@@ -31,6 +31,7 @@
 #ifndef __CPU_BASE_DYN_INST_HH__
 #define __CPU_BASE_DYN_INST_HH__
 
+#include <bitset>
 #include <list>
 #include <string>
 
@@ -126,56 +127,34 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** The sequence number of the instruction. */
     InstSeqNum seqNum;
 
-    /** Is the instruction in the IQ */
-    bool iqEntry;
+    enum Status {
+        IqEntry,                 /// Instruction is in the IQ
+        RobEntry,                /// Instruction is in the ROB
+        LsqEntry,                /// Instruction is in the LSQ
+        Completed,               /// Instruction has completed
+        ResultReady,             /// Instruction has its result
+        CanIssue,                /// Instruction can issue and execute
+        Issued,                  /// Instruction has issued
+        Executed,                /// Instruction has executed
+        CanCommit,               /// Instruction can commit
+        AtCommit,                /// Instruction has reached commit
+        Committed,               /// Instruction has committed
+        Squashed,                /// Instruction is squashed
+        SquashedInIQ,            /// Instruction is squashed in the IQ
+        SquashedInLSQ,           /// Instruction is squashed in the LSQ
+        SquashedInROB,           /// Instruction is squashed in the ROB
+        RecoverInst,             /// Is a recover instruction
+        BlockingInst,            /// Is a blocking instruction
+        ThreadsyncWait,          /// Is a thread synchronization instruction
+        SerializeBefore,         /// Needs to serialize on
+                                 /// instructions ahead of it
+        SerializeAfter,          /// Needs to serialize instructions behind it
+        SerializeHandled,        /// Serialization has been handled
+        NumStatus
+    };
 
-    /** Is the instruction in the ROB */
-    bool robEntry;
-
-    /** Is the instruction in the LSQ */
-    bool lsqEntry;
-
-    /** Is the instruction completed. */
-    bool completed;
-
-    /** Is the instruction's result ready. */
-    bool resultReady;
-
-    /** Can this instruction issue. */
-    bool canIssue;
-
-    /** Has this instruction issued. */
-    bool issued;
-
-    /** Has this instruction executed (or made it through execute) yet. */
-    bool executed;
-
-    /** Can this instruction commit. */
-    bool canCommit;
-
-    /** Is this instruction committed. */
-    bool committed;
-
-    /** Is this instruction squashed. */
-    bool squashed;
-
-    /** Is this instruction squashed in the instruction queue. */
-    bool squashedInIQ;
-
-    /** Is this instruction squashed in the instruction queue. */
-    bool squashedInLSQ;
-
-    /** Is this instruction squashed in the instruction queue. */
-    bool squashedInROB;
-
-    /** Is this a recover instruction. */
-    bool recoverInst;
-
-    /** Is this a thread blocking instruction. */
-    bool blockingInst;	/* this inst has called thread_block() */
-
-    /** Is this a thread syncrhonization instruction. */
-    bool threadsyncWait;
+    /** The status of this BaseDynInst.  Several bits can be set. */
+    std::bitset<NumStatus> status;
 
     /** The thread this instruction is from. */
     short threadNumber;
@@ -215,12 +194,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** The memory request flags (from translation). */
     unsigned memReqFlags;
-
-    /** The size of the data to be stored. */
-    int storeSize;
-
-    /** The data to be stored. */
-    IntReg storeData;
 
     union Result {
         uint64_t integer;
@@ -338,9 +311,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
     bool isSerializeBefore() const
-    { return staticInst->isSerializeBefore() || serializeBefore; }
+    { return staticInst->isSerializeBefore() || status[SerializeBefore]; }
     bool isSerializeAfter() const
-    { return staticInst->isSerializeAfter() || serializeAfter; }
+    { return staticInst->isSerializeAfter() || status[SerializeAfter]; }
     bool isMemBarrier()   const { return staticInst->isMemBarrier(); }
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }
@@ -349,41 +322,32 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
-    void setSerializeBefore() { serializeBefore = true; }
+    void setSerializeBefore() { status.set(SerializeBefore); }
 
     /** Clears the serializeBefore part of this instruction. */
-    void clearSerializeBefore() { serializeBefore = false; }
+    void clearSerializeBefore() { status.reset(SerializeBefore); }
 
     /** Checks if this serializeBefore is only temporarily set. */
-    bool isTempSerializeBefore() { return serializeBefore; }
-
-    /** Tracks if instruction has been externally set as serializeBefore. */
-    bool serializeBefore;
+    bool isTempSerializeBefore() { return status[SerializeBefore]; }
 
     /** Temporarily sets this instruction as a serialize after instruction. */
-    void setSerializeAfter() { serializeAfter = true; }
+    void setSerializeAfter() { status.set(SerializeAfter); }
 
     /** Clears the serializeAfter part of this instruction.*/
-    void clearSerializeAfter() { serializeAfter = false; }
+    void clearSerializeAfter() { status.reset(SerializeAfter); }
 
     /** Checks if this serializeAfter is only temporarily set. */
-    bool isTempSerializeAfter() { return serializeAfter; }
+    bool isTempSerializeAfter() { return status[SerializeAfter]; }
 
-    /** Tracks if instruction has been externally set as serializeAfter. */
-    bool serializeAfter;
+    /** Sets the serialization part of this instruction as handled. */
+    void setSerializeHandled() { status.set(SerializeHandled); }
 
     /** Checks if the serialization part of this instruction has been
      *  handled.  This does not apply to the temporary serializing
      *  state; it only applies to this instruction's own permanent
      *  serializing state.
      */
-    bool isSerializeHandled() { return serializeHandled; }
-
-    /** Sets the serialization part of this instruction as handled. */
-    void setSerializeHandled() { serializeHandled = true; }
-
-    /** Whether or not the serialization of this instruction has been handled. */
-    bool serializeHandled;
+    bool isSerializeHandled() { return status[SerializeHandled]; }
 
     /** Returns the opclass of this instruction. */
     OpClass opClass() const { return staticInst->opClass(); }
@@ -465,106 +429,112 @@ class BaseDynInst : public FastAlloc, public RefCounted
     }
 
     /** Sets this instruction as completed. */
-    void setCompleted() { completed = true; }
+    void setCompleted() { status.set(Completed); }
 
     /** Returns whether or not this instruction is completed. */
-    bool isCompleted() const { return completed; }
+    bool isCompleted() const { return status[Completed]; }
 
-    void setResultReady() { resultReady = true; }
+    /** Marks the result as ready. */
+    void setResultReady() { status.set(ResultReady); }
 
-    bool isResultReady() const { return resultReady; }
+    /** Returns whether or not the result is ready. */
+    bool isResultReady() const { return status[ResultReady]; }
 
     /** Sets this instruction as ready to issue. */
-    void setCanIssue() { canIssue = true; }
+    void setCanIssue() { status.set(CanIssue); }
 
     /** Returns whether or not this instruction is ready to issue. */
-    bool readyToIssue() const { return canIssue; }
+    bool readyToIssue() const { return status[CanIssue]; }
 
     /** Sets this instruction as issued from the IQ. */
-    void setIssued() { issued = true; }
+    void setIssued() { status.set(Issued); }
 
     /** Returns whether or not this instruction has issued. */
-    bool isIssued() const { return issued; }
+    bool isIssued() const { return status[Issued]; }
 
     /** Sets this instruction as executed. */
-    void setExecuted() { executed = true; }
+    void setExecuted() { status.set(Executed); }
 
     /** Returns whether or not this instruction has executed. */
-    bool isExecuted() const { return executed; }
+    bool isExecuted() const { return status[Executed]; }
 
     /** Sets this instruction as ready to commit. */
-    void setCanCommit() { canCommit = true; }
+    void setCanCommit() { status.set(CanCommit); }
 
     /** Clears this instruction as being ready to commit. */
-    void clearCanCommit() { canCommit = false; }
+    void clearCanCommit() { status.reset(CanCommit); }
 
     /** Returns whether or not this instruction is ready to commit. */
-    bool readyToCommit() const { return canCommit; }
+    bool readyToCommit() const { return status[CanCommit]; }
+
+    void setAtCommit() { status.set(AtCommit); }
+
+    bool isAtCommit() { return status[AtCommit]; }
 
     /** Sets this instruction as committed. */
-    void setCommitted() { committed = true; }
+    void setCommitted() { status.set(Committed); }
 
     /** Returns whether or not this instruction is committed. */
-    bool isCommitted() const { return committed; }
+    bool isCommitted() const { return status[Committed]; }
 
     /** Sets this instruction as squashed. */
-    void setSquashed() { squashed = true; }
+    void setSquashed() { status.set(Squashed); }
 
     /** Returns whether or not this instruction is squashed. */
-    bool isSquashed() const { return squashed; }
+    bool isSquashed() const { return status[Squashed]; }
 
     //Instruction Queue Entry
     //-----------------------
     /** Sets this instruction as a entry the IQ. */
-    void setInIQ() { iqEntry = true; }
+    void setInIQ() { status.set(IqEntry); }
 
     /** Sets this instruction as a entry the IQ. */
-    void removeInIQ() { iqEntry = false; }
-
-    /** Sets this instruction as squashed in the IQ. */
-    void setSquashedInIQ() { squashedInIQ = true; squashed = true;}
-
-    /** Returns whether or not this instruction is squashed in the IQ. */
-    bool isSquashedInIQ() const { return squashedInIQ; }
+    void clearInIQ() { status.reset(IqEntry); }
 
     /** Returns whether or not this instruction has issued. */
-    bool isInIQ() const { return iqEntry; }
+    bool isInIQ() const { return status[IqEntry]; }
+
+    /** Sets this instruction as squashed in the IQ. */
+    void setSquashedInIQ() { status.set(SquashedInIQ); status.set(Squashed);}
+
+    /** Returns whether or not this instruction is squashed in the IQ. */
+    bool isSquashedInIQ() const { return status[SquashedInIQ]; }
 
 
     //Load / Store Queue Functions
     //-----------------------
     /** Sets this instruction as a entry the LSQ. */
-    void setInLSQ() { lsqEntry = true; }
+    void setInLSQ() { status.set(LsqEntry); }
 
     /** Sets this instruction as a entry the LSQ. */
-    void removeInLSQ() { lsqEntry = false; }
-
-    /** Sets this instruction as squashed in the LSQ. */
-    void setSquashedInLSQ() { squashedInLSQ = true;}
-
-    /** Returns whether or not this instruction is squashed in the LSQ. */
-    bool isSquashedInLSQ() const { return squashedInLSQ; }
+    void removeInLSQ() { status.reset(LsqEntry); }
 
     /** Returns whether or not this instruction is in the LSQ. */
-    bool isInLSQ() const { return lsqEntry; }
+    bool isInLSQ() const { return status[LsqEntry]; }
+
+    /** Sets this instruction as squashed in the LSQ. */
+    void setSquashedInLSQ() { status.set(SquashedInLSQ);}
+
+    /** Returns whether or not this instruction is squashed in the LSQ. */
+    bool isSquashedInLSQ() const { return status[SquashedInLSQ]; }
 
 
     //Reorder Buffer Functions
     //-----------------------
     /** Sets this instruction as a entry the ROB. */
-    void setInROB() { robEntry = true; }
+    void setInROB() { status.set(RobEntry); }
 
     /** Sets this instruction as a entry the ROB. */
-    void removeInROB() { robEntry = false; }
-
-    /** Sets this instruction as squashed in the ROB. */
-    void setSquashedInROB() { squashedInROB = true; }
-
-    /** Returns whether or not this instruction is squashed in the ROB. */
-    bool isSquashedInROB() const { return squashedInROB; }
+    void clearInROB() { status.reset(RobEntry); }
 
     /** Returns whether or not this instruction is in the ROB. */
-    bool isInROB() const { return robEntry; }
+    bool isInROB() const { return status[RobEntry]; }
+
+    /** Sets this instruction as squashed in the ROB. */
+    void setSquashedInROB() { status.set(SquashedInROB); }
+
+    /** Returns whether or not this instruction is squashed in the ROB. */
+    bool isSquashedInROB() const { return status[SquashedInROB]; }
 
     /** Read the PC of this instruction. */
     const Addr readPC() const { return PC; }
@@ -581,10 +551,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Sets the thread id. */
     void setTid(unsigned tid) { threadNumber = tid; }
 
+    /** Sets the pointer to the thread state. */
     void setThreadState(ImplState *state) { thread = state; }
 
-    /** Returns the thread context.
-     */
+    /** Returns the thread context. */
     ThreadContext *tcBase() { return thread->getTC(); }
 
   private:
@@ -620,8 +590,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Store queue index. */
     int16_t sqIdx;
-
-    bool reachedCommit;
 
     /** Iterator pointing to this BaseDynInst in the list of all insts. */
     ListIt instListIt;

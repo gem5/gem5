@@ -527,7 +527,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
     if (req->getFlags() & UNCACHEABLE &&
-        (load_idx != loadHead || !load_inst->reachedCommit)) {
+        (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
         return TheISA::genMachineCheckFault();

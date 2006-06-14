@@ -296,7 +296,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     for (int i=0; i<fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid &&
             fromFetch->insts[i]->seqNum > inst->seqNum) {
-            fromFetch->insts[i]->squashed = true;
+            fromFetch->insts[i]->setSquashed();
         }
     }
 
@@ -345,7 +345,7 @@ DefaultDecode<Impl>::squash(unsigned tid)
 
     for (int i=0; i<fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid) {
-            fromFetch->insts[i]->squashed = true;
+            fromFetch->insts[i]->setSquashed();
             squash_count++;
         }
     }

@@ -907,7 +907,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // and committed this instruction.
         thread[tid]->funcExeInst--;
 
-        head_inst->reachedCommit = true;
+        head_inst->setAtCommit();
 
         if (head_inst->isNonSpeculative() ||
             head_inst->isStoreConditional() ||

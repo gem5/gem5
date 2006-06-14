@@ -276,7 +276,7 @@ ROB<Impl>::retireHead(unsigned tid)
     --numInstsInROB;
     --threadEntries[tid];
 
-    head_inst->removeInROB();
+    head_inst->clearInROB();
     head_inst->setCommitted();
 
     instList[tid].erase(head_it);

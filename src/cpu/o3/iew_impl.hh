@@ -579,7 +579,7 @@ DefaultIEW<Impl>::validInstsFromRename()
     unsigned inst_count = 0;
 
     for (int i=0; i<fromRename->size; i++) {
-        if (!fromRename->insts[i]->squashed)
+        if (!fromRename->insts[i]->isSquashed())
             inst_count++;
     }
 

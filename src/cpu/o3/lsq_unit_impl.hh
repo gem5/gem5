@@ -710,7 +710,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        loadQueue[load_idx]->squashed = true;
+        loadQueue[load_idx]->setSquashed();
         loadQueue[load_idx] = NULL;
         --loads;
 
@@ -754,7 +754,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        storeQueue[store_idx].inst->squashed = true;
+        storeQueue[store_idx].inst->setSquashed();
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
 
