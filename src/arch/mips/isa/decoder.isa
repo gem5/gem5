@@ -859,7 +859,7 @@ decode OPCODE_HI default Unknown::unknown() {
                 format LoadIndexedMemory {
                     0x0: lwxc1({{ Fd.uw = Mem.uw;}});
                     0x1: ldxc1({{ Fd.ud = Mem.ud;}});
-                    0x5: luxc1({{ Fd.uw = Mem.ud;}},
+                    0x5: luxc1({{ Fd.ud = Mem.ud;}},
                                {{ EA = (Rs + Rt) & ~7; }});
                 }
             }

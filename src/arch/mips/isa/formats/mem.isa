@@ -499,23 +499,11 @@ def template MiscCompleteAcc {{
     }
 }};
 
-// load instructions use Rt as dest, so check for
-// Rt == 0 to detect nops
-def template LoadNopCheckDecode {{
- {
-     MipsStaticInst *i = new %(class_name)s(machInst);
-     if (RT == 0) {
-         i = makeNop(i);
-     }
-     return i;
- }
-}};
-
 def format LoadMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -530,7 +518,7 @@ def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -554,7 +542,7 @@ def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; 
 
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -571,7 +559,6 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
 
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
                       exec_template_base = 'Store')
 }};
 
