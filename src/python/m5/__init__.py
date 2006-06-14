@@ -64,11 +64,34 @@ def AddToPath(path):
 def setTraceFlags(option, opt_str, value, parser):
     objects.Trace.flags = value
 
+def setTraceStart(option, opt_str, value, parser):
+    objects.Trace.start = value
+
+def clearPCSymbol(option, opt_str, value, parser):
+    objects.ExecutionTrace.pc_symbol = False
+
+def clearPrintCycle(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_cycle = False
+
+def statsTextFile(option, opt_str, value, parser):
+    objects.Statistics.text_file = value
+
 # Standard optparse options.  Need to be explicitly included by the
 # user script when it calls optparse.OptionParser().
 standardOptions = [
     optparse.make_option("--traceflags", type="string", action="callback",
-                         callback=setTraceFlags)
+                         callback=setTraceFlags),
+    optparse.make_option("--tracestart", type="int", action="callback",
+                         callback=setTraceStart),
+    optparse.make_option("--nopcsymbol", action="callback",
+                         callback=clearPCSymbol,
+                         help="Turn off printing PC symbols in trace output"),
+    optparse.make_option("--noprintcycle", action="callback",
+                         callback=clearPrintCycle,
+                         help="Turn off printing cycles in trace output"),
+    optparse.make_option("--statsfile", type="string", action="callback",
+                         callback=statsTextFile, metavar="FILE",
+                         help="Sets the output file for the statistics")
     ]
 
 # make a SmartDict out of the build options for our local use
