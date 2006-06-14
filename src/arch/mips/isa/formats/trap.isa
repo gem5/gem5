@@ -70,11 +70,9 @@ def template TrapExecute {{
 }};
 
 def format Trap(code, *flags) {{
-        warn_code = 'warn(\"'
-        warn_code += 'Trap Exception Handler Is Currently Not Implemented.'
-        warn_code += '\");'
-        code = warn_code + "bool " + code
-
+        code = 'warn(\"'
+        code += 'Trap Exception Handler Is Currently Not Implemented.'
+        code += '\");'
         iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
