@@ -134,7 +134,9 @@ showBriefHelp(ostream &out)
 "                    script is executed (just like the -i option to  the\n"
 "                    Python interpreter).\n\n"
 " -h                 Prints this help\n\n"
-" <configfile>       config file name (ends in .py)\n\n",
+" <configfile>       config file name which ends in .py. (Normally you can\n"
+"                    run <configfile> --help to get help on that config files\n"
+"                    parameters.\n\n",
              prog);
 
 }
