@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,7 +100,7 @@ namespace MipsISA
             }
         }
 
-        Fault setReg(int floatReg, const FloatReg &val, int width)
+        Fault setReg(int floatReg, const FloatRegVal &val, int width)
         {
             using namespace std;
             switch(width)

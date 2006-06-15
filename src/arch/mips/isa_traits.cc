@@ -30,7 +30,7 @@
  */
 
 #include "arch/mips/isa_traits.hh"
-#include "config/full_system.hh"
+//#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
 #include "base/bitfield.hh"
@@ -43,38 +43,13 @@ void
 MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     panic("Copy Regs Not Implemented Yet\n");
-    /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
-    uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
-    lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
-    lock_addr = xc->readMiscReg(MipsISA::Lock_Addr_DepTag);
-
-#if FULL_SYSTEM
-    copyIprs(xc);
-    #endif*/
 }
 
 void
 MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
 {
     panic("Copy Misc. Regs Not Implemented Yet\n");
-    /*fpcr = xc->readMiscReg(MipsISA::Fpcr_DepTag);
-    uniq = xc->readMiscReg(MipsISA::Uniq_DepTag);
-    lock_flag = xc->readMiscReg(MipsISA::Lock_Flag_DepTag);
-    lock_addr = xc->readMiscReg(MipsISA::Lock_Addr_DepTag);
-
-    #endif*/
 }
-
-#if FULL_SYSTEM
-
-static inline Addr
-TruncPage(Addr addr)
-{ return addr & ~(MipsISA::PageBytes - 1); }
-
-static inline Addr
-RoundPage(Addr addr)
-{ return (addr + MipsISA::PageBytes - 1) & ~(MipsISA::PageBytes - 1); }
-#endif
 
 void
 IntRegFile::serialize(std::ostream &os)
@@ -100,12 +75,6 @@ RegFile::serialize(std::ostream &os)
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
-#if FULL_SYSTEM
-    SERIALIZE_ARRAY(palregs, NumIntRegs);
-    SERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-    SERIALIZE_SCALAR(intrflag);
-    SERIALIZE_SCALAR(pal_shadow);
-#endif
 }
 
 
@@ -121,43 +90,5 @@ RegFile::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);
-#if FULL_SYSTEM
-    UNSERIALIZE_ARRAY(palregs, NumIntRegs);
-    UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-    UNSERIALIZE_SCALAR(intrflag);
-    UNSERIALIZE_SCALAR(pal_shadow);
-#endif
+
 }
-
-
-#if FULL_SYSTEM
-void
-PTE::serialize(std::ostream &os)
-{
-    SERIALIZE_SCALAR(tag);
-    SERIALIZE_SCALAR(ppn);
-    SERIALIZE_SCALAR(xre);
-    SERIALIZE_SCALAR(xwe);
-    SERIALIZE_SCALAR(asn);
-    SERIALIZE_SCALAR(asma);
-    SERIALIZE_SCALAR(fonr);
-    SERIALIZE_SCALAR(fonw);
-    SERIALIZE_SCALAR(valid);
-}
-
-
-void
-PTE::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_SCALAR(tag);
-    UNSERIALIZE_SCALAR(ppn);
-    UNSERIALIZE_SCALAR(xre);
-    UNSERIALIZE_SCALAR(xwe);
-    UNSERIALIZE_SCALAR(asn);
-    UNSERIALIZE_SCALAR(asma);
-    UNSERIALIZE_SCALAR(fonr);
-    UNSERIALIZE_SCALAR(fonw);
-    UNSERIALIZE_SCALAR(valid);
-}
-
-#endif //FULL_SYSTEM

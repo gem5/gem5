@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2003-2006 The Regents of The University of Michigan
+// Copyright (c) 2006 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -53,8 +53,8 @@ def operands {{
     'R2':  ('IntReg', 'uw','2', 'IsInteger', 5),
 
     #Special Integer Reg operands
-    'HI':  ('IntReg', 'uw','32', 'IsInteger', 6),
-    'LO':  ('IntReg', 'uw','33', 'IsInteger', 7),
+    'HI':  ('IntReg', 'uw','MipsISA::HI', 'IsInteger', 6),
+    'LO':  ('IntReg', 'uw','MipsISA::LO', 'IsInteger', 7),
 
     #Immediate Value operand
     'IntImm': ('IntReg', 'uw', 'INTIMM', 'IsInteger', 3),
@@ -66,11 +66,11 @@ def operands {{
     'Fr': ('FloatReg', 'sf', 'FR', 'IsFloating', 3),
 
     #Special Floating Point Control Reg Operands
-    'FIR':  ('FloatReg', 'uw', '32', 'IsFloating', 1),
-    'FCCR': ('FloatReg', 'uw', '33', 'IsFloating', 2),
-    'FEXR': ('FloatReg', 'uw', '34', 'IsFloating', 3),
-    'FENR': ('FloatReg', 'uw', '35', 'IsFloating', 3),
-    'FCSR': ('FloatReg', 'uw', '36', 'IsFloating', 3),
+    'FIR':  ('FloatReg', 'uw', 'MipsISA::FIR', 'IsFloating', 1),
+    'FCCR': ('FloatReg', 'uw', 'MipsISA::FCCR', 'IsFloating', 2),
+    'FEXR': ('FloatReg', 'uw', 'MipsISA::FEXR', 'IsFloating', 3),
+    'FENR': ('FloatReg', 'uw', 'MipsISA::FENR', 'IsFloating', 3),
+    'FCSR': ('FloatReg', 'uw', 'MipsISA::FCSR', 'IsFloating', 3),
 
      #Operands For Paired Singles FP Operations
     'Fd1': ('FloatReg', 'sf', 'FD', 'IsFloating', 4),

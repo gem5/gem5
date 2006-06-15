@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,12 +81,12 @@ namespace MipsISA
             return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
-        FloatReg readFloatReg(int floatReg)
+        FloatRegVal readFloatReg(int floatReg)
         {
             return floatRegFile.readReg(floatReg,SingleWidth);
         }
 
-        FloatReg readFloatReg(int floatReg, int width)
+        FloatRegVal readFloatReg(int floatReg, int width)
         {
             return floatRegFile.readReg(floatReg,width);
         }
@@ -101,12 +101,12 @@ namespace MipsISA
             return floatRegFile.readRegBits(floatReg,width);
         }
 
-        Fault setFloatReg(int floatReg, const FloatReg &val)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val)
         {
             return floatRegFile.setReg(floatReg, val, SingleWidth);
         }
 
-        Fault setFloatReg(int floatReg, const FloatReg &val, int width)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width)
         {
             return floatRegFile.setReg(floatReg, val, width);
         }
@@ -168,16 +168,6 @@ namespace MipsISA
             nnpc = val;
         }
 
-
-#if FULL_SYSTEM
-        IntReg palregs[NumIntRegs];	// PAL shadow registers
-        InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
-        int intrflag;			// interrupt flag
-        bool pal_shadow;		// using pal_shadow registers
-        inline int instAsid() { return MIPS34K::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
-        inline int dataAsid() { return MIPS34K::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
-#endif // FULL_SYSTEM
-
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 
@@ -193,9 +183,6 @@ namespace MipsISA
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
-#if FULL_SYSTEM
-    void copyIprs(ThreadContext *src, ThreadContext *dest);
-#endif
 } // namespace MipsISA
 
 #endif

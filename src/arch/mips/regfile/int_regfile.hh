@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,11 +63,6 @@ namespace MipsISA
 
         void unserialize(Checkpoint *cp, const std::string &section);
 
-    };
-
-    enum MiscIntRegNums {
-       HI = NumIntArchRegs,
-       LO
     };
 
 } // namespace MipsISA

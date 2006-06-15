@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,14 +42,15 @@ namespace MipsISA
     typedef uint32_t IntReg;
 
     // floating point register file entry type
-    typedef double FloatReg;
     typedef uint32_t FloatReg32;
     typedef uint64_t FloatReg64;
     typedef uint64_t FloatRegBits;
 
+    typedef double FloatRegVal;
+    typedef double FloatReg;
+
     // cop-0/cop-1 system control register
     typedef uint64_t MiscReg;
-    typedef uint64_t InternalProcReg;
 
     typedef union {
         IntReg   intreg;
