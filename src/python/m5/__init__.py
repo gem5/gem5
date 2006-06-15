@@ -107,11 +107,7 @@ env.update(os.environ)
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
     obj = config.instanceDict[name]
-    if not obj._ccObject:
-        obj.createCCObject()
-    if obj._ccObject == -1:
-        panic("resolveSimObject: recursive lookup error on %s" % name)
-    return obj._ccObject
+    return obj.getCCObject()
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
