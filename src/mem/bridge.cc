@@ -59,7 +59,7 @@ Bridge::Bridge(const std::string &n, int qsa, int qsb,
 }
 
 Port *
-Bridge::getPort(const std::string &if_name)
+Bridge::getPort(const std::string &if_name, int idx)
 {
     BridgePort *port;
 

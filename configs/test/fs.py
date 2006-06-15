@@ -129,17 +129,7 @@ class BaseTsunami(Tsunami):
     ethernet = NSGigE(configdata=NSGigEPciData(),
                       pci_bus=0, pci_dev=1, pci_func=0)
     etherint = NSGigEInt(device=Parent.ethernet)
-#    ethernet = Sinic(configdata=SinicPciData(),
-#                      pci_bus=0, pci_dev=1, pci_func=0)
-#    etherint = SinicInt(device=Parent.ethernet)
     console = AlphaConsole(pio_addr=0x80200000000, disk=Parent.simple_disk)
-#    bridge = PciFake(configdata=BridgePciData(), pci_bus=0, pci_dev=2, pci_func=0)
-
-#class FreeBSDTsunami(BaseTsunami):
-#    disk0 = FreeBSDRootDisk(delay='0us', driveID='master')
-#    ide = IdeController(disks=[Parent.disk0],
-#                        configdata=IdeControllerPciData(),
-#                        pci_func=0, pci_dev=0, pci_bus=0)
 
 class LinuxTsunami(BaseTsunami):
     disk0 = LinuxRootDisk(driveID='master')
@@ -149,45 +139,45 @@ class LinuxTsunami(BaseTsunami):
                         configdata=IdeControllerPciData(),
                         pci_func=0, pci_dev=0, pci_bus=0)
 
-class LinuxAlphaSystem(LinuxAlphaSystem):
+class MyLinuxAlphaSystem(LinuxAlphaSystem):
     magicbus = Bus(bus_id=0)
     magicbus2 = Bus(bus_id=1)
     bridge = Bridge()
     physmem = PhysicalMemory(range = AddrRange('128MB'))
-    c0a = Connector(side_a=Parent.magicbus, side_b=Parent.bridge, side_b_name="side_a")
-    c0b = Connector(side_a=Parent.magicbus2, side_b=Parent.bridge, side_b_name="side_b")
-    c1 = Connector(side_a=Parent.physmem, side_b=Parent.magicbus2)
+    bridge.side_a = magicbus.port
+    bridge.side_b = magicbus2.port
+    physmem.port = magicbus2.port
     tsunami = LinuxTsunami()
-    c2 = Connector(side_a=Parent.tsunami.cchip, side_a_name='pio', side_b=Parent.magicbus)
-    c3 = Connector(side_a=Parent.tsunami.pchip, side_a_name='pio', side_b=Parent.magicbus)
-    c4 = Connector(side_a=Parent.tsunami.pciconfig, side_a_name='pio', side_b=Parent.magicbus)
-    c5 = Connector(side_a=Parent.tsunami.fake_sm_chip, side_a_name='pio', side_b=Parent.magicbus)
-    c6 = Connector(side_a=Parent.tsunami.ethernet, side_a_name='pio', side_b=Parent.magicbus)
-    c6a = Connector(side_a=Parent.tsunami.ethernet, side_a_name='dma', side_b=Parent.magicbus)
-    c7 = Connector(side_a=Parent.tsunami.fake_uart1, side_a_name='pio', side_b=Parent.magicbus)
-    c8 = Connector(side_a=Parent.tsunami.fake_uart2, side_a_name='pio', side_b=Parent.magicbus)
-    c9 = Connector(side_a=Parent.tsunami.fake_uart3, side_a_name='pio', side_b=Parent.magicbus)
-    c10 = Connector(side_a=Parent.tsunami.fake_uart4, side_a_name='pio', side_b=Parent.magicbus)
-    c11 = Connector(side_a=Parent.tsunami.ide, side_a_name='pio', side_b=Parent.magicbus)
-    c13 = Connector(side_a=Parent.tsunami.ide, side_a_name='dma', side_b=Parent.magicbus)
-    c12 = Connector(side_a=Parent.tsunami.fake_ppc, side_a_name='pio', side_b=Parent.magicbus)
-    c14 = Connector(side_a=Parent.tsunami.fake_OROM, side_a_name='pio', side_b=Parent.magicbus)
-    c16 = Connector(side_a=Parent.tsunami.fake_pnp_addr, side_a_name='pio', side_b=Parent.magicbus)
-    c17 = Connector(side_a=Parent.tsunami.fake_pnp_write, side_a_name='pio', side_b=Parent.magicbus)
-    c18 = Connector(side_a=Parent.tsunami.fake_pnp_read0, side_a_name='pio', side_b=Parent.magicbus)
-    c19 = Connector(side_a=Parent.tsunami.fake_pnp_read1, side_a_name='pio', side_b=Parent.magicbus)
-    c20 = Connector(side_a=Parent.tsunami.fake_pnp_read2, side_a_name='pio', side_b=Parent.magicbus)
-    c21 = Connector(side_a=Parent.tsunami.fake_pnp_read3, side_a_name='pio', side_b=Parent.magicbus)
-    c22 = Connector(side_a=Parent.tsunami.fake_pnp_read4, side_a_name='pio', side_b=Parent.magicbus)
-    c23 = Connector(side_a=Parent.tsunami.fake_pnp_read5, side_a_name='pio', side_b=Parent.magicbus)
-    c24 = Connector(side_a=Parent.tsunami.fake_pnp_read6, side_a_name='pio', side_b=Parent.magicbus)
-    c25 = Connector(side_a=Parent.tsunami.fake_pnp_read7, side_a_name='pio', side_b=Parent.magicbus)
-    c27 = Connector(side_a=Parent.tsunami.fake_ata0, side_a_name='pio', side_b=Parent.magicbus)
-    c28 = Connector(side_a=Parent.tsunami.fake_ata1, side_a_name='pio', side_b=Parent.magicbus)
-    c30 = Connector(side_a=Parent.tsunami.fb, side_a_name='pio', side_b=Parent.magicbus)
-    c31 = Connector(side_a=Parent.tsunami.io, side_a_name='pio', side_b=Parent.magicbus)
-    c32 = Connector(side_a=Parent.tsunami.uart, side_a_name='pio', side_b=Parent.magicbus)
-    c33 = Connector(side_a=Parent.tsunami.console, side_a_name='pio', side_b=Parent.magicbus)
+    tsunami.cchip.pio = magicbus.port
+    tsunami.pchip.pio = magicbus.port
+    tsunami.pciconfig.pio = magicbus.port
+    tsunami.fake_sm_chip.pio = magicbus.port
+    tsunami.ethernet.pio = magicbus.port
+    tsunami.ethernet.dma = magicbus.port
+    tsunami.fake_uart1.pio = magicbus.port
+    tsunami.fake_uart2.pio = magicbus.port
+    tsunami.fake_uart3.pio = magicbus.port
+    tsunami.fake_uart4.pio = magicbus.port
+    tsunami.ide.pio = magicbus.port
+    tsunami.ide.dma = magicbus.port
+    tsunami.fake_ppc.pio = magicbus.port
+    tsunami.fake_OROM.pio = magicbus.port
+    tsunami.fake_pnp_addr.pio = magicbus.port
+    tsunami.fake_pnp_write.pio = magicbus.port
+    tsunami.fake_pnp_read0.pio = magicbus.port
+    tsunami.fake_pnp_read1.pio = magicbus.port
+    tsunami.fake_pnp_read2.pio = magicbus.port
+    tsunami.fake_pnp_read3.pio = magicbus.port
+    tsunami.fake_pnp_read4.pio = magicbus.port
+    tsunami.fake_pnp_read5.pio = magicbus.port
+    tsunami.fake_pnp_read6.pio = magicbus.port
+    tsunami.fake_pnp_read7.pio = magicbus.port
+    tsunami.fake_ata0.pio = magicbus.port
+    tsunami.fake_ata1.pio = magicbus.port
+    tsunami.fb.pio = magicbus.port
+    tsunami.io.pio = magicbus.port
+    tsunami.uart.pio = magicbus.port
+    tsunami.console.pio = magicbus.port
     raw_image = RawDiskImage(image_file=disk('linux-latest.img'),
                              read_only=True)
     simple_disk = SimpleDisk(disk=Parent.raw_image)
@@ -196,7 +186,7 @@ class LinuxAlphaSystem(LinuxAlphaSystem):
         cpu = TimingSimpleCPU()
     else:
         cpu = AtomicSimpleCPU()
-    cpu.mem = Parent.magicbus2
+    cpu.mem = magicbus2
     cpu.itb = AlphaITB()
     cpu.dtb = AlphaDTB()
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
@@ -224,11 +214,12 @@ def DualRoot(clientSystem, serverSystem):
     self.clock = '5GHz'
     return self
 
-root = DualRoot(LinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
-                LinuxAlphaSystem(readfile=script('netperf-server.rcS')))
+root = DualRoot(
+    MyLinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
+    MyLinuxAlphaSystem(readfile=script('netperf-server.rcS')))
 
 m5.instantiate(root)
 
 exit_event = m5.simulate()
 
-print 'Exiting @', m5.curTick(), 'because', exit_event.getCause()
+print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()

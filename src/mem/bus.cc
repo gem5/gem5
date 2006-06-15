@@ -38,7 +38,7 @@
 #include "sim/builder.hh"
 
 Port *
-Bus::getPort(const std::string &if_name)
+Bus::getPort(const std::string &if_name, int idx)
 {
     // if_name ignored?  forced to be empty?
     int id = interfaces.size();

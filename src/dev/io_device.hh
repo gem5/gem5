@@ -247,7 +247,7 @@ class PioDevice : public MemObject
 
     virtual void init();
 
-    virtual Port *getPort(const std::string &if_name)
+    virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
@@ -309,7 +309,7 @@ class DmaDevice : public PioDevice
 
     bool dmaPending() { return dmaPort->dmaPending(); }
 
-    virtual Port *getPort(const std::string &if_name)
+    virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "pio") {
             if (pioPort != NULL)

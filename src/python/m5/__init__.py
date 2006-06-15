@@ -103,6 +103,12 @@ build_env.update(defines.m5_build_env)
 env = smartdict.SmartDict()
 env.update(os.environ)
 
+
+# Function to provide to C++ so it can look up instances based on paths
+def resolveSimObject(name):
+    obj = config.instanceDict[name]
+    return obj.getCCObject()
+
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(root):
@@ -112,7 +118,10 @@ def instantiate(root):
     root.print_ini()
     sys.stdout.close() # close config.ini
     sys.stdout = sys.__stdout__ # restore to original
-    main.initialize()  # load config.ini into C++ and process it
+    main.loadIniFile(resolveSimObject)  # load config.ini into C++
+    root.createCCObject()
+    root.connectPorts()
+    main.finalInit()
     noDot = True # temporary until we fix dot
     if not noDot:
        dot = pydot.Dot()

@@ -177,7 +177,7 @@ class Bridge : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name);
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
 

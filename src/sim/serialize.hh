@@ -42,8 +42,8 @@
 #include <map>
 
 #include "sim/host.hh"
-#include "sim/configfile.hh"
 
+class IniFile;
 class Serializable;
 class Checkpoint;
 
@@ -177,7 +177,7 @@ class SerializableClass
     // an optional config hierarchy node (specified by the third
     // argument).  A pointer to the new SerializableBuilder is returned.
     typedef Serializable *(*CreateFunc)(Checkpoint *cp,
-                                         const std::string &section);
+                                        const std::string &section);
 
     static std::map<std::string,CreateFunc> *classMap;
 
@@ -191,7 +191,7 @@ class SerializableClass
     // create Serializable given name of class and pointer to
     // configuration hierarchy node
     static Serializable *createObject(Checkpoint *cp,
-                                       const std::string &section);
+                                      const std::string &section);
 };
 
 //
@@ -209,12 +209,10 @@ class Checkpoint
 
     IniFile *db;
     const std::string basePath;
-    const ConfigNode *configNode;
     std::map<std::string, Serializable*> objMap;
 
   public:
-    Checkpoint(const std::string &cpt_dir, const std::string &path,
-               const ConfigNode *_configNode);
+    Checkpoint(const std::string &cpt_dir, const std::string &path);
 
     const std::string cptDir;
 
