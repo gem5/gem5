@@ -50,5 +50,5 @@ m5.instantiate(root)
 # simulate until program terminates
 exit_event = m5.simulate()
 
-print 'Exiting @', m5.curTick(), 'because', exit_event.getCause()
+print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
 
