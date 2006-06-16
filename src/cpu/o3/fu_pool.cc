@@ -31,7 +31,7 @@
 #include <sstream>
 
 #include "cpu/o3/fu_pool.hh"
-#include "encumbered/cpu/full/fu_pool.hh"
+#include "cpu/func_unit.hh"
 #include "sim/builder.hh"
 
 using namespace std;
