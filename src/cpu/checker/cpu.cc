@@ -829,6 +829,6 @@ Checker<DynInstPtr>::dumpInsts()
 
 //template
 //class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
-
+// Manually instantiate checker
 template
 class Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >;
