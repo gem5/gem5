@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #include "config/full_system.hh"
@@ -921,6 +922,22 @@ FullO3CPU<Impl>::setNextPC(uint64_t val,unsigned tid)
 {
     commit.setNextPC(val, tid);
 }
+
+#if THE_ISA != ALPHA_ISA
+template <class Impl>
+uint64_t
+FullO3CPU<Impl>::readNextNPC(unsigned tid)
+{
+    return commit.readNextNPC(tid);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setNextNNPC(uint64_t val,unsigned tid)
+{
+    commit.setNextNPC(val, tid);
+}
+#endif
 
 template <class Impl>
 typename FullO3CPU<Impl>::ListIt

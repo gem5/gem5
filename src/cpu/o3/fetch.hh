@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_FETCH_HH__
@@ -334,6 +335,15 @@ class DefaultFetch
 
     /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
+
+#if THE_ISA != ALPHA_ISA
+    /** Per-thread next Next PC.
+     *  This is not a real register but is used for
+     *  architectures that use a branch-delay slot.
+     *  (such as MIPS or Sparc)
+     */
+    Addr nextNPC[Impl::MaxThreads];
+#endif
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];

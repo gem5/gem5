@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_CPU_HH__
@@ -298,6 +299,12 @@ class FullO3CPU : public BaseFullCPU
 
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid);
+
+    /** Reads the next NPC of a specific thread. */
+    uint64_t readNextNPC(unsigned tid);
+
+    /** Sets the next NPC of a specific thread. */
+    void setNextNPC(uint64_t val, unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
