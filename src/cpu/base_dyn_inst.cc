@@ -71,8 +71,8 @@ my_hash_t thishash;
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(ExtMachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
-                               FullCPU *cpu)
-  : staticInst(machInst), traceData(NULL), cpu(cpu)/*, xc(cpu->xcBase())*/
+                               ImplCPU *cpu)
+  : staticInst(machInst), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 

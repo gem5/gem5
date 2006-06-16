@@ -112,7 +112,7 @@ DefaultDecode<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultDecode<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Decode, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -427,7 +427,7 @@ DefaultDecode<Impl>::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullCPU::DecodeIdx);
+            cpu->activateStage(O3CPU::DecodeIdx);
         }
     } else {
         // If it's not unblocking, then decode will not have any internal
@@ -436,7 +436,7 @@ DefaultDecode<Impl>::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullCPU::DecodeIdx);
+            cpu->deactivateStage(O3CPU::DecodeIdx);
         }
     }
 }

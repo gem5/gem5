@@ -28,6 +28,9 @@
  * Authors: Kevin Lim
  */
 
+#include "config/full_system.hh"
+#include "config/use_checker.hh"
+
 #include <algorithm>
 #include <string>
 
@@ -219,14 +222,14 @@ DefaultCommit<Impl>::regStats()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Commit, "Commit: Setting CPU pointer.\n");
     cpu = cpu_ptr;
 
     // Commit must broadcast the number of free entries it has at the start of
     // the simulation, so it starts as active.
-    cpu->activateStage(FullCPU::CommitIdx);
+    cpu->activateStage(O3CPU::CommitIdx);
 
     trapLatency = cpu->cycles(trapLatency);
     fetchTrapLatency = cpu->cycles(fetchTrapLatency);
@@ -395,10 +398,10 @@ DefaultCommit<Impl>::updateStatus()
 
     if (_nextStatus == Inactive && _status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
-        cpu->deactivateStage(FullCPU::CommitIdx);
+        cpu->deactivateStage(O3CPU::CommitIdx);
     } else if (_nextStatus == Active && _status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
-        cpu->activateStage(FullCPU::CommitIdx);
+        cpu->activateStage(O3CPU::CommitIdx);
     }
 
     _status = _nextStatus;
@@ -972,11 +975,13 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         head_inst->setCompleted();
     }
 
+#if USE_CHECKER
     // Use checker prior to updating anything due to traps or PC
     // based events.
     if (cpu->checker) {
         cpu->checker->verify(head_inst);
     }
+#endif
 
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
@@ -992,9 +997,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             return false;
         }
 
+#if USE_CHECKER
         if (cpu->checker && head_inst->isStore()) {
             cpu->checker->verify(head_inst);
         }
+#endif
 
         assert(!thread[tid]->inSyscall);
 

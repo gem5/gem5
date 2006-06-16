@@ -59,8 +59,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
 {
   public:
     // Typedef for the CPU.
-    typedef typename Impl::FullCPU FullCPU;
-    typedef typename FullCPU::ImplState ImplState;
+    typedef typename Impl::CPUType ImplCPU;
+    typedef typename ImplCPU::ImplState ImplState;
 
     // Binary machine instruction type.
     typedef TheISA::MachInst MachInst;
@@ -165,8 +165,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** How many source registers are ready. */
     unsigned readyRegs;
 
-    /** Pointer to the FullCPU object. */
-    FullCPU *cpu;
+    /** Pointer to the Impl's CPU object. */
+    ImplCPU *cpu;
 
     /** Pointer to the thread state. */
     ImplState *thread;
@@ -239,7 +239,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param cpu Pointer to the instruction's CPU.
      */
     BaseDynInst(ExtMachInst inst, Addr PC, Addr pred_PC, InstSeqNum seq_num,
-                FullCPU *cpu);
+                ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.

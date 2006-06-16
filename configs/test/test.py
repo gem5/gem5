@@ -14,6 +14,7 @@ parser = optparse.OptionParser(option_list=m5.standardOptions)
 parser.add_option("-c", "--cmd", default="hello")
 parser.add_option("-t", "--timing", action="store_true")
 parser.add_option("-f", "--full", action="store_true")
+parser.add_option("-m", "--maxtick", type="int")
 
 (options, args) = parser.parse_args()
 
@@ -34,7 +35,7 @@ mem = PhysicalMemory()
 if options.timing:
     cpu = TimingSimpleCPU()
 elif options.full:
-    cpu = DetailedCPU()
+    cpu = DetailedO3CPU()
 else:
     cpu = AtomicSimpleCPU()
 cpu.workload = process
@@ -48,7 +49,10 @@ root = Root(system = system)
 m5.instantiate(root)
 
 # simulate until program terminates
-exit_event = m5.simulate()
+if options.maxtick:
+    exit_event = m5.simulate(options.maxtick)
+else:
+    exit_event = m5.simulate()
 
 print 'Exiting @', m5.curTick(), 'because', exit_event.getCause()
 

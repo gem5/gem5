@@ -67,7 +67,7 @@ CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
 CpuModel('FullCPU', 'full_cpu_exec.cc',
          '#include "encumbered/cpu/full/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })
-CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
+CpuModel('AlphaO3CPU', 'alpha_o3_exec.cc',
          '#include "cpu/o3/alpha_dyn_inst.hh"',
          { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
 CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',

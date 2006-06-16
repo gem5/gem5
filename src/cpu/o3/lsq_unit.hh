@@ -61,7 +61,7 @@ class LSQUnit {
     typedef TheISA::IntReg IntReg;
   public:
     typedef typename Impl::Params Params;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
@@ -81,7 +81,7 @@ class LSQUnit {
     void regStats();
 
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr)
@@ -232,7 +232,7 @@ class LSQUnit {
 
   private:
     /** Pointer to the CPU. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Pointer to the IEW stage. */
     IEW *iewStage;
@@ -249,13 +249,13 @@ class LSQUnit {
     {
       protected:
         /** Pointer to CPU. */
-        FullCPU *cpu;
+        O3CPU *cpu;
         /** Pointer to LSQ. */
         LSQUnit *lsq;
 
       public:
         /** Default constructor. */
-        DcachePort(FullCPU *_cpu, LSQUnit *_lsq)
+        DcachePort(O3CPU *_cpu, LSQUnit *_lsq)
             : Port(_lsq->name() + "-dport"), cpu(_cpu), lsq(_lsq)
         { }
 
