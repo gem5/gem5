@@ -975,7 +975,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Use checker prior to updating anything due to traps or PC
     // based events.
     if (cpu->checker) {
-        cpu->checker->tick(head_inst);
+        cpu->checker->verify(head_inst);
     }
 
     // Check if the instruction caused a fault.  If so, trap.
@@ -993,7 +993,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         }
 
         if (cpu->checker && head_inst->isStore()) {
-            cpu->checker->tick(head_inst);
+            cpu->checker->verify(head_inst);
         }
 
         assert(!thread[tid]->inSyscall);

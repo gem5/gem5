@@ -77,6 +77,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
 
     Param<bool> defer_registration;
     Param<bool> exitOnError;
+    Param<bool> warnOnlyOnLoadError;
     Param<bool> function_trace;
     Param<Tick> function_trace_start;
 
@@ -110,6 +111,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
 
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(exitOnError, "exit on error"),
+    INIT_PARAM_DFLT(warnOnlyOnLoadError, "warn, but don't exit, if a load "
+                    "result errors", false),
     INIT_PARAM(function_trace, "Enable function trace"),
     INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
@@ -126,6 +129,7 @@ CREATE_SIM_OBJECT(OzoneChecker)
     params->max_loads_any_thread = 0;
     params->max_loads_all_threads = 0;
     params->exitOnError = exitOnError;
+    params->warnOnlyOnLoadError = warnOnlyOnLoadError;
     params->deferRegistration = defer_registration;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;

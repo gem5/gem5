@@ -789,7 +789,7 @@ LSQUnit<Impl>::storePostSend(Packet *pkt)
         // verify the value in memory for stores.
         storeQueue[storeWBIdx].inst->setCompleted();
         if (cpu->checker) {
-            cpu->checker->tick(storeQueue[storeWBIdx].inst);
+            cpu->checker->verify(storeQueue[storeWBIdx].inst);
         }
     }
 
@@ -885,7 +885,7 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // may get reported twice to the checker, but the checker can
     // handle that case.
     if (cpu->checker) {
-        cpu->checker->tick(storeQueue[store_idx].inst);
+        cpu->checker->verify(storeQueue[store_idx].inst);
     }
 }
 
