@@ -42,12 +42,12 @@ class Process;
 class System;
 
 /**
- * This file defines the parameters that will be used for the AlphaFullCPU.
+ * This file defines the parameters that will be used for the AlphaO3CPU.
  * This must be defined externally so that the Impl can have a params class
  * defined that it can pass to all of the individual stages.
  */
 
-class AlphaSimpleParams : public BaseFullCPU::Params
+class AlphaSimpleParams : public BaseO3CPU::Params
 {
   public:
 

@@ -41,12 +41,12 @@ template <class Impl>
 class AlphaDynInst;
 
 template <class Impl>
-class AlphaFullCPU;
+class AlphaO3CPU;
 
 /** Implementation specific struct that defines several key types to the
  *  CPU, the stages within the CPU, the time buffers, and the DynInst.
  *  The struct defines the ISA, the CPU policy, the specific DynInst, the
- *  specific FullCPU, and all of the structs from the time buffers to do
+ *  specific O3CPU, and all of the structs from the time buffers to do
  *  communication.
  *  This is one of the key things that must be defined for each hardware
  *  specific CPU implementation.
@@ -67,8 +67,14 @@ struct AlphaSimpleImpl
      */
     typedef RefCountingPtr<DynInst> DynInstPtr;
 
-    /** The FullCPU type to be used. */
-    typedef AlphaFullCPU<AlphaSimpleImpl> FullCPU;
+    /** The O3CPU type to be used. */
+    typedef AlphaO3CPU<AlphaSimpleImpl> O3CPU;
+
+    /** Same typedef, but for CPUType.  BaseDynInst may not always use
+     * an O3 CPU, so it's clearer to call it CPUType instead in that
+     * case.
+     */
+    typedef O3CPU CPUType;
 
     /** The Params to be passed to each stage. */
     typedef AlphaSimpleParams Params;

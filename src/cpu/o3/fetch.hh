@@ -58,7 +58,7 @@ class DefaultFetch
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::Params Params;
 
     /** Typedefs from the CPU policy. */
@@ -165,7 +165,7 @@ class DefaultFetch
     void regStats();
 
     /** Sets CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
@@ -297,8 +297,8 @@ class DefaultFetch
     int branchCount();
 
   private:
-    /** Pointer to the FullCPU. */
-    FullCPU *cpu;
+    /** Pointer to the O3CPU. */
+    O3CPU *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

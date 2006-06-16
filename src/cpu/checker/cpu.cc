@@ -78,6 +78,7 @@ CheckerCPU::CheckerCPU(Params *p)
     changedPC = willChangePC = changedNextPC = false;
 
     exitOnError = p->exitOnError;
+    warnOnlyOnLoadError = p->warnOnlyOnLoadError;
 #if FULL_SYSTEM
     itb = p->itb;
     dtb = p->dtb;
@@ -409,9 +410,17 @@ CheckerCPU::checkFlags(Request *req)
     }
 }
 
+void
+CheckerCPU::dumpAndExit()
+{
+    warn("%lli: Checker PC:%#x, next PC:%#x",
+         curTick, thread->readPC(), thread->readNextPC());
+    panic("Checker found an error!");
+}
+
 template <class DynInstPtr>
 void
-Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
+Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 {
     DynInstPtr inst;
 
@@ -485,7 +494,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                     warn("%lli: Changed PC does not match expected PC, "
                          "changed: %#x, expected: %#x",
                          curTick, thread->readPC(), newPC);
-                    handleError();
+                    CheckerCPU::handleError();
                 }
                 willChangePC = false;
             }
@@ -524,7 +533,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                 // possible that its ITB entry was kicked out.
                 warn("%lli: Instruction PC %#x was not found in the ITB!",
                      curTick, thread->readPC());
-                handleError();
+                handleError(inst);
 
                 // go to the next instruction
                 thread->setPC(thread->readNextPC());
@@ -676,7 +685,7 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
             warn("%lli: Changed PCs recently, may not be an error",
                  curTick);
         } else {
-            handleError();
+            handleError(inst);
         }
     }
 
@@ -686,7 +695,7 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
         warn("%lli: Binary instructions do not match! Inst: %#x, "
              "checker: %#x",
              curTick, mi, machInst);
-        handleError();
+        handleError(inst);
     }
 }
 
@@ -694,25 +703,33 @@ template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
 {
+    bool result_mismatch = false;
     if (inst->numDestRegs()) {
         // @todo: Support more destination registers.
         if (inst->isUnverifiable()) {
             // Unverifiable instructions assume they were executed
             // properly by the CPU. Grab the result from the
             // instruction and write it to the register.
-            RegIndex idx = inst->destRegIdx(0);
-            if (idx < TheISA::FP_Base_DepTag) {
-                thread->setIntReg(idx, inst->readIntResult());
-            } else if (idx < TheISA::Fpcr_DepTag) {
-                thread->setFloatRegBits(idx, inst->readIntResult());
-            } else {
-                thread->setMiscReg(idx, inst->readIntResult());
-            }
+            copyResult(inst);
         } else if (result.integer != inst->readIntResult()) {
-            warn("%lli: Instruction results do not match! (Values may not "
-                 "actually be integers) Inst: %#x, checker: %#x",
-                 curTick, inst->readIntResult(), result.integer);
-            handleError();
+            result_mismatch = true;
+        }
+    }
+
+    if (result_mismatch) {
+        warn("%lli: Instruction results do not match! (Values may not "
+             "actually be integers) Inst: %#x, checker: %#x",
+             curTick, inst->readIntResult(), result.integer);
+
+        // It's useful to verify load values from memory, but in MP
+        // systems the value obtained at execute may be different than
+        // the value obtained at completion.  Similarly DMA can
+        // present the same problem on even UP systems.  Thus there is
+        // the option to only warn on loads having a result error.
+        if (inst->isLoad() && warnOnlyOnLoadError) {
+            copyResult(inst);
+        } else {
+            handleError(inst);
         }
     }
 
@@ -720,7 +737,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         warn("%lli: Instruction next PCs do not match! Inst: %#x, "
              "checker: %#x",
              curTick, inst->readNextPC(), thread->readNextPC());
-        handleError();
+        handleError(inst);
     }
 
     // Checking side effect registers can be difficult if they are not
@@ -739,7 +756,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
                  curTick, misc_reg_idx,
                  inst->tcBase()->readMiscReg(misc_reg_idx),
                  thread->readMiscReg(misc_reg_idx));
-            handleError();
+            handleError(inst);
         }
     }
 }
@@ -748,6 +765,36 @@ template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateState()
 {
+}
+
+template <class DynInstPtr>
+void
+Checker<DynInstPtr>::copyResult(DynInstPtr &inst)
+{
+    RegIndex idx = inst->destRegIdx(0);
+    if (idx < TheISA::FP_Base_DepTag) {
+        thread->setIntReg(idx, inst->readIntResult());
+    } else if (idx < TheISA::Fpcr_DepTag) {
+        thread->setFloatRegBits(idx, inst->readIntResult());
+    } else {
+        thread->setMiscReg(idx, inst->readIntResult());
+    }
+}
+
+template <class DynInstPtr>
+void
+Checker<DynInstPtr>::dumpAndExit(DynInstPtr &inst)
+{
+    cprintf("Error detected, instruction information:\n");
+    cprintf("PC:%#x, nextPC:%#x\n[sn:%lli]\n[tid:%i]\n"
+            "Completed:%i\n",
+            inst->readPC(),
+            inst->readNextPC(),
+            inst->seqNum,
+            inst->threadNumber,
+            inst->isCompleted());
+    inst->dump();
+    CheckerCPU::dumpAndExit();
 }
 
 template <class DynInstPtr>
@@ -782,6 +829,6 @@ Checker<DynInstPtr>::dumpInsts()
 
 //template
 //class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
-
+// Manually instantiate checker
 template
 class Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >;

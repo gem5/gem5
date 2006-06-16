@@ -260,8 +260,8 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
-                       'FullCPU', 'AlphaFullCPU',
-                       'OzoneSimpleCPU', 'OzoneCPU', 'CheckerCPU']
+                       'FullCPU', 'AlphaO3CPU',
+                       'OzoneSimpleCPU', 'OzoneCPU']
 
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -289,6 +289,7 @@ sticky_opts.AddOptions(
                False),
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
+    BoolOption('USE_CHECKER', 'Use checker for detailed CPU models', False),
     ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
     ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
     BoolOption('BATCH', 'Use batch pool for build and tests', False),
@@ -303,7 +304,8 @@ nonsticky_opts.AddOptions(
 
 # These options get exported to #defines in config/*.hh (see m5/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
-                     'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP']
+                     'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
+                     'USE_CHECKER']
 
 # Define a handy 'no-op' action
 def no_action(target, source, env):
@@ -469,6 +471,10 @@ for build_path in build_paths:
             print "Compiling in", build_dir, "with MySQL support."
             env.ParseConfig(mysql_config_libs)
             env.ParseConfig(mysql_config_include)
+
+    # Check if the Checker is being used.  If so append it to env['CPU_MODELS']
+    if env['USE_CHECKER']:
+        env['CPU_MODELS'].append('CheckerCPU')
 
     # Save sticky option settings back to current options file
     sticky_opts.Save(current_opts_file, env)

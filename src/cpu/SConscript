@@ -92,6 +92,10 @@ env.Command('static_inst_exec_sigs.hh', models_db,
             Action(gen_cpu_exec_signatures, gen_sigs_string,
                    varlist = ['CPU_MODELS']))
 
+# List of suppported CPUs by the Checker.  Errors out if USE_CHECKER=True
+# and one of these are not being used.
+CheckerSupportedCPUList = ['AlphaO3CPU', 'OzoneCPU']
+
 #################################################################
 #
 # Include CPU-model-specific files based on set of models
@@ -116,7 +120,7 @@ if need_simple_base:
 if 'FastCPU' in env['CPU_MODELS']:
     sources += Split('fast/cpu.cc')
 
-if 'AlphaFullCPU' in env['CPU_MODELS']:
+if 'AlphaO3CPU' in env['CPU_MODELS']:
     sources += Split('''
         base_dyn_inst.cc
         o3/2bit_local_pred.cc
@@ -144,6 +148,8 @@ if 'AlphaFullCPU' in env['CPU_MODELS']:
         o3/store_set.cc
         o3/tournament_pred.cc
         ''')
+    if 'CheckerCPU' in env['CPU_MODELS']:
+        sources += Split('checker/o3_builder.cc')
 
 if 'OzoneSimpleCPU' in env['CPU_MODELS']:
     sources += Split('''
@@ -155,6 +161,8 @@ if 'OzoneSimpleCPU' in env['CPU_MODELS']:
         ozone/inst_queue.cc
         ozone/rename_table.cc
         ''')
+    if 'CheckerCPU' in env['CPU_MODELS']:
+        sources += Split('checker/ozone_builder.cc')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
     sources += Split('''
@@ -164,10 +172,17 @@ if 'OzoneCPU' in env['CPU_MODELS']:
         ''')
 
 if 'CheckerCPU' in env['CPU_MODELS']:
-    sources += Split('''
-        checker/cpu.cc
-        checker/o3_cpu_builder.cc
-        ''')
+    sources += Split('checker/cpu.cc')
+    checker_supports = False
+    for i in CheckerSupportedCPUList:
+        if i in env['CPU_MODELS']:
+            checker_supports = True
+    if not checker_supports:
+        print "Checker only supports CPU models %s, please " \
+              "set USE_CHECKER=False or use one of those CPU models" \
+              % CheckerSupportedCPUList
+        Exit(1)
+
 
 # FullCPU sources are included from m5/SConscript since they're not
 # below this point in the file hierarchy.

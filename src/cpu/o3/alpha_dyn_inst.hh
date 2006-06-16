@@ -51,7 +51,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
 {
   public:
     /** Typedef for the CPU. */
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
 
     /** Binary machine instruction type. */
     typedef TheISA::MachInst MachInst;
@@ -74,7 +74,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
   public:
     /** BaseDynInst constructor given a binary instruction. */
     AlphaDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC, InstSeqNum seq_num,
-                 FullCPU *cpu);
+                 O3CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     AlphaDynInst(StaticInstPtr &_staticInst);

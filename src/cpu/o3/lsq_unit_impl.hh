@@ -29,6 +29,8 @@
  *          Korey Sewell
  */
 
+#include "config/use_checker.hh"
+
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
@@ -171,7 +173,7 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
 
 template<class Impl>
 void
-LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
+LSQUnit<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
     dcachePort = new DcachePort(cpu, this);
@@ -180,9 +182,11 @@ LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
     dcachePort->setPeer(mem_dport);
     mem_dport->setPeer(dcachePort);
 
+#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setDcachePort(dcachePort);
     }
+#endif
 }
 
 template<class Impl>
@@ -710,7 +714,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        loadQueue[load_idx]->squashed = true;
+        loadQueue[load_idx]->setSquashed();
         loadQueue[load_idx] = NULL;
         --loads;
 
@@ -754,7 +758,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        storeQueue[store_idx].inst->squashed = true;
+        storeQueue[store_idx].inst->setSquashed();
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
 
@@ -788,9 +792,11 @@ LSQUnit<Impl>::storePostSend(Packet *pkt)
         // only works so long as the checker doesn't try to
         // verify the value in memory for stores.
         storeQueue[storeWBIdx].inst->setCompleted();
+#if USE_CHECKER
         if (cpu->checker) {
-            cpu->checker->tick(storeQueue[storeWBIdx].inst);
+            cpu->checker->verify(storeQueue[storeWBIdx].inst);
         }
+#endif
     }
 
     if (pkt->result != Packet::Success) {
@@ -884,9 +890,11 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can
     // handle that case.
+#if USE_CHECKER
     if (cpu->checker) {
-        cpu->checker->tick(storeQueue[store_idx].inst);
+        cpu->checker->verify(storeQueue[store_idx].inst);
     }
+#endif
 }
 
 template <class Impl>

@@ -29,6 +29,8 @@
  *          Korey Sewell
  */
 
+#include "config/use_checker.hh"
+
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "cpu/checker/cpu.hh"
@@ -269,7 +271,7 @@ DefaultFetch<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Fetch, "Setting the CPU pointer.\n");
     cpu = cpu_ptr;
@@ -281,9 +283,11 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     icachePort->setPeer(mem_dport);
     mem_dport->setPeer(icachePort);
 
+#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setIcachePort(icachePort);
     }
+#endif
 
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
@@ -437,7 +441,7 @@ DefaultFetch<Impl>::switchToActive()
     if (_status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
 
-        cpu->activateStage(FullCPU::FetchIdx);
+        cpu->activateStage(O3CPU::FetchIdx);
 
         _status = Active;
     }
@@ -450,7 +454,7 @@ DefaultFetch<Impl>::switchToInactive()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullCPU::FetchIdx);
+        cpu->deactivateStage(O3CPU::FetchIdx);
 
         _status = Inactive;
     }
@@ -669,7 +673,7 @@ DefaultFetch<Impl>::updateFetchStatus()
                             "completion\n",tid);
                 }
 
-                cpu->activateStage(FullCPU::FetchIdx);
+                cpu->activateStage(O3CPU::FetchIdx);
             }
 
             return Active;
@@ -680,7 +684,7 @@ DefaultFetch<Impl>::updateFetchStatus()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullCPU::FetchIdx);
+        cpu->deactivateStage(O3CPU::FetchIdx);
     }
 
     return Inactive;

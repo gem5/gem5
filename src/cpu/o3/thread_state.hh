@@ -58,11 +58,11 @@ class Process;
 template <class Impl>
 struct O3ThreadState : public ThreadState {
     typedef ThreadContext::Status Status;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
 
   private:
     /** Pointer to the CPU. */
-    FullCPU *cpu;
+    O3CPU *cpu;
   public:
     /** Whether or not the thread is currently in syscall mode, and
      * thus able to be externally updated without squashing.
@@ -75,12 +75,12 @@ struct O3ThreadState : public ThreadState {
     bool trapPending;
 
 #if FULL_SYSTEM
-    O3ThreadState(FullCPU *_cpu, int _thread_num)
+    O3ThreadState(O3CPU *_cpu, int _thread_num)
         : ThreadState(-1, _thread_num),
           inSyscall(0), trapPending(0)
     { }
 #else
-    O3ThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid,
+    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process, int _asid,
                   MemObject *mem)
         : ThreadState(-1, _thread_num, mem, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)

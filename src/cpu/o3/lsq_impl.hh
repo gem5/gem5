@@ -126,7 +126,7 @@ LSQ<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 
 template<class Impl>
 void
-LSQ<Impl>::setCPU(FullCPU *cpu_ptr)
+LSQ<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 

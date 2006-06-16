@@ -71,8 +71,8 @@ my_hash_t thishash;
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(ExtMachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
-                               FullCPU *cpu)
-  : staticInst(machInst), traceData(NULL), cpu(cpu)/*, xc(cpu->xcBase())*/
+                               ImplCPU *cpu)
+  : staticInst(machInst), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
@@ -99,39 +99,18 @@ BaseDynInst<Impl>::initVars()
     memData = NULL;
     effAddr = 0;
     physEffAddr = 0;
-    storeSize = 0;
 
     readyRegs = 0;
 
     instResult.integer = 0;
 
-    // May want to turn this into a bit vector or something.
-    completed = false;
-    resultReady = false;
-    canIssue = false;
-    issued = false;
-    executed = false;
-    canCommit = false;
-    committed = false;
-    squashed = false;
-    squashedInIQ = false;
-    squashedInLSQ = false;
-    squashedInROB = false;
+    status.reset();
+
     eaCalcDone = false;
     memOpDone = false;
+
     lqIdx = -1;
     sqIdx = -1;
-    reachedCommit = false;
-
-    blockingInst = false;
-    recoverInst = false;
-
-    iqEntry = false;
-    robEntry = false;
-
-    serializeBefore = false;
-    serializeAfter = false;
-    serializeHandled = false;
 
     // Eventually make this a parameter.
     threadNumber = 0;
@@ -294,7 +273,7 @@ void
 BaseDynInst<Impl>::markSrcRegReady()
 {
     if (++readyRegs == numSrcRegs()) {
-        canIssue = true;
+        status.set(CanIssue);
     }
 }
 
@@ -302,13 +281,9 @@ template <class Impl>
 void
 BaseDynInst<Impl>::markSrcRegReady(RegIndex src_idx)
 {
-    ++readyRegs;
-
     _readySrcRegIdx[src_idx] = true;
 
-    if (readyRegs == numSrcRegs()) {
-        canIssue = true;
-    }
+    markSrcRegReady();
 }
 
 template <class Impl>

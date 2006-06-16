@@ -37,15 +37,15 @@
 #include "cpu/o3/fu_pool.hh"
 #include "sim/builder.hh"
 
-class DerivAlphaFullCPU : public AlphaFullCPU<AlphaSimpleImpl>
+class DerivAlphaO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
 {
   public:
-    DerivAlphaFullCPU(AlphaSimpleParams *p)
-        : AlphaFullCPU<AlphaSimpleImpl>(p)
+    DerivAlphaO3CPU(AlphaSimpleParams *p)
+        : AlphaO3CPU<AlphaSimpleImpl>(p)
     { }
 };
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaO3CPU)
 
     Param<int> clock;
     Param<int> numThreads;
@@ -144,9 +144,9 @@ Param<bool> defer_registration;
 Param<bool> function_trace;
 Param<Tick> function_trace_start;
 
-END_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+END_DECLARE_SIM_OBJECT_PARAMS(DerivAlphaO3CPU)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaO3CPU)
 
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
@@ -261,11 +261,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(function_trace, "Enable function trace"),
     INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
-END_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
+END_INIT_SIM_OBJECT_PARAMS(DerivAlphaO3CPU)
 
-CREATE_SIM_OBJECT(DerivAlphaFullCPU)
+CREATE_SIM_OBJECT(DerivAlphaO3CPU)
 {
-    DerivAlphaFullCPU *cpu;
+    DerivAlphaO3CPU *cpu;
 
 #if FULL_SYSTEM
     // Full-system only supports a single thread for the moment.
@@ -386,10 +386,10 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
 
-    cpu = new DerivAlphaFullCPU(params);
+    cpu = new DerivAlphaO3CPU(params);
 
     return cpu;
 }
 
-REGISTER_SIM_OBJECT("DerivAlphaFullCPU", DerivAlphaFullCPU)
+REGISTER_SIM_OBJECT("DerivAlphaO3CPU", DerivAlphaO3CPU)
 

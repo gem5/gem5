@@ -776,7 +776,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 // complete.
                 ++freeEntries;
                 count[tid]--;
-                issuing_inst->removeInIQ();
+                issuing_inst->clearInIQ();
             } else {
                 memDepUnit[tid].issue(issuing_inst);
             }
@@ -1082,7 +1082,7 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
             // inst will flow through the rest of the pipeline.
             squashed_inst->setIssued();
             squashed_inst->setCanCommit();
-            squashed_inst->removeInIQ();
+            squashed_inst->clearInIQ();
 
             //Update Thread IQ Count
             count[squashed_inst->threadNumber]--;

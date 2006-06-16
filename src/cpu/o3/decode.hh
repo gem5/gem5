@@ -48,7 +48,7 @@ class DefaultDecode
 {
   private:
     // Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
@@ -95,7 +95,7 @@ class DefaultDecode
     void regStats();
 
     /** Sets CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -189,7 +189,7 @@ class DefaultDecode
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

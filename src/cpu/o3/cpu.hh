@@ -57,13 +57,13 @@ class ThreadContext;
 class MemObject;
 class Process;
 
-class BaseFullCPU : public BaseCPU
+class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
     typedef BaseCPU::Params Params;
 
-    BaseFullCPU(Params *params);
+    BaseO3CPU(Params *params);
 
     void regStats();
 
@@ -79,7 +79,7 @@ class BaseFullCPU : public BaseCPU
  * tick() function for the CPU is defined here.
  */
 template <class Impl>
-class FullO3CPU : public BaseFullCPU
+class FullO3CPU : public BaseO3CPU
 {
   public:
     typedef TheISA::FloatReg FloatReg;

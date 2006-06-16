@@ -72,7 +72,7 @@ class PhysRegFile
     // Will make these registers public for now, but they probably should
     // be private eventually with some accessor functions.
   public:
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
 
     /**
      * Constructs a physical register file with the specified amount of
@@ -278,11 +278,11 @@ class PhysRegFile
 
   private:
     /** CPU pointer. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
   public:
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr) { cpu = cpu_ptr; }
+    void setCPU(O3CPU *cpu_ptr) { cpu = cpu_ptr; }
 
     /** Number of physical integer registers. */
     unsigned numPhysicalIntRegs;

@@ -68,7 +68,7 @@ class DefaultCommit
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
@@ -146,7 +146,7 @@ class DefaultCommit
     void regStats();
 
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the list of threads. */
     void setThreads(std::vector<Thread *> &threads);
@@ -326,8 +326,8 @@ class DefaultCommit
     ROB *rob;
 
   private:
-    /** Pointer to FullCPU. */
-    FullCPU *cpu;
+    /** Pointer to O3CPU. */
+    O3CPU *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
