@@ -13,7 +13,7 @@ parser = optparse.OptionParser(option_list=m5.standardOptions)
 
 parser.add_option("-c", "--cmd", default="hello")
 parser.add_option("-t", "--timing", action="store_true")
-parser.add_option("-f", "--full", action="store_true")
+parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
 
 (options, args) = parser.parse_args()
@@ -34,7 +34,7 @@ mem = PhysicalMemory()
 
 if options.timing:
     cpu = TimingSimpleCPU()
-elif options.full:
+elif options.detailed:
     cpu = DetailedO3CPU()
 else:
     cpu = AtomicSimpleCPU()
