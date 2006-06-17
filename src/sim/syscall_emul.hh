@@ -33,8 +33,8 @@
 #ifndef __SIM_SYSCALL_EMUL_HH__
 #define __SIM_SYSCALL_EMUL_HH__
 
-#define BSD_HOST (defined(__APPLE__) || defined(__OpenBSD__) || \
-                  defined(__FreeBSD__))
+#define NO_STAT64 (defined(__APPLE__) || defined(__OpenBSD__) || \
+                   defined(__FreeBSD__) || defined(__CYGWIN__))
 
 ///
 /// @file syscall_emul.hh
@@ -507,7 +507,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
         return -EBADF;
     }
 
-#if BSD_HOST
+#if NO_STAT64
     struct stat  hostBuf;
     int result = fstat(process->sim_fd(fd), &hostBuf);
 #else
@@ -557,7 +557,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
       return -EFAULT;
 
-#if BSD_HOST
+#if NO_STAT64
     struct stat hostBuf;
     int result = lstat(path.c_str(), &hostBuf);
 #else
