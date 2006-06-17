@@ -30,7 +30,7 @@
 import os, re, sys, types, inspect, copy
 
 import m5
-from m5 import panic
+from m5 import panic, cc_main
 from convert import *
 from multidict import multidict
 
@@ -529,7 +529,7 @@ class SimObject(object):
     def getCCObject(self):
         if not self._ccObject:
             self._ccObject = -1 # flag to catch cycles in recursion
-            self._ccObject = m5.main.createSimObject(self.path())
+            self._ccObject = cc_main.createSimObject(self.path())
         elif self._ccObject == -1:
             raise RuntimeError, "%s: recursive call to getCCObject()" \
                   % self.path()
@@ -1443,7 +1443,7 @@ class PortRef(object):
         if self.ccConnected: # already done this
             return
         peer = self.peer
-        m5.main.connectPorts(self.simobj.getCCObject(), self.name, self.index,
+        cc_main.connectPorts(self.simobj.getCCObject(), self.name, self.index,
                              peer.simobj.getCCObject(), peer.name, peer.index)
         self.ccConnected = True
         peer.ccConnected = True
