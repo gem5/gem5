@@ -427,11 +427,6 @@ finalInit()
 
     SimObject::regAllStats();
 
-    // uncomment the following to get PC-based execution-time profile
-#ifdef DO_PROFILE
-    init_profile((char *)&_init, (char *)&_fini);
-#endif
-
     // Check to make sure that the stats package is properly initialized
     Stats::check();
 

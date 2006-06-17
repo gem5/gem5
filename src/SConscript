@@ -108,7 +108,6 @@ base_sources = Split('''
 	sim/main.cc
         python/swig/cc_main_wrap.cc
 	sim/param.cc
-	sim/profile.cc
 	sim/root.cc
 	sim/serialize.cc
 	sim/sim_events.cc
