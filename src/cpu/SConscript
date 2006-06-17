@@ -184,7 +184,7 @@ if 'CheckerCPU' in env['CPU_MODELS']:
         Exit(1)
 
 
-# FullCPU sources are included from m5/SConscript since they're not
+# FullCPU sources are included from src/SConscript since they're not
 # below this point in the file hierarchy.
 
 # Convert file names to SCons File objects.  This takes care of the

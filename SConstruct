@@ -39,17 +39,20 @@
 #
 # You can build M5 in a different directory as long as there is a
 # 'build/<CONFIG>' somewhere along the target path.  The build system
-# expdects that all configs under the same build directory are being
+# expects that all configs under the same build directory are being
 # built for the same host system.
 #
 # Examples:
-#   These two commands are equivalent.  The '-u' option tells scons to
-#   search up the directory tree for this SConstruct file.
+#
+#   The following two commands are equivalent.  The '-u' option tells
+#   scons to search up the directory tree for this SConstruct file.
 #   % cd <path-to-src>/m5 ; scons build/ALPHA_FS/m5.debug
 #   % cd <path-to-src>/m5/build/ALPHA_FS; scons -u m5.debug
-#   These two commands are equivalent and demonstrate building in a
-#   directory outside of the source tree.  The '-C' option tells scons
-#   to chdir to the specified directory to find this SConstruct file.
+#
+#   The following two commands are equivalent and demonstrate building
+#   in a directory outside of the source tree.  The '-C' option tells
+#   scons to chdir to the specified directory to find this SConstruct
+#   file.
 #   % cd <path-to-src>/m5 ; scons /local/foo/build/ALPHA_FS/m5.debug
 #   % cd /local/foo/build/ALPHA_FS; scons -C <path-to-src>/m5 m5.debug
 #
@@ -302,7 +305,7 @@ nonsticky_opts.AddOptions(
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 
-# These options get exported to #defines in config/*.hh (see m5/SConscript).
+# These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                      'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
                      'USE_CHECKER']
@@ -488,7 +491,7 @@ for build_path in build_paths:
     if env['USE_SSE2']:
         env.Append(CCFLAGS='-msse2')
 
-    # The m5/SConscript file sets up the build rules in 'env' according
+    # The src/SConscript file sets up the build rules in 'env' according
     # to the configured options.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
     envList = SConscript('src/SConscript', build_dir = build_path,
