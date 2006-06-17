@@ -49,6 +49,10 @@
 #include <machine/endian.h>
 #endif
 
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#endif
+
 //These functions actually perform the swapping for parameters
 //of various bit lengths
 static inline uint64_t
@@ -56,6 +60,8 @@ swap_byte64(uint64_t x)
 {
 #if defined(linux)
     return bswap_64(x);
+#elif defined(__APPLE__)
+    return OSSwapInt64(x);
 #else
     return  (uint64_t)((((uint64_t)(x) & 0xff) << 56) |
             ((uint64_t)(x) & 0xff00ULL) << 40 |
@@ -73,6 +79,8 @@ swap_byte32(uint32_t x)
 {
 #if defined(linux)
     return bswap_32(x);
+#elif defined(__APPLE__)
+    return OSSwapInt32(x);
 #else
     return  (uint32_t)(((uint32_t)(x) & 0xff) << 24 |
             ((uint32_t)(x) & 0xff00) << 8 | ((uint32_t)(x) & 0xff0000) >> 8 |
@@ -85,6 +93,8 @@ swap_byte16(uint16_t x)
 {
 #if defined(linux)
     return bswap_16(x);
+#elif defined(__APPLE__)
+    return OSSwapInt16(x);
 #else
     return (uint16_t)(((uint16_t)(x) & 0xff) << 8 |
                       ((uint16_t)(x) & 0xff00) >> 8);
