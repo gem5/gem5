@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
 #ifndef __ARCH_ALPHA_SYSTEM_HH__
