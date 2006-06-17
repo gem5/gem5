@@ -276,7 +276,7 @@ DefaultIEW<Impl>::initStage()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultIEW<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(IEW, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -284,7 +284,7 @@ DefaultIEW<Impl>::setCPU(FullCPU *cpu_ptr)
     instQueue.setCPU(cpu_ptr);
     ldstQueue.setCPU(cpu_ptr);
 
-    cpu->activateStage(FullCPU::IEWIdx);
+    cpu->activateStage(O3CPU::IEWIdx);
 }
 
 template<class Impl>
@@ -579,7 +579,7 @@ DefaultIEW<Impl>::validInstsFromRename()
     unsigned inst_count = 0;
 
     for (int i=0; i<fromRename->size; i++) {
-        if (!fromRename->insts[i]->squashed)
+        if (!fromRename->insts[i]->isSquashed())
             inst_count++;
     }
 
@@ -857,7 +857,7 @@ inline void
 DefaultIEW<Impl>::activateStage()
 {
     DPRINTF(Activity, "Activating stage.\n");
-    cpu->activateStage(FullCPU::IEWIdx);
+    cpu->activateStage(O3CPU::IEWIdx);
 }
 
 template <class Impl>
@@ -865,7 +865,7 @@ inline void
 DefaultIEW<Impl>::deactivateStage()
 {
     DPRINTF(Activity, "Deactivating stage.\n");
-    cpu->deactivateStage(FullCPU::IEWIdx);
+    cpu->deactivateStage(O3CPU::IEWIdx);
 }
 
 template<class Impl>

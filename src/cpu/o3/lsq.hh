@@ -44,7 +44,7 @@ template <class Impl>
 class LSQ {
   public:
     typedef typename Impl::Params Params;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::LSQUnit LSQUnit;
@@ -68,7 +68,7 @@ class LSQ {
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr);
     /** Switches out the LSQ. */
@@ -275,7 +275,7 @@ class LSQ {
     LSQUnit thread[Impl::MaxThreads];
 
     /** The CPU pointer. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** The IEW stage pointer. */
     IEW *iewStage;

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_COMMIT_HH__
@@ -67,7 +68,7 @@ class DefaultCommit
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
@@ -145,7 +146,7 @@ class DefaultCommit
     void regStats();
 
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the list of threads. */
     void setThreads(std::vector<Thread *> &threads);
@@ -280,11 +281,19 @@ class DefaultCommit
     /** Sets the PC of a specific thread. */
     void setPC(uint64_t val, unsigned tid) { PC[tid] = val; }
 
-    /** Reads the PC of a specific thread. */
+    /** Reads the next PC of a specific thread. */
     uint64_t readNextPC(unsigned tid) { return nextPC[tid]; }
 
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
+
+#if THE_ISA != ALPHA_ISA
+    /** Reads the next NPC of a specific thread. */
+    uint64_t readNextPC(unsigned tid) { return nextNPC[tid]; }
+
+    /** Sets the next NPC of a specific thread. */
+    void setNextPC(uint64_t val, unsigned tid) { nextNPC[tid] = val; }
+#endif
 
   private:
     /** Time buffer interface. */
@@ -317,8 +326,8 @@ class DefaultCommit
     ROB *rob;
 
   private:
-    /** Pointer to FullCPU. */
-    FullCPU *cpu;
+    /** Pointer to O3CPU. */
+    O3CPU *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
@@ -396,6 +405,9 @@ class DefaultCommit
 
     /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
+
+    /** The next NPC of each thread. */
+    Addr nextNPC[Impl::MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_CPU_HH__
@@ -56,13 +57,13 @@ class ThreadContext;
 class MemObject;
 class Process;
 
-class BaseFullCPU : public BaseCPU
+class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
     typedef BaseCPU::Params Params;
 
-    BaseFullCPU(Params *params);
+    BaseO3CPU(Params *params);
 
     void regStats();
 
@@ -78,7 +79,7 @@ class BaseFullCPU : public BaseCPU
  * tick() function for the CPU is defined here.
  */
 template <class Impl>
-class FullO3CPU : public BaseFullCPU
+class FullO3CPU : public BaseO3CPU
 {
   public:
     typedef TheISA::FloatReg FloatReg;
@@ -298,6 +299,12 @@ class FullO3CPU : public BaseFullCPU
 
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid);
+
+    /** Reads the next NPC of a specific thread. */
+    uint64_t readNextNPC(unsigned tid);
+
+    /** Sets the next NPC of a specific thread. */
+    void setNextNPC(uint64_t val, unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.

@@ -32,7 +32,7 @@
 
 template <class Impl>
 AlphaDynInst<Impl>::AlphaDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,
-                                 InstSeqNum seq_num, FullCPU *cpu)
+                                 InstSeqNum seq_num, O3CPU *cpu)
     : BaseDynInst<Impl>(inst, PC, Pred_PC, seq_num, cpu)
 {
     initVars();

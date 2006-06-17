@@ -168,7 +168,7 @@ sayHello(ostream &out)
 }
 
 
-extern "C" { void init_main(); }
+extern "C" { void init_cc_main(); }
 
 int
 main(int argc, char **argv)
@@ -260,8 +260,8 @@ main(int argc, char **argv)
     Py_Initialize();
     PySys_SetArgv(argc, argv);
 
-    // initialize SWIG 'main' module
-    init_main();
+    // initialize SWIG 'cc_main' module
+    init_cc_main();
 
     if (argc > 0) {
         // extra arg(s): first is script file, remaining ones are args
@@ -298,6 +298,14 @@ main(int argc, char **argv)
     // clean up Python intepreter.
     Py_Finalize();
 }
+
+
+void
+setOutputDir(const string &dir)
+{
+    simout.setDirectory(dir);
+}
+
 
 IniFile inifile;
 

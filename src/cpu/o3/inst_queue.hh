@@ -68,7 +68,7 @@ class InstructionQueue
 {
   public:
     //Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
 
@@ -80,7 +80,7 @@ class InstructionQueue
     // Typedef of iterator through the list of instructions.
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
-    friend class Impl::FullCPU;
+    friend class Impl::O3CPU;
 
     /** FU completion event class. */
     class FUCompletion : public Event {
@@ -125,7 +125,7 @@ class InstructionQueue
     void resetState();
 
     /** Sets CPU pointer. */
-    void setCPU(FullCPU *_cpu) { cpu = _cpu; }
+    void setCPU(O3CPU *_cpu) { cpu = _cpu; }
 
     /** Sets active threads list. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
@@ -252,7 +252,7 @@ class InstructionQueue
     /////////////////////////
 
     /** Pointer to the CPU. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Cache interface. */
     MemInterface *dcacheInterface;

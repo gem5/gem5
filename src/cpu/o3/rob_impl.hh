@@ -100,7 +100,7 @@ ROB<Impl>::name() const
 
 template <class Impl>
 void
-ROB<Impl>::setCPU(FullCPU *cpu_ptr)
+ROB<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 
@@ -276,7 +276,7 @@ ROB<Impl>::retireHead(unsigned tid)
     --numInstsInROB;
     --threadEntries[tid];
 
-    head_inst->removeInROB();
+    head_inst->clearInROB();
     head_inst->setCommitted();
 
     instList[tid].erase(head_it);

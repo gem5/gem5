@@ -68,7 +68,7 @@ class DefaultIEW
     //Typedefs from Impl
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::Params Params;
 
     typedef typename CPUPol::IQ IQ;
@@ -80,7 +80,7 @@ class DefaultIEW
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::IssueStruct IssueStruct;
 
-    friend class Impl::FullCPU;
+    friend class Impl::O3CPU;
     friend class CPUPol::IQ;
 
   public:
@@ -126,7 +126,7 @@ class DefaultIEW
     void initStage();
 
     /** Sets CPU pointer for IEW, IQ, and LSQ. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets main time buffer used for backwards communication. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -331,7 +331,7 @@ class DefaultIEW
 
   private:
     /** CPU pointer. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Records if IEW has written to the time buffer this cycle, so that the
      * CPU can deschedule itself if there is no activity.

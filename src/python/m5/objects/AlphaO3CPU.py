@@ -2,8 +2,8 @@ from m5 import build_env
 from m5.config import *
 from BaseCPU import BaseCPU
 
-class DerivAlphaFullCPU(BaseCPU):
-    type = 'DerivAlphaFullCPU'
+class DerivAlphaO3CPU(BaseCPU):
+    type = 'DerivAlphaO3CPU'
     activity = Param.Unsigned("Initial count")
     numThreads = Param.Unsigned("number of HW thread contexts")
 

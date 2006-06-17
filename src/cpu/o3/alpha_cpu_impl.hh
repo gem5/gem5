@@ -28,6 +28,8 @@
  * Authors: Kevin Lim
  */
 
+#include "config/use_checker.hh"
+
 #include "arch/alpha/faults.hh"
 #include "base/cprintf.hh"
 #include "base/statistics.hh"
@@ -53,14 +55,14 @@
 using namespace TheISA;
 
 template <class Impl>
-AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
+AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
 #if FULL_SYSTEM
     : FullO3CPU<Impl>(params), itb(params->itb), dtb(params->dtb)
 #else
     : FullO3CPU<Impl>(params)
 #endif
 {
-    DPRINTF(FullCPU, "AlphaFullCPU: Creating AlphaFullCPU object.\n");
+    DPRINTF(O3CPU, "Creating AlphaO3CPU object.\n");
 
     // Setup any thread state.
     this->thread.resize(this->numThreads);
@@ -73,7 +75,7 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         this->thread[i]->setStatus(ThreadContext::Suspended);
 #else
         if (i < params->workload.size()) {
-            DPRINTF(FullCPU, "FullCPU: Workload[%i] process is %#x",
+            DPRINTF(O3CPU, "Workload[%i] process is %#x",
                     i, this->thread[i]);
             this->thread[i] = new Thread(this, i, params->workload[i],
                                          i, params->mem);
@@ -110,14 +112,16 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
         // Setup the TC that will serve as the interface to the threads/CPU.
         AlphaTC *alpha_tc = new AlphaTC;
 
+        tc = alpha_tc;
+
         // If we're using a checker, then the TC should be the
         // CheckerThreadContext.
+#if USE_CHECKER
         if (params->checker) {
             tc = new CheckerThreadContext<AlphaTC>(
                 alpha_tc, this->checker);
-        } else {
-            tc = alpha_tc;
         }
+#endif
 
         alpha_tc->cpu = this;
         alpha_tc->thread = this->thread[i];
@@ -172,7 +176,7 @@ AlphaFullCPU<Impl>::AlphaFullCPU(Params *params)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::regStats()
+AlphaO3CPU<Impl>::regStats()
 {
     // Register stats for everything that has stats.
     this->fullCPURegStats();
@@ -186,7 +190,7 @@ AlphaFullCPU<Impl>::regStats()
 #if FULL_SYSTEM
 template <class Impl>
 VirtualPort *
-AlphaFullCPU<Impl>::AlphaTC::getVirtPort(ThreadContext *src_tc)
+AlphaO3CPU<Impl>::AlphaTC::getVirtPort(ThreadContext *src_tc)
 {
     if (!src_tc)
         return thread->getVirtPort();
@@ -203,7 +207,7 @@ AlphaFullCPU<Impl>::AlphaTC::getVirtPort(ThreadContext *src_tc)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::dumpFuncProfile()
+AlphaO3CPU<Impl>::AlphaTC::dumpFuncProfile()
 {
     // Currently not supported
 }
@@ -211,7 +215,7 @@ AlphaFullCPU<Impl>::AlphaTC::dumpFuncProfile()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
+AlphaO3CPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
 #if FULL_SYSTEM
@@ -253,7 +257,7 @@ AlphaFullCPU<Impl>::AlphaTC::takeOverFrom(ThreadContext *old_context)
 #if FULL_SYSTEM
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::delVirtPort(VirtualPort *vp)
+AlphaO3CPU<Impl>::AlphaTC::delVirtPort(VirtualPort *vp)
 {
     delete vp->getPeer();
     delete vp;
@@ -262,9 +266,9 @@ AlphaFullCPU<Impl>::AlphaTC::delVirtPort(VirtualPort *vp)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::activate(int delay)
+AlphaO3CPU<Impl>::AlphaTC::activate(int delay)
 {
-    DPRINTF(FullCPU, "Calling activate on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling activate on AlphaTC\n");
 
     if (thread->status() == ThreadContext::Active)
         return;
@@ -286,9 +290,9 @@ AlphaFullCPU<Impl>::AlphaTC::activate(int delay)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::suspend()
+AlphaO3CPU<Impl>::AlphaTC::suspend()
 {
-    DPRINTF(FullCPU, "Calling suspend on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling suspend on AlphaTC\n");
 
     if (thread->status() == ThreadContext::Suspended)
         return;
@@ -312,9 +316,9 @@ AlphaFullCPU<Impl>::AlphaTC::suspend()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::deallocate()
+AlphaO3CPU<Impl>::AlphaTC::deallocate()
 {
-    DPRINTF(FullCPU, "Calling deallocate on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling deallocate on AlphaTC\n");
 
     if (thread->status() == ThreadContext::Unallocated)
         return;
@@ -325,9 +329,9 @@ AlphaFullCPU<Impl>::AlphaTC::deallocate()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::halt()
+AlphaO3CPU<Impl>::AlphaTC::halt()
 {
-    DPRINTF(FullCPU, "Calling halt on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling halt on AlphaTC\n");
 
     if (thread->status() == ThreadContext::Halted)
         return;
@@ -338,7 +342,7 @@ AlphaFullCPU<Impl>::AlphaTC::halt()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::regStats(const std::string &name)
+AlphaO3CPU<Impl>::AlphaTC::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
     thread->kernelStats = new Kernel::Statistics(cpu->system);
@@ -348,7 +352,7 @@ AlphaFullCPU<Impl>::AlphaTC::regStats(const std::string &name)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::serialize(std::ostream &os)
+AlphaO3CPU<Impl>::AlphaTC::serialize(std::ostream &os)
 {
 #if FULL_SYSTEM
     if (thread->kernelStats)
@@ -359,7 +363,7 @@ AlphaFullCPU<Impl>::AlphaTC::serialize(std::ostream &os)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::unserialize(Checkpoint *cp, const std::string &section)
+AlphaO3CPU<Impl>::AlphaTC::unserialize(Checkpoint *cp, const std::string &section)
 {
 #if FULL_SYSTEM
     if (thread->kernelStats)
@@ -371,46 +375,46 @@ AlphaFullCPU<Impl>::AlphaTC::unserialize(Checkpoint *cp, const std::string &sect
 #if FULL_SYSTEM
 template <class Impl>
 EndQuiesceEvent *
-AlphaFullCPU<Impl>::AlphaTC::getQuiesceEvent()
+AlphaO3CPU<Impl>::AlphaTC::getQuiesceEvent()
 {
     return thread->quiesceEvent;
 }
 
 template <class Impl>
 Tick
-AlphaFullCPU<Impl>::AlphaTC::readLastActivate()
+AlphaO3CPU<Impl>::AlphaTC::readLastActivate()
 {
     return thread->lastActivate;
 }
 
 template <class Impl>
 Tick
-AlphaFullCPU<Impl>::AlphaTC::readLastSuspend()
+AlphaO3CPU<Impl>::AlphaTC::readLastSuspend()
 {
     return thread->lastSuspend;
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::profileClear()
+AlphaO3CPU<Impl>::AlphaTC::profileClear()
 {}
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::profileSample()
+AlphaO3CPU<Impl>::AlphaTC::profileSample()
 {}
 #endif
 
 template <class Impl>
 TheISA::MachInst
-AlphaFullCPU<Impl>::AlphaTC:: getInst()
+AlphaO3CPU<Impl>::AlphaTC:: getInst()
 {
     return thread->getInst();
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::copyArchRegs(ThreadContext *tc)
+AlphaO3CPU<Impl>::AlphaTC::copyArchRegs(ThreadContext *tc)
 {
     // This function will mess things up unless the ROB is empty and
     // there are no instructions in the pipeline.
@@ -421,7 +425,7 @@ AlphaFullCPU<Impl>::AlphaTC::copyArchRegs(ThreadContext *tc)
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i) {
         renamed_reg = cpu->renameMap[tid].lookup(i);
 
-        DPRINTF(FullCPU, "FullCPU: Copying over register %i, had data %lli, "
+        DPRINTF(O3CPU, "Copying over register %i, had data %lli, "
                 "now has data %lli.\n",
                 renamed_reg, cpu->readIntReg(renamed_reg),
                 tc->readIntReg(i));
@@ -449,19 +453,19 @@ AlphaFullCPU<Impl>::AlphaTC::copyArchRegs(ThreadContext *tc)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::clearArchRegs()
+AlphaO3CPU<Impl>::AlphaTC::clearArchRegs()
 {}
 
 template <class Impl>
 uint64_t
-AlphaFullCPU<Impl>::AlphaTC::readIntReg(int reg_idx)
+AlphaO3CPU<Impl>::AlphaTC::readIntReg(int reg_idx)
 {
     return cpu->readArchIntReg(reg_idx, thread->readTid());
 }
 
 template <class Impl>
 FloatReg
-AlphaFullCPU<Impl>::AlphaTC::readFloatReg(int reg_idx, int width)
+AlphaO3CPU<Impl>::AlphaTC::readFloatReg(int reg_idx, int width)
 {
     switch(width) {
       case 32:
@@ -476,14 +480,14 @@ AlphaFullCPU<Impl>::AlphaTC::readFloatReg(int reg_idx, int width)
 
 template <class Impl>
 FloatReg
-AlphaFullCPU<Impl>::AlphaTC::readFloatReg(int reg_idx)
+AlphaO3CPU<Impl>::AlphaTC::readFloatReg(int reg_idx)
 {
     return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
 }
 
 template <class Impl>
 FloatRegBits
-AlphaFullCPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx, int width)
+AlphaO3CPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx, int width)
 {
     DPRINTF(Fault, "Reading floatint register through the TC!\n");
     return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
@@ -491,14 +495,14 @@ AlphaFullCPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx, int width)
 
 template <class Impl>
 FloatRegBits
-AlphaFullCPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx)
+AlphaO3CPU<Impl>::AlphaTC::readFloatRegBits(int reg_idx)
 {
     return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setIntReg(int reg_idx, uint64_t val)
+AlphaO3CPU<Impl>::AlphaTC::setIntReg(int reg_idx, uint64_t val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->readTid());
 
@@ -510,7 +514,7 @@ AlphaFullCPU<Impl>::AlphaTC::setIntReg(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val, int width)
+AlphaO3CPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val, int width)
 {
     switch(width) {
       case 32:
@@ -529,7 +533,7 @@ AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val, int width)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val)
+AlphaO3CPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val)
 {
     cpu->setArchFloatRegSingle(reg_idx, val, thread->readTid());
 
@@ -540,7 +544,7 @@ AlphaFullCPU<Impl>::AlphaTC::setFloatReg(int reg_idx, FloatReg val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val,
+AlphaO3CPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val,
                                              int width)
 {
     DPRINTF(Fault, "Setting floatint register through the TC!\n");
@@ -554,7 +558,7 @@ AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val,
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val)
+AlphaO3CPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     cpu->setArchFloatRegInt(reg_idx, val, thread->readTid());
 
@@ -566,7 +570,7 @@ AlphaFullCPU<Impl>::AlphaTC::setFloatRegBits(int reg_idx, FloatRegBits val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setPC(uint64_t val)
+AlphaO3CPU<Impl>::AlphaTC::setPC(uint64_t val)
 {
     cpu->setPC(val, thread->readTid());
 
@@ -578,7 +582,7 @@ AlphaFullCPU<Impl>::AlphaTC::setPC(uint64_t val)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setNextPC(uint64_t val)
+AlphaO3CPU<Impl>::AlphaTC::setNextPC(uint64_t val)
 {
     cpu->setNextPC(val, thread->readTid());
 
@@ -590,7 +594,7 @@ AlphaFullCPU<Impl>::AlphaTC::setNextPC(uint64_t val)
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::AlphaTC::setMiscReg(int misc_reg, const MiscReg &val)
+AlphaO3CPU<Impl>::AlphaTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     Fault ret_fault = cpu->setMiscReg(misc_reg, val, thread->readTid());
 
@@ -604,8 +608,8 @@ AlphaFullCPU<Impl>::AlphaTC::setMiscReg(int misc_reg, const MiscReg &val)
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::AlphaTC::setMiscRegWithEffect(int misc_reg,
-                                                  const MiscReg &val)
+AlphaO3CPU<Impl>::AlphaTC::setMiscRegWithEffect(int misc_reg,
+                                                const MiscReg &val)
 {
     Fault ret_fault = cpu->setMiscRegWithEffect(misc_reg, val,
                                                 thread->readTid());
@@ -622,21 +626,21 @@ AlphaFullCPU<Impl>::AlphaTC::setMiscRegWithEffect(int misc_reg,
 
 template <class Impl>
 TheISA::IntReg
-AlphaFullCPU<Impl>::AlphaTC::getSyscallArg(int i)
+AlphaO3CPU<Impl>::AlphaTC::getSyscallArg(int i)
 {
     return cpu->getSyscallArg(i, thread->readTid());
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setSyscallArg(int i, IntReg val)
+AlphaO3CPU<Impl>::AlphaTC::setSyscallArg(int i, IntReg val)
 {
     cpu->setSyscallArg(i, val, thread->readTid());
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::AlphaTC::setSyscallReturn(SyscallReturn return_value)
+AlphaO3CPU<Impl>::AlphaTC::setSyscallReturn(SyscallReturn return_value)
 {
     cpu->setSyscallReturn(return_value, thread->readTid());
 }
@@ -645,37 +649,37 @@ AlphaFullCPU<Impl>::AlphaTC::setSyscallReturn(SyscallReturn return_value)
 
 template <class Impl>
 MiscReg
-AlphaFullCPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
+AlphaO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 {
     return this->regFile.readMiscReg(misc_reg, tid);
 }
 
 template <class Impl>
 MiscReg
-AlphaFullCPU<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault,
-                                          unsigned tid)
+AlphaO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault,
+                                        unsigned tid)
 {
     return this->regFile.readMiscRegWithEffect(misc_reg, fault, tid);
 }
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
+AlphaO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
 {
     return this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
-                                         unsigned tid)
+AlphaO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
+                                       unsigned tid)
 {
     return this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::squashFromTC(unsigned tid)
+AlphaO3CPU<Impl>::squashFromTC(unsigned tid)
 {
     this->thread[tid]->inSyscall = true;
     this->commit.generateTCEvent(tid);
@@ -685,7 +689,7 @@ AlphaFullCPU<Impl>::squashFromTC(unsigned tid)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::post_interrupt(int int_num, int index)
+AlphaO3CPU<Impl>::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
@@ -697,21 +701,21 @@ AlphaFullCPU<Impl>::post_interrupt(int int_num, int index)
 
 template <class Impl>
 int
-AlphaFullCPU<Impl>::readIntrFlag()
+AlphaO3CPU<Impl>::readIntrFlag()
 {
     return this->regFile.readIntrFlag();
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::setIntrFlag(int val)
+AlphaO3CPU<Impl>::setIntrFlag(int val)
 {
     this->regFile.setIntrFlag(val);
 }
 
 template <class Impl>
 Fault
-AlphaFullCPU<Impl>::hwrei(unsigned tid)
+AlphaO3CPU<Impl>::hwrei(unsigned tid)
 {
     // Need to clear the lock flag upon returning from an interrupt.
     this->lockFlag = false;
@@ -726,7 +730,7 @@ AlphaFullCPU<Impl>::hwrei(unsigned tid)
 
 template <class Impl>
 bool
-AlphaFullCPU<Impl>::simPalCheck(int palFunc, unsigned tid)
+AlphaO3CPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 {
     if (this->thread[tid]->kernelStats)
         this->thread[tid]->kernelStats->callpal(palFunc,
@@ -751,7 +755,7 @@ AlphaFullCPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::trap(Fault fault, unsigned tid)
+AlphaO3CPU<Impl>::trap(Fault fault, unsigned tid)
 {
     // Pass the thread's TC into the invoke method.
     fault->invoke(this->threadContexts[tid]);
@@ -759,7 +763,7 @@ AlphaFullCPU<Impl>::trap(Fault fault, unsigned tid)
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::processInterrupts()
+AlphaO3CPU<Impl>::processInterrupts()
 {
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
@@ -805,10 +809,12 @@ AlphaFullCPU<Impl>::processInterrupts()
         this->setMiscReg(IPR_ISR, summary, 0);
         this->setMiscReg(IPR_INTID, ipl, 0);
         // Checker needs to know these two registers were updated.
+#if USE_CHECKER
         if (this->checker) {
             this->checker->threadBase()->setMiscReg(IPR_ISR, summary);
             this->checker->threadBase()->setMiscReg(IPR_INTID, ipl);
         }
+#endif
         this->trap(Fault(new InterruptFault), 0);
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                 this->readMiscReg(IPR_IPLR, 0), ipl, summary);
@@ -821,9 +827,9 @@ AlphaFullCPU<Impl>::processInterrupts()
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::syscall(int64_t callnum, int tid)
+AlphaO3CPU<Impl>::syscall(int64_t callnum, int tid)
 {
-    DPRINTF(FullCPU, "AlphaFullCPU: [tid:%i] Executing syscall().\n\n", tid);
+    DPRINTF(O3CPU, "[tid:%i] Executing syscall().\n\n", tid);
 
     DPRINTF(Activity,"Activity: syscall() called.\n");
 
@@ -841,21 +847,21 @@ AlphaFullCPU<Impl>::syscall(int64_t callnum, int tid)
 
 template <class Impl>
 TheISA::IntReg
-AlphaFullCPU<Impl>::getSyscallArg(int i, int tid)
+AlphaO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
     return this->readArchIntReg(AlphaISA::ArgumentReg0 + i, tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
+AlphaO3CPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
 {
     this->setArchIntReg(AlphaISA::ArgumentReg0 + i, val, tid);
 }
 
 template <class Impl>
 void
-AlphaFullCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
+AlphaO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 {
     // check for error condition.  Alpha syscall convention is to
     // indicate success/failure in reg a3 (r19) and put the

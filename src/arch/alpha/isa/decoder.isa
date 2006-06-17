@@ -47,9 +47,11 @@ decode OPCODE default Unknown::unknown() {
         0x23: ldt({{ Fa = Mem.df; }});
         0x2a: ldl_l({{ Ra.sl = Mem.sl; }}, mem_flags = LOCKED);
         0x2b: ldq_l({{ Ra.uq = Mem.uq; }}, mem_flags = LOCKED);
+#ifdef USE_COPY
         0x20: MiscPrefetch::copy_load({{ EA = Ra; }},
                                       {{ fault = xc->copySrcTranslate(EA); }},
                                       inst_flags = [IsMemRef, IsLoad, IsCopy]);
+#endif
     }
 
     format LoadOrPrefetch {
@@ -69,9 +71,11 @@ decode OPCODE default Unknown::unknown() {
         0x0f: stq_u({{ Mem.uq = Ra.uq; }}, {{ EA = (Rb + disp) & ~7; }});
         0x26: sts({{ Mem.ul = t_to_s(Fa.uq); }});
         0x27: stt({{ Mem.df = Fa; }});
+#ifdef USE_COPY
         0x24: MiscPrefetch::copy_store({{ EA = Rb; }},
                                        {{ fault = xc->copy(EA); }},
                                        inst_flags = [IsMemRef, IsStore, IsCopy]);
+#endif
     }
 
     format StoreCond {

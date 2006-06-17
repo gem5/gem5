@@ -162,7 +162,7 @@ DefaultRename<Impl>::regStats()
 
 template <class Impl>
 void
-DefaultRename<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultRename<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Rename, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -341,7 +341,7 @@ DefaultRename<Impl>::squash(unsigned tid)
 
     for (int i=0; i<fromDecode->size; i++) {
         if (fromDecode->insts[i]->threadNumber == tid) {
-            fromDecode->insts[i]->squashed = true;
+            fromDecode->insts[i]->setSquashed();
             wroteToTimeBuffer = true;
             squashCount++;
         }
@@ -755,7 +755,7 @@ DefaultRename<Impl>::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullCPU::RenameIdx);
+            cpu->activateStage(O3CPU::RenameIdx);
         }
     } else {
         // If it's not unblocking, then rename will not have any internal
@@ -764,7 +764,7 @@ DefaultRename<Impl>::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullCPU::RenameIdx);
+            cpu->deactivateStage(O3CPU::RenameIdx);
         }
     }
 }
@@ -1022,7 +1022,7 @@ DefaultRename<Impl>::validInsts()
     unsigned inst_count = 0;
 
     for (int i=0; i<fromDecode->size; i++) {
-        if (!fromDecode->insts[i]->squashed)
+        if (!fromDecode->insts[i]->isSquashed())
             inst_count++;
     }
 

@@ -44,7 +44,7 @@ namespace Kernel {
 class TranslatingPort;
 
 /**
- * AlphaFullCPU class.  Derives from the FullO3CPU class, and
+ * AlphaO3CPU class.  Derives from the FullO3CPU class, and
  * implements all ISA and implementation specific functions of the
  * CPU.  This is the CPU class that is used for the SimObjects, and is
  * what is given to the DynInsts.  Most of its state exists in the
@@ -52,7 +52,7 @@ class TranslatingPort;
  * functionality.
  */
 template <class Impl>
-class AlphaFullCPU : public FullO3CPU<Impl>
+class AlphaO3CPU : public FullO3CPU<Impl>
 {
   protected:
     typedef TheISA::IntReg IntReg;
@@ -67,17 +67,17 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     typedef O3ThreadState<Impl> Thread;
     typedef typename Impl::Params Params;
 
-    /** Constructs an AlphaFullCPU with the given parameters. */
-    AlphaFullCPU(Params *params);
+    /** Constructs an AlphaO3CPU with the given parameters. */
+    AlphaO3CPU(Params *params);
 
     /**
-     * Derived ThreadContext class for use with the AlphaFullCPU.  It
+     * Derived ThreadContext class for use with the AlphaO3CPU.  It
      * provides the interface for any external objects to access a
      * single thread's state and some general CPU state.  Any time
      * external objects try to update state through this interface,
      * the CPU will create an event to squash all in-flight
      * instructions in order to ensure state is maintained correctly.
-     * It must be defined specifically for the AlphaFullCPU because
+     * It must be defined specifically for the AlphaO3CPU because
      * not all architectural state is located within the O3ThreadState
      * (such as the commit PC, and registers), and specific actions
      * must be taken when using this interface (such as squashing all
@@ -87,7 +87,7 @@ class AlphaFullCPU : public FullO3CPU<Impl>
     {
       public:
         /** Pointer to the CPU. */
-        AlphaFullCPU<Impl> *cpu;
+        AlphaO3CPU<Impl> *cpu;
 
         /** Pointer to the thread state that this TC corrseponds to. */
         O3ThreadState<Impl> *thread;
