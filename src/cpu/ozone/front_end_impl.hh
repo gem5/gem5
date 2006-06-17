@@ -35,7 +35,6 @@
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"
 #include "mem/mem_interface.hh"
-#include "sim/byte_swap.hh"
 
 using namespace TheISA;
 
