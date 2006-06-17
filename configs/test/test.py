@@ -17,6 +17,7 @@ parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
 
 (options, args) = parser.parse_args()
+m5.setStandardOptions(options)
 
 if args:
     print "Error: script doesn't take any positional arguments"

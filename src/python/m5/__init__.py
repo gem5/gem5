@@ -58,6 +58,20 @@ def AddToPath(path):
     sys.path.insert(1, path)
 
 
+# The m5 module's pointer to the parsed options object
+options = None
+
+
+# User should call this function after calling parse_args() to pass
+# parsed standard option values back into the m5 module for
+# processing.
+def setStandardOptions(_options):
+    # Set module global var
+    global options
+    options = _options
+    # tell C++ about output directory
+    main.setOutputDir(options.outdir)
+
 # Callback to set trace flags.  Not necessarily the best way to do
 # things in the long run (particularly if we change how these global
 # options are handled).
@@ -110,6 +124,7 @@ TorF = "True | False"
 # Standard optparse options.  Need to be explicitly included by the
 # user script when it calls optparse.OptionParser().
 standardOptions = [
+    optparse.make_option("--outdir", type="string", default="."),
     optparse.make_option("--traceflags", type="string", action="callback",
                          callback=setTraceFlags),
     optparse.make_option("--tracestart", type="int", action="callback",
@@ -187,7 +202,7 @@ def resolveSimObject(name):
 def instantiate(root):
     config.ticks_per_sec = float(root.clock.frequency)
     # ugly temporary hack to get output to config.ini
-    sys.stdout = file('config.ini', 'w')
+    sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
     root.print_ini()
     sys.stdout.close() # close config.ini
     sys.stdout = sys.__stdout__ # restore to original

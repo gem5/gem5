@@ -297,6 +297,14 @@ main(int argc, char **argv)
     Py_Finalize();
 }
 
+
+void
+setOutputDir(const string &dir)
+{
+    simout.setDirectory(dir);
+}
+
+
 IniFile inifile;
 
 SimObject *
