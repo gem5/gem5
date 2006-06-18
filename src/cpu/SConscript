@@ -68,6 +68,13 @@ mem_comp_sig_template = '''
 virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; };
 '''
 
+# Generate a temporary CPU list, including the CheckerCPU if
+# it's enabled.  This isn't used for anything else other than StaticInst
+# headers.
+temp_cpu_list = env['CPU_MODELS']
+if env['USE_CHECKER']:
+    temp_cpu_list.append('CheckerCPU')
+
 # Generate header.  
 def gen_cpu_exec_signatures(target, source, env):
     f = open(str(target[0]), 'w')
@@ -75,7 +82,7 @@ def gen_cpu_exec_signatures(target, source, env):
 #ifndef __CPU_STATIC_INST_EXEC_SIGS_HH__
 #define __CPU_STATIC_INST_EXEC_SIGS_HH__
 '''
-    for cpu in env['CPU_MODELS']:
+    for cpu in temp_cpu_list:
         xc_type = CpuModel.dict[cpu].strings['CPU_exec_context']
         print >> f, exec_sig_template % (xc_type, xc_type, xc_type)
     print >> f, '''
@@ -85,12 +92,14 @@ def gen_cpu_exec_signatures(target, source, env):
 # Generate string that gets printed when header is rebuilt
 def gen_sigs_string(target, source, env):
     return "Generating static_inst_exec_sigs.hh: " \
-           + ', '.join(env['CPU_MODELS'])
+           + ', '.join(temp_cpu_list)
 
 # Add command to generate header to environment.
 env.Command('static_inst_exec_sigs.hh', models_db,
             Action(gen_cpu_exec_signatures, gen_sigs_string,
-                   varlist = ['CPU_MODELS']))
+                   varlist = temp_cpu_list))
+
+env.Depends('static_inst_exec_sigs.hh', Value(env['USE_CHECKER']))
 
 # List of suppported CPUs by the Checker.  Errors out if USE_CHECKER=True
 # and one of these are not being used.
@@ -148,7 +157,7 @@ if 'AlphaO3CPU' in env['CPU_MODELS']:
         o3/store_set.cc
         o3/tournament_pred.cc
         ''')
-    if 'CheckerCPU' in env['CPU_MODELS']:
+    if env['USE_CHECKER']:
         sources += Split('o3/checker_builder.cc')
 
 if 'OzoneSimpleCPU' in env['CPU_MODELS']:
@@ -170,10 +179,10 @@ if 'OzoneCPU' in env['CPU_MODELS']:
         ozone/lw_back_end.cc
         ozone/lw_lsq.cc
         ''')
-    if 'CheckerCPU' in env['CPU_MODELS']:
+    if env['USE_CHECKER']:
         sources += Split('ozone/checker_builder.cc')
 
-if 'CheckerCPU' in env['CPU_MODELS']:
+if env['USE_CHECKER']:
     checker_supports = False
     for i in CheckerSupportedCPUList:
         if i in env['CPU_MODELS']:
