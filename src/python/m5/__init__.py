@@ -70,32 +70,32 @@ def setTraceStart(option, opt_str, value, parser):
 def setTraceFile(option, opt_str, value, parser):
     objects.Trace.file = value
 
-def usePCSymbol(option, opt_str, value, parser):
-    objects.ExecutionTrace.pc_symbol = value
+def noPCSymbol(option, opt_str, value, parser):
+    objects.ExecutionTrace.pc_symbol = False
 
-def printCycle(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_cycle = value
+def noPrintCycle(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_cycle = False
 
-def printOp(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_opclass = value
+def noPrintOpclass(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_opclass = False
 
-def printThread(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_thread = value
+def noPrintThread(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_thread = False
 
-def printEA(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_effaddr = value
+def noPrintEA(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_effaddr = False
 
-def printData(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_data = value
+def noPrintData(option, opt_str, value, parser):
+    objects.ExecutionTrace.print_data = False
 
 def printFetchseq(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_fetchseq = value
+    objects.ExecutionTrace.print_fetchseq = True
 
 def printCpseq(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_cpseq = value
+    objects.ExecutionTrace.print_cpseq = True
 
 def dumpOnExit(option, opt_str, value, parser):
-    objects.Trace.dump_on_exit = value
+    objects.Trace.dump_on_exit = True
 
 def debugBreak(option, opt_str, value, parser):
     objects.Debug.break_cycles = value
@@ -116,47 +116,31 @@ standardOptions = [
                          callback=setTraceStart),
     optparse.make_option("--tracefile", type="string", action="callback",
                          callback=setTraceFile),
-    optparse.make_option("--pcsymbol", type="choice", choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=usePCSymbol,
-                         help="Use PC symbols in trace output"),
-    optparse.make_option("--printcycle", type="choice", choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=printCycle,
-                         help="Print cycle numbers in trace output"),
-    optparse.make_option("--printopclass", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=printOp,
-                         help="Print cycle numbers in trace output"),
-    optparse.make_option("--printthread", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=printThread,
-                         help="Print thread number in trace output"),
-    optparse.make_option("--printeffaddr", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=printEA,
-                         help="Print effective address in trace output"),
-    optparse.make_option("--printdata", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
-                         action="callback", callback=printData,
-                         help="Print result data in trace output"),
-    optparse.make_option("--printfetchseq", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
+    optparse.make_option("--nopcsymbol",
+                         action="callback", callback=noPCSymbol,
+                         help="Disable PC symbols in trace output"),
+    optparse.make_option("--noprintcycle",
+                         action="callback", callback=noPrintCycle,
+                         help="Don't print cycle numbers in trace output"),
+    optparse.make_option("--noprintopclass",
+                         action="callback", callback=noPrintOpclass,
+                         help="Don't print op class type in trace output"),
+    optparse.make_option("--noprintthread",
+                         action="callback", callback=noPrintThread,
+                         help="Don't print thread number in trace output"),
+    optparse.make_option("--noprinteffaddr",
+                         action="callback", callback=noPrintEA,
+                         help="Don't print effective address in trace output"),
+    optparse.make_option("--noprintdata",
+                         action="callback", callback=noPrintData,
+                         help="Don't print result data in trace output"),
+    optparse.make_option("--printfetchseq",
                          action="callback", callback=printFetchseq,
                          help="Print fetch sequence numbers in trace output"),
-    optparse.make_option("--printcpseq", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
+    optparse.make_option("--printcpseq",
                          action="callback", callback=printCpseq,
                          help="Print correct path sequence numbers in trace output"),
-    optparse.make_option("--dumponexit", type="choice",
-                         choices=TrueOrFalse,
-                         default="True", metavar=TorF,
+    optparse.make_option("--dumponexit",
                          action="callback", callback=dumpOnExit,
                          help="Dump trace buffer on exit"),
     optparse.make_option("--debugbreak", type="int", metavar="CYCLE",
