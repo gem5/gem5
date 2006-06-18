@@ -159,7 +159,7 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
 
-env.SConsignFile("sconsign")
+env.SConsignFile(os.path.join(build_root,"sconsign"))
 
 # Default duplicate option is to use hard links, but this messes up
 # when you use emacs to edit a file in the target dir, as emacs moves
