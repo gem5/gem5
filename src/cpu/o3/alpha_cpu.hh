@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_ALPHA_FULL_CPU_HH__
-#define __CPU_O3_ALPHA_FULL_CPU_HH__
+#ifndef __CPU_O3_ALPHA_CPU_HH__
+#define __CPU_O3_ALPHA_CPU_HH__
 
 #include "arch/isa_traits.hh"
 #include "cpu/thread_context.hh"
@@ -431,4 +431,4 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     bool lockFlag;
 };
 
-#endif // __CPU_O3_ALPHA_FULL_CPU_HH__
+#endif // __CPU_O3_ALPHA_CPU_HH__

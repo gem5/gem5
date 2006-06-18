@@ -39,7 +39,7 @@
 # "filename" is a pipe (|).  Thus to compare the instruction traces
 # from two versions of m5 (m5a and m5b), you can do this:
 #
-# rundiff 'm5a --trace:flags=InstExec |' 'm5b --trace:flags=InstExec |'
+# rundiff 'm5a --traceflags=InstExec |' 'm5b --traceflags=InstExec |'
 #
 
 use strict;
