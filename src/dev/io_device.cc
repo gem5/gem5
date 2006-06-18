@@ -62,12 +62,13 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 void
 PioPort::recvRetry()
 {
-    Packet* pkt = transmitList.front();
-    if (Port::sendTiming(pkt)) {
-        transmitList.pop_front();
+    bool result = true;
+    while (result && transmitList.size()) {
+        result = Port::sendTiming(transmitList.front());
+        if (result)
+            transmitList.pop_front();
     }
 }
-
 
 void
 PioPort::SendEvent::process()
@@ -83,10 +84,20 @@ PioPort::SendEvent::process()
 bool
 PioPort::recvTiming(Packet *pkt)
 {
-    Tick latency = device->recvAtomic(pkt);
-    // turn packet around to go back to requester
-    pkt->makeTimingResponse();
-    sendTiming(pkt, latency);
+    if (pkt->result == Packet::Nacked) {
+        pkt->reinitNacked();
+        if (transmitList.size()) {
+             transmitList.push_front(pkt);
+        } else {
+            if (!Port::sendTiming(pkt))
+                transmitList.push_front(pkt);
+        }
+    } else {
+        Tick latency = device->recvAtomic(pkt);
+        // turn packet around to go back to requester
+        pkt->makeTimingResponse();
+        sendTiming(pkt, latency);
+    }
     return true;
 }
 

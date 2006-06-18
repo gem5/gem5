@@ -119,30 +119,29 @@ class PioPort : public Port
 };
 
 
-struct DmaReqState : public Packet::SenderState
-{
-    /** Event to call on the device when this transaction (all packets)
-     * complete. */
-    Event *completionEvent;
-
-    /** Where we came from for some sanity checking. */
-    Port *outPort;
-
-    /** Total number of bytes that this transaction involves. */
-    Addr totBytes;
-
-    /** Number of bytes that have been acked for this transaction. */
-    Addr numBytes;
-
-    bool final;
-    DmaReqState(Event *ce, Port *p, Addr tb)
-        : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0)
-    {}
-};
-
 class DmaPort : public Port
 {
   protected:
+    struct DmaReqState : public Packet::SenderState
+    {
+        /** Event to call on the device when this transaction (all packets)
+         * complete. */
+        Event *completionEvent;
+
+        /** Where we came from for some sanity checking. */
+        Port *outPort;
+
+        /** Total number of bytes that this transaction involves. */
+        Addr totBytes;
+
+        /** Number of bytes that have been acked for this transaction. */
+        Addr numBytes;
+
+        DmaReqState(Event *ce, Port *p, Addr tb)
+            : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0)
+        {}
+    };
+
     DmaDevice *device;
     std::list<Packet*> transmitList;
 
