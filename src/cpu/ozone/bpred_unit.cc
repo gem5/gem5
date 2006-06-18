@@ -29,7 +29,8 @@
  */
 
 #include "cpu/o3/bpred_unit_impl.hh"
-#include "cpu/o3/alpha_impl.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
+#include "cpu/ozone/ozone_impl.hh"
+#include "cpu/ozone/simple_impl.hh"
 
-template class BPredUnit<AlphaSimpleImpl>;
+template class BPredUnit<OzoneImpl>;
+template class BPredUnit<SimpleImpl>;

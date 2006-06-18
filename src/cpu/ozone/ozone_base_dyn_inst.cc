@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,12 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/bpred_unit_impl.hh"
-#include "cpu/o3/alpha_impl.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
+#include "cpu/base_dyn_inst_impl.hh"
+#include "cpu/ozone/ozone_impl.hh"
 
-template class BPredUnit<AlphaSimpleImpl>;
+// Explicit instantiation
+template class BaseDynInst<OzoneImpl>;
+
+template <>
+int
+BaseDynInst<OzoneImpl>::instcount = 0;

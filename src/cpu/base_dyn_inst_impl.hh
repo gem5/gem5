@@ -41,10 +41,6 @@
 #include "mem/request.hh"
 
 #include "cpu/base_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
-#include "cpu/o3/alpha_cpu.hh"
-//#include "cpu/ozone/simple_impl.hh"
-//#include "cpu/ozone/ozone_impl.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -301,25 +297,3 @@ BaseDynInst<Impl>::eaSrcsReady()
 
     return true;
 }
-
-// Forward declaration
-template class BaseDynInst<AlphaSimpleImpl>;
-
-template <>
-int
-BaseDynInst<AlphaSimpleImpl>::instcount = 0;
-/*
-// Forward declaration
-template class BaseDynInst<SimpleImpl>;
-
-template <>
-int
-BaseDynInst<SimpleImpl>::instcount = 0;
-
-// Forward declaration
-template class BaseDynInst<OzoneImpl>;
-
-template <>
-int
-BaseDynInst<OzoneImpl>::instcount = 0;
-*/

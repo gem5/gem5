@@ -122,11 +122,11 @@ if 'FastCPU' in env['CPU_MODELS']:
 
 if 'AlphaO3CPU' in env['CPU_MODELS']:
     sources += Split('''
-        base_dyn_inst.cc
         o3/2bit_local_pred.cc
         o3/alpha_dyn_inst.cc
         o3/alpha_cpu.cc
         o3/alpha_cpu_builder.cc
+        o3/base_dyn_inst.cc
         o3/bpred_unit.cc
         o3/btb.cc
         o3/commit.cc
@@ -149,7 +149,7 @@ if 'AlphaO3CPU' in env['CPU_MODELS']:
         o3/tournament_pred.cc
         ''')
     if 'CheckerCPU' in env['CPU_MODELS']:
-        sources += Split('checker/o3_builder.cc')
+        sources += Split('o3/checker_builder.cc')
 
 if 'OzoneSimpleCPU' in env['CPU_MODELS']:
     sources += Split('''
@@ -161,18 +161,19 @@ if 'OzoneSimpleCPU' in env['CPU_MODELS']:
         ozone/inst_queue.cc
         ozone/rename_table.cc
         ''')
-    if 'CheckerCPU' in env['CPU_MODELS']:
-        sources += Split('checker/ozone_builder.cc')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
     sources += Split('''
+        ozone/base_dyn_inst.cc
+        ozone/bpred_unit.cc
         ozone/lsq_unit.cc
         ozone/lw_back_end.cc
         ozone/lw_lsq.cc
         ''')
+    if 'CheckerCPU' in env['CPU_MODELS']:
+        sources += Split('ozone/checker_builder.cc')
 
 if 'CheckerCPU' in env['CPU_MODELS']:
-    sources += Split('checker/cpu.cc')
     checker_supports = False
     for i in CheckerSupportedCPUList:
         if i in env['CPU_MODELS']:
