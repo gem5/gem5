@@ -475,10 +475,6 @@ for build_path in build_paths:
             env.ParseConfig(mysql_config_libs)
             env.ParseConfig(mysql_config_include)
 
-    # Check if the Checker is being used.  If so append it to env['CPU_MODELS']
-    if env['USE_CHECKER']:
-        env['CPU_MODELS'].append('CheckerCPU')
-
     # Save sticky option settings back to current options file
     sticky_opts.Save(current_opts_file, env)
 

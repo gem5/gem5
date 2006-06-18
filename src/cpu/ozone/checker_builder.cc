@@ -30,24 +30,26 @@
 
 #include <string>
 
-#include "cpu/checker/cpu.hh"
+#include "cpu/checker/cpu_impl.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/ozone/dyn_inst.hh"
+#include "cpu/ozone/ozone_impl.hh"
+#include "mem/base_mem.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
 
-class MemObject;
+template
+class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
 
 /**
  * Specific non-templated derived class used for SimObject configuration.
  */
-class O3Checker : public Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >
+class OzoneChecker : public Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >
 {
   public:
-    O3Checker(Params *p)
-        : Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >(p)
+    OzoneChecker(Params *p)
+        : Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >(p)
     { }
 };
 
@@ -55,7 +57,7 @@ class O3Checker : public Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > 
 //
 //  CheckerCPU Simulation Object
 //
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
 
     Param<Counter> max_insts_any_thread;
     Param<Counter> max_insts_all_threads;
@@ -65,6 +67,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
+    SimObjectParam<FunctionalMemory *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
@@ -72,6 +75,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
     Param<int> clock;
+    SimObjectParam<BaseMem *> icache;
+    SimObjectParam<BaseMem *> dcache;
 
     Param<bool> defer_registration;
     Param<bool> exitOnError;
@@ -79,9 +84,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
     Param<bool> function_trace;
     Param<Tick> function_trace_start;
 
-END_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
+END_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
+BEGIN_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
 
     INIT_PARAM(max_insts_any_thread,
                "terminate when any thread reaches this inst count"),
@@ -95,6 +100,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
+    INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
@@ -103,6 +109,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
 #endif // FULL_SYSTEM
 
     INIT_PARAM(clock, "clock speed"),
+    INIT_PARAM(icache, "L1 instruction cache object"),
+    INIT_PARAM(dcache, "L1 data cache object"),
 
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(exitOnError, "exit on error"),
@@ -111,12 +119,12 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
     INIT_PARAM(function_trace, "Enable function trace"),
     INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
-END_INIT_SIM_OBJECT_PARAMS(O3Checker)
+END_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
 
 
-CREATE_SIM_OBJECT(O3Checker)
+CREATE_SIM_OBJECT(OzoneChecker)
 {
-    O3Checker::Params *params = new O3Checker::Params();
+    OzoneChecker::Params *params = new OzoneChecker::Params();
     params->name = getInstanceName();
     params->numberOfThreads = 1;
     params->max_insts_any_thread = 0;
@@ -136,10 +144,13 @@ CREATE_SIM_OBJECT(O3Checker)
     temp = max_insts_all_threads;
     temp = max_loads_any_thread;
     temp = max_loads_all_threads;
+    BaseMem *cache = icache;
+    cache = dcache;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
+    params->mem = mem;
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
@@ -147,8 +158,8 @@ CREATE_SIM_OBJECT(O3Checker)
     params->process = workload;
 #endif
 
-    O3Checker *cpu = new O3Checker(params);
+    OzoneChecker *cpu = new OzoneChecker(params);
     return cpu;
 }
 
-REGISTER_SIM_OBJECT("O3Checker", O3Checker)
+REGISTER_SIM_OBJECT("OzoneChecker", OzoneChecker)

@@ -43,16 +43,10 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
-
-//#include "cpu/ozone/dyn_inst.hh"
-//#include "cpu/ozone/ozone_impl.hh"
-//#include "cpu/ozone/simple_impl.hh"
-
 #if FULL_SYSTEM
 #include "sim/system.hh"
 #include "arch/vtophys.hh"
+#include "kern/kernel_stats.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;
@@ -826,9 +820,3 @@ Checker<DynInstPtr>::dumpInsts()
     }
 
 }
-
-//template
-//class Checker<RefCountingPtr<OzoneDynInst<OzoneImpl> > >;
-// Manually instantiate checker
-template
-class Checker<RefCountingPtr<AlphaDynInst<AlphaSimpleImpl> > >;
