@@ -55,5 +55,5 @@ if options.maxtick:
 else:
     exit_event = m5.simulate()
 
-print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
+print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
 
