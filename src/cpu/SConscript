@@ -184,6 +184,7 @@ if 'OzoneCPU' in env['CPU_MODELS']:
         sources += Split('ozone/checker_builder.cc')
 
 if env['USE_CHECKER']:
+    sources += Split('checker/cpu.cc')
     checker_supports = False
     for i in CheckerSupportedCPUList:
         if i in env['CPU_MODELS']:
