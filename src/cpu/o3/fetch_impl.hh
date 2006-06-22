@@ -357,7 +357,6 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         ++fetchIcacheSquashes;
         delete pkt->req;
         delete pkt;
-        memReq[tid] = NULL;
         return;
     }
 

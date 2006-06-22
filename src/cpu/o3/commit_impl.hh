@@ -36,10 +36,13 @@
 
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
-#include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 using namespace std;
 

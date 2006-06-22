@@ -31,11 +31,14 @@
 
 #include "config/use_checker.hh"
 
-#include "cpu/checker/cpu.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 template<class Impl>
 LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,

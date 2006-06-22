@@ -102,15 +102,7 @@ template <class Impl>
 Fault
 AlphaDynInst<Impl>::completeAcc(Packet *pkt)
 {
-    if (this->isLoad()) {
-        this->fault = this->staticInst->completeAcc(pkt, this,
-                                                    this->traceData);
-    } else if (this->isStore()) {
-        this->fault = this->staticInst->completeAcc(pkt, this,
-                                                    this->traceData);
-    } else {
-        panic("Unknown type!");
-    }
+    this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
     return this->fault;
 }

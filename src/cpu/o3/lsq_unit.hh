@@ -128,6 +128,8 @@ class LSQUnit {
     /** Writes back stores. */
     void writebackStores();
 
+    /** Completes the data access that has been returned from the
+     * memory system. */
     void completeDataAccess(PacketPtr pkt);
 
     /** Clears all the entries in the LQ. */
