@@ -100,6 +100,7 @@ env.Command('static_inst_exec_sigs.hh', models_db,
                    varlist = temp_cpu_list))
 
 env.Depends('static_inst_exec_sigs.hh', Value(env['USE_CHECKER']))
+env.Depends('static_inst_exec_sigs.hh', Value(env['CPU_MODELS']))
 
 # List of suppported CPUs by the Checker.  Errors out if USE_CHECKER=True
 # and one of these are not being used.
