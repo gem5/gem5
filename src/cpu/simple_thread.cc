@@ -107,7 +107,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
                          Process *_process, int _asid, MemObject* memobj)
-    : ThreadState(-1, _thread_num, memobj, _process, _asid),
+    : ThreadState(-1, _thread_num, _process, _asid, memobj),
       cpu(_cpu)
 {
     /* Use this port to for syscall emulation writes to memory. */
@@ -124,7 +124,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
 }
 
 SimpleThread::SimpleThread(RegFile *regFile)
-    : ThreadState(-1, -1, NULL, NULL, -1), cpu(NULL)
+    : ThreadState(-1, -1, NULL, -1, NULL), cpu(NULL)
 {
     regs = *regFile;
     tc = new ProxyThreadContext<SimpleThread>(this);

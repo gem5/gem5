@@ -61,8 +61,8 @@ struct ThreadState {
 #if FULL_SYSTEM
     ThreadState(int _cpuId, int _tid);
 #else
-    ThreadState(int _cpuId, int _tid, MemObject *mem,
-                Process *_process, short _asid);
+    ThreadState(int _cpuId, int _tid, Process *_process,
+                short _asid, MemObject *mem);
 #endif
 
     void setCpuId(int id) { cpuId = id; }

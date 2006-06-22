@@ -82,7 +82,7 @@ struct O3ThreadState : public ThreadState {
 #else
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process, int _asid,
                   MemObject *mem)
-        : ThreadState(-1, _thread_num, mem, _process, _asid),
+        : ThreadState(-1, _thread_num, _process, _asid, mem),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 #endif
