@@ -28,58 +28,105 @@
  * Authors: Kevin Lim
  */
 
+#include "config/use_checker.hh"
+
 #include "arch/isa_traits.hh"
 #include "base/str.hh"
 #include "cpu/ozone/lw_lsq.hh"
 #include "cpu/checker/cpu.hh"
 
-template <class Impl>
-OzoneLWLSQ<Impl>::StoreCompletionEvent::StoreCompletionEvent(DynInstPtr &_inst,
-                                                             BackEnd *_be,
-                                                             Event *wb_event,
-                                                             OzoneLWLSQ<Impl> *lsq_ptr)
-    : Event(&mainEventQueue),
-      inst(_inst),
-      be(_be),
-      wbEvent(wb_event),
-      miss(false),
-      lsqPtr(lsq_ptr)
+template<class Impl>
+OzoneLWLSQ<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
+                                                 OzoneLWLSQ *lsq_ptr)
+    : Event(&mainEventQueue), inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
 {
     this->setFlags(Event::AutoDelete);
 }
 
-template <class Impl>
+template<class Impl>
 void
-OzoneLWLSQ<Impl>::StoreCompletionEvent::process()
+OzoneLWLSQ<Impl>::WritebackEvent::process()
 {
-    DPRINTF(OzoneLSQ, "Cache miss complete for store [sn:%lli]\n",
-            inst->seqNum);
-
-    //lsqPtr->removeMSHR(lsqPtr->storeQueue[storeIdx].inst->seqNum);
-
-//    lsqPtr->cpu->wakeCPU();
-    if (lsqPtr->isSwitchedOut()) {
-        if (wbEvent)
-            delete wbEvent;
-
-        return;
+    if (!lsqPtr->isSwitchedOut()) {
+        lsqPtr->writeback(inst, pkt);
     }
+    delete pkt;
+}
 
-    if (wbEvent) {
-        wbEvent->process();
-        delete wbEvent;
-    }
-
-    lsqPtr->completeStore(inst->sqIdx);
-    if (miss)
-        be->removeDcacheMiss(inst);
+template<class Impl>
+const char *
+OzoneLWLSQ<Impl>::WritebackEvent::description()
+{
+    return "Store writeback event";
 }
 
 template <class Impl>
-const char *
-OzoneLWLSQ<Impl>::StoreCompletionEvent::description()
+Tick
+OzoneLWLSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
 {
-    return "LSQ store completion event";
+    panic("O3CPU model does not work with atomic mode!");
+    return curTick;
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
+{
+    panic("O3CPU doesn't expect recvFunctional callback!");
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::DcachePort::recvStatusChange(Status status)
+{
+    if (status == RangeChange)
+        return;
+
+    panic("O3CPU doesn't expect recvStatusChange callback!");
+}
+
+template <class Impl>
+bool
+OzoneLWLSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
+{
+    lsq->completeDataAccess(pkt);
+    return true;
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::DcachePort::recvRetry()
+{
+    lsq->recvRetry();
+}
+
+template<class Impl>
+void
+OzoneLWLSQ<Impl>::completeDataAccess(PacketPtr pkt)
+{
+    LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
+    DynInstPtr inst = state->inst;
+    DPRINTF(IEW, "Writeback event [sn:%lli]\n", inst->seqNum);
+    DPRINTF(Activity, "Activity: Writeback event [sn:%lli]\n", inst->seqNum);
+
+    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
+
+    if (isSwitchedOut() || inst->isSquashed()) {
+        delete state;
+        delete pkt;
+        return;
+    } else {
+        if (!state->noWB) {
+            writeback(inst, pkt);
+        }
+
+        if (inst->isStore()) {
+            completeStore(state->idx);
+        }
+    }
+
+    delete state;
+    delete pkt;
 }
 
 template <class Impl>
@@ -109,8 +156,6 @@ OzoneLWLSQ<Impl>::init(Params *params, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
-    dcacheInterface = params->dcacheInterface;
-
     loadFaultInst = storeFaultInst = memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
@@ -121,6 +166,24 @@ std::string
 OzoneLWLSQ<Impl>::name() const
 {
     return "lsqunit";
+}
+
+template<class Impl>
+void
+OzoneLWLSQ<Impl>::setCPU(OzoneCPU *cpu_ptr)
+{
+    cpu = cpu_ptr;
+    dcachePort = new DcachePort(cpu, this);
+
+    Port *mem_dport = mem->getPort("");
+    dcachePort->setPeer(mem_dport);
+    mem_dport->setPeer(dcachePort);
+
+#if USE_CHECKER
+    if (cpu->checker) {
+        cpu->checker->setDcachePort(dcachePort);
+    }
+#endif
 }
 
 template<class Impl>
@@ -481,6 +544,12 @@ OzoneLWLSQ<Impl>::writebackStores()
            (*sq_it).canWB &&
            usedPorts < cachePorts) {
 
+        if (isStoreBlocked) {
+            DPRINTF(OzoneLSQ, "Unable to write back any more stores, cache"
+                    " is blocked!\n");
+            break;
+        }
+
         DynInstPtr inst = (*sq_it).inst;
 
         if ((*sq_it).size == 0 && !(*sq_it).completed) {
@@ -495,48 +564,64 @@ OzoneLWLSQ<Impl>::writebackStores()
             continue;
         }
 
-        if (dcacheInterface && dcacheInterface->isBlocked()) {
-            DPRINTF(OzoneLSQ, "Unable to write back any more stores, cache"
-                    " is blocked!\n");
-            break;
-        }
-
         ++usedPorts;
 
         assert((*sq_it).req);
         assert(!(*sq_it).committed);
 
+        Request *req = (*sq_it).req;
         (*sq_it).committed = true;
 
-        MemReqPtr req = (*sq_it).req;
+        assert(!inst->memData);
+        inst->memData = new uint8_t[64];
+        memcpy(inst->memData, (uint8_t *)&(*sq_it).data,
+               req->getSize());
 
-        req->cmd = Write;
-        req->completionEvent = NULL;
-        req->time = curTick;
+        PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        data_pkt->dataStatic(inst->memData);
 
-        switch((*sq_it).size) {
-          case 1:
-            cpu->write(req, (uint8_t &)(*sq_it).data);
-            break;
-          case 2:
-            cpu->write(req, (uint16_t &)(*sq_it).data);
-            break;
-          case 4:
-            cpu->write(req, (uint32_t &)(*sq_it).data);
-            break;
-          case 8:
-            cpu->write(req, (uint64_t &)(*sq_it).data);
-            break;
-          default:
-            panic("Unexpected store size!\n");
-        }
-        if (!(req->flags & LOCKED)) {
-            (*sq_it).inst->setCompleted();
-            if (cpu->checker) {
-                cpu->checker->tick((*sq_it).inst);
+        LSQSenderState *state = new LSQSenderState;
+        state->isLoad = false;
+        state->idx = inst->sqIdx;
+        state->inst = inst;
+        data_pkt->senderState = state;
+
+        DPRINTF(OzoneLSQ, "D-Cache: Writing back store PC:%#x "
+                "to Addr:%#x, data:%#x [sn:%lli]\n",
+                (*sq_it).inst->readPC(),
+                req->getPaddr(), *(inst->memData),
+                inst->seqNum);
+
+        // @todo: Remove this SC hack once the memory system handles it.
+        if (req->getFlags() & LOCKED) {
+            if (req->getFlags() & UNCACHEABLE) {
+                req->setScResult(2);
+            } else {
+                if (cpu->lockFlag) {
+                    req->setScResult(1);
+                } else {
+                    req->setScResult(0);
+                    // Hack: Instantly complete this store.
+                    completeDataAccess(data_pkt);
+                    --sq_it;
+                    continue;
+                }
             }
+        } else {
+            // Non-store conditionals do not need a writeback.
+            state->noWB = true;
         }
 
+        if (!dcachePort->sendTiming(data_pkt)) {
+            // Need to handle becoming blocked on a store.
+            isStoreBlocked = true;
+            assert(retryPkt == NULL);
+            retryPkt = data_pkt;
+        } else {
+            storePostSend(data_pkt, inst);
+            --sq_it;
+        }
+/*
         DPRINTF(OzoneLSQ, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
                 inst->sqIdx,inst->readPC(),
@@ -606,6 +691,7 @@ OzoneLWLSQ<Impl>::writebackStores()
         } else {
             panic("Must HAVE DCACHE!!!!!\n");
         }
+*/
     }
 
     // Not sure this should set it to 0.
@@ -685,10 +771,6 @@ OzoneLWLSQ<Impl>::squash(const InstSeqNum &squashed_num)
         SQIndices.push((*sq_it).inst->sqIdx);
         (*sq_it).inst = NULL;
         (*sq_it).canWB = 0;
-
-        if ((*sq_it).req) {
-            assert(!(*sq_it).req->completionEvent);
-        }
         (*sq_it).req = NULL;
         --stores;
         storeQueue.erase(sq_it++);
@@ -734,6 +816,72 @@ OzoneLWLSQ<Impl>::dumpInsts()
 
 template <class Impl>
 void
+OzoneLWLSQ<Impl>::storePostSend(Packet *pkt, DynInstPtr &inst)
+{
+    if (isStalled() &&
+        inst->seqNum == stallingStoreIsn) {
+        DPRINTF(OzoneLSQ, "Unstalling, stalling store [sn:%lli] "
+                "load [sn:%lli]\n",
+                stallingStoreIsn, (*stallingLoad)->seqNum);
+        stalled = false;
+        stallingStoreIsn = 0;
+        be->replayMemInst((*stallingLoad));
+    }
+
+    if (!inst->isStoreConditional()) {
+        // The store is basically completed at this time. This
+        // only works so long as the checker doesn't try to
+        // verify the value in memory for stores.
+        inst->setCompleted();
+#if USE_CHECKER
+        if (cpu->checker) {
+            cpu->checker->verify(inst);
+        }
+#endif
+    }
+
+    if (pkt->result != Packet::Success) {
+        DPRINTF(OzoneLSQ,"D-Cache Write Miss!\n");
+
+        DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
+                inst->seqNum);
+
+        //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
+
+        //DPRINTF(OzoneLWLSQ, "Added MSHR. count = %i\n",mshrSeqNums.size());
+
+        // @todo: Increment stat here.
+    } else {
+        DPRINTF(OzoneLSQ,"D-Cache: Write Hit!\n");
+
+        DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
+                inst->seqNum);
+    }
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
+{
+    // Squashed instructions do not need to complete their access.
+    if (inst->isSquashed()) {
+        assert(!inst->isStore());
+        return;
+    }
+
+    if (!inst->isExecuted()) {
+        inst->setExecuted();
+
+        // Complete access to copy data to proper place.
+        inst->completeAcc(pkt);
+    }
+
+    // Need to insert instruction into queue to commit
+    be->instToCommit(inst);
+}
+
+template <class Impl>
+void
 OzoneLWLSQ<Impl>::completeStore(int store_idx)
 {
     SQHashIt sq_hash_it = SQItHash.find(store_idx);
@@ -766,9 +914,18 @@ OzoneLWLSQ<Impl>::completeStore(int store_idx)
     --stores;
 
     inst->setCompleted();
+#if USE_CHECKER
     if (cpu->checker) {
-        cpu->checker->tick(inst);
+        cpu->checker->verify(inst);
     }
+#endif
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::recvRetry()
+{
+    panic("Unimplemented!");
 }
 
 template <class Impl>
@@ -777,68 +934,6 @@ OzoneLWLSQ<Impl>::switchOut()
 {
     assert(storesToWB == 0);
     switchedOut = true;
-    SQIt sq_it = --(storeQueue.end());
-    while (storesToWB > 0 &&
-           sq_it != storeQueue.end() &&
-           (*sq_it).inst &&
-           (*sq_it).canWB) {
-
-        DynInstPtr inst = (*sq_it).inst;
-
-        if ((*sq_it).size == 0 && !(*sq_it).completed) {
-            sq_it--;
-            continue;
-        }
-
-        // Store conditionals don't complete until *after* they have written
-        // back.  If it's here and not yet sent to memory, then don't bother
-        // as it's not part of committed state.
-        if (inst->isDataPrefetch() || (*sq_it).committed) {
-            sq_it--;
-            continue;
-        } else if ((*sq_it).req->flags & LOCKED) {
-            sq_it--;
-            assert(!(*sq_it).canWB ||
-                   ((*sq_it).canWB && (*sq_it).req->flags & LOCKED));
-            continue;
-        }
-
-        assert((*sq_it).req);
-        assert(!(*sq_it).committed);
-
-        MemReqPtr req = (*sq_it).req;
-        (*sq_it).committed = true;
-
-        req->cmd = Write;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
-        memcpy(req->data, (uint8_t *)&(*sq_it).data, req->size);
-
-        DPRINTF(OzoneLSQ, "Switching out : Writing back store idx:%i PC:%#x "
-                "to Addr:%#x, data:%#x directly to memory [sn:%lli]\n",
-                inst->sqIdx,inst->readPC(),
-                req->paddr, *(req->data),
-                inst->seqNum);
-
-        switch((*sq_it).size) {
-          case 1:
-            cpu->write(req, (uint8_t &)(*sq_it).data);
-            break;
-          case 2:
-            cpu->write(req, (uint16_t &)(*sq_it).data);
-            break;
-          case 4:
-            cpu->write(req, (uint32_t &)(*sq_it).data);
-            break;
-          case 8:
-            cpu->write(req, (uint64_t &)(*sq_it).data);
-            break;
-          default:
-            panic("Unexpected store size!\n");
-        }
-    }
 
     // Clear the queue to free up resources
     storeQueue.clear();

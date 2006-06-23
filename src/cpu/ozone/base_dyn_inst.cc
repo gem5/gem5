@@ -28,48 +28,12 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_OZONE_OZONE_IMPL_HH__
-#define __CPU_OZONE_OZONE_IMPL_HH__
+#include "cpu/base_dyn_inst_impl.hh"
+#include "cpu/ozone/ozone_impl.hh"
 
-#include "arch/alpha/isa_traits.hh"
-#include "cpu/o3/bpred_unit.hh"
-#include "cpu/ozone/front_end.hh"
-#include "cpu/ozone/inst_queue.hh"
-#include "cpu/ozone/lw_lsq.hh"
-#include "cpu/ozone/lw_back_end.hh"
-#include "cpu/ozone/null_predictor.hh"
-#include "cpu/ozone/dyn_inst.hh"
-#include "cpu/ozone/simple_params.hh"
+// Explicit instantiation
+template class BaseDynInst<OzoneImpl>;
 
-template <class Impl>
-class OzoneCPU;
-
-template <class Impl>
-class OzoneDynInst;
-
-struct OzoneImpl {
-    typedef SimpleParams Params;
-    typedef OzoneCPU<OzoneImpl> OzoneCPU;
-    typedef OzoneCPU CPUType;
-
-    // Would like to put these into their own area.
-//    typedef NullPredictor BranchPred;
-    typedef BPredUnit<OzoneImpl> BranchPred;
-    typedef FrontEnd<OzoneImpl> FrontEnd;
-    // Will need IQ, LSQ eventually
-    typedef LWBackEnd<OzoneImpl> BackEnd;
-
-    typedef InstQueue<OzoneImpl> InstQueue;
-    typedef OzoneLWLSQ<OzoneImpl> LdstQueue;
-
-    typedef OzoneDynInst<OzoneImpl> DynInst;
-    typedef RefCountingPtr<DynInst> DynInstPtr;
-
-    typedef uint64_t IssueStruct;
-
-    enum {
-        MaxThreads = 1
-    };
-};
-
-#endif // __CPU_OZONE_OZONE_IMPL_HH__
+template <>
+int
+BaseDynInst<OzoneImpl>::instcount = 0;

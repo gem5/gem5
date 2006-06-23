@@ -29,21 +29,17 @@
  *          Nathan Binkert
  */
 
-//#include <cstdio>
-//#include <cstdlib>
+#include "config/full_system.hh"
+#include "config/use_checker.hh"
 
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/checker/thread_context.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/static_inst.hh"
-//#include "mem/base_mem.hh"
-#include "mem/mem_interface.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
@@ -56,16 +52,17 @@
 //#include "base/remote_gdb.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/functional/memory_control.hh"
-#include "mem/functional/physical.hh"
 #include "sim/faults.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 #else // !FULL_SYSTEM
-#include "mem/functional/functional.hh"
 #include "sim/process.hh"
 #endif // FULL_SYSTEM
+
+#if USE_CHECKER
+#include "cpu/checker/thread_context.hh"
+#endif
 
 using namespace TheISA;
 
@@ -101,13 +98,12 @@ OzoneCPU<Impl>::TickEvent::description()
 template <class Impl>
 OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
-    : BaseCPU(p), thread(this, 0, p->mem), tickEvent(this, p->width),
-      mem(p->mem),
+    : BaseCPU(p), thread(this, 0), tickEvent(this, p->width),
 #else
-    : BaseCPU(p), thread(this, 0, p->workload[0], 0), tickEvent(this, p->width),
-      mem(p->workload[0]->getMemory()),
+    : BaseCPU(p), thread(this, 0, p->workload[0], 0, p->mem),
+      tickEvent(this, p->width),
 #endif
-      comm(5, 5)
+      mem(p->mem), comm(5, 5)
 {
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
@@ -115,6 +111,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     _status = Idle;
 
     if (p->checker) {
+#if USE_CHECKER
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
@@ -123,7 +120,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #endif
         checkerTC = new CheckerThreadContext<OzoneTC>(&ozoneTC, checker);
         thread.tc = checkerTC;
-        tc = checkerXC;
+        tc = checkerTC;
+#else
+        panic("Checker enabled but not compiled in!");
+#endif
     } else {
         checker = NULL;
         thread.tc = &ozoneTC;
@@ -139,15 +139,13 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
     /***** All thread state stuff *****/
     thread.cpu = this;
-    thread.tid = 0;
-    thread.mem = p->mem;
+    thread.setTid(0);
 
     thread.quiesceEvent = new EndQuiesceEvent(tc);
 
     system = p->system;
     itb = p->itb;
     dtb = p->dtb;
-    memctrl = p->system->memctrl;
     physmem = p->system->physmem;
 
     if (p->profile) {
@@ -166,9 +164,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.profilePC = 3;
 #else
     thread.cpu = this;
-    thread.tid = 0;
-    thread.process = p->workload[0];
-    thread.asid = 0;
 #endif // !FULL_SYSTEM
 
     numInst = 0;
@@ -237,8 +232,11 @@ OzoneCPU<Impl>::signalSwitched()
     if (++switchCount == 2) {
         backEnd->doSwitchOut();
         frontEnd->doSwitchOut();
+#if USE_CHECKER
         if (checker)
             checker->switchOut(sampler);
+#endif
+
         _status = SwitchedOut;
         if (tickEvent.scheduled())
             tickEvent.squash();
@@ -291,7 +289,7 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     notIdleFraction++;
     scheduleTickEvent(delay);
     _status = Running;
-    thread._status = ThreadContext::Active;
+    thread.setStatus(ThreadContext::Active);
     frontEnd->wakeFromQuiesce();
 }
 
@@ -510,7 +508,7 @@ template <class Impl>
 Addr
 OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 {
-    return vtophys(tcProxy, addr);
+    return vtophys(tc, addr);
 }
 #endif // FULL_SYSTEM
 
@@ -526,7 +524,7 @@ OzoneCPU<Impl>::post_interrupt(int int_num, int index)
 //	thread.activate();
         // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
-        activateContext(thread.tid, 1);
+        activateContext(thread.readTid(), 1);
     }
 }
 #endif // FULL_SYSTEM
@@ -565,7 +563,7 @@ OzoneCPU<Impl>::squashFromTC()
 #if !FULL_SYSTEM
 template <class Impl>
 void
-OzoneCPU<Impl>::syscall()
+OzoneCPU<Impl>::syscall(uint64_t &callnum)
 {
     // Not sure this copy is needed, depending on how the TC proxy is made.
     thread.renameTable.copyFrom(backEnd->renameTable);
@@ -576,7 +574,7 @@ OzoneCPU<Impl>::syscall()
 
     DPRINTF(OzoneCPU, "FuncExeInst: %i\n", thread.funcExeInst);
 
-    thread.process->syscall(yc);
+    thread.process->syscall(callnum, tc);
 
     thread.funcExeInst--;
 
@@ -690,9 +688,9 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 
     switch (palFunc) {
       case PAL::halt:
-        haltContext(thread.tid);
+        haltContext(thread.readTid());
         if (--System::numSystemsRunning == 0)
-            new SimExitEvent("all cpus halted");
+            exitSimLoop("all cpus halted");
         break;
 
       case PAL::bpt:
@@ -718,21 +716,31 @@ void
 OzoneCPU<Impl>::OzoneTC::setCpuId(int id)
 {
     cpu->cpuId = id;
-    thread->cpuId = id;
+    thread->setCpuId(id);
 }
+
+#if FULL_SYSTEM
+template <class Impl>
+void
+OzoneCPU<Impl>::OzoneTC::delVirtPort(VirtualPort *vp)
+{
+    delete vp->getPeer();
+    delete vp;
+}
+#endif
 
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::setStatus(Status new_status)
 {
-    thread->_status = new_status;
+    thread->setStatus(new_status);
 }
 
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::activate(int delay)
 {
-    cpu->activateContext(thread->tid, delay);
+    cpu->activateContext(thread->readTid(), delay);
 }
 
 /// Set the status to Suspended.
@@ -740,7 +748,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::suspend()
 {
-    cpu->suspendContext(thread->tid);
+    cpu->suspendContext(thread->readTid());
 }
 
 /// Set the status to Unallocated.
@@ -748,7 +756,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::deallocate()
 {
-    cpu->deallocateContext(thread->tid);
+    cpu->deallocateContext(thread->readTid());
 }
 
 /// Set the status to Halted.
@@ -756,7 +764,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::halt()
 {
-    cpu->haltContext(thread->tid);
+    cpu->haltContext(thread->readTid());
 }
 
 #if FULL_SYSTEM
@@ -771,7 +779,6 @@ void
 OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
-    assert(getMemPtr() == old_context->getMemPtr());
 #if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
 #else
@@ -867,7 +874,7 @@ template <class Impl>
 int
 OzoneCPU<Impl>::OzoneTC::getThreadNum()
 {
-    return thread->tid;
+    return thread->readTid();
 }
 
 // Also somewhat obnoxious.  Really only used for the TLB fault.
@@ -875,7 +882,7 @@ template <class Impl>
 TheISA::MachInst
 OzoneCPU<Impl>::OzoneTC::getInst()
 {
-    return thread->inst;
+    return thread->getInst();
 }
 
 template <class Impl>
@@ -894,7 +901,7 @@ OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
         } else if (i < (TheISA::FP_Base_DepTag + TheISA::NumFloatRegs)) {
             int fp_idx = i - TheISA::FP_Base_DepTag;
             thread->renameTable[i]->setDoubleResult(
-                tc->readFloatRegDouble(fp_idx));
+                tc->readFloatReg(fp_idx, 64));
         }
     }
 
@@ -904,7 +911,7 @@ OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
 
     // Need to copy the TC values into the current rename table,
     // copy the misc regs.
-    thread->regs.miscRegs.copyMiscRegs(tc);
+    copyMiscRegs(tc, this);
 }
 
 template <class Impl>
@@ -922,7 +929,7 @@ OzoneCPU<Impl>::OzoneTC::readIntReg(int reg_idx)
 }
 
 template <class Impl>
-float
+TheISA::FloatReg
 OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx, int width)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
@@ -1049,15 +1056,15 @@ template <class Impl>
 TheISA::MiscReg
 OzoneCPU<Impl>::OzoneTC::readMiscReg(int misc_reg)
 {
-    return thread->regs.miscRegs.readReg(misc_reg);
+    return thread->miscRegFile.readReg(misc_reg);
 }
 
 template <class Impl>
 TheISA::MiscReg
 OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg, Fault &fault)
 {
-    return thread->regs.miscRegs.readRegWithEffect(misc_reg,
-                                                   fault, this);
+    return thread->miscRegFile.readRegWithEffect(misc_reg,
+                                                 fault, this);
 }
 
 template <class Impl>
@@ -1065,7 +1072,7 @@ Fault
 OzoneCPU<Impl>::OzoneTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->regs.miscRegs.setReg(misc_reg, val);
+    Fault ret_fault = thread->miscRegFile.setReg(misc_reg, val);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();
@@ -1079,8 +1086,8 @@ Fault
 OzoneCPU<Impl>::OzoneTC::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->regs.miscRegs.setRegWithEffect(misc_reg, val,
-                                                             this);
+    Fault ret_fault = thread->miscRegFile.setRegWithEffect(misc_reg, val,
+                                                           this);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();

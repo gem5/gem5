@@ -33,9 +33,11 @@
 
 #include <deque>
 
+#include "arch/utility.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/rename_table.hh"
+#include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
@@ -55,17 +57,55 @@ class FrontEnd
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::CPUType CPUType;
     typedef typename Impl::BackEnd BackEnd;
 
-    typedef typename Impl::FullCPU::OzoneTC OzoneTC;
-    typedef typename Impl::FullCPU::CommStruct CommStruct;
+    typedef typename Impl::CPUType::OzoneTC OzoneTC;
+    typedef typename Impl::CPUType::CommStruct CommStruct;
+
+    /** IcachePort class.  Handles doing the communication with the
+     * cache/memory.
+     */
+    class IcachePort : public Port
+    {
+      protected:
+        /** Pointer to FE. */
+        FrontEnd<Impl> *fe;
+
+      public:
+        /** Default constructor. */
+        IcachePort(FrontEnd<Impl> *_fe)
+            : Port(_fe->name() + "-iport"), fe(_fe)
+        { }
+
+      protected:
+        /** Atomic version of receive.  Panics. */
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        /** Functional version of receive.  Panics. */
+        virtual void recvFunctional(PacketPtr pkt);
+
+        /** Receives status change.  Other than range changing, panics. */
+        virtual void recvStatusChange(Status status);
+
+        /** Returns the address ranges of this device. */
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
+
+        /** Timing version of receive.  Handles setting fetch to the
+         * proper status to start fetching. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of a failed fetch. */
+        virtual void recvRetry();
+    };
 
     FrontEnd(Params *params);
 
     std::string name() const;
 
-    void setCPU(FullCPU *cpu_ptr)
+    void setCPU(CPUType *cpu_ptr)
     { cpu = cpu_ptr; }
 
     void setBackEnd(BackEnd *back_end_ptr)
@@ -104,6 +144,8 @@ class FrontEnd
     bool switchedOut;
 
   private:
+    void recvRetry();
+
     bool updateStatus();
 
     void checkBE();
@@ -130,7 +172,7 @@ class FrontEnd
     { return cpu->globalSeqNum++; }
 
   public:
-    FullCPU *cpu;
+    CPUType *cpu;
 
     BackEnd *backEnd;
 
@@ -141,8 +183,9 @@ class FrontEnd
     enum Status {
         Running,
         Idle,
-        IcacheMissStall,
-        IcacheMissComplete,
+        IcacheWaitResponse,
+        IcacheWaitRetry,
+        IcacheAccessComplete,
         SerializeBlocked,
         SerializeComplete,
         RenameBlocked,
@@ -161,37 +204,7 @@ class FrontEnd
 
     BranchPred branchPred;
 
-    class IcachePort : public Port
-    {
-      protected:
-        FrontEnd *fe;
-
-      public:
-        IcachePort(const std::string &_name, FrontEnd *_fe)
-            : Port(_name), fe(_fe)
-        { }
-
-      protected:
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-
-        virtual void recvStatusChange(Status status);
-
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
-
-        virtual bool recvTiming(PacketPtr pkt);
-
-        virtual void recvRetry();
-    };
-
     IcachePort icachePort;
-
-#if !FULL_SYSTEM
-    PageTable *pTable;
-#endif
 
     RequestPtr memReq;
 
@@ -208,6 +221,11 @@ class FrontEnd
     bool fetchCacheLineNextCycle;
 
     bool cacheBlkValid;
+
+    bool cacheBlocked;
+
+    /** The packet that is waiting to be retried. */
+    PacketPtr retryPkt;
 
   public:
     RenameTable<Impl> renameTable;

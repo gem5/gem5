@@ -60,9 +60,9 @@ class LWBackEnd
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::OzoneCPU OzoneCPU;
     typedef typename Impl::FrontEnd FrontEnd;
-    typedef typename Impl::FullCPU::CommStruct CommStruct;
+    typedef typename Impl::OzoneCPU::CommStruct CommStruct;
 
     struct SizeStruct {
         int size;
@@ -95,35 +95,13 @@ class LWBackEnd
         const char *description();
     };
 
-    /** LdWriteback event for a load completion. */
-    class LdWritebackEvent : public Event {
-      private:
-        /** Instruction that is writing back data to the register file. */
-        DynInstPtr inst;
-        /** Pointer to IEW stage. */
-        LWBackEnd *be;
-
-        bool dcacheMiss;
-
-      public:
-        /** Constructs a load writeback event. */
-        LdWritebackEvent(DynInstPtr &_inst, LWBackEnd *be);
-
-        /** Processes writeback event. */
-        virtual void process();
-        /** Returns the description of the writeback event. */
-        virtual const char *description();
-
-        void setDcacheMiss() { dcacheMiss = true; be->addDcacheMiss(inst); }
-    };
-
     LWBackEnd(Params *params);
 
     std::string name() const;
 
     void regStats();
 
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(OzoneCPU *cpu_ptr);
 
     void setFrontEnd(FrontEnd *front_end_ptr)
     { frontEnd = front_end_ptr; }
@@ -239,7 +217,7 @@ class LWBackEnd
     void updateComInstStats(DynInstPtr &inst);
 
   public:
-    FullCPU *cpu;
+    OzoneCPU *cpu;
 
     FrontEnd *frontEnd;
 
@@ -273,24 +251,6 @@ class LWBackEnd
 
     RenameTable<Impl> renameTable;
   private:
-    class DCacheCompletionEvent : public Event
-    {
-      private:
-        LWBackEnd *be;
-
-      public:
-        DCacheCompletionEvent(LWBackEnd *_be);
-
-        virtual void process();
-        virtual const char *description();
-    };
-
-    friend class DCacheCompletionEvent;
-
-    DCacheCompletionEvent cacheCompletionEvent;
-
-    MemInterface *dcacheInterface;
-
     // General back end width. Used if the more specific isn't given.
     int width;
 

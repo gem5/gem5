@@ -34,14 +34,55 @@
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"
-#include "mem/mem_interface.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 
 using namespace TheISA;
+
+template<class Impl>
+Tick
+FrontEnd<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
+{
+    panic("FrontEnd doesn't expect recvAtomic callback!");
+    return curTick;
+}
+
+template<class Impl>
+void
+FrontEnd<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
+{
+    panic("FrontEnd doesn't expect recvFunctional callback!");
+}
+
+template<class Impl>
+void
+FrontEnd<Impl>::IcachePort::recvStatusChange(Status status)
+{
+    if (status == RangeChange)
+        return;
+
+    panic("FrontEnd doesn't expect recvStatusChange callback!");
+}
+
+template<class Impl>
+bool
+FrontEnd<Impl>::IcachePort::recvTiming(Packet *pkt)
+{
+    fe->processCacheCompletion(pkt);
+    return true;
+}
+
+template<class Impl>
+void
+FrontEnd<Impl>::IcachePort::recvRetry()
+{
+    fe->recvRetry();
+}
 
 template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
-      icacheInterface(params->icacheInterface),
+      icachePort(this),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
       width(params->frontEndWidth),
@@ -56,7 +97,7 @@ FrontEnd<Impl>::FrontEnd(Params *params)
 
     memReq = NULL;
     // Size of cache block.
-    cacheBlkSize = icacheInterface ? icacheInterface->getBlockSize() : 64;
+    cacheBlkSize = 64;
 
     assert(isPowerOf2(cacheBlkSize));
 
@@ -68,11 +109,10 @@ FrontEnd<Impl>::FrontEnd(Params *params)
 
     fetchCacheLineNextCycle = true;
 
-    cacheBlkValid = false;
+    cacheBlkValid = cacheBlocked = false;
 
-#if !FULL_SYSTEM
-//    pTable = params->pTable;
-#endif
+    retryPkt = NULL;
+
     fetchFault = NoFault;
 }
 
@@ -271,7 +311,7 @@ FrontEnd<Impl>::tick()
     IFQFcount += instBufferSize == maxInstBufferSize;
 
     // Fetch cache line
-    if (status == IcacheMissComplete) {
+    if (status == IcacheAccessComplete) {
         cacheBlkValid = true;
 
         status = Running;
@@ -280,8 +320,8 @@ FrontEnd<Impl>::tick()
         if (freeRegs <= 0)
             status = RenameBlocked;
         checkBE();
-    } else if (status == IcacheMissStall) {
-        DPRINTF(FE, "Still in Icache miss stall.\n");
+    } else if (status == IcacheWaitResponse || status == IcacheWaitRetry) {
+        DPRINTF(FE, "Still in Icache wait.\n");
         icacheStallCycles++;
         return;
     }
@@ -302,7 +342,7 @@ FrontEnd<Impl>::tick()
     } else if (status == QuiescePending) {
         DPRINTF(FE, "Waiting for quiesce to execute or get squashed.\n");
         return;
-    } else if (status != IcacheMissComplete) {
+    } else if (status != IcacheAccessComplete) {
         if (fetchCacheLineNextCycle) {
             Fault fault = fetchCacheLine();
             if (fault != NoFault) {
@@ -313,7 +353,7 @@ FrontEnd<Impl>::tick()
             fetchCacheLineNextCycle = false;
         }
         // If miss, stall until it returns.
-        if (status == IcacheMissStall) {
+        if (status == IcacheWaitResponse || status == IcacheWaitRetry) {
             // Tell CPU to not tick me for now.
             return;
         }
@@ -403,22 +443,16 @@ FrontEnd<Impl>::fetchCacheLine()
 
     // Setup the memReq to do a read of the first isntruction's address.
     // Set the appropriate read size and flags as well.
-    memReq = new MemReq();
-
-    memReq->asid = 0;
-    memReq->thread_num = 0;
-    memReq->data = new uint8_t[64];
-    memReq->tc = tc;
-    memReq->cmd = Read;
-    memReq->reset(fetch_PC, cacheBlkSize, flags);
+    memReq = new Request(0, fetch_PC, cacheBlkSize, flags,
+                         fetch_PC, cpu->readCpuId(), 0);
 
     // Translate the instruction request.
-    fault = cpu->translateInstReq(memReq);
+    fault = cpu->translateInstReq(memReq, thread);
 
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.
-    if (icacheInterface && fault == NoFault) {
-#if FULL_SYSTEM
+    if (fault == NoFault) {
+#if 0
         if (cpu->system->memctrl->badaddr(memReq->paddr) ||
             memReq->flags & UNCACHEABLE) {
             DPRINTF(FE, "Fetch: Bad address %#x (hopefully on a "
@@ -428,30 +462,21 @@ FrontEnd<Impl>::fetchCacheLine()
         }
 #endif
 
-        memReq->completionEvent = NULL;
+        // Build packet here.
+        PacketPtr data_pkt = new Packet(memReq,
+                                        Packet::ReadReq, Packet::Broadcast);
+        data_pkt->dataStatic(cacheData);
 
-        memReq->time = curTick;
-        fault = cpu->mem->read(memReq, cacheData);
-
-        MemAccessResult res = icacheInterface->access(memReq);
-
-        // If the cache missed then schedule an event to wake
-        // up this stage once the cache miss completes.
-        if (icacheInterface->doEvents() && res != MA_HIT) {
-            memReq->completionEvent = new ICacheCompletionEvent(memReq, this);
-
-            status = IcacheMissStall;
-
-            cacheBlkValid = false;
-
-            DPRINTF(FE, "Cache miss.\n");
-        }  else {
-            DPRINTF(FE, "Cache hit.\n");
-
-            cacheBlkValid = true;
-
-//            memcpy(cacheData, memReq->data, memReq->size);
+        if (!icachePort.sendTiming(data_pkt)) {
+            assert(retryPkt == NULL);
+            DPRINTF(Fetch, "Out of MSHRs!\n");
+            status = IcacheWaitRetry;
+            retryPkt = data_pkt;
+            cacheBlocked = true;
+            return NoFault;
         }
+
+        status = IcacheWaitResponse;
     }
 
     // Note that this will set the cache block PC a bit earlier than it should
@@ -564,7 +589,7 @@ FrontEnd<Impl>::handleFault(Fault &fault)
 
 //    instruction->setASID(tid);
 
-    instruction->setState(thread);
+    instruction->setThreadState(thread);
 
     instruction->traceData = NULL;
 
@@ -613,8 +638,8 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
     }
 
     // Clear the icache miss if it's outstanding.
-    if (status == IcacheMissStall && icacheInterface) {
-        DPRINTF(FE, "Squashing outstanding Icache miss.\n");
+    if (status == IcacheWaitResponse) {
+        DPRINTF(FE, "Squashing outstanding Icache access.\n");
         memReq = NULL;
     }
 
@@ -651,20 +676,22 @@ FrontEnd<Impl>::getInst()
 
 template <class Impl>
 void
-FrontEnd<Impl>::processCacheCompletion(MemReqPtr &req)
+FrontEnd<Impl>::processCacheCompletion(PacketPtr pkt)
 {
     DPRINTF(FE, "Processing cache completion\n");
 
     // Do something here.
-    if (status != IcacheMissStall ||
-        req != memReq ||
+    if (status != IcacheWaitResponse ||
+        pkt->req != memReq ||
         switchedOut) {
         DPRINTF(FE, "Previous fetch was squashed.\n");
         fetchIcacheSquashes++;
+        delete pkt->req;
+        delete pkt;
         return;
     }
 
-    status = IcacheMissComplete;
+    status = IcacheAccessComplete;
 
 /*    if (checkStall(tid)) {
         fetchStatus[tid] = Blocked;
@@ -676,6 +703,8 @@ FrontEnd<Impl>::processCacheCompletion(MemReqPtr &req)
 
     // Reset the completion event to NULL.
 //    memReq->completionEvent = NULL;
+    delete pkt->req;
+    delete pkt;
     memReq = NULL;
 }
 
@@ -694,6 +723,27 @@ FrontEnd<Impl>::addFreeRegs(int num_freed)
 //    assert(freeRegs <= numPhysRegs);
     if (freeRegs > numPhysRegs)
         freeRegs = numPhysRegs;
+}
+
+template <class Impl>
+void
+FrontEnd<Impl>::recvRetry()
+{
+    assert(cacheBlocked);
+    if (retryPkt != NULL) {
+        assert(status == IcacheWaitRetry);
+
+        if (icachePort.sendTiming(retryPkt)) {
+            status = IcacheWaitResponse;
+            retryPkt = NULL;
+            cacheBlocked = false;
+        }
+    } else {
+        // Access has been squashed since it was sent out.  Just clear
+        // the cache being blocked.
+        cacheBlocked = false;
+    }
+
 }
 
 template <class Impl>
@@ -774,7 +824,7 @@ FrontEnd<Impl>::getInstFromCacheline()
     DynInstPtr instruction = new DynInst(decode_inst, PC, PC+sizeof(MachInst),
                                          inst_seq, cpu);
 
-    instruction->setState(thread);
+    instruction->setThreadState(thread);
 
     DPRINTF(FE, "Instruction [sn:%lli] created, with PC %#x\n%s\n",
             inst_seq, instruction->readPC(),
@@ -897,25 +947,4 @@ FrontEnd<Impl>::dumpInsts()
                 (*buff_it)->isSquashed());
         buff_it++;
     }
-}
-
-template <class Impl>
-FrontEnd<Impl>::ICacheCompletionEvent::ICacheCompletionEvent(MemReqPtr &_req, FrontEnd *fe)
-    : Event(&mainEventQueue, Delayed_Writeback_Pri), req(_req), frontEnd(fe)
-{
-    this->setFlags(Event::AutoDelete);
-}
-
-template <class Impl>
-void
-FrontEnd<Impl>::ICacheCompletionEvent::process()
-{
-    frontEnd->processCacheCompletion(req);
-}
-
-template <class Impl>
-const char *
-FrontEnd<Impl>::ICacheCompletionEvent::description()
-{
-    return "ICache completion event";
 }

@@ -30,7 +30,7 @@
 
 #include "cpu/o3/bpred_unit_impl.hh"
 #include "cpu/ozone/ozone_impl.hh"
-#include "cpu/ozone/simple_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
 
 template class BPredUnit<OzoneImpl>;
-template class BPredUnit<SimpleImpl>;
+//template class BPredUnit<SimpleImpl>;

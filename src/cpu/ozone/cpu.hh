@@ -43,6 +43,7 @@
 #include "cpu/ozone/thread_state.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
+#include "mem/page_table.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
@@ -70,6 +71,7 @@ class Process;
 
 class Checkpoint;
 class EndQuiesceEvent;
+class MemObject;
 class Request;
 
 namespace Trace {
@@ -111,7 +113,7 @@ class OzoneCPU : public BaseCPU
 
         void setCpuId(int id);
 
-        int readCpuId() { return thread->cpuId; }
+        int readCpuId() { return thread->readCpuId(); }
 
 #if FULL_SYSTEM
         System *getSystemPtr() { return cpu->system; }
@@ -122,22 +124,22 @@ class OzoneCPU : public BaseCPU
 
         AlphaDTB * getDTBPtr() { return cpu->dtb; }
 
-        Kernel::Statistics *getKernelStats() { return thread->kernelStats; }
+        Kernel::Statistics *getKernelStats()
+        { return thread->getKernelStats(); }
 
         FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
         VirtualPort *getVirtPort(ThreadContext *tc = NULL)
         { return thread->getVirtPort(tc); }
 
-        void delVirtPort(VirtualPort *vp)
-        { thread->delVirtPort(vp); }
+        void delVirtPort(VirtualPort *vp);
 #else
-        TranslatingPort *getMemPort() { return thread->port; }
+        TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
-        Process *getProcessPtr() { return thread->process; }
+        Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
 
-        Status status() const { return thread->_status; }
+        Status status() const { return thread->status(); }
 
         void setStatus(Status new_status);
 
@@ -250,7 +252,7 @@ class OzoneCPU : public BaseCPU
         { thread->renameTable[TheISA::ArgumentReg0 + i]->setIntResult(i); }
 
         void setSyscallReturn(SyscallReturn return_value)
-        { cpu->setSyscallReturn(return_value, thread->tid); }
+        { cpu->setSyscallReturn(return_value, thread->readTid()); }
 
         Counter readFuncExeInst() { return thread->funcExeInst; }
 
@@ -374,6 +376,8 @@ class OzoneCPU : public BaseCPU
     PhysicalMemory *physmem;
 #endif
 
+    MemObject *mem;
+
     FrontEnd *frontEnd;
 
     BackEnd *backEnd;
@@ -415,50 +419,41 @@ class OzoneCPU : public BaseCPU
 
 
 #if FULL_SYSTEM
-    bool validInstAddr(Addr addr) { return true; }
-    bool validDataAddr(Addr addr) { return true; }
-
-    Fault translateInstReq(Request *req)
+    /** Translates instruction requestion. */
+    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return itb->translate(req, tc);
+        return itb->translate(req, thread->getTC());
     }
 
-    Fault translateDataReadReq(Request *req)
+    /** Translates data read request. */
+    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return dtb->translate(req, tc, false);
+        return dtb->translate(req, thread->getTC(), false);
     }
 
-    Fault translateDataWriteReq(Request *req)
+    /** Translates data write request. */
+    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return dtb->translate(req, tc, true);
+        return dtb->translate(req, thread->getTC(), true);
     }
 
 #else
-    bool validInstAddr(Addr addr)
-    { return true; }
-
-    bool validDataAddr(Addr addr)
-    { return true; }
-
-    int getInstAsid() { return thread.asid; }
-    int getDataAsid() { return thread.asid; }
-
     /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(Request *req)
+    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return thread.translateInstReq(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(Request *req)
+    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return thread.translateDataReadReq(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 
     /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(Request *req)
+    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
     {
-        return thread.translateDataWriteReq(req);
+        return thread->getProcessPtr()->pTable->translate(req);
     }
 #endif
 
@@ -599,14 +594,14 @@ class OzoneCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei();
-    int readIntrFlag() { return thread.regs.intrflag; }
-    void setIntrFlag(int val) { thread.regs.intrflag = val; }
+    int readIntrFlag() { return thread.intrflag; }
+    void setIntrFlag(int val) { thread.intrflag = val; }
     bool inPalMode() { return AlphaISA::PcPAL(thread.PC); }
     bool inPalMode(Addr pc) { return AlphaISA::PcPAL(pc); }
     bool simPalCheck(int palFunc);
     void processInterrupts();
 #else
-    void syscall();
+    void syscall(uint64_t &callnum);
     void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 

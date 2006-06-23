@@ -32,28 +32,31 @@
 
 #include "cpu/checker/cpu.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/ozone/cpu.hh"
-#include "cpu/ozone/ozone_impl.hh"
+#include "cpu/ozone/cpu_impl.hh"
+#include "cpu/ozone/simple_impl.hh"
 #include "cpu/ozone/simple_params.hh"
+#include "mem/cache/base_cache.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
 
-class DerivOzoneCPU : public OzoneCPU<OzoneImpl>
+template
+class OzoneCPU<SimpleImpl>;
+
+class SimpleOzoneCPU : public OzoneCPU<SimpleImpl>
 {
   public:
-    DerivOzoneCPU(SimpleParams *p)
-        : OzoneCPU<OzoneImpl>(p)
+    SimpleOzoneCPU(SimpleParams *p)
+        : OzoneCPU<SimpleImpl>(p)
     { }
 };
-
 
 ////////////////////////////////////////////////////////////////////////
 //
 //  OzoneCPU Simulation Object
 //
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivOzoneCPU)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 
     Param<int> clock;
     Param<int> numThreads;
@@ -68,7 +71,7 @@ SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
-SimObjectParam<MemObject *> mem;
+SimObjectParam<FunctionalMemory *> mem;
 
 SimObjectParam<BaseCPU *> checker;
 
@@ -77,8 +80,8 @@ Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
 
-//SimObjectParam<BaseCache *> icache;
-//SimObjectParam<BaseCache *> dcache;
+SimObjectParam<BaseCache *> icache;
+SimObjectParam<BaseCache *> dcache;
 
 Param<unsigned> cachePorts;
 Param<unsigned> width;
@@ -88,7 +91,6 @@ Param<unsigned> backEndSquashLatency;
 Param<unsigned> backEndLatency;
 Param<unsigned> maxInstBufferSize;
 Param<unsigned> numPhysicalRegs;
-Param<unsigned> maxOutstandingMemOps;
 
 Param<unsigned> decodeToFetchDelay;
 Param<unsigned> renameToFetchDelay;
@@ -169,9 +171,9 @@ Param<bool> defer_registration;
 Param<bool> function_trace;
 Param<Tick> function_trace_start;
 
-END_DECLARE_SIM_OBJECT_PARAMS(DerivOzoneCPU)
+END_DECLARE_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
+BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
@@ -205,8 +207,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
                     "count",
                     0),
 
-//    INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
-//    INIT_PARAM_DFLT(dcache, "L1 data cache", NULL),
+    INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
+    INIT_PARAM_DFLT(dcache, "L1 data cache", NULL),
 
     INIT_PARAM_DFLT(cachePorts, "Cache Ports", 200),
     INIT_PARAM_DFLT(width, "Width", 1),
@@ -216,7 +218,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM_DFLT(backEndLatency, "Back end latency", 1),
     INIT_PARAM_DFLT(maxInstBufferSize, "Maximum instruction buffer size", 16),
     INIT_PARAM(numPhysicalRegs, "Number of physical registers"),
-    INIT_PARAM_DFLT(maxOutstandingMemOps, "Maximum outstanding memory operations", 4),
 
     INIT_PARAM(decodeToFetchDelay, "Decode to fetch delay"),
     INIT_PARAM(renameToFetchDelay, "Rename to fetch delay"),
@@ -303,11 +304,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM(function_trace, "Enable function trace"),
     INIT_PARAM(function_trace_start, "Cycle to start function trace")
 
-END_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
+END_INIT_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 
-CREATE_SIM_OBJECT(DerivOzoneCPU)
+CREATE_SIM_OBJECT(SimpleOzoneCPU)
 {
-    DerivOzoneCPU *cpu;
+    SimpleOzoneCPU *cpu;
 
 #if FULL_SYSTEM
     // Full-system only supports a single thread for the moment.
@@ -351,8 +352,8 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     //
     // Caches
     //
-//    params->icacheInterface = icache ? icache->getInterface() : NULL;
-//    params->dcacheInterface = dcache ? dcache->getInterface() : NULL;
+    params->icacheInterface = icache ? icache->getInterface() : NULL;
+    params->dcacheInterface = dcache ? dcache->getInterface() : NULL;
     params->cachePorts = cachePorts;
 
     params->width = width;
@@ -362,7 +363,6 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->backEndLatency = backEndLatency;
     params->maxInstBufferSize = maxInstBufferSize;
     params->numPhysicalRegs = numPhysIntRegs + numPhysFloatRegs;
-    params->maxOutstandingMemOps = maxOutstandingMemOps;
 
     params->decodeToFetchDelay = decodeToFetchDelay;
     params->renameToFetchDelay = renameToFetchDelay;
@@ -443,9 +443,10 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
 
-    cpu = new DerivOzoneCPU(params);
+    cpu = new SimpleOzoneCPU(params);
 
     return cpu;
 }
 
-REGISTER_SIM_OBJECT("DerivOzoneCPU", DerivOzoneCPU)
+REGISTER_SIM_OBJECT("SimpleOzoneCPU", SimpleOzoneCPU)
+

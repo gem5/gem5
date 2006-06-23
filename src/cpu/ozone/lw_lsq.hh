@@ -47,7 +47,7 @@
 #include "sim/debug.hh"
 #include "sim/sim_object.hh"
 
-//class PageTable;
+class MemObject;
 
 /**
  * Class that implements the actual LQ and SQ for each specific thread.
@@ -64,7 +64,7 @@ template <class Impl>
 class OzoneLWLSQ {
   public:
     typedef typename Impl::Params Params;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::OzoneCPU OzoneCPU;
     typedef typename Impl::BackEnd BackEnd;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::IssueStruct IssueStruct;
@@ -72,35 +72,6 @@ class OzoneLWLSQ {
     typedef TheISA::IntReg IntReg;
 
     typedef typename std::map<InstSeqNum, DynInstPtr>::iterator LdMapIt;
-
-  private:
-    class StoreCompletionEvent : public Event {
-      public:
-        /** Constructs a store completion event. */
-        StoreCompletionEvent(DynInstPtr &inst, BackEnd *be,
-                             Event *wb_event, OzoneLWLSQ *lsq_ptr);
-
-        /** Processes the store completion event. */
-        void process();
-
-        /** Returns the description of this event. */
-        const char *description();
-
-      private:
-        /** The store index of the store being written back. */
-        DynInstPtr inst;
-
-        BackEnd *be;
-        /** The writeback event for the store.  Needed for store
-         * conditionals.
-         */
-      public:
-        Event *wbEvent;
-        bool miss;
-      private:
-        /** The pointer to the LSQ unit that issued the store. */
-        OzoneLWLSQ<Impl> *lsqPtr;
-    };
 
   public:
     /** Constructs an LSQ unit. init() must be called prior to use. */
@@ -114,8 +85,7 @@ class OzoneLWLSQ {
     std::string name() const;
 
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr)
-    { cpu = cpu_ptr; }
+    void setCPU(OzoneCPU *cpu_ptr);
 
     /** Sets the back-end stage pointer. */
     void setBE(BackEnd *be_ptr)
@@ -154,6 +124,10 @@ class OzoneLWLSQ {
 
     /** Writes back stores. */
     void writebackStores();
+
+    /** Completes the data access that has been returned from the
+     * memory system. */
+    void completeDataAccess(PacketPtr pkt);
 
     // @todo: Include stats in the LSQ unit.
     //void regStats();
@@ -231,8 +205,8 @@ class OzoneLWLSQ {
 
     /** Returns if the LSQ unit will writeback on this cycle. */
     bool willWB() { return storeQueue.back().canWB &&
-                        !storeQueue.back().completed/* &&
-                                                       !dcacheInterface->isBlocked()*/; }
+                        !storeQueue.back().completed &&
+                        !isStoreBlocked; }
 
     void switchOut();
 
@@ -243,12 +217,21 @@ class OzoneLWLSQ {
     bool switchedOut;
 
   private:
+    /** Writes back the instruction, sending it to IEW. */
+    void writeback(DynInstPtr &inst, PacketPtr pkt);
+
+    /** Handles completing the send of a store to memory. */
+    void storePostSend(Packet *pkt, DynInstPtr &inst);
+
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);
 
+    /** Handles doing the retry. */
+    void recvRetry();
+
   private:
     /** Pointer to the CPU. */
-    FullCPU *cpu;
+    OzoneCPU *cpu;
 
     /** Pointer to the back-end stage. */
     BackEnd *be;
@@ -258,11 +241,13 @@ class OzoneLWLSQ {
     class DcachePort : public Port
     {
       protected:
-        FullCPU *cpu;
+        OzoneCPU *cpu;
+
+        OzoneLWLSQ *lsq;
 
       public:
-        DcachePort(const std::string &_name, FullCPU *_cpu)
-            : Port(_name), cpu(_cpu)
+        DcachePort(OzoneCPU *_cpu, OzoneLWLSQ *_lsq)
+            : Port(_lsq->name() + "-dport"), cpu(_cpu), lsq(_lsq)
         { }
 
       protected:
@@ -282,7 +267,7 @@ class OzoneLWLSQ {
     };
 
     /** Pointer to the D-cache. */
-    DcachePort dcachePort;
+    DcachePort *dcachePort;
 
     /** Pointer to the page table. */
 //    PageTable *pTable;
@@ -317,6 +302,48 @@ class OzoneLWLSQ {
         bool completed;
 
         typename std::list<DynInstPtr>::iterator lqIt;
+    };
+
+    /** Derived class to hold any sender state the LSQ needs. */
+    class LSQSenderState : public Packet::SenderState
+    {
+      public:
+        /** Default constructor. */
+        LSQSenderState()
+            : noWB(false)
+        { }
+
+        /** Instruction who initiated the access to memory. */
+        DynInstPtr inst;
+        /** Whether or not it is a load. */
+        bool isLoad;
+        /** The LQ/SQ index of the instruction. */
+        int idx;
+        /** Whether or not the instruction will need to writeback. */
+        bool noWB;
+    };
+
+    /** Writeback event, specifically for when stores forward data to loads. */
+    class WritebackEvent : public Event {
+      public:
+        /** Constructs a writeback event. */
+        WritebackEvent(DynInstPtr &_inst, PacketPtr pkt, OzoneLWLSQ *lsq_ptr);
+
+        /** Processes the writeback event. */
+        void process();
+
+        /** Returns the description of this event. */
+        const char *description();
+
+      private:
+        /** Instruction whose results are being written back. */
+        DynInstPtr inst;
+
+        /** The packet that would have been sent to memory. */
+        PacketPtr pkt;
+
+        /** The pointer to the LSQ unit that issued the store. */
+        OzoneLWLSQ<Impl> *lsqPtr;
     };
 
     enum Status {
@@ -395,6 +422,12 @@ class OzoneLWLSQ {
     /** The index of the above store. */
     LQIt stallingLoad;
 
+    /** The packet that needs to be retried. */
+    PacketPtr retryPkt;
+
+    /** Whehter or not a store is blocked due to the memory system. */
+    bool isStoreBlocked;
+
     /** Whether or not a load is blocked due to the memory system.  It is
      *  cleared when this value is checked via loadBlocked().
      */
@@ -470,7 +503,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     // too).
     // @todo: Fix uncached accesses.
     if (req->getFlags() & UNCACHEABLE &&
-        (inst != loadQueue.back() || !inst->reachedCommit)) {
+        (inst != loadQueue.back() || !inst->isAtCommit())) {
         DPRINTF(OzoneLSQ, "[sn:%lli] Uncached load and not head of "
                 "commit/LSQ!\n",
                 inst->seqNum);
@@ -532,17 +565,19 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 
             DPRINTF(OzoneLSQ, "Forwarding from store [sn:%lli] to load to "
                     "[sn:%lli] addr %#x, data %#x\n",
-                    (*sq_it).inst->seqNum, inst->seqNum, req->vaddr, *(inst->memData));
-/*
-            typename BackEnd::LdWritebackEvent *wb =
-                new typename BackEnd::LdWritebackEvent(inst,
-                                                       be);
+                    (*sq_it).inst->seqNum, inst->seqNum, req->getVaddr(),
+                    *(inst->memData));
+
+            PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            data_pkt->dataStatic(inst->memData);
+
+            WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
 
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
-            // FIXME - Need to make this a parameter.
+            // @todo: Need to make this a parameter.
             wb->schedule(curTick);
-*/
+
             // Should keep track of stat for forwarded data
             return NoFault;
         } else if ((store_has_lower_limit && lower_load_has_store_part) ||
@@ -575,7 +610,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 
             DPRINTF(OzoneLSQ, "Load-store forwarding mis-match. "
                     "Store [sn:%lli] to load addr %#x\n",
-                    (*sq_it).inst->seqNum, req->vaddr);
+                    (*sq_it).inst->seqNum, req->getVaddr());
 
             return NoFault;
         }
@@ -597,8 +632,14 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
     data_pkt->dataStatic(inst->memData);
 
+    LSQSenderState *state = new LSQSenderState;
+    state->isLoad = true;
+    state->idx = load_idx;
+    state->inst = inst;
+    data_pkt->senderState = state;
+
     // if we have a cache, do cache access too
-    if (!dcachePort.sendTiming(data_pkt)) {
+    if (!dcachePort->sendTiming(data_pkt)) {
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < inst->seqNum)
             return NoFault;

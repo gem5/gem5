@@ -37,8 +37,7 @@
 class AlphaDTB;
 class AlphaITB;
 class FUPool;
-class FunctionalMemory;
-class MemInterface;
+class MemObject;
 class PageTable;
 class Process;
 class System;
@@ -62,13 +61,13 @@ class SimpleParams : public BaseCPU::Params
     //Page Table
     PageTable *pTable;
 
-    FunctionalMemory *mem;
+    MemObject *mem;
 
     //
     // Caches
     //
-    MemInterface *icacheInterface;
-    MemInterface *dcacheInterface;
+//    MemInterface *icacheInterface;
+//    MemInterface *dcacheInterface;
 
     unsigned cachePorts;
     unsigned width;
