@@ -39,7 +39,6 @@
 #endif
 
 #include "cpu/activity.hh"
-#include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/o3/alpha_dyn_inst.hh"
@@ -48,6 +47,10 @@
 
 #include "sim/root.hh"
 #include "sim/stat_control.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 using namespace std;
 using namespace TheISA;
@@ -135,16 +138,18 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
     checker = NULL;
 
-#if USE_CHECKER
     if (params->checker) {
+#if USE_CHECKER
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
 #if FULL_SYSTEM
         checker->setSystem(params->system);
 #endif
+#else
+        panic("Checker enabled but not compiled in!");
+#endif // USE_CHECKER
     }
-#endif
 
 #if !FULL_SYSTEM
     thread.resize(number_of_threads);
@@ -688,8 +693,10 @@ FullO3CPU<Impl>::signalSwitched()
             removeList.pop();
         }
 
+#if USE_CHECKER
         if (checker)
             checker->switchOut(sampler);
+#endif
 
         if (tickEvent.scheduled())
             tickEvent.squash();
