@@ -214,12 +214,11 @@ class OzoneCPU : public BaseCPU
 
         uint64_t readNextNPC()
         {
-            panic("Alpha has no NextNPC!");
             return 0;
         }
 
         void setNextNPC(uint64_t val)
-        { panic("Alpha has no NextNPC!"); }
+        { }
 
       public:
         // ISA stuff:

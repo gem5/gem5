@@ -142,7 +142,7 @@ LWBackEnd<Impl>::replayMemInst(DynInstPtr &inst)
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
     : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
-      trapSquash(false), tcSquash(false),
+      trapSquash(false), tcSquash(false), LSQ(params),
       width(params->backEndWidth), exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
@@ -169,6 +169,7 @@ LWBackEnd<Impl>::LWBackEnd(Params *params)
     LSQ.init(params, params->LQEntries, params->SQEntries, 0);
 
     dispatchStatus = Running;
+    commitStatus = Running;
 }
 
 template <class Impl>

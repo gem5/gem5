@@ -131,8 +131,8 @@ OzoneLWLSQ<Impl>::completeDataAccess(PacketPtr pkt)
 
 template <class Impl>
 OzoneLWLSQ<Impl>::OzoneLWLSQ()
-    : loads(0), stores(0), storesToWB(0), stalled(false), isLoadBlocked(false),
-      loadBlockedHandled(false)
+    : switchedOut(false), loads(0), stores(0), storesToWB(0), stalled(false),
+      isStoreBlocked(false), isLoadBlocked(false), loadBlockedHandled(false)
 {
 }
 
@@ -152,6 +152,8 @@ OzoneLWLSQ<Impl>::init(Params *params, unsigned maxLQEntries,
         LQIndices.push(i);
         SQIndices.push(i);
     }
+
+    mem = params->mem;
 
     usedPorts = 0;
     cachePorts = params->cachePorts;

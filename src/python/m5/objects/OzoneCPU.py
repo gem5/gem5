@@ -7,9 +7,6 @@ class DerivOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    if not build_env['FULL_SYSTEM']:
-        mem = Param.FunctionalMemory(NULL, "memory")
-
     checker = Param.BaseCPU("Checker CPU")
 
     width = Param.Unsigned("Width")

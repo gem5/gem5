@@ -28,6 +28,8 @@
  * Authors: Kevin Lim
  */
 
+#include "config/use_checker.hh"
+
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
@@ -36,6 +38,10 @@
 #include "cpu/ozone/front_end.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 using namespace TheISA;
 
@@ -83,6 +89,7 @@ template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
       icachePort(this),
+      mem(params->mem),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
       width(params->frontEndWidth),
@@ -121,6 +128,25 @@ std::string
 FrontEnd<Impl>::name() const
 {
     return cpu->name() + ".frontend";
+}
+
+template <class Impl>
+void
+FrontEnd<Impl>::setCPU(CPUType *cpu_ptr)
+{
+    cpu = cpu_ptr;
+
+    icachePort.setName(this->name() + "-iport");
+
+    Port *mem_dport = mem->getPort("");
+    icachePort.setPeer(mem_dport);
+    mem_dport->setPeer(&icachePort);
+
+#if USE_CHECKER
+    if (cpu->checker) {
+        cpu->checker->setIcachePort(&icachePort);
+    }
+#endif
 }
 
 template <class Impl>

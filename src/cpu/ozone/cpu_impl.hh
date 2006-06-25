@@ -201,7 +201,35 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     backEnd->renameTable.copyFrom(thread.renameTable);
 
 #if !FULL_SYSTEM
-//    pTable = p->pTable;
+    /* Use this port to for syscall emulation writes to memory. */
+    Port *mem_port;
+    TranslatingPort *trans_port;
+    trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
+                                              name(), 0),
+                                     p->workload[0]->pTable,
+                                     false);
+    mem_port = p->mem->getPort("functional");
+    mem_port->setPeer(trans_port);
+    trans_port->setPeer(mem_port);
+    thread.setMemPort(trans_port);
+#else
+    Port *mem_port;
+    FunctionalPort *phys_port;
+    VirtualPort *virt_port;
+    phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
+                                            name(), 0));
+    mem_port = system->physmem->getPort("functional");
+    mem_port->setPeer(phys_port);
+    phys_port->setPeer(mem_port);
+
+    virt_port = new VirtualPort(csprintf("%s-%d-vport",
+                                         name(), 0));
+    mem_port = system->physmem->getPort("functional");
+    mem_port->setPeer(virt_port);
+    virt_port->setPeer(mem_port);
+
+    thread.setPhysPort(phys_port);
+    thread.setVirtPort(virt_port);
 #endif
 
     lockFlag = 0;

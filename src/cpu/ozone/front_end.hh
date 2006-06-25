@@ -43,7 +43,7 @@
 #include "sim/stats.hh"
 
 class ThreadContext;
-class MemInterface;
+class MemObject;
 template <class>
 class OzoneThreadState;
 class PageTable;
@@ -75,7 +75,7 @@ class FrontEnd
       public:
         /** Default constructor. */
         IcachePort(FrontEnd<Impl> *_fe)
-            : Port(_fe->name() + "-iport"), fe(_fe)
+            : fe(_fe)
         { }
 
       protected:
@@ -105,8 +105,7 @@ class FrontEnd
 
     std::string name() const;
 
-    void setCPU(CPUType *cpu_ptr)
-    { cpu = cpu_ptr; }
+    void setCPU(CPUType *cpu_ptr);
 
     void setBackEnd(BackEnd *back_end_ptr)
     { backEnd = back_end_ptr; }
@@ -205,6 +204,8 @@ class FrontEnd
     BranchPred branchPred;
 
     IcachePort icachePort;
+
+    MemObject *mem;
 
     RequestPtr memReq;
 
