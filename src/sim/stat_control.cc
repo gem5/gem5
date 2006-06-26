@@ -221,8 +221,7 @@ SetupEvent(int flags, Tick when, Tick repeat)
 
 /* namespace Stats */ }
 
-extern "C" void
-debugDumpStats()
+void debugDumpStats()
 {
     Stats::DumpNow();
 }
