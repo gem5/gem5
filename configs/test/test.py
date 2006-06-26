@@ -12,6 +12,8 @@ from FullO3Config import *
 parser = optparse.OptionParser(option_list=m5.standardOptions)
 
 parser.add_option("-c", "--cmd", default="hello")
+parser.add_option("-o", "--options", default="")
+parser.add_option("-i", "--input", default="")
 parser.add_option("-t", "--timing", action="store_true")
 parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
@@ -28,7 +30,9 @@ this_dir = os.path.dirname(__file__)
 
 process = LiveProcess()
 process.executable = os.path.join(this_dir, options.cmd)
-process.cmd = options.cmd
+process.cmd = options.cmd + " " + options.options
+if options.input != "":
+    process.input = options.input
 
 magicbus = Bus()
 mem = PhysicalMemory()

@@ -180,13 +180,11 @@ FastAlloc::dump_oldest(int n)
 // C interfaces to FastAlloc::dump_summary() and FastAlloc::dump_oldest().
 // gdb seems to have trouble with calling C++ functions directly.
 //
-extern "C" void
 fast_alloc_summary()
 {
     FastAlloc::dump_summary();
 }
 
-extern "C" void
 fast_alloc_oldest(int n)
 {
     FastAlloc::dump_oldest(n);

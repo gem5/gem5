@@ -446,11 +446,7 @@ void
 BaseSimpleCPU::advancePC(Fault fault)
 {
     if (fault != NoFault) {
-#if FULL_SYSTEM
         fault->invoke(tc);
-#else // !FULL_SYSTEM
-        fatal("fault (%s) detected @ PC %08p", fault->name(), thread->readPC());
-#endif // FULL_SYSTEM
     }
     else {
         // go to the next instruction

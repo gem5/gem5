@@ -236,7 +236,6 @@ SimObject::debugObjectBreak(const string &objs)
    }
 }
 
-extern "C"
 void
 debugObjectBreak(const char *objs)
 {

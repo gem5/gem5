@@ -54,11 +54,7 @@ class FaultBase : public RefCounted
 {
   public:
     virtual FaultName name() = 0;
-#if FULL_SYSTEM
     virtual void invoke(ThreadContext * tc);
-#else
-    virtual void invoke(ThreadContext * tc);
-#endif
 //    template<typename T>
 //    bool isA() {return dynamic_cast<T *>(this);}
     virtual bool isMachineCheckFault() {return false;}

@@ -83,6 +83,31 @@ class MemAddressNotAligned : public SparcFault
     bool isAlignmentFault() {return true;}
 };
 
+#if !FULL_SYSTEM
+class PageTableFault : public SparcFault
+{
+  private:
+    Addr vaddr;
+    static FaultName _name;
+    static TrapType _trapType;
+    static FaultPriority _priority;
+    static FaultStat _count;
+  public:
+    PageTableFault(Addr va)
+        : vaddr(va) {}
+    FaultName name() {return _name;}
+    TrapType trapType() {return _trapType;}
+    FaultPriority priority() {return _priority;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
+};
+
+static inline Fault genPageTableFault(Addr va)
+{
+    return new PageTableFault(va);
+}
+#endif
+
 static inline Fault genMachineCheckFault()
 {
     return new InternalProcessorError;
@@ -588,6 +613,7 @@ class TrapInstruction : public EnumeratedFault
     void invoke(ThreadContext * tc);
 #endif
 };
+
 
 } // SparcISA namespace
 
