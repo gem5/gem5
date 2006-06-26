@@ -326,11 +326,10 @@ LiveProcess::argsInit(int intSize, int pageSize)
     // set bottom of stack
     stack_min = stack_base - space_needed;
     // align it
-    stack_min &= ~(intSize-1);
+    stack_min = roundDown(stack_min, pageSize);
     stack_size = stack_base - stack_min;
     // map memory
-    pTable->allocate(roundDown(stack_min, pageSize),
-                     roundUp(stack_size, pageSize));
+    pTable->allocate(stack_min, roundUp(stack_size, pageSize));
 
     // map out initial stack contents
     Addr argv_array_base = stack_min + intSize; // room for argc
