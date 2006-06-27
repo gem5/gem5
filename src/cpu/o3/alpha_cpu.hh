@@ -384,8 +384,6 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     bool inPalMode(uint64_t PC)
     { return AlphaISA::PcPAL(PC); }
 
-    /** Traps to handle given fault. */
-    void trap(Fault fault, unsigned tid);
     bool simPalCheck(int palFunc, unsigned tid);
 
     /** Processes any interrupts. */
@@ -395,6 +393,8 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     void halt() { panic("Halt not implemented!\n"); }
 #endif
 
+    /** Traps to handle given fault. */
+    void trap(Fault fault, unsigned tid);
 
 #if !FULL_SYSTEM
     /** Executes a syscall.

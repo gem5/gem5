@@ -36,7 +36,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/pc_event.hh"
-#include "mem/packet.hh"
+#include "mem/packet_impl.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 

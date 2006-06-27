@@ -755,14 +755,6 @@ AlphaO3CPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 
 template <class Impl>
 void
-AlphaO3CPU<Impl>::trap(Fault fault, unsigned tid)
-{
-    // Pass the thread's TC into the invoke method.
-    fault->invoke(this->threadContexts[tid]);
-}
-
-template <class Impl>
-void
 AlphaO3CPU<Impl>::processInterrupts()
 {
     // Check for interrupts here.  For now can copy the code that
@@ -822,6 +814,14 @@ AlphaO3CPU<Impl>::processInterrupts()
 }
 
 #endif // FULL_SYSTEM
+
+template <class Impl>
+void
+AlphaO3CPU<Impl>::trap(Fault fault, unsigned tid)
+{
+    // Pass the thread's TC into the invoke method.
+    fault->invoke(this->threadContexts[tid]);
+}
 
 #if !FULL_SYSTEM
 
