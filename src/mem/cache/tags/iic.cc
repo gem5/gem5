@@ -418,8 +418,8 @@ IIC::freeReplacementBlock(PacketList* & writebacks)
             tag_ptr->isModified() ? "writeback" : "clean");
     /* write back replaced block data */
     if (tag_ptr && (tag_ptr->isValid())) {
-        int thread_num = (tag_ptr->xc) ? tag_ptr->xc->getThreadNum() : 0;
-        replacements[thread_num]++;
+        int req->setThreadNum() = (tag_ptr->xc) ? tag_ptr->xc->getThreadNum() : 0;
+        replacements[req->getThreadNum()]++;
         totalRefs += tag_ptr->refCount;
         ++sampledRefs;
         tag_ptr->refCount = 0;

@@ -175,7 +175,7 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
         //We are determining prefetches on access stream, call prefetcher
         prefetcher->handleMiss(pkt, curTick);
     }
-    if (!pkt->isUncacheable()) {
+    if (!pkt->req->isUncacheable()) {
         if (pkt->cmd.isInvalidate() && !pkt->cmd.isRead()
             && !pkt->cmd.isWrite()) {
             //Upgrade or Invalidate
@@ -220,7 +220,7 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
             pkt->paddr & ~((Addr)blkSize - 1), pkt->pc);
     if (blk) {
         // Hit
-        hits[pkt->cmd.toIndex()][pkt->thread_num]++;
+        hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
         // clear dirty bit if write through
         if (!pkt->cmd.isNoResponse())
             respond(pkt, curTick+lat);
@@ -228,8 +228,8 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
     }
 
     // Miss
-    if (!pkt->isUncacheable()) {
-        misses[pkt->cmd.toIndex()][pkt->thread_num]++;
+    if (!pkt->req->isUncacheable()) {
+        misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
         /** @todo Move miss count code into BaseCache */
         if (missCount) {
             --missCount;
@@ -248,8 +248,8 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
 {
     Packet * pkt = missQueue->getPacket();
     if (pkt) {
-        if (!pkt->isUncacheable()) {
-            if (pkt->cmd == Hard_Prefetch) misses[Hard_Prefetch][pkt->thread_num]++;
+        if (!pkt->req->isUncacheable()) {
+            if (pkt->cmd == Hard_Prefetch) misses[Hard_Prefetch][pkt->req->getThreadNum()]++;
             BlkType *blk = tags->findBlock(pkt);
             Packet::Command cmd = coherence->getBusCmd(pkt->cmd,
                                               (blk)? blk->status : 0);
@@ -272,7 +272,7 @@ Cache<TagStore,Buffering,Coherence>::sendResult(MemPktPtr &pkt, bool success)
           if (pkt->cmd == Upgrade) {
               handleResponse(pkt);
           }
-    } else if (pkt && !pkt->isUncacheable()) {
+    } else if (pkt && !pkt->req->isUncacheable()) {
         missQueue->restoreOrigCmd(pkt);
     }
 }
@@ -394,7 +394,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
             for (int i=0; i<writebacks.size(); i++) {
                 mshr = writebacks[i];
 
-                if (!mshr->pkt->isUncacheable()) {
+                if (!mshr->pkt->req->isUncacheable()) {
                     if (pkt->cmd.isRead()) {
                         //Only Upgrades don't get here
                         //Supply the data
@@ -469,7 +469,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 {
     MemDebug::cacheProbe(pkt);
 
-    if (!pkt->isUncacheable()) {
+    if (!pkt->req->isUncacheable()) {
         if (pkt->cmd.isInvalidate() && !pkt->cmd.isRead()
             && !pkt->cmd.isWrite()) {
             //Upgrade or Invalidate, satisfy it, don't forward
@@ -583,7 +583,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                 // Can't handle it, return pktuest unsatisfied.
                 return 0;
             }
-            if (!pkt->isUncacheable()) {
+            if (!pkt->req->isUncacheable()) {
                 // Fetch the cache block to fill
                 Packet * busPkt = new MemPkt();
                 busPkt->paddr = blk_addr;
@@ -596,7 +596,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 
                 busPkt->req->asid = pkt->req->asid;
                 busPkt->xc = pkt->xc;
-                busPkt->thread_num = pkt->thread_num;
+                busPkt->req->setThreadNum() = pkt->req->getThreadNum();
                 busPkt->time = curTick;
 
                 lat = mi->sendProbe(busPkt, update);
@@ -606,7 +606,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                     return 0;
                 }
 
-                misses[pkt->cmd.toIndex()][pkt->thread_num]++;
+                misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
 
                 CacheBlk::State old_state = (blk) ? blk->status : 0;
                 tags->handleFill(blk, busPkt,
@@ -631,7 +631,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         }
 
         if (update) {
-            hits[pkt->cmd.toIndex()][pkt->thread_num]++;
+            hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
         } else if (pkt->cmd.isWrite()) {
             // Still need to change data in all locations.
             return mi->sendProbe(pkt, update);

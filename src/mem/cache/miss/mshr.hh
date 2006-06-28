@@ -66,7 +66,7 @@ class MSHR {
     /** True if the request has been sent to the bus. */
     bool inService;
     /** Thread number of the miss. */
-    int threadNum;
+    int getThreadNum();
     /** The request that is forwarded to the next level of the hierarchy. */
     Packet * pkt;
     /** The number of currently allocated targets. */

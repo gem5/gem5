@@ -244,8 +244,8 @@ SplitLRU::findReplacement(Packet * &pkt, PacketList* &writebacks,
     SplitBlk *blk = sets[set].blks[assoc-1];
     sets[set].moveToHead(blk);
     if (blk->isValid()) {
-        int thread_num = (blk->xc) ? blk->xc->getThreadNum() : 0;
-        replacements[thread_num]++;
+        int req->setThreadNum() = (blk->xc) ? blk->xc->getThreadNum() : 0;
+        replacements[req->getThreadNum()]++;
         totalRefs += blk->refCount;
         ++sampledRefs;
         blk->refCount = 0;

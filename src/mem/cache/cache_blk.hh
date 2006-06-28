@@ -37,7 +37,6 @@
 
 #include "sim/root.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
-#include "cpu/exec_context.hh"
 
 /**
  * Cache block status bit assignments
@@ -87,9 +86,6 @@ class CacheBlk
 
     /** Which curTick will this block be accessable */
     Tick whenReady;
-
-    /** Save the exec context so that writebacks can use them. */
-    ExecContext *xc;
 
     /**
      * The set this block belongs to.

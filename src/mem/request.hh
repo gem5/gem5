@@ -224,6 +224,9 @@ class Request
     /** Accessor function for pc.*/
     Addr getPC() { assert(validPC); return pc; }
 
+    /** Accessor Function to Check Cacheability. */
+    bool isUncacheable() { return getFlags() & UNCACHEABLE; }
+
     friend class Packet;
 };
 

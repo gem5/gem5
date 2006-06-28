@@ -190,9 +190,9 @@ class MSHRQueue {
     /**
      * Squash outstanding requests with the given thread number. If a request
      * is in service, just squashes the targets.
-     * @param thread_number The thread to squash.
+     * @param req->getThreadNum()ber The thread to squash.
      */
-    void squash(int thread_number);
+    void squash(int req->getThreadNum()ber);
 
     /**
      * Returns true if the pending list is not empty.

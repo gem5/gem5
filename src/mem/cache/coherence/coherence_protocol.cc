@@ -465,7 +465,7 @@ CacheBlk::State
 CoherenceProtocol::getNewState(const Packet * &pkt, CacheBlk::State oldState)
 {
     CacheBlk::State state = oldState & stateMask;
-    int cmd_idx = pkt->cmd.toIndex();
+    int cmd_idx = pkt->cmdToIndex();
 
     assert(0 <= state && state <= stateMax);
     assert(0 <= cmd_idx && cmd_idx < NUM_MEM_CMDS);
@@ -498,7 +498,7 @@ CoherenceProtocol::handleBusRequest(BaseCache *cache, Packet * &pkt,
     }
 
     CacheBlk::State state = blk->status & stateMask;
-    int cmd_idx = pkt->cmd.toIndex();
+    int cmd_idx = pkt->cmdToIndex();
 
     assert(0 <= state && state <= stateMax);
     assert(0 <= cmd_idx && cmd_idx < NUM_MEM_CMDS);

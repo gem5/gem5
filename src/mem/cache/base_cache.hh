@@ -47,6 +47,7 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
+#include "sim/eventq.hh"
 
 /**
  * Reasons for Caches to be Blocked.
@@ -82,7 +83,7 @@ class BaseCache : public MemObject
       public:
         CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
 
-      private:
+      protected:
         virtual bool recvTiming(Packet *pkt);
 
         virtual Tick recvAtomic(Packet *pkt);
@@ -96,6 +97,7 @@ class BaseCache : public MemObject
 
         virtual int deviceBlockSize();
 
+      public:
         void setBlocked();
 
         void clearBlocked();
@@ -110,10 +112,10 @@ class BaseCache : public MemObject
         Packet *pkt;
         CachePort *cachePort;
 
-        CacheResponseEvent(Packet *pkt, CachePort *cachePort);
+        CacheEvent(Packet *pkt, CachePort *cachePort);
         void process();
         const char *description();
-    }
+    };
 
   protected:
     CachePort *cpuSidePort;
@@ -124,7 +126,7 @@ class BaseCache : public MemObject
 
   private:
     //To be defined in cache_impl.hh not in base class
-    virtual bool doTimingAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide);
+    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide);
     virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide);
     virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide);
     virtual void recvStatusChange(Port::Status status, bool isCpuSide);
@@ -275,12 +277,14 @@ class BaseCache : public MemObject
      * of this cache.
      * @param params The parameter object for this BaseCache.
      */
-    BaseCache(const std::string &name, HierParams *hier_params, Params &params)
-        : BaseMem(name, hier_params, params.hitLatency, params.addrRange),
-          blocked(0), blockedSnoop(0), masterRequests(0), slaveRequests(0),
-          topLevelCache(false),  blkSize(params.blkSize),
+    BaseCache(const std::string &name, Params &params)
+        : MemObject(name), blocked(0), blockedSnoop(0), masterRequests(0),
+          slaveRequests(0), topLevelCache(false),  blkSize(params.blkSize),
           missCount(params.maxMisses)
     {
+        //Start ports at null if more than one is created we should panic
+        cpuSidePort = NULL;
+        memSidePort = NULL;
     }
 
     /**
@@ -453,8 +457,8 @@ class BaseCache : public MemObject
      */
     void respondToMiss(Packet *pkt, Tick time)
     {
-        if (!pkt->isUncacheable()) {
-            missLatency[pkt->cmd.toIndex()][pkt->thread_num] += time - pkt->time;
+        if (!pkt->req->isUncacheable()) {
+            missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
         }
         assert("Implement\n" && 0);
 //	si->respond(pkt,time);
@@ -475,6 +479,11 @@ class BaseCache : public MemObject
      * to do for a cache.
      */
     void rangeChange() {}
+
+    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    {
+        panic("Unimplimented\n");
+    }
 };
 
 #endif //__BASE_CACHE_HH__

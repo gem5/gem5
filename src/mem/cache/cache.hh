@@ -46,7 +46,6 @@
 
 // forward declarations
 class Bus;
-class ExecContext;
 
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
@@ -209,11 +208,11 @@ class Cache : public BaseCache
     /**
      * Aquash all requests associated with specified thread.
      * intended for use by I-cache.
-     * @param thread_number The thread to squash.
+     * @param req->getThreadNum()ber The thread to squash.
      */
-    void squash(int thread_number)
+    void squash(int threadNum)
     {
-        missQueue->squash(thread_number);
+        missQueue->squash(threadNum);
     }
 
     /**

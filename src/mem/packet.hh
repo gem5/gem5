@@ -46,6 +46,10 @@ struct Packet;
 typedef Packet* PacketPtr;
 typedef uint8_t* PacketDataPtr;
 
+//For statistics we need max number of commands, hard code it at
+//20 for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 9
+
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -102,6 +106,9 @@ class Packet
 
   public:
 
+    /** Used to calculate latencies for each packet.*/
+    Tick time;
+
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */
     static const short Broadcast = -1;
@@ -149,6 +156,8 @@ class Packet
         IsRequest	= 1 << 4,
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
+        IsSWPrefetch    = 1 << 7,
+        IsHWPrefetch    = 1 << 8
     };
 
   public:
@@ -159,12 +168,23 @@ class Packet
         WriteReq	= IsWrite | IsRequest | NeedsResponse,
         WriteReqNoAck	= IsWrite | IsRequest,
         ReadResp	= IsRead  | IsResponse,
-        WriteResp	= IsWrite | IsResponse
+        WriteResp	= IsWrite | IsResponse,
+        Writeback       = IsWrite | IsRequest,
+        SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
+        HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
+        SoftPFResp      = IsRead  | IsRequest | IsSWPrefetch | IsResponse,
+        HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse
     };
 
     /** Return the string name of the cmd field (for debugging and
      *   tracing). */
     const std::string &cmdString() const;
+
+    /** Reutrn the string to a cmd given by idx. */
+    const std::string &cmdIdxToString(Command idx);
+
+    /** Return the index of this command. */
+    inline int cmdToIndex() const { return (int) cmd; }
 
     /** The command field of the packet. */
     Command cmd;

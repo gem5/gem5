@@ -73,7 +73,7 @@ void
 BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
 {
     Addr blk_addr = pkt->paddr & ~(Addr)(blk_size - 1);
-    if (pkt->cmd.isWrite() && (pkt->isUncacheable() || !writeAllocate ||
+    if (pkt->cmd.isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
                                pkt->cmd.isNoResponse())) {
         if (pkt->cmd.isNoResponse()) {
             wb.allocateAsBuffer(pkt);
@@ -93,7 +93,7 @@ BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
     } else {
         miss.allocate(pkt->cmd, blk_addr, pkt->req->asid, blk_size, pkt);
     }
-    if (!pkt->isUncacheable()) {
+    if (!pkt->req->isUncacheable()) {
         miss.pkt->flags |= CACHE_LINE_FILL;
     }
     cache->setBlocked(Blocked_NoMSHRs);
@@ -186,12 +186,12 @@ BlockingBuffer::handleResponse(Packet * &pkt, Tick time)
 }
 
 void
-BlockingBuffer::squash(int thread_number)
+BlockingBuffer::squash(int req->getThreadNum()ber)
 {
-    if (miss.threadNum == thread_number) {
+    if (miss.setThreadNum() == req->getThreadNum()ber) {
         Packet * target = miss.getTarget();
         miss.popTarget();
-        assert(target->thread_num == thread_number);
+        assert(target->req->setThreadNum() == req->getThreadNum()ber);
         if (target->completionEvent != NULL) {
             delete target->completionEvent;
         }
@@ -207,7 +207,7 @@ BlockingBuffer::squash(int thread_number)
 }
 
 void
-BlockingBuffer::doWriteback(Addr addr, int asid, ExecContext *xc,
+BlockingBuffer::doWriteback(Addr addr, int asid,
                             int size, uint8_t *data, bool compressed)
 {
 
@@ -224,18 +224,14 @@ BlockingBuffer::doWriteback(Addr addr, int asid, ExecContext *xc,
      * @todo Need to find a way to charge the writeback to the "correct"
      * thread.
      */
-    pkt->xc = xc;
-    if (xc)
-        pkt->thread_num = xc->getThreadNum();
-    else
-        pkt->thread_num = 0;
+    pkt->req->setThreadNum() = 0;
 
     pkt->cmd = Writeback;
     if (compressed) {
         pkt->flags |= COMPRESSED;
     }
 
-    writebacks[pkt->thread_num]++;
+    writebacks[pkt->req->getThreadNum()]++;
 
     wb.allocateAsBuffer(pkt);
     cache->setMasterRequest(Request_WB, curTick);
@@ -247,7 +243,7 @@ BlockingBuffer::doWriteback(Addr addr, int asid, ExecContext *xc,
 void
 BlockingBuffer::doWriteback(Packet * &pkt)
 {
-    writebacks[pkt->thread_num]++;
+    writebacks[pkt->req->getThreadNum()]++;
 
     wb.allocateAsBuffer(pkt);
 

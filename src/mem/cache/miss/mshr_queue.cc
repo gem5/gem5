@@ -237,18 +237,18 @@ MSHRQueue::markPending(MSHR* mshr, Packet::Command cmd)
 }
 
 void
-MSHRQueue::squash(int thread_number)
+MSHRQueue::squash(int req->getThreadNum()ber)
 {
     MSHR::Iterator i = allocatedList.begin();
     MSHR::Iterator end = allocatedList.end();
     for (; i != end;) {
         MSHR *mshr = *i;
-        if (mshr->threadNum == thread_number) {
+        if (mshr->setThreadNum() == req->getThreadNum()ber) {
             while (mshr->hasTargets()) {
                 Packet * target = mshr->getTarget();
                 mshr->popTarget();
 
-                assert(target->thread_num == thread_number);
+                assert(target->req->setThreadNum() == req->getThreadNum()ber);
                 if (target->completionEvent != NULL) {
                     delete target->completionEvent;
                 }

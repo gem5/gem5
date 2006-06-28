@@ -268,9 +268,9 @@ class MissQueue
     /**
      * Removes all outstanding requests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
-     * @param thread_number The thread number of the requests to squash.
+     * @param req->getThreadNum()ber The thread number of the requests to squash.
      */
-    void squash(int thread_number);
+    void squash(int req->getThreadNum()ber);
 
     /**
      * Return the current number of outstanding misses.

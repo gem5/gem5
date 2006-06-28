@@ -50,7 +50,7 @@ MSHR::MSHR()
 {
     inService = false;
     ntargets = 0;
-    threadNum = -1;
+    setThreadNum() = -1;
 }
 
 void
@@ -68,7 +68,7 @@ MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
     pkt->data = new uint8_t[size];
     pkt->senderState = this;
     //Set the time here for latency calculations
-    //pkt->time = curTick;
+    pkt->time = curTick;
 
     if (target) {
         pkt->req = target->req;
@@ -85,7 +85,7 @@ MSHR::allocateAsBuffer(Packet * &target)
 {
     addr = target->paddr;
     asid = target->req->asid;
-    threadNum = target->thread_num;
+    setThreadNum() = target->req->getThreadNum();
     pkt = new Packet();
     pkt->addr = target->addr;
     pkt->dest = target->dest;
@@ -94,6 +94,7 @@ MSHR::allocateAsBuffer(Packet * &target)
     pkt->req = target->req;
     pkt->data = new uint8_t[target->size];
     pkt->senderState = this;
+    pkt->time = curTick;
 }
 
 void
@@ -161,14 +162,14 @@ MSHR::dump()
              "inService: %d thread: %d\n"
              "Addr: %x asid: %d ntargets %d\n"
              "Targets:\n",
-             inService, threadNum, addr, asid, ntargets);
+             inService, getThreadNum(), addr, asid, ntargets);
 
     TargetListIterator tar_it = targets.begin();
     for (int i = 0; i < ntargets; i++) {
         assert(tar_it != targets.end());
 
         ccprintf(cerr, "\t%d: Addr: %x cmd: %d\n",
-                 i, (*tar_it)->paddr, (*tar_it)->cmd.toIndex());
+                 i, (*tar_it)->paddr, (*tar_it)->cmdToIndex());
 
         tar_it++;
     }

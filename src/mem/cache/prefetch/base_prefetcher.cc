@@ -132,7 +132,7 @@ BasePrefetcher::getPacket()
 void
 BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
 {
-    if (!pkt->isUncacheable() && !(pkt->isInstRead() && only_data))
+    if (!pkt->req->isUncacheable() && !(pkt->isInstRead() && only_data))
     {
         //Calculate the blk address
         Addr blkAddr = pkt->paddr & ~(Addr)(blkSize-1);
@@ -185,7 +185,7 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             prefetch->xc = pkt->xc;
             prefetch->data = new uint8_t[blkSize];
             prefetch->req->asid = pkt->req->asid;
-            prefetch->thread_num = pkt->thread_num;
+            prefetch->req->setThreadNum() = pkt->req->getThreadNum();
             prefetch->time = time + (*delay); //@todo ADD LATENCY HERE
             //... initialize
 

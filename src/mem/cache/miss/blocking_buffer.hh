@@ -164,9 +164,9 @@ public:
     /**
      * Removes all outstanding requests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
-     * @param thread_number The thread number of the requests to squash.
+     * @param req->getThreadNum()ber The thread number of the requests to squash.
      */
-    void squash(int thread_number);
+    void squash(int req->getThreadNum()ber);
 
     /**
      * Return the current number of outstanding misses.
@@ -212,12 +212,11 @@ public:
      * Perform a writeback of dirty data to the given address.
      * @param addr The address to write to.
      * @param asid The address space id.
-     * @param xc The execution context of the address space.
      * @param size The number of bytes to write.
      * @param data The data to write, can be NULL.
      * @param compressed True if the data is compressed.
      */
-    void doWriteback(Addr addr, int asid, ExecContext *xc,
+    void doWriteback(Addr addr, int asid,
                      int size, uint8_t *data, bool compressed);
 
     /**
