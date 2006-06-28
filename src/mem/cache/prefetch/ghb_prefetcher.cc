@@ -26,50 +26,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Steve Reinhardt
  */
 
 /**
  * @file
- * Describes a tagged prefetcher based on template policies.
+ * GHB Prefetcher template instantiations.
  */
 
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#include "mem/cache/tags/cache_tags.hh"
 
-template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
-                                     cacheCheckPush, onlyData),
-     latency(latency), degree(degree)
-{
-}
+#include "mem/cache/tags/lru.hh"
 
-template <class TagStore, class Buffering>
-void
-TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
+#include "base/compression/null_compression.hh"
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
-        }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
-        }
-    }
-}
+#include "mem/cache/miss/miss_queue.hh"
+#include "mem/cache/miss/blocking_buffer.hh"
 
+#include "mem/cache/prefetch/ghb_prefetcher.hh"
 
+// Template Instantiations
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template class GHBPrefetcher<CacheTags<LRU,NullCompression>, MissQueue>;
+template class GHBPrefetcher<CacheTags<LRU,NullCompression>, BlockingBuffer>;
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS

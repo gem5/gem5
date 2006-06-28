@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
+ * Authors: Lisa Hsu
  */
 
 /**
  * @file
- * Describes a tagged prefetcher based on template policies.
+ * Declaration of partitioned tag store cache block class.
  */
 
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#ifndef __SPLIT_BLK_HH__
+#define __SPLIT_BLK_HH__
 
-template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
-                                     cacheCheckPush, onlyData),
-     latency(latency), degree(degree)
-{
-}
+#include "mem/cache/cache_blk.hh" // base class
 
-template <class TagStore, class Buffering>
-void
-TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
+/**
+ * Split cache block.
+ */
+class SplitBlk : public CacheBlk {
+  public:
+    /** Has this block been touched? Used to aid calculation of warmup time. */
+    bool isTouched;
+    /** Has this block been used after being brought in? (for LIFO partition) */
+    bool isUsed;
+    /** is this blk a NIC block? (i.e. requested by the NIC) */
+    bool isNIC;
+    /** timestamp of the arrival of this block into the cache */
+    Tick ts;
+    /** the previous block in the LIFO partition (brought in before than me) */
+    SplitBlk *prev;
+    /** the next block in the LIFO partition (brought in later than me) */
+    SplitBlk *next;
+    /** which partition this block is in */
+    int part;
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
-        }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
-        }
-    }
-}
+    SplitBlk()
+        : isTouched(false), isUsed(false), isNIC(false), ts(0), prev(NULL), next(NULL),
+          part(0)
+    {}
+};
 
+#endif
 

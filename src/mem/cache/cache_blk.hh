@@ -1,0 +1,203 @@
+/*
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
+ */
+
+/** @file
+ * Definitions of a simple cache block class.
+ */
+
+#ifndef __CACHE_BLK_HH__
+#define __CACHE_BLK_HH__
+
+#include "sim/root.hh"		// for Tick
+#include "arch/isa_traits.hh"	// for Addr
+#include "cpu/exec_context.hh"
+
+/**
+ * Cache block status bit assignments
+ */
+enum CacheBlkStatusBits {
+    /** valid, readable */
+    BlkValid =		0x01,
+    /** write permission */
+    BlkWritable =	0x02,
+    /** dirty (modified) */
+    BlkDirty =		0x04,
+    /** compressed */
+    BlkCompressed =	0x08,
+    /** block was referenced */
+    BlkReferenced =	0x10,
+    /** block was a hardware prefetch yet unaccessed*/
+    BlkHWPrefetched =	0x20
+};
+
+/**
+ * A Basic Cache block.
+ * Contains the tag, status, and a pointer to data.
+ */
+class CacheBlk
+{
+  public:
+    /** The address space ID of this block. */
+    int asid;
+    /** Data block tag value. */
+    Addr tag;
+    /**
+     * Contains a copy of the data in this block for easy access. This is used
+     * for efficient execution when the data could be actually stored in
+     * another format (COW, compressed, sub-blocked, etc). In all cases the
+     * data stored here should be kept consistant with the actual data
+     * referenced by this block.
+     */
+    uint8_t *data;
+    /** the number of bytes stored in this block. */
+    int size;
+
+    /** block state: OR of CacheBlkStatusBit */
+    typedef unsigned State;
+
+    /** The current status of this block. @sa CacheBlockStatusBits */
+    State status;
+
+    /** Which curTick will this block be accessable */
+    Tick whenReady;
+
+    /** Save the exec context so that writebacks can use them. */
+    ExecContext *xc;
+
+    /**
+     * The set this block belongs to.
+     * @todo Move this into subclasses when we fix CacheTags to use them.
+     */
+    int set;
+
+    /** Number of references to this block since it was brought in. */
+    int refCount;
+
+    CacheBlk()
+        : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0), xc(0),
+          set(-1), refCount(0)
+    {}
+
+    /**
+     * Copy the state of the given block into this one.
+     * @param rhs The block to copy.
+     * @return a const reference to this block.
+     */
+    const CacheBlk& operator=(const CacheBlk& rhs)
+    {
+        asid = rhs.asid;
+        tag = rhs.tag;
+        data = rhs.data;
+        size = rhs.size;
+        status = rhs.status;
+        whenReady = rhs.whenReady;
+        xc = rhs.xc;
+        set = rhs.set;
+        refCount = rhs.refCount;
+        return *this;
+    }
+
+    /**
+     * Checks the write permissions of this block.
+     * @return True if the block is writable.
+     */
+    bool isWritable() const
+    {
+        const int needed_bits = BlkWritable | BlkValid;
+        return (status & needed_bits) == needed_bits;
+    }
+
+    /**
+     * Checks that a block is valid (readable).
+     * @return True if the block is valid.
+     */
+    bool isValid() const
+    {
+        return (status & BlkValid) != 0;
+    }
+
+    /**
+     * Check to see if a block has been written.
+     * @return True if the block is dirty.
+     */
+    bool isModified() const
+    {
+        return (status & BlkDirty) != 0;
+    }
+
+    /**
+     * Check to see if this block contains compressed data.
+     * @return True iF the block's data is compressed.
+     */
+    bool isCompressed() const
+    {
+        return (status & BlkCompressed) != 0;
+    }
+
+    /**
+     * Check if this block has been referenced.
+     * @return True if the block has been referenced.
+     */
+    bool isReferenced() const
+    {
+        return (status & BlkReferenced) != 0;
+    }
+
+    /**
+     * Check if this block was the result of a hardware prefetch, yet to
+     * be touched.
+     * @return True if the block was a hardware prefetch, unaccesed.
+     */
+    bool isPrefetch() const
+    {
+        return (status & BlkHWPrefetched) != 0;
+    }
+
+
+};
+
+/**
+ * Output a CacheBlk to the given ostream.
+ * @param out The stream for the output.
+ * @param blk The cache block to print.
+ *
+ * @return The output stream.
+ */
+inline std::ostream &
+operator<<(std::ostream &out, const CacheBlk &blk)
+{
+    out << std::hex << std::endl;
+    out << "  Tag: " << blk.tag << std::endl;
+    out << "  Status: " <<  blk.status << std::endl;
+
+    return(out << std::dec);
+}
+
+#endif //__CACHE_BLK_HH__
