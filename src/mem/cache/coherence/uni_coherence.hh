@@ -34,7 +34,6 @@
 #include "base/trace.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/mshr_queue.hh"
-#include "mem/mem_cmd.hh"
 #include "mem/packet.hh"
 
 class BaseCache;
@@ -79,11 +78,11 @@ class UniCoherence
      */
     Packet::Command getBusCmd(Packet::Command &cmd, CacheBlk::State state)
     {
-        if (cmd == Hard_Prefetch && state)
+        if (cmd == Packet::HardPFReq && state)
             warn("Trying to issue a prefetch to a block we already have\n");
-        if (cmd == Writeback)
-            return Writeback;
-        return Read;
+        if (cmd == Packet::Writeback)
+            return Packet::Writeback;
+        return Packet::ReadReq;
     }
 
     /**
@@ -96,7 +95,7 @@ class UniCoherence
     {
         if (pkt->senderState) //Blocking Buffers don't get mshrs
         {
-            if (pkt->senderState->originalCmd == Hard_Prefetch) {
+            if (((MSHR *)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
                 DPRINTF(HWPrefetch, "Marking a hardware prefetch as such in the state\n");
                 return BlkHWPrefetched | BlkValid | BlkWritable;
             }

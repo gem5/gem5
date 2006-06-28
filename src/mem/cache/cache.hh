@@ -138,7 +138,7 @@ class Cache : public BaseCache
     };
 
     /** Instantiates a basic cache object. */
-    Cache(const std::string &_name, HierParams *hier_params, Params &params);
+    Cache(const std::string &_name, Params &params);
 
     void regStats();
 
@@ -147,7 +147,7 @@ class Cache : public BaseCache
      * @param req The request to perform.
      * @return The result of the access.
      */
-    MemAccessResult access(Packet * &pkt);
+    bool access(Packet * &pkt);
 
     /**
      * Selects a request to send on the bus.
@@ -233,7 +233,8 @@ class Cache : public BaseCache
      */
     void respond(Packet * &pkt, Tick time)
     {
-        si->respond(pkt,time);
+        //si->respond(pkt,time);
+        cpuSidePort->sendAtomic(pkt);
     }
 
     /**

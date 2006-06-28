@@ -41,10 +41,17 @@
 #include "mem/request.hh"
 #include "arch/isa_traits.hh"
 #include "sim/root.hh"
+#include <list>
 
 struct Packet;
 typedef Packet* PacketPtr;
 typedef uint8_t* PacketDataPtr;
+typedef std::list<PacketPtr> PacketList;
+
+//Coherence Flags
+#define NACKED_LINE 1 << 0
+#define SATISFIED 1 << 1
+#define SHARED_LINE 1 << 2
 
 //For statistics we need max number of commands, hard code it at
 //20 for now.  @todo fix later
@@ -173,7 +180,10 @@ class Packet
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
         SoftPFResp      = IsRead  | IsRequest | IsSWPrefetch | IsResponse,
-        HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse
+        HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse,
+        InvalidateReq   = IsInvalidate | IsRequest,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
+        UpgradeReq      = IsInvalidate | NeedsResponse
     };
 
     /** Return the string name of the cmd field (for debugging and
@@ -190,9 +200,14 @@ class Packet
     Command cmd;
 
     bool isRead() 	 { return (cmd & IsRead)  != 0; }
+    bool isWrite()       { return (cmd & IsWrite) != 0; }
     bool isRequest()	 { return (cmd & IsRequest)  != 0; }
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
+    bool isInvalidate()  { return (cmd * IsInvalidate) != 0; }
+
+    bool isCacheFill() { assert("Unimplemented yet\n" && 0); }
+    bool isNoAllocate() { assert("Unimplemented yet\n" && 0); }
 
     /** Possible results of a packet's request. */
     enum Result

@@ -97,7 +97,7 @@ class CacheBlk
     int refCount;
 
     CacheBlk()
-        : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0), xc(0),
+        : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
           set(-1), refCount(0)
     {}
 
@@ -114,7 +114,6 @@ class CacheBlk
         size = rhs.size;
         status = rhs.status;
         whenReady = rhs.whenReady;
-        xc = rhs.xc;
         set = rhs.set;
         refCount = rhs.refCount;
         return *this;

@@ -44,6 +44,7 @@ class Request;
 
 typedef Request* RequestPtr;
 
+
 /** The request is a Load locked/store conditional. */
 const unsigned LOCKED		= 0x001;
 /** The virtual address is also the physical address. */

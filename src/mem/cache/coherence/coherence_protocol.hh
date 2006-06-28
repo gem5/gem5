@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Ron Dreslinski
  *          Steve Reinhardt
  */
 
@@ -40,7 +41,6 @@
 
 #include "sim/sim_object.hh"
 #include "mem/packet.hh"
-#include "mem/mem_cmd.hh"
 #include "mem/cache/cache_blk.hh"
 #include "base/statistics.hh"
 
@@ -89,7 +89,7 @@ class CoherenceProtocol : public SimObject
      * @param oldState The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(const Packet * &pkt,
+    CacheBlk::State getNewState(Packet * &pkt,
                                 CacheBlk::State oldState);
 
     /**

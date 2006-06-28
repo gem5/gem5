@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Ron Dreslinski
  */
 
 /**
@@ -39,7 +40,6 @@
 #include <string>
 
 #include "mem/packet.hh"
-#include "mem/mem_cmd.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/mshr_queue.hh"
 #include "mem/cache/coherence/coherence_protocol.hh"
@@ -119,7 +119,7 @@ class SimpleCoherence
 //Got rid of, there could be an MSHR, but it can't be in service
         if (blk != NULL)
         {
-            if (pkt->cmd != Writeback) {
+            if (pkt->cmd != Packet::Writeback) {
                 return protocol->handleBusRequest(cache, pkt, blk, mshr,
                                               new_state);
             }
@@ -138,7 +138,7 @@ class SimpleCoherence
      */
     Packet::Command getBusCmd(Packet::Command &cmd, CacheBlk::State state)
     {
-        if (cmd == Writeback) return Writeback;
+        if (cmd == Packet::Writeback) return Packet::Writeback;
         return protocol->getBusCmd(cmd, state);
     }
 

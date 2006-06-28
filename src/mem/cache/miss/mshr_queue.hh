@@ -192,7 +192,7 @@ class MSHRQueue {
      * is in service, just squashes the targets.
      * @param req->getThreadNum()ber The thread to squash.
      */
-    void squash(int req->getThreadNum()ber);
+    void squash(int threadNum);
 
     /**
      * Returns true if the pending list is not empty.

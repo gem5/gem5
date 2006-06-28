@@ -51,14 +51,6 @@
 #include "mem/cache/miss/mshr.hh"
 #include "mem/cache/prefetch/prefetcher.hh"
 
-#include "mem/bus/bus.hh"
-
-#include "mem/bus/slave_interface.hh"
-#include "mem/memory_interface.hh"
-#include "mem/bus/master_interface.hh"
-
-#include "mem/mem_debug.hh"
-
 #include "sim/sim_events.hh" // for SimExitEvent
 
 using namespace std;
@@ -66,7 +58,7 @@ using namespace std;
 template<class TagStore, class Buffering, class Coherence>
 bool
 Cache<TagStore,Buffering,Coherence>::
-doTimingAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
+doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -74,17 +66,18 @@ doTimingAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
     }
     else
     {
-        if (pkt->isRespnse())
+        if (pkt->isResponse())
             handleResponse(pkt);
         else
             snoop(pkt);
     }
+    return true; //Deal with blocking....
 }
 
 template<class TagStore, class Buffering, class Coherence>
 Tick
 Cache<TagStore,Buffering,Coherence>::
-doAtomicAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
+doAtomicAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -92,7 +85,7 @@ doAtomicAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
     }
     else
     {
-        if (pkt->isRespnse())
+        if (pkt->isResponse())
             handleResponse(pkt);
         else
             snoopProbe(pkt, true);
@@ -102,7 +95,7 @@ doAtomicAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
 template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::
-doFunctionalAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
+doFunctionalAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -110,7 +103,7 @@ doFunctionalAccess(Packet *pkt, MemoryPort *memoryPort, bool isCpuSide)
     }
     else
     {
-        if (pkt->isRespnse())
+        if (pkt->isResponse())
             handleResponse(pkt);
         else
             snoopProbe(pkt, false);
@@ -128,9 +121,9 @@ recvStatusChange(Port::Status status, bool isCpuSide)
 
 template<class TagStore, class Buffering, class Coherence>
 Cache<TagStore,Buffering,Coherence>::
-Cache(const std::string &_name, HierParams *hier_params,
+Cache(const std::string &_name,
       Cache<TagStore,Buffering,Coherence>::Params &params)
-    : BaseCache(_name, hier_params, params.baseParams),
+    : BaseCache(_name, params.baseParams),
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
       coherence(params.coherence), prefetcher(params.prefetcher),
@@ -148,7 +141,7 @@ Cache(const std::string &_name, HierParams *hier_params,
     prefetcher->setTags(tags);
     prefetcher->setBuffer(missQueue);
     invalidatePkt = new Packet;
-    invalidatePkt->cmd = Invalidate;
+    invalidatePkt->cmd = Packet::InvalidateReq;
 }
 
 template<class TagStore, class Buffering, class Coherence>
@@ -163,12 +156,13 @@ Cache<TagStore,Buffering,Coherence>::regStats()
 }
 
 template<class TagStore, class Buffering, class Coherence>
-MemAccessResult
-Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
+bool
+Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
 {
-    MemDebug::cacheAccess(pkt);
+//@todo Add back in MemDebug Calls
+//    MemDebug::cacheAccess(pkt);
     BlkType *blk = NULL;
-    PacketList* writebacks;
+    PacketList writebacks;
     int size = blkSize;
     int lat = hitLatency;
     if (prefetchAccess) {
@@ -176,18 +170,19 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
         prefetcher->handleMiss(pkt, curTick);
     }
     if (!pkt->req->isUncacheable()) {
-        if (pkt->cmd.isInvalidate() && !pkt->cmd.isRead()
-            && !pkt->cmd.isWrite()) {
+        if (pkt->isInvalidate() && !pkt->isRead()
+            && !pkt->isWrite()) {
             //Upgrade or Invalidate
             //Look into what happens if two slave caches on bus
-            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmd.toString(),
-                    pkt->req->asid, pkt->paddr & (((ULL(1))<<48)-1),
-                    pkt->paddr & ~((Addr)blkSize - 1));
+            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmdString(),
+                    pkt->req->asid, pkt->addr & (((ULL(1))<<48)-1),
+                    pkt->addr & ~((Addr)blkSize - 1));
 
             //@todo Should this return latency have the hit latency in it?
 //	    respond(pkt,curTick+lat);
-            pkt->flags |= SATISFIED;
-            return MA_HIT;
+            (int)pkt->coherence |= SATISFIED;
+//            return MA_HIT; //@todo, return values
+            return true;
         }
         blk = tags->handleAccess(pkt, lat, writebacks);
     } else {
@@ -198,10 +193,10 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
     /** @todo make the fast write alloc (wh64) work with coherence. */
     /** @todo Do we want to do fast writes for writebacks as well? */
     if (!blk && pkt->size >= blkSize && coherence->allowFastWrites() &&
-        (pkt->cmd == Write || pkt->cmd == WriteInvalidate) ) {
+        (pkt->cmd == Packet::WriteReq || pkt->cmd == Packet::WriteInvalidateReq) ) {
         // not outstanding misses, can do this
-        MSHR* outstanding_miss = missQueue->findMSHR(pkt->paddr, pkt->req->asid);
-        if (pkt->cmd ==WriteInvalidate || !outstanding_miss) {
+        MSHR* outstanding_miss = missQueue->findMSHR(pkt->addr, pkt->req->asid);
+        if (pkt->cmd == Packet::WriteInvalidateReq || !outstanding_miss) {
             if (outstanding_miss) {
                 warn("WriteInv doing a fastallocate"
                      "with an outstanding miss to the same address\n");
@@ -215,16 +210,17 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
         missQueue->doWriteback(writebacks.front());
         writebacks.pop_front();
     }
-    DPRINTF(Cache, "%s %d %x %s blk_addr: %x pc %x\n", pkt->cmd.toString(),
-            pkt->req->asid, pkt->paddr & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
-            pkt->paddr & ~((Addr)blkSize - 1), pkt->pc);
+    DPRINTF(Cache, "%s %d %x %s blk_addr: %x pc %x\n", pkt->cmdString(),
+            pkt->req->asid, pkt->addr & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
+            pkt->addr & ~((Addr)blkSize - 1), pkt->req->pc);
     if (blk) {
         // Hit
         hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
         // clear dirty bit if write through
-        if (!pkt->cmd.isNoResponse())
+        if (pkt->needsResponse())
             respond(pkt, curTick+lat);
-        return MA_HIT;
+//	return MA_HIT;
+        return true;
     }
 
     // Miss
@@ -234,11 +230,12 @@ Cache<TagStore,Buffering,Coherence>::access(Packet &pkt)
         if (missCount) {
             --missCount;
             if (missCount == 0)
-                new SimExitEvent("A cache reached the maximum miss count");
+                new SimLoopExitEvent("A cache reached the maximum miss count");
         }
     }
     missQueue->handleMiss(pkt, size, curTick + hitLatency);
-    return MA_CACHE_MISS;
+//    return MA_CACHE_MISS;
+    return true;
 }
 
 
@@ -249,7 +246,7 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
     Packet * pkt = missQueue->getPacket();
     if (pkt) {
         if (!pkt->req->isUncacheable()) {
-            if (pkt->cmd == Hard_Prefetch) misses[Hard_Prefetch][pkt->req->getThreadNum()]++;
+            if (pkt->cmd == Packet::HardPFReq) misses[Packet::HardPFReq][pkt->req->getThreadNum()]++;
             BlkType *blk = tags->findBlock(pkt);
             Packet::Command cmd = coherence->getBusCmd(pkt->cmd,
                                               (blk)? blk->status : 0);
@@ -257,19 +254,19 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
         }
     }
 
-    assert(!doMasterPktuest() || missQueue->havePending());
+    assert(!doMasterRequest() || missQueue->havePending());
     assert(!pkt || pkt->time <= curTick);
     return pkt;
 }
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::sendResult(MemPktPtr &pkt, bool success)
+Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, bool success)
 {
     if (success) {
         missQueue->markInService(pkt);
           //Temp Hack for UPGRADES
-          if (pkt->cmd == Upgrade) {
+          if (pkt->cmd == Packet::UpgradeReq) {
               handleResponse(pkt);
           }
     } else if (pkt && !pkt->req->isUncacheable()) {
@@ -283,14 +280,14 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
-        MemDebug::cacheResponse(pkt);
-        DPRINTF(Cache, "Handling reponse to %x, blk addr: %x\n",pkt->paddr,
-                pkt->paddr & (((ULL(1))<<48)-1));
+//	MemDebug::cacheResponse(pkt);
+        DPRINTF(Cache, "Handling reponse to %x, blk addr: %x\n",pkt->addr,
+                pkt->addr & (((ULL(1))<<48)-1));
 
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
             blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
-            MemPktList writebacks;
+            PacketList writebacks;
             blk = tags->handleFill(blk, pkt->senderState,
                                    coherence->getNewState(pkt,old_state),
                                    writebacks);
@@ -309,11 +306,11 @@ Cache<TagStore,Buffering,Coherence>::pseudoFill(Addr addr, int asid)
     // Need to temporarily move this blk into MSHRs
     MSHR *mshr = missQueue->allocateTargetList(addr, asid);
     int lat;
-    PacketList* dummy;
+    PacketList dummy;
     // Read the data into the mshr
     BlkType *blk = tags->handleAccess(mshr->pkt, lat, dummy, false);
     assert(dummy.empty());
-    assert(mshr->pkt->isSatisfied());
+    assert((int)mshr->pkt->coherence & SATISFIED);
     // can overload order since it isn't used on non pending blocks
     mshr->order = blk->status;
     // temporarily remove the block from the cache.
@@ -325,17 +322,17 @@ void
 Cache<TagStore,Buffering,Coherence>::pseudoFill(MSHR *mshr)
 {
     // Need to temporarily move this blk into MSHRs
-    assert(mshr->pkt->cmd == Read);
+    assert(mshr->pkt->cmd == Packet::ReadReq);
     int lat;
-    PacketList* dummy;
+    PacketList dummy;
     // Read the data into the mshr
     BlkType *blk = tags->handleAccess(mshr->pkt, lat, dummy, false);
     assert(dummy.empty());
-    assert(mshr->pkt->isSatisfied());
+    assert((int)mshr->pkt->coherence & SATISFIED);
     // can overload order since it isn't used on non pending blocks
     mshr->order = blk->status;
     // temporarily remove the block from the cache.
-    tags->invalidateBlk(mshr->pkt->paddr, mshr->pkt->req->asid);
+    tags->invalidateBlk(mshr->pkt->addr, mshr->pkt->req->asid);
 }
 
 
@@ -351,19 +348,19 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 {
-    Addr blk_addr = pkt->paddr & ~(Addr(blkSize-1));
+    Addr blk_addr = pkt->addr & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr, pkt->req->asid);
     if (isTopLevel() && coherence->hasProtocol()) { //@todo Move this into handle bus req
         //If we find an mshr, and it is in service, we need to NACK or invalidate
         if (mshr) {
             if (mshr->inService) {
-                if ((mshr->pkt->cmd.isInvalidate() || !mshr->pkt->isCacheFill())
-                    && (pkt->cmd != Invalidate && pkt->cmd != WriteInvalidate)) {
+                if ((mshr->pkt->isInvalidate() || !mshr->pkt->isCacheFill())
+                    && (pkt->cmd != Packet::InvalidateReq && pkt->cmd != Packet::WriteInvalidateReq)) {
                     //If the outstanding request was an invalidate (upgrade,readex,..)
                     //Then we need to ACK the request until we get the data
                     //Also NACK if the outstanding request is not a cachefill (writeback)
-                    pkt->flags |= NACKED_LINE;
+                    (int)pkt->coherence |= NACKED_LINE;
                     return;
                 }
                 else {
@@ -376,11 +373,11 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //@todo Make it so that a read to a pending read can't be exclusive now.
 
                     //Set the address so find match works
-                    invalidatePkt->paddr = pkt->paddr;
+                    invalidatePkt->addr = pkt->addr;
 
                     //Append the invalidate on
                     missQueue->addTarget(mshr,invalidatePkt);
-                    DPRINTF(Cache, "Appending Invalidate to blk_addr: %x\n", pkt->paddr & (((ULL(1))<<48)-1));
+                    DPRINTF(Cache, "Appending Invalidate to blk_addr: %x\n", pkt->addr & (((ULL(1))<<48)-1));
                     return;
                 }
             }
@@ -388,34 +385,32 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
         //We also need to check the writeback buffers and handle those
         std::vector<MSHR *> writebacks;
         if (missQueue->findWrites(blk_addr, pkt->req->asid, writebacks)) {
-            DPRINTF(Cache, "Snoop hit in writeback to blk_addr: %x\n", pkt->paddr & (((ULL(1))<<48)-1));
+            DPRINTF(Cache, "Snoop hit in writeback to blk_addr: %x\n", pkt->addr & (((ULL(1))<<48)-1));
 
             //Look through writebacks for any non-uncachable writes, use that
             for (int i=0; i<writebacks.size(); i++) {
                 mshr = writebacks[i];
 
                 if (!mshr->pkt->req->isUncacheable()) {
-                    if (pkt->cmd.isRead()) {
+                    if (pkt->isRead()) {
                         //Only Upgrades don't get here
                         //Supply the data
-                        pkt->flags |= SATISFIED;
+                        (int)pkt->coherence |= SATISFIED;
 
                         //If we are in an exclusive protocol, make it ask again
                         //to get write permissions (upgrade), signal shared
-                        pkt->flags |= SHARED_LINE;
+                        (int)pkt->coherence |= SHARED_LINE;
 
-                        if (doData()) {
-                            assert(pkt->cmd.isRead());
+                        assert(pkt->isRead());
+                        assert(pkt->offset < blkSize);
+                        assert(pkt->size <= blkSize);
+                        assert(pkt->offset + pkt->size <=blkSize);
+                        memcpy(pkt->data, mshr->pkt->data + pkt->offset, pkt->size);
 
-                            assert(pkt->offset < blkSize);
-                            assert(pkt->size <= blkSize);
-                            assert(pkt->offset + pkt->size <=blkSize);
-                            memcpy(pkt->data, mshr->pkt->data + pkt->offset, pkt->size);
-                        }
                         respondToSnoop(pkt);
                     }
 
-                    if (pkt->cmd.isInvalidate()) {
+                    if (pkt->isInvalidate()) {
                         //This must be an upgrade or other cache will take ownership
                         missQueue->markInService(mshr->pkt);
                     }
@@ -439,7 +434,7 @@ void
 Cache<TagStore,Buffering,Coherence>::snoopResponse(Packet * &pkt)
 {
     //Need to handle the response, if NACKED
-    if (pkt->isNacked()) {
+    if ((int)pkt->coherence & NACKED_LINE) {
         //Need to mark it as not in service, and retry for bus
         assert(0); //Yeah, we saw a NACK come through
 
@@ -467,16 +462,16 @@ template<class TagStore, class Buffering, class Coherence>
 Tick
 Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 {
-    MemDebug::cacheProbe(pkt);
+//    MemDebug::cacheProbe(pkt);
 
     if (!pkt->req->isUncacheable()) {
-        if (pkt->cmd.isInvalidate() && !pkt->cmd.isRead()
-            && !pkt->cmd.isWrite()) {
+        if (pkt->isInvalidate() && !pkt->isRead()
+            && !pkt->isWrite()) {
             //Upgrade or Invalidate, satisfy it, don't forward
-            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmd.toString(),
-                    pkt->req->asid, pkt->paddr & (((ULL(1))<<48)-1),
-                    pkt->paddr & ~((Addr)blkSize - 1));
-            pkt->flags |= SATISFIED;
+            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmdString(),
+                    pkt->req->asid, pkt->addr & (((ULL(1))<<48)-1),
+                    pkt->addr & ~((Addr)blkSize - 1));
+            (int)pkt->coherence |= SATISFIED;
             return 0;
         }
     }
@@ -486,13 +481,13 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         return mi->sendProbe(pkt,update);
     }
 
-    PacketList* writebacks;
+    PacketList writebacks;
     int lat;
     BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
 
     if (!blk) {
         // Need to check for outstanding misses and writes
-        Addr blk_addr = pkt->paddr & ~(blkSize - 1);
+        Addr blk_addr = pkt->addr & ~(blkSize - 1);
 
         // There can only be one matching outstanding miss.
         MSHR* mshr = missQueue->findMSHR(blk_addr, pkt->req->asid);
@@ -513,12 +508,12 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                     Packet * target = *i;
                     // If the target contains data, and it overlaps the
                     // probed request, need to update data
-                    if (target->cmd.isWrite() && target->overlaps(pkt)) {
+                    if (target->isWrite() && target->overlaps(pkt)) {
                         uint8_t* pkt_data;
                         uint8_t* write_data;
                         int data_size;
-                        if (target->paddr < pkt->paddr) {
-                            int offset = pkt->paddr - target->paddr;
+                        if (target->addr < pkt->addr) {
+                            int offset = pkt->addr - target->paddr;
                             pkt_data = pkt->data;
                             write_data = target->data + offset;
                             data_size = target->size - offset;
@@ -526,7 +521,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                             if (data_size > pkt->size)
                                 data_size = pkt->size;
                         } else {
-                            int offset = target->paddr - pkt->paddr;
+                            int offset = target->addr - pkt->addr;
                             pkt_data = pkt->data + offset;
                             write_data = target->data;
                             data_size = pkt->size - offset;
@@ -535,7 +530,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                                 data_size = target->size;
                         }
 
-                        if (pkt->cmd.isWrite()) {
+                        if (pkt->isWrite()) {
                             memcpy(pkt_data, write_data, data_size);
                         } else {
                             memcpy(write_data, pkt_data, data_size);
@@ -550,8 +545,8 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                     uint8_t* pkt_data;
                     uint8_t* write_data;
                     int data_size;
-                    if (write->paddr < pkt->paddr) {
-                        int offset = pkt->paddr - write->paddr;
+                    if (write->addr < pkt->addr) {
+                        int offset = pkt->addr - write->addr;
                         pkt_data = pkt->data;
                         write_data = write->data + offset;
                         data_size = write->size - offset;
@@ -559,7 +554,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                         if (data_size > pkt->size)
                             data_size = pkt->size;
                     } else {
-                        int offset = write->paddr - pkt->paddr;
+                        int offset = write->addr - pkt->addr;
                         pkt_data = pkt->data + offset;
                         write_data = write->data;
                         data_size = pkt->size - offset;
@@ -568,7 +563,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
                             data_size = write->size;
                     }
 
-                    if (pkt->cmd.isWrite()) {
+                    if (pkt->isWrite()) {
                         memcpy(pkt_data, write_data, data_size);
                     } else {
                         memcpy(write_data, pkt_data, data_size);
@@ -585,8 +580,8 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
             }
             if (!pkt->req->isUncacheable()) {
                 // Fetch the cache block to fill
-                Packet * busPkt = new MemPkt();
-                busPkt->paddr = blk_addr;
+                Packet * busPkt = new Packet();
+                busPkt->addr = blk_addr;
                 busPkt->size = blkSize;
                 busPkt->data = new uint8_t[blkSize];
 
@@ -632,7 +627,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 
         if (update) {
             hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
-        } else if (pkt->cmd.isWrite()) {
+        } else if (pkt->isWrite()) {
             // Still need to change data in all locations.
             return mi->sendProbe(pkt, update);
         }
@@ -644,9 +639,9 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 
 template<class TagStore, class Buffering, class Coherence>
 Tick
-Cache<TagStore,Buffering,Coherence>::snoopProbe(MemPktPtr &pkt, bool update)
+Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt, bool update)
 {
-    Addr blk_addr = pkt->paddr & ~(Addr(blkSize-1));
+    Addr blk_addr = pkt->addr & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr, pkt->req->asid);
     CacheBlk::State new_state = 0;
