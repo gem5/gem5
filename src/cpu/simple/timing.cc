@@ -88,6 +88,8 @@ TimingSimpleCPU::TimingSimpleCPU(Params *p)
 {
     _status = Idle;
     ifetch_pkt = dcache_pkt = NULL;
+    quiesceEvent = NULL;
+    state = SimObject::Timing;
 }
 
 
@@ -98,25 +100,54 @@ TimingSimpleCPU::~TimingSimpleCPU()
 void
 TimingSimpleCPU::serialize(ostream &os)
 {
-    BaseSimpleCPU::serialize(os);
     SERIALIZE_ENUM(_status);
+    BaseSimpleCPU::serialize(os);
 }
 
 void
 TimingSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    BaseSimpleCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
+    BaseSimpleCPU::unserialize(cp, section);
+}
+
+bool
+TimingSimpleCPU::quiesce(Event *quiesce_event)
+{
+    // TimingSimpleCPU is ready to quiesce if it's not waiting for
+    // an access to complete.
+    if (status() == Idle || status() == Running || status() == SwitchedOut) {
+        DPRINTF(Config, "Ready to quiesce\n");
+        return false;
+    } else {
+        DPRINTF(Config, "Waiting to quiesce\n");
+        changeState(SimObject::Quiescing);
+        quiesceEvent = quiesce_event;
+        return true;
+    }
 }
 
 void
-TimingSimpleCPU::switchOut(Sampler *s)
+TimingSimpleCPU::resume()
 {
-    sampler = s;
-    if (status() == Running) {
-        _status = SwitchedOut;
+    if (_status != SwitchedOut && _status != Idle) {
+        Event *e =
+            new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, true);
+        e->schedule(curTick);
     }
-    sampler->signalSwitched();
+}
+
+void
+TimingSimpleCPU::setMemoryMode(State new_mode)
+{
+    assert(new_mode == SimObject::Timing);
+}
+
+void
+TimingSimpleCPU::switchOut()
+{
+    assert(status() == Running || status() == Idle);
+    _status = SwitchedOut;
 }
 
 
@@ -383,10 +414,16 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     // instruction
     assert(pkt->result == Packet::Success);
     assert(_status == IcacheWaitResponse);
+
     _status = Running;
 
     delete pkt->req;
     delete pkt;
+
+    if (getState() == SimObject::Quiescing) {
+        completeQuiesce();
+        return;
+    }
 
     preExecute();
     if (curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
@@ -440,6 +477,15 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
+    if (getState() == SimObject::Quiescing) {
+        completeQuiesce();
+
+        delete pkt->req;
+        delete pkt;
+
+        return;
+    }
+
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
     delete pkt->req;
@@ -450,6 +496,13 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 }
 
 
+void
+TimingSimpleCPU::completeQuiesce()
+{
+    DPRINTF(Config, "Done quiescing\n");
+    changeState(SimObject::QuiescedTiming);
+    quiesceEvent->process();
+}
 
 bool
 TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)

@@ -148,7 +148,7 @@ class BaseCPU : public SimObject
 
     /// Prepare for another CPU to take over execution.  When it is
     /// is ready (drained pipe) it signals the sampler.
-    virtual void switchOut(Sampler *);
+    virtual void switchOut();
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.

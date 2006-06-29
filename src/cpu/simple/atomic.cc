@@ -145,8 +145,8 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 void
 AtomicSimpleCPU::serialize(ostream &os)
 {
-    BaseSimpleCPU::serialize(os);
     SERIALIZE_ENUM(_status);
+    BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
 }
@@ -154,21 +154,18 @@ AtomicSimpleCPU::serialize(ostream &os)
 void
 AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    BaseSimpleCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
+    BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
 
 void
-AtomicSimpleCPU::switchOut(Sampler *s)
+AtomicSimpleCPU::switchOut()
 {
-    sampler = s;
-    if (status() == Running) {
-        _status = SwitchedOut;
+    assert(status() == Running || status() == Idle);
+    _status = SwitchedOut;
 
-        tickEvent.squash();
-    }
-    sampler->signalSwitched();
+    tickEvent.squash();
 }
 
 

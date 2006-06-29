@@ -237,7 +237,7 @@ BaseCPU::registerThreadContexts()
 
 
 void
-BaseCPU::switchOut(Sampler *sampler)
+BaseCPU::switchOut()
 {
     panic("This CPU doesn't support sampling!");
 }

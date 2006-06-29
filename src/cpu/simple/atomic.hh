@@ -125,7 +125,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    void switchOut(Sampler *s);
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     virtual void activateContext(int thread_num, int delay);
