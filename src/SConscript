@@ -103,7 +103,6 @@ base_sources = Split('''
 
         mem/cache/base_cache.cc
         mem/cache/cache.cc
-        mem/cache/cache_builder.cc
         mem/cache/coherence/coherence_protocol.cc
         mem/cache/coherence/uni_coherence.cc
         mem/cache/miss/blocking_buffer.cc
@@ -125,6 +124,8 @@ base_sources = Split('''
         mem/cache/tags/split.cc
         mem/cache/tags/split_lifo.cc
         mem/cache/tags/split_lru.cc
+
+        mem/cache/cache_builder.cc
 
 	sim/builder.cc
 	sim/debug.cc

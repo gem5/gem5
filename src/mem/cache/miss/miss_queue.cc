@@ -34,7 +34,6 @@
  * Miss and writeback queue definitions.
  */
 
-#include "cpu/exec_context.hh"
 #include "cpu/smt.hh" //for maxThreadsPerCPU
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/miss/miss_queue.hh"
@@ -59,6 +58,10 @@ MissQueue::MissQueue(int numMSHRs, int numTargets, int write_buffers,
 void
 MissQueue::regStats(const string &name)
 {
+    Request temp_req;
+    Packet::Command temp_cmd = Packet::ReadReq;
+    Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
+
     using namespace Stats;
 
     writebacks
@@ -71,7 +74,7 @@ MissQueue::regStats(const string &name)
     // MSHR hit statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
         Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = cmd.toString();
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshr_hits[access_idx]
             .init(maxThreadsPerCPU)
@@ -86,20 +89,20 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR hits")
         .flags(total)
         ;
-    demandMshrHits = mshr_hits[Read] + mshr_hits[Write];
+    demandMshrHits = mshr_hits[Packet::ReadReq] + mshr_hits[Packet::WriteReq];
 
     overallMshrHits
         .name(name + ".overall_mshr_hits")
         .desc("number of overall MSHR hits")
         .flags(total)
         ;
-    overallMshrHits = demandMshrHits + mshr_hits[Soft_Prefetch] +
-        mshr_hits[Hard_Prefetch];
+    overallMshrHits = demandMshrHits + mshr_hits[Packet::SoftPFReq] +
+        mshr_hits[Packet::HardPFReq];
 
     // MSHR miss statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshr_misses[access_idx]
             .init(maxThreadsPerCPU)
@@ -114,20 +117,20 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR misses")
         .flags(total)
         ;
-    demandMshrMisses = mshr_misses[Read] + mshr_misses[Write];
+    demandMshrMisses = mshr_misses[Packet::ReadReq] + mshr_misses[Packet::WriteReq];
 
     overallMshrMisses
         .name(name + ".overall_mshr_misses")
         .desc("number of overall MSHR misses")
         .flags(total)
         ;
-    overallMshrMisses = demandMshrMisses + mshr_misses[Soft_Prefetch] +
-        mshr_misses[Hard_Prefetch];
+    overallMshrMisses = demandMshrMisses + mshr_misses[Packet::SoftPFReq] +
+        mshr_misses[Packet::HardPFReq];
 
     // MSHR miss latency statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshr_miss_latency[access_idx]
             .init(maxThreadsPerCPU)
@@ -142,7 +145,8 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR miss cycles")
         .flags(total)
         ;
-    demandMshrMissLatency = mshr_miss_latency[Read] + mshr_miss_latency[Write];
+    demandMshrMissLatency = mshr_miss_latency[Packet::ReadReq]
+        + mshr_miss_latency[Packet::WriteReq];
 
     overallMshrMissLatency
         .name(name + ".overall_mshr_miss_latency")
@@ -150,12 +154,12 @@ MissQueue::regStats(const string &name)
         .flags(total)
         ;
     overallMshrMissLatency = demandMshrMissLatency +
-        mshr_miss_latency[Soft_Prefetch] + mshr_miss_latency[Hard_Prefetch];
+        mshr_miss_latency[Packet::SoftPFReq] + mshr_miss_latency[Packet::HardPFReq];
 
     // MSHR uncacheable statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshr_uncacheable[access_idx]
             .init(maxThreadsPerCPU)
@@ -170,13 +174,14 @@ MissQueue::regStats(const string &name)
         .desc("number of overall MSHR uncacheable misses")
         .flags(total)
         ;
-    overallMshrUncacheable = mshr_uncacheable[Read] + mshr_uncacheable[Write]
-        + mshr_uncacheable[Soft_Prefetch] + mshr_uncacheable[Hard_Prefetch];
+    overallMshrUncacheable = mshr_uncacheable[Packet::ReadReq]
+        + mshr_uncacheable[Packet::WriteReq] + mshr_uncacheable[Packet::SoftPFReq]
+        + mshr_uncacheable[Packet::HardPFReq];
 
     // MSHR miss latency statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshr_uncacheable_lat[access_idx]
             .init(maxThreadsPerCPU)
@@ -191,15 +196,16 @@ MissQueue::regStats(const string &name)
         .desc("number of overall MSHR uncacheable cycles")
         .flags(total)
         ;
-    overallMshrUncacheableLatency = mshr_uncacheable_lat[Read]
-        + mshr_uncacheable_lat[Write] + mshr_uncacheable_lat[Soft_Prefetch]
-        + mshr_uncacheable_lat[Hard_Prefetch];
+    overallMshrUncacheableLatency = mshr_uncacheable_lat[Packet::ReadReq]
+        + mshr_uncacheable_lat[Packet::WriteReq]
+        + mshr_uncacheable_lat[Packet::SoftPFReq]
+        + mshr_uncacheable_lat[Packet::HardPFReq];
 
 #if 0
     // MSHR access formulas
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshrAccesses[access_idx]
             .name(name + "." + cstr + "_mshr_accesses")
@@ -229,8 +235,8 @@ MissQueue::regStats(const string &name)
 
     // MSHR miss rate formulas
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         mshrMissRate[access_idx]
             .name(name + "." + cstr + "_mshr_miss_rate")
@@ -258,8 +264,8 @@ MissQueue::regStats(const string &name)
 
     // mshrMiss latency formulas
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         avgMshrMissLatency[access_idx]
             .name(name + "." + cstr + "_avg_mshr_miss_latency")
@@ -287,8 +293,8 @@ MissQueue::regStats(const string &name)
 
     // mshrUncacheable latency formulas
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::CommandEnum)access_idx;
-        const string &cstr = cmd.toString();
+        Packet::Command cmd = (Packet::Command)access_idx;
+        const string &cstr = temp_pkt.cmdIdxToString(cmd);
 
         avgMshrUncacheableLatency[access_idx]
             .name(name + "." + cstr + "_avg_mshr_uncacheable_latency")
@@ -354,7 +360,7 @@ MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
     if (mq.isFull()) {
         cache->setBlocked(Blocked_NoMSHRs);
     }
-    if (pkt->cmd != Hard_Prefetch) {
+    if (pkt->cmd != Packet::HardPFReq) {
         //If we need to request the bus (not on HW prefetch), do so
         cache->setMasterRequest(Request_MSHR, time);
     }
@@ -365,18 +371,21 @@ MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 MSHR*
 MissQueue::allocateWrite(Packet * &pkt, int size, Tick time)
 {
-    MSHR* mshr = wb.allocate(pkt,pkt->size);
+    MSHR* mshr = wb.allocate(pkt,pkt->getSize());
     mshr->order = order++;
-    if (cache->doData()){
-        if (pkt->isCompressed()) {
-            delete [] mshr->pkt->data;
-            mshr->pkt->actualSize = pkt->actualSize;
-            mshr->pkt->data = new uint8_t[pkt->actualSize];
-            memcpy(mshr->pkt->data, pkt->data, pkt->actualSize);
-        } else {
-            memcpy(mshr->pkt->data, pkt->data, pkt->size);
-        }
-    }
+
+//REMOVING COMPRESSION FOR NOW
+#if 0
+    if (pkt->isCompressed()) {
+        mshr->pkt->deleteData();
+        mshr->pkt->actualSize = pkt->actualSize;
+        mshr->pkt->data = new uint8_t[pkt->actualSize];
+        memcpy(mshr->pkt->data, pkt->data, pkt->actualSize);
+    } else {
+#endif
+        memcpy(mshr->pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+  //{
+
     if (wb.isFull()) {
         cache->setBlocked(Blocked_NoWBBuffers);
     }
@@ -397,15 +406,15 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
     if (prefetchMiss) prefetcher->handleMiss(pkt, time);
 
     int size = blkSize;
-    Addr blkAddr = pkt->paddr & ~(Addr)(blkSize-1);
+    Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
     MSHR* mshr = NULL;
     if (!pkt->req->isUncacheable()) {
-        mshr = mq.findMatch(blkAddr, pkt->req->asid);
+        mshr = mq.findMatch(blkAddr, pkt->req->getAsid());
         if (mshr) {
             //@todo remove hw_pf here
             mshr_hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
-            if (mshr->getThreadNum() != pkt->req->getThreadNum()) {
-                mshr->setThreadNum() = -1;
+            if (mshr->threadNum != pkt->req->getThreadNum()) {
+                mshr->threadNum = -1;
             }
             mq.allocateTarget(mshr, pkt);
             if (mshr->pkt->isNoAllocate() && !pkt->isNoAllocate()) {
@@ -429,14 +438,14 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
     } else {
         //Count uncacheable accesses
         mshr_uncacheable[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
-        size = pkt->size;
+        size = pkt->getSize();
     }
-    if (pkt->cmd.isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
-                               pkt->cmd.isNoResponse())) {
+    if (pkt->isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
+                               !pkt->needsResponse())) {
         /**
          * @todo Add write merging here.
          */
-        mshr = allocateWrite(pkt, pkt->size, time);
+        mshr = allocateWrite(pkt, pkt->getSize(), time);
         return;
     }
 
@@ -468,7 +477,7 @@ MissQueue::getPacket()
         pkt = wb.getReq();
         // Need to search for earlier miss.
         MSHR *mshr = mq.findPending(pkt);
-        if (mshr && mshr->order < pkt->senderState->order) {
+        if (mshr && mshr->order < ((MSHR*)(pkt->senderState))->order) {
             // Service misses in order until conflict is cleared.
             return mq.getReq();
         }
@@ -491,7 +500,7 @@ MissQueue::getPacket()
             //Update statistic on number of prefetches issued (hwpf_mshr_misses)
             mshr_misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
             //It will request the bus for the future, but should clear that immedieatley
-            allocateMiss(pkt, pkt->size, curTick);
+            allocateMiss(pkt, pkt->getSize(), curTick);
             pkt = mq.getReq();
             assert(pkt); //We should get back a req b/c we just put one in
         }
@@ -503,7 +512,7 @@ void
 MissQueue::setBusCmd(Packet * &pkt, Packet::Command cmd)
 {
     assert(pkt->senderState != 0);
-    MSHR * mshr = pkt->senderState;
+    MSHR * mshr = (MSHR*)pkt->senderState;
     mshr->originalCmd = pkt->cmd;
     if (pkt->isCacheFill() || pkt->isNoAllocate())
         pkt->cmd = cmd;
@@ -512,7 +521,7 @@ MissQueue::setBusCmd(Packet * &pkt, Packet::Command cmd)
 void
 MissQueue::restoreOrigCmd(Packet * &pkt)
 {
-    pkt->cmd = pkt->senderState->originalCmd;
+    pkt->cmd = ((MSHR*)(pkt->senderState))->originalCmd;
 }
 
 void
@@ -526,11 +535,11 @@ MissQueue::markInService(Packet * &pkt)
      * @todo Should include MSHRQueue pointer in MSHR to select the correct
      * one.
      */
-    if ((!pkt->isCacheFill() && pkt->cmd.isWrite()) || pkt->cmd == Copy) {
+    if ((!pkt->isCacheFill() && pkt->isWrite())) {
         // Forwarding a write/ writeback, don't need to change
         // the command
         unblock = wb.isFull();
-        wb.markInService(pkt->senderState);
+        wb.markInService((MSHR*)pkt->senderState);
         if (!wb.havePending()){
             cache->clearMasterRequest(Request_WB);
         }
@@ -541,11 +550,11 @@ MissQueue::markInService(Packet * &pkt)
         }
     } else {
         unblock = mq.isFull();
-        mq.markInService(pkt->senderState);
+        mq.markInService((MSHR*)pkt->senderState);
         if (!mq.havePending()){
             cache->clearMasterRequest(Request_MSHR);
         }
-        if (pkt->senderState->originalCmd == Hard_Prefetch) {
+        if (((MSHR*)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
                     cache->name());
             //Also clear pending if need be
@@ -568,8 +577,8 @@ MissQueue::markInService(Packet * &pkt)
 void
 MissQueue::handleResponse(Packet * &pkt, Tick time)
 {
-    MSHR* mshr = pkt->senderState;
-    if (pkt->senderState->originalCmd == Hard_Prefetch) {
+    MSHR* mshr = (MSHR*)pkt->senderState;
+    if (((MSHR*)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
         DPRINTF(HWPrefetch, "%s:Handling the response to a HW_PF\n",
                 cache->name());
     }
@@ -617,8 +626,9 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
             assert(num_targets == 1);
             Packet * target = mshr->getTarget();
             mshr->popTarget();
-            if (cache->doData() && pkt->cmd.isRead()) {
-                memcpy(target->data, pkt->data, target->size);
+            if (pkt->isRead()) {
+                memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(),
+                       target->getSize());
             }
             cache->respond(target, time);
             assert(!mshr->hasTargets());
@@ -629,14 +639,15 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
             while (mshr->hasTargets()) {
                 Packet * target = mshr->getTarget();
                 mshr->popTarget();
-                if (cache->doData() && pkt->cmd.isRead()) {
-                    memcpy(target->data, pkt->data, target->size);
+                if (pkt->isRead()) {
+                    memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(),
+                           target->getSize());
                 }
                 cache->respond(target, time);
             }
         }
 
-        if (pkt->cmd.isWrite()) {
+        if (pkt->isWrite()) {
             // If the wrtie buffer is full, we might unblock now
             unblock = wb.isFull();
             wb.deallocate(mshr);
@@ -660,12 +671,12 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
 }
 
 void
-MissQueue::squash(int req->getThreadNum()ber)
+MissQueue::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
 
-    if (noTargetMSHR && noTargetMSHR->setThreadNum() == req->getThreadNum()ber) {
+    if (noTargetMSHR && noTargetMSHR->threadNum == threadNum) {
         noTargetMSHR = NULL;
         unblock = true;
         cause = Blocked_NoTargets;
@@ -674,7 +685,7 @@ MissQueue::squash(int req->getThreadNum()ber)
         unblock = true;
         cause = Blocked_NoMSHRs;
     }
-    mq.squash(req->getThreadNum()ber);
+    mq.squash(threadNum);
     if (!mq.havePending()) {
         cache->clearMasterRequest(Request_MSHR);
     }
@@ -701,9 +712,19 @@ MissQueue::doWriteback(Addr addr, int asid,
                        int size, uint8_t *data, bool compressed)
 {
     // Generate request
-    Packet * pkt = buildWritebackReq(addr, asid, size, data,
-                                      compressed);
+    Request * req = new Request(addr, size, 0);
+    Packet * pkt = new Packet(req, Packet::Writeback, -1);
+    uint8_t *new_data = new uint8_t[size];
+    pkt->dataDynamicArray<uint8_t>(new_data);
+    if (data) {
+        memcpy(pkt->getPtr<uint8_t>(), data, size);
+    }
 
+    if (compressed) {
+        pkt->flags |= COMPRESSED;
+    }
+
+    ///All writebacks charged to same thread @todo figure this out
     writebacks[pkt->req->getThreadNum()]++;
 
     allocateWrite(pkt, 0, curTick);

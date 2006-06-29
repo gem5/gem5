@@ -52,6 +52,9 @@ typedef std::list<PacketPtr> PacketList;
 #define NACKED_LINE 1 << 0
 #define SATISFIED 1 << 1
 #define SHARED_LINE 1 << 2
+#define CACHE_LINE_FILL 1 << 3
+#define COMPRESSED 1 << 4
+#define NO_ALLOCATE 1 << 5
 
 //For statistics we need max number of commands, hard code it at
 //20 for now.  @todo fix later
@@ -66,6 +69,10 @@ typedef std::list<PacketPtr> PacketList;
  */
 class Packet
 {
+  public:
+    /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
+    uint64_t flags;
+
   private:
    /** A pointer to the data being transfered.  It can be differnt
     *    sizes at each level of the heirarchy so it belongs in the
@@ -93,6 +100,9 @@ class Packet
      /** The size of the request or transfer. */
     int size;
 
+    /** The offset within the block that represents the data. */
+    int offset;
+
     /** Device address (e.g., bus ID) of the source of the
      *   transaction. The source is not responsible for setting this
      *   field; it is set implicitly by the interconnect when the
@@ -110,6 +120,9 @@ class Packet
     bool addrSizeValid;
     /** Is the 'src' field valid? */
     bool srcValid;
+    /** Is the offset valid. */
+    bool offsetValid;
+
 
   public:
 
@@ -171,6 +184,7 @@ class Packet
     /** List of all commands associated with a packet. */
     enum Command
     {
+        InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
         WriteReq	= IsWrite | IsRequest | NeedsResponse,
         WriteReqNoAck	= IsWrite | IsRequest,
@@ -183,7 +197,10 @@ class Packet
         HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
-        UpgradeReq      = IsInvalidate | NeedsResponse
+        UpgradeReq      = IsInvalidate | NeedsResponse,
+        UpgradeResp     = IsInvalidate | IsResponse,
+        ReadExReq       = IsRead | IsInvalidate | NeedsResponse,
+        ReadExResp      = IsRead | IsInvalidate | IsResponse
     };
 
     /** Return the string name of the cmd field (for debugging and
@@ -206,8 +223,8 @@ class Packet
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
     bool isInvalidate()  { return (cmd * IsInvalidate) != 0; }
 
-    bool isCacheFill() { assert("Unimplemented yet\n" && 0); }
-    bool isNoAllocate() { assert("Unimplemented yet\n" && 0); }
+    bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
+    bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
 
     /** Possible results of a packet's request. */
     enum Result
@@ -232,6 +249,10 @@ class Packet
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
     int getSize() const { assert(addrSizeValid); return size; }
+    int getOffset() const { assert(offsetValid); return offset; }
+
+    void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
+    void cmdOverride(Command newCmd) { cmd = newCmd; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
@@ -241,10 +262,25 @@ class Packet
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
            addrSizeValid(_req->validPaddr),
-           srcValid(false),
+           srcValid(false), offsetValid(false),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {
+        flags = 0;
+    }
+
+    /** Alternate constructor if you are trying to create a packet with
+     *  a request that is for a whole block, not the address from the req.
+     *  this allows for overriding the size/addr of the req.*/
+    Packet(Request *_req, Command _cmd, short _dest, int _blkSize)
+        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
+           offset(_req->paddr & (_blkSize - 1)), dest(_dest),
+           addrSizeValid(_req->validPaddr), srcValid(false), offsetValid(true),
+           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
+           result(Unknown)
+    {
+        flags = 0;
     }
 
     /** Destructor. */

@@ -42,7 +42,7 @@
 
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache.hh"
-#include "mem/bus/bus.hh"
+#include "mem/bus.hh"
 #include "mem/cache/coherence/coherence_protocol.hh"
 #include "sim/builder.hh"
 
@@ -84,13 +84,6 @@
 #include "mem/cache/coherence/uni_coherence.hh"
 #include "mem/cache/coherence/simple_coherence.hh"
 
-// Bus Interfaces
-#include "mem/bus/slave_interface.hh"
-#include "mem/bus/master_interface.hh"
-#include "mem/memory_interface.hh"
-
-#include "mem/trace/mem_trace_writer.hh"
-
 //Prefetcher Headers
 #if defined(USE_GHB)
 #include "mem/cache/prefetch/ghb_prefetcher.hh"
@@ -118,8 +111,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<int> tgts_per_mshr;
     Param<int> write_buffers;
     Param<bool> prioritizeRequests;
-    SimObjectParam<Bus *> in_bus;
-    SimObjectParam<Bus *> out_bus;
+//    SimObjectParam<Bus *> in_bus;
+//    SimObjectParam<Bus *> out_bus;
     Param<bool> do_copy;
     SimObjectParam<CoherenceProtocol *> protocol;
     Param<Addr> trace_addr;
@@ -133,9 +126,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<int> compression_latency;
     Param<int> subblock_size;
     Param<Counter> max_miss_count;
-    SimObjectParam<HierParams *> hier;
+//    SimObjectParam<HierParams *> hier;
     VectorParam<Range<Addr> > addr_range;
-    SimObjectParam<MemTraceWriter *> mem_trace;
+//    SimObjectParam<MemTraceWriter *> mem_trace;
     Param<bool> split;
     Param<int> split_size;
     Param<bool> lifo;
@@ -151,6 +144,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<bool> prefetch_cache_check_push;
     Param<bool> prefetch_use_cpu_id;
     Param<bool> prefetch_data_accesses_only;
+    Param<int> hit_latency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
 
@@ -166,8 +160,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(write_buffers, "number of write buffers", 8),
     INIT_PARAM_DFLT(prioritizeRequests, "always service demand misses first",
                     false),
-    INIT_PARAM_DFLT(in_bus, "incoming bus object", NULL),
+/*    INIT_PARAM_DFLT(in_bus, "incoming bus object", NULL),
     INIT_PARAM(out_bus, "outgoing bus object"),
+*/
     INIT_PARAM_DFLT(do_copy, "perform fast copies in the cache", false),
     INIT_PARAM_DFLT(protocol, "coherence protocol to use in the cache", NULL),
     INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
@@ -192,12 +187,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(max_miss_count,
                     "The number of misses to handle before calling exit",
                     0),
-    INIT_PARAM_DFLT(hier,
+/*    INIT_PARAM_DFLT(hier,
                     "Hierarchy global variables",
                     &defaultHierParams),
+*/
     INIT_PARAM_DFLT(addr_range, "The address range in bytes",
                     vector<Range<Addr> >(1,RangeIn((Addr)0, MaxAddr))),
-    INIT_PARAM_DFLT(mem_trace, "Memory trace to write accesses to", NULL),
+//    INIT_PARAM_DFLT(mem_trace, "Memory trace to write accesses to", NULL),
     INIT_PARAM_DFLT(split, "Whether this is a partitioned cache", false),
     INIT_PARAM_DFLT(split_size, "the number of \"ways\" belonging to the LRU partition", 0),
     INIT_PARAM_DFLT(lifo, "whether you are using a LIFO repl. policy", false),
@@ -212,7 +208,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(prefetch_policy, "Type of prefetcher to use", "none"),
     INIT_PARAM_DFLT(prefetch_cache_check_push, "Check if in cash on push or pop of prefetch queue", true),
     INIT_PARAM_DFLT(prefetch_use_cpu_id, "Use the CPU ID to seperate calculations of prefetches", true),
-    INIT_PARAM_DFLT(prefetch_data_accesses_only, "Only prefetch on data not on instruction accesses", false)
+    INIT_PARAM_DFLT(prefetch_data_accesses_only, "Only prefetch on data not on instruction accesses", false),
+    INIT_PARAM_DFLT(hit_latency, "Hit Latecny for a succesful access", 1)
 END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 
@@ -232,12 +229,12 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         } \
         Cache<CacheTags<t, comp>, b, c>::Params params(tagStore, mq, coh, \
                                                        do_copy, base_params, \
-                                                       in_bus, out_bus, pf,  \
+                                                       /*in_bus, out_bus,*/ pf,  \
                                                        prefetch_access); \
         Cache<CacheTags<t, comp>, b, c> *retval =			\
-            new Cache<CacheTags<t, comp>, b, c>(getInstanceName(), hier, \
+            new Cache<CacheTags<t, comp>, b, c>(getInstanceName(), /*hier,*/ \
                                                 params);		\
-        if (in_bus == NULL) {						\
+/*	if (in_bus == NULL) {						\
             retval->setSlaveInterface(new MemoryInterface<Cache<CacheTags<t, comp>, b, c> >(getInstanceName(), hier, retval, mem_trace)); \
         } else {							\
             retval->setSlaveInterface(new SlaveInterface<Cache<CacheTags<t, comp>, b, c>, Bus>(getInstanceName(), hier, retval, in_bus, mem_trace)); \
@@ -245,6 +242,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         retval->setMasterInterface(new MasterInterface<Cache<CacheTags<t, comp>, b, c>, Bus>(getInstanceName(), hier, retval, out_bus)); \
         out_bus->rangeChange();						\
         return retval;							\
+*/return true;                                                          \
     } while (0)
 
 #define BUILD_CACHE_PANIC(x) do {			\
@@ -465,7 +463,7 @@ CREATE_SIM_OBJECT(BaseCache)
     const void *repl = NULL;
 #endif
 
-    if (mshrs == 1 || out_bus->doEvents() == false) {
+    if (mshrs == 1 /*|| out_bus->doEvents() == false*/) {
         BlockingBuffer *mq = new BlockingBuffer(true);
         BUILD_COHERENCE(BlockingBuffer);
     } else {

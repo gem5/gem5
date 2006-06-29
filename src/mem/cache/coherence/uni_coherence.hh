@@ -32,6 +32,7 @@
 #define __UNI_COHERENCE_HH__
 
 #include "base/trace.hh"
+#include "base/misc.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/mshr_queue.hh"
 #include "mem/packet.hh"

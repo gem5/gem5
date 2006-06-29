@@ -44,8 +44,8 @@ Packet *
 UniCoherence::getPacket()
 {
     bool unblock = cshrs.isFull();
-    Packet * pkt = cshrs.getPkt();
-    cshrs.markInService(pkt->senderState);
+    Packet* pkt = cshrs.getReq();
+    cshrs.markInService((MSHR*)pkt->senderState);
     if (!cshrs.havePending()) {
         cache->clearSlaveRequest(Request_Coherence);
     }
@@ -65,15 +65,12 @@ UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
                                CacheBlk::State &new_state)
 {
     new_state = 0;
-    if (pkt->cmd.isInvalidate()) {
+    if (pkt->isInvalidate()) {
         DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
-                pkt->paddr, blk);
+                pkt->getAddr(), blk);
         if (!cache->isTopLevel()) {
             // Forward to other caches
-            Packet * tmp = new MemPkt();
-            tmp->cmd = Invalidate;
-            tmp->paddr = pkt->paddr;
-            tmp->size = pkt->size;
+            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
             cshrs.allocate(tmp);
             cache->setSlaveRequest(Request_Coherence, curTick);
             if (cshrs.isFull()) {

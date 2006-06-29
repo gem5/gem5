@@ -33,12 +33,12 @@
  * Definitions of a simple buffer for a blocking cache.
  */
 
-#include "cpu/exec_context.hh"
 #include "cpu/smt.hh" //for maxThreadsPerCPU
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
 #include "mem/cache/prefetch/base_prefetcher.hh"
 #include "sim/eventq.hh" // for Event declaration.
+#include "mem/request.hh"
 
 using namespace TheISA;
 
@@ -72,26 +72,26 @@ BlockingBuffer::setPrefetcher(BasePrefetcher *_prefetcher)
 void
 BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
 {
-    Addr blk_addr = pkt->paddr & ~(Addr)(blk_size - 1);
-    if (pkt->cmd.isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
-                               pkt->cmd.isNoResponse())) {
-        if (pkt->cmd.isNoResponse()) {
+    Addr blk_addr = pkt->getAddr() & ~(Addr)(blk_size - 1);
+    if (pkt->isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
+                               !pkt->needsResponse())) {
+        if (!pkt->needsResponse()) {
             wb.allocateAsBuffer(pkt);
         } else {
-            wb.allocate(pkt->cmd, blk_addr, pkt->req->asid, blk_size, pkt);
+            wb.allocate(pkt->cmd, blk_addr, pkt->req->getAsid(), blk_size, pkt);
         }
-        if (cache->doData()) {
-            memcpy(wb.pkt->data, pkt->data, blk_size);
-        }
+
+        memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), blk_size);
+
         cache->setBlocked(Blocked_NoWBBuffers);
         cache->setMasterRequest(Request_WB, time);
         return;
     }
 
-    if (pkt->cmd.isNoResponse()) {
+    if (!pkt->needsResponse()) {
         miss.allocateAsBuffer(pkt);
     } else {
-        miss.allocate(pkt->cmd, blk_addr, pkt->req->asid, blk_size, pkt);
+        miss.allocate(pkt->cmd, blk_addr, pkt->req->getAsid(), blk_size, pkt);
     }
     if (!pkt->req->isUncacheable()) {
         miss.pkt->flags |= CACHE_LINE_FILL;
@@ -112,27 +112,27 @@ BlockingBuffer::getPacket()
 void
 BlockingBuffer::setBusCmd(Packet * &pkt, Packet::Command cmd)
 {
-    MSHR *mshr = pkt->senderState;
+    MSHR *mshr = (MSHR*) pkt->senderState;
     mshr->originalCmd = pkt->cmd;
     if (pkt->isCacheFill())
-        pkt->cmd = cmd;
+        pkt->cmdOverride(cmd);
 }
 
 void
 BlockingBuffer::restoreOrigCmd(Packet * &pkt)
 {
-    pkt->cmd = pkt->senderState->originalCmd;
+    pkt->cmdOverride(((MSHR*)(pkt->senderState))->originalCmd);
 }
 
 void
 BlockingBuffer::markInService(Packet * &pkt)
 {
-    if (!pkt->isCacheFill() && pkt->cmd.isWrite()) {
+    if (!pkt->isCacheFill() && pkt->isWrite()) {
         // Forwarding a write/ writeback, don't need to change
         // the command
-        assert(pkt->senderState == &wb);
+        assert((MSHR*)pkt->senderState == &wb);
         cache->clearMasterRequest(Request_WB);
-        if (pkt->cmd.isNoResponse()) {
+        if (!pkt->needsResponse()) {
             assert(wb.getNumTargets() == 0);
             wb.deallocate();
             cache->clearBlocked(Blocked_NoWBBuffers);
@@ -140,9 +140,9 @@ BlockingBuffer::markInService(Packet * &pkt)
             wb.inService = true;
         }
     } else {
-        assert(pkt->senderState == &miss);
+        assert((MSHR*)pkt->senderState == &miss);
         cache->clearMasterRequest(Request_MSHR);
-        if (pkt->cmd.isNoResponse()) {
+        if (!pkt->needsResponse()) {
             assert(miss.getNumTargets() == 0);
             miss.deallocate();
             cache->clearBlocked(Blocked_NoMSHRs);
@@ -158,24 +158,24 @@ BlockingBuffer::handleResponse(Packet * &pkt, Tick time)
 {
     if (pkt->isCacheFill()) {
         // targets were handled in the cache tags
-        assert(pkt->senderState == &miss);
+        assert((MSHR*)pkt->senderState == &miss);
         miss.deallocate();
         cache->clearBlocked(Blocked_NoMSHRs);
     } else {
-        if (pkt->senderState->hasTargets()) {
+        if (((MSHR*)(pkt->senderState))->hasTargets()) {
             // Should only have 1 target if we had any
-            assert(pkt->senderState->getNumTargets() == 1);
-            Packet * target = pkt->senderState->getTarget();
-            pkt->senderState->popTarget();
-            if (cache->doData() && pkt->cmd.isRead()) {
-                memcpy(target->data, pkt->data, target->size);
+            assert(((MSHR*)(pkt->senderState))->getNumTargets() == 1);
+            Packet * target = ((MSHR*)(pkt->senderState))->getTarget();
+            ((MSHR*)(pkt->senderState))->popTarget();
+            if (pkt->isRead()) {
+                memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), target->getSize());
             }
             cache->respond(target, time);
-            assert(!pkt->senderState->hasTargets());
+            assert(!((MSHR*)(pkt->senderState))->hasTargets());
         }
 
-        if (pkt->cmd.isWrite()) {
-            assert(pkt->senderState == &wb);
+        if (pkt->isWrite()) {
+            assert(((MSHR*)(pkt->senderState)) == &wb);
             wb.deallocate();
             cache->clearBlocked(Blocked_NoWBBuffers);
         } else {
@@ -186,15 +186,12 @@ BlockingBuffer::handleResponse(Packet * &pkt, Tick time)
 }
 
 void
-BlockingBuffer::squash(int req->getThreadNum()ber)
+BlockingBuffer::squash(int threadNum)
 {
-    if (miss.setThreadNum() == req->getThreadNum()ber) {
+    if (miss.threadNum == threadNum) {
         Packet * target = miss.getTarget();
         miss.popTarget();
-        assert(target->req->setThreadNum() == req->getThreadNum()ber);
-        if (target->completionEvent != NULL) {
-            delete target->completionEvent;
-        }
+        assert(target->req->getThreadNum() == threadNum);
         target = NULL;
         assert(!miss.hasTargets());
         miss.ntargets=0;
@@ -210,27 +207,20 @@ void
 BlockingBuffer::doWriteback(Addr addr, int asid,
                             int size, uint8_t *data, bool compressed)
 {
-
     // Generate request
-    Packet * pkt = new Packet();
-    pkt->paddr = addr;
-    pkt->req->asid = asid;
-    pkt->size = size;
-    pkt->data = new uint8_t[size];
+    Request * req = new Request(addr, size, 0);
+    Packet * pkt = new Packet(req, Packet::Writeback, -1);
+    uint8_t *new_data = new uint8_t[size];
+    pkt->dataDynamicArray<uint8_t>(new_data);
     if (data) {
-        memcpy(pkt->data, data, size);
+        memcpy(pkt->getPtr<uint8_t>(), data, size);
     }
-    /**
-     * @todo Need to find a way to charge the writeback to the "correct"
-     * thread.
-     */
-    pkt->req->setThreadNum() = 0;
 
-    pkt->cmd = Writeback;
     if (compressed) {
         pkt->flags |= COMPRESSED;
     }
 
+    ///All writebacks charged to same thread @todo figure this out
     writebacks[pkt->req->getThreadNum()]++;
 
     wb.allocateAsBuffer(pkt);
@@ -249,9 +239,8 @@ BlockingBuffer::doWriteback(Packet * &pkt)
 
     // Since allocate as buffer copies the request,
     // need to copy data here.
-    if (cache->doData()) {
-        memcpy(wb.pkt->data, pkt->data, pkt->size);
-    }
+        memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+
     cache->setBlocked(Blocked_NoWBBuffers);
     cache->setMasterRequest(Request_WB, curTick);
 }

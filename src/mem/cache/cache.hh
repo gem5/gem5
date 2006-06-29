@@ -44,8 +44,9 @@
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/prefetch/prefetcher.hh"
 
-// forward declarations
-class Bus;
+//Forward decleration
+class MSHR;
+
 
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
@@ -92,6 +93,11 @@ class Cache : public BaseCache
       */
     int busWidth;
 
+    /**
+     * The latency of a hit in this device.
+     */
+    int hitLatency;
+
      /**
       * A permanent mem req to always be used to cause invalidations.
       * Used to append to target list, to cause an invalidation.
@@ -121,24 +127,35 @@ class Cache : public BaseCache
         bool doCopy;
         bool blockOnCopy;
         BaseCache::Params baseParams;
-        Bus *in;
-        Bus *out;
         Prefetcher<TagStore, Buffering> *prefetcher;
         bool prefetchAccess;
+        int hitLatency;
 
         Params(TagStore *_tags, Buffering *mq, Coherence *coh,
-               bool do_copy, BaseCache::Params params, Bus * in_bus,
-               Bus * out_bus, Prefetcher<TagStore, Buffering> *_prefetcher,
-               bool prefetch_access)
+               bool do_copy, BaseCache::Params params,
+               Prefetcher<TagStore, Buffering> *_prefetcher,
+               bool prefetch_access, int hit_latency)
             : tags(_tags), missQueue(mq), coherence(coh), doCopy(do_copy),
-              blockOnCopy(false), baseParams(params), in(in_bus), out(out_bus),
-              prefetcher(_prefetcher), prefetchAccess(prefetch_access)
+              blockOnCopy(false), baseParams(params),
+              prefetcher(_prefetcher), prefetchAccess(prefetch_access),
+              hitLatency(hit_latency)
         {
         }
     };
 
     /** Instantiates a basic cache object. */
     Cache(const std::string &_name, Params &params);
+
+    bool doTimingAccess(Packet *pkt, CachePort *cachePort,
+                        bool isCpuSide);
+
+    Tick doAtomicAccess(Packet *pkt, CachePort *cachePort,
+                        bool isCpuSide);
+
+    void doFunctionalAccess(Packet *pkt, CachePort *cachePort,
+                            bool isCpuSide);
+
+    void recvStatusChange(Port::Status status, bool isCpuSide);
 
     void regStats();
 

@@ -50,13 +50,15 @@ MSHR::MSHR()
 {
     inService = false;
     ntargets = 0;
-    setThreadNum() = -1;
+    threadNum = -1;
 }
 
 void
 MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
                Packet * &target)
 {
+    assert("NEED TO FIX YET\n" && 0);
+#if 0
     assert(targets.empty());
     addr = _addr;
     asid = _asid;
@@ -74,6 +76,7 @@ MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
         pkt->req = target->req;
         allocateTarget(target);
     }
+#endif
 }
 
 // Since we aren't sure if data is being used, don't copy here.
@@ -83,17 +86,13 @@ MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
 void
 MSHR::allocateAsBuffer(Packet * &target)
 {
-    addr = target->paddr;
-    asid = target->req->asid;
-    setThreadNum() = target->req->getThreadNum();
-    pkt = new Packet();
-    pkt->addr = target->addr;
-    pkt->dest = target->dest;
-    pkt->cmd = target->cmd;
-    pkt->size = target->size;
-    pkt->req = target->req;
-    pkt->data = new uint8_t[target->size];
-    pkt->senderState = this;
+    addr = target->getAddr();
+    asid = target->req->getAsid();
+    threadNum = target->req->getThreadNum();
+    pkt = new Packet(target->req, target->cmd, -1);
+    uint8_t *new_data = new uint8_t[target->getSize()];
+    pkt->dataDynamicArray<uint8_t>(new_data);
+    pkt->senderState = (Packet::SenderState*)this;
     pkt->time = curTick;
 }
 
@@ -117,11 +116,11 @@ MSHR::allocateTarget(Packet * &target)
     //If we append an invalidate and we issued a read to the bus,
     //but now have some pending writes, we need to move
     //the invalidate to before the first non-read
-    if (inService && pkt->cmd.isRead() && target->cmd.isInvalidate()) {
+    if (inService && pkt->isRead() && target->isInvalidate()) {
         std::list<Packet *> temp;
 
         while (!targets.empty()) {
-            if (!targets.front()->cmd.isRead()) break;
+            if (!targets.front()->isRead()) break;
             //Place on top of temp stack
             temp.push_front(targets.front());
             //Remove from targets
@@ -148,8 +147,8 @@ MSHR::allocateTarget(Packet * &target)
      * @todo really prioritize the target commands.
      */
 
-    if (!inService && target->cmd.isWrite()) {
-        pkt->cmd = WriteReq;
+    if (!inService && target->isWrite()) {
+        pkt->cmd = Packet::WriteReq;
     }
 }
 
@@ -162,14 +161,14 @@ MSHR::dump()
              "inService: %d thread: %d\n"
              "Addr: %x asid: %d ntargets %d\n"
              "Targets:\n",
-             inService, getThreadNum(), addr, asid, ntargets);
+             inService, threadNum, addr, asid, ntargets);
 
     TargetListIterator tar_it = targets.begin();
     for (int i = 0; i < ntargets; i++) {
         assert(tar_it != targets.end());
 
         ccprintf(cerr, "\t%d: Addr: %x cmd: %d\n",
-                 i, (*tar_it)->paddr, (*tar_it)->cmdToIndex());
+                 i, (*tar_it)->getAddr(), (*tar_it)->cmdToIndex());
 
         tar_it++;
     }

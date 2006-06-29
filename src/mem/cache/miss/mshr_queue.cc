@@ -94,17 +94,19 @@ MSHRQueue::findPending(Packet * &pkt) const
     MSHR::ConstIterator end = pendingList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
-        if (mshr->addr < pkt->addr) {
-            if (mshr->addr + mshr->pkt->size > pkt->addr) {
+        if (mshr->addr < pkt->getAddr()) {
+            if (mshr->addr + mshr->pkt->getSize() > pkt->getAddr()) {
                 return mshr;
             }
         } else {
-            if (pkt->addr + pkt->size > mshr->addr) {
+            if (pkt->getAddr() + pkt->getSize() > mshr->addr) {
                 return mshr;
             }
         }
 
         //need to check destination address for copies.
+        //TEMP NOT DOING COPIES
+#if 0
         if (mshr->pkt->cmd == Copy) {
             Addr dest = mshr->pkt->dest;
             if (dest < pkt->addr) {
@@ -117,6 +119,7 @@ MSHRQueue::findPending(Packet * &pkt) const
                 }
             }
         }
+#endif
     }
     return NULL;
 }
@@ -124,16 +127,16 @@ MSHRQueue::findPending(Packet * &pkt) const
 MSHR*
 MSHRQueue::allocate(Packet * &pkt, int size)
 {
-    Addr aligned_addr = pkt->addr & ~((Addr)size - 1);
+    Addr aligned_addr = pkt->getAddr() & ~((Addr)size - 1);
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
 
-    if (pkt->cmd.isNoResponse()) {
+    if (!pkt->needsResponse()) {
         mshr->allocateAsBuffer(pkt);
     } else {
         assert(size !=0);
-        mshr->allocate(pkt->cmd, aligned_addr, pkt->req->req->asid, size, pkt);
+        mshr->allocate(pkt->cmd, aligned_addr, pkt->req->getAsid(), size, pkt);
         allocatedTargets += 1;
     }
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
@@ -149,7 +152,7 @@ MSHRQueue::allocateFetch(Addr addr, int asid, int size, Packet * &target)
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
-    mshr->allocate(Read, addr, asid, size, target);
+    mshr->allocate(Packet::ReadReq, addr, asid, size, target);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
 
@@ -164,7 +167,7 @@ MSHRQueue::allocateTargetList(Addr addr, int asid, int size)
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
     Packet * dummy;
-    mshr->allocate(Read, addr, asid, size, dummy);
+    mshr->allocate(Packet::ReadReq, addr, asid, size, dummy);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->inService = true;
     ++inServiceMSHRs;
@@ -209,7 +212,7 @@ void
 MSHRQueue::markInService(MSHR* mshr)
 {
     //assert(mshr == pendingList.front());
-    if (mshr->pkt->cmd.isNoResponse()) {
+    if (!mshr->pkt->needsResponse()) {
         assert(mshr->getNumTargets() == 0);
         deallocate(mshr);
         return;
@@ -237,21 +240,18 @@ MSHRQueue::markPending(MSHR* mshr, Packet::Command cmd)
 }
 
 void
-MSHRQueue::squash(int req->getThreadNum()ber)
+MSHRQueue::squash(int threadNum)
 {
     MSHR::Iterator i = allocatedList.begin();
     MSHR::Iterator end = allocatedList.end();
     for (; i != end;) {
         MSHR *mshr = *i;
-        if (mshr->setThreadNum() == req->getThreadNum()ber) {
+        if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {
                 Packet * target = mshr->getTarget();
                 mshr->popTarget();
 
-                assert(target->req->setThreadNum() == req->getThreadNum()ber);
-                if (target->completionEvent != NULL) {
-                    delete target->completionEvent;
-                }
+                assert(target->req->getThreadNum() == threadNum);
                 target = NULL;
             }
             assert(!mshr->hasTargets());
