@@ -543,6 +543,33 @@ class SimObject(object):
         for child in self._children.itervalues():
             child.connectPorts()
 
+    def startQuiesce(self, quiesce_event, recursive):
+        count = 0
+        # ParamContexts don't serialize
+        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+            if self._ccObject.quiesce(quiesce_event):
+                count = 1
+        if recursive:
+            for child in self._children.itervalues():
+                count += child.startQuiesce(quiesce_event, True)
+        return count
+
+    def resume(self):
+        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+            self._ccObject.resume()
+        for child in self._children.itervalues():
+            child.resume()
+
+    def changeTiming(self, mode):
+        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+            self._ccObject.setMemoryMode(mode)
+        for child in self._children.itervalues():
+            child.changeTiming(mode)
+
+    def takeOverFrom(self, old_cpu):
+        cpu_ptr = cc_main.convertToBaseCPUPtr(old_cpu._ccObject)
+        self._ccObject.takeOverFrom(cpu_ptr)
+
     # generate output file for 'dot' to display as a pretty graph.
     # this code is currently broken.
     def outputDot(self, dot):

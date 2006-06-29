@@ -34,7 +34,7 @@ import cc_main
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from cc_main import simulate, SimLoopExitEvent
+from cc_main import simulate, SimLoopExitEvent, setCheckpointDir
 
 # import the m5 compile options
 import defines
@@ -116,10 +116,6 @@ def debugBreak(option, opt_str, value, parser):
 
 def statsTextFile(option, opt_str, value, parser):
     objects.Statistics.text_file = value
-
-# Extra list to help for options that are true or false
-TrueOrFalse = ['True', 'False']
-TorF = "True | False"
 
 # Standard optparse options.  Need to be explicitly included by the
 # user script when it calls optparse.OptionParser().
@@ -216,3 +212,81 @@ atexit.register(cc_main.doExitCleanup)
 # just doing an 'import m5' (without an 'import m5.objects').  May not
 # matter since most scripts will probably 'from m5.objects import *'.
 import objects
+
+def doQuiesce(root):
+    quiesce = cc_main.createCountedQuiesce()
+    unready_objects = root.startQuiesce(quiesce, True)
+    # If we've got some objects that can't quiesce immediately, then simulate
+    if unready_objects > 0:
+        quiesce.setCount(unready_objects)
+        simulate()
+    cc_main.cleanupCountedQuiesce(quiesce)
+
+def resume(root):
+    root.resume()
+
+def checkpoint(root):
+    if not isinstance(root, objects.Root):
+        raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
+    doQuiesce(root)
+    print "Writing checkpoint"
+    cc_main.serializeAll()
+    resume(root)
+
+def restoreCheckpoint(root):
+    print "Restoring from checkpoint"
+    cc_main.unserializeAll()
+
+def changeToAtomic(system):
+    if not isinstance(system, objects.Root) and not isinstance(system, System):
+        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
+        "called on a root object."
+    doQuiesce(system)
+    print "Changing memory mode to atomic"
+    system.changeTiming(cc_main.SimObject.Atomic)
+    resume(system)
+
+def changeToTiming(system):
+    if not isinstance(system, objects.Root) and not isinstance(system, System):
+        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
+        "called on a root object."
+    doQuiesce(system)
+    print "Changing memory mode to timing"
+    system.changeTiming(cc_main.SimObject.Timing)
+    resume(system)
+
+def switchCpus(cpuList):
+    if not isinstance(cpuList, list):
+        raise RuntimeError, "Must pass a list to this function"
+    for i in cpuList:
+        if not isinstance(i, tuple):
+            raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
+
+    [old_cpus, new_cpus] = zip(*cpuList)
+
+    for cpu in old_cpus:
+        if not isinstance(cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU", cpu
+    for cpu in new_cpus:
+        if not isinstance(cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU", cpu
+
+    # Quiesce all of the individual CPUs
+    quiesce = cc_main.createCountedQuiesce()
+    unready_cpus = 0
+    for old_cpu in old_cpus:
+        unready_cpus += old_cpu.startQuiesce(quiesce, False)
+    # If we've got some objects that can't quiesce immediately, then simulate
+    if unready_cpus > 0:
+        quiesce.setCount(unready_cpus)
+        simulate()
+    cc_main.cleanupCountedQuiesce(quiesce)
+    # Now all of the CPUs are ready to be switched out
+    for old_cpu in old_cpus:
+        old_cpu._ccObject.switchOut()
+    index = 0
+    print "Switching CPUs"
+    for new_cpu in new_cpus:
+        new_cpu.takeOverFrom(old_cpus[index])
+        new_cpu._ccObject.resume()
+        index += 1

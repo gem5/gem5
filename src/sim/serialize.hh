@@ -127,6 +127,7 @@ class Serializable
     static int ckptMaxCount;
     static int ckptPrevCount;
     static void serializeAll();
+    static void unserializeAll();
     static void unserializeGlobals(Checkpoint *cp);
 };
 
@@ -203,6 +204,9 @@ class SerializableClass
 #define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)			   \
 SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
                                          OBJ_CLASS::createForUnserialize);
+
+void
+setCheckpointName(const std::string &name);
 
 class Checkpoint
 {

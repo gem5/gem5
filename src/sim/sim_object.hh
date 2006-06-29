@@ -44,7 +44,8 @@
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 
-class Serializer;
+class BaseCPU;
+class Event;
 
 /*
  * Abstract superclass for simulation objects.  Represents things that
@@ -58,15 +59,26 @@ class SimObject : public Serializable, protected StartupCallback
         std::string name;
     };
 
+    enum State {
+        Atomic,
+        Timing,
+        Quiescing,
+        QuiescedAtomic,
+        QuiescedTiming
+    };
+
   protected:
     Params *_params;
+    State state;
+
+    void changeState(State new_state) { state = new_state; }
 
   public:
     const Params *params() const { return _params; }
 
-  private:
-    friend class Serializer;
+    State getState() { return state; }
 
+  private:
     typedef std::vector<SimObject *> SimObjectList;
 
     // list of all instantiated simulation objects
@@ -100,13 +112,16 @@ class SimObject : public Serializable, protected StartupCallback
 
     // static: call nameOut() & serialize() on all SimObjects
     static void serializeAll(std::ostream &);
+    static void unserializeAll(Checkpoint *cp);
 
     // Methods to drain objects in order to take checkpoints
     // Or switch from timing -> atomic memory model
-    virtual void drain(Serializer *serializer);
-    virtual void resume() { return;} ;
-    virtual void serializationComplete()
-    { assert(0 && "Unimplemented"); };
+    // Quiesce returns true if the SimObject cannot quiesce immediately.
+    virtual bool quiesce(Event *quiesce_event);
+    virtual void resume();
+    virtual void setMemoryMode(State new_mode);
+    virtual void switchOut();
+    virtual void takeOverFrom(BaseCPU *cpu);
 
 #ifdef DEBUG
   public:

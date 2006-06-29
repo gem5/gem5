@@ -62,6 +62,7 @@
 #include "sim/async.hh"
 #include "sim/builder.hh"
 #include "sim/host.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -521,6 +522,37 @@ simulate(Tick num_cycles = -1)
     // not reached... only exit is return on SimLoopExitEvent
 }
 
+Event *
+createCountedQuiesce()
+{
+    return new CountedQuiesceEvent();
+}
+
+void
+cleanupCountedQuiesce(Event *counted_quiesce)
+{
+    CountedQuiesceEvent *event =
+        dynamic_cast<CountedQuiesceEvent *>(counted_quiesce);
+    if (event == NULL) {
+        fatal("Called cleanupCountedQuiesce() on an event that was not "
+              "a CountedQuiesceEvent.");
+    }
+    assert(event->getCount() == 0);
+    delete event;
+}
+
+void
+serializeAll()
+{
+    Serializable::serializeAll();
+}
+
+void
+unserializeAll()
+{
+    Serializable::unserializeAll();
+}
+
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */
@@ -533,6 +565,16 @@ void
 registerExitCallback(Callback *callback)
 {
     exitCallbacks.add(callback);
+}
+
+BaseCPU *
+convertToBaseCPUPtr(SimObject *obj)
+{
+    BaseCPU *ptr = dynamic_cast<BaseCPU *>(obj);
+
+    if (ptr == NULL)
+        warn("Casting to BaseCPU pointer failed");
+    return ptr;
 }
 
 /**
