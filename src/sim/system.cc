@@ -243,7 +243,6 @@ System::printSystems()
     }
 }
 
-extern "C"
 void
 printSystems()
 {
