@@ -82,6 +82,8 @@ doAtomicAccess(Packet *pkt, bool isCpuSide)
     if (isCpuSide)
     {
         probe(pkt, true);
+        //TEMP ALWAYS SUCCES FOR NOW
+        pkt->result = Packet::Success;
     }
     else
     {
@@ -101,7 +103,11 @@ doFunctionalAccess(Packet *pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
+        //TEMP USE CPU?THREAD 0 0
+        pkt->req->setThreadContext(0,0);
         probe(pkt, true);
+        //TEMP ALWAYS SUCCESFUL FOR NOW
+        pkt->result = Packet::Success;
     }
     else
     {
@@ -594,12 +600,12 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 
                 lat = memSidePort->sendAtomic(busPkt);
 
-                if (!(busPkt->flags & SATISFIED)) {
+/*		if (!(busPkt->flags & SATISFIED)) {
                     // blocked at a higher level, just return
                     return 0;
                 }
 
-                misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
+*/		misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
 
                 CacheBlk::State old_state = (blk) ? blk->status : 0;
                 tags->handleFill(blk, busPkt,

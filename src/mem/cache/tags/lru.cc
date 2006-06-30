@@ -188,7 +188,7 @@ LRUBlk*
 LRU::findBlock(Packet * &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
-    int asid = pkt->req->getAsid();
+    int asid = 0;//pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
