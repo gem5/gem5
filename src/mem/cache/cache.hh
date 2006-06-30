@@ -149,11 +149,9 @@ class Cache : public BaseCache
     virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort,
                         bool isCpuSide);
 
-    virtual Tick doAtomicAccess(Packet *pkt, CachePort *cachePort,
-                        bool isCpuSide);
+    virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide);
 
-    virtual void doFunctionalAccess(Packet *pkt, CachePort *cachePort,
-                            bool isCpuSide);
+    virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide);
 
     virtual void recvStatusChange(Port::Status status, bool isCpuSide);
 

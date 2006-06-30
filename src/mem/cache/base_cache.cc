@@ -101,16 +101,21 @@ BaseCache::CachePort::clearBlocked()
 Port*
 BaseCache::getPort(const std::string &if_name, int idx)
 {
-    if(if_name == "cpu_side")
+    if (if_name == "")
     {
-        if(cpuSidePort != NULL)
-            panic("Already have a cpu side for this cache\n");
-        cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+        if(cpuSidePort == NULL)
+            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
         return cpuSidePort;
     }
-    else if(if_name == "mem_side")
+    if (if_name == "functional")
     {
-        if(memSidePort != NULL)
+        if(cpuSidePort == NULL)
+            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+        return cpuSidePort;
+    }
+    else if (if_name == "mem_side")
+    {
+        if (memSidePort != NULL)
             panic("Already have a mem side for this cache\n");
         memSidePort = new CachePort(name() + "-mem_side_port", this, false);
         return memSidePort;
@@ -121,9 +126,10 @@ BaseCache::getPort(const std::string &if_name, int idx)
 void
 BaseCache::regStats()
 {
-    Request temp_req;
+    Request temp_req((Addr) NULL, 4, 0);
     Packet::Command temp_cmd = Packet::ReadReq;
     Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
+    temp_pkt.allocate(); //Temp allocate, all need data
 
     using namespace Stats;
 
@@ -331,4 +337,5 @@ BaseCache::regStats()
         .name(name() + ".cache_copies")
         .desc("number of cache copies performed")
         ;
+
 }

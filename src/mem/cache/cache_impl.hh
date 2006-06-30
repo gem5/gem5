@@ -77,7 +77,7 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 template<class TagStore, class Buffering, class Coherence>
 Tick
 Cache<TagStore,Buffering,Coherence>::
-doAtomicAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
+doAtomicAccess(Packet *pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -97,18 +97,18 @@ doAtomicAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::
-doFunctionalAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
+doFunctionalAccess(Packet *pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
-        probe(pkt, false);
+        probe(pkt, true);
     }
     else
     {
         if (pkt->isResponse())
             handleResponse(pkt);
         else
-            snoopProbe(pkt, false);
+            snoopProbe(pkt, true);
     }
 }
 

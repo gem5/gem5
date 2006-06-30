@@ -58,9 +58,10 @@ MissQueue::MissQueue(int numMSHRs, int numTargets, int write_buffers,
 void
 MissQueue::regStats(const string &name)
 {
-    Request temp_req;
+    Request temp_req((Addr) NULL, 4, 0);
     Packet::Command temp_cmd = Packet::ReadReq;
     Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
+    temp_pkt.allocate();
 
     using namespace Stats;
 
