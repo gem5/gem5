@@ -209,12 +209,6 @@ namespace AlphaPseudo
     {
         if (!doCheckpointInsts)
             return;
-
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        Checkpoint::setup(when, repeat);
     }
 
     uint64_t
