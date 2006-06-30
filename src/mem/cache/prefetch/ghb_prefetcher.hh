@@ -78,8 +78,8 @@ class GHBPrefetcher : public Prefetcher<TagStore, Buffering>
     void calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
                            std::list<Tick> &delays)
     {
-        Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-        int cpuID = pkt->cpu_num;
+        Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+        int cpuID = pkt->req->getCpuNum();
         if (!useCPUId) cpuID = 0;
 
 

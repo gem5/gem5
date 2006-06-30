@@ -135,7 +135,7 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
             // table; won't matter because the block is invalid
             blk->tag = j;
             blk->whenReady = 0;
-            blk->req->asid = -1;
+            blk->asid = -1;
             blk->isTouched = false;
             blk->size = blkSize;
             sets[i].blks[j]=blk;
@@ -187,8 +187,8 @@ LRU::findBlock(Addr addr, int asid, int &lat)
 LRUBlk*
 LRU::findBlock(Packet * &pkt, int &lat)
 {
-    Addr addr = pkt->paddr;
-    int asid = pkt->req->asid;
+    Addr addr = pkt->getAddr();
+    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -217,16 +217,15 @@ LRU::findBlock(Addr addr, int asid) const
 }
 
 LRUBlk*
-LRU::findReplacement(Packet * &pkt, PacketList* &writebacks,
+LRU::findReplacement(Packet * &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
-    unsigned set = extractSet(pkt->paddr);
+    unsigned set = extractSet(pkt->getAddr());
     // grab a replacement candidate
     LRUBlk *blk = sets[set].blks[assoc-1];
     sets[set].moveToHead(blk);
     if (blk->isValid()) {
-        int req->setThreadNum() = (blk->xc) ? blk->xc->getThreadNum() : 0;
-        replacements[req->getThreadNum()]++;
+        replacements[0]++;
         totalRefs += blk->refCount;
         ++sampledRefs;
         blk->refCount = 0;
@@ -254,7 +253,7 @@ LRU::invalidateBlk(int asid, Addr addr)
 }
 
 void
-LRU::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
+LRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
 {
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
@@ -263,29 +262,31 @@ LRU::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
     LRUBlk *dest_blk = findBlock(dest, asid);
     if (dest_blk == NULL) {
         // Need to do a replacement
-        Packet * pkt = new Packet();
-        pkt->paddr = dest;
+        Request *search = new Request(dest,1,0);
+        Packet * pkt = new Packet(search, Packet::ReadReq, -1);
         BlkList dummy_list;
         dest_blk = findReplacement(pkt, writebacks, dummy_list);
         if (dest_blk->isValid() && dest_blk->isModified()) {
             // Need to writeback data.
-            pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
+/*	    pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
                                                       dest_blk->set),
                                     dest_blk->req->asid,
                                     dest_blk->xc,
                                     blkSize,
-                                    (cache->doData())?dest_blk->data:0,
+                                    dest_blk->data,
                                     dest_blk->size);
-            writebacks.push_back(pkt);
+*/
+            Request *writebackReq = new Request(regenerateBlkAddr(dest_blk->tag,
+                                                                  dest_blk->set),
+                                                blkSize, 0);
+            Packet *writeback = new Packet(writebackReq, Packet::Writeback, -1);
+            writeback->dataDynamic<uint8_t>(dest_blk->data);
+            writebacks.push_back(writeback);
         }
         dest_blk->tag = extractTag(dest);
-        dest_blk->req->asid = asid;
-        /**
-         * @todo Do we need to pass in the execution context, or can we
-         * assume its the same?
-         */
-        assert(source_blk->xc);
-        dest_blk->xc = source_blk->xc;
+        dest_blk->asid = asid;
+        delete search;
+        delete pkt;
     }
     /**
      * @todo Can't assume the status once we have coherence on copies.
@@ -293,9 +294,7 @@ LRU::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
 
     // Set this block as readable, writeable, and dirty.
     dest_blk->status = 7;
-    if (cache->doData()) {
-        memcpy(dest_blk->data, source_blk->data, blkSize);
-    }
+    memcpy(dest_blk->data, source_blk->data, blkSize);
 }
 
 void

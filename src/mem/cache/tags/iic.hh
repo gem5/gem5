@@ -475,7 +475,7 @@ class IIC : public BaseTags
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(Packet * &pkt, PacketList* &writebacks,
+    IICTag* findReplacement(Packet * &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**
@@ -495,7 +495,7 @@ class IIC : public BaseTags
      * needed when writing to a compressed block.
      */
     void writeData(IICTag *blk, uint8_t *data, int size,
-                   PacketList* & writebacks);
+                   PacketList & writebacks);
 
     /**
      * Perform a block aligned copy from the source address to the destination.
@@ -504,14 +504,14 @@ class IIC : public BaseTags
      * @param asid The address space DI.
      * @param writebacks List for any generated writeback requests.
      */
-    void doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks);
+    void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
 
     /**
      * If a block is currently marked copy on write, copy it before writing.
      * @param req The write request.
      * @param writebacks List for any generated writeback requests.
      */
-    void fixCopy(Packet * &pkt, PacketList* &writebacks);
+    void fixCopy(Packet * &pkt, PacketList &writebacks);
 
     /**
      * Called at end of simulation to complete average block reference stats.
@@ -541,14 +541,14 @@ private:
      * Free the resources associated with the next replacement block.
      * @param writebacks A list of any writebacks to perform.
      */
-    void freeReplacementBlock(PacketList* & writebacks);
+    void freeReplacementBlock(PacketList & writebacks);
 
     /**
      * Return the pointer to a free data block.
      * @param writebacks A list of any writebacks to perform.
      * @return A pointer to a free data block.
      */
-    unsigned long getFreeDataBlock(PacketList* & writebacks);
+    unsigned long getFreeDataBlock(PacketList & writebacks);
 
     /**
      * Get a free tag in the given hash set.
@@ -556,7 +556,7 @@ private:
      * @param writebacks A list of any writebacks to perform.
      * @return a pointer to a free tag.
      */
-    IICTag* getFreeTag(int set, PacketList* & writebacks);
+    IICTag* getFreeTag(int set, PacketList & writebacks);
 
     /**
      * Free the resources associated with the given tag.

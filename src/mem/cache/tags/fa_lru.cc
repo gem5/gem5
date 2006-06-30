@@ -39,6 +39,7 @@
 
 #include "mem/cache/tags/fa_lru.hh"
 #include "base/intmath.hh"
+#include "base/misc.hh"
 
 using namespace std;
 
@@ -204,7 +205,7 @@ FALRU::findBlock(Addr addr, int asid, int &lat, int *inCache)
 FALRUBlk*
 FALRU::findBlock(Packet * &pkt, int &lat, int *inCache)
 {
-    Addr addr = pkt->paddr;
+    Addr addr = pkt->getAddr();
 
     accesses++;
     int tmp_in_cache = 0;
@@ -255,17 +256,16 @@ FALRU::findBlock(Addr addr, int asid) const
 }
 
 FALRUBlk*
-FALRU::findReplacement(Packet * &pkt, PacketList* &writebacks,
+FALRU::findReplacement(Packet * &pkt, PacketList &writebacks,
                        BlkList &compress_blocks)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);
     moveToHead(blk);
     tagHash.erase(blk->tag);
-    tagHash[blkAlign(pkt->paddr)] = blk;
+    tagHash[blkAlign(pkt->getAddr())] = blk;
     if (blk->isValid()) {
-        int req->setThreadNum() = (blk->xc) ? blk->xc->getThreadNum() : 0;
-        replacements[req->getThreadNum()]++;
+        replacements[0]++;
     } else {
         tagsInUse++;
         blk->isTouched = true;

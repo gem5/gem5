@@ -287,8 +287,8 @@ IIC::findBlock(Addr addr, int asid, int &lat)
 IICTag*
 IIC::findBlock(Packet * &pkt, int &lat)
 {
-    Addr addr = pkt->paddr;
-    int asid = pkt->req->asid;
+    Addr addr = pkt->getAddr();
+    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
@@ -363,11 +363,11 @@ IIC::findBlock(Addr addr, int asid) const
 
 
 IICTag*
-IIC::findReplacement(Packet * &pkt, PacketList* &writebacks,
+IIC::findReplacement(Packet * &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
-    DPRINTF(IIC, "Finding Replacement for %x\n", pkt->paddr);
-    unsigned set = hash(pkt->paddr);
+    DPRINTF(IIC, "Finding Replacement for %x\n", pkt->getAddr());
+    unsigned set = hash(pkt->getAddr());
     IICTag *tag_ptr;
     unsigned long *tmp_data = new unsigned long[numSub];
 
@@ -405,7 +405,7 @@ IIC::findReplacement(Packet * &pkt, PacketList* &writebacks,
 }
 
 void
-IIC::freeReplacementBlock(PacketList* & writebacks)
+IIC::freeReplacementBlock(PacketList & writebacks)
 {
     IICTag *tag_ptr;
     unsigned long data_ptr;
@@ -418,18 +418,23 @@ IIC::freeReplacementBlock(PacketList* & writebacks)
             tag_ptr->isModified() ? "writeback" : "clean");
     /* write back replaced block data */
     if (tag_ptr && (tag_ptr->isValid())) {
-        int req->setThreadNum() = (tag_ptr->xc) ? tag_ptr->xc->getThreadNum() : 0;
-        replacements[req->getThreadNum()]++;
+        replacements[0]++;
         totalRefs += tag_ptr->refCount;
         ++sampledRefs;
         tag_ptr->refCount = 0;
 
         if (tag_ptr->isModified()) {
-            Packet * writeback =
+/*	    Packet * writeback =
                 buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
                                   tag_ptr->req->asid, tag_ptr->xc, blkSize,
-                                  (cache->doData())?tag_ptr->data:0,
+                                  tag_ptr->data,
                                   tag_ptr->size);
+*/
+        Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
+                                           blkSize, 0);
+        Packet *writeback = new Packet(writebackReq, Packet::Writeback, -1);
+        writeback->dataDynamic<uint8_t>(tag_ptr->data);
+
             writebacks.push_back(writeback);
         }
     }
@@ -446,7 +451,7 @@ IIC::freeReplacementBlock(PacketList* & writebacks)
 }
 
 unsigned long
-IIC::getFreeDataBlock(PacketList* & writebacks)
+IIC::getFreeDataBlock(PacketList & writebacks)
 {
     struct IICTag *tag_ptr;
     unsigned long data_ptr;
@@ -466,7 +471,7 @@ IIC::getFreeDataBlock(PacketList* & writebacks)
 
 
 IICTag*
-IIC::getFreeTag(int set, PacketList* & writebacks)
+IIC::getFreeTag(int set, PacketList & writebacks)
 {
     unsigned long tag_index;
     IICTag *tag_ptr;
@@ -708,7 +713,7 @@ IIC::invalidateBlk(int asid, Addr addr)
 
 void
 IIC::readData(IICTag *blk, uint8_t *data){
-    assert(cache->doData());
+//    assert(cache->doData());
     assert(blk->size <= trivialSize || blk->numData > 0);
     int data_size = blk->size;
     if (data_size > trivialSize) {
@@ -725,8 +730,8 @@ IIC::readData(IICTag *blk, uint8_t *data){
 
 void
 IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
-               PacketList* & writebacks){
-    assert(cache->doData());
+               PacketList & writebacks){
+//    assert(cache->doData());
     assert(size < blkSize || !blk->isCompressed());
     DPRINTF(IIC, "Writing %d bytes to %x\n", size,
             blk->tag<<tagShift);
@@ -775,8 +780,10 @@ IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
  * @todo This code can break if the src is evicted to get a tag for the dest.
  */
 void
-IIC::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
+IIC::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
 {
+//Copy unsuported now
+#if 0
     IICTag *dest_tag = findBlock(dest, asid);
 
     if (dest_tag) {
@@ -791,7 +798,7 @@ IIC::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
         dest_tag->re = (void*) repl->add(dest_tag - tagStore);
         dest_tag->set = hash(dest);
         dest_tag->tag = extractTag(dest);
-        dest_tag->req->asid = asid;
+        dest_tag->asid = asid;
         dest_tag->status = BlkValid | BlkWritable;
     }
     // Find the source tag here since it might move if we need to find a
@@ -823,15 +830,17 @@ IIC::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
     } else {
         dest_tag->status &= ~BlkCompressed;
     }
+#endif
 }
 
 void
-IIC::fixCopy(Packet * &pkt, PacketList* &writebacks)
+IIC::fixCopy(Packet * &pkt, PacketList &writebacks)
 {
+#if 0
     // if reference counter is greater than 1, do copy
     // else do write
-    Addr blk_addr = blkAlign(pkt->paddr);
-    IICTag* blk = findBlock(blk_addr, pkt->req->asid);
+    Addr blk_addr = blkAlign(pkt->getAddr);
+    IICTag* blk = findBlock(blk_addr, pkt->req->getAsid());
 
     if (blk->numData > 0 && dataReferenceCount[blk->data_ptr[0]] != 1) {
         // copy the data
@@ -843,7 +852,7 @@ IIC::fixCopy(Packet * &pkt, PacketList* &writebacks)
             /**
              * @todo Remove this refetch once we change IIC to pointer based
              */
-            blk = findBlock(blk_addr, pkt->req->asid);
+            blk = findBlock(blk_addr, pkt->req->getAsid());
             assert(blk);
             if (cache->doData()) {
                 memcpy(&(dataBlks[new_data][0]),
@@ -855,6 +864,7 @@ IIC::fixCopy(Packet * &pkt, PacketList* &writebacks)
             blk->data_ptr[i] = new_data;
         }
     }
+#endif
 }
 
 void

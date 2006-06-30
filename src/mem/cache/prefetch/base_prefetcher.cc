@@ -36,6 +36,7 @@
 #include "base/trace.hh"
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/request.hh"
 #include <list>
 
 BasePrefetcher::BasePrefetcher(int size, bool pageStop, bool serialSquash,
@@ -132,10 +133,10 @@ BasePrefetcher::getPacket()
 void
 BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
 {
-    if (!pkt->req->isUncacheable() && !(pkt->isInstRead() && only_data))
+    if (!pkt->req->isUncacheable() && !(pkt->req->isInstRead() && only_data))
     {
         //Calculate the blk address
-        Addr blkAddr = pkt->paddr & ~(Addr)(blkSize-1);
+        Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
         //Check if miss is in pfq, if so remove it
         std::list<Packet *>::iterator iter = inPrefetch(blkAddr);
@@ -177,15 +178,14 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             //temp calc this here...
             pfIdentified++;
             //create a prefetch memreq
+            Request * prefetchReq = new Request(*addr, blkSize, 0);
             Packet * prefetch;
-            prefetch = new Packet();
-            prefetch->paddr = (*addr);
-            prefetch->size = blkSize;
-            prefetch->cmd = Hard_Prefetch;
-            prefetch->xc = pkt->xc;
-            prefetch->data = new uint8_t[blkSize];
-            prefetch->req->asid = pkt->req->asid;
-            prefetch->req->setThreadNum() = pkt->req->getThreadNum();
+            prefetch = new Packet(prefetchReq, Packet::HardPFReq, -1);
+            uint8_t *new_data = new uint8_t[blkSize];
+            prefetch->dataDynamicArray<uint8_t>(new_data);
+            prefetch->req->setThreadContext(pkt->req->getCpuNum(),
+                                            pkt->req->getThreadNum());
+
             prefetch->time = time + (*delay); //@todo ADD LATENCY HERE
             //... initialize
 
@@ -199,14 +199,14 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             }
 
             //Check if it is already in the miss_queue
-            if (inMissQueue(prefetch->paddr, prefetch->req->asid)) {
+            if (inMissQueue(prefetch->getAddr(), prefetch->req->getAsid())) {
                 addr++;
                 delay++;
                 continue;
             }
 
             //Check if it is already in the pf buffer
-            if (inPrefetch(prefetch->paddr) != pf.end()) {
+            if (inPrefetch(prefetch->getAddr()) != pf.end()) {
                 pfBufferHit++;
                 addr++;
                 delay++;
@@ -240,7 +240,7 @@ BasePrefetcher::inPrefetch(Addr address)
     //Guaranteed to only be one match, we always check before inserting
     std::list<Packet *>::iterator iter;
     for (iter=pf.begin(); iter != pf.end(); iter++) {
-        if (((*iter)->paddr & ~(Addr)(blkSize-1)) == address) {
+        if (((*iter)->getAddr() & ~(Addr)(blkSize-1)) == address) {
             return iter;
         }
     }

@@ -96,7 +96,7 @@ class StridePrefetcher : public Prefetcher<TagStore, Buffering>
                            std::list<Tick> &delays)
     {
 //	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-        int cpuID = pkt->cpu_num;
+        int cpuID = pkt->req->getCpuNum();
         if (!useCPUId) cpuID = 0;
 
         /* Scan Table for IAddr Match */

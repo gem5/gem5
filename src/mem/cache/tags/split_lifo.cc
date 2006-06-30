@@ -257,8 +257,8 @@ SplitLIFO::findBlock(Addr addr, int asid, int &lat)
 SplitBlk*
 SplitLIFO::findBlock(Packet * &pkt, int &lat)
 {
-    Addr addr = pkt->paddr;
-    int asid = pkt->req->asid;
+    Addr addr = pkt->getAddr();
+    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -292,10 +292,10 @@ SplitLIFO::findBlock(Addr addr, int asid) const
 }
 
 SplitBlk*
-SplitLIFO::findReplacement(Packet * &pkt, PacketList* &writebacks,
+SplitLIFO::findReplacement(Packet * &pkt, PacketList &writebacks,
                            BlkList &compress_blocks)
 {
-    unsigned set = extractSet(pkt->paddr);
+    unsigned set = extractSet(pkt->getAddr());
 
     SplitBlk *firstIn = sets[set].firstIn;
     SplitBlk *lastIn = sets[set].lastIn;
@@ -315,10 +315,9 @@ SplitLIFO::findReplacement(Packet * &pkt, PacketList* &writebacks,
     }
 
     DPRINTF(Split, "just assigned %#x addr into LIFO, replacing %#x status %#x\n",
-            pkt->paddr, regenerateBlkAddr(blk->tag, set), blk->status);
+            pkt->getAddr(), regenerateBlkAddr(blk->tag, set), blk->status);
     if (blk->isValid()) {
-        int req->setThreadNum() = (blk->xc) ? blk->xc->getThreadNum() : 0;
-        replacements[req->getThreadNum()]++;
+        replacements[0]++;
         totalRefs += blk->refCount;
         ++sampledRefs;
         blk->refCount = 0;
@@ -349,8 +348,10 @@ SplitLIFO::invalidateBlk(int asid, Addr addr)
 }
 
 void
-SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
+SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
 {
+//Copy Unsuported for now
+#if 0
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
     SplitBlk *source_blk = findBlock(source, asid);
@@ -391,6 +392,7 @@ SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
     if (cache->doData()) {
         memcpy(dest_blk->data, source_blk->data, blkSize);
     }
+#endif
 }
 
 void

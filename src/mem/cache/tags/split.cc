@@ -270,30 +270,30 @@ SplitBlk*
 Split::findBlock(Packet * &pkt, int &lat)
 {
 
-    Addr aligned = blkAlign(pkt->paddr);
+    Addr aligned = blkAlign(pkt->getAddr());
 
     if (memHash.count(aligned)) {
         memHash[aligned]++;
-    } else if (pkt->nic_pkt) {
+    } else if (pkt->nic_pkt()) {
         memHash[aligned] = 1;
     }
 
-    SplitBlk *blk = lru->findBlock(pkt->paddr, pkt->req->asid, lat);
+    SplitBlk *blk = lru->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
     if (blk) {
-        if (pkt->nic_pkt) {
+        if (pkt->nic_pkt()) {
             NR_CP_hits++;
         } else {
             CR_CP_hits++;
         }
     } else {
         if (lifo && lifo_net) {
-            blk = lifo_net->findBlock(pkt->paddr, pkt->req->asid, lat);
+            blk = lifo_net->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
 
         } else if (lru_net) {
-            blk = lru_net->findBlock(pkt->paddr, pkt->req->asid, lat);
+            blk = lru_net->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
         }
         if (blk) {
-            if (pkt->nic_pkt) {
+            if (pkt->nic_pkt()) {
                 NR_NP_hits++;
             } else {
                 CR_NP_hits++;
@@ -304,7 +304,7 @@ Split::findBlock(Packet * &pkt, int &lat)
     if (blk) {
         Tick latency = curTick - blk->ts;
         if (blk->isNIC) {
-            if (!blk->isUsed && !pkt->nic_pkt) {
+            if (!blk->isUsed && !pkt->nic_pkt()) {
                     useByCPUCycleDist.sample(latency);
                     nicUseByCPUCycleTotal += latency;
                     nicBlksUsedByCPU++;
@@ -312,7 +312,7 @@ Split::findBlock(Packet * &pkt, int &lat)
         }
         blk->isUsed = true;
 
-        if (pkt->nic_pkt) {
+        if (pkt->nic_pkt()) {
             DPRINTF(Split, "found block in partition %d\n", blk->part);
         }
     }
@@ -350,12 +350,12 @@ Split::findBlock(Addr addr, int asid) const
 }
 
 SplitBlk*
-Split::findReplacement(Packet * &pkt, PacketList* &writebacks,
+Split::findReplacement(Packet * &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
     SplitBlk *blk;
 
-    if (pkt->nic_pkt) {
+    if (pkt->nic_pkt()) {
         DPRINTF(Split, "finding a replacement for nic_req\n");
         nic_repl++;
         if (lifo && lifo_net)
@@ -397,7 +397,7 @@ Split::findReplacement(Packet * &pkt, PacketList* &writebacks,
 
     // blk attributes for the new blk coming IN
     blk->ts = curTick;
-    blk->isNIC = (pkt->nic_pkt) ? true : false;
+    blk->isNIC = (pkt->nic_pkt()) ? true : false;
 
     return blk;
 }
@@ -422,7 +422,7 @@ Split::invalidateBlk(int asid, Addr addr)
 }
 
 void
-Split::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
+Split::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
 {
     if (lru->probe(asid, source))
         lru->doCopy(source, dest, asid, writebacks);

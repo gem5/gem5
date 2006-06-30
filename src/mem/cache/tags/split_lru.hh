@@ -207,7 +207,7 @@ public:
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    SplitBlk* findReplacement(Packet * &pkt, PacketList* &writebacks,
+    SplitBlk* findReplacement(Packet * &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**
@@ -302,7 +302,7 @@ public:
      * needed when writing to a compressed block.
      */
     void writeData(SplitBlk *blk, uint8_t *data, int size,
-                   PacketList* & writebacks)
+                   PacketList & writebacks)
     {
         assert(size <= blkSize);
         blk->size = size;
@@ -315,12 +315,12 @@ public:
      * @param asid The address space DI.
      * @param writebacks List for any generated writeback requests.
      */
-    void doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks);
+    void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
 
     /**
      * No impl.
      */
-    void fixCopy(Packet * &pkt, PacketList* &writebacks)
+    void fixCopy(Packet * &pkt, PacketList &writebacks)
     {
     }
 

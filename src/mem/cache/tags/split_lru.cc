@@ -135,7 +135,7 @@ SplitLRU::SplitLRU(int _numSets, int _blkSize, int _assoc, int _hit_latency, int
             // table; won't matter because the block is invalid
             blk->tag = j;
             blk->whenReady = 0;
-            blk->req->asid = -1;
+            blk->asid = -1;
             blk->isTouched = false;
             blk->size = blkSize;
             sets[i].blks[j]=blk;
@@ -206,8 +206,8 @@ SplitLRU::findBlock(Addr addr, int asid, int &lat)
 SplitBlk*
 SplitLRU::findBlock(Packet * &pkt, int &lat)
 {
-    Addr addr = pkt->paddr;
-    int asid = pkt->req->asid;
+    Addr addr = pkt->getAddr();
+    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -236,16 +236,15 @@ SplitLRU::findBlock(Addr addr, int asid) const
 }
 
 SplitBlk*
-SplitLRU::findReplacement(Packet * &pkt, PacketList* &writebacks,
+SplitLRU::findReplacement(Packet * &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
-    unsigned set = extractSet(pkt->paddr);
+    unsigned set = extractSet(pkt->getAddr());
     // grab a replacement candidate
     SplitBlk *blk = sets[set].blks[assoc-1];
     sets[set].moveToHead(blk);
     if (blk->isValid()) {
-        int req->setThreadNum() = (blk->xc) ? blk->xc->getThreadNum() : 0;
-        replacements[req->getThreadNum()]++;
+        replacements[0]++;
         totalRefs += blk->refCount;
         ++sampledRefs;
         blk->refCount = 0;
@@ -275,8 +274,10 @@ SplitLRU::invalidateBlk(int asid, Addr addr)
 }
 
 void
-SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
+SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
 {
+//Copy not supported for now
+#if 0
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
     SplitBlk *source_blk = findBlock(source, asid);
@@ -317,6 +318,7 @@ SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList* &writebacks)
     if (cache->doData()) {
         memcpy(dest_blk->data, source_blk->data, blkSize);
     }
+#endif
 }
 
 void

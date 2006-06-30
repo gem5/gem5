@@ -100,9 +100,6 @@ class Packet
      /** The size of the request or transfer. */
     int size;
 
-    /** The offset within the block that represents the data. */
-    int offset;
-
     /** Device address (e.g., bus ID) of the source of the
      *   transaction. The source is not responsible for setting this
      *   field; it is set implicitly by the interconnect when the
@@ -120,8 +117,6 @@ class Packet
     bool addrSizeValid;
     /** Is the 'src' field valid? */
     bool srcValid;
-    /** Is the offset valid. */
-    bool offsetValid;
 
 
   public:
@@ -225,6 +220,9 @@ class Packet
 
     bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
+    bool isCompressed() { return (flags & COMPRESSED) != 0; }
+
+    bool nic_pkt() { assert("Unimplemented\n" && 0); }
 
     /** Possible results of a packet's request. */
     enum Result
@@ -249,7 +247,7 @@ class Packet
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
     int getSize() const { assert(addrSizeValid); return size; }
-    int getOffset() const { assert(offsetValid); return offset; }
+    Addr getOffset(int blkSize) const { return req->getPaddr() & (Addr)(blkSize - 1); }
 
     void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
     void cmdOverride(Command newCmd) { cmd = newCmd; }
@@ -262,7 +260,7 @@ class Packet
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
            addrSizeValid(_req->validPaddr),
-           srcValid(false), offsetValid(false),
+           srcValid(false),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {
@@ -275,8 +273,8 @@ class Packet
     Packet(Request *_req, Command _cmd, short _dest, int _blkSize)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
-           offset(_req->paddr & (_blkSize - 1)), dest(_dest),
-           addrSizeValid(_req->validPaddr), srcValid(false), offsetValid(true),
+           dest(_dest),
+           addrSizeValid(_req->validPaddr), srcValid(false),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {

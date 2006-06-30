@@ -63,6 +63,8 @@ const unsigned PF_EXCLUSIVE	= 0x100;
 const unsigned EVICT_NEXT	= 0x200;
 /** The request should ignore unaligned access faults */
 const unsigned NO_ALIGN_FAULT   = 0x400;
+/** The request was an instruction read. */
+const unsigned INST_READ        = 0x800;
 
 class Request
 {
@@ -227,6 +229,8 @@ class Request
 
     /** Accessor Function to Check Cacheability. */
     bool isUncacheable() { return getFlags() & UNCACHEABLE; }
+
+    bool isInstRead() { return getFlags() & INST_READ; }
 
     friend class Packet;
 };
