@@ -280,7 +280,8 @@ LRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
                                                                   dest_blk->set),
                                                 blkSize, 0);
             Packet *writeback = new Packet(writebackReq, Packet::Writeback, -1);
-            writeback->dataDynamic<uint8_t>(dest_blk->data);
+            writeback->allocate();
+            memcpy(writeback->getPtr<uint8_t>(),dest_blk->data, blkSize);
             writebacks.push_back(writeback);
         }
         dest_blk->tag = extractTag(dest);

@@ -146,16 +146,16 @@ class Cache : public BaseCache
     /** Instantiates a basic cache object. */
     Cache(const std::string &_name, Params &params);
 
-    bool doTimingAccess(Packet *pkt, CachePort *cachePort,
+    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort,
                         bool isCpuSide);
 
-    Tick doAtomicAccess(Packet *pkt, CachePort *cachePort,
+    virtual Tick doAtomicAccess(Packet *pkt, CachePort *cachePort,
                         bool isCpuSide);
 
-    void doFunctionalAccess(Packet *pkt, CachePort *cachePort,
+    virtual void doFunctionalAccess(Packet *pkt, CachePort *cachePort,
                             bool isCpuSide);
 
-    void recvStatusChange(Port::Status status, bool isCpuSide);
+    virtual void recvStatusChange(Port::Status status, bool isCpuSide);
 
     void regStats();
 

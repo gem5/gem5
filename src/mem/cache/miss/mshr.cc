@@ -90,8 +90,7 @@ MSHR::allocateAsBuffer(Packet * &target)
     asid = target->req->getAsid();
     threadNum = target->req->getThreadNum();
     pkt = new Packet(target->req, target->cmd, -1);
-    uint8_t *new_data = new uint8_t[target->getSize()];
-    pkt->dataDynamicArray<uint8_t>(new_data);
+    pkt->allocate();
     pkt->senderState = (Packet::SenderState*)this;
     pkt->time = curTick;
 }

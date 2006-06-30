@@ -99,7 +99,7 @@ BaseCache::CachePort::clearBlocked()
 }
 
 Port*
-BaseCache::getPort(const std::string &if_name)
+BaseCache::getPort(const std::string &if_name, int idx)
 {
     if(if_name == "cpu_side")
     {

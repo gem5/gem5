@@ -230,7 +230,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         Cache<CacheTags<t, comp>, b, c>::Params params(tagStore, mq, coh, \
                                                        do_copy, base_params, \
                                                        /*in_bus, out_bus,*/ pf,  \
-                                                       prefetch_access); \
+                                                       prefetch_access, hit_latency); \
         Cache<CacheTags<t, comp>, b, c> *retval =			\
             new Cache<CacheTags<t, comp>, b, c>(getInstanceName(), /*hier,*/ \
                                                 params);		\
@@ -242,7 +242,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         retval->setMasterInterface(new MasterInterface<Cache<CacheTags<t, comp>, b, c>, Bus>(getInstanceName(), hier, retval, out_bus)); \
         out_bus->rangeChange();						\
         return retval;							\
-*/return true;                                                          \
+*/return retval;                                                          \
     } while (0)
 
 #define BUILD_CACHE_PANIC(x) do {			\

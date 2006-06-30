@@ -181,8 +181,7 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             Request * prefetchReq = new Request(*addr, blkSize, 0);
             Packet * prefetch;
             prefetch = new Packet(prefetchReq, Packet::HardPFReq, -1);
-            uint8_t *new_data = new uint8_t[blkSize];
-            prefetch->dataDynamicArray<uint8_t>(new_data);
+            prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->getCpuNum(),
                                             pkt->req->getThreadNum());
 

@@ -210,8 +210,7 @@ BlockingBuffer::doWriteback(Addr addr, int asid,
     // Generate request
     Request * req = new Request(addr, size, 0);
     Packet * pkt = new Packet(req, Packet::Writeback, -1);
-    uint8_t *new_data = new uint8_t[size];
-    pkt->dataDynamicArray<uint8_t>(new_data);
+    pkt->allocate();
     if (data) {
         memcpy(pkt->getPtr<uint8_t>(), data, size);
     }

@@ -588,8 +588,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
 
                 Packet * busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
 
-                uint8_t* temp_data = new uint8_t[blkSize];
-                busPkt->dataDynamicArray<uint8_t>(temp_data);
+                busPkt->allocate();
 
                 busPkt->time = curTick;
 

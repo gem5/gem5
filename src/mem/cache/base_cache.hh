@@ -41,6 +41,7 @@
 #include <list>
 #include <inttypes.h>
 
+#include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "mem/mem_object.hh"
@@ -122,14 +123,29 @@ class BaseCache : public MemObject
     CachePort *memSidePort;
 
   public:
-    virtual Port *getPort(const std::string &if_name);
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
   private:
     //To be defined in cache_impl.hh not in base class
-    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide);
-    virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide);
-    virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide);
-    virtual void recvStatusChange(Port::Status status, bool isCpuSide);
+    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
+    {
+        fatal("No implementation");
+    }
+
+    virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide)
+    {
+        fatal("No implementation");
+    }
+
+    virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide)
+    {
+        fatal("No implementation");
+    }
+
+    virtual void recvStatusChange(Port::Status status, bool isCpuSide)
+    {
+        fatal("No implementation");
+    }
 
     /**
      * Bit vector of the blocking reasons for the access path.
