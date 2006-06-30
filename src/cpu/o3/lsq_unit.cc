@@ -29,9 +29,7 @@
  *          Korey Sewell
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_cpu.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/lsq_unit_impl.hh"
 
 // Force the instantiation of LDSTQ for all the implementations we care about.

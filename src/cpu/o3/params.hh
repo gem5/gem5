@@ -28,47 +28,29 @@
  * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_ALPHA_PARAMS_HH__
-#define __CPU_O3_ALPHA_PARAMS_HH__
+#ifndef __CPU_O3_PARAMS_HH__
+#define __CPU_O3_PARAMS_HH__
 
 #include "cpu/o3/cpu.hh"
 
 //Forward declarations
-class AlphaDTB;
-class AlphaITB;
 class FUPool;
-class MemObject;
-class Process;
-class System;
 
 /**
- * This file defines the parameters that will be used for the AlphaO3CPU.
+ * This file defines the parameters that will be used for the O3CPU.
  * This must be defined externally so that the Impl can have a params class
  * defined that it can pass to all of the individual stages.
  */
-
-class AlphaSimpleParams : public BaseO3CPU::Params
+class O3Params : public BaseO3CPU::Params
 {
   public:
-
-#if FULL_SYSTEM
-    AlphaITB *itb; AlphaDTB *dtb;
-#else
-    std::vector<Process *> workload;
-    Process *process;
-#endif // FULL_SYSTEM
-
-    MemObject *mem;
-
-    BaseCPU *checker;
-
     unsigned activity;
 
     //
     // Caches
     //
-//    MemInterface *icacheInterface;
-//    MemInterface *dcacheInterface;
+    //    MemInterface *icacheInterface;
+    //    MemInterface *dcacheInterface;
 
     unsigned cachePorts;
 

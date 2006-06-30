@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
+#include "cpu/o3/alpha/dyn_inst.hh"
 
 template <class Impl>
 AlphaDynInst<Impl>::AlphaDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,

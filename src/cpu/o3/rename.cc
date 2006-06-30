@@ -28,8 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/rename_impl.hh"
 
 template class DefaultRename<AlphaSimpleImpl>;

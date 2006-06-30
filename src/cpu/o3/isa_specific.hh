@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Korey Sewell
  */
 
-#include "cpu/o3/isa_specific.hh"
-#include "cpu/o3/fetch_impl.hh"
+#include "cpu/base.hh"
 
-template class DefaultFetch<AlphaSimpleImpl>;
+#if THE_ISA == ALPHA_ISA
+    #include "cpu/o3/alpha/cpu.hh"
+    #include "cpu/o3/alpha/impl.hh"
+    #include "cpu/o3/alpha/params.hh"
+    #include "cpu/o3/alpha/dyn_inst.hh"
+#else
+    #error "O3CPU doesnt support this ISA"
+#endif

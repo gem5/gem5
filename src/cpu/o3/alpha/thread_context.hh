@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
-#include "cpu/o3/isa_specific.hh"
-#include "cpu/o3/fetch_impl.hh"
+#include "cpu/o3/thread_context.hh"
 
-template class DefaultFetch<AlphaSimpleImpl>;
+template <class Impl>
+class AlphaTC : public O3ThreadContext<Impl>
+{
+#if FULL_SYSTEM
+    /** Returns a pointer to the ITB. */
+    virtual AlphaITB *getITBPtr() { return cpu->itb; }
+
+    /** Returns a pointer to the DTB. */
+    virtual AlphaDTB *getDTBPtr() { return cpu->dtb; }
+
+    /** Returns pointer to the quiesce event. */
+    virtual EndQuiesceEvent *getQuiesceEvent()
+    {
+        return thread->quiesceEvent;
+    }
+
+    /** Returns if the thread is currently in PAL mode, based on
+     * the PC's value. */
+    virtual bool inPalMode()
+    { return TheISA::PcPAL(cpu->readPC(thread->readTid())); }
+#endif
+
+    virtual uint64_t readNextNPC()
+    {
+        panic("Alpha has no NextNPC!");
+        return 0;
+    }
+
+    virtual void setNextNPC(uint64_t val)
+    {
+        panic("Alpha has no NextNPC!");
+    }
+
+    virtual void changeRegFileContext(TheISA::RegFile::ContextParam param,
+                                      TheISA::RegFile::ContextVal val)
+    { panic("Not supported on Alpha!"); }
+};

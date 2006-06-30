@@ -33,7 +33,7 @@
 
 #include "arch/alpha/isa_traits.hh"
 
-#include "cpu/o3/alpha_params.hh"
+#include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/cpu_policy.hh"
 
 // Forward declarations.
@@ -81,7 +81,7 @@ struct AlphaSimpleImpl
 
     enum {
       MaxWidth = 8,
-      MaxThreads = 4
+      MaxThreads = 2
     };
 };
 

@@ -28,9 +28,9 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_impl.hh"
-#include "cpu/o3/alpha_cpu_impl.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
+#include "cpu/o3/alphaimpl.hh"
+#include "cpu/o3/alpha/cpu_impl.hh"
+#include "cpu/o3/alpha/dyn_inst.hh"
 
 // Force instantiation of AlphaO3CPU for all the implemntations that are
 // needed.  Consider merging this and alpha_dyn_inst.cc, and maybe all

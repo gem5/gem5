@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,42 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/isa_specific.hh"
-#include "cpu/o3/fetch_impl.hh"
+#ifndef __CPU_O3_ALPHA_PARAMS_HH__
+#define __CPU_O3_ALPHA_PARAMS_HH__
 
-template class DefaultFetch<AlphaSimpleImpl>;
+#include "cpu/o3/cpu.hh"
+#include "cpu/o3/params.hh"
+
+//Forward declarations
+class AlphaDTB;
+class AlphaITB;
+class MemObject;
+class Process;
+class System;
+
+/**
+ * This file defines the parameters that will be used for the AlphaO3CPU.
+ * This must be defined externally so that the Impl can have a params class
+ * defined that it can pass to all of the individual stages.
+ */
+
+class AlphaSimpleParams : public O3Params
+{
+  public:
+
+#if FULL_SYSTEM
+    AlphaITB *itb;
+    AlphaDTB *dtb;
+#else
+    std::vector<Process *> workload;
+    Process *process;
+#endif // FULL_SYSTEM
+
+    MemObject *mem;
+
+    BaseCPU *checker;
+
+    unsigned decodeToFetchDelay;
+};
+
+#endif // __CPU_O3_ALPHA_PARAMS_HH__
