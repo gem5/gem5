@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
+ * Authors: Erik Hallnor
+ *          Nathan Binkert
  */
 
 /**
- * @file
- * Describes a tagged prefetcher based on template policies.
+ * Definitions of the base replacement class.
  */
 
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#include "sim/param.hh"
+#include "mem/cache/tags/repl/repl.hh"
 
-template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
-                                     cacheCheckPush, onlyData),
-     latency(latency), degree(degree)
-{
-}
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-template <class TagStore, class Buffering>
-void
-TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+DEFINE_SIM_OBJECT_CLASS_NAME("Repl", Repl)
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
-        }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
-        }
-    }
-}
-
-
+#endif //DOXYGEN_SHOULD_SKIP_THIS

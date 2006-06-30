@@ -33,43 +33,39 @@
  * Describes a tagged prefetcher based on template policies.
  */
 
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
 
+#include "mem/cache/prefetch/prefetcher.hh"
+
+/**
+ * A template-policy based cache. The behavior of the cache can be altered by
+ * supplying different template policies. TagStore handles all tag and data
+ * storage @sa TagStore. Buffering handles all misses and writes/writebacks
+ * @sa MissQueue. Coherence handles all coherence policy details @sa
+ * UniCoherence, SimpleMultiCoherence.
+ */
 template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
-                                     cacheCheckPush, onlyData),
-     latency(latency), degree(degree)
+class TaggedPrefetcher : public Prefetcher<TagStore, Buffering>
 {
-}
+  protected:
 
-template <class TagStore, class Buffering>
-void
-TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+    Buffering* mq;
+    TagStore* tags;
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
-        }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
-        }
-    }
-}
+    Tick latency;
+    int degree;
 
+  public:
 
+    TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
+                     bool cacheCheckPush, bool onlyData,
+                     Tick latency, int degree);
+
+    ~TaggedPrefetcher() {}
+
+    void calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
+                           std::list<Tick> &delays);
+};
+
+#endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__

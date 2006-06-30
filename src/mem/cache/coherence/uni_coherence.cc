@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,62 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
+ * Authors: Erik Hallnor
  */
+
+#include "mem/cache/coherence/uni_coherence.hh"
+#include "mem/cache/base_cache.hh"
+
+#include "base/trace.hh"
+
+using namespace std;
+
+UniCoherence::UniCoherence()
+    : cshrs(50)
+{
+}
+
+Packet *
+UniCoherence::getPacket()
+{
+    bool unblock = cshrs.isFull();
+    Packet* pkt = cshrs.getReq();
+    cshrs.markInService((MSHR*)pkt->senderState);
+    if (!cshrs.havePending()) {
+        cache->clearSlaveRequest(Request_Coherence);
+    }
+    if (unblock) {
+        //since CSHRs are always used as buffers, should always get rid of one
+        assert(!cshrs.isFull());
+        cache->clearBlocked(Blocked_Coherence);
+    }
+    return pkt;
+}
 
 /**
- * @file
- * Describes a tagged prefetcher based on template policies.
+ * @todo add support for returning slave requests, not doing them here.
  */
-
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
-
-template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
-                                     cacheCheckPush, onlyData),
-     latency(latency), degree(degree)
+bool
+UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
+                               CacheBlk::State &new_state)
 {
-}
-
-template <class TagStore, class Buffering>
-void
-TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
-
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
+    new_state = 0;
+    if (pkt->isInvalidate()) {
+        DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
+                pkt->getAddr(), blk);
+        if (!cache->isTopLevel()) {
+            // Forward to other caches
+            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cshrs.allocate(tmp);
+            cache->setSlaveRequest(Request_Coherence, curTick);
+            if (cshrs.isFull()) {
+                cache->setBlockedForSnoop(Blocked_Coherence);
+            }
         }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
+    } else {
+        if (blk) {
+            new_state = blk->status;
         }
     }
+    return false;
 }
-
-
