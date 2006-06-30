@@ -37,9 +37,9 @@
 #define __PAGE_TABLE__
 
 #include <string>
-#include <map>
 
 #include "arch/isa_traits.hh"
+#include "base/hashmap.hh"
 #include "base/trace.hh"
 #include "mem/request.hh"
 #include "mem/packet.hh"
@@ -53,7 +53,14 @@ class System;
 class PageTable
 {
   protected:
-    std::map<Addr,Addr> pTable;
+    m5::hash_map<Addr,Addr> pTable;
+
+    struct cacheElement {
+        Addr paddr;
+        Addr vaddr;
+    } ;
+
+    struct cacheElement pTableCache[3];
 
     const Addr pageSize;
     const Addr offsetMask;

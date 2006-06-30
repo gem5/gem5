@@ -991,7 +991,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     if (inst_fault != NoFault) {
         head_inst->setCompleted();
-#if FULL_SYSTEM
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
                 head_inst->seqNum, head_inst->readPC());
 
@@ -1035,10 +1034,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         generateTrapEvent(tid);
 
         return false;
-#else // !FULL_SYSTEM
-        panic("fault (%d) detected @ PC %08p", inst_fault,
-              head_inst->PC);
-#endif // FULL_SYSTEM
     }
 
     updateComInstStats(head_inst);

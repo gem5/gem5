@@ -407,15 +407,14 @@ AtomicSimpleCPU::tick()
             postExecute();
 
             if (simulate_stalls) {
-                // This calculation assumes that the icache and dcache
-                // access latencies are always a multiple of the CPU's
-                // cycle time.  If not, the next tick event may get
-                // scheduled at a non-integer multiple of the CPU
-                // cycle time.
                 Tick icache_stall = icache_latency - cycles(1);
                 Tick dcache_stall =
                     dcache_access ? dcache_latency - cycles(1) : 0;
-                latency += icache_stall + dcache_stall;
+                Tick stall_cycles = (icache_stall + dcache_stall) / cycles(1);
+                if (cycles(stall_cycles) < (icache_stall + dcache_stall))
+                    latency += cycles(stall_cycles+1);
+                else
+                    latency += cycles(stall_cycles);
             }
 
         }
