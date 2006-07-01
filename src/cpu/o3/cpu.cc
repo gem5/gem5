@@ -41,8 +41,7 @@
 #include "cpu/activity.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/cpu.hh"
 
 #include "sim/root.hh"
@@ -1212,4 +1211,4 @@ FullO3CPU<Impl>::updateThreadPriority()
 }
 
 // Forward declaration of FullO3CPU.
-template class FullO3CPU<AlphaSimpleImpl>;
+template class FullO3CPU<O3CPUImpl>;

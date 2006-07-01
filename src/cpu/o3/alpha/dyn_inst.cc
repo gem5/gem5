@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,9 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/bpred_unit_impl.hh"
-#include "cpu/o3/isa_specific.hh"
+#include "cpu/o3/alpha/dyn_inst_impl.hh"
+#include "cpu/o3/alpha/impl.hh"
 
-template class BPredUnit<O3CPUImpl>;
+// Force instantiation of AlphaDynInst for all the implementations that
+// are needed.
+template class AlphaDynInst<AlphaSimpleImpl>;

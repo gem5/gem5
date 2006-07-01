@@ -28,23 +28,22 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/store_set.hh"
 #include "cpu/o3/mem_dep_unit_impl.hh"
 
 // Force instantation of memory dependency unit using store sets and
-// AlphaSimpleImpl.
-template class MemDepUnit<StoreSet, AlphaSimpleImpl>;
+// O3CPUImpl.
+template class MemDepUnit<StoreSet, O3CPUImpl>;
 
 #ifdef DEBUG
 template <>
 int
-MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_count = 0;
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_count = 0;
 template <>
 int
-MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_insert = 0;
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_insert = 0;
 template <>
 int
-MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_erase = 0;
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_erase = 0;
 #endif

@@ -49,11 +49,14 @@
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
+//#include "cpu/o3/thread_context.hh"
 #include "sim/process.hh"
 
 template <class>
 class Checker;
 class ThreadContext;
+template <class>
+class O3ThreadContext;
 class MemObject;
 class Process;
 
@@ -67,6 +70,10 @@ class BaseO3CPU : public BaseCPU
 
     void regStats();
 
+    /** Sets this CPU's ID. */
+    void setCpuId(int id) { cpu_id = id; }
+
+    /** Reads this CPU's ID. */
     int readCpuId() { return cpu_id; }
 
   protected:
@@ -94,6 +101,7 @@ class FullO3CPU : public BaseO3CPU
 
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
+    friend class O3ThreadContext<Impl>;
   public:
     enum Status {
         Running,

@@ -28,7 +28,42 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/bpred_unit_impl.hh"
-#include "cpu/o3/isa_specific.hh"
+#ifndef __CPU_O3_ALPHA_PARAMS_HH__
+#define __CPU_O3_ALPHA_PARAMS_HH__
 
-template class BPredUnit<O3CPUImpl>;
+#include "cpu/o3/cpu.hh"
+#include "cpu/o3/params.hh"
+
+//Forward declarations
+class AlphaDTB;
+class AlphaITB;
+class MemObject;
+class Process;
+class System;
+
+/**
+ * This file defines the parameters that will be used for the AlphaO3CPU.
+ * This must be defined externally so that the Impl can have a params class
+ * defined that it can pass to all of the individual stages.
+ */
+
+class AlphaSimpleParams : public O3Params
+{
+  public:
+
+#if FULL_SYSTEM
+    AlphaITB *itb;
+    AlphaDTB *dtb;
+#else
+    std::vector<Process *> workload;
+    Process *process;
+#endif // FULL_SYSTEM
+
+    MemObject *mem;
+
+    BaseCPU *checker;
+
+    unsigned decodeToFetchDelay;
+};
+
+#endif // __CPU_O3_ALPHA_PARAMS_HH__

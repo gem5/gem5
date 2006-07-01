@@ -28,9 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/iew_impl.hh"
 #include "cpu/o3/inst_queue.hh"
 
-template class DefaultIEW<AlphaSimpleImpl>;
+template class DefaultIEW<O3CPUImpl>;

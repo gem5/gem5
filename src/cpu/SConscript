@@ -104,7 +104,7 @@ env.Depends('static_inst_exec_sigs.hh', Value(env['CPU_MODELS']))
 
 # List of suppported CPUs by the Checker.  Errors out if USE_CHECKER=True
 # and one of these are not being used.
-CheckerSupportedCPUList = ['AlphaO3CPU', 'OzoneCPU']
+CheckerSupportedCPUList = ['O3CPU', 'OzoneCPU']
 
 #################################################################
 #
@@ -130,12 +130,10 @@ if need_simple_base:
 if 'FastCPU' in env['CPU_MODELS']:
     sources += Split('fast/cpu.cc')
 
-if 'AlphaO3CPU' in env['CPU_MODELS']:
+if 'O3CPU' in env['CPU_MODELS']:
+    sources += SConscript('o3/SConscript', exports = 'env')
     sources += Split('''
         o3/2bit_local_pred.cc
-        o3/alpha_dyn_inst.cc
-        o3/alpha_cpu.cc
-        o3/alpha_cpu_builder.cc
         o3/base_dyn_inst.cc
         o3/bpred_unit.cc
         o3/btb.cc

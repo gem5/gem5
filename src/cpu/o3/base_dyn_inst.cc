@@ -29,12 +29,11 @@
  */
 
 #include "cpu/base_dyn_inst_impl.hh"
-#include "cpu/o3/alpha_cpu.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 
 // Explicit instantiation
-template class BaseDynInst<AlphaSimpleImpl>;
+template class BaseDynInst<O3CPUImpl>;
 
 template <>
 int
-BaseDynInst<AlphaSimpleImpl>::instcount = 0;
+BaseDynInst<O3CPUImpl>::instcount = 0;
