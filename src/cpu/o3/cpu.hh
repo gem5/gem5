@@ -102,6 +102,7 @@ class FullO3CPU : public BaseO3CPU
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     friend class O3ThreadContext<Impl>;
+
   public:
     enum Status {
         Running,
@@ -113,6 +114,9 @@ class FullO3CPU : public BaseO3CPU
 
     /** Overall CPU status. */
     Status _status;
+
+    /** Per-thread status in CPU, used for SMT.  */
+    Status _threadStatus[Impl::MaxThreads];
 
   private:
     class TickEvent : public Event
@@ -150,6 +154,49 @@ class FullO3CPU : public BaseO3CPU
             tickEvent.squash();
     }
 
+    class ActivateThreadEvent : public Event
+    {
+      private:
+        /** Number of Thread to Activate */
+        int tid;
+
+        /** Pointer to the CPU. */
+        FullO3CPU<Impl> *cpu;
+
+      public:
+        /** Constructs the event. */
+        ActivateThreadEvent();
+
+        /** Initialize Event */
+        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
+
+        /** Processes the event, calling activateThread() on the CPU. */
+        void process();
+
+        /** Returns the description of the event. */
+        const char *description();
+    };
+
+    /** Schedule thread to activate , regardless of its current state. */
+    void scheduleActivateThreadEvent(int tid, int delay)
+    {
+        // Schedule thread to activate, regardless of its current state.
+        if (activateThreadEvent[tid].squashed())
+            activateThreadEvent[tid].reschedule(curTick + cycles(delay));
+        else if (!activateThreadEvent[tid].scheduled())
+            activateThreadEvent[tid].schedule(curTick + cycles(delay));
+    }
+
+    /** Unschedule actiavte thread event, regardless of its current state. */
+    void unscheduleActivateThreadEvent(int tid)
+    {
+        if (activateThreadEvent[tid].scheduled())
+            activateThreadEvent[tid].squash();
+    }
+
+    /** The tick event used for scheduling CPU ticks. */
+    ActivateThreadEvent activateThreadEvent[Impl::MaxThreads];
+
   public:
     /** Constructs a CPU with the given parameters. */
     FullO3CPU(Params *params);
@@ -166,6 +213,9 @@ class FullO3CPU : public BaseO3CPU
 
     /** Initialize the CPU */
     void init();
+
+    /** Add Thread to Active Threads List */
+    void activateThread(unsigned int tid);
 
     /** Setup CPU to insert a thread's context */
     void insertThread(unsigned tid);
@@ -521,6 +571,9 @@ class FullO3CPU : public BaseO3CPU
 
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
+
+    /** The cycle that the CPU was last activated by a new thread*/
+    Tick lastActivatedCycle;
 
     /** Number of Threads CPU can process */
     unsigned numThreads;

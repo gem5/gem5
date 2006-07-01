@@ -86,6 +86,35 @@ FullO3CPU<Impl>::TickEvent::description()
 }
 
 template <class Impl>
+FullO3CPU<Impl>::ActivateThreadEvent::ActivateThreadEvent()
+    : Event(&mainEventQueue, CPU_Tick_Pri)
+{
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::ActivateThreadEvent::init(int thread_num,
+                                           FullO3CPU<Impl> *thread_cpu)
+{
+    tid = thread_num;
+    cpu = thread_cpu;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::ActivateThreadEvent::process()
+{
+    cpu->activateThread(tid);
+}
+
+template <class Impl>
+const char *
+FullO3CPU<Impl>::ActivateThreadEvent::description()
+{
+    return "FullO3CPU \"Activate Thread\" event";
+}
+
+template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(Params *params)
     : BaseO3CPU(params),
       tickEvent(this),
@@ -256,6 +285,8 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setROB(&rob);
 
     lastRunningCycle = curTick;
+
+    lastActivatedCycle = -1;
 
     contextSwitch = false;
 }
@@ -574,31 +605,45 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::activateContext(int tid, int delay)
+FullO3CPU<Impl>::activateThread(unsigned int tid)
 {
-    // Needs to set each stage to running as well.
     list<unsigned>::iterator isActive = find(
         activeThreads.begin(), activeThreads.end(), tid);
 
     if (isActive == activeThreads.end()) {
-        //May Need to Re-code this if the delay variable is the
-        //delay needed for thread to activate
-        DPRINTF(O3CPU, "Adding Thread %i to active threads list\n",
+        DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
                 tid);
 
         activeThreads.push_back(tid);
     }
+}
 
-    assert(_status == Idle || _status == SwitchedOut);
 
-    scheduleTickEvent(delay);
+template <class Impl>
+void
+FullO3CPU<Impl>::activateContext(int tid, int delay)
+{
+    // Needs to set each stage to running as well.
+    if (delay){
+        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
+                "on cycle %d\n", tid, curTick + cycles(delay));
+        scheduleActivateThreadEvent(tid, delay);
+    } else {
+        activateThread(tid);
+    }
 
-    // Be sure to signal that there's some activity so the CPU doesn't
-    // deschedule itself.
-    activityRec.activity();
-    fetch.wakeFromQuiesce();
+    if(lastActivatedCycle < curTick) {
+        scheduleTickEvent(delay);
 
-    _status = Running;
+        // Be sure to signal that there's some activity so the CPU doesn't
+        // deschedule itself.
+        activityRec.activity();
+        fetch.wakeFromQuiesce();
+
+        lastActivatedCycle = curTick;
+
+        _status = Running;
+    }
 }
 
 template <class Impl>
