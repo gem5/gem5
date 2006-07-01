@@ -31,4 +31,4 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/commit_impl.hh"
 
-template class DefaultCommit<AlphaSimpleImpl>;
+template class DefaultCommit<O3CPUImpl>;

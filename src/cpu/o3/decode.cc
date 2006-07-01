@@ -31,4 +31,4 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/decode_impl.hh"
 
-template class DefaultDecode<AlphaSimpleImpl>;
+template class DefaultDecode<O3CPUImpl>;

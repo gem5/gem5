@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alphaimpl.hh"
+#include "cpu/o3/alpha/impl.hh"
 #include "cpu/o3/alpha/cpu_impl.hh"
 #include "cpu/o3/alpha/dyn_inst.hh"
 

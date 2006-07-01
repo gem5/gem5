@@ -33,4 +33,4 @@
 #include "cpu/o3/rob_impl.hh"
 
 // Force instantiation of InstructionQueue.
-template class ROB<AlphaSimpleImpl>;
+template class ROB<O3CPUImpl>;

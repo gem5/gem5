@@ -32,4 +32,4 @@
 #include "cpu/o3/inst_queue_impl.hh"
 
 // Force instantiation of InstructionQueue.
-template class InstructionQueue<AlphaSimpleImpl>;
+template class InstructionQueue<O3CPUImpl>;

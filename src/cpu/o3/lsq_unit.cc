@@ -33,5 +33,5 @@
 #include "cpu/o3/lsq_unit_impl.hh"
 
 // Force the instantiation of LDSTQ for all the implementations we care about.
-template class LSQUnit<AlphaSimpleImpl>;
+template class LSQUnit<O3CPUImpl>;
 

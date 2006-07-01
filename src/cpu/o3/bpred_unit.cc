@@ -31,4 +31,4 @@
 #include "cpu/o3/bpred_unit_impl.hh"
 #include "cpu/o3/isa_specific.hh"
 
-template class BPredUnit<AlphaSimpleImpl>;
+template class BPredUnit<O3CPUImpl>;

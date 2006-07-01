@@ -34,6 +34,7 @@
 template <class Impl>
 class AlphaTC : public O3ThreadContext<Impl>
 {
+  public:
 #if FULL_SYSTEM
     /** Returns a pointer to the ITB. */
     virtual AlphaITB *getITBPtr() { return cpu->itb; }

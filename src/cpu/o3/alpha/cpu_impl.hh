@@ -40,7 +40,7 @@
 
 #include "cpu/o3/alpha/cpu.hh"
 #include "cpu/o3/alpha/params.hh"
-#include "cpu/o3/alpha/tc.hh"
+#include "cpu/o3/alpha/thread_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/thread_state.hh"
 
@@ -120,7 +120,7 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
         // CheckerThreadContext.
 #if USE_CHECKER
         if (params->checker) {
-            tc = new CheckerThreadContext<AlphaTC<Impl>>(
+            tc = new CheckerThreadContext<AlphaTC<Impl> >(
                 alpha_tc, this->checker);
         }
 #endif

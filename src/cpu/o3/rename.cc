@@ -31,4 +31,4 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/rename_impl.hh"
 
-template class DefaultRename<AlphaSimpleImpl>;
+template class DefaultRename<O3CPUImpl>;

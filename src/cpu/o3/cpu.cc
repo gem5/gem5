@@ -1211,4 +1211,4 @@ FullO3CPU<Impl>::updateThreadPriority()
 }
 
 // Forward declaration of FullO3CPU.
-template class FullO3CPU<AlphaSimpleImpl>;
+template class FullO3CPU<O3CPUImpl>;

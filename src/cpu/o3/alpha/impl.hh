@@ -81,8 +81,14 @@ struct AlphaSimpleImpl
 
     enum {
       MaxWidth = 8,
-      MaxThreads = 2
+      MaxThreads = 4
     };
 };
+
+/** The O3Impl to be used. */
+typedef AlphaSimpleImpl O3CPUImpl;
+
+/** The O3Impl to be used. */
+typedef DynInst O3DynInst;
 
 #endif // __CPU_O3_ALPHA_IMPL_HH__
