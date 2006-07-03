@@ -34,6 +34,13 @@
 
 #include "cpu/o3/isa_specific.hh"
 
+class EndQuiesceEvent;
+namespace Kernel {
+    class Statistics;
+};
+
+class TranslatingPort;
+
 /**
  * Derived ThreadContext class for use with the O3CPU.  It
  * provides the interface for any external objects to access a

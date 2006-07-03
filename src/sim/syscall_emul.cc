@@ -27,7 +27,6 @@
  *
  * Authors: Steve Reinhardt
  *          Ali Saidi
- *          Korey Sewell
  */
 
 #include <fcntl.h>
@@ -92,7 +91,9 @@ SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, Process *process,
          ThreadContext *tc)
 {
-    exitSimLoop("target called exit()", tc->getSyscallArg(0) & 0xff);
+    if (tc->exit()) {
+        exitSimLoop("target called exit()", tc->getSyscallArg(0) & 0xff);
+    }
 
     return 1;
 }

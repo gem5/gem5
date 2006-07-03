@@ -30,6 +30,7 @@
  */
 
 #include "cpu/o3/thread_context.hh"
+#include "cpu/quiesce_event.hh"
 
 using namespace TheISA;
 

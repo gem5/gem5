@@ -37,21 +37,21 @@ class AlphaTC : public O3ThreadContext<Impl>
   public:
 #if FULL_SYSTEM
     /** Returns a pointer to the ITB. */
-    virtual AlphaITB *getITBPtr() { return cpu->itb; }
+    virtual AlphaITB *getITBPtr() { return this->cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    virtual AlphaDTB *getDTBPtr() { return cpu->dtb; }
+    virtual AlphaDTB *getDTBPtr() { return this->cpu->dtb; }
 
     /** Returns pointer to the quiesce event. */
     virtual EndQuiesceEvent *getQuiesceEvent()
     {
-        return thread->quiesceEvent;
+        return this->thread->quiesceEvent;
     }
 
     /** Returns if the thread is currently in PAL mode, based on
      * the PC's value. */
     virtual bool inPalMode()
-    { return TheISA::PcPAL(cpu->readPC(thread->readTid())); }
+    { return TheISA::PcPAL(this->cpu->readPC(this->thread->readTid())); }
 #endif
 
     virtual uint64_t readNextNPC()
@@ -68,4 +68,20 @@ class AlphaTC : public O3ThreadContext<Impl>
     virtual void changeRegFileContext(TheISA::RegFile::ContextParam param,
                                       TheISA::RegFile::ContextVal val)
     { panic("Not supported on Alpha!"); }
+
+
+    // This function exits the thread context in the CPU and returns
+    // 1 if the CPU has no more active threads (meaning it's OK to exit);
+    // Used in syscall-emulation mode when a thread executes the 'exit'
+    // syscall.
+    virtual int exit()
+    {
+        this->cpu->deallocateContext(this->thread->readTid());
+
+        // If there are still threads executing in the system
+        if (this->cpu->numActiveThreads())
+            return 0;
+        else
+            return 1;
+    }
 };
