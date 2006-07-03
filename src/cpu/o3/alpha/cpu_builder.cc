@@ -377,7 +377,7 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     std::string single_thread = "SingleThread";
 
     if (actual_num_threads > 1 && single_thread.compare(smtFetchPolicy) == 0)
-        params->smtFetchPolicy = single_thread;
+        params->smtFetchPolicy = round_robin_policy;
     else
         params->smtFetchPolicy = smtFetchPolicy;
 
