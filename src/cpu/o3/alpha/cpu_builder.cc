@@ -274,12 +274,12 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     // In non-full-system mode, we infer the number of threads from
     // the workload if it's not explicitly specified.
     int actual_num_threads =
-        numThreads.isValid() ? numThreads : workload.size();
+        (numThreads.isValid() && numThreads >= workload.size()) ?
+         numThreads : workload.size();
 
     if (workload.size() == 0) {
         fatal("Must specify at least one workload!");
     }
-
 #endif
 
     AlphaSimpleParams *params = new AlphaSimpleParams;
@@ -371,7 +371,16 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->numROBEntries = numROBEntries;
 
     params->smtNumFetchingThreads = smtNumFetchingThreads;
-    params->smtFetchPolicy = smtFetchPolicy;
+
+    // Default smtFetchPolicy to "RoundRobin", if necessary.
+    std::string round_robin_policy = "RoundRobin";
+    std::string single_thread = "SingleThread";
+
+    if (actual_num_threads > 1 && single_thread.compare(smtFetchPolicy) == 0)
+        params->smtFetchPolicy = single_thread;
+    else
+        params->smtFetchPolicy = smtFetchPolicy;
+
     params->smtIQPolicy    = smtIQPolicy;
     params->smtLSQPolicy    = smtLSQPolicy;
     params->smtLSQThreshold = smtLSQThreshold;

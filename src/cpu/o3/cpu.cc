@@ -127,7 +127,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
       regFile(params->numPhysIntRegs, params->numPhysFloatRegs),
 
-      freeList(params->numberOfThreads,//number of activeThreads
+      freeList(params->numberOfThreads,
                TheISA::NumIntRegs, params->numPhysIntRegs,
                TheISA::NumFloatRegs, params->numPhysFloatRegs),
 
@@ -135,7 +135,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
           params->smtROBPolicy, params->smtROBThreshold,
           params->numberOfThreads),
 
-      scoreboard(params->numberOfThreads,//number of activeThreads
+      scoreboard(params->numberOfThreads,
                  TheISA::NumIntRegs, params->numPhysIntRegs,
                  TheISA::NumFloatRegs, params->numPhysFloatRegs,
                  TheISA::NumMiscRegs * number_of_threads,
@@ -221,6 +221,12 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 
 #if !FULL_SYSTEM
     int active_threads = params->workload.size();
+
+    if (active_threads > Impl::MaxThreads) {
+        panic("Workload Size too large. Increase the 'MaxThreads'"
+              "constant in your O3CPU impl. file (e.g. o3/alpha/impl.hh) or "
+              "edit your workload size.");
+    }
 #else
     int active_threads = 1;
 #endif

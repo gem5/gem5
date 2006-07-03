@@ -406,8 +406,10 @@ class DefaultCommit
     /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
 
+#if THE_ISA != ALPHA_ISA
     /** The next NPC of each thread. */
     Addr nextNPC[Impl::MaxThreads];
+#endif
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

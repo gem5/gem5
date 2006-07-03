@@ -68,12 +68,12 @@ BaseCPU::BaseCPU(Params *p)
       number_of_threads(p->numberOfThreads), system(p->system)
 #endif
 {
-    DPRINTF(BaseCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
+    DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
 
     // add self to global list of CPUs
     cpuList.push_back(this);
 
-    DPRINTF(BaseCPU, "BaseCPU: CPU added to cpuList, mem address %#x.\n",
+    DPRINTF(FullCPU, "BaseCPU: CPU added to cpuList, mem address %#x.\n",
             this);
 
     if (number_of_threads > maxThreadsPerCPU)

@@ -121,6 +121,7 @@ baseFlags = [
     'FE',
     'IBE',
     'BE',
+    'O3CPU',
     'OzoneLSQ',
     'PCEvent',
     'PCIA',
