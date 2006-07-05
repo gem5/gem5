@@ -114,8 +114,6 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     if (numThreads > Impl::MaxThreads)
         fatal("numThreads is not a valid value\n");
 
-    DPRINTF(Fetch, "Fetch constructor called\n");
-
     // Set fetch stage's status to inactive.
     _status = Inactive;
 
@@ -128,6 +126,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     // Figure out fetch policy
     if (policy == "singlethread") {
         fetchPolicy = SingleThread;
+        if (numThreads > 1)
+            panic("Invalid Fetch Policy for a SMT workload.");
     } else if (policy == "roundrobin") {
         fetchPolicy = RoundRobin;
         DPRINTF(Fetch, "Fetch policy set to Round Robin\n");
@@ -559,7 +559,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
             return false;
         }
 
-        DPRINTF(Fetch, "Doing cache access.\n");
+        DPRINTF(Fetch, "[tid:%i]: Doing cache access.\n", tid);
 
         lastIcacheStall[tid] = curTick;
 
@@ -724,12 +724,15 @@ DefaultFetch<Impl>::tick()
     // Reset the number of the instruction we're fetching.
     numInst = 0;
 
+#if FULL_SYSTEM
     if (fromCommit->commitInfo[0].interruptPending) {
         interruptPending = true;
     }
+
     if (fromCommit->commitInfo[0].clearInterrupt) {
         interruptPending = false;
     }
+#endif
 
     for (threadFetched = 0; threadFetched < numFetchingThreads;
          threadFetched++) {
@@ -902,6 +905,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         threadFetched = numFetchingThreads;
         return;
     }
+
+    DPRINTF(Fetch, "Attempting to fetch from [tid:%i]\n", tid);
 
     // The current PC.
     Addr &fetch_PC = PC[tid];
@@ -1279,6 +1284,6 @@ int
 DefaultFetch<Impl>::branchCount()
 {
     list<unsigned>::iterator threads = (*activeThreads).begin();
-    warn("Branch Count Fetch policy unimplemented\n");
+    panic("Branch Count Fetch policy unimplemented\n");
     return *threads;
 }

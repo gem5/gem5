@@ -34,8 +34,8 @@
 #include "arch/isa_traits.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/alpha_cpu.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/alpha/cpu.hh"
+#include "cpu/o3/alpha/impl.hh"
 
 class Packet;
 

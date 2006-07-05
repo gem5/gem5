@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,14 +25,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Ron Dreslinski
  */
 
-#include "cpu/o3/alpha_impl.hh"
-#include "cpu/o3/alpha_cpu_impl.hh"
-#include "cpu/o3/alpha_dyn_inst.hh"
+/**
+ * @file
+ * Describes a tagged prefetcher based on template policies.
+ */
 
-// Force instantiation of AlphaO3CPU for all the implemntations that are
-// needed.  Consider merging this and alpha_dyn_inst.cc, and maybe all
-// classes that depend on a certain impl, into one file (alpha_impl.cc?).
-template class AlphaO3CPU<AlphaSimpleImpl>;
+#ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+
+#include "mem/cache/prefetch/prefetcher.hh"
+
+/**
+ * A template-policy based cache. The behavior of the cache can be altered by
+ * supplying different template policies. TagStore handles all tag and data
+ * storage @sa TagStore. Buffering handles all misses and writes/writebacks
+ * @sa MissQueue. Coherence handles all coherence policy details @sa
+ * UniCoherence, SimpleMultiCoherence.
+ */
+template <class TagStore, class Buffering>
+class TaggedPrefetcher : public Prefetcher<TagStore, Buffering>
+{
+  protected:
+
+    Buffering* mq;
+    TagStore* tags;
+
+    Tick latency;
+    int degree;
+
+  public:
+
+    TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
+                     bool cacheCheckPush, bool onlyData,
+                     Tick latency, int degree);
+
+    ~TaggedPrefetcher() {}
+
+    void calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
+                           std::list<Tick> &delays);
+};
+
+#endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__

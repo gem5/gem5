@@ -358,7 +358,10 @@ LiveProcess::argsInit(int intSize, int pageSize)
     Addr prog_entry = objFile->entryPoint();
     threadContexts[0]->setPC(prog_entry);
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+
+#if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
     threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+#endif
 
     num_processes++;
 }

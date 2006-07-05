@@ -274,7 +274,7 @@ class MetaSimObject(type):
             cls._values[attr] = value
         else:
             raise AttributeError, \
-                  "Class %s has no parameter %s" % (cls.__name__, attr)
+                  "Class %s has no parameter \'%s\'" % (cls.__name__, attr)
 
     def __getattr__(cls, attr):
         if cls._values.has_key(attr):

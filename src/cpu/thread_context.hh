@@ -247,6 +247,11 @@ class ThreadContext
 
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
+
+    // This function exits the thread context in the CPU and returns
+    // 1 if the CPU has no more active threads (meaning it's OK to exit);
+    // Used in syscall-emulation mode when a  thread calls the exit syscall.
+    virtual int exit() { return 1; };
 #endif
 
     virtual void changeRegFileContext(RegFile::ContextParam param,

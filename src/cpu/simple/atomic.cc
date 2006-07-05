@@ -124,15 +124,18 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
 
     // @todo fix me and get the real cpu id & thread number!!!
     ifetch_req = new Request();
+    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     data_read_req = new Request();
+    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
                                Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
 
     data_write_req = new Request();
+    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
                                 Packet::Broadcast);
 }

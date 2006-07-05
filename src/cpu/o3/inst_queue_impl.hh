@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #include <limits>
@@ -125,7 +126,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = part_amt;
         }
 
-        DPRINTF(Fetch, "IQ sharing policy set to Partitioned:"
+        DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
                 "%i entries per thread.\n",part_amt);
 
     } else if (policy == "threshold") {
@@ -140,7 +141,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = thresholdIQ;
         }
 
-        DPRINTF(Fetch, "IQ sharing policy set to Threshold:"
+        DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
    } else {
        assert(0 && "Invalid IQ Sharing Policy.Options Are:{Dynamic,"

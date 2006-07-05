@@ -51,6 +51,25 @@ if options.timing and options.detailed:
 if options.timing:
     cpu = TimingSimpleCPU()
 elif options.detailed:
+    #check for SMT workload
+    workloads = options.cmd.split(';')
+    if len(workloads) > 1:
+        process = []
+        smt_idx = 0
+        inputs = []
+
+        if options.input != "":
+            inputs = options.input.split(';')
+
+        for wrkld in workloads:
+            smt_process = LiveProcess()
+            smt_process.executable = os.path.join(this_dir, wrkld)
+            smt_process.cmd = wrkld + " " + options.options
+            if inputs and inputs[smt_idx]:
+                smt_process.input = inputs[smt_idx]
+            process += [smt_process, ]
+            smt_idx += 1
+
     cpu = DetailedO3CPU()
 else:
     cpu = AtomicSimpleCPU()

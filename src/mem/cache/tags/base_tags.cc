@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,67 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Erik Hallnor
+ *          Ron Dreslinski
  */
 
-#include "cpu/o3/alpha_dyn_inst_impl.hh"
-#include "cpu/o3/alpha_impl.hh"
+/**
+ * @file
+ * Definitions of BaseTags.
+ */
 
-// Force instantiation of AlphaDynInst for all the implementations that
-// are needed.
-template class AlphaDynInst<AlphaSimpleImpl>;
+#include "mem/cache/tags/base_tags.hh"
+
+#include "mem/cache/base_cache.hh"
+#include "cpu/smt.hh" //maxThreadsPerCPU
+#include "sim/sim_exit.hh"
+
+using namespace std;
+
+void
+BaseTags::setCache(BaseCache *_cache)
+{
+    cache = _cache;
+    objName = cache->name();
+}
+
+void
+BaseTags::regStats(const string &name)
+{
+    using namespace Stats;
+    replacements
+        .init(maxThreadsPerCPU)
+        .name(name + ".replacements")
+        .desc("number of replacements")
+        .flags(total)
+        ;
+
+    tagsInUse
+        .name(name + ".tagsinuse")
+        .desc("Cycle average of tags in use")
+        ;
+
+    totalRefs
+        .name(name + ".total_refs")
+        .desc("Total number of references to valid blocks.")
+        ;
+
+    sampledRefs
+        .name(name + ".sampled_refs")
+        .desc("Sample count of references to valid blocks.")
+        ;
+
+    avgRefs
+        .name(name + ".avg_refs")
+        .desc("Average number of references to valid blocks.")
+        ;
+
+    avgRefs = totalRefs/sampledRefs;
+
+    warmupCycle
+        .name(name + ".warmup_cycle")
+        .desc("Cycle when the warmup percentage was hit.")
+        ;
+
+    registerExitCallback(new BaseTagsCallback(this));
+}

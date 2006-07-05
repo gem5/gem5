@@ -57,6 +57,19 @@ Packet::cmdString() const
     }
 }
 
+const std::string &
+Packet::cmdIdxToString(Packet::Command idx)
+{
+    switch (idx) {
+      case ReadReq:         return ReadReqString;
+      case WriteReq:        return WriteReqString;
+      case WriteReqNoAck:   return WriteReqNoAckString;
+      case ReadResp:        return ReadRespString;
+      case WriteResp:       return WriteRespString;
+      default:              return OtherCmdString;
+    }
+}
+
 /** delete the data pointed to in the data pointer. Ok to call to matter how
  * data was allocted. */
 void

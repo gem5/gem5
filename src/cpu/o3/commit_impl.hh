@@ -1221,7 +1221,8 @@ DefaultCommit<Impl>::roundRobin()
         unsigned tid = *pri_iter;
 
         if (commitStatus[tid] == Running ||
-            commitStatus[tid] == Idle) {
+            commitStatus[tid] == Idle ||
+            commitStatus[tid] == FetchTrapPending) {
 
             if (rob->isHeadReady(tid)) {
                 priority_list.erase(pri_iter);
