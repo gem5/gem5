@@ -54,19 +54,7 @@ class AlphaSimpleParams : public O3Params
 #if FULL_SYSTEM
     AlphaITB *itb;
     AlphaDTB *dtb;
-#else
-    std::vector<Process *> workload;
-    Process *process;
-#endif // FULL_SYSTEM
-
-    MemObject *mem;
-
-    BaseCPU *checker;
-
-    unsigned decodeToFetchDelay;
-    unsigned dispatchWidth;
-    unsigned wbWidth;
-    unsigned wbDepth;
+#endif
 };
 
 #endif // __CPU_O3_ALPHA_PARAMS_HH__
