@@ -64,6 +64,9 @@ class AlphaSimpleParams : public O3Params
     BaseCPU *checker;
 
     unsigned decodeToFetchDelay;
+    unsigned dispatchWidth;
+    unsigned wbWidth;
+    unsigned wbDepth;
 };
 
 #endif // __CPU_O3_ALPHA_PARAMS_HH__

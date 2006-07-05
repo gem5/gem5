@@ -118,6 +118,7 @@ TimingSimpleCPU::quiesce(Event *quiesce_event)
     // an access to complete.
     if (status() == Idle || status() == Running || status() == SwitchedOut) {
         DPRINTF(Config, "Ready to quiesce\n");
+        changeState(SimObject::QuiescedTiming);
         return false;
     } else {
         DPRINTF(Config, "Waiting to quiesce\n");
