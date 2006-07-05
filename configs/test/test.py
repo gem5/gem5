@@ -11,12 +11,19 @@ from FullO3Config import *
 # parse command-line arguments
 parser = optparse.OptionParser(option_list=m5.standardOptions)
 
-parser.add_option("-c", "--cmd", default="hello")
-parser.add_option("-o", "--options", default="")
-parser.add_option("-i", "--input", default="")
-parser.add_option("-t", "--timing", action="store_true")
-parser.add_option("-d", "--detailed", action="store_true")
-parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("-c", "--cmd", default="hello",
+                  help="The binary to run in syscall emulation mode.")
+parser.add_option("-o", "--options", default="",
+        help="The options to pass to the binary, use \" \" around the entire\
+                string.")
+parser.add_option("-i", "--input", default="",
+        help="A file of input to give to the binary.")
+parser.add_option("-t", "--timing", action="store_true",
+        help="Use simple timing CPU.")
+parser.add_option("-d", "--detailed", action="store_true",
+        help="Use detailed CPU.")
+parser.add_option("-m", "--maxtick", type="int",
+        help="Set the maximum number of ticks to run  for")
 
 (options, args) = parser.parse_args()
 m5.setStandardOptions(options)
@@ -36,6 +43,10 @@ if options.input != "":
 
 magicbus = Bus()
 mem = PhysicalMemory()
+
+if options.timing and options.detailed:
+       print "Error: you may only specify one cpu model";
+       sys.exit(1)
 
 if options.timing:
     cpu = TimingSimpleCPU()

@@ -241,9 +241,6 @@ class Checkpoint
 
     // Filename for base checkpoint file within directory.
     static const char *baseFilename;
-
-    // Set up a checkpoint creation event or series of events.
-    static void setup(Tick when, Tick period = 0);
 };
 
 #endif // __SERIALIZE_HH__
