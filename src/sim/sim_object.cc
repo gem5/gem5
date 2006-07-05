@@ -271,22 +271,22 @@ SimObject::recordEvent(const std::string &stat)
 }
 
 bool
-SimObject::quiesce(Event *quiesce_event)
+SimObject::drain(Event *drain_event)
 {
-    if (state != QuiescedAtomic && state != Atomic) {
-        panic("Must implement your own quiesce function if it is to be used "
+    if (state != DrainedAtomic && state != Atomic) {
+        panic("Must implement your own drain function if it is to be used "
               "in timing mode!");
     }
-    state = QuiescedAtomic;
+    state = DrainedAtomic;
     return false;
 }
 
 void
 SimObject::resume()
 {
-    if (state == QuiescedAtomic) {
+    if (state == DrainedAtomic) {
         state = Atomic;
-    } else if (state == QuiescedTiming) {
+    } else if (state == DrainedTiming) {
         state = Timing;
     }
 }
@@ -295,10 +295,10 @@ void
 SimObject::setMemoryMode(State new_mode)
 {
     assert(new_mode == Timing || new_mode == Atomic);
-    if (state == QuiescedAtomic && new_mode == Timing) {
-        state = QuiescedTiming;
-    } else if (state == QuiescedTiming && new_mode == Atomic) {
-        state = QuiescedAtomic;
+    if (state == DrainedAtomic && new_mode == Timing) {
+        state = DrainedTiming;
+    } else if (state == DrainedTiming && new_mode == Atomic) {
+        state = DrainedAtomic;
     } else {
         state = new_mode;
     }
