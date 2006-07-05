@@ -104,7 +104,10 @@ class AlphaSimpleParams : public BaseO3CPU::Params
     unsigned commitToIEWDelay;
     unsigned renameToIEWDelay;
     unsigned issueToExecuteDelay;
+    unsigned dispatchWidth;
     unsigned issueWidth;
+    unsigned wbWidth;
+    unsigned wbDepth;
     FUPool *fuPool;
 
     //

@@ -91,7 +91,10 @@ Param<unsigned> renameWidth;
 Param<unsigned> commitToIEWDelay;
 Param<unsigned> renameToIEWDelay;
 Param<unsigned> issueToExecuteDelay;
+Param<unsigned> dispatchWidth;
 Param<unsigned> issueWidth;
+Param<unsigned> wbWidth;
+Param<unsigned> wbDepth;
 SimObjectParam<FUPool *> fuPool;
 
 Param<unsigned> iewToCommitDelay;
@@ -207,7 +210,10 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaO3CPU)
                "Issue/Execute/Writeback delay"),
     INIT_PARAM(issueToExecuteDelay, "Issue to execute delay (internal"
                "to the IEW stage)"),
+    INIT_PARAM(dispatchWidth, "Dispatch width"),
     INIT_PARAM(issueWidth, "Issue width"),
+    INIT_PARAM(wbWidth, "Writeback width"),
+    INIT_PARAM(wbDepth, "Writeback depth (number of cycles it can buffer)"),
     INIT_PARAM_DFLT(fuPool, "Functional unit pool", NULL),
 
     INIT_PARAM(iewToCommitDelay, "Issue/Execute/Writeback to commit "
@@ -333,7 +339,10 @@ CREATE_SIM_OBJECT(DerivAlphaO3CPU)
     params->commitToIEWDelay = commitToIEWDelay;
     params->renameToIEWDelay = renameToIEWDelay;
     params->issueToExecuteDelay = issueToExecuteDelay;
+    params->dispatchWidth = dispatchWidth;
     params->issueWidth = issueWidth;
+    params->wbWidth = wbWidth;
+    params->wbDepth = wbDepth;
     params->fuPool = fuPool;
 
     params->iewToCommitDelay = iewToCommitDelay;

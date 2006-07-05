@@ -37,12 +37,10 @@ class DerivAlphaO3CPU(BaseCPU):
                "Issue/Execute/Writeback delay")
     issueToExecuteDelay = Param.Unsigned("Issue to execute delay (internal "
               "to the IEW stage)")
+    dispatchWidth = Param.Unsigned("Dispatch width")
     issueWidth = Param.Unsigned("Issue width")
-    executeWidth = Param.Unsigned("Execute width")
-    executeIntWidth = Param.Unsigned("Integer execute width")
-    executeFloatWidth = Param.Unsigned("Floating point execute width")
-    executeBranchWidth = Param.Unsigned("Branch execute width")
-    executeMemoryWidth = Param.Unsigned("Memory execute width")
+    wbWidth = Param.Unsigned("Writeback width")
+    wbDepth = Param.Unsigned("Writeback depth")
     fuPool = Param.FUPool(NULL, "Functional Unit pool")
 
     iewToCommitDelay = Param.Unsigned("Issue/Execute/Writeback to commit "

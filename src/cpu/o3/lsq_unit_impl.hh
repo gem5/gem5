@@ -77,6 +77,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
     if (isSwitchedOut() || inst->isSquashed()) {
+        iewStage->decrWb(inst->seqNum);
         delete state;
         delete pkt;
         return;
