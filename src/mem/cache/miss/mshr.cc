@@ -57,26 +57,26 @@ void
 MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
                Packet * &target)
 {
-    assert("NEED TO FIX YET\n" && 0);
-#if 0
-    assert(targets.empty());
-    addr = _addr;
-    asid = _asid;
-
-    pkt = new Packet(); // allocate new memory request
-    pkt->addr = addr; //picked physical address for now
-    pkt->cmd = cmd;
-    pkt->size = size;
-    pkt->data = new uint8_t[size];
-    pkt->senderState = this;
-    //Set the time here for latency calculations
-    pkt->time = curTick;
-
-    if (target) {
-        pkt->req = target->req;
+    if (target)
+    {
+        //Have a request, just use it
+        pkt = new Packet(target->req, cmd, Packet::Broadcast, size);
+        pkt->time = curTick;
+        pkt->allocate();
+        pkt->senderState = (Packet::SenderState *)this;
         allocateTarget(target);
     }
-#endif
+    else
+    {
+        //need a request first
+        Request * req = new Request();
+        req->setPhys(addr, size, 0);
+        //Thread context??
+        pkt = new Packet(req, cmd, Packet::Broadcast, size);
+        pkt->time = curTick;
+        pkt->allocate();
+        pkt->senderState = (Packet::SenderState *)this;
+    }
 }
 
 // Since we aren't sure if data is being used, don't copy here.
