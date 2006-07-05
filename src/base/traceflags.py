@@ -48,8 +48,10 @@ ccfilename = sys.argv[1] + '.cc'
 # To define a new flag, simply add it to this list.
 #
 baseFlags = [
+    'Activity',
     'AlphaConsole',
     'BADADDR',
+    'BE',
     'BPredRAS',
     'Bus',
     'BusAddrRanges',
@@ -84,6 +86,7 @@ baseFlags = [
     'EthernetPIO',
     'EthernetSM',
     'Event',
+    'FE',
     'Fault',
     'Fetch',
     'Flow',
@@ -97,6 +100,7 @@ baseFlags = [
     'GDBSend',
     'GDBWrite',
     'HWPrefetch',
+    'IBE',
     'IEW',
     'IIC',
     'IICMore',
@@ -117,9 +121,6 @@ baseFlags = [
     'MemDepUnit',
     'O3CPU',
     'OzoneCPU',
-    'FE',
-    'IBE',
-    'BE',
     'OzoneLSQ',
     'PCEvent',
     'PCIA',
@@ -133,6 +134,7 @@ baseFlags = [
     'RenameMap',
     'SQL',
     'Sampler',
+    'Scoreboard',
     'ScsiCtrl',
     'ScsiDisk',
     'ScsiNone',
@@ -156,8 +158,6 @@ baseFlags = [
     'Uart',
     'VtoPhys',
     'WriteBarrier',
-    'Activity',
-    'Scoreboard',
     'Writeback',
     ]
 
@@ -176,7 +176,7 @@ compoundFlagMap = {
     'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
-    'FullCPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'Activity','Scoreboard','Writeback'],
+    'O3CPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'O3CPU', 'Activity','Scoreboard','Writeback'],
     'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU']
 }
 
