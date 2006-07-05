@@ -236,9 +236,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
             willChangePC = true;
             newPC = thread->readPC();
             DPRINTF(Checker, "Fault, PC is now %#x\n", newPC);
-#else // !FULL_SYSTEM
-            fatal("fault (%d) detected @ PC 0x%08p", fault, thread->readPC());
-#endif // FULL_SYSTEM
+#endif
         } else {
 #if THE_ISA != MIPS_ISA
             // go to the next instruction
