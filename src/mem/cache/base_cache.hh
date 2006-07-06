@@ -153,6 +153,17 @@ class BaseCache : public MemObject
         fatal("No implementation");
     }
 
+    virtual Packet *getCoherencePacket()
+    {
+        fatal("No implementation");
+    }
+
+    virtual void sendResult(Packet* &pkt, bool success)
+    {
+
+        fatal("No implementation");
+    }
+
     /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause

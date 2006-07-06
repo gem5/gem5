@@ -183,19 +183,19 @@ class Packet
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
         WriteReq	= IsWrite | IsRequest | NeedsResponse,
         WriteReqNoAck	= IsWrite | IsRequest,
-        ReadResp	= IsRead  | IsResponse,
-        WriteResp	= IsWrite | IsResponse,
+        ReadResp	= IsRead  | IsResponse | NeedsResponse,
+        WriteResp	= IsWrite | IsResponse | NeedsResponse,
         Writeback       = IsWrite | IsRequest,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
-        SoftPFResp      = IsRead  | IsRequest | IsSWPrefetch | IsResponse,
-        HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse,
+        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch | NeedsResponse,
+        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
-        UpgradeReq      = IsInvalidate | NeedsResponse,
-        UpgradeResp     = IsInvalidate | IsResponse,
-        ReadExReq       = IsRead | IsInvalidate | NeedsResponse,
-        ReadExResp      = IsRead | IsInvalidate | IsResponse
+        UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
+        UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
+        ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
+        ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
     };
 
     /** Return the string name of the cmd field (for debugging and
@@ -311,8 +311,9 @@ class Packet
      *   should not be called. */
     void makeTimingResponse() {
         assert(needsResponse());
+        assert(isRequest());
         int icmd = (int)cmd;
-        icmd &= ~(IsRequest | NeedsResponse);
+        icmd &= ~(IsRequest);
         icmd |= IsResponse;
         cmd = (Command)icmd;
         dest = src;

@@ -118,9 +118,15 @@ BaseCache::CacheEvent::process()
     {
         if (!cachePort->isCpuSide)
             pkt = cachePort->cache->getPacket();
-        //Else get coherence req
+        else
+            pkt = cachePort->cache->getCoherencePacket();
+        bool success = cachePort->sendTiming(pkt);
+        cachePort->cache->sendResult(pkt, success);
+        return;
     }
-    cachePort->sendTiming(pkt);
+    //Know the packet to send, no need to mark in service (must succed)
+    bool success = cachePort->sendTiming(pkt);
+    assert(success);
 }
 
 const char *

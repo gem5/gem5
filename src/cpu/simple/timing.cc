@@ -451,7 +451,12 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    cpu->completeIfetch(pkt);
+    if (cpu->_status == DcacheWaitResponse)
+        cpu->completeDataAccess(pkt);
+    else if (cpu->_status == IcacheWaitResponse)
+        cpu->completeIfetch(pkt);
+    else
+        assert("OOPS" && 0);
     return true;
 }
 

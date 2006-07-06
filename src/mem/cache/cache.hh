@@ -175,7 +175,7 @@ class Cache : public BaseCache
      * @param req The request.
      * @param success True if the request was sent successfully.
      */
-    void sendResult(Packet * &pkt, bool success);
+    virtual void sendResult(Packet * &pkt, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
@@ -202,7 +202,7 @@ class Cache : public BaseCache
      * Selects a coherence message to forward to lower levels of the hierarchy.
      * @return The coherence message to forward.
      */
-    Packet * getCoherenceReq();
+    virtual Packet * getCoherencePacket();
 
     /**
      * Snoops bus transactions to maintain coherence.
