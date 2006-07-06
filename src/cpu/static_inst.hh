@@ -53,6 +53,8 @@ class Packet;
 template <class Impl>
 class AlphaDynInst;
 
+//class O3DynInst;
+
 template <class Impl>
 class OzoneDynInst;
 
