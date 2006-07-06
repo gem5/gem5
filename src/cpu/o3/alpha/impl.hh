@@ -36,6 +36,7 @@
 #include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/cpu_policy.hh"
 
+
 // Forward declarations.
 template <class Impl>
 class AlphaDynInst;
@@ -87,8 +88,5 @@ struct AlphaSimpleImpl
 
 /** The O3Impl to be used. */
 typedef AlphaSimpleImpl O3CPUImpl;
-
-/** The O3Impl to be used. */
-typedef DynInst O3DynInst;
 
 #endif // __CPU_O3_ALPHA_IMPL_HH__

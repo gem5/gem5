@@ -463,14 +463,13 @@ template <class Impl>
 void
 FullO3CPU<Impl>::insertThread(unsigned tid)
 {
-    DPRINTF(O3CPU,"[tid:%i] Initializing thread data");
+    DPRINTF(O3CPU,"[tid:%i] Initializing thread into CPU");
     // Will change now that the PC and thread state is internal to the CPU
     // and not in the ThreadContext.
-#if 0
 #if FULL_SYSTEM
     ThreadContext *src_tc = system->threadContexts[tid];
 #else
-    ThreadContext *src_tc = thread[tid];
+    ThreadContext *src_tc = tcBase(tid);
 #endif
 
     //Bind Int Regs to Rename Map
@@ -490,11 +489,14 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     }
 
     //Copy Thread Data Into RegFile
-    this->copyFromTC(tid);
+    //this->copyFromTC(tid);
 
-    //Set PC/NPC
-    regFile.pc[tid]  = src_tc->readPC();
-    regFile.npc[tid] = src_tc->readNextPC();
+    //Set PC/NPC/NNPC
+    setPC(src_tc->readPC(), tid);
+    setNextPC(src_tc->readNextPC(), tid);
+#if THE_ISA != ALPHA_ISA
+    setNextNPC(src_tc->readNextNPC(), tid);
+#endif
 
     src_tc->setStatus(ThreadContext::Active);
 
@@ -503,16 +505,19 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     //Reset ROB/IQ/LSQ Entries
     commit.rob->resetEntries();
     iew.resetEntries();
-#endif
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::removeThread(unsigned tid)
 {
-    DPRINTF(O3CPU,"[tid:%i] Removing thread data");
-#if 0
-    //Unbind Int Regs from Rename Map
+    DPRINTF(O3CPU,"[tid:%i] Removing thread from CPU.");
+
+    // Copy Thread Data From RegFile
+    // If thread is suspended, it might be re-allocated
+    //this->copyToTC(tid);
+
+    // Unbind Int Regs from Rename Map
     for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(ireg);
 
@@ -520,7 +525,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
         freeList.addReg(phys_reg);
     }
 
-    //Unbind Float Regs from Rename Map
+    // Unbind Float Regs from Rename Map
     for (int freg = 0; freg < TheISA::NumFloatRegs; freg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(freg);
 
@@ -528,27 +533,18 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
         freeList.addReg(phys_reg);
     }
 
-    //Copy Thread Data From RegFile
-    /* Fix Me:
-     * Do we really need to do this if we are removing a thread
-     * in the sense that it's finished (exiting)? If the thread is just
-     * being suspended we might...
-     */
-//    this->copyToTC(tid);
-
-    //Squash Throughout Pipeline
+    // Squash Throughout Pipeline
     fetch.squash(0,tid);
     decode.squash(tid);
     rename.squash(tid);
 
     assert(iew.ldstQueue.getCount(tid) == 0);
 
-    //Reset ROB/IQ/LSQ Entries
+    // Reset ROB/IQ/LSQ Entries
     if (activeThreads.size() >= 1) {
         commit.rob->resetEntries();
         iew.resetEntries();
     }
-#endif
 }
 
 
@@ -656,7 +652,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::suspendContext(int tid)
 {
-    DPRINTF(O3CPU,"[tid: %i]: Suspended ...\n", tid);
+    DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
     unscheduleTickEvent();
     _status = Idle;
 /*
@@ -676,27 +672,26 @@ template <class Impl>
 void
 FullO3CPU<Impl>::deallocateContext(int tid)
 {
-    DPRINTF(O3CPU,"[tid:%i]: Deallocating ...", tid);
-/*
-    //Remove From Active List, if Active
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
+    DPRINTF(O3CPU,"[tid:%i]: Deallocating Thread Context", tid);
 
-    if (isActive != activeThreads.end()) {
+    //Remove From Active List, if Active
+    list<unsigned>::iterator thread_it =
+        find(activeThreads.begin(), activeThreads.end(), tid);
+
+    if (thread_it != activeThreads.end()) {
         DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
                 tid);
-        activeThreads.erase(isActive);
+        activeThreads.erase(thread_it);
 
         removeThread(tid);
     }
-*/
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::haltContext(int tid)
 {
-    DPRINTF(O3CPU,"[tid:%i]: Halted ...", tid);
+    DPRINTF(O3CPU,"[tid:%i]: Halting Thread Context", tid);
 /*
     //Remove From Active List, if Active
     list<unsigned>::iterator isActive = find(
