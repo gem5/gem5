@@ -37,7 +37,6 @@
 #include "cpu/intr_control.hh"
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"
-#include "dev/pciconfigall.hh"
 #include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
@@ -1623,7 +1622,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
 
     SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
-    SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
@@ -1666,7 +1664,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
 
     INIT_PARAM(system, "System pointer"),
     INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
@@ -1711,7 +1708,6 @@ CREATE_SIM_OBJECT(Device)
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
-    params->configSpace = configspace;
     params->configData = configdata;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;

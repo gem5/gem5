@@ -1,6 +1,6 @@
 import m5
 from m5.objects import *
-import os
+import os,optparse,sys
 from SysPaths import *
 
 parser = optparse.OptionParser(option_list=m5.standardOptions)
@@ -98,7 +98,7 @@ class SpecwebFilesetDisk(IdeDisk):
 class BaseTsunami(Tsunami):
     cchip = TsunamiCChip(pio_addr=0x801a0000000)
     pchip = TsunamiPChip(pio_addr=0x80180000000)
-    pciconfig = PciConfigAll(pio_addr=0x801fe000000)
+    pciconfig = PciConfigAll()
     fake_sm_chip = IsaFake(pio_addr=0x801fc000370)
 
     fake_uart1 = IsaFake(pio_addr=0x801fc0002f8)
@@ -151,16 +151,18 @@ class MyLinuxAlphaSystem(LinuxAlphaSystem):
     tsunami = LinuxTsunami()
     tsunami.cchip.pio = magicbus.port
     tsunami.pchip.pio = magicbus.port
-    tsunami.pciconfig.pio = magicbus.port
+    tsunami.pciconfig.pio = magicbus.default
     tsunami.fake_sm_chip.pio = magicbus.port
     tsunami.ethernet.pio = magicbus.port
     tsunami.ethernet.dma = magicbus.port
+    tsunami.ethernet.config = magicbus.port
     tsunami.fake_uart1.pio = magicbus.port
     tsunami.fake_uart2.pio = magicbus.port
     tsunami.fake_uart3.pio = magicbus.port
     tsunami.fake_uart4.pio = magicbus.port
     tsunami.ide.pio = magicbus.port
     tsunami.ide.dma = magicbus.port
+    tsunami.ide.config = magicbus.port
     tsunami.fake_ppc.pio = magicbus.port
     tsunami.fake_OROM.pio = magicbus.port
     tsunami.fake_pnp_addr.pio = magicbus.port

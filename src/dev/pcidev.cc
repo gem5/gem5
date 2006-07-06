@@ -53,9 +53,63 @@
 
 using namespace std;
 
+
+PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
+        int funcid, Platform *p)
+        : PioPort(dev,p,"-pciconf"), device(dev), busId(busid), deviceId(devid),
+        functionId(funcid)
+{
+    configAddr = platform->calcConfigAddr(busId, deviceId, functionId);
+}
+
+
+Tick
+PciDev::PciConfigPort::recvAtomic(Packet *pkt)
+{
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
+            PCI_CONFIG_SIZE);
+    return device->recvConfig(pkt);
+}
+
+void
+PciDev::PciConfigPort::recvFunctional(Packet *pkt)
+{
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
+            PCI_CONFIG_SIZE);
+    device->recvConfig(pkt);
+}
+
+void
+PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+{
+    snoop.clear();
+    resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
+}
+
+
+bool
+PciDev::PciConfigPort::recvTiming(Packet *pkt)
+{
+    if (pkt->result == Packet::Nacked) {
+        resendNacked(pkt);
+    } else {
+        assert(pkt->result == Packet::Unknown);
+        assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
+                PCI_CONFIG_SIZE);
+        Tick latency = device->recvConfig(pkt);
+        // turn packet around to go back to requester
+        pkt->makeTimingResponse();
+        sendTiming(pkt, latency);
+    }
+    return true;
+}
+
 PciDev::PciDev(Params *p)
     : DmaDevice(p), plat(p->platform), configData(p->configData),
-      pioDelay(p->pio_delay)
+      pioDelay(p->pio_delay), configDelay(p->config_delay),
+      configPort(NULL)
 {
     // copy the config data from the PciConfigData object
     if (configData) {
@@ -65,25 +119,56 @@ PciDev::PciDev(Params *p)
     } else
         panic("NULL pointer to configuration data");
 
-    // Setup pointer in config space to point to this entry
-    if (p->configSpace->deviceExists(p->deviceNum, p->functionNum))
-        panic("Two PCI devices occuping same dev: %#x func: %#x",
-              p->deviceNum, p->functionNum);
-    else
-        p->configSpace->registerDevice(p->deviceNum, p->functionNum, this);
+    plat->registerPciDevice(0, p->deviceNum, p->functionNum,
+            letoh(configData->config.interruptLine));
 }
 
 void
-PciDev::readConfig(int offset, uint8_t *data)
+PciDev::init()
 {
+    if (!configPort)
+        panic("pci config port not connected to anything!");
+   configPort->sendStatusChange(Port::RangeChange);
+   PioDevice::init();
+}
+
+Tick
+PciDev::readConfig(Packet *pkt)
+{
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
-    *data = config.data[offset];
+    pkt->allocate();
 
-    DPRINTF(PCIDEV,
+    switch (pkt->getSize()) {
+      case sizeof(uint8_t):
+        pkt->set<uint8_t>(config.data[offset]);
+        DPRINTF(PCIDEV,
             "read device: %#x function: %#x register: %#x 1 bytes: data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, *data);
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint8_t>());
+        break;
+      case sizeof(uint16_t):
+        pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
+        DPRINTF(PCIDEV,
+            "read device: %#x function: %#x register: %#x 2 bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint16_t>());
+        break;
+      case sizeof(uint32_t):
+        pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
+        DPRINTF(PCIDEV,
+            "read device: %#x function: %#x register: %#x 4 bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint32_t>());
+        break;
+      default:
+        panic("invalid access size(?) for PCI configspace!\n");
+    }
+    pkt->result = Packet::Success;
+    return configDelay;
+
 }
 
 void
@@ -96,158 +181,128 @@ PciDev::addressRanges(AddrRangeList &range_list)
             range_list.push_back(RangeSize(BARAddrs[x],BARSize[x]));
 }
 
-void
-PciDev::readConfig(int offset, uint16_t *data)
+Tick
+PciDev::writeConfig(Packet *pkt)
 {
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)
         panic("Device specific PCI config space not implemented!\n");
 
-    *data = *(uint16_t*)&config.data[offset];
-
-    DPRINTF(PCIDEV,
-            "read device: %#x function: %#x register: %#x 2 bytes: data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, *data);
-}
-
-void
-PciDev::readConfig(int offset, uint32_t *data)
-{
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
-
-    *data = *(uint32_t*)&config.data[offset];
-
-    DPRINTF(PCIDEV,
-            "read device: %#x function: %#x register: %#x 4 bytes: data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, *data);
-}
-
-
-void
-PciDev::writeConfig(int offset,  const uint8_t data)
-{
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
-
-    DPRINTF(PCIDEV,
-            "write device: %#x function: %#x reg: %#x size: 1 data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, data);
-
-    switch (offset) {
-      case PCI0_INTERRUPT_LINE:
-        config.interruptLine = data;
-      case PCI_CACHE_LINE_SIZE:
-        config.cacheLineSize = data;
-      case PCI_LATENCY_TIMER:
-        config.latencyTimer = data;
-        break;
-      /* Do nothing for these read-only registers */
-      case PCI0_INTERRUPT_PIN:
-      case PCI0_MINIMUM_GRANT:
-      case PCI0_MAXIMUM_LATENCY:
-      case PCI_CLASS_CODE:
-      case PCI_REVISION_ID:
-        break;
-      default:
-        panic("writing to a read only register");
-    }
-}
-
-void
-PciDev::writeConfig(int offset, const uint16_t data)
-{
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
-
-    DPRINTF(PCIDEV,
-            "write device: %#x function: %#x reg: %#x size: 2 data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, data);
-
-    switch (offset) {
-      case PCI_COMMAND:
-        config.command = data;
-      case PCI_STATUS:
-        config.status = data;
-      case PCI_CACHE_LINE_SIZE:
-        config.cacheLineSize = data;
-        break;
-      default:
-        panic("writing to a read only register");
-    }
-}
-
-
-void
-PciDev::writeConfig(int offset, const uint32_t data)
-{
-    if (offset >= PCI_DEVICE_SPECIFIC)
-        panic("Device specific PCI config space not implemented!\n");
-
-    DPRINTF(PCIDEV,
-            "write device: %#x function: %#x reg: %#x size: 4 data: %#x\n",
-            params()->deviceNum, params()->functionNum, offset, data);
-
-    switch (offset) {
-      case PCI0_BASE_ADDR0:
-      case PCI0_BASE_ADDR1:
-      case PCI0_BASE_ADDR2:
-      case PCI0_BASE_ADDR3:
-      case PCI0_BASE_ADDR4:
-      case PCI0_BASE_ADDR5:
-
-        uint32_t barnum, bar_mask;
-        Addr base_addr, base_size, space_base;
-
-        barnum = BAR_NUMBER(offset);
-
-        if (BAR_IO_SPACE(letoh(config.baseAddr[barnum]))) {
-            bar_mask = BAR_IO_MASK;
-            space_base = TSUNAMI_PCI0_IO;
-        } else {
-            bar_mask = BAR_MEM_MASK;
-            space_base = TSUNAMI_PCI0_MEMORY;
+    switch (pkt->getSize()) {
+      case sizeof(uint8_t):
+        switch (offset) {
+          case PCI0_INTERRUPT_LINE:
+            config.interruptLine = pkt->get<uint8_t>();
+          case PCI_CACHE_LINE_SIZE:
+            config.cacheLineSize = pkt->get<uint8_t>();
+          case PCI_LATENCY_TIMER:
+            config.latencyTimer = pkt->get<uint8_t>();
+            break;
+          /* Do nothing for these read-only registers */
+          case PCI0_INTERRUPT_PIN:
+          case PCI0_MINIMUM_GRANT:
+          case PCI0_MAXIMUM_LATENCY:
+          case PCI_CLASS_CODE:
+          case PCI_REVISION_ID:
+            break;
+          default:
+            panic("writing to a read only register");
         }
+        DPRINTF(PCIDEV,
+            "write device: %#x function: %#x register: %#x 1 bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint8_t>());
+        break;
+      case sizeof(uint16_t):
+        switch (offset) {
+          case PCI_COMMAND:
+            config.command = pkt->get<uint8_t>();
+          case PCI_STATUS:
+            config.status = pkt->get<uint8_t>();
+          case PCI_CACHE_LINE_SIZE:
+            config.cacheLineSize = pkt->get<uint8_t>();
+            break;
+          default:
+            panic("writing to a read only register");
+        }
+        DPRINTF(PCIDEV,
+            "write device: %#x function: %#x register: %#x 2 bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint16_t>());
+        break;
+      case sizeof(uint32_t):
+        switch (offset) {
+          case PCI0_BASE_ADDR0:
+          case PCI0_BASE_ADDR1:
+          case PCI0_BASE_ADDR2:
+          case PCI0_BASE_ADDR3:
+          case PCI0_BASE_ADDR4:
+          case PCI0_BASE_ADDR5:
 
-        // Writing 0xffffffff to a BAR tells the card to set the
-        // value of the bar to size of memory it needs
-        if (letoh(data) == 0xffffffff) {
-            // This is I/O Space, bottom two bits are read only
+            uint32_t barnum, bar_mask;
+            Addr base_addr, base_size, space_base;
 
-            config.baseAddr[barnum] = letoh(
-                    (~(BARSize[barnum] - 1) & ~bar_mask) |
-                    (letoh(config.baseAddr[barnum]) & bar_mask));
-        } else {
-            config.baseAddr[barnum] = letoh(
-                (letoh(data) & ~bar_mask) |
-                (letoh(config.baseAddr[barnum]) & bar_mask));
+            barnum = BAR_NUMBER(offset);
 
-            if (letoh(config.baseAddr[barnum]) & ~bar_mask) {
-                base_addr = (letoh(data) & ~bar_mask) + space_base;
-                base_size = BARSize[barnum];
-                BARAddrs[barnum] = base_addr;
-
-            pioPort->sendStatusChange(Port::RangeChange);
+            if (BAR_IO_SPACE(letoh(config.baseAddr[barnum]))) {
+                bar_mask = BAR_IO_MASK;
+                space_base = TSUNAMI_PCI0_IO;
+            } else {
+                bar_mask = BAR_MEM_MASK;
+                space_base = TSUNAMI_PCI0_MEMORY;
             }
+
+            // Writing 0xffffffff to a BAR tells the card to set the
+            // value of the bar to size of memory it needs
+            if (letoh(pkt->get<uint32_t>()) == 0xffffffff) {
+                // This is I/O Space, bottom two bits are read only
+
+                config.baseAddr[barnum] = letoh(
+                        (~(BARSize[barnum] - 1) & ~bar_mask) |
+                        (letoh(config.baseAddr[barnum]) & bar_mask));
+            } else {
+                config.baseAddr[barnum] = letoh(
+                    (letoh(pkt->get<uint32_t>()) & ~bar_mask) |
+                    (letoh(config.baseAddr[barnum]) & bar_mask));
+
+                if (letoh(config.baseAddr[barnum]) & ~bar_mask) {
+                    base_addr = (letoh(pkt->get<uint32_t>()) & ~bar_mask) + space_base;
+                    base_size = BARSize[barnum];
+                    BARAddrs[barnum] = base_addr;
+
+                pioPort->sendStatusChange(Port::RangeChange);
+                }
+            }
+            break;
+
+          case PCI0_ROM_BASE_ADDR:
+            if (letoh(pkt->get<uint32_t>()) == 0xfffffffe)
+                config.expansionROM = htole((uint32_t)0xffffffff);
+            else
+                config.expansionROM = pkt->get<uint32_t>();
+            break;
+
+          case PCI_COMMAND:
+            // This could also clear some of the error bits in the Status
+            // register. However they should never get set, so lets ignore
+            // it for now
+            config.command = pkt->get<uint32_t>();
+            break;
+
+          default:
+            DPRINTF(PCIDEV, "Writing to a read only register");
         }
+        DPRINTF(PCIDEV,
+            "write device: %#x function: %#x register: %#x 4 bytes: data: %#x\n",
+            params()->deviceNum, params()->functionNum, offset,
+            (uint32_t)pkt->get<uint32_t>());
         break;
-
-      case PCI0_ROM_BASE_ADDR:
-        if (letoh(data) == 0xfffffffe)
-            config.expansionROM = htole((uint32_t)0xffffffff);
-        else
-            config.expansionROM = data;
-        break;
-
-      case PCI_COMMAND:
-        // This could also clear some of the error bits in the Status
-        // register. However they should never get set, so lets ignore
-        // it for now
-        config.command = data;
-        break;
-
       default:
-        DPRINTF(PCIDEV, "Writing to a read only register");
+        panic("invalid access size(?) for PCI configspace!\n");
     }
+    pkt->result = Packet::Success;
+    return configDelay;
+
 }
 
 void

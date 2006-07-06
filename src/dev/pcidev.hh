@@ -47,8 +47,6 @@
 #define BAR_IO_SPACE(x) ((x) & BAR_IO_SPACE_BIT)
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
 
-class PciConfigAll;
-
 
 /**
  * This class encapulates the first 64 bytes of a singles PCI
@@ -78,24 +76,41 @@ class PciConfigData : public SimObject
     Addr BARAddrs[6];
 };
 
+
 /**
  * PCI device, base implemnation is only config space.
- * Each device is connected to a PCIConfigSpace device
- * which returns -1 for everything but the pcidevs that
- * register with it. This object registers with the PCIConfig space
- * object.
  */
 class PciDev : public DmaDevice
 {
-  public:
-    struct Params : public ::PioDevice::Params
+    class PciConfigPort : public PioPort
     {
-        /**
-         * A pointer to the configspace all object that calls us when
-         * a read comes to this particular device/function.
-         */
-        PciConfigAll *configSpace;
+      protected:
+        PciDev *device;
 
+        virtual bool recvTiming(Packet *pkt);
+
+        virtual Tick recvAtomic(Packet *pkt);
+
+        virtual void recvFunctional(Packet *pkt) ;
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+
+        int busId;
+        int deviceId;
+        int functionId;
+
+        Addr configAddr;
+
+      public:
+        PciConfigPort(PciDev *dev, int busid, int devid, int funcid,
+                Platform *p);
+
+      friend class PioPort::SendEvent;
+    };
+
+  public:
+    struct Params : public PioDevice::Params
+    {
         /**
          * A pointer to the object that contains the first 64 bytes of
          * config space
@@ -113,6 +128,9 @@ class PciDev : public DmaDevice
 
         /** The latency for pio accesses. */
         Tick pio_delay;
+
+        /** The latency for a config access. */
+        Tick config_delay;
     };
 
   public:
@@ -164,6 +182,25 @@ class PciDev : public DmaDevice
     Platform *plat;
     PciConfigData *configData;
     Tick pioDelay;
+    Tick configDelay;
+    PciConfigPort *configPort;
+
+    /**
+     * Write to the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param pkt packet containing the write the offset into config space
+     */
+    virtual Tick writeConfig(Packet *pkt);
+
+
+    /**
+     * Read from the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param pkt packet containing the write the offset into config space
+     */
+    virtual Tick readConfig(Packet *pkt);
 
   public:
     Addr pciToDma(Addr pciAddr) const
@@ -171,20 +208,24 @@ class PciDev : public DmaDevice
 
     void
     intrPost()
-    { plat->postPciInt(configData->config.interruptLine); }
+    { plat->postPciInt(letoh(configData->config.interruptLine)); }
 
     void
     intrClear()
-    { plat->clearPciInt(configData->config.interruptLine); }
+    { plat->clearPciInt(letoh(configData->config.interruptLine)); }
 
     uint8_t
     interruptLine()
-    { return configData->config.interruptLine; }
+    { return letoh(configData->config.interruptLine); }
 
     /** return the address ranges that this device responds to.
      * @params range_list range list to populate with ranges
      */
     void addressRanges(AddrRangeList &range_list);
+
+    /** Do a PCI Configspace memory access. */
+    Tick recvConfig(Packet *pkt)
+    { return pkt->isRead() ? readConfig(pkt) : writeConfig(pkt); }
 
     /**
      * Constructor for PCI Dev. This function copies data from the
@@ -193,30 +234,7 @@ class PciDev : public DmaDevice
      */
     PciDev(Params *params);
 
-    /**
-     * Write to the PCI config space data that is stored locally. This may be
-     * overridden by the device but at some point it will eventually call this
-     * for normal operations that it does not need to override.
-     * @param offset the offset into config space
-     * @param size the size of the write
-     * @param data the data to write
-     */
-    virtual void writeConfig(int offset, const uint8_t data);
-    virtual void writeConfig(int offset, const uint16_t data);
-    virtual void writeConfig(int offset, const uint32_t data);
-
-
-    /**
-     * Read from the PCI config space data that is stored locally. This may be
-     * overridden by the device but at some point it will eventually call this
-     * for normal operations that it does not need to override.
-     * @param offset the offset into config space
-     * @param size the size of the read
-     * @param data pointer to the location where the read value should be stored
-     */
-    virtual void readConfig(int offset, uint8_t *data);
-    virtual void readConfig(int offset, uint16_t *data);
-    virtual void readConfig(int offset, uint32_t *data);
+    virtual void init();
 
     /**
      * Serialize this object to the given output stream.
@@ -230,5 +248,19 @@ class PciDev : public DmaDevice
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    virtual Port *getPort(const std::string &if_name, int idx = -1)
+    {
+        if (if_name == "config") {
+            if (configPort != NULL)
+                panic("pciconfig port already connected to.");
+            configPort = new PciConfigPort(this, params()->busNum,
+                    params()->deviceNum, params()->functionNum,
+                    params()->platform);
+            return configPort;
+        }
+        return DmaDevice::getPort(if_name, idx);
+    }
+
 };
 #endif // __DEV_PCIDEV_HH__

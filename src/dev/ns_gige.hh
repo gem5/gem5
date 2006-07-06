@@ -114,7 +114,6 @@ struct dp_rom {
 
 class NSGigEInt;
 class Packet;
-class PciConfigAll;
 
 /**
  * NS DP83820 Ethernet device model
@@ -376,7 +375,7 @@ class NSGigE : public PciDev
     ~NSGigE();
     const Params *params() const { return (const Params *)_params; }
 
-    virtual void writeConfig(int offset, const uint16_t data);
+    virtual Tick writeConfig(Packet *pkt);
 
     virtual Tick read(Packet *pkt);
     virtual Tick write(Packet *pkt);
