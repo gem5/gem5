@@ -547,7 +547,7 @@ class SimObject(object):
         count = 0
         # ParamContexts don't serialize
         if isinstance(self, SimObject) and not isinstance(self, ParamContext):
-            if self._ccObject.drain(drain_event):
+            if not self._ccObject.drain(drain_event):
                 count = 1
         if recursive:
             for child in self._children.itervalues():
