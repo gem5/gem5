@@ -712,19 +712,27 @@ bool
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
     drainCount = 0;
-    drainEvent = drain_event;
     fetch.drain();
     decode.drain();
     rename.drain();
     iew.drain();
     commit.drain();
+    // A bit of a hack...set the drainEvent after all the drain()
+    // calls have been made, that way if all of the stages drain
+    // immediately, the signalDrained() function knows not to call
+    // process on the drain event.
+    drainEvent = drain_event;
 
     // Wake the CPU and record activity so everything can drain out if
-    // the CPU is currently idle.
-    wakeCPU();
-    activityRec.activity();
+    // the CPU was not able to immediately drain.
+    if (_status != Drained) {
+        wakeCPU();
+        activityRec.activity();
 
-    return false;
+        return false;
+    } else {
+        return true;
+    }
 }
 
 template <class Impl>
@@ -751,8 +759,13 @@ FullO3CPU<Impl>::signalDrained()
     if (++drainCount == NumStages) {
         if (tickEvent.scheduled())
             tickEvent.squash();
+
         _status = Drained;
-        drainEvent->process();
+
+        if (drainEvent) {
+            drainEvent->process();
+            drainEvent = NULL;
+        }
     }
     assert(drainCount <= 5);
 }

@@ -350,10 +350,18 @@ DefaultCommit<Impl>::initStage()
 }
 
 template <class Impl>
-void
+bool
 DefaultCommit<Impl>::drain()
 {
     drainPending = true;
+
+    // If it's already drained, return true.
+    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalDrained();
+        return true;
+    }
+
+    return false;
 }
 
 template <class Impl>

@@ -188,7 +188,7 @@ class DefaultCommit
     void initStage();
 
     /** Initializes the draining of commit. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after draining. */
     void resume();

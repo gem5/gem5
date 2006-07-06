@@ -165,11 +165,12 @@ DefaultDecode<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 }
 
 template <class Impl>
-void
+bool
 DefaultDecode<Impl>::drain()
 {
     // Decode is done draining at any time.
     cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>

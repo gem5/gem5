@@ -110,7 +110,7 @@ class DefaultDecode
     void setActiveThreads(std::list<unsigned> *at_ptr);
 
     /** Drains the decode stage. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after a drain. */
     void resume() { }

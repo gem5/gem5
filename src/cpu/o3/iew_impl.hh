@@ -354,11 +354,12 @@ DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
 }
 
 template <class Impl>
-void
+bool
 DefaultIEW<Impl>::drain()
 {
     // IEW is ready to drain at any time.
     cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>
