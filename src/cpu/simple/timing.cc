@@ -118,11 +118,11 @@ TimingSimpleCPU::drain(Event *drain_event)
     // an access to complete.
     if (status() == Idle || status() == Running || status() == SwitchedOut) {
         changeState(SimObject::DrainedTiming);
-        return false;
+        return true;
     } else {
         changeState(SimObject::Draining);
         drainEvent = drain_event;
-        return true;
+        return false;
     }
 }
 

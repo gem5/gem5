@@ -213,14 +213,28 @@ atexit.register(cc_main.doExitCleanup)
 # matter since most scripts will probably 'from m5.objects import *'.
 import objects
 
+# This loops until all objects have been fully drained.
 def doDrain(root):
+    all_drained = drain(root)
+    while (not all_drained):
+        all_drained = drain(root)
+
+# Tries to drain all objects.  Draining might not be completed unless
+# all objects return that they are drained on the first call.  This is
+# because as objects drain they may cause other objects to no longer
+# be drained.
+def drain(root):
+    all_drained = False
     drain_event = cc_main.createCountedDrain()
     unready_objects = root.startDrain(drain_event, True)
     # If we've got some objects that can't drain immediately, then simulate
     if unready_objects > 0:
         drain_event.setCount(unready_objects)
         simulate()
+    else:
+        all_drained = True
     cc_main.cleanupCountedDrain(drain_event)
+    return all_drained
 
 def resume(root):
     root.resume()
