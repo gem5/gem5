@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
  */
 
 /**
@@ -48,7 +50,7 @@ class MemObject : public SimObject
 
   public:
     /** Additional function to return the Port of a memory object. */
-    virtual Port *getPort(const std::string &if_name) = 0;
+    virtual Port *getPort(const std::string &if_name, int idx = -1) = 0;
 };
 
 #endif //__MEM_MEM_OBJECT_HH__

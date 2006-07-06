@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Lisa Hsu
  */
 
 #ifndef __ARCH_ALPHA_TRU64_SYSTEM_HH__
@@ -33,7 +36,7 @@
 #include "arch/isa_traits.hh"
 #include "sim/system.hh"
 
-class ExecContext;
+class ThreadContext;
 
 class BreakPCEvent;
 class BadAddrEvent;

@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #ifndef __CPU_SIMPLE_TIMING_HH__
@@ -61,6 +63,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Status _status;
 
     Status status() const { return _status; }
+
+    Event *quiesceEvent;
 
   private:
 
@@ -100,7 +104,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     class DcachePort : public CpuPort
@@ -115,7 +119,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual bool recvTiming(Packet *pkt);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
     };
 
     IcachePort icachePort;
@@ -129,7 +133,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    void switchOut(Sampler *s);
+    virtual bool quiesce(Event *quiesce_event);
+    virtual void resume();
+    virtual void setMemoryMode(State new_mode);
+
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     virtual void activateContext(int thread_num, int delay);
@@ -145,6 +153,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeIfetch(Packet *);
     void completeDataAccess(Packet *);
     void advanceInst(Fault fault);
+  private:
+    void completeQuiesce();
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__

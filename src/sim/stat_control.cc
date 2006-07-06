@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 // This file will contain default statistics for the simulator that
@@ -219,8 +221,7 @@ SetupEvent(int flags, Tick when, Tick repeat)
 
 /* namespace Stats */ }
 
-extern "C" void
-debugDumpStats()
+void debugDumpStats()
 {
     Stats::DumpNow();
 }

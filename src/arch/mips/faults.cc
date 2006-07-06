@@ -24,12 +24,18 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #include "arch/mips/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+#if !FULL_SYSTEM
+#include "sim/process.hh"
+#include "mem/page_table.hh"
+#endif
 
 namespace MipsISA
 {
@@ -49,6 +55,12 @@ FaultStat ResetFault::_count;
 FaultName ArithmeticFault::_name = "arith";
 FaultVect ArithmeticFault::_vect = 0x0501;
 FaultStat ArithmeticFault::_count;
+
+#if !FULL_SYSTEM
+FaultName PageTableFault::_name = "page_table_fault";
+FaultVect PageTableFault::_vect = 0x0000;
+FaultStat PageTableFault::_count;
+#endif
 
 FaultName InterruptFault::_name = "interrupt";
 FaultVect InterruptFault::_vect = 0x0101;
@@ -100,32 +112,53 @@ FaultStat IntegerOverflowFault::_count;
 
 #if FULL_SYSTEM
 
-void MipsFault::invoke(ExecContext * xc)
+void MipsFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     countStat()++;
 
     // exception restart address
-    if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(MipsISA::IPR_EXC_ADDR, xc->readPC());
+    if (setRestartAddress() || !tc->inPalMode())
+        tc->setMiscReg(MipsISA::IPR_EXC_ADDR, tc->readPC());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        xc->setMiscReg(MipsISA::IPR_EXC_ADDR,
-                   xc->readMiscReg(MipsISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscReg(MipsISA::IPR_EXC_ADDR,
+                   tc->readMiscReg(MipsISA::IPR_EXC_ADDR) + 4);
     }
 
-    xc->setPC(xc->readMiscReg(MipsISA::IPR_PAL_BASE) + vect());
-    xc->setNextPC(xc->readPC() + sizeof(MachInst));
+    tc->setPC(tc->readMiscReg(MipsISA::IPR_PAL_BASE) + vect());
+    tc->setNextPC(tc->readPC() + sizeof(MachInst));
 }
 
-void ArithmeticFault::invoke(ExecContext * xc)
+void ArithmeticFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     panic("Arithmetic traps are unimplemented!");
 }
 
-#endif
+#else //!FULL_SYSTEM
 
+void PageTableFault::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+
+    // address is higher than the stack region or in the current stack region
+    if (vaddr > p->stack_base || vaddr > p->stack_min)
+        FaultBase::invoke(tc);
+
+    // We've accessed the next page
+    if (vaddr > p->stack_min - PageBytes) {
+        p->stack_min -= PageBytes;
+        if (p->stack_base - p->stack_min > 8*1024*1024)
+            fatal("Over max stack size for one thread\n");
+        p->pTable->allocate(p->stack_min, PageBytes);
+        warn("Increasing stack size by one page.");
+    } else {
+        FaultBase::invoke(tc);
+    }
+}
+
+#endif
 } // namespace MipsISA
 

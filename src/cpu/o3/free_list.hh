@@ -24,15 +24,18 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_FREE_LIST_HH__
-#define __CPU_O3_CPU_FREE_LIST_HH__
+#ifndef __CPU_O3_FREE_LIST_HH__
+#define __CPU_O3_FREE_LIST_HH__
 
 #include <iostream>
 #include <queue>
 
 #include "arch/isa_traits.hh"
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "cpu/o3/comm.hh"
@@ -45,10 +48,9 @@
  * other classes, it assumes that the indices for the floating point
  * registers starts after the integer registers end.  Hence the variable
  * numPhysicalIntRegs is logically equivalent to the baseFP dependency.
- * Note that
- * while this most likely should be called FreeList, the name "FreeList"
- * is used in a typedef within the CPU Policy, and therefore no class
- * can be named simply "FreeList".
+ * Note that while this most likely should be called FreeList, the name
+ * "FreeList" is used in a typedef within the CPU Policy, and therefore no
+ * class can be named simply "FreeList".
  * @todo: Give a better name to the base FP dependency.
  */
 class SimpleFreeList
@@ -75,36 +77,51 @@ class SimpleFreeList
     /** Total number of physical registers. */
     int numPhysicalRegs;
 
-    /** DEBUG stuff below. */
-    std::vector<int> freeIntRegsScoreboard;
-
-    std::vector<bool> freeFloatRegsScoreboard;
-
   public:
-    SimpleFreeList(unsigned _numLogicalIntRegs,
+    /** Constructs a free list.
+     *  @param activeThreads Number of active threads.
+     *  @param _numLogicalIntRegs Number of logical integer registers.
+     *  @param _numPhysicalIntRegs Number of physical integer registers.
+     *  @param _numLogicalFloatRegs Number of logical fp registers.
+     *  @param _numPhysicalFloatRegs Number of physical fp registers.
+     */
+    SimpleFreeList(unsigned activeThreads,
+                   unsigned _numLogicalIntRegs,
                    unsigned _numPhysicalIntRegs,
                    unsigned _numLogicalFloatRegs,
                    unsigned _numPhysicalFloatRegs);
 
+    /** Gives the name of the freelist. */
+    std::string name() const;
+
+    /** Gets a free integer register. */
     inline PhysRegIndex getIntReg();
 
+    /** Gets a free fp register. */
     inline PhysRegIndex getFloatReg();
 
+    /** Adds a register back to the free list. */
     inline void addReg(PhysRegIndex freed_reg);
 
+    /** Adds an integer register back to the free list. */
     inline void addIntReg(PhysRegIndex freed_reg);
 
+    /** Adds a fp register back to the free list. */
     inline void addFloatReg(PhysRegIndex freed_reg);
 
+    /** Checks if there are any free integer registers. */
     bool hasFreeIntRegs()
     { return !freeIntRegs.empty(); }
 
+    /** Checks if there are any free fp registers. */
     bool hasFreeFloatRegs()
     { return !freeFloatRegs.empty(); }
 
+    /** Returns the number of free integer registers. */
     int numFreeIntRegs()
     { return freeIntRegs.size(); }
 
+    /** Returns the number of free fp registers. */
     int numFreeFloatRegs()
     { return freeFloatRegs.size(); }
 };
@@ -112,7 +129,8 @@ class SimpleFreeList
 inline PhysRegIndex
 SimpleFreeList::getIntReg()
 {
-    DPRINTF(Rename, "FreeList: Trying to get free integer register.\n");
+    DPRINTF(FreeList, "Trying to get free integer register.\n");
+
     if (freeIntRegs.empty()) {
         panic("No free integer registers!");
     }
@@ -121,17 +139,14 @@ SimpleFreeList::getIntReg()
 
     freeIntRegs.pop();
 
-    // DEBUG
-    assert(freeIntRegsScoreboard[free_reg]);
-    freeIntRegsScoreboard[free_reg] = 0;
-
     return(free_reg);
 }
 
 inline PhysRegIndex
 SimpleFreeList::getFloatReg()
 {
-    DPRINTF(Rename, "FreeList: Trying to get free float register.\n");
+    DPRINTF(FreeList, "Trying to get free float register.\n");
+
     if (freeFloatRegs.empty()) {
         panic("No free integer registers!");
     }
@@ -140,42 +155,28 @@ SimpleFreeList::getFloatReg()
 
     freeFloatRegs.pop();
 
-    // DEBUG
-    assert(freeFloatRegsScoreboard[free_reg]);
-    freeFloatRegsScoreboard[free_reg] = 0;
-
     return(free_reg);
 }
 
 inline void
 SimpleFreeList::addReg(PhysRegIndex freed_reg)
 {
-    DPRINTF(Rename, "Freelist: Freeing register %i.\n", freed_reg);
+    DPRINTF(FreeList,"Freeing register %i.\n", freed_reg);
     //Might want to add in a check for whether or not this register is
     //already in there.  A bit vector or something similar would be useful.
     if (freed_reg < numPhysicalIntRegs) {
-        freeIntRegs.push(freed_reg);
-
-        // DEBUG
-        assert(freeIntRegsScoreboard[freed_reg] == false);
-        freeIntRegsScoreboard[freed_reg] = 1;
+        if (freed_reg != TheISA::ZeroReg)
+            freeIntRegs.push(freed_reg);
     } else if (freed_reg < numPhysicalRegs) {
-        freeFloatRegs.push(freed_reg);
-
-        // DEBUG
-        assert(freeFloatRegsScoreboard[freed_reg] == false);
-        freeFloatRegsScoreboard[freed_reg] = 1;
+        if (freed_reg != (TheISA::ZeroReg + numPhysicalIntRegs))
+            freeFloatRegs.push(freed_reg);
     }
 }
 
 inline void
 SimpleFreeList::addIntReg(PhysRegIndex freed_reg)
 {
-    DPRINTF(Rename, "Freelist: Freeing int register %i.\n", freed_reg);
-
-    // DEBUG
-    assert(!freeIntRegsScoreboard[freed_reg]);
-    freeIntRegsScoreboard[freed_reg] = 1;
+    DPRINTF(FreeList,"Freeing int register %i.\n", freed_reg);
 
     freeIntRegs.push(freed_reg);
 }
@@ -183,13 +184,9 @@ SimpleFreeList::addIntReg(PhysRegIndex freed_reg)
 inline void
 SimpleFreeList::addFloatReg(PhysRegIndex freed_reg)
 {
-    DPRINTF(Rename, "Freelist: Freeing float register %i.\n", freed_reg);
-
-    // DEBUG
-    assert(!freeFloatRegsScoreboard[freed_reg]);
-    freeFloatRegsScoreboard[freed_reg] = 1;
+    DPRINTF(FreeList,"Freeing float register %i.\n", freed_reg);
 
     freeFloatRegs.push(freed_reg);
 }
 
-#endif // __CPU_O3_CPU_FREE_LIST_HH__
+#endif // __CPU_O3_FREE_LIST_HH__

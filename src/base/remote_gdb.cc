@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 /*
@@ -126,7 +128,7 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
@@ -250,7 +252,7 @@ RemoteGDB::Event::process(int revent)
         gdb->detach();
 }
 
-RemoteGDB::RemoteGDB(System *_system, ExecContext *c)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : event(NULL), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
       system(_system), pmem(_system->physmem), context(c)
@@ -640,7 +642,9 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    context->getVirtPort(context)->readBlob(vaddr, (uint8_t*)data, size);
+    VirtualPort *vp = context->getVirtPort(context);
+    vp->readBlob(vaddr, (uint8_t*)data, size);
+    context->delVirtPort(vp);
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -677,8 +681,9 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-
-    context->getVirtPort(context)->writeBlob(vaddr, (uint8_t*)data, size);
+    VirtualPort *vp = context->getVirtPort(context);
+    vp->writeBlob(vaddr, (uint8_t*)data, size);
+    context->delVirtPort(vp);
 
 #ifdef IMB
     alpha_pal_imb();
@@ -702,11 +707,11 @@ RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
 }
 
 void
-RemoteGDB::HardBreakpoint::process(ExecContext *xc)
+RemoteGDB::HardBreakpoint::process(ThreadContext *tc)
 {
     DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
-    if (xc == gdb->context)
+    if (tc == gdb->context)
         gdb->trap(ALPHA_KENTRY_INT);
 }
 

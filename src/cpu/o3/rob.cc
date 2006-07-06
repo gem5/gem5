@@ -24,11 +24,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
+ *          Nathan Binkert
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/rob_impl.hh"
 
 // Force instantiation of InstructionQueue.
-template class ROB<AlphaSimpleImpl>;
+template class ROB<O3CPUImpl>;

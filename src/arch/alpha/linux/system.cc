@@ -24,6 +24,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Lisa Hsu
+ *          Nathan Binkert
+ *          Steve Reinhardt
  */
 
 /**
@@ -41,7 +46,7 @@
 #include "arch/alpha/linux/threadinfo.hh"
 #include "arch/alpha/system.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "dev/platform.hh"
 #include "kern/linux/printk.hh"
@@ -132,24 +137,6 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
     } else {
         printThreadEvent = NULL;
     }
-
-    if (params()->bin_int) {
-        intStartEvent = addPalFuncEvent<InterruptStartEvent>("sys_int_21");
-        if (!intStartEvent)
-            panic("could not find symbol: sys_int_21\n");
-
-        intEndEvent = addPalFuncEvent<InterruptEndEvent>("rti_to_kern");
-        if (!intEndEvent)
-            panic("could not find symbol: rti_to_kern\n");
-
-        intEndEvent2 = addPalFuncEvent<InterruptEndEvent>("rti_to_user");
-        if (!intEndEvent2)
-            panic("could not find symbol: rti_to_user\n");
-
-        intEndEvent3 = addKernelFuncEvent<InterruptEndEvent>("do_softirq");
-        if (!intEndEvent3)
-            panic("could not find symbol: do_softirq\n");
-    }
 }
 
 LinuxAlphaSystem::~LinuxAlphaSystem()
@@ -163,37 +150,37 @@ LinuxAlphaSystem::~LinuxAlphaSystem()
     delete debugPrintkEvent;
     delete idleStartEvent;
     delete printThreadEvent;
-    delete intStartEvent;
-    delete intEndEvent;
-    delete intEndEvent2;
 }
 
 
 void
-LinuxAlphaSystem::setDelayLoop(ExecContext *xc)
+LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
-        Tick cpuFreq = xc->getCpuPtr()->frequency();
+        Tick cpuFreq = tc->getCpuPtr()->frequency();
         Tick intrFreq = platform->intrFrequency();
-        xc->getVirtPort(xc)->write(addr,
-                (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        VirtualPort *vp;
+
+        vp = tc->getVirtPort();
+        vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        tc->delVirtPort(vp);
     }
 }
 
 
 void
-LinuxAlphaSystem::SkipDelayLoopEvent::process(ExecContext *xc)
+LinuxAlphaSystem::SkipDelayLoopEvent::process(ThreadContext *tc)
 {
-    SkipFuncEvent::process(xc);
+    SkipFuncEvent::process(tc);
     // calculate and set loops_per_jiffy
-    ((LinuxAlphaSystem *)xc->getSystemPtr())->setDelayLoop(xc);
+    ((LinuxAlphaSystem *)tc->getSystemPtr())->setDelayLoop(tc);
 }
 
 void
-LinuxAlphaSystem::PrintThreadInfo::process(ExecContext *xc)
+LinuxAlphaSystem::PrintThreadInfo::process(ThreadContext *tc)
 {
-    Linux::ThreadInfo ti(xc);
+    Linux::ThreadInfo ti(tc);
 
     DPRINTF(Thread, "Currently Executing Thread %s, pid %d, started at: %d\n",
             ti.curTaskName(), ti.curTaskPID(), ti.curTaskStart());
@@ -216,10 +203,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
     Param<uint64_t> system_type;
     Param<uint64_t> system_rev;
 
-    Param<bool> bin;
-    VectorParam<string> binned_fns;
-    Param<bool> bin_int;
-
 END_DECLARE_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
@@ -234,10 +217,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
     INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
-    INIT_PARAM_DFLT(bin, "is this system to be binned", false),
-    INIT_PARAM(binned_fns, "functions to be broken down and binned"),
-    INIT_PARAM_DFLT(bin_int, "is interrupt code binned seperately?", true)
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
 
 END_INIT_SIM_OBJECT_PARAMS(LinuxAlphaSystem)
 
@@ -255,9 +235,6 @@ CREATE_SIM_OBJECT(LinuxAlphaSystem)
     p->readfile = readfile;
     p->system_type = system_type;
     p->system_rev = system_rev;
-    p->bin = bin;
-    p->binned_fns = binned_fns;
-    p->bin_int = bin_int;
     return new LinuxAlphaSystem(p);
 }
 

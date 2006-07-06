@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Lisa Hsu
  */
 
 /** @file
@@ -35,7 +38,7 @@
 
 #include "arch/alpha/ev5.hh"
 #include "base/inet.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
@@ -492,7 +495,6 @@ NSGigE::read(Packet *pkt)
 {
     assert(ioEnable);
 
-    pkt->time += pioDelay;
     pkt->allocate();
 
     //The mask is to give you only the offset into the device register file
@@ -727,8 +729,6 @@ NSGigE::write(Packet *pkt)
     Addr daddr = pkt->getAddr() & 0xfff;
     DPRINTF(EthernetPIO, "write da=%#x pa=%#x size=%d\n",
             daddr, pkt->getAddr(), pkt->getSize());
-
-    pkt->time += pioDelay;
 
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");

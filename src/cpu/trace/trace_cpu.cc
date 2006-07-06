@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
  */
 
 /**
@@ -106,7 +108,7 @@ TraceCPU::tick()
     if (!nextReq) {
         // No more requests to send. Finish trailing events and exit.
         if (mainEventQueue.empty()) {
-            new SimExitEvent("Finshed Memory Trace");
+            exitSimLoop("end of memory trace reached");
         } else {
             tickEvent.schedule(mainEventQueue.nextEventTime() + cycles(1));
         }

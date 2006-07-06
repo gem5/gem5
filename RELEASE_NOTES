@@ -1,3 +1,11 @@
+XXX. X, 2006: m5_2.0
+--------------------
+Major update to M5 including:
+- New CPU model
+- Sew memory system
+- More extensive python integration
+- Preliminary syscall emulation support for MIPS and SPARC
+
 Oct. 8, 2005: m5_1.1
 --------------------
 Update release for IOSCA workshop mini-tutorial.  New features include:

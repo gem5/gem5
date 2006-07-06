@@ -1,11 +1,37 @@
 // -*- mode:c++ -*-
 
+// Copyright (c) 2006 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Korey Sewell
+
 ////////////////////////////////////////////////////////////////////
 //
 // Integer operate instructions
 //
-
-//Outputs to decoder.hh
 output header {{
 #include <iostream>
     using namespace std;
@@ -24,6 +50,34 @@ output header {{
 
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
+
+
+        class HiLoOp: public IntOp
+        {
+                protected:
+
+                /// Constructor
+                HiLoOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                IntOp(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+        class HiLoMiscOp: public HiLoOp
+        {
+                protected:
+
+                /// Constructor
+                HiLoMiscOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                HiLoOp(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
 
         class IntImmOp : public MipsStaticInst
         {
@@ -52,6 +106,33 @@ output header {{
 
 }};
 
+// HiLo<Misc> instruction class execute method template.
+// Mainly to get instruction trace data to print out
+// correctly
+def template HiLoExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(fp_enable_check)s;
+                %(op_decl)s;
+                %(op_rd)s;
+                %(code)s;
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                    //If there are 2 Destination Registers then
+                    //concatenate the values for the traceData
+                    if(traceData && _numDestRegs == 2) {
+                        uint64_t hilo_final_val = (uint64_t)HI << 32 | LO;
+                        traceData->setData(hilo_final_val);
+                    }
+                }
+                return fault;
+        }
+}};
+
 //Outputs to decoder.cc
 output decoder {{
         std::string IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
@@ -64,7 +145,7 @@ output decoder {{
             // it's generally implicit
             if (_numDestRegs > 0) {
                 printReg(ss, _destRegIdx[0]);
-                ss << ",";
+                ss << ", ";
             }
 
             // just print the first two source regs... if there's
@@ -75,8 +156,42 @@ output decoder {{
             }
 
             if (_numSrcRegs > 1) {
-                ss << ",";
+                ss << ", ";
                 printReg(ss, _srcRegIdx[1]);
+            }
+
+            return ss.str();
+        }
+
+        std::string HiLoOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            //Destination Registers are implicit for HI/LO ops
+            if (_numSrcRegs > 0) {
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            if (_numSrcRegs > 1) {
+                ss << ", ";
+                printReg(ss, _srcRegIdx[1]);
+            }
+
+            return ss.str();
+        }
+
+        std::string HiLoMiscOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+                printReg(ss, _destRegIdx[0]);
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+                printReg(ss, _srcRegIdx[0]);
             }
 
             return ss.str();
@@ -92,15 +207,15 @@ output decoder {{
                 printReg(ss, _destRegIdx[0]);
             }
 
-            ss << ",";
+            ss << ", ";
 
             if (_numSrcRegs > 0) {
                 printReg(ss, _srcRegIdx[0]);
-                ss << ",";
+                ss << ", ";
             }
 
             if( mnemonic == "lui")
-                ccprintf(ss, "%08p ", sextImm);
+                ccprintf(ss, "0x%x ", sextImm);
             else
                 ss << (int) sextImm;
 
@@ -109,23 +224,47 @@ output decoder {{
 
 }};
 
-//Used by decoder.isa
 def format IntOp(code, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-
-        # Figure out if we are creating a IntImmOp or a IntOp
-        # by looking at the instruction name
-        iop = InstObjParams(name, Name, 'IntOp', cblk, opt_flags)
-        strlen = len(name)
-        if name[strlen-1] == 'i' or name[strlen-2:] == 'iu':
-            iop = InstObjParams(name, Name, 'IntImmOp', cblk, opt_flags)
-
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = OperateNopCheckDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    iop = InstObjParams(name, Name, 'IntOp', CodeBlock(code), opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = RegNopCheckDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
+
+def format IntImmOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'IntImmOp', CodeBlock(code), opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = ImmNopCheckDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format HiLoOp(code, *opt_flags) {{
+    if '.sd' in code:
+        code = 'int64_t ' + code
+    elif '.ud' in code:
+        code = 'uint64_t ' + code
+
+    code += 'HI = val<63:32>;\n'
+    code += 'LO = val<31:0>;\n'
+
+    iop = InstObjParams(name, Name, 'HiLoOp', CodeBlock(code), opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = HiLoExecute.subst(iop)
+}};
+
+def format HiLoMiscOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'HiLoMiscOp', CodeBlock(code), opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = HiLoExecute.subst(iop)
+}};
+
+
 
 
 

@@ -24,10 +24,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Lisa Hsu
+ *          Nathan Binkert
  */
 
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "kern/system_events.hh"
 #include "sim/system.hh"
@@ -35,57 +38,28 @@
 using namespace TheISA;
 
 void
-SkipFuncEvent::process(ExecContext *xc)
+SkipFuncEvent::process(ThreadContext *tc)
 {
-    Addr newpc = xc->readIntReg(ReturnAddressReg);
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
 
     DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            xc->readPC(), newpc);
+            tc->readPC(), newpc);
 
-    xc->setPC(newpc);
-    xc->setNextPC(xc->readPC() + sizeof(TheISA::MachInst));
+    tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
 /*
-    BranchPred *bp = xc->getCpuPtr()->getBranchPred();
+    BranchPred *bp = tc->getCpuPtr()->getBranchPred();
     if (bp != NULL) {
-        bp->popRAS(xc->getThreadNum());
+        bp->popRAS(tc->getThreadNum());
     }
 */
 }
 
-
-FnEvent::FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
-                 Stats::MainBin *bin)
-    : PCEvent(q, desc, addr), _name(desc), mybin(bin)
-{
-}
-
 void
-FnEvent::process(ExecContext *xc)
+IdleStartEvent::process(ThreadContext *tc)
 {
-    if (xc->misspeculating())
-        return;
-
-    xc->getSystemPtr()->kernelBinning->call(xc, mybin);
-}
-
-void
-IdleStartEvent::process(ExecContext *xc)
-{
-    xc->getCpuPtr()->kernelStats->setIdleProcess(
-        xc->readMiscReg(AlphaISA::IPR_PALtemp23), xc);
+    if (tc->getKernelStats())
+        tc->getKernelStats()->setIdleProcess(
+            tc->readMiscReg(AlphaISA::IPR_PALtemp23), tc);
     remove();
-}
-
-void
-InterruptStartEvent::process(ExecContext *xc)
-{
-    xc->getCpuPtr()->kernelStats->mode(Kernel::interrupt, xc);
-}
-
-void
-InterruptEndEvent::process(ExecContext *xc)
-{
-    // We go back to kernel, if we are user, inside the rti
-    // pal code we will get switched to user because of the ICM write
-    xc->getCpuPtr()->kernelStats->mode(Kernel::kernel, xc);
 }

@@ -23,6 +23,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
 
 from __future__ import division
 import operator, re, types
@@ -174,7 +176,7 @@ def WrapValue(value):
 class Statistic(object):
     def __getattr__(self, attr):
         if attr in ('data', 'x', 'y'):
-            result = self.source.data(self, self.bins, self.ticks)
+            result = self.source.data(self, self.ticks)
             self.data = result.data
             self.x = result.x
             self.y = result.y
@@ -183,7 +185,7 @@ class Statistic(object):
     def __setattr__(self, attr, value):
         if attr == 'stat':
             raise AttributeError, '%s is read only' % stat
-        if attr in ('source', 'bins', 'ticks'):
+        if attr in ('source', 'ticks'):
             if getattr(self, attr) != value:
                 if hasattr(self, 'data'):
                     delattr(self, 'data')
@@ -759,7 +761,6 @@ def NewStat(source, data):
         stat = Formula()
 
     stat.__dict__['source'] = source
-    stat.__dict__['bins'] = None
     stat.__dict__['ticks'] = None
     stat.__dict__.update(data.__dict__)
 

@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
  */
 
 #ifndef __ARCH_SPARC_UTILITY_HH__
@@ -79,10 +81,10 @@ namespace SparcISA
 
     /**
      * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
+     * @param tc The thread context.
      */
-    template <class XC>
-    void zeroRegisters(XC *xc);
+    template <class TC>
+    void zeroRegisters(TC *tc);
 
 } // namespace SparcISA
 

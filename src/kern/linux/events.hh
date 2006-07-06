@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Ali Saidi
  */
 
 #ifndef __KERN_LINUX_EVENTS_HH__
@@ -42,7 +45,7 @@ class DebugPrintkEvent : public SkipFuncEvent
     DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr,
                      bool r = false)
         : SkipFuncEvent(q, desc, addr), raw(r) {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *xc);
 };
 
 }

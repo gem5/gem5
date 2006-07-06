@@ -25,6 +25,13 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Steve Reinhardt
+
+////////////////////////////////////////////////////////////////////
+//
+// The actual decoder specification
+//
 
 decode OPCODE default Unknown::unknown() {
 
@@ -40,9 +47,11 @@ decode OPCODE default Unknown::unknown() {
         0x23: ldt({{ Fa = Mem.df; }});
         0x2a: ldl_l({{ Ra.sl = Mem.sl; }}, mem_flags = LOCKED);
         0x2b: ldq_l({{ Ra.uq = Mem.uq; }}, mem_flags = LOCKED);
+#ifdef USE_COPY
         0x20: MiscPrefetch::copy_load({{ EA = Ra; }},
                                       {{ fault = xc->copySrcTranslate(EA); }},
                                       inst_flags = [IsMemRef, IsLoad, IsCopy]);
+#endif
     }
 
     format LoadOrPrefetch {
@@ -62,9 +71,11 @@ decode OPCODE default Unknown::unknown() {
         0x0f: stq_u({{ Mem.uq = Ra.uq; }}, {{ EA = (Rb + disp) & ~7; }});
         0x26: sts({{ Mem.ul = t_to_s(Fa.uq); }});
         0x27: stt({{ Mem.df = Fa; }});
+#ifdef USE_COPY
         0x24: MiscPrefetch::copy_store({{ EA = Rb; }},
                                        {{ fault = xc->copy(EA); }},
                                        inst_flags = [IsMemRef, IsStore, IsCopy]);
+#endif
     }
 
     format StoreCond {
@@ -73,7 +84,7 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -85,7 +96,7 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
-                    }}, mem_flags = LOCKED);
+                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
     }
 
     format IntegerOperate {
@@ -591,8 +602,8 @@ decode OPCODE default Unknown::unknown() {
             0x02e: fcmovle({{ Fc = (Fa <= 0) ? Fb : Fc; }});
             0x02f: fcmovgt({{ Fc = (Fa >  0) ? Fb : Fc; }});
 
-            0x024: mt_fpcr({{ FPCR = Fa.uq; }});
-            0x025: mf_fpcr({{ Fa.uq = FPCR; }});
+            0x024: mt_fpcr({{ FPCR = Fa.uq; }}, IsIprAccess);
+            0x025: mf_fpcr({{ Fa.uq = FPCR; }}, IsIprAccess);
         }
     }
 
@@ -623,7 +634,7 @@ decode OPCODE default Unknown::unknown() {
 #else
                 Ra = curTick;
 #endif
-            }});
+            }}, IsUnverifiable);
 
             // All of the barrier instructions below do nothing in
             // their execute() methods (hence the empty code blocks).
@@ -641,8 +652,8 @@ decode OPCODE default Unknown::unknown() {
             // a barrier on integer and FP traps.  "EXCB is thus a
             // superset of TRAPB." (Alpha ARM, Sec 4.11.4) We treat
             // them the same though.
-            0x0000: trapb({{ }}, IsSerializing, No_OpClass);
-            0x0400: excb({{ }}, IsSerializing, No_OpClass);
+            0x0000: trapb({{ }}, IsSerializing, IsSerializeBefore, No_OpClass);
+            0x0400: excb({{ }}, IsSerializing, IsSerializeBefore, No_OpClass);
             0x4000: mb({{ }}, IsMemBarrier, MemReadOp);
             0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
         }
@@ -652,11 +663,11 @@ decode OPCODE default Unknown::unknown() {
             0xe000: rc({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(0);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
             0xf000: rs({{
                 Ra = xc->readIntrFlag();
                 xc->setIntrFlag(1);
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
         }
 #else
         format FailUnimpl {
@@ -690,15 +701,15 @@ decode OPCODE default Unknown::unknown() {
     0x00: decode PALFUNC {
         format EmulatedCallPal {
             0x00: halt ({{
-                SimExit(curTick, "halt instruction encountered");
+                exitSimLoop(curTick, "halt instruction encountered");
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall(R0);
-            }}, IsNonSpeculative);
+            }}, IsSerializeAfter, IsNonSpeculative);
             // Read uniq reg into ABI return value register (r0)
-            0x9e: rduniq({{ R0 = Runiq; }});
+            0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
             // Write uniq reg with value from ABI arg register (r16)
-            0x9f: wruniq({{ Runiq = R16; }});
+            0x9f: wruniq({{ Runiq = R16; }}, IsIprAccess);
         }
     }
 #endif
@@ -735,7 +746,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mfpr({{
                 Ra = xc->readMiscRegWithEffect(ipr_index, fault);
-            }});
+            }}, IsIprAccess);
         }
     }
 
@@ -745,69 +756,69 @@ decode OPCODE default Unknown::unknown() {
             1: hw_mtpr({{
                 xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
-            }});
+            }}, IsIprAccess);
         }
     }
 
     format BasicOperate {
         0x1e: decode PALMODE {
             0: OpcdecFault::hw_rei();
-            1:hw_rei({{ xc->hwrei(); }}, IsSerializing);
+            1:hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
         }
 
         // M5 special opcodes use the reserved 0x01 opcode space
         0x01: decode M5FUNC {
             0x00: arm({{
-                AlphaPseudo::arm(xc->xcBase());
+                AlphaPseudo::arm(xc->tcBase());
             }}, IsNonSpeculative);
             0x01: quiesce({{
-                AlphaPseudo::quiesce(xc->xcBase());
-            }}, IsNonSpeculative);
+                AlphaPseudo::quiesce(xc->tcBase());
+            }}, IsNonSpeculative, IsQuiesce);
             0x02: quiesceNs({{
-                AlphaPseudo::quiesceNs(xc->xcBase(), R16);
-            }}, IsNonSpeculative);
+                AlphaPseudo::quiesceNs(xc->tcBase(), R16);
+            }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
-                AlphaPseudo::quiesceCycles(xc->xcBase(), R16);
-            }}, IsNonSpeculative);
+                AlphaPseudo::quiesceCycles(xc->tcBase(), R16);
+            }}, IsNonSpeculative, IsQuiesce);
             0x04: quiesceTime({{
-                R0 = AlphaPseudo::quiesceTime(xc->xcBase());
+                R0 = AlphaPseudo::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative);
             0x10: ivlb({{
-                AlphaPseudo::ivlb(xc->xcBase());
+                AlphaPseudo::ivlb(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x11: ivle({{
-                AlphaPseudo::ivle(xc->xcBase());
+                AlphaPseudo::ivle(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x20: m5exit_old({{
-                AlphaPseudo::m5exit_old(xc->xcBase());
+                AlphaPseudo::m5exit_old(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
-                AlphaPseudo::m5exit(xc->xcBase(), R16);
+                AlphaPseudo::m5exit(xc->tcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
-            0x30: initparam({{ Ra = xc->xcBase()->getCpuPtr()->system->init_param; }});
+            0x30: initparam({{ Ra = xc->tcBase()->getCpuPtr()->system->init_param; }});
             0x40: resetstats({{
-                AlphaPseudo::resetstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::resetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x41: dumpstats({{
-                AlphaPseudo::dumpstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::dumpstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x42: dumpresetstats({{
-                AlphaPseudo::dumpresetstats(xc->xcBase(), R16, R17);
+                AlphaPseudo::dumpresetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x43: m5checkpoint({{
-                AlphaPseudo::m5checkpoint(xc->xcBase(), R16, R17);
+                AlphaPseudo::m5checkpoint(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x50: m5readfile({{
-                R0 = AlphaPseudo::readfile(xc->xcBase(), R16, R17, R18);
+                R0 = AlphaPseudo::readfile(xc->tcBase(), R16, R17, R18);
             }}, IsNonSpeculative);
             0x51: m5break({{
-                AlphaPseudo::debugbreak(xc->xcBase());
+                AlphaPseudo::debugbreak(xc->tcBase());
             }}, IsNonSpeculative);
             0x52: m5switchcpu({{
-                AlphaPseudo::switchcpu(xc->xcBase());
+                AlphaPseudo::switchcpu(xc->tcBase());
             }}, IsNonSpeculative);
             0x53: m5addsymbol({{
-                AlphaPseudo::addsymbol(xc->xcBase(), R16, R17);
+                AlphaPseudo::addsymbol(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());

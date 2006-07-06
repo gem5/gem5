@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #ifndef __CPU_BASE_HH__
@@ -38,10 +41,10 @@
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"
 
-class System;
-namespace Kernel { class Statistics; }
 class BranchPred;
-class ExecContext;
+class CheckerCPU;
+class ThreadContext;
+class System;
 
 class BaseCPU : public SimObject
 {
@@ -89,7 +92,7 @@ class BaseCPU : public SimObject
 #endif
 
   protected:
-    std::vector<ExecContext *> execContexts;
+    std::vector<ThreadContext *> threadContexts;
 
   public:
 
@@ -125,6 +128,7 @@ class BaseCPU : public SimObject
         int cpu_id;
         Tick profile;
 #endif
+        BaseCPU *checker;
 
         Params();
     };
@@ -140,11 +144,11 @@ class BaseCPU : public SimObject
 
     virtual void activateWhenReady(int tid) {};
 
-    void registerExecContexts();
+    void registerThreadContexts();
 
     /// Prepare for another CPU to take over execution.  When it is
     /// is ready (drained pipe) it signals the sampler.
-    virtual void switchOut(Sampler *);
+    virtual void switchOut();
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.
@@ -232,10 +236,6 @@ class BaseCPU : public SimObject
   public:
     // Number of CPU cycles simulated
     Stats::Scalar<> numCycles;
-
-#if FULL_SYSTEM
-    Kernel::Statistics *kernelStats;
-#endif
 };
 
 #endif // __CPU_BASE_HH__

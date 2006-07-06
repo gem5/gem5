@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 /** @file
@@ -114,7 +116,6 @@ Uart8250::read(Packet *pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 1);
 
-    pkt->time += pioDelay;
     Addr daddr = pkt->getAddr() - pioAddr;
     pkt->allocate();
 
@@ -124,7 +125,7 @@ Uart8250::read(Packet *pkt)
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
                 if (cons->dataAvailable())
-                    cons->in(*pkt->getPtr<uint8_t>());
+                    pkt->set(cons->in());
                 else {
                     pkt->set((uint8_t)0);
                     // A limited amount of these are ok.
@@ -198,7 +199,6 @@ Uart8250::write(Packet *pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 1);
 
-    pkt->time += pioDelay;
     Addr daddr = pkt->getAddr() - pioAddr;
 
     DPRINTF(Uart, " write register %#x value %#x\n", daddr, pkt->get<uint8_t>());

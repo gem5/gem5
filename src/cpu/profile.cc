@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include <string>
@@ -34,7 +36,7 @@
 #include "base/trace.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
 
 using namespace std;
@@ -118,7 +120,7 @@ FunctionProfile::clear()
 }
 
 void
-FunctionProfile::dump(ExecContext *xc, ostream &os) const
+FunctionProfile::dump(ThreadContext *tc, ostream &os) const
 {
     ccprintf(os, ">>>PC data\n");
     map<Addr, Counter>::const_iterator i, end = pc_count.end();

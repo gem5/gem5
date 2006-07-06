@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Korey Sewell
  */
 
 #include "arch/utility.hh"
@@ -36,18 +39,18 @@
 #include "base/stats/events.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
-#include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/simple/base.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
 #include "mem/packet_impl.hh"
-#include "sim/byteswap.hh"
 #include "sim/builder.hh"
+#include "sim/byteswap.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/sim_events.hh"
@@ -68,16 +71,18 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(Params *p)
-    : BaseCPU(p), mem(p->mem), cpuXC(NULL)
+    : BaseCPU(p), mem(p->mem), thread(NULL)
 {
 #if FULL_SYSTEM
-    cpuXC = new CPUExecContext(this, 0, p->system, p->itb, p->dtb);
+    thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
-    cpuXC = new CPUExecContext(this, /* thread_num */ 0, p->process,
+    thread = new SimpleThread(this, /* thread_num */ 0, p->process,
             /* asid */ 0, mem);
 #endif // !FULL_SYSTEM
 
-    xcProxy = cpuXC->getProxy();
+    thread->setStatus(ThreadContext::Suspended);
+
+    tc = thread->getTC();
 
     numInst = 0;
     startNumInst = 0;
@@ -86,7 +91,7 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
     lastIcacheStall = 0;
     lastDcacheStall = 0;
 
-    execContexts.push_back(xcProxy);
+    threadContexts.push_back(tc);
 }
 
 BaseSimpleCPU::~BaseSimpleCPU()
@@ -176,7 +181,7 @@ BaseSimpleCPU::serialize(ostream &os)
     BaseCPU::serialize(os);
     SERIALIZE_SCALAR(inst);
     nameOut(os, csprintf("%s.xc", name()));
-    cpuXC->serialize(os);
+    thread->serialize(os);
 }
 
 void
@@ -184,7 +189,7 @@ BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     BaseCPU::unserialize(cp, section);
     UNSERIALIZE_SCALAR(inst);
-    cpuXC->unserialize(cp, csprintf("%s.xc", section));
+    thread->unserialize(cp, csprintf("%s.xc", section));
 }
 
 void
@@ -213,16 +218,16 @@ BaseSimpleCPU::copySrcTranslate(Addr src)
     memReq->reset(src & ~(blk_size - 1), blk_size);
 
     // translate to physical address
-    Fault fault = cpuXC->translateDataReadReq(req);
+    Fault fault = thread->translateDataReadReq(req);
 
     if (fault == NoFault) {
-        cpuXC->copySrcAddr = src;
-        cpuXC->copySrcPhysAddr = memReq->paddr + offset;
+        thread->copySrcAddr = src;
+        thread->copySrcPhysAddr = memReq->paddr + offset;
     } else {
         assert(!fault->isAlignmentFault());
 
-        cpuXC->copySrcAddr = 0;
-        cpuXC->copySrcPhysAddr = 0;
+        thread->copySrcAddr = 0;
+        thread->copySrcPhysAddr = 0;
     }
     return fault;
 #else
@@ -239,7 +244,7 @@ BaseSimpleCPU::copy(Addr dest)
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     uint8_t data[blk_size];
-    //assert(cpuXC->copySrcAddr);
+    //assert(thread->copySrcAddr);
     int offset = dest & (blk_size - 1);
 
     // Make sure block doesn't span page
@@ -252,19 +257,19 @@ BaseSimpleCPU::copy(Addr dest)
 
     memReq->reset(dest & ~(blk_size -1), blk_size);
     // translate to physical address
-    Fault fault = cpuXC->translateDataWriteReq(req);
+    Fault fault = thread->translateDataWriteReq(req);
 
     if (fault == NoFault) {
         Addr dest_addr = memReq->paddr + offset;
         // Need to read straight from memory since we have more than 8 bytes.
-        memReq->paddr = cpuXC->copySrcPhysAddr;
-        cpuXC->mem->read(memReq, data);
+        memReq->paddr = thread->copySrcPhysAddr;
+        thread->mem->read(memReq, data);
         memReq->paddr = dest_addr;
-        cpuXC->mem->write(memReq, data);
+        thread->mem->write(memReq, data);
         if (dcacheInterface) {
             memReq->cmd = Copy;
             memReq->completionEvent = NULL;
-            memReq->paddr = cpuXC->copySrcPhysAddr;
+            memReq->paddr = thread->copySrcPhysAddr;
             memReq->dest = dest_addr;
             memReq->size = 64;
             memReq->time = curTick;
@@ -286,7 +291,7 @@ BaseSimpleCPU::copy(Addr dest)
 Addr
 BaseSimpleCPU::dbg_vtophys(Addr addr)
 {
-    return vtophys(xcProxy, addr);
+    return vtophys(tc, addr);
 }
 #endif // FULL_SYSTEM
 
@@ -296,9 +301,9 @@ BaseSimpleCPU::post_interrupt(int int_num, int index)
 {
     BaseCPU::post_interrupt(int_num, index);
 
-    if (cpuXC->status() == ExecContext::Suspended) {
+    if (thread->status() == ThreadContext::Suspended) {
                 DPRINTF(IPI,"Suspended Processor awoke\n");
-        cpuXC->activate();
+        thread->activate();
     }
 }
 #endif // FULL_SYSTEM
@@ -307,15 +312,15 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts() && !cpuXC->inPalMode()) {
+    if (checkInterrupts && check_interrupts() && !thread->inPalMode()) {
         int ipl = 0;
         int summary = 0;
         checkInterrupts = false;
 
-        if (cpuXC->readMiscReg(IPR_SIRR)) {
+        if (thread->readMiscReg(IPR_SIRR)) {
             for (int i = INTLEVEL_SOFTWARE_MIN;
                  i < INTLEVEL_SOFTWARE_MAX; i++) {
-                if (cpuXC->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+                if (thread->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference
                     ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                     summary |= (ULL(1) << i);
@@ -323,7 +328,7 @@ BaseSimpleCPU::checkForInterrupts()
             }
         }
 
-        uint64_t interrupts = cpuXC->cpu->intr_status();
+        uint64_t interrupts = thread->cpu->intr_status();
         for (int i = INTLEVEL_EXTERNAL_MIN;
             i < INTLEVEL_EXTERNAL_MAX; i++) {
             if (interrupts & (ULL(1) << i)) {
@@ -333,17 +338,17 @@ BaseSimpleCPU::checkForInterrupts()
             }
         }
 
-        if (cpuXC->readMiscReg(IPR_ASTRR))
+        if (thread->readMiscReg(IPR_ASTRR))
             panic("asynchronous traps not implemented\n");
 
-        if (ipl && ipl > cpuXC->readMiscReg(IPR_IPLR)) {
-            cpuXC->setMiscReg(IPR_ISR, summary);
-            cpuXC->setMiscReg(IPR_INTID, ipl);
+        if (ipl && ipl > thread->readMiscReg(IPR_IPLR)) {
+            thread->setMiscReg(IPR_ISR, summary);
+            thread->setMiscReg(IPR_INTID, ipl);
 
-            Fault(new InterruptFault)->invoke(xcProxy);
+            Fault(new InterruptFault)->invoke(tc);
 
             DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    cpuXC->readMiscReg(IPR_IPLR), ipl, summary);
+                    thread->readMiscReg(IPR_IPLR), ipl, summary);
         }
     }
 #endif
@@ -351,29 +356,22 @@ BaseSimpleCPU::checkForInterrupts()
 
 
 Fault
-BaseSimpleCPU::setupFetchPacket(Packet *ifetch_pkt)
+BaseSimpleCPU::setupFetchRequest(Request *req)
 {
-    // Try to fetch an instruction
-
     // set up memory request for instruction fetch
-
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",cpuXC->readPC(),
-            cpuXC->readNextPC(),cpuXC->readNextNPC());
-
-    Request *ifetch_req = ifetch_pkt->req;
-    ifetch_req->setVaddr(cpuXC->readPC() & ~3);
-    ifetch_req->setTime(curTick);
-#if FULL_SYSTEM
-    ifetch_req->setFlags((cpuXC->readPC() & 1) ? PHYSICAL : 0);
+#if THE_ISA == ALPHA_ISA
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
+            thread->readNextPC());
 #else
-    ifetch_req->setFlags(0);
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",thread->readPC(),
+            thread->readNextPC(),thread->readNextNPC());
 #endif
 
-    Fault fault = cpuXC->translateInstReq(ifetch_req);
+    req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst),
+                 (FULL_SYSTEM && (thread->readPC() & 1)) ? PHYSICAL : 0,
+                 thread->readPC());
 
-    if (fault == NoFault) {
-        ifetch_pkt->reinitFromRequest();
-    }
+    Fault fault = thread->translateInstReq(req);
 
     return fault;
 }
@@ -383,33 +381,33 @@ void
 BaseSimpleCPU::preExecute()
 {
     // maintain $r0 semantics
-    cpuXC->setIntReg(ZeroReg, 0);
+    thread->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-    cpuXC->setFloatReg(ZeroReg, 0.0);
+    thread->setFloatReg(ZeroReg, 0.0);
 #endif // ALPHA_ISA
 
     // keep an instruction count
     numInst++;
     numInsts++;
 
-    cpuXC->func_exe_inst++;
+    thread->funcExeInst++;
 
     // check for instruction-count-based events
     comInstEventQueue[0]->serviceEvents(numInst);
 
     // decode the instruction
     inst = gtoh(inst);
-    curStaticInst = StaticInst::decode(makeExtMI(inst, cpuXC->readPC()));
+    curStaticInst = StaticInst::decode(makeExtMI(inst, thread->readPC()));
 
-    traceData = Trace::getInstRecord(curTick, xcProxy, this, curStaticInst,
-                                     cpuXC->readPC());
+    traceData = Trace::getInstRecord(curTick, tc, this, curStaticInst,
+                                     thread->readPC());
 
     DPRINTF(Decode,"Decode: Decoded %s instruction (opcode: 0x%x): 0x%x\n",
             curStaticInst->getName(), curStaticInst->getOpcode(),
             curStaticInst->machInst);
 
 #if FULL_SYSTEM
-    cpuXC->setInst(inst);
+    thread->setInst(inst);
 #endif // FULL_SYSTEM
 }
 
@@ -417,18 +415,13 @@ void
 BaseSimpleCPU::postExecute()
 {
 #if FULL_SYSTEM
-    if (system->kernelBinning->fnbin) {
-        assert(kernelStats);
-        system->kernelBinning->execute(xcProxy, inst);
-    }
-
-    if (cpuXC->profile) {
+    if (thread->profile) {
         bool usermode =
-            (cpuXC->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
-        cpuXC->profilePC = usermode ? 1 : cpuXC->readPC();
-        ProfileNode *node = cpuXC->profile->consume(xcProxy, inst);
+            (thread->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+        thread->profilePC = usermode ? 1 : thread->readPC();
+        ProfileNode *node = thread->profile->consume(tc, inst);
         if (node)
-            cpuXC->profileNode = node;
+            thread->profileNode = node;
     }
 #endif
 
@@ -441,7 +434,7 @@ BaseSimpleCPU::postExecute()
         comLoadEventQueue[0]->serviceEvents(numLoad);
     }
 
-    traceFunctions(cpuXC->readPC());
+    traceFunctions(thread->readPC());
 
     if (traceData) {
         traceData->finalize();
@@ -453,20 +446,16 @@ void
 BaseSimpleCPU::advancePC(Fault fault)
 {
     if (fault != NoFault) {
-#if FULL_SYSTEM
-        fault->invoke(xcProxy);
-#else // !FULL_SYSTEM
-        fatal("fault (%s) detected @ PC %08p", fault->name(), cpuXC->readPC());
-#endif // FULL_SYSTEM
+        fault->invoke(tc);
     }
     else {
         // go to the next instruction
-        cpuXC->setPC(cpuXC->readNextPC());
+        thread->setPC(thread->readNextPC());
 #if THE_ISA == ALPHA_ISA
-        cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+        thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 #else
-        cpuXC->setNextPC(cpuXC->readNextNPC());
-        cpuXC->setNextNPC(cpuXC->readNextNPC() + sizeof(MachInst));
+        thread->setNextPC(thread->readNextNPC());
+        thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
 #endif
 
     }
@@ -474,9 +463,9 @@ BaseSimpleCPU::advancePC(Fault fault)
 #if FULL_SYSTEM
     Addr oldpc;
     do {
-        oldpc = cpuXC->readPC();
-        system->pcEventQueue.service(xcProxy);
-    } while (oldpc != cpuXC->readPC());
+        oldpc = thread->readPC();
+        system->pcEventQueue.service(tc);
+    } while (oldpc != thread->readPC());
 #endif
 }
 

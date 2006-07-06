@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #include <sys/types.h>
@@ -124,12 +127,12 @@ DebugContext::checkParams()
 // handy function to schedule DebugBreakEvent on main event queue
 // (callable from debugger)
 //
-extern "C" void sched_break_cycle(Tick when)
+void sched_break_cycle(Tick when)
 {
     new DebugBreakEvent(&mainEventQueue, when);
 }
 
-extern "C" void eventq_dump()
+void eventq_dump()
 {
     mainEventQueue.dump();
 }

@@ -316,22 +316,38 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 
     calcCcCode = '''
-        CcrIccN = (Rd >> 31) & 1;
-        CcrIccZ = ((Rd & 0xFFFFFFFF) == 0);
-        CcrXccN = (Rd >> 63) & 1;
-        CcrXccZ = (Rd == 0);
-        CcrIccV = %(ivValue)s;
-        CcrIccC = %(icValue)s;
-        CcrXccV = %(xvValue)s;
-        CcrXccC = %(xcValue)s;
-        DPRINTF(Sparc, "in = %%d\\n", CcrIccN);
-        DPRINTF(Sparc, "iz = %%d\\n", CcrIccZ);
-        DPRINTF(Sparc, "xn = %%d\\n", CcrXccN);
-        DPRINTF(Sparc, "xz = %%d\\n", CcrXccZ);
-        DPRINTF(Sparc, "iv = %%d\\n", CcrIccV);
-        DPRINTF(Sparc, "ic = %%d\\n", CcrIccC);
-        DPRINTF(Sparc, "xv = %%d\\n", CcrXccV);
-        DPRINTF(Sparc, "xc = %%d\\n", CcrXccC);
+        uint8_t tmp_ccriccc;
+        uint8_t tmp_ccriccv;
+        uint8_t tmp_ccriccz;
+        uint8_t tmp_ccriccn;
+        uint8_t tmp_ccrxccc;
+        uint8_t tmp_ccrxccv;
+        uint8_t tmp_ccrxccz;
+        uint8_t tmp_ccrxccn;
+
+        tmp_ccriccn = (Rd >> 31) & 1;
+        tmp_ccriccz = ((Rd & 0xFFFFFFFF) == 0);
+        tmp_ccrxccn = (Rd >> 63) & 1;
+        tmp_ccrxccz = (Rd == 0);
+        tmp_ccriccv = %(ivValue)s & 1;
+        tmp_ccriccc = %(icValue)s & 1;
+        tmp_ccrxccv = %(xvValue)s & 1;
+        tmp_ccrxccc = %(xcValue)s & 1;
+
+        Ccr =  tmp_ccriccc | tmp_ccriccv << 1 |
+               tmp_ccriccz << 2 | tmp_ccriccn << 3|
+               tmp_ccrxccc << 4 | tmp_ccrxccv << 5|
+               tmp_ccrxccz << 6| tmp_ccrxccn << 7;
+
+
+        DPRINTF(Sparc, "in = %%d\\n", (uint16_t)tmp_ccriccn);
+        DPRINTF(Sparc, "iz = %%d\\n", (uint16_t)tmp_ccriccz);
+        DPRINTF(Sparc, "xn = %%d\\n", (uint16_t)tmp_ccrxccn);
+        DPRINTF(Sparc, "xz = %%d\\n", (uint16_t)tmp_ccrxccz);
+        DPRINTF(Sparc, "iv = %%d\\n", (uint16_t)tmp_ccriccv);
+        DPRINTF(Sparc, "ic = %%d\\n", (uint16_t)tmp_ccriccc);
+        DPRINTF(Sparc, "xv = %%d\\n", (uint16_t)tmp_ccrxccv);
+        DPRINTF(Sparc, "xc = %%d\\n", (uint16_t)tmp_ccrxccc);
         '''
 }};
 

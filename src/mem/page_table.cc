@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -51,6 +54,9 @@ PageTable::PageTable(System *_system, Addr _pageSize)
       system(_system)
 {
     assert(isPowerOf2(pageSize));
+    pTableCache[0].vaddr = 0;
+    pTableCache[1].vaddr = 0;
+    pTableCache[2].vaddr = 0;
 }
 
 PageTable::~PageTable()
@@ -92,7 +98,7 @@ PageTable::allocate(Addr vaddr, int size)
     assert(pageOffset(vaddr) == 0);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        std::map<Addr,Addr>::iterator iter = pTable.find(vaddr);
+        m5::hash_map<Addr,Addr>::iterator iter = pTable.find(vaddr);
 
         if (iter != pTable.end()) {
             // already mapped
@@ -100,6 +106,12 @@ PageTable::allocate(Addr vaddr, int size)
         }
 
         pTable[vaddr] = system->new_page();
+        pTableCache[2].paddr = pTableCache[1].paddr;
+        pTableCache[2].vaddr = pTableCache[1].vaddr;
+        pTableCache[1].paddr = pTableCache[0].paddr;
+        pTableCache[1].vaddr = pTableCache[0].vaddr;
+        pTableCache[0].paddr = pTable[vaddr];
+        pTableCache[0].vaddr = vaddr;
     }
 }
 
@@ -109,7 +121,22 @@ bool
 PageTable::translate(Addr vaddr, Addr &paddr)
 {
     Addr page_addr = pageAlign(vaddr);
-    std::map<Addr,Addr>::iterator iter = pTable.find(page_addr);
+    paddr = 0;
+
+    if (pTableCache[0].vaddr == vaddr) {
+        paddr = pTableCache[0].paddr;
+        return true;
+    }
+    if (pTableCache[1].vaddr == vaddr) {
+        paddr = pTableCache[1].paddr;
+        return true;
+    }
+    if (pTableCache[2].vaddr == vaddr) {
+        paddr = pTableCache[2].paddr;
+        return true;
+    }
+
+    m5::hash_map<Addr,Addr>::iterator iter = pTable.find(page_addr);
 
     if (iter == pTable.end()) {
         return false;
@@ -127,7 +154,7 @@ PageTable::translate(RequestPtr &req)
     assert(pageAlign(req->getVaddr() + req->getSize() - 1)
            == pageAlign(req->getVaddr()));
     if (!translate(req->getVaddr(), paddr)) {
-        return genMachineCheckFault();
+        return genPageTableFault(req->getVaddr());
     }
     req->setPaddr(paddr);
     return page_check(req->getPaddr(), req->getSize());

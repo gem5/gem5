@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
+ *          Steve Reinhardt
+ *          Ali Saidi
  */
 
 /**
@@ -39,6 +43,7 @@
 class Request;
 
 typedef Request* RequestPtr;
+
 
 /** The request is a Load locked/store conditional. */
 const unsigned LOCKED		= 0x001;
@@ -58,142 +63,174 @@ const unsigned PF_EXCLUSIVE	= 0x100;
 const unsigned EVICT_NEXT	= 0x200;
 /** The request should ignore unaligned access faults */
 const unsigned NO_ALIGN_FAULT   = 0x400;
+/** The request was an instruction read. */
+const unsigned INST_READ        = 0x800;
 
 class Request
 {
-    //@todo Make Accesor functions, make these private.
-  public:
-    /** Constructor, needs a bool to signify if it is/isn't Cpu Request. */
-    Request(bool isCpu);
-
-    /** reset the request to it's initial state so it can be reused.*/
-    void resetAll(bool isCpu);
-
-    /** reset the request's addrs times, etc, so but not everything to same
-     * time. */
-    void resetMin();
-
-//First non-cpu request fields
   private:
-    /** The physical address of the request. */
+    /**
+     * The physical address of the request. Valid only if validPaddr
+     * is set. */
     Addr paddr;
-    /** Wether or not paddr is valid (has been written yet). */
-    bool validPaddr;
 
-    /** The size of the request. */
+    /**
+     * The size of the request. This field must be set when vaddr or
+     * paddr is written via setVirt() or setPhys(), so it is always
+     * valid as long as one of the address fields is valid.  */
     int size;
-    /** Wether or not size is valid (has been written yet). */
-    bool validSize;
-
-    /** The time this request was started. Used to calculate latencies. */
-    Tick time;
-    /** Wether or not time is valid (has been written yet). */
-    bool validTime;
-
-    /** Destination address if this is a block copy. */
-    Addr copyDest;
-    /** Wether or not copyDest is valid (has been written yet). */
-    bool validCopyDest;
 
     /** Flag structure for the request. */
     uint32_t flags;
 
-//Accsesors for non-cpu request fields
-  public:
-    /** Accesor for paddr. */
-    Addr getPaddr();
-    /** Accesor for paddr. */
-    void setPaddr(Addr _paddr);
-
-    /** Accesor for size. */
-    int getSize();
-    /** Accesor for size. */
-    void setSize(int _size);
-
-    /** Accesor for time. */
-    Tick getTime();
-    /** Accesor for time. */
-    void setTime(Tick _time);
-
-    /** Accesor for copy dest. */
-    Addr getCopyDest();
-    /** Accesor for copy dest. */
-    void setCopyDest(Addr _copyDest);
-
-    /** Accesor for flags. */
-    uint32_t getFlags();
-    /** Accesor for paddr. */
-    void setFlags(uint32_t _flags);
-
-//Now cpu-request fields
-  private:
-    /** Bool to signify if this is a cpuRequest. */
-    bool cpuReq;
-
-    /** The virtual address of the request. */
-    Addr vaddr;
-    /** Wether or not the vaddr is valid. */
-    bool validVaddr;
+    /**
+     * The time this request was started. Used to calculate
+     * latencies. This field is set to curTick any time paddr or vaddr
+     * is written.  */
+    Tick time;
 
     /** The address space ID. */
     int asid;
-    /** Wether or not the asid is valid. */
-    bool validAsid;
+    /** The virtual address of the request. */
+    Addr vaddr;
 
     /** The return value of store conditional. */
     uint64_t scResult;
-    /** Wether or not the sc result is valid. */
-    bool validScResult;
 
-    /** The cpu number for statistics. */
+    /** The cpu number (for statistics, typically). */
     int cpuNum;
-    /** Wether or not the cpu number is valid. */
-    bool validCpuNum;
-
-    /** The requesting  thread id. */
+    /** The requesting thread id (for statistics, typically). */
     int  threadNum;
-    /** Wether or not the thread id is valid. */
-    bool validThreadNum;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr pc;
-    /** Wether or not the pc is valid. */
+
+    /** Whether or not paddr is valid (has been written yet). */
+    bool validPaddr;
+    /** Whether or not the asid & vaddr are valid. */
+    bool validAsidVaddr;
+    /** Whether or not the sc result is valid. */
+    bool validScResult;
+    /** Whether or not the cpu number & thread ID are valid. */
+    bool validCpuAndThreadNums;
+    /** Whether or not the pc is valid. */
     bool validPC;
 
-//Accessor Functions for cpu request fields
   public:
-    /** Accesor function to determine if this is a cpu request or not.*/
-    bool isCpuRequest();
+    /** Minimal constructor.  No fields are initialized. */
+    Request()
+        : validPaddr(false), validAsidVaddr(false),
+          validScResult(false), validCpuAndThreadNums(false), validPC(false)
+    {}
 
-    /** Accesor function for vaddr.*/
-    Addr getVaddr();
-    /** Accesor function for vaddr.*/
-    void setVaddr(Addr _vaddr);
+    /**
+     * Constructor for physical (e.g. device) requests.  Initializes
+     * just physical address, size, flags, and timestamp (to curTick).
+     * These fields are adequate to perform a request.  */
+    Request(Addr _paddr, int _size, int _flags)
+        : validCpuAndThreadNums(false)
+    { setPhys(_paddr, _size, _flags); }
 
-    /** Accesor function for asid.*/
-    int getAsid();
-    /** Accesor function for asid.*/
-    void setAsid(int _asid);
+    Request(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc,
+            int _cpuNum, int _threadNum)
+    {
+        setThreadContext(_cpuNum, _threadNum);
+        setVirt(_asid, _vaddr, _size, _flags, _pc);
+    }
 
-    /** Accesor function for store conditional return value.*/
-    uint64_t getScResult();
-    /** Accesor function for store conditional return value.*/
-    void setScResult(uint64_t _scResult);
+    /**
+     * Set up CPU and thread numbers. */
+    void setThreadContext(int _cpuNum, int _threadNum)
+    {
+        cpuNum = _cpuNum;
+        threadNum = _threadNum;
+        validCpuAndThreadNums = true;
+    }
 
-    /** Accesor function for cpu number.*/
-    int getCpuNum();
-    /** Accesor function for cpu number.*/
-    void setCpuNum(int _cpuNum);
+    /**
+     * Set up a physical (e.g. device) request in a previously
+     * allocated Request object. */
+    void setPhys(Addr _paddr, int _size, int _flags)
+    {
+        paddr = _paddr;
+        size = _size;
+        flags = _flags;
+        time = curTick;
+        validPaddr = true;
+        validAsidVaddr = false;
+        validPC = false;
+        validScResult = false;
+    }
 
-    /** Accesor function for thread number.*/
-    int getThreadNum();
-    /** Accesor function for thread number.*/
-    void setThreadNum(int _threadNum);
+    /**
+     * Set up a virtual (e.g., CPU) request in a previously
+     * allocated Request object. */
+    void setVirt(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc)
+    {
+        asid = _asid;
+        vaddr = _vaddr;
+        size = _size;
+        flags = _flags;
+        pc = _pc;
+        time = curTick;
+        validPaddr = false;
+        validAsidVaddr = true;
+        validPC = true;
+        validScResult = false;
+    }
 
-    /** Accesor function for pc.*/
-    Addr getPC();
-    /** Accesor function for pc.*/
-    void setPC(Addr _pc);
+    /** Set just the physical address.  This should only be used to
+     * record the result of a translation, and thus the vaddr must be
+     * valid before this method is called.  Otherwise, use setPhys()
+     * to guarantee that the size and flags are also set.
+     */
+    void setPaddr(Addr _paddr)
+    {
+        assert(validAsidVaddr);
+        paddr = _paddr;
+        validPaddr = true;
+    }
+
+    /** Accessor for paddr. */
+    Addr getPaddr() { assert(validPaddr); return paddr; }
+
+    /** Accessor for size. */
+    int getSize() { assert(validPaddr || validAsidVaddr); return size; }
+    /** Accessor for time. */
+    Tick getTime() { assert(validPaddr || validAsidVaddr); return time; }
+
+    /** Accessor for flags. */
+    uint32_t getFlags() { assert(validPaddr || validAsidVaddr); return flags; }
+    /** Accessor for paddr. */
+    void setFlags(uint32_t _flags)
+    { assert(validPaddr || validAsidVaddr); flags = _flags; }
+
+    /** Accessor function for vaddr.*/
+    Addr getVaddr() { assert(validAsidVaddr); return vaddr; }
+
+    /** Accessor function for asid.*/
+    int getAsid() { assert(validAsidVaddr); return asid; }
+
+    /** Accessor function to check if sc result is valid. */
+    bool scResultValid() { return validScResult; }
+    /** Accessor function for store conditional return value.*/
+    uint64_t getScResult() { assert(validScResult); return scResult; }
+    /** Accessor function for store conditional return value.*/
+    void setScResult(uint64_t _scResult)
+    { scResult = _scResult; validScResult = true; }
+
+    /** Accessor function for cpu number.*/
+    int getCpuNum() { assert(validCpuAndThreadNums); return cpuNum; }
+    /** Accessor function for thread number.*/
+    int getThreadNum()  { assert(validCpuAndThreadNums); return threadNum; }
+
+    /** Accessor function for pc.*/
+    Addr getPC() { assert(validPC); return pc; }
+
+    /** Accessor Function to Check Cacheability. */
+    bool isUncacheable() { return getFlags() & UNCACHEABLE; }
+
+    bool isInstRead() { return getFlags() & INST_READ; }
 
     friend class Packet;
 };

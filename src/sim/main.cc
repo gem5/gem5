@@ -24,24 +24,30 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Raasch
+ *          Nathan Binkert
+ *          Steve Reinhardt
  */
 
 ///
 /// @file sim/main.cc
 ///
+#include <Python.h>	// must be before system headers... see Python docs
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <libgen.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <getopt.h>
 
 #include <list>
 #include <string>
 #include <vector>
 
-#include "base/copyright.hh"
-#include "base/embedfile.hh"
+#include "base/callback.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -51,11 +57,12 @@
 #include "base/time.hh"
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
-#include "python/pyconfig.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "sim/async.hh"
 #include "sim/builder.hh"
-#include "sim/configfile.hh"
 #include "sim/host.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -119,31 +126,39 @@ showBriefHelp(ostream &out)
 
     ccprintf(out, "Usage:\n");
     ccprintf(out,
-"%s [-d <dir>] [-E <var>[=<val>]] [-I <dir>] [-P <python>]\n"
-"        [--<var>=<val>] <config file>\n"
+"%s [-p <path>] [-i ] [-h] <config file>\n"
 "\n"
-"   -d            set the output directory to <dir>\n"
-"   -E            set the environment variable <var> to <val> (or 'True')\n"
-"   -I            add the directory <dir> to python's path\n"
-"   -P            execute <python> directly in the configuration\n"
-"   --var=val     set the python variable <var> to '<val>'\n"
-"   <configfile>  config file name (ends in .py)\n\n",
+" -p, --path <path>  prepends <path> to PYTHONPATH instead of using\n"
+"                    built-in zip archive.  Useful when developing/debugging\n"
+"                    changes to built-in Python libraries, as the new Python\n"
+"                    can be tested without building a new m5 binary.\n\n"
+" -i, --interactive  forces entry into interactive mode after the supplied\n"
+"                    script is executed (just like the -i option to  the\n"
+"                    Python interpreter).\n\n"
+" -h                 Prints this help\n\n"
+" <configfile>       config file name which ends in .py. (Normally you can\n"
+"                    run <configfile> --help to get help on that config files\n"
+"                    parameters.\n\n",
              prog);
 
-    ccprintf(out, "%s -X\n   -X            extract embedded files\n\n", prog);
-    ccprintf(out, "%s -h\n   -h            print short help\n\n", prog);
 }
+
+const char *briefCopyright =
+"Copyright (c) 2001-2006\n"
+"The Regents of The University of Michigan\n"
+"All Rights Reserved\n";
 
 /// Print welcome message.
 void
 sayHello(ostream &out)
 {
-    extern const char *compileDate;	// from date.cc
+    extern const char *compileDate;     // from date.cc
 
     ccprintf(out, "M5 Simulator System\n");
     // display copyright
     ccprintf(out, "%s\n", briefCopyright);
-    ccprintf(out, "M5 compiled on %d\n", compileDate);
+    ccprintf(out, "M5 compiled %d\n", compileDate);
+    ccprintf(out, "M5 started %s\n", Time::start);
 
     char *host = getenv("HOSTNAME");
     if (!host)
@@ -151,65 +166,18 @@ sayHello(ostream &out)
 
     if (host)
         ccprintf(out, "M5 executing on %s\n", host);
-
-    ccprintf(out, "M5 simulation started %s\n", Time::start);
 }
 
-///
-/// Echo the command line for posterity in such a way that it can be
-/// used to rerun the same simulation (given the same .ini files).
-///
-void
-echoCommandLine(int argc, char **argv, ostream &out)
-{
-    out << "command line: " << argv[0];
-    for (int i = 1; i < argc; i++) {
-        string arg(argv[i]);
 
-        out << ' ';
-
-        // If the arg contains spaces, we need to quote it.
-        // The rest of this is overkill to make it look purty.
-
-        // print dashes first outside quotes
-        int non_dash_pos = arg.find_first_not_of("-");
-        out << arg.substr(0, non_dash_pos);	// print dashes
-        string body = arg.substr(non_dash_pos);	// the rest
-
-        // if it's an assignment, handle the lhs & rhs separately
-        int eq_pos = body.find("=");
-        if (eq_pos == string::npos) {
-            out << quote(body);
-        }
-        else {
-            string lhs(body.substr(0, eq_pos));
-            string rhs(body.substr(eq_pos + 1));
-
-            out << quote(lhs) << "=" << quote(rhs);
-        }
-    }
-    out << endl << endl;
-}
-
-char *
-getOptionString(int &index, int argc, char **argv)
-{
-    char *option = argv[index] + 2;
-    if (*option != '\0')
-        return option;
-
-    // We didn't find an argument, it must be in the next variable.
-    if (++index >= argc)
-        panic("option string for option '%s' not found", argv[index - 1]);
-
-    return argv[index];
-}
+extern "C" { void init_cc_main(); }
 
 int
 main(int argc, char **argv)
 {
-    // Save off program name
+    // Saze off program name
     myProgName = argv[0];
+
+    sayHello(cerr);
 
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
     signal(SIGTRAP, SIG_IGN);
@@ -218,164 +186,247 @@ main(int argc, char **argv)
     signal(SIGINT, exitNowHandler);		// dump final stats and exit
     signal(SIGABRT, abortHandler);
 
-    bool configfile_found = false;
-    PythonConfig pyconfig;
-    string outdir;
+    Py_SetProgramName(argv[0]);
 
-    if (argc < 2) {
+    // default path to m5 python code is the currently executing
+    // file... Python ZipImporter will find embedded zip archive
+    char *pythonpath = argv[0];
+
+    bool interactive = false;
+    bool show_help = false;
+    bool getopt_done = false;
+    int opt_index = 0;
+
+    static struct option long_options[] = {
+        {"python", 1, 0, 'p'},
+        {"interactive", 0, 0, 'i'},
+        {"help", 0, 0, 'h'},
+        {0,0,0,0}
+    };
+
+    do {
+        switch (getopt_long(argc, argv, "+p:ih", long_options, &opt_index)) {
+            // -p <path> prepends <path> to PYTHONPATH instead of
+            // using built-in zip archive.  Useful when
+            // developing/debugging changes to built-in Python
+            // libraries, as the new Python can be tested without
+            // building a new m5 binary.
+          case 'p':
+            pythonpath = optarg;
+            break;
+
+            // -i forces entry into interactive mode after the
+            // supplied script is executed (just like the -i option to
+            // the Python interpreter).
+          case 'i':
+            interactive = true;
+            break;
+
+          case 'h':
+            show_help = true;
+            break;
+          case -1:
+            getopt_done = true;
+            break;
+
+          default:
+            fatal("Unrecognized option %c\n", optopt);
+        }
+    } while (!getopt_done);
+
+    if (show_help) {
         showBriefHelp(cerr);
         exit(1);
     }
 
-    sayHello(cerr);
+    // Fix up argc & argv to hide arguments we just processed.
+    // getopt() sets optind to the index of the first non-processed
+    // argv element.
+    argc -= optind;
+    argv += optind;
 
-    // Parse command-line options.
-    // Since most of the complex options are handled through the
-    // config database, we don't mess with getopts, and just parse
-    // manually.
-    for (int i = 1; i < argc; ++i) {
-        char *arg_str = argv[i];
+    // Set up PYTHONPATH to make sure the m5 module is found
+    string newpath(pythonpath);
 
-        // if arg starts with '--', parse as a special python option
-        // of the format --<python var>=<string value>, if the arg
-        // starts with '-', it should be a simulator option with a
-        // format similar to getopt.  In any other case, treat the
-        // option as a configuration file name and load it.
-        if (arg_str[0] == '-' && arg_str[1] == '-') {
-            string str = &arg_str[2];
-            string var, val;
+    char *oldpath = getenv("PYTHONPATH");
+    if (oldpath != NULL) {
+        newpath += ":";
+        newpath += oldpath;
+    }
 
-            if (!split_first(str, var, val, '='))
-                panic("Could not parse configuration argument '%s'\n"
-                      "Expecting --<variable>=<value>\n", arg_str);
+    if (setenv("PYTHONPATH", newpath.c_str(), true) == -1)
+        fatal("setenv: %s\n", strerror(errno));
 
-            pyconfig.setVariable(var, val);
-        } else if (arg_str[0] == '-') {
-            char *option;
-            string var, val;
+    // initialize embedded Python interpreter
+    Py_Initialize();
+    PySys_SetArgv(argc, argv);
 
-            // switch on second char
-            switch (arg_str[1]) {
-              case 'd':
-                outdir = getOptionString(i, argc, argv);
-                break;
+    // initialize SWIG 'cc_main' module
+    init_cc_main();
 
-              case 'h':
-                showBriefHelp(cerr);
-                exit(1);
-
-              case 'E':
-                option = getOptionString(i, argc, argv);
-                if (!split_first(option, var, val, '='))
-                    val = "True";
-
-                if (setenv(var.c_str(), val.c_str(), true) == -1)
-                    panic("setenv: %s\n", strerror(errno));
-                break;
-
-              case 'I':
-                option = getOptionString(i, argc, argv);
-                pyconfig.addPath(option);
-                break;
-
-              case 'P':
-                option = getOptionString(i, argc, argv);
-                pyconfig.writeLine(option);
-                break;
-
-              case 'X': {
-                  list<EmbedFile> lst;
-                  EmbedMap::all(lst);
-                  list<EmbedFile>::iterator i = lst.begin();
-                  list<EmbedFile>::iterator end = lst.end();
-
-                  while (i != end) {
-                      cprintf("Embedded File: %s\n", i->name);
-                      cout.write(i->data, i->length);
-                      ++i;
-                  }
-
-                  return 0;
-              }
-
-              default:
-                showBriefHelp(cerr);
-                panic("invalid argument '%s'\n", arg_str);
-            }
-        } else {
-            string file(arg_str);
-            string base, ext;
-
-            if (!split_last(file, base, ext, '.') || ext != "py")
-                panic("Config file '%s' must end in '.py'\n", file);
-
-            pyconfig.load(file);
-            configfile_found = true;
+    if (argc > 0) {
+        // extra arg(s): first is script file, remaining ones are args
+        // to script file
+        char *filename = argv[0];
+        FILE *fp = fopen(filename, "r");
+        if (!fp) {
+            fatal("cannot open file '%s'\n", filename);
         }
+
+        PyRun_AnyFile(fp, filename);
+    } else {
+        // no script file argument... force interactive prompt
+        interactive = true;
     }
 
-    if (outdir.empty()) {
-        char *env = getenv("OUTPUT_DIR");
-        outdir = env ? env : ".";
+    if (interactive) {
+        // The following code to import readline was copied from Python
+        // 2.4.3's Modules/main.c.
+        // Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006
+        // Python Software Foundation; All Rights Reserved
+        // We should only enable this if we're actually using an
+        // interactive prompt.
+        PyObject *v;
+        v = PyImport_ImportModule("readline");
+        if (v == NULL)
+            PyErr_Clear();
+        else
+            Py_DECREF(v);
+
+        PyRun_InteractiveLoop(stdin, "stdin");
     }
 
-    simout.setDirectory(outdir);
+    // clean up Python intepreter.
+    Py_Finalize();
+}
 
-    char *env = getenv("CONFIG_OUTPUT");
-    if (!env)
-        env = "config.out";
-    configStream = simout.find(env);
 
-    if (!configfile_found)
-        panic("no configuration file specified!");
+void
+setOutputDir(const string &dir)
+{
+    simout.setDirectory(dir);
+}
+
+
+IniFile inifile;
+
+SimObject *
+createSimObject(const string &name)
+{
+    return SimObjectClass::createObject(inifile, name);
+}
+
+
+/**
+ * Pointer to the Python function that maps names to SimObjects.
+ */
+PyObject *resolveFunc = NULL;
+
+/**
+ * Convert a pointer to the Python object that SWIG wraps around a C++
+ * SimObject pointer back to the actual C++ pointer.  See main.i.
+ */
+extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
+
+
+SimObject *
+resolveSimObject(const string &name)
+{
+    PyObject *pyPtr = PyEval_CallFunction(resolveFunc, "(s)", name.c_str());
+    if (pyPtr == NULL) {
+        PyErr_Print();
+        panic("resolveSimObject: failure on call to Python for %s", name);
+    }
+
+    SimObject *simObj = convertSwigSimObjectPtr(pyPtr);
+    if (simObj == NULL)
+        panic("resolveSimObject: failure on pointer conversion for %s", name);
+
+    return simObj;
+}
+
+
+/**
+ * Load config.ini into C++ database.  Exported to Python via SWIG;
+ * invoked from m5.instantiate().
+ */
+void
+loadIniFile(PyObject *_resolveFunc)
+{
+    resolveFunc = _resolveFunc;
+    configStream = simout.find("config.out");
 
     // The configuration database is now complete; start processing it.
-    IniFile inifile;
-    if (!pyconfig.output(inifile))
-        panic("Error processing python code");
+    inifile.load("config.ini");
 
     // Initialize statistics database
     Stats::InitSimStats();
+}
 
-    // Now process the configuration hierarchy and create the SimObjects.
-    ConfigHierarchy configHierarchy(inifile);
-    configHierarchy.build();
-    configHierarchy.createSimObjects();
 
+/**
+ * Look up a MemObject port.  Helper function for connectPorts().
+ */
+Port *
+lookupPort(SimObject *so, const std::string &name, int i)
+{
+    MemObject *mo = dynamic_cast<MemObject *>(so);
+    if (mo == NULL) {
+        warn("error casting SimObject %s to MemObject", so->name());
+        return NULL;
+    }
+
+    Port *p = mo->getPort(name, i);
+    if (p == NULL)
+        warn("error looking up port %s on object %s", name, so->name());
+    return p;
+}
+
+
+/**
+ * Connect the described MemObject ports.  Called from Python via SWIG.
+ */
+int
+connectPorts(SimObject *o1, const std::string &name1, int i1,
+             SimObject *o2, const std::string &name2, int i2)
+{
+    Port *p1 = lookupPort(o1, name1, i1);
+    Port *p2 = lookupPort(o2, name2, i2);
+
+    if (p1 == NULL || p2 == NULL) {
+        warn("connectPorts: port lookup error");
+        return 0;
+    }
+
+    p1->setPeer(p2);
+    p2->setPeer(p1);
+
+    return 1;
+}
+
+/**
+ * Do final initialization steps after object construction but before
+ * start of simulation.
+ */
+void
+finalInit()
+{
     // Parse and check all non-config-hierarchy parameters.
     ParamContext::parseAllContexts(inifile);
     ParamContext::checkAllContexts();
 
-    // Print hello message to stats file if it's actually a file.  If
-    // it's not (i.e. it's cout or cerr) then we already did it above.
-    if (simout.isFile(*outputStream))
-        sayHello(*outputStream);
-
-    // Echo command line and all parameter settings to stats file as well.
-    echoCommandLine(argc, argv, *outputStream);
+    // Echo all parameter settings to stats file as well.
     ParamContext::showAllContexts(*configStream);
-
-    // Any objects that can't connect themselves until after construction should
-    // do so now
-    SimObject::connectAll();
 
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();
 
     // Restore checkpointed state, if any.
+#if 0
     configHierarchy.unserializeSimObjects();
-
-    // Done processing the configuration database.
-    // Check for unreferenced entries.
-    if (inifile.printUnreferenced())
-        panic("unreferenced sections/entries in the intermediate ini file");
+#endif
 
     SimObject::regAllStats();
-
-    // uncomment the following to get PC-based execution-time profile
-#ifdef DO_PROFILE
-    init_profile((char *)&_init, (char *)&_fini);
-#endif
 
     // Check to make sure that the stats package is properly initialized
     Stats::check();
@@ -383,16 +434,61 @@ main(int argc, char **argv)
     // Reset to put the stats in a consistent state.
     Stats::reset();
 
-    warn("Entering event queue.  Starting simulation...\n");
     SimStartup();
-    while (!mainEventQueue.empty()) {
+}
+
+
+/** Simulate for num_cycles additional cycles.  If num_cycles is -1
+ * (the default), do not limit simulation; some other event must
+ * terminate the loop.  Exported to Python via SWIG.
+ * @return The SimLoopExitEvent that caused the loop to exit.
+ */
+SimLoopExitEvent *
+simulate(Tick num_cycles = -1)
+{
+    warn("Entering event queue @ %d.  Starting simulation...\n", curTick);
+
+    // Fix up num_cycles.  Special default value -1 means simulate
+    // "forever"... schedule event at MaxTick just to be safe.
+    // Otherwise it's a delta for additional cycles to simulate past
+    // curTick, and thus must be non-negative.
+    if (num_cycles == -1)
+        num_cycles = MaxTick;
+    else if (num_cycles < 0)
+        fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
+    else
+        num_cycles = curTick + num_cycles;
+
+    Event *limit_event = new SimLoopExitEvent(num_cycles,
+                                              "simulate() limit reached");
+
+    while (1) {
+        // there should always be at least one event (the SimLoopExitEvent
+        // we just scheduled) in the queue
+        assert(!mainEventQueue.empty());
         assert(curTick <= mainEventQueue.nextTick() &&
                "event scheduled in the past");
 
         // forward current cycle to the time of the first event on the
         // queue
         curTick = mainEventQueue.nextTick();
-        mainEventQueue.serviceOne();
+        Event *exit_event = mainEventQueue.serviceOne();
+        if (exit_event != NULL) {
+            // hit some kind of exit event; return to Python
+            // event must be subclass of SimLoopExitEvent...
+            SimLoopExitEvent *se_event = dynamic_cast<SimLoopExitEvent *>(exit_event);
+            if (se_event == NULL)
+                panic("Bogus exit event class!");
+
+            // if we didn't hit limit_event, delete it
+            if (se_event != limit_event) {
+                assert(limit_event->scheduled());
+                limit_event->deschedule();
+                delete limit_event;
+            }
+
+            return se_event;
+        }
 
         if (async_event) {
             async_event = false;
@@ -412,7 +508,7 @@ main(int argc, char **argv)
 
             if (async_exit) {
                 async_exit = false;
-                new SimExitEvent("User requested STOP");
+                exitSimLoop("user interrupt received");
             }
 
             if (async_io || async_alarm) {
@@ -423,11 +519,78 @@ main(int argc, char **argv)
         }
     }
 
-    // This should never happen... every conceivable way for the
-    // simulation to terminate (hit max cycles/insts, signal,
-    // simulated system halts/exits) generates an exit event, so we
-    // should never run out of events on the queue.
-    exitNow("no events on event loop!  All CPUs must be idle.", 1);
+    // not reached... only exit is return on SimLoopExitEvent
+}
 
-    return 0;
+Event *
+createCountedQuiesce()
+{
+    return new CountedQuiesceEvent();
+}
+
+void
+cleanupCountedQuiesce(Event *counted_quiesce)
+{
+    CountedQuiesceEvent *event =
+        dynamic_cast<CountedQuiesceEvent *>(counted_quiesce);
+    if (event == NULL) {
+        fatal("Called cleanupCountedQuiesce() on an event that was not "
+              "a CountedQuiesceEvent.");
+    }
+    assert(event->getCount() == 0);
+    delete event;
+}
+
+void
+serializeAll()
+{
+    Serializable::serializeAll();
+}
+
+void
+unserializeAll()
+{
+    Serializable::unserializeAll();
+}
+
+/**
+ * Queue of C++ callbacks to invoke on simulator exit.
+ */
+CallbackQueue exitCallbacks;
+
+/**
+ * Register an exit callback.
+ */
+void
+registerExitCallback(Callback *callback)
+{
+    exitCallbacks.add(callback);
+}
+
+BaseCPU *
+convertToBaseCPUPtr(SimObject *obj)
+{
+    BaseCPU *ptr = dynamic_cast<BaseCPU *>(obj);
+
+    if (ptr == NULL)
+        warn("Casting to BaseCPU pointer failed");
+    return ptr;
+}
+
+/**
+ * Do C++ simulator exit processing.  Exported to SWIG to be invoked
+ * when simulator terminates via Python's atexit mechanism.
+ */
+void
+doExitCleanup()
+{
+    exitCallbacks.process();
+    exitCallbacks.clear();
+
+    cout.flush();
+
+    ParamContext::cleanupAllContexts();
+
+    // print simulation stats
+    Stats::DumpNow();
 }

@@ -25,6 +25,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
 
 ###################################################
 #
@@ -37,17 +39,20 @@
 #
 # You can build M5 in a different directory as long as there is a
 # 'build/<CONFIG>' somewhere along the target path.  The build system
-# expdects that all configs under the same build directory are being
+# expects that all configs under the same build directory are being
 # built for the same host system.
 #
 # Examples:
-#   These two commands are equivalent.  The '-u' option tells scons to
-#   search up the directory tree for this SConstruct file.
+#
+#   The following two commands are equivalent.  The '-u' option tells
+#   scons to search up the directory tree for this SConstruct file.
 #   % cd <path-to-src>/m5 ; scons build/ALPHA_FS/m5.debug
 #   % cd <path-to-src>/m5/build/ALPHA_FS; scons -u m5.debug
-#   These two commands are equivalent and demonstrate building in a
-#   directory outside of the source tree.  The '-C' option tells scons
-#   to chdir to the specified directory to find this SConstruct file.
+#
+#   The following two commands are equivalent and demonstrate building
+#   in a directory outside of the source tree.  The '-C' option tells
+#   scons to chdir to the specified directory to find this SConstruct
+#   file.
 #   % cd <path-to-src>/m5 ; scons /local/foo/build/ALPHA_FS/m5.debug
 #   % cd /local/foo/build/ALPHA_FS; scons -C <path-to-src>/m5 m5.debug
 #
@@ -62,9 +67,24 @@
 import sys
 import os
 
-# Check for recent-enough Python and SCons versions
-EnsurePythonVersion(2,3)
-EnsureSConsVersion(0,96,91)
+# Check for recent-enough Python and SCons versions.  If your system's
+# default installation of Python is not recent enough, you can use a
+# non-default installation of the Python interpreter by either (1)
+# rearranging your PATH so that scons finds the non-default 'python'
+# first or (2) explicitly invoking an alternative interpreter on the
+# scons script, e.g., "/usr/local/bin/python2.4 `which scons` [args]".
+EnsurePythonVersion(2,4)
+
+# Ironically, SCons 0.96 dies if you give EnsureSconsVersion a
+# 3-element version number.
+min_scons_version = (0,96,91)
+try:
+    EnsureSConsVersion(*min_scons_version)
+except:
+    print "Error checking current SCons version."
+    print "SCons", ".".join(map(str,min_scons_version)), "or greater required."
+    Exit(2)
+    
 
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
@@ -139,7 +159,13 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
 
-env.SConsignFile("sconsign")
+env.SConsignFile(os.path.join(build_root,"sconsign"))
+
+# Default duplicate option is to use hard links, but this messes up
+# when you use emacs to edit a file in the target dir, as emacs moves
+# file to file~ then copies to file, breaking the link.  Symbolic
+# (soft) links work better.
+env.SetOption('duplicate', 'soft-copy')
 
 # I waffle on this setting... it does avoid a few painful but
 # unnecessary builds, but it also seems to make trivial builds take
@@ -159,7 +185,37 @@ if sys.platform == 'cygwin':
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
 env.Append(CPPPATH=[Dir('ext/dnet')])
 
-# Default libraries
+# Find Python include and library directories for embedding the
+# interpreter.  For consistency, we will use the same Python
+# installation used to run scons (and thus this script).  If you want
+# to link in an alternate version, see above for instructions on how
+# to invoke scons with a different copy of the Python interpreter.
+
+# Get brief Python version name (e.g., "python2.4") for locating
+# include & library files
+py_version_name = 'python' + sys.version[:3]
+
+# include path, e.g. /usr/local/include/python2.4
+env.Append(CPPPATH = os.path.join(sys.exec_prefix, 'include', py_version_name))
+env.Append(LIBS = py_version_name)
+# add library path too if it's not in the default place
+if sys.exec_prefix != '/usr':
+    env.Append(LIBPATH = os.path.join(sys.exec_prefix, 'lib'))
+
+# Set up SWIG flags & scanner
+
+env.Append(SWIGFLAGS=Split('-c++ -python -modern $_CPPINCFLAGS'))
+
+import SCons.Scanner
+
+swig_inc_re = '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+
+swig_scanner = SCons.Scanner.ClassicCPP("SwigScan", ".i", "CPPPATH",
+                                        swig_inc_re)
+
+env.Append(SCANNERS = swig_scanner)
+
+# Other default libraries
 env.Append(LIBS=['z'])
 
 # Platform-specific configuration.  Note again that we assume that all
@@ -207,7 +263,8 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
-                       'FullCPU', 'AlphaFullCPU']
+                       'FullCPU', 'O3CPU',
+                       'OzoneCPU']
 
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -233,9 +290,9 @@ sticky_opts.AddOptions(
     BoolOption('USE_SSE2',
                'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
                False),
-    BoolOption('STATS_BINNING', 'Bin statistics by CPU mode', have_mysql),
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
+    BoolOption('USE_CHECKER', 'Use checker for detailed CPU models', False),
     ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
     ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
     BoolOption('BATCH', 'Use batch pool for build and tests', False),
@@ -248,10 +305,10 @@ nonsticky_opts.AddOptions(
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 
-# These options get exported to #defines in config/*.hh (see m5/SConscript).
+# These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                      'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
-                     'STATS_BINNING']
+                     'USE_CHECKER']
 
 # Define a handy 'no-op' action
 def no_action(target, source, env):
@@ -299,6 +356,32 @@ def config_emitter(target, source, env):
 config_builder = Builder(emitter = config_emitter, action = config_action)
 
 env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+
+###################################################
+#
+# Define a SCons builder for copying files.  This is used by the
+# Python zipfile code in src/python/SConscript, but is placed up here
+# since it's potentially more generally applicable.
+#
+###################################################
+
+copy_builder = Builder(action = Copy("$TARGET", "$SOURCE"))
+
+env.Append(BUILDERS = { 'CopyFile' : copy_builder })
+
+###################################################
+#
+# Define a simple SCons builder to concatenate files.
+#
+# Used to append the Python zip archive to the executable.
+#
+###################################################
+
+concat_builder = Builder(action = Action(['cat $SOURCES > $TARGET',
+                                          'chmod +x $TARGET']))
+
+env.Append(BUILDERS = { 'Concat' : concat_builder })
+
 
 # base help text
 help_text = '''
@@ -404,11 +487,11 @@ for build_path in build_paths:
     if env['USE_SSE2']:
         env.Append(CCFLAGS='-msse2')
 
-    # The m5/SConscript file sets up the build rules in 'env' according
+    # The src/SConscript file sets up the build rules in 'env' according
     # to the configured options.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
     envList = SConscript('src/SConscript', build_dir = build_path,
-                         exports = 'env', duplicate = False)
+                         exports = 'env')
 
     # Set up the regression tests for each build.
 #    for e in envList:

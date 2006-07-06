@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #ifndef __CPU_STATIC_INST_HH__
@@ -32,6 +34,7 @@
 #include <bitset>
 #include <string>
 
+#include "base/bitfield.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/refcnt.hh"
@@ -41,13 +44,19 @@
 
 // forward declarations
 struct AlphaSimpleImpl;
-class ExecContext;
+struct OzoneImpl;
+struct SimpleImpl;
+class ThreadContext;
 class DynInst;
 class Packet;
 
 template <class Impl>
 class AlphaDynInst;
 
+template <class Impl>
+class OzoneDynInst;
+
+class CheckerCPU;
 class FastCPU;
 class AtomicSimpleCPU;
 class TimingSimpleCPU;
@@ -100,6 +109,7 @@ class StaticInstBase : public RefCounted
         IsMemRef,	///< References memory (load, store, or prefetch).
         IsLoad,		///< Reads from memory (load or prefetch).
         IsStore,	///< Writes to memory.
+        IsStoreConditional,    ///< Store conditional instruction.
         IsInstPrefetch,	///< Instruction-cache prefetch.
         IsDataPrefetch,	///< Data-cache prefetch.
         IsCopy,         ///< Fast Cache block copy
@@ -124,6 +134,10 @@ class StaticInstBase : public RefCounted
         IsWriteBarrier,	///< Is a write barrier
 
         IsNonSpeculative, ///< Should not be executed speculatively
+        IsQuiesce,      ///< Is a quiesce instruction
+
+        IsIprAccess,    ///< Accesses IPRs
+        IsUnverifiable, ///< Can't be verified by a checker
 
         NumFlags
     };
@@ -187,6 +201,7 @@ class StaticInstBase : public RefCounted
     bool isMemRef()    	  const { return flags[IsMemRef]; }
     bool isLoad()	  const { return flags[IsLoad]; }
     bool isStore()	  const { return flags[IsStore]; }
+    bool isStoreConditional()	  const { return flags[IsStoreConditional]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
     bool isCopy()         const { return flags[IsCopy];}
@@ -211,6 +226,9 @@ class StaticInstBase : public RefCounted
     bool isMemBarrier()   const { return flags[IsMemBarrier]; }
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
+    bool isQuiesce() const { return flags[IsQuiesce]; }
+    bool isIprAccess() const { return flags[IsIprAccess]; }
+    bool isUnverifiable() const { return flags[IsUnverifiable]; }
     //@}
 
     /// Operation class.  Used to select appropriate function unit in issue.
@@ -340,12 +358,12 @@ class StaticInst : public StaticInstBase
 
     /**
      * Return the target address for an indirect branch (jump).  The
-     * register value is read from the supplied execution context, so
-     * the result is valid only if the execution context is about to
+     * register value is read from the supplied thread context, so
+     * the result is valid only if the thread context is about to
      * execute the branch in question.  Invalid if not an indirect
      * branch (i.e. isIndirectCtrl() should be true).
      */
-    virtual Addr branchTarget(ExecContext *xc) const
+    virtual Addr branchTarget(ThreadContext *tc) const
     {
         panic("StaticInst::branchTarget() called on instruction "
               "that is not an indirect branch.");
@@ -355,7 +373,7 @@ class StaticInst : public StaticInstBase
      * Return true if the instruction is a control transfer, and if so,
      * return the target address as well.
      */
-    bool hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const;
+    bool hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const;
 
     /**
      * Return string representation of disassembled instruction.
@@ -394,16 +412,10 @@ class StaticInst : public StaticInstBase
     //This is defined as inline below.
     static StaticInstPtr decode(ExtMachInst mach_inst);
 
-    //MIPS Decoder Debug Functions
-    int getOpcode() { return (machInst & 0xFC000000) >> 26 ; }//31..26
-    int getRs() {     return (machInst & 0x03E00000) >> 21; }    //25...21
-    int getRt() {     return (machInst & 0x001F0000) >> 16;  }    //20...16
-    int getRd() {     return (machInst & 0x0000F800) >> 11; }    //15...11
-    int getImm() {  return (machInst & 0x0000FFFF); }    //15...0
-    int getFunction(){  return (machInst & 0x0000003F); }//5...0
-    int getBranch(){  return (machInst & 0x0000FFFF); }//15...0
-    int getJump(){    return (machInst & 0x03FFFFFF); }//5...0
-    int getHint(){    return (machInst & 0x000007C0) >> 6; }  //10...6
+    /// Return opcode of machine instruction
+    uint32_t getOpcode() { return bits(machInst, 31, 26);}
+
+    /// Return name of machine instruction
     std::string getName() { return mnemonic; }
 };
 

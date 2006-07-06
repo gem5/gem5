@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #ifndef __REMOTE_GDB_HH__
@@ -37,7 +39,7 @@
 #include "base/socket.hh"
 
 class System;
-class ExecContext;
+class ThreadContext;
 class PhysicalMemory;
 
 class GDBListener;
@@ -78,7 +80,7 @@ class RemoteGDB
 
     System *system;
     PhysicalMemory *pmem;
-    ExecContext *context;
+    ThreadContext *context;
 
   protected:
     uint8_t getbyte();
@@ -96,10 +98,10 @@ class RemoteGDB
     template <class T> void write(Addr addr, T data);
 
   public:
-    RemoteGDB(System *system, ExecContext *context);
+    RemoteGDB(System *system, ThreadContext *context);
     ~RemoteGDB();
 
-    void replaceExecContext(ExecContext *xc) { context = xc; }
+    void replaceThreadContext(ThreadContext *tc) { context = tc; }
 
     void attach(int fd);
     void detach();
@@ -131,7 +133,7 @@ class RemoteGDB
         HardBreakpoint(RemoteGDB *_gdb, Addr addr);
         std::string name() { return gdb->name() + ".hwbkpt"; }
 
-        virtual void process(ExecContext *xc);
+        virtual void process(ThreadContext *tc);
     };
     friend class HardBreakpoint;
 

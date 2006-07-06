@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #include <assert.h>
@@ -35,7 +38,6 @@
 #include "base/trace.hh"
 #include "base/stats/events.hh"
 #include "base/serializer.hh"
-#include "sim/configfile.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -71,6 +73,7 @@ SimObject::SimObject(Params *p)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
+    state = Atomic;
 }
 
 //
@@ -86,6 +89,7 @@ SimObject::SimObject(const string &_name)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
+    state = Atomic;
 }
 
 void
@@ -217,6 +221,24 @@ SimObject::serializeAll(ostream &os)
    }
 }
 
+void
+SimObject::unserializeAll(Checkpoint *cp)
+{
+    SimObjectList::reverse_iterator ri = simObjectList.rbegin();
+    SimObjectList::reverse_iterator rend = simObjectList.rend();
+
+    for (; ri != rend; ++ri) {
+        SimObject *obj = *ri;
+        DPRINTFR(Config, "Unserializing '%s'\n",
+                 obj->name());
+        if(cp->sectionExists(obj->name()))
+            obj->unserialize(cp, obj->name());
+        else
+            warn("Not unserializing '%s': no section found in checkpoint.\n",
+                 obj->name());
+   }
+}
+
 #ifdef DEBUG
 //
 // static function: flag which objects should have the debugger break
@@ -234,7 +256,6 @@ SimObject::debugObjectBreak(const string &objs)
    }
 }
 
-extern "C"
 void
 debugObjectBreak(const char *objs)
 {
@@ -249,10 +270,50 @@ SimObject::recordEvent(const std::string &stat)
         Stats::recordEvent(stat);
 }
 
-void
-SimObject::drain(Serializer *serializer)
+bool
+SimObject::quiesce(Event *quiesce_event)
 {
-    serializer->signalDrained();
+    if (state != QuiescedAtomic && state != Atomic) {
+        panic("Must implement your own quiesce function if it is to be used "
+              "in timing mode!");
+    }
+    state = QuiescedAtomic;
+    return false;
+}
+
+void
+SimObject::resume()
+{
+    if (state == QuiescedAtomic) {
+        state = Atomic;
+    } else if (state == QuiescedTiming) {
+        state = Timing;
+    }
+}
+
+void
+SimObject::setMemoryMode(State new_mode)
+{
+    assert(new_mode == Timing || new_mode == Atomic);
+    if (state == QuiescedAtomic && new_mode == Timing) {
+        state = QuiescedTiming;
+    } else if (state == QuiescedTiming && new_mode == Atomic) {
+        state = QuiescedAtomic;
+    } else {
+        state = new_mode;
+    }
+}
+
+void
+SimObject::switchOut()
+{
+    panic("Unimplemented!");
+}
+
+void
+SimObject::takeOverFrom(BaseCPU *cpu)
+{
+    panic("Unimplemented!");
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("SimObject", SimObject)

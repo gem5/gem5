@@ -24,15 +24,18 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#ifndef __CPU_O3_CPU_CPU_POLICY_HH__
-#define __CPU_O3_CPU_CPU_POLICY_HH__
+#ifndef __CPU_O3_CPU_POLICY_HH__
+#define __CPU_O3_CPU_POLICY_HH__
 
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/inst_queue.hh"
-#include "cpu/o3/ldstq.hh"
+#include "cpu/o3/lsq.hh"
+#include "cpu/o3/lsq_unit.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/regfile.hh"
 #include "cpu/o3/rename_map.hh"
@@ -47,42 +50,70 @@
 
 #include "cpu/o3/comm.hh"
 
+/**
+ * Struct that defines the key classes to be used by the CPU.  All
+ * classes use the typedefs defined here to determine what are the
+ * classes of the other stages and communication buffers.  In order to
+ * change a structure such as the IQ, simply change the typedef here
+ * to use the desired class instead, and recompile.  In order to
+ * create a different CPU to be used simultaneously with this one, see
+ * the alpha_impl.hh file for instructions.
+ */
 template<class Impl>
 struct SimpleCPUPolicy
 {
-    typedef TwobitBPredUnit<Impl> BPredUnit;
+    /** Typedef for the branch prediction unit (which includes the BP,
+     * RAS, and BTB).
+     */
+    typedef BPredUnit<Impl> BPredUnit;
+    /** Typedef for the register file.  Most classes assume a unified
+     * physical register file.
+     */
     typedef PhysRegFile<Impl> RegFile;
+    /** Typedef for the freelist of registers. */
     typedef SimpleFreeList FreeList;
+    /** Typedef for the rename map. */
     typedef SimpleRenameMap RenameMap;
+    /** Typedef for the ROB. */
     typedef ROB<Impl> ROB;
+    /** Typedef for the instruction queue/scheduler. */
     typedef InstructionQueue<Impl> IQ;
+    /** Typedef for the memory dependence unit. */
     typedef MemDepUnit<StoreSet, Impl> MemDepUnit;
-    typedef LDSTQ<Impl> LDSTQ;
+    /** Typedef for the LSQ. */
+    typedef LSQ<Impl> LSQ;
+    /** Typedef for the thread-specific LSQ units. */
+    typedef LSQUnit<Impl> LSQUnit;
 
-    typedef SimpleFetch<Impl> Fetch;
-    typedef SimpleDecode<Impl> Decode;
-    typedef SimpleRename<Impl> Rename;
-    typedef SimpleIEW<Impl> IEW;
-    typedef SimpleCommit<Impl> Commit;
+    /** Typedef for fetch. */
+    typedef DefaultFetch<Impl> Fetch;
+    /** Typedef for decode. */
+    typedef DefaultDecode<Impl> Decode;
+    /** Typedef for rename. */
+    typedef DefaultRename<Impl> Rename;
+    /** Typedef for Issue/Execute/Writeback. */
+    typedef DefaultIEW<Impl> IEW;
+    /** Typedef for commit. */
+    typedef DefaultCommit<Impl> Commit;
 
     /** The struct for communication between fetch and decode. */
-    typedef SimpleFetchSimpleDecode<Impl> FetchStruct;
+    typedef DefaultFetchDefaultDecode<Impl> FetchStruct;
 
     /** The struct for communication between decode and rename. */
-    typedef SimpleDecodeSimpleRename<Impl> DecodeStruct;
+    typedef DefaultDecodeDefaultRename<Impl> DecodeStruct;
 
     /** The struct for communication between rename and IEW. */
-    typedef SimpleRenameSimpleIEW<Impl> RenameStruct;
+    typedef DefaultRenameDefaultIEW<Impl> RenameStruct;
 
     /** The struct for communication between IEW and commit. */
-    typedef SimpleIEWSimpleCommit<Impl> IEWStruct;
+    typedef DefaultIEWDefaultCommit<Impl> IEWStruct;
 
     /** The struct for communication within the IEW stage. */
     typedef IssueStruct<Impl> IssueStruct;
 
     /** The struct for all backwards communication. */
-    typedef TimeBufStruct TimeStruct;
+    typedef TimeBufStruct<Impl> TimeStruct;
 
 };
 
-#endif //__CPU_O3_CPU_CPU_POLICY_HH__
+#endif //__CPU_O3_CPU_POLICY_HH__

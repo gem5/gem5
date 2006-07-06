@@ -1,9 +1,10 @@
-from m5 import *
+from m5.config import *
 from MemObject import MemObject
 
 class PioDevice(MemObject):
     type = 'PioDevice'
     abstract = True
+    pio = Port("Programmed I/O port")
     platform = Param.Platform(Parent.any, "Platform this device is part of")
     system = Param.System(Parent.any, "System this device is part of")
 
@@ -16,3 +17,4 @@ class BasicPioDevice(PioDevice):
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
+    dma = Port("DMA port")

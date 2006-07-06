@@ -24,27 +24,29 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 #include "base/misc.hh"
 #include "cpu/o3/sat_counter.hh"
 
 SatCounter::SatCounter()
-    : maxVal(0), counter(0)
+    : initialVal(0), counter(0)
 {
 }
 
 SatCounter::SatCounter(unsigned bits)
-    : maxVal((1 << bits) - 1), counter(0)
+    : initialVal(0), maxVal((1 << bits) - 1), counter(0)
 {
 }
 
-SatCounter::SatCounter(unsigned bits, unsigned initial_val)
-    : maxVal((1 << bits) - 1), counter(initial_val)
+SatCounter::SatCounter(unsigned bits, uint8_t initial_val)
+    : initialVal(initialVal), maxVal((1 << bits) - 1), counter(initial_val)
 {
     // Check to make sure initial value doesn't exceed the max counter value.
     if (initial_val > maxVal) {
-        panic("BP: Initial counter value exceeds max size.");
+        fatal("BP: Initial counter value exceeds max size.");
     }
 }
 
@@ -52,20 +54,4 @@ void
 SatCounter::setBits(unsigned bits)
 {
     maxVal = (1 << bits) - 1;
-}
-
-void
-SatCounter::increment()
-{
-    if(counter < maxVal) {
-        ++counter;
-    }
-}
-
-void
-SatCounter::decrement()
-{
-    if(counter > 0) {
-        --counter;
-    }
 }

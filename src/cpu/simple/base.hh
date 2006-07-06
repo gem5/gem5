@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Dave Greene
+ *          Nathan Binkert
  */
 
 #ifndef __CPU_SIMPLE_BASE_HH__
@@ -32,7 +36,7 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/sampler/sampler.hh"
 #include "cpu/static_inst.hh"
@@ -57,7 +61,7 @@ class Process;
 
 #endif // FULL_SYSTEM
 
-class ExecContext;
+class ThreadContext;
 class Checkpoint;
 
 namespace Trace {
@@ -104,10 +108,13 @@ class BaseSimpleCPU : public BaseCPU
     virtual ~BaseSimpleCPU();
 
   public:
-    // execution context
-    CPUExecContext *cpuXC;
+    /** SimpleThread object, provides all the architectural state. */
+    SimpleThread *thread;
 
-    ExecContext *xcProxy;
+    /** ThreadContext object, provides an interface for external
+     * objects to modify this thread's state.
+     */
+    ThreadContext *tc;
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
@@ -129,7 +136,7 @@ class BaseSimpleCPU : public BaseCPU
     StaticInstPtr curStaticInst;
 
     void checkForInterrupts();
-    Fault setupFetchPacket(Packet *ifetch_pkt);
+    Fault setupFetchRequest(Request *req);
     void preExecute();
     void postExecute();
     void advancePC(Fault fault);
@@ -213,104 +220,104 @@ class BaseSimpleCPU : public BaseCPU
 
     uint64_t readIntReg(const StaticInst *si, int idx)
     {
-        return cpuXC->readIntReg(si->srcRegIdx(idx));
+        return thread->readIntReg(si->srcRegIdx(idx));
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatReg(reg_idx, width);
+        return thread->readFloatReg(reg_idx, width);
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatReg(reg_idx);
+        return thread->readFloatReg(reg_idx);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegBits(reg_idx, width);
+        return thread->readFloatRegBits(reg_idx, width);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return cpuXC->readFloatRegBits(reg_idx);
+        return thread->readFloatRegBits(reg_idx);
     }
 
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        cpuXC->setIntReg(si->destRegIdx(idx), val);
+        thread->setIntReg(si->destRegIdx(idx), val);
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatReg(reg_idx, val, width);
+        thread->setFloatReg(reg_idx, val, width);
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatReg(reg_idx, val);
+        thread->setFloatReg(reg_idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx,
                          FloatRegBits val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegBits(reg_idx, val, width);
+        thread->setFloatRegBits(reg_idx, val, width);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        cpuXC->setFloatRegBits(reg_idx, val);
+        thread->setFloatRegBits(reg_idx, val);
     }
 
-    uint64_t readPC() { return cpuXC->readPC(); }
-    uint64_t readNextPC() { return cpuXC->readNextPC(); }
-    uint64_t readNextNPC() { return cpuXC->readNextNPC(); }
+    uint64_t readPC() { return thread->readPC(); }
+    uint64_t readNextPC() { return thread->readNextPC(); }
+    uint64_t readNextNPC() { return thread->readNextNPC(); }
 
-    void setPC(uint64_t val) { cpuXC->setPC(val); }
-    void setNextPC(uint64_t val) { cpuXC->setNextPC(val); }
-    void setNextNPC(uint64_t val) { cpuXC->setNextNPC(val); }
+    void setPC(uint64_t val) { thread->setPC(val); }
+    void setNextPC(uint64_t val) { thread->setNextPC(val); }
+    void setNextNPC(uint64_t val) { thread->setNextNPC(val); }
 
     MiscReg readMiscReg(int misc_reg)
     {
-        return cpuXC->readMiscReg(misc_reg);
+        return thread->readMiscReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return cpuXC->readMiscRegWithEffect(misc_reg, fault);
+        return thread->readMiscRegWithEffect(misc_reg, fault);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return cpuXC->setMiscReg(misc_reg, val);
+        return thread->setMiscReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return cpuXC->setMiscRegWithEffect(misc_reg, val);
+        return thread->setMiscRegWithEffect(misc_reg, val);
     }
 
 #if FULL_SYSTEM
-    Fault hwrei() { return cpuXC->hwrei(); }
-    int readIntrFlag() { return cpuXC->readIntrFlag(); }
-    void setIntrFlag(int val) { cpuXC->setIntrFlag(val); }
-    bool inPalMode() { return cpuXC->inPalMode(); }
-    void ev5_trap(Fault fault) { fault->invoke(xcProxy); }
-    bool simPalCheck(int palFunc) { return cpuXC->simPalCheck(palFunc); }
+    Fault hwrei() { return thread->hwrei(); }
+    int readIntrFlag() { return thread->readIntrFlag(); }
+    void setIntrFlag(int val) { thread->setIntrFlag(val); }
+    bool inPalMode() { return thread->inPalMode(); }
+    void ev5_trap(Fault fault) { fault->invoke(tc); }
+    bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
-    void syscall(int64_t callnum) { cpuXC->syscall(callnum); }
+    void syscall(int64_t callnum) { thread->syscall(callnum); }
 #endif
 
-    bool misspeculating() { return cpuXC->misspeculating(); }
-    ExecContext *xcBase() { return xcProxy; }
+    bool misspeculating() { return thread->misspeculating(); }
+    ThreadContext *tcBase() { return tc; }
 };
 
 #endif // __CPU_SIMPLE_BASE_HH__

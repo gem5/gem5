@@ -24,9 +24,12 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Lisa Hsu
  */
 
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "kern/system_events.hh"
 #include "kern/tru64/tru64_events.hh"
@@ -39,23 +42,23 @@
 
 using namespace TheISA;
 
-//void SkipFuncEvent::process(ExecContext *xc);
+//void SkipFuncEvent::process(ExecContext *tc);
 
 void
-BadAddrEvent::process(ExecContext *xc)
+BadAddrEvent::process(ThreadContext *tc)
 {
     // The following gross hack is the equivalent function to the
     // annotation for vmunix::badaddr in:
     // simos/simulation/apps/tcl/osf/tlaser.tcl
 
-    uint64_t a0 = xc->readIntReg(ArgumentReg0);
+    uint64_t a0 = tc->readIntReg(ArgumentReg0);
 
     AddrRangeList resp;
     AddrRangeList snoop;
     AddrRangeIter iter;
     bool found = false;
 
-    xc->getPhysPort()->getPeerAddressRanges(resp, snoop);
+    tc->getPhysPort()->getPeerAddressRanges(resp, snoop);
     for(iter = resp.begin(); iter != resp.end(); iter++)
     {
         if (*iter == (TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask))
@@ -65,41 +68,41 @@ BadAddrEvent::process(ExecContext *xc)
     if (!TheISA::IsK0Seg(a0) || found ) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
-        xc->setIntReg(ReturnValueReg, 0x1);
-        SkipFuncEvent::process(xc);
+        tc->setIntReg(ReturnValueReg, 0x1);
+        SkipFuncEvent::process(tc);
     }
     else
         DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
 }
 
 void
-PrintfEvent::process(ExecContext *xc)
+PrintfEvent::process(ThreadContext *tc)
 {
     if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << xc->getCpuPtr()->name() << ": ";
+        DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
 
-        AlphaArguments args(xc);
+        AlphaArguments args(tc);
         tru64::Printf(args);
     }
 }
 
 void
-DebugPrintfEvent::process(ExecContext *xc)
+DebugPrintfEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
         if (!raw)
-            DebugOut() << curTick << ": " << xc->getCpuPtr()->name() << ": ";
+            DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
 
-        AlphaArguments args(xc);
+        AlphaArguments args(tc);
         tru64::Printf(args);
     }
 }
 
 void
-DumpMbufEvent::process(ExecContext *xc)
+DumpMbufEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
-        AlphaArguments args(xc);
+        AlphaArguments args(tc);
         tru64::DumpMbuf(args);
     }
 }

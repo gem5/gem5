@@ -24,29 +24,32 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Gabe Black
  */
 
 #include "base/misc.hh"
 #include "sim/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 
 #if !FULL_SYSTEM
-void FaultBase::invoke(ExecContext * xc)
+void FaultBase::invoke(ThreadContext * tc)
 {
-    fatal("fault (%s) detected @ PC 0x%08p", name(), xc->readPC());
+    fatal("fault (%s) detected @ PC 0x%08p", name(), tc->readPC());
 }
 #else
-void FaultBase::invoke(ExecContext * xc)
+void FaultBase::invoke(ThreadContext * tc)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), xc->readPC());
-    xc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
+    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), tc->readPC());
+    tc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
 
-    assert(!xc->misspeculating());
+    assert(!tc->misspeculating());
 }
 #endif
 
-void UnimpFault::invoke(ExecContext * xc)
+void UnimpFault::invoke(ThreadContext * tc)
 {
     panic("Unimpfault: %s\n", panicStr.c_str());
 }

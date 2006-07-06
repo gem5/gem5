@@ -24,13 +24,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 #include "base/trace.hh"
 
 #include "cpu/o3/free_list.hh"
 
-SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
+SimpleFreeList::SimpleFreeList(unsigned activeThreads,
+                               unsigned _numLogicalIntRegs,
                                unsigned _numPhysicalIntRegs,
                                unsigned _numLogicalFloatRegs,
                                unsigned _numPhysicalFloatRegs)
@@ -40,43 +43,30 @@ SimpleFreeList::SimpleFreeList(unsigned _numLogicalIntRegs,
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalRegs(numPhysicalIntRegs + numPhysicalFloatRegs)
 {
-    DPRINTF(FreeList, "FreeList: Creating new free list object.\n");
-
-    // DEBUG stuff.
-    freeIntRegsScoreboard.resize(numPhysicalIntRegs);
-
-    freeFloatRegsScoreboard.resize(numPhysicalRegs);
-
-    for (PhysRegIndex i = 0; i < numLogicalIntRegs; ++i) {
-        freeIntRegsScoreboard[i] = 0;
-    }
+    DPRINTF(FreeList, "Creating new free list object.\n");
 
     // Put all of the extra physical registers onto the free list.  This
     // means excluding all of the base logical registers.
-    for (PhysRegIndex i = numLogicalIntRegs;
+    for (PhysRegIndex i = numLogicalIntRegs * activeThreads;
          i < numPhysicalIntRegs; ++i)
     {
         freeIntRegs.push(i);
-
-        freeIntRegsScoreboard[i] = 1;
-    }
-
-    for (PhysRegIndex i = 0; i < numPhysicalIntRegs + numLogicalFloatRegs;
-         ++i)
-    {
-        freeFloatRegsScoreboard[i] = 0;
     }
 
     // Put all of the extra physical registers onto the free list.  This
     // means excluding all of the base logical registers.  Because the
     // float registers' indices start where the physical registers end,
     // some math must be done to determine where the free registers start.
-    for (PhysRegIndex i = numPhysicalIntRegs + numLogicalFloatRegs;
-         i < numPhysicalRegs; ++i)
+    PhysRegIndex i = numPhysicalIntRegs + (numLogicalFloatRegs * activeThreads);
+
+    for ( ; i < numPhysicalRegs; ++i)
     {
         freeFloatRegs.push(i);
-
-        freeFloatRegsScoreboard[i] = 1;
     }
 }
 
+std::string
+SimpleFreeList::name() const
+{
+    return "cpu.freelist";
+}

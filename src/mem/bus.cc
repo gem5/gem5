@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 /**
@@ -36,7 +38,7 @@
 #include "sim/builder.hh"
 
 Port *
-Bus::getPort(const std::string &if_name)
+Bus::getPort(const std::string &if_name, int idx)
 {
     // if_name ignored?  forced to be empty?
     int id = interfaces.size();
@@ -72,8 +74,34 @@ Bus::recvTiming(Packet *pkt)
         assert(dest != pkt->getSrc()); // catch infinite loops
         port = interfaces[dest];
     }
-    return port->sendTiming(pkt);
+    if (port->sendTiming(pkt))  {
+        // packet was successfully sent, just return true.
+        return true;
+    }
+
+    // packet not successfully sent
+    retryList.push_back(interfaces[pkt->getSrc()]);
+    return false;
 }
+
+void
+Bus::recvRetry(int id)
+{
+    // Go through all the elements on the list calling sendRetry on each
+    // This is not very efficient at all but it works. Ultimately we should end
+    // up with something that is more intelligent.
+    int initialSize = retryList.size();
+    int i;
+    Port *p;
+
+    for (i = 0; i < initialSize; i++) {
+        assert(retryList.size() > 0);
+        p = retryList.front();
+        retryList.pop_front();
+        p->sendRetry();
+    }
+}
+
 
 Port *
 Bus::findPort(Addr addr, int id)

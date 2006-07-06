@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
 #include <cstring>
@@ -37,6 +40,7 @@
 #include "sim/builder.hh"
 #include "sim/host.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/root.hh"
 
@@ -96,7 +100,7 @@ void
 Root::startup()
 {
     if (max_tick != 0)
-        new SimExitEvent(curTick + max_tick, "reached maximum cycle count");
+        exitSimLoop(curTick + max_tick, "reached maximum cycle count");
 
     if (progress_interval != 0)
         new ProgressEvent(&mainEventQueue, progress_interval);

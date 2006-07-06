@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Lisa Hsu
+ *          Ali Saidi
  */
 
 #ifndef __SYSTEM_EVENTS_HH__
@@ -39,20 +43,7 @@ class SkipFuncEvent : public PCEvent
     SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
-};
-
-class FnEvent : public PCEvent
-{
-  public:
-    FnEvent(PCEventQueue *q, const std::string &desc, Addr addr,
-            Stats::MainBin *bin);
-    virtual void process(ExecContext *xc);
-    std::string myname() const { return _name; }
-
-  private:
-    std::string _name;
-    Stats::MainBin *mybin;
+    virtual void process(ThreadContext *tc);
 };
 
 class IdleStartEvent : public PCEvent
@@ -61,26 +52,7 @@ class IdleStartEvent : public PCEvent
     IdleStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
-    virtual void process(ExecContext *xc);
+    virtual void process(ThreadContext *tc);
 };
-
-class InterruptStartEvent : public PCEvent
-{
-  public:
-    InterruptStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ExecContext *xc);
-};
-
-class InterruptEndEvent : public PCEvent
-{
-  public:
-    InterruptEndEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ExecContext *xc);
-};
-
 
 #endif // __SYSTEM_EVENTS_HH__

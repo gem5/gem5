@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,148 +24,308 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
+ *          Korey Sewell
  */
-
-#ifndef __CPU_O3_CPU_ROB_IMPL_HH__
-#define __CPU_O3_CPU_ROB_IMPL_HH__
 
 #include "config/full_system.hh"
 #include "cpu/o3/rob.hh"
 
+using namespace std;
+
 template <class Impl>
-ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth)
+ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
+               string _smtROBPolicy, unsigned _smtROBThreshold,
+               unsigned _numThreads)
     : numEntries(_numEntries),
       squashWidth(_squashWidth),
       numInstsInROB(0),
-      squashedSeqNum(0)
+      squashedSeqNum(0),
+      numThreads(_numThreads)
 {
-    doneSquashing = true;
+    for (int tid=0; tid  < numThreads; tid++) {
+        doneSquashing[tid] = true;
+        threadEntries[tid] = 0;
+    }
+
+    string policy = _smtROBPolicy;
+
+    //Convert string to lowercase
+    std::transform(policy.begin(), policy.end(), policy.begin(),
+                   (int(*)(int)) tolower);
+
+    //Figure out rob policy
+    if (policy == "dynamic") {
+        robPolicy = Dynamic;
+
+        //Set Max Entries to Total ROB Capacity
+        for (int i = 0; i < numThreads; i++) {
+            maxEntries[i]=numEntries;
+        }
+
+    } else if (policy == "partitioned") {
+        robPolicy = Partitioned;
+        DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
+
+        //@todo:make work if part_amt doesnt divide evenly.
+        int part_amt = numEntries / numThreads;
+
+        //Divide ROB up evenly
+        for (int i = 0; i < numThreads; i++) {
+            maxEntries[i]=part_amt;
+        }
+
+    } else if (policy == "threshold") {
+        robPolicy = Threshold;
+        DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
+
+        int threshold =  _smtROBThreshold;;
+
+        //Divide up by threshold amount
+        for (int i = 0; i < numThreads; i++) {
+            maxEntries[i]=threshold;
+        }
+    } else {
+        assert(0 && "Invalid ROB Sharing Policy.Options Are:{Dynamic,"
+                    "Partitioned, Threshold}");
+    }
+}
+
+template <class Impl>
+std::string
+ROB<Impl>::name() const
+{
+    return cpu->name() + ".rob";
 }
 
 template <class Impl>
 void
-ROB<Impl>::setCPU(FullCPU *cpu_ptr)
+ROB<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 
-    // Set the tail to the beginning of the CPU instruction list so that
-    // upon the first instruction being inserted into the ROB, the tail
-    // iterator can simply be incremented.
-    tail = cpu->instList.begin();
+    // Set the per-thread iterators to the end of the instruction list.
+    for (int i=0; i < numThreads;i++) {
+        squashIt[i] = instList[i].end();
+    }
 
-    // Set the squash iterator to the end of the instruction list.
-    squashIt = cpu->instList.end();
+    // Initialize the "universal" ROB head & tail point to invalid
+    // pointers
+    head = instList[0].end();
+    tail = instList[0].end();
+}
+
+template <class Impl>
+void
+ROB<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+{
+    DPRINTF(ROB, "Setting active threads list pointer.\n");
+    activeThreads = at_ptr;
+}
+
+template <class Impl>
+void
+ROB<Impl>::switchOut()
+{
+    for (int tid = 0; tid < numThreads; tid++) {
+        instList[tid].clear();
+    }
+}
+
+template <class Impl>
+void
+ROB<Impl>::takeOverFrom()
+{
+    for (int tid=0; tid  < numThreads; tid++) {
+        doneSquashing[tid] = true;
+        threadEntries[tid] = 0;
+        squashIt[tid] = instList[tid].end();
+    }
+    numInstsInROB = 0;
+
+    // Initialize the "universal" ROB head & tail point to invalid
+    // pointers
+    head = instList[0].end();
+    tail = instList[0].end();
+}
+
+template <class Impl>
+void
+ROB<Impl>::resetEntries()
+{
+    if (robPolicy != Dynamic || numThreads > 1) {
+        int active_threads = (*activeThreads).size();
+
+        list<unsigned>::iterator threads  = (*activeThreads).begin();
+        list<unsigned>::iterator list_end = (*activeThreads).end();
+
+        while (threads != list_end) {
+            if (robPolicy == Partitioned) {
+                maxEntries[*threads++] = numEntries / active_threads;
+            } else if (robPolicy == Threshold && active_threads == 1) {
+                maxEntries[*threads++] = numEntries;
+            }
+        }
+    }
+}
+
+template <class Impl>
+int
+ROB<Impl>::entryAmount(int num_threads)
+{
+    if (robPolicy == Partitioned) {
+        return numEntries / num_threads;
+    } else {
+        return 0;
+    }
 }
 
 template <class Impl>
 int
 ROB<Impl>::countInsts()
 {
-    // Start at 1; if the tail matches cpu->instList.begin(), then there is
-    // one inst in the ROB.
-    int return_val = 1;
+    int total=0;
 
-    // There are quite a few special cases.  Do not use this function other
-    // than for debugging purposes.
-    if (cpu->instList.begin() == cpu->instList.end()) {
-        // In this case there are no instructions in the list.  The ROB
-        // must be empty.
-        return 0;
-    } else if (tail == cpu->instList.end()) {
-        // In this case, the tail is not yet pointing to anything valid.
-        // The ROB must be empty.
-        return 0;
-    }
+    for (int i=0;i < numThreads;i++)
+        total += countInsts(i);
 
-    // Iterate through the ROB from the head to the tail, counting the
-    // entries.
-    for (InstIt_t i = cpu->instList.begin(); i != tail; ++i)
-    {
-        assert(i != cpu->instList.end());
-        ++return_val;
-    }
+    return total;
+}
 
-    return return_val;
-
-    // Because the head won't be tracked properly until the ROB gets the
-    // first instruction, and any time that the ROB is empty and has not
-    // yet gotten the instruction, this function doesn't work.
-//    return numInstsInROB;
+template <class Impl>
+int
+ROB<Impl>::countInsts(unsigned tid)
+{
+    return instList[tid].size();
 }
 
 template <class Impl>
 void
 ROB<Impl>::insertInst(DynInstPtr &inst)
 {
-    // Make sure we have the right number of instructions.
-    assert(numInstsInROB == countInsts());
-    // Make sure the instruction is valid.
+    //assert(numInstsInROB == countInsts());
     assert(inst);
 
-    DPRINTF(ROB, "ROB: Adding inst PC %#x to the ROB.\n", inst->readPC());
+    DPRINTF(ROB, "Adding inst PC %#x to the ROB.\n", inst->readPC());
 
-    // If the ROB is full then exit.
     assert(numInstsInROB != numEntries);
 
-    ++numInstsInROB;
+    int tid = inst->threadNumber;
 
-    // Increment the tail iterator, moving it one instruction back.
-    // There is a special case if the ROB was empty prior to this insertion,
-    // in which case the tail will be pointing at instList.end().  If that
-    // happens, then reset the tail to the beginning of the list.
-    if (tail != cpu->instList.end()) {
-        ++tail;
-    } else {
-        tail = cpu->instList.begin();
+    instList[tid].push_back(inst);
+
+    //Set Up head iterator if this is the 1st instruction in the ROB
+    if (numInstsInROB == 0) {
+        head = instList[tid].begin();
+        assert((*head) == inst);
     }
 
-    // Make sure the tail iterator is actually pointing at the instruction
-    // added.
+    //Must Decrement for iterator to actually be valid  since __.end()
+    //actually points to 1 after the last inst
+    tail = instList[tid].end();
+    tail--;
+
+    inst->setInROB();
+
+    ++numInstsInROB;
+    ++threadEntries[tid];
+
     assert((*tail) == inst);
 
-    DPRINTF(ROB, "ROB: Now has %d instructions.\n", numInstsInROB);
-
+    DPRINTF(ROB, "[tid:%i] Now has %d instructions.\n", tid, threadEntries[tid]);
 }
 
 // Whatever calls this function needs to ensure that it properly frees up
 // registers prior to this function.
+/*
 template <class Impl>
 void
 ROB<Impl>::retireHead()
 {
-    assert(numInstsInROB == countInsts());
+    //assert(numInstsInROB == countInsts());
+    assert(numInstsInROB > 0);
+
+    int tid = (*head)->threadNumber;
+
+    retireHead(tid);
+
+    if (numInstsInROB == 0) {
+        tail = instList[tid].end();
+    }
+}
+*/
+
+template <class Impl>
+void
+ROB<Impl>::retireHead(unsigned tid)
+{
+    //assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
 
     // Get the head ROB instruction.
-    DynInstPtr head_inst = cpu->instList.front();
+    InstIt head_it = instList[tid].begin();
 
-    // Make certain this can retire.
+    DynInstPtr head_inst = (*head_it);
+
     assert(head_inst->readyToCommit());
 
-    DPRINTF(ROB, "ROB: Retiring head instruction of the ROB, "
-            "instruction PC %#x, seq num %i\n", head_inst->readPC(),
+    DPRINTF(ROB, "[tid:%u]: Retiring head instruction, "
+            "instruction PC %#x,[sn:%lli]\n", tid, head_inst->readPC(),
             head_inst->seqNum);
 
-    // Keep track of how many instructions are in the ROB.
     --numInstsInROB;
+    --threadEntries[tid];
 
-    // Tell CPU to remove the instruction from the list of instructions.
-    // A special case is needed if the instruction being retired is the
-    // only instruction in the ROB; otherwise the tail iterator will become
-    // invalidated.
+    head_inst->clearInROB();
+    head_inst->setCommitted();
+
+    instList[tid].erase(head_it);
+
+    //Update "Global" Head of ROB
+    updateHead();
+
+    // @todo: A special case is needed if the instruction being
+    // retired is the only instruction in the ROB; otherwise the tail
+    // iterator will become invalidated.
     cpu->removeFrontInst(head_inst);
-
-    if (numInstsInROB == 0) {
-        tail = cpu->instList.end();
-    }
 }
-
+/*
 template <class Impl>
 bool
 ROB<Impl>::isHeadReady()
 {
     if (numInstsInROB != 0) {
-        return cpu->instList.front()->readyToCommit();
+        return (*head)->readyToCommit();
+    }
+
+    return false;
+}
+*/
+template <class Impl>
+bool
+ROB<Impl>::isHeadReady(unsigned tid)
+{
+    if (threadEntries[tid] != 0) {
+        return instList[tid].front()->readyToCommit();
+    }
+
+    return false;
+}
+
+template <class Impl>
+bool
+ROB<Impl>::canCommit()
+{
+    //@todo: set ActiveThreads through ROB or CPU
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    while (threads != (*activeThreads).end()) {
+        unsigned tid = *threads++;
+
+        if (isHeadReady(tid)) {
+            return true;
+        }
     }
 
     return false;
@@ -175,128 +335,336 @@ template <class Impl>
 unsigned
 ROB<Impl>::numFreeEntries()
 {
-    assert(numInstsInROB == countInsts());
+    //assert(numInstsInROB == countInsts());
 
     return numEntries - numInstsInROB;
 }
 
 template <class Impl>
-void
-ROB<Impl>::doSquash()
+unsigned
+ROB<Impl>::numFreeEntries(unsigned tid)
 {
-    DPRINTF(ROB, "ROB: Squashing instructions.\n");
+    return maxEntries[tid] - threadEntries[tid];
+}
 
-    assert(squashIt != cpu->instList.end());
+template <class Impl>
+void
+ROB<Impl>::doSquash(unsigned tid)
+{
+    DPRINTF(ROB, "[tid:%u]: Squashing instructions until [sn:%i].\n",
+            tid, squashedSeqNum);
+
+    assert(squashIt[tid] != instList[tid].end());
+
+    if ((*squashIt[tid])->seqNum < squashedSeqNum) {
+        DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
+                tid);
+
+        squashIt[tid] = instList[tid].end();
+
+        doneSquashing[tid] = true;
+        return;
+    }
+
+    bool robTailUpdate = false;
 
     for (int numSquashed = 0;
-         numSquashed < squashWidth && (*squashIt)->seqNum != squashedSeqNum;
+         numSquashed < squashWidth &&
+         squashIt[tid] != instList[tid].end() &&
+         (*squashIt[tid])->seqNum > squashedSeqNum;
          ++numSquashed)
     {
-        // Ensure that the instruction is younger.
-        assert((*squashIt)->seqNum > squashedSeqNum);
-
-        DPRINTF(ROB, "ROB: Squashing instruction PC %#x, seq num %i.\n",
-                (*squashIt)->readPC(), (*squashIt)->seqNum);
+        DPRINTF(ROB, "[tid:%u]: Squashing instruction PC %#x, seq num %i.\n",
+                (*squashIt[tid])->threadNumber,
+                (*squashIt[tid])->readPC(),
+                (*squashIt[tid])->seqNum);
 
         // Mark the instruction as squashed, and ready to commit so that
         // it can drain out of the pipeline.
-        (*squashIt)->setSquashed();
+        (*squashIt[tid])->setSquashed();
 
-        (*squashIt)->setCanCommit();
+        (*squashIt[tid])->setCanCommit();
 
-        // Special case for when squashing due to a syscall.  It's possible
-        // that the squash happened after the head instruction was already
-        // committed, meaning that (*squashIt)->seqNum != squashedSeqNum
-        // will never be false.  Normally the squash would never be able
-        // to go past the head of the ROB; in this case it might, so it
-        // must be handled otherwise it will segfault.
-#if !FULL_SYSTEM
-        if (squashIt == cpu->instList.begin()) {
-            DPRINTF(ROB, "ROB: Reached head of instruction list while "
+
+        if (squashIt[tid] == instList[tid].begin()) {
+            DPRINTF(ROB, "Reached head of instruction list while "
                     "squashing.\n");
 
-            squashIt = cpu->instList.end();
+            squashIt[tid] = instList[tid].end();
 
-            doneSquashing = true;
+            doneSquashing[tid] = true;
 
             return;
         }
-#endif
 
-        // Move the tail iterator to the next instruction.
-        squashIt--;
+        InstIt tail_thread = instList[tid].end();
+        tail_thread--;
+
+        if ((*squashIt[tid]) == (*tail_thread))
+            robTailUpdate = true;
+
+        squashIt[tid]--;
     }
 
 
     // Check if ROB is done squashing.
-    if ((*squashIt)->seqNum == squashedSeqNum) {
-        DPRINTF(ROB, "ROB: Done squashing instructions.\n");
+    if ((*squashIt[tid])->seqNum <= squashedSeqNum) {
+        DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
+                tid);
 
-        squashIt = cpu->instList.end();
+        squashIt[tid] = instList[tid].end();
 
-        doneSquashing = true;
+        doneSquashing[tid] = true;
     }
+
+    if (robTailUpdate) {
+        updateTail();
+    }
+}
+
+
+template <class Impl>
+void
+ROB<Impl>::updateHead()
+{
+    DynInstPtr head_inst;
+    InstSeqNum lowest_num = 0;
+    bool first_valid = true;
+
+    // @todo: set ActiveThreads through ROB or CPU
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    while (threads != (*activeThreads).end()) {
+        unsigned thread_num = *threads++;
+
+        if (instList[thread_num].empty())
+            continue;
+
+        if (first_valid) {
+            head = instList[thread_num].begin();
+            lowest_num = (*head)->seqNum;
+            first_valid = false;
+            continue;
+        }
+
+        InstIt head_thread = instList[thread_num].begin();
+
+        DynInstPtr head_inst = (*head_thread);
+
+        assert(head_inst != 0);
+
+        if (head_inst->seqNum < lowest_num) {
+            head = head_thread;
+            lowest_num = head_inst->seqNum;
+        }
+    }
+
+    if (first_valid) {
+        head = instList[0].end();
+    }
+
 }
 
 template <class Impl>
 void
-ROB<Impl>::squash(InstSeqNum squash_num)
+ROB<Impl>::updateTail()
 {
-    DPRINTF(ROB, "ROB: Starting to squash within the ROB.\n");
-    doneSquashing = false;
+    tail = instList[0].end();
+    bool first_valid = true;
+
+    list<unsigned>::iterator threads = (*activeThreads).begin();
+
+    while (threads != (*activeThreads).end()) {
+        unsigned tid = *threads++;
+
+        if (instList[tid].empty()) {
+            continue;
+        }
+
+        // If this is the first valid then assign w/out
+        // comparison
+        if (first_valid) {
+            tail = instList[tid].end();
+            tail--;
+            first_valid = false;
+            continue;
+        }
+
+        // Assign new tail if this thread's tail is younger
+        // than our current "tail high"
+        InstIt tail_thread = instList[tid].end();
+        tail_thread--;
+
+        if ((*tail_thread)->seqNum > (*tail)->seqNum) {
+            tail = tail_thread;
+        }
+    }
+}
+
+
+template <class Impl>
+void
+ROB<Impl>::squash(InstSeqNum squash_num,unsigned tid)
+{
+    if (isEmpty()) {
+        DPRINTF(ROB, "Does not need to squash due to being empty "
+                "[sn:%i]\n",
+                squash_num);
+
+        return;
+    }
+
+    DPRINTF(ROB, "Starting to squash within the ROB.\n");
+
+    robStatus[tid] = ROBSquashing;
+
+    doneSquashing[tid] = false;
 
     squashedSeqNum = squash_num;
 
-    assert(tail != cpu->instList.end());
+    if (!instList[tid].empty()) {
+        InstIt tail_thread = instList[tid].end();
+        tail_thread--;
 
-    squashIt = tail;
+        squashIt[tid] = tail_thread;
 
-    doSquash();
+        doSquash(tid);
+    }
 }
+/*
+template <class Impl>
+typename Impl::DynInstPtr
+ROB<Impl>::readHeadInst()
+{
+    if (numInstsInROB != 0) {
+        assert((*head)->isInROB()==true);
+        return *head;
+    } else {
+        return dummyInst;
+    }
+}
+*/
+template <class Impl>
+typename Impl::DynInstPtr
+ROB<Impl>::readHeadInst(unsigned tid)
+{
+    if (threadEntries[tid] != 0) {
+        InstIt head_thread = instList[tid].begin();
 
+        assert((*head_thread)->isInROB()==true);
+
+        return *head_thread;
+    } else {
+        return dummyInst;
+    }
+}
+/*
 template <class Impl>
 uint64_t
 ROB<Impl>::readHeadPC()
 {
-    assert(numInstsInROB == countInsts());
+    //assert(numInstsInROB == countInsts());
 
-    DynInstPtr head_inst = cpu->instList.front();
+    DynInstPtr head_inst = *head;
 
     return head_inst->readPC();
 }
 
 template <class Impl>
 uint64_t
+ROB<Impl>::readHeadPC(unsigned tid)
+{
+    //assert(numInstsInROB == countInsts());
+    InstIt head_thread = instList[tid].begin();
+
+    return (*head_thread)->readPC();
+}
+
+
+template <class Impl>
+uint64_t
 ROB<Impl>::readHeadNextPC()
 {
-    assert(numInstsInROB == countInsts());
+    //assert(numInstsInROB == countInsts());
 
-    DynInstPtr head_inst = cpu->instList.front();
+    DynInstPtr head_inst = *head;
 
     return head_inst->readNextPC();
+}
+
+template <class Impl>
+uint64_t
+ROB<Impl>::readHeadNextPC(unsigned tid)
+{
+    //assert(numInstsInROB == countInsts());
+    InstIt head_thread = instList[tid].begin();
+
+    return (*head_thread)->readNextPC();
 }
 
 template <class Impl>
 InstSeqNum
 ROB<Impl>::readHeadSeqNum()
 {
-    // Return the last sequence number that has not been squashed.  Other
-    // stages can use it to squash any instructions younger than the current
-    // tail.
-    DynInstPtr head_inst = cpu->instList.front();
+    //assert(numInstsInROB == countInsts());
+    DynInstPtr head_inst = *head;
 
     return head_inst->seqNum;
 }
 
 template <class Impl>
+InstSeqNum
+ROB<Impl>::readHeadSeqNum(unsigned tid)
+{
+    InstIt head_thread = instList[tid].begin();
+
+    return ((*head_thread)->seqNum);
+}
+
+template <class Impl>
+typename Impl::DynInstPtr
+ROB<Impl>::readTailInst()
+{
+    //assert(numInstsInROB == countInsts());
+    //assert(tail != instList[0].end());
+
+    return (*tail);
+}
+*/
+template <class Impl>
+typename Impl::DynInstPtr
+ROB<Impl>::readTailInst(unsigned tid)
+{
+    //assert(tail_thread[tid] != instList[tid].end());
+
+    InstIt tail_thread = instList[tid].end();
+    tail_thread--;
+
+    return *tail_thread;
+}
+
+/*
+template <class Impl>
 uint64_t
 ROB<Impl>::readTailPC()
 {
-    assert(numInstsInROB == countInsts());
+    //assert(numInstsInROB == countInsts());
 
-    assert(tail != cpu->instList.end());
+    //assert(tail != instList[0].end());
 
     return (*tail)->readPC();
+}
+
+template <class Impl>
+uint64_t
+ROB<Impl>::readTailPC(unsigned tid)
+{
+    //assert(tail_thread[tid] != instList[tid].end());
+
+    InstIt tail_thread = instList[tid].end();
+    tail_thread--;
+
+    return (*tail_thread)->readPC();
 }
 
 template <class Impl>
@@ -309,4 +677,18 @@ ROB<Impl>::readTailSeqNum()
     return (*tail)->seqNum;
 }
 
-#endif // __CPU_O3_CPU_ROB_IMPL_HH__
+template <class Impl>
+InstSeqNum
+ROB<Impl>::readTailSeqNum(unsigned tid)
+{
+    // Return the last sequence number that has not been squashed.  Other
+    // stages can use it to squash any instructions younger than the current
+    // tail.
+    //    assert(tail_thread[tid] != instList[tid].end());
+
+    InstIt tail_thread = instList[tid].end();
+    tail_thread--;
+
+    return (*tail_thread)->seqNum;
+}
+*/

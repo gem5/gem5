@@ -24,10 +24,14 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
+ *          Nathan Binkert
  */
 
-#include "cpu/ooo_cpu/ooo_cpu_impl.hh"
-#include "cpu/ooo_cpu/ooo_dyn_inst.hh"
-#include "cpu/ooo_cpu/ooo_impl.hh"
+#include "cpu/ozone/cpu_impl.hh"
+#include "cpu/ozone/ozone_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
 
-template class OoOCPU<OoOImpl>;
+//template class OzoneCPU<SimpleImpl>;
+template class OzoneCPU<OzoneImpl>;

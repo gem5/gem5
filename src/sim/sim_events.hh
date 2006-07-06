@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #ifndef __SIM_SIM_EVENTS_HH__
@@ -34,7 +36,7 @@
 //
 // Event to terminate simulation at a particular cycle/instruction
 //
-class SimExitEvent : public Event
+class SimLoopExitEvent : public Event
 {
   private:
     // string explaining why we're terminating
@@ -42,28 +44,43 @@ class SimExitEvent : public Event
     int code;
 
   public:
-    SimExitEvent(const std::string &_cause, int c = 0)
+    // Default constructor.  Only really used for derived classes.
+    SimLoopExitEvent()
+        : Event(&mainEventQueue, Sim_Exit_Pri)
+    { }
+
+    SimLoopExitEvent(Tick _when, const std::string &_cause, int c = 0)
         : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
           code(c)
-        { schedule(curTick); }
+    { setFlags(IsExitEvent); schedule(_when); }
 
-    SimExitEvent(Tick _when, const std::string &_cause, int c = 0)
-        : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
-          code(c)
-        { schedule(_when); }
-
-    SimExitEvent(EventQueue *q, const std::string &_cause, int c = 0)
+    SimLoopExitEvent(EventQueue *q,
+                     Tick _when, const std::string &_cause, int c = 0)
         : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
-        { schedule(curTick); }
+    { setFlags(IsExitEvent); schedule(_when); }
 
-    SimExitEvent(EventQueue *q, Tick _when, const std::string &_cause,
-                 int c = 0)
-        : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
-        { schedule(_when); }
+    std::string getCause() { return cause; }
+    int getCode() { return code; }
 
     void process();	// process event
 
     virtual const char *description();
+};
+
+class CountedQuiesceEvent : public SimLoopExitEvent
+{
+  private:
+    // Count down to quiescing
+    int count;
+  public:
+    CountedQuiesceEvent()
+        : count(0)
+    { }
+    void process();
+
+    void setCount(int _count) { count = _count; }
+
+    int getCount() { return count; }
 };
 
 //

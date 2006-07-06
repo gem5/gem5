@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 /**
@@ -40,8 +42,8 @@ VirtualPort::readBlob(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
             gen.next())
     {
-        if (xc)
-            paddr = TheISA::vtophys(xc,gen.addr());
+        if (tc)
+            paddr = TheISA::vtophys(tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 
@@ -57,8 +59,8 @@ VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
             gen.next())
     {
-        if (xc)
-            paddr = TheISA::vtophys(xc,gen.addr());
+        if (tc)
+            paddr = TheISA::vtophys(tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 

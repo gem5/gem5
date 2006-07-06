@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_INT_REGFILE_HH__
@@ -35,7 +37,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 class Regfile;
 
 namespace MipsISA
@@ -61,11 +63,6 @@ namespace MipsISA
 
         void unserialize(Checkpoint *cp, const std::string &section);
 
-    };
-
-    enum MiscIntRegNums {
-       HI = NumIntArchRegs,
-       LO
     };
 
 } // namespace MipsISA

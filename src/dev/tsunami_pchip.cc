@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Andrew Schultz
  */
 
 /** @file
@@ -70,8 +73,6 @@ TsunamiPChip::read(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-
-    pkt->time += pioDelay;
     pkt->allocate();
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;;
     assert(pkt->getSize() == sizeof(uint64_t));
@@ -151,8 +152,6 @@ TsunamiPChip::read(Packet *pkt)
 Tick
 TsunamiPChip::write(Packet *pkt)
 {
-    pkt->time += pioDelay;
-
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;

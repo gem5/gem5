@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
  */
 
 #include <sys/types.h>
@@ -139,8 +141,7 @@ Tick
 PhysicalMemory::doAtomicAccess(Packet *pkt)
 {
     doFunctionalAccess(pkt);
-    pkt->time = curTick + lat;
-    return curTick + lat;
+    return lat;
 }
 
 void
@@ -172,9 +173,9 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
 }
 
 Port *
-PhysicalMemory::getPort(const std::string &if_name)
+PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "") {
+    if (if_name == "port" && idx == -1) {
         if (port != NULL)
            panic("PhysicalMemory::getPort: additional port requested to memory!");
         port = new MemoryPort(name() + "-port", this);

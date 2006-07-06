@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 /**
@@ -53,6 +55,8 @@ typedef int64_t Counter;
  * @note using an unsigned breaks the cache.
  */
 typedef int64_t Tick;
+
+const Tick MaxTick = (1LL << 62);
 
 /**
  * Address type

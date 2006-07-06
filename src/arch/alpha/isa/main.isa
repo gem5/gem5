@@ -25,6 +25,20 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Steve Reinhardt
+
+////////////////////////////////////////////////////////////////////
+//
+// Alpha ISA description file.
+//
+////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////
+//
+// Output include file directives.
+//
 
 output header {{
 #include <sstream>
@@ -42,7 +56,7 @@ output decoder {{
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
 #include "config/ss_compatible_fp.hh"
-#include "cpu/exec_context.hh"  // for Jump::branchTarget()
+#include "cpu/thread_context.hh"  // for Jump::branchTarget()
 
 #include <math.h>
 

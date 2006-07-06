@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #ifndef __SPARC_LINUX_PROCESS_HH__
@@ -59,7 +61,7 @@ class SparcLinuxProcess : public SparcLiveProcess
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 Process *p, ExecContext *xc);
+                                 Process *p, ThreadContext *tc);
 
 } // namespace SparcISA
 #endif // __ALPHA_LINUX_PROCESS_HH__

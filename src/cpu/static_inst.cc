@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #include <iostream>
@@ -57,7 +60,7 @@ StaticInst::dumpDecodeCacheStats()
 }
 
 bool
-StaticInst::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
+StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
 {
     if (isDirectCtrl()) {
         tgt = branchTarget(pc);
@@ -65,7 +68,7 @@ StaticInst::hasBranchTarget(Addr pc, ExecContext *xc, Addr &tgt) const
     }
 
     if (isIndirectCtrl()) {
-        tgt = branchTarget(xc);
+        tgt = branchTarget(tc);
         return true;
     }
 

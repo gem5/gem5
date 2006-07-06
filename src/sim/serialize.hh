@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
+ *          Erik Hallnor
+ *          Steve Reinhardt
  */
 
 /* @file
@@ -39,8 +43,8 @@
 #include <map>
 
 #include "sim/host.hh"
-#include "sim/configfile.hh"
 
+class IniFile;
 class Serializable;
 class Checkpoint;
 
@@ -123,6 +127,7 @@ class Serializable
     static int ckptMaxCount;
     static int ckptPrevCount;
     static void serializeAll();
+    static void unserializeAll();
     static void unserializeGlobals(Checkpoint *cp);
 };
 
@@ -174,7 +179,7 @@ class SerializableClass
     // an optional config hierarchy node (specified by the third
     // argument).  A pointer to the new SerializableBuilder is returned.
     typedef Serializable *(*CreateFunc)(Checkpoint *cp,
-                                         const std::string &section);
+                                        const std::string &section);
 
     static std::map<std::string,CreateFunc> *classMap;
 
@@ -188,7 +193,7 @@ class SerializableClass
     // create Serializable given name of class and pointer to
     // configuration hierarchy node
     static Serializable *createObject(Checkpoint *cp,
-                                       const std::string &section);
+                                      const std::string &section);
 };
 
 //
@@ -200,18 +205,19 @@ class SerializableClass
 SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
                                          OBJ_CLASS::createForUnserialize);
 
+void
+setCheckpointName(const std::string &name);
+
 class Checkpoint
 {
   private:
 
     IniFile *db;
     const std::string basePath;
-    const ConfigNode *configNode;
     std::map<std::string, Serializable*> objMap;
 
   public:
-    Checkpoint(const std::string &cpt_dir, const std::string &path,
-               const ConfigNode *_configNode);
+    Checkpoint(const std::string &cpt_dir, const std::string &path);
 
     const std::string cptDir;
 
@@ -235,9 +241,6 @@ class Checkpoint
 
     // Filename for base checkpoint file within directory.
     static const char *baseFilename;
-
-    // Set up a checkpoint creation event or series of events.
-    static void setup(Tick when, Tick period = 0);
 };
 
 #endif // __SERIALIZE_HH__

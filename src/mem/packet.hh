@@ -24,12 +24,15 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ron Dreslinski
+ *          Steve Reinhardt
+ *          Ali Saidi
  */
 
 /**
  * @file
- * Declaration of the Packet Class, a packet is a transaction occuring
- * between a single level of the memory heirarchy (ie L1->L2).
+ * Declaration of the Packet class.
  */
 
 #ifndef __MEM_PACKET_HH__
@@ -38,87 +41,124 @@
 #include "mem/request.hh"
 #include "arch/isa_traits.hh"
 #include "sim/root.hh"
+#include <list>
 
 struct Packet;
 typedef Packet* PacketPtr;
 typedef uint8_t* PacketDataPtr;
+typedef std::list<PacketPtr> PacketList;
+
+//Coherence Flags
+#define NACKED_LINE 1 << 0
+#define SATISFIED 1 << 1
+#define SHARED_LINE 1 << 2
+#define CACHE_LINE_FILL 1 << 3
+#define COMPRESSED 1 << 4
+#define NO_ALLOCATE 1 << 5
+
+//For statistics we need max number of commands, hard code it at
+//20 for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 9
 
 /**
- * A Packet is the structure to handle requests between two levels
- * of the memory system.  The Request is a global object that trancends
- * all of the memory heirarchy, but at each levels interface a packet
- * is created to transfer data/requests.  For example, a request would
- * be used to initiate a request to go to memory/IOdevices, as the request
- * passes through the memory system several packets will be created.  One
- * will be created to go between the L1 and L2 caches and another to go to
- * the next level and so forth.
- *
- * Packets are assumed to be returned in the case of a single response.  If
- * the transaction has no response, then the consumer will delete the packet.
+ * A Packet is used to encapsulate a transfer between two objects in
+ * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
+ * single Request travels all the way from the requester to the
+ * ultimate destination and back, possibly being conveyed by several
+ * different Packets along the way.)
  */
 class Packet
 {
+  public:
+    /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
+    uint64_t flags;
+
   private:
-   /** A pointer to the data being transfered.  It can be differnt sizes
-        at each level of the heirarchy so it belongs in the packet,
-        not request. This may or may not be populated when a responder recieves
-        the packet. If not populated it memory should be allocated.
+   /** A pointer to the data being transfered.  It can be differnt
+    *    sizes at each level of the heirarchy so it belongs in the
+    *    packet, not request. This may or may not be populated when a
+    *    responder recieves the packet. If not populated it memory
+    *    should be allocated.
     */
     PacketDataPtr data;
 
-    /** Is the data pointer set to a value that shouldn't be freed when the
-     * packet is destroyed? */
+    /** Is the data pointer set to a value that shouldn't be freed
+     *   when the packet is destroyed? */
     bool staticData;
-    /** The data pointer points to a value that should be freed when the packet
-     * is destroyed. */
+    /** The data pointer points to a value that should be freed when
+     *   the packet is destroyed. */
     bool dynamicData;
-    /** the data pointer points to an array (thus delete [] ) needs to be called
-     * on it rather than simply delete.*/
+    /** the data pointer points to an array (thus delete [] ) needs to
+     *   be called on it rather than simply delete.*/
     bool arrayData;
 
 
-    /** The address of the request, could be virtual or physical (depending on
-        cache configurations). */
+    /** The address of the request.  This address could be virtual or
+     *   physical, depending on the system configuration. */
     Addr addr;
 
-     /** Indicates the size of the request. */
+     /** The size of the request or transfer. */
     int size;
 
-    /** A index of the source of the transaction. */
+    /** Device address (e.g., bus ID) of the source of the
+     *   transaction. The source is not responsible for setting this
+     *   field; it is set implicitly by the interconnect when the
+     *   packet * is first sent.  */
     short src;
 
-    /** A index to the destination of the transaction. */
+    /** Device address (e.g., bus ID) of the destination of the
+     *   transaction. The special value Broadcast indicates that the
+     *   packet should be routed based on its address. This field is
+     *   initialized in the constructor and is thus always valid
+     *   (unlike * addr, size, and src). */
     short dest;
 
-    bool addrValid;
-    bool sizeValid;
+    /** Are the 'addr' and 'size' fields valid? */
+    bool addrSizeValid;
+    /** Is the 'src' field valid? */
     bool srcValid;
+
 
   public:
 
+    /** Used to calculate latencies for each packet.*/
+    Tick time;
+
+    /** The special destination address indicating that the packet
+     *   should be routed based on its address. */
     static const short Broadcast = -1;
 
-    /** A pointer to the overall request. */
+    /** A pointer to the original request. */
     RequestPtr req;
 
+    /** A virtual base opaque structure used to hold coherence-related
+     *    state.  A specific subclass would be derived from this to
+     *    carry state specific to a particular coherence protocol.  */
     class CoherenceState {
       public:
         virtual ~CoherenceState() {}
     };
 
-    /** A virtual base opaque structure used to hold
-        coherence status messages. */
-    CoherenceState *coherence;  // virtual base opaque,
-                           // assert(dynamic_cast<Foo>) etc.
+    /** This packet's coherence state.  Caches should use
+     *   dynamic_cast<> to cast to the state appropriate for the
+     *   system's coherence protocol.  */
+    CoherenceState *coherence;
 
+    /** A virtual base opaque structure used to hold state associated
+     *    with the packet but specific to the sending device (e.g., an
+     *    MSHR).  A pointer to this state is returned in the packet's
+     *    response so that the sender can quickly look up the state
+     *    needed to process it.  A specific subclass would be derived
+     *    from this to carry state specific to a particular sending
+     *    device.  */
     class SenderState {
       public:
         virtual ~SenderState() {}
     };
 
-    /** A virtual base opaque structure used to hold the senders state. */
-    SenderState *senderState; // virtual base opaque,
-    // assert(dynamic_cast<Foo>) etc.
+    /** This packet's sender state.  Devices should use dynamic_cast<>
+     *   to cast to the state appropriate to the sender. */
+    SenderState *senderState;
 
   private:
     /** List of command attributes. */
@@ -131,51 +171,69 @@ class Packet
         IsRequest	= 1 << 4,
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
+        IsSWPrefetch    = 1 << 7,
+        IsHWPrefetch    = 1 << 8
     };
 
   public:
     /** List of all commands associated with a packet. */
     enum Command
     {
+        InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
         WriteReq	= IsWrite | IsRequest | NeedsResponse,
         WriteReqNoAck	= IsWrite | IsRequest,
         ReadResp	= IsRead  | IsResponse,
-        WriteResp	= IsWrite | IsResponse
+        WriteResp	= IsWrite | IsResponse,
+        Writeback       = IsWrite | IsRequest,
+        SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
+        HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
+        SoftPFResp      = IsRead  | IsRequest | IsSWPrefetch | IsResponse,
+        HardPFResp      = IsRead  | IsRequest | IsHWPrefetch | IsResponse,
+        InvalidateReq   = IsInvalidate | IsRequest,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
+        UpgradeReq      = IsInvalidate | NeedsResponse,
+        UpgradeResp     = IsInvalidate | IsResponse,
+        ReadExReq       = IsRead | IsInvalidate | NeedsResponse,
+        ReadExResp      = IsRead | IsInvalidate | IsResponse
     };
 
+    /** Return the string name of the cmd field (for debugging and
+     *   tracing). */
     const std::string &cmdString() const;
 
-    /** The command of the transaction. */
+    /** Reutrn the string to a cmd given by idx. */
+    const std::string &cmdIdxToString(Command idx);
+
+    /** Return the index of this command. */
+    inline int cmdToIndex() const { return (int) cmd; }
+
+    /** The command field of the packet. */
     Command cmd;
 
     bool isRead() 	 { return (cmd & IsRead)  != 0; }
+    bool isWrite()       { return (cmd & IsWrite) != 0; }
     bool isRequest()	 { return (cmd & IsRequest)  != 0; }
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
+    bool isInvalidate()  { return (cmd * IsInvalidate) != 0; }
 
-    void makeTimingResponse() {
-        assert(needsResponse());
-        int icmd = (int)cmd;
-        icmd &= ~(IsRequest | NeedsResponse);
-        icmd |= IsResponse;
-        cmd = (Command)icmd;
-        dest = src;
-        srcValid = false;
-    }
+    bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
+    bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
+    bool isCompressed() { return (flags & COMPRESSED) != 0; }
 
-    /** The time this request was responded to. Used to calculate latencies. */
-    Tick time;
+    bool nic_pkt() { assert("Unimplemented\n" && 0); }
 
-    /** The result of a particular packets request. */
+    /** Possible results of a packet's request. */
     enum Result
     {
         Success,
         BadAddress,
+        Nacked,
         Unknown
     };
 
-    /** The result of the packet transaction. */
+    /** The result of this packet's request. */
     Result result;
 
     /** Accessor function that returns the source index of the packet. */
@@ -187,34 +245,89 @@ class Packet
     short getDest() const { return dest; }
     void setDest(short _dest) { dest = _dest; }
 
-    Addr getAddr() const { assert(addrValid); return addr; }
-    void setAddr(Addr _addr) { addr = _addr; addrValid = true; }
+    Addr getAddr() const { assert(addrSizeValid); return addr; }
+    int getSize() const { assert(addrSizeValid); return size; }
+    Addr getOffset(int blkSize) const { return req->getPaddr() & (Addr)(blkSize - 1); }
 
-    int getSize() const { assert(sizeValid); return size; }
-    void setSize(int _size) { size = _size; sizeValid = true; }
+    void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
+    void cmdOverride(Command newCmd) { cmd = newCmd; }
 
-
+    /** Constructor.  Note that a Request object must be constructed
+     *   first, but the Requests's physical address and size fields
+     *   need not be valid. The command and destination addresses
+     *   must be supplied.  */
     Packet(Request *_req, Command _cmd, short _dest)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
-           addrValid(_req->validPaddr), sizeValid(_req->validSize),
+           addrSizeValid(_req->validPaddr),
            srcValid(false),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
-           time(curTick), result(Unknown)
+           result(Unknown)
     {
+        flags = 0;
     }
 
+    /** Alternate constructor if you are trying to create a packet with
+     *  a request that is for a whole block, not the address from the req.
+     *  this allows for overriding the size/addr of the req.*/
+    Packet(Request *_req, Command _cmd, short _dest, int _blkSize)
+        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
+           dest(_dest),
+           addrSizeValid(_req->validPaddr), srcValid(false),
+           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
+           result(Unknown)
+    {
+        flags = 0;
+    }
+
+    /** Destructor. */
     ~Packet()
     { deleteData(); }
 
-
-    /** Minimally reset a packet so something like simple cpu can reuse it. */
-    void reset();
-
+    /** Reinitialize packet address and size from the associated
+     *   Request object, and reset other fields that may have been
+     *   modified by a previous transaction.  Typically called when a
+     *   statically allocated Request/Packet pair is reused for
+     *   multiple transactions. */
     void reinitFromRequest() {
-        if (req->validPaddr) setAddr(req->paddr);
-        if (req->validSize)  setSize(req->size);
+        assert(req->validPaddr);
+        addr = req->paddr;
+        size = req->size;
+        addrSizeValid = true;
+        result = Unknown;
+        if (dynamicData) {
+            deleteData();
+            dynamicData = false;
+            arrayData = false;
+        }
     }
+
+    /** Take a request packet and modify it in place to be suitable
+     *   for returning as a response to that request.  Used for timing
+     *   accesses only.  For atomic and functional accesses, the
+     *   request packet is always implicitly passed back *without*
+     *   modifying the command or destination fields, so this function
+     *   should not be called. */
+    void makeTimingResponse() {
+        assert(needsResponse());
+        int icmd = (int)cmd;
+        icmd &= ~(IsRequest | NeedsResponse);
+        icmd |= IsResponse;
+        cmd = (Command)icmd;
+        dest = src;
+        srcValid = false;
+    }
+
+    /** Take a request packet that has been returned as NACKED and modify it so
+     * that it can be sent out again. Only packets that need a response can be
+     * NACKED, so verify that that is true. */
+    void reinitNacked() {
+        assert(needsResponse() && result == Nacked);
+        dest =  Broadcast;
+        result = Unknown;
+    }
+
 
     /** Set the data pointer to the following value that should not be freed. */
     template <typename T>

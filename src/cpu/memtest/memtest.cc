@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
+ *          Steve Reinhardt
  */
 
 // FIX ME: make trackBlkAddr use blocksize from actual cache, not hard coded
@@ -35,7 +38,7 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "cpu/cpu_exec_context.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/memtest/memtest.hh"
 #include "mem/cache/base_cache.hh"
 #include "sim/builder.hh"
@@ -78,7 +81,7 @@ MemTest::MemTest(const string &name,
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
-    cpuXC = new CPUExecContext(NULL, 0, mainMem, 0);
+    thread = new SimpleThread(NULL, 0, mainMem, 0);
 
     blockSize = cacheInterface->getBlockSize();
     blockAddrMask = blockSize - 1;
@@ -268,7 +271,7 @@ MemTest::tick()
     req->data = new uint8_t[req->size];
     req->paddr &= ~(req->size - 1);
     req->time = curTick;
-    req->xc = cpuXC->getProxy();
+    req->xc = thread->getProxy();
 
     if (cmd < percentReads) {
         // read

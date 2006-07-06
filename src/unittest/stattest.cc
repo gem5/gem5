@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include <iomanip>
@@ -48,10 +50,10 @@ Tick ticksPerSecond = ULL(2000000000);
 Scalar<> s1;
 Scalar<> s2;
 Average<> s3;
-Scalar<MainBin> s4;
-Vector<MainBin> s5;
-Distribution<MainBin> s6;
-Vector<MainBin> s7;
+Scalar<> s4;
+Vector<> s5;
+Distribution<> s6;
+Vector<> s7;
 AverageVector<> s8;
 StandardDeviation<> s9;
 AverageDeviation<> s10;
@@ -69,9 +71,6 @@ Value f4;
 Value f5;
 Formula f6;
 Formula f7;
-
-MainBin bin1("bin1");
-MainBin bin2("bin2");
 
 ostream *outputStream = &cout;
 
@@ -301,8 +300,6 @@ main(int argc, char *argv[])
     check();
     reset();
 
-    bin1.activate();
-
     s16[1][0] = 1;
     s16[0][1] = 3;
     s16[0][0] = 2;
@@ -493,7 +490,6 @@ main(int argc, char *argv[])
     s6.sample(8);
     s6.sample(9);
 
-    bin2.activate();
     s6.sample(10);
     s6.sample(10);
     s6.sample(10);

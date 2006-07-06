@@ -25,6 +25,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Steve Reinhardt
  */
 
 /**
@@ -56,7 +59,7 @@ Bridge::Bridge(const std::string &n, int qsa, int qsb,
 }
 
 Port *
-Bridge::getPort(const std::string &if_name)
+Bridge::getPort(const std::string &if_name, int idx)
 {
     BridgePort *port;
 
@@ -90,19 +93,6 @@ Bridge::BridgePort::recvTiming(Packet *pkt)
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
-    if (pkt->isResponse()) {
-        // This is a response for a request we forwarded earlier.  The
-        // corresponding PacketBuffer should be stored in the packet's
-        // senderState field.
-        PacketBuffer *buf = dynamic_cast<PacketBuffer*>(pkt->senderState);
-        assert(buf != NULL);
-        // set up new packet dest & senderState based on values saved
-        // from original request
-        buf->fixResponse(pkt);
-        DPRINTF(BusBridge, "  is response, new dest %d\n", pkt->getDest());
-        delete buf;
-    }
-
     return otherPort->queueForSendTiming(pkt);
 }
 
@@ -113,8 +103,25 @@ Bridge::BridgePort::queueForSendTiming(Packet *pkt)
     if (queueFull())
         return false;
 
+   if (pkt->isResponse()) {
+        // This is a response for a request we forwarded earlier.  The
+        // corresponding PacketBuffer should be stored in the packet's
+        // senderState field.
+        PacketBuffer *buf = dynamic_cast<PacketBuffer*>(pkt->senderState);
+        assert(buf != NULL);
+        // set up new packet dest & senderState based on values saved
+        // from original request
+        buf->fixResponse(pkt);
+        DPRINTF(BusBridge, "restoring  sender state: %#X, from packet buffer: %#X\n",
+                        pkt->senderState, buf);
+        DPRINTF(BusBridge, "  is response, new dest %d\n", pkt->getDest());
+        delete buf;
+    }
+
     Tick readyTime = curTick + delay;
     PacketBuffer *buf = new PacketBuffer(pkt, readyTime);
+    DPRINTF(BusBridge, "old sender state: %#X, new sender state: %#X\n",
+            buf->origSenderState, buf);
 
     // If we're about to put this packet at the head of the queue, we
     // need to schedule an event to do the transmit.  Otherwise there
@@ -126,42 +133,15 @@ Bridge::BridgePort::queueForSendTiming(Packet *pkt)
 
     sendQueue.push_back(buf);
 
-    // Did we just become blocked?  If yes, let other side know.
-    if (queueFull())
-        otherPort->sendStatusChange(Port::Blocked);
-
     return true;
 }
-
-
-void
-Bridge::BridgePort::finishSend(PacketBuffer *buf)
-{
-    if (buf->expectResponse) {
-        // Must wait for response.  We just need to count outstanding
-        // responses (in case we want to cap them); PacketBuffer
-        // pointer will be recovered on response.
-        ++outstandingResponses;
-        DPRINTF(BusBridge, "  successful: awaiting response (%d)\n",
-                outstandingResponses);
-    } else {
-        // no response expected... deallocate packet buffer now.
-        DPRINTF(BusBridge, "  successful: no response expected\n");
-        delete buf;
-    }
-
-    // If there are more packets to send, schedule event to try again.
-    if (!sendQueue.empty()) {
-        buf = sendQueue.front();
-        sendEvent.schedule(std::max(buf->ready, curTick + 1));
-    }
-}
-
 
 void
 Bridge::BridgePort::trySend()
 {
     assert(!sendQueue.empty());
+
+    bool was_full = queueFull();
 
     PacketBuffer *buf = sendQueue.front();
 
@@ -176,20 +156,41 @@ Bridge::BridgePort::trySend()
         // send successful
         sendQueue.pop_front();
         buf->pkt = NULL; // we no longer own packet, so it's not safe to look at it
-        finishSend(buf);
+
+        if (buf->expectResponse) {
+            // Must wait for response.  We just need to count outstanding
+            // responses (in case we want to cap them); PacketBuffer
+            // pointer will be recovered on response.
+            ++outstandingResponses;
+            DPRINTF(BusBridge, "  successful: awaiting response (%d)\n",
+                    outstandingResponses);
+        } else {
+            // no response expected... deallocate packet buffer now.
+            DPRINTF(BusBridge, "  successful: no response expected\n");
+            delete buf;
+        }
+
+        // If there are more packets to send, schedule event to try again.
+        if (!sendQueue.empty()) {
+            buf = sendQueue.front();
+            sendEvent.schedule(std::max(buf->ready, curTick + 1));
+        }
+        // Let things start sending again
+        if (was_full) {
+          DPRINTF(BusBridge, "Queue was full, sending retry\n");
+          otherPort->sendRetry();
+        }
+
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
     }
 }
 
 
-Packet *
+void
 Bridge::BridgePort::recvRetry()
 {
-    PacketBuffer *buf = sendQueue.front();
-    Packet *pkt = buf->pkt;
-    finishSend(buf);
-    return pkt;
+    trySend();
 }
 
 /** Function called by the port when the bus is receiving a Atomic
@@ -223,9 +224,6 @@ Bridge::BridgePort::recvFunctional(Packet *pkt)
 void
 Bridge::BridgePort::recvStatusChange(Port::Status status)
 {
-    if (status == Port::Blocked || status == Port::Unblocked)
-        return;
-
     otherPort->sendStatusChange(status);
 }
 

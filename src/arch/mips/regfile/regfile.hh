@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_REGFILE_HH__
@@ -37,7 +39,7 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ExecContext;
+class ThreadContext;
 
 namespace MipsISA
 {
@@ -62,10 +64,10 @@ namespace MipsISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
             fault = NoFault;
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -74,17 +76,17 @@ namespace MipsISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
-        FloatReg readFloatReg(int floatReg)
+        FloatRegVal readFloatReg(int floatReg)
         {
             return floatRegFile.readReg(floatReg,SingleWidth);
         }
 
-        FloatReg readFloatReg(int floatReg, int width)
+        FloatRegVal readFloatReg(int floatReg, int width)
         {
             return floatRegFile.readReg(floatReg,width);
         }
@@ -99,12 +101,12 @@ namespace MipsISA
             return floatRegFile.readRegBits(floatReg,width);
         }
 
-        Fault setFloatReg(int floatReg, const FloatReg &val)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val)
         {
             return floatRegFile.setReg(floatReg, val, SingleWidth);
         }
 
-        Fault setFloatReg(int floatReg, const FloatReg &val, int width)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width)
         {
             return floatRegFile.setReg(floatReg, val, width);
         }
@@ -166,16 +168,6 @@ namespace MipsISA
             nnpc = val;
         }
 
-
-#if FULL_SYSTEM
-        IntReg palregs[NumIntRegs];	// PAL shadow registers
-        InternalProcReg ipr[NumInternalProcRegs]; // internal processor regs
-        int intrflag;			// interrupt flag
-        bool pal_shadow;		// using pal_shadow registers
-        inline int instAsid() { return MIPS34K::ITB_ASN_ASN(ipr[IPR_ITB_ASN]); }
-        inline int dataAsid() { return MIPS34K::DTB_ASN_ASN(ipr[IPR_DTB_ASN]); }
-#endif // FULL_SYSTEM
-
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 
@@ -187,13 +179,10 @@ namespace MipsISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
-#if FULL_SYSTEM
-    void copyIprs(ExecContext *src, ExecContext *dest);
-#endif
 } // namespace MipsISA
 
 #endif

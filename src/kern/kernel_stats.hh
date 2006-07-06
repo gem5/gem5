@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Lisa Hsu
+ *          Nathan Binkert
  */
 
 #ifndef __KERNEL_STATS_HH__
@@ -37,104 +40,26 @@
 #include "cpu/static_inst.hh"
 
 class BaseCPU;
-class ExecContext;
+class ThreadContext;
 class FnEvent;
 // What does kernel stats expect is included?
 class System;
 
 namespace Kernel {
 
-enum cpu_mode { kernel, user, idle, interrupt, cpu_mode_num };
+enum cpu_mode { kernel, user, idle, cpu_mode_num };
 extern const char *modestr[];
-
-class Binning
-{
-  private:
-    std::string myname;
-    System *system;
-
-  private:
-    // lisa's binning stuff
-    struct fnCall
-    {
-        Stats::MainBin *myBin;
-        std::string name;
-    };
-
-    struct SWContext
-    {
-        Counter calls;
-        std::stack<fnCall *> callStack;
-    };
-
-    std::map<const std::string, Stats::MainBin *> fnBins;
-    std::map<const Addr, SWContext *> swCtxMap;
-
-    std::multimap<const std::string, std::string> callerMap;
-    void populateMap(std::string caller, std::string callee);
-
-    std::vector<FnEvent *> fnEvents;
-
-    Stats::Scalar<> fnCalls;
-
-    Stats::MainBin *getBin(const std::string &name);
-    bool findCaller(std::string, std::string) const;
-
-    SWContext *findContext(Addr pcb);
-    bool addContext(Addr pcb, SWContext *ctx)
-    {
-        return (swCtxMap.insert(std::make_pair(pcb, ctx))).second;
-    }
-
-    void remContext(Addr pcb)
-    {
-        swCtxMap.erase(pcb);
-    }
-
-    void dumpState() const;
-
-    SWContext *swctx;
-    std::vector<std::string> binned_fns;
-
-  private:
-    Stats::MainBin *modeBin[cpu_mode_num];
-
-  public:
-    const bool bin;
-    const bool fnbin;
-
-    cpu_mode themode;
-    void palSwapContext(ExecContext *xc);
-    void execute(ExecContext *xc, StaticInstPtr inst);
-    void call(ExecContext *xc, Stats::MainBin *myBin);
-    void changeMode(cpu_mode mode);
-
-  public:
-    Binning(System *sys);
-    virtual ~Binning();
-
-    const std::string name() const { return myname; }
-    void regStats(const std::string &name);
-
-  public:
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-};
 
 class Statistics : public Serializable
 {
-  private:
-    friend class Binning;
-
   private:
     std::string myname;
 
     Addr idleProcess;
     cpu_mode themode;
     Tick lastModeTick;
-    bool bin_int;
 
-    void changeMode(cpu_mode newmode, ExecContext *xc);
+    void changeMode(cpu_mode newmode, ThreadContext *tc);
 
   private:
     Stats::Scalar<> _arm;
@@ -176,11 +101,11 @@ class Statistics : public Serializable
     void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
     void swpipl(int ipl);
-    void mode(cpu_mode newmode, ExecContext *xc);
-    void context(Addr oldpcbb, Addr newpcbb, ExecContext *xc);
-    void callpal(int code, ExecContext *xc);
+    void mode(cpu_mode newmode, ThreadContext *tc);
+    void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
+    void callpal(int code, ThreadContext *tc);
 
-    void setIdleProcess(Addr idle, ExecContext *xc);
+    void setIdleProcess(Addr idle, ThreadContext *tc);
 
   public:
     virtual void serialize(std::ostream &os);

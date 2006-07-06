@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 /* @file
@@ -87,7 +90,8 @@ class Event : public Serializable, public FastAlloc
         Squashed = 0x1,
         Scheduled = 0x2,
         AutoDelete = 0x4,
-        AutoSerialize = 0x8
+        AutoSerialize = 0x8,
+        IsExitEvent = 0x10
     };
 
     bool getFlags(Flags f) const { return (_flags & f) == f; }
@@ -211,6 +215,9 @@ class Event : public Serializable, public FastAlloc
     /// Check whether the event is squashed
     bool squashed() { return getFlags(Squashed); }
 
+    /// See if this is a SimExitEvent (without resorting to RTTI)
+    bool isExitEvent() { return getFlags(IsExitEvent); }
+
     /// Get the time that the event is scheduled
     Tick when() const { return _when; }
 
@@ -295,7 +302,7 @@ class EventQueue : public Serializable
     void reschedule(Event *ev);
 
     Tick nextTick() { return head->when(); }
-    void serviceOne();
+    Event *serviceOne();
 
     // process all events up to the given timestamp.  we inline a
     // quick test to see if there are any events to process; if so,

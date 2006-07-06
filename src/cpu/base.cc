@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #include <iostream>
@@ -35,7 +38,8 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/cpuevent.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
 #include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
@@ -44,10 +48,6 @@
 #include "sim/system.hh"
 
 #include "base/trace.hh"
-
-#if FULL_SYSTEM
-#include "kern/kernel_stats.hh"
-#endif
 
 using namespace std;
 
@@ -89,8 +89,8 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_insts_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
-                "a thread reached the max instruction count");
+            new SimLoopExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
+                                 "a thread reached the max instruction count");
 
     if (p->max_insts_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
@@ -114,8 +114,8 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_loads_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
-                "a thread reached the max load count");
+            new SimLoopExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
+                                 "a thread reached the max load count");
 
     if (p->max_loads_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
@@ -153,8 +153,6 @@ BaseCPU::BaseCPU(Params *p)
     profileEvent = NULL;
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
-
-    kernelStats = new Kernel::Statistics(system);
 #endif
 
 }
@@ -164,6 +162,7 @@ BaseCPU::Params::Params()
 #if FULL_SYSTEM
     profile = false;
 #endif
+    checker = NULL;
 }
 
 void
@@ -174,17 +173,13 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
-#if FULL_SYSTEM
-    if (kernelStats)
-        delete kernelStats;
-#endif
 }
 
 void
 BaseCPU::init()
 {
     if (!params->deferRegistration)
-        registerExecContexts();
+        registerThreadContexts();
 }
 
 void
@@ -207,44 +202,42 @@ BaseCPU::regStats()
         .desc("number of cpu cycles simulated")
         ;
 
-    int size = execContexts.size();
+    int size = threadContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {
             stringstream namestr;
             ccprintf(namestr, "%s.ctx%d", name(), i);
-            execContexts[i]->regStats(namestr.str());
+            threadContexts[i]->regStats(namestr.str());
         }
     } else if (size == 1)
-        execContexts[0]->regStats(name());
+        threadContexts[0]->regStats(name());
 
 #if FULL_SYSTEM
-    if (kernelStats)
-        kernelStats->regStats(name() + ".kern");
 #endif
 }
 
 
 void
-BaseCPU::registerExecContexts()
+BaseCPU::registerThreadContexts()
 {
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *xc = execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *tc = threadContexts[i];
 
 #if FULL_SYSTEM
         int id = params->cpu_id;
         if (id != -1)
             id += i;
 
-        xc->setCpuId(system->registerExecContext(xc, id));
+        tc->setCpuId(system->registerThreadContext(tc, id));
 #else
-        xc->setCpuId(xc->getProcessPtr()->registerExecContext(xc));
+        tc->setCpuId(tc->getProcessPtr()->registerThreadContext(tc));
 #endif
     }
 }
 
 
 void
-BaseCPU::switchOut(Sampler *sampler)
+BaseCPU::switchOut()
 {
     panic("This CPU doesn't support sampling!");
 }
@@ -252,19 +245,22 @@ BaseCPU::switchOut(Sampler *sampler)
 void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    assert(execContexts.size() == oldCPU->execContexts.size());
+    assert(threadContexts.size() == oldCPU->threadContexts.size());
 
-    for (int i = 0; i < execContexts.size(); ++i) {
-        ExecContext *newXC = execContexts[i];
-        ExecContext *oldXC = oldCPU->execContexts[i];
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        ThreadContext *newTC = threadContexts[i];
+        ThreadContext *oldTC = oldCPU->threadContexts[i];
 
-        newXC->takeOverFrom(oldXC);
-        assert(newXC->readCpuId() == oldXC->readCpuId());
+        newTC->takeOverFrom(oldTC);
+
+        CpuEvent::replaceThreadContext(oldTC, newTC);
+
+        assert(newTC->readCpuId() == oldTC->readCpuId());
 #if FULL_SYSTEM
-        system->replaceExecContext(newXC, newXC->readCpuId());
+        system->replaceThreadContext(newTC, newTC->readCpuId());
 #else
-        assert(newXC->getProcessPtr() == oldXC->getProcessPtr());
-        newXC->getProcessPtr()->replaceExecContext(newXC, newXC->readCpuId());
+        assert(newTC->getProcessPtr() == oldTC->getProcessPtr());
+        newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
 #endif
     }
 
@@ -273,8 +269,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
 
-    for (int i = 0; i < execContexts.size(); ++i)
-        execContexts[i]->profileClear();
+    for (int i = 0; i < threadContexts.size(); ++i)
+        threadContexts[i]->profileClear();
 
     if (profileEvent)
         profileEvent->schedule(curTick);
@@ -290,9 +286,9 @@ BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
 void
 BaseCPU::ProfileEvent::process()
 {
-    for (int i = 0, size = cpu->execContexts.size(); i < size; ++i) {
-        ExecContext *xc = cpu->execContexts[i];
-        xc->profileSample();
+    for (int i = 0, size = cpu->threadContexts.size(); i < size; ++i) {
+        ThreadContext *tc = cpu->threadContexts[i];
+        tc->profileSample();
     }
 
     schedule(curTick + interval);
@@ -345,12 +341,6 @@ BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     SERIALIZE_SCALAR(intstatus);
-
-#if FULL_SYSTEM
-    if (kernelStats)
-        kernelStats->serialize(os);
-#endif
-
 }
 
 void
@@ -358,11 +348,6 @@ BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
     UNSERIALIZE_SCALAR(intstatus);
-
-#if FULL_SYSTEM
-    if (kernelStats)
-        kernelStats->unserialize(cp, section);
-#endif
 }
 
 #endif // FULL_SYSTEM

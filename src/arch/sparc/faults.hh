@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Kevin Lim
  */
 
 #ifndef __ALPHA_FAULTS_HH__
@@ -43,7 +46,7 @@ class SparcFault : public FaultBase
 {
   public:
 #if FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
@@ -79,6 +82,31 @@ class MemAddressNotAligned : public SparcFault
     FaultStat & countStat() {return _count;}
     bool isAlignmentFault() {return true;}
 };
+
+#if !FULL_SYSTEM
+class PageTableFault : public SparcFault
+{
+  private:
+    Addr vaddr;
+    static FaultName _name;
+    static TrapType _trapType;
+    static FaultPriority _priority;
+    static FaultStat _count;
+  public:
+    PageTableFault(Addr va)
+        : vaddr(va) {}
+    FaultName name() {return _name;}
+    TrapType trapType() {return _trapType;}
+    FaultPriority priority() {return _priority;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
+};
+
+static inline Fault genPageTableFault(Addr va)
+{
+    return new PageTableFault(va);
+}
+#endif
 
 static inline Fault genMachineCheckFault()
 {
@@ -582,9 +610,10 @@ class TrapInstruction : public EnumeratedFault
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
 #if !FULL_SYSTEM
-    void invoke(ExecContext * xc);
+    void invoke(ThreadContext * tc);
 #endif
 };
+
 
 } // SparcISA namespace
 

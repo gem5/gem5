@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #ifndef __CPU__OP_CLASS_HH__
@@ -59,6 +62,6 @@ enum OpClass {
 /**
  * Array mapping OpClass enum values to strings.  Defined in op_class.cc.
  */
-extern const char *opClassStrings[];
+extern const char *opClassStrings[Num_OpClasses];
 
 #endif // __CPU__OP_CLASS_HH__

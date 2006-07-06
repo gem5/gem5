@@ -24,14 +24,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
 // Todo:  Create destructor.
 // Have it so that there's a more meaningful name given to the variable
 // that marks the beginning of the FP registers.
 
-#ifndef __CPU_O3_CPU_RENAME_MAP_HH__
-#define __CPU_O3_CPU_RENAME_MAP_HH__
+#ifndef __CPU_O3_RENAME_MAP_HH__
+#define __CPU_O3_RENAME_MAP_HH__
 
 #include <iostream>
 #include <utility>
@@ -62,18 +64,30 @@ class SimpleRenameMap
     typedef std::pair<PhysRegIndex, PhysRegIndex> RenameInfo;
 
   public:
-    //Constructor
-    SimpleRenameMap(unsigned _numLogicalIntRegs,
-                    unsigned _numPhysicalIntRegs,
-                    unsigned _numLogicalFloatRegs,
-                    unsigned _numPhysicalFloatRegs,
-                    unsigned _numMiscRegs,
-                    RegIndex _intZeroReg,
-                    RegIndex _floatZeroReg);
+    /** Default constructor.  init() must be called prior to use. */
+    SimpleRenameMap() {};
 
     /** Destructor. */
     ~SimpleRenameMap();
 
+    /** Initializes rename map with given parameters. */
+    void init(unsigned _numLogicalIntRegs,
+              unsigned _numPhysicalIntRegs,
+              PhysRegIndex &_int_reg_start,
+
+              unsigned _numLogicalFloatRegs,
+              unsigned _numPhysicalFloatRegs,
+              PhysRegIndex &_float_reg_start,
+
+              unsigned _numMiscRegs,
+
+              RegIndex _intZeroReg,
+              RegIndex _floatZeroReg,
+
+              int id,
+              bool bindRegs);
+
+    /** Sets the free list used with this rename map. */
     void setFreeList(SimpleFreeList *fl_ptr);
 
     //Tell rename map to get a free physical register for a given
@@ -84,23 +98,19 @@ class SimpleRenameMap
 
     PhysRegIndex lookup(RegIndex phys_reg);
 
-    bool isReady(PhysRegIndex arch_reg);
-
     /**
      * Marks the given register as ready, meaning that its value has been
      * calculated and written to the register file.
      * @param ready_reg The index of the physical register that is now ready.
      */
-    void markAsReady(PhysRegIndex ready_reg);
-
     void setEntry(RegIndex arch_reg, PhysRegIndex renamed_reg);
-
-    void squash(std::vector<RegIndex> freed_regs,
-                std::vector<UnmapInfo> unmaps);
 
     int numFreeEntries();
 
   private:
+    /** Rename Map ID  */
+    int id;
+
     /** Number of logical integer registers. */
     int numLogicalIntRegs;
 
@@ -143,31 +153,16 @@ class SimpleRenameMap
         { }
     };
 
+  private:
     /** Integer rename map. */
-    RenameEntry *intRenameMap;
+    std::vector<RenameEntry> intRenameMap;
 
     /** Floating point rename map. */
-    RenameEntry *floatRenameMap;
+    std::vector<RenameEntry> floatRenameMap;
 
+  private:
     /** Free list interface. */
     SimpleFreeList *freeList;
-
-    // Might want to make all these scoreboards into one large scoreboard.
-
-    /** Scoreboard of physical integer registers, saying whether or not they
-     *  are ready.
-     */
-    std::vector<bool> intScoreboard;
-
-    /** Scoreboard of physical floating registers, saying whether or not they
-     *  are ready.
-     */
-    std::vector<bool> floatScoreboard;
-
-    /** Scoreboard of miscellaneous registers, saying whether or not they
-     *  are ready.
-     */
-    std::vector<bool> miscScoreboard;
 };
 
-#endif //__CPU_O3_CPU_RENAME_MAP_HH__
+#endif //__CPU_O3_RENAME_MAP_HH__

@@ -1,4 +1,4 @@
-from m5 import *
+from m5.config import *
 class ConsoleListener(SimObject):
     type = 'ConsoleListener'
     port = Param.TcpPort(3456, "listen port")

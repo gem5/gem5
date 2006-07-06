@@ -24,14 +24,19 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
+#include "arch/sparc/exceptions.hh"
 #include "arch/sparc/faults.hh"
 #include "base/trace.hh"
 #include "sim/byteswap.hh"
+#include "cpu/cpuevent.hh"
 #include "sim/host.hh"
 
 class Checkpoint;
@@ -42,13 +47,21 @@ namespace SparcISA
     typedef uint8_t  RegIndex;
 
     // MAXTL - maximum trap level
-    const int MaxPTL = 6;
+    const int MaxPTL = 2;
     const int MaxTL  = 6;
     const int MaxGL  = 3;
     const int MaxPGL = 2;
 
     // NWINDOWS - number of register windows, can be 3 to 32
     const int NWindows = 32;
+
+
+    const int AsrStart = 0;
+    const int PrStart = 32;
+    const int HprStart = 64;
+    const int MiscStart = 96;
+
+    const uint64_t Bit64 = (1ULL << 63);
 
     class IntRegFile
     {
@@ -231,17 +244,22 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
@@ -253,17 +271,21 @@ namespace SparcISA
             //In each of these cases, we have to copy the value into a temporary
             //variable. This is because we may otherwise try to access an
             //unaligned portion of memory.
+            uint32_t result32;
+            uint64_t result64;
             switch(width)
             {
               case SingleWidth:
-                uint32_t result32 = gtoh((uint32_t)val);
+                result32 = gtoh((uint32_t)val);
                 memcpy(regSpace + 4 * floatReg, &result32, width);
+                break;
               case DoubleWidth:
-                uint64_t result64 = gtoh((uint64_t)val);
+                result64 = gtoh((uint64_t)val);
                 memcpy(regSpace + 4 * floatReg, &result64, width);
+                break;
               case QuadWidth:
-                uint64_t result128 = gtoh((uint64_t)val);
-                memcpy(regSpace + 4 * floatReg, &result128, width);
+                panic("Quad width FP not implemented.");
+                break;
               default:
                 panic("Attempted to read a %d bit floating point register!", width);
             }
@@ -277,156 +299,83 @@ namespace SparcISA
 
     enum MiscRegIndex
     {
-        MISCREG_PSTATE,
-        MISCREG_PSTATE_AG,
-        MISCREG_PSTATE_IE,
-        MISCREG_PSTATE_PRIV,
-        MISCREG_PSTATE_AM,
-        MISCREG_PSTATE_PEF,
-        MISCREG_PSTATE_RED,
-        MISCREG_PSTATE_MM,
-        MISCREG_PSTATE_TLE,
-        MISCREG_PSTATE_CLE,
-        MISCREG_TBA,
-        MISCREG_Y,
-        MISCREG_Y_VALUE,
-        MISCREG_PIL,
-        MISCREG_CWP,
-        MISCREG_TT_BASE,
-        MISCREG_TT_END = MISCREG_TT_BASE + MaxTL,
-        MISCREG_CCR,
-        MISCREG_CCR_ICC,
-        MISCREG_CCR_ICC_C,
-        MISCREG_CCR_ICC_V,
-        MISCREG_CCR_ICC_Z,
-        MISCREG_CCR_ICC_N,
-        MISCREG_CCR_XCC,
-        MISCREG_CCR_XCC_C,
-        MISCREG_CCR_XCC_V,
-        MISCREG_CCR_XCC_Z,
-        MISCREG_CCR_XCC_N,
-        MISCREG_ASI,
-        MISCREG_TL,
-        MISCREG_TPC_BASE,
-        MISCREG_TPC_END = MISCREG_TPC_BASE + MaxTL,
-        MISCREG_TNPC_BASE,
-        MISCREG_TNPC_END = MISCREG_TNPC_BASE + MaxTL,
-        MISCREG_TSTATE_BASE,
-        MISCREG_TSTATE_END = MISCREG_TSTATE_BASE + MaxTL,
-        MISCREG_TSTATE_CWP_BASE,
-        MISCREG_TSTATE_CWP_END = MISCREG_TSTATE_CWP_BASE + MaxTL,
-        MISCREG_TSTATE_PSTATE_BASE,
-        MISCREG_TSTATE_PSTATE_END = MISCREG_TSTATE_PSTATE_BASE + MaxTL,
-        MISCREG_TSTATE_ASI_BASE,
-        MISCREG_TSTATE_ASI_END = MISCREG_TSTATE_ASI_BASE + MaxTL,
-        MISCREG_TSTATE_CCR_BASE,
-        MISCREG_TSTATE_CCR_END = MISCREG_TSTATE_CCR_BASE + MaxTL,
-        MISCREG_TICK,
-        MISCREG_TICK_COUNTER,
-        MISCREG_TICK_NPT,
-        MISCREG_CANSAVE,
-        MISCREG_CANRESTORE,
-        MISCREG_OTHERWIN,
-        MISCREG_CLEANWIN,
-        MISCREG_WSTATE,
-        MISCREG_WSTATE_NORMAL,
-        MISCREG_WSTATE_OTHER,
-        MISCREG_VER,
-        MISCREG_VER_MAXWIN,
-        MISCREG_VER_MAXTL,
-        MISCREG_VER_MASK,
-        MISCREG_VER_IMPL,
-        MISCREG_VER_MANUF,
-        MISCREG_FSR,
-        MISCREG_FSR_CEXC,
-        MISCREG_FSR_CEXC_NXC,
-        MISCREG_FSR_CEXC_DZC,
-        MISCREG_FSR_CEXC_UFC,
-        MISCREG_FSR_CEXC_OFC,
-        MISCREG_FSR_CEXC_NVC,
-        MISCREG_FSR_AEXC,
-        MISCREG_FSR_AEXC_NXC,
-        MISCREG_FSR_AEXC_DZC,
-        MISCREG_FSR_AEXC_UFC,
-        MISCREG_FSR_AEXC_OFC,
-        MISCREG_FSR_AEXC_NVC,
-        MISCREG_FSR_FCC0,
-        MISCREG_FSR_QNE,
-        MISCREG_FSR_FTT,
-        MISCREG_FSR_VER,
-        MISCREG_FSR_NS,
-        MISCREG_FSR_TEM,
-        MISCREG_FSR_TEM_NXM,
-        MISCREG_FSR_TEM_DZM,
-        MISCREG_FSR_TEM_UFM,
-        MISCREG_FSR_TEM_OFM,
-        MISCREG_FSR_TEM_NVM,
-        MISCREG_FSR_RD,
-        MISCREG_FSR_FCC1,
-        MISCREG_FSR_FCC2,
-        MISCREG_FSR_FCC3,
-        MISCREG_FPRS,
-        MISCREG_FPRS_DL,
-        MISCREG_FPRS_DU,
-        MISCREG_FPRS_FEF,
-        numMiscRegs
+        /** Ancillary State Registers */
+        MISCREG_Y  = AsrStart + 0,
+        MISCREG_CCR = AsrStart + 2,
+        MISCREG_ASI = AsrStart + 3,
+        MISCREG_TICK = AsrStart + 4,
+        MISCREG_PC = AsrStart + 5,
+        MISCREG_FPRS = AsrStart + 6,
+        MISCREG_PCR = AsrStart + 16,
+        MISCREG_PIC = AsrStart + 17,
+        MISCREG_GSR = AsrStart + 19,
+        MISCREG_SOFTINT_SET = AsrStart + 20,
+        MISCREG_SOFTINT_CLR = AsrStart + 21,
+        MISCREG_SOFTINT = AsrStart + 22,
+        MISCREG_TICK_CMPR = AsrStart + 23,
+        MISCREG_STICK = AsrStart + 24,
+        MISCREG_STICK_CMPR = AsrStart + 25,
+
+        /** Privilged Registers */
+        MISCREG_TPC = PrStart + 0,
+        MISCREG_TNPC = PrStart + 1,
+        MISCREG_TSTATE = PrStart + 2,
+        MISCREG_TT = PrStart + 3,
+        MISCREG_PRIVTICK = PrStart + 4,
+        MISCREG_TBA = PrStart + 5,
+        MISCREG_PSTATE = PrStart + 6,
+        MISCREG_TL = PrStart + 7,
+        MISCREG_PIL = PrStart + 8,
+        MISCREG_CWP = PrStart + 9,
+        MISCREG_CANSAVE = PrStart + 10,
+        MISCREG_CANRESTORE = PrStart + 11,
+        MISCREG_CLEANWIN = PrStart + 12,
+        MISCREG_OTHERWIN = PrStart + 13,
+        MISCREG_WSTATE = PrStart + 14,
+        MISCREG_GL = PrStart + 16,
+
+        /** Hyper privileged registers */
+        MISCREG_HPSTATE = HprStart + 0,
+        MISCREG_HTSTATE = HprStart + 1,
+        MISCREG_HINTP = HprStart + 3,
+        MISCREG_HTBA = HprStart + 5,
+        MISCREG_HVER = HprStart + 6,
+        MISCREG_STRAND_STS_REG = HprStart + 16,
+        MISCREG_HSTICK_CMPR = HprStart + 31,
+
+        /** Floating Point Status Register */
+        MISCREG_FSR = MiscStart + 0
+
     };
 
     // The control registers, broken out into fields
     class MiscRegFile
     {
       private:
-        union
-        {
-            uint16_t pstate;		// Process State Register
-            struct
-            {
-                uint16_t ag:1;		// Alternate Globals
-                uint16_t ie:1;		// Interrupt enable
-                uint16_t priv:1;	// Privelege mode
-                uint16_t am:1;		// Address mask
-                uint16_t pef:1;		// PSTATE enable floating-point
-                uint16_t red:1;		// RED (reset, error, debug) state
-                uint16_t mm:2;		// Memory Model
-                uint16_t tle:1;		// Trap little-endian
-                uint16_t cle:1;		// Current little-endian
-            } pstateFields;
-        };
-        uint64_t tba;		// Trap Base Address
-        union
-        {
+
+        /* ASR Registers */
+        union {
             uint64_t y;		// Y (used in obsolete multiplication)
-            struct
-            {
+            struct {
                 uint64_t value:32;	// The actual value stored in y
                 uint64_t :32;	// reserved bits
             } yFields;
         };
-        uint8_t pil;		// Process Interrupt Register
-        uint8_t cwp;		// Current Window Pointer
-        uint16_t tt[MaxTL];	// Trap Type (Type of trap which occured
-                                // on the previous level)
-        union
-        {
+        union {
             uint8_t	ccr;		// Condition Code Register
-            struct
-            {
-                union
-                {
+            struct {
+                union {
                     uint8_t icc:4;	// 32-bit condition codes
-                    struct
-                    {
+                    struct {
                         uint8_t c:1;	// Carry
                         uint8_t v:1;	// Overflow
                         uint8_t z:1;	// Zero
                         uint8_t n:1;	// Negative
                     } iccFields;
                 };
-                union
-                {
+                union {
                     uint8_t xcc:4;	// 64-bit condition codes
-                    struct
-                    {
+                    struct {
                         uint8_t c:1;	// Carry
                         uint8_t v:1;	// Overflow
                         uint8_t z:1;	// Zero
@@ -436,73 +385,143 @@ namespace SparcISA
             } ccrFields;
         };
         uint8_t asi;		// Address Space Identifier
-        uint8_t tl;		// Trap Level
+        union {
+            uint64_t tick;		// Hardware clock-tick counter
+            struct {
+                int64_t counter:63;	// Clock-tick count
+                uint64_t npt:1;		// Non-priveleged trap
+            } tickFields;
+        };
+        union {
+            uint8_t		fprs;	// Floating-Point Register State
+            struct {
+                uint8_t dl:1;		// Dirty lower
+                uint8_t du:1;		// Dirty upper
+                uint8_t fef:1;		// FPRS enable floating-Point
+            } fprsFields;
+        };
+        union {
+            uint64_t softint;
+            struct {
+                uint64_t tm:1;
+                uint64_t int_level:14;
+                uint64_t sm:1;
+            } softintFields;
+        };
+        union {
+            uint64_t tick_cmpr;		// Hardware tick compare registers
+            struct {
+                uint64_t tick_cmpr:63;	// Clock-tick count
+                uint64_t int_dis:1;		// Non-priveleged trap
+            } tick_cmprFields;
+        };
+        union {
+            uint64_t stick;		// Hardware clock-tick counter
+            struct {
+                int64_t :63;	// Not used, storage in SparcSystem
+                uint64_t npt:1;		// Non-priveleged trap
+            } stickFields;
+        };
+        union {
+            uint64_t stick_cmpr;		// Hardware tick compare registers
+            struct {
+                uint64_t tick_cmpr:63;	// Clock-tick count
+                uint64_t int_dis:1;		// Non-priveleged trap
+            } stick_cmprFields;
+        };
+
+
+        /* Privileged Registers */
         uint64_t tpc[MaxTL];	// Trap Program Counter (value from
                                 // previous trap level)
         uint64_t tnpc[MaxTL];	// Trap Next Program Counter (value from
                                 // previous trap level)
-        union
-        {
+        union {
             uint64_t tstate[MaxTL];	// Trap State
-            struct
-            {
+            struct {
                 //Values are from previous trap level
                 uint64_t cwp:5;		// Current Window Pointer
-                uint64_t :2;	// Reserved bits
-                uint64_t pstate:10;	// Process State
-                uint64_t :6;	// Reserved bits
+                uint64_t :3;	// Reserved bits
+                uint64_t pstate:13;	// Process State
+                uint64_t :3;	// Reserved bits
                 uint64_t asi:8;		// Address Space Identifier
                 uint64_t ccr:8;		// Condition Code Register
+                uint64_t gl:8;		// Global level
             } tstateFields[MaxTL];
         };
-        union
-        {
-            uint64_t tick;		// Hardware clock-tick counter
-            struct
-            {
-                uint64_t counter:63;	// Clock-tick count
-                uint64_t npt:1;		// Non-priveleged trap
-            } tickFields;
+        uint16_t tt[MaxTL];	// Trap Type (Type of trap which occured
+                                // on the previous level)
+        uint64_t tba;		// Trap Base Address
+
+        union {
+            uint16_t pstate;		// Process State Register
+            struct {
+                uint16_t :1;		// reserved
+                uint16_t ie:1;		// Interrupt enable
+                uint16_t priv:1;	// Privelege mode
+                uint16_t am:1;		// Address mask
+                uint16_t pef:1;		// PSTATE enable floating-point
+                uint16_t :1;		// reserved2
+                uint16_t mm:2;		// Memory Model
+                uint16_t tle:1;		// Trap little-endian
+                uint16_t cle:1;		// Current little-endian
+            } pstateFields;
         };
+        uint8_t tl;		// Trap Level
+        uint8_t pil;		// Process Interrupt Register
+        uint8_t cwp;		// Current Window Pointer
         uint8_t cansave;	// Savable windows
         uint8_t canrestore;	// Restorable windows
-        uint8_t otherwin;	// Other windows
         uint8_t cleanwin;	// Clean windows
-        union
-        {
+        uint8_t otherwin;	// Other windows
+        union {
             uint8_t wstate;		// Window State
-            struct
-            {
+            struct {
                 uint8_t normal:3;	// Bits TT<4:2> are set to on a normal
                                         // register window trap
                 uint8_t other:3;	// Bits TT<4:2> are set to on an "otherwin"
                                         // register window trap
             } wstateFields;
         };
-        union
-        {
-            uint64_t ver;		// Version
-            struct
-            {
-                uint64_t maxwin:5;	// Max CWP value
-                uint64_t :2;	// Reserved bits
-                uint64_t maxtl:8;	// Maximum trap level
-                uint64_t :8;	// Reserved bits
-                uint64_t mask:8;	// Processor mask set revision number
-                uint64_t impl:16;	// Implementation identification number
-                uint64_t manuf:16;	// Manufacturer code
-            } verFields;
+        uint8_t gl;             // Global level register
+
+
+        /** Hyperprivileged Registers */
+        union {
+            uint64_t hpstate; // Hyperprivileged State Register
+            struct {
+                uint8_t tlz: 1;
+                uint8_t :1;
+                uint8_t hpriv:1;
+                uint8_t :2;
+                uint8_t red:1;
+                uint8_t :4;
+                uint8_t ibe:1;
+                uint8_t id:1;
+            } hpstateFields;
         };
-        union
-        {
+
+        uint64_t htstate[MaxTL]; // Hyperprivileged Trap State Register
+        uint64_t hintp;
+        uint64_t htba; // Hyperprivileged Trap Base Address register
+        union {
+            uint64_t hstick_cmpr;		// Hardware tick compare registers
+            struct {
+                uint64_t tick_cmpr:63;	// Clock-tick count
+                uint64_t int_dis:1;		// Non-priveleged trap
+            } hstick_cmprFields;
+        };
+
+        uint64_t strandStatusReg; // Per strand status register
+
+
+        /** Floating point misc registers. */
+        union {
             uint64_t	fsr;	// Floating-Point State Register
-            struct
-            {
-                union
-                {
+            struct {
+                union {
                     uint64_t cexc:5;	// Current excpetion
-                    struct
-                    {
+                    struct {
                         uint64_t nxc:1;		// Inexact
                         uint64_t dzc:1;		// Divide by zero
                         uint64_t ufc:1;		// Underflow
@@ -510,11 +529,9 @@ namespace SparcISA
                         uint64_t nvc:1;		// Invalid operand
                     } cexcFields;
                 };
-                union
-                {
+                union {
                     uint64_t aexc:5;		// Accrued exception
-                    struct
-                    {
+                    struct {
                         uint64_t nxc:1;		// Inexact
                         uint64_t dzc:1;		// Divide by zero
                         uint64_t ufc:1;		// Underflow
@@ -530,11 +547,9 @@ namespace SparcISA
                 uint64_t ver:3;			// Version (of the FPU)
                 uint64_t :2;		// Reserved bits
                 uint64_t ns:1;			// Nonstandard floating point
-                union
-                {
+                union {
                     uint64_t tem:5;			// Trap Enable Mask
-                    struct
-                    {
+                    struct {
                         uint64_t nxm:1;		// Inexact
                         uint64_t dzm:1;		// Divide by zero
                         uint64_t ufm:1;		// Underflow
@@ -550,17 +565,34 @@ namespace SparcISA
                 uint64_t :26;		// Reserved bits
             } fsrFields;
         };
-        union
-        {
-            uint8_t		fprs;	// Floating-Point Register State
-            struct
-            {
-                uint8_t dl:1;		// Dirty lower
-                uint8_t du:1;		// Dirty upper
-                uint8_t fef:1;		// FPRS enable floating-Point
-            } fprsFields;
-        };
 
+        // These need to check the int_dis field and if 0 then
+        // set appropriate bit in softint and checkinterrutps on the cpu
+#if FULL_SYSTEM
+        /** Process a tick compare event and generate an interrupt on the cpu if
+         * appropriate. */
+        void processTickCompare(ThreadContext *tc);
+        void processSTickCompare(ThreadContext *tc);
+        void processHSTickCompare(ThreadContext *tc);
+
+        typedef CpuEventWrapper<MiscRegFile,
+                &MiscRegFile::processTickCompare> TickCompareEvent;
+        TickCompareEvent *tickCompare;
+
+        typedef CpuEventWrapper<MiscRegFile,
+                &MiscRegFile::processSTickCompare> STickCompareEvent;
+        STickCompareEvent *sTickCompare;
+
+        typedef CpuEventWrapper<MiscRegFile,
+                &MiscRegFile::processHSTickCompare> HSTickCompareEvent;
+        HSTickCompareEvent *hSTickCompare;
+
+        /** Fullsystem only register version of ReadRegWithEffect() */
+        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
+        /** Fullsystem only register version of SetRegWithEffect() */
+        Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
+                ThreadContext * tc);
+#endif
       public:
 
         void reset()
@@ -572,18 +604,32 @@ namespace SparcISA
             //on reset Trap which sets the processor into the following state.
             //Bits that aren't set aren't defined on startup.
             tl = MaxTL;
-            tt[tl] = PowerOnReset.trapType();
-            pstateFields.mm = 0; //Total Store Order
-            pstateFields.red = 1; //Enter RED_State
-            pstateFields.am = 0; //Address Masking is turned off
-            pstateFields.priv = 1; //Processor enters privileged mode
-            pstateFields.ie = 0; //Interrupts are disabled
-            pstateFields.ag = 1; //Globals are replaced with alternate globals
-            pstateFields.tle = 0; //Big Endian mode for traps
-            pstateFields.cle = 0; //Big Endian mode for non-traps
-            tickFields.counter = 0; //The TICK register is unreadable by
-            tickFields.npt = 1; //The TICK register is unreadable by
-                                //non-priveleged software
+            gl = MaxGL;
+
+            tickFields.counter = 0; //The TICK register is unreadable bya
+            tickFields.npt = 1; //The TICK register is unreadable by by !priv
+
+            softint = 0; // Clear all the soft interrupt bits
+            tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+            stickFields.npt = 1; //The TICK register is unreadable by by !priv
+            stick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
+
+            tt[tl] = power_on_reset;
+            pstate = 0; // fields 0 but pef
+            pstateFields.pef = 1;
+
+            hpstate = 0;
+            hpstateFields.red = 1;
+            hpstateFields.hpriv = 1;
+            hpstateFields.tlz = 0; // this is a guess
+
+            hintp = 0; // no interrupts pending
+            hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
+            hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
 #else
 /*	    //This sets up the initial state of the processor for usermode processes
             pstateFields.priv = 0; //Process runs in user mode
@@ -608,20 +654,42 @@ namespace SparcISA
             reset();
         }
 
+        /** read a value out of an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial. */
         MiscReg readReg(int miscReg);
 
-        MiscReg readRegWithEffect(int miscReg, Fault &fault, ExecContext *xc);
+        /** Read a value from an IPR. Only the SE iprs are here and the rest
+         * are are readFSRegWithEffect (which is called by readRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
+        MiscReg readRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
 
+        /** write a value into an either an SE or FS IPR. No checking is done
+         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
+         * register are copied that are necessary for FS. However this prevents
+         * a bunch of ifdefs and is rarely called so is not performance
+         * criticial.*/
         Fault setReg(int miscReg, const MiscReg &val);
 
+        /** Write a value into an IPR. Only the SE iprs are here and the rest
+         * are are setFSRegWithEffect (which is called by setRegWithEffect()).
+         * Checking is done for permission based on state bits in the miscreg
+         * file. */
         Fault setRegWithEffect(int miscReg,
-                const MiscReg &val, ExecContext * xc);
+                const MiscReg &val, ThreadContext * tc);
 
         void serialize(std::ostream & os);
 
         void unserialize(Checkpoint * cp, const std::string & section);
 
-        void copyMiscRegs(ExecContext * xc);
+        void copyMiscRegs(ThreadContext * tc);
+
+        bool isHyperPriv() { return hpstateFields.hpriv; }
+        bool isPriv() { return hpstateFields.hpriv || pstateFields.priv; }
+        bool isNonPriv() { return !isPriv(); }
     };
 
     typedef union
@@ -693,9 +761,9 @@ namespace SparcISA
         }
 
         MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ExecContext *xc)
+                Fault &fault, ThreadContext *tc)
         {
-            return miscRegFile.readRegWithEffect(miscReg, fault, xc);
+            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
         }
 
         Fault setMiscReg(int miscReg, const MiscReg &val)
@@ -704,9 +772,9 @@ namespace SparcISA
         }
 
         Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ExecContext * xc)
+                ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, xc);
+            return miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg, int width)
@@ -775,22 +843,17 @@ namespace SparcISA
             CONTEXT_CWP,
             CONTEXT_GLOBALS
         };
-
-        union ContextVal
-        {
-            MiscReg reg;
-            int globalLevel;
-        };
+        typedef int ContextVal;
 
         void changeContext(ContextParam param, ContextVal val)
         {
             switch(param)
             {
               case CONTEXT_CWP:
-                intRegFile.setCWP(val.reg);
+                intRegFile.setCWP(val);
                 break;
               case CONTEXT_GLOBALS:
-                intRegFile.setGlobals(val.globalLevel);
+                intRegFile.setGlobals(val);
                 break;
               default:
                 panic("Tried to set illegal context parameter in the SPARC regfile.\n");
@@ -798,9 +861,11 @@ namespace SparcISA
         }
     };
 
-    void copyRegs(ExecContext *src, ExecContext *dest);
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
+    int InterruptLevel(uint64_t softint);
 
 } // namespace SparcISA
 

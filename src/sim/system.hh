@@ -24,6 +24,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Lisa Hsu
+ *          Nathan Binkert
  */
 
 #ifndef __SYSTEM_HH__
@@ -44,7 +48,7 @@
 #endif
 
 class BaseCPU;
-class ExecContext;
+class ThreadContext;
 class ObjectFile;
 class PhysicalMemory;
 
@@ -52,7 +56,6 @@ class PhysicalMemory;
 class Platform;
 class GDBListener;
 class RemoteGDB;
-namespace Kernel { class Binning; }
 #endif
 
 class System : public SimObject
@@ -61,12 +64,12 @@ class System : public SimObject
     PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
 
-    std::vector<ExecContext *> execContexts;
+    std::vector<ThreadContext *> threadContexts;
     int numcpus;
 
     int getNumCPUs()
     {
-        if (numcpus != execContexts.size())
+        if (numcpus != threadContexts.size())
             panic("cpu array not fully populated!");
 
         return numcpus;
@@ -95,8 +98,6 @@ class System : public SimObject
 
     /** Entry point in the kernel to start at */
     Addr kernelEntry;
-
-    Kernel::Binning *kernelBinning;
 
 #else
 
@@ -157,9 +158,6 @@ class System : public SimObject
         Tick boot_cpu_frequency;
         std::string boot_osflags;
         uint64_t init_param;
-        bool bin;
-        std::vector<std::string> binned_fns;
-        bool bin_int;
 
         std::string kernel_path;
         std::string readfile;
@@ -204,10 +202,9 @@ class System : public SimObject
 
 #endif // FULL_SYSTEM
 
-    int registerExecContext(ExecContext *xc, int xcIndex);
-    void replaceExecContext(ExecContext *xc, int xcIndex);
+    int registerThreadContext(ThreadContext *tc, int tcIndex);
+    void replaceThreadContext(ThreadContext *tc, int tcIndex);
 
-    void regStats();
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 

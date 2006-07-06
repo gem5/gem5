@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
  */
 
 #ifndef __LINUX_HH__
@@ -67,7 +69,7 @@ class Linux {
     typedef uint32_t gid_t;
     //@}
 
-#if BSD_HOST
+#if NO_STAT64
     typedef struct stat hst_stat;
     typedef struct stat hst_stat64;
 #else
@@ -174,7 +176,7 @@ class Linux {
     /// Helper function to convert a host stat buffer to a target stat
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by stat(), fstat(), and lstat().
-#if !BSD_HOST
+#if !NO_STAT64
     static void
     copyOutStatBuf(TranslatingPort *mem, Addr addr, hst_stat *host)
     {

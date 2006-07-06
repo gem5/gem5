@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
+ *          Gabe Black
  */
 
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
@@ -33,7 +36,7 @@
 #include "config/full_system.hh"
 #include "sim/host.hh"
 
-class ExecContext;
+class ThreadContext;
 class FastCPU;
 //class FullCPU;
 class Checkpoint;
@@ -80,6 +83,9 @@ class SyscallReturn
 
 #endif
 
+#if FULL_SYSTEM
+#include "arch/sparc/isa_fullsys_traits.hh"
+#endif
 
 namespace SparcISA
 {
@@ -172,12 +178,12 @@ namespace SparcISA
         // indicate success/failure in reg the carry bit of the ccr
         // and put the return value itself in the standard return value reg ().
         if (return_value.successful()) {
-            // no error
-            regs->setMiscReg(MISCREG_CCR_XCC_C, 0);
+            // no error, clear XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEF);
             regs->setIntReg(ReturnValueReg, return_value.value());
         } else {
-            // got an error, return details
-            regs->setMiscReg(MISCREG_CCR_XCC_C, 1);
+            // got an error, set XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x10);
             regs->setIntReg(ReturnValueReg, return_value.value());
         }
     }

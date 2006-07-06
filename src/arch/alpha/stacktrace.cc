@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
 #include <string>
@@ -34,36 +36,42 @@
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-ProcessInfo::ProcessInfo(ExecContext *_xc)
-    : xc(_xc)
+ProcessInfo::ProcessInfo(ThreadContext *_tc)
+    : tc(_tc)
 {
     Addr addr = 0;
 
-    if (!xc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
-        panic("thread info not compiled into kernel\n");
-    thread_info_size = gtoh(xc->getVirtPort()->read<int32_t>(addr));
+    VirtualPort *vp;
 
-    if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
-        panic("thread info not compiled into kernel\n");
-    task_struct_size = gtoh(xc->getVirtPort()->read<int32_t>(addr));
+    vp = tc->getVirtPort();
 
-    if (!xc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
         panic("thread info not compiled into kernel\n");
-    task_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
+    thread_info_size = vp->readGtoH<int32_t>(addr);
 
-    if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
         panic("thread info not compiled into kernel\n");
-    pid_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
+    task_struct_size = vp->readGtoH<int32_t>(addr);
 
-    if (!xc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
         panic("thread info not compiled into kernel\n");
-    name_off = gtoh(xc->getVirtPort()->read<int32_t>(addr));
+    task_off = vp->readGtoH<int32_t>(addr);
+
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
+        panic("thread info not compiled into kernel\n");
+    pid_off = vp->readGtoH<int32_t>(addr);
+
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
+        panic("thread info not compiled into kernel\n");
+    name_off = vp->readGtoH<int32_t>(addr);
+
+    tc->delVirtPort(vp);
 }
 
 Addr
@@ -73,7 +81,15 @@ ProcessInfo::task(Addr ksp) const
     if (base == ULL(0xfffffc0000000000))
         return 0;
 
-    return gtoh(xc->getVirtPort()->read<Addr>(base + task_off));
+    Addr tsk;
+
+    VirtualPort *vp;
+
+    vp = tc->getVirtPort();
+    tsk = vp->readGtoH<Addr>(base + task_off);
+    tc->delVirtPort(vp);
+
+    return tsk;
 }
 
 int
@@ -83,7 +99,15 @@ ProcessInfo::pid(Addr ksp) const
     if (!task)
         return -1;
 
-    return gtoh(xc->getVirtPort()->read<uint16_t>(task + pid_off));
+    uint16_t pd;
+
+    VirtualPort *vp;
+
+    vp = tc->getVirtPort();
+    pd = vp->readGtoH<uint16_t>(task + pid_off);
+    tc->delVirtPort(vp);
+
+    return pd;
 }
 
 string
@@ -94,7 +118,7 @@ ProcessInfo::name(Addr ksp) const
         return "console";
 
     char comm[256];
-    CopyStringOut(xc, comm, task + name_off, sizeof(comm));
+    CopyStringOut(tc, comm, task + name_off, sizeof(comm));
     if (!comm[0])
         return "startup";
 
@@ -102,14 +126,14 @@ ProcessInfo::name(Addr ksp) const
 }
 
 StackTrace::StackTrace()
-    : xc(0), stack(64)
+    : tc(0), stack(64)
 {
 }
 
-StackTrace::StackTrace(ExecContext *_xc, StaticInstPtr inst)
-    : xc(0), stack(64)
+StackTrace::StackTrace(ThreadContext *_tc, StaticInstPtr inst)
+    : tc(0), stack(64)
 {
-    trace(_xc, inst);
+    trace(_tc, inst);
 }
 
 StackTrace::~StackTrace()
@@ -117,15 +141,15 @@ StackTrace::~StackTrace()
 }
 
 void
-StackTrace::trace(ExecContext *_xc, bool is_call)
+StackTrace::trace(ThreadContext *_tc, bool is_call)
 {
-    xc = _xc;
+    tc = _tc;
 
-    bool usermode = (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+    bool usermode = (tc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
 
-    Addr pc = xc->readNextPC();
-    bool kernel = xc->getSystemPtr()->kernelStart <= pc &&
-        pc <= xc->getSystemPtr()->kernelEnd;
+    Addr pc = tc->readNextPC();
+    bool kernel = tc->getSystemPtr()->kernelStart <= pc &&
+        pc <= tc->getSystemPtr()->kernelEnd;
 
     if (usermode) {
         stack.push_back(user);
@@ -137,8 +161,8 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
         return;
     }
 
-    SymbolTable *symtab = xc->getSystemPtr()->kernelSymtab;
-    Addr ksp = xc->readIntReg(TheISA::StackPointerReg);
+    SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
+    Addr ksp = tc->readIntReg(TheISA::StackPointerReg);
     Addr bottom = ksp & ~0x3fff;
     Addr addr;
 
@@ -147,7 +171,7 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
             panic("could not find address %#x", pc);
 
         stack.push_back(addr);
-        pc = xc->readPC();
+        pc = tc->readPC();
     }
 
     Addr ra;
@@ -179,8 +203,8 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
             return;
         }
 
-        bool kernel = xc->getSystemPtr()->kernelStart <= pc &&
-            pc <= xc->getSystemPtr()->kernelEnd;
+        bool kernel = tc->getSystemPtr()->kernelStart <= pc &&
+            pc <= tc->getSystemPtr()->kernelEnd;
         if (!kernel)
             return;
 
@@ -194,22 +218,22 @@ StackTrace::trace(ExecContext *_xc, bool is_call)
 bool
 StackTrace::isEntry(Addr addr)
 {
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp12))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp12))
         return true;
 
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp7))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp7))
         return true;
 
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp11))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp11))
         return true;
 
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp21))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp21))
         return true;
 
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp9))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp9))
         return true;
 
-    if (addr == xc->readMiscReg(AlphaISA::IPR_PALtemp2))
+    if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp2))
         return true;
 
     return false;
@@ -294,7 +318,7 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
 
     for (Addr pc = func; pc < callpc; pc += sizeof(MachInst)) {
         MachInst inst;
-        CopyOut(xc, (uint8_t *)&inst, pc, sizeof(MachInst));
+        CopyOut(tc, (uint8_t *)&inst, pc, sizeof(MachInst));
 
         int reg, disp;
         if (decodeStack(inst, disp)) {
@@ -305,7 +329,7 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
             size += disp;
         } else if (decodeSave(inst, reg, disp)) {
             if (!ra && reg == ReturnAddressReg) {
-                CopyOut(xc, (uint8_t *)&ra, sp + disp, sizeof(Addr));
+                CopyOut(tc, (uint8_t *)&ra, sp + disp, sizeof(Addr));
                 if (!ra) {
                     // panic("no return address value pc=%#x\n", pc);
                     return false;
@@ -321,8 +345,8 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
 void
 StackTrace::dump()
 {
-    StringWrap name(xc->getCpuPtr()->name());
-    SymbolTable *symtab = xc->getSystemPtr()->kernelSymtab;
+    StringWrap name(tc->getCpuPtr()->name());
+    SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
 
     DPRINTFN("------ Stack ------\n");
 

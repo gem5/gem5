@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
 #ifndef __EXETRACE_HH__
@@ -35,7 +38,7 @@
 #include "sim/host.hh"
 #include "cpu/inst_seq.hh"	// for InstSeqNum
 #include "base/trace.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 
 class BaseCPU;
@@ -144,6 +147,7 @@ class InstRecord : public Record
         PRINT_INT_REGS,
         PRINT_FETCH_SEQ,
         PRINT_CP_SEQ,
+        PC_SYMBOL,
         INTEL_FORMAT,
         NUM_BITS
     };
@@ -169,14 +173,14 @@ InstRecord::setRegs(const IntRegFile &regs)
 
 inline
 InstRecord *
-getInstRecord(Tick cycle, ExecContext *xc, BaseCPU *cpu,
+getInstRecord(Tick cycle, ThreadContext *tc, BaseCPU *cpu,
               const StaticInstPtr staticInst,
               Addr pc, int thread = 0)
 {
     if (DTRACE(InstExec) &&
-        (InstRecord::traceMisspec() || !xc->misspeculating())) {
+        (InstRecord::traceMisspec() || !tc->misspeculating())) {
         return new InstRecord(cycle, cpu, staticInst, pc,
-                              xc->misspeculating(), thread);
+                              tc->misspeculating(), thread);
     }
 
     return NULL;

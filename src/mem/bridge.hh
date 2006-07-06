@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Steve Reinhardt
  */
 
 /**
@@ -37,7 +40,6 @@
 #include <list>
 #include <inttypes.h>
 #include <queue>
-
 
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
@@ -77,7 +79,8 @@ class Bridge : public MemObject
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
                   expectResponse(_pkt->needsResponse())
             {
-                pkt->senderState = this;
+                if (!pkt->isResponse())
+                    pkt->senderState = this;
             }
 
             void fixResponse(Packet *pkt)
@@ -146,7 +149,7 @@ class Bridge : public MemObject
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        virtual Packet* recvRetry();
+        virtual void recvRetry();
 
         /** When receiving a Atomic requestfrom the peer port,
             pass it to the bridge. */
@@ -174,7 +177,7 @@ class Bridge : public MemObject
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name);
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
 

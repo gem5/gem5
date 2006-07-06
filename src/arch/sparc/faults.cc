@@ -24,12 +24,19 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ *          Kevin Lim
  */
 
 #include "arch/sparc/faults.hh"
-#include "cpu/exec_context.hh"
+#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+#if !FULL_SYSTEM
+#include "sim/process.hh"
+#include "mem/page_table.hh"
+#endif
 
 namespace SparcISA
 {
@@ -215,40 +222,66 @@ TrapType      TrapInstruction::_baseTrapType = 0x100;
 FaultPriority TrapInstruction::_priority = 16;
 FaultStat     TrapInstruction::_count;
 
+#if !FULL_SYSTEM
+FaultName PageTableFault::_name = "page_table_fault";
+TrapType PageTableFault::_trapType = 0x0000;
+FaultPriority PageTableFault::_priority = 0;
+FaultStat PageTableFault::_count;
+#endif
+
 #if FULL_SYSTEM
 
-void SparcFault::invoke(ExecContext * xc)
+void SparcFault::invoke(ThreadContext * tc)
 {
-    FaultBase::invoke(xc);
+    FaultBase::invoke(tc);
     countStat()++;
 
     //Use the SPARC trap state machine
     /*// exception restart address
-    if (setRestartAddress() || !xc->inPalMode())
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, xc->regs.pc);
+    if (setRestartAddress() || !tc->inPalMode())
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->regs.pc);
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        xc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   xc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
+                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    if (!xc->inPalMode())
-        AlphaISA::swap_palshadow(&(xc->regs), true);
+    if (!tc->inPalMode())
+        AlphaISA::swap_palshadow(&(tc->regs), true);
 
-    xc->regs.pc = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    xc->regs.npc = xc->regs.pc + sizeof(MachInst);*/
+    tc->regs.pc = tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
+    tc->regs.npc = tc->regs.pc + sizeof(MachInst);*/
 }
 
 #endif
 
 #if !FULL_SYSTEM
 
-void TrapInstruction::invoke(ExecContext * xc)
+void TrapInstruction::invoke(ThreadContext * tc)
 {
-    xc->syscall(syscall_num);
+    // Should be handled in ISA.
 }
 
+void PageTableFault::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+
+    // address is higher than the stack region or in the current stack region
+    if (vaddr > p->stack_base || vaddr > p->stack_min)
+        FaultBase::invoke(tc);
+
+    // We've accessed the next page
+    if (vaddr > p->stack_min - PageBytes) {
+        p->stack_min -= PageBytes;
+        if (p->stack_base - p->stack_min > 8*1024*1024)
+            fatal("Over max stack size for one thread\n");
+        p->pTable->allocate(p->stack_min, PageBytes);
+        warn("Increasing stack size by one page.");
+    } else {
+        FaultBase::invoke(tc);
+    }
+}
 #endif
 
 } // namespace SparcISA

@@ -23,6 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
+
+import os
+import os.path
+import sys
 
 ################
 # CpuModel class
@@ -45,7 +51,6 @@ class CpuModel:
         # Add self to dict
         CpuModel.dict[name] = self
 
-
 #
 # Define CPU models.
 #
@@ -65,7 +70,27 @@ CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
 CpuModel('FullCPU', 'full_cpu_exec.cc',
          '#include "encumbered/cpu/full/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })
-CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
-         '#include "cpu/o3/alpha_dyn_inst.hh"',
-         { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
+CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<SimpleImpl>' })
+CpuModel('OzoneCPU', 'ozone_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<OzoneImpl>' })
+CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
+         '#include "cpu/checker/cpu.hh"',
+         { 'CPU_exec_context': 'CheckerCPU' })
 
+# Maybe there is a more clever way to determine ISA
+# here but since the environment variable isnt passed through
+# here the easiest way is this...
+sub_template = 'not found'
+for argument in sys.argv:
+    if 'ALPHA' in argument:
+        sub_template = 'AlphaDynInst<AlphaSimpleImpl>'
+
+if sub_template == 'not found':
+    sys.exit('NO CPU_exec_context substitution defined for this ISA')
+
+CpuModel('O3CPU', 'o3_cpu_exec.cc',
+         '#include "cpu/o3/isa_specific.hh"',
+         { 'CPU_exec_context': sub_template })

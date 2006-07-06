@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 #ifndef __CPU_SIMPLE_ATOMIC_HH__
@@ -98,7 +100,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
         virtual void recvStatusChange(Status status);
 
-        virtual Packet *recvRetry();
+        virtual void recvRetry();
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
@@ -116,14 +118,14 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     Packet  *data_write_pkt;
 
     bool dcache_access;
-    Tick dcache_complete;
+    Tick dcache_latency;
 
   public:
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    void switchOut(Sampler *s);
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     virtual void activateContext(int thread_num, int delay);

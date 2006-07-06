@@ -24,6 +24,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Steve Reinhardt
  */
 
 /*
@@ -178,13 +180,11 @@ FastAlloc::dump_oldest(int n)
 // C interfaces to FastAlloc::dump_summary() and FastAlloc::dump_oldest().
 // gdb seems to have trouble with calling C++ functions directly.
 //
-extern "C" void
 fast_alloc_summary()
 {
     FastAlloc::dump_summary();
 }
 
-extern "C" void
 fast_alloc_oldest(int n)
 {
     FastAlloc::dump_oldest(n);

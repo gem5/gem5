@@ -24,13 +24,26 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha_dyn_inst.hh"
-#include "cpu/o3/alpha_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/store_set.hh"
 #include "cpu/o3/mem_dep_unit_impl.hh"
 
 // Force instantation of memory dependency unit using store sets and
-// AlphaSimpleImpl.
-template class MemDepUnit<StoreSet, AlphaSimpleImpl>;
+// O3CPUImpl.
+template class MemDepUnit<StoreSet, O3CPUImpl>;
+
+#ifdef DEBUG
+template <>
+int
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_count = 0;
+template <>
+int
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_insert = 0;
+template <>
+int
+MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_erase = 0;
+#endif
