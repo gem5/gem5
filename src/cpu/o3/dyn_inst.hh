@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,59 +25,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Andrew Schultz
- *          Nathan Binkert
+ * Authors: Korey Sewell
  */
 
-/**
- * @file
- * Generic interface for platforms
- */
+#ifndef __CPU_O3_DYN_INST_HH__
+#define __CPU_O3_DYN_INST_HH__
 
-#ifndef __DEV_PLATFORM_HH__
-#define __DEV_PLATFORM_HH__
+#include "arch/isa_specific.hh"
 
-#include <bitset>
-#include <set>
+#if THE_ISA == ALPHA_ISA
+template <class Impl>
+class AlphaDynInst;
 
-#include "sim/sim_object.hh"
-#include "arch/isa_traits.hh"
+struct AlphaSimpleImpl;
 
-class PciConfigAll;
-class IntrControl;
-class SimConsole;
-class Uart;
-class System;
+typedef AlphaDynInst<AlphaSimpleImpl> O3DynInst;
+#endif
 
-class Platform : public SimObject
-{
-  public:
-    /** Pointer to the interrupt controller */
-    IntrControl *intrctrl;
-
-    /** Pointer to the UART, set by the uart */
-    Uart *uart;
-
-    /** Pointer to the system for info about the memory system. */
-    System *system;
-
-  public:
-    Platform(const std::string &name, IntrControl *intctrl);
-    virtual ~Platform();
-    virtual void postConsoleInt() = 0;
-    virtual void clearConsoleInt() = 0;
-    virtual Tick intrFrequency() = 0;
-    virtual void postPciInt(int line);
-    virtual void clearPciInt(int line);
-    virtual Addr pciToDma(Addr pciAddr) const;
-    virtual Addr calcConfigAddr(int bus, int dev, int func) = 0;
-    virtual void registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func,
-            uint8_t intr);
-
-  private:
-    std::bitset<256> intLines;
-    std::set<uint32_t> pciDevices;
-
-};
-
-#endif // __DEV_PLATFORM_HH__
+#endif // __CPU_O3_DYN_INST_HH__

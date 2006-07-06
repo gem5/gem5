@@ -52,8 +52,6 @@
 
 using namespace std;
 
-extern Sampler *SampCPU;
-
 using namespace Stats;
 using namespace TheISA;
 
@@ -209,6 +207,7 @@ namespace AlphaPseudo
     {
         if (!doCheckpointInsts)
             return;
+        exitSimLoop("checkpoint");
     }
 
     uint64_t
@@ -280,7 +279,6 @@ namespace AlphaPseudo
 
     void switchcpu(ThreadContext *tc)
     {
-        if (SampCPU)
-            SampCPU->switchCPUs();
+        exitSimLoop("switchcpu");
     }
 }

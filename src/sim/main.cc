@@ -523,19 +523,19 @@ simulate(Tick num_cycles = -1)
 }
 
 Event *
-createCountedQuiesce()
+createCountedDrain()
 {
-    return new CountedQuiesceEvent();
+    return new CountedDrainEvent();
 }
 
 void
-cleanupCountedQuiesce(Event *counted_quiesce)
+cleanupCountedDrain(Event *counted_drain)
 {
-    CountedQuiesceEvent *event =
-        dynamic_cast<CountedQuiesceEvent *>(counted_quiesce);
+    CountedDrainEvent *event =
+        dynamic_cast<CountedDrainEvent *>(counted_drain);
     if (event == NULL) {
-        fatal("Called cleanupCountedQuiesce() on an event that was not "
-              "a CountedQuiesceEvent.");
+        fatal("Called cleanupCountedDrain() on an event that was not "
+              "a CountedDrainEvent.");
     }
     assert(event->getCount() == 0);
     delete event;

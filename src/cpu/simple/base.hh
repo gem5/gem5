@@ -38,7 +38,6 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/pc_event.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -127,11 +126,6 @@ class BaseSimpleCPU : public BaseCPU
 
     // Static data storage
     TheISA::IntReg dataReg;
-
-    // Pointer to the sampler that is telling us to switchover.
-    // Used to signal the completion of the pipe drain and schedule
-    // the next switchover
-    Sampler *sampler;
 
     StaticInstPtr curStaticInst;
 

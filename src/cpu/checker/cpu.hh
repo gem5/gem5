@@ -66,7 +66,6 @@ class ThreadContext;
 class MemInterface;
 class Checkpoint;
 class Request;
-class Sampler;
 
 /**
  * CheckerCPU class.  Dynamically verifies instructions as they are
@@ -374,7 +373,7 @@ class Checker : public CheckerCPU
         : CheckerCPU(p)
     { }
 
-    void switchOut(Sampler *s);
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     void verify(DynInstPtr &inst);

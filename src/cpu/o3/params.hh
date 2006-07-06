@@ -47,6 +47,18 @@ class O3Params : public BaseO3CPU::Params
     unsigned activity;
 
     //
+    // Pointers to key objects
+    //
+#if !FULL_SYSTEM
+    std::vector<Process *> workload;
+    Process *process;
+#endif // FULL_SYSTEM
+
+    MemObject *mem;
+
+    BaseCPU *checker;
+
+    //
     // Caches
     //
     //    MemInterface *icacheInterface;
@@ -86,7 +98,10 @@ class O3Params : public BaseO3CPU::Params
     unsigned commitToIEWDelay;
     unsigned renameToIEWDelay;
     unsigned issueToExecuteDelay;
+    unsigned dispatchWidth;
     unsigned issueWidth;
+    unsigned wbWidth;
+    unsigned wbDepth;
     FUPool *fuPool;
 
     //

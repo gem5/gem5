@@ -40,8 +40,6 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
-class Sampler;
-
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch
@@ -182,11 +180,14 @@ class DefaultFetch
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
 
-    /** Begins the switch out of the fetch stage. */
-    void switchOut();
+    /** Begins the drain of the fetch stage. */
+    void drain();
 
-    /** Completes the switch out of the fetch stage. */
-    void doSwitchOut();
+    /** Resumes execution after a drain. */
+    void resume();
+
+    /** Tells fetch stage to prepare to be switched out. */
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -422,6 +423,9 @@ class DefaultFetch
      * must stop once it is not fetching PAL instructions.
      */
     bool interruptPending;
+
+    /** Is there a drain pending. */
+    bool drainPending;
 
     /** Records if fetch is switched out. */
     bool switchedOut;

@@ -130,13 +130,13 @@ if need_simple_base:
 if 'FastCPU' in env['CPU_MODELS']:
     sources += Split('fast/cpu.cc')
 
+need_bp_unit = False
 if 'O3CPU' in env['CPU_MODELS']:
+    need_bp_unit = True
     sources += SConscript('o3/SConscript', exports = 'env')
     sources += Split('''
-        o3/2bit_local_pred.cc
         o3/base_dyn_inst.cc
         o3/bpred_unit.cc
-        o3/btb.cc
         o3/commit.cc
         o3/decode.cc
         o3/fetch.cc
@@ -148,18 +148,17 @@ if 'O3CPU' in env['CPU_MODELS']:
         o3/lsq_unit.cc
         o3/lsq.cc
         o3/mem_dep_unit.cc
-        o3/ras.cc
         o3/rename.cc
         o3/rename_map.cc
         o3/rob.cc
         o3/scoreboard.cc
         o3/store_set.cc
-        o3/tournament_pred.cc
         ''')
     if env['USE_CHECKER']:
         sources += Split('o3/checker_builder.cc')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
+    need_bp_unit = True
     sources += Split('''
         ozone/base_dyn_inst.cc
         ozone/bpred_unit.cc
@@ -173,6 +172,14 @@ if 'OzoneCPU' in env['CPU_MODELS']:
         ''')
     if env['USE_CHECKER']:
         sources += Split('ozone/checker_builder.cc')
+
+if need_bp_unit:
+    sources += Split('''
+        o3/2bit_local_pred.cc
+        o3/btb.cc
+        o3/ras.cc
+        o3/tournament_pred.cc
+        ''')
 
 if env['USE_CHECKER']:
     sources += Split('checker/cpu.cc')

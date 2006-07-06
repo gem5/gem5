@@ -143,11 +143,14 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
-    /** Starts switch out of IEW stage. */
-    void switchOut();
+    /** Drains IEW stage. */
+    void drain();
+
+    /** Resumes execution after a drain. */
+    void resume();
 
     /** Completes switch out of IEW stage. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -203,6 +206,45 @@ class DefaultIEW
 
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
+
+    void incrWb(InstSeqNum &sn)
+    {
+        if (++wbOutstanding == wbMax)
+            ableToIssue = false;
+        DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+#if DEBUG
+        wbList.insert(sn);
+#endif
+    }
+
+    void decrWb(InstSeqNum &sn)
+    {
+        if (wbOutstanding-- == wbMax)
+            ableToIssue = true;
+        DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+#if DEBUG
+        assert(wbList.find(sn) != wbList.end());
+        wbList.erase(sn);
+#endif
+    }
+
+#if DEBUG
+    std::set<InstSeqNum> wbList;
+
+    void dumpWb()
+    {
+        std::set<InstSeqNum>::iterator wb_it = wbList.begin();
+        while (wb_it != wbList.end()) {
+            cprintf("[sn:%lli]\n",
+                    (*wb_it));
+            wb_it++;
+        }
+    }
+#endif
+
+    bool canIssue() { return ableToIssue; }
+
+    bool ableToIssue;
 
   private:
     /** Sends commit proper information for a squash due to a branch
@@ -384,11 +426,8 @@ class DefaultIEW
      */
     unsigned issueToExecuteDelay;
 
-    /** Width of issue's read path, in instructions.  The read path is both
-     *  the skid buffer and the rename instruction queue.
-     *  Note to self: is this really different than issueWidth?
-     */
-    unsigned issueReadWidth;
+    /** Width of dispatch, in instructions. */
+    unsigned dispatchWidth;
 
     /** Width of issue, in instructions. */
     unsigned issueWidth;
@@ -402,6 +441,17 @@ class DefaultIEW
      * in instToCommit().
      */
     unsigned wbCycle;
+
+    /** Number of instructions in flight that will writeback. */
+    unsigned wbOutstanding;
+
+    /** Writeback width. */
+    unsigned wbWidth;
+
+    /** Writeback width * writeback depth, where writeback depth is
+     * the number of cycles of writing back instructions that can be
+     * buffered. */
+    unsigned wbMax;
 
     /** Number of active threads. */
     unsigned numThreads;

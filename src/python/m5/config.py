@@ -543,15 +543,15 @@ class SimObject(object):
         for child in self._children.itervalues():
             child.connectPorts()
 
-    def startQuiesce(self, quiesce_event, recursive):
+    def startDrain(self, drain_event, recursive):
         count = 0
         # ParamContexts don't serialize
         if isinstance(self, SimObject) and not isinstance(self, ParamContext):
-            if self._ccObject.quiesce(quiesce_event):
+            if not self._ccObject.drain(drain_event):
                 count = 1
         if recursive:
             for child in self._children.itervalues():
-                count += child.startQuiesce(quiesce_event, True)
+                count += child.startDrain(drain_event, True)
         return count
 
     def resume(self):

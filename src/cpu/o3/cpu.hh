@@ -57,6 +57,8 @@ class Checker;
 class ThreadContext;
 template <class>
 class O3ThreadContext;
+
+class Checkpoint;
 class MemObject;
 class Process;
 
@@ -109,6 +111,7 @@ class FullO3CPU : public BaseO3CPU
         Idle,
         Halted,
         Blocked,
+        Drained,
         SwitchedOut
     };
 
@@ -270,14 +273,21 @@ class FullO3CPU : public BaseO3CPU
      */
     virtual void syscall(int tid) { panic("Unimplemented!"); }
 
-    /** Switches out this CPU. */
-    void switchOut(Sampler *sampler);
+    /** Starts draining the CPU's pipeline of all instructions in
+     * order to stop all memory accesses. */
+    virtual bool drain(Event *drain_event);
+
+    /** Resumes execution after a drain. */
+    virtual void resume();
 
     /** Signals to this CPU that a stage has completed switching out. */
-    void signalSwitched();
+    void signalDrained();
+
+    /** Switches out this CPU. */
+    virtual void switchOut();
 
     /** Takes over from another CPU. */
-    void takeOverFrom(BaseCPU *oldCPU);
+    virtual void takeOverFrom(BaseCPU *oldCPU);
 
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq()
@@ -550,11 +560,11 @@ class FullO3CPU : public BaseO3CPU
     /** Pointer to memory. */
     MemObject *mem;
 
-    /** Pointer to the sampler */
-    Sampler *sampler;
+    /** Event to call process() on once draining has completed. */
+    Event *drainEvent;
 
-    /** Counter of how many stages have completed switching out. */
-    int switchCount;
+    /** Counter of how many stages have completed draining. */
+    int drainCount;
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;

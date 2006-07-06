@@ -80,7 +80,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
-      switchPending(false),
+      drainPending(false),
       switchedOut(false),
       trapLatency(params->trapLatency),
       fetchTrapLatency(params->fetchTrapLatency)
@@ -351,18 +351,24 @@ DefaultCommit<Impl>::initStage()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::switchOut()
+DefaultCommit<Impl>::drain()
 {
-    switchPending = true;
+    drainPending = true;
 }
 
 template <class Impl>
 void
-DefaultCommit<Impl>::doSwitchOut()
+DefaultCommit<Impl>::switchOut()
 {
     switchedOut = true;
-    switchPending = false;
+    drainPending = false;
     rob->switchOut();
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::resume()
+{
 }
 
 template <class Impl>
@@ -557,8 +563,9 @@ DefaultCommit<Impl>::tick()
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
 
-    if (switchPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
-        cpu->signalSwitched();
+    if (drainPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalDrained();
+        drainPending = false;
         return;
     }
 

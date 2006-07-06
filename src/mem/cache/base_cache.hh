@@ -79,9 +79,9 @@ class BaseCache : public MemObject
 {
     class CachePort : public Port
     {
+      public:
         BaseCache *cache;
 
-      public:
         CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
 
       protected:
@@ -110,10 +110,11 @@ class BaseCache : public MemObject
 
     struct CacheEvent : public Event
     {
-        Packet *pkt;
         CachePort *cachePort;
+        Packet *pkt;
 
-        CacheEvent(Packet *pkt, CachePort *cachePort);
+        CacheEvent(CachePort *_cachePort);
+        CacheEvent(CachePort *_cachePort, Packet *_pkt);
         void process();
         const char *description();
     };
@@ -143,6 +144,11 @@ class BaseCache : public MemObject
     }
 
     virtual void recvStatusChange(Port::Status status, bool isCpuSide)
+    {
+        fatal("No implementation");
+    }
+
+    virtual Packet *getPacket()
     {
         fatal("No implementation");
     }
@@ -388,7 +394,6 @@ class BaseCache : public MemObject
         if (!isBlockedForSnoop()) {
            memSidePort->clearBlocked();
         }
-
     }
 
     /**
@@ -407,10 +412,13 @@ class BaseCache : public MemObject
      */
     void setMasterRequest(RequestCause cause, Tick time)
     {
+        if (!doMasterRequest())
+        {
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
+            reqCpu->schedule(time);
+        }
         uint8_t flag = 1<<cause;
         masterRequests |= flag;
-        assert("Implement\n" && 0);
-//	mi->pktuest(time);
     }
 
     /**
@@ -462,8 +470,10 @@ class BaseCache : public MemObject
      */
     void respond(Packet *pkt, Tick time)
     {
-        assert("Implement\n" && 0);
-//	si->respond(pkt,time);
+        pkt->makeTimingResponse();
+        pkt->result = Packet::Success;
+        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+        reqCpu->schedule(time);
     }
 
     /**
@@ -476,8 +486,10 @@ class BaseCache : public MemObject
         if (!pkt->req->isUncacheable()) {
             missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
         }
-        assert("Implement\n" && 0);
-//	si->respond(pkt,time);
+        pkt->makeTimingResponse();
+        pkt->result = Packet::Success;
+        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+        reqCpu->schedule(time);
     }
 
     /**

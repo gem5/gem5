@@ -213,14 +213,14 @@ atexit.register(cc_main.doExitCleanup)
 # matter since most scripts will probably 'from m5.objects import *'.
 import objects
 
-def doQuiesce(root):
-    quiesce = cc_main.createCountedQuiesce()
-    unready_objects = root.startQuiesce(quiesce, True)
-    # If we've got some objects that can't quiesce immediately, then simulate
+def doDrain(root):
+    drain_event = cc_main.createCountedDrain()
+    unready_objects = root.startDrain(drain_event, True)
+    # If we've got some objects that can't drain immediately, then simulate
     if unready_objects > 0:
-        quiesce.setCount(unready_objects)
+        drain_event.setCount(unready_objects)
         simulate()
-    cc_main.cleanupCountedQuiesce(quiesce)
+    cc_main.cleanupCountedDrain(drain_event)
 
 def resume(root):
     root.resume()
@@ -228,7 +228,7 @@ def resume(root):
 def checkpoint(root):
     if not isinstance(root, objects.Root):
         raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
-    doQuiesce(root)
+    doDrain(root)
     print "Writing checkpoint"
     cc_main.serializeAll()
     resume(root)
@@ -241,7 +241,7 @@ def changeToAtomic(system):
     if not isinstance(system, objects.Root) and not isinstance(system, System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
-    doQuiesce(system)
+    doDrain(system)
     print "Changing memory mode to atomic"
     system.changeTiming(cc_main.SimObject.Atomic)
     resume(system)
@@ -250,7 +250,7 @@ def changeToTiming(system):
     if not isinstance(system, objects.Root) and not isinstance(system, System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
-    doQuiesce(system)
+    doDrain(system)
     print "Changing memory mode to timing"
     system.changeTiming(cc_main.SimObject.Timing)
     resume(system)
@@ -271,16 +271,16 @@ def switchCpus(cpuList):
         if not isinstance(cpu, objects.BaseCPU):
             raise TypeError, "%s is not of type BaseCPU", cpu
 
-    # Quiesce all of the individual CPUs
-    quiesce = cc_main.createCountedQuiesce()
+    # Drain all of the individual CPUs
+    drain_event = cc_main.createCountedDrain()
     unready_cpus = 0
     for old_cpu in old_cpus:
-        unready_cpus += old_cpu.startQuiesce(quiesce, False)
-    # If we've got some objects that can't quiesce immediately, then simulate
+        unready_cpus += old_cpu.startDrain(drain_event, False)
+    # If we've got some objects that can't drain immediately, then simulate
     if unready_cpus > 0:
-        quiesce.setCount(unready_cpus)
+        drain_event.setCount(unready_cpus)
         simulate()
-    cc_main.cleanupCountedQuiesce(quiesce)
+    cc_main.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
         old_cpu._ccObject.switchOut()

@@ -82,6 +82,8 @@ class PioPort : public Port
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
 
+    void resendNacked(Packet *pkt);
+
     /**
      * This class is used to implemented sendTiming() with a delay. When a delay
      * is requested a new event is created. When the event time expires it
@@ -113,7 +115,7 @@ class PioPort : public Port
     virtual void recvRetry();
 
   public:
-    PioPort(PioDevice *dev, Platform *p);
+    PioPort(PioDevice *dev, Platform *p, std::string pname = "-pioport");
 
   friend class PioPort::SendEvent;
 };
