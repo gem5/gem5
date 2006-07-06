@@ -355,15 +355,21 @@ DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::switchOut()
+DefaultIEW<Impl>::drain()
 {
-    // IEW is ready to switch out at any time.
-    cpu->signalSwitched();
+    // IEW is ready to drain at any time.
+    cpu->signalDrained();
 }
 
 template <class Impl>
 void
-DefaultIEW<Impl>::doSwitchOut()
+DefaultIEW<Impl>::resume()
+{
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::switchOut()
 {
     // Clear any state.
     switchedOut = true;

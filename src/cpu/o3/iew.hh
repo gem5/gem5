@@ -143,11 +143,14 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
-    /** Starts switch out of IEW stage. */
-    void switchOut();
+    /** Drains IEW stage. */
+    void drain();
+
+    /** Resumes execution after a drain. */
+    void resume();
 
     /** Completes switch out of IEW stage. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
