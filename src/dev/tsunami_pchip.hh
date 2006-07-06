@@ -45,6 +45,9 @@
 class TsunamiPChip : public BasicPioDevice
 {
   protected:
+
+    static const Addr TsunamiPciBus0Config = 0x801fe000000;
+
     /** Pchip control register */
     uint64_t pctl;
 
@@ -79,6 +82,8 @@ class TsunamiPChip : public BasicPioDevice
      * @return memory system address
      */
     Addr translatePciToDma(Addr busAddr);
+
+    Addr calcConfigAddr(int bus, int dev, int func);
 
     virtual Tick read(Packet *pkt);
     virtual Tick write(Packet *pkt);

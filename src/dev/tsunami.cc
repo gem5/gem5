@@ -95,6 +95,13 @@ Tsunami::pciToDma(Addr pciAddr) const
     return pchip->translatePciToDma(pciAddr);
 }
 
+
+Addr
+Tsunami::calcConfigAddr(int bus, int dev, int func)
+{
+   return pchip->calcConfigAddr(bus, dev, func);
+}
+
 void
 Tsunami::serialize(std::ostream &os)
 {

@@ -113,7 +113,13 @@ class Tsunami : public Platform
      */
     virtual void clearPciInt(int line);
 
+
     virtual Addr pciToDma(Addr pciAddr) const;
+
+    /**
+     * Calculate the configuration address given a bus/dev/func.
+     */
+    virtual Addr calcConfigAddr(int bus, int dev, int func);
 
     /**
      * Serialize this object to the given output stream.

@@ -34,8 +34,8 @@
 #include "sim/builder.hh"
 
 
-PioPort::PioPort(PioDevice *dev, Platform *p)
-    : Port(dev->name() + "-pioport"), device(dev), platform(p)
+PioPort::PioPort(PioDevice *dev, Platform *p, std::string pname)
+    : Port(dev->name() + pname), device(dev), platform(p)
 { }
 
 
@@ -79,19 +79,23 @@ PioPort::SendEvent::process()
     port->transmitList.push_back(packet);
 }
 
+void
+PioPort::resendNacked(Packet *pkt) {
+    pkt->reinitNacked();
+    if (transmitList.size()) {
+         transmitList.push_front(pkt);
+    } else {
+        if (!Port::sendTiming(pkt))
+            transmitList.push_front(pkt);
+    }
+};
 
 
 bool
 PioPort::recvTiming(Packet *pkt)
 {
     if (pkt->result == Packet::Nacked) {
-        pkt->reinitNacked();
-        if (transmitList.size()) {
-             transmitList.push_front(pkt);
-        } else {
-            if (!Port::sendTiming(pkt))
-                transmitList.push_front(pkt);
-        }
+        resendNacked(pkt);
     } else {
         Tick latency = device->recvAtomic(pkt);
         // turn packet around to go back to requester
