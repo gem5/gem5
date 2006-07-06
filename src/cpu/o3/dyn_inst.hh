@@ -31,6 +31,7 @@
 #ifndef __CPU_O3_DYN_INST_HH__
 #define __CPU_O3_DYN_INST_HH__
 
+#include "arch/isa_specific.hh"
 
 #if THE_ISA == ALPHA_ISA
 template <class Impl>
