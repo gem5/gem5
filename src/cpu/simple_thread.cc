@@ -123,14 +123,31 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
 
-SimpleThread::SimpleThread(RegFile *regFile)
-    : ThreadState(-1, -1, NULL, -1, NULL), cpu(NULL)
-{
-    regs = *regFile;
-    tc = new ProxyThreadContext<SimpleThread>(this);
-}
-
 #endif
+
+SimpleThread::SimpleThread(ThreadContext *oldContext)
+#if FULL_SYSTEM
+    : ThreadState(-1, -1)
+#else
+    : ThreadState(-1, -1, NULL, -1, NULL)
+#endif
+{
+    tc = new ProxyThreadContext<SimpleThread>(this);
+    regs.clear();
+
+    copyState(oldContext);
+
+#if FULL_SYSTEM
+    EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
+    if (quiesce) {
+        quiesceEvent = quiesce;
+    }
+    Kernel::Statistics *stats = oldContext->getKernelStats();
+    if (stats) {
+        kernelStats = stats;
+    }
+#endif
+}
 
 SimpleThread::~SimpleThread()
 {
@@ -147,13 +164,8 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
     assert(process == oldContext->getProcessPtr());
 #endif
 
-    // copy over functional state
-    _status = oldContext->status();
-    copyArchRegs(oldContext);
-    cpuId = oldContext->readCpuId();
-#if !FULL_SYSTEM
-    funcExeInst = oldContext->readFuncExeInst();
-#else
+    copyState(oldContext);
+#if FULL_SYSTEM
     EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
     if (quiesce) {
         // Point the quiesce event's TC at this TC so that it wakes up
@@ -171,42 +183,32 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
 }
 
 void
+SimpleThread::copyState(ThreadContext *oldContext)
+{
+    // copy over functional state
+    _status = oldContext->status();
+    copyArchRegs(oldContext);
+    cpuId = oldContext->readCpuId();
+#if !FULL_SYSTEM
+    funcExeInst = oldContext->readFuncExeInst();
+#endif
+}
+
+void
 SimpleThread::serialize(ostream &os)
 {
-    SERIALIZE_ENUM(_status);
+    ThreadState::serialize(os);
     regs.serialize(os);
     // thread_num and cpu_id are deterministic from the config
-    SERIALIZE_SCALAR(funcExeInst);
-    SERIALIZE_SCALAR(inst);
-
-#if FULL_SYSTEM
-    Tick quiesceEndTick = 0;
-    if (quiesceEvent->scheduled())
-        quiesceEndTick = quiesceEvent->when();
-    SERIALIZE_SCALAR(quiesceEndTick);
-    if (kernelStats)
-        kernelStats->serialize(os);
-#endif
 }
 
 
 void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ENUM(_status);
+    ThreadState::unserialize(cp, section);
     regs.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
-    UNSERIALIZE_SCALAR(funcExeInst);
-    UNSERIALIZE_SCALAR(inst);
-
-#if FULL_SYSTEM
-    Tick quiesceEndTick;
-    UNSERIALIZE_SCALAR(quiesceEndTick);
-    if (quiesceEndTick)
-        quiesceEvent->schedule(quiesceEndTick);
-    if (kernelStats)
-        kernelStats->unserialize(cp, section);
-#endif
 }
 
 #if FULL_SYSTEM
