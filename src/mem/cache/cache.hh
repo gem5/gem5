@@ -168,7 +168,7 @@ class Cache : public BaseCache
      * Selects a request to send on the bus.
      * @return The memory request to service.
      */
-    Packet * getPacket();
+    virtual Packet * getPacket();
 
     /**
      * Was the request was sent successfully?
@@ -239,17 +239,6 @@ class Cache : public BaseCache
     unsigned outstandingMisses() const
     {
         return missQueue->getMisses();
-    }
-
-    /**
-     * Send a response to the slave interface.
-     * @param req The request being responded to.
-     * @param time The time the response is ready.
-     */
-    void respond(Packet * &pkt, Tick time)
-    {
-        //si->respond(pkt,time);
-        cpuSidePort->sendAtomic(pkt);
     }
 
     /**
