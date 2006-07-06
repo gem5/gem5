@@ -227,177 +227,143 @@ IdeController::setDmaComplete(IdeDisk *disk)
 // Read and write handling
 ////
 
-void
-IdeController::readConfig(int offset, uint8_t *data)
+Tick
+IdeController::readConfig(Packet *pkt)
 {
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::readConfig(offset, data);
-    } else if (offset >= IDE_CTRL_CONF_START &&
-               (offset + 1) <= IDE_CTRL_CONF_END) {
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
+    if (offset < PCI_DEVICE_SPECIFIC)
+        return  PciDev::readConfig(pkt);
+    assert(offset >= IDE_CTRL_CONF_START && (offset + 1) <= IDE_CTRL_CONF_END);
 
+    pkt->allocate();
+
+    switch (pkt->getSize()) {
+      case sizeof(uint8_t):
         switch (offset) {
           case IDE_CTRL_CONF_DEV_TIMING:
-            *data = config_regs.sidetim;
+            pkt->set<uint8_t>(config_regs.sidetim);
             break;
           case IDE_CTRL_CONF_UDMA_CNTRL:
-            *data = config_regs.udmactl;
+            pkt->set<uint8_t>(config_regs.udmactl);
             break;
           case IDE_CTRL_CONF_PRIM_TIMING+1:
-            *data = htole(config_regs.idetim0) >> 8;
+            pkt->set<uint8_t>(htole(config_regs.idetim0) >> 8);
             break;
           case IDE_CTRL_CONF_SEC_TIMING+1:
-            *data = htole(config_regs.idetim1) >> 8;
+            pkt->set<uint8_t>(htole(config_regs.idetim1) >> 8);
             break;
           case IDE_CTRL_CONF_IDE_CONFIG:
-            *data = htole(config_regs.ideconfig) & 0xFF;
+            pkt->set<uint8_t>(htole(config_regs.ideconfig) & 0xFF);
             break;
           case IDE_CTRL_CONF_IDE_CONFIG+1:
-            *data = htole(config_regs.ideconfig) >> 8;
+            pkt->set<uint8_t>(htole(config_regs.ideconfig) >> 8);
             break;
           default:
             panic("Invalid PCI configuration read for size 1 at offset: %#x!\n",
                     offset);
         }
-
-    } else {
-        panic("Read of unimplemented PCI config. register: %x\n", offset);
-    }
-    DPRINTF(IdeCtrl, "PCI read offset: %#x size: 1 data: %#x\n",
-                offset, (uint32_t)*data);
-}
-
-void
-IdeController::readConfig(int offset, uint16_t *data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::readConfig(offset, data);
-    } else if (offset >= IDE_CTRL_CONF_START &&
-               (offset + 2) <= IDE_CTRL_CONF_END) {
-
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 1 data: %#x\n", offset,
+                (uint32_t)pkt->get<uint8_t>());
+        break;
+      case sizeof(uint16_t):
         switch (offset) {
           case IDE_CTRL_CONF_PRIM_TIMING:
-            *data = config_regs.idetim0;
+            pkt->set<uint16_t>(config_regs.idetim0);
             break;
           case IDE_CTRL_CONF_SEC_TIMING:
-            *data = config_regs.idetim1;
+            pkt->set<uint16_t>(config_regs.idetim1);
             break;
           case IDE_CTRL_CONF_UDMA_TIMING:
-            *data = config_regs.udmatim;
+            pkt->set<uint16_t>(config_regs.udmatim);
             break;
           case IDE_CTRL_CONF_IDE_CONFIG:
-            *data = config_regs.ideconfig;
+            pkt->set<uint16_t>(config_regs.ideconfig);
             break;
           default:
             panic("Invalid PCI configuration read for size 2 offset: %#x!\n",
                     offset);
         }
-
-    } else {
-        panic("Read of unimplemented PCI config. register: %x\n", offset);
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 2 data: %#x\n", offset,
+                (uint32_t)pkt->get<uint16_t>());
+        break;
+      case sizeof(uint32_t):
+        panic("No 32bit reads implemented for this device.");
+        DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset,
+                (uint32_t)pkt->get<uint32_t>());
+        break;
+      default:
+        panic("invalid access size(?) for PCI configspace!\n");
     }
-    DPRINTF(IdeCtrl, "PCI read offset: %#x size: 2 data: %#x\n", offset, *data);
+    pkt->result = Packet::Success;
+    return configDelay;
+
 }
 
-void
-IdeController::readConfig(int offset, uint32_t *data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::readConfig(offset, data);
-    } else {
-        panic("Read of unimplemented PCI config. register: %x\n", offset);
-    }
-    DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset, *data);
-}
-void
-IdeController::writeConfig(int offset, const uint8_t data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::writeConfig(offset, data);
-    } else if (offset >= IDE_CTRL_CONF_START &&
-               (offset + 1) <= IDE_CTRL_CONF_END) {
 
-        switch (offset) {
-          case IDE_CTRL_CONF_DEV_TIMING:
-            config_regs.sidetim = data;
+Tick
+IdeController::writeConfig(Packet *pkt)
+{
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        PciDev::writeConfig(pkt);
+    } else {
+        assert(offset >= IDE_CTRL_CONF_START && (offset + 1) <= IDE_CTRL_CONF_END);
+
+        switch (pkt->getSize()) {
+          case sizeof(uint8_t):
+            switch (offset) {
+              case IDE_CTRL_CONF_DEV_TIMING:
+                config_regs.sidetim = pkt->get<uint8_t>();
+                break;
+              case IDE_CTRL_CONF_UDMA_CNTRL:
+                config_regs.udmactl = pkt->get<uint8_t>();
+                break;
+              case IDE_CTRL_CONF_IDE_CONFIG:
+                config_regs.ideconfig = (config_regs.ideconfig & 0xFF00) |
+                    (pkt->get<uint8_t>());
+                break;
+              case IDE_CTRL_CONF_IDE_CONFIG+1:
+                config_regs.ideconfig = (config_regs.ideconfig & 0x00FF) |
+                    pkt->get<uint8_t>() << 8;
+                break;
+              default:
+                panic("Invalid PCI configuration write for size 1 offset: %#x!\n",
+                        offset);
+            }
+            DPRINTF(IdeCtrl, "PCI write offset: %#x size: 1 data: %#x\n",
+                    offset, (uint32_t)pkt->get<uint8_t>());
             break;
-          case IDE_CTRL_CONF_UDMA_CNTRL:
-            config_regs.udmactl = data;
+          case sizeof(uint16_t):
+            switch (offset) {
+              case IDE_CTRL_CONF_PRIM_TIMING:
+                config_regs.idetim0 = pkt->get<uint16_t>();
+                break;
+              case IDE_CTRL_CONF_SEC_TIMING:
+                config_regs.idetim1 = pkt->get<uint16_t>();
+                break;
+              case IDE_CTRL_CONF_UDMA_TIMING:
+                config_regs.udmatim = pkt->get<uint16_t>();
+                break;
+              case IDE_CTRL_CONF_IDE_CONFIG:
+                config_regs.ideconfig = pkt->get<uint16_t>();
+                break;
+              default:
+                panic("Invalid PCI configuration write for size 2 offset: %#x!\n",
+                        offset);
+            }
+            DPRINTF(IdeCtrl, "PCI write offset: %#x size: 2 data: %#x\n",
+                    offset, (uint32_t)pkt->get<uint16_t>());
             break;
-          case IDE_CTRL_CONF_IDE_CONFIG:
-            config_regs.ideconfig = (config_regs.ideconfig & 0xFF00) | (data);
-            break;
-          case IDE_CTRL_CONF_IDE_CONFIG+1:
-            config_regs.ideconfig = (config_regs.ideconfig & 0x00FF) | data << 8;
+          case sizeof(uint32_t):
+            panic("Write of unimplemented PCI config. register: %x\n", offset);
             break;
           default:
-            panic("Invalid PCI configuration write for size 1 offset: %#x!\n",
-                    offset);
+            panic("invalid access size(?) for PCI configspace!\n");
         }
-
-    } else {
-        panic("Read of unimplemented PCI config. register: %x\n", offset);
-    }
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: 1 data: %#x\n",
-                offset, (uint32_t)data);
-}
-
-void
-IdeController::writeConfig(int offset, const uint16_t data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::writeConfig(offset, data);
-    } else if (offset >= IDE_CTRL_CONF_START &&
-               (offset + 2) <= IDE_CTRL_CONF_END) {
-
-        switch (offset) {
-          case IDE_CTRL_CONF_PRIM_TIMING:
-            config_regs.idetim0 = data;
-            break;
-          case IDE_CTRL_CONF_SEC_TIMING:
-            config_regs.idetim1 = data;
-            break;
-          case IDE_CTRL_CONF_UDMA_TIMING:
-            config_regs.udmatim = data;
-            break;
-          case IDE_CTRL_CONF_IDE_CONFIG:
-            config_regs.ideconfig = data;
-            break;
-          default:
-            panic("Invalid PCI configuration write for size 2 offset: %#x!\n",
-                    offset);
-        }
-
-    } else {
-        panic("Write of unimplemented PCI config. register: %x\n", offset);
-    }
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: 2 data: %#x\n", offset, data);
-
-    /* Trap command register writes and enable IO/BM as appropriate. */
-    if (offset == PCI_COMMAND) {
-        if (letoh(config.command) & PCI_CMD_IOSE)
-            io_enabled = true;
-        else
-            io_enabled = false;
-
-        if (letoh(config.command) & PCI_CMD_BME)
-            bm_enabled = true;
-        else
-            bm_enabled = false;
     }
 
-}
-
-void
-IdeController::writeConfig(int offset, const uint32_t data)
-{
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDev::writeConfig(offset, data);
-    } else {
-        panic("Read of unimplemented PCI config. register: %x\n", offset);
-    }
-
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: 4 data: %#x\n", offset, data);
-
+    /* Trap command register writes and enable IO/BM as appropriate as well as
+     * BARs. */
     switch(offset) {
       case PCI0_BASE_ADDR0:
         if (BARAddrs[0] != 0)
@@ -423,8 +389,23 @@ IdeController::writeConfig(int offset, const uint32_t data)
         if (BARAddrs[4] != 0)
             bmi_addr = BARAddrs[4];
         break;
+
+      case PCI_COMMAND:
+        if (letoh(config.command) & PCI_CMD_IOSE)
+            io_enabled = true;
+        else
+            io_enabled = false;
+
+        if (letoh(config.command) & PCI_CMD_BME)
+            bm_enabled = true;
+        else
+            bm_enabled = false;
+        break;
     }
+    pkt->result = Packet::Success;
+    return configDelay;
 }
+
 
 Tick
 IdeController::read(Packet *pkt)
@@ -770,7 +751,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
 
     SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
-    SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
@@ -784,7 +764,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
 
     INIT_PARAM(system, "System pointer"),
     INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
@@ -800,7 +779,6 @@ CREATE_SIM_OBJECT(IdeController)
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
-    params->configSpace = configspace;
     params->configData = configdata;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;

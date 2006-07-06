@@ -33,14 +33,8 @@
  * PCI Configspace implementation
  */
 
-#include <deque>
-#include <string>
-#include <vector>
-#include <bitset>
-
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
-#include "dev/pcidev.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
@@ -50,151 +44,61 @@
 using namespace std;
 
 PciConfigAll::PciConfigAll(Params *p)
-    : BasicPioDevice(p)
+    : PioDevice(p)
 {
-    pioSize = 0xffffff;
-
-    // Set backpointer for pci config. Really the config stuff should be able to
-    // automagically do this
-    p->platform->pciconfig = this;
-
-    // Make all the pointers to devices null
-    for(int x=0; x < MAX_PCI_DEV; x++)
-        for(int y=0; y < MAX_PCI_FUNC; y++)
-            devices[x][y] = NULL;
+    pioAddr = p->platform->calcConfigAddr(params()->bus,0,0);
 }
 
-// If two interrupts share the same line largely bad things will happen.
-// Since we don't track how many times an interrupt was set and correspondingly
-// cleared two devices on the same interrupt line and assert and deassert each
-// others interrupt "line". Interrupts will not work correctly.
-void
-PciConfigAll::startup()
-{
-    bitset<256> intLines;
-    PciDev *tempDev;
-    uint8_t intline;
-
-    for (int x = 0; x < MAX_PCI_DEV; x++) {
-        for (int y = 0; y < MAX_PCI_FUNC; y++) {
-           if (devices[x][y] != NULL) {
-               tempDev = devices[x][y];
-               intline = tempDev->interruptLine();
-               if (intLines.test(intline))
-                   warn("Interrupt line %#X is used multiple times"
-                        "(You probably want to fix this).\n", (uint32_t)intline);
-               else
-                   intLines.set(intline);
-           } // devices != NULL
-        } // PCI_FUNC
-    } // PCI_DEV
-
-}
 
 Tick
 PciConfigAll::read(Packet *pkt)
 {
     assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-
-    Addr daddr = pkt->getAddr() - pioAddr;
-    int device = (daddr >> 11) & 0x1F;
-    int func = (daddr >> 8) & 0x7;
-    int reg = daddr & 0xFF;
 
     pkt->allocate();
 
-    DPRINTF(PciConfigAll, "read  va=%#x da=%#x size=%d\n", pkt->getAddr(), daddr,
+    DPRINTF(PciConfigAll, "read  va=%#x size=%d\n", pkt->getAddr(),
             pkt->getSize());
 
     switch (pkt->getSize()) {
       case sizeof(uint32_t):
-         if (devices[device][func] == NULL)
-             pkt->set<uint32_t>(0xFFFFFFFF);
-         else
-             devices[device][func]->readConfig(reg, pkt->getPtr<uint32_t>());
+         pkt->set<uint32_t>(0xFFFFFFFF);
          break;
       case sizeof(uint16_t):
-         if (devices[device][func] == NULL)
-             pkt->set<uint16_t>(0xFFFF);
-         else
-             devices[device][func]->readConfig(reg, pkt->getPtr<uint16_t>());
+         pkt->set<uint16_t>(0xFFFF);
          break;
       case sizeof(uint8_t):
-         if (devices[device][func] == NULL)
-             pkt->set<uint8_t>(0xFF);
-         else
-             devices[device][func]->readConfig(reg, pkt->getPtr<uint8_t>());
+         pkt->set<uint8_t>(0xFF);
          break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
     pkt->result = Packet::Success;
-    return pioDelay;
+    return params()->pio_delay;
 }
 
 Tick
 PciConfigAll::write(Packet *pkt)
 {
     assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-    assert(pkt->getSize() == sizeof(uint8_t) || pkt->getSize() == sizeof(uint16_t) ||
-            pkt->getSize() == sizeof(uint32_t));
-    Addr daddr = pkt->getAddr() - pioAddr;
-
-    int device = (daddr >> 11) & 0x1F;
-    int func = (daddr >> 8) & 0x7;
-    int reg = daddr & 0xFF;
-
-    if (devices[device][func] == NULL)
-        panic("Attempting to write to config space on non-existant device\n");
-
-    DPRINTF(PciConfigAll, "write - va=%#x size=%d data=%#x\n",
-            pkt->getAddr(), pkt->getSize(), pkt->get<uint32_t>());
-
-    switch (pkt->getSize()) {
-      case sizeof(uint8_t):
-        devices[device][func]->writeConfig(reg, pkt->get<uint8_t>());
-        break;
-      case sizeof(uint16_t):
-        devices[device][func]->writeConfig(reg, pkt->get<uint16_t>());
-        break;
-      case sizeof(uint32_t):
-        devices[device][func]->writeConfig(reg, pkt->get<uint32_t>());
-        break;
-      default:
-        panic("invalid pci config write size\n");
-    }
-    pkt->result = Packet::Success;
-    return pioDelay;
+    panic("Attempting to write to config space on non-existant device\n");
 }
 
 void
-PciConfigAll::serialize(std::ostream &os)
+PciConfigAll::addressRanges(AddrRangeList &range_list)
 {
-    /*
-     * There is no state associated with this object that requires
-     * serialization.  The only real state are the device pointers
-     * which are all setup by the constructor of the PciDev class
-     */
+    range_list.clear();
+    range_list.push_back(RangeSize(pioAddr, params()->size));
 }
 
-void
-PciConfigAll::unserialize(Checkpoint *cp, const std::string &section)
-{
-    /*
-     * There is no state associated with this object that requires
-     * serialization.  The only real state are the device pointers
-     * which are all setup by the constructor of the PciDev class
-     */
-}
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    Param<Addr> pio_addr;
     Param<Tick> pio_latency;
+    Param<int> bus;
+    Param<Addr> size;
     SimObjectParam<Platform *> platform;
     SimObjectParam<System *> system;
 
@@ -202,8 +106,9 @@ END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
-    INIT_PARAM(pio_addr, "Device Address"),
     INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(bus, "Bus that this object handles config space for"),
+    INIT_PARAM(size, "The size of config space"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object")
 
@@ -211,11 +116,13 @@ END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
 
 CREATE_SIM_OBJECT(PciConfigAll)
 {
-    BasicPioDevice::Params *p = new BasicPioDevice::Params;
-    p->pio_addr = pio_addr;
+    PciConfigAll::Params *p = new PciConfigAll::Params;
     p->pio_delay = pio_latency;
     p->platform = platform;
     p->system = system;
+    p->bus = bus;
+    p->size = size;
+
     return new PciConfigAll(p);
 }
 

@@ -204,12 +204,8 @@ class IdeController : public PciDev
     IdeController(Params *p);
     ~IdeController();
 
-    virtual void writeConfig(int offset, const uint8_t data);
-    virtual void writeConfig(int offset, const uint16_t data);
-    virtual void writeConfig(int offset, const uint32_t data);
-    virtual void readConfig(int offset, uint8_t *data);
-    virtual void readConfig(int offset, uint16_t *data);
-    virtual void readConfig(int offset, uint32_t *data);
+    virtual Tick writeConfig(Packet *pkt);
+    virtual Tick readConfig(Packet *pkt);
 
     void setDmaComplete(IdeDisk *disk);
 

@@ -42,11 +42,6 @@
 #include "dev/io_device.hh"
 
 
-static const uint32_t MAX_PCI_DEV = 32;
-static const uint32_t MAX_PCI_FUNC = 8;
-
-class PciDev;
-
 /**
  * PCI Config Space
  * All of PCI config space needs to return -1 on Tsunami, except
@@ -54,16 +49,17 @@ class PciDev;
  * space and passes the requests on to TsunamiPCIDev devices as
  * appropriate.
  */
-class PciConfigAll : public BasicPioDevice
+class PciConfigAll : public PioDevice
 {
-  private:
-    /**
-      * Pointers to all the devices that are registered with this
-      * particular config space.
-      */
-    PciDev* devices[MAX_PCI_DEV][MAX_PCI_FUNC];
-
   public:
+    struct Params :  public PioDevice::Params
+    {
+        Tick pio_delay;
+        Addr size;
+        int bus;
+    };
+    const Params *params() const { return (const Params *)_params; }
+
     /**
      * Constructor for PCIConfigAll
      * @param p parameters structure
@@ -71,28 +67,10 @@ class PciConfigAll : public BasicPioDevice
     PciConfigAll(Params *p);
 
     /**
-     * Check if a device exists.
-     * @param pcidev PCI device to check
-     * @param pcifunc PCI function to check
-     * @return true if device exists, false otherwise
-     */
-    bool deviceExists(uint32_t pcidev, uint32_t pcifunc)
-                     { return devices[pcidev][pcifunc] != NULL ? true : false; }
-
-    /**
-     * Registers a device with the config space object.
-     * @param pcidev PCI device to register
-     * @param pcifunc PCI function to register
-     * @param device device to register
-     */
-    void registerDevice(uint8_t pcidev, uint8_t pcifunc, PciDev *device)
-                        { devices[pcidev][pcifunc] = device; }
-
-    /**
      * Read something in PCI config space. If the device does not exist
      * -1 is returned, if the device does exist its PciDev::ReadConfig (or the
      * virtual function that overrides) it is called.
-     * @param pkt Contains the address of the field to read.
+     * @param pkt Contains information about the read operation
      * @return Amount of time to do the read
      */
     virtual Tick read(Packet *pkt);
@@ -101,31 +79,17 @@ class PciConfigAll : public BasicPioDevice
      * Write to PCI config spcae. If the device does not exit the simulator
      * panics. If it does it is passed on the PciDev::WriteConfig (or the virtual
      * function that overrides it).
-     * @param req Contains the address to write to.
-     * @param data The data to write.
-     * @return The fault condition of the access.
+     * @param pkt Contains information about the write operation
+     * @return Amount of time to do the read
      */
 
     virtual Tick write(Packet *pkt);
 
-    /**
-     * Start up function to check if more than one person is using an interrupt line
-     * and print a warning if such a case exists
-     */
-    virtual void startup();
+    void addressRanges(AddrRangeList &range_list);
 
-    /**
-     * Serialize this object to the given output stream.
-     * @param os The stream to serialize to.
-     */
-    virtual void serialize(std::ostream &os);
+  private:
+    Addr pioAddr;
 
-    /**
-     * Reconstruct the state of this object from a checkpoint.
-     * @param cp The checkpoint use.
-     * @param section The section name of this object
-     */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 #endif // __PCICONFIGALL_HH__
