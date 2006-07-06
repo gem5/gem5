@@ -55,7 +55,6 @@ class AlphaDTB;
 class PhysicalMemory;
 class MemoryController;
 
-class Sampler;
 class RemoteGDB;
 class GDBListener;
 
@@ -356,11 +355,9 @@ class OzoneCPU : public BaseCPU
 
     int cpuId;
 
-    void switchOut(Sampler *sampler);
+    void switchOut();
     void signalSwitched();
     void takeOverFrom(BaseCPU *oldCPU);
-
-    Sampler *sampler;
 
     int switchCount;
 

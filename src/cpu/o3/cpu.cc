@@ -714,9 +714,8 @@ FullO3CPU<Impl>::haltContext(int tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::switchOut(Sampler *_sampler)
+FullO3CPU<Impl>::switchOut()
 {
-    sampler = _sampler;
     switchCount = 0;
     fetch.switchOut();
     decode.switchOut();
@@ -745,12 +744,11 @@ FullO3CPU<Impl>::signalSwitched()
 
 #if USE_CHECKER
         if (checker)
-            checker->switchOut(sampler);
+            checker->switchOut();
 #endif
 
         if (tickEvent.scheduled())
             tickEvent.squash();
-        sampler->signalSwitched();
         _status = SwitchedOut;
     }
     assert(switchCount <= 5);

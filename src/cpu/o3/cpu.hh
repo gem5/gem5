@@ -271,7 +271,7 @@ class FullO3CPU : public BaseO3CPU
     virtual void syscall(int tid) { panic("Unimplemented!"); }
 
     /** Switches out this CPU. */
-    void switchOut(Sampler *sampler);
+    void switchOut();
 
     /** Signals to this CPU that a stage has completed switching out. */
     void signalSwitched();
@@ -549,9 +549,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Pointer to memory. */
     MemObject *mem;
-
-    /** Pointer to the sampler */
-    Sampler *sampler;
 
     /** Counter of how many stages have completed switching out. */
     int switchCount;

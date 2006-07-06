@@ -41,7 +41,6 @@
 #include "cpu/cpuevent.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
-#include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"

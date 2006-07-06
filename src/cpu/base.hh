@@ -36,7 +36,6 @@
 
 #include "base/statistics.hh"
 #include "config/full_system.hh"
-#include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"

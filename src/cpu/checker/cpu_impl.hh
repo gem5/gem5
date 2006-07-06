@@ -293,7 +293,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 
 template <class DynInstPtr>
 void
-Checker<DynInstPtr>::switchOut(Sampler *s)
+Checker<DynInstPtr>::switchOut()
 {
     instList.clear();
 }

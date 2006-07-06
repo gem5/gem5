@@ -244,9 +244,8 @@ OzoneCPU<Impl>::~OzoneCPU()
 
 template <class Impl>
 void
-OzoneCPU<Impl>::switchOut(Sampler *_sampler)
+OzoneCPU<Impl>::switchOut()
 {
-    sampler = _sampler;
     switchCount = 0;
     // Front end needs state from back end, so switch out the back end first.
     backEnd->switchOut();
@@ -262,13 +261,12 @@ OzoneCPU<Impl>::signalSwitched()
         frontEnd->doSwitchOut();
 #if USE_CHECKER
         if (checker)
-            checker->switchOut(sampler);
+            checker->switchOut();
 #endif
 
         _status = SwitchedOut;
         if (tickEvent.scheduled())
             tickEvent.squash();
-        sampler->signalSwitched();
     }
     assert(switchCount <= 2);
 }

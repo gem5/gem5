@@ -52,8 +52,6 @@
 
 using namespace std;
 
-extern Sampler *SampCPU;
-
 using namespace Stats;
 using namespace TheISA;
 
@@ -280,7 +278,5 @@ namespace AlphaPseudo
 
     void switchcpu(ThreadContext *tc)
     {
-        if (SampCPU)
-            SampCPU->switchCPUs();
     }
 }

@@ -40,8 +40,6 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
-class Sampler;
-
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch

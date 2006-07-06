@@ -41,7 +41,6 @@
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"

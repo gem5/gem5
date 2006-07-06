@@ -89,7 +89,6 @@ base_sources = Split('''
 	cpu/pc_event.cc
         cpu/quiesce_event.cc
 	cpu/static_inst.cc
-        cpu/sampler/sampler.cc
         cpu/simple_thread.cc
         cpu/thread_state.cc
 
