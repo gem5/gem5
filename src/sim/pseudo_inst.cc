@@ -207,6 +207,7 @@ namespace AlphaPseudo
     {
         if (!doCheckpointInsts)
             return;
+        exitSimLoop("checkpoint");
     }
 
     uint64_t
@@ -278,5 +279,6 @@ namespace AlphaPseudo
 
     void switchcpu(ThreadContext *tc)
     {
+        exitSimLoop("switchcpu");
     }
 }
