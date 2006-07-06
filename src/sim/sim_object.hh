@@ -116,7 +116,7 @@ class SimObject : public Serializable, protected StartupCallback
 
     // Methods to drain objects in order to take checkpoints
     // Or switch from timing -> atomic memory model
-    // Quiesce returns true if the SimObject cannot quiesce immediately.
+    // Drain returns false if the SimObject cannot drain immediately.
     virtual bool drain(Event *drain_event);
     virtual void resume();
     virtual void setMemoryMode(State new_mode);

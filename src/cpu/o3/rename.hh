@@ -157,11 +157,14 @@ class DefaultRename
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
 
+    /** Drains the rename stage. */
+    void drain();
+
+    /** Resumes execution after a drain. */
+    void resume() { }
+
     /** Switches out the rename stage. */
     void switchOut();
-
-    /** Completes the switch out. */
-    void doSwitchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();

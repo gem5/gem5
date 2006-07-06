@@ -277,7 +277,7 @@ SimObject::drain(Event *drain_event)
               "in timing mode!");
     }
     state = DrainedAtomic;
-    return false;
+    return true;
 }
 
 void

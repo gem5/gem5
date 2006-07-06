@@ -109,6 +109,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
       numThreads(params->numberOfThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
+      drainPending(false),
       switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
@@ -353,7 +354,8 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||
         pkt->req != memReq[tid] ||
-        isSwitchedOut()) {
+        isSwitchedOut() ||
+        drainPending) {
         ++fetchIcacheSquashes;
         delete pkt->req;
         delete pkt;
@@ -384,17 +386,25 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 
 template <class Impl>
 void
-DefaultFetch<Impl>::switchOut()
+DefaultFetch<Impl>::drain()
 {
-    // Fetch is ready to switch out at any time.
-    switchedOut = true;
-    cpu->signalSwitched();
+    // Fetch is ready to drain at any time.
+    cpu->signalDrained();
+    drainPending = true;
 }
 
 template <class Impl>
 void
-DefaultFetch<Impl>::doSwitchOut()
+DefaultFetch<Impl>::resume()
 {
+    drainPending = false;
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::switchOut()
+{
+    switchedOut = true;
     // Branch predictor needs to have its state cleared.
     branchPred.switchOut();
 }
@@ -498,7 +508,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (cacheBlocked || (interruptPending && flags == 0) || switchedOut) {
+    if (cacheBlocked || (interruptPending && flags == 0) || drainPending) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or

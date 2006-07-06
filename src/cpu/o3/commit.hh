@@ -187,11 +187,14 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void initStage();
 
-    /** Initializes the switching out of commit. */
-    void switchOut();
+    /** Initializes the draining of commit. */
+    void drain();
+
+    /** Resumes execution after draining. */
+    void resume();
 
     /** Completes the switch out of commit. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -383,8 +386,8 @@ class DefaultCommit
     /** Number of Active Threads */
     unsigned numThreads;
 
-    /** Is a switch out pending. */
-    bool switchPending;
+    /** Is a drain pending. */
+    bool drainPending;
 
     /** Is commit switched out. */
     bool switchedOut;

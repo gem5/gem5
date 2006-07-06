@@ -158,7 +158,7 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
       physmem(system->physmem),
 #endif // FULL_SYSTEM
       mem(params->mem),
-      switchCount(0),
+      drainCount(0),
       deferRegistration(params->deferRegistration),
       numThreads(number_of_threads)
 {
@@ -708,45 +708,72 @@ FullO3CPU<Impl>::haltContext(int tid)
 }
 
 template <class Impl>
-void
-FullO3CPU<Impl>::switchOut()
+bool
+FullO3CPU<Impl>::drain(Event *drain_event)
 {
-    switchCount = 0;
-    fetch.switchOut();
-    decode.switchOut();
-    rename.switchOut();
-    iew.switchOut();
-    commit.switchOut();
+    drainCount = 0;
+    drainEvent = drain_event;
+    fetch.drain();
+    decode.drain();
+    rename.drain();
+    iew.drain();
+    commit.drain();
 
     // Wake the CPU and record activity so everything can drain out if
     // the CPU is currently idle.
     wakeCPU();
     activityRec.activity();
+
+    return false;
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::signalSwitched()
+FullO3CPU<Impl>::resume()
 {
-    if (++switchCount == NumStages) {
-        fetch.doSwitchOut();
-        rename.doSwitchOut();
-        commit.doSwitchOut();
-        instList.clear();
-        while (!removeList.empty()) {
-            removeList.pop();
-        }
+    if (_status == SwitchedOut)
+        return;
+    fetch.resume();
+    decode.resume();
+    rename.resume();
+    iew.resume();
+    commit.resume();
 
-#if USE_CHECKER
-        if (checker)
-            checker->switchOut();
-#endif
+    if (!tickEvent.scheduled())
+        tickEvent.schedule(curTick);
+    _status = Running;
+}
 
+template <class Impl>
+void
+FullO3CPU<Impl>::signalDrained()
+{
+    if (++drainCount == NumStages) {
         if (tickEvent.scheduled())
             tickEvent.squash();
-        _status = SwitchedOut;
+        _status = Drained;
+        drainEvent->process();
     }
-    assert(switchCount <= 5);
+    assert(drainCount <= 5);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::switchOut()
+{
+    fetch.switchOut();
+    rename.switchOut();
+    commit.switchOut();
+    instList.clear();
+    while (!removeList.empty()) {
+        removeList.pop();
+    }
+
+    _status = SwitchedOut;
+#if USE_CHECKER
+    if (checker)
+        checker->switchOut();
+#endif
 }
 
 template <class Impl>
