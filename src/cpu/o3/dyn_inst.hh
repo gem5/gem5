@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,15 +25,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Korey Sewell
  */
 
 #ifndef __CPU_O3_DYN_INST_HH__
 #define __CPU_O3_DYN_INST_HH__
 
-#include "cpu/o3/isa_specific.hh"
 
-/** The O3Impl to be used. */
-typedef DynInst O3DynInst;
+#if THE_ISA == ALPHA_ISA
+template <class Impl>
+class AlphaDynInst;
+
+struct AlphaSimpleImpl;
+
+typedef AlphaDynInst<AlphaSimpleImpl> O3DynInst;
+#endif
 
 #endif // __CPU_O3_DYN_INST_HH__

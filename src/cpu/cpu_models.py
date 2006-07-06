@@ -80,5 +80,5 @@ CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
          '#include "cpu/checker/cpu.hh"',
          { 'CPU_exec_context': 'CheckerCPU' })
 CpuModel('O3CPU', 'o3_cpu_exec.cc',
-         '#include "cpu/o3/alpha/dyn_inst.hh"',
-         { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
+         '#include "cpu/o3/isa_specific.hh"',
+         { 'CPU_exec_context': 'O3DynInst' })
