@@ -569,6 +569,9 @@ DefaultCommit<Impl>::tick()
         return;
     }
 
+    if ((*activeThreads).size() <= 0)
+        return;
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check if any of the threads are done squashing.  Change the
