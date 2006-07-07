@@ -372,6 +372,8 @@ class OzoneCPU : public BaseCPU
     PhysicalMemory *physmem;
 #endif
 
+    virtual Port *getPort(const std::string &name, int idx);
+
     MemObject *mem;
 
     FrontEnd *frontEnd;

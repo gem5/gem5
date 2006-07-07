@@ -9,6 +9,9 @@ class DerivOzoneCPU(BaseCPU):
 
     checker = Param.BaseCPU("Checker CPU")
 
+    icache_port = Port("Instruction Port")
+    dcache_port = Port("Data Port")
+
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")
     backEndWidth = Param.Unsigned("Back end width")

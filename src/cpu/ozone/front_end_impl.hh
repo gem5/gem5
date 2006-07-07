@@ -36,6 +36,7 @@
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"
+#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
@@ -137,10 +138,6 @@ FrontEnd<Impl>::setCPU(CPUType *cpu_ptr)
     cpu = cpu_ptr;
 
     icachePort.setName(this->name() + "-iport");
-
-    Port *mem_dport = mem->getPort("");
-    icachePort.setPeer(mem_dport);
-    mem_dport->setPeer(&icachePort);
 
 #if USE_CHECKER
     if (cpu->checker) {

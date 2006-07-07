@@ -419,6 +419,18 @@ OzoneCPU<Impl>::init()
 }
 
 template <class Impl>
+Port *
+OzoneCPU<Impl>::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return backEnd->getDcachePort();
+    else if (if_name == "icache_port")
+        return frontEnd->getIcachePort();
+    else
+        panic("No Such Port\n");
+}
+
+template <class Impl>
 void
 OzoneCPU<Impl>::serialize(std::ostream &os)
 {

@@ -114,6 +114,8 @@ class LWBackEnd
 
     void setCommBuffer(TimeBuffer<CommStruct> *_comm);
 
+    Port *getDcachePort() { return LSQ.getDcachePort(); }
+
     void tick();
     void squash();
     void generateTCEvent() { tcSquash = true; }
