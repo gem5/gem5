@@ -75,6 +75,8 @@ else:
     cpu = AtomicSimpleCPU()
 cpu.workload = process
 cpu.mem = magicbus
+cpu.icache_port=magicbus.port
+cpu.dcache_port=magicbus.port
 
 system = System(physmem = mem, cpu = cpu)
 mem.port = magicbus.port
