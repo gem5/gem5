@@ -63,7 +63,7 @@ BaseCPU::BaseCPU(Params *p)
       params(p), number_of_threads(p->numberOfThreads), system(p->system)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), clock(p->clock), params(p),
+    : MemObject(p->name), clock(p->clock), params(p),
       number_of_threads(p->numberOfThreads), system(p->system)
 #endif
 {

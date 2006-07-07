@@ -37,19 +37,20 @@
 using namespace std;
 using namespace TheISA;
 
+Port *
+TimingSimpleCPU::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return &dcachePort;
+    else if (if_name == "icache_port")
+        return &icachePort;
+    else
+        panic("No Such Port\n");
+}
 
 void
 TimingSimpleCPU::init()
 {
-    //Create Memory Ports (conect them up)
-    Port *mem_dport = mem->getPort("");
-    dcachePort.setPeer(mem_dport);
-    mem_dport->setPeer(&dcachePort);
-
-    Port *mem_iport = mem->getPort("");
-    icachePort.setPeer(mem_iport);
-    mem_iport->setPeer(&icachePort);
-
     BaseCPU::init();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
