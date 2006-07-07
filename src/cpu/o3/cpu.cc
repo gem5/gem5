@@ -400,7 +400,8 @@ FullO3CPU<Impl>::tick()
     }
 
     if (!tickEvent.scheduled()) {
-        if (_status == SwitchedOut) {
+        if (_status == SwitchedOut ||
+            getState() == SimObject::DrainedTiming) {
             // increment stat
             lastRunningCycle = curTick;
         } else if (!activityRec.active()) {
@@ -793,6 +794,7 @@ FullO3CPU<Impl>::resume()
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
     _status = Running;
+    changeState(SimObject::Timing);
 }
 
 template <class Impl>

@@ -66,6 +66,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Event *drainEvent;
 
+    Event *fetchEvent;
+
   private:
 
     class CpuPort : public Port
