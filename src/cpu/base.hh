@@ -37,15 +37,16 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_object.hh"
+#include "mem/mem_object.hh"
 #include "arch/isa_traits.hh"
 
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
 class System;
+class Port;
 
-class BaseCPU : public SimObject
+class BaseCPU : public MemObject
 {
   protected:
     // CPU's clock period in terms of the number of ticks of curTime.
