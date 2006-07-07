@@ -578,6 +578,9 @@ DefaultCommit<Impl>::tick()
         return;
     }
 
+    if ((*activeThreads).size() <= 0)
+        return;
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check if any of the threads are done squashing.  Change the
@@ -591,7 +594,7 @@ DefaultCommit<Impl>::tick()
                 commitStatus[tid] = Running;
             } else {
                 DPRINTF(Commit,"[tid:%u]: Still Squashing, cannot commit any"
-                        "insts this cycle.\n", tid);
+                        " insts this cycle.\n", tid);
                 rob->doSquash(tid);
                 toIEW->commitInfo[tid].robSquashing = true;
                 wroteToTimeBuffer = true;
