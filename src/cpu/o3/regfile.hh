@@ -86,10 +86,6 @@ class PhysRegFile
     //The duplication is unfortunate but it's better than having
     //different ways to access certain registers.
 
-    //Add these in later when everything else is in place
-//    void serialize(std::ostream &os);
-//    void unserialize(Checkpoint *cp, const std::string &section);
-
     /** Reads an integer register. */
     uint64_t readIntReg(PhysRegIndex reg_idx)
     {

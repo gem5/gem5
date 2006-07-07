@@ -257,11 +257,12 @@ DefaultRename<Impl>::setScoreboard(Scoreboard *_scoreboard)
 }
 
 template <class Impl>
-void
+bool
 DefaultRename<Impl>::drain()
 {
     // Rename is ready to switch out at any time.
     cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>

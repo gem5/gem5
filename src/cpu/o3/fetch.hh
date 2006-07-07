@@ -181,7 +181,7 @@ class DefaultFetch
     void processCacheCompletion(PacketPtr pkt);
 
     /** Begins the drain of the fetch stage. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after a drain. */
     void resume();

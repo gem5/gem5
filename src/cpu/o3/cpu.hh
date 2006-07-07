@@ -111,7 +111,6 @@ class FullO3CPU : public BaseO3CPU
         Idle,
         Halted,
         Blocked,
-        Drained,
         SwitchedOut
     };
 
@@ -266,6 +265,13 @@ class FullO3CPU : public BaseO3CPU
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
 
+    /** Serialize state. */
+    virtual void serialize(std::ostream &os);
+
+    /** Unserialize from a checkpoint. */
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  public:
     /** Executes a syscall on this cycle.
      *  ---------------------------------------
      *  Note: this is a virtual function. CPU-Specific

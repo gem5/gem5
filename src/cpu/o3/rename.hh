@@ -158,7 +158,7 @@ class DefaultRename
     void setScoreboard(Scoreboard *_scoreboard);
 
     /** Drains the rename stage. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after a drain. */
     void resume() { }

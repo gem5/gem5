@@ -385,12 +385,13 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 }
 
 template <class Impl>
-void
+bool
 DefaultFetch<Impl>::drain()
 {
     // Fetch is ready to drain at any time.
     cpu->signalDrained();
     drainPending = true;
+    return true;
 }
 
 template <class Impl>

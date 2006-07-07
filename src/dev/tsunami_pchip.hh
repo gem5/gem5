@@ -46,7 +46,7 @@ class TsunamiPChip : public BasicPioDevice
 {
   protected:
 
-    static const Addr TsunamiPciBus0Config = 0x801fe000000;
+    static const Addr TsunamiPciBus0Config = ULL(0x801fe000000);
 
     /** Pchip control register */
     uint64_t pctl;

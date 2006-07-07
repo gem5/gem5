@@ -144,7 +144,7 @@ class DefaultIEW
     void setScoreboard(Scoreboard *sb_ptr);
 
     /** Drains IEW stage. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after a drain. */
     void resume();
