@@ -127,6 +127,12 @@ class CheckerCPU : public BaseCPU
 
     Port *dcachePort;
 
+    virtual Port *getPort(const std::string &name, int idx)
+    {
+        panic("Not supported on checker!");
+        return NULL;
+    }
+
   public:
     // Primary thread being run.
     SimpleThread *thread;

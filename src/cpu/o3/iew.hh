@@ -125,6 +125,9 @@ class DefaultIEW
     /** Initializes stage; sends back the number of free IQ and LSQ entries. */
     void initStage();
 
+    /** Returns the dcache port. */
+    Port *getDcachePort() { return ldstQueue.getDcachePort(); }
+
     /** Sets CPU pointer for IEW, IQ, and LSQ. */
     void setCPU(O3CPU *cpu_ptr);
 

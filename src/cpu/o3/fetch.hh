@@ -162,6 +162,9 @@ class DefaultFetch
     /** Registers statistics. */
     void regStats();
 
+    /** Returns the icache port. */
+    Port *getIcachePort() { return icachePort; }
+
     /** Sets CPU pointer. */
     void setCPU(O3CPU *cpu_ptr);
 

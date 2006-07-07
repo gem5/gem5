@@ -65,6 +65,13 @@ class LSQ {
     /** Registers statistics of each LSQ unit. */
     void regStats();
 
+    /** Returns dcache port.
+     *  @todo: Dcache port needs to be moved up to this level for SMT
+     *  to work.  For now it just returns the port from one of the
+     *  threads.
+     */
+    Port *getDcachePort() { return thread[0].getDcachePort(); }
+
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
     /** Sets the CPU pointer. */

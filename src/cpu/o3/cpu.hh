@@ -208,6 +208,9 @@ class FullO3CPU : public BaseO3CPU
     /** Registers statistics. */
     void fullCPURegStats();
 
+    /** Returns a specific port. */
+    Port *getPort(const std::string &if_name, int idx);
+
     /** Ticks CPU, calling tick() on each stage, and checking the overall
      *  activity to see if the CPU should deschedule itself.
      */

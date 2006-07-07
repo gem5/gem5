@@ -280,10 +280,6 @@ DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
 
-    Port *mem_dport = mem->getPort("");
-    icachePort->setPeer(mem_dport);
-    mem_dport->setPeer(icachePort);
-
 #if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setIcachePort(icachePort);
