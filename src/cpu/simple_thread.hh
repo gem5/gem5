@@ -121,13 +121,15 @@ class SimpleThread : public ThreadState
                  MemObject *memobj);
 #endif
 
-    SimpleThread(ThreadContext *oldContext);
+    SimpleThread();
 
     virtual ~SimpleThread();
 
     virtual void takeOverFrom(ThreadContext *oldContext);
 
     void regStats(const std::string &name);
+
+    void copyTC(ThreadContext *context);
 
     void copyState(ThreadContext *oldContext);
 

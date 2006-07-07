@@ -502,6 +502,9 @@ LSQ<Impl>::hasStoresToWB()
 {
     list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
+    if ((*activeThreads).empty())
+        return false;
+
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
         if (!hasStoresToWB(tid))

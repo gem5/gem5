@@ -377,6 +377,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::resume()
 {
+    drainPending = false;
 }
 
 template <class Impl>

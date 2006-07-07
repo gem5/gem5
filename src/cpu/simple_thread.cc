@@ -125,7 +125,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
 
 #endif
 
-SimpleThread::SimpleThread(ThreadContext *oldContext)
+SimpleThread::SimpleThread()
 #if FULL_SYSTEM
     : ThreadState(-1, -1)
 #else
@@ -134,19 +134,6 @@ SimpleThread::SimpleThread(ThreadContext *oldContext)
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
     regs.clear();
-
-    copyState(oldContext);
-
-#if FULL_SYSTEM
-    EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
-    if (quiesce) {
-        quiesceEvent = quiesce;
-    }
-    Kernel::Statistics *stats = oldContext->getKernelStats();
-    if (stats) {
-        kernelStats = stats;
-    }
-#endif
 }
 
 SimpleThread::~SimpleThread()
@@ -180,6 +167,23 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
     storeCondFailures = 0;
 
     oldContext->setStatus(ThreadContext::Unallocated);
+}
+
+void
+SimpleThread::copyTC(ThreadContext *context)
+{
+    copyState(context);
+
+#if FULL_SYSTEM
+    EndQuiesceEvent *quiesce = context->getQuiesceEvent();
+    if (quiesce) {
+        quiesceEvent = quiesce;
+    }
+    Kernel::Statistics *stats = context->getKernelStats();
+    if (stats) {
+        kernelStats = stats;
+    }
+#endif
 }
 
 void
