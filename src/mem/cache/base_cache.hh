@@ -143,9 +143,19 @@ class BaseCache : public MemObject
         fatal("No implementation");
     }
 
-    virtual void recvStatusChange(Port::Status status, bool isCpuSide)
+    void recvStatusChange(Port::Status status, bool isCpuSide)
     {
-        fatal("No implementation");
+        if (status == Port::RangeChange)
+        {
+            if (!isCpuSide)
+            {
+                cpuSidePort->sendStatusChange(Port::RangeChange);
+            }
+            else
+            {
+                memSidePort->sendStatusChange(Port::RangeChange);
+            }
+        }
     }
 
     virtual Packet *getPacket()
@@ -319,6 +329,8 @@ class BaseCache : public MemObject
         cpuSidePort = NULL;
         memSidePort = NULL;
     }
+
+    virtual void init();
 
     /**
      * Query block size of a cache.
@@ -519,9 +531,18 @@ class BaseCache : public MemObject
      */
     void rangeChange() {}
 
-    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop, bool isCpuSide)
     {
-        panic("Unimplimented\n");
+        if (isCpuSide)
+        {
+            AddrRangeList dummy;
+            memSidePort->getPeerAddressRanges(resp, dummy);
+        }
+        else
+        {
+            //This is where snoops get updated
+            return;
+        }
     }
 };
 

@@ -59,7 +59,7 @@ void
 BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp,
                                        AddrRangeList &snoop)
 {
-    cache->getAddressRanges(resp, snoop);
+    cache->getAddressRanges(resp, snoop, isCpuSide);
 }
 
 int
@@ -164,6 +164,14 @@ BaseCache::getPort(const std::string &if_name, int idx)
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
+}
+
+void
+BaseCache::init()
+{
+    if (!cpuSidePort || !memSidePort)
+        panic("Cache not hooked up on both sides\n");
+    cpuSidePort->sendStatusChange(Port::RangeChange);
 }
 
 void
