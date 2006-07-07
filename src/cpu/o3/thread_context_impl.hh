@@ -115,7 +115,8 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::activate(int delay)
 {
-    DPRINTF(O3CPU, "Calling activate on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
+            getThreadNum());
 
     if (thread->status() == ThreadContext::Active)
         return;
@@ -139,7 +140,8 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::suspend()
 {
-    DPRINTF(O3CPU, "Calling suspend on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
+            getThreadNum());
 
     if (thread->status() == ThreadContext::Suspended)
         return;
@@ -163,22 +165,24 @@ O3ThreadContext<Impl>::suspend()
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::deallocate()
+O3ThreadContext<Impl>::deallocate(int delay)
 {
-    DPRINTF(O3CPU, "Calling deallocate on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling deallocate on Thread Context %d\n",
+            getThreadNum());
 
     if (thread->status() == ThreadContext::Unallocated)
         return;
 
     thread->setStatus(ThreadContext::Unallocated);
-    cpu->deallocateContext(thread->readTid());
+    cpu->deallocateContext(thread->readTid(), delay);
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::halt()
 {
-    DPRINTF(O3CPU, "Calling halt on AlphaTC\n");
+    DPRINTF(O3CPU, "Calling halt on Thread Context %d\n",
+            getThreadNum());
 
     if (thread->status() == ThreadContext::Halted)
         return;

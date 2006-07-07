@@ -70,18 +70,19 @@ class AlphaTC : public O3ThreadContext<Impl>
     { panic("Not supported on Alpha!"); }
 
 
-    // This function exits the thread context in the CPU and returns
-    // 1 if the CPU has no more active threads (meaning it's OK to exit);
-    // Used in syscall-emulation mode when a thread executes the 'exit'
-    // syscall.
+    /** This function exits the thread context in the CPU and returns
+     * 1 if the CPU has no more active threads (meaning it's OK to exit);
+     * Used in syscall-emulation mode when a thread executes the 'exit'
+     * syscall.
+     */
     virtual int exit()
     {
-        this->cpu->deallocateContext(this->thread->readTid());
+        this->deallocate();
 
         // If there are still threads executing in the system
         if (this->cpu->numActiveThreads())
-            return 0;
+            return 0; // don't exit simulation
         else
-            return 1;
+            return 1; // exit simulation
     }
 };
