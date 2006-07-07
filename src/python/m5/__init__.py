@@ -250,6 +250,7 @@ def checkpoint(root):
 def restoreCheckpoint(root):
     print "Restoring from checkpoint"
     cc_main.unserializeAll()
+    resume(root)
 
 def changeToAtomic(system):
     if not isinstance(system, objects.Root) and not isinstance(system, System):
