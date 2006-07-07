@@ -34,7 +34,7 @@ import cc_main
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from cc_main import simulate, SimLoopExitEvent, setCheckpointDir
+from cc_main import simulate, SimLoopExitEvent
 
 # import the m5 compile options
 import defines
@@ -239,17 +239,17 @@ def drain(root):
 def resume(root):
     root.resume()
 
-def checkpoint(root):
+def checkpoint(root, dir):
     if not isinstance(root, objects.Root):
         raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
     doDrain(root)
     print "Writing checkpoint"
-    cc_main.serializeAll()
+    cc_main.serializeAll(dir)
     resume(root)
 
-def restoreCheckpoint(root):
+def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
-    cc_main.unserializeAll()
+    cc_main.unserializeAll(dir)
     resume(root)
 
 def changeToAtomic(system):

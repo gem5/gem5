@@ -542,15 +542,15 @@ cleanupCountedDrain(Event *counted_drain)
 }
 
 void
-serializeAll()
+serializeAll(const std::string &cpt_dir)
 {
-    Serializable::serializeAll();
+    Serializable::serializeAll(cpt_dir);
 }
 
 void
-unserializeAll()
+unserializeAll(const std::string &cpt_dir)
 {
-    Serializable::unserializeAll();
+    Serializable::unserializeAll(cpt_dir);
 }
 
 /**
