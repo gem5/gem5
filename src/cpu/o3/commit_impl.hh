@@ -82,8 +82,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       numThreads(params->numberOfThreads),
       drainPending(false),
       switchedOut(false),
-      trapLatency(params->trapLatency),
-      fetchTrapLatency(params->fetchTrapLatency)
+      trapLatency(params->trapLatency)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -123,9 +122,6 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         tcSquash[i] = false;
         PC[i] = nextPC[i] = 0;
     }
-
-    fetchFaultTick = 0;
-    fetchTrapWait = 0;
 }
 
 template <class Impl>
@@ -235,7 +231,6 @@ DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
     cpu->activateStage(O3CPU::CommitIdx);
 
     trapLatency = cpu->cycles(trapLatency);
-    fetchTrapLatency = cpu->cycles(fetchTrapLatency);
 }
 
 template <class Impl>
@@ -290,13 +285,6 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
     // Setup wire to get instructions from IEW.
     fromIEW = iewQueue->getWire(-iewToCommitDelay);
-}
-
-template <class Impl>
-void
-DefaultCommit<Impl>::setFetchStage(Fetch *fetch_stage)
-{
-    fetchStage = fetch_stage;
 }
 
 template <class Impl>

@@ -188,9 +188,10 @@ if env['USE_CHECKER']:
         if i in env['CPU_MODELS']:
             checker_supports = True
     if not checker_supports:
-        print "Checker only supports CPU models %s, please " \
-              "set USE_CHECKER=False or use one of those CPU models" \
-              % CheckerSupportedCPUList
+        print "Checker only supports CPU models",
+        for i in CheckerSupportedCPUList:
+            print i,
+        print ", please set USE_CHECKER=False or use one of those CPU models"              
         Exit(1)
 
 
