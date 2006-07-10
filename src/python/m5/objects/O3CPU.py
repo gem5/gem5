@@ -53,6 +53,9 @@ class DerivO3CPU(BaseCPU):
     trapLatency = Param.Tick("Trap latency")
     fetchTrapLatency = Param.Tick("Fetch trap latency")
 
+    backComSize = Param.Unsigned("Time buffer size for backwards communication")
+    forwardComSize = Param.Unsigned("Time buffer size for forward communication")
+
     predType = Param.String("Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")
     localCtrBits = Param.Unsigned("Bits per counter")

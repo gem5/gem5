@@ -42,8 +42,7 @@ using namespace std;
 
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
-    : // @todo: Make this into a parameter.
-      issueToExecQueue(5, 5),
+    : issueToExecQueue(params->backComSize, params->forwardComSize),
       instQueue(params),
       ldstQueue(params),
       fuPool(params->fuPool),
@@ -413,7 +412,7 @@ DefaultIEW<Impl>::takeOverFrom()
     updateLSQNextCycle = false;
 
     // @todo: Fix hardcoded number
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < issueToExecQueue.getSize(); ++i) {
         issueToExecQueue.advance();
     }
 }

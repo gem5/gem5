@@ -115,6 +115,12 @@ class O3Params : public BaseO3CPU::Params
     Tick fetchTrapLatency;
 
     //
+    // Timebuffer sizes
+    //
+    unsigned backComSize;
+    unsigned forwardComSize;
+
+    //
     // Branch predictor (BP, BTB, RAS)
     //
     std::string predType;

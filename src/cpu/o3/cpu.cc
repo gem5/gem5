@@ -141,15 +141,14 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
                  TheISA::NumMiscRegs * number_of_threads,
                  TheISA::ZeroReg),
 
-      // For now just have these time buffers be pretty big.
-      // @todo: Make these time buffer sizes parameters or derived
-      // from latencies
-      timeBuffer(5, 5),
-      fetchQueue(5, 5),
-      decodeQueue(5, 5),
-      renameQueue(5, 5),
-      iewQueue(5, 5),
-      activityRec(NumStages, 10, params->activity),
+      timeBuffer(params->backComSize, params->forwardComSize),
+      fetchQueue(params->backComSize, params->forwardComSize),
+      decodeQueue(params->backComSize, params->forwardComSize),
+      renameQueue(params->backComSize, params->forwardComSize),
+      iewQueue(params->backComSize, params->forwardComSize),
+      activityRec(NumStages,
+                  params->backComSize + params->forwardComSize,
+                  params->activity),
 
       globalSeqNum(1),
 
@@ -214,7 +213,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setIEWQueue(&iewQueue);
     commit.setRenameQueue(&renameQueue);
 
-    commit.setFetchStage(&fetch);
     commit.setIEWStage(&iew);
     rename.setIEWStage(&iew);
     rename.setCommitStage(&commit);
@@ -851,7 +849,7 @@ void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     // Flush out any old data from the time buffers.
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < timeBuffer.getSize(); ++i) {
         timeBuffer.advance();
         fetchQueue.advance();
         decodeQueue.advance();
