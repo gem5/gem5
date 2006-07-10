@@ -247,7 +247,7 @@ class Packet
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
     int getSize() const { assert(addrSizeValid); return size; }
-    Addr getOffset(int blkSize) const { return req->getPaddr() & (Addr)(blkSize - 1); }
+    Addr getOffset(int blkSize) const { return addr & (Addr)(blkSize - 1); }
 
     void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
     void cmdOverride(Command newCmd) { cmd = newCmd; }
