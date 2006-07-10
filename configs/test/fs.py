@@ -190,6 +190,8 @@ class MyLinuxAlphaSystem(LinuxAlphaSystem):
     else:
         cpu = AtomicSimpleCPU()
     cpu.mem = magicbus2
+    cpu.icache_port = magicbus2.port
+    cpu.dcache_port = magicbus2.port
     cpu.itb = AlphaITB()
     cpu.dtb = AlphaDTB()
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
