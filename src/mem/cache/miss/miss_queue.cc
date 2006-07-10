@@ -352,7 +352,7 @@ MissQueue::setPrefetcher(BasePrefetcher *_prefetcher)
 MSHR*
 MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 {
-    MSHR* mshr = mq.allocate(pkt, size);
+    MSHR* mshr = mq.allocate(pkt, blkSize);
     mshr->order = order++;
     if (!pkt->req->isUncacheable() ){//&& !pkt->isNoAllocate()) {
         // Mark this as a cache line fill
@@ -372,7 +372,7 @@ MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 MSHR*
 MissQueue::allocateWrite(Packet * &pkt, int size, Tick time)
 {
-    MSHR* mshr = wb.allocate(pkt,pkt->getSize());
+    MSHR* mshr = wb.allocate(pkt,blkSize);
     mshr->order = order++;
 
 //REMOVING COMPRESSION FOR NOW
@@ -446,11 +446,11 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
         /**
          * @todo Add write merging here.
          */
-        mshr = allocateWrite(pkt, pkt->getSize(), time);
+        mshr = allocateWrite(pkt, blkSize, time);
         return;
     }
 
-    mshr = allocateMiss(pkt, size, time);
+    mshr = allocateMiss(pkt, blkSize, time);
 }
 
 MSHR*

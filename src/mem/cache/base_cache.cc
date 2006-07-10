@@ -117,11 +117,24 @@ BaseCache::CacheEvent::process()
     if (!pkt)
     {
         if (!cachePort->isCpuSide)
+        {
             pkt = cachePort->cache->getPacket();
+            bool success = cachePort->sendTiming(pkt);
+            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                    pkt->getAddr(), success ? "succesful" : "unsuccesful");
+            cachePort->cache->sendResult(pkt, success);
+            if (success && cachePort->cache->doMasterRequest())
+            {
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
+            }
+        }
         else
+        {
             pkt = cachePort->cache->getCoherencePacket();
-        bool success = cachePort->sendTiming(pkt);
-        cachePort->cache->sendResult(pkt, success);
+            cachePort->sendTiming(pkt);
+        }
         return;
     }
     //Know the packet to send, no need to mark in service (must succed)
