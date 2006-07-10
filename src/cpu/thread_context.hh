@@ -143,7 +143,7 @@ class ThreadContext
     virtual void suspend() = 0;
 
     /// Set the status to Unallocated.
-    virtual void deallocate() = 0;
+    virtual void deallocate(int delay = 0) = 0;
 
     /// Set the status to Halted.
     virtual void halt() = 0;
@@ -318,7 +318,7 @@ class ProxyThreadContext : public ThreadContext
     void suspend() { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
-    void deallocate() { actualTC->deallocate(); }
+    void deallocate(int delay = 0) { actualTC->deallocate(); }
 
     /// Set the status to Halted.
     void halt() { actualTC->halt(); }
