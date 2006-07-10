@@ -51,6 +51,8 @@ class ThreadContext;
 template <class Impl>
 class OzoneThreadState;
 
+class Port;
+
 template <class Impl>
 class LWBackEnd
 {

@@ -335,7 +335,7 @@ OzoneCPU<Impl>::suspendContext(int thread_num)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::deallocateContext(int thread_num)
+OzoneCPU<Impl>::deallocateContext(int thread_num, int delay)
 {
     // for now, these are equivalent
     suspendContext(thread_num);
@@ -792,9 +792,9 @@ OzoneCPU<Impl>::OzoneTC::suspend()
 /// Set the status to Unallocated.
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneTC::deallocate()
+OzoneCPU<Impl>::OzoneTC::deallocate(int delay)
 {
-    cpu->deallocateContext(thread->readTid());
+    cpu->deallocateContext(thread->readTid(), delay);
 }
 
 /// Set the status to Halted.
