@@ -50,6 +50,7 @@ All Rights Reserved
 parser = optparse.OptionParser(usage=usage, version=version,
                                description=brief_copyright,
                                formatter=optparse.TitledHelpFormatter())
+parser.disable_interspersed_args()
 
 # current option group
 group = None
