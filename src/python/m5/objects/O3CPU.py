@@ -10,6 +10,8 @@ class DerivO3CPU(BaseCPU):
     checker = Param.BaseCPU(NULL, "checker")
 
     cachePorts = Param.Unsigned("Cache Ports")
+    icache_port = Port("Instruction Port")
+    dcache_port = Port("Data Port")
 
     decodeToFetchDelay = Param.Unsigned("Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned("Rename to fetch delay")
@@ -50,6 +52,9 @@ class DerivO3CPU(BaseCPU):
     squashWidth = Param.Unsigned("Squash width")
     trapLatency = Param.Tick("Trap latency")
     fetchTrapLatency = Param.Tick("Fetch trap latency")
+
+    backComSize = Param.Unsigned("Time buffer size for backwards communication")
+    forwardComSize = Param.Unsigned("Time buffer size for forward communication")
 
     predType = Param.String("Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")

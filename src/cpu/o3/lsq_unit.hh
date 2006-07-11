@@ -77,6 +77,11 @@ class LSQUnit {
     /** Returns the name of the LSQ unit. */
     std::string name() const;
 
+    /** Returns the dcache port.
+     *  @todo: Remove this once the port moves up to the LSQ level.
+     */
+    Port *getDcachePort() { return dcachePort; }
+
     /** Registers statistics. */
     void regStats();
 

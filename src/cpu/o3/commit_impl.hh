@@ -82,8 +82,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       numThreads(params->numberOfThreads),
       drainPending(false),
       switchedOut(false),
-      trapLatency(params->trapLatency),
-      fetchTrapLatency(params->fetchTrapLatency)
+      trapLatency(params->trapLatency)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -123,9 +122,6 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         tcSquash[i] = false;
         PC[i] = nextPC[i] = 0;
     }
-
-    fetchFaultTick = 0;
-    fetchTrapWait = 0;
 }
 
 template <class Impl>
@@ -235,7 +231,6 @@ DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
     cpu->activateStage(O3CPU::CommitIdx);
 
     trapLatency = cpu->cycles(trapLatency);
-    fetchTrapLatency = cpu->cycles(fetchTrapLatency);
 }
 
 template <class Impl>
@@ -294,13 +289,6 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setFetchStage(Fetch *fetch_stage)
-{
-    fetchStage = fetch_stage;
-}
-
-template <class Impl>
-void
 DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 {
     iewStage = iew_stage;
@@ -350,10 +338,18 @@ DefaultCommit<Impl>::initStage()
 }
 
 template <class Impl>
-void
+bool
 DefaultCommit<Impl>::drain()
 {
     drainPending = true;
+
+    // If it's already drained, return true.
+    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalDrained();
+        return true;
+    }
+
+    return false;
 }
 
 template <class Impl>
@@ -369,6 +365,7 @@ template <class Impl>
 void
 DefaultCommit<Impl>::resume()
 {
+    drainPending = false;
 }
 
 template <class Impl>
@@ -569,6 +566,9 @@ DefaultCommit<Impl>::tick()
         return;
     }
 
+    if ((*activeThreads).size() <= 0)
+        return;
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check if any of the threads are done squashing.  Change the
@@ -582,7 +582,7 @@ DefaultCommit<Impl>::tick()
                 commitStatus[tid] = Running;
             } else {
                 DPRINTF(Commit,"[tid:%u]: Still Squashing, cannot commit any"
-                        "insts this cycle.\n", tid);
+                        " insts this cycle.\n", tid);
                 rob->doSquash(tid);
                 toIEW->commitInfo[tid].robSquashing = true;
                 wroteToTimeBuffer = true;

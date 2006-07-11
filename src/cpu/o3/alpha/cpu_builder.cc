@@ -102,7 +102,9 @@ Param<unsigned> renameToROBDelay;
 Param<unsigned> commitWidth;
 Param<unsigned> squashWidth;
 Param<Tick> trapLatency;
-Param<Tick> fetchTrapLatency;
+
+Param<unsigned> backComSize;
+Param<unsigned> forwardComSize;
 
 Param<std::string> predType;
 Param<unsigned> localPredictorSize;
@@ -222,7 +224,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
     INIT_PARAM(commitWidth, "Commit width"),
     INIT_PARAM(squashWidth, "Squash width"),
     INIT_PARAM_DFLT(trapLatency, "Number of cycles before the trap is handled", 6),
-    INIT_PARAM_DFLT(fetchTrapLatency, "Number of cycles before the fetch trap is handled", 12),
+
+    INIT_PARAM(backComSize, "Time buffer size for backwards communication"),
+    INIT_PARAM(forwardComSize, "Time buffer size for forward communication"),
 
     INIT_PARAM(predType, "Type of branch predictor ('local', 'tournament')"),
     INIT_PARAM(localPredictorSize, "Size of local predictor"),
@@ -350,7 +354,9 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->commitWidth = commitWidth;
     params->squashWidth = squashWidth;
     params->trapLatency = trapLatency;
-    params->fetchTrapLatency = fetchTrapLatency;
+
+    params->backComSize = backComSize;
+    params->forwardComSize = forwardComSize;
 
     params->predType = predType;
     params->localPredictorSize = localPredictorSize;

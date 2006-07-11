@@ -59,7 +59,7 @@ void
 BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp,
                                        AddrRangeList &snoop)
 {
-    cache->getAddressRanges(resp, snoop);
+    cache->getAddressRanges(resp, snoop, isCpuSide);
 }
 
 int
@@ -117,10 +117,29 @@ BaseCache::CacheEvent::process()
     if (!pkt)
     {
         if (!cachePort->isCpuSide)
+        {
             pkt = cachePort->cache->getPacket();
-        //Else get coherence req
+            bool success = cachePort->sendTiming(pkt);
+            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                    pkt->getAddr(), success ? "succesful" : "unsuccesful");
+            cachePort->cache->sendResult(pkt, success);
+            if (success && cachePort->cache->doMasterRequest())
+            {
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
+            }
+        }
+        else
+        {
+            pkt = cachePort->cache->getCoherencePacket();
+            cachePort->sendTiming(pkt);
+        }
+        return;
     }
-    cachePort->sendTiming(pkt);
+    //Know the packet to send, no need to mark in service (must succed)
+    bool success = cachePort->sendTiming(pkt);
+    assert(success);
 }
 
 const char *
@@ -138,7 +157,13 @@ BaseCache::getPort(const std::string &if_name, int idx)
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
         return cpuSidePort;
     }
-    if (if_name == "functional")
+    else if (if_name == "functional")
+    {
+        if(cpuSidePort == NULL)
+            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+        return cpuSidePort;
+    }
+    else if (if_name == "cpu_side")
     {
         if(cpuSidePort == NULL)
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
@@ -152,6 +177,14 @@ BaseCache::getPort(const std::string &if_name, int idx)
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
+}
+
+void
+BaseCache::init()
+{
+    if (!cpuSidePort || !memSidePort)
+        panic("Cache not hooked up on both sides\n");
+    cpuSidePort->sendStatusChange(Port::RangeChange);
 }
 
 void

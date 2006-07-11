@@ -112,6 +112,10 @@ namespace AlphaISA
             lock_flag = 0;
             lock_addr = 0;
         }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
 #if FULL_SYSTEM
       protected:
         typedef uint64_t InternalProcReg;

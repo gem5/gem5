@@ -1,14 +1,14 @@
+import optparse, os, sys
+
 import m5
 from m5.objects import *
-import os,optparse,sys
 from SysPaths import *
 
-parser = optparse.OptionParser(option_list=m5.standardOptions)
+parser = optparse.OptionParser()
 
 parser.add_option("-t", "--timing", action="store_true")
 
 (options, args) = parser.parse_args()
-m5.setStandardOptions(options)
 
 if args:
     print "Error: script doesn't take any positional arguments"
@@ -190,6 +190,8 @@ class MyLinuxAlphaSystem(LinuxAlphaSystem):
     else:
         cpu = AtomicSimpleCPU()
     cpu.mem = magicbus2
+    cpu.icache_port = magicbus2.port
+    cpu.dcache_port = magicbus2.port
     cpu.itb = AlphaITB()
     cpu.dtb = AlphaDTB()
     sim_console = SimConsole(listener=ConsoleListener(port=3456))

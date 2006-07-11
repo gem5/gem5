@@ -142,7 +142,7 @@ LWBackEnd<Impl>::replayMemInst(DynInstPtr &inst)
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
     : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
-      trapSquash(false), tcSquash(false), LSQ(params),
+      trapSquash(false), tcSquash(false),
       width(params->backEndWidth), exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
@@ -557,6 +557,7 @@ LWBackEnd<Impl>::checkInterrupts()
         }
     }
 }
+#endif
 
 template <class Impl>
 void
@@ -580,7 +581,6 @@ LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
     // Generate trap squash event.
     generateTrapEvent(latency);
 }
-#endif
 
 template <class Impl>
 void
@@ -602,6 +602,7 @@ LWBackEnd<Impl>::tick()
 
 #if FULL_SYSTEM
     checkInterrupts();
+#endif
 
     if (trapSquash) {
         assert(!tcSquash);
@@ -609,7 +610,6 @@ LWBackEnd<Impl>::tick()
     } else if (tcSquash) {
         squashFromTC();
     }
-#endif
 
     if (dispatchStatus != Blocked) {
         dispatchInsts();
@@ -1137,13 +1137,9 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
         thread->setInst(
             static_cast<TheISA::MachInst>(inst->staticInst->machInst));
-#if FULL_SYSTEM
+
         handleFault(inst_fault);
         return false;
-#else // !FULL_SYSTEM
-        panic("fault (%d) detected @ PC %08p", inst_fault,
-              inst->PC);
-#endif // FULL_SYSTEM
     }
 
     int freed_regs = 0;

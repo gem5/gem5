@@ -131,8 +131,9 @@ OzoneLWLSQ<Impl>::completeDataAccess(PacketPtr pkt)
 
 template <class Impl>
 OzoneLWLSQ<Impl>::OzoneLWLSQ()
-    : switchedOut(false), loads(0), stores(0), storesToWB(0), stalled(false),
-      isStoreBlocked(false), isLoadBlocked(false), loadBlockedHandled(false)
+    : switchedOut(false), dcachePort(this), loads(0), stores(0),
+      storesToWB(0), stalled(false), isStoreBlocked(false),
+      isLoadBlocked(false), loadBlockedHandled(false)
 {
 }
 
@@ -175,15 +176,11 @@ void
 OzoneLWLSQ<Impl>::setCPU(OzoneCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
-    dcachePort = new DcachePort(cpu, this);
-
-    Port *mem_dport = mem->getPort("");
-    dcachePort->setPeer(mem_dport);
-    mem_dport->setPeer(dcachePort);
+    dcachePort.setName(this->name() + "-dport");
 
 #if USE_CHECKER
     if (cpu->checker) {
-        cpu->checker->setDcachePort(dcachePort);
+        cpu->checker->setDcachePort(&dcachePort);
     }
 #endif
 }
@@ -614,7 +611,7 @@ OzoneLWLSQ<Impl>::writebackStores()
             state->noWB = true;
         }
 
-        if (!dcachePort->sendTiming(data_pkt)) {
+        if (!dcachePort.sendTiming(data_pkt)) {
             // Need to handle becoming blocked on a store.
             isStoreBlocked = true;
             assert(retryPkt == NULL);

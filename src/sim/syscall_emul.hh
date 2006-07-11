@@ -27,7 +27,6 @@
  *
  * Authors: Steve Reinhardt
  *          Kevin Lim
- *          Korey Sewell
  */
 
 #ifndef __SIM_SYSCALL_EMUL_HH__

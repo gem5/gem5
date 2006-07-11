@@ -182,10 +182,6 @@ LSQUnit<Impl>::setCPU(O3CPU *cpu_ptr)
     cpu = cpu_ptr;
     dcachePort = new DcachePort(cpu, this);
 
-    Port *mem_dport = mem->getPort("");
-    dcachePort->setPeer(mem_dport);
-    mem_dport->setPeer(dcachePort);
-
 #if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setDcachePort(dcachePort);

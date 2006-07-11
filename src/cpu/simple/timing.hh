@@ -66,6 +66,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Event *drainEvent;
 
+    Event *fetchEvent;
+
   private:
 
     class CpuPort : public Port
@@ -129,6 +131,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Packet *dcache_pkt;
 
   public:
+
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

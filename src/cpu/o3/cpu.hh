@@ -111,7 +111,6 @@ class FullO3CPU : public BaseO3CPU
         Idle,
         Halted,
         Blocked,
-        Drained,
         SwitchedOut
     };
 
@@ -200,6 +199,49 @@ class FullO3CPU : public BaseO3CPU
     /** The tick event used for scheduling CPU ticks. */
     ActivateThreadEvent activateThreadEvent[Impl::MaxThreads];
 
+    class DeallocateContextEvent : public Event
+    {
+      private:
+        /** Number of Thread to Activate */
+        int tid;
+
+        /** Pointer to the CPU. */
+        FullO3CPU<Impl> *cpu;
+
+      public:
+        /** Constructs the event. */
+        DeallocateContextEvent();
+
+        /** Initialize Event */
+        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
+
+        /** Processes the event, calling activateThread() on the CPU. */
+        void process();
+
+        /** Returns the description of the event. */
+        const char *description();
+    };
+
+    /** Schedule cpu to deallocate thread context.*/
+    void scheduleDeallocateContextEvent(int tid, int delay)
+    {
+        // Schedule thread to activate, regardless of its current state.
+        if (deallocateContextEvent[tid].squashed())
+            deallocateContextEvent[tid].reschedule(curTick + cycles(delay));
+        else if (!deallocateContextEvent[tid].scheduled())
+            deallocateContextEvent[tid].schedule(curTick + cycles(delay));
+    }
+
+    /** Unschedule thread deallocation in CPU */
+    void unscheduleDeallocateContextEvent(int tid)
+    {
+        if (deallocateContextEvent[tid].scheduled())
+            deallocateContextEvent[tid].squash();
+    }
+
+    /** The tick event used for scheduling CPU ticks. */
+    DeallocateContextEvent deallocateContextEvent[Impl::MaxThreads];
+
   public:
     /** Constructs a CPU with the given parameters. */
     FullO3CPU(Params *params);
@@ -208,6 +250,9 @@ class FullO3CPU : public BaseO3CPU
 
     /** Registers statistics. */
     void fullCPURegStats();
+
+    /** Returns a specific port. */
+    Port *getPort(const std::string &if_name, int idx);
 
     /** Ticks CPU, calling tick() on each stage, and checking the overall
      *  activity to see if the CPU should deschedule itself.
@@ -222,7 +267,10 @@ class FullO3CPU : public BaseO3CPU
     { return activeThreads.size(); }
 
     /** Add Thread to Active Threads List */
-    void activateThread(unsigned int tid);
+    void activateThread(unsigned tid);
+
+    /** Remove Thread from Active Threads List */
+    void deactivateThread(unsigned tid);
 
     /** Setup CPU to insert a thread's context */
     void insertThread(unsigned tid);
@@ -250,7 +298,7 @@ class FullO3CPU : public BaseO3CPU
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void deallocateContext(int tid);
+    void deallocateContext(int tid, int delay = 1);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
@@ -266,6 +314,13 @@ class FullO3CPU : public BaseO3CPU
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
 
+    /** Serialize state. */
+    virtual void serialize(std::ostream &os);
+
+    /** Unserialize from a checkpoint. */
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  public:
     /** Executes a syscall on this cycle.
      *  ---------------------------------------
      *  Note: this is a virtual function. CPU-Specific

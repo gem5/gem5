@@ -120,7 +120,7 @@ class CheckerThreadContext : public ThreadContext
     void suspend() { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
-    void deallocate() { actualTC->deallocate(); }
+    void deallocate(int delay = 0) { actualTC->deallocate(delay); }
 
     /// Set the status to Halted.
     void halt() { actualTC->halt(); }

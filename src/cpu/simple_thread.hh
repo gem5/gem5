@@ -119,15 +119,19 @@ class SimpleThread : public ThreadState
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
                  MemObject *memobj);
-    // Constructor to use SimpleThread to pass reg file around.  Not
-    // used for anything else.
-    SimpleThread(RegFile *regFile);
 #endif
+
+    SimpleThread();
+
     virtual ~SimpleThread();
 
     virtual void takeOverFrom(ThreadContext *oldContext);
 
     void regStats(const std::string &name);
+
+    void copyTC(ThreadContext *context);
+
+    void copyState(ThreadContext *oldContext);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

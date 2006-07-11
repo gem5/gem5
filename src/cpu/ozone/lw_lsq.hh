@@ -91,8 +91,7 @@ class OzoneLWLSQ {
     void setBE(BackEnd *be_ptr)
     { be = be_ptr; }
 
-    /** Sets the page table pointer. */
-//    void setPageTable(PageTable *pt_ptr);
+    Port *getDcachePort() { return &dcachePort; }
 
     /** Ticks the LSQ unit, which in this case only resets the number of
      * used cache ports.
@@ -241,13 +240,11 @@ class OzoneLWLSQ {
     class DcachePort : public Port
     {
       protected:
-        OzoneCPU *cpu;
-
         OzoneLWLSQ *lsq;
 
       public:
-        DcachePort(OzoneCPU *_cpu, OzoneLWLSQ *_lsq)
-            : Port(_lsq->name() + "-dport"), cpu(_cpu), lsq(_lsq)
+        DcachePort(OzoneLWLSQ *_lsq)
+            : lsq(_lsq)
         { }
 
       protected:
@@ -266,11 +263,8 @@ class OzoneLWLSQ {
         virtual void recvRetry();
     };
 
-    /** Pointer to the D-cache. */
-    DcachePort *dcachePort;
-
-    /** Pointer to the page table. */
-//    PageTable *pTable;
+    /** D-cache port. */
+    DcachePort dcachePort;
 
   public:
     struct SQEntry {
@@ -639,7 +633,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     data_pkt->senderState = state;
 
     // if we have a cache, do cache access too
-    if (!dcachePort->sendTiming(data_pkt)) {
+    if (!dcachePort.sendTiming(data_pkt)) {
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < inst->seqNum)
             return NoFault;

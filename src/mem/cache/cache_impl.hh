@@ -350,7 +350,7 @@ Cache<TagStore,Buffering,Coherence>::pseudoFill(MSHR *mshr)
 
 template<class TagStore, class Buffering, class Coherence>
 Packet *
-Cache<TagStore,Buffering,Coherence>::getCoherenceReq()
+Cache<TagStore,Buffering,Coherence>::getCoherencePacket()
 {
     return coherence->getPacket();
 }

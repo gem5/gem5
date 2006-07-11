@@ -51,6 +51,8 @@ class ThreadContext;
 template <class Impl>
 class OzoneThreadState;
 
+class Port;
+
 template <class Impl>
 class LWBackEnd
 {
@@ -113,6 +115,8 @@ class LWBackEnd
     { thread = thread_ptr; }
 
     void setCommBuffer(TimeBuffer<CommStruct> *_comm);
+
+    Port *getDcachePort() { return LSQ.getDcachePort(); }
 
     void tick();
     void squash();

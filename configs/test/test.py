@@ -4,15 +4,16 @@
 # MIPS: "m5 test.py -a Mips -c hello_mips"
 
 import os, optparse, sys
+
 import m5
 from m5.objects import *
 from FullO3Config import *
 
 # parse command-line arguments
-parser = optparse.OptionParser(option_list=m5.standardOptions)
+parser = optparse.OptionParser()
 
 parser.add_option("-c", "--cmd", default="hello",
-                  help="The binary to run in syscall emulation mode.")
+        help="The binary to run in syscall emulation mode.")
 parser.add_option("-o", "--options", default="",
         help="The options to pass to the binary, use \" \" around the entire\
                 string.")
@@ -26,7 +27,6 @@ parser.add_option("-m", "--maxtick", type="int",
         help="Set the maximum number of ticks to run  for")
 
 (options, args) = parser.parse_args()
-m5.setStandardOptions(options)
 
 if args:
     print "Error: script doesn't take any positional arguments"
@@ -75,6 +75,8 @@ else:
     cpu = AtomicSimpleCPU()
 cpu.workload = process
 cpu.mem = magicbus
+cpu.icache_port=magicbus.port
+cpu.dcache_port=magicbus.port
 
 system = System(physmem = mem, cpu = cpu)
 mem.port = magicbus.port

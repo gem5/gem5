@@ -115,6 +115,36 @@ FullO3CPU<Impl>::ActivateThreadEvent::description()
 }
 
 template <class Impl>
+FullO3CPU<Impl>::DeallocateContextEvent::DeallocateContextEvent()
+    : Event(&mainEventQueue, CPU_Tick_Pri)
+{
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::DeallocateContextEvent::init(int thread_num,
+                                           FullO3CPU<Impl> *thread_cpu)
+{
+    tid = thread_num;
+    cpu = thread_cpu;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::DeallocateContextEvent::process()
+{
+    cpu->deactivateThread(tid);
+    cpu->removeThread(tid);
+}
+
+template <class Impl>
+const char *
+FullO3CPU<Impl>::DeallocateContextEvent::description()
+{
+    return "FullO3CPU \"Deallocate Context\" event";
+}
+
+template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(Params *params)
     : BaseO3CPU(params),
       tickEvent(this),
@@ -141,15 +171,14 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
                  TheISA::NumMiscRegs * number_of_threads,
                  TheISA::ZeroReg),
 
-      // For now just have these time buffers be pretty big.
-      // @todo: Make these time buffer sizes parameters or derived
-      // from latencies
-      timeBuffer(5, 5),
-      fetchQueue(5, 5),
-      decodeQueue(5, 5),
-      renameQueue(5, 5),
-      iewQueue(5, 5),
-      activityRec(NumStages, 10, params->activity),
+      timeBuffer(params->backComSize, params->forwardComSize),
+      fetchQueue(params->backComSize, params->forwardComSize),
+      decodeQueue(params->backComSize, params->forwardComSize),
+      renameQueue(params->backComSize, params->forwardComSize),
+      iewQueue(params->backComSize, params->forwardComSize),
+      activityRec(NumStages,
+                  params->backComSize + params->forwardComSize,
+                  params->activity),
 
       globalSeqNum(1),
 
@@ -214,7 +243,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setIEWQueue(&iewQueue);
     commit.setRenameQueue(&renameQueue);
 
-    commit.setFetchStage(&fetch);
     commit.setIEWStage(&iew);
     rename.setIEWStage(&iew);
     rename.setCommitStage(&commit);
@@ -361,6 +389,18 @@ FullO3CPU<Impl>::fullCPURegStats()
 }
 
 template <class Impl>
+Port *
+FullO3CPU<Impl>::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return iew.getDcachePort();
+    else if (if_name == "icache_port")
+        return fetch.getIcachePort();
+    else
+        panic("No Such Port\n");
+}
+
+template <class Impl>
 void
 FullO3CPU<Impl>::tick()
 {
@@ -400,7 +440,8 @@ FullO3CPU<Impl>::tick()
     }
 
     if (!tickEvent.scheduled()) {
-        if (_status == SwitchedOut) {
+        if (_status == SwitchedOut ||
+            getState() == SimObject::DrainedTiming) {
             // increment stat
             lastRunningCycle = curTick;
         } else if (!activityRec.active()) {
@@ -461,6 +502,118 @@ FullO3CPU<Impl>::init()
 
 template <class Impl>
 void
+FullO3CPU<Impl>::activateThread(unsigned tid)
+{
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive == activeThreads.end()) {
+        DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
+                tid);
+
+        activeThreads.push_back(tid);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::deactivateThread(unsigned tid)
+{
+    //Remove From Active List, if Active
+    list<unsigned>::iterator thread_it =
+        find(activeThreads.begin(), activeThreads.end(), tid);
+
+    if (thread_it != activeThreads.end()) {
+        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(thread_it);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::activateContext(int tid, int delay)
+{
+    // Needs to set each stage to running as well.
+    if (delay){
+        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
+                "on cycle %d\n", tid, curTick + cycles(delay));
+        scheduleActivateThreadEvent(tid, delay);
+    } else {
+        activateThread(tid);
+    }
+
+    if(lastActivatedCycle < curTick) {
+        scheduleTickEvent(delay);
+
+        // Be sure to signal that there's some activity so the CPU doesn't
+        // deschedule itself.
+        activityRec.activity();
+        fetch.wakeFromQuiesce();
+
+        lastActivatedCycle = curTick;
+
+        _status = Running;
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::deallocateContext(int tid, int delay)
+{
+    // Schedule removal of thread data from CPU
+    if (delay){
+        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to deallocate "
+                "on cycle %d\n", tid, curTick + cycles(delay));
+        scheduleDeallocateContextEvent(tid, delay);
+    } else {
+        deactivateThread(tid);
+        removeThread(tid);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::suspendContext(int tid)
+{
+    DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
+    unscheduleTickEvent();
+    _status = Idle;
+/*
+    //Remove From Active List, if Active
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive != activeThreads.end()) {
+        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(isActive);
+    }
+*/
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::haltContext(int tid)
+{
+    DPRINTF(O3CPU,"[tid:%i]: Halting Thread Context", tid);
+/*
+    //Remove From Active List, if Active
+    list<unsigned>::iterator isActive = find(
+        activeThreads.begin(), activeThreads.end(), tid);
+
+    if (isActive != activeThreads.end()) {
+        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        activeThreads.erase(isActive);
+
+        removeThread(tid);
+    }
+*/
+}
+
+template <class Impl>
+void
 FullO3CPU<Impl>::insertThread(unsigned tid)
 {
     DPRINTF(O3CPU,"[tid:%i] Initializing thread into CPU");
@@ -511,7 +664,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::removeThread(unsigned tid)
 {
-    DPRINTF(O3CPU,"[tid:%i] Removing thread from CPU.");
+    DPRINTF(O3CPU,"[tid:%i] Removing thread context from CPU.\n", tid);
 
     // Copy Thread Data From RegFile
     // If thread is suspended, it might be re-allocated
@@ -537,6 +690,8 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     fetch.squash(0,tid);
     decode.squash(tid);
     rename.squash(tid);
+    iew.squash(tid);
+    commit.rob->squash(commit.rob->readHeadInst(tid)->seqNum, tid);
 
     assert(iew.ldstQueue.getCount(tid) == 0);
 
@@ -600,6 +755,7 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
         //blocks fetch
         contextSwitch = true;
 
+        //@todo: dont always add to waitlist
         //do waitlist
         cpuWaitList.push_back(tid);
     }
@@ -607,104 +763,43 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::activateThread(unsigned int tid)
+FullO3CPU<Impl>::serialize(std::ostream &os)
 {
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
+    SERIALIZE_ENUM(_status);
+    BaseCPU::serialize(os);
+    nameOut(os, csprintf("%s.tickEvent", name()));
+    tickEvent.serialize(os);
 
-    if (isActive == activeThreads.end()) {
-        DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
-                tid);
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // write out the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static SimpleThread temp;
 
-        activeThreads.push_back(tid);
-    }
-}
-
-
-template <class Impl>
-void
-FullO3CPU<Impl>::activateContext(int tid, int delay)
-{
-    // Needs to set each stage to running as well.
-    if (delay){
-        DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
-                "on cycle %d\n", tid, curTick + cycles(delay));
-        scheduleActivateThreadEvent(tid, delay);
-    } else {
-        activateThread(tid);
-    }
-
-    if(lastActivatedCycle < curTick) {
-        scheduleTickEvent(delay);
-
-        // Be sure to signal that there's some activity so the CPU doesn't
-        // deschedule itself.
-        activityRec.activity();
-        fetch.wakeFromQuiesce();
-
-        lastActivatedCycle = curTick;
-
-        _status = Running;
+    for (int i = 0; i < thread.size(); i++) {
+        nameOut(os, csprintf("%s.xc.%i", name(), i));
+        temp.copyTC(thread[i]->getTC());
+        temp.serialize(os);
     }
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::suspendContext(int tid)
+FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
-    DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
-    unscheduleTickEvent();
-    _status = Idle;
-/*
-    //Remove From Active List, if Active
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
+    UNSERIALIZE_ENUM(_status);
+    BaseCPU::unserialize(cp, section);
+    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 
-    if (isActive != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        activeThreads.erase(isActive);
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // read in the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static SimpleThread temp;
+
+    for (int i = 0; i < thread.size(); i++) {
+        temp.copyTC(thread[i]->getTC());
+        temp.unserialize(cp, csprintf("%s.xc.%i", section, i));
+        thread[i]->getTC()->copyArchRegs(temp.getTC());
     }
-*/
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::deallocateContext(int tid)
-{
-    DPRINTF(O3CPU,"[tid:%i]: Deallocating Thread Context", tid);
-
-    //Remove From Active List, if Active
-    list<unsigned>::iterator thread_it =
-        find(activeThreads.begin(), activeThreads.end(), tid);
-
-    if (thread_it != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        activeThreads.erase(thread_it);
-
-        removeThread(tid);
-    }
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::haltContext(int tid)
-{
-    DPRINTF(O3CPU,"[tid:%i]: Halting Thread Context", tid);
-/*
-    //Remove From Active List, if Active
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
-
-    if (isActive != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        activeThreads.erase(isActive);
-
-        removeThread(tid);
-    }
-*/
 }
 
 template <class Impl>
@@ -712,7 +807,6 @@ bool
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
     drainCount = 0;
-    drainEvent = drain_event;
     fetch.drain();
     decode.drain();
     rename.drain();
@@ -720,28 +814,40 @@ FullO3CPU<Impl>::drain(Event *drain_event)
     commit.drain();
 
     // Wake the CPU and record activity so everything can drain out if
-    // the CPU is currently idle.
-    wakeCPU();
-    activityRec.activity();
+    // the CPU was not able to immediately drain.
+    if (getState() != SimObject::DrainedTiming) {
+        // A bit of a hack...set the drainEvent after all the drain()
+        // calls have been made, that way if all of the stages drain
+        // immediately, the signalDrained() function knows not to call
+        // process on the drain event.
+        drainEvent = drain_event;
 
-    return false;
+        wakeCPU();
+        activityRec.activity();
+
+        return false;
+    } else {
+        return true;
+    }
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::resume()
 {
-    if (_status == SwitchedOut)
-        return;
     fetch.resume();
     decode.resume();
     rename.resume();
     iew.resume();
     commit.resume();
 
+    if (_status == SwitchedOut || _status == Idle)
+        return;
+
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
     _status = Running;
+    changeState(SimObject::Timing);
 }
 
 template <class Impl>
@@ -751,8 +857,13 @@ FullO3CPU<Impl>::signalDrained()
     if (++drainCount == NumStages) {
         if (tickEvent.scheduled())
             tickEvent.squash();
-        _status = Drained;
-        drainEvent->process();
+
+        changeState(SimObject::DrainedTiming);
+
+        if (drainEvent) {
+            drainEvent->process();
+            drainEvent = NULL;
+        }
     }
     assert(drainCount <= 5);
 }
@@ -781,7 +892,7 @@ void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     // Flush out any old data from the time buffers.
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < timeBuffer.getSize(); ++i) {
         timeBuffer.advance();
         fetchQueue.advance();
         decodeQueue.advance();

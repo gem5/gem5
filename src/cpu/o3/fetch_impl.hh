@@ -280,10 +280,6 @@ DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
 
-    Port *mem_dport = mem->getPort("");
-    icachePort->setPeer(mem_dport);
-    mem_dport->setPeer(icachePort);
-
 #if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setIcachePort(icachePort);
@@ -354,22 +350,23 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||
         pkt->req != memReq[tid] ||
-        isSwitchedOut() ||
-        drainPending) {
+        isSwitchedOut()) {
         ++fetchIcacheSquashes;
         delete pkt->req;
         delete pkt;
         return;
     }
 
-    // Wake up the CPU (if it went to sleep and was waiting on this completion
-    // event).
-    cpu->wakeCPU();
+    if (!drainPending) {
+        // Wake up the CPU (if it went to sleep and was waiting on
+        // this completion event).
+        cpu->wakeCPU();
 
-    DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
-            tid);
+        DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
+                tid);
 
-    switchToActive();
+        switchToActive();
+    }
 
     // Only switch to IcacheAccessComplete if we're not stalled as well.
     if (checkStall(tid)) {
@@ -385,12 +382,13 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 }
 
 template <class Impl>
-void
+bool
 DefaultFetch<Impl>::drain()
 {
     // Fetch is ready to drain at any time.
     cpu->signalDrained();
     drainPending = true;
+    return true;
 }
 
 template <class Impl>
@@ -508,7 +506,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (cacheBlocked || (interruptPending && flags == 0) || drainPending) {
+    if (cacheBlocked || (interruptPending && flags == 0)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -908,7 +906,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     //////////////////////////////////////////
     int tid = getFetchingThread(fetchPolicy);
 
-    if (tid == -1) {
+    if (tid == -1 || drainPending) {
         DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
 
         // Breaks looping condition in tick()

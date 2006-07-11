@@ -119,6 +119,8 @@ class FrontEnd
 
     void regStats();
 
+    Port *getIcachePort() { return &icachePort; }
+
     void tick();
     Fault fetchCacheLine();
     void processInst(DynInstPtr &inst);

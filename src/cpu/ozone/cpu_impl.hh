@@ -335,7 +335,7 @@ OzoneCPU<Impl>::suspendContext(int thread_num)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::deallocateContext(int thread_num)
+OzoneCPU<Impl>::deallocateContext(int thread_num, int delay)
 {
     // for now, these are equivalent
     suspendContext(thread_num);
@@ -416,6 +416,18 @@ OzoneCPU<Impl>::init()
     backEnd->renameTable.copyFrom(thread.renameTable);
 
     thread.inSyscall = false;
+}
+
+template <class Impl>
+Port *
+OzoneCPU<Impl>::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return backEnd->getDcachePort();
+    else if (if_name == "icache_port")
+        return frontEnd->getIcachePort();
+    else
+        panic("No Such Port\n");
 }
 
 template <class Impl>
@@ -780,9 +792,9 @@ OzoneCPU<Impl>::OzoneTC::suspend()
 /// Set the status to Unallocated.
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneTC::deallocate()
+OzoneCPU<Impl>::OzoneTC::deallocate(int delay)
 {
-    cpu->deallocateContext(thread->readTid());
+    cpu->deallocateContext(thread->readTid(), delay);
 }
 
 /// Set the status to Halted.

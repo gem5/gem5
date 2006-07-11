@@ -162,10 +162,6 @@ class DefaultCommit
     /** Sets the pointer to the queue coming from IEW. */
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
-    void setFetchStage(Fetch *fetch_stage);
-
-    Fetch *fetchStage;
-
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
@@ -188,7 +184,7 @@ class DefaultCommit
     void initStage();
 
     /** Initializes the draining of commit. */
-    void drain();
+    bool drain();
 
     /** Resumes execution after draining. */
     void resume();
@@ -335,10 +331,6 @@ class DefaultCommit
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
 
-    Fault fetchFault;
-
-    int fetchTrapWait;
-
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.
      */
@@ -396,10 +388,6 @@ class DefaultCommit
      * squash event.
      */
     Tick trapLatency;
-
-    Tick fetchTrapLatency;
-
-    Tick fetchFaultTick;
 
     /** The commit PC of each thread.  Refers to the instruction that
      * is currently being processed/committed.
