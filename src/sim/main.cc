@@ -115,70 +115,11 @@ abortHandler(int sigtype)
 #endif
 }
 
-/// Simulator executable name
-char *myProgName = "";
-
-/// Show brief help message.
-void
-showBriefHelp(ostream &out)
-{
-    char *prog = basename(myProgName);
-
-    ccprintf(out, "Usage:\n");
-    ccprintf(out,
-"%s [-p <path>] [-i ] [-h] <config file>\n"
-"\n"
-" -p, --path <path>  prepends <path> to PYTHONPATH instead of using\n"
-"                    built-in zip archive.  Useful when developing/debugging\n"
-"                    changes to built-in Python libraries, as the new Python\n"
-"                    can be tested without building a new m5 binary.\n\n"
-" -i, --interactive  forces entry into interactive mode after the supplied\n"
-"                    script is executed (just like the -i option to  the\n"
-"                    Python interpreter).\n\n"
-" -h                 Prints this help\n\n"
-" <configfile>       config file name which ends in .py. (Normally you can\n"
-"                    run <configfile> --help to get help on that config files\n"
-"                    parameters.\n\n",
-             prog);
-
-}
-
-const char *briefCopyright =
-"Copyright (c) 2001-2006\n"
-"The Regents of The University of Michigan\n"
-"All Rights Reserved\n";
-
-/// Print welcome message.
-void
-sayHello(ostream &out)
-{
-    extern const char *compileDate;     // from date.cc
-
-    ccprintf(out, "M5 Simulator System\n");
-    // display copyright
-    ccprintf(out, "%s\n", briefCopyright);
-    ccprintf(out, "M5 compiled %d\n", compileDate);
-    ccprintf(out, "M5 started %s\n", Time::start);
-
-    char *host = getenv("HOSTNAME");
-    if (!host)
-        host = getenv("HOST");
-
-    if (host)
-        ccprintf(out, "M5 executing on %s\n", host);
-}
-
-
 extern "C" { void init_cc_main(); }
 
 int
 main(int argc, char **argv)
 {
-    // Saze off program name
-    myProgName = argv[0];
-
-    sayHello(cerr);
-
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
     signal(SIGTRAP, SIG_IGN);
     signal(SIGUSR1, dumpStatsHandler);		// dump intermediate stats
@@ -189,72 +130,18 @@ main(int argc, char **argv)
     Py_SetProgramName(argv[0]);
 
     // default path to m5 python code is the currently executing
-    // file... Python ZipImporter will find embedded zip archive
-    char *pythonpath = argv[0];
-
-    bool interactive = false;
-    bool show_help = false;
-    bool getopt_done = false;
-    int opt_index = 0;
-
-    static struct option long_options[] = {
-        {"python", 1, 0, 'p'},
-        {"interactive", 0, 0, 'i'},
-        {"help", 0, 0, 'h'},
-        {0,0,0,0}
-    };
-
-    do {
-        switch (getopt_long(argc, argv, "+p:ih", long_options, &opt_index)) {
-            // -p <path> prepends <path> to PYTHONPATH instead of
-            // using built-in zip archive.  Useful when
-            // developing/debugging changes to built-in Python
-            // libraries, as the new Python can be tested without
-            // building a new m5 binary.
-          case 'p':
-            pythonpath = optarg;
-            break;
-
-            // -i forces entry into interactive mode after the
-            // supplied script is executed (just like the -i option to
-            // the Python interpreter).
-          case 'i':
-            interactive = true;
-            break;
-
-          case 'h':
-            show_help = true;
-            break;
-          case -1:
-            getopt_done = true;
-            break;
-
-          default:
-            fatal("Unrecognized option %c\n", optopt);
-        }
-    } while (!getopt_done);
-
-    if (show_help) {
-        showBriefHelp(cerr);
-        exit(1);
-    }
-
-    // Fix up argc & argv to hide arguments we just processed.
-    // getopt() sets optind to the index of the first non-processed
-    // argv element.
-    argc -= optind;
-    argv += optind;
-
-    // Set up PYTHONPATH to make sure the m5 module is found
-    string newpath(pythonpath);
+    // file... Python ZipImporter will find embedded zip archive.
+    // The M5_ARCHIVE environment variable can be used to override this.
+    char *m5_archive = getenv("M5_ARCHIVE");
+    string pythonpath = m5_archive ? m5_archive : argv[0];
 
     char *oldpath = getenv("PYTHONPATH");
     if (oldpath != NULL) {
-        newpath += ":";
-        newpath += oldpath;
+        pythonpath += ":";
+        pythonpath += oldpath;
     }
 
-    if (setenv("PYTHONPATH", newpath.c_str(), true) == -1)
+    if (setenv("PYTHONPATH", pythonpath.c_str(), true) == -1)
         fatal("setenv: %s\n", strerror(errno));
 
     // initialize embedded Python interpreter
@@ -264,37 +151,8 @@ main(int argc, char **argv)
     // initialize SWIG 'cc_main' module
     init_cc_main();
 
-    if (argc > 0) {
-        // extra arg(s): first is script file, remaining ones are args
-        // to script file
-        char *filename = argv[0];
-        FILE *fp = fopen(filename, "r");
-        if (!fp) {
-            fatal("cannot open file '%s'\n", filename);
-        }
-
-        PyRun_AnyFile(fp, filename);
-    } else {
-        // no script file argument... force interactive prompt
-        interactive = true;
-    }
-
-    if (interactive) {
-        // The following code to import readline was copied from Python
-        // 2.4.3's Modules/main.c.
-        // Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006
-        // Python Software Foundation; All Rights Reserved
-        // We should only enable this if we're actually using an
-        // interactive prompt.
-        PyObject *v;
-        v = PyImport_ImportModule("readline");
-        if (v == NULL)
-            PyErr_Clear();
-        else
-            Py_DECREF(v);
-
-        PyRun_InteractiveLoop(stdin, "stdin");
-    }
+    PyRun_SimpleString("import m5");
+    PyRun_SimpleString("m5.main()");
 
     // clean up Python intepreter.
     Py_Finalize();

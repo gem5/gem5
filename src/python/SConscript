@@ -75,16 +75,27 @@ def addPkg(pkgdir):
 # build_env flags.
 def MakeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
-    print >>f, "m5_build_env = ",
-    print >>f, source[0]
+    print >>f, "m5_build_env = ", source[0]
     f.close()
 
 optionDict = dict([(opt, env[opt]) for opt in env.ExportOptions])
 env.Command('m5/defines.py', Value(optionDict), MakeDefinesPyFile)
 
+def MakeInfoPyFile(target, source, env):
+    f = file(str(target[0]), 'w')
+    for src in source:
+        data = ''.join(file(src.srcnode().abspath, 'r').xreadlines())
+        print >>f, "%s = %s" % (src, repr(data))
+    f.close()
+
+env.Command('m5/info.py',
+            [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
+            MakeInfoPyFile)
+
 # Now specify the packages & files for the zip archive.
 addPkg('m5')
 pyzip_files.append('m5/defines.py')
+pyzip_files.append('m5/info.py')
 pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
 
 env.Command(['swig/cc_main_wrap.cc', 'm5/cc_main.py'],

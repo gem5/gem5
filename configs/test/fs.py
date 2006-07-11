@@ -1,14 +1,14 @@
+import optparse, os, sys
+
 import m5
 from m5.objects import *
-import os,optparse,sys
 from SysPaths import *
 
-parser = optparse.OptionParser(option_list=m5.standardOptions)
+parser = optparse.OptionParser()
 
 parser.add_option("-t", "--timing", action="store_true")
 
 (options, args) = parser.parse_args()
-m5.setStandardOptions(options)
 
 if args:
     print "Error: script doesn't take any positional arguments"
