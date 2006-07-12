@@ -517,6 +517,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
 
+    // If we've already got the block, no need to try to fetch it again.
+    if (fetch_PC == cacheDataPC[tid]) {
+        return true;
+    }
+
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
@@ -549,6 +554,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         PacketPtr data_pkt = new Packet(mem_req,
                                         Packet::ReadReq, Packet::Broadcast);
         data_pkt->dataStatic(cacheData[tid]);
+
+        cacheDataPC[tid] = fetch_PC;
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
