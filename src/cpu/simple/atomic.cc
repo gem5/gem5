@@ -158,18 +158,29 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 void
 AtomicSimpleCPU::serialize(ostream &os)
 {
-    SERIALIZE_ENUM(_status);
-    BaseSimpleCPU::serialize(os);
+    SimObject::State so_state = SimObject::getState();
+    SERIALIZE_ENUM(so_state);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
+    BaseSimpleCPU::serialize(os);
 }
 
 void
 AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    UNSERIALIZE_ENUM(_status);
-    BaseSimpleCPU::unserialize(cp, section);
+    SimObject::State so_state;
+    UNSERIALIZE_ENUM(so_state);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
+    BaseSimpleCPU::unserialize(cp, section);
+}
+
+void
+AtomicSimpleCPU::resume()
+{
+    if (thread->status() == ThreadContext::Active) {
+        if (!tickEvent.scheduled())
+            tickEvent.schedule(curTick);
+    }
 }
 
 void
