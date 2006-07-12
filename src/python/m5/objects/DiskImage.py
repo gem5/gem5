@@ -10,6 +10,6 @@ class RawDiskImage(DiskImage):
 
 class CowDiskImage(DiskImage):
     type = 'CowDiskImage'
-    child = Param.DiskImage("child image")
+    child = Param.DiskImage(RawDiskImage(read_only=True),
+                            "child image")
     table_size = Param.Int(65536, "initial table size")
-    image_file = ''

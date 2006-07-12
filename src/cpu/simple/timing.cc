@@ -102,14 +102,16 @@ TimingSimpleCPU::~TimingSimpleCPU()
 void
 TimingSimpleCPU::serialize(ostream &os)
 {
-    SERIALIZE_ENUM(_status);
+    SimObject::State so_state = SimObject::getState();
+    SERIALIZE_ENUM(so_state);
     BaseSimpleCPU::serialize(os);
 }
 
 void
 TimingSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    UNSERIALIZE_ENUM(_status);
+    SimObject::State so_state;
+    UNSERIALIZE_ENUM(so_state);
     BaseSimpleCPU::unserialize(cp, section);
 }
 
@@ -134,7 +136,9 @@ TimingSimpleCPU::resume()
     if (_status != SwitchedOut && _status != Idle) {
         // Delete the old event if it existed.
         if (fetchEvent) {
-            assert(!fetchEvent->scheduled());
+            if (fetchEvent->scheduled())
+                fetchEvent->deschedule();
+
             delete fetchEvent;
         }
 

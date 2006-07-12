@@ -178,8 +178,8 @@ void
 BaseSimpleCPU::serialize(ostream &os)
 {
     BaseCPU::serialize(os);
-    SERIALIZE_SCALAR(inst);
-    nameOut(os, csprintf("%s.xc", name()));
+//    SERIALIZE_SCALAR(inst);
+    nameOut(os, csprintf("%s.xc.0", name()));
     thread->serialize(os);
 }
 
@@ -187,8 +187,8 @@ void
 BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     BaseCPU::unserialize(cp, section);
-    UNSERIALIZE_SCALAR(inst);
-    thread->unserialize(cp, csprintf("%s.xc", section));
+//    UNSERIALIZE_SCALAR(inst);
+    thread->unserialize(cp, csprintf("%s.xc.0", section));
 }
 
 void

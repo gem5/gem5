@@ -996,6 +996,12 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
+    // DTB will sometimes need the machine instruction for when
+    // faults happen.  So we will set it here, prior to the DTB
+    // possibly needing it for its fault.
+    thread[tid]->setInst(
+        static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
+
     if (inst_fault != NoFault) {
         head_inst->setCompleted();
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
@@ -1017,12 +1023,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // Mark that we're in state update mode so that the trap's
         // execution doesn't generate extra squashes.
         thread[tid]->inSyscall = true;
-
-        // DTB will sometimes need the machine instruction for when
-        // faults happen.  So we will set it here, prior to the DTB
-        // possibly needing it for its fault.
-        thread[tid]->setInst(
-            static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
 
         // Execute the trap.  Although it's slightly unrealistic in
         // terms of timing (as it doesn't wait for the full timing of
