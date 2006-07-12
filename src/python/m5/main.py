@@ -283,9 +283,10 @@ def main():
     objects.ExecutionTrace.print_fetchseq = options.print_fetch_seq
     objects.ExecutionTrace.print_cpseq = options.print_cpseq
 
-    scope = { '__file__' : sys.argv[0] }
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
+
+    scope = { '__file__' : sys.argv[0] }
     exec("import readline", scope)
     execfile(sys.argv[0], scope)
 
