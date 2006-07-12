@@ -357,6 +357,8 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
+    memcpy(cacheData[tid], pkt->getPtr<uint8_t *>(), cacheBlkSize);
+
     if (!drainPending) {
         // Wake up the CPU (if it went to sleep and was waiting on
         // this completion event).
@@ -553,7 +555,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         Packet::ReadReq, Packet::Broadcast);
-        data_pkt->dataStatic(cacheData[tid]);
+        data_pkt->dataDynamic(new uint8_t[cacheBlkSize]);
 
         cacheDataPC[tid] = fetch_PC;
 

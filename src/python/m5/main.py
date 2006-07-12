@@ -119,6 +119,8 @@ add_option('-d', "--outdir", metavar="DIR", default=".",
     help="Set the output directory to DIR [Default: %default]")
 add_option('-i', "--interactive", action="store_true", default=False,
     help="Invoke the interactive interpreter after running the script")
+add_option("--pdb", action="store_true", default=False,
+    help="Invoke the python debugger before running the script")
 add_option('-p', "--path", metavar="PATH[:PATH]", action='append', split=':',
     help="Prepend PATH to the system path when invoking the script")
 add_option('-q', "--quiet", action="count", default=0,
@@ -283,11 +285,23 @@ def main():
     objects.ExecutionTrace.print_fetchseq = options.print_fetch_seq
     objects.ExecutionTrace.print_cpseq = options.print_cpseq
 
-    scope = { '__file__' : sys.argv[0] }
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
-    exec("import readline", scope)
-    execfile(sys.argv[0], scope)
+
+    scope = { '__file__' : sys.argv[0] }
+
+    # we want readline if we're doing anything interactive
+    if options.interactive or options.pdb:
+        exec("import readline", scope)
+
+    # if pdb was requested, execfile the thing under pdb, otherwise,
+    # just do the execfile normally
+    if options.pdb:
+        from pdb import Pdb
+        debugger = Pdb()
+        debugger.run('execfile("%s")' % sys.argv[0], scope)
+    else:
+        execfile(sys.argv[0], scope)
 
     # once the script is done
     if options.interactive:
