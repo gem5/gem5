@@ -182,7 +182,7 @@ options = attrdict()
 arguments = []
 
 def usage(exitcode=None):
-    print parser.help
+    parser.print_help()
     if exitcode is not None:
         sys.exit(exitcode)
 
