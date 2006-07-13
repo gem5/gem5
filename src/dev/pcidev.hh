@@ -95,6 +95,8 @@ class PciDev : public DmaDevice
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
 
+        Platform *platform;
+
         int busId;
         int deviceId;
         int functionId;
@@ -248,6 +250,9 @@ class PciDev : public DmaDevice
      * @param section The section name of this object
      */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+
+    virtual unsigned int drain(Event *de);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {

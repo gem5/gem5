@@ -33,6 +33,7 @@
 #include "cpu/simple/timing.hh"
 #include "mem/packet_impl.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -91,7 +92,7 @@ TimingSimpleCPU::TimingSimpleCPU(Params *p)
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
     fetchEvent = NULL;
-    state = SimObject::Timing;
+    changeState(SimObject::Running);
 }
 
 
@@ -113,18 +114,18 @@ TimingSimpleCPU::unserialize(Checkpoint *cp, const string &section)
     BaseSimpleCPU::unserialize(cp, section);
 }
 
-bool
+unsigned int
 TimingSimpleCPU::drain(Event *drain_event)
 {
     // TimingSimpleCPU is ready to drain if it's not waiting for
     // an access to complete.
     if (status() == Idle || status() == Running || status() == SwitchedOut) {
-        changeState(SimObject::DrainedTiming);
-        return true;
+        changeState(SimObject::Drained);
+        return 0;
     } else {
         changeState(SimObject::Draining);
         drainEvent = drain_event;
-        return false;
+        return 1;
     }
 }
 
@@ -142,12 +143,9 @@ TimingSimpleCPU::resume()
             new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
         fetchEvent->schedule(curTick);
     }
-}
 
-void
-TimingSimpleCPU::setMemoryMode(State new_mode)
-{
-    assert(new_mode == SimObject::Timing);
+    assert(system->getMemoryMode() == System::Timing);
+    changeState(SimObject::Running);
 }
 
 void
@@ -514,7 +512,7 @@ void
 TimingSimpleCPU::completeDrain()
 {
     DPRINTF(Config, "Done draining\n");
-    changeState(SimObject::DrainedTiming);
+    changeState(SimObject::Drained);
     drainEvent->process();
 }
 
@@ -551,11 +549,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     SimObjectParam<MemObject *> mem;
+    SimObjectParam<System *> system;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
@@ -583,11 +581,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(mem, "memory"),
+    INIT_PARAM(system, "system object"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
@@ -618,11 +616,11 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->mem = mem;
+    params->system = system;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
 #else

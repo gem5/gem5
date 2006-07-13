@@ -143,6 +143,14 @@ int rgdb_wait = -1;
 
 #endif // FULL_SYSTEM
 
+
+void
+System::setMemoryMode(MemoryMode mode)
+{
+    assert(getState() == Drained);
+    memoryMode = mode;
+}
+
 int
 System::registerThreadContext(ThreadContext *tc, int id)
 {

@@ -921,7 +921,7 @@ Device::rxKick()
         break;
 
       case rxBeginCopy:
-        if (dmaPending())
+        if (dmaPending() || getState() != Running)
             goto exit;
 
         rxDmaAddr = params()->platform->pciToDma(
@@ -1109,7 +1109,7 @@ Device::txKick()
         break;
 
       case txBeginCopy:
-        if (dmaPending())
+        if (dmaPending() || getState() != Running)
             goto exit;
 
         txDmaAddr = params()->platform->pciToDma(
@@ -1285,6 +1285,18 @@ Device::recvPacket(EthPacketPtr packet)
     devIntrPost(Regs::Intr_RxPacket);
     rxKick();
     return true;
+}
+
+void
+Device::resume()
+{
+    SimObject::resume();
+
+    // During drain we could have left the state machines in a waiting state and
+    // they wouldn't get out until some other event occured to kick them.
+    // This way they'll get out immediately
+    txKick();
+    rxKick();
 }
 
 //=====================================================================

@@ -61,6 +61,21 @@ class RemoteGDB;
 class System : public SimObject
 {
   public:
+    enum MemoryMode {
+        Invalid=0,
+        Atomic,
+        Timing
+    };
+
+
+    MemoryMode getMemoryMode() { assert(memoryMode); return memoryMode; }
+
+    /** Change the memory mode of the system. This should only be called by the
+     * python!!
+     * @param mode Mode to change to (atomic/timing)
+     */
+    void setMemoryMode(MemoryMode mode);
+
     PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
 
@@ -107,6 +122,8 @@ class System : public SimObject
 #endif // FULL_SYSTEM
 
   protected:
+
+    MemoryMode memoryMode;
 
 #if FULL_SYSTEM
     /**

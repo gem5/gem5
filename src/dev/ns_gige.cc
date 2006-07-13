@@ -1377,7 +1377,7 @@ NSGigE::doRxDmaRead()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
     rxDmaState = dmaReading;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         rxDmaState = dmaReadWaiting;
     else
         dmaRead(rxDmaAddr, rxDmaLen, &rxDmaReadEvent, (uint8_t*)rxDmaData);
@@ -1408,7 +1408,7 @@ NSGigE::doRxDmaWrite()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
     rxDmaState = dmaWriting;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         rxDmaState = dmaWriteWaiting;
     else
         dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaWriteEvent, (uint8_t*)rxDmaData);
@@ -1826,7 +1826,7 @@ NSGigE::doTxDmaRead()
     assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
     txDmaState = dmaReading;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         txDmaState = dmaReadWaiting;
     else
         dmaRead(txDmaAddr, txDmaLen, &txDmaReadEvent, (uint8_t*)txDmaData);
@@ -1857,7 +1857,7 @@ NSGigE::doTxDmaWrite()
     assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
     txDmaState = dmaWriting;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         txDmaState = dmaWriteWaiting;
     else
         dmaWrite(txDmaAddr, txDmaLen, &txDmaWriteEvent, (uint8_t*)txDmaData);
@@ -2405,6 +2405,20 @@ NSGigE::recvPacket(EthPacketPtr packet)
     rxKick();
     return true;
 }
+
+
+void
+NSGigE::resume()
+{
+    SimObject::resume();
+
+    // During drain we could have left the state machines in a waiting state and
+    // they wouldn't get out until some other event occured to kick them.
+    // This way they'll get out immediately
+    txKick();
+    rxKick();
+}
+
 
 //=====================================================================
 //
