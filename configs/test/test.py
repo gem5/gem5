@@ -79,6 +79,11 @@ cpu.icache_port=magicbus.port
 cpu.dcache_port=magicbus.port
 
 system = System(physmem = mem, cpu = cpu)
+
+if options.timing or options.detailed:
+    system.mem_mode = 'timing'
+
+
 mem.port = magicbus.port
 root = Root(system = system)
 

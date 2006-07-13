@@ -287,6 +287,7 @@ DmaPort::sendDma(Packet *pkt, bool front)
     // some kind of selction between access methods
     // more work is going to have to be done to make
     // switching actually work
+
     System::MemoryMode state = sys->getMemoryMode();
     if (state == System::Timing) {
         DPRINTF(DMA, "Attempting to send Packet %#x with addr: %#x\n",
@@ -301,15 +302,15 @@ DmaPort::sendDma(Packet *pkt, bool front)
             DPRINTF(DMA, "-- Done\n");
         }
     } else if (state == System::Atomic) {
-        sendAtomic(pkt);
+        Tick lat;
+        lat = sendAtomic(pkt);
         assert(pkt->senderState);
         DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
         assert(state);
 
         state->numBytes += pkt->req->getSize();
         if (state->totBytes == state->numBytes) {
-            state->completionEvent->schedule(curTick +
-                    (pkt->time - pkt->req->getTime()) +1);
+            state->completionEvent->schedule(curTick + lat);
             delete state;
             delete pkt->req;
         }
