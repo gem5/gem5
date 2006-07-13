@@ -162,6 +162,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
 
         stalls[tid].decode = 0;
         stalls[tid].rename = 0;
@@ -358,6 +360,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     }
 
     memcpy(cacheData[tid], pkt->getPtr<uint8_t *>(), cacheBlkSize);
+    cacheDataValid[tid] = true;
 
     if (!drainPending) {
         // Wake up the CPU (if it went to sleep and was waiting on
@@ -520,7 +523,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     fetch_PC = icacheBlockAlignPC(fetch_PC);
 
     // If we've already got the block, no need to try to fetch it again.
-    if (fetch_PC == cacheDataPC[tid]) {
+    if (cacheDataValid[tid] && fetch_PC == cacheDataPC[tid]) {
         return true;
     }
 
@@ -555,9 +558,10 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         Packet::ReadReq, Packet::Broadcast);
-        data_pkt->dataDynamic(new uint8_t[cacheBlkSize]);
+        data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
 
         cacheDataPC[tid] = fetch_PC;
+        cacheDataValid[tid] = false;
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
