@@ -330,7 +330,7 @@ class FullO3CPU : public BaseO3CPU
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
-    virtual bool drain(Event *drain_event);
+    virtual unsigned int drain(Event *drain_event);
 
     /** Resumes execution after a drain. */
     virtual void resume();

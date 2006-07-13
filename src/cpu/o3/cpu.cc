@@ -441,7 +441,7 @@ FullO3CPU<Impl>::tick()
 
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut ||
-            getState() == SimObject::DrainedTiming) {
+            getState() == SimObject::Drained) {
             // increment stat
             lastRunningCycle = curTick;
         } else if (!activityRec.active()) {
@@ -803,7 +803,7 @@ FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 template <class Impl>
-bool
+unsigned int
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
     drainCount = 0;
@@ -815,7 +815,7 @@ FullO3CPU<Impl>::drain(Event *drain_event)
 
     // Wake the CPU and record activity so everything can drain out if
     // the CPU was not able to immediately drain.
-    if (getState() != SimObject::DrainedTiming) {
+    if (getState() != SimObject::Drained) {
         // A bit of a hack...set the drainEvent after all the drain()
         // calls have been made, that way if all of the stages drain
         // immediately, the signalDrained() function knows not to call
@@ -825,9 +825,9 @@ FullO3CPU<Impl>::drain(Event *drain_event)
         wakeCPU();
         activityRec.activity();
 
-        return false;
+        return 1;
     } else {
-        return true;
+        return 0;
     }
 }
 
@@ -835,11 +835,14 @@ template <class Impl>
 void
 FullO3CPU<Impl>::resume()
 {
+    assert(system->getMemoryMode() == System::Timing);
     fetch.resume();
     decode.resume();
     rename.resume();
     iew.resume();
     commit.resume();
+
+    changeState(SimObject::Running);
 
     if (_status == SwitchedOut || _status == Idle)
         return;
@@ -847,7 +850,6 @@ FullO3CPU<Impl>::resume()
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
     _status = Running;
-    changeState(SimObject::Timing);
 }
 
 template <class Impl>
@@ -858,7 +860,7 @@ FullO3CPU<Impl>::signalDrained()
         if (tickEvent.scheduled())
             tickEvent.squash();
 
-        changeState(SimObject::DrainedTiming);
+        changeState(SimObject::Drained);
 
         if (drainEvent) {
             drainEvent->process();
