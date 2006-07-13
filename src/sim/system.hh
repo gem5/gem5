@@ -67,6 +67,8 @@ class System : public SimObject
         Timing
     };
 
+    static const char *MemoryModeStrings[3];
+
 
     MemoryMode getMemoryMode() { assert(memoryMode); return memoryMode; }
 
@@ -170,6 +172,7 @@ class System : public SimObject
     {
         std::string name;
         PhysicalMemory *physmem;
+        MemoryMode mem_mode;
 
 #if FULL_SYSTEM
         Tick boot_cpu_frequency;

@@ -97,6 +97,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     Param<Tick> boot_cpu_frequency;
     SimObjectParam<PhysicalMemory *> physmem;
+    SimpleEnumParam<System::MemoryMode> mem_mode;
 
     Param<string> kernel;
     Param<string> console;
@@ -115,6 +116,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(physmem, "phsyical memory"),
+    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
+            System::MemoryModeStrings),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(console, "file that contains the console code"),
     INIT_PARAM(pal, "file that contains palcode"),
@@ -133,6 +136,7 @@ CREATE_SIM_OBJECT(FreebsdAlphaSystem)
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->physmem = physmem;
+    p->mem_mode = mem_mode;
     p->kernel_path = kernel;
     p->console_path = console;
     p->palcode = pal;
