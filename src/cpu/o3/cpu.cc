@@ -577,7 +577,7 @@ void
 FullO3CPU<Impl>::suspendContext(int tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
-    deactivateThread();
+    deactivateThread(tid);
     if (activeThreads.size() == 0)
         unscheduleTickEvent();
     _status = Idle;
