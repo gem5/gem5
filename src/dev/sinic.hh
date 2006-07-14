@@ -266,6 +266,7 @@ class Device : public Base
   public:
     virtual Tick read(Packet *pkt);
     virtual Tick write(Packet *pkt);
+    virtual void resume();
 
     void prepareIO(int cpu, int index);
     void prepareRead(int cpu, int index);

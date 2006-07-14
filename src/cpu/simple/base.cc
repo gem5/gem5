@@ -55,10 +55,10 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
-#include "sim/system.hh"
 #include "arch/tlb.hh"
 #include "arch/stacktrace.hh"
 #include "arch/vtophys.hh"

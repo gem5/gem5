@@ -1,9 +1,12 @@
 from m5 import build_env
 from m5.config import *
 
+class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
+
 class System(SimObject):
     type = 'System'
     physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")
+    mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
     if build_env['FULL_SYSTEM']:
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                              "boot processor frequency")

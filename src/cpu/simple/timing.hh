@@ -137,9 +137,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    virtual bool drain(Event *drain_event);
+    virtual unsigned int drain(Event *drain_event);
     virtual void resume();
-    virtual void setMemoryMode(State new_mode);
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);

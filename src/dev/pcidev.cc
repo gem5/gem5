@@ -56,8 +56,8 @@ using namespace std;
 
 PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
         int funcid, Platform *p)
-        : PioPort(dev,p,"-pciconf"), device(dev), busId(busid), deviceId(devid),
-        functionId(funcid)
+        : PioPort(dev,p->system,"-pciconf"), device(dev), platform(p),
+          busId(busid), deviceId(devid), functionId(funcid)
 {
     configAddr = platform->calcConfigAddr(busId, deviceId, functionId);
 }
@@ -130,6 +130,18 @@ PciDev::init()
         panic("pci config port not connected to anything!");
    configPort->sendStatusChange(Port::RangeChange);
    PioDevice::init();
+}
+
+unsigned int
+PciDev::drain(Event *de)
+{
+    unsigned int count;
+    count = pioPort->drain(de) + dmaPort->drain(de) + configPort->drain(de);
+    if (count)
+        changeState(Draining);
+    else
+        changeState(Drained);
+    return count;
 }
 
 Tick

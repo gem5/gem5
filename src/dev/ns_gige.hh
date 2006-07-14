@@ -391,6 +391,8 @@ class NSGigE : public PciDev
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    virtual void resume();
+
   public:
     void regStats();
 

@@ -31,6 +31,7 @@
 
 #include "config/use_checker.hh"
 
+#include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
 #include "mem/packet.hh"
@@ -96,46 +97,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 }
 
 template <class Impl>
-Tick
-LSQUnit<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
-{
-    panic("O3CPU model does not work with atomic mode!");
-    return curTick;
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
-{
-    panic("O3CPU doesn't expect recvFunctional callback!");
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvStatusChange(Status status)
-{
-    if (status == RangeChange)
-        return;
-
-    panic("O3CPU doesn't expect recvStatusChange callback!");
-}
-
-template <class Impl>
-bool
-LSQUnit<Impl>::DcachePort::recvTiming(PacketPtr pkt)
-{
-    lsq->completeDataAccess(pkt);
-    return true;
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvRetry()
-{
-    lsq->recvRetry();
-}
-
-template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
@@ -145,12 +106,14 @@ LSQUnit<Impl>::LSQUnit()
 
 template<class Impl>
 void
-LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
+LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
                     unsigned maxSQEntries, unsigned id)
 {
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     switchedOut = false;
+
+    lsq = lsq_ptr;
 
     lsqID = id;
 
@@ -168,8 +131,6 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
-    mem = params->mem;
-
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
@@ -180,7 +141,6 @@ void
 LSQUnit<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
-    dcachePort = new DcachePort(cpu, this);
 
 #if USE_CHECKER
     if (cpu->checker) {
@@ -588,7 +548,7 @@ LSQUnit<Impl>::writebackStores()
            storeQueue[storeWBIdx].canWB &&
            usedPorts < cachePorts) {
 
-        if (isStoreBlocked) {
+        if (isStoreBlocked || lsq->cacheBlocked()) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
                     " is blocked!\n");
             break;
@@ -911,6 +871,7 @@ LSQUnit<Impl>::recvRetry()
         } else {
             // Still blocked!
             ++lsqCacheBlocked;
+            lsq->setRetryTid(lsqID);
         }
     } else if (isLoadBlocked) {
         DPRINTF(LSQUnit, "Loads squash themselves and all younger insts, "

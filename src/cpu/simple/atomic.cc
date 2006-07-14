@@ -33,6 +33,7 @@
 #include "cpu/simple/atomic.hh"
 #include "mem/packet_impl.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -181,6 +182,13 @@ AtomicSimpleCPU::resume()
         if (!tickEvent.scheduled())
             tickEvent.schedule(curTick);
     }
+}
+
+void
+AtomicSimpleCPU::resume()
+{
+    assert(system->getMemoryMode() == System::Atomic);
+    changeState(SimObject::Running);
 }
 
 void
@@ -462,11 +470,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     SimObjectParam<MemObject *> mem;
+    SimObjectParam<System *> system;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
@@ -494,11 +502,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(mem, "memory"),
+    INIT_PARAM(system, "system object"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
@@ -531,11 +539,11 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->width = width;
     params->simulate_stalls = simulate_stalls;
     params->mem = mem;
+    params->system = system;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
 #else

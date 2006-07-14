@@ -547,8 +547,7 @@ class SimObject(object):
         count = 0
         # ParamContexts don't serialize
         if isinstance(self, SimObject) and not isinstance(self, ParamContext):
-            if not self._ccObject.drain(drain_event):
-                count = 1
+            count += self._ccObject.drain(drain_event)
         if recursive:
             for child in self._children.itervalues():
                 count += child.startDrain(drain_event, True)
@@ -561,7 +560,7 @@ class SimObject(object):
             child.resume()
 
     def changeTiming(self, mode):
-        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+        if isinstance(self, System):
             self._ccObject.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)

@@ -22,6 +22,8 @@ if args:
 # Base for tests is directory containing this file.
 test_base = os.path.dirname(__file__)
 
+script.dir =  '/z/saidi/work/m5.newmem/configs/boot'
+
 linux_image = env.get('LINUX_IMAGE', disk('linux-latest.img'))
 
 class CowIdeDisk(IdeDisk):
@@ -65,6 +67,7 @@ class MyLinuxAlphaSystem(LinuxAlphaSystem):
         cpu = DetailedO3CPU()
     elif options.timing:
         cpu = TimingSimpleCPU()
+        mem_mode = 'timing'
     else:
         cpu = AtomicSimpleCPU()
     cpu.mem = membus
@@ -72,6 +75,7 @@ class MyLinuxAlphaSystem(LinuxAlphaSystem):
     cpu.dcache_port = membus.port
     cpu.itb = AlphaITB()
     cpu.dtb = AlphaDTB()
+    cpu.clock = '2GHz'
     sim_console = SimConsole(listener=ConsoleListener(port=3456))
     kernel = binary('vmlinux')
     pal = binary('ts_osfpal')
@@ -90,7 +94,7 @@ def DualRoot(clientSystem, serverSystem):
     self.etherlink = EtherLink(int1 = Parent.client.tsunami.etherint[0],
                                int2 = Parent.server.tsunami.etherint[0],
                                dump = Parent.etherdump)
-    self.clock = '5GHz'
+    self.clock = '1THz'
     return self
 
 if options.dual:
@@ -101,6 +105,14 @@ else:
     root = TsunamiRoot(clock = '2GHz', system = MyLinuxAlphaSystem())
 
 m5.instantiate(root)
+
+#exit_event = m5.simulate(2600000000000)
+#if exit_event.getCause() != "user interrupt received":
+#    m5.checkpoint(root, 'cpt')
+#    exit_event = m5.simulate(300000000000)
+#    if exit_event.getCause() != "user interrupt received":
+#        m5.checkpoint(root, 'cptA')
+
 
 if options.maxtick:
     exit_event = m5.simulate(options.maxtick)

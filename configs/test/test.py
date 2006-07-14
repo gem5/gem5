@@ -38,6 +38,11 @@ if options.detailed:
 
 cpu.workload = process
 
+if options.timing or options.detailed:
+    system.mem_mode = 'timing'
+
+
+
 # instantiate configuration
 m5.instantiate(root)
 

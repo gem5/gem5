@@ -50,6 +50,9 @@ class MipsLiveProcess : public LiveProcess
                 std::vector<std::string> &envp);
 
     void startup();
+
+
+    static Addr stack_start;
 };
 
 

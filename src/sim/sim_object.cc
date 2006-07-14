@@ -72,7 +72,7 @@ SimObject::SimObject(Params *p)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
-    state = Atomic;
+    state = Running;
 }
 
 //
@@ -88,7 +88,7 @@ SimObject::SimObject(const string &_name)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
-    state = Atomic;
+    state = Running;
 }
 
 void
@@ -269,38 +269,23 @@ SimObject::recordEvent(const std::string &stat)
         Stats::recordEvent(stat);
 }
 
-bool
+unsigned int
 SimObject::drain(Event *drain_event)
 {
-    if (state != DrainedAtomic && state != Atomic) {
-        panic("Must implement your own drain function if it is to be used "
-              "in timing mode!");
-    }
-    state = DrainedAtomic;
-    return true;
+    state = Drained;
+    return 0;
 }
 
 void
 SimObject::resume()
 {
-    if (state == DrainedAtomic) {
-        state = Atomic;
-    } else if (state == DrainedTiming) {
-        state = Timing;
-    }
+    state = Running;
 }
 
 void
 SimObject::setMemoryMode(State new_mode)
 {
-    assert(new_mode == Timing || new_mode == Atomic);
-    if (state == DrainedAtomic && new_mode == Timing) {
-        state = DrainedTiming;
-    } else if (state == DrainedTiming && new_mode == Atomic) {
-        state = DrainedAtomic;
-    } else {
-        state = new_mode;
-    }
+    panic("setMemoryMode() should only be called on systems");
 }
 
 void

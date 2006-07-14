@@ -129,7 +129,7 @@ namespace MipsISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    const Addr MaxAddr = (Addr)-1;
+//    const Addr MaxAddr = (Addr)-1;
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
