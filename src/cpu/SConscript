@@ -71,7 +71,8 @@ virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) c
 # Generate a temporary CPU list, including the CheckerCPU if
 # it's enabled.  This isn't used for anything else other than StaticInst
 # headers.
-temp_cpu_list = env['CPU_MODELS']
+temp_cpu_list = env['CPU_MODELS'][:]
+
 if env['USE_CHECKER']:
     temp_cpu_list.append('CheckerCPU')
 

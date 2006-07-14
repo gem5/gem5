@@ -140,8 +140,15 @@ def isa_desc_emitter(target, source, env):
 
 # Pieces are in place, so create the builder.
 python = sys.executable  # use same Python binary used to run scons
-isa_desc_builder = Builder(action=python + ' $SOURCES $TARGET.dir $CPU_MODELS',
-                           emitter = isa_desc_emitter)
+
+# Also include the CheckerCPU as one of the models if it is being
+# enabled via command line.
+if env['USE_CHECKER']:
+    isa_desc_builder = Builder(action=python + ' $SOURCES $TARGET.dir $CPU_MODELS CheckerCPU',
+                               emitter = isa_desc_emitter)
+else:
+    isa_desc_builder = Builder(action=python + ' $SOURCES $TARGET.dir $CPU_MODELS',
+                               emitter = isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
 
