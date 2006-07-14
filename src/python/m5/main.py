@@ -249,6 +249,8 @@ def main():
 
     # check to make sure we can find the listed script
     if not arguments or not os.path.isfile(arguments[0]):
+        if arguments and not os.path.isfile(arguments[0]):
+            print "Script %s not found" % arguments[0]
         usage(2)
 
     # tell C++ about output directory
