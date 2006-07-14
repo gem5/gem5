@@ -577,39 +577,19 @@ void
 FullO3CPU<Impl>::suspendContext(int tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
-    unscheduleTickEvent();
+    deactivateThread();
+    if (activeThreads.size() == 0)
+        unscheduleTickEvent();
     _status = Idle;
-/*
-    //Remove From Active List, if Active
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
-
-    if (isActive != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        activeThreads.erase(isActive);
-    }
-*/
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::haltContext(int tid)
 {
-    DPRINTF(O3CPU,"[tid:%i]: Halting Thread Context", tid);
-/*
-    //Remove From Active List, if Active
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
-
-    if (isActive != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        activeThreads.erase(isActive);
-
-        removeThread(tid);
-    }
-*/
+    //For now, this is the same as deallocate
+    DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
+    deallocateContext(tid, 1);
 }
 
 template <class Impl>
