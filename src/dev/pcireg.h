@@ -142,6 +142,7 @@ union PCIConfig {
 
 // Device specific offsets
 #define PCI_DEVICE_SPECIFIC     	0x40	// 192 bytes
+#define PCI_CONFIG_SIZE         0xFF
 
 // Some Vendor IDs
 #define PCI_VENDOR_DEC			0x1011

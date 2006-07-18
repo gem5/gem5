@@ -143,7 +143,7 @@ class ThreadContext
     virtual void suspend() = 0;
 
     /// Set the status to Unallocated.
-    virtual void deallocate() = 0;
+    virtual void deallocate(int delay = 0) = 0;
 
     /// Set the status to Halted.
     virtual void halt() = 0;
@@ -245,10 +245,13 @@ class ThreadContext
 
     virtual void setSyscallReturn(SyscallReturn return_value) = 0;
 
-    virtual void syscall(int64_t callnum) = 0;
-
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
+
+    // This function exits the thread context in the CPU and returns
+    // 1 if the CPU has no more active threads (meaning it's OK to exit);
+    // Used in syscall-emulation mode when a  thread calls the exit syscall.
+    virtual int exit() { return 1; };
 #endif
 
     virtual void changeRegFileContext(RegFile::ContextParam param,
@@ -315,7 +318,7 @@ class ProxyThreadContext : public ThreadContext
     void suspend() { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
-    void deallocate() { actualTC->deallocate(); }
+    void deallocate(int delay = 0) { actualTC->deallocate(); }
 
     /// Set the status to Halted.
     void halt() { actualTC->halt(); }
@@ -431,8 +434,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setSyscallReturn(SyscallReturn return_value)
     { actualTC->setSyscallReturn(return_value); }
-
-    void syscall(int64_t callnum) { actualTC->syscall(callnum); }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif

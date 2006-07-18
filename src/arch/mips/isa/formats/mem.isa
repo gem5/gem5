@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2003-2005 The Regents of The University of Michigan
+// Copyright (c) 2006 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -58,14 +58,8 @@ output header {{
                StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : MipsStaticInst(mnem, _machInst, __opClass),
               memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
-              disp(OFFSET)
+              disp(sext<16>(OFFSET))
         {
-            //If Bit 15 is 1 then Sign Extend
-            int32_t temp = disp & 0x00008000;
-
-            if (temp > 0) {
-                disp |= 0xFFFF0000;
-            }
         }
 
         std::string
@@ -77,6 +71,24 @@ output header {{
         const StaticInstPtr &memAccInst() const { return memAccPtr; }
     };
 
+     /**
+     * Base class for a few miscellaneous memory-format insts
+     * that don't interpret the disp field
+     */
+    class MemoryNoDisp : public Memory
+    {
+      protected:
+        /// Constructor
+        MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
+                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
+            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+        {
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
 }};
 
 
@@ -84,10 +96,18 @@ output decoder {{
     std::string
     Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
-        return csprintf("%-10s %c%d,%d(r%d)", mnemonic,
+        return csprintf("%-10s %c%d, %d(r%d)", mnemonic,
                         flags[IsFloating] ? 'f' : 'r', RT, disp, RS);
     }
 
+    std::string
+    MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s %c%d, r%d(r%d)", mnemonic,
+                        flags[IsFloating] ? 'f' : 'r',
+                        flags[IsFloating] ? FD : RD,
+                        RS, RT);
+    }
 }};
 
 def template LoadStoreDeclare {{
@@ -479,23 +499,11 @@ def template MiscCompleteAcc {{
     }
 }};
 
-// load instructions use Rt as dest, so check for
-// Rt == 0 to detect nops
-def template LoadNopCheckDecode {{
- {
-     MipsStaticInst *i = new %(class_name)s(machInst);
-     if (RT == 0) {
-         i = makeNop(i);
-     }
-     return i;
- }
-}};
-
 def format LoadMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -510,7 +518,7 @@ def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -534,7 +542,7 @@ def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; 
 
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
+                      decode_template = ImmNopCheckDecode,
                       exec_template_base = 'Load')
 }};
 
@@ -551,7 +559,6 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
 
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = LoadNopCheckDecode,
                       exec_template_base = 'Store')
 }};
 

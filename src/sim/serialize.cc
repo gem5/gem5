@@ -25,7 +25,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Nathan Binkert
+ *          Erik Hallnor
  *          Steve Reinhardt
  */
 
@@ -44,7 +45,6 @@
 #include "base/output.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "sim/config_node.hh"
 #include "sim/eventq.hh"
 #include "sim/param.hh"
 #include "sim/serialize.hh"
@@ -231,8 +231,9 @@ Globals::unserialize(Checkpoint *cp)
 }
 
 void
-Serializable::serializeAll()
+Serializable::serializeAll(const std::string &cpt_dir)
 {
+    setCheckpointDir(cpt_dir);
     string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
@@ -244,14 +245,23 @@ Serializable::serializeAll()
 
     globals.serialize(outstream);
     SimObject::serializeAll(outstream);
-
-    assert(Serializable::ckptPrevCount + 1 == Serializable::ckptCount);
-    Serializable::ckptPrevCount++;
-    if (ckptMaxCount && ++ckptCount >= ckptMaxCount)
-        exitSimLoop(curTick + 1, "Maximum number of checkpoints dropped");
-
 }
 
+void
+Serializable::unserializeAll(const std::string &cpt_dir)
+{
+    setCheckpointDir(cpt_dir);
+    string dir = Checkpoint::dir();
+    string cpt_file = dir + Checkpoint::baseFilename;
+    string section = "";
+
+    DPRINTFR(Config, "Loading checkpoint dir '%s'\n",
+             dir);
+    Checkpoint *cp = new Checkpoint(dir, section);
+    unserializeGlobals(cp);
+
+    SimObject::unserializeAll(cp);
+}
 
 void
 Serializable::unserializeGlobals(Checkpoint *cp)
@@ -259,40 +269,17 @@ Serializable::unserializeGlobals(Checkpoint *cp)
     globals.unserialize(cp);
 }
 
-
-class SerializeEvent : public Event
-{
-  protected:
-    Tick repeat;
-
-  public:
-    SerializeEvent(Tick _when, Tick _repeat);
-    virtual void process();
-    virtual void serialize(std::ostream &os)
-    {
-        panic("Cannot serialize the SerializeEvent");
-    }
-
-};
-
-SerializeEvent::SerializeEvent(Tick _when, Tick _repeat)
-    : Event(&mainEventQueue, Serialize_Pri), repeat(_repeat)
-{
-    setFlags(AutoDelete);
-    schedule(_when);
-}
-
-void
-SerializeEvent::process()
-{
-    Serializable::serializeAll();
-    if (repeat)
-        schedule(curTick + repeat);
-}
-
 const char *Checkpoint::baseFilename = "m5.cpt";
 
 static string checkpointDirBase;
+
+void
+setCheckpointDir(const std::string &name)
+{
+    checkpointDirBase = name;
+    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
+        checkpointDirBase += "/";
+}
 
 string
 Checkpoint::dir()
@@ -304,75 +291,11 @@ Checkpoint::dir()
 }
 
 void
-Checkpoint::setup(Tick when, Tick period)
+debug_serialize(const std::string &cpt_dir)
 {
-    new SerializeEvent(when, period);
+    Serializable::serializeAll(cpt_dir);
 }
 
-class SerializeParamContext : public ParamContext
-{
-  private:
-    SerializeEvent *event;
-
-  public:
-    SerializeParamContext(const string &section);
-    ~SerializeParamContext();
-    void checkParams();
-};
-
-SerializeParamContext serialParams("serialize");
-
-Param<string> serialize_dir(&serialParams, "dir",
-                            "dir to stick checkpoint in "
-                            "(sprintf format with cycle #)");
-
-Param<Counter> serialize_cycle(&serialParams,
-                                "cycle",
-                                "cycle to serialize",
-                                0);
-
-Param<Counter> serialize_period(&serialParams,
-                                "period",
-                                "period to repeat serializations",
-                                0);
-
-Param<int> serialize_count(&serialParams, "count",
-                           "maximum number of checkpoints to drop");
-
-SerializeParamContext::SerializeParamContext(const string &section)
-    : ParamContext(section), event(NULL)
-{ }
-
-SerializeParamContext::~SerializeParamContext()
-{
-}
-
-void
-SerializeParamContext::checkParams()
-{
-    checkpointDirBase = simout.resolve(serialize_dir);
-
-    // guarantee that directory ends with a '/'
-    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
-        checkpointDirBase += "/";
-
-    if (serialize_cycle > 0)
-        Checkpoint::setup(serialize_cycle, serialize_period);
-
-    Serializable::ckptMaxCount = serialize_count;
-}
-
-void
-debug_serialize()
-{
-    Serializable::serializeAll();
-}
-
-void
-debug_serialize(Tick when)
-{
-    new SerializeEvent(when, 0);
-}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -442,9 +365,8 @@ Serializable::create(Checkpoint *cp, const std::string &section)
 }
 
 
-Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path,
-                       const ConfigNode *_configNode)
-    : db(new IniFile), basePath(path), configNode(_configNode), cptDir(cpt_dir)
+Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path)
+    : db(new IniFile), basePath(path), cptDir(cpt_dir)
 {
     string filename = cpt_dir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {
@@ -469,9 +391,6 @@ Checkpoint::findObj(const std::string &section, const std::string &entry,
 
     if (!db->find(section, entry, path))
         return false;
-
-    if ((value = configNode->resolveSimObject(path)) != NULL)
-        return true;
 
     if ((value = objMap[path]) != NULL)
         return true;

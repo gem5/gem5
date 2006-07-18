@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_CPU_HH__
@@ -48,24 +49,33 @@
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
+//#include "cpu/o3/thread_context.hh"
 #include "sim/process.hh"
 
 template <class>
 class Checker;
 class ThreadContext;
+template <class>
+class O3ThreadContext;
+
+class Checkpoint;
 class MemObject;
 class Process;
 
-class BaseFullCPU : public BaseCPU
+class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
     typedef BaseCPU::Params Params;
 
-    BaseFullCPU(Params *params);
+    BaseO3CPU(Params *params);
 
     void regStats();
 
+    /** Sets this CPU's ID. */
+    void setCpuId(int id) { cpu_id = id; }
+
+    /** Reads this CPU's ID. */
     int readCpuId() { return cpu_id; }
 
   protected:
@@ -78,7 +88,7 @@ class BaseFullCPU : public BaseCPU
  * tick() function for the CPU is defined here.
  */
 template <class Impl>
-class FullO3CPU : public BaseFullCPU
+class FullO3CPU : public BaseO3CPU
 {
   public:
     typedef TheISA::FloatReg FloatReg;
@@ -93,6 +103,8 @@ class FullO3CPU : public BaseFullCPU
 
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
+    friend class O3ThreadContext<Impl>;
+
   public:
     enum Status {
         Running,
@@ -104,6 +116,9 @@ class FullO3CPU : public BaseFullCPU
 
     /** Overall CPU status. */
     Status _status;
+
+    /** Per-thread status in CPU, used for SMT.  */
+    Status _threadStatus[Impl::MaxThreads];
 
   private:
     class TickEvent : public Event
@@ -141,6 +156,92 @@ class FullO3CPU : public BaseFullCPU
             tickEvent.squash();
     }
 
+    class ActivateThreadEvent : public Event
+    {
+      private:
+        /** Number of Thread to Activate */
+        int tid;
+
+        /** Pointer to the CPU. */
+        FullO3CPU<Impl> *cpu;
+
+      public:
+        /** Constructs the event. */
+        ActivateThreadEvent();
+
+        /** Initialize Event */
+        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
+
+        /** Processes the event, calling activateThread() on the CPU. */
+        void process();
+
+        /** Returns the description of the event. */
+        const char *description();
+    };
+
+    /** Schedule thread to activate , regardless of its current state. */
+    void scheduleActivateThreadEvent(int tid, int delay)
+    {
+        // Schedule thread to activate, regardless of its current state.
+        if (activateThreadEvent[tid].squashed())
+            activateThreadEvent[tid].reschedule(curTick + cycles(delay));
+        else if (!activateThreadEvent[tid].scheduled())
+            activateThreadEvent[tid].schedule(curTick + cycles(delay));
+    }
+
+    /** Unschedule actiavte thread event, regardless of its current state. */
+    void unscheduleActivateThreadEvent(int tid)
+    {
+        if (activateThreadEvent[tid].scheduled())
+            activateThreadEvent[tid].squash();
+    }
+
+    /** The tick event used for scheduling CPU ticks. */
+    ActivateThreadEvent activateThreadEvent[Impl::MaxThreads];
+
+    class DeallocateContextEvent : public Event
+    {
+      private:
+        /** Number of Thread to Activate */
+        int tid;
+
+        /** Pointer to the CPU. */
+        FullO3CPU<Impl> *cpu;
+
+      public:
+        /** Constructs the event. */
+        DeallocateContextEvent();
+
+        /** Initialize Event */
+        void init(int thread_num, FullO3CPU<Impl> *thread_cpu);
+
+        /** Processes the event, calling activateThread() on the CPU. */
+        void process();
+
+        /** Returns the description of the event. */
+        const char *description();
+    };
+
+    /** Schedule cpu to deallocate thread context.*/
+    void scheduleDeallocateContextEvent(int tid, int delay)
+    {
+        // Schedule thread to activate, regardless of its current state.
+        if (deallocateContextEvent[tid].squashed())
+            deallocateContextEvent[tid].reschedule(curTick + cycles(delay));
+        else if (!deallocateContextEvent[tid].scheduled())
+            deallocateContextEvent[tid].schedule(curTick + cycles(delay));
+    }
+
+    /** Unschedule thread deallocation in CPU */
+    void unscheduleDeallocateContextEvent(int tid)
+    {
+        if (deallocateContextEvent[tid].scheduled())
+            deallocateContextEvent[tid].squash();
+    }
+
+    /** The tick event used for scheduling CPU ticks. */
+    DeallocateContextEvent deallocateContextEvent[Impl::MaxThreads];
+
   public:
     /** Constructs a CPU with the given parameters. */
     FullO3CPU(Params *params);
@@ -150,6 +251,9 @@ class FullO3CPU : public BaseFullCPU
     /** Registers statistics. */
     void fullCPURegStats();
 
+    /** Returns a specific port. */
+    Port *getPort(const std::string &if_name, int idx);
+
     /** Ticks CPU, calling tick() on each stage, and checking the overall
      *  activity to see if the CPU should deschedule itself.
      */
@@ -157,6 +261,16 @@ class FullO3CPU : public BaseFullCPU
 
     /** Initialize the CPU */
     void init();
+
+    /** Returns the Number of Active Threads in the CPU */
+    int numActiveThreads()
+    { return activeThreads.size(); }
+
+    /** Add Thread to Active Threads List */
+    void activateThread(unsigned tid);
+
+    /** Remove Thread from Active Threads List */
+    void deactivateThread(unsigned tid);
 
     /** Setup CPU to insert a thread's context */
     void insertThread(unsigned tid);
@@ -184,7 +298,7 @@ class FullO3CPU : public BaseFullCPU
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void deallocateContext(int tid);
+    void deallocateContext(int tid, int delay = 1);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
@@ -200,6 +314,13 @@ class FullO3CPU : public BaseFullCPU
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
 
+    /** Serialize state. */
+    virtual void serialize(std::ostream &os);
+
+    /** Unserialize from a checkpoint. */
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+  public:
     /** Executes a syscall on this cycle.
      *  ---------------------------------------
      *  Note: this is a virtual function. CPU-Specific
@@ -207,14 +328,21 @@ class FullO3CPU : public BaseFullCPU
      */
     virtual void syscall(int tid) { panic("Unimplemented!"); }
 
-    /** Switches out this CPU. */
-    void switchOut(Sampler *sampler);
+    /** Starts draining the CPU's pipeline of all instructions in
+     * order to stop all memory accesses. */
+    virtual unsigned int drain(Event *drain_event);
+
+    /** Resumes execution after a drain. */
+    virtual void resume();
 
     /** Signals to this CPU that a stage has completed switching out. */
-    void signalSwitched();
+    void signalDrained();
+
+    /** Switches out this CPU. */
+    virtual void switchOut();
 
     /** Takes over from another CPU. */
-    void takeOverFrom(BaseCPU *oldCPU);
+    virtual void takeOverFrom(BaseCPU *oldCPU);
 
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq()
@@ -298,6 +426,12 @@ class FullO3CPU : public BaseFullCPU
 
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid);
+
+    /** Reads the next NPC of a specific thread. */
+    uint64_t readNextNPC(unsigned tid);
+
+    /** Sets the next NPC of a specific thread. */
+    void setNextNPC(uint64_t val, unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
@@ -481,11 +615,11 @@ class FullO3CPU : public BaseFullCPU
     /** Pointer to memory. */
     MemObject *mem;
 
-    /** Pointer to the sampler */
-    Sampler *sampler;
+    /** Event to call process() on once draining has completed. */
+    Event *drainEvent;
 
-    /** Counter of how many stages have completed switching out. */
-    int switchCount;
+    /** Counter of how many stages have completed draining. */
+    int drainCount;
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
@@ -506,6 +640,9 @@ class FullO3CPU : public BaseFullCPU
 
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
+
+    /** The cycle that the CPU was last activated by a new thread*/
+    Tick lastActivatedCycle;
 
     /** Number of Threads CPU can process */
     unsigned numThreads;

@@ -31,6 +31,12 @@
 #include "base/output.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_state.hh"
+#include "sim/serialize.hh"
+
+#if FULL_SYSTEM
+#include "cpu/quiesce_event.hh"
+#include "kern/kernel_stats.hh"
+#endif
 
 #if FULL_SYSTEM
 ThreadState::ThreadState(int _cpuId, int _tid)
@@ -38,8 +44,8 @@ ThreadState::ThreadState(int _cpuId, int _tid)
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       funcExeInst(0), storeCondFailures(0)
 #else
-ThreadState::ThreadState(int _cpuId, int _tid, MemObject *mem,
-                         Process *_process, short _asid)
+ThreadState::ThreadState(int _cpuId, int _tid, Process *_process,
+                         short _asid, MemObject *mem)
     : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
       process(_process), asid(_asid),
       funcExeInst(0), storeCondFailures(0)
@@ -47,6 +53,43 @@ ThreadState::ThreadState(int _cpuId, int _tid, MemObject *mem,
 {
     numInst = 0;
     numLoad = 0;
+}
+
+void
+ThreadState::serialize(std::ostream &os)
+{
+    SERIALIZE_ENUM(_status);
+    // thread_num and cpu_id are deterministic from the config
+    SERIALIZE_SCALAR(funcExeInst);
+    SERIALIZE_SCALAR(inst);
+
+#if FULL_SYSTEM
+    Tick quiesceEndTick = 0;
+    if (quiesceEvent->scheduled())
+        quiesceEndTick = quiesceEvent->when();
+    SERIALIZE_SCALAR(quiesceEndTick);
+    if (kernelStats)
+        kernelStats->serialize(os);
+#endif
+}
+
+void
+ThreadState::unserialize(Checkpoint *cp, const std::string &section)
+{
+
+    UNSERIALIZE_ENUM(_status);
+    // thread_num and cpu_id are deterministic from the config
+    UNSERIALIZE_SCALAR(funcExeInst);
+    UNSERIALIZE_SCALAR(inst);
+
+#if FULL_SYSTEM
+    Tick quiesceEndTick;
+    UNSERIALIZE_SCALAR(quiesceEndTick);
+    if (quiesceEndTick)
+        quiesceEvent->schedule(quiesceEndTick);
+    if (kernelStats)
+        kernelStats->unserialize(cp, section);
+#endif
 }
 
 #if FULL_SYSTEM

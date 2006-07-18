@@ -44,7 +44,8 @@
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 
-class Serializer;
+class BaseCPU;
+class Event;
 
 /*
  * Abstract superclass for simulation objects.  Represents things that
@@ -58,15 +59,25 @@ class SimObject : public Serializable, protected StartupCallback
         std::string name;
     };
 
+    enum State {
+        Running,
+        Draining,
+        Drained
+    };
+  private:
+    State state;
+
   protected:
     Params *_params;
+
+    void changeState(State new_state) { state = new_state; }
 
   public:
     const Params *params() const { return _params; }
 
-  private:
-    friend class Serializer;
+    State getState() { return state; }
 
+  private:
     typedef std::vector<SimObject *> SimObjectList;
 
     // list of all instantiated simulation objects
@@ -100,13 +111,18 @@ class SimObject : public Serializable, protected StartupCallback
 
     // static: call nameOut() & serialize() on all SimObjects
     static void serializeAll(std::ostream &);
+    static void unserializeAll(Checkpoint *cp);
 
     // Methods to drain objects in order to take checkpoints
     // Or switch from timing -> atomic memory model
-    virtual void drain(Serializer *serializer);
-    virtual void resume() { return;} ;
-    virtual void serializationComplete()
-    { assert(0 && "Unimplemented"); };
+    // Drain returns 0 if the simobject can drain immediately or
+    // the number of times the drain_event's process function will be called
+    // before the object will be done draining. Normally this should be 1
+    virtual unsigned int drain(Event *drain_event);
+    virtual void resume();
+    virtual void setMemoryMode(State new_mode);
+    virtual void switchOut();
+    virtual void takeOverFrom(BaseCPU *cpu);
 
 #ifdef DEBUG
   public:

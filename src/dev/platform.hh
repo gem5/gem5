@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andrew Schultz
+ *          Nathan Binkert
  */
 
 /**
@@ -35,6 +36,9 @@
 
 #ifndef __DEV_PLATFORM_HH__
 #define __DEV_PLATFORM_HH__
+
+#include <bitset>
+#include <set>
 
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"
@@ -51,9 +55,6 @@ class Platform : public SimObject
     /** Pointer to the interrupt controller */
     IntrControl *intrctrl;
 
-    /** Pointer to the PCI configuration space */
-    PciConfigAll *pciconfig;
-
     /** Pointer to the UART, set by the uart */
     Uart *uart;
 
@@ -63,13 +64,20 @@ class Platform : public SimObject
   public:
     Platform(const std::string &name, IntrControl *intctrl);
     virtual ~Platform();
-    virtual void init() { if (pciconfig == NULL) panic("PCI Config not set"); }
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
     virtual Tick intrFrequency() = 0;
     virtual void postPciInt(int line);
     virtual void clearPciInt(int line);
     virtual Addr pciToDma(Addr pciAddr) const;
+    virtual Addr calcConfigAddr(int bus, int dev, int func) = 0;
+    virtual void registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func,
+            uint8_t intr);
+
+  private:
+    std::bitset<256> intLines;
+    std::set<uint32_t> pciDevices;
+
 };
 
 #endif // __DEV_PLATFORM_HH__

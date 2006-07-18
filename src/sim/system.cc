@@ -63,7 +63,7 @@ System::System(Params *p)
 #else
       page_ptr(0),
 #endif
-      _params(p)
+      memoryMode(p->mem_mode), _params(p)
 {
     // add self to global system list
     systemList.push_back(this);
@@ -119,8 +119,6 @@ System::System(Params *p)
     DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
     DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
     DPRINTF(Loader, "Kernel loaded...\n");
-
-    kernelBinning = new Kernel::Binning(this);
 #endif // FULL_SYSTEM
 
     // increment the number of running systms
@@ -144,6 +142,14 @@ System::~System()
 int rgdb_wait = -1;
 
 #endif // FULL_SYSTEM
+
+
+void
+System::setMemoryMode(MemoryMode mode)
+{
+    assert(getState() == Drained);
+    memoryMode = mode;
+}
 
 int
 System::registerThreadContext(ThreadContext *tc, int id)
@@ -245,12 +251,14 @@ System::printSystems()
     }
 }
 
-extern "C"
 void
 printSystems()
 {
     System::printSystems();
 }
+
+const char *System::MemoryModeStrings[3] = {"invalid", "atomic",
+    "timing"};
 
 #if FULL_SYSTEM
 
@@ -264,12 +272,15 @@ DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
 
     SimObjectParam<PhysicalMemory *> physmem;
+    SimpleEnumParam<System::MemoryMode> mem_mode;
 
 END_DECLARE_SIM_OBJECT_PARAMS(System)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(System)
 
-    INIT_PARAM(physmem, "physical memory")
+    INIT_PARAM(physmem, "physical memory"),
+    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
+            System::MemoryModeStrings)
 
 END_INIT_SIM_OBJECT_PARAMS(System)
 
@@ -278,6 +289,7 @@ CREATE_SIM_OBJECT(System)
     System::Params *p = new System::Params;
     p->name = getInstanceName();
     p->physmem = physmem;
+    p->mem_mode = mem_mode;
     return new System(p);
 }
 

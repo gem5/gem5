@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,53 @@
 using namespace std;
 
 template <class Impl>
+Tick
+LSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
+{
+    panic("O3CPU model does not work with atomic mode!");
+    return curTick;
+}
+
+template <class Impl>
+void
+LSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
+{
+    panic("O3CPU doesn't expect recvFunctional callback!");
+}
+
+template <class Impl>
+void
+LSQ<Impl>::DcachePort::recvStatusChange(Status status)
+{
+    if (status == RangeChange)
+        return;
+
+    panic("O3CPU doesn't expect recvStatusChange callback!");
+}
+
+template <class Impl>
+bool
+LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
+{
+    lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
+    return true;
+}
+
+template <class Impl>
+void
+LSQ<Impl>::DcachePort::recvRetry()
+{
+    lsq->thread[lsq->retryTid].recvRetry();
+    // Speculatively clear the retry Tid.  This will get set again if
+    // the LSQUnit was unable to complete its access.
+    lsq->retryTid = -1;
+}
+
+template <class Impl>
 LSQ<Impl>::LSQ(Params *params)
-    : LQEntries(params->LQEntries), SQEntries(params->SQEntries),
-      numThreads(params->numberOfThreads)
+    : dcachePort(this), LQEntries(params->LQEntries),
+      SQEntries(params->SQEntries), numThreads(params->numberOfThreads),
+      retryTid(-1)
 {
     DPRINTF(LSQ, "Creating LSQ object.\n");
 
@@ -94,7 +138,8 @@ LSQ<Impl>::LSQ(Params *params)
 
     //Initialize LSQs
     for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].init(params, maxLQEntries, maxSQEntries, tid);
+        thread[tid].init(params, this, maxLQEntries, maxSQEntries, tid);
+        thread[tid].setDcachePort(&dcachePort);
     }
 }
 
@@ -108,6 +153,16 @@ LSQ<Impl>::name() const
 
 template<class Impl>
 void
+LSQ<Impl>::regStats()
+{
+    //Initialize LSQs
+    for (int tid=0; tid < numThreads; tid++) {
+        thread[tid].regStats();
+    }
+}
+
+template<class Impl>
+void
 LSQ<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 {
     activeThreads = at_ptr;
@@ -116,9 +171,11 @@ LSQ<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 
 template<class Impl>
 void
-LSQ<Impl>::setCPU(FullCPU *cpu_ptr)
+LSQ<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
+
+    dcachePort.setName(name());
 
     for (int tid=0; tid < numThreads; tid++) {
         thread[tid].setCPU(cpu_ptr);
@@ -491,6 +548,9 @@ bool
 LSQ<Impl>::hasStoresToWB()
 {
     list<unsigned>::iterator active_threads = (*activeThreads).begin();
+
+    if ((*activeThreads).empty())
+        return false;
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;

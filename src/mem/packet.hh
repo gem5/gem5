@@ -41,10 +41,24 @@
 #include "mem/request.hh"
 #include "arch/isa_traits.hh"
 #include "sim/root.hh"
+#include <list>
 
 struct Packet;
 typedef Packet* PacketPtr;
 typedef uint8_t* PacketDataPtr;
+typedef std::list<PacketPtr> PacketList;
+
+//Coherence Flags
+#define NACKED_LINE 1 << 0
+#define SATISFIED 1 << 1
+#define SHARED_LINE 1 << 2
+#define CACHE_LINE_FILL 1 << 3
+#define COMPRESSED 1 << 4
+#define NO_ALLOCATE 1 << 5
+
+//For statistics we need max number of commands, hard code it at
+//20 for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 9
 
 /**
  * A Packet is used to encapsulate a transfer between two objects in
@@ -55,6 +69,10 @@ typedef uint8_t* PacketDataPtr;
  */
 class Packet
 {
+  public:
+    /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
+    uint64_t flags;
+
   private:
    /** A pointer to the data being transfered.  It can be differnt
     *    sizes at each level of the heirarchy so it belongs in the
@@ -100,7 +118,11 @@ class Packet
     /** Is the 'src' field valid? */
     bool srcValid;
 
+
   public:
+
+    /** Used to calculate latencies for each packet.*/
+    Tick time;
 
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */
@@ -149,30 +171,58 @@ class Packet
         IsRequest	= 1 << 4,
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
+        IsSWPrefetch    = 1 << 7,
+        IsHWPrefetch    = 1 << 8
     };
 
   public:
     /** List of all commands associated with a packet. */
     enum Command
     {
+        InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
         WriteReq	= IsWrite | IsRequest | NeedsResponse,
         WriteReqNoAck	= IsWrite | IsRequest,
-        ReadResp	= IsRead  | IsResponse,
-        WriteResp	= IsWrite | IsResponse
+        ReadResp	= IsRead  | IsResponse | NeedsResponse,
+        WriteResp	= IsWrite | IsResponse | NeedsResponse,
+        Writeback       = IsWrite | IsRequest,
+        SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
+        HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
+        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch | NeedsResponse,
+        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
+        InvalidateReq   = IsInvalidate | IsRequest,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
+        UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
+        UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
+        ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
+        ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
     };
 
     /** Return the string name of the cmd field (for debugging and
      *   tracing). */
     const std::string &cmdString() const;
 
+    /** Reutrn the string to a cmd given by idx. */
+    const std::string &cmdIdxToString(Command idx);
+
+    /** Return the index of this command. */
+    inline int cmdToIndex() const { return (int) cmd; }
+
     /** The command field of the packet. */
     Command cmd;
 
     bool isRead() 	 { return (cmd & IsRead)  != 0; }
+    bool isWrite()       { return (cmd & IsWrite) != 0; }
     bool isRequest()	 { return (cmd & IsRequest)  != 0; }
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
+    bool isInvalidate()  { return (cmd * IsInvalidate) != 0; }
+
+    bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
+    bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
+    bool isCompressed() { return (flags & COMPRESSED) != 0; }
+
+    bool nic_pkt() { assert("Unimplemented\n" && 0); }
 
     /** Possible results of a packet's request. */
     enum Result
@@ -197,6 +247,10 @@ class Packet
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
     int getSize() const { assert(addrSizeValid); return size; }
+    Addr getOffset(int blkSize) const { return addr & (Addr)(blkSize - 1); }
+
+    void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
+    void cmdOverride(Command newCmd) { cmd = newCmd; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
@@ -210,6 +264,21 @@ class Packet
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {
+        flags = 0;
+    }
+
+    /** Alternate constructor if you are trying to create a packet with
+     *  a request that is for a whole block, not the address from the req.
+     *  this allows for overriding the size/addr of the req.*/
+    Packet(Request *_req, Command _cmd, short _dest, int _blkSize)
+        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
+           dest(_dest),
+           addrSizeValid(_req->validPaddr), srcValid(false),
+           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
+           result(Unknown)
+    {
+        flags = 0;
     }
 
     /** Destructor. */
@@ -242,8 +311,9 @@ class Packet
      *   should not be called. */
     void makeTimingResponse() {
         assert(needsResponse());
+        assert(isRequest());
         int icmd = (int)cmd;
-        icmd &= ~(IsRequest | NeedsResponse);
+        icmd &= ~(IsRequest);
         icmd |= IsResponse;
         cmd = (Command)icmd;
         dest = src;

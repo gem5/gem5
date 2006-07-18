@@ -49,6 +49,8 @@ namespace Kernel {
 };
 #endif
 
+class Checkpoint;
+
 /**
  *  Struct for holding general thread state that is needed across CPU
  *  models.  This includes things such as pointers to the process,
@@ -61,9 +63,13 @@ struct ThreadState {
 #if FULL_SYSTEM
     ThreadState(int _cpuId, int _tid);
 #else
-    ThreadState(int _cpuId, int _tid, MemObject *mem,
-                Process *_process, short _asid);
+    ThreadState(int _cpuId, int _tid, Process *_process,
+                short _asid, MemObject *mem);
 #endif
+
+    void serialize(std::ostream &os);
+
+    void unserialize(Checkpoint *cp, const std::string &section);
 
     void setCpuId(int id) { cpuId = id; }
 

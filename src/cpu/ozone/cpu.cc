@@ -31,7 +31,7 @@
 
 #include "cpu/ozone/cpu_impl.hh"
 #include "cpu/ozone/ozone_impl.hh"
-#include "cpu/ozone/simple_impl.hh"
+//#include "cpu/ozone/simple_impl.hh"
 
-template class OzoneCPU<SimpleImpl>;
+//template class OzoneCPU<SimpleImpl>;
 template class OzoneCPU<OzoneImpl>;

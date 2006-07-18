@@ -44,7 +44,7 @@ template <class Impl>
 class LSQ {
   public:
     typedef typename Impl::Params Params;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::LSQUnit LSQUnit;
@@ -62,10 +62,20 @@ class LSQ {
     /** Returns the name of the LSQ. */
     std::string name() const;
 
+    /** Registers statistics of each LSQ unit. */
+    void regStats();
+
+    /** Returns dcache port.
+     *  @todo: Dcache port needs to be moved up to this level for SMT
+     *  to work.  For now it just returns the port from one of the
+     *  threads.
+     */
+    Port *getDcachePort() { return &dcachePort; }
+
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr);
     /** Switches out the LSQ. */
@@ -248,6 +258,15 @@ class LSQ {
     bool willWB(unsigned tid)
     { return thread[tid].willWB(); }
 
+    /** Returns if the cache is currently blocked. */
+    bool cacheBlocked()
+    { return retryTid != -1; }
+
+    /** Sets the retry thread id, indicating that one of the LSQUnits
+     * tried to access the cache but the cache was blocked. */
+    void setRetryTid(int tid)
+    { retryTid = tid; }
+
     /** Debugging function to print out all instructions. */
     void dumpInsts();
     /** Debugging function to print out instructions from a specific thread. */
@@ -264,7 +283,49 @@ class LSQ {
     template <class T>
     Fault write(RequestPtr req, T &data, int store_idx);
 
-  private:
+    /** DcachePort class for this LSQ.  Handles doing the
+     * communication with the cache/memory.
+     */
+    class DcachePort : public Port
+    {
+      protected:
+        /** Pointer to LSQ. */
+        LSQ *lsq;
+
+      public:
+        /** Default constructor. */
+        DcachePort(LSQ *_lsq)
+            : lsq(_lsq)
+        { }
+
+      protected:
+        /** Atomic version of receive.  Panics. */
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        /** Functional version of receive.  Panics. */
+        virtual void recvFunctional(PacketPtr pkt);
+
+        /** Receives status change.  Other than range changing, panics. */
+        virtual void recvStatusChange(Status status);
+
+        /** Returns the address ranges of this device. */
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); }
+
+        /** Timing version of receive.  Handles writing back and
+         * completing the load or store that has returned from
+         * memory. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of the previous send. */
+        virtual void recvRetry();
+    };
+
+    /** D-cache port. */
+    DcachePort dcachePort;
+
+  protected:
     /** The LSQ policy for SMT mode. */
     LSQPolicy lsqPolicy;
 
@@ -272,7 +333,7 @@ class LSQ {
     LSQUnit thread[Impl::MaxThreads];
 
     /** The CPU pointer. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** The IEW stage pointer. */
     IEW *iewStage;
@@ -293,6 +354,10 @@ class LSQ {
 
     /** Number of Threads. */
     unsigned numThreads;
+
+    /** The thread id of the LSQ Unit that is currently waiting for a
+     * retry. */
+    int retryTid;
 };
 
 template <class Impl>

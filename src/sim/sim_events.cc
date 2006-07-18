@@ -78,6 +78,14 @@ exitSimLoop(const std::string &message, int exit_code)
     exitSimLoop(curTick, message, exit_code);
 }
 
+void
+CountedDrainEvent::process()
+{
+    if (--count == 0) {
+        exitSimLoop("Finished drain");
+    }
+}
+
 //
 // constructor: automatically schedules at specified time
 //

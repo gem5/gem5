@@ -112,7 +112,7 @@ DefaultDecode<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultDecode<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Decode, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -165,11 +165,12 @@ DefaultDecode<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 }
 
 template <class Impl>
-void
-DefaultDecode<Impl>::switchOut()
+bool
+DefaultDecode<Impl>::drain()
 {
-    // Decode can immediately switch out.
-    cpu->signalSwitched();
+    // Decode is done draining at any time.
+    cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>
@@ -296,7 +297,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     for (int i=0; i<fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid &&
             fromFetch->insts[i]->seqNum > inst->seqNum) {
-            fromFetch->insts[i]->squashed = true;
+            fromFetch->insts[i]->setSquashed();
         }
     }
 
@@ -345,7 +346,7 @@ DefaultDecode<Impl>::squash(unsigned tid)
 
     for (int i=0; i<fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid) {
-            fromFetch->insts[i]->squashed = true;
+            fromFetch->insts[i]->setSquashed();
             squash_count++;
         }
     }
@@ -427,7 +428,7 @@ DefaultDecode<Impl>::updateStatus()
 
             DPRINTF(Activity, "Activating stage.\n");
 
-            cpu->activateStage(FullCPU::DecodeIdx);
+            cpu->activateStage(O3CPU::DecodeIdx);
         }
     } else {
         // If it's not unblocking, then decode will not have any internal
@@ -436,7 +437,7 @@ DefaultDecode<Impl>::updateStatus()
             _status = Inactive;
             DPRINTF(Activity, "Deactivating stage.\n");
 
-            cpu->deactivateStage(FullCPU::DecodeIdx);
+            cpu->deactivateStage(O3CPU::DecodeIdx);
         }
     }
 }
@@ -515,7 +516,7 @@ DefaultDecode<Impl>::checkSignalsAndUpdate(unsigned tid)
 
     // Check ROB squash signals from commit.
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Decode, "[tid:%]: ROB is still squashing.\n",tid);
+        DPRINTF(Decode, "[tid:%u]: ROB is still squashing.\n", tid);
 
         // Continue to squash.
         decodeStatus[tid] = Squashing;

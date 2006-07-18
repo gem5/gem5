@@ -74,7 +74,7 @@ class Port
   private:
 
     /** Descriptive name (for DPRINTF output) */
-    const std::string portName;
+    mutable std::string portName;
 
     /** A pointer to the peer port.  Ports always come in pairs, that way they
         can use a standardized interface to communicate between different
@@ -82,6 +82,10 @@ class Port
     Port *peer;
 
   public:
+
+    Port()
+        : peer(NULL)
+    { }
 
     /**
      * Constructor.
@@ -104,6 +108,9 @@ class Port
     enum Status {
         RangeChange
     };
+
+    void setName(const std::string &name)
+    { portName = name; }
 
     /** Function to set the pointer for the peer port.
         @todo should be called by the configuration stuff (python).

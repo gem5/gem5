@@ -7,10 +7,10 @@ class DerivOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    if not build_env['FULL_SYSTEM']:
-        mem = Param.FunctionalMemory(NULL, "memory")
-
     checker = Param.BaseCPU("Checker CPU")
+
+    icache_port = Port("Instruction Port")
+    dcache_port = Port("Data Port")
 
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")

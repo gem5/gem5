@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_FETCH_HH__
@@ -35,11 +36,9 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/pc_event.hh"
-#include "mem/packet.hh"
+#include "mem/packet_impl.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
-
-class Sampler;
 
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
@@ -57,7 +56,7 @@ class DefaultFetch
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::Params Params;
 
     /** Typedefs from the CPU policy. */
@@ -163,8 +162,11 @@ class DefaultFetch
     /** Registers statistics. */
     void regStats();
 
+    /** Returns the icache port. */
+    Port *getIcachePort() { return icachePort; }
+
     /** Sets CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
@@ -181,11 +183,14 @@ class DefaultFetch
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
 
-    /** Begins the switch out of the fetch stage. */
-    void switchOut();
+    /** Begins the drain of the fetch stage. */
+    bool drain();
 
-    /** Completes the switch out of the fetch stage. */
-    void doSwitchOut();
+    /** Resumes execution after a drain. */
+    void resume();
+
+    /** Tells fetch stage to prepare to be switched out. */
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -296,8 +301,8 @@ class DefaultFetch
     int branchCount();
 
   private:
-    /** Pointer to the FullCPU. */
-    FullCPU *cpu;
+    /** Pointer to the O3CPU. */
+    O3CPU *cpu;
 
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -334,6 +339,15 @@ class DefaultFetch
 
     /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
+
+#if THE_ISA != ALPHA_ISA
+    /** Per-thread next Next PC.
+     *  This is not a real register but is used for
+     *  architectures that use a branch-delay slot.
+     *  (such as MIPS or Sparc)
+     */
+    Addr nextNPC[Impl::MaxThreads];
+#endif
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];
@@ -390,6 +404,12 @@ class DefaultFetch
     /** The cache line being fetched. */
     uint8_t *cacheData[Impl::MaxThreads];
 
+    /** The PC of the cacheline that has been loaded. */
+    Addr cacheDataPC[Impl::MaxThreads];
+
+    /** Whether or not the cache data is valid. */
+    bool cacheDataValid[Impl::MaxThreads];
+
     /** Size of instructions. */
     int instSize;
 
@@ -413,6 +433,9 @@ class DefaultFetch
      */
     bool interruptPending;
 
+    /** Is there a drain pending. */
+    bool drainPending;
+
     /** Records if fetch is switched out. */
     bool switchedOut;
 
@@ -421,6 +444,7 @@ class DefaultFetch
     Stats::Scalar<> icacheStallCycles;
     /** Stat for total number of fetched instructions. */
     Stats::Scalar<> fetchedInsts;
+    /** Total number of fetched branches. */
     Stats::Scalar<> fetchedBranches;
     /** Stat for total number of predicted branches. */
     Stats::Scalar<> predictedBranches;

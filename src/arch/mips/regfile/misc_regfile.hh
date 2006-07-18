@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,18 +45,12 @@ namespace MipsISA
 
       protected:
         uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
         bool		lock_flag;	// lock flag for LL/SC
         Addr		lock_addr;	// lock address for LL/SC
 
         MiscReg miscRegFile[NumMiscRegs];
 
       public:
-        //These functions should be removed once the simplescalar cpu model
-        //has been replaced.
-        int getInstAsid();
-        int getDataAsid();
-
         void copyMiscRegs(ThreadContext *tc);
 
         MiscReg readReg(int misc_reg)
@@ -80,17 +74,6 @@ namespace MipsISA
             miscRegFile[misc_reg] = val; return NoFault;
         }
 
-#if FULL_SYSTEM
-        void clearIprs() { }
-
-      protected:
-        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
-
-      private:
-        MiscReg readIpr(int idx, Fault &fault, ThreadContext *tc) { }
-
-        Fault setIpr(int idx, uint64_t val, ThreadContext *tc) { }
-#endif
         friend class RegFile;
     };
 } // namespace MipsISA

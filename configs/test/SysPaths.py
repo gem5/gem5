@@ -1,32 +1,40 @@
-from m5 import *
-
-import os.path
-import sys
-
-# Edit the following list to include the possible paths to the binary
-# and disk image directories.  The first directory on the list that
-# exists will be selected.
-SYSTEMDIR_PATH = ['/n/poolfs/z/dist/m5/system']
-
-SYSTEMDIR = None
-for d in SYSTEMDIR_PATH:
-    if os.path.exists(d):
-        SYSTEMDIR = d
-        break
-
-if not SYSTEMDIR:
-    print >>sys.stderr, "Can't find a path to system files."
-    sys.exit(1)
-
-BINDIR = SYSTEMDIR + '/binaries'
-DISKDIR = SYSTEMDIR + '/disks'
+import os, sys
+from os.path import isdir, join as joinpath
+from os import environ as env
 
 def disk(file):
-    return os.path.join(DISKDIR, file)
+    system()
+    return joinpath(disk.dir, file)
 
 def binary(file):
-    return os.path.join(BINDIR, file)
+    system()
+    return joinpath(binary.dir, file)
 
 def script(file):
-    return os.path.join(SYSTEMDIR, 'boot', file)
+    system()
+    return joinpath(script.dir, file)
 
+def system():
+    if not system.dir:
+        try:
+                path = env['M5_PATH'].split(':')
+        except KeyError:
+                path = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+
+        for system.dir in path:
+            if os.path.isdir(system.dir):
+                break
+        else:
+            raise ImportError, "Can't find a path to system files."
+
+    if not binary.dir:
+        binary.dir = joinpath(system.dir, 'binaries')
+    if not disk.dir:
+        disk.dir = joinpath(system.dir, 'disks')
+    if not script.dir:
+        script.dir = joinpath(system.dir, 'boot')
+
+system.dir = None
+binary.dir = None
+disk.dir = None
+script.dir = None

@@ -41,7 +41,7 @@
 #include <libgen.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <unistd.h>
+#include <getopt.h>
 
 #include <list>
 #include <string>
@@ -57,10 +57,12 @@
 #include "base/time.hh"
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "sim/async.hh"
 #include "sim/builder.hh"
-#include "sim/configfile.hh"
 #include "sim/host.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -113,40 +115,11 @@ abortHandler(int sigtype)
 #endif
 }
 
-
-const char *briefCopyright =
-"Copyright (c) 2001-2006\n"
-"The Regents of The University of Michigan\n"
-"All Rights Reserved\n";
-
-/// Print welcome message.
-void
-sayHello(ostream &out)
-{
-    extern const char *compileDate;     // from date.cc
-
-    ccprintf(out, "M5 Simulator System\n");
-    // display copyright
-    ccprintf(out, "%s\n", briefCopyright);
-    ccprintf(out, "M5 compiled %d\n", compileDate);
-    ccprintf(out, "M5 started %s\n", Time::start);
-
-    char *host = getenv("HOSTNAME");
-    if (!host)
-        host = getenv("HOST");
-
-    if (host)
-        ccprintf(out, "M5 executing on %s\n", host);
-}
-
-
-extern "C" { void init_main(); }
+extern "C" { void init_cc_main(); }
 
 int
 main(int argc, char **argv)
 {
-    sayHello(cerr);
-
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
     signal(SIGTRAP, SIG_IGN);
     signal(SIGUSR1, dumpStatsHandler);		// dump intermediate stats
@@ -157,119 +130,145 @@ main(int argc, char **argv)
     Py_SetProgramName(argv[0]);
 
     // default path to m5 python code is the currently executing
-    // file... Python ZipImporter will find embedded zip archive
-    char *pythonpath = argv[0];
-
-    bool interactive = false;
-    bool getopt_done = false;
-    do {
-        switch (getopt(argc, argv, "+p:i")) {
-            // -p <path> prepends <path> to PYTHONPATH instead of
-            // using built-in zip archive.  Useful when
-            // developing/debugging changes to built-in Python
-            // libraries, as the new Python can be tested without
-            // building a new m5 binary.
-          case 'p':
-            pythonpath = optarg;
-            break;
-
-            // -i forces entry into interactive mode after the
-            // supplied script is executed (just like the -i option to
-            // the Python interpreter).
-          case 'i':
-            interactive = true;
-            break;
-
-          case -1:
-            getopt_done = true;
-            break;
-
-          default:
-            fatal("Unrecognized option %c\n", optopt);
-        }
-    } while (!getopt_done);
-
-    // Fix up argc & argv to hide arguments we just processed.
-    // getopt() sets optind to the index of the first non-processed
-    // argv element.
-    argc -= optind;
-    argv += optind;
-
-    // Set up PYTHONPATH to make sure the m5 module is found
-    string newpath(pythonpath);
+    // file... Python ZipImporter will find embedded zip archive.
+    // The M5_ARCHIVE environment variable can be used to override this.
+    char *m5_archive = getenv("M5_ARCHIVE");
+    string pythonpath = m5_archive ? m5_archive : argv[0];
 
     char *oldpath = getenv("PYTHONPATH");
     if (oldpath != NULL) {
-        newpath += ":";
-        newpath += oldpath;
+        pythonpath += ":";
+        pythonpath += oldpath;
     }
 
-    if (setenv("PYTHONPATH", newpath.c_str(), true) == -1)
+    if (setenv("PYTHONPATH", pythonpath.c_str(), true) == -1)
         fatal("setenv: %s\n", strerror(errno));
 
     // initialize embedded Python interpreter
     Py_Initialize();
     PySys_SetArgv(argc, argv);
 
-    // initialize SWIG 'main' module
-    init_main();
+    // initialize SWIG 'cc_main' module
+    init_cc_main();
 
-    if (argc > 0) {
-        // extra arg(s): first is script file, remaining ones are args
-        // to script file
-        char *filename = argv[0];
-        FILE *fp = fopen(filename, "r");
-        if (!fp) {
-            fatal("cannot open file '%s'\n", filename);
-        }
-
-        PyRun_AnyFile(fp, filename);
-    } else {
-        // no script file argument... force interactive prompt
-        interactive = true;
-    }
-
-    if (interactive) {
-        // The following code to import readline was copied from Python
-        // 2.4.3's Modules/main.c.
-        // Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006
-        // Python Software Foundation; All Rights Reserved
-        // We should only enable this if we're actually using an
-        // interactive prompt.
-        PyObject *v;
-        v = PyImport_ImportModule("readline");
-        if (v == NULL)
-            PyErr_Clear();
-        else
-            Py_DECREF(v);
-
-        PyRun_InteractiveLoop(stdin, "stdin");
-    }
+    PyRun_SimpleString("import m5");
+    PyRun_SimpleString("m5.main()");
 
     // clean up Python intepreter.
     Py_Finalize();
 }
 
 
-/// Initialize C++ configuration.  Exported to Python via SWIG; invoked
-/// from m5.instantiate().
 void
-initialize()
+setOutputDir(const string &dir)
 {
+    simout.setDirectory(dir);
+}
+
+
+IniFile inifile;
+
+SimObject *
+createSimObject(const string &name)
+{
+    return SimObjectClass::createObject(inifile, name);
+}
+
+
+/**
+ * Pointer to the Python function that maps names to SimObjects.
+ */
+PyObject *resolveFunc = NULL;
+
+/**
+ * Convert a pointer to the Python object that SWIG wraps around a C++
+ * SimObject pointer back to the actual C++ pointer.  See main.i.
+ */
+extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
+
+
+SimObject *
+resolveSimObject(const string &name)
+{
+    PyObject *pyPtr = PyEval_CallFunction(resolveFunc, "(s)", name.c_str());
+    if (pyPtr == NULL) {
+        PyErr_Print();
+        panic("resolveSimObject: failure on call to Python for %s", name);
+    }
+
+    SimObject *simObj = convertSwigSimObjectPtr(pyPtr);
+    if (simObj == NULL)
+        panic("resolveSimObject: failure on pointer conversion for %s", name);
+
+    return simObj;
+}
+
+
+/**
+ * Load config.ini into C++ database.  Exported to Python via SWIG;
+ * invoked from m5.instantiate().
+ */
+void
+loadIniFile(PyObject *_resolveFunc)
+{
+    resolveFunc = _resolveFunc;
     configStream = simout.find("config.out");
 
     // The configuration database is now complete; start processing it.
-    IniFile inifile;
     inifile.load("config.ini");
 
     // Initialize statistics database
     Stats::InitSimStats();
+}
 
-    // Now process the configuration hierarchy and create the SimObjects.
-    ConfigHierarchy configHierarchy(inifile);
-    configHierarchy.build();
-    configHierarchy.createSimObjects();
 
+/**
+ * Look up a MemObject port.  Helper function for connectPorts().
+ */
+Port *
+lookupPort(SimObject *so, const std::string &name, int i)
+{
+    MemObject *mo = dynamic_cast<MemObject *>(so);
+    if (mo == NULL) {
+        warn("error casting SimObject %s to MemObject", so->name());
+        return NULL;
+    }
+
+    Port *p = mo->getPort(name, i);
+    if (p == NULL)
+        warn("error looking up port %s on object %s", name, so->name());
+    return p;
+}
+
+
+/**
+ * Connect the described MemObject ports.  Called from Python via SWIG.
+ */
+int
+connectPorts(SimObject *o1, const std::string &name1, int i1,
+             SimObject *o2, const std::string &name2, int i2)
+{
+    Port *p1 = lookupPort(o1, name1, i1);
+    Port *p2 = lookupPort(o2, name2, i2);
+
+    if (p1 == NULL || p2 == NULL) {
+        warn("connectPorts: port lookup error");
+        return 0;
+    }
+
+    p1->setPeer(p2);
+    p2->setPeer(p1);
+
+    return 1;
+}
+
+/**
+ * Do final initialization steps after object construction but before
+ * start of simulation.
+ */
+void
+finalInit()
+{
     // Parse and check all non-config-hierarchy parameters.
     ParamContext::parseAllContexts(inifile);
     ParamContext::checkAllContexts();
@@ -277,27 +276,15 @@ initialize()
     // Echo all parameter settings to stats file as well.
     ParamContext::showAllContexts(*configStream);
 
-    // Any objects that can't connect themselves until after construction should
-    // do so now
-    SimObject::connectAll();
-
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();
 
     // Restore checkpointed state, if any.
+#if 0
     configHierarchy.unserializeSimObjects();
-
-    // Done processing the configuration database.
-    // Check for unreferenced entries.
-    if (inifile.printUnreferenced())
-        panic("unreferenced sections/entries in the intermediate ini file");
+#endif
 
     SimObject::regAllStats();
-
-    // uncomment the following to get PC-based execution-time profile
-#ifdef DO_PROFILE
-    init_profile((char *)&_init, (char *)&_fini);
-#endif
 
     // Check to make sure that the stats package is properly initialized
     Stats::check();
@@ -393,6 +380,37 @@ simulate(Tick num_cycles = -1)
     // not reached... only exit is return on SimLoopExitEvent
 }
 
+Event *
+createCountedDrain()
+{
+    return new CountedDrainEvent();
+}
+
+void
+cleanupCountedDrain(Event *counted_drain)
+{
+    CountedDrainEvent *event =
+        dynamic_cast<CountedDrainEvent *>(counted_drain);
+    if (event == NULL) {
+        fatal("Called cleanupCountedDrain() on an event that was not "
+              "a CountedDrainEvent.");
+    }
+    assert(event->getCount() == 0);
+    delete event;
+}
+
+void
+serializeAll(const std::string &cpt_dir)
+{
+    Serializable::serializeAll(cpt_dir);
+}
+
+void
+unserializeAll(const std::string &cpt_dir)
+{
+    Serializable::unserializeAll(cpt_dir);
+}
+
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */
@@ -405,6 +423,16 @@ void
 registerExitCallback(Callback *callback)
 {
     exitCallbacks.add(callback);
+}
+
+BaseCPU *
+convertToBaseCPUPtr(SimObject *obj)
+{
+    BaseCPU *ptr = dynamic_cast<BaseCPU *>(obj);
+
+    if (ptr == NULL)
+        warn("Casting to BaseCPU pointer failed");
+    return ptr;
 }
 
 /**

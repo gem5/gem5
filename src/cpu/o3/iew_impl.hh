@@ -42,17 +42,17 @@ using namespace std;
 
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
-    : // @todo: Make this into a parameter.
-      issueToExecQueue(5, 5),
+    : issueToExecQueue(params->backComSize, params->forwardComSize),
       instQueue(params),
       ldstQueue(params),
       fuPool(params->fuPool),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToIEWDelay(params->renameToIEWDelay),
       issueToExecuteDelay(params->issueToExecuteDelay),
-      issueReadWidth(params->issueWidth),
+      dispatchWidth(params->dispatchWidth),
       issueWidth(params->issueWidth),
-      executeWidth(params->executeWidth),
+      wbOutstanding(0),
+      wbWidth(params->wbWidth),
       numThreads(params->numberOfThreads),
       switchedOut(false)
 {
@@ -75,7 +75,11 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
         fetchRedirect[i] = false;
     }
 
+    wbMax = wbWidth * params->wbDepth;
+
     updateLSQNextCycle = false;
+
+    ableToIssue = true;
 
     skidBufferMax = (3 * (renameToIEWDelay * params->renameWidth)) + issueWidth;
 }
@@ -94,6 +98,7 @@ DefaultIEW<Impl>::regStats()
     using namespace Stats;
 
     instQueue.regStats();
+    ldstQueue.regStats();
 
     iewIdleCycles
         .name(name() + ".iewIdleCycles")
@@ -139,20 +144,6 @@ DefaultIEW<Impl>::regStats()
         .name(name() + ".iewLSQFullEvents")
         .desc("Number of times the LSQ has become full, causing a stall");
 
-    iewExecutedInsts
-        .name(name() + ".iewExecutedInsts")
-        .desc("Number of executed instructions");
-
-    iewExecLoadInsts
-        .init(cpu->number_of_threads)
-        .name(name() + ".iewExecLoadInsts")
-        .desc("Number of load instructions executed")
-        .flags(total);
-
-    iewExecSquashedInsts
-        .name(name() + ".iewExecSquashedInsts")
-        .desc("Number of squashed instructions skipped in execute");
-
     memOrderViolationEvents
         .name(name() + ".memOrderViolationEvents")
         .desc("Number of memory order violations");
@@ -171,114 +162,105 @@ DefaultIEW<Impl>::regStats()
 
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
 
-    exeSwp
+    iewExecutedInsts
+        .name(name() + ".EXEC:insts")
+        .desc("Number of executed instructions");
+
+    iewExecLoadInsts
+        .init(cpu->number_of_threads)
+        .name(name() + ".EXEC:loads")
+        .desc("Number of load instructions executed")
+        .flags(total);
+
+    iewExecSquashedInsts
+        .name(name() + ".EXEC:squashedInsts")
+        .desc("Number of squashed instructions skipped in execute");
+
+    iewExecutedSwp
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:swp")
         .desc("number of swp insts executed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    exeNop
+    iewExecutedNop
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:nop")
         .desc("number of nop insts executed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    exeRefs
+    iewExecutedRefs
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:refs")
         .desc("number of memory reference insts executed")
-        .flags(total)
-        ;
+        .flags(total);
 
-    exeBranches
+    iewExecutedBranches
         .init(cpu->number_of_threads)
         .name(name() + ".EXEC:branches")
         .desc("Number of branches executed")
-        .flags(total)
-        ;
-
-    issueRate
-        .name(name() + ".EXEC:rate")
-        .desc("Inst execution rate")
-        .flags(total)
-        ;
-    issueRate = iewExecutedInsts / cpu->numCycles;
+        .flags(total);
 
     iewExecStoreInsts
         .name(name() + ".EXEC:stores")
         .desc("Number of stores executed")
-        .flags(total)
-        ;
-    iewExecStoreInsts = exeRefs - iewExecLoadInsts;
-/*
-    for (int i=0; i<Num_OpClasses; ++i) {
-        stringstream subname;
-        subname << opClassStrings[i] << "_delay";
-        issue_delay_dist.subname(i, subname.str());
-    }
-*/
-    //
-    //  Other stats
-    //
+        .flags(total);
+    iewExecStoreInsts = iewExecutedRefs - iewExecLoadInsts;
+
+    iewExecRate
+        .name(name() + ".EXEC:rate")
+        .desc("Inst execution rate")
+        .flags(total);
+
+    iewExecRate = iewExecutedInsts / cpu->numCycles;
 
     iewInstsToCommit
         .init(cpu->number_of_threads)
         .name(name() + ".WB:sent")
         .desc("cumulative count of insts sent to commit")
-        .flags(total)
-        ;
+        .flags(total);
 
     writebackCount
         .init(cpu->number_of_threads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
-        .flags(total)
-        ;
+        .flags(total);
 
     producerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
-        .flags(total)
-        ;
+        .flags(total);
 
     consumerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
-        .flags(total)
-        ;
+        .flags(total);
 
     wbPenalized
         .init(cpu->number_of_threads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
-        .flags(total)
-        ;
+        .flags(total);
 
     wbPenalizedRate
         .name(name() + ".WB:penalized_rate")
         .desc ("fraction of instructions written-back that wrote to 'other' IQ")
-        .flags(total)
-        ;
+        .flags(total);
 
     wbPenalizedRate = wbPenalized / writebackCount;
 
     wbFanout
         .name(name() + ".WB:fanout")
         .desc("average fanout of values written-back")
-        .flags(total)
-        ;
+        .flags(total);
 
     wbFanout = producerInst / consumerInst;
 
     wbRate
         .name(name() + ".WB:rate")
         .desc("insts written-back per cycle")
-        .flags(total)
-        ;
+        .flags(total);
     wbRate = writebackCount / cpu->numCycles;
 }
 
@@ -299,7 +281,7 @@ DefaultIEW<Impl>::initStage()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultIEW<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(IEW, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
@@ -307,7 +289,7 @@ DefaultIEW<Impl>::setCPU(FullCPU *cpu_ptr)
     instQueue.setCPU(cpu_ptr);
     ldstQueue.setCPU(cpu_ptr);
 
-    cpu->activateStage(FullCPU::IEWIdx);
+    cpu->activateStage(O3CPU::IEWIdx);
 }
 
 template<class Impl>
@@ -371,16 +353,23 @@ DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
 }
 
 template <class Impl>
-void
-DefaultIEW<Impl>::switchOut()
+bool
+DefaultIEW<Impl>::drain()
 {
-    // IEW is ready to switch out at any time.
-    cpu->signalSwitched();
+    // IEW is ready to drain at any time.
+    cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>
 void
-DefaultIEW<Impl>::doSwitchOut()
+DefaultIEW<Impl>::resume()
+{
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::switchOut()
 {
     // Clear any state.
     switchedOut = true;
@@ -423,7 +412,7 @@ DefaultIEW<Impl>::takeOverFrom()
     updateLSQNextCycle = false;
 
     // @todo: Fix hardcoded number
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < issueToExecQueue.getSize(); ++i) {
         issueToExecQueue.advance();
     }
 }
@@ -456,16 +445,7 @@ DefaultIEW<Impl>::squash(unsigned tid)
         skidBuffer[tid].pop();
     }
 
-    while (!insts[tid].empty()) {
-        if (insts[tid].front()->isLoad() ||
-            insts[tid].front()->isStore() ) {
-            toRename->iewInfo[tid].dispatchedToLSQ++;
-        }
-
-        toRename->iewInfo[tid].dispatched++;
-
-        insts[tid].pop();
-    }
+    emptyRenameInsts(tid);
 }
 
 template<class Impl>
@@ -591,12 +571,12 @@ DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
     // free slot.
     while ((*iewQueue)[wbCycle].insts[wbNumInst]) {
         ++wbNumInst;
-        if (wbNumInst == issueWidth) {
+        if (wbNumInst == wbWidth) {
             ++wbCycle;
             wbNumInst = 0;
         }
 
-        assert(wbCycle < 5);
+        assert((wbCycle * wbWidth + wbNumInst) < wbMax);
     }
 
     // Add finished instruction to queue to commit.
@@ -611,7 +591,7 @@ DefaultIEW<Impl>::validInstsFromRename()
     unsigned inst_count = 0;
 
     for (int i=0; i<fromRename->size; i++) {
-        if (!fromRename->insts[i]->squashed)
+        if (!fromRename->insts[i]->isSquashed())
             inst_count++;
     }
 
@@ -799,10 +779,12 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(unsigned tid)
     }
 
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(IEW, "[tid:%i]: ROB is still squashing.\n");
+        DPRINTF(IEW, "[tid:%i]: ROB is still squashing.\n", tid);
 
         dispatchStatus[tid] = Squashing;
 
+        emptyRenameInsts(tid);
+        wroteToTimeBuffer = true;
         return;
     }
 
@@ -853,6 +835,22 @@ DefaultIEW<Impl>::sortInsts()
 
 template <class Impl>
 void
+DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
+{
+    while (!insts[tid].empty()) {
+        if (insts[tid].front()->isLoad() ||
+            insts[tid].front()->isStore() ) {
+            toRename->iewInfo[tid].dispatchedToLSQ++;
+        }
+
+        toRename->iewInfo[tid].dispatched++;
+
+        insts[tid].pop();
+    }
+}
+
+template <class Impl>
+void
 DefaultIEW<Impl>::wakeCPU()
 {
     cpu->wakeCPU();
@@ -871,7 +869,7 @@ inline void
 DefaultIEW<Impl>::activateStage()
 {
     DPRINTF(Activity, "Activating stage.\n");
-    cpu->activateStage(FullCPU::IEWIdx);
+    cpu->activateStage(O3CPU::IEWIdx);
 }
 
 template <class Impl>
@@ -879,7 +877,7 @@ inline void
 DefaultIEW<Impl>::deactivateStage()
 {
     DPRINTF(Activity, "Deactivating stage.\n");
-    cpu->deactivateStage(FullCPU::IEWIdx);
+    cpu->deactivateStage(O3CPU::IEWIdx);
 }
 
 template<class Impl>
@@ -951,7 +949,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
     // Loop through the instructions, putting them in the instruction
     // queue.
     for ( ; dis_num_inst < insts_to_add &&
-              dis_num_inst < issueReadWidth;
+              dis_num_inst < dispatchWidth;
           ++dis_num_inst)
     {
         inst = insts_to_dispatch.front();
@@ -1090,7 +1088,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
 
             instQueue.recordProducer(inst);
 
-            exeNop[tid]++;
+            iewExecutedNop[tid]++;
 
             add_to_iq = false;
         } else if (inst->isExecuted()) {
@@ -1203,6 +1201,7 @@ DefaultIEW<Impl>::executeInsts()
 
             ++iewExecSquashedInsts;
 
+            decrWb(inst->seqNum);
             continue;
         }
 
@@ -1365,6 +1364,8 @@ DefaultIEW<Impl>::writebackInsts()
             }
             writebackCount[tid]++;
         }
+
+        decrWb(inst->seqNum);
     }
 }
 
@@ -1501,9 +1502,9 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        exeSwp[thread_number]++;
+        iewExecutedSwp[thread_number]++;
     else
-        iewExecutedInsts++;
+        iewIewExecutedcutedInsts++;
 #else
     iewExecutedInsts++;
 #endif
@@ -1512,13 +1513,13 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     //  Control operations
     //
     if (inst->isControl())
-        exeBranches[thread_number]++;
+        iewExecutedBranches[thread_number]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        exeRefs[thread_number]++;
+        iewExecutedRefs[thread_number]++;
 
         if (inst->isLoad()) {
             iewExecLoadInsts[thread_number]++;

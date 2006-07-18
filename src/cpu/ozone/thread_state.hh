@@ -58,30 +58,23 @@ class FunctionalMemory;
 template <class Impl>
 struct OzoneThreadState : public ThreadState {
     typedef typename ThreadContext::Status Status;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::CPUType CPUType;
     typedef TheISA::MiscReg MiscReg;
 
 #if FULL_SYSTEM
-    OzoneThreadState(FullCPU *_cpu, int _thread_num)
+    OzoneThreadState(CPUType *_cpu, int _thread_num)
         : ThreadState(-1, _thread_num),
-          inSyscall(0), trapPending(0)
+          intrflag(0), inSyscall(0), trapPending(0)
     {
-        memset(&regs, 0, sizeof(TheISA::RegFile));
+        miscRegFile.clear();
     }
 #else
-    OzoneThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(-1, _thread_num, NULL, _process, _asid),
+    OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process,
+                     int _asid, MemObject *mem)
+        : ThreadState(-1, _thread_num, _process, _asid, mem),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
-        memset(&regs, 0, sizeof(TheISA::RegFile));
-    }
-
-    OzoneThreadState(FullCPU *_cpu, int _thread_num,
-                     int _asid)
-        : ThreadState(-1, _thread_num, NULL, NULL, _asid),
-          cpu(_cpu), inSyscall(0), trapPending(0)
-    {
-        memset(&regs, 0, sizeof(TheISA::RegFile));
+        miscRegFile.clear();
     }
 #endif
 
@@ -91,9 +84,11 @@ struct OzoneThreadState : public ThreadState {
 
     Addr nextPC;
 
-    TheISA::RegFile regs;
+    TheISA::MiscRegFile miscRegFile;
 
-    typename Impl::FullCPU *cpu;
+    int intrflag;
+
+    typename Impl::CPUType *cpu;
 
     bool inSyscall;
 
@@ -103,54 +98,24 @@ struct OzoneThreadState : public ThreadState {
 
     ThreadContext *getTC() { return tc; }
 
-#if !FULL_SYSTEM
-    Fault translateInstReq(Request *req)
-    {
-        return process->pTable->translate(req);
-    }
-    Fault translateDataReadReq(Request *req)
-    {
-        return process->pTable->translate(req);
-    }
-    Fault translateDataWriteReq(Request *req)
-    {
-        return process->pTable->translate(req);
-    }
-#else
-    Fault translateInstReq(Request *req)
-    {
-        return cpu->itb->translate(req);
-    }
-
-    Fault translateDataReadReq(Request *req)
-    {
-        return cpu->dtb->translate(req, false);
-    }
-
-    Fault translateDataWriteReq(Request *req)
-    {
-        return cpu->dtb->translate(req, true);
-    }
-#endif
-
     MiscReg readMiscReg(int misc_reg)
     {
-        return regs.readMiscReg(misc_reg);
+        return miscRegFile.readReg(misc_reg);
     }
 
     MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
+        return miscRegFile.readRegWithEffect(misc_reg, fault, tc);
     }
 
     Fault setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscReg(misc_reg, val);
+        return miscRegFile.setReg(misc_reg, val);
     }
 
     Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscRegWithEffect(misc_reg, val, tc);
+        return miscRegFile.setRegWithEffect(misc_reg, val, tc);
     }
 
     uint64_t readPC()

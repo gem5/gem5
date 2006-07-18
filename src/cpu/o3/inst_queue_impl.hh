@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #include <limits>
@@ -125,7 +126,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = part_amt;
         }
 
-        DPRINTF(Fetch, "IQ sharing policy set to Partitioned:"
+        DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
                 "%i entries per thread.\n",part_amt);
 
     } else if (policy == "threshold") {
@@ -140,7 +141,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = thresholdIQ;
         }
 
-        DPRINTF(Fetch, "IQ sharing policy set to Threshold:"
+        DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
    } else {
        assert(0 && "Invalid IQ Sharing Policy.Options Are:{Dynamic,"
@@ -289,22 +290,7 @@ InstructionQueue<Impl>::regStats()
         .flags(total)
         ;
     issueRate = iqInstsIssued / cpu->numCycles;
-/*
-    issue_stores
-        .name(name() + ".ISSUE:stores")
-        .desc("Number of stores issued")
-        .flags(total)
-        ;
-    issue_stores = exe_refs - exe_loads;
-*/
-/*
-    issue_op_rate
-        .name(name() + ".ISSUE:op_rate")
-        .desc("Operation issue rate")
-        .flags(total)
-        ;
-    issue_op_rate = issued_ops / numCycles;
-*/
+
     statFuBusy
         .init(Num_OpClasses)
         .name(name() + ".ISSUE:fu_full")
@@ -701,6 +687,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     int total_issued = 0;
 
     while (total_issued < totalWidth &&
+           iewStage->canIssue() &&
            order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
 
@@ -791,13 +778,14 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 // complete.
                 ++freeEntries;
                 count[tid]--;
-                issuing_inst->removeInIQ();
+                issuing_inst->clearInIQ();
             } else {
                 memDepUnit[tid].issue(issuing_inst);
             }
 
             listOrder.erase(order_it++);
             statIssuedInstType[tid][op_class]++;
+            iewStage->incrWb(issuing_inst->seqNum);
         } else {
             statFuBusy[op_class]++;
             fuBusy[tid]++;
@@ -1097,7 +1085,7 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
             // inst will flow through the rest of the pipeline.
             squashed_inst->setIssued();
             squashed_inst->setCanCommit();
-            squashed_inst->removeInIQ();
+            squashed_inst->clearInIQ();
 
             //Update Thread IQ Count
             count[squashed_inst->threadNumber]--;

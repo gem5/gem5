@@ -36,17 +36,17 @@
 
 #include "base/statistics.hh"
 #include "config/full_system.hh"
-#include "cpu/sampler/sampler.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_object.hh"
+#include "mem/mem_object.hh"
 #include "arch/isa_traits.hh"
 
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
 class System;
+class Port;
 
-class BaseCPU : public SimObject
+class BaseCPU : public MemObject
 {
   protected:
     // CPU's clock period in terms of the number of ticks of curTime.
@@ -148,7 +148,7 @@ class BaseCPU : public SimObject
 
     /// Prepare for another CPU to take over execution.  When it is
     /// is ready (drained pipe) it signals the sampler.
-    virtual void switchOut(Sampler *);
+    virtual void switchOut();
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.

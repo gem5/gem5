@@ -33,6 +33,10 @@
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+#if !FULL_SYSTEM
+#include "sim/process.hh"
+#include "mem/page_table.hh"
+#endif
 
 namespace SparcISA
 {
@@ -218,6 +222,13 @@ TrapType      TrapInstruction::_baseTrapType = 0x100;
 FaultPriority TrapInstruction::_priority = 16;
 FaultStat     TrapInstruction::_count;
 
+#if !FULL_SYSTEM
+FaultName PageTableFault::_name = "page_table_fault";
+TrapType PageTableFault::_trapType = 0x0000;
+FaultPriority PageTableFault::_priority = 0;
+FaultStat PageTableFault::_count;
+#endif
+
 #if FULL_SYSTEM
 
 void SparcFault::invoke(ThreadContext * tc)
@@ -249,9 +260,28 @@ void SparcFault::invoke(ThreadContext * tc)
 
 void TrapInstruction::invoke(ThreadContext * tc)
 {
-    tc->syscall(syscall_num);
+    // Should be handled in ISA.
 }
 
+void PageTableFault::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+
+    // address is higher than the stack region or in the current stack region
+    if (vaddr > p->stack_base || vaddr > p->stack_min)
+        FaultBase::invoke(tc);
+
+    // We've accessed the next page
+    if (vaddr > p->stack_min - PageBytes) {
+        p->stack_min -= PageBytes;
+        if (p->stack_base - p->stack_min > 8*1024*1024)
+            fatal("Over max stack size for one thread\n");
+        p->pTable->allocate(p->stack_min, PageBytes);
+        warn("Increasing stack size by one page.");
+    } else {
+        FaultBase::invoke(tc);
+    }
+}
 #endif
 
 } // namespace SparcISA

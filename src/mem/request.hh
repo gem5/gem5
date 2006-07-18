@@ -44,6 +44,7 @@ class Request;
 
 typedef Request* RequestPtr;
 
+
 /** The request is a Load locked/store conditional. */
 const unsigned LOCKED		= 0x001;
 /** The virtual address is also the physical address. */
@@ -62,6 +63,8 @@ const unsigned PF_EXCLUSIVE	= 0x100;
 const unsigned EVICT_NEXT	= 0x200;
 /** The request should ignore unaligned access faults */
 const unsigned NO_ALIGN_FAULT   = 0x400;
+/** The request was an instruction read. */
+const unsigned INST_READ        = 0x800;
 
 class Request
 {
@@ -223,6 +226,11 @@ class Request
 
     /** Accessor function for pc.*/
     Addr getPC() { assert(validPC); return pc; }
+
+    /** Accessor Function to Check Cacheability. */
+    bool isUncacheable() { return getFlags() & UNCACHEABLE; }
+
+    bool isInstRead() { return getFlags() & INST_READ; }
 
     friend class Packet;
 };

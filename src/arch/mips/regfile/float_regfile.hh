@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,6 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_FLOAT_REGFILE_HH__
@@ -34,13 +32,14 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/constants.hh"
 #include "base/misc.hh"
+#include "base/bitfield.hh"
 #include "config/full_system.hh"
 #include "sim/byteswap.hh"
 #include "sim/faults.hh"
 #include "sim/host.hh"
 
 class Checkpoint;
-class ThreadContext;
+class ExecContext;
 class Regfile;
 
 namespace MipsISA
@@ -101,8 +100,9 @@ namespace MipsISA
             }
         }
 
-        Fault setReg(int floatReg, const FloatReg &val, int width)
+        Fault setReg(int floatReg, const FloatRegVal &val, int width)
         {
+            using namespace std;
             switch(width)
             {
               case SingleWidth:
@@ -117,8 +117,8 @@ namespace MipsISA
                 {
                     const void *double_ptr = &val;
                     FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
-                    regs[floatReg + 1] = temp_double >> 32;
-                    regs[floatReg] = 0x0000FFFF & temp_double;
+                    regs[floatReg + 1] = bits(temp_double, 63, 32);
+                    regs[floatReg] = bits(temp_double, 31, 0);
                     break;
                 }
 
@@ -140,8 +140,8 @@ namespace MipsISA
                 break;
 
               case DoubleWidth:
-                regs[floatReg + 1] = val >> 32;
-                regs[floatReg] = val;
+                regs[floatReg + 1] = bits(val, 63, 32);
+                regs[floatReg] = bits(val, 31, 0);
                 break;
 
               default:

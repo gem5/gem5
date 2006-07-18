@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_COMMIT_HH__
@@ -67,7 +68,7 @@ class DefaultCommit
 {
   public:
     // Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
@@ -145,7 +146,7 @@ class DefaultCommit
     void regStats();
 
     /** Sets the CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the list of threads. */
     void setThreads(std::vector<Thread *> &threads);
@@ -160,10 +161,6 @@ class DefaultCommit
 
     /** Sets the pointer to the queue coming from IEW. */
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
-
-    void setFetchStage(Fetch *fetch_stage);
-
-    Fetch *fetchStage;
 
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
@@ -186,11 +183,14 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void initStage();
 
-    /** Initializes the switching out of commit. */
-    void switchOut();
+    /** Initializes the draining of commit. */
+    bool drain();
+
+    /** Resumes execution after draining. */
+    void resume();
 
     /** Completes the switch out of commit. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -280,11 +280,19 @@ class DefaultCommit
     /** Sets the PC of a specific thread. */
     void setPC(uint64_t val, unsigned tid) { PC[tid] = val; }
 
-    /** Reads the PC of a specific thread. */
+    /** Reads the next PC of a specific thread. */
     uint64_t readNextPC(unsigned tid) { return nextPC[tid]; }
 
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
+
+#if THE_ISA != ALPHA_ISA
+    /** Reads the next NPC of a specific thread. */
+    uint64_t readNextPC(unsigned tid) { return nextNPC[tid]; }
+
+    /** Sets the next NPC of a specific thread. */
+    void setNextPC(uint64_t val, unsigned tid) { nextNPC[tid] = val; }
+#endif
 
   private:
     /** Time buffer interface. */
@@ -317,15 +325,11 @@ class DefaultCommit
     ROB *rob;
 
   private:
-    /** Pointer to FullCPU. */
-    FullCPU *cpu;
+    /** Pointer to O3CPU. */
+    O3CPU *cpu;
 
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
-
-    Fault fetchFault;
-
-    int fetchTrapWait;
 
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.
@@ -365,11 +369,6 @@ class DefaultCommit
      */
     unsigned renameWidth;
 
-    /** IEW width, in instructions.  Used so ROB knows how many
-     *  instructions to get from the IEW instruction queue.
-     */
-    unsigned iewWidth;
-
     /** Commit width, in instructions. */
     unsigned commitWidth;
 
@@ -379,8 +378,8 @@ class DefaultCommit
     /** Number of Active Threads */
     unsigned numThreads;
 
-    /** Is a switch out pending. */
-    bool switchPending;
+    /** Is a drain pending. */
+    bool drainPending;
 
     /** Is commit switched out. */
     bool switchedOut;
@@ -390,10 +389,6 @@ class DefaultCommit
      */
     Tick trapLatency;
 
-    Tick fetchTrapLatency;
-
-    Tick fetchFaultTick;
-
     /** The commit PC of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
@@ -401,6 +396,11 @@ class DefaultCommit
 
     /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
+
+#if THE_ISA != ALPHA_ISA
+    /** The next NPC of each thread. */
+    Addr nextNPC[Impl::MaxThreads];
+#endif
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

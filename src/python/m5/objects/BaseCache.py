@@ -1,29 +1,26 @@
 from m5.config import *
-from BaseMem import BaseMem
+from MemObject import MemObject
 
 class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
 
-class BaseCache(BaseMem):
+class BaseCache(MemObject):
     type = 'BaseCache'
     adaptive_compression = Param.Bool(False,
         "Use an adaptive compression scheme")
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
+    latency = Param.Int("Latency")
     compressed_bus = Param.Bool(False,
         "This cache connects to a compressed memory")
     compression_latency = Param.Latency('0ns',
         "Latency in cycles of compression algorithm")
     do_copy = Param.Bool(False, "perform fast copies in the cache")
     hash_delay = Param.Int(1, "time in cycles of hash access")
-    in_bus = Param.Bus(NULL, "incoming bus object")
     lifo = Param.Bool(False,
         "whether this NIC partition should use LIFO repl. policy")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
-    mem_trace = Param.MemTraceWriter(NULL,
-                                     "memory trace writer to record accesses")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
-    out_bus = Param.Bus("outgoing bus object")
     prioritizeRequests = Param.Bool(False,
         "always service demand misses first")
     protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
@@ -63,3 +60,6 @@ class BaseCache(BaseMem):
          "Use the CPU ID to seperate calculations of prefetches")
     prefetch_data_accesses_only = Param.Bool(False,
          "Only prefetch on data not on instruction accesses")
+    hit_latency = Param.Int(1,"Hit Latency of the cache")
+    cpu_side = Port("Port on side closer to CPU")
+    mem_side = Port("Port on side closer to MEM")

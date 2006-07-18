@@ -141,6 +141,7 @@ SparcSystem::unserialize(Checkpoint *cp, const std::string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
 
     SimObjectParam<PhysicalMemory *> physmem;
+    SimpleEnumParam<System::MemoryMode> mem_mode;
 
     Param<std::string> kernel;
     Param<std::string> reset_bin;
@@ -161,6 +162,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(physmem, "phsyical memory"),
+    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
+            System::MemoryModeStrings),
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(reset_bin, "file that contains the reset code"),
     INIT_PARAM(hypervisor_bin, "file that contains the hypervisor code"),
@@ -183,6 +186,7 @@ CREATE_SIM_OBJECT(SparcSystem)
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->physmem = physmem;
+    p->mem_mode = mem_mode;
     p->kernel_path = kernel;
     p->reset_bin = reset_bin;
     p->hypervisor_bin = hypervisor_bin;

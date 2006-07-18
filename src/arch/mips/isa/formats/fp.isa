@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2003-2006 The Regents of The University of Michigan
+// Copyright (c) 2006 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -142,10 +142,10 @@ output exec {{
                 cpu->setFloatRegBits(inst, 0, mips_nan, size);
 
                 //Read FCSR from FloatRegFile
-                uint32_t fcsr_bits = cpu->tc->readFloatRegBits(FCSR);
+                uint32_t fcsr_bits = cpu->tcBase()->readFloatRegBits(FCSR);
 
                 //Write FCSR from FloatRegFile
-                cpu->tc->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
+                cpu->tcBase()->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
 
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
@@ -158,12 +158,12 @@ output exec {{
         fpResetCauseBits(%(CPU_exec_context)s *cpu)
         {
             //Read FCSR from FloatRegFile
-            uint32_t fcsr = cpu->tc->readFloatRegBits(FCSR);
+            uint32_t fcsr = cpu->tcBase()->readFloatRegBits(FCSR);
 
             fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
 
             //Write FCSR from FloatRegFile
-            cpu->tc->setFloatRegBits(FCSR, fcsr);
+            cpu->tcBase()->setFloatRegBits(FCSR, fcsr);
         }
 }};
 
@@ -176,8 +176,9 @@ def template FloatingPointExecute {{
 
                 //When is the right time to reset cause bits?
                 //start of every instruction or every cycle?
+#if FULL_SYSTEM
                 fpResetCauseBits(xc);
-
+#endif
                 %(op_decl)s;
                 %(op_rd)s;
 
@@ -192,7 +193,10 @@ def template FloatingPointExecute {{
                     //----
                     //Check for IEEE 754 FP Exceptions
                     //fault = fpNanOperands((FPOp*)this, xc, Fd, traceData);
-                    if (!fpInvalidOp((FPOp*)this, xc, Fd, traceData) &&
+                    if (
+#if FULL_SYSTEM
+                        !fpInvalidOp((FPOp*)this, xc, Fd, traceData) &&
+#endif
                         fault == NoFault)
                     {
                         %(op_wb)s;

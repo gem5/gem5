@@ -68,7 +68,7 @@ class DefaultIEW
     //Typedefs from Impl
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::Params Params;
 
     typedef typename CPUPol::IQ IQ;
@@ -80,7 +80,7 @@ class DefaultIEW
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::IssueStruct IssueStruct;
 
-    friend class Impl::FullCPU;
+    friend class Impl::O3CPU;
     friend class CPUPol::IQ;
 
   public:
@@ -125,8 +125,11 @@ class DefaultIEW
     /** Initializes stage; sends back the number of free IQ and LSQ entries. */
     void initStage();
 
+    /** Returns the dcache port. */
+    Port *getDcachePort() { return ldstQueue.getDcachePort(); }
+
     /** Sets CPU pointer for IEW, IQ, and LSQ. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets main time buffer used for backwards communication. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -143,11 +146,14 @@ class DefaultIEW
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
 
-    /** Starts switch out of IEW stage. */
-    void switchOut();
+    /** Drains IEW stage. */
+    bool drain();
+
+    /** Resumes execution after a drain. */
+    void resume();
 
     /** Completes switch out of IEW stage. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -203,6 +209,45 @@ class DefaultIEW
 
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
+
+    void incrWb(InstSeqNum &sn)
+    {
+        if (++wbOutstanding == wbMax)
+            ableToIssue = false;
+        DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+#if DEBUG
+        wbList.insert(sn);
+#endif
+    }
+
+    void decrWb(InstSeqNum &sn)
+    {
+        if (wbOutstanding-- == wbMax)
+            ableToIssue = true;
+        DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+#if DEBUG
+        assert(wbList.find(sn) != wbList.end());
+        wbList.erase(sn);
+#endif
+    }
+
+#if DEBUG
+    std::set<InstSeqNum> wbList;
+
+    void dumpWb()
+    {
+        std::set<InstSeqNum>::iterator wb_it = wbList.begin();
+        while (wb_it != wbList.end()) {
+            cprintf("[sn:%lli]\n",
+                    (*wb_it));
+            wb_it++;
+        }
+    }
+#endif
+
+    bool canIssue() { return ableToIssue; }
+
+    bool ableToIssue;
 
   private:
     /** Sends commit proper information for a squash due to a branch
@@ -260,6 +305,9 @@ class DefaultIEW
 
     /** Processes inputs and changes state accordingly. */
     void checkSignalsAndUpdate(unsigned tid);
+
+    /** Removes instructions from rename from a thread's instruction list. */
+    void emptyRenameInsts(unsigned tid);
 
     /** Sorts instructions coming from rename into lists separated by thread. */
     void sortInsts();
@@ -328,7 +376,7 @@ class DefaultIEW
 
   private:
     /** CPU pointer. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Records if IEW has written to the time buffer this cycle, so that the
      * CPU can deschedule itself if there is no activity.
@@ -381,19 +429,11 @@ class DefaultIEW
      */
     unsigned issueToExecuteDelay;
 
-    /** Width of issue's read path, in instructions.  The read path is both
-     *  the skid buffer and the rename instruction queue.
-     *  Note to self: is this really different than issueWidth?
-     */
-    unsigned issueReadWidth;
+    /** Width of dispatch, in instructions. */
+    unsigned dispatchWidth;
 
     /** Width of issue, in instructions. */
     unsigned issueWidth;
-
-    /** Width of execute, in instructions.  Might make more sense to break
-     *  down into FP vs int.
-     */
-    unsigned executeWidth;
 
     /** Index into queue of instructions being written back. */
     unsigned wbNumInst;
@@ -404,6 +444,17 @@ class DefaultIEW
      * in instToCommit().
      */
     unsigned wbCycle;
+
+    /** Number of instructions in flight that will writeback. */
+    unsigned wbOutstanding;
+
+    /** Writeback width. */
+    unsigned wbWidth;
+
+    /** Writeback width * writeback depth, where writeback depth is
+     * the number of cycles of writing back instructions that can be
+     * buffered. */
+    unsigned wbMax;
 
     /** Number of active threads. */
     unsigned numThreads;
@@ -439,14 +490,6 @@ class DefaultIEW
     Stats::Scalar<> iewIQFullEvents;
     /** Stat for number of times the LSQ becomes full. */
     Stats::Scalar<> iewLSQFullEvents;
-    /** Stat for total number of executed instructions. */
-    Stats::Scalar<> iewExecutedInsts;
-    /** Stat for total number of executed load instructions. */
-    Stats::Vector<> iewExecLoadInsts;
-    /** Stat for total number of executed store instructions. */
-//    Stats::Scalar<> iewExecStoreInsts;
-    /** Stat for total number of squashed instructions skipped at execute. */
-    Stats::Scalar<> iewExecSquashedInsts;
     /** Stat for total number of memory ordering violation events. */
     Stats::Scalar<> memOrderViolationEvents;
     /** Stat for total number of incorrect predicted taken branches. */
@@ -456,28 +499,25 @@ class DefaultIEW
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
 
+    /** Stat for total number of executed instructions. */
+    Stats::Scalar<> iewExecutedInsts;
+    /** Stat for total number of executed load instructions. */
+    Stats::Vector<> iewExecLoadInsts;
+    /** Stat for total number of squashed instructions skipped at execute. */
+    Stats::Scalar<> iewExecSquashedInsts;
     /** Number of executed software prefetches. */
-    Stats::Vector<> exeSwp;
+    Stats::Vector<> iewExecutedSwp;
     /** Number of executed nops. */
-    Stats::Vector<> exeNop;
+    Stats::Vector<> iewExecutedNop;
     /** Number of executed meomory references. */
-    Stats::Vector<> exeRefs;
+    Stats::Vector<> iewExecutedRefs;
     /** Number of executed branches. */
-    Stats::Vector<> exeBranches;
-
-//    Stats::Vector<> issued_ops;
-/*
-    Stats::Vector<> stat_fu_busy;
-    Stats::Vector2d<> stat_fuBusy;
-    Stats::Vector<> dist_unissued;
-    Stats::Vector2d<> stat_issued_inst_type;
-*/
-    /** Number of instructions issued per cycle. */
-    Stats::Formula issueRate;
+    Stats::Vector<> iewExecutedBranches;
     /** Number of executed store instructions. */
     Stats::Formula iewExecStoreInsts;
-//    Stats::Formula issue_op_rate;
-//    Stats::Formula fu_busy_rate;
+    /** Number of instructions executed per cycle. */
+    Stats::Formula iewExecRate;
+
     /** Number of instructions sent to commit. */
     Stats::Vector<> iewInstsToCommit;
     /** Number of instructions that writeback. */
@@ -490,7 +530,6 @@ class DefaultIEW
      * to resource contention.
      */
     Stats::Vector<> wbPenalized;
-
     /** Number of instructions per cycle written back. */
     Stats::Formula wbRate;
     /** Average number of woken instructions per writeback. */

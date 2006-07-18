@@ -29,10 +29,17 @@
  *          Korey Sewell
  */
 
-#include "cpu/checker/cpu.hh"
+#include "config/use_checker.hh"
+
+#include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"
+#include "mem/packet.hh"
 #include "mem/request.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 template<class Impl>
 LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
@@ -71,6 +78,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
     if (isSwitchedOut() || inst->isSquashed()) {
+        iewStage->decrWb(inst->seqNum);
         delete state;
         delete pkt;
         return;
@@ -89,46 +97,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 }
 
 template <class Impl>
-Tick
-LSQUnit<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
-{
-    panic("O3CPU model does not work with atomic mode!");
-    return curTick;
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
-{
-    panic("O3CPU doesn't expect recvFunctional callback!");
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvStatusChange(Status status)
-{
-    if (status == RangeChange)
-        return;
-
-    panic("O3CPU doesn't expect recvStatusChange callback!");
-}
-
-template <class Impl>
-bool
-LSQUnit<Impl>::DcachePort::recvTiming(PacketPtr pkt)
-{
-    lsq->completeDataAccess(pkt);
-    return true;
-}
-
-template <class Impl>
-void
-LSQUnit<Impl>::DcachePort::recvRetry()
-{
-    lsq->recvRetry();
-}
-
-template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
@@ -138,12 +106,14 @@ LSQUnit<Impl>::LSQUnit()
 
 template<class Impl>
 void
-LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
+LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
                     unsigned maxSQEntries, unsigned id)
 {
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     switchedOut = false;
+
+    lsq = lsq_ptr;
 
     lsqID = id;
 
@@ -161,8 +131,6 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
-    mem = params->mem;
-
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
@@ -170,18 +138,15 @@ LSQUnit<Impl>::init(Params *params, unsigned maxLQEntries,
 
 template<class Impl>
 void
-LSQUnit<Impl>::setCPU(FullCPU *cpu_ptr)
+LSQUnit<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     cpu = cpu_ptr;
-    dcachePort = new DcachePort(cpu, this);
 
-    Port *mem_dport = mem->getPort("");
-    dcachePort->setPeer(mem_dport);
-    mem_dport->setPeer(dcachePort);
-
+#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setDcachePort(dcachePort);
     }
+#endif
 }
 
 template<class Impl>
@@ -193,6 +158,47 @@ LSQUnit<Impl>::name() const
     } else {
         return iewStage->name() + ".lsq.thread." + to_string(lsqID);
     }
+}
+
+template<class Impl>
+void
+LSQUnit<Impl>::regStats()
+{
+    lsqForwLoads
+        .name(name() + ".forwLoads")
+        .desc("Number of loads that had data forwarded from stores");
+
+    invAddrLoads
+        .name(name() + ".invAddrLoads")
+        .desc("Number of loads ignored due to an invalid address");
+
+    lsqSquashedLoads
+        .name(name() + ".squashedLoads")
+        .desc("Number of loads squashed");
+
+    lsqIgnoredResponses
+        .name(name() + ".ignoredResponses")
+        .desc("Number of memory responses ignored because the instruction is squashed");
+
+    lsqSquashedStores
+        .name(name() + ".squashedStores")
+        .desc("Number of stores squashed");
+
+    invAddrSwpfs
+        .name(name() + ".invAddrSwpfs")
+        .desc("Number of software prefetches ignored due to an invalid address");
+
+    lsqBlockedLoads
+        .name(name() + ".blockedLoads")
+        .desc("Number of blocked loads due to partial load-store forwarding");
+
+    lsqRescheduledLoads
+        .name(name() + ".rescheduledLoads")
+        .desc("Number of loads that were rescheduled");
+
+    lsqCacheBlocked
+        .name(name() + ".cacheBlocked")
+        .desc("Number of times an access to memory failed due to the cache being blocked");
 }
 
 template<class Impl>
@@ -542,7 +548,7 @@ LSQUnit<Impl>::writebackStores()
            storeQueue[storeWBIdx].canWB &&
            usedPorts < cachePorts) {
 
-        if (isStoreBlocked) {
+        if (isStoreBlocked || lsq->cacheBlocked()) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
                     " is blocked!\n");
             break;
@@ -617,7 +623,7 @@ LSQUnit<Impl>::writebackStores()
         if (!dcachePort->sendTiming(data_pkt)) {
             // Need to handle becoming blocked on a store.
             isStoreBlocked = true;
-
+            ++lsqCacheBlocked;
             assert(retryPkt == NULL);
             retryPkt = data_pkt;
         } else {
@@ -668,7 +674,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        loadQueue[load_idx]->squashed = true;
+        loadQueue[load_idx]->setSquashed();
         loadQueue[load_idx] = NULL;
         --loads;
 
@@ -676,6 +682,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         loadTail = load_idx;
 
         decrLdIdx(load_idx);
+        ++lsqSquashedLoads;
     }
 
     if (isLoadBlocked) {
@@ -711,7 +718,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        storeQueue[store_idx].inst->squashed = true;
+        storeQueue[store_idx].inst->setSquashed();
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
 
@@ -722,6 +729,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         storeTail = store_idx;
 
         decrStIdx(store_idx);
+        ++lsqSquashedStores;
     }
 }
 
@@ -744,9 +752,11 @@ LSQUnit<Impl>::storePostSend(Packet *pkt)
         // only works so long as the checker doesn't try to
         // verify the value in memory for stores.
         storeQueue[storeWBIdx].inst->setCompleted();
+#if USE_CHECKER
         if (cpu->checker) {
-            cpu->checker->tick(storeQueue[storeWBIdx].inst);
+            cpu->checker->verify(storeQueue[storeWBIdx].inst);
         }
+#endif
     }
 
     if (pkt->result != Packet::Success) {
@@ -781,6 +791,7 @@ LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
     // Squashed instructions do not need to complete their access.
     if (inst->isSquashed()) {
         assert(!inst->isStore());
+        ++lsqIgnoredResponses;
         return;
     }
 
@@ -839,9 +850,11 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can
     // handle that case.
+#if USE_CHECKER
     if (cpu->checker) {
-        cpu->checker->tick(storeQueue[store_idx].inst);
+        cpu->checker->verify(storeQueue[store_idx].inst);
     }
+#endif
 }
 
 template <class Impl>
@@ -857,6 +870,8 @@ LSQUnit<Impl>::recvRetry()
             isStoreBlocked = false;
         } else {
             // Still blocked!
+            ++lsqCacheBlocked;
+            lsq->setRetryTid(lsqID);
         }
     } else if (isLoadBlocked) {
         DPRINTF(LSQUnit, "Loads squash themselves and all younger insts, "

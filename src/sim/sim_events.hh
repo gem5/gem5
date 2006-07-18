@@ -44,6 +44,11 @@ class SimLoopExitEvent : public Event
     int code;
 
   public:
+    // Default constructor.  Only really used for derived classes.
+    SimLoopExitEvent()
+        : Event(&mainEventQueue, Sim_Exit_Pri)
+    { }
+
     SimLoopExitEvent(Tick _when, const std::string &_cause, int c = 0)
         : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
           code(c)
@@ -60,6 +65,22 @@ class SimLoopExitEvent : public Event
     void process();	// process event
 
     virtual const char *description();
+};
+
+class CountedDrainEvent : public SimLoopExitEvent
+{
+  private:
+    // Count of how many objects have not yet drained
+    int count;
+  public:
+    CountedDrainEvent()
+        : count(0)
+    { }
+    void process();
+
+    void setCount(int _count) { count = _count; }
+
+    int getCount() { return count; }
 };
 
 //

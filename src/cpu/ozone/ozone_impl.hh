@@ -50,7 +50,7 @@ class OzoneDynInst;
 struct OzoneImpl {
     typedef SimpleParams Params;
     typedef OzoneCPU<OzoneImpl> OzoneCPU;
-    typedef OzoneCPU FullCPU;
+    typedef OzoneCPU CPUType;
 
     // Would like to put these into their own area.
 //    typedef NullPredictor BranchPred;

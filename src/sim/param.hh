@@ -36,10 +36,10 @@
 #include <string>
 #include <vector>
 
-#include "sim/configfile.hh"
 #include "sim/startup.hh"
 
 // forward decls
+class IniFile;
 class BaseParam;
 class SimObject;
 
@@ -132,17 +132,9 @@ class ParamContext : protected StartupCallback
     // print context information for parameter error
     virtual void printErrorProlog(std::ostream &);
 
-    // resolve a SimObject name in this context to an object pointer.
-    virtual SimObject *resolveSimObject(const std::string &name);
-
     // generate the name for this instance of this context (used as a
     // prefix to create unique names in resolveSimObject()
     virtual const std::string &getInstanceName() { return iniSection; }
-
-    // return the configuration hierarchy node for this context.  Bare
-    // ParamContext objects have no corresponding node, so the default
-    // implementation returns NULL.
-    virtual ConfigNode *getConfigNode() { return NULL; }
 
     // Parse all parameters registered with all ParamContext objects.
     static void parseAllContexts(IniFile &iniFile);

@@ -37,7 +37,7 @@
 using namespace TheISA;
 
 template <class Impl>
-OzoneDynInst<Impl>::OzoneDynInst(FullCPU *cpu)
+OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)
     : BaseDynInst<Impl>(0, 0, 0, 0, cpu)
 {
     this->setResultReady();
@@ -47,7 +47,7 @@ OzoneDynInst<Impl>::OzoneDynInst(FullCPU *cpu)
 
 template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,
-                                 InstSeqNum seq_num, FullCPU *cpu)
+                                 InstSeqNum seq_num, OzoneCPU *cpu)
     : BaseDynInst<Impl>(inst, PC, Pred_PC, seq_num, cpu)
 {
     initInstPtrs();
@@ -111,19 +111,9 @@ OzoneDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-OzoneDynInst<Impl>::completeAcc()
+OzoneDynInst<Impl>::completeAcc(Packet *pkt)
 {
-    if (this->isLoad()) {
-        this->fault = this->staticInst->completeAcc(this->req->data,
-                                                    this,
-                                                    this->traceData);
-    } else if (this->isStore()) {
-        this->fault = this->staticInst->completeAcc((uint8_t*)&this->req->result,
-                                                    this,
-                                                    this->traceData);
-    } else {
-        panic("Unknown type!");
-    }
+    this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
     return this->fault;
 }
@@ -298,7 +288,7 @@ template <class Impl>
 void
 OzoneDynInst<Impl>::trap(Fault fault)
 {
-    fault->invoke(this->thread->getXCProxy());
+    fault->invoke(this->thread->getTC());
 }
 
 template <class Impl>
@@ -310,8 +300,8 @@ OzoneDynInst<Impl>::simPalCheck(int palFunc)
 #else
 template <class Impl>
 void
-OzoneDynInst<Impl>::syscall()
+OzoneDynInst<Impl>::syscall(uint64_t &callnum)
 {
-    this->cpu->syscall();
+    this->cpu->syscall(callnum);
 }
 #endif

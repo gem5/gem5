@@ -28,9 +28,14 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/checker/cpu.hh"
+#include "config/use_checker.hh"
+
 #include "cpu/ozone/lw_back_end.hh"
-#include "encumbered/cpu/full/op_class.hh"
+#include "cpu/op_class.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 template <class Impl>
 void
@@ -134,86 +139,11 @@ LWBackEnd<Impl>::replayMemInst(DynInstPtr &inst)
     assert(found_inst);
 }
 
-template<class Impl>
-LWBackEnd<Impl>::LdWritebackEvent::LdWritebackEvent(DynInstPtr &_inst,
-                                                  LWBackEnd<Impl> *_be)
-    : Event(&mainEventQueue), inst(_inst), be(_be), dcacheMiss(false)
-{
-    this->setFlags(Event::AutoDelete);
-}
-
-template<class Impl>
-void
-LWBackEnd<Impl>::LdWritebackEvent::process()
-{
-    DPRINTF(BE, "Load writeback event [sn:%lli]\n", inst->seqNum);
-//    DPRINTF(Activity, "Activity: Ld Writeback event [sn:%lli]\n", inst->seqNum);
-
-    //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
-
-//    iewStage->wakeCPU();
-
-    if (be->isSwitchedOut())
-        return;
-
-    if (dcacheMiss) {
-        be->removeDcacheMiss(inst);
-    }
-
-    if (inst->isSquashed()) {
-        inst = NULL;
-        return;
-    }
-
-    if (!inst->isExecuted()) {
-        inst->setExecuted();
-
-        // Execute again to copy data to proper place.
-        inst->completeAcc();
-    }
-
-    // Need to insert instruction into queue to commit
-    be->instToCommit(inst);
-
-    //wroteToTimeBuffer = true;
-//    iewStage->activityThisCycle();
-
-    inst = NULL;
-}
-
-template<class Impl>
-const char *
-LWBackEnd<Impl>::LdWritebackEvent::description()
-{
-    return "Load writeback event";
-}
-
-
-template <class Impl>
-LWBackEnd<Impl>::DCacheCompletionEvent::DCacheCompletionEvent(LWBackEnd *_be)
-    : Event(&mainEventQueue, CPU_Tick_Pri), be(_be)
-{
-}
-
-template <class Impl>
-void
-LWBackEnd<Impl>::DCacheCompletionEvent::process()
-{
-}
-
-template <class Impl>
-const char *
-LWBackEnd<Impl>::DCacheCompletionEvent::description()
-{
-    return "Cache completion event";
-}
-
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
     : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
-      trapSquash(false), tcSquash(false), cacheCompletionEvent(this),
-      dcacheInterface(params->dcacheInterface), width(params->backEndWidth),
-      exactFullStall(true)
+      trapSquash(false), tcSquash(false),
+      width(params->backEndWidth), exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
     numInsts = 0;
@@ -239,6 +169,7 @@ LWBackEnd<Impl>::LWBackEnd(Params *params)
     LSQ.init(params, params->LQEntries, params->SQEntries, 0);
 
     dispatchStatus = Running;
+    commitStatus = Running;
 }
 
 template <class Impl>
@@ -569,7 +500,7 @@ LWBackEnd<Impl>::regStats()
 
 template <class Impl>
 void
-LWBackEnd<Impl>::setCPU(FullCPU *cpu_ptr)
+LWBackEnd<Impl>::setCPU(OzoneCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
     LSQ.setCPU(cpu_ptr);
@@ -626,6 +557,7 @@ LWBackEnd<Impl>::checkInterrupts()
         }
     }
 }
+#endif
 
 template <class Impl>
 void
@@ -639,7 +571,7 @@ LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
 
     // Consider holding onto the trap and waiting until the trap event
     // happens for this to be executed.
-    fault->invoke(thread->getTCProxy());
+    fault->invoke(thread->getTC());
 
     // Exit state update mode to avoid accidental updating.
     thread->inSyscall = false;
@@ -649,7 +581,6 @@ LWBackEnd<Impl>::handleFault(Fault &fault, Tick latency)
     // Generate trap squash event.
     generateTrapEvent(latency);
 }
-#endif
 
 template <class Impl>
 void
@@ -671,6 +602,7 @@ LWBackEnd<Impl>::tick()
 
 #if FULL_SYSTEM
     checkInterrupts();
+#endif
 
     if (trapSquash) {
         assert(!tcSquash);
@@ -678,7 +610,6 @@ LWBackEnd<Impl>::tick()
     } else if (tcSquash) {
         squashFromTC();
     }
-#endif
 
     if (dispatchStatus != Blocked) {
         dispatchInsts();
@@ -929,11 +860,6 @@ LWBackEnd<Impl>::executeInsts()
         // at the commit stage.
         if (inst->isMemRef() &&
             (!inst->isDataPrefetch() && !inst->isInstPrefetch())) {
-            if (dcacheInterface->isBlocked()) {
-                // Should I move the instruction aside?
-                DPRINTF(BE, "Execute: dcache is blocked\n");
-                break;
-            }
             DPRINTF(BE, "Execute: Initiating access for memory "
                     "reference.\n");
 
@@ -941,7 +867,7 @@ LWBackEnd<Impl>::executeInsts()
                 LSQ.executeLoad(inst);
             } else if (inst->isStore()) {
                 LSQ.executeStore(inst);
-                if (inst->req && !(inst->req->flags & LOCKED)) {
+                if (inst->req && !(inst->req->getFlags() & LOCKED)) {
                     inst->setExecuted();
 
                     instToCommit(inst);
@@ -1078,7 +1004,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     thread->setPC(inst->readPC());
     thread->setNextPC(inst->readNextPC());
-    inst->reachedCommit = true;
+    inst->setAtCommit();
 
     // If the instruction is not executed yet, then it is a non-speculative
     // or store inst.  Signal backwards that it should be executed.
@@ -1183,9 +1109,11 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     // Use checker prior to updating anything due to traps or PC
     // based events.
+#if USE_CHECKER
     if (checker) {
-        checker->tick(inst);
+        checker->verify(inst);
     }
+#endif
 
     if (inst_fault != NoFault) {
         DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
@@ -1200,19 +1128,18 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         } else if (inst_num != 0) {
             DPRINTF(BE, "Will wait until instruction is head of commit group.\n");
             return false;
-        } else if (checker && inst->isStore()) {
-            checker->tick(inst);
         }
+#if USE_CHECKER
+        else if (checker && inst->isStore()) {
+            checker->verify(inst);
+        }
+#endif
 
         thread->setInst(
             static_cast<TheISA::MachInst>(inst->staticInst->machInst));
-#if FULL_SYSTEM
+
         handleFault(inst_fault);
         return false;
-#else // !FULL_SYSTEM
-        panic("fault (%d) detected @ PC %08p", inst_fault,
-              inst->PC);
-#endif // FULL_SYSTEM
     }
 
     int freed_regs = 0;
@@ -1259,7 +1186,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
             assert(!thread->inSyscall && !thread->trapPending);
         oldpc = thread->readPC();
         cpu->system->pcEventQueue.service(
-            thread->getTCProxy());
+            thread->getTC());
         count++;
     } while (oldpc != thread->readPC());
     if (count > 1) {
@@ -1346,7 +1273,7 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
 
         (*insts_it)->setCanCommit();
 
-        (*insts_it)->removeInROB();
+        (*insts_it)->clearInROB();
 
         for (int i = 0; i < (*insts_it)->numDestRegs(); ++i) {
             DynInstPtr prev_dest = (*insts_it)->getPrevDestInst(i);
@@ -1497,10 +1424,10 @@ LWBackEnd<Impl>::doSwitchOut()
 
 template <class Impl>
 void
-LWBackEnd<Impl>::takeOverFrom(ThreadContext *old_xc)
+LWBackEnd<Impl>::takeOverFrom(ThreadContext *old_tc)
 {
     switchedOut = false;
-    xcSquash = false;
+    tcSquash = false;
     trapSquash = false;
 
     numInsts = 0;
@@ -1510,7 +1437,7 @@ LWBackEnd<Impl>::takeOverFrom(ThreadContext *old_xc)
     switchedOut = false;
     dispatchStatus = Running;
     commitStatus = Running;
-    LSQ.takeOverFrom(old_xc);
+    LSQ.takeOverFrom(old_tc);
 }
 
 template <class Impl>

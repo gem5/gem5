@@ -26,6 +26,10 @@
 #
 # Authors: Steve Reinhardt
 
+import os
+import os.path
+import sys
+
 ################
 # CpuModel class
 #
@@ -47,7 +51,6 @@ class CpuModel:
         # Add self to dict
         CpuModel.dict[name] = self
 
-
 #
 # Define CPU models.
 #
@@ -67,9 +70,6 @@ CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
 CpuModel('FullCPU', 'full_cpu_exec.cc',
          '#include "encumbered/cpu/full/dyn_inst.hh"',
          { 'CPU_exec_context': 'DynInst' })
-CpuModel('AlphaFullCPU', 'alpha_o3_exec.cc',
-         '#include "cpu/o3/alpha_dyn_inst.hh"',
-         { 'CPU_exec_context': 'AlphaDynInst<AlphaSimpleImpl>' })
 CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',
          '#include "cpu/ozone/dyn_inst.hh"',
          { 'CPU_exec_context': 'OzoneDynInst<SimpleImpl>' })
@@ -79,4 +79,6 @@ CpuModel('OzoneCPU', 'ozone_exec.cc',
 CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
          '#include "cpu/checker/cpu.hh"',
          { 'CPU_exec_context': 'CheckerCPU' })
-
+CpuModel('O3CPU', 'o3_cpu_exec.cc',
+         '#include "cpu/o3/isa_specific.hh"',
+         { 'CPU_exec_context': 'O3DynInst' })

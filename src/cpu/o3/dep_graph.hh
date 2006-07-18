@@ -68,6 +68,8 @@ class DependencyGraph
         : numEntries(0), memAllocCounter(0), nodesTraversed(0), nodesRemoved(0)
     { }
 
+    ~DependencyGraph();
+
     /** Resize the dependency graph to have num_entries registers. */
     void resize(int num_entries);
 
@@ -119,6 +121,12 @@ class DependencyGraph
     // Debug variable, remove when done testing.
     uint64_t nodesRemoved;
 };
+
+template <class DynInstPtr>
+DependencyGraph<DynInstPtr>::~DependencyGraph()
+{
+    delete [] dependGraph;
+}
 
 template <class DynInstPtr>
 void

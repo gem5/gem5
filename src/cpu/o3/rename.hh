@@ -55,7 +55,7 @@ class DefaultRename
     // Typedefs from the Impl.
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::Params Params;
 
     // Typedefs from the CPUPol
@@ -115,7 +115,7 @@ class DefaultRename
     void regStats();
 
     /** Sets CPU pointer. */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -157,11 +157,14 @@ class DefaultRename
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
 
+    /** Drains the rename stage. */
+    bool drain();
+
+    /** Resumes execution after a drain. */
+    void resume() { }
+
     /** Switches out the rename stage. */
     void switchOut();
-
-    /** Completes the switch out. */
-    void doSwitchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -291,7 +294,7 @@ class DefaultRename
     std::list<RenameHistory> historyBuffer[Impl::MaxThreads];
 
     /** Pointer to CPU. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;

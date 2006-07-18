@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #ifndef __CPU_O3_ROB_HH__
@@ -45,7 +46,7 @@ class ROB
     typedef TheISA::RegIndex RegIndex;
   public:
     //Typedefs from the Impl.
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     typedef std::pair<RegIndex, PhysRegIndex> UnmapInfo;
@@ -90,7 +91,7 @@ class ROB
      *  is created within.
      *  @param cpu_ptr Pointer to the implementation specific full CPU object.
      */
-    void setCPU(FullCPU *cpu_ptr);
+    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets pointer to the list of active threads.
      *  @param at_ptr Pointer to the list of active threads.
@@ -257,7 +258,7 @@ class ROB
 
   private:
     /** Pointer to the CPU. */
-    FullCPU *cpu;
+    O3CPU *cpu;
 
     /** Active Threads in CPU */
     std::list<unsigned>* activeThreads;
@@ -307,7 +308,7 @@ class ROB
 
   private:
     /** The sequence number of the squashed instruction. */
-    InstSeqNum squashedSeqNum;
+    InstSeqNum squashedSeqNum[Impl::MaxThreads];
 
     /** Is the ROB done squashing. */
     bool doneSquashing[Impl::MaxThreads];

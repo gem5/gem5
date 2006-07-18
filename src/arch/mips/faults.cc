@@ -32,6 +32,10 @@
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+#if !FULL_SYSTEM
+#include "sim/process.hh"
+#include "mem/page_table.hh"
+#endif
 
 namespace MipsISA
 {
@@ -51,6 +55,12 @@ FaultStat ResetFault::_count;
 FaultName ArithmeticFault::_name = "arith";
 FaultVect ArithmeticFault::_vect = 0x0501;
 FaultStat ArithmeticFault::_count;
+
+#if !FULL_SYSTEM
+FaultName PageTableFault::_name = "page_table_fault";
+FaultVect PageTableFault::_vect = 0x0000;
+FaultStat PageTableFault::_count;
+#endif
 
 FaultName InterruptFault::_name = "interrupt";
 FaultVect InterruptFault::_vect = 0x0101;
@@ -127,7 +137,28 @@ void ArithmeticFault::invoke(ThreadContext * tc)
     panic("Arithmetic traps are unimplemented!");
 }
 
-#endif
+#else //!FULL_SYSTEM
 
+void PageTableFault::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+
+    // address is higher than the stack region or in the current stack region
+    if (vaddr > p->stack_base || vaddr > p->stack_min)
+        FaultBase::invoke(tc);
+
+    // We've accessed the next page
+    if (vaddr > p->stack_min - PageBytes) {
+        p->stack_min -= PageBytes;
+        if (p->stack_base - p->stack_min > 8*1024*1024)
+            fatal("Over max stack size for one thread\n");
+        p->pTable->allocate(p->stack_min, PageBytes);
+        warn("Increasing stack size by one page.");
+    } else {
+        FaultBase::invoke(tc);
+    }
+}
+
+#endif
 } // namespace MipsISA
 

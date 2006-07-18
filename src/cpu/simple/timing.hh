@@ -64,6 +64,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Status status() const { return _status; }
 
+    Event *drainEvent;
+
+    Event *fetchEvent;
+
   private:
 
     class CpuPort : public Port
@@ -128,10 +132,15 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   public:
 
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
+
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    void switchOut(Sampler *s);
+    virtual unsigned int drain(Event *drain_event);
+    virtual void resume();
+
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     virtual void activateContext(int thread_num, int delay);
@@ -147,6 +156,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeIfetch(Packet *);
     void completeDataAccess(Packet *);
     void advanceInst(Fault fault);
+  private:
+    void completeDrain();
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__

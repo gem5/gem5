@@ -25,7 +25,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Lisa Hsu
+ * Authors: Nathan Binkert
+ *          Lisa Hsu
  */
 
 /** @file
@@ -113,7 +114,6 @@ struct dp_rom {
 
 class NSGigEInt;
 class Packet;
-class PciConfigAll;
 
 /**
  * NS DP83820 Ethernet device model
@@ -375,7 +375,7 @@ class NSGigE : public PciDev
     ~NSGigE();
     const Params *params() const { return (const Params *)_params; }
 
-    virtual void writeConfig(int offset, const uint16_t data);
+    virtual Tick writeConfig(Packet *pkt);
 
     virtual Tick read(Packet *pkt);
     virtual Tick write(Packet *pkt);
@@ -390,6 +390,8 @@ class NSGigE : public PciDev
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    virtual void resume();
 
   public:
     void regStats();

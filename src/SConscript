@@ -62,7 +62,6 @@ base_sources = Split('''
 	base/range.cc
 	base/random.cc
 	base/sat_counter.cc
-        base/serializer.cc
 	base/socket.cc
 	base/statistics.cc
 	base/str.cc
@@ -85,33 +84,54 @@ base_sources = Split('''
 	cpu/base.cc
 	cpu/cpuevent.cc
 	cpu/exetrace.cc
+        cpu/func_unit.cc
         cpu/op_class.cc
 	cpu/pc_event.cc
         cpu/quiesce_event.cc
 	cpu/static_inst.cc
-        cpu/sampler/sampler.cc
         cpu/simple_thread.cc
         cpu/thread_state.cc
 
-        encumbered/cpu/full/fu_pool.cc
-        
         mem/bridge.cc
         mem/bus.cc
-        mem/connector.cc
         mem/mem_object.cc
         mem/packet.cc
         mem/physical.cc
         mem/port.cc
 
+        mem/cache/base_cache.cc
+        mem/cache/cache.cc
+        mem/cache/coherence/coherence_protocol.cc
+        mem/cache/coherence/uni_coherence.cc
+        mem/cache/miss/blocking_buffer.cc
+        mem/cache/miss/miss_queue.cc
+        mem/cache/miss/mshr.cc
+        mem/cache/miss/mshr_queue.cc
+        mem/cache/prefetch/base_prefetcher.cc
+        mem/cache/prefetch/ghb_prefetcher.cc
+        mem/cache/prefetch/prefetcher.cc
+        mem/cache/prefetch/stride_prefetcher.cc
+        mem/cache/prefetch/tagged_prefetcher.cc
+        mem/cache/tags/base_tags.cc
+        mem/cache/tags/cache_tags.cc
+        mem/cache/tags/fa_lru.cc
+        mem/cache/tags/iic.cc
+        mem/cache/tags/lru.cc
+        mem/cache/tags/repl/gen.cc
+        mem/cache/tags/repl/repl.cc
+        mem/cache/tags/split.cc
+        mem/cache/tags/split_lifo.cc
+        mem/cache/tags/split_lru.cc
+
+        mem/cache/cache_builder.cc
+
 	sim/builder.cc
-	sim/configfile.cc
 	sim/debug.cc
 	sim/eventq.cc
 	sim/faults.cc
 	sim/main.cc
-        python/swig/main_wrap.cc
+        python/swig/cc_main_wrap.cc
 	sim/param.cc
-	sim/profile.cc
 	sim/root.cc
 	sim/serialize.cc
 	sim/sim_events.cc

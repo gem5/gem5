@@ -247,7 +247,6 @@ DebugOut()
 //
 // Dump trace buffer to specified file (cout if NULL)
 //
-extern "C"
 void
 dumpTrace(const char *filename)
 {
@@ -269,7 +268,6 @@ dumpTrace(const char *filename)
 // same facility as the "trace to file" feature, and will print error
 // messages rather than clobbering an existing ostream pointer.
 //
-extern "C"
 void
 echoTrace(bool on)
 {
@@ -289,7 +287,6 @@ echoTrace(bool on)
     }
 }
 
-extern "C"
 void
 printTraceFlags()
 {
@@ -338,14 +335,12 @@ tweakTraceFlag(const char *string, bool value)
     cprintf("could not find flag %s\n", string);
 }
 
-extern "C"
 void
 setTraceFlag(const char *string)
 {
     tweakTraceFlag(string, true);
 }
 
-extern "C"
 void
 clearTraceFlag(const char *string)
 {

@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2004-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,10 @@
 # Authors: Steve Reinhardt
 #          Nathan Binkert
 
-import os, re, sys, types, inspect
+import os, re, sys, types, inspect, copy
 
 import m5
-from m5 import panic
+from m5 import panic, cc_main
 from convert import *
 from multidict import multidict
 
@@ -84,64 +84,21 @@ class Singleton(type):
 #
 # Once a set of Python objects have been instantiated in a hierarchy,
 # calling 'instantiate(obj)' (where obj is the root of the hierarchy)
-# will generate a .ini file.  See simple-4cpu.py for an example
-# (corresponding to m5-test/simple-4cpu.ini).
+# will generate a .ini file.
 #
 #####################################################################
 
-#####################################################################
-#
-# ConfigNode/SimObject classes
-#
-# The Python class hierarchy rooted by ConfigNode (which is the base
-# class of SimObject, which in turn is the base class of all other M5
-# SimObject classes) has special attribute behavior.  In general, an
-# object in this hierarchy has three categories of attribute-like
-# things:
-#
-# 1. Regular Python methods and variables.  These must start with an
-# underscore to be treated normally.
-#
-# 2. SimObject parameters.  These values are stored as normal Python
-# attributes, but all assignments to these attributes are checked
-# against the pre-defined set of parameters stored in the class's
-# _params dictionary.  Assignments to attributes that do not
-# correspond to predefined parameters, or that are not of the correct
-# type, incur runtime errors.
-#
-# 3. Hierarchy children.  The child nodes of a ConfigNode are stored
-# in the node's _children dictionary, but can be accessed using the
-# Python attribute dot-notation (just as they are printed out by the
-# simulator).  Children cannot be created using attribute assigment;
-# they must be added by specifying the parent node in the child's
-# constructor or using the '+=' operator.
+# dict to look up SimObjects based on path
+instanceDict = {}
 
-# The SimObject parameters are the most complex, for a few reasons.
-# First, both parameter descriptions and parameter values are
-# inherited.  Thus parameter description lookup must go up the
-# inheritance chain like normal attribute lookup, but this behavior
-# must be explicitly coded since the lookup occurs in each class's
-# _params attribute.  Second, because parameter values can be set
-# on SimObject classes (to implement default values), the parameter
-# checking behavior must be enforced on class attribute assignments as
-# well as instance attribute assignments.  Finally, because we allow
-# class specialization via inheritance (e.g., see the L1Cache class in
-# the simple-4cpu.py example), we must do parameter checking even on
-# class instantiation.  To provide all these features, we use a
-# metaclass to define most of the SimObject parameter behavior for
-# this class hierarchy.
+#############################
 #
-#####################################################################
+# Utility methods
+#
+#############################
 
 def isSimObject(value):
     return isinstance(value, SimObject)
-
-def isSimObjectClass(value):
-    try:
-        return issubclass(value, SimObject)
-    except TypeError:
-        # happens if value is not a class at all
-        return False
 
 def isSimObjectSequence(value):
     if not isinstance(value, (list, tuple)) or len(value) == 0:
@@ -153,21 +110,8 @@ def isSimObjectSequence(value):
 
     return True
 
-def isSimObjectClassSequence(value):
-    if not isinstance(value, (list, tuple)) or len(value) == 0:
-        return False
-
-    for val in value:
-        if not isNullPointer(val) and not isSimObjectClass(val):
-            return False
-
-    return True
-
 def isSimObjectOrSequence(value):
     return isSimObject(value) or isSimObjectSequence(value)
-
-def isSimObjectClassOrSequence(value):
-    return isSimObjectClass(value) or isSimObjectClassSequence(value)
 
 def isNullPointer(value):
     return isinstance(value, NullSimObject)
@@ -188,40 +132,36 @@ def applyOrMap(objOrSeq, meth, *args, **kwargs):
         return [applyMethod(o, meth, *args, **kwargs) for o in objOrSeq]
 
 
-# The metaclass for ConfigNode (and thus for everything that derives
-# from ConfigNode, including SimObject).  This class controls how new
-# classes that derive from ConfigNode are instantiated, and provides
-# inherited class behavior (just like a class controls how instances
-# of that class are instantiated, and provides inherited instance
-# behavior).
+# The metaclass for SimObject.  This class controls how new classes
+# that derive from SimObject are instantiated, and provides inherited
+# class behavior (just like a class controls how instances of that
+# class are instantiated, and provides inherited instance behavior).
 class MetaSimObject(type):
     # Attributes that can be set only at initialization time
     init_keywords = { 'abstract' : types.BooleanType,
                       'type' : types.StringType }
     # Attributes that can be set any time
-    keywords = { 'check' : types.FunctionType,
-                 'children' : types.ListType }
+    keywords = { 'check' : types.FunctionType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
-    # __dict__.  We intercept this to filter out parameter assignments
+    # __dict__.  We intercept this to filter out parameter & port assignments
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        if dict.has_key('_init_dict'):
-            # must have been called from makeSubclass() rather than
-            # via Python class declaration; bypass filtering process.
-            cls_dict = dict
-        else:
-            # Copy "private" attributes (including special methods
-            # such as __new__) to the official dict.  Everything else
-            # goes in _init_dict to be filtered in __init__.
-            cls_dict = {}
-            for key,val in dict.items():
-                if key.startswith('_'):
-                    cls_dict[key] = val
-                    del dict[key]
-            cls_dict['_init_dict'] = dict
+        # Copy "private" attributes, functions, and classes to the
+        # official dict.  Everything else goes in _init_dict to be
+        # filtered in __init__.
+        cls_dict = {}
+        value_dict = {}
+        for key,val in dict.items():
+            if key.startswith('_') or isinstance(val, (types.FunctionType,
+                                                       types.TypeType)):
+                cls_dict[key] = val
+            else:
+                # must be a param/port setting
+                value_dict[key] = val
+        cls_dict['_value_dict'] = value_dict
         return super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
 
     # subclass initialization
@@ -231,10 +171,15 @@ class MetaSimObject(type):
         super(MetaSimObject, cls).__init__(name, bases, dict)
 
         # initialize required attributes
-        cls._params = multidict()
-        cls._values = multidict()
-        cls._instantiated = False # really instantiated or subclassed
-        cls._anon_subclass_counter = 0
+
+        # class-only attributes
+        cls._params = multidict() # param descriptions
+        cls._ports = multidict()  # port descriptions
+
+        # class or instance attributes
+        cls._values = multidict()   # param values
+        cls._port_map = multidict() # port bindings
+        cls._instantiated = False # really instantiated, cloned, or subclassed
 
         # We don't support multiple inheritance.  If you want to, you
         # must fix multidict to deal with it properly.
@@ -243,21 +188,33 @@ class MetaSimObject(type):
 
         base = bases[0]
 
-        # the only time the following is not true is when we define
-        # the SimObject class itself
+        # Set up general inheritance via multidicts.  A subclass will
+        # inherit all its settings from the base class.  The only time
+        # the following is not true is when we define the SimObject
+        # class itself (in which case the multidicts have no parent).
         if isinstance(base, MetaSimObject):
             cls._params.parent = base._params
+            cls._ports.parent = base._ports
             cls._values.parent = base._values
+            cls._port_map.parent = base._port_map
+            # mark base as having been subclassed
             base._instantiated = True
 
-        # now process the _init_dict items
-        for key,val in cls._init_dict.items():
-            if isinstance(val, (types.FunctionType, types.TypeType)):
-                type.__setattr__(cls, key, val)
-
+        # Now process the _value_dict items.  They could be defining
+        # new (or overriding existing) parameters or ports, setting
+        # class keywords (e.g., 'abstract'), or setting parameter
+        # values or port bindings.  The first 3 can only be set when
+        # the class is defined, so we handle them here.  The others
+        # can be set later too, so just emulate that by calling
+        # setattr().
+        for key,val in cls._value_dict.items():
             # param descriptions
-            elif isinstance(val, ParamDesc):
+            if isinstance(val, ParamDesc):
                 cls._new_param(key, val)
+
+            # port objects
+            elif isinstance(val, Port):
+                cls._ports[key] = val
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
@@ -266,27 +223,6 @@ class MetaSimObject(type):
             # default: use normal path (ends up in __setattr__)
             else:
                 setattr(cls, key, val)
-
-        # Pull the deep-copy memoization dict out of the class dict if
-        # it's there...
-        memo = cls.__dict__.get('_memo', {})
-
-        # Handle SimObject values
-        for key,val in cls._values.iteritems():
-            # SimObject instances need to be promoted to classes.
-            # Existing classes should not have any instance values, so
-            # these can only occur at the lowest level dict (the
-            # parameters just being set in this class definition).
-            if isSimObjectOrSequence(val):
-                assert(val == cls._values.local[key])
-                cls._values[key] = applyOrMap(val, 'makeClass', memo)
-            # SimObject classes need to be subclassed so that
-            # parameters that get set at this level only affect this
-            # level and derivatives.
-            elif isSimObjectClassOrSequence(val):
-                assert(not cls._values.local.has_key(key))
-                cls._values[key] = applyOrMap(val, 'makeSubclass', {}, memo)
-
 
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
@@ -313,15 +249,19 @@ class MetaSimObject(type):
             cls._set_keyword(attr, value, cls.keywords[attr])
             return
 
-        # must be SimObject param
-        param = cls._params.get(attr, None)
-        if param:
-            # It's ok: set attribute by delegating to 'object' class.
-            if isSimObjectOrSequence(value) and cls._instantiated:
-                raise AttributeError, \
-                  "Cannot set SimObject parameter '%s' after\n" \
+        if cls._ports.has_key(attr):
+            self._ports[attr].connect(self, attr, value)
+            return
+
+        if isSimObjectOrSequence(value) and cls._instantiated:
+            raise RuntimeError, \
+                  "cannot set SimObject parameter '%s' after\n" \
                   "    class %s has been instantiated or subclassed" \
                   % (attr, cls.__name__)
+
+        # check for param
+        param = cls._params.get(attr, None)
+        if param:
             try:
                 cls._values[attr] = param.convert(value)
             except Exception, e:
@@ -329,12 +269,12 @@ class MetaSimObject(type):
                       (e, cls.__name__, attr, value)
                 e.args = (msg, )
                 raise
-        # I would love to get rid of this
         elif isSimObjectOrSequence(value):
-           cls._values[attr] = value
+            # if RHS is a SimObject, it's an implicit child assignment
+            cls._values[attr] = value
         else:
             raise AttributeError, \
-                  "Class %s has no parameter %s" % (cls.__name__, attr)
+                  "Class %s has no parameter \'%s\'" % (cls.__name__, attr)
 
     def __getattr__(cls, attr):
         if cls._values.has_key(attr):
@@ -343,23 +283,7 @@ class MetaSimObject(type):
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
-    # Create a subclass of this class.  Basically a function interface
-    # to the standard Python class definition mechanism, primarily for
-    # internal use.  'memo' dict param supports "deep copy" (really
-    # "deep subclass") operations... within a given operation,
-    # multiple references to a class should result in a single
-    # subclass object with multiple references to it (as opposed to
-    # mutiple unique subclasses).
-    def makeSubclass(cls, init_dict, memo = {}):
-        subcls = memo.get(cls)
-        if not subcls:
-            name = cls.__name__ + '_' + str(cls._anon_subclass_counter)
-            cls._anon_subclass_counter += 1
-            subcls = MetaSimObject(name, (cls,),
-                                   { '_init_dict': init_dict, '_memo': memo })
-        return subcls
-
-# The ConfigNode class is the root of the special hierarchy.  Most of
+# The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
 class SimObject(object):
@@ -367,82 +291,79 @@ class SimObject(object):
     # get this metaclass.
     __metaclass__ = MetaSimObject
 
-    # __new__ operator allocates new instances of the class.  We
-    # override it here just to support "deep instantiation" operation
-    # via the _memo dict.  When recursively instantiating an object
-    # hierarchy we want to make sure that each class is instantiated
-    # only once, and that if there are multiple references to the same
-    # original class, we end up with the corresponding instantiated
-    # references all pointing to the same instance.
-    def __new__(cls, _memo = None, **kwargs):
-        if _memo is not None and _memo.has_key(cls):
-            # return previously instantiated object
-            assert(len(kwargs) == 0)
-            return _memo[cls]
-        else:
-            # Need a new one... if it needs to be memoized, this will
-            # happen in __init__.  We defer the insertion until then
-            # so __init__ can use the memo dict to tell whether or not
-            # to perform the initialization.
-            return super(SimObject, cls).__new__(cls, **kwargs)
+    # Initialize new instance.  For objects with SimObject-valued
+    # children, we need to recursively clone the classes represented
+    # by those param values as well in a consistent "deep copy"-style
+    # fashion.  That is, we want to make sure that each instance is
+    # cloned only once, and that if there are multiple references to
+    # the same original object, we end up with the corresponding
+    # cloned references all pointing to the same cloned instance.
+    def __init__(self, **kwargs):
+        ancestor = kwargs.get('_ancestor')
+        memo_dict = kwargs.get('_memo')
+        if memo_dict is None:
+            # prepare to memoize any recursively instantiated objects
+            memo_dict = {}
+        elif ancestor:
+            # memoize me now to avoid problems with recursive calls
+            memo_dict[ancestor] = self
 
-    # Initialize new instance previously allocated by __new__.  For
-    # objects with SimObject-valued params, we need to recursively
-    # instantiate the classes represented by those param values as
-    # well (in a consistent "deep copy"-style fashion; see comment
-    # above).
-    def __init__(self, _memo = None, **kwargs):
-        if _memo is not None:
-            # We're inside a "deep instantiation"
-            assert(isinstance(_memo, dict))
-            assert(len(kwargs) == 0)
-            if _memo.has_key(self.__class__):
-                # __new__ returned an existing, already initialized
-                # instance, so there's nothing to do here
-                assert(_memo[self.__class__] == self)
-                return
-            # no pre-existing object, so remember this one here
-            _memo[self.__class__] = self
-        else:
-            # This is a new top-level instantiation... don't memoize
-            # this objcet, but prepare to memoize any recursively
-            # instantiated objects.
-            _memo = {}
+        if not ancestor:
+            ancestor = self.__class__
+        ancestor._instantiated = True
 
-        self.__class__._instantiated = True
-
+        # initialize required attributes
+        self._parent = None
         self._children = {}
+        self._ccObject = None  # pointer to C++ object
+        self._instantiated = False # really "cloned"
+
         # Inherit parameter values from class using multidict so
         # individual value settings can be overridden.
-        self._values = multidict(self.__class__._values)
-        # For SimObject-valued parameters, the class should have
-        # classes (not instances) for the values.  We need to
-        # instantiate these classes rather than just inheriting the
-        # class object.
-        for key,val in self.__class__._values.iteritems():
-            if isSimObjectClass(val):
-                setattr(self, key, val(_memo))
-            elif isSimObjectClassSequence(val) and len(val):
-                setattr(self, key, [ v(_memo) for v in val ])
+        self._values = multidict(ancestor._values)
+        # clone SimObject-valued parameters
+        for key,val in ancestor._values.iteritems():
+            if isSimObject(val):
+                setattr(self, key, val(_memo=memo_dict))
+            elif isSimObjectSequence(val) and len(val):
+                setattr(self, key, [ v(_memo=memo_dict) for v in val ])
+        # clone port references.  no need to use a multidict here
+        # since we will be creating new references for all ports.
+        self._port_map = {}
+        for key,val in ancestor._port_map.iteritems():
+            self._port_map[key] = applyOrMap(val, 'clone', memo_dict)
         # apply attribute assignments from keyword args, if any
         for key,val in kwargs.iteritems():
             setattr(self, key, val)
 
-    # Use this instance as a template to create a new class.
-    def makeClass(self, memo = {}):
-        cls = memo.get(self)
-        if not cls:
-            cls =  self.__class__.makeSubclass(self._values.local)
-            memo[self] = cls
-        return cls
-
-    # Direct instantiation of instances (cloning) is no longer
-    # allowed; must generate class from instance first.
+    # "Clone" the current instance by creating another instance of
+    # this instance's class, but that inherits its parameter values
+    # and port mappings from the current instance.  If we're in a
+    # "deep copy" recursive clone, check the _memo dict to see if
+    # we've already cloned this instance.
     def __call__(self, **kwargs):
-        raise TypeError, "cannot instantiate SimObject; "\
-              "use makeClass() to make class first"
+        memo_dict = kwargs.get('_memo')
+        if memo_dict is None:
+            # no memo_dict: must be top-level clone operation.
+            # this is only allowed at the root of a hierarchy
+            if self._parent:
+                raise RuntimeError, "attempt to clone object %s " \
+                      "not at the root of a tree (parent = %s)" \
+                      % (self, self._parent)
+            # create a new dict and use that.
+            memo_dict = {}
+            kwargs['_memo'] = memo_dict
+        elif memo_dict.has_key(self):
+            # clone already done & memoized
+            return memo_dict[self]
+        return self.__class__(_ancestor = self, **kwargs)
 
     def __getattr__(self, attr):
+        if self._ports.has_key(attr):
+            # return reference that can be assigned to another port
+            # via __setattr__
+            return self._ports[attr].makeRef(self, attr)
+
         if self._values.has_key(attr):
             return self._values[attr]
 
@@ -457,10 +378,19 @@ class SimObject(object):
             object.__setattr__(self, attr, value)
             return
 
+        if self._ports.has_key(attr):
+            # set up port connection
+            self._ports[attr].connect(self, attr, value)
+            return
+
+        if isSimObjectOrSequence(value) and self._instantiated:
+            raise RuntimeError, \
+                  "cannot set SimObject parameter '%s' after\n" \
+                  "    instance been cloned %s" % (attr, `self`)
+
         # must be SimObject param
         param = self._params.get(attr, None)
         if param:
-            # It's ok: set attribute by delegating to 'object' class.
             try:
                 value = param.convert(value)
             except Exception, e:
@@ -468,7 +398,6 @@ class SimObject(object):
                       (e, self.__class__.__name__, attr, value)
                 e.args = (msg, )
                 raise
-        # I would love to get rid of this
         elif isSimObjectOrSequence(value):
             pass
         else:
@@ -507,13 +436,13 @@ class SimObject(object):
         self._children[name] = value
 
     def set_path(self, parent, name):
-        if not hasattr(self, '_parent'):
+        if not self._parent:
             self._parent = parent
             self._name = name
             parent.add_child(name, self)
 
     def path(self):
-        if not hasattr(self, '_parent'):
+        if not self._parent:
             return 'root'
         ppath = self._parent.path()
         if ppath == 'root':
@@ -554,6 +483,8 @@ class SimObject(object):
     def print_ini(self):
         print '[' + self.path() + ']'	# .ini section header
 
+        instanceDict[self.path()] = self
+
         if hasattr(self, 'type') and not isinstance(self, ParamContext):
             print 'type=%s' % self.type
 
@@ -584,6 +515,59 @@ class SimObject(object):
 
         for child in child_names:
             self._children[child].print_ini()
+
+    # Call C++ to create C++ object corresponding to this object and
+    # (recursively) all its children
+    def createCCObject(self):
+        self.getCCObject() # force creation
+        for child in self._children.itervalues():
+            child.createCCObject()
+
+    # Get C++ object corresponding to this object, calling C++ if
+    # necessary to construct it.  Does *not* recursively create
+    # children.
+    def getCCObject(self):
+        if not self._ccObject:
+            self._ccObject = -1 # flag to catch cycles in recursion
+            self._ccObject = cc_main.createSimObject(self.path())
+        elif self._ccObject == -1:
+            raise RuntimeError, "%s: recursive call to getCCObject()" \
+                  % self.path()
+        return self._ccObject
+
+    # Create C++ port connections corresponding to the connections in
+    # _port_map (& recursively for all children)
+    def connectPorts(self):
+        for portRef in self._port_map.itervalues():
+            applyOrMap(portRef, 'ccConnect')
+        for child in self._children.itervalues():
+            child.connectPorts()
+
+    def startDrain(self, drain_event, recursive):
+        count = 0
+        # ParamContexts don't serialize
+        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+            count += self._ccObject.drain(drain_event)
+        if recursive:
+            for child in self._children.itervalues():
+                count += child.startDrain(drain_event, True)
+        return count
+
+    def resume(self):
+        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+            self._ccObject.resume()
+        for child in self._children.itervalues():
+            child.resume()
+
+    def changeTiming(self, mode):
+        if isinstance(self, System):
+            self._ccObject.setMemoryMode(mode)
+        for child in self._children.itervalues():
+            child.changeTiming(mode)
+
+    def takeOverFrom(self, old_cpu):
+        cpu_ptr = cc_main.convertToBaseCPUPtr(old_cpu._ccObject)
+        self._ccObject.takeOverFrom(cpu_ptr)
 
     # generate output file for 'dot' to display as a pretty graph.
     # this code is currently broken.
@@ -675,9 +659,9 @@ class BaseProxy(object):
 
         if self._search_up:
             while not done:
-                try: obj = obj._parent
-                except: break
-
+                obj = obj._parent
+                if not obj:
+                    break
                 result, done = self.find(obj)
 
         if not done:
@@ -793,16 +777,16 @@ Self = ProxyFactory(search_self = True, search_up = False)
 #
 # Parameter description classes
 #
-# The _params dictionary in each class maps parameter names to
-# either a Param or a VectorParam object.  These objects contain the
+# The _params dictionary in each class maps parameter names to either
+# a Param or a VectorParam object.  These objects contain the
 # parameter description string, the parameter type, and the default
-# value (loaded from the PARAM section of the .odesc files).  The
-# _convert() method on these objects is used to force whatever value
-# is assigned to the parameter to the appropriate type.
+# value (if any).  The convert() method on these objects is used to
+# force whatever value is assigned to the parameter to the appropriate
+# type.
 #
 # Note that the default values are loaded into the class's attribute
 # space when the parameter dictionary is initialized (in
-# MetaConfigNode._setparams()); after that point they aren't used.
+# MetaSimObject._new_param()); after that point they aren't used.
 #
 #####################################################################
 
@@ -1419,6 +1403,107 @@ MaxAddr = Addr.max
 MaxTick = Tick.max
 AllMemory = AddrRange(0, MaxAddr)
 
+
+#####################################################################
+#
+# Port objects
+#
+# Ports are used to interconnect objects in the memory system.
+#
+#####################################################################
+
+# Port reference: encapsulates a reference to a particular port on a
+# particular SimObject.
+class PortRef(object):
+    def __init__(self, simobj, name, isVec):
+        assert(isSimObject(simobj))
+        self.simobj = simobj
+        self.name = name
+        self.index = -1
+        self.isVec = isVec # is this a vector port?
+        self.peer = None   # not associated with another port yet
+        self.ccConnected = False # C++ port connection done?
+
+    # Set peer port reference.  Called via __setattr__ as a result of
+    # a port assignment, e.g., "obj1.port1 = obj2.port2".
+    def setPeer(self, other):
+        if self.isVec:
+            curMap = self.simobj._port_map.get(self.name, [])
+            self.index = len(curMap)
+            curMap.append(other)
+        else:
+            curMap = self.simobj._port_map.get(self.name)
+            if curMap and not self.isVec:
+                print "warning: overwriting port", self.simobj, self.name
+            curMap = other
+        self.simobj._port_map[self.name] = curMap
+        self.peer = other
+
+    def clone(self, memo):
+        newRef = copy.copy(self)
+        assert(isSimObject(newRef.simobj))
+        newRef.simobj = newRef.simobj(_memo=memo)
+        # Tricky: if I'm the *second* PortRef in the pair to be
+        # cloned, then my peer is still in the middle of its clone
+        # method, and thus hasn't returned to its owner's
+        # SimObject.__init__ to get installed in _port_map.  As a
+        # result I have no way of finding the *new* peer object.  So I
+        # mark myself as "waiting" for my peer, and I let the *first*
+        # PortRef clone call set up both peer pointers after I return.
+        newPeer = newRef.simobj._port_map.get(self.name)
+        if newPeer:
+            if self.isVec:
+                assert(self.index != -1)
+                newPeer = newPeer[self.index]
+            # other guy is all set up except for his peer pointer
+            assert(newPeer.peer == -1) # peer must be waiting for handshake
+            newPeer.peer = newRef
+            newRef.peer = newPeer
+        else:
+            # other guy is in clone; just wait for him to do the work
+            newRef.peer = -1 # mark as waiting for handshake
+        return newRef
+
+    # Call C++ to create corresponding port connection between C++ objects
+    def ccConnect(self):
+        if self.ccConnected: # already done this
+            return
+        peer = self.peer
+        cc_main.connectPorts(self.simobj.getCCObject(), self.name, self.index,
+                             peer.simobj.getCCObject(), peer.name, peer.index)
+        self.ccConnected = True
+        peer.ccConnected = True
+
+# Port description object.  Like a ParamDesc object, this represents a
+# logical port in the SimObject class, not a particular port on a
+# SimObject instance.  The latter are represented by PortRef objects.
+class Port(object):
+    def __init__(self, desc):
+        self.desc = desc
+        self.isVec = False
+
+    # Generate a PortRef for this port on the given SimObject with the
+    # given name
+    def makeRef(self, simobj, name):
+        return PortRef(simobj, name, self.isVec)
+
+    # Connect an instance of this port (on the given SimObject with
+    # the given name) with the port described by the supplied PortRef
+    def connect(self, simobj, name, ref):
+        if not isinstance(ref, PortRef):
+            raise TypeError, \
+                  "assigning non-port reference port '%s'" % name
+        myRef = self.makeRef(simobj, name)
+        myRef.setPeer(ref)
+        ref.setPeer(myRef)
+
+# VectorPort description object.  Like Port, but represents a vector
+# of connections (e.g., as on a Bus).
+class VectorPort(Port):
+    def __init__(self, desc):
+        Port.__init__(self, desc)
+        self.isVec = True
+
 #####################################################################
 
 # __all__ defines the list of symbols that get exported when
@@ -1436,5 +1521,6 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
-           'NextEthernetAddr']
+           'NextEthernetAddr',
+           'Port', 'VectorPort']
 

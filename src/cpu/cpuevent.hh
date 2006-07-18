@@ -36,7 +36,7 @@
 
 class ThreadContext;
 
-/** This class creates a global list of events than need a pointer to an
+/** This class creates a global list of events that need a pointer to a
  * thread context. When a switchover takes place the events can be migrated
  * to the new thread context, otherwise you could have a wake timer interrupt
  * go off on a switched out cpu or other unfortunate events. This object MUST be

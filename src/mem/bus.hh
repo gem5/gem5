@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Ali Saidi
  */
 
 /**
@@ -50,19 +51,22 @@ class Bus : public MemObject
     /** a globally unique id for this bus. */
     int busId;
 
+    static const int defaultId = -1;
+
     struct DevMap {
         int portId;
         Range<Addr> range;
     };
     std::vector<DevMap> portList;
+    AddrRangeList defaultRange;
 
 
     /** Function called by the port when the bus is recieving a Timing
-        transaction.*/
+      transaction.*/
     bool recvTiming(Packet *pkt);
 
     /** Function called by the port when the bus is recieving a Atomic
-        transaction.*/
+      transaction.*/
     Tick recvAtomic(Packet *pkt);
 
     /** Function called by the port when the bus is recieving a Functional
@@ -158,15 +162,18 @@ class Bus : public MemObject
      * original send failed for whatever reason.*/
     std::list<Port*> retryList;
 
+    /** Port that handles requests that don't match any of the interfaces.*/
+    Port *defaultPort;
+
   public:
 
     /** A function used to return the port associated with this bus object. */
-    virtual Port *getPort(const std::string &if_name);
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
 
     Bus(const std::string &n, int bus_id)
-        : MemObject(n), busId(bus_id)  {}
+        : MemObject(n), busId(bus_id), defaultPort(NULL)  {}
 
 };
 

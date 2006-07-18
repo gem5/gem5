@@ -326,11 +326,10 @@ LiveProcess::argsInit(int intSize, int pageSize)
     // set bottom of stack
     stack_min = stack_base - space_needed;
     // align it
-    stack_min &= ~(intSize-1);
+    stack_min = roundDown(stack_min, pageSize);
     stack_size = stack_base - stack_min;
     // map memory
-    pTable->allocate(roundDown(stack_min, pageSize),
-                     roundUp(stack_size, pageSize));
+    pTable->allocate(stack_min, roundUp(stack_size, pageSize));
 
     // map out initial stack contents
     Addr argv_array_base = stack_min + intSize; // room for argc
@@ -359,7 +358,10 @@ LiveProcess::argsInit(int intSize, int pageSize)
     Addr prog_entry = objFile->entryPoint();
     threadContexts[0]->setPC(prog_entry);
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+
+#if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
     threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+#endif
 
     num_processes++;
 }

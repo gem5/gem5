@@ -27,14 +27,14 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
-import sys, os, time, atexit, optparse
+import atexit, os, sys
 
 # import the SWIG-wrapped main C++ functions
-import main
+import cc_main
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from main import simulate, SimLoopExitEvent
+from cc_main import simulate, SimLoopExitEvent
 
 # import the m5 compile options
 import defines
@@ -57,20 +57,6 @@ def AddToPath(path):
     # so place the new dir right after that.
     sys.path.insert(1, path)
 
-
-# Callback to set trace flags.  Not necessarily the best way to do
-# things in the long run (particularly if we change how these global
-# options are handled).
-def setTraceFlags(option, opt_str, value, parser):
-    objects.Trace.flags = value
-
-# Standard optparse options.  Need to be explicitly included by the
-# user script when it calls optparse.OptionParser().
-standardOptions = [
-    optparse.make_option("--traceflags", type="string", action="callback",
-                         callback=setTraceFlags)
-    ]
-
 # make a SmartDict out of the build options for our local use
 import smartdict
 build_env = smartdict.SmartDict()
@@ -80,16 +66,26 @@ build_env.update(defines.m5_build_env)
 env = smartdict.SmartDict()
 env.update(os.environ)
 
+# Function to provide to C++ so it can look up instances based on paths
+def resolveSimObject(name):
+    obj = config.instanceDict[name]
+    return obj.getCCObject()
+
+from main import options, arguments, main
+
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(root):
     config.ticks_per_sec = float(root.clock.frequency)
     # ugly temporary hack to get output to config.ini
-    sys.stdout = file('config.ini', 'w')
+    sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
     root.print_ini()
     sys.stdout.close() # close config.ini
     sys.stdout = sys.__stdout__ # restore to original
-    main.initialize()  # load config.ini into C++ and process it
+    cc_main.loadIniFile(resolveSimObject)  # load config.ini into C++
+    root.createCCObject()
+    root.connectPorts()
+    cc_main.finalInit()
     noDot = True # temporary until we fix dot
     if not noDot:
        dot = pydot.Dot()
@@ -103,12 +99,105 @@ def instantiate(root):
 
 # Export curTick to user script.
 def curTick():
-    return main.cvar.curTick
+    return cc_main.cvar.curTick
 
 # register our C++ exit callback function with Python
-atexit.register(main.doExitCleanup)
+atexit.register(cc_main.doExitCleanup)
 
 # This import allows user scripts to reference 'm5.objects.Foo' after
 # just doing an 'import m5' (without an 'import m5.objects').  May not
 # matter since most scripts will probably 'from m5.objects import *'.
 import objects
+
+# This loops until all objects have been fully drained.
+def doDrain(root):
+    all_drained = drain(root)
+    while (not all_drained):
+        all_drained = drain(root)
+
+# Tries to drain all objects.  Draining might not be completed unless
+# all objects return that they are drained on the first call.  This is
+# because as objects drain they may cause other objects to no longer
+# be drained.
+def drain(root):
+    all_drained = False
+    drain_event = cc_main.createCountedDrain()
+    unready_objects = root.startDrain(drain_event, True)
+    # If we've got some objects that can't drain immediately, then simulate
+    if unready_objects > 0:
+        drain_event.setCount(unready_objects)
+        simulate()
+    else:
+        all_drained = True
+    cc_main.cleanupCountedDrain(drain_event)
+    return all_drained
+
+def resume(root):
+    root.resume()
+
+def checkpoint(root, dir):
+    if not isinstance(root, objects.Root):
+        raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
+    doDrain(root)
+    print "Writing checkpoint"
+    cc_main.serializeAll(dir)
+    resume(root)
+
+def restoreCheckpoint(root, dir):
+    print "Restoring from checkpoint"
+    cc_main.unserializeAll(dir)
+    resume(root)
+
+def changeToAtomic(system):
+    if not isinstance(system, objects.Root) and not isinstance(system, System):
+        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
+        "called on a root object."
+    doDrain(system)
+    print "Changing memory mode to atomic"
+    system.changeTiming(cc_main.SimObject.Atomic)
+    resume(system)
+
+def changeToTiming(system):
+    if not isinstance(system, objects.Root) and not isinstance(system, System):
+        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
+        "called on a root object."
+    doDrain(system)
+    print "Changing memory mode to timing"
+    system.changeTiming(cc_main.SimObject.Timing)
+    resume(system)
+
+def switchCpus(cpuList):
+    if not isinstance(cpuList, list):
+        raise RuntimeError, "Must pass a list to this function"
+    for i in cpuList:
+        if not isinstance(i, tuple):
+            raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
+
+    [old_cpus, new_cpus] = zip(*cpuList)
+
+    for cpu in old_cpus:
+        if not isinstance(cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU", cpu
+    for cpu in new_cpus:
+        if not isinstance(cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU", cpu
+
+    # Drain all of the individual CPUs
+    drain_event = cc_main.createCountedDrain()
+    unready_cpus = 0
+    for old_cpu in old_cpus:
+        unready_cpus += old_cpu.startDrain(drain_event, False)
+    # If we've got some objects that can't drain immediately, then simulate
+    if unready_cpus > 0:
+        drain_event.setCount(unready_cpus)
+        simulate()
+    cc_main.cleanupCountedDrain(drain_event)
+    # Now all of the CPUs are ready to be switched out
+    for old_cpu in old_cpus:
+        old_cpu._ccObject.switchOut()
+    index = 0
+    print "Switching CPUs"
+    for new_cpu in new_cpus:
+        new_cpu.takeOverFrom(old_cpus[index])
+        new_cpu._ccObject.resume()
+        index += 1

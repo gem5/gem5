@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
+ *          Korey Sewell
  */
 
 #include "arch/utility.hh"
@@ -40,7 +41,6 @@
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"
@@ -55,10 +55,10 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
-#include "sim/system.hh"
 #include "arch/tlb.hh"
 #include "arch/stacktrace.hh"
 #include "arch/vtophys.hh"
@@ -358,8 +358,13 @@ Fault
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
     // set up memory request for instruction fetch
+#if THE_ISA == ALPHA_ISA
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
+            thread->readNextPC());
+#else
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",thread->readPC(),
             thread->readNextPC(),thread->readNextNPC());
+#endif
 
     req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst),
                  (FULL_SYSTEM && (thread->readPC() & 1)) ? PHYSICAL : 0,
@@ -440,11 +445,7 @@ void
 BaseSimpleCPU::advancePC(Fault fault)
 {
     if (fault != NoFault) {
-#if FULL_SYSTEM
         fault->invoke(tc);
-#else // !FULL_SYSTEM
-        fatal("fault (%s) detected @ PC %08p", fault->name(), thread->readPC());
-#endif // FULL_SYSTEM
     }
     else {
         // go to the next instruction

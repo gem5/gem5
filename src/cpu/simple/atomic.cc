@@ -33,6 +33,7 @@
 #include "cpu/simple/atomic.hh"
 #include "mem/packet_impl.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -55,18 +56,28 @@ AtomicSimpleCPU::TickEvent::description()
     return "AtomicSimpleCPU tick event";
 }
 
+Port *
+AtomicSimpleCPU::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return &dcachePort;
+    else if (if_name == "icache_port")
+        return &icachePort;
+    else
+        panic("No Such Port\n");
+}
 
 void
 AtomicSimpleCPU::init()
 {
     //Create Memory Ports (conect them up)
-    Port *mem_dport = mem->getPort("");
-    dcachePort.setPeer(mem_dport);
-    mem_dport->setPeer(&dcachePort);
+//    Port *mem_dport = mem->getPort("");
+//    dcachePort.setPeer(mem_dport);
+//    mem_dport->setPeer(&dcachePort);
 
-    Port *mem_iport = mem->getPort("");
-    icachePort.setPeer(mem_iport);
-    mem_iport->setPeer(&icachePort);
+//    Port *mem_iport = mem->getPort("");
+//    icachePort.setPeer(mem_iport);
+//    mem_iport->setPeer(&icachePort);
 
     BaseCPU::init();
 #if FULL_SYSTEM
@@ -124,15 +135,18 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
 
     // @todo fix me and get the real cpu id & thread number!!!
     ifetch_req = new Request();
+    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     data_read_req = new Request();
+    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
                                Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
 
     data_write_req = new Request();
+    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
     data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
                                 Packet::Broadcast);
 }
@@ -145,8 +159,8 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 void
 AtomicSimpleCPU::serialize(ostream &os)
 {
-    BaseSimpleCPU::serialize(os);
     SERIALIZE_ENUM(_status);
+    BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
 }
@@ -154,21 +168,25 @@ AtomicSimpleCPU::serialize(ostream &os)
 void
 AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    BaseSimpleCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
+    BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
 
 void
-AtomicSimpleCPU::switchOut(Sampler *s)
+AtomicSimpleCPU::resume()
 {
-    sampler = s;
-    if (status() == Running) {
-        _status = SwitchedOut;
+    assert(system->getMemoryMode() == System::Atomic);
+    changeState(SimObject::Running);
+}
 
-        tickEvent.squash();
-    }
-    sampler->signalSwitched();
+void
+AtomicSimpleCPU::switchOut()
+{
+    assert(status() == Running || status() == Idle);
+    _status = SwitchedOut;
+
+    tickEvent.squash();
 }
 
 
@@ -410,15 +428,14 @@ AtomicSimpleCPU::tick()
             postExecute();
 
             if (simulate_stalls) {
-                // This calculation assumes that the icache and dcache
-                // access latencies are always a multiple of the CPU's
-                // cycle time.  If not, the next tick event may get
-                // scheduled at a non-integer multiple of the CPU
-                // cycle time.
                 Tick icache_stall = icache_latency - cycles(1);
                 Tick dcache_stall =
                     dcache_access ? dcache_latency - cycles(1) : 0;
-                latency += icache_stall + dcache_stall;
+                Tick stall_cycles = (icache_stall + dcache_stall) / cycles(1);
+                if (cycles(stall_cycles) < (icache_stall + dcache_stall))
+                    latency += cycles(stall_cycles+1);
+                else
+                    latency += cycles(stall_cycles);
             }
 
         }
@@ -442,11 +459,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     SimObjectParam<MemObject *> mem;
+    SimObjectParam<System *> system;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
@@ -474,11 +491,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(mem, "memory"),
+    INIT_PARAM(system, "system object"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
@@ -511,11 +528,11 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->width = width;
     params->simulate_stalls = simulate_stalls;
     params->mem = mem;
+    params->system = system;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
 #else

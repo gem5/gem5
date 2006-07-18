@@ -37,7 +37,6 @@
 #include "sim/pseudo_inst.hh"
 #include "arch/vtophys.hh"
 #include "cpu/base.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 #include "kern/kernel_stats.hh"
@@ -51,8 +50,6 @@
 #include "sim/vptr.hh"
 
 using namespace std;
-
-extern Sampler *SampCPU;
 
 using namespace Stats;
 using namespace TheISA;
@@ -209,12 +206,7 @@ namespace AlphaPseudo
     {
         if (!doCheckpointInsts)
             return;
-
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        Checkpoint::setup(when, repeat);
+        exitSimLoop("checkpoint");
     }
 
     uint64_t
@@ -286,7 +278,6 @@ namespace AlphaPseudo
 
     void switchcpu(ThreadContext *tc)
     {
-        if (SampCPU)
-            SampCPU->switchCPUs();
+        exitSimLoop("switchcpu");
     }
 }

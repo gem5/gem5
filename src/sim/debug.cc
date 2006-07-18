@@ -127,12 +127,12 @@ DebugContext::checkParams()
 // handy function to schedule DebugBreakEvent on main event queue
 // (callable from debugger)
 //
-extern "C" void sched_break_cycle(Tick when)
+void sched_break_cycle(Tick when)
 {
     new DebugBreakEvent(&mainEventQueue, when);
 }
 
-extern "C" void eventq_dump()
+void eventq_dump()
 {
     mainEventQueue.dump();
 }

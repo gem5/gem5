@@ -57,12 +57,6 @@ namespace LittleEndianGuest {};
 class StaticInst;
 class StaticInstPtr;
 
-namespace MIPS34K {
-int DTB_ASN_ASN(uint64_t reg);
-int ITB_ASN_ASN(uint64_t reg);
-};
-
-#if !FULL_SYSTEM
 class SyscallReturn {
         public:
            template <class T>
@@ -95,7 +89,6 @@ class SyscallReturn {
            uint64_t retval;
            bool success;
 };
-#endif
 
 namespace MipsISA
 {
@@ -136,15 +129,9 @@ namespace MipsISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    const Addr MaxAddr = (Addr)-1;
+//    const Addr MaxAddr = (Addr)-1;
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    uint64_t fpConvert(double fp_val, ConvertType cvt_type);
-    double roundFP(double val, int digits);
-    double truncFP(double val);
-    bool getFPConditionCode(uint32_t fcsr_reg, int cc);
-    uint32_t makeCCVector(uint32_t fcsr, int num, bool val);
 
     // Machine operations
 
@@ -190,12 +177,6 @@ namespace MipsISA
     }
 
 };
-
-#if FULL_SYSTEM
-
-#include "arch/mips/mips34k.hh"
-
-#endif
 
 using namespace MipsISA;
 

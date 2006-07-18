@@ -34,9 +34,8 @@
 #include "arch/isa_traits.hh"
 #include "config/full_system.hh"
 #include "cpu/base_dyn_inst.hh"
-#include "cpu/ozone/cpu.hh"   // MUST include this
 #include "cpu/inst_seq.hh"
-//#include "cpu/ozone/simple_impl.hh" // Would be nice to not have to include this
+#include "cpu/ozone/cpu.hh"   // MUST include this
 #include "cpu/ozone/ozone_impl.hh"
 
 #include <list>
@@ -47,15 +46,17 @@ class OzoneDynInst : public BaseDynInst<Impl>
 {
   public:
     // Typedefs
-    typedef typename Impl::FullCPU FullCPU;
+    typedef typename Impl::OzoneCPU OzoneCPU;
 
-    typedef typename FullCPU::ImplState ImplState;
+    typedef typename OzoneCPU::ImplState ImplState;
 
     // Typedef for DynInstPtr.  This is really just a RefCountingPtr<OoODynInst>.
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     typedef TheISA::ExtMachInst ExtMachInst;
     typedef TheISA::MachInst MachInst;
+    typedef TheISA::FloatReg FloatReg;
+    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
@@ -67,10 +68,10 @@ class OzoneDynInst : public BaseDynInst<Impl>
         MaxInstDestRegs = TheISA::MaxInstDestRegs
     };
 
-    OzoneDynInst(FullCPU *cpu);
+    OzoneDynInst(OzoneCPU *cpu);
 
     OzoneDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,
-                 InstSeqNum seq_num, FullCPU *cpu);
+                 InstSeqNum seq_num, OzoneCPU *cpu);
 
     OzoneDynInst(StaticInstPtr inst);
 
@@ -131,7 +132,7 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
     Fault initiateAcc();
 
-    Fault completeAcc();
+    Fault completeAcc(Packet *pkt);
 
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
@@ -149,17 +150,30 @@ class OzoneDynInst : public BaseDynInst<Impl>
         return srcInsts[idx]->readIntResult();
     }
 
-    float readFloatRegSingle(const StaticInst *si, int idx)
+    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
+    {
+        switch(width) {
+          case 32:
+            return srcInsts[idx]->readFloatResult();
+          case 64:
+            return srcInsts[idx]->readDoubleResult();
+          default:
+            panic("Width not supported");
+            return 0;
+        }
+    }
+
+    FloatReg readFloatReg(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readFloatResult();
     }
 
-    double readFloatRegDouble(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
-        return srcInsts[idx]->readDoubleResult();
+        return srcInsts[idx]->readIntResult();
     }
 
-    uint64_t readFloatRegInt(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readIntResult();
     }
@@ -172,19 +186,25 @@ class OzoneDynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setIntReg(si, idx, val);
     }
 
-    void setFloatRegSingle(const StaticInst *si, int idx, float val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
-        BaseDynInst<Impl>::setFloatRegSingle(si, idx, val);
+        BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
     }
 
-    void setFloatRegDouble(const StaticInst *si, int idx, double val)
+    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
-        BaseDynInst<Impl>::setFloatRegDouble(si, idx, val);
+        BaseDynInst<Impl>::setFloatReg(si, idx, val);
     }
 
-    void setFloatRegInt(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegBits(const StaticInst *si, int idx,
+            FloatRegBits val, int width)
     {
-        BaseDynInst<Impl>::setFloatRegInt(si, idx, val);
+        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
+    }
+
+    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    {
+        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     void setIntResult(uint64_t result) { this->instResult.integer = result; }
@@ -223,7 +243,7 @@ class OzoneDynInst : public BaseDynInst<Impl>
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
 #else
-    void syscall();
+    void syscall(uint64_t &callnum);
 #endif
 
     ListIt iqIt;

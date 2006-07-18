@@ -26,7 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
+
+#include "config/use_checker.hh"
 
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
@@ -106,12 +109,11 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
       numThreads(params->numberOfThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
+      drainPending(false),
       switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
         fatal("numThreads is not a valid value\n");
-
-    DPRINTF(Fetch, "Fetch constructor called\n");
 
     // Set fetch stage's status to inactive.
     _status = Inactive;
@@ -125,6 +127,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     // Figure out fetch policy
     if (policy == "singlethread") {
         fetchPolicy = SingleThread;
+        if (numThreads > 1)
+            panic("Invalid Fetch Policy for a SMT workload.");
     } else if (policy == "roundrobin") {
         fetchPolicy = RoundRobin;
         DPRINTF(Fetch, "Fetch policy set to Round Robin\n");
@@ -158,6 +162,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
 
         stalls[tid].decode = 0;
         stalls[tid].rename = 0;
@@ -268,7 +274,7 @@ DefaultFetch<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
+DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
 {
     DPRINTF(Fetch, "Setting the CPU pointer.\n");
     cpu = cpu_ptr;
@@ -276,13 +282,11 @@ DefaultFetch<Impl>::setCPU(FullCPU *cpu_ptr)
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
 
-    Port *mem_dport = mem->getPort("");
-    icachePort->setPeer(mem_dport);
-    mem_dport->setPeer(icachePort);
-
+#if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setIcachePort(icachePort);
     }
+#endif
 
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
@@ -330,6 +334,9 @@ DefaultFetch<Impl>::initStage()
     for (int tid = 0; tid < numThreads; tid++) {
         PC[tid] = cpu->readPC(tid);
         nextPC[tid] = cpu->readNextPC(tid);
+#if THE_ISA != ALPHA_ISA
+        nextNPC[tid] = cpu->readNextNPC(tid);
+#endif
     }
 }
 
@@ -349,18 +356,22 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         ++fetchIcacheSquashes;
         delete pkt->req;
         delete pkt;
-        memReq[tid] = NULL;
         return;
     }
 
-    // Wake up the CPU (if it went to sleep and was waiting on this completion
-    // event).
-    cpu->wakeCPU();
+    memcpy(cacheData[tid], pkt->getPtr<uint8_t *>(), cacheBlkSize);
+    cacheDataValid[tid] = true;
 
-    DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
-            tid);
+    if (!drainPending) {
+        // Wake up the CPU (if it went to sleep and was waiting on
+        // this completion event).
+        cpu->wakeCPU();
 
-    switchToActive();
+        DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
+                tid);
+
+        switchToActive();
+    }
 
     // Only switch to IcacheAccessComplete if we're not stalled as well.
     if (checkStall(tid)) {
@@ -376,18 +387,27 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 }
 
 template <class Impl>
-void
-DefaultFetch<Impl>::switchOut()
+bool
+DefaultFetch<Impl>::drain()
 {
-    // Fetch is ready to switch out at any time.
-    switchedOut = true;
-    cpu->signalSwitched();
+    // Fetch is ready to drain at any time.
+    cpu->signalDrained();
+    drainPending = true;
+    return true;
 }
 
 template <class Impl>
 void
-DefaultFetch<Impl>::doSwitchOut()
+DefaultFetch<Impl>::resume()
 {
+    drainPending = false;
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::switchOut()
+{
+    switchedOut = true;
     // Branch predictor needs to have its state cleared.
     branchPred.switchOut();
 }
@@ -404,6 +424,9 @@ DefaultFetch<Impl>::takeOverFrom()
         stalls[i].commit = 0;
         PC[i] = cpu->readPC(i);
         nextPC[i] = cpu->readNextPC(i);
+#if THE_ISA != ALPHA_ISA
+        nextNPC[i] = cpu->readNextNPC(i);
+#endif
         fetchStatus[i] = Running;
     }
     numInst = 0;
@@ -430,7 +453,7 @@ DefaultFetch<Impl>::switchToActive()
     if (_status == Inactive) {
         DPRINTF(Activity, "Activating stage.\n");
 
-        cpu->activateStage(FullCPU::FetchIdx);
+        cpu->activateStage(O3CPU::FetchIdx);
 
         _status = Active;
     }
@@ -443,7 +466,7 @@ DefaultFetch<Impl>::switchToInactive()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullCPU::FetchIdx);
+        cpu->deactivateStage(O3CPU::FetchIdx);
 
         _status = Inactive;
     }
@@ -488,7 +511,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (cacheBlocked || (interruptPending && flags == 0) || switchedOut) {
+    if (cacheBlocked || (interruptPending && flags == 0)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -498,6 +521,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
+
+    // If we've already got the block, no need to try to fetch it again.
+    if (cacheDataValid[tid] && fetch_PC == cacheDataPC[tid]) {
+        return true;
+    }
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
@@ -530,7 +558,10 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         Packet::ReadReq, Packet::Broadcast);
-        data_pkt->dataStatic(cacheData[tid]);
+        data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
+
+        cacheDataPC[tid] = fetch_PC;
+        cacheDataValid[tid] = false;
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
@@ -549,7 +580,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
             return false;
         }
 
-        DPRINTF(Fetch, "Doing cache access.\n");
+        DPRINTF(Fetch, "[tid:%i]: Doing cache access.\n", tid);
 
         lastIcacheStall[tid] = curTick;
 
@@ -662,7 +693,7 @@ DefaultFetch<Impl>::updateFetchStatus()
                             "completion\n",tid);
                 }
 
-                cpu->activateStage(FullCPU::FetchIdx);
+                cpu->activateStage(O3CPU::FetchIdx);
             }
 
             return Active;
@@ -673,7 +704,7 @@ DefaultFetch<Impl>::updateFetchStatus()
     if (_status == Active) {
         DPRINTF(Activity, "Deactivating stage.\n");
 
-        cpu->deactivateStage(FullCPU::FetchIdx);
+        cpu->deactivateStage(O3CPU::FetchIdx);
     }
 
     return Inactive;
@@ -714,12 +745,15 @@ DefaultFetch<Impl>::tick()
     // Reset the number of the instruction we're fetching.
     numInst = 0;
 
+#if FULL_SYSTEM
     if (fromCommit->commitInfo[0].interruptPending) {
         interruptPending = true;
     }
+
     if (fromCommit->commitInfo[0].clearInterrupt) {
         interruptPending = false;
     }
+#endif
 
     for (threadFetched = 0; threadFetched < numFetchingThreads;
          threadFetched++) {
@@ -817,7 +851,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
     // Check ROB squash signals from commit.
     if (fromCommit->commitInfo[tid].robSquashing) {
-        DPRINTF(Fetch, "[tid:%u]: ROB is still squashing Thread %u.\n", tid);
+        DPRINTF(Fetch, "[tid:%u]: ROB is still squashing.\n", tid);
 
         // Continue to squash.
         fetchStatus[tid] = Squashing;
@@ -885,13 +919,15 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     //////////////////////////////////////////
     int tid = getFetchingThread(fetchPolicy);
 
-    if (tid == -1) {
+    if (tid == -1 || drainPending) {
         DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
 
         // Breaks looping condition in tick()
         threadFetched = numFetchingThreads;
         return;
     }
+
+    DPRINTF(Fetch, "Attempting to fetch from [tid:%i]\n", tid);
 
     // The current PC.
     Addr &fetch_PC = PC[tid];
@@ -915,7 +951,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         bool fetch_success = fetchCacheLine(fetch_PC, fault, tid);
         if (!fetch_success) {
-            ++fetchMiscStallCycles;
+            if (cacheBlocked) {
+                ++icacheStallCycles;
+            } else {
+                ++fetchMiscStallCycles;
+            }
             return;
         }
     } else {
@@ -984,11 +1024,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,
                                                  next_PC,
                                                  inst_seq, cpu);
-            instruction->setThread(tid);
+            instruction->setTid(tid);
 
             instruction->setASID(tid);
 
-            instruction->setState(cpu->thread[tid]);
+            instruction->setThreadState(cpu->thread[tid]);
 
             DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x created "
                     "[sn:%lli]\n",
@@ -1020,7 +1060,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             fetch_PC = next_PC;
 
             if (instruction->isQuiesce()) {
-                warn("%lli: Quiesce instruction encountered, halting fetch!",
+                warn("cycle %lli: Quiesce instruction encountered, halting fetch!",
                      curTick);
                 fetchStatus[tid] = QuiescePending;
                 ++numInst;
@@ -1041,8 +1081,17 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     if (fault == NoFault) {
         DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n",tid, next_PC);
 
+#if THE_ISA == ALPHA_ISA
         PC[tid] = next_PC;
         nextPC[tid] = next_PC + instSize;
+#else
+        PC[tid] = next_PC;
+        nextPC[tid] = next_PC + instSize;
+        nextPC[tid] = next_PC + instSize;
+
+        thread->setNextPC(thread->readNextNPC());
+        thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
+#endif
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB
         // miss)
@@ -1065,11 +1114,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                              next_PC,
                                              inst_seq, cpu);
         instruction->setPredTarg(next_PC + instSize);
-        instruction->setThread(tid);
+        instruction->setTid(tid);
 
         instruction->setASID(tid);
 
-        instruction->setState(cpu->thread[tid]);
+        instruction->setThreadState(cpu->thread[tid]);
 
         instruction->traceData = NULL;
 
@@ -1085,9 +1134,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
-        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
+        warn("cycle %lli: fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #else // !FULL_SYSTEM
-        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
+        warn("cycle %lli: fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #endif // FULL_SYSTEM
     }
 }
@@ -1256,6 +1305,6 @@ int
 DefaultFetch<Impl>::branchCount()
 {
     list<unsigned>::iterator threads = (*activeThreads).begin();
-
+    panic("Branch Count Fetch policy unimplemented\n");
     return *threads;
 }

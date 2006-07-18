@@ -33,13 +33,22 @@
  */
 
 
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/bus.hh"
 #include "sim/builder.hh"
 
 Port *
-Bus::getPort(const std::string &if_name)
+Bus::getPort(const std::string &if_name, int idx)
 {
+    if (if_name == "default")
+        if (defaultPort == NULL) {
+            defaultPort = new BusPort(csprintf("%s-default",name()), this,
+                    defaultId);
+            return defaultPort;
+        } else
+            fatal("Default port already set\n");
+
     // if_name ignored?  forced to be empty?
     int id = interfaces.size();
     BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
@@ -47,11 +56,12 @@ Bus::getPort(const std::string &if_name)
     return bp;
 }
 
-/** Get the ranges of anyone that we are connected to. */
+/** Get the ranges of anyone other buses that we are connected to. */
 void
 Bus::init()
 {
     std::vector<Port*>::iterator intIter;
+
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
         (*intIter)->sendStatusChange(Port::RangeChange);
 }
@@ -110,6 +120,7 @@ Bus::findPort(Addr addr, int id)
     int dest_id = -1;
     int i = 0;
     bool found = false;
+    AddrRangeIter iter;
 
     while (i < portList.size() && !found)
     {
@@ -120,8 +131,18 @@ Bus::findPort(Addr addr, int id)
         }
         i++;
     }
-    if (dest_id == -1)
+
+    // Check if this matches the default range
+    if (dest_id == -1) {
+        for (iter = defaultRange.begin(); iter != defaultRange.end(); iter++) {
+            if (*iter == addr) {
+                DPRINTF(Bus, "  found addr 0x%llx on default\n", addr);
+                return defaultPort;
+            }
+        }
         panic("Unable to find destination for addr: %llx", addr);
+    }
+
 
     // we shouldn't be sending this back to where it came from
     assert(dest_id != id);
@@ -155,39 +176,52 @@ Bus::recvFunctional(Packet *pkt)
 void
 Bus::recvStatusChange(Port::Status status, int id)
 {
+    AddrRangeList ranges;
+    AddrRangeList snoops;
+    int x;
+    AddrRangeIter iter;
+
     assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
 
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
-    assert(id < interfaces.size() && id >= 0);
-    int x;
-    Port *port = interfaces[id];
-    AddrRangeList ranges;
-    AddrRangeList snoops;
-    AddrRangeIter iter;
-    std::vector<DevMap>::iterator portIter;
+    if (id == defaultId) {
+        defaultRange.clear();
+        defaultPort->getPeerAddressRanges(ranges, snoops);
+        assert(snoops.size() == 0);
+        for(iter = ranges.begin(); iter != ranges.end(); iter++) {
+            defaultRange.push_back(*iter);
+            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for default\n",
+                    iter->start, iter->end);
+        }
+    } else {
 
-    // Clean out any previously existent ids
-    for (portIter = portList.begin(); portIter != portList.end(); ) {
-        if (portIter->portId == id)
-            portIter = portList.erase(portIter);
-        else
-            portIter++;
-    }
+        assert((id < interfaces.size() && id >= 0) || id == -1);
+        Port *port = interfaces[id];
+        std::vector<DevMap>::iterator portIter;
 
-    port->getPeerAddressRanges(ranges, snoops);
+        // Clean out any previously existent ids
+        for (portIter = portList.begin(); portIter != portList.end(); ) {
+            if (portIter->portId == id)
+                portIter = portList.erase(portIter);
+            else
+                portIter++;
+        }
 
-    // not dealing with snooping yet either
-    assert(snoops.size() == 0);
-    for(iter = ranges.begin(); iter != ranges.end(); iter++) {
-        DevMap dm;
-        dm.portId = id;
-        dm.range = *iter;
+        port->getPeerAddressRanges(ranges, snoops);
 
-        DPRINTF(BusAddrRanges, "Adding range %llx - %llx for id %d\n",
-                dm.range.start, dm.range.end, id);
-        portList.push_back(dm);
+        // not dealing with snooping yet either
+        assert(snoops.size() == 0);
+        for(iter = ranges.begin(); iter != ranges.end(); iter++) {
+            DevMap dm;
+            dm.portId = id;
+            dm.range = *iter;
+
+            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for id %d\n",
+                    dm.range.start, dm.range.end, id);
+            portList.push_back(dm);
+        }
     }
     DPRINTF(MMU, "port list has %d entries\n", portList.size());
 
@@ -196,19 +230,47 @@ Bus::recvStatusChange(Port::Status status, int id)
     for (x = 0; x < interfaces.size(); x++)
         if (x != id)
             interfaces[x]->sendStatusChange(Port::RangeChange);
+
+    if (id != defaultId && defaultPort)
+        defaultPort->sendStatusChange(Port::RangeChange);
 }
 
 void
 Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 {
     std::vector<DevMap>::iterator portIter;
+    AddrRangeIter dflt_iter;
+    bool subset;
 
     resp.clear();
     snoop.clear();
 
     DPRINTF(BusAddrRanges, "received address range request, returning:\n");
+
+    for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
+            dflt_iter++) {
+        resp.push_back(*dflt_iter);
+        DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",dflt_iter->start,
+                dflt_iter->end);
+    }
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
-        if (portIter->portId != id) {
+        subset = false;
+        for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
+                dflt_iter++) {
+            if ((portIter->range.start < dflt_iter->start &&
+                portIter->range.end >= dflt_iter->start) ||
+               (portIter->range.start < dflt_iter->end &&
+                portIter->range.end >= dflt_iter->end))
+                fatal("Devices can not set ranges that itersect the default set\
+                        but are not a subset of the default set.\n");
+            if (portIter->range.start >= dflt_iter->start &&
+                portIter->range.end <= dflt_iter->end) {
+                subset = true;
+                DPRINTF(BusAddrRanges, "  -- %#llX : %#llX is a SUBSET\n",
+                    portIter->range.start, portIter->range.end);
+            }
+        }
+        if (portIter->portId != id && !subset) {
             resp.push_back(portIter->range);
             DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",
                     portIter->range.start, portIter->range.end);
