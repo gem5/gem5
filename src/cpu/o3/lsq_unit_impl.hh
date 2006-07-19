@@ -790,6 +790,7 @@ LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
 
     // Squashed instructions do not need to complete their access.
     if (inst->isSquashed()) {
+        iewStage->decrWb(inst->seqNum);
         assert(!inst->isStore());
         ++lsqIgnoredResponses;
         return;

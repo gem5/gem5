@@ -601,6 +601,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
             iewStage->rescheduleMemInst(load_inst);
+            iewStage->decrWb(load_inst->seqNum);
             ++lsqRescheduledLoads;
 
             // Do not generate a writeback event as this instruction is not
