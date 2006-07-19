@@ -170,7 +170,7 @@ class CheckerCPU : public BaseCPU
 
     virtual Counter totalInstructions() const
     {
-        return numInst - startNumInst;
+        return 0;
     }
 
     // number of simulated loads
