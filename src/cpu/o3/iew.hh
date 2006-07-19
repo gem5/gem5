@@ -31,11 +31,12 @@
 #ifndef __CPU_O3_IEW_HH__
 #define __CPU_O3_IEW_HH__
 
+#include "config/full_system.hh"
+
 #include <queue>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
-#include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/lsq.hh"
@@ -215,7 +216,7 @@ class DefaultIEW
         if (++wbOutstanding == wbMax)
             ableToIssue = false;
         DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
-#if DEBUG
+#ifdef DEBUG
         wbList.insert(sn);
 #endif
     }
@@ -225,13 +226,13 @@ class DefaultIEW
         if (wbOutstanding-- == wbMax)
             ableToIssue = true;
         DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
-#if DEBUG
+#ifdef DEBUG
         assert(wbList.find(sn) != wbList.end());
         wbList.erase(sn);
 #endif
     }
 
-#if DEBUG
+#ifdef DEBUG
     std::set<InstSeqNum> wbList;
 
     void dumpWb()

@@ -178,17 +178,12 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 void
 AtomicSimpleCPU::resume()
 {
+    assert(system->getMemoryMode() == System::Atomic);
+    changeState(SimObject::Running);
     if (thread->status() == ThreadContext::Active) {
         if (!tickEvent.scheduled())
             tickEvent.schedule(curTick);
     }
-}
-
-void
-AtomicSimpleCPU::resume()
-{
-    assert(system->getMemoryMode() == System::Atomic);
-    changeState(SimObject::Running);
 }
 
 void
