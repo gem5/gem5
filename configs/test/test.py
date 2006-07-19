@@ -7,6 +7,7 @@ import m5
 import os, optparse, sys
 m5.AddToPath('../common')
 from SEConfig import *
+from m5.objects import *
 
 this_dir = os.path.dirname(__file__)
 
@@ -36,12 +37,10 @@ if options.detailed:
             process += [smt_process, ]
             smt_idx += 1
 
-cpu.workload = process
+root = MySESystem(process)
 
 if options.timing or options.detailed:
-    system.mem_mode = 'timing'
-
-
+    root.system.mem_mode = 'timing'
 
 # instantiate configuration
 m5.instantiate(root)
