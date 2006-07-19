@@ -52,7 +52,7 @@ class PciDevice(DmaDevice):
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
-    pio_latency = Param.Tick(1, "Programmed IO latency in simticks")
+    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     configdata = Param.PciConfigData(Parent.any, "PCI Config data")
 
 class PciFake(PciDevice):
