@@ -7,7 +7,7 @@ from Debug import Debug
 
 class Root(SimObject):
     type = 'Root'
-    clock = Param.RootClock('200MHz', "tick frequency")
+    clock = Param.RootClock('1THz', "tick frequency")
     max_tick = Param.Tick('0', "maximum simulation ticks (0 = infinite)")
     progress_interval = Param.Tick('0',
         "print a progress message every n ticks (0 = never)")

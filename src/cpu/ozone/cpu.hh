@@ -55,7 +55,6 @@ class AlphaDTB;
 class PhysicalMemory;
 class MemoryController;
 
-class Sampler;
 class RemoteGDB;
 class GDBListener;
 
@@ -151,7 +150,7 @@ class OzoneCPU : public BaseCPU
         void suspend();
 
         /// Set the status to Unallocated.
-        void deallocate();
+        void deallocate(int delay = 0);
 
         /// Set the status to Halted.
         void halt();
@@ -356,11 +355,9 @@ class OzoneCPU : public BaseCPU
 
     int cpuId;
 
-    void switchOut(Sampler *sampler);
+    void switchOut();
     void signalSwitched();
     void takeOverFrom(BaseCPU *oldCPU);
-
-    Sampler *sampler;
 
     int switchCount;
 
@@ -375,6 +372,8 @@ class OzoneCPU : public BaseCPU
     PhysicalMemory *physmem;
 #endif
 
+    virtual Port *getPort(const std::string &name, int idx);
+
     MemObject *mem;
 
     FrontEnd *frontEnd;
@@ -386,7 +385,7 @@ class OzoneCPU : public BaseCPU
 
     virtual void activateContext(int thread_num, int delay);
     virtual void suspendContext(int thread_num);
-    virtual void deallocateContext(int thread_num);
+    virtual void deallocateContext(int thread_num, int delay);
     virtual void haltContext(int thread_num);
 
     // statistics

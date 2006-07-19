@@ -89,7 +89,6 @@ base_sources = Split('''
 	cpu/pc_event.cc
         cpu/quiesce_event.cc
 	cpu/static_inst.cc
-        cpu/sampler/sampler.cc
         cpu/simple_thread.cc
         cpu/thread_state.cc
 
@@ -299,7 +298,7 @@ alpha_eio_sources = Split('''
 	encumbered/eio/eio.cc
         ''')
 
-if env['TARGET_ISA'] == 'ALPHA_ISA':
+if env['TARGET_ISA'] == 'alpha':
     syscall_emulation_sources += alpha_eio_sources
     
 memtest_sources = Split('''

@@ -41,7 +41,6 @@
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
-#include "cpu/sampler/sampler.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/smt.hh"
@@ -56,10 +55,10 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "base/remote_gdb.hh"
-#include "sim/system.hh"
 #include "arch/tlb.hh"
 #include "arch/stacktrace.hh"
 #include "arch/vtophys.hh"
@@ -179,8 +178,8 @@ void
 BaseSimpleCPU::serialize(ostream &os)
 {
     BaseCPU::serialize(os);
-    SERIALIZE_SCALAR(inst);
-    nameOut(os, csprintf("%s.xc", name()));
+//    SERIALIZE_SCALAR(inst);
+    nameOut(os, csprintf("%s.xc.0", name()));
     thread->serialize(os);
 }
 
@@ -188,8 +187,8 @@ void
 BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     BaseCPU::unserialize(cp, section);
-    UNSERIALIZE_SCALAR(inst);
-    thread->unserialize(cp, csprintf("%s.xc", section));
+//    UNSERIALIZE_SCALAR(inst);
+    thread->unserialize(cp, csprintf("%s.xc.0", section));
 }
 
 void

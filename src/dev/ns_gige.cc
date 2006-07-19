@@ -465,11 +465,12 @@ NSGigE::regStats()
 /**
  * This is to write to the PCI general configuration registers
  */
-void
-NSGigE::writeConfig(int offset, const uint16_t data)
+Tick
+NSGigE::writeConfig(Packet *pkt)
 {
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDev::writeConfig(offset,  data);
+        PciDev::writeConfig(pkt);
     else
         panic("Device specific PCI config space not implemented!\n");
 
@@ -484,6 +485,8 @@ NSGigE::writeConfig(int offset, const uint16_t data)
             ioEnable = false;
         break;
     }
+    pkt->result = Packet::Success;
+    return configDelay;
 }
 
 /**
@@ -508,14 +511,7 @@ NSGigE::read(Packet *pkt)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        if (pkt->getSize() == sizeof(uint8_t))
-            readConfig(daddr & 0xff, pkt->getPtr<uint8_t>());
-        if (pkt->getSize() == sizeof(uint16_t))
-            readConfig(daddr & 0xff, pkt->getPtr<uint16_t>());
-        if (pkt->getSize() == sizeof(uint32_t))
-            readConfig(daddr & 0xff, pkt->getPtr<uint32_t>());
-        pkt->result = Packet::Success;
-        return pioDelay;
+        return readConfig(pkt);
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
@@ -733,14 +729,7 @@ NSGigE::write(Packet *pkt)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        if (pkt->getSize() == sizeof(uint8_t))
-            writeConfig(daddr & 0xff, pkt->get<uint8_t>());
-        if (pkt->getSize() == sizeof(uint16_t))
-            writeConfig(daddr & 0xff, pkt->get<uint16_t>());
-        if (pkt->getSize() == sizeof(uint32_t))
-            writeConfig(daddr & 0xff, pkt->get<uint32_t>());
-        pkt->result = Packet::Success;
-        return pioDelay;
+        return writeConfig(pkt);
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 
@@ -1388,7 +1377,7 @@ NSGigE::doRxDmaRead()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaReadWaiting);
     rxDmaState = dmaReading;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         rxDmaState = dmaReadWaiting;
     else
         dmaRead(rxDmaAddr, rxDmaLen, &rxDmaReadEvent, (uint8_t*)rxDmaData);
@@ -1419,7 +1408,7 @@ NSGigE::doRxDmaWrite()
     assert(rxDmaState == dmaIdle || rxDmaState == dmaWriteWaiting);
     rxDmaState = dmaWriting;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         rxDmaState = dmaWriteWaiting;
     else
         dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaWriteEvent, (uint8_t*)rxDmaData);
@@ -1837,7 +1826,7 @@ NSGigE::doTxDmaRead()
     assert(txDmaState == dmaIdle || txDmaState == dmaReadWaiting);
     txDmaState = dmaReading;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         txDmaState = dmaReadWaiting;
     else
         dmaRead(txDmaAddr, txDmaLen, &txDmaReadEvent, (uint8_t*)txDmaData);
@@ -1868,7 +1857,7 @@ NSGigE::doTxDmaWrite()
     assert(txDmaState == dmaIdle || txDmaState == dmaWriteWaiting);
     txDmaState = dmaWriting;
 
-    if (dmaPending())
+    if (dmaPending() || getState() != Running)
         txDmaState = dmaWriteWaiting;
     else
         dmaWrite(txDmaAddr, txDmaLen, &txDmaWriteEvent, (uint8_t*)txDmaData);
@@ -2417,6 +2406,20 @@ NSGigE::recvPacket(EthPacketPtr packet)
     return true;
 }
 
+
+void
+NSGigE::resume()
+{
+    SimObject::resume();
+
+    // During drain we could have left the state machines in a waiting state and
+    // they wouldn't get out until some other event occured to kick them.
+    // This way they'll get out immediately
+    txKick();
+    rxKick();
+}
+
+
 //=====================================================================
 //
 //
@@ -2807,7 +2810,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
 
     SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
-    SimObjectParam<PciConfigAll *> configspace;
     SimObjectParam<PciConfigData *> configdata;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
@@ -2841,7 +2843,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
 
     INIT_PARAM(system, "System pointer"),
     INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(configspace, "PCI Configspace"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
@@ -2879,7 +2880,6 @@ CREATE_SIM_OBJECT(NSGigE)
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
-    params->configSpace = configspace;
     params->configData = configdata;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;

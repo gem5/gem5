@@ -27,14 +27,14 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
-import sys, os, time, atexit, optparse
+import atexit, os, sys
 
 # import the SWIG-wrapped main C++ functions
 import cc_main
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from cc_main import simulate, SimLoopExitEvent, setCheckpointDir
+from cc_main import simulate, SimLoopExitEvent
 
 # import the m5 compile options
 import defines
@@ -57,111 +57,6 @@ def AddToPath(path):
     # so place the new dir right after that.
     sys.path.insert(1, path)
 
-
-# The m5 module's pointer to the parsed options object
-options = None
-
-
-# User should call this function after calling parse_args() to pass
-# parsed standard option values back into the m5 module for
-# processing.
-def setStandardOptions(_options):
-    # Set module global var
-    global options
-    options = _options
-    # tell C++ about output directory
-    cc_main.setOutputDir(options.outdir)
-
-# Callback to set trace flags.  Not necessarily the best way to do
-# things in the long run (particularly if we change how these global
-# options are handled).
-def setTraceFlags(option, opt_str, value, parser):
-    objects.Trace.flags = value
-
-def setTraceStart(option, opt_str, value, parser):
-    objects.Trace.start = value
-
-def setTraceFile(option, opt_str, value, parser):
-    objects.Trace.file = value
-
-def noPCSymbol(option, opt_str, value, parser):
-    objects.ExecutionTrace.pc_symbol = False
-
-def noPrintCycle(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_cycle = False
-
-def noPrintOpclass(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_opclass = False
-
-def noPrintThread(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_thread = False
-
-def noPrintEA(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_effaddr = False
-
-def noPrintData(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_data = False
-
-def printFetchseq(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_fetchseq = True
-
-def printCpseq(option, opt_str, value, parser):
-    objects.ExecutionTrace.print_cpseq = True
-
-def dumpOnExit(option, opt_str, value, parser):
-    objects.Trace.dump_on_exit = True
-
-def debugBreak(option, opt_str, value, parser):
-    objects.Debug.break_cycles = value
-
-def statsTextFile(option, opt_str, value, parser):
-    objects.Statistics.text_file = value
-
-# Standard optparse options.  Need to be explicitly included by the
-# user script when it calls optparse.OptionParser().
-standardOptions = [
-    optparse.make_option("--outdir", type="string", default="."),
-    optparse.make_option("--traceflags", type="string", action="callback",
-                         callback=setTraceFlags),
-    optparse.make_option("--tracestart", type="int", action="callback",
-                         callback=setTraceStart),
-    optparse.make_option("--tracefile", type="string", action="callback",
-                         callback=setTraceFile),
-    optparse.make_option("--nopcsymbol",
-                         action="callback", callback=noPCSymbol,
-                         help="Disable PC symbols in trace output"),
-    optparse.make_option("--noprintcycle",
-                         action="callback", callback=noPrintCycle,
-                         help="Don't print cycle numbers in trace output"),
-    optparse.make_option("--noprintopclass",
-                         action="callback", callback=noPrintOpclass,
-                         help="Don't print op class type in trace output"),
-    optparse.make_option("--noprintthread",
-                         action="callback", callback=noPrintThread,
-                         help="Don't print thread number in trace output"),
-    optparse.make_option("--noprinteffaddr",
-                         action="callback", callback=noPrintEA,
-                         help="Don't print effective address in trace output"),
-    optparse.make_option("--noprintdata",
-                         action="callback", callback=noPrintData,
-                         help="Don't print result data in trace output"),
-    optparse.make_option("--printfetchseq",
-                         action="callback", callback=printFetchseq,
-                         help="Print fetch sequence numbers in trace output"),
-    optparse.make_option("--printcpseq",
-                         action="callback", callback=printCpseq,
-                         help="Print correct path sequence numbers in trace output"),
-    optparse.make_option("--dumponexit",
-                         action="callback", callback=dumpOnExit,
-                         help="Dump trace buffer on exit"),
-    optparse.make_option("--debugbreak", type="int", metavar="CYCLE",
-                         action="callback", callback=debugBreak,
-                         help="Cycle to create a breakpoint"),
-    optparse.make_option("--statsfile", type="string", action="callback",
-                         callback=statsTextFile, metavar="FILE",
-                         help="Sets the output file for the statistics")
-    ]
-
 # make a SmartDict out of the build options for our local use
 import smartdict
 build_env = smartdict.SmartDict()
@@ -171,11 +66,12 @@ build_env.update(defines.m5_build_env)
 env = smartdict.SmartDict()
 env.update(os.environ)
 
-
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
     obj = config.instanceDict[name]
     return obj.getCCObject()
+
+from main import options, arguments, main
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
@@ -213,35 +109,50 @@ atexit.register(cc_main.doExitCleanup)
 # matter since most scripts will probably 'from m5.objects import *'.
 import objects
 
-def doQuiesce(root):
-    quiesce = cc_main.createCountedQuiesce()
-    unready_objects = root.startQuiesce(quiesce, True)
-    # If we've got some objects that can't quiesce immediately, then simulate
+# This loops until all objects have been fully drained.
+def doDrain(root):
+    all_drained = drain(root)
+    while (not all_drained):
+        all_drained = drain(root)
+
+# Tries to drain all objects.  Draining might not be completed unless
+# all objects return that they are drained on the first call.  This is
+# because as objects drain they may cause other objects to no longer
+# be drained.
+def drain(root):
+    all_drained = False
+    drain_event = cc_main.createCountedDrain()
+    unready_objects = root.startDrain(drain_event, True)
+    # If we've got some objects that can't drain immediately, then simulate
     if unready_objects > 0:
-        quiesce.setCount(unready_objects)
+        drain_event.setCount(unready_objects)
         simulate()
-    cc_main.cleanupCountedQuiesce(quiesce)
+    else:
+        all_drained = True
+    cc_main.cleanupCountedDrain(drain_event)
+    return all_drained
 
 def resume(root):
     root.resume()
 
-def checkpoint(root):
+def checkpoint(root, dir):
     if not isinstance(root, objects.Root):
         raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
-    doQuiesce(root)
+    doDrain(root)
     print "Writing checkpoint"
-    cc_main.serializeAll()
+    cc_main.serializeAll(dir)
     resume(root)
 
-def restoreCheckpoint(root):
+def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
-    cc_main.unserializeAll()
+    cc_main.unserializeAll(dir)
+    resume(root)
 
 def changeToAtomic(system):
     if not isinstance(system, objects.Root) and not isinstance(system, System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
-    doQuiesce(system)
+    doDrain(system)
     print "Changing memory mode to atomic"
     system.changeTiming(cc_main.SimObject.Atomic)
     resume(system)
@@ -250,7 +161,7 @@ def changeToTiming(system):
     if not isinstance(system, objects.Root) and not isinstance(system, System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
-    doQuiesce(system)
+    doDrain(system)
     print "Changing memory mode to timing"
     system.changeTiming(cc_main.SimObject.Timing)
     resume(system)
@@ -271,16 +182,16 @@ def switchCpus(cpuList):
         if not isinstance(cpu, objects.BaseCPU):
             raise TypeError, "%s is not of type BaseCPU", cpu
 
-    # Quiesce all of the individual CPUs
-    quiesce = cc_main.createCountedQuiesce()
+    # Drain all of the individual CPUs
+    drain_event = cc_main.createCountedDrain()
     unready_cpus = 0
     for old_cpu in old_cpus:
-        unready_cpus += old_cpu.startQuiesce(quiesce, False)
-    # If we've got some objects that can't quiesce immediately, then simulate
+        unready_cpus += old_cpu.startDrain(drain_event, False)
+    # If we've got some objects that can't drain immediately, then simulate
     if unready_cpus > 0:
-        quiesce.setCount(unready_cpus)
+        drain_event.setCount(unready_cpus)
         simulate()
-    cc_main.cleanupCountedQuiesce(quiesce)
+    cc_main.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
         old_cpu._ccObject.switchOut()

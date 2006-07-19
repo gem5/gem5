@@ -60,9 +60,9 @@ class PioPort : public Port
     /** The device that this port serves. */
     PioDevice *device;
 
-    /** The platform that device/port are in. This is used to select which mode
+    /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
-    Platform *platform;
+    System *sys;
 
     /** A list of outgoing timing response packets that haven't been serviced
      * yet. */
@@ -81,6 +81,8 @@ class PioPort : public Port
     { peerStatus = status; }
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+
+    void resendNacked(Packet *pkt);
 
     /**
      * This class is used to implemented sendTiming() with a delay. When a delay
@@ -104,16 +106,27 @@ class PioPort : public Port
         friend class PioPort;
     };
 
+    /** Number of timing requests that are emulating the device timing before
+     * attempting to end up on the bus.
+     */
+    int outTiming;
+
+    /** If we need to drain, keep the drain event around until we're done
+     * here.*/
+    Event *drainEvent;
+
     /** Schedule a sendTiming() event to be called in the future. */
     void sendTiming(Packet *pkt, Tick time)
-    { new PioPort::SendEvent(this, pkt, time); }
+    { outTiming++; new PioPort::SendEvent(this, pkt, time); }
 
     /** This function is notification that the device should attempt to send a
      * packet again. */
     virtual void recvRetry();
 
   public:
-    PioPort(PioDevice *dev, Platform *p);
+    PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
+
+    unsigned int drain(Event *de);
 
   friend class PioPort::SendEvent;
 };
@@ -145,12 +158,19 @@ class DmaPort : public Port
     DmaDevice *device;
     std::list<Packet*> transmitList;
 
-    /** The platform that device/port are in. This is used to select which mode
+    /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
-    Platform *platform;
+    System *sys;
 
     /** Number of outstanding packets the dma port has. */
     int pendingCount;
+
+    /** If a dmaAction is in progress. */
+    int actionInProgress;
+
+    /** If we need to drain, keep the drain event around until we're done
+     * here.*/
+    Event *drainEvent;
 
     virtual bool recvTiming(Packet *pkt);
     virtual Tick recvAtomic(Packet *pkt)
@@ -169,13 +189,14 @@ class DmaPort : public Port
     void sendDma(Packet *pkt, bool front = false);
 
   public:
-    DmaPort(DmaDevice *dev, Platform *p);
+    DmaPort(DmaDevice *dev, System *s);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data = NULL);
 
     bool dmaPending() { return pendingCount > 0; }
 
+    unsigned int drain(Event *de);
 };
 
 /**
@@ -193,6 +214,8 @@ class PioDevice : public MemObject
     /** The platform we are in. This is used to decide what type of memory
      * transaction we should perform. */
     Platform *platform;
+
+    System *sys;
 
     /** The pioPort that handles the requests for us and provides us requests
      * that it sees. */
@@ -238,20 +261,22 @@ class PioDevice : public MemObject
     const Params *params() const { return _params; }
 
     PioDevice(Params *p)
-              : MemObject(p->name),  platform(p->platform), pioPort(NULL),
-                _params(p)
+              : MemObject(p->name),  platform(p->platform), sys(p->system),
+              pioPort(NULL), _params(p)
               {}
 
     virtual ~PioDevice();
 
     virtual void init();
 
+    virtual unsigned int drain(Event *de);
+
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
                 panic("pio port already connected to.");
-            pioPort = new PioPort(this, params()->platform);
+            pioPort = new PioPort(this, sys);
             return pioPort;
         } else
             return NULL;
@@ -308,17 +333,19 @@ class DmaDevice : public PioDevice
 
     bool dmaPending() { return dmaPort->dmaPending(); }
 
+    virtual unsigned int drain(Event *de);
+
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
                 panic("pio port already connected to.");
-            pioPort = new PioPort(this, params()->platform);
+            pioPort = new PioPort(this, sys);
             return pioPort;
         } else if (if_name == "dma") {
             if (dmaPort != NULL)
                 panic("dma port already connected to.");
-            dmaPort = new DmaPort(this, params()->platform);
+            dmaPort = new DmaPort(this, sys);
             return dmaPort;
         } else
             return NULL;

@@ -39,6 +39,7 @@
 #include "base/misc.hh"
 #include "base/refcnt.hh"
 #include "cpu/op_class.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "sim/host.hh"
 #include "arch/isa_traits.hh"
 
@@ -49,9 +50,6 @@ struct SimpleImpl;
 class ThreadContext;
 class DynInst;
 class Packet;
-
-template <class Impl>
-class AlphaDynInst;
 
 template <class Impl>
 class OzoneDynInst;

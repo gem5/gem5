@@ -79,9 +79,9 @@ class BaseCache : public MemObject
 {
     class CachePort : public Port
     {
+      public:
         BaseCache *cache;
 
-      public:
         CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
 
       protected:
@@ -110,10 +110,11 @@ class BaseCache : public MemObject
 
     struct CacheEvent : public Event
     {
-        Packet *pkt;
         CachePort *cachePort;
+        Packet *pkt;
 
-        CacheEvent(Packet *pkt, CachePort *cachePort);
+        CacheEvent(CachePort *_cachePort);
+        CacheEvent(CachePort *_cachePort, Packet *_pkt);
         void process();
         const char *description();
     };
@@ -142,8 +143,34 @@ class BaseCache : public MemObject
         fatal("No implementation");
     }
 
-    virtual void recvStatusChange(Port::Status status, bool isCpuSide)
+    void recvStatusChange(Port::Status status, bool isCpuSide)
     {
+        if (status == Port::RangeChange)
+        {
+            if (!isCpuSide)
+            {
+                cpuSidePort->sendStatusChange(Port::RangeChange);
+            }
+            else
+            {
+                memSidePort->sendStatusChange(Port::RangeChange);
+            }
+        }
+    }
+
+    virtual Packet *getPacket()
+    {
+        fatal("No implementation");
+    }
+
+    virtual Packet *getCoherencePacket()
+    {
+        fatal("No implementation");
+    }
+
+    virtual void sendResult(Packet* &pkt, bool success)
+    {
+
         fatal("No implementation");
     }
 
@@ -303,6 +330,8 @@ class BaseCache : public MemObject
         memSidePort = NULL;
     }
 
+    virtual void init();
+
     /**
      * Query block size of a cache.
      * @return  The block size
@@ -388,7 +417,6 @@ class BaseCache : public MemObject
         if (!isBlockedForSnoop()) {
            memSidePort->clearBlocked();
         }
-
     }
 
     /**
@@ -407,10 +435,13 @@ class BaseCache : public MemObject
      */
     void setMasterRequest(RequestCause cause, Tick time)
     {
+        if (!doMasterRequest())
+        {
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
+            reqCpu->schedule(time);
+        }
         uint8_t flag = 1<<cause;
         masterRequests |= flag;
-        assert("Implement\n" && 0);
-//	mi->pktuest(time);
     }
 
     /**
@@ -462,8 +493,10 @@ class BaseCache : public MemObject
      */
     void respond(Packet *pkt, Tick time)
     {
-        assert("Implement\n" && 0);
-//	si->respond(pkt,time);
+        pkt->makeTimingResponse();
+        pkt->result = Packet::Success;
+        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+        reqCpu->schedule(time);
     }
 
     /**
@@ -476,8 +509,10 @@ class BaseCache : public MemObject
         if (!pkt->req->isUncacheable()) {
             missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
         }
-        assert("Implement\n" && 0);
-//	si->respond(pkt,time);
+        pkt->makeTimingResponse();
+        pkt->result = Packet::Success;
+        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+        reqCpu->schedule(time);
     }
 
     /**
@@ -496,9 +531,18 @@ class BaseCache : public MemObject
      */
     void rangeChange() {}
 
-    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop, bool isCpuSide)
     {
-        panic("Unimplimented\n");
+        if (isCpuSide)
+        {
+            AddrRangeList dummy;
+            memSidePort->getPeerAddressRanges(resp, dummy);
+        }
+        else
+        {
+            //This is where snoops get updated
+            return;
+        }
     }
 };
 

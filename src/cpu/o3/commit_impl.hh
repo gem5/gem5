@@ -80,10 +80,9 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
-      switchPending(false),
+      drainPending(false),
       switchedOut(false),
-      trapLatency(params->trapLatency),
-      fetchTrapLatency(params->fetchTrapLatency)
+      trapLatency(params->trapLatency)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -123,9 +122,6 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         tcSquash[i] = false;
         PC[i] = nextPC[i] = 0;
     }
-
-    fetchFaultTick = 0;
-    fetchTrapWait = 0;
 }
 
 template <class Impl>
@@ -235,7 +231,6 @@ DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
     cpu->activateStage(O3CPU::CommitIdx);
 
     trapLatency = cpu->cycles(trapLatency);
-    fetchTrapLatency = cpu->cycles(fetchTrapLatency);
 }
 
 template <class Impl>
@@ -294,13 +289,6 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setFetchStage(Fetch *fetch_stage)
-{
-    fetchStage = fetch_stage;
-}
-
-template <class Impl>
-void
 DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 {
     iewStage = iew_stage;
@@ -350,19 +338,34 @@ DefaultCommit<Impl>::initStage()
 }
 
 template <class Impl>
-void
-DefaultCommit<Impl>::switchOut()
+bool
+DefaultCommit<Impl>::drain()
 {
-    switchPending = true;
+    drainPending = true;
+
+    // If it's already drained, return true.
+    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalDrained();
+        return true;
+    }
+
+    return false;
 }
 
 template <class Impl>
 void
-DefaultCommit<Impl>::doSwitchOut()
+DefaultCommit<Impl>::switchOut()
 {
     switchedOut = true;
-    switchPending = false;
+    drainPending = false;
     rob->switchOut();
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::resume()
+{
+    drainPending = false;
 }
 
 template <class Impl>
@@ -557,10 +560,14 @@ DefaultCommit<Impl>::tick()
     wroteToTimeBuffer = false;
     _nextStatus = Inactive;
 
-    if (switchPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
-        cpu->signalSwitched();
+    if (drainPending && rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        cpu->signalDrained();
+        drainPending = false;
         return;
     }
+
+    if ((*activeThreads).size() <= 0)
+        return;
 
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
@@ -575,7 +582,7 @@ DefaultCommit<Impl>::tick()
                 commitStatus[tid] = Running;
             } else {
                 DPRINTF(Commit,"[tid:%u]: Still Squashing, cannot commit any"
-                        "insts this cycle.\n", tid);
+                        " insts this cycle.\n", tid);
                 rob->doSquash(tid);
                 toIEW->commitInfo[tid].robSquashing = true;
                 wroteToTimeBuffer = true;
@@ -989,6 +996,12 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     // Check if the instruction caused a fault.  If so, trap.
     Fault inst_fault = head_inst->getFault();
 
+    // DTB will sometimes need the machine instruction for when
+    // faults happen.  So we will set it here, prior to the DTB
+    // possibly needing it for its fault.
+    thread[tid]->setInst(
+        static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
+
     if (inst_fault != NoFault) {
         head_inst->setCompleted();
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
@@ -1010,12 +1023,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // Mark that we're in state update mode so that the trap's
         // execution doesn't generate extra squashes.
         thread[tid]->inSyscall = true;
-
-        // DTB will sometimes need the machine instruction for when
-        // faults happen.  So we will set it here, prior to the DTB
-        // possibly needing it for its fault.
-        thread[tid]->setInst(
-            static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
 
         // Execute the trap.  Although it's slightly unrealistic in
         // terms of timing (as it doesn't wait for the full timing of

@@ -67,13 +67,13 @@ class SimLoopExitEvent : public Event
     virtual const char *description();
 };
 
-class CountedQuiesceEvent : public SimLoopExitEvent
+class CountedDrainEvent : public SimLoopExitEvent
 {
   private:
-    // Count down to quiescing
+    // Count of how many objects have not yet drained
     int count;
   public:
-    CountedQuiesceEvent()
+    CountedDrainEvent()
         : count(0)
     { }
     void process();

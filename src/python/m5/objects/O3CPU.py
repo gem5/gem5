@@ -10,6 +10,8 @@ class DerivO3CPU(BaseCPU):
     checker = Param.BaseCPU(NULL, "checker")
 
     cachePorts = Param.Unsigned("Cache Ports")
+    icache_port = Port("Instruction Port")
+    dcache_port = Port("Data Port")
 
     decodeToFetchDelay = Param.Unsigned("Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned("Rename to fetch delay")
@@ -37,12 +39,10 @@ class DerivO3CPU(BaseCPU):
                "Issue/Execute/Writeback delay")
     issueToExecuteDelay = Param.Unsigned("Issue to execute delay (internal "
               "to the IEW stage)")
+    dispatchWidth = Param.Unsigned("Dispatch width")
     issueWidth = Param.Unsigned("Issue width")
-    executeWidth = Param.Unsigned("Execute width")
-    executeIntWidth = Param.Unsigned("Integer execute width")
-    executeFloatWidth = Param.Unsigned("Floating point execute width")
-    executeBranchWidth = Param.Unsigned("Branch execute width")
-    executeMemoryWidth = Param.Unsigned("Memory execute width")
+    wbWidth = Param.Unsigned("Writeback width")
+    wbDepth = Param.Unsigned("Writeback depth")
     fuPool = Param.FUPool(NULL, "Functional Unit pool")
 
     iewToCommitDelay = Param.Unsigned("Issue/Execute/Writeback to commit "
@@ -52,6 +52,9 @@ class DerivO3CPU(BaseCPU):
     squashWidth = Param.Unsigned("Squash width")
     trapLatency = Param.Tick("Trap latency")
     fetchTrapLatency = Param.Tick("Fetch trap latency")
+
+    backComSize = Param.Unsigned("Time buffer size for backwards communication")
+    forwardComSize = Param.Unsigned("Time buffer size for forward communication")
 
     predType = Param.String("Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")

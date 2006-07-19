@@ -162,10 +162,6 @@ class DefaultCommit
     /** Sets the pointer to the queue coming from IEW. */
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
-    void setFetchStage(Fetch *fetch_stage);
-
-    Fetch *fetchStage;
-
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
@@ -187,11 +183,14 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void initStage();
 
-    /** Initializes the switching out of commit. */
-    void switchOut();
+    /** Initializes the draining of commit. */
+    bool drain();
+
+    /** Resumes execution after draining. */
+    void resume();
 
     /** Completes the switch out of commit. */
-    void doSwitchOut();
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -332,10 +331,6 @@ class DefaultCommit
     /** Vector of all of the threads. */
     std::vector<Thread *> thread;
 
-    Fault fetchFault;
-
-    int fetchTrapWait;
-
     /** Records that commit has written to the time buffer this cycle. Used for
      * the CPU to determine if it can deschedule itself if there is no activity.
      */
@@ -383,8 +378,8 @@ class DefaultCommit
     /** Number of Active Threads */
     unsigned numThreads;
 
-    /** Is a switch out pending. */
-    bool switchPending;
+    /** Is a drain pending. */
+    bool drainPending;
 
     /** Is commit switched out. */
     bool switchedOut;
@@ -393,10 +388,6 @@ class DefaultCommit
      * squash event.
      */
     Tick trapLatency;
-
-    Tick fetchTrapLatency;
-
-    Tick fetchFaultTick;
 
     /** The commit PC of each thread.  Refers to the instruction that
      * is currently being processed/committed.

@@ -543,15 +543,14 @@ class SimObject(object):
         for child in self._children.itervalues():
             child.connectPorts()
 
-    def startQuiesce(self, quiesce_event, recursive):
+    def startDrain(self, drain_event, recursive):
         count = 0
         # ParamContexts don't serialize
         if isinstance(self, SimObject) and not isinstance(self, ParamContext):
-            if self._ccObject.quiesce(quiesce_event):
-                count = 1
+            count += self._ccObject.drain(drain_event)
         if recursive:
             for child in self._children.itervalues():
-                count += child.startQuiesce(quiesce_event, True)
+                count += child.startDrain(drain_event, True)
         return count
 
     def resume(self):
@@ -561,7 +560,7 @@ class SimObject(object):
             child.resume()
 
     def changeTiming(self, mode):
-        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+        if isinstance(self, System):
             self._ccObject.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)
@@ -666,7 +665,8 @@ class BaseProxy(object):
                 result, done = self.find(obj)
 
         if not done:
-            raise AttributeError, "Can't resolve proxy '%s' from '%s'" % \
+            raise AttributeError, \
+                  "Can't resolve proxy '%s' from '%s'" % \
                   (self.path(), base.path())
 
         if isinstance(result, BaseProxy):

@@ -60,16 +60,15 @@ class SimObject : public Serializable, protected StartupCallback
     };
 
     enum State {
-        Atomic,
-        Timing,
-        Quiescing,
-        QuiescedAtomic,
-        QuiescedTiming
+        Running,
+        Draining,
+        Drained
     };
+  private:
+    State state;
 
   protected:
     Params *_params;
-    State state;
 
     void changeState(State new_state) { state = new_state; }
 
@@ -116,8 +115,10 @@ class SimObject : public Serializable, protected StartupCallback
 
     // Methods to drain objects in order to take checkpoints
     // Or switch from timing -> atomic memory model
-    // Quiesce returns true if the SimObject cannot quiesce immediately.
-    virtual bool quiesce(Event *quiesce_event);
+    // Drain returns 0 if the simobject can drain immediately or
+    // the number of times the drain_event's process function will be called
+    // before the object will be done draining. Normally this should be 1
+    virtual unsigned int drain(Event *drain_event);
     virtual void resume();
     virtual void setMemoryMode(State new_mode);
     virtual void switchOut();

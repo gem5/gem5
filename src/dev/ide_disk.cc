@@ -318,7 +318,7 @@ IdeDisk::doDmaTransfer()
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
               dmaState, devState);
 
-    if (ctrl->dmaPending()) {
+    if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
         dmaTransferEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
         return;
     } else
@@ -398,8 +398,7 @@ IdeDisk::doDmaRead()
                 curPrd.getByteCount(), TheISA::PageBytes);
 
     }
-    if (ctrl->dmaPending()) {
-        panic("shouldn't be reentant??");
+    if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
         dmaReadWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaReadCG->done()) {
@@ -474,8 +473,7 @@ IdeDisk::doDmaWrite()
         dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
                 curPrd.getByteCount(), TheISA::PageBytes);
     }
-    if (ctrl->dmaPending()) {
-        panic("shouldn't be reentant??");
+    if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
         dmaWriteWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaWriteCG->done()) {

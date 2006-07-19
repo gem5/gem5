@@ -33,23 +33,25 @@
 #include "cpu/simple/timing.hh"
 #include "mem/packet_impl.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
+Port *
+TimingSimpleCPU::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dcache_port")
+        return &dcachePort;
+    else if (if_name == "icache_port")
+        return &icachePort;
+    else
+        panic("No Such Port\n");
+}
 
 void
 TimingSimpleCPU::init()
 {
-    //Create Memory Ports (conect them up)
-    Port *mem_dport = mem->getPort("");
-    dcachePort.setPeer(mem_dport);
-    mem_dport->setPeer(&dcachePort);
-
-    Port *mem_iport = mem->getPort("");
-    icachePort.setPeer(mem_iport);
-    mem_iport->setPeer(&icachePort);
-
     BaseCPU::init();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
@@ -88,8 +90,9 @@ TimingSimpleCPU::TimingSimpleCPU(Params *p)
 {
     _status = Idle;
     ifetch_pkt = dcache_pkt = NULL;
-    quiesceEvent = NULL;
-    state = SimObject::Timing;
+    drainEvent = NULL;
+    fetchEvent = NULL;
+    changeState(SimObject::Running);
 }
 
 
@@ -100,30 +103,31 @@ TimingSimpleCPU::~TimingSimpleCPU()
 void
 TimingSimpleCPU::serialize(ostream &os)
 {
-    SERIALIZE_ENUM(_status);
+    SimObject::State so_state = SimObject::getState();
+    SERIALIZE_ENUM(so_state);
     BaseSimpleCPU::serialize(os);
 }
 
 void
 TimingSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
-    UNSERIALIZE_ENUM(_status);
+    SimObject::State so_state;
+    UNSERIALIZE_ENUM(so_state);
     BaseSimpleCPU::unserialize(cp, section);
 }
 
-bool
-TimingSimpleCPU::quiesce(Event *quiesce_event)
+unsigned int
+TimingSimpleCPU::drain(Event *drain_event)
 {
-    // TimingSimpleCPU is ready to quiesce if it's not waiting for
+    // TimingSimpleCPU is ready to drain if it's not waiting for
     // an access to complete.
     if (status() == Idle || status() == Running || status() == SwitchedOut) {
-        DPRINTF(Config, "Ready to quiesce\n");
-        return false;
+        changeState(SimObject::Drained);
+        return 0;
     } else {
-        DPRINTF(Config, "Waiting to quiesce\n");
-        changeState(SimObject::Quiescing);
-        quiesceEvent = quiesce_event;
-        return true;
+        changeState(SimObject::Draining);
+        drainEvent = drain_event;
+        return 1;
     }
 }
 
@@ -131,16 +135,21 @@ void
 TimingSimpleCPU::resume()
 {
     if (_status != SwitchedOut && _status != Idle) {
-        Event *e =
-            new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, true);
-        e->schedule(curTick);
-    }
-}
+        // Delete the old event if it existed.
+        if (fetchEvent) {
+            if (fetchEvent->scheduled())
+                fetchEvent->deschedule();
 
-void
-TimingSimpleCPU::setMemoryMode(State new_mode)
-{
-    assert(new_mode == SimObject::Timing);
+            delete fetchEvent;
+        }
+
+        fetchEvent =
+            new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
+        fetchEvent->schedule(curTick);
+    }
+
+    assert(system->getMemoryMode() == System::Timing);
+    changeState(SimObject::Running);
 }
 
 void
@@ -148,6 +157,11 @@ TimingSimpleCPU::switchOut()
 {
     assert(status() == Running || status() == Idle);
     _status = SwitchedOut;
+
+    // If we've been scheduled to resume but are then told to switch out,
+    // we'll need to cancel it.
+    if (fetchEvent && fetchEvent->scheduled())
+        fetchEvent->deschedule();
 }
 
 
@@ -179,9 +193,9 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     notIdleFraction++;
     _status = Running;
     // kick things off by initiating the fetch of the next instruction
-    Event *e =
-        new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, true);
-    e->schedule(curTick + cycles(delay));
+    fetchEvent =
+        new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
+    fetchEvent->schedule(curTick + cycles(delay));
 }
 
 
@@ -422,8 +436,8 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     delete pkt->req;
     delete pkt;
 
-    if (getState() == SimObject::Quiescing) {
-        completeQuiesce();
+    if (getState() == SimObject::Draining) {
+        completeDrain();
         return;
     }
 
@@ -479,8 +493,8 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
-    if (getState() == SimObject::Quiescing) {
-        completeQuiesce();
+    if (getState() == SimObject::Draining) {
+        completeDrain();
 
         delete pkt->req;
         delete pkt;
@@ -499,11 +513,11 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 
 
 void
-TimingSimpleCPU::completeQuiesce()
+TimingSimpleCPU::completeDrain()
 {
-    DPRINTF(Config, "Done quiescing\n");
-    changeState(SimObject::QuiescedTiming);
-    quiesceEvent->process();
+    DPRINTF(Config, "Done draining\n");
+    changeState(SimObject::Drained);
+    drainEvent->process();
 }
 
 bool
@@ -539,11 +553,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     SimObjectParam<MemObject *> mem;
+    SimObjectParam<System *> system;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;
 #else
@@ -571,11 +585,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(mem, "memory"),
+    INIT_PARAM(system, "system object"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
@@ -606,11 +620,11 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->mem = mem;
+    params->system = system;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;
 #else

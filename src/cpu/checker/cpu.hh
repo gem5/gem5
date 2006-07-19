@@ -66,7 +66,6 @@ class ThreadContext;
 class MemInterface;
 class Checkpoint;
 class Request;
-class Sampler;
 
 /**
  * CheckerCPU class.  Dynamically verifies instructions as they are
@@ -128,6 +127,12 @@ class CheckerCPU : public BaseCPU
 
     Port *dcachePort;
 
+    virtual Port *getPort(const std::string &name, int idx)
+    {
+        panic("Not supported on checker!");
+        return NULL;
+    }
+
   public:
     // Primary thread being run.
     SimpleThread *thread;
@@ -165,7 +170,7 @@ class CheckerCPU : public BaseCPU
 
     virtual Counter totalInstructions() const
     {
-        return numInst - startNumInst;
+        return 0;
     }
 
     // number of simulated loads
@@ -374,7 +379,7 @@ class Checker : public CheckerCPU
         : CheckerCPU(p)
     { }
 
-    void switchOut(Sampler *s);
+    void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
     void verify(DynInstPtr &inst);

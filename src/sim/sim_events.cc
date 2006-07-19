@@ -79,10 +79,10 @@ exitSimLoop(const std::string &message, int exit_code)
 }
 
 void
-CountedQuiesceEvent::process()
+CountedDrainEvent::process()
 {
     if (--count == 0) {
-        exitSimLoop("Finished quiesce");
+        exitSimLoop("Finished drain");
     }
 }
 

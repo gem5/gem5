@@ -40,8 +40,6 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
-class Sampler;
-
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch
@@ -164,6 +162,9 @@ class DefaultFetch
     /** Registers statistics. */
     void regStats();
 
+    /** Returns the icache port. */
+    Port *getIcachePort() { return icachePort; }
+
     /** Sets CPU pointer. */
     void setCPU(O3CPU *cpu_ptr);
 
@@ -182,11 +183,14 @@ class DefaultFetch
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
 
-    /** Begins the switch out of the fetch stage. */
-    void switchOut();
+    /** Begins the drain of the fetch stage. */
+    bool drain();
 
-    /** Completes the switch out of the fetch stage. */
-    void doSwitchOut();
+    /** Resumes execution after a drain. */
+    void resume();
+
+    /** Tells fetch stage to prepare to be switched out. */
+    void switchOut();
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();
@@ -400,6 +404,12 @@ class DefaultFetch
     /** The cache line being fetched. */
     uint8_t *cacheData[Impl::MaxThreads];
 
+    /** The PC of the cacheline that has been loaded. */
+    Addr cacheDataPC[Impl::MaxThreads];
+
+    /** Whether or not the cache data is valid. */
+    bool cacheDataValid[Impl::MaxThreads];
+
     /** Size of instructions. */
     int instSize;
 
@@ -422,6 +432,9 @@ class DefaultFetch
      * must stop once it is not fetching PAL instructions.
      */
     bool interruptPending;
+
+    /** Is there a drain pending. */
+    bool drainPending;
 
     /** Records if fetch is switched out. */
     bool switchedOut;

@@ -112,7 +112,7 @@ class O3ThreadContext : public ThreadContext
     virtual void suspend();
 
     /** Set the status to Unallocated. */
-    virtual void deallocate();
+    virtual void deallocate(int delay = 0);
 
     /** Set the status to Halted. */
     virtual void halt();

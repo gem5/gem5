@@ -42,16 +42,17 @@ using namespace std;
 
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
-    : // @todo: Make this into a parameter.
-      issueToExecQueue(5, 5),
+    : issueToExecQueue(params->backComSize, params->forwardComSize),
       instQueue(params),
       ldstQueue(params),
       fuPool(params->fuPool),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToIEWDelay(params->renameToIEWDelay),
       issueToExecuteDelay(params->issueToExecuteDelay),
-      issueReadWidth(params->issueWidth),
+      dispatchWidth(params->dispatchWidth),
       issueWidth(params->issueWidth),
+      wbOutstanding(0),
+      wbWidth(params->wbWidth),
       numThreads(params->numberOfThreads),
       switchedOut(false)
 {
@@ -74,7 +75,11 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
         fetchRedirect[i] = false;
     }
 
+    wbMax = wbWidth * params->wbDepth;
+
     updateLSQNextCycle = false;
+
+    ableToIssue = true;
 
     skidBufferMax = (3 * (renameToIEWDelay * params->renameWidth)) + issueWidth;
 }
@@ -348,16 +353,23 @@ DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
 }
 
 template <class Impl>
-void
-DefaultIEW<Impl>::switchOut()
+bool
+DefaultIEW<Impl>::drain()
 {
-    // IEW is ready to switch out at any time.
-    cpu->signalSwitched();
+    // IEW is ready to drain at any time.
+    cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>
 void
-DefaultIEW<Impl>::doSwitchOut()
+DefaultIEW<Impl>::resume()
+{
+}
+
+template <class Impl>
+void
+DefaultIEW<Impl>::switchOut()
 {
     // Clear any state.
     switchedOut = true;
@@ -400,7 +412,7 @@ DefaultIEW<Impl>::takeOverFrom()
     updateLSQNextCycle = false;
 
     // @todo: Fix hardcoded number
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < issueToExecQueue.getSize(); ++i) {
         issueToExecQueue.advance();
     }
 }
@@ -559,12 +571,12 @@ DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
     // free slot.
     while ((*iewQueue)[wbCycle].insts[wbNumInst]) {
         ++wbNumInst;
-        if (wbNumInst == issueWidth) {
+        if (wbNumInst == wbWidth) {
             ++wbCycle;
             wbNumInst = 0;
         }
 
-        assert(wbCycle < 5);
+        assert((wbCycle * wbWidth + wbNumInst) < wbMax);
     }
 
     // Add finished instruction to queue to commit.
@@ -937,7 +949,7 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
     // Loop through the instructions, putting them in the instruction
     // queue.
     for ( ; dis_num_inst < insts_to_add &&
-              dis_num_inst < issueReadWidth;
+              dis_num_inst < dispatchWidth;
           ++dis_num_inst)
     {
         inst = insts_to_dispatch.front();
@@ -1189,6 +1201,7 @@ DefaultIEW<Impl>::executeInsts()
 
             ++iewExecSquashedInsts;
 
+            decrWb(inst->seqNum);
             continue;
         }
 
@@ -1351,6 +1364,8 @@ DefaultIEW<Impl>::writebackInsts()
             }
             writebackCount[tid]++;
         }
+
+        decrWb(inst->seqNum);
     }
 }
 

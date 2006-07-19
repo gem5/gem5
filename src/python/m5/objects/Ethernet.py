@@ -1,7 +1,7 @@
 from m5 import build_env
 from m5.config import *
 from Device import DmaDevice
-from Pci import PciDevice
+from Pci import PciDevice, PciConfigData
 
 class EtherInt(SimObject):
     type = 'EtherInt'
@@ -84,6 +84,26 @@ class EtherDevBase(PciDevice):
     tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
     rss = Param.Bool(False, "Receive Side Scaling")
 
+class NSGigEPciData(PciConfigData):
+    VendorID = 0x100B
+    DeviceID = 0x0022
+    Status = 0x0290
+    SubClassCode = 0x00
+    ClassCode = 0x02
+    ProgIF = 0x00
+    BAR0 = 0x00000001
+    BAR1 = 0x00000000
+    BAR2 = 0x00000000
+    BAR3 = 0x00000000
+    BAR4 = 0x00000000
+    BAR5 = 0x00000000
+    MaximumLatency = 0x34
+    MinimumGrant = 0xb0
+    InterruptLine = 0x1e
+    InterruptPin = 0x01
+    BAR0Size = '256B'
+    BAR1Size = '4kB'
+
 class NSGigE(EtherDevBase):
     type = 'NSGigE'
 
@@ -91,10 +111,31 @@ class NSGigE(EtherDevBase):
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
     dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
 
+    configdata = NSGigEPciData()
+
 
 class NSGigEInt(EtherInt):
     type = 'NSGigEInt'
     device = Param.NSGigE("Ethernet device of this interface")
+
+class SinicPciData(PciConfigData):
+    VendorID = 0x1291
+    DeviceID = 0x1293
+    Status = 0x0290
+    SubClassCode = 0x00
+    ClassCode = 0x02
+    ProgIF = 0x00
+    BAR0 = 0x00000000
+    BAR1 = 0x00000000
+    BAR2 = 0x00000000
+    BAR3 = 0x00000000
+    BAR4 = 0x00000000
+    BAR5 = 0x00000000
+    MaximumLatency = 0x34
+    MinimumGrant = 0xb0
+    InterruptLine = 0x1e
+    InterruptPin = 0x01
+    BAR0Size = '64kB'
 
 class Sinic(EtherDevBase):
     type = 'Sinic'
@@ -110,6 +151,8 @@ class Sinic(EtherDevBase):
     zero_copy = Param.Bool(False, "Zero copy receive")
     delay_copy = Param.Bool(False, "Delayed copy transmit")
     virtual_addr = Param.Bool(False, "Virtual addressing")
+
+    configdata = SinicPciData()
 
 class SinicInt(EtherInt):
     type = 'SinicInt'

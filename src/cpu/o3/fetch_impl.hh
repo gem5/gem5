@@ -109,6 +109,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
       numThreads(params->numberOfThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
+      drainPending(false),
       switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
@@ -161,6 +162,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
 
         stalls[tid].decode = 0;
         stalls[tid].rename = 0;
@@ -279,10 +282,6 @@ DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
 
-    Port *mem_dport = mem->getPort("");
-    icachePort->setPeer(mem_dport);
-    mem_dport->setPeer(icachePort);
-
 #if USE_CHECKER
     if (cpu->checker) {
         cpu->checker->setIcachePort(icachePort);
@@ -360,14 +359,19 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
-    // Wake up the CPU (if it went to sleep and was waiting on this completion
-    // event).
-    cpu->wakeCPU();
+    memcpy(cacheData[tid], pkt->getPtr<uint8_t *>(), cacheBlkSize);
+    cacheDataValid[tid] = true;
 
-    DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
-            tid);
+    if (!drainPending) {
+        // Wake up the CPU (if it went to sleep and was waiting on
+        // this completion event).
+        cpu->wakeCPU();
 
-    switchToActive();
+        DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
+                tid);
+
+        switchToActive();
+    }
 
     // Only switch to IcacheAccessComplete if we're not stalled as well.
     if (checkStall(tid)) {
@@ -383,18 +387,27 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 }
 
 template <class Impl>
-void
-DefaultFetch<Impl>::switchOut()
+bool
+DefaultFetch<Impl>::drain()
 {
-    // Fetch is ready to switch out at any time.
-    switchedOut = true;
-    cpu->signalSwitched();
+    // Fetch is ready to drain at any time.
+    cpu->signalDrained();
+    drainPending = true;
+    return true;
 }
 
 template <class Impl>
 void
-DefaultFetch<Impl>::doSwitchOut()
+DefaultFetch<Impl>::resume()
 {
+    drainPending = false;
+}
+
+template <class Impl>
+void
+DefaultFetch<Impl>::switchOut()
+{
+    switchedOut = true;
     // Branch predictor needs to have its state cleared.
     branchPred.switchOut();
 }
@@ -498,7 +511,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (cacheBlocked || (interruptPending && flags == 0) || switchedOut) {
+    if (cacheBlocked || (interruptPending && flags == 0)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -508,6 +521,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
+
+    // If we've already got the block, no need to try to fetch it again.
+    if (cacheDataValid[tid] && fetch_PC == cacheDataPC[tid]) {
+        return true;
+    }
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
@@ -540,7 +558,10 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         Packet::ReadReq, Packet::Broadcast);
-        data_pkt->dataStatic(cacheData[tid]);
+        data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
+
+        cacheDataPC[tid] = fetch_PC;
+        cacheDataValid[tid] = false;
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
@@ -898,7 +919,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     //////////////////////////////////////////
     int tid = getFetchingThread(fetchPolicy);
 
-    if (tid == -1) {
+    if (tid == -1 || drainPending) {
         DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
 
         // Breaks looping condition in tick()

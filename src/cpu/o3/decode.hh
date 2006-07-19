@@ -109,8 +109,14 @@ class DefaultDecode
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
 
+    /** Drains the decode stage. */
+    bool drain();
+
+    /** Resumes execution after a drain. */
+    void resume() { }
+
     /** Switches out the decode stage. */
-    void switchOut();
+    void switchOut() { }
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom();

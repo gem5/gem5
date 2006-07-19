@@ -41,7 +41,6 @@
 #include "cpu/cpuevent.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
-#include "cpu/sampler/sampler.hh"
 #include "sim/param.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
@@ -60,11 +59,11 @@ int maxThreadsPerCPU = 1;
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), clock(p->clock), checkInterrupts(true),
+    : MemObject(p->name), clock(p->clock), checkInterrupts(true),
       params(p), number_of_threads(p->numberOfThreads), system(p->system)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : SimObject(p->name), clock(p->clock), params(p),
+    : MemObject(p->name), clock(p->clock), params(p),
       number_of_threads(p->numberOfThreads), system(p->system)
 #endif
 {

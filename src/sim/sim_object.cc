@@ -37,7 +37,6 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/stats/events.hh"
-#include "base/serializer.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -73,7 +72,7 @@ SimObject::SimObject(Params *p)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
-    state = Atomic;
+    state = Running;
 }
 
 //
@@ -89,7 +88,7 @@ SimObject::SimObject(const string &_name)
 
     doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
-    state = Atomic;
+    state = Running;
 }
 
 void
@@ -270,38 +269,23 @@ SimObject::recordEvent(const std::string &stat)
         Stats::recordEvent(stat);
 }
 
-bool
-SimObject::quiesce(Event *quiesce_event)
+unsigned int
+SimObject::drain(Event *drain_event)
 {
-    if (state != QuiescedAtomic && state != Atomic) {
-        panic("Must implement your own quiesce function if it is to be used "
-              "in timing mode!");
-    }
-    state = QuiescedAtomic;
-    return false;
+    state = Drained;
+    return 0;
 }
 
 void
 SimObject::resume()
 {
-    if (state == QuiescedAtomic) {
-        state = Atomic;
-    } else if (state == QuiescedTiming) {
-        state = Timing;
-    }
+    state = Running;
 }
 
 void
 SimObject::setMemoryMode(State new_mode)
 {
-    assert(new_mode == Timing || new_mode == Atomic);
-    if (state == QuiescedAtomic && new_mode == Timing) {
-        state = QuiescedTiming;
-    } else if (state == QuiescedTiming && new_mode == Atomic) {
-        state = QuiescedAtomic;
-    } else {
-        state = new_mode;
-    }
+    panic("setMemoryMode() should only be called on systems");
 }
 
 void

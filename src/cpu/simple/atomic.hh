@@ -122,8 +122,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
   public:
 
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
+
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void resume();
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);

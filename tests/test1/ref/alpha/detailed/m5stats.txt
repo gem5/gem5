@@ -1,0 +1,1775 @@
+
+---------- Begin Simulation Statistics ----------
+global.BPredUnit.BTBCorrect                         0                       # Number of correct BTB predictions (this stat may not work properly.
+global.BPredUnit.BTBHits                        45390                       # Number of BTB hits
+global.BPredUnit.BTBLookups                     59902                       # Number of BTB lookups
+global.BPredUnit.RASInCorrect                      85                       # Number of incorrect RAS predictions.
+global.BPredUnit.condIncorrect                   3098                       # Number of conditional branches incorrect
+global.BPredUnit.condPredicted                  46029                       # Number of conditional branches predicted
+global.BPredUnit.lookups                        70231                       # Number of BP lookups
+global.BPredUnit.usedRAS                         7755                       # Number of times the RAS was used to get a target.
+host_inst_rate                                  69741                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 148316                       # Number of bytes of host memory used
+host_seconds                                     7.17                       # Real time elapsed on the host
+host_tick_rate                                  36160                       # Simulator tick rate (ticks/s)
+memdepunit.memDep.conflictingLoads              15235                       # Number of conflicting loads.
+memdepunit.memDep.conflictingStores              2693                       # Number of conflicting stores.
+memdepunit.memDep.insertedLoads                145639                       # Number of loads inserted to the mem dependence unit.
+memdepunit.memDep.insertedStores                60928                       # Number of stores inserted to the mem dependence unit.
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+sim_insts                                      500002                       # Number of instructions simulated
+sim_seconds                                  0.000000                       # Number of seconds simulated
+sim_ticks                                      259259                       # Number of ticks simulated
+system.cpu0.checker.numCycles                  518940                       # number of cpu cycles simulated
+system.cpu0.commit.COM:branches                 61160                       # Number of branches committed
+system.cpu0.commit.COM:bw_lim_events            17172                       # number cycles where commit BW limit reached
+system.cpu0.commit.COM:bw_limited                   0                       # number of insts not committed due to BW limits
+system.cpu0.commit.COM:committed_per_cycle.start_dist                     # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle.samples       251997                      
+system.cpu0.commit.COM:committed_per_cycle.min_value            0                      
+                               0        70509   2798.01%           
+                               1        75489   2995.63%           
+                               2        28876   1145.89%           
+                               3        23224    921.60%           
+                               4        21222    842.15%           
+                               5         3198    126.91%           
+                               6         8368    332.07%           
+                               7         3939    156.31%           
+                               8        17172    681.44%           
+system.cpu0.commit.COM:committed_per_cycle.max_value            8                      
+system.cpu0.commit.COM:committed_per_cycle.end_dist
+
+system.cpu0.commit.COM:count                   518948                       # Number of instructions committed
+system.cpu0.commit.COM:loads                   131376                       # Number of loads committed
+system.cpu0.commit.COM:membars                      0                       # Number of memory barriers committed
+system.cpu0.commit.COM:refs                    189772                       # Number of memory references committed
+system.cpu0.commit.COM:swp_count                    0                       # Number of s/w prefetches committed
+system.cpu0.commit.branchMispredicts             2836                       # The number of times a branch was mispredicted
+system.cpu0.commit.commitCommittedInsts        518948                       # The number of committed instructions
+system.cpu0.commit.commitNonSpecStalls             18                       # The number of times commit has been forced to stall to communicate backwards
+system.cpu0.commit.commitSquashedInsts          44297                       # The number of squashed insts skipped by commit
+system.cpu0.committedInsts                     500002                       # Number of Instructions Simulated
+system.cpu0.committedInsts_total               500002                       # Number of Instructions Simulated
+system.cpu0.cpi                              0.518516                       # CPI: Cycles Per Instruction
+system.cpu0.cpi_total                        0.518516                       # CPI: Total CPI of All Threads
+system.cpu0.decode.DECODE:BlockedCycles           743                       # Number of cycles decode is blocked
+system.cpu0.decode.DECODE:BranchMispred           281                       # Number of times decode detected a branch misprediction
+system.cpu0.decode.DECODE:BranchResolved        16033                       # Number of times decode resolved a branch
+system.cpu0.decode.DECODE:DecodedInsts         586219                       # Number of instructions handled by decode
+system.cpu0.decode.DECODE:IdleCycles           143055                       # Number of cycles decode is idle
+system.cpu0.decode.DECODE:RunCycles            108199                       # Number of cycles decode is running
+system.cpu0.decode.DECODE:SquashCycles           7263                       # Number of cycles decode is squashing
+system.cpu0.decode.DECODE:SquashedInsts           989                       # Number of squashed instructions handled by decode
+system.cpu0.fetch.Branches                      70231                       # Number of branches that fetch encountered
+system.cpu0.fetch.CacheLines                    71036                       # Number of cache lines fetched
+system.cpu0.fetch.Cycles                       180480                       # Number of cycles fetch has run and was not squashing or blocked
+system.cpu0.fetch.IcacheSquashes                  962                       # Number of outstanding Icache misses that were squashed
+system.cpu0.fetch.Insts                        594968                       # Number of instructions fetch has processed
+system.cpu0.fetch.SquashCycles                   3140                       # Number of cycles fetch has spent squashing
+system.cpu0.fetch.branchRate                 0.270890                       # Number of branch fetches per cycle
+system.cpu0.fetch.icacheStallCycles             71036                       # Number of cycles fetch is stalled on an Icache miss
+system.cpu0.fetch.predictedBranches             53145                       # Number of branches that fetch has predicted taken
+system.cpu0.fetch.rate                       2.294870                       # Number of inst fetches per cycle
+system.cpu0.fetch.rateDist.start_dist                          # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist.samples             259260                      
+system.cpu0.fetch.rateDist.min_value                0                      
+                               0       149817   5778.64%           
+                               1         3603    138.97%           
+                               2         9058    349.38%           
+                               3        10685    412.13%           
+                               4         8455    326.12%           
+                               5        18775    724.18%           
+                               6        25664    989.89%           
+                               7         6109    235.63%           
+                               8        27094   1045.05%           
+system.cpu0.fetch.rateDist.max_value                8                      
+system.cpu0.fetch.rateDist.end_dist
+
+system.cpu0.iew.EXEC:branches                   64672                       # Number of branches executed
+system.cpu0.iew.EXEC:insts                     526242                       # Number of executed instructions
+system.cpu0.iew.EXEC:loads                     140576                       # Number of load instructions executed
+system.cpu0.iew.EXEC:nop                        19405                       # number of nop insts executed
+system.cpu0.iew.EXEC:rate                    2.029785                       # Inst execution rate
+system.cpu0.iew.EXEC:refs                      200121                       # number of memory reference insts executed
+system.cpu0.iew.EXEC:squashedInsts               5760                       # Number of squashed instructions skipped in execute
+system.cpu0.iew.EXEC:stores                     59545                       # Number of stores executed
+system.cpu0.iew.EXEC:swp                            0                       # number of swp insts executed
+system.cpu0.iew.WB:consumers                   394903                       # num instructions consuming a value
+system.cpu0.iew.WB:count                       523588                       # cumulative count of insts written-back
+system.cpu0.iew.WB:fanout                    0.746115                       # average fanout of values written-back
+system.cpu0.iew.WB:penalized                        0                       # number of instrctions required to write to 'other' IQ
+system.cpu0.iew.WB:penalized_rate                   0                       # fraction of instructions written-back that wrote to 'other' IQ
+system.cpu0.iew.WB:producers                   294643                       # num instructions producing a value
+system.cpu0.iew.WB:rate                      2.019548                       # insts written-back per cycle
+system.cpu0.iew.WB:sent                        524223                       # cumulative count of insts sent to commit
+system.cpu0.iew.branchMispredicts                2948                       # Number of branch mispredicts detected at execute
+system.cpu0.iew.iewBlockCycles                      0                       # Number of cycles IEW is blocking
+system.cpu0.iew.iewDispLoadInsts               145639                       # Number of dispatched load instructions
+system.cpu0.iew.iewDispNonSpecInsts                27                       # Number of dispatched non-speculative instructions
+system.cpu0.iew.iewDispSquashedInsts             1523                       # Number of squashed instructions skipped by dispatch
+system.cpu0.iew.iewDispStoreInsts               60928                       # Number of dispatched store instructions
+system.cpu0.iew.iewDispatchedInsts             563297                       # Number of instructions dispatched to IQ
+system.cpu0.iew.iewIQFullEvents                     0                       # Number of times the IQ has become full, causing a stall
+system.cpu0.iew.iewIdleCycles                       0                       # Number of cycles IEW is idle
+system.cpu0.iew.iewLSQFullEvents                    0                       # Number of times the LSQ has become full, causing a stall
+system.cpu0.iew.iewSquashCycles                  7263                       # Number of cycles IEW is squashing
+system.cpu0.iew.iewUnblockCycles                    0                       # Number of cycles IEW is unblocking
+system.cpu0.iew.lsq.thread.0.blockedLoads            1                       # Number of blocked loads due to partial load-store forwarding
+system.cpu0.iew.lsq.thread.0.cacheBlocked            0                       # Number of times an access to memory failed due to the cache being blocked
+system.cpu0.iew.lsq.thread.0.forwLoads          18223                       # Number of loads that had data forwarded from stores
+system.cpu0.iew.lsq.thread.0.ignoredResponses            9                       # Number of memory responses ignored because the instruction is squashed
+system.cpu0.iew.lsq.thread.0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
+system.cpu0.iew.lsq.thread.0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
+system.cpu0.iew.lsq.thread.0.rescheduledLoads            1                       # Number of loads that were rescheduled
+system.cpu0.iew.lsq.thread.0.squashedLoads        14246                       # Number of loads squashed
+system.cpu0.iew.lsq.thread.0.squashedStores         2528                       # Number of stores squashed
+system.cpu0.iew.memOrderViolationEvents            44                       # Number of memory order violations
+system.cpu0.iew.predictedNotTakenIncorrect         1750                       # Number of branches that were predicted not taken incorrectly
+system.cpu0.iew.predictedTakenIncorrect          1198                       # Number of branches that were predicted taken incorrectly
+system.cpu0.ipc                              1.928581                       # IPC: Instructions Per Cycle
+system.cpu0.ipc_total                        1.928581                       # IPC: Total IPC of All Threads
+system.cpu0.iq.IQ:residence:(null).start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:(null).samples            0                      
+system.cpu0.iq.IQ:residence:(null).min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:(null).max_value            0                      
+system.cpu0.iq.IQ:residence:(null).end_dist
+
+system.cpu0.iq.IQ:residence:IntAlu.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:IntAlu.samples            0                      
+system.cpu0.iq.IQ:residence:IntAlu.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:IntAlu.max_value            0                      
+system.cpu0.iq.IQ:residence:IntAlu.end_dist
+
+system.cpu0.iq.IQ:residence:IntMult.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:IntMult.samples            0                      
+system.cpu0.iq.IQ:residence:IntMult.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:IntMult.max_value            0                      
+system.cpu0.iq.IQ:residence:IntMult.end_dist
+
+system.cpu0.iq.IQ:residence:IntDiv.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:IntDiv.samples            0                      
+system.cpu0.iq.IQ:residence:IntDiv.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:IntDiv.max_value            0                      
+system.cpu0.iq.IQ:residence:IntDiv.end_dist
+
+system.cpu0.iq.IQ:residence:FloatAdd.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatAdd.samples            0                      
+system.cpu0.iq.IQ:residence:FloatAdd.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatAdd.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatAdd.end_dist
+
+system.cpu0.iq.IQ:residence:FloatCmp.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatCmp.samples            0                      
+system.cpu0.iq.IQ:residence:FloatCmp.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatCmp.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatCmp.end_dist
+
+system.cpu0.iq.IQ:residence:FloatCvt.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatCvt.samples            0                      
+system.cpu0.iq.IQ:residence:FloatCvt.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatCvt.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatCvt.end_dist
+
+system.cpu0.iq.IQ:residence:FloatMult.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatMult.samples            0                      
+system.cpu0.iq.IQ:residence:FloatMult.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatMult.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatMult.end_dist
+
+system.cpu0.iq.IQ:residence:FloatDiv.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatDiv.samples            0                      
+system.cpu0.iq.IQ:residence:FloatDiv.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatDiv.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatDiv.end_dist
+
+system.cpu0.iq.IQ:residence:FloatSqrt.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:FloatSqrt.samples            0                      
+system.cpu0.iq.IQ:residence:FloatSqrt.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:FloatSqrt.max_value            0                      
+system.cpu0.iq.IQ:residence:FloatSqrt.end_dist
+
+system.cpu0.iq.IQ:residence:MemRead.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:MemRead.samples            0                      
+system.cpu0.iq.IQ:residence:MemRead.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:MemRead.max_value            0                      
+system.cpu0.iq.IQ:residence:MemRead.end_dist
+
+system.cpu0.iq.IQ:residence:MemWrite.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:MemWrite.samples            0                      
+system.cpu0.iq.IQ:residence:MemWrite.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:MemWrite.max_value            0                      
+system.cpu0.iq.IQ:residence:MemWrite.end_dist
+
+system.cpu0.iq.IQ:residence:IprAccess.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:IprAccess.samples            0                      
+system.cpu0.iq.IQ:residence:IprAccess.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:IprAccess.max_value            0                      
+system.cpu0.iq.IQ:residence:IprAccess.end_dist
+
+system.cpu0.iq.IQ:residence:InstPrefetch.start_dist                     # cycles from dispatch to issue
+system.cpu0.iq.IQ:residence:InstPrefetch.samples            0                      
+system.cpu0.iq.IQ:residence:InstPrefetch.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.IQ:residence:InstPrefetch.max_value            0                      
+system.cpu0.iq.IQ:residence:InstPrefetch.end_dist
+
+system.cpu0.iq.ISSUE:(null)_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:(null)_delay.samples            0                      
+system.cpu0.iq.ISSUE:(null)_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:(null)_delay.max_value            0                      
+system.cpu0.iq.ISSUE:(null)_delay.end_dist
+
+system.cpu0.iq.ISSUE:IntAlu_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:IntAlu_delay.samples            0                      
+system.cpu0.iq.ISSUE:IntAlu_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:IntAlu_delay.max_value            0                      
+system.cpu0.iq.ISSUE:IntAlu_delay.end_dist
+
+system.cpu0.iq.ISSUE:IntMult_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:IntMult_delay.samples            0                      
+system.cpu0.iq.ISSUE:IntMult_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:IntMult_delay.max_value            0                      
+system.cpu0.iq.ISSUE:IntMult_delay.end_dist
+
+system.cpu0.iq.ISSUE:IntDiv_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:IntDiv_delay.samples            0                      
+system.cpu0.iq.ISSUE:IntDiv_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:IntDiv_delay.max_value            0                      
+system.cpu0.iq.ISSUE:IntDiv_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatAdd_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatAdd_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatAdd_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatAdd_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatAdd_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatCmp_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatCmp_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatCmp_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatCmp_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatCmp_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatCvt_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatCvt_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatCvt_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatCvt_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatCvt_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatMult_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatMult_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatMult_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatMult_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatMult_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatDiv_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatDiv_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatDiv_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatDiv_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatDiv_delay.end_dist
+
+system.cpu0.iq.ISSUE:FloatSqrt_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:FloatSqrt_delay.samples            0                      
+system.cpu0.iq.ISSUE:FloatSqrt_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:FloatSqrt_delay.max_value            0                      
+system.cpu0.iq.ISSUE:FloatSqrt_delay.end_dist
+
+system.cpu0.iq.ISSUE:MemRead_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:MemRead_delay.samples            0                      
+system.cpu0.iq.ISSUE:MemRead_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:MemRead_delay.max_value            0                      
+system.cpu0.iq.ISSUE:MemRead_delay.end_dist
+
+system.cpu0.iq.ISSUE:MemWrite_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:MemWrite_delay.samples            0                      
+system.cpu0.iq.ISSUE:MemWrite_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:MemWrite_delay.max_value            0                      
+system.cpu0.iq.ISSUE:MemWrite_delay.end_dist
+
+system.cpu0.iq.ISSUE:IprAccess_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:IprAccess_delay.samples            0                      
+system.cpu0.iq.ISSUE:IprAccess_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:IprAccess_delay.max_value            0                      
+system.cpu0.iq.ISSUE:IprAccess_delay.end_dist
+
+system.cpu0.iq.ISSUE:InstPrefetch_delay.start_dist                     # cycles from operands ready to issue
+system.cpu0.iq.ISSUE:InstPrefetch_delay.samples            0                      
+system.cpu0.iq.ISSUE:InstPrefetch_delay.min_value            0                      
+                               0            0                      
+                               2            0                      
+                               4            0                      
+                               6            0                      
+                               8            0                      
+                              10            0                      
+                              12            0                      
+                              14            0                      
+                              16            0                      
+                              18            0                      
+                              20            0                      
+                              22            0                      
+                              24            0                      
+                              26            0                      
+                              28            0                      
+                              30            0                      
+                              32            0                      
+                              34            0                      
+                              36            0                      
+                              38            0                      
+                              40            0                      
+                              42            0                      
+                              44            0                      
+                              46            0                      
+                              48            0                      
+                              50            0                      
+                              52            0                      
+                              54            0                      
+                              56            0                      
+                              58            0                      
+                              60            0                      
+                              62            0                      
+                              64            0                      
+                              66            0                      
+                              68            0                      
+                              70            0                      
+                              72            0                      
+                              74            0                      
+                              76            0                      
+                              78            0                      
+                              80            0                      
+                              82            0                      
+                              84            0                      
+                              86            0                      
+                              88            0                      
+                              90            0                      
+                              92            0                      
+                              94            0                      
+                              96            0                      
+                              98            0                      
+system.cpu0.iq.ISSUE:InstPrefetch_delay.max_value            0                      
+system.cpu0.iq.ISSUE:InstPrefetch_delay.end_dist
+
+system.cpu0.iq.ISSUE:FU_type_0                 532005                       # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0.start_dist
+                          (null)            0      0.00%            # Type of FU issued
+                          IntAlu       329259     61.89%            # Type of FU issued
+                         IntMult           10      0.00%            # Type of FU issued
+                          IntDiv            0      0.00%            # Type of FU issued
+                        FloatAdd           13      0.00%            # Type of FU issued
+                        FloatCmp            3      0.00%            # Type of FU issued
+                        FloatCvt            0      0.00%            # Type of FU issued
+                       FloatMult            2      0.00%            # Type of FU issued
+                        FloatDiv            0      0.00%            # Type of FU issued
+                       FloatSqrt            0      0.00%            # Type of FU issued
+                         MemRead       142868     26.85%            # Type of FU issued
+                        MemWrite        59850     11.25%            # Type of FU issued
+                       IprAccess            0      0.00%            # Type of FU issued
+                    InstPrefetch            0      0.00%            # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0.end_dist
+system.cpu0.iq.ISSUE:fu_busy_cnt                 5510                       # FU busy when requested
+system.cpu0.iq.ISSUE:fu_busy_rate            0.010357                       # FU busy rate (busy events/executed inst)
+system.cpu0.iq.ISSUE:fu_full.start_dist
+                          (null)            0      0.00%            # attempts to use FU when none available
+                          IntAlu         1663     30.18%            # attempts to use FU when none available
+                         IntMult            0      0.00%            # attempts to use FU when none available
+                          IntDiv            0      0.00%            # attempts to use FU when none available
+                        FloatAdd            0      0.00%            # attempts to use FU when none available
+                        FloatCmp            0      0.00%            # attempts to use FU when none available
+                        FloatCvt            0      0.00%            # attempts to use FU when none available
+                       FloatMult            0      0.00%            # attempts to use FU when none available
+                        FloatDiv            0      0.00%            # attempts to use FU when none available
+                       FloatSqrt            0      0.00%            # attempts to use FU when none available
+                         MemRead         2693     48.87%            # attempts to use FU when none available
+                        MemWrite         1154     20.94%            # attempts to use FU when none available
+                       IprAccess            0      0.00%            # attempts to use FU when none available
+                    InstPrefetch            0      0.00%            # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full.end_dist
+system.cpu0.iq.ISSUE:issued_per_cycle.start_dist                     # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle.samples       259260                      
+system.cpu0.iq.ISSUE:issued_per_cycle.min_value            0                      
+                               0        59185   2282.84%           
+                               1        72964   2814.32%           
+                               2        38364   1479.75%           
+                               3        33144   1278.41%           
+                               4        19818    764.41%           
+                               5        14624    564.07%           
+                               6        18233    703.27%           
+                               7         2333     89.99%           
+                               8          595     22.95%           
+system.cpu0.iq.ISSUE:issued_per_cycle.max_value            8                      
+system.cpu0.iq.ISSUE:issued_per_cycle.end_dist
+
+system.cpu0.iq.ISSUE:rate                    2.052013                       # Inst issue rate
+system.cpu0.iq.iqInstsAdded                    543865                       # Number of instructions added to the IQ (excludes non-spec)
+system.cpu0.iq.iqInstsIssued                   532005                       # Number of instructions issued
+system.cpu0.iq.iqNonSpecInstsAdded                 27                       # Number of non-speculative instructions added to the IQ
+system.cpu0.iq.iqSquashedInstsExamined          42716                       # Number of squashed instructions iterated over during squash; mainly for profiling
+system.cpu0.iq.iqSquashedInstsIssued              611                       # Number of squashed instructions issued
+system.cpu0.iq.iqSquashedNonSpecRemoved             9                       # Number of squashed non-spec instructions that were removed
+system.cpu0.iq.iqSquashedOperandsExamined        21818                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu0.numCycles                          259260                       # number of cpu cycles simulated
+system.cpu0.rename.RENAME:BlockCycles             191                       # Number of cycles rename is blocking
+system.cpu0.rename.RENAME:CommittedMaps        386063                       # Number of HB maps that are committed
+system.cpu0.rename.RENAME:IdleCycles           144885                       # Number of cycles rename is idle
+system.cpu0.rename.RENAME:LSQFullEvents           336                       # Number of times rename has blocked due to LSQ full
+system.cpu0.rename.RENAME:RenameLookups        753146                       # Number of register rename lookups that rename has made
+system.cpu0.rename.RENAME:RenamedInsts         577319                       # Number of instructions processed by rename
+system.cpu0.rename.RENAME:RenamedOperands       432146                       # Number of destination operands rename has renamed
+system.cpu0.rename.RENAME:RunCycles            106374                       # Number of cycles rename is running
+system.cpu0.rename.RENAME:SquashCycles           7263                       # Number of cycles rename is squashing
+system.cpu0.rename.RENAME:UnblockCycles           302                       # Number of cycles rename is unblocking
+system.cpu0.rename.RENAME:UndoneMaps            46034                       # Number of HB maps that are undone due to squashing
+system.cpu0.rename.RENAME:serializeStallCycles          245                       # count of cycles rename stalled for serializing inst
+system.cpu0.rename.RENAME:serializingInsts           34                       # count of serializing insts renamed
+system.cpu0.rename.RENAME:skidInsts               421                       # count of insts added to the skid buffer
+system.cpu0.rename.RENAME:tempSerializingInsts           32                       # count of temporary serializing insts renamed
+system.workload.PROG:num_syscalls                  18                       # Number of system calls
+
+---------- End Simulation Statistics   ----------

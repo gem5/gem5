@@ -57,6 +57,7 @@ void
 MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
                Packet * &target)
 {
+    addr = _addr;
     if (target)
     {
         //Have a request, just use it

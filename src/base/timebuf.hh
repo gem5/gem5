@@ -215,6 +215,11 @@ class TimeBuffer
     {
         return wire(this, 0);
     }
+
+    int getSize()
+    {
+        return size;
+    }
 };
 
 #endif // __BASE_TIMEBUF_HH__

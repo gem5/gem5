@@ -231,8 +231,9 @@ Globals::unserialize(Checkpoint *cp)
 }
 
 void
-Serializable::serializeAll()
+Serializable::serializeAll(const std::string &cpt_dir)
 {
+    setCheckpointDir(cpt_dir);
     string dir = Checkpoint::dir();
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
@@ -247,8 +248,9 @@ Serializable::serializeAll()
 }
 
 void
-Serializable::unserializeAll()
+Serializable::unserializeAll(const std::string &cpt_dir)
 {
+    setCheckpointDir(cpt_dir);
     string dir = Checkpoint::dir();
     string cpt_file = dir + Checkpoint::baseFilename;
     string section = "";
@@ -289,9 +291,9 @@ Checkpoint::dir()
 }
 
 void
-debug_serialize()
+debug_serialize(const std::string &cpt_dir)
 {
-    Serializable::serializeAll();
+    Serializable::serializeAll(cpt_dir);
 }
 
 

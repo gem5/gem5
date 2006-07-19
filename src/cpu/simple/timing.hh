@@ -64,7 +64,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Status status() const { return _status; }
 
-    Event *quiesceEvent;
+    Event *drainEvent;
+
+    Event *fetchEvent;
 
   private:
 
@@ -130,12 +132,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   public:
 
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
+
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    virtual bool quiesce(Event *quiesce_event);
+    virtual unsigned int drain(Event *drain_event);
     virtual void resume();
-    virtual void setMemoryMode(State new_mode);
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
@@ -154,7 +157,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeDataAccess(Packet *);
     void advanceInst(Fault fault);
   private:
-    void completeQuiesce();
+    void completeDrain();
 };
 
 #endif // __CPU_SIMPLE_TIMING_HH__

@@ -59,7 +59,7 @@ void
 BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp,
                                        AddrRangeList &snoop)
 {
-    cache->getAddressRanges(resp, snoop);
+    cache->getAddressRanges(resp, snoop, isCpuSide);
 }
 
 int
@@ -98,6 +98,56 @@ BaseCache::CachePort::clearBlocked()
     blocked = false;
 }
 
+BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
+{
+    this->setFlags(AutoDelete);
+    pkt = NULL;
+}
+
+BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, Packet *_pkt)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort), pkt(_pkt)
+{
+    this->setFlags(AutoDelete);
+}
+
+void
+BaseCache::CacheEvent::process()
+{
+    if (!pkt)
+    {
+        if (!cachePort->isCpuSide)
+        {
+            pkt = cachePort->cache->getPacket();
+            bool success = cachePort->sendTiming(pkt);
+            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                    pkt->getAddr(), success ? "succesful" : "unsuccesful");
+            cachePort->cache->sendResult(pkt, success);
+            if (success && cachePort->cache->doMasterRequest())
+            {
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
+            }
+        }
+        else
+        {
+            pkt = cachePort->cache->getCoherencePacket();
+            cachePort->sendTiming(pkt);
+        }
+        return;
+    }
+    //Know the packet to send, no need to mark in service (must succed)
+    bool success = cachePort->sendTiming(pkt);
+    assert(success);
+}
+
+const char *
+BaseCache::CacheEvent::description()
+{
+    return "timing event\n";
+}
+
 Port*
 BaseCache::getPort(const std::string &if_name, int idx)
 {
@@ -107,7 +157,13 @@ BaseCache::getPort(const std::string &if_name, int idx)
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
         return cpuSidePort;
     }
-    if (if_name == "functional")
+    else if (if_name == "functional")
+    {
+        if(cpuSidePort == NULL)
+            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+        return cpuSidePort;
+    }
+    else if (if_name == "cpu_side")
     {
         if(cpuSidePort == NULL)
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
@@ -121,6 +177,14 @@ BaseCache::getPort(const std::string &if_name, int idx)
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
+}
+
+void
+BaseCache::init()
+{
+    if (!cpuSidePort || !memSidePort)
+        panic("Cache not hooked up on both sides\n");
+    cpuSidePort->sendStatusChange(Port::RangeChange);
 }
 
 void

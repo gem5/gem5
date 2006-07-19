@@ -257,16 +257,17 @@ DefaultRename<Impl>::setScoreboard(Scoreboard *_scoreboard)
 }
 
 template <class Impl>
-void
-DefaultRename<Impl>::switchOut()
+bool
+DefaultRename<Impl>::drain()
 {
     // Rename is ready to switch out at any time.
-    cpu->signalSwitched();
+    cpu->signalDrained();
+    return true;
 }
 
 template <class Impl>
 void
-DefaultRename<Impl>::doSwitchOut()
+DefaultRename<Impl>::switchOut()
 {
     // Clear any state, fix up the rename map.
     for (int i = 0; i < numThreads; i++) {

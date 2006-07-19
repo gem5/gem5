@@ -64,6 +64,7 @@ class LSQUnit {
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
+    typedef typename Impl::CPUPol::LSQ LSQ;
     typedef typename Impl::CPUPol::IssueStruct IssueStruct;
 
   public:
@@ -71,7 +72,7 @@ class LSQUnit {
     LSQUnit();
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(Params *params, unsigned maxLQEntries,
+    void init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
               unsigned maxSQEntries, unsigned id);
 
     /** Returns the name of the LSQ unit. */
@@ -86,6 +87,10 @@ class LSQUnit {
     /** Sets the IEW stage pointer. */
     void setIEW(IEW *iew_ptr)
     { iewStage = iew_ptr; }
+
+    /** Sets the pointer to the dcache port. */
+    void setDcachePort(Port *dcache_port)
+    { dcachePort = dcache_port; }
 
     /** Switches out LSQ unit. */
     void switchOut();
@@ -206,6 +211,9 @@ class LSQUnit {
                         !storeQueue[storeWBIdx].completed &&
                         !isStoreBlocked; }
 
+    /** Handles doing the retry. */
+    void recvRetry();
+
   private:
     /** Writes back the instruction, sending it to IEW. */
     void writeback(DynInstPtr &inst, PacketPtr pkt);
@@ -215,9 +223,6 @@ class LSQUnit {
 
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);
-
-    /** Handles doing the retry. */
-    void recvRetry();
 
     /** Increments the given store index (circular queue). */
     inline void incrStIdx(int &store_idx);
@@ -239,54 +244,11 @@ class LSQUnit {
     /** Pointer to the IEW stage. */
     IEW *iewStage;
 
-    /** Pointer to memory object. */
-    MemObject *mem;
+    /** Pointer to the LSQ. */
+    LSQ *lsq;
 
-    /** DcachePort class for this LSQ Unit.  Handles doing the
-     * communication with the cache/memory.
-     * @todo: Needs to be moved to the LSQ level and have some sort
-     * of arbitration.
-     */
-    class DcachePort : public Port
-    {
-      protected:
-        /** Pointer to CPU. */
-        O3CPU *cpu;
-        /** Pointer to LSQ. */
-        LSQUnit *lsq;
-
-      public:
-        /** Default constructor. */
-        DcachePort(O3CPU *_cpu, LSQUnit *_lsq)
-            : Port(_lsq->name() + "-dport"), cpu(_cpu), lsq(_lsq)
-        { }
-
-      protected:
-        /** Atomic version of receive.  Panics. */
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        /** Functional version of receive.  Panics. */
-        virtual void recvFunctional(PacketPtr pkt);
-
-        /** Receives status change.  Other than range changing, panics. */
-        virtual void recvStatusChange(Status status);
-
-        /** Returns the address ranges of this device. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
-
-        /** Timing version of receive.  Handles writing back and
-         * completing the load or store that has returned from
-         * memory. */
-        virtual bool recvTiming(PacketPtr pkt);
-
-        /** Handles doing a retry of the previous send. */
-        virtual void recvRetry();
-    };
-
-    /** Pointer to the D-cache. */
-    DcachePort *dcachePort;
+    /** Pointer to the dcache port.  Used only for sending. */
+    Port *dcachePort;
 
     /** Derived class to hold any sender state the LSQ needs. */
     class LSQSenderState : public Packet::SenderState
@@ -639,6 +601,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
             iewStage->rescheduleMemInst(load_inst);
+            iewStage->decrWb(load_inst->seqNum);
             ++lsqRescheduledLoads;
 
             // Do not generate a writeback event as this instruction is not
@@ -653,16 +616,13 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     }
 
     // If there's no forwarding case, then go access memory
-    DPRINTF(LSQUnit, "Doing functional access for inst [sn:%lli] PC %#x\n",
+    DPRINTF(LSQUnit, "Doing memory access for inst [sn:%lli] PC %#x\n",
             load_inst->seqNum, load_inst->readPC());
 
     assert(!load_inst->memData);
     load_inst->memData = new uint8_t[64];
 
     ++usedPorts;
-
-    DPRINTF(LSQUnit, "Doing timing access for inst PC %#x\n",
-            load_inst->readPC());
 
     PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
     data_pkt->dataStatic(load_inst->memData);
@@ -673,8 +633,18 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     state->inst = load_inst;
     data_pkt->senderState = state;
 
-    // if we have a cache, do cache access too
-    if (!dcachePort->sendTiming(data_pkt)) {
+    // if we the cache is not blocked, do cache access
+    if (!lsq->cacheBlocked()) {
+        if (!dcachePort->sendTiming(data_pkt)) {
+            // If the access didn't succeed, tell the LSQ by setting
+            // the retry thread id.
+            lsq->setRetryTid(lsqID);
+        }
+    }
+
+    // If the cache was blocked, or has become blocked due to the access,
+    // handle it.
+    if (lsq->cacheBlocked()) {
         ++lsqCacheBlocked;
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < load_inst->seqNum)

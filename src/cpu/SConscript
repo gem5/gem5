@@ -71,7 +71,8 @@ virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) c
 # Generate a temporary CPU list, including the CheckerCPU if
 # it's enabled.  This isn't used for anything else other than StaticInst
 # headers.
-temp_cpu_list = env['CPU_MODELS']
+temp_cpu_list = env['CPU_MODELS'][:]
+
 if env['USE_CHECKER']:
     temp_cpu_list.append('CheckerCPU')
 
@@ -113,6 +114,9 @@ CheckerSupportedCPUList = ['O3CPU', 'OzoneCPU']
 #
 #################################################################
 
+# Keep a list of CPU models that support SMT
+env['SMT_CPU_MODELS'] = []
+
 sources = []
 
 need_simple_base = False
@@ -130,13 +134,13 @@ if need_simple_base:
 if 'FastCPU' in env['CPU_MODELS']:
     sources += Split('fast/cpu.cc')
 
+need_bp_unit = False
 if 'O3CPU' in env['CPU_MODELS']:
+    need_bp_unit = True
     sources += SConscript('o3/SConscript', exports = 'env')
     sources += Split('''
-        o3/2bit_local_pred.cc
         o3/base_dyn_inst.cc
         o3/bpred_unit.cc
-        o3/btb.cc
         o3/commit.cc
         o3/decode.cc
         o3/fetch.cc
@@ -148,18 +152,18 @@ if 'O3CPU' in env['CPU_MODELS']:
         o3/lsq_unit.cc
         o3/lsq.cc
         o3/mem_dep_unit.cc
-        o3/ras.cc
         o3/rename.cc
         o3/rename_map.cc
         o3/rob.cc
         o3/scoreboard.cc
         o3/store_set.cc
-        o3/tournament_pred.cc
         ''')
     if env['USE_CHECKER']:
         sources += Split('o3/checker_builder.cc')
+    env['SMT_CPU_MODELS'].append('O3CPU')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
+    need_bp_unit = True
     sources += Split('''
         ozone/base_dyn_inst.cc
         ozone/bpred_unit.cc
@@ -174,6 +178,14 @@ if 'OzoneCPU' in env['CPU_MODELS']:
     if env['USE_CHECKER']:
         sources += Split('ozone/checker_builder.cc')
 
+if need_bp_unit:
+    sources += Split('''
+        o3/2bit_local_pred.cc
+        o3/btb.cc
+        o3/ras.cc
+        o3/tournament_pred.cc
+        ''')
+
 if env['USE_CHECKER']:
     sources += Split('checker/cpu.cc')
     checker_supports = False
@@ -181,9 +193,10 @@ if env['USE_CHECKER']:
         if i in env['CPU_MODELS']:
             checker_supports = True
     if not checker_supports:
-        print "Checker only supports CPU models %s, please " \
-              "set USE_CHECKER=False or use one of those CPU models" \
-              % CheckerSupportedCPUList
+        print "Checker only supports CPU models",
+        for i in CheckerSupportedCPUList:
+            print i,
+        print ", please set USE_CHECKER=False or use one of those CPU models"              
         Exit(1)
 
 

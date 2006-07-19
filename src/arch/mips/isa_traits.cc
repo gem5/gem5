@@ -46,6 +46,12 @@ MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 }
 
 void
+MipsISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Misc. Regs Not Implemented Yet\n");
+}
+
+void
 MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
 {
     panic("Copy Misc. Regs Not Implemented Yet\n");
