@@ -39,30 +39,30 @@ decode OP default Unknown::unknown()
     {
         //Throw an illegal instruction acception
         0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
-        0x1: decode BPCC
+        format BranchN
         {
-            format Branch19
+            0x1: decode BPCC
             {
-                0x0: bpcci({{
+                0x0: bpcci(19, {{
                     if(passesCondition(Ccr<3:0>, COND2))
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
-                0x2: bpccx({{
+                0x2: bpccx(19, {{
                     if(passesCondition(Ccr<7:4>, COND2))
                         NNPC = xc->readPC() + disp;
                     else
                         handle_annul
                 }});
             }
+            0x2: bicc(22, {{
+                if(passesCondition(Ccr<3:0>, COND2))
+                    NNPC = xc->readPC() + disp;
+                else
+                    handle_annul
+            }});
         }
-        0x2: Branch22::bicc({{
-            if(passesCondition(Ccr<3:0>, COND2))
-                NNPC = xc->readPC() + disp;
-            else
-                handle_annul
-        }});
         0x3: decode RCOND2
         {
             format BranchSplit
@@ -110,7 +110,7 @@ decode OP default Unknown::unknown()
         0x5: Trap::fbpfcc({{fault = new FpDisabled;}});
         0x6: Trap::fbfcc({{fault = new FpDisabled;}});
     }
-    0x1: Branch30::call({{
+    0x1: BranchN::call(30, {{
             R15 = xc->readPC();
             NNPC = R15 + disp;
     }});

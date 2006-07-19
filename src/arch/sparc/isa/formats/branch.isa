@@ -69,47 +69,18 @@ output header {{
         };
 
         /**
-         * Base class for branches with 19 bit displacements.
+         * Base class for branches with n bit displacements.
          */
-        class Branch19 : public BranchDisp
+        template<int bits>
+        class BranchNBits : public BranchDisp
         {
           protected:
             // Constructor
-            Branch19(const char *mnem, MachInst _machInst,
+            BranchNBits(const char *mnem, MachInst _machInst,
                     OpClass __opClass) :
                 BranchDisp(mnem, _machInst, __opClass)
             {
-                disp = sign_ext(DISP19 << 2, 21);
-            }
-        };
-
-        /**
-         * Base class for branches with 22 bit displacements.
-         */
-        class Branch22 : public BranchDisp
-        {
-          protected:
-            // Constructor
-            Branch22(const char *mnem, MachInst _machInst,
-                    OpClass __opClass) :
-                BranchDisp(mnem, _machInst, __opClass)
-            {
-                disp = sign_ext(DISP22 << 2, 24);
-            }
-        };
-
-        /**
-         * Base class for branches with 30 bit displacements.
-         */
-        class Branch30 : public BranchDisp
-        {
-          protected:
-            // Constructor
-            Branch30(const char *mnem, MachInst _machInst,
-                    OpClass __opClass) :
-                BranchDisp(mnem, _machInst, __opClass)
-            {
-                disp = sign_ext(DISP30 << 2, 32);
+                disp = sign_ext(_machInst << 2, bits + 2);
             }
         };
 
@@ -149,29 +120,23 @@ output header {{
 }};
 
 output decoder {{
+
+        template class BranchNBits<19>;
+
+        template class BranchNBits<22>;
+
+        template class BranchNBits<30>;
+
         std::string Branch::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
-
-            if (_numSrcRegs > 0)
-            {
-                printReg(response, _srcRegIdx[0]);
-                for(int x = 1; x < _numSrcRegs; x++)
-                {
+            printRegArray(response, _srcRegIdx, _numSrcRegs);
+            if(_numDestRegs && _numSrcRegs)
                     response << ", ";
-                    printReg(response, _srcRegIdx[x]);
-                }
-            }
-
-            if (_numDestRegs > 0)
-            {
-                if(_numSrcRegs > 0)
-                    response << ", ";
-                printReg(response, _destRegIdx[0]);
-            }
+            printDestReg(response, 0);
 
             return response.str();
         }
@@ -182,27 +147,13 @@ output decoder {{
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
-
-            if (_numSrcRegs > 0)
-            {
-                printReg(response, _srcRegIdx[0]);
-                for(int x = 1; x < _numSrcRegs; x++)
-                {
-                    response << ", ";
-                    printReg(response, _srcRegIdx[x]);
-                }
-            }
-
+            printRegArray(response, _srcRegIdx, _numSrcRegs);
             if(_numSrcRegs > 0)
                 response << ", ";
-
             ccprintf(response, "0x%x", imm);
-
             if (_numDestRegs > 0)
-            {
                 response << ", ";
-                printReg(response, _destRegIdx[0]);
-            }
+            printDestReg(response, 0);
 
             return response.str();
         }
@@ -292,32 +243,10 @@ def format Branch(code, *opt_flags) {{
 }};
 
 // Primary format for branch instructions:
-def format Branch19(code, *opt_flags) {{
+def format BranchN(bits, code, *opt_flags) {{
         code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Branch19', codeBlk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        exec_output = BranchExecute.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-}};
-
-// Primary format for branch instructions:
-def format Branch22(code, *opt_flags) {{
-        code = re.sub(r'handle_annul', handle_annul, code)
-        codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Branch22', codeBlk, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        exec_output = BranchExecute.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-}};
-
-// Primary format for branch instructions:
-def format Branch30(code, *opt_flags) {{
-        code = re.sub(r'handle_annul', handle_annul, code)
-        codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Branch30', codeBlk, opt_flags)
+        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, codeBlk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = BranchExecute.subst(iop)

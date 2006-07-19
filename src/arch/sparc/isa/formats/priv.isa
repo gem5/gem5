@@ -72,7 +72,11 @@ output decoder {{
         std::string Priv::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
-                return "Privileged Instruction";
+            std::stringstream response;
+
+            printMnemonic(response, mnemonic);
+
+            return response.str();
         }
 }};
 
