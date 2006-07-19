@@ -215,7 +215,7 @@ loadIniFile(PyObject *_resolveFunc)
     configStream = simout.find("config.out");
 
     // The configuration database is now complete; start processing it.
-    inifile.load("config.ini");
+    inifile.load(simout.resolve("config.ini"));
 
     // Initialize statistics database
     Stats::InitSimStats();
