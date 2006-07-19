@@ -114,6 +114,9 @@ CheckerSupportedCPUList = ['O3CPU', 'OzoneCPU']
 #
 #################################################################
 
+# Keep a list of CPU models that support SMT
+env['SMT_CPU_MODELS'] = []
+
 sources = []
 
 need_simple_base = False
@@ -157,6 +160,7 @@ if 'O3CPU' in env['CPU_MODELS']:
         ''')
     if env['USE_CHECKER']:
         sources += Split('o3/checker_builder.cc')
+    env['SMT_CPU_MODELS'].append('O3CPU')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
     need_bp_unit = True
