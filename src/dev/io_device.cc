@@ -36,8 +36,7 @@
 
 
 PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
-    : Port(dev->name() + pname), device(dev), sys(s),
-      outTiming(0), drainEvent(NULL)
+    : SimpleTimingPort(dev->name() + pname), device(dev), sys(s)
 { }
 
 
@@ -61,48 +60,6 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 }
 
 
-void
-PioPort::recvRetry()
-{
-    bool result = true;
-    while (result && transmitList.size()) {
-        result = Port::sendTiming(transmitList.front());
-        if (result)
-            transmitList.pop_front();
-    }
-   if (transmitList.size() == 0 && drainEvent) {
-       drainEvent->process();
-       drainEvent = NULL;
-   }
-}
-
-void
-PioPort::SendEvent::process()
-{
-    port->outTiming--;
-    assert(port->outTiming >= 0);
-    if (port->Port::sendTiming(packet))
-       if (port->transmitList.size() == 0 && port->drainEvent) {
-           port->drainEvent->process();
-           port->drainEvent = NULL;
-       }
-       return;
-
-    port->transmitList.push_back(packet);
-}
-
-void
-PioPort::resendNacked(Packet *pkt) {
-    pkt->reinitNacked();
-    if (transmitList.size()) {
-         transmitList.push_front(pkt);
-    } else {
-        if (!Port::sendTiming(pkt))
-            transmitList.push_front(pkt);
-    }
-};
-
-
 bool
 PioPort::recvTiming(Packet *pkt)
 {
@@ -115,15 +72,6 @@ PioPort::recvTiming(Packet *pkt)
         sendTiming(pkt, latency);
     }
     return true;
-}
-
-unsigned int
-PioPort::drain(Event *de)
-{
-    if (outTiming == 0 && transmitList.size() == 0)
-        return 0;
-    drainEvent = de;
-    return 1;
 }
 
 PioDevice::~PioDevice()

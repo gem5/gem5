@@ -98,6 +98,7 @@ base_sources = Split('''
         mem/packet.cc
         mem/physical.cc
         mem/port.cc
+        mem/tport.cc
 
         mem/cache/base_cache.cc
         mem/cache/cache.cc

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Ali Saidi
  */
 
 #include <sys/types.h>
@@ -52,24 +53,6 @@
 using namespace std;
 using namespace TheISA;
 
-PhysicalMemory::MemResponseEvent::MemResponseEvent(Packet *pkt, MemoryPort* _m)
-    : Event(&mainEventQueue, CPU_Tick_Pri), pkt(pkt), memoryPort(_m)
-{
-
-    this->setFlags(AutoDelete);
-}
-
-void
-PhysicalMemory::MemResponseEvent::process()
-{
-    memoryPort->sendTiming(pkt);
-}
-
-const char *
-PhysicalMemory::MemResponseEvent::description()
-{
-    return "Physical Memory Timing Access respnse event";
-}
 
 PhysicalMemory::PhysicalMemory(const string &n, Tick latency)
     : MemObject(n),base_addr(0), pmem_addr(NULL), port(NULL), lat(latency)
@@ -124,27 +107,8 @@ PhysicalMemory::deviceBlockSize()
     return 0;
 }
 
-bool
-PhysicalMemory::doTimingAccess (Packet *pkt, MemoryPort* memoryPort)
-{
-    doFunctionalAccess(pkt);
-
-    // turn packet around to go back to requester
-    pkt->makeTimingResponse();
-    MemResponseEvent* response = new MemResponseEvent(pkt, memoryPort);
-    response->schedule(curTick + lat);
-
-    return true;
-}
 
 Tick
-PhysicalMemory::doAtomicAccess(Packet *pkt)
-{
-    doFunctionalAccess(pkt);
-    return lat;
-}
-
-void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
     assert(pkt->getAddr() + pkt->getSize() < pmem_size);
@@ -170,6 +134,7 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
     }
 
     pkt->result = Packet::Success;
+    return lat;
 }
 
 Port *
@@ -195,7 +160,7 @@ PhysicalMemory::recvStatusChange(Port::Status status)
 
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
-    : Port(_name), memory(_memory)
+    : SimpleTimingPort(_name), memory(_memory)
 { }
 
 void
@@ -228,13 +193,20 @@ PhysicalMemory::MemoryPort::deviceBlockSize()
 bool
 PhysicalMemory::MemoryPort::recvTiming(Packet *pkt)
 {
-    return memory->doTimingAccess(pkt, this);
+    assert(pkt->result != Packet::Nacked);
+
+    Tick latency = memory->doFunctionalAccess(pkt);
+
+    pkt->makeTimingResponse();
+    sendTiming(pkt, latency);
+
+    return true;
 }
 
 Tick
 PhysicalMemory::MemoryPort::recvAtomic(Packet *pkt)
 {
-    return memory->doAtomicAccess(pkt);
+    return memory->doFunctionalAccess(pkt);
 }
 
 void
@@ -243,7 +215,16 @@ PhysicalMemory::MemoryPort::recvFunctional(Packet *pkt)
     memory->doFunctionalAccess(pkt);
 }
 
-
+unsigned int
+PhysicalMemory::drain(Event *de)
+{
+    int count = port->drain(de);
+    if (count)
+        changeState(Draining);
+    else
+        changeState(Drained);
+    return count;
+}
 
 void
 PhysicalMemory::serialize(ostream &os)

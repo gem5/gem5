@@ -37,6 +37,7 @@
 #include "mem/packet_impl.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
+#include "mem/tport.hh"
 
 class Platform;
 class PioDevice;
@@ -48,13 +49,9 @@ class System;
  * sensitive to an address range use. The port takes all the memory
  * access types and roles them into one read() and write() call that the device
  * must respond to. The device must also provide the addressRanges() function
- * with which it returns the address ranges it is interested in. An extra
- * sendTiming() function is implemented which takes an delay. In this way the
- * device can immediatly call sendTiming(pkt, time) after processing a request
- * and the request will be handled by the port even if the port bus the device
- * connects to is blocked.
- */
-class PioPort : public Port
+ * with which it returns the address ranges it is interested in. */
+
+class PioPort : public SimpleTimingPort
 {
   protected:
     /** The device that this port serves. */
@@ -63,10 +60,6 @@ class PioPort : public Port
     /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
     System *sys;
-
-    /** A list of outgoing timing response packets that haven't been serviced
-     * yet. */
-    std::list<Packet*> transmitList;
 
     /** The current status of the peer(bus) that we are connected to. */
     Status peerStatus;
@@ -82,53 +75,9 @@ class PioPort : public Port
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
 
-    void resendNacked(Packet *pkt);
-
-    /**
-     * This class is used to implemented sendTiming() with a delay. When a delay
-     * is requested a new event is created. When the event time expires it
-     * attempts to send the packet. If it cannot, the packet is pushed onto the
-     * transmit list to be sent when recvRetry() is called. */
-    class SendEvent : public Event
-    {
-        PioPort *port;
-        Packet *packet;
-
-        SendEvent(PioPort *p, Packet *pkt, Tick t)
-            : Event(&mainEventQueue), port(p), packet(pkt)
-        { schedule(curTick + t); }
-
-        virtual void process();
-
-        virtual const char *description()
-        { return "Future scheduled sendTiming event"; }
-
-        friend class PioPort;
-    };
-
-    /** Number of timing requests that are emulating the device timing before
-     * attempting to end up on the bus.
-     */
-    int outTiming;
-
-    /** If we need to drain, keep the drain event around until we're done
-     * here.*/
-    Event *drainEvent;
-
-    /** Schedule a sendTiming() event to be called in the future. */
-    void sendTiming(Packet *pkt, Tick time)
-    { outTiming++; new PioPort::SendEvent(this, pkt, time); }
-
-    /** This function is notification that the device should attempt to send a
-     * packet again. */
-    virtual void recvRetry();
-
   public:
     PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
 
-    unsigned int drain(Event *de);
-
-  friend class PioPort::SendEvent;
 };
 
 
