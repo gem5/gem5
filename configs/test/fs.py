@@ -10,6 +10,7 @@ parser = optparse.OptionParser()
 parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("--maxtime", type="float")
 parser.add_option("--dual", help="Run full system using dual systems",
                   action="store_true")
 
@@ -102,7 +103,7 @@ if options.dual:
         MyLinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
         MyLinuxAlphaSystem(readfile=script('netperf-server.rcS')))
 else:
-    root = TsunamiRoot(clock = '2GHz', system = MyLinuxAlphaSystem())
+    root = TsunamiRoot(clock = '1THz', system = MyLinuxAlphaSystem())
 
 m5.instantiate(root)
 
@@ -116,6 +117,10 @@ m5.instantiate(root)
 
 if options.maxtick:
     exit_event = m5.simulate(options.maxtick)
+elif options.maxtime:
+    simtime = int(options.maxtime * root.clock.value)
+    print "simulating for: ", simtime
+    exit_event = m5.simulate(simtime)
 else:
     exit_event = m5.simulate()
 

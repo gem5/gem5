@@ -74,11 +74,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
     {
       protected:
         TimingSimpleCPU *cpu;
+        Tick lat;
 
       public:
 
-        CpuPort(const std::string &_name, TimingSimpleCPU *_cpu)
-            : Port(_name), cpu(_cpu)
+        CpuPort(const std::string &_name, TimingSimpleCPU *_cpu, Tick _lat)
+            : Port(_name), cpu(_cpu), lat(_lat)
         { }
 
       protected:
@@ -92,14 +93,26 @@ class TimingSimpleCPU : public BaseSimpleCPU
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
         { resp.clear(); snoop.clear(); }
+
+        struct TickEvent : public Event
+        {
+            Packet *pkt;
+            TimingSimpleCPU *cpu;
+
+            TickEvent(TimingSimpleCPU *_cpu)
+                :Event(&mainEventQueue), cpu(_cpu) {}
+            const char *description() { return "Timing CPU clock event"; }
+            void schedule(Packet *_pkt, Tick t);
+        };
+
     };
 
     class IcachePort : public CpuPort
     {
       public:
 
-        IcachePort(TimingSimpleCPU *_cpu)
-            : CpuPort(_cpu->name() + "-iport", _cpu)
+        IcachePort(TimingSimpleCPU *_cpu, Tick _lat)
+            : CpuPort(_cpu->name() + "-iport", _cpu, _lat), tickEvent(_cpu)
         { }
 
       protected:
@@ -107,14 +120,26 @@ class TimingSimpleCPU : public BaseSimpleCPU
         virtual bool recvTiming(Packet *pkt);
 
         virtual void recvRetry();
+
+        struct ITickEvent : public TickEvent
+        {
+
+            ITickEvent(TimingSimpleCPU *_cpu)
+                : TickEvent(_cpu) {}
+            void process();
+            const char *description() { return "Timing CPU clock event"; }
+        };
+
+        ITickEvent tickEvent;
+
     };
 
     class DcachePort : public CpuPort
     {
       public:
 
-        DcachePort(TimingSimpleCPU *_cpu)
-            : CpuPort(_cpu->name() + "-dport", _cpu)
+        DcachePort(TimingSimpleCPU *_cpu, Tick _lat)
+            : CpuPort(_cpu->name() + "-dport", _cpu, _lat), tickEvent(_cpu)
         { }
 
       protected:
@@ -122,6 +147,17 @@ class TimingSimpleCPU : public BaseSimpleCPU
         virtual bool recvTiming(Packet *pkt);
 
         virtual void recvRetry();
+
+        struct DTickEvent : public TickEvent
+        {
+            DTickEvent(TimingSimpleCPU *_cpu)
+                : TickEvent(_cpu) {}
+            void process();
+            const char *description() { return "Timing CPU clock event"; }
+        };
+
+        DTickEvent tickEvent;
+
     };
 
     IcachePort icachePort;

@@ -85,8 +85,16 @@ TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
     panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
 }
 
+
+void
+TimingSimpleCPU::CpuPort::TickEvent::schedule(Packet *_pkt, Tick t)
+{
+    pkt = _pkt;
+    Event::schedule(t);
+}
+
 TimingSimpleCPU::TimingSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), icachePort(this), dcachePort(this)
+    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
 {
     _status = Idle;
     ifetch_pkt = dcache_pkt = NULL;
@@ -462,11 +470,26 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     }
 }
 
+void
+TimingSimpleCPU::IcachePort::ITickEvent::process()
+{
+    cpu->completeIfetch(pkt);
+}
 
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    cpu->completeIfetch(pkt);
+    // These next few lines could be replaced with something faster
+    // who knows what though
+    Tick time = pkt->req->getTime();
+    while (time < curTick)
+        time += lat;
+
+    if (time == curTick)
+        cpu->completeIfetch(pkt);
+    else
+        tickEvent.schedule(pkt, time);
+
     return true;
 }
 
@@ -523,8 +546,22 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
 {
-    cpu->completeDataAccess(pkt);
+    Tick time = pkt->req->getTime();
+    while (time < curTick)
+        time += lat;
+
+    if (time == curTick)
+        cpu->completeDataAccess(pkt);
+    else
+        tickEvent.schedule(pkt, time);
+
     return true;
+}
+
+void
+TimingSimpleCPU::DcachePort::DTickEvent::process()
+{
+    cpu->completeDataAccess(pkt);
 }
 
 void
