@@ -55,14 +55,12 @@ namespace SparcISA
     // NWINDOWS - number of register windows, can be 3 to 32
     const int NWindows = 32;
 
-
     const int AsrStart = 0;
     const int PrStart = 32;
     const int HprStart = 64;
     const int MiscStart = 96;
 
     const uint64_t Bit64 = (1ULL << 63);
-
     class IntRegFile
     {
       protected:
@@ -625,11 +623,9 @@ namespace SparcISA
             hpstateFields.red = 1;
             hpstateFields.hpriv = 1;
             hpstateFields.tlz = 0; // this is a guess
-
             hintp = 0; // no interrupts pending
             hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
             hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-
 #else
 /*	    //This sets up the initial state of the processor for usermode processes
             pstateFields.priv = 0; //Process runs in user mode
@@ -686,6 +682,8 @@ namespace SparcISA
         void unserialize(Checkpoint * cp, const std::string & section);
 
         void copyMiscRegs(ThreadContext * tc);
+
+      protected:
 
         bool isHyperPriv() { return hpstateFields.hpriv; }
         bool isPriv() { return hpstateFields.hpriv || pstateFields.priv; }

@@ -132,7 +132,7 @@ output header {{
                     OpClass __opClass) :
                 IntOpImm(mnem, _machInst, __opClass)
             {
-                imm = (IMM22 << 10) & 0xFFFFFC00;
+                imm = (IMM22 & 0x3FFFFF) << 10;
             }
 
             std::string generateDisassembly(Addr pc,
@@ -157,12 +157,9 @@ output decoder {{
             if(!strcmp(mnemonic, "or") && _srcRegIdx[0] == 0)
             {
                 printMnemonic(os, "mov");
-                if(_numSrcRegs > 0)
-                    printReg(os, _srcRegIdx[1]);
+                printSrcReg(os, 1);
                 ccprintf(os, ", ");
-                if(_numDestRegs > 0)
-                    printReg(os, _destRegIdx[0]);
-
+                printDestReg(os, 0);
                 return true;
             }
             return false;
@@ -173,32 +170,24 @@ output decoder {{
         {
             if(!strcmp(mnemonic, "or"))
             {
-                if(_srcRegIdx[0] == 0)
+                if(_numSrcRegs > 0 && _srcRegIdx[0] == 0)
                 {
                     if(imm == 0)
-                    {
                         printMnemonic(os, "clr");
-                        if(_numDestRegs > 0)
-                            printReg(os, _destRegIdx[0]);
-                        return true;
-                    }
                     else
                     {
                         printMnemonic(os, "mov");
-                        ccprintf(os, ", 0x%x, ", imm);
-                        if(_numDestRegs > 0)
-                            printReg(os, _destRegIdx[0]);
-                        return true;
+                        ccprintf(os, " 0x%x, ", imm);
                     }
+                    printDestReg(os, 0);
+                    return true;
                 }
                 else if(imm == 0)
                 {
                     printMnemonic(os, "mov");
-                    if(_numSrcRegs > 0)
-                        printReg(os, _srcRegIdx[0]);
+                    printSrcReg(os, 0);
                     ccprintf(os, ", ");
-                    if(_numDestRegs > 0)
-                        printReg(os, _destRegIdx[0]);
+                    printDestReg(os, 0);
                     return true;
                 }
             }
@@ -210,25 +199,13 @@ output decoder {{
         {
             std::stringstream response;
 
-            if(!printPseudoOps(response, pc, symtab))
-            {
-                printMnemonic(response, mnemonic);
-                if (_numSrcRegs > 0)
-                {
-                    printReg(response, _srcRegIdx[0]);
-                    for(int x = 1; x < _numSrcRegs; x++)
-                    {
-                        response << ", ";
-                        printReg(response, _srcRegIdx[x]);
-                    }
-                }
-                if (_numDestRegs > 0)
-                {
-                    if(_numSrcRegs > 0)
-                        response << ", ";
-                    printReg(response, _destRegIdx[0]);
-                }
-            }
+            if(printPseudoOps(response, pc, symtab))
+                return response.str();
+            printMnemonic(response, mnemonic);
+            printRegArray(response, _srcRegIdx, _numSrcRegs);
+            if(_numDestRegs && _numSrcRegs)
+                response << ", ";
+            printDestReg(response, 0);
             return response.str();
         }
 
@@ -237,27 +214,16 @@ output decoder {{
         {
             std::stringstream response;
 
-            if(!printPseudoOps(response, pc, symtab))
-            {
-                printMnemonic(response, mnemonic);
-                if (_numSrcRegs > 0)
-                {
-                    printReg(response, _srcRegIdx[0]);
-                    for(int x = 1; x < _numSrcRegs - 1; x++)
-                    {
-                        response << ", ";
-                        printReg(response, _srcRegIdx[x]);
-                    }
-                }
-                if(_numSrcRegs > 0)
-                    response << ", ";
-                ccprintf(response, "0x%x", imm);
-                if (_numDestRegs > 0)
-                {
-                    response << ", ";
-                    printReg(response, _destRegIdx[0]);
-                }
-            }
+            if(printPseudoOps(response, pc, symtab))
+                return response.str();
+            printMnemonic(response, mnemonic);
+            printRegArray(response, _srcRegIdx, _numSrcRegs);
+            if(_numSrcRegs > 0)
+                response << ", ";
+            ccprintf(response, "0x%x", imm);
+            if(_numDestRegs > 0)
+                response << ", ";
+            printDestReg(response, 0);
             return response.str();
         }
 
@@ -267,10 +233,8 @@ output decoder {{
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
-            if(_numSrcRegs > 0)
-                response << ", ";
             ccprintf(response, "%%hi(0x%x), ", imm);
-            printReg(response, _destRegIdx[0]);
+            printDestReg(response, 0);
             return response.str();
         }
 }};
@@ -316,38 +280,29 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 
     calcCcCode = '''
-        uint8_t tmp_ccriccc;
-        uint8_t tmp_ccriccv;
-        uint8_t tmp_ccriccz;
-        uint8_t tmp_ccriccn;
-        uint8_t tmp_ccrxccc;
-        uint8_t tmp_ccrxccv;
-        uint8_t tmp_ccrxccz;
-        uint8_t tmp_ccrxccn;
+        uint16_t _ic, _iv, _iz, _in, _xc, _xv, _xz, _xn;
 
-        tmp_ccriccn = (Rd >> 31) & 1;
-        tmp_ccriccz = ((Rd & 0xFFFFFFFF) == 0);
-        tmp_ccrxccn = (Rd >> 63) & 1;
-        tmp_ccrxccz = (Rd == 0);
-        tmp_ccriccv = %(ivValue)s & 1;
-        tmp_ccriccc = %(icValue)s & 1;
-        tmp_ccrxccv = %(xvValue)s & 1;
-        tmp_ccrxccc = %(xcValue)s & 1;
+        _in = (Rd >> 31) & 1;
+        _iz = ((Rd & 0xFFFFFFFF) == 0);
+        _xn = (Rd >> 63) & 1;
+        _xz = (Rd == 0);
+        _iv = %(ivValue)s & 1;
+        _ic = %(icValue)s & 1;
+        _xv = %(xvValue)s & 1;
+        _xc = %(xcValue)s & 1;
 
-        Ccr =  tmp_ccriccc | tmp_ccriccv << 1 |
-               tmp_ccriccz << 2 | tmp_ccriccn << 3|
-               tmp_ccrxccc << 4 | tmp_ccrxccv << 5|
-               tmp_ccrxccz << 6| tmp_ccrxccn << 7;
+        Ccr =  _ic << 0 | _iv << 1 | _iz << 2 | _in << 3 |
+               _xc << 4 | _xv << 5 | _xz << 6 | _xn << 7;
 
 
-        DPRINTF(Sparc, "in = %%d\\n", (uint16_t)tmp_ccriccn);
-        DPRINTF(Sparc, "iz = %%d\\n", (uint16_t)tmp_ccriccz);
-        DPRINTF(Sparc, "xn = %%d\\n", (uint16_t)tmp_ccrxccn);
-        DPRINTF(Sparc, "xz = %%d\\n", (uint16_t)tmp_ccrxccz);
-        DPRINTF(Sparc, "iv = %%d\\n", (uint16_t)tmp_ccriccv);
-        DPRINTF(Sparc, "ic = %%d\\n", (uint16_t)tmp_ccriccc);
-        DPRINTF(Sparc, "xv = %%d\\n", (uint16_t)tmp_ccrxccv);
-        DPRINTF(Sparc, "xc = %%d\\n", (uint16_t)tmp_ccrxccc);
+        DPRINTF(Sparc, "in = %%d\\n", _in);
+        DPRINTF(Sparc, "iz = %%d\\n", _iz);
+        DPRINTF(Sparc, "xn = %%d\\n", _xn);
+        DPRINTF(Sparc, "xz = %%d\\n", _xz);
+        DPRINTF(Sparc, "iv = %%d\\n", _iv);
+        DPRINTF(Sparc, "ic = %%d\\n", _ic);
+        DPRINTF(Sparc, "xv = %%d\\n", _xv);
+        DPRINTF(Sparc, "xc = %%d\\n", _xc);
         '''
 }};
 
