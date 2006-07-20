@@ -37,7 +37,7 @@
 #include "base/range.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
-#include "mem/port.hh"
+#include "mem/tport.hh"
 #include "sim/eventq.hh"
 #include <map>
 #include <string>
@@ -47,7 +47,7 @@
 //
 class PhysicalMemory : public MemObject
 {
-    class MemoryPort : public Port
+    class MemoryPort : public SimpleTimingPort
     {
         PhysicalMemory *memory;
 
@@ -73,16 +73,6 @@ class PhysicalMemory : public MemObject
 
     int numPorts;
 
-
-    struct MemResponseEvent : public Event
-    {
-        Packet *pkt;
-        MemoryPort *memoryPort;
-
-        MemResponseEvent(Packet *pkt, MemoryPort *memoryPort);
-        void process();
-        const char *description();
-    };
 
   private:
     // prevent copying of a MainMemory object
@@ -110,13 +100,10 @@ class PhysicalMemory : public MemObject
     void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     void virtual init();
+    unsigned int drain(Event *de);
 
-    // fast back-door memory access for vtophys(), remote gdb, etc.
-    // uint64_t phys_read_qword(Addr addr) const;
   private:
-    bool doTimingAccess(Packet *pkt, MemoryPort *memoryPort);
-    Tick doAtomicAccess(Packet *pkt);
-    void doFunctionalAccess(Packet *pkt);
+    Tick doFunctionalAccess(Packet *pkt);
 
     void recvStatusChange(Port::Status status);
 
