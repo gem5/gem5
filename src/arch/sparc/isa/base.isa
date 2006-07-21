@@ -85,7 +85,7 @@ output header {{
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
 
-            void printReg(std::ostream &os, RegIndex reg) const;
+            void printReg(std::ostream &os, int reg) const;
             void printSrcReg(std::ostream &os, int reg) const;
             void printDestReg(std::ostream &os, int reg) const;
 
@@ -183,7 +183,7 @@ output decoder {{
         }
 
         void
-        SparcStaticInst::printReg(std::ostream &os, RegIndex reg) const
+        SparcStaticInst::printReg(std::ostream &os, int reg) const
         {
             const int MaxGlobal = 8;
             const int MaxOutput = 16;
