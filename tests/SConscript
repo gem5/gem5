@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2004-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Steve Reinhardt
+#          Kevin Lim
 
 import os
 import sys
@@ -136,7 +139,8 @@ def update_test_string(target, source, env):
 
 updateAction = env.Action(update_test, update_test_string)
 
-def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref', timeout=15):
+def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref',
+                 timeout=15):
     """Define a test.
 
     Args:
@@ -153,12 +157,23 @@ def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref', timeout=1
         default_refdir = True
     if len(cpu_list) == 0:
         cpu_list = env['CPU_MODELS']
+    if env['TEST_CPU_MODELS']:
+        temp_cpu_list = []
+        for i in env['TEST_CPU_MODELS']:
+            if i in cpu_list:
+                temp_cpu_list.append(i)
+        cpu_list = temp_cpu_list
+# Code commented out that shows the general structure if we want to test
+# different OS's as well.
 #    if len(os_list) == 0:
-#        raise RuntimeError, "No OS specified"
+#        for test_cpu in cpu_list:
+#            build_cpu_test(env, category, '', test_cpu, refdir, timeout)
 #    else:
 #        for test_os in os_list:
-#            build_cpu_test(env, category, test_os, cpu_list, refdir, timeout)
-    # Loop through CPU models and generate proper options, ref directories for each
+#            for test_cpu in cpu_list:
+#                build_cpu_test(env, category, test_os, test_cpu, refdir,
+#                               timeout)
+    # Loop through CPU models and generate proper options, ref directories
     for cpu in cpu_list:
         test_os = ''
         if cpu == "AtomicSimpleCPU":
@@ -171,7 +186,8 @@ def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref', timeout=1
             raise TypeError, "Unknown CPU model specified"
 
         if default_refdir:
-            # Reference stats located in ref/arch/os/cpu or ref/arch/cpu if no OS specified
+            # Reference stats located in ref/arch/os/cpu or ref/arch/cpu
+            # if no OS specified
             test_refdir = os.path.join(refdir, env['TARGET_ISA'])
             if test_os != '':
                 test_refdir = os.path.join(test_refdir, test_os)
@@ -202,8 +218,8 @@ def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref', timeout=1
         else:
             cmd = [base_cmd, '>', cmd_stdout, '2>', cmd_stderr]
             
-        env.Command([stdout_string, stderr_string, m5stats_string], [env.M5Binary, 'run.py'],
-                    ' '.join(cmd))
+        env.Command([stdout_string, stderr_string, m5stats_string],
+                    [env.M5Binary, 'run.py'], ' '.join(cmd))
 
         # order of targets is important... see check_test
         env.Command([outdiff_string, statsdiff_string, status_string],
@@ -212,10 +228,12 @@ def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref', timeout=1
 
         # phony target to echo status
         if env['update_ref']:
-            p = env.Command(cpu_option[1] + '_update', [ref_stats, m5stats_string, status_string],
+            p = env.Command(cpu_option[1] + '_update',
+                            [ref_stats, m5stats_string, status_string],
                             updateAction)
         else:
-            p = env.Command(cpu_option[1] + '_print', [status_string], printAction)
+            p = env.Command(cpu_option[1] + '_print', [status_string],
+                            printAction)
         env.AlwaysBuild(p)
 
         env.Tests.setdefault(category, [])

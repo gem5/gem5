@@ -160,7 +160,8 @@ if 'O3CPU' in env['CPU_MODELS']:
         ''')
     if env['USE_CHECKER']:
         sources += Split('o3/checker_builder.cc')
-    env['SMT_CPU_MODELS'].append('O3CPU')
+    else:
+        env['SMT_CPU_MODELS'].append('O3CPU') # Checker doesn't support SMT right now
 
 if 'OzoneCPU' in env['CPU_MODELS']:
     need_bp_unit = True
