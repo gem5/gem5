@@ -2,8 +2,10 @@ import optparse, os, sys
 
 import m5
 from m5.objects import *
+m5.AddToPath('../common')
+from FSConfig import *
 from SysPaths import *
-from FullO3Config import *
+from Util import *
 
 parser = optparse.OptionParser()
 
@@ -19,90 +21,27 @@ if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
 
-# Base for tests is directory containing this file.
-test_base = os.path.dirname(__file__)
-
-script.dir =  '/z/saidi/work/m5.newmem/configs/boot'
-
-linux_image = env.get('LINUX_IMAGE', disk('linux-latest.img'))
-
-class CowIdeDisk(IdeDisk):
-    image = CowDiskImage(child=RawDiskImage(read_only=True),
-                         read_only=False)
-
-    def childImage(self, ci):
-        self.image.child.image_file = ci
-
-class BaseTsunami(Tsunami):
-    ethernet = NSGigE(configdata=NSGigEPciData(),
-                      pci_bus=0, pci_dev=1, pci_func=0)
-    etherint = NSGigEInt(device=Parent.ethernet)
-    ide = IdeController(disks=[Parent.disk0, Parent.disk2],
-                        pci_func=0, pci_dev=0, pci_bus=0)
-
-class MyLinuxAlphaSystem(LinuxAlphaSystem):
-    iobus = Bus(bus_id=0)
-    membus = Bus(bus_id=1)
-    bridge = Bridge()
-    physmem = PhysicalMemory(range = AddrRange('128MB'))
-    bridge.side_a = iobus.port
-    bridge.side_b = membus.port
-    physmem.port = membus.port
-    disk0 = CowIdeDisk(driveID='master')
-    disk2 = CowIdeDisk(driveID='master')
-    disk0.childImage(linux_image)
-    disk2.childImage(disk('linux-bigswap2.img'))
-    tsunami = BaseTsunami()
-    tsunami.attachIO(iobus)
-    tsunami.ide.pio = iobus.port
-    tsunami.ide.dma = iobus.port
-    tsunami.ide.config = iobus.port
-    tsunami.ethernet.pio = iobus.port
-    tsunami.ethernet.dma = iobus.port
-    tsunami.ethernet.config = iobus.port
-    simple_disk = SimpleDisk(disk=RawDiskImage(image_file = linux_image,
-                                               read_only = True))
-    intrctrl = IntrControl()
-    if options.detailed:
-        cpu = DetailedO3CPU()
-    elif options.timing:
-        cpu = TimingSimpleCPU()
-        mem_mode = 'timing'
-    else:
-        cpu = AtomicSimpleCPU()
-    cpu.mem = membus
-    cpu.icache_port = membus.port
-    cpu.dcache_port = membus.port
-    cpu.itb = AlphaITB()
-    cpu.dtb = AlphaDTB()
-    cpu.clock = '2GHz'
-    sim_console = SimConsole(listener=ConsoleListener(port=3456))
-    kernel = binary('vmlinux')
-    pal = binary('ts_osfpal')
-    console = binary('console')
-    boot_osflags = 'root=/dev/hda1 console=ttyS0'
-
-class TsunamiRoot(Root):
-    pass
-
-def DualRoot(clientSystem, serverSystem):
-    self = Root()
-    self.client = clientSystem
-    self.server = serverSystem
-
-    self.etherdump = EtherDump(file='ethertrace')
-    self.etherlink = EtherLink(int1 = Parent.client.tsunami.etherint[0],
-                               int2 = Parent.server.tsunami.etherint[0],
-                               dump = Parent.etherdump)
-    self.clock = '1THz'
-    return self
+if options.detailed:
+    cpu = DetailedO3CPU()
+    cpu2 = DetailedO3CPU()
+    mem_mode = 'Timing'
+elif options.timing:
+    cpu = TimingSimpleCPU()
+    cpu2 = TimingSimpleCPU()
+    mem_mode = 'Timing'
+else:
+    cpu = AtomicSimpleCPU()
+    cpu2 = AtomicSimpleCPU()
+    mem_mode = 'Atomic'
 
 if options.dual:
     root = DualRoot(
-        MyLinuxAlphaSystem(readfile=script('netperf-stream-nt-client.rcS')),
-        MyLinuxAlphaSystem(readfile=script('netperf-server.rcS')))
+        MyLinuxAlphaSystem(cpu, mem_mode, linux_image),
+        MyLinuxAlphaSystem(cpu2, mem_mode, linux_image))
+    root.client.readfile = script('netperf-stream-nt-client.rcS')
+    root.server.readfile = script('netperf-server.rcS')
 else:
-    root = TsunamiRoot(clock = '2GHz', system = MyLinuxAlphaSystem())
+    root = TsunamiRoot(clock = '2GHz', system = MyLinuxAlphaSystem(cpu, mem_mode, linux_image))
 
 m5.instantiate(root)
 
