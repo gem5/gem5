@@ -279,8 +279,6 @@ sticky_opts.AddOptions(
     # scons 0.96.90 or later.
     ListOption('CPU_MODELS', 'CPU models', 'AtomicSimpleCPU,TimingSimpleCPU',
                env['ALL_CPU_LIST']),
-    ListOption('TEST_CPU_MODELS', 'CPU models to test if regression is being run', '',
-               env['ALL_CPU_LIST']),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
     BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
@@ -304,6 +302,8 @@ sticky_opts.AddOptions(
 # Non-sticky options only apply to the current build.
 nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
+    ListOption('TEST_CPU_MODELS', 'CPU models to test if regression is being run', '',
+               env['ALL_CPU_LIST']),
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 

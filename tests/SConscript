@@ -155,14 +155,20 @@ def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref',
     default_refdir = False
     if refdir == 'ref':
         default_refdir = True
+    valid_cpu_list = []
     if len(cpu_list) == 0:
-        cpu_list = env['CPU_MODELS']
+        valid_cpu_list = env['CPU_MODELS']
+    else:
+        for i in cpu_list:
+            if i in env['CPU_MODELS']:
+                valid_cpu_list.append(i)
+    cpu_list = valid_cpu_list
     if env['TEST_CPU_MODELS']:
-        temp_cpu_list = []
+        valid_cpu_list = []
         for i in env['TEST_CPU_MODELS']:
             if i in cpu_list:
-                temp_cpu_list.append(i)
-        cpu_list = temp_cpu_list
+                valid_cpu_list.append(i)
+        cpu_list = valid_cpu_list
 # Code commented out that shows the general structure if we want to test
 # different OS's as well.
 #    if len(os_list) == 0:

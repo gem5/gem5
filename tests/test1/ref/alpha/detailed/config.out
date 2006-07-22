@@ -23,160 +23,146 @@ chkpt=
 output=cout
 system=system
 
-[system.cpu0.mem]
+[system.cpu.mem]
 type=Bus
 bus_id=0
 
-[system.cpu0.checker]
-type=O3Checker
-max_insts_any_thread=0
-max_insts_all_threads=0
-max_loads_any_thread=0
-max_loads_all_threads=0
-workload=system.workload
-clock=1
-defer_registration=false
-exitOnError=true
-warnOnlyOnLoadError=false
-function_trace=false
-function_trace_start=0
-
-[system.cpu0.fuPool.FUList0.opList0]
+[system.cpu.fuPool.FUList0.opList0]
 type=OpDesc
 opClass=IntAlu
 opLat=1
 issueLat=1
 
-[system.cpu0.fuPool.FUList0]
+[system.cpu.fuPool.FUList0]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList0.opList0
+opList=system.cpu.fuPool.FUList0.opList0
 count=6
 
-[system.cpu0.fuPool.FUList1.opList0]
+[system.cpu.fuPool.FUList1.opList0]
 type=OpDesc
 opClass=IntMult
 opLat=3
 issueLat=1
 
-[system.cpu0.fuPool.FUList1.opList1]
+[system.cpu.fuPool.FUList1.opList1]
 type=OpDesc
 opClass=IntDiv
 opLat=20
 issueLat=19
 
-[system.cpu0.fuPool.FUList1]
+[system.cpu.fuPool.FUList1]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList1.opList0 system.cpu0.fuPool.FUList1.opList1
+opList=system.cpu.fuPool.FUList1.opList0 system.cpu.fuPool.FUList1.opList1
 count=2
 
-[system.cpu0.fuPool.FUList2.opList0]
+[system.cpu.fuPool.FUList2.opList0]
 type=OpDesc
 opClass=FloatAdd
 opLat=2
 issueLat=1
 
-[system.cpu0.fuPool.FUList2.opList1]
+[system.cpu.fuPool.FUList2.opList1]
 type=OpDesc
 opClass=FloatCmp
 opLat=2
 issueLat=1
 
-[system.cpu0.fuPool.FUList2.opList2]
+[system.cpu.fuPool.FUList2.opList2]
 type=OpDesc
 opClass=FloatCvt
 opLat=2
 issueLat=1
 
-[system.cpu0.fuPool.FUList2]
+[system.cpu.fuPool.FUList2]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList2.opList0 system.cpu0.fuPool.FUList2.opList1 system.cpu0.fuPool.FUList2.opList2
+opList=system.cpu.fuPool.FUList2.opList0 system.cpu.fuPool.FUList2.opList1 system.cpu.fuPool.FUList2.opList2
 count=4
 
-[system.cpu0.fuPool.FUList3.opList0]
+[system.cpu.fuPool.FUList3.opList0]
 type=OpDesc
 opClass=FloatMult
 opLat=4
 issueLat=1
 
-[system.cpu0.fuPool.FUList3.opList1]
+[system.cpu.fuPool.FUList3.opList1]
 type=OpDesc
 opClass=FloatDiv
 opLat=12
 issueLat=12
 
-[system.cpu0.fuPool.FUList3.opList2]
+[system.cpu.fuPool.FUList3.opList2]
 type=OpDesc
 opClass=FloatSqrt
 opLat=24
 issueLat=24
 
-[system.cpu0.fuPool.FUList3]
+[system.cpu.fuPool.FUList3]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList3.opList0 system.cpu0.fuPool.FUList3.opList1 system.cpu0.fuPool.FUList3.opList2
+opList=system.cpu.fuPool.FUList3.opList0 system.cpu.fuPool.FUList3.opList1 system.cpu.fuPool.FUList3.opList2
 count=2
 
-[system.cpu0.fuPool.FUList4.opList0]
+[system.cpu.fuPool.FUList4.opList0]
 type=OpDesc
 opClass=MemRead
 opLat=1
 issueLat=1
 
-[system.cpu0.fuPool.FUList4]
+[system.cpu.fuPool.FUList4]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList4.opList0
+opList=system.cpu.fuPool.FUList4.opList0
 count=0
 
-[system.cpu0.fuPool.FUList5.opList0]
+[system.cpu.fuPool.FUList5.opList0]
 type=OpDesc
 opClass=MemWrite
 opLat=1
 issueLat=1
 
-[system.cpu0.fuPool.FUList5]
+[system.cpu.fuPool.FUList5]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList5.opList0
+opList=system.cpu.fuPool.FUList5.opList0
 count=0
 
-[system.cpu0.fuPool.FUList6.opList0]
+[system.cpu.fuPool.FUList6.opList0]
 type=OpDesc
 opClass=MemRead
 opLat=1
 issueLat=1
 
-[system.cpu0.fuPool.FUList6.opList1]
+[system.cpu.fuPool.FUList6.opList1]
 type=OpDesc
 opClass=MemWrite
 opLat=1
 issueLat=1
 
-[system.cpu0.fuPool.FUList6]
+[system.cpu.fuPool.FUList6]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList6.opList0 system.cpu0.fuPool.FUList6.opList1
+opList=system.cpu.fuPool.FUList6.opList0 system.cpu.fuPool.FUList6.opList1
 count=4
 
-[system.cpu0.fuPool.FUList7.opList0]
+[system.cpu.fuPool.FUList7.opList0]
 type=OpDesc
 opClass=IprAccess
 opLat=3
 issueLat=3
 
-[system.cpu0.fuPool.FUList7]
+[system.cpu.fuPool.FUList7]
 type=FUDesc
-opList=system.cpu0.fuPool.FUList7.opList0
+opList=system.cpu.fuPool.FUList7.opList0
 count=1
 
-[system.cpu0.fuPool]
+[system.cpu.fuPool]
 type=FUPool
-FUList=system.cpu0.fuPool.FUList0 system.cpu0.fuPool.FUList1 system.cpu0.fuPool.FUList2 system.cpu0.fuPool.FUList3 system.cpu0.fuPool.FUList4 system.cpu0.fuPool.FUList5 system.cpu0.fuPool.FUList6 system.cpu0.fuPool.FUList7
+FUList=system.cpu.fuPool.FUList0 system.cpu.fuPool.FUList1 system.cpu.fuPool.FUList2 system.cpu.fuPool.FUList3 system.cpu.fuPool.FUList4 system.cpu.fuPool.FUList5 system.cpu.fuPool.FUList6 system.cpu.fuPool.FUList7
 
-[system.cpu0]
+[system.cpu]
 type=DerivO3CPU
 clock=1
 numThreads=1
 activity=0
 workload=system.workload
-mem=system.cpu0.mem
-checker=system.cpu0.checker
+mem=system.cpu.mem
+checker=null
 max_insts_any_thread=500000
 max_insts_all_threads=0
 max_loads_any_thread=0
@@ -203,12 +189,12 @@ dispatchWidth=8
 issueWidth=8
 wbWidth=8
 wbDepth=1
-fuPool=system.cpu0.fuPool
+fuPool=system.cpu.fuPool
 iewToCommitDelay=1
 renameToROBDelay=1
 commitWidth=8
 squashWidth=8
-trapLatency=6
+trapLatency=13
 backComSize=5
 forwardComSize=5
 predType=tournament

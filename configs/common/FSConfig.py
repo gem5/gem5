@@ -74,7 +74,7 @@ def MyLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2c
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.cpu = cpu
-
+    self.mem_mode = mem_mode
     connectCpu(self.cpu, self.membus, icache, dcache, l2cache)
     for each_cpu in listWrapper(self.cpu):
         each_cpu.itb = AlphaITB()

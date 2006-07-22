@@ -25,15 +25,15 @@ if args:
 if options.detailed:
     cpu = DetailedO3CPU()
     cpu2 = DetailedO3CPU()
-    mem_mode = 'Timing'
+    mem_mode = 'timing'
 elif options.timing:
     cpu = TimingSimpleCPU()
     cpu2 = TimingSimpleCPU()
-    mem_mode = 'Timing'
+    mem_mode = 'timing'
 else:
     cpu = AtomicSimpleCPU()
     cpu2 = AtomicSimpleCPU()
-    mem_mode = 'Atomic'
+    mem_mode = 'atomic'
 
 if options.dual:
     root = DualRoot(
