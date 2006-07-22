@@ -134,7 +134,7 @@ decode OP default Unknown::unknown()
                 Rd.sdw = Rs1.sdw<31:0> * Rs2_or_imm13<31:0>;
                 Y = Rd.sdw;
             }});
-            0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 + Ccr<0:0>}});
+            0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
             0x0D: udivx({{
                 if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
                 else Rd.udw = Rs1.udw / Rs2_or_imm13;
@@ -208,7 +208,7 @@ decode OP default Unknown::unknown()
             0x1C: subccc({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = Ccr<0:0>;
-                Rd = resTemp = Rs1 + ~(val2 + carryin) + 1;}},
+                Rd = resTemp = Rs1 + ~val2 + 1 - carryin;}},
                 {{(~((Rs1<31:0> + (~(val2 + carryin))<31:0> + 1))<32:>)}},
                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
                 {{(~((Rs1<63:1> + (~(val2 + carryin))<63:1>) + (Rs1<0:> + (~(val2+carryin))<0:> + 1)<63:1>))<63:>}},
@@ -272,8 +272,9 @@ decode OP default Unknown::unknown()
             );
             0x22: taddcctv({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;
-                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
+                Rd = Rs1 + val2;
+                int32_t overflow = Rs1<1:0> || val2<1:0> ||
+                        (Rs1<31:> == val2<31:> && val2<31:> != Rd<31:>);
                 if(overflow) fault = new TagOverflow;}},
                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                 {{overflow}},
@@ -322,9 +323,15 @@ decode OP default Unknown::unknown()
                 0x1: srax({{Rd = Rs1.sdw >> (I ? SHCNT64 : Rs2<5:0>);}});
             }
             // XXX might want a format rdipr thing here
-            0x28: rdasr({{
+            0x28: decode RS1 {
+                0xF: decode I {
+                    0x0: Nop::stbar({{/*stuff*/}});
+                    0x1: Nop::membar({{/*stuff*/}});
+                }
+                default: rdasr({{
                 Rd = xc->readMiscRegWithEffect(RS1 + AsrStart, fault);
-            }});
+                }});
+            }
             0x29: HPriv::rdhpr({{
                 // XXX Need to protect with format that traps non-priv/priv
                 // access
@@ -407,8 +414,142 @@ decode OP default Unknown::unknown()
                 // access
                 fault = xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
             }});
-            0x34: Trap::fpop1({{fault = new FpDisabled;}});
+            0x34: decode OPF{
+                0x01: Trap::fmovs({{fault = new FpDisabled;}});
+                0x02: Trap::fmovd({{fault = new FpDisabled;}});
+                0x03: Trap::fmovq({{fault = new FpDisabled;}});
+                0x05: Trap::fnegs({{fault = new FpDisabled;}});
+                0x06: Trap::fnegd({{fault = new FpDisabled;}});
+                0x07: Trap::fnegq({{fault = new FpDisabled;}});
+                0x09: Trap::fabss({{fault = new FpDisabled;}});
+                0x0A: Trap::fabsd({{fault = new FpDisabled;}});
+                0x0B: Trap::fabsq({{fault = new FpDisabled;}});
+                0x29: Trap::fsqrts({{fault = new FpDisabled;}});
+                0x2A: Trap::fsqrtd({{fault = new FpDisabled;}});
+                0x2B: Trap::fsqrtq({{fault = new FpDisabled;}});
+                0x41: Trap::fadds({{fault = new FpDisabled;}});
+                0x42: BasicOperate::faddd({{Frd = Frs1 + Frs2;}});
+                0x43: Trap::faddq({{fault = new FpDisabled;}});
+                0x45: Trap::fsubs({{fault = new FpDisabled;}});
+                0x46: Trap::fsubd({{fault = new FpDisabled;}});
+                0x47: Trap::fsubq({{fault = new FpDisabled;}});
+                0x49: Trap::fmuls({{fault = new FpDisabled;}});
+                0x4A: BasicOperate::fmuld({{Frd = Frs1.sf * Frs2.sf;}});
+                0x4B: Trap::fmulq({{fault = new FpDisabled;}});
+                0x4D: Trap::fdivs({{fault = new FpDisabled;}});
+                0x4E: Trap::fdivd({{fault = new FpDisabled;}});
+                0x4F: Trap::fdivq({{fault = new FpDisabled;}});
+                0x69: Trap::fsmuld({{fault = new FpDisabled;}});
+                0x6E: Trap::fdmulq({{fault = new FpDisabled;}});
+                0x81: Trap::fstox({{fault = new FpDisabled;}});
+                0x82: Trap::fdtox({{fault = new FpDisabled;}});
+                0x83: Trap::fqtox({{fault = new FpDisabled;}});
+                0x84: Trap::fxtos({{fault = new FpDisabled;}});
+                0x88: Trap::fxtod({{fault = new FpDisabled;}});
+                0x8C: Trap::fxtoq({{fault = new FpDisabled;}});
+                0xC4: Trap::fitos({{fault = new FpDisabled;}});
+                0xC6: Trap::fdtos({{fault = new FpDisabled;}});
+                0xC7: Trap::fqtos({{fault = new FpDisabled;}});
+                0xC8: Trap::fitod({{fault = new FpDisabled;}});
+                0xC9: Trap::fstod({{fault = new FpDisabled;}});
+                0xCB: Trap::fqtod({{fault = new FpDisabled;}});
+                0xCC: Trap::fitoq({{fault = new FpDisabled;}});
+                0xCD: Trap::fstoq({{fault = new FpDisabled;}});
+                0xCE: Trap::fdtoq({{fault = new FpDisabled;}});
+                0xD1: Trap::fstoi({{fault = new FpDisabled;}});
+                0xD2: Trap::fdtoi({{fault = new FpDisabled;}});
+                0xD3: Trap::fqtoi({{fault = new FpDisabled;}});
+                default: Trap::fpop1({{fault = new FpDisabled;}});
+            }
             0x35: Trap::fpop2({{fault = new FpDisabled;}});
+            //This used to be just impdep1, but now it's a whole bunch
+            //of instructions
+            0x36: decode OPF{
+                0x00: Trap::edge8({{fault = new IllegalInstruction;}});
+                0x01: Trap::edge8n({{fault = new IllegalInstruction;}});
+                0x02: Trap::edge8l({{fault = new IllegalInstruction;}});
+                0x03: Trap::edge8ln({{fault = new IllegalInstruction;}});
+                0x04: Trap::edge16({{fault = new IllegalInstruction;}});
+                0x05: Trap::edge16n({{fault = new IllegalInstruction;}});
+                0x06: Trap::edge16l({{fault = new IllegalInstruction;}});
+                0x07: Trap::edge16ln({{fault = new IllegalInstruction;}});
+                0x08: Trap::edge32({{fault = new IllegalInstruction;}});
+                0x09: Trap::edge32n({{fault = new IllegalInstruction;}});
+                0x0A: Trap::edge32l({{fault = new IllegalInstruction;}});
+                0x0B: Trap::edge32ln({{fault = new IllegalInstruction;}});
+                0x10: Trap::array8({{fault = new IllegalInstruction;}});
+                0x12: Trap::array16({{fault = new IllegalInstruction;}});
+                0x14: Trap::array32({{fault = new IllegalInstruction;}});
+                0x18: Trap::alignaddress({{fault = new IllegalInstruction;}});
+                0x19: Trap::bmask({{fault = new IllegalInstruction;}});
+                0x1A: Trap::alignaddresslittle({{fault = new IllegalInstruction;}});
+                0x20: Trap::fcmple16({{fault = new IllegalInstruction;}});
+                0x22: Trap::fcmpne16({{fault = new IllegalInstruction;}});
+                0x24: Trap::fcmple32({{fault = new IllegalInstruction;}});
+                0x26: Trap::fcmpne32({{fault = new IllegalInstruction;}});
+                0x28: Trap::fcmpgt16({{fault = new IllegalInstruction;}});
+                0x2A: Trap::fcmpeq16({{fault = new IllegalInstruction;}});
+                0x2C: Trap::fcmpgt32({{fault = new IllegalInstruction;}});
+                0x2E: Trap::fcmpeq32({{fault = new IllegalInstruction;}});
+                0x31: Trap::fmul8x16({{fault = new IllegalInstruction;}});
+                0x33: Trap::fmul8x16au({{fault = new IllegalInstruction;}});
+                0x35: Trap::fmul8x16al({{fault = new IllegalInstruction;}});
+                0x36: Trap::fmul8sux16({{fault = new IllegalInstruction;}});
+                0x37: Trap::fmul8ulx16({{fault = new IllegalInstruction;}});
+                0x38: Trap::fmuld8sux16({{fault = new IllegalInstruction;}});
+                0x39: Trap::fmuld8ulx16({{fault = new IllegalInstruction;}});
+                0x3A: Trap::fpack32({{fault = new IllegalInstruction;}});
+                0x3B: Trap::fpack16({{fault = new IllegalInstruction;}});
+                0x3D: Trap::fpackfix({{fault = new IllegalInstruction;}});
+                0x3E: Trap::pdist({{fault = new IllegalInstruction;}});
+                0x48: Trap::faligndata({{fault = new IllegalInstruction;}});
+                0x4B: Trap::fpmerge({{fault = new IllegalInstruction;}});
+                0x4C: Trap::bshuffle({{fault = new IllegalInstruction;}});
+                0x4D: Trap::fexpand({{fault = new IllegalInstruction;}});
+                0x50: Trap::fpadd16({{fault = new IllegalInstruction;}});
+                0x51: Trap::fpadd16s({{fault = new IllegalInstruction;}});
+                0x52: Trap::fpadd32({{fault = new IllegalInstruction;}});
+                0x53: Trap::fpadd32s({{fault = new IllegalInstruction;}});
+                0x54: Trap::fpsub16({{fault = new IllegalInstruction;}});
+                0x55: Trap::fpsub16s({{fault = new IllegalInstruction;}});
+                0x56: Trap::fpsub32({{fault = new IllegalInstruction;}});
+                0x57: Trap::fpsub32s({{fault = new IllegalInstruction;}});
+                0x60: BasicOperate::fzero({{Frd = 0;}});
+                0x61: Trap::fzeros({{fault = new IllegalInstruction;}});
+                0x62: Trap::fnor({{fault = new IllegalInstruction;}});
+                0x63: Trap::fnors({{fault = new IllegalInstruction;}});
+                0x64: Trap::fandnot2({{fault = new IllegalInstruction;}});
+                0x65: Trap::fandnot2s({{fault = new IllegalInstruction;}});
+                0x66: Trap::fnot2({{fault = new IllegalInstruction;}});
+                0x67: Trap::fnot2s({{fault = new IllegalInstruction;}});
+                0x68: Trap::fandnot1({{fault = new IllegalInstruction;}});
+                0x69: Trap::fandnot1s({{fault = new IllegalInstruction;}});
+                0x6A: Trap::fnot1({{fault = new IllegalInstruction;}});
+                0x6B: Trap::fnot1s({{fault = new IllegalInstruction;}});
+                0x6C: Trap::fxor({{fault = new IllegalInstruction;}});
+                0x6D: Trap::fxors({{fault = new IllegalInstruction;}});
+                0x6E: Trap::fnand({{fault = new IllegalInstruction;}});
+                0x6F: Trap::fnands({{fault = new IllegalInstruction;}});
+                0x70: Trap::fand({{fault = new IllegalInstruction;}});
+                0x71: Trap::fands({{fault = new IllegalInstruction;}});
+                0x72: Trap::fxnor({{fault = new IllegalInstruction;}});
+                0x73: Trap::fxnors({{fault = new IllegalInstruction;}});
+                0x74: Trap::fsrc1({{fault = new IllegalInstruction;}});
+                0x75: Trap::fsrc1s({{fault = new IllegalInstruction;}});
+                0x76: Trap::fornot2({{fault = new IllegalInstruction;}});
+                0x77: Trap::fornot2s({{fault = new IllegalInstruction;}});
+                0x78: Trap::fsrc2({{fault = new IllegalInstruction;}});
+                0x79: Trap::fsrc2s({{fault = new IllegalInstruction;}});
+                0x7A: Trap::fornot1({{fault = new IllegalInstruction;}});
+                0x7B: Trap::fornot1s({{fault = new IllegalInstruction;}});
+                0x7C: Trap::for({{fault = new IllegalInstruction;}});
+                0x7D: Trap::fors({{fault = new IllegalInstruction;}});
+                0x7E: Trap::fone({{fault = new IllegalInstruction;}});
+                0x7F: Trap::fones({{fault = new IllegalInstruction;}});
+                0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
+                0x81: Trap::siam({{fault = new IllegalInstruction;}});
+            }
+            0x37: Trap::impdep2({{fault = new IllegalInstruction;}});
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if(target & 0x3)
@@ -645,12 +786,13 @@ decode OP default Unknown::unknown()
             0x26: stqf({{fault = new FpDisabled;}});
             0x27: stdf({{fault = new FpDisabled;}});
             0x2D: Nop::prefetch({{ }});
-            0x30: ldfa({{return new FpDisabled;}});
+            0x30: ldfa({{fault = new FpDisabled;}});
             0x32: ldqfa({{fault = new FpDisabled;}});
             0x33: lddfa({{fault = new FpDisabled;}});
             0x34: stfa({{fault = new FpDisabled;}});
-            0x35: stqfa({{fault = new FpDisabled;}});
-            0x36: stdfa({{fault = new FpDisabled;}});
+            0x36: stqfa({{fault = new FpDisabled;}});
+            //XXX need to work in the ASI thing
+            0x37: Store::stdfa({{Mem = ((uint64_t)Frd);}}, {{64}});
             0x3C: Cas::casa({{
                 uint64_t val = Mem.uw;
                 if(Rs2.uw == val)
