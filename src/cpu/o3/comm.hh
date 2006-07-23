@@ -88,6 +88,7 @@ struct DefaultIEWDefaultCommit {
     bool squash[Impl::MaxThreads];
     bool branchMispredict[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
+    bool condDelaySlotBranch[Impl::MaxThreads];
     uint64_t mispredPC[Impl::MaxThreads];
     uint64_t nextPC[Impl::MaxThreads];
     InstSeqNum squashedSeqNum[Impl::MaxThreads];
@@ -113,6 +114,7 @@ struct TimeBufStruct {
         uint64_t branchAddr;
 
         InstSeqNum doneSeqNum;
+        InstSeqNum bdelayDoneSeqNum;
 
         // @todo: Might want to package this kind of branch stuff into a single
         // struct as it is used pretty frequently.
@@ -164,6 +166,9 @@ struct TimeBufStruct {
         // squashed.  Similar to having a single bus that broadcasts the
         // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
+
+        InstSeqNum bdelayDoneSeqNum;
+        bool squashDelaySlot;
 
         //Just in case we want to do a commit/squash on a cycle
         //(necessary for multiple ROBs?)

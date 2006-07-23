@@ -120,7 +120,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         changedROBNumEntries[i] = false;
         trapSquash[i] = false;
         tcSquash[i] = false;
-        PC[i] = nextPC[i] = 0;
+        PC[i] = nextPC[i] = nextNPC[i] = 0;
     }
 }
 
@@ -723,14 +723,48 @@ DefaultCommit<Impl>::commit()
             // then use one older sequence number.
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
-            if (fromIEW->includeSquashInst[tid] == true)
-                squashed_inst--;
+#if THE_ISA != ALPHA_ISA
+            InstSeqNum bdelay_done_seq_num;
+            bool squash_bdelay_slot;
 
+            if (fromIEW->branchMispredict[tid]) {
+                if (fromIEW->branchTaken[tid] &&
+                    fromIEW->condDelaySlotBranch[tid]) {
+                    DPRINTF(Commit, "[tid:%i]: Cond. delay slot branch"
+                            "mispredicted as taken. Squashing after previous "
+                            "inst, [sn:%i]\n",
+                            tid, squashed_inst);
+                     bdelay_done_seq_num = squashed_inst;
+                     squash_bdelay_slot = true;
+                } else {
+                    DPRINTF(Commit, "[tid:%i]: Branch Mispredict. Squashing "
+                            "after delay slot [sn:%i]\n", tid, squashed_inst+1);
+                    bdelay_done_seq_num = squashed_inst + 1;
+                    squash_bdelay_slot = false;
+                }
+            } else {
+                bdelay_done_seq_num = squashed_inst;
+            }
+#endif
+
+            if (fromIEW->includeSquashInst[tid] == true) {
+                squashed_inst--;
+#if THE_ISA != ALPHA_ISA
+                bdelay_done_seq_num--;
+#endif
+            }
             // All younger instructions will be squashed. Set the sequence
             // number as the youngest instruction in the ROB.
             youngestSeqNum[tid] = squashed_inst;
 
+#if THE_ISA == ALPHA_ISA
             rob->squash(squashed_inst, tid);
+            toIEW->commitInfo[tid].squashDelaySlot = true;
+#else
+            rob->squash(bdelay_done_seq_num, tid);
+            toIEW->commitInfo[tid].squashDelaySlot = squash_bdelay_slot;
+            toIEW->commitInfo[tid].bdelayDoneSeqNum = bdelay_done_seq_num;
+#endif
             changedROBNumEntries[tid] = true;
 
             toIEW->commitInfo[tid].doneSeqNum = squashed_inst;
@@ -840,6 +874,7 @@ DefaultCommit<Impl>::commitInsts()
         } else {
             PC[tid] = head_inst->readPC();
             nextPC[tid] = head_inst->readNextPC();
+            nextNPC[tid] = head_inst->readNextNPC();
 
             // Increment the total number of non-speculative instructions
             // executed.
@@ -868,7 +903,13 @@ DefaultCommit<Impl>::commitInsts()
                 }
 
                 PC[tid] = nextPC[tid];
+#if THE_ISA == ALPHA_ISA
                 nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
+#else
+                nextPC[tid] = nextNPC[tid];
+                nextNPC[tid] = nextNPC[tid] + sizeof(TheISA::MachInst);
+#endif
+
 #if FULL_SYSTEM
                 int count = 0;
                 Addr oldpc;
@@ -1069,6 +1110,8 @@ template <class Impl>
 void
 DefaultCommit<Impl>::getInsts()
 {
+    DPRINTF(Commit, "Getting instructions from Rename stage.\n");
+
     // Read any renamed instructions and place them into the ROB.
     int insts_to_process = min((int)renameWidth, fromRename->size);
 

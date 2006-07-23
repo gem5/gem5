@@ -26,12 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
- *          Korey Sewell
  */
 
 #ifndef __CPU_O3_THREAD_CONTEXT_HH__
 #define __CPU_O3_THREAD_CONTEXT_HH__
 
+#include "cpu/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
 
 class EndQuiesceEvent;

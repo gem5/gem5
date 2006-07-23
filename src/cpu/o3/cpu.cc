@@ -667,11 +667,12 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     }
 
     // Squash Throughout Pipeline
-    fetch.squash(0,tid);
+    InstSeqNum squash_seq_num = commit.rob->readHeadInst(tid)->seqNum;
+    fetch.squash(0, squash_seq_num, true, tid);
     decode.squash(tid);
-    rename.squash(tid);
+    rename.squash(squash_seq_num, tid);
     iew.squash(tid);
-    commit.rob->squash(commit.rob->readHeadInst(tid)->seqNum, tid);
+    commit.rob->squash(squash_seq_num, tid);
 
     assert(iew.ldstQueue.getCount(tid) == 0);
 
@@ -1101,7 +1102,6 @@ FullO3CPU<Impl>::setNextPC(uint64_t val,unsigned tid)
     commit.setNextPC(val, tid);
 }
 
-#if THE_ISA != ALPHA_ISA
 template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readNextNPC(unsigned tid)
@@ -1111,11 +1111,10 @@ FullO3CPU<Impl>::readNextNPC(unsigned tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setNextNNPC(uint64_t val,unsigned tid)
+FullO3CPU<Impl>::setNextNPC(uint64_t val,unsigned tid)
 {
     commit.setNextNPC(val, tid);
 }
-#endif
 
 template <class Impl>
 typename FullO3CPU<Impl>::ListIt
@@ -1165,7 +1164,9 @@ FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
+FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
+                                     bool squash_delay_slot,
+                                     const InstSeqNum &delay_slot_seq_num)
 {
     DPRINTF(O3CPU, "Thread %i: Deleting instructions from instruction"
             " list.\n", tid);
@@ -1196,6 +1197,12 @@ FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
     while (inst_it != end_it) {
         assert(!instList.empty());
 
+#if THE_ISA != ALPHA_ISA
+        if(!squash_delay_slot &&
+           delay_slot_seq_num >= (*inst_it)->seqNum) {
+            break;
+        }
+#endif
         squashInstIt(inst_it, tid);
 
         inst_it--;

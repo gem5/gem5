@@ -286,13 +286,11 @@ class DefaultCommit
     /** Sets the next PC of a specific thread. */
     void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
 
-#if THE_ISA != ALPHA_ISA
     /** Reads the next NPC of a specific thread. */
-    uint64_t readNextPC(unsigned tid) { return nextNPC[tid]; }
+    uint64_t readNextNPC(unsigned tid) { return nextNPC[tid]; }
 
     /** Sets the next NPC of a specific thread. */
-    void setNextPC(uint64_t val, unsigned tid) { nextNPC[tid] = val; }
-#endif
+    void setNextNPC(uint64_t val, unsigned tid) { nextNPC[tid] = val; }
 
   private:
     /** Time buffer interface. */
@@ -397,10 +395,8 @@ class DefaultCommit
     /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
 
-#if THE_ISA != ALPHA_ISA
     /** The next NPC of each thread. */
     Addr nextNPC[Impl::MaxThreads];
-#endif
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

@@ -76,6 +76,7 @@ class DefaultRename
     // using a list instead of a queue. (Most other stages use a
     // queue)
     typedef std::list<DynInstPtr> InstQueue;
+    typedef typename std::list<DynInstPtr>::iterator ListIt;
 
   public:
     /** Overall rename status. Used to determine if the CPU can
@@ -170,7 +171,7 @@ class DefaultRename
     void takeOverFrom();
 
     /** Squashes all instructions in a thread. */
-    void squash(unsigned tid);
+    void squash(const InstSeqNum &squash_seq_num, unsigned tid);
 
     /** Ticks rename, which processes all input signals and attempts to rename
      * as many instructions as possible.
@@ -222,7 +223,7 @@ class DefaultRename
     bool unblock(unsigned tid);
 
     /** Executes actual squash, removing squashed instructions. */
-    void doSquash(unsigned tid);
+    void doSquash(const InstSeqNum &squash_seq_num, unsigned tid);
 
     /** Removes a committed instruction's rename history. */
     void removeFromHistory(InstSeqNum inst_seq_num, unsigned tid);

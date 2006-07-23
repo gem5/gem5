@@ -35,6 +35,11 @@
     #include "cpu/o3/alpha/impl.hh"
     #include "cpu/o3/alpha/params.hh"
     #include "cpu/o3/alpha/dyn_inst.hh"
+#elif THE_ISA == MIPS_ISA
+    #include "cpu/o3/mips/cpu.hh"
+    #include "cpu/o3/mips/impl.hh"
+    #include "cpu/o3/mips/params.hh"
+    #include "cpu/o3/mips/dyn_inst.hh"
 #else
-    #error "O3CPU doesnt support this ISA"
+    #error "ISA-specific header files O3CPU not defined ISA"
 #endif

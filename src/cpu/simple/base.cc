@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
- *          Korey Sewell
  */
 
 #include "arch/utility.hh"
@@ -455,6 +454,7 @@ BaseSimpleCPU::advancePC(Fault fault)
 #else
         thread->setNextPC(thread->readNextNPC());
         thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
+        assert(thread->readNextPC() != thread->readNextNPC());
 #endif
 
     }

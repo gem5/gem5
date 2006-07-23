@@ -45,12 +45,25 @@ namespace MipsISA
 
       protected:
         uint64_t	fpcr;		// floating point condition codes
+                                        // FPCR is not used in MIPS. Condition
+                                        // codes are kept as part of the FloatRegFile
+
         bool		lock_flag;	// lock flag for LL/SC
+                                        // use LL reg. in the future
+
         Addr		lock_addr;	// lock address for LL/SC
+                                        // use LLAddr reg. in the future
 
         MiscReg miscRegFile[NumMiscRegs];
 
       public:
+        void clear()
+        {
+            fpcr = 0;
+            lock_flag = 0;
+            lock_addr = 0;
+        }
+
         void copyMiscRegs(ThreadContext *tc);
 
         MiscReg readReg(int misc_reg)
