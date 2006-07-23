@@ -7,7 +7,27 @@ import m5
 import os, optparse, sys
 m5.AddToPath('../common')
 from SEConfig import *
+from FullO3Config import *
 from m5.objects import *
+
+parser = optparse.OptionParser()
+
+parser.add_option("-c", "--cmd", default="hello",
+                  help="The binary to run in syscall emulation mode.")
+parser.add_option("-o", "--options", default="",
+                  help="The options to pass to the binary, use \" \" around the entire\
+                        string.")
+parser.add_option("-i", "--input", default="",
+                  help="A file of input to give to the binary.")
+parser.add_option("-d", "--detailed", action="store_true")
+parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-m", "--maxtick", type="int")
+
+(options, args) = parser.parse_args()
+
+if args:
+    print "Error: script doesn't take any positional arguments"
+    sys.exit(1)
 
 this_dir = os.path.dirname(__file__)
 
@@ -37,7 +57,15 @@ if options.detailed:
             process += [smt_process, ]
             smt_idx += 1
 
-root = MySESystem(process)
+
+if options.timing:
+    cpu = TimingSimpleCPU()
+elif options.detailed:
+    cpu = DetailedO3CPU()
+else:
+    cpu = AtomicSimpleCPU()
+
+root = MySESystem(cpu, process)
 
 if options.timing or options.detailed:
     root.system.mem_mode = 'timing'
