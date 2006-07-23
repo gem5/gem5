@@ -165,10 +165,15 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
         cacheDataPC[tid] = 0;
         cacheDataValid[tid] = false;
 
-        stalls[tid].decode = 0;
-        stalls[tid].rename = 0;
-        stalls[tid].iew = 0;
-        stalls[tid].commit = 0;
+        delaySlotInfo[tid].branchSeqNum = -1;
+        delaySlotInfo[tid].numInsts = 0;
+        delaySlotInfo[tid].targetAddr = 0;
+        delaySlotInfo[tid].targetReady = false;
+
+        stalls[tid].decode = false;
+        stalls[tid].rename = false;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
     }
 
     // Get the size of an instruction.
@@ -287,6 +292,9 @@ DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
         cpu->checker->setIcachePort(icachePort);
     }
 #endif
+
+    // Schedule fetch to get the correct PC from the CPU
+    // scheduleFetchStartupEvent(1);
 
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
@@ -426,6 +434,10 @@ DefaultFetch<Impl>::takeOverFrom()
         nextPC[i] = cpu->readNextPC(i);
 #if THE_ISA != ALPHA_ISA
         nextNPC[i] = cpu->readNextNPC(i);
+        delaySlotInfo[i].branchSeqNum = -1;
+        delaySlotInfo[i].numInsts = 0;
+        delaySlotInfo[i].targetAddr = 0;
+        delaySlotInfo[i].targetReady = false;
 #endif
         fetchStatus[i] = Running;
     }
@@ -474,7 +486,8 @@ DefaultFetch<Impl>::switchToInactive()
 
 template <class Impl>
 bool
-DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
+DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
+                                          Addr &next_NPC)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -482,12 +495,54 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC)
     bool predict_taken;
 
     if (!inst->isControl()) {
+#if THE_ISA == ALPHA_ISA
         next_PC = next_PC + instSize;
         inst->setPredTarg(next_PC);
+#else
+        Addr cur_PC = next_PC;
+        next_PC  = cur_PC + instSize;      //next_NPC;
+        next_NPC = cur_PC + (2 * instSize);//next_NPC + instSize;
+        inst->setPredTarg(next_NPC);
+#endif
         return false;
     }
 
-    predict_taken = branchPred.predict(inst, next_PC, inst->threadNumber);
+    int tid = inst->threadNumber;
+#if THE_ISA == ALPHA_ISA
+    predict_taken = branchPred.predict(inst, next_PC, tid);
+#else
+    Addr pred_PC = next_PC;
+    predict_taken = branchPred.predict(inst, pred_PC, tid);
+
+    if (predict_taken) {
+        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be true.\n", tid);
+    } else {
+        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be false.\n", tid);
+    }
+
+    if (predict_taken) {
+        next_PC = next_NPC;
+        next_NPC = pred_PC;
+
+        // Update delay slot info
+        ++delaySlotInfo[tid].numInsts;
+        delaySlotInfo[tid].targetAddr = pred_PC;
+        DPRINTF(Fetch, "[tid:%i]: %i delay slot inst(s) to process.\n", tid,
+                delaySlotInfo[tid].numInsts);
+    } else { // !predict_taken
+        if (inst->isCondDelaySlot()) {
+            next_PC = pred_PC;
+            // The delay slot is skipped here if there is on
+            // prediction
+        } else {
+            next_PC = next_NPC;
+            // No need to declare a delay slot here since
+            // there is no for the pred. target to jump
+        }
+
+        next_NPC = next_NPC + instSize;
+    }
+#endif
 
     ++fetchedBranches;
 
@@ -606,6 +661,7 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
 
     PC[tid] = new_PC;
     nextPC[tid] = new_PC + instSize;
+    nextNPC[tid] = new_PC + (2 * instSize);
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -638,6 +694,14 @@ DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC,
     DPRINTF(Fetch, "[tid:%i]: Squashing from decode.\n",tid);
 
     doSquash(new_PC, tid);
+
+#if THE_ISA != ALPHA_ISA
+    if (seq_num <=  delaySlotInfo[tid].branchSeqNum) {
+        delaySlotInfo[tid].numInsts = 0;
+        delaySlotInfo[tid].targetAddr = 0;
+        delaySlotInfo[tid].targetReady = false;
+    }
+#endif
 
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
@@ -712,14 +776,26 @@ DefaultFetch<Impl>::updateFetchStatus()
 
 template <class Impl>
 void
-DefaultFetch<Impl>::squash(const Addr &new_PC, unsigned tid)
+DefaultFetch<Impl>::squash(const Addr &new_PC, const InstSeqNum &seq_num,
+                           bool squash_delay_slot, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n",tid);
 
     doSquash(new_PC, tid);
 
+#if THE_ISA == ALPHA_ISA
     // Tell the CPU to remove any instructions that are not in the ROB.
-    cpu->removeInstsNotInROB(tid);
+    cpu->removeInstsNotInROB(tid, true, 0);
+#else
+    if (seq_num <=  delaySlotInfo[tid].branchSeqNum) {
+        delaySlotInfo[tid].numInsts = 0;
+        delaySlotInfo[tid].targetAddr = 0;
+        delaySlotInfo[tid].targetReady = false;
+    }
+
+    // Tell the CPU to remove any instructions that are not in the ROB.
+    cpu->removeInstsNotInROB(tid, squash_delay_slot, seq_num);
+#endif
 }
 
 template <class Impl>
@@ -828,8 +904,16 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         DPRINTF(Fetch, "[tid:%u]: Squashing instructions due to squash "
                 "from commit.\n",tid);
 
+#if THE_ISA == ALPHA_ISA
+            InstSeqNum doneSeqNum = fromCommit->commitInfo[tid].doneSeqNum;
+#else
+            InstSeqNum doneSeqNum = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
+#endif
         // In any case, squash.
-        squash(fromCommit->commitInfo[tid].nextPC,tid);
+        squash(fromCommit->commitInfo[tid].nextPC,
+               doneSeqNum,
+               fromCommit->commitInfo[tid].squashDelaySlot,
+               tid);
 
         // Also check if there's a mispredict that happened.
         if (fromCommit->commitInfo[tid].branchMispredict) {
@@ -876,9 +960,15 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         }
 
         if (fetchStatus[tid] != Squashing) {
+
+#if THE_ISA == ALPHA_ISA
+            InstSeqNum doneSeqNum = fromDecode->decodeInfo[tid].doneSeqNum;
+#else
+            InstSeqNum doneSeqNum = fromDecode->decodeInfo[tid].bdelayDoneSeqNum;
+#endif
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
-                             fromDecode->decodeInfo[tid].doneSeqNum,
+                             doneSeqNum,
                              tid);
 
             return true;
@@ -984,6 +1074,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     }
 
     Addr next_PC = fetch_PC;
+    Addr next_NPC = next_PC + instSize;
     InstSeqNum inst_seq;
     MachInst inst;
     ExtMachInst ext_inst;
@@ -1002,10 +1093,13 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // ended this fetch block.
         bool predicted_branch = false;
 
+        // Need to keep track of whether or not a delay slot
+        // instruction has been fetched
+
         for (;
              offset < cacheBlkSize &&
                  numInst < fetchWidth &&
-                 !predicted_branch;
+                 (!predicted_branch || delaySlotInfo[tid].numInsts > 0);
              ++numInst) {
 
             // Get a sequence number.
@@ -1042,7 +1136,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                      instruction->staticInst,
                                      instruction->readPC(),tid);
 
-            predicted_branch = lookupAndUpdateNextPC(instruction, next_PC);
+            predicted_branch = lookupAndUpdateNextPC(instruction, next_PC,
+                                                     next_NPC);
 
             // Add instruction to the CPU's list of instructions.
             instruction->setInstListIt(cpu->addInst(instruction));
@@ -1068,7 +1163,41 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
 
-            offset+= instSize;
+            offset += instSize;
+
+#if THE_ISA != ALPHA_ISA
+            if (predicted_branch) {
+                delaySlotInfo[tid].branchSeqNum = inst_seq;
+
+                DPRINTF(Fetch, "[tid:%i]: Delay slot branch set to [sn:%i]\n",
+                        tid, inst_seq);
+                continue;
+            } else if (delaySlotInfo[tid].numInsts > 0) {
+                --delaySlotInfo[tid].numInsts;
+
+                // It's OK to set PC to target of branch
+                if (delaySlotInfo[tid].numInsts == 0) {
+                    delaySlotInfo[tid].targetReady = true;
+
+                    // Break the looping condition
+                    predicted_branch = true;
+                }
+
+                DPRINTF(Fetch, "[tid:%i]: %i delay slot inst(s) left to"
+                        " process.\n", tid, delaySlotInfo[tid].numInsts);
+            }
+#endif
+        }
+
+        if (offset >= cacheBlkSize) {
+            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
+                    "block.\n", tid);
+        } else if (numInst >= fetchWidth) {
+            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
+                    "for this cycle.\n", tid);
+        } else if (predicted_branch && delaySlotInfo[tid].numInsts <= 0) {
+            DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
+                    "instruction encountered.\n", tid);
         }
     }
 
@@ -1085,12 +1214,19 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         PC[tid] = next_PC;
         nextPC[tid] = next_PC + instSize;
 #else
-        PC[tid] = next_PC;
-        nextPC[tid] = next_PC + instSize;
-        nextPC[tid] = next_PC + instSize;
+        if (delaySlotInfo[tid].targetReady &&
+            delaySlotInfo[tid].numInsts == 0) {
+            // Set PC to target
+            PC[tid] = delaySlotInfo[tid].targetAddr; //next_PC
+            nextPC[tid] = next_PC + instSize;        //next_NPC
+            nextNPC[tid] = next_PC + (2 * instSize);
 
-        thread->setNextPC(thread->readNextNPC());
-        thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
+            delaySlotInfo[tid].targetReady = false;
+        } else {
+            PC[tid] = next_PC;
+            nextPC[tid] = next_NPC;
+            nextNPC[tid] = next_NPC + instSize;
+        }
 #endif
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB

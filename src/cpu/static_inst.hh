@@ -214,6 +214,7 @@ class StaticInstBase : public RefCounted
     bool isIndirectCtrl() const { return flags[IsIndirectControl]; }
     bool isCondCtrl()	  const { return flags[IsCondControl]; }
     bool isUncondCtrl()	  const { return flags[IsUncondControl]; }
+    bool isCondDelaySlot() const { return flags[IsCondDelaySlot]; }
 
     bool isThreadSync()   const { return flags[IsThreadSync]; }
     bool isSerializing()  const { return flags[IsSerializing] ||

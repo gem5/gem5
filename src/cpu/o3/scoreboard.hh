@@ -35,7 +35,7 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-#include "arch/alpha/isa_traits.hh"
+#include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "cpu/o3/comm.hh"

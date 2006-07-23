@@ -50,6 +50,8 @@ DefaultDecode<Impl>::DefaultDecode(Params *params)
         stalls[i].rename = false;
         stalls[i].iew = false;
         stalls[i].commit = false;
+
+        squashAfterDelaySlot[i] = false;
     }
 
     // @todo: Make into a parameter
@@ -278,12 +280,24 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
 
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
-    toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].predIncorrect = true;
+    toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
+#if THE_ISA == ALPHA_ISA
     toFetch->decodeInfo[tid].branchTaken =
         inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
+
+    InstSeqNum squash_seq_num = inst->seqNum;
+#else
+    toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
+        (inst->readNextPC() + sizeof(TheISA::MachInst));
+
+    toFetch->decodeInfo[tid].bdelayDoneSeqNum = bdelayDoneSeqNum[tid];
+    squashAfterDelaySlot[tid] = false;
+
+    InstSeqNum squash_seq_num = bdelayDoneSeqNum[tid];
+#endif
 
     // Might have to tell fetch to unblock.
     if (decodeStatus[tid] == Blocked ||
@@ -296,7 +310,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
 
     for (int i=0; i<fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid &&
-            fromFetch->insts[i]->seqNum > inst->seqNum) {
+            fromFetch->insts[i]->seqNum > squash_seq_num) {
             fromFetch->insts[i]->setSquashed();
         }
     }
@@ -304,15 +318,35 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     // Clear the instruction list and skid buffer in case they have any
     // insts in them.
     while (!insts[tid].empty()) {
+
+#if THE_ISA != ALPHA_ISA
+        if (insts[tid].front()->seqNum <= squash_seq_num) {
+            DPRINTF(Decode, "[tid:%i]: Cannot remove incoming decode "
+                    "instructions before delay slot [sn:%i]. %i insts"
+                    "left in decode.\n", tid, squash_seq_num,
+                    insts[tid].size());
+            break;
+        }
+#endif
         insts[tid].pop();
     }
 
     while (!skidBuffer[tid].empty()) {
+
+#if THE_ISA != ALPHA_ISA
+        if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
+            DPRINTF(Decode, "[tid:%i]: Cannot remove skidBuffer "
+                    "instructions before delay slot [sn:%i]. %i insts"
+                    "left in decode.\n", tid, squash_seq_num,
+                    insts[tid].size());
+            break;
+        }
+#endif
         skidBuffer[tid].pop();
     }
 
     // Squash instructions up until this one
-    cpu->removeInstsUntil(inst->seqNum, tid);
+    cpu->removeInstsUntil(squash_seq_num, tid);
 }
 
 template<class Impl>
@@ -611,7 +645,7 @@ DefaultDecode<Impl>::decode(bool &status_change, unsigned tid)
     // will allow, as long as it is not currently blocked.
     if (decodeStatus[tid] == Running ||
         decodeStatus[tid] == Idle) {
-        DPRINTF(Decode, "[tid:%u] Not blocked, so attempting to run "
+        DPRINTF(Decode, "[tid:%u]: Not blocked, so attempting to run "
                 "stage.\n",tid);
 
         decodeInsts(tid);
@@ -710,6 +744,9 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
         if (inst->predTaken() && !inst->isControl()) {
+            DPRINTF(Decode, "PredPC : %#x != NextPC: %#x\n",inst->predPC,
+                    inst->nextPC + 4);
+
             panic("Instruction predicted as a branch!");
 
             ++decodeControlMispred;
@@ -730,11 +767,42 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
+#if THE_ISA == ALPHA_ISA
                 squash(inst, inst->threadNumber);
                 inst->setPredTarg(inst->branchTarget());
-
                 break;
+#else
+                // If mispredicted as taken, then ignore delay slot
+                // instruction... else keep delay slot and squash
+                // after it is sent to rename
+                if (inst->predTaken() && inst->isCondDelaySlot()) {
+                    DPRINTF(Decode, "[tid:%i]: Conditional delay slot inst."
+                            "[sn:%i] PC %#x mispredicted as taken.\n", tid,
+                            inst->seqNum, inst->PC);
+                    bdelayDoneSeqNum[tid] = inst->seqNum;
+                    squash(inst, inst->threadNumber);
+                    inst->setPredTarg(inst->branchTarget());
+                    break;
+                } else {
+                    DPRINTF(Decode, "[tid:%i]: Misprediction detected at "
+                            "[sn:%i] PC %#x, will squash after delay slot "
+                            "inst. is sent to Rename\n",
+                            tid, inst->seqNum, inst->PC);
+                    bdelayDoneSeqNum[tid] = inst->seqNum + 1;
+                    squashAfterDelaySlot[tid] = true;
+                    squashInst[tid] = inst;
+                    continue;
+                }
+#endif
             }
+        }
+
+        if (squashAfterDelaySlot[tid]) {
+            assert(!inst->isSquashed());
+            squash(squashInst[tid], squashInst[tid]->threadNumber);
+            squashInst[tid]->setPredTarg(squashInst[tid]->branchTarget());
+            assert(!inst->isSquashed());
+            break;
         }
     }
 

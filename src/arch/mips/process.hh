@@ -51,8 +51,6 @@ class MipsLiveProcess : public LiveProcess
 
     void startup();
 
-
-    static Addr stack_start;
 };
 
 

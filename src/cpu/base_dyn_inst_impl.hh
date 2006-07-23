@@ -74,6 +74,7 @@ BaseDynInst<Impl>::BaseDynInst(ExtMachInst machInst, Addr inst_PC,
 
     PC = inst_PC;
     nextPC = PC + sizeof(MachInst);
+    nextNPC = nextPC + sizeof(MachInst);
     predPC = pred_PC;
 
     initVars();

@@ -25,13 +25,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Korey Sewell
+ * Authors: Gabe Black
+ *          Korey Sewell
  */
 
 #include "arch/mips/faults.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+
 #if !FULL_SYSTEM
 #include "sim/process.hh"
 #include "mem/page_table.hh"
@@ -110,35 +112,6 @@ FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_count;
 
-#if FULL_SYSTEM
-
-void MipsFault::invoke(ThreadContext * tc)
-{
-    FaultBase::invoke(tc);
-    countStat()++;
-
-    // exception restart address
-    if (setRestartAddress() || !tc->inPalMode())
-        tc->setMiscReg(MipsISA::IPR_EXC_ADDR, tc->readPC());
-
-    if (skipFaultingInstruction()) {
-        // traps...  skip faulting instruction.
-        tc->setMiscReg(MipsISA::IPR_EXC_ADDR,
-                   tc->readMiscReg(MipsISA::IPR_EXC_ADDR) + 4);
-    }
-
-    tc->setPC(tc->readMiscReg(MipsISA::IPR_PAL_BASE) + vect());
-    tc->setNextPC(tc->readPC() + sizeof(MachInst));
-}
-
-void ArithmeticFault::invoke(ThreadContext * tc)
-{
-    FaultBase::invoke(tc);
-    panic("Arithmetic traps are unimplemented!");
-}
-
-#else //!FULL_SYSTEM
-
 void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
@@ -159,6 +132,5 @@ void PageTableFault::invoke(ThreadContext *tc)
     }
 }
 
-#endif
 } // namespace MipsISA
 

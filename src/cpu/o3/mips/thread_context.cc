@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 2003-2004 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,44 +25,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
- *          Ali Saidi
+ * Authors: Kevin Lim
  *          Korey Sewell
  */
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/process.hh"
-#include "base/loader/object_file.hh"
-#include "base/misc.hh"
-#include "cpu/thread_context.hh"
-#include "sim/system.hh"
+#include "cpu/o3/thread_context.hh"
+#include "cpu/o3/thread_context_impl.hh"
 
-using namespace std;
-using namespace MipsISA;
+template class O3ThreadContext<MipsSimpleImpl>;
 
-MipsLiveProcess::MipsLiveProcess(const std::string &nm, ObjectFile *objFile,
-        System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-        std::vector<std::string> &argv, std::vector<std::string> &envp)
-    : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
-        argv, envp)
-{
-    // Set up stack. On MIPS, stack starts at the top of kuseg
-    // user address space. MIPS stack grows down from here
-    stack_base = 0x7FFFFFFF;
-
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
-
-    // Set up break point (Top of Heap)
-    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, VMPageSize);
-
-    // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x10000;
-}
-
-void
-MipsLiveProcess::startup()
-{
-    argsInit(MachineBytes, VMPageSize);
-}
