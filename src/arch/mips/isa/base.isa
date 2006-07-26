@@ -79,21 +79,27 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-        if(_numDestRegs > 0){
-            printReg(ss, _destRegIdx[0]);
+        // Need to find standard way to not print
+        // this info. Maybe add bool variable to
+        // class?
+        if (mnemonic != "syscall") {
+            if(_numDestRegs > 0){
+                printReg(ss, _destRegIdx[0]);
+            }
+
+            if(_numSrcRegs > 0) {
+                ss << ", ";
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            if(_numSrcRegs > 1) {
+                ss << ", ";
+                printReg(ss, _srcRegIdx[1]);
+            }
         }
 
-        if(_numSrcRegs > 0) {
-            ss << ", ";
-            printReg(ss, _srcRegIdx[0]);
-        }
-
-        if(_numSrcRegs > 1) {
-            ss << ", ";
-            printReg(ss, _srcRegIdx[1]);
-        }
-
-
+        // Should we define a separate inst. class
+        // just for two insts?
         if(mnemonic == "sll" || mnemonic == "sra"){
             ccprintf(ss,", %d",SA);
         }

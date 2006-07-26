@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Korey Sewell
  */
 
 #include "config/full_system.hh"
@@ -800,6 +801,10 @@ DefaultCommit<Impl>::commit()
 
         // Try to commit any instructions.
         commitInsts();
+    } else {
+#if THE_ISA != ALPHA_ISA
+        skidInsert();
+#endif
     }
 
     //Check for any activity
@@ -1112,12 +1117,37 @@ DefaultCommit<Impl>::getInsts()
 {
     DPRINTF(Commit, "Getting instructions from Rename stage.\n");
 
+#if THE_ISA == ALPHA_ISA
     // Read any renamed instructions and place them into the ROB.
     int insts_to_process = min((int)renameWidth, fromRename->size);
+#else
+    // Read any renamed instructions and place them into the ROB.
+    int insts_to_process = min((int)renameWidth,
+                               (int)(fromRename->size + skidBuffer.size()));
+    int rename_idx = 0;
 
-    for (int inst_num = 0; inst_num < insts_to_process; ++inst_num)
-    {
-        DynInstPtr inst = fromRename->insts[inst_num];
+    DPRINTF(Commit, "%i insts available to process. Rename Insts:%i "
+            "SkidBuffer Insts:%i\n", insts_to_process, fromRename->size,
+            skidBuffer.size());
+#endif
+
+
+    for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
+        DynInstPtr inst;
+
+#if THE_ISA == ALPHA_ISA
+        inst = fromRename->insts[inst_num];
+#else
+        // Get insts from skidBuffer or from Rename
+        if (skidBuffer.size() > 0) {
+            DPRINTF(Commit, "Grabbing skidbuffer inst.\n");
+            inst = skidBuffer.front();
+            skidBuffer.pop();
+        } else {
+            DPRINTF(Commit, "Grabbing rename inst.\n");
+            inst = fromRename->insts[rename_idx++];
+        }
+#endif
         int tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
@@ -1132,6 +1162,53 @@ DefaultCommit<Impl>::getInsts()
             assert(rob->getThreadEntries(tid) <= rob->getMaxEntries(tid));
 
             youngestSeqNum[tid] = inst->seqNum;
+        } else {
+            DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
+                    "squashed, skipping.\n",
+                    inst->readPC(), inst->seqNum, tid);
+        }
+    }
+
+#if THE_ISA != ALPHA_ISA
+    if (rename_idx < fromRename->size) {
+        DPRINTF(Commit,"Placing Rename Insts into skidBuffer.\n");
+
+        for (;
+             rename_idx < fromRename->size;
+             rename_idx++) {
+            DynInstPtr inst = fromRename->insts[rename_idx];
+            int tid = inst->threadNumber;
+
+            if (!inst->isSquashed()) {
+                DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
+                        "skidBuffer.\n", inst->readPC(), inst->seqNum, tid);
+                skidBuffer.push(inst);
+            } else {
+                DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
+                        "squashed, skipping.\n",
+                        inst->readPC(), inst->seqNum, tid);
+            }
+        }
+    }
+#endif
+
+}
+
+template <class Impl>
+void
+DefaultCommit<Impl>::skidInsert()
+{
+    DPRINTF(Commit, "Attempting to any instructions from rename into "
+            "skidBuffer.\n");
+
+    for (int inst_num = 0; inst_num < fromRename->size; ++inst_num) {
+        DynInstPtr inst = fromRename->insts[inst_num];
+        int tid = inst->threadNumber;
+
+        if (!inst->isSquashed()) {
+            DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
+                    "skidBuffer.\n", inst->readPC(), inst->seqNum, tid);
+            skidBuffer.push(inst);
         } else {
             DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
                     "squashed, skipping.\n",

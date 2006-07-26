@@ -1208,9 +1208,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // Now that fetching is completed, update the PC to signify what the next
     // cycle will be.
     if (fault == NoFault) {
-        DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n",tid, next_PC);
-
 #if THE_ISA == ALPHA_ISA
+        DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n",tid, next_PC);
         PC[tid] = next_PC;
         nextPC[tid] = next_PC + instSize;
 #else
@@ -1227,6 +1226,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             nextPC[tid] = next_NPC;
             nextNPC[tid] = next_NPC + instSize;
         }
+
+        DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n", tid, PC[tid]);
 #endif
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB
@@ -1270,9 +1271,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
-        warn("cycle %lli: fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
+        warn("cycle %lli: fault (%s) detected @ PC %08p", curTick, fault->name(), PC[tid]);
 #else // !FULL_SYSTEM
-        warn("cycle %lli: fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
+        warn("cycle %lli: fault (%s) detected @ PC %08p", curTick, fault->name(), PC[tid]);
 #endif // FULL_SYSTEM
     }
 }

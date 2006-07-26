@@ -133,7 +133,8 @@ decode OPCODE_HI default Unknown::unknown() {
                 format BasicOp {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
-                    0x4: syscall({{ xc->syscall(R2); }}, IsNonSpeculative);
+                    0x4: syscall({{ xc->syscall(R2); }},
+                                 IsSerializeAfter, IsNonSpeculative);
                     0x7: sync({{ ; }}, IsMemBarrier);
                 }
 

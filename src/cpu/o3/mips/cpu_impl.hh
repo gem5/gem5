@@ -237,9 +237,7 @@ template <class Impl>
 void
 MipsO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 {
-    // check for error condition.  Mips syscall convention is to
-    // indicate success/failure in reg a3 (r19) and put the
-    // return value itself in the standard return value reg (v0).
+    // check for error condition.
     if (return_value.successful()) {
         // no error
         this->setArchIntReg(SyscallSuccessReg, 0, tid);
