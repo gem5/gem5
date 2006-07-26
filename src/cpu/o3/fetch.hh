@@ -106,6 +106,7 @@ class DefaultFetch
         virtual void recvRetry();
     };
 
+
   public:
     /** Overall fetch status. Used to determine if the CPU can
      * deschedule itsef due to a lack of activity.
@@ -218,9 +219,10 @@ class DefaultFetch
      * @param next_PC Next PC variable passed in by reference.  It is
      * expected to be set to the current PC; it will be updated with what
      * the next PC will be.
+     * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC);
+    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC, Addr &next_NPC);
 
     /**
      * Fetches the cache line that contains fetch_PC.  Returns any
@@ -255,7 +257,8 @@ class DefaultFetch
      * remove any instructions that are not in the ROB. The source of this
      * squash should be the commit stage.
      */
-    void squash(const Addr &new_PC, unsigned tid);
+    void squash(const Addr &new_PC, const InstSeqNum &seq_num,
+                bool squash_delay_slot, unsigned tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -340,14 +343,12 @@ class DefaultFetch
     /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
 
-#if THE_ISA != ALPHA_ISA
     /** Per-thread next Next PC.
      *  This is not a real register but is used for
      *  architectures that use a branch-delay slot.
      *  (such as MIPS or Sparc)
      */
     Addr nextNPC[Impl::MaxThreads];
-#endif
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];
@@ -359,6 +360,19 @@ class DefaultFetch
 
     /** Tracks how many instructions has been fetched this cycle. */
     int numInst;
+
+    /** Tracks delay slot information for threads in ISAs which use
+     *	delay slots;
+     */
+    struct DelaySlotInfo {
+        InstSeqNum delaySlotSeqNum;
+        InstSeqNum branchSeqNum;
+        int numInsts;
+        Addr targetAddr;
+        bool targetReady;
+    };
+
+    DelaySlotInfo delaySlotInfo[Impl::MaxThreads];
 
     /** Source of possible stalls. */
     struct Stalls {

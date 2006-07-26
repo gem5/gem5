@@ -405,6 +405,9 @@ class DefaultIEW
     /** Records if there is a fetch redirect on this cycle for each thread. */
     bool fetchRedirect[Impl::MaxThreads];
 
+    /** Keeps track of the last valid branch delay slot instss for threads */
+    InstSeqNum bdelayDoneSeqNum[Impl::MaxThreads];
+
     /** Used to track if all instructions have been dispatched this cycle.
      * If they have not, then blocking must have occurred, and the instructions
      * would already be added to the skid buffer.

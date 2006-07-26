@@ -668,7 +668,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             + completeAccTemplate.subst(completeacc_iop))
 }};
 
-
 def format LoadOrNop(memacc_code, ea_code = {{ EA = Rb + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \

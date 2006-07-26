@@ -34,12 +34,15 @@
 #include "arch/isa_specific.hh"
 
 #if THE_ISA == ALPHA_ISA
-template <class Impl>
-class AlphaDynInst;
-
-struct AlphaSimpleImpl;
-
-typedef AlphaDynInst<AlphaSimpleImpl> O3DynInst;
+    template <class Impl> class AlphaDynInst;
+    struct AlphaSimpleImpl;
+    typedef AlphaDynInst<AlphaSimpleImpl> O3DynInst;
+#elif THE_ISA == MIPS_ISA
+    template <class Impl> class MipsDynInst;
+    struct MipsSimpleImpl;
+    typedef MipsDynInst<MipsSimpleImpl> O3DynInst;
+#else
+    #error "O3DynInst not defined for this ISA"
 #endif
 
 #endif // __CPU_O3_DYN_INST_HH__

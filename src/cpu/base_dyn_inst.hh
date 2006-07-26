@@ -215,6 +215,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     Addr nextPC;
 
+    /** Next non-speculative NPC. Target PC for Mips or Sparc. */
+    Addr nextNPC;
+
     /** Predicted next PC. */
     Addr predPC;
 
@@ -275,6 +278,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     Addr readNextPC() { return nextPC; }
 
+    /** Returns the next NPC.  This could be the speculative next NPC if it is
+     *  called prior to the actual branch target being calculated.
+     */
+    Addr readNextNPC() { return nextNPC; }
+
     /** Set the predicted target of this current instruction. */
     void setPredTarg(Addr predicted_PC) { predPC = predicted_PC; }
 
@@ -282,11 +290,20 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr readPredTarg() { return predPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool predTaken() { return predPC != (PC + sizeof(MachInst)); }
+    bool predTaken()
+#if THE_ISA == ALPHA_ISA
+    { return predPC != (PC + sizeof(MachInst)); }
+#else
+    { return predPC != (nextPC + sizeof(MachInst)); }
+#endif
 
     /** Returns whether the instruction mispredicted. */
-    bool mispredicted() { return predPC != nextPC; }
-
+    bool mispredicted()
+#if THE_ISA == ALPHA_ISA
+    { return predPC != nextPC; }
+#else
+    { return predPC != nextNPC; }
+#endif
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //
@@ -308,6 +325,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isIndirectCtrl() const { return staticInst->isIndirectCtrl(); }
     bool isCondCtrl()	  const { return staticInst->isCondCtrl(); }
     bool isUncondCtrl()	  const { return staticInst->isUncondCtrl(); }
+    bool isCondDelaySlot() const { return staticInst->isCondDelaySlot(); }
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
     bool isSerializeBefore() const
@@ -543,6 +561,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setNextPC(uint64_t val)
     {
         nextPC = val;
+    }
+
+    /** Set the next NPC of this instruction (the target in Mips or Sparc).*/
+    void setNextNPC(uint64_t val)
+    {
+        nextNPC = val;
     }
 
     /** Sets the ASID. */

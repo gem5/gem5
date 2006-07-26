@@ -65,7 +65,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     if (exec_template_base == 'Load'):
         initiateacc_cblk = CodeBlock(ea_code + memacc_code)
         completeacc_cblk = CodeBlock(memacc_code + postacc_code)
-    elif (exec_template_base == 'Store'):
+    elif (exec_template_base.startswith('Store')):
         initiateacc_cblk = CodeBlock(ea_code + memacc_code)
         completeacc_cblk = CodeBlock(postacc_code)
     else:
@@ -83,7 +83,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
         initiateacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.postacc_code = postacc_cblk.code
-    elif (exec_template_base == 'Store'):
+    elif (exec_template_base.startswith('Store')):
         initiateacc_iop.ea_code = ea_cblk.code
         initiateacc_iop.memacc_code = memacc_cblk.code
         completeacc_iop.postacc_code = postacc_cblk.code
@@ -104,6 +104,13 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
         memacc_iop.constructor += s
 
     # select templates
+
+    # define aliases... most StoreCond templates are the same as the
+    # corresponding Store templates (only CompleteAcc is different).
+    StoreCondMemAccExecute = StoreMemAccExecute
+    StoreCondExecute = StoreExecute
+    StoreCondInitiateAcc = StoreInitiateAcc
+
     memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
     fullExecTemplate = eval(exec_template_base + 'Execute')
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
@@ -118,7 +125,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             + initiateAccTemplate.subst(initiateacc_iop)
             + completeAccTemplate.subst(completeacc_iop))
 }};
-
 output header {{
         std::string inst2string(MachInst machInst);
 }};

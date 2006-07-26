@@ -276,6 +276,19 @@ class DefaultDecode
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
 
+    /** SeqNum of Squashing Branch Delay Instruction (used for MIPS)*/
+    Addr bdelayDoneSeqNum[Impl::MaxThreads];
+
+    /** Instruction used for squashing branch (used for MIPS)*/
+    DynInstPtr squashInst[Impl::MaxThreads];
+
+    /** Tells when their is a pending delay slot inst. to send
+     *  to rename. If there is, then wait squash after the next
+     *  instruction (used for MIPS).
+     */
+    bool squashAfterDelaySlot[Impl::MaxThreads];
+
+
     /** Stat for total number of idle cycles. */
     Stats::Scalar<> decodeIdleCycles;
     /** Stat for total number of blocked cycles. */
