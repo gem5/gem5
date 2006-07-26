@@ -83,6 +83,7 @@ def operands {{
     'Wstate':		('ControlReg', 'udw', 'MISCREG_WSTATE', None, 53),
     'Gl':               ('ControlReg', 'udw', 'MISCREG_GL', None, 54),
 
-    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 55)
+    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 55),
+    'Gsr':		('ControlReg', 'udw', 'MISCREG_GSR', None, 56)
 
 }};
