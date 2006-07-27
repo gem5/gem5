@@ -68,6 +68,8 @@ class EtherDevBase(PciDevice):
 
     clock = Param.Clock('0ns', "State machine processor frequency")
 
+    config_latency = Param.Latency('20ns', "Config read or write latency")
+
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
     dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")

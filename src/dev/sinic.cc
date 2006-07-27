@@ -1639,6 +1639,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
     Param<Tick> pio_latency;
+    Param<Tick> config_latency;
     Param<Tick> intr_delay;
 
     Param<Tick> clock;
@@ -1681,6 +1682,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
+    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
     INIT_PARAM(intr_delay, "Interrupt Delay"),
     INIT_PARAM(clock, "State machine cycle time"),
 
@@ -1725,6 +1727,7 @@ CREATE_SIM_OBJECT(Device)
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
     params->pio_delay = pio_latency;
+    params->config_delay = config_latency;
     params->intr_delay = intr_delay;
     params->clock = clock;
 
