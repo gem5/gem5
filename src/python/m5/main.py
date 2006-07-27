@@ -246,6 +246,10 @@ def main():
         print "M5 compiled %s" % cc_main.cvar.compileDate;
         print "M5 started %s" % datetime.now().ctime()
         print "M5 executing on %s" % socket.gethostname()
+        print "command line:",
+        for argv in sys.argv:
+            print argv,
+        print
 
     # check to make sure we can find the listed script
     if not arguments or not os.path.isfile(arguments[0]):
