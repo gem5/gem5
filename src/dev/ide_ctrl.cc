@@ -756,6 +756,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
     Param<uint32_t> pci_dev;
     Param<uint32_t> pci_func;
     Param<Tick> pio_latency;
+    Param<Tick> config_latency;
     SimObjectVectorParam<IdeDisk *> disks;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
@@ -769,6 +770,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
     INIT_PARAM(pci_dev, "PCI device number"),
     INIT_PARAM(pci_func, "PCI function code"),
     INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
+    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
     INIT_PARAM(disks, "IDE disks attached to this controller")
 
 END_INIT_SIM_OBJECT_PARAMS(IdeController)
@@ -784,6 +786,7 @@ CREATE_SIM_OBJECT(IdeController)
     params->deviceNum = pci_dev;
     params->functionNum = pci_func;
     params->pio_delay = pio_latency;
+    params->config_delay = config_latency;
     params->disks = disks;
     return new IdeController(params);
 }

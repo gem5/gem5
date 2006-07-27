@@ -36,4 +36,6 @@ class IdeController(PciDevice):
     type = 'IdeController'
     disks = VectorParam.IdeDisk("IDE disks attached to this controller")
 
+    config_latency = Param.Latency('20ns', "Config read or write latency")
+
     configdata =IdeControllerPciData()
