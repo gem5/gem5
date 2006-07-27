@@ -1,0 +1,106 @@
+M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
+Got Configuration 623
+memsize 8000000 pages 4000 
+First free page after ROM 0xFFFFFC0000018000
+HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
+kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC00008064E8, kentry = 0xFFFFFC0000310000, numCPUs = 0x1
+CPU Clock at 2000 MHz IntrClockFrequency=1024 
+Booting with 1 processor(s) 
+KSP: 0x20043FE8 PTBR 0x20
+Console Callback at 0x0, fixup at 0x0, crb offset: 0x510
+Memory cluster 0 [0 - 392]
+Memory cluster 1 [392 - 15992]
+Initalizing mdt_bitmap addr 0xFFFFFC0000038000 mem_pages 4000 
+ConsoleDispatch at virt 10000658 phys 18658 val FFFFFC00000100A8
+unix_boot_mem ends at FFFFFC0000076000 
+k_argc = 0 
+jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1028)
+CallbackFixup 0 18000, t7=FFFFFC0000700000
+Linux version 2.6.8.1 (binkertn@ziff.eecs.umich.edu) (gcc version 3.4.3) #36 SMP Mon May 2 19:50:53 EDT 2005
+Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
+Major Options: SMP LEGACY_START VERBOSE_MCHECK 
+Command line: root=/dev/hda1 console=ttyS0
+memcluster 0, usage 1, start        0, end      392
+memcluster 1, usage 0, start      392, end    16384
+freeing pages 1030:16384
+reserving pages 1030:1031
+SMP: 1 CPUs probed -- cpu_present_mask = 1
+Built 1 zonelists
+Kernel command line: root=/dev/hda1 console=ttyS0
+PID hash table entries: 1024 (order 10: 16384 bytes)
+Using epoch = 1900
+Console: colour dummy device 80x25
+Dentry cache hash table entries: 32768 (order: 5, 262144 bytes)
+Inode-cache hash table entries: 16384 (order: 4, 131072 bytes)
+Memory: 119072k/131072k available (3058k kernel code, 8680k reserved, 695k data, 480k init)
+Mount-cache hash table entries: 512 (order: 0, 8192 bytes)
+per-CPU timeslice cutoff: 374.49 usecs.
+task migration cache decay timeout: 0 msecs.
+SMP mode deactivated.
+Brought up 1 CPUs
+SMP: Total of 1 processors activated (4002.20 BogoMIPS).
+NET: Registered protocol family 16
+EISA bus registered
+pci: enabling save/restore of SRM state
+SCSI subsystem initialized
+srm_env: version 0.0.5 loaded successfully
+Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+Initializing Cryptographic API
+rtc: Standard PC (1900) epoch (1900) detected
+Real Time Clock Driver v1.12
+Serial: 8250/16550 driver $Revision: 1.90 $ 5 ports, IRQ sharing disabled
+ttyS0 at I/O 0x3f8 (irq = 4) is a 8250
+loop: loaded (max 8 devices)
+Using anticipatory io scheduler
+nbd: registered device at major 43
+sinic.c: M5 Simple Integrated NIC driver
+ns83820.c: National Semiconductor DP83820 10/100/1000 driver.
+eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
+eth0: enabling optical transceiver
+eth0: ns83820 v0.20: DP83820 v1.3: 00:90:00:00:00:01 io=0x09000000 irq=30 f=sg
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+PIIX4: IDE controller at PCI slot 0000:00:00.0
+PIIX4: chipset revision 0
+PIIX4: 100% native mode on irq 31
+    ide0: BM-DMA at 0x8400-0x8407, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0x8408-0x840f, BIOS settings: hdc:DMA, hdd:DMA
+hda: M5 IDE Disk, ATA DISK drive
+hdb: M5 IDE Disk, ATA DISK drive
+ide0 at 0x8410-0x8417,0x8422 on irq 31
+hda: max request size: 128KiB
+hda: 163296 sectors (83 MB), CHS=162/16/63, UDMA(33)
+ hda: hda1
+hdb: max request size: 128KiB
+hdb: 4177920 sectors (2139 MB), CHS=4144/16/63, UDMA(33)
+ hdb: unknown partition table
+scsi0 : scsi_m5, version 1.73 [20040518], dev_size_mb=8, opts=0x0
+  Vendor: Linux     Model: scsi_m5       Li  Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sda: 16384 512-byte hdwr sectors (8 MB)
+SCSI device sda: drive cache: write back
+ sda: unknown partition table
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+mice: PS/2 mouse device common for all mice
+NET: Registered protocol family 2
+IP: routing cache hash table of 1024 buckets, 16Kbytes
+TCP: Hash tables configured (established 8192 bind 8192)
+ip_conntrack version 2.1 (512 buckets, 4096 max) - 440 bytes per conntrack
+ip_tables: (C) 2000-2002 Netfilter core team
+arp_tables: (C) 2002 David S. Miller
+Initializing IPsec netlink socket
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+NET: Registered protocol family 15
+Bridge firewalling registered
+802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+All bugs added by David S. Miller <davem@redhat.com>
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 480k freed
+init started:  BusyBox v1.00-rc2 (2004.11.18-16:22+0000) multi-call binary
+
+PTXdist-0.7.0 (2004-11-18T11:23:40-0500)
+
+mounting filesystems...
+EXT2-fs warning: checktime reached, running e2fsck is recommended
+loading script...

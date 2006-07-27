@@ -1,0 +1,12 @@
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jul 27 2006 16:54:00
+M5 started Thu Jul 27 17:12:14 2006
+M5 executing on zamp.eecs.umich.edu
+command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/test/opt/linux-mpboot/atomic tests/linux-mpboot/run.py
+Exiting @ cycle 3556060806 because m5_exit instruction encountered

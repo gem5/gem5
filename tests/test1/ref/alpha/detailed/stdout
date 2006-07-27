@@ -7,7 +7,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 21 2006 16:19:30
-M5 started Fri Jul 21 16:41:07 2006
+M5 compiled Jul 27 2006 17:25:03
+M5 started Thu Jul 27 17:25:11 2006
 M5 executing on zamp.eecs.umich.edu
+command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/test/opt/test1/detailed tests/test1/run.py --detailed
 Exiting @ tick 198813 because a thread reached the max instruction count
