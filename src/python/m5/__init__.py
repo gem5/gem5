@@ -44,6 +44,11 @@ def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
+def makeList(objOrList):
+    if isinstance(objOrList, list):
+        return objOrList
+    return [objOrList]
+
 # Prepend given directory to system module search path.  We may not
 # need this anymore if we can structure our config library more like a
 # Python package.

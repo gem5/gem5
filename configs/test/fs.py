@@ -36,13 +36,14 @@ else:
     mem_mode = 'atomic'
 
 if options.dual:
-    root = DualRoot(
-        MyLinuxAlphaSystem(cpu, mem_mode, linux_image),
-        MyLinuxAlphaSystem(cpu2, mem_mode, linux_image))
+    root = makeDualRoot(
+        makeLinuxAlphaSystem(cpu, mem_mode, linux_image),
+        makeLinuxAlphaSystem(cpu2, mem_mode, linux_image))
     root.client.readfile = script('netperf-stream-nt-client.rcS')
     root.server.readfile = script('netperf-server.rcS')
 else:
-    root = TsunamiRoot(clock = '1THz', system = MyLinuxAlphaSystem(cpu, mem_mode, linux_image))
+    root = Root(clock = '1THz',
+                system = makeLinuxAlphaSystem(cpu, mem_mode, linux_image))
 
 m5.instantiate(root)
 

@@ -27,6 +27,7 @@
 # Authors: Kevin Lim
 
 import m5
+from m5 import makeList
 from m5.objects import *
 from FullO3Config import *
 from SysPaths import *
@@ -49,7 +50,7 @@ class BaseTsunami(Tsunami):
     ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                         pci_func=0, pci_dev=0, pci_bus=0)
 
-def MyLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2cache=None):
+def makeLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2cache=None):
     self = LinuxAlphaSystem()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
@@ -76,7 +77,7 @@ def MyLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2c
     self.cpu = cpu
     self.mem_mode = mem_mode
     connectCpu(self.cpu, self.membus, icache, dcache, l2cache)
-    for each_cpu in listWrapper(self.cpu):
+    for each_cpu in makeList(self.cpu):
         each_cpu.itb = AlphaITB()
         each_cpu.dtb = AlphaDTB()
     self.cpu.clock = '2GHz'
@@ -88,10 +89,7 @@ def MyLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2c
 
     return self
 
-class TsunamiRoot(Root):
-    pass
-
-def DualRoot(clientSystem, serverSystem):
+def makeDualRoot(clientSystem, serverSystem):
     self = Root()
     self.client = clientSystem
     self.server = serverSystem
