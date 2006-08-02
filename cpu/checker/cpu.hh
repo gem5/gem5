@@ -98,6 +98,7 @@ class CheckerCPU : public BaseCPU
         Process *process;
 #endif
         bool exitOnError;
+        bool updateOnError;
     };
 
   public:
@@ -294,11 +295,8 @@ class CheckerCPU : public BaseCPU
     void syscall() { }
 #endif
 
-    void handleError()
-    {
-        if (exitOnError)
-            panic("Checker found error!");
-    }
+    virtual void handleError() = 0;
+
     bool checkFlags(MemReqPtr &req);
 
     ExecContext *xcBase() { return xcProxy; }
@@ -312,6 +310,7 @@ class CheckerCPU : public BaseCPU
     uint64_t newPC;
     bool changedNextPC;
     bool exitOnError;
+    bool updateOnError;
 
     InstSeqNum youngestSN;
 };
@@ -327,7 +326,7 @@ class Checker : public CheckerCPU
 {
   public:
     Checker(Params *p)
-        : CheckerCPU(p)
+        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
     { }
 
     void switchOut(Sampler *s);
@@ -338,6 +337,18 @@ class Checker : public CheckerCPU
     void validateInst(DynInstPtr &inst);
     void validateExecution(DynInstPtr &inst);
     void validateState();
+
+    virtual void handleError()
+    {
+        if (exitOnError)
+            panic("Checker found error!");
+        else if (updateOnError)
+            updateThisCycle = true;
+    }
+
+    bool updateThisCycle;
+
+    DynInstPtr unverifiedInst;
 
     std::list<DynInstPtr> instList;
     typedef typename std::list<DynInstPtr>::iterator InstListIt;

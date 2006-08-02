@@ -78,6 +78,7 @@ CheckerCPU::CheckerCPU(Params *p)
     changedPC = willChangePC = changedNextPC = false;
 
     exitOnError = p->exitOnError;
+    updateOnError = p->updateOnError;
 #if FULL_SYSTEM
     itb = p->itb;
     dtb = p->dtb;
@@ -350,7 +351,12 @@ CheckerCPU::translateDataReadReq(MemReqPtr &req)
 {
     cpuXC->translateDataReadReq(req);
 
-    if (req->vaddr != unverifiedReq->vaddr) {
+    if (!unverifiedReq) {
+        warn("%lli: Request virtual addresses do not match! Inst: N/A, "
+             "checker: %#x",
+             curTick, req->vaddr);
+        return;
+    } else if (req->vaddr != unverifiedReq->vaddr) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
              "checker: %#x",
              curTick, unverifiedReq->vaddr, req->vaddr);
@@ -370,7 +376,12 @@ CheckerCPU::translateDataWriteReq(MemReqPtr &req)
 {
     cpuXC->translateDataWriteReq(req);
 
-    if (req->vaddr != unverifiedReq->vaddr) {
+    if (!unverifiedReq) {
+        warn("%lli: Request virtual addresses do not match! Inst: N/A, "
+             "checker: %#x",
+             curTick, req->vaddr);
+        return;
+    } else if (req->vaddr != unverifiedReq->vaddr) {
         warn("%lli: Request virtual addresses do not match! Inst: %#x, "
              "checker: %#x",
              curTick, unverifiedReq->vaddr, req->vaddr);
@@ -442,6 +453,8 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
             }
         }
     }
+
+    unverifiedInst = inst;
 
     // Try to check all instructions that are completed, ending if we
     // run out of instructions to check or if an instruction is not
@@ -516,7 +529,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                 cpuXC->setPC(cpuXC->readNextPC());
                 cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
 
-                return;
+                break;
             } else {
                 // The instruction is carrying an ITB fault.  Handle
                 // the fault and see if our results match the CPU on
@@ -554,7 +567,8 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
 
             cpuXC->func_exe_inst++;
 
-            fault = curStaticInst->execute(this, NULL);
+            if (!inst->isUnverifiable())
+                fault = curStaticInst->execute(this, NULL);
 
             // Checks to make sure instrution results are correct.
             validateExecution(inst);
@@ -620,6 +634,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
             break;
         }
     }
+    unverifiedInst = NULL;
 }
 
 template <class DynInstPtr>
@@ -718,6 +733,13 @@ template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateState()
 {
+    if (updateThisCycle) {
+        warn("%lli: Instruction PC %#x results didn't match up, copying all "
+             "registers from main CPU", unverifiedInst->readPC());
+        // Heavy-weight copying of all registers
+        cpuXC->copyArchRegs(unverifiedInst->xcBase());
+        updateThisCycle = false;
+    }
 }
 
 template <class DynInstPtr>
