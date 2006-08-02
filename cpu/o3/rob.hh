@@ -305,7 +305,7 @@ class ROB
 
   private:
     /** The sequence number of the squashed instruction. */
-    InstSeqNum squashedSeqNum;
+    InstSeqNum squashedSeqNum[Impl::MaxThreads];
 
     /** Is the ROB done squashing. */
     bool doneSquashing[Impl::MaxThreads];

@@ -490,8 +490,6 @@ class InstructionQueue
 
     /** Number of instructions issued per cycle. */
     Stats::Formula issueRate;
-//    Stats::Formula issue_stores;
-//    Stats::Formula issue_op_rate;
     /** Number of times the FU was busy. */
     Stats::Vector<> fuBusy;
     /** Number of times the FU was busy per instruction issued. */

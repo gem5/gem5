@@ -108,12 +108,14 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
       // For now just have these time buffers be pretty big.
       // @todo: Make these time buffer sizes parameters or derived
       // from latencies
-      timeBuffer(5, 5),
-      fetchQueue(5, 5),
-      decodeQueue(5, 5),
-      renameQueue(5, 5),
-      iewQueue(5, 5),
-      activityRec(NumStages, 10, params->activity),
+      timeBuffer(params->backComSize, params->forwardComSize),
+      fetchQueue(params->backComSize, params->forwardComSize),
+      decodeQueue(params->backComSize, params->forwardComSize),
+      renameQueue(params->backComSize, params->forwardComSize),
+      iewQueue(params->backComSize, params->forwardComSize),
+      activityRec(NumStages,
+                  params->backComSize + params->forwardComSize,
+                  params->activity),
 
       globalSeqNum(1),
 
@@ -180,7 +182,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     commit.setIEWQueue(&iewQueue);
     commit.setRenameQueue(&renameQueue);
 
-    commit.setFetchStage(&fetch);
     commit.setIEWStage(&iew);
     rename.setIEWStage(&iew);
     rename.setCommitStage(&commit);
@@ -709,7 +710,7 @@ void
 FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     // Flush out any old data from the time buffers.
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < timeBuffer.getSize(); ++i) {
         timeBuffer.advance();
         fetchQueue.advance();
         decodeQueue.advance();
@@ -758,6 +759,46 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         tickEvent.schedule(curTick);
 }
 
+/*
+template <class Impl>
+void
+FullO3CPU<Impl>::serialize(std::ostream &os)
+{
+    BaseCPU::serialize(os);
+    nameOut(os, csprintf("%s.tickEvent", name()));
+    tickEvent.serialize(os);
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // write out the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static SimpleThread temp;
+
+    for (int i = 0; i < thread.size(); i++) {
+        nameOut(os, csprintf("%s.xc.%i", name(), i));
+        temp.copyXC(thread[i]->getXC());
+        temp.serialize(os);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
+{
+    BaseCPU::unserialize(cp, section);
+    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // read in the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static SimpleThread temp;
+
+    for (int i = 0; i < thread.size(); i++) {
+        temp.copyXC(thread[i]->getXC());
+        temp.unserialize(cp, csprintf("%s.xc.%i", section, i));
+        thread[i]->getXC()->copyArchRegs(temp.getXC());
+    }
+}
+*/
 template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readIntReg(int reg_idx)
@@ -866,7 +907,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegSingle(int reg_idx, float val, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatRegSingle(phys_reg, val);
 }
@@ -875,7 +917,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegDouble(int reg_idx, double val, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatRegDouble(phys_reg, val);
 }
@@ -884,7 +927,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid)
 {
-    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
+    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatRegInt(phys_reg, val);
 }

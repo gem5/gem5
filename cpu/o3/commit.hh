@@ -160,10 +160,6 @@ class DefaultCommit
     /** Sets the pointer to the queue coming from IEW. */
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
-    void setFetchStage(Fetch *fetch_stage);
-
-    Fetch *fetchStage;
-
     /** Sets the pointer to the IEW stage. */
     void setIEWStage(IEW *iew_stage);
 
@@ -367,11 +363,6 @@ class DefaultCommit
      */
     unsigned renameWidth;
 
-    /** IEW width, in instructions.  Used so ROB knows how many
-     *  instructions to get from the IEW instruction queue.
-     */
-    unsigned iewWidth;
-
     /** Commit width, in instructions. */
     unsigned commitWidth;
 
@@ -391,10 +382,6 @@ class DefaultCommit
      * squash event.
      */
     Tick trapLatency;
-
-    Tick fetchTrapLatency;
-
-    Tick fetchFaultTick;
 
     /** The commit PC of each thread.  Refers to the instruction that
      * is currently being processed/committed.

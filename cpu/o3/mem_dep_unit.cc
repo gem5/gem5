@@ -35,6 +35,7 @@
 // AlphaSimpleImpl.
 template class MemDepUnit<StoreSet, AlphaSimpleImpl>;
 
+#ifdef DEBUG
 template <>
 int
 MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_count = 0;
@@ -44,3 +45,4 @@ MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_insert = 0;
 template <>
 int
 MemDepUnit<StoreSet, AlphaSimpleImpl>::MemDepEntry::memdep_erase = 0;
+#endif

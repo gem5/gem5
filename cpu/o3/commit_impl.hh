@@ -71,12 +71,10 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
       renameToROBDelay(params->renameToROBDelay),
       fetchToCommitDelay(params->commitToFetchDelay),
       renameWidth(params->renameWidth),
-      iewWidth(params->executeWidth),
       commitWidth(params->commitWidth),
       numThreads(params->numberOfThreads),
       switchedOut(false),
-      trapLatency(params->trapLatency),
-      fetchTrapLatency(params->fetchTrapLatency)
+      trapLatency(params->trapLatency)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -114,10 +112,8 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         changedROBNumEntries[i] = false;
         trapSquash[i] = false;
         xcSquash[i] = false;
+        PC[i] = nextPC[i] = 0;
     }
-
-    fetchFaultTick = 0;
-    fetchTrapWait = 0;
 }
 
 template <class Impl>
@@ -240,7 +236,6 @@ DefaultCommit<Impl>::setCPU(FullCPU *cpu_ptr)
     cpu->activateStage(FullCPU::CommitIdx);
 
     trapLatency = cpu->cycles(trapLatency);
-    fetchTrapLatency = cpu->cycles(fetchTrapLatency);
 }
 
 template <class Impl>
@@ -295,13 +290,6 @@ DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
     // Setup wire to get instructions from IEW.
     fromIEW = iewQueue->getWire(-iewToCommitDelay);
-}
-
-template <class Impl>
-void
-DefaultCommit<Impl>::setFetchStage(Fetch *fetch_stage)
-{
-    fetchStage = fetch_stage;
 }
 
 template <class Impl>
@@ -431,7 +419,7 @@ DefaultCommit<Impl>::setNextStatus()
         }
     }
 
-    assert(squashes == squashCounter);
+    squashCounter = squashes;
 
     // If commit is currently squashing, then it will have activity for the
     // next cycle. Set its next status as active.
@@ -536,8 +524,6 @@ DefaultCommit<Impl>::squashFromTrap(unsigned tid)
 
     commitStatus[tid] = ROBSquashing;
     cpu->activityThisCycle();
-
-    ++squashCounter;
 }
 
 template <class Impl>
@@ -555,8 +541,6 @@ DefaultCommit<Impl>::squashFromXC(unsigned tid)
     cpu->activityThisCycle();
 
     xcSquash[tid] = false;
-
-    ++squashCounter;
 }
 
 template <class Impl>
@@ -571,6 +555,9 @@ DefaultCommit<Impl>::tick()
         return;
     }
 
+    if ((*activeThreads).size() <=0)
+        return;
+
     list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check if any of the threads are done squashing.  Change the
@@ -582,10 +569,12 @@ DefaultCommit<Impl>::tick()
 
             if (rob->isDoneSquashing(tid)) {
                 commitStatus[tid] = Running;
-                --squashCounter;
             } else {
                 DPRINTF(Commit,"[tid:%u]: Still Squashing, cannot commit any"
-                        "insts this cycle.\n", tid);
+                        " insts this cycle.\n", tid);
+                rob->doSquash(tid);
+                toIEW->commitInfo[tid].robSquashing = true;
+                wroteToTimeBuffer = true;
             }
         }
     }
@@ -691,29 +680,7 @@ DefaultCommit<Impl>::commit()
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
-/*
-        if (fromFetch->fetchFault && commitStatus[0] != TrapPending) {
-            // Record the fault.  Wait until it's empty in the ROB.
-            // Then handle the trap.  Ignore it if there's already a
-            // trap pending as fetch will be redirected.
-            fetchFault = fromFetch->fetchFault;
-            fetchFaultTick = curTick + fetchTrapLatency;
-            commitStatus[0] = FetchTrapPending;
-            DPRINTF(Commit, "Fault from fetch recorded.  Will trap if the "
-                    "ROB empties without squashing the fault.\n");
-            fetchTrapWait = 0;
-        }
 
-        // Fetch may tell commit to clear the trap if it's been squashed.
-        if (fromFetch->clearFetchFault) {
-            DPRINTF(Commit, "Received clear fetch fault signal\n");
-            fetchTrapWait = 0;
-            if (commitStatus[0] == FetchTrapPending) {
-                DPRINTF(Commit, "Clearing fault from fetch\n");
-                commitStatus[0] = Running;
-            }
-        }
-*/
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid] == true) {
@@ -740,8 +707,6 @@ DefaultCommit<Impl>::commit()
                     fromIEW->nextPC[tid]);
 
             commitStatus[tid] = ROBSquashing;
-
-            ++squashCounter;
 
             // If we want to include the squashing instruction in the squash,
             // then use one older sequence number.
@@ -944,7 +909,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // and committed this instruction.
         thread[tid]->funcExeInst--;
 
-        head_inst->reachedCommit = true;
+        head_inst->setAtCommit();
 
         if (head_inst->isNonSpeculative() ||
             head_inst->isStoreConditional() ||
@@ -1060,7 +1025,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         // Generate trap squash event.
         generateTrapEvent(tid);
-
+//        warn("%lli fault (%d) handled @ PC %08p", curTick, inst_fault->name(), head_inst->readPC());
         return false;
 #else // !FULL_SYSTEM
         panic("fault (%d) detected @ PC %08p", inst_fault,
@@ -1082,6 +1047,9 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         renameMap[tid]->setEntry(head_inst->destRegIdx(i),
                                  head_inst->renamedDestRegIdx(i));
     }
+
+    if (head_inst->isCopy())
+        panic("Should not commit any copy instructions!");
 
     // Finally clear the head ROB entry.
     rob->retireHead(tid);

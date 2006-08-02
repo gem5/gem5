@@ -60,6 +60,7 @@ struct ThreadState {
         : cpuId(_cpuId), tid(_tid), mem(_mem), process(_process), asid(_asid)
 #endif
     {
+        numInst = 0;
         funcExeInst = 0;
         storeCondFailures = 0;
     }

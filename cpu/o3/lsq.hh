@@ -62,6 +62,9 @@ class LSQ {
     /** Returns the name of the LSQ. */
     std::string name() const;
 
+    /** Registers the statistics for each LSQ Unit. */
+    void regStats();
+
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
     /** Sets the CPU pointer. */

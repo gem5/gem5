@@ -182,8 +182,6 @@ struct OzoneThreadState : public ThreadState {
     void setNextPC(uint64_t val)
     { nextPC = val; }
 
-    bool misspeculating() { return false; }
-
     void setInst(TheISA::MachInst _inst) { inst = _inst; }
 
     Counter readFuncExeInst() { return funcExeInst; }

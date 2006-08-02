@@ -106,12 +106,10 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned commitToIEWDelay;
     unsigned renameToIEWDelay;
     unsigned issueToExecuteDelay;
+    unsigned dispatchWidth;
     unsigned issueWidth;
-    unsigned executeWidth;
-    unsigned executeIntWidth;
-    unsigned executeFloatWidth;
-    unsigned executeBranchWidth;
-    unsigned executeMemoryWidth;
+    unsigned wbWidth;
+    unsigned wbDepth;
     FUPool *fuPool;
 
     //
@@ -123,6 +121,12 @@ class AlphaSimpleParams : public BaseFullCPU::Params
     unsigned squashWidth;
     Tick trapLatency;
     Tick fetchTrapLatency;
+
+    //
+    // Timebuffer sizes
+    //
+    unsigned backComSize;
+    unsigned forwardComSize;
 
     //
     // Branch predictor (BP, BTB, RAS)

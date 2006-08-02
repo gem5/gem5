@@ -447,7 +447,7 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     // too).
     // @todo: Fix uncached accesses.
     if (req->flags & UNCACHEABLE &&
-        (inst != loadQueue.back() || !inst->reachedCommit)) {
+        (inst != loadQueue.back() || !inst->isAtCommit())) {
         DPRINTF(OzoneLSQ, "[sn:%lli] Uncached load and not head of "
                 "commit/LSQ!\n",
                 inst->seqNum);

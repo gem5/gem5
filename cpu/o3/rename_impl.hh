@@ -348,7 +348,7 @@ DefaultRename<Impl>::squash(unsigned tid)
 
     for (int i=0; i<fromDecode->size; i++) {
         if (fromDecode->insts[i]->threadNumber == tid) {
-            fromDecode->insts[i]->squashed = true;
+            fromDecode->insts[i]->setSquashed();
             wroteToTimeBuffer = true;
             squashCount++;
         }
@@ -1029,7 +1029,7 @@ DefaultRename<Impl>::validInsts()
     unsigned inst_count = 0;
 
     for (int i=0; i<fromDecode->size; i++) {
-        if (!fromDecode->insts[i]->squashed)
+        if (!fromDecode->insts[i]->isSquashed())
             inst_count++;
     }
 

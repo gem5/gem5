@@ -106,6 +106,16 @@ LSQ<Impl>::name() const
 
 template<class Impl>
 void
+LSQ<Impl>::regStats()
+{
+    //Initialize LSQs
+    for (int tid=0; tid < numThreads; tid++) {
+        thread[tid].regStats();
+    }
+}
+
+template<class Impl>
+void
 LSQ<Impl>::setActiveThreads(list<unsigned> *at_ptr)
 {
     activeThreads = at_ptr;

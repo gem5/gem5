@@ -257,7 +257,7 @@ InorderBackEnd<Impl>::executeInsts()
         }
 
         inst->setExecuted();
-        inst->setCompleted();
+        inst->setResultReady();
         inst->setCanCommit();
 
         instList.pop_front();

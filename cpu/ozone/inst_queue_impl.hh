@@ -848,13 +848,13 @@ template <class Impl>
 void
 InstQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
 {
-    OpClass op_class = ready_inst->opClass();
+//    OpClass op_class = ready_inst->opClass();
 
     readyInsts.push(ready_inst);
 
     DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
             "the ready list, PC %#x opclass:%i [sn:%lli].\n",
-            ready_inst->readPC(), op_class, ready_inst->seqNum);
+            ready_inst->readPC(), ready_inst->opClass(), ready_inst->seqNum);
 }
 /*
 template <class Impl>
@@ -1175,11 +1175,11 @@ InstQueue<Impl>::addIfReady(DynInstPtr &inst)
             return;
         }
 
-        OpClass op_class = inst->opClass();
+//        OpClass op_class = inst->opClass();
 
         DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
                 "the ready list, PC %#x opclass:%i [sn:%lli].\n",
-                inst->readPC(), op_class, inst->seqNum);
+                inst->readPC(), inst->opClass(), inst->seqNum);
 
         readyInsts.push(inst);
     }

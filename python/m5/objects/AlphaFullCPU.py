@@ -39,12 +39,10 @@ class DerivAlphaFullCPU(BaseCPU):
                "Issue/Execute/Writeback delay")
     issueToExecuteDelay = Param.Unsigned("Issue to execute delay (internal "
               "to the IEW stage)")
-    issueWidth = Param.Unsigned("Issue width")
-    executeWidth = Param.Unsigned("Execute width")
-    executeIntWidth = Param.Unsigned("Integer execute width")
-    executeFloatWidth = Param.Unsigned("Floating point execute width")
-    executeBranchWidth = Param.Unsigned("Branch execute width")
-    executeMemoryWidth = Param.Unsigned("Memory execute width")
+    dispatchWidth = Param.Unsigned(8, "Dispatch width")
+    issueWidth = Param.Unsigned(8, "Issue width")
+    wbWidth = Param.Unsigned(8, "Writeback width")
+    wbDepth = Param.Unsigned(1, "Writeback depth")
     fuPool = Param.FUPool(NULL, "Functional Unit pool")
 
     iewToCommitDelay = Param.Unsigned("Issue/Execute/Writeback to commit "
@@ -54,6 +52,9 @@ class DerivAlphaFullCPU(BaseCPU):
     squashWidth = Param.Unsigned("Squash width")
     trapLatency = Param.Tick("Trap latency")
     fetchTrapLatency = Param.Tick("Fetch trap latency")
+
+    backComSize = Param.Unsigned(5, "Time buffer size for backwards communication")
+    forwardComSize = Param.Unsigned(5, "Time buffer size for forward communication")
 
     predType = Param.String("Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned("Size of local predictor")

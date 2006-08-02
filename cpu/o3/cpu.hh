@@ -63,6 +63,12 @@ class BaseFullCPU : public BaseCPU
 
     void regStats();
 
+    /** Sets this CPU's ID. */
+    void setCpuId(int id) { cpu_id = id; }
+
+    /** Reads this CPU's ID. */
+    int readCpuId() { return cpu_id; }
+
   protected:
     int cpu_id;
 };

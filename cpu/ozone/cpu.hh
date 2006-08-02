@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,13 +79,13 @@ template <class>
 class Checker;
 
 /**
- * Declaration of Out-of-Order CPU class.  Basically it is a SimpleCPU with
- * simple out-of-order capabilities added to it.  It is still a 1 CPI machine
- * (?), but is capable of handling cache misses.  Basically it models having
- * a ROB/IQ by only allowing a certain amount of instructions to execute while
- * the cache miss is outstanding.
+ * Light weight out of order CPU model that approximates an out of
+ * order CPU.  It is separated into a front end and a back end, with
+ * the template parameter Impl describing the classes used for each.
+ * The goal is to be able to specify through the Impl the class to use
+ * for the front end and back end, with different classes used to
+ * model different levels of detail.
  */
-
 template <class Impl>
 class OzoneCPU : public BaseCPU
 {
@@ -98,6 +98,11 @@ class OzoneCPU : public BaseCPU
     typedef TheISA::MiscReg MiscReg;
 
   public:
+    /**
+     * The ExecContext for this CPU, which is used to provide the
+     * CPU's interface to any external objects.  Internally most of
+     * the CPU state is stored within the OzoneThreadState class.
+     */
     class OzoneXC : public ExecContext {
       public:
         OzoneCPU<Impl> *cpu;
@@ -235,14 +240,19 @@ class OzoneCPU : public BaseCPU
 #endif
     };
 
-    // execution context proxy
+    // ExecContext for OzoneCPU
     OzoneXC ozoneXC;
+
+    // ExecContext pointer that will be given to any external objects.
     ExecContext *xcProxy;
+
+    // ExecContext pointer to the CheckerCPU's ExecContext.
     ExecContext *checkerXC;
 
     typedef OzoneThreadState<Impl> ImplState;
 
   private:
+    // Committed thread state for the OzoneCPU.
     OzoneThreadState<Impl> thread;
 
   public:
@@ -279,12 +289,6 @@ class OzoneCPU : public BaseCPU
         if (tickEvent.scheduled())
             tickEvent.squash();
     }
-
-  private:
-    Trace::InstRecord *traceData;
-
-    template<typename T>
-    void trace_data(T data);
 
   public:
     enum Status {
@@ -361,6 +365,7 @@ class OzoneCPU : public BaseCPU
     FrontEnd *frontEnd;
 
     BackEnd *backEnd;
+
   private:
     Status status() const { return _status; }
     void setStatus(Status new_status) { _status = new_status; }
@@ -392,11 +397,10 @@ class OzoneCPU : public BaseCPU
     // number of idle cycles
     Stats::Average<> notIdleFraction;
     Stats::Formula idleFraction;
-  public:
 
+  public:
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
 
 #if FULL_SYSTEM
     bool validInstAddr(Addr addr) { return true; }
@@ -585,12 +589,9 @@ class OzoneCPU : public BaseCPU
 
     Fault copy(Addr dest);
 
-    InstSeqNum globalSeqNum;
-
   public:
     void squashFromXC();
 
-    // @todo: This can be a useful debug function.  Implement it.
     void dumpInsts() { frontEnd->dumpInsts(); }
 
 #if FULL_SYSTEM
@@ -608,7 +609,6 @@ class OzoneCPU : public BaseCPU
 
     ExecContext *xcBase() { return xcProxy; }
 
-    bool decoupledFrontEnd;
     struct CommStruct {
         InstSeqNum doneSeqNum;
         InstSeqNum nonSpecSeqNum;
@@ -617,7 +617,12 @@ class OzoneCPU : public BaseCPU
 
         bool stall;
     };
+
+    InstSeqNum globalSeqNum;
+
     TimeBuffer<CommStruct> comm;
+
+    bool decoupledFrontEnd;
 
     bool lockFlag;
 

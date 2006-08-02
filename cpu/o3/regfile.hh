@@ -223,10 +223,10 @@ class PhysRegFile
 
   public:
     /** (signed) integer register file. */
-    std::vector<IntReg> intRegFile;
+    IntReg *intRegFile;
 
     /** Floating point register file. */
-    std::vector<FloatReg> floatRegFile;
+    FloatReg *floatRegFile;
 
     /** Miscellaneous register file. */
     MiscRegFile miscRegs[Impl::MaxThreads];
@@ -256,11 +256,15 @@ PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
     : numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs)
 {
-    intRegFile.resize(numPhysicalIntRegs);
-    floatRegFile.resize(numPhysicalFloatRegs);
+    intRegFile = new IntReg[numPhysicalIntRegs];
+    floatRegFile = new FloatReg[numPhysicalFloatRegs];
 
-    //memset(intRegFile, 0, sizeof(*intRegFile));
-    //memset(floatRegFile, 0, sizeof(*floatRegFile));
+    for (int i = 0; i < Impl::MaxThreads; ++i) {
+        miscRegs[i].clear();
+    }
+
+    memset(intRegFile, 0, sizeof(*intRegFile));
+    memset(floatRegFile, 0, sizeof(*floatRegFile));
 }
 
 #endif

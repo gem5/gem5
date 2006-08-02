@@ -383,7 +383,7 @@ AlphaFullCPU<Impl>::AlphaXC::copyArchRegs(ExecContext *xc)
     }
 
     // Copy the misc regs.
-    cpu->regFile.miscRegs[tid].copyMiscRegs(xc);
+    TheISA::copyMiscRegs(xc, this);
 
     // Then finally set the PC and the next PC.
     cpu->setPC(xc->readPC(), tid);

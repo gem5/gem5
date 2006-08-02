@@ -26,9 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#include <cstdio>
-//#include <cstdlib>
-
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
 #include "config/full_system.hh"
@@ -39,7 +36,6 @@
 #include "cpu/ozone/cpu.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/static_inst.hh"
-//#include "mem/base_mem.hh"
 #include "mem/mem_interface.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -50,7 +46,6 @@
 #include "arch/alpha/tlb.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
-//#include "base/remote_gdb.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
 #include "mem/functional/memory_control.hh"
@@ -65,15 +60,6 @@
 #endif // FULL_SYSTEM
 
 using namespace TheISA;
-
-template <class Impl>
-template<typename T>
-void
-OzoneCPU<Impl>::trace_data(T data) {
-    if (traceData) {
-        traceData->setData(data);
-    }
-}
 
 template <class Impl>
 OzoneCPU<Impl>::TickEvent::TickEvent(OzoneCPU *c, int w)
@@ -104,7 +90,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     : BaseCPU(p), thread(this, 0, p->workload[0], 0), tickEvent(this, p->width),
       mem(p->workload[0]->getMemory()),
 #endif
-      comm(5, 5)
+      comm(5, 5), decoupledFrontEnd(p->decoupledFrontEnd)
 {
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
@@ -112,6 +98,9 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     _status = Idle;
 
     if (p->checker) {
+        // If checker is being used, get the checker from the params
+        // pointer, make the Checker's ExecContext, and setup the
+        // xcProxy to point to it.
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
@@ -122,11 +111,17 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
         thread.xcProxy = checkerXC;
         xcProxy = checkerXC;
     } else {
+        // If checker is not being used, then the xcProxy points
+        // directly to the CPU's ExecContext.
         checker = NULL;
         thread.xcProxy = &ozoneXC;
         xcProxy = &ozoneXC;
     }
 
+    // Add xcProxy to CPU list of ExecContexts.
+    execContexts.push_back(xcProxy);
+
+    // Give the OzoneXC pointers to the CPU and the thread state.
     ozoneXC.cpu = this;
     ozoneXC.thread = &thread;
 
@@ -134,7 +129,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     thread.setStatus(ExecContext::Suspended);
 #if FULL_SYSTEM
-    /***** All thread state stuff *****/
+    // Setup thread state stuff.
     thread.cpu = this;
     thread.tid = 0;
     thread.mem = p->mem;
@@ -171,8 +166,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     numInst = 0;
     startNumInst = 0;
 
-    execContexts.push_back(xcProxy);
-
+    // Give pointers to the front and back end to all things they may need.
     frontEnd->setCPU(this);
     backEnd->setCPU(this);
 
@@ -188,12 +182,13 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->setBackEnd(backEnd);
     backEnd->setFrontEnd(frontEnd);
 
-    decoupledFrontEnd = p->decoupledFrontEnd;
-
     globalSeqNum = 1;
 
     checkInterrupts = false;
 
+    lockFlag = 0;
+
+    // Setup rename table, initializing all values to ready.
     for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
         thread.renameTable[i] = new DynInst(this);
         thread.renameTable[i]->setResultReady();
@@ -205,8 +200,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if !FULL_SYSTEM
 //    pTable = p->pTable;
 #endif
-
-    lockFlag = 0;
 
     DPRINTF(OzoneCPU, "OzoneCPU: Created Ozone cpu object.\n");
 }
@@ -231,14 +224,20 @@ template <class Impl>
 void
 OzoneCPU<Impl>::signalSwitched()
 {
+    // Only complete the switchout when both the front end and back
+    // end have signalled they are ready to switch.
     if (++switchCount == 2) {
         backEnd->doSwitchOut();
         frontEnd->doSwitchOut();
+
         if (checker)
             checker->switchOut(sampler);
+
         _status = SwitchedOut;
+
         if (tickEvent.scheduled())
             tickEvent.squash();
+
         sampler->signalSwitched();
     }
     assert(switchCount <= 2);
@@ -793,6 +792,7 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
         thread->quiesceEvent->xc = this;
     }
 
+    // Copy kernel stats pointer from old context.
     thread->kernelStats = old_context->getKernelStats();
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
@@ -814,7 +814,11 @@ OzoneCPU<Impl>::OzoneXC::regStats(const std::string &name)
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::serialize(std::ostream &os)
-{ }
+{
+    // Once serialization is added, serialize the quiesce event and
+    // kernel stats.  Will need to make sure there aren't multiple
+    // things that serialize them.
+}
 
 template <class Impl>
 void
@@ -867,7 +871,6 @@ OzoneCPU<Impl>::OzoneXC::getThreadNum()
     return thread->tid;
 }
 
-// Also somewhat obnoxious.  Really only used for the TLB fault.
 template <class Impl>
 TheISA::MachInst
 OzoneCPU<Impl>::OzoneXC::getInst()
@@ -901,7 +904,7 @@ OzoneCPU<Impl>::OzoneXC::copyArchRegs(ExecContext *xc)
 
     // Need to copy the XC values into the current rename table,
     // copy the misc regs.
-    thread->regs.miscRegs.copyMiscRegs(xc);
+    TheISA::copyMiscRegs(xc, this);
 }
 
 template <class Impl>

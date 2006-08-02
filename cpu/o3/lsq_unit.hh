@@ -101,6 +101,9 @@ class LSQUnit {
     /** Returns the name of the LSQ unit. */
     std::string name() const;
 
+    /** Registers statistics. */
+    void regStats();
+
     /** Sets the CPU pointer. */
     void setCPU(FullCPU *cpu_ptr)
     { cpu = cpu_ptr; }
@@ -152,9 +155,6 @@ class LSQUnit {
 
     /** Writes back stores. */
     void writebackStores();
-
-    // @todo: Include stats in the LSQ unit.
-    //void regStats();
 
     /** Clears all the entries in the LQ. */
     void clearLQ();
@@ -369,25 +369,34 @@ class LSQUnit {
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-/*
-    // total number of loads forwaded from LSQ stores
-    Stats::Vector<> lsq_forw_loads;
+    /** Total number of loads forwaded from LSQ stores. */
+    Stats::Scalar<> lsqForwLoads;
 
-    // total number of loads ignored due to invalid addresses
-    Stats::Vector<> inv_addr_loads;
+    /** Total number of loads ignored due to invalid addresses. */
+    Stats::Scalar<> invAddrLoads;
 
-    // total number of software prefetches ignored due to invalid addresses
-    Stats::Vector<> inv_addr_swpfs;
+    /** Total number of squashed loads. */
+    Stats::Scalar<> lsqSquashedLoads;
 
-    // total non-speculative bogus addresses seen (debug var)
-    Counter sim_invalid_addrs;
-    Stats::Vector<> fu_busy;  //cumulative fu busy
+    /** Total number of responses from the memory system that are
+     * ignored due to the instruction already being squashed. */
+    Stats::Scalar<> lsqIgnoredResponses;
 
-    // ready loads blocked due to memory disambiguation
-    Stats::Vector<> lsq_blocked_loads;
+    /** Total number of squashed stores. */
+    Stats::Scalar<> lsqSquashedStores;
 
-    Stats::Scalar<> lsqInversion;
-*/
+    /** Total number of software prefetches ignored due to invalid addresses. */
+    Stats::Scalar<> invAddrSwpfs;
+
+    /** Ready loads blocked due to partial store-forwarding. */
+    Stats::Scalar<> lsqBlockedLoads;
+
+    /** Number of loads that were rescheduled. */
+    Stats::Scalar<> lsqRescheduledLoads;
+
+    /** Number of times the LSQ is blocked due to the cache. */
+    Stats::Scalar<> lsqCacheBlocked;
+
   public:
     /** Executes the load at the given index. */
     template <class T>
@@ -441,8 +450,9 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
     if (req->flags & UNCACHEABLE &&
-        (load_idx != loadHead || !loadQueue[load_idx]->reachedCommit)) {
+        (load_idx != loadHead || !loadQueue[load_idx]->isAtCommit())) {
         iewStage->rescheduleMemInst(loadQueue[load_idx]);
+        ++lsqRescheduledLoads;
         return TheISA::genMachineCheckFault();
     }
 
@@ -552,6 +562,8 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             // Tell IQ/mem dep unit that this instruction will need to be
             // rescheduled eventually
             iewStage->rescheduleMemInst(loadQueue[load_idx]);
+            iewStage->decrWb(loadQueue[load_idx]->seqNum);
+            ++lsqRescheduledLoads;
 
             // Do not generate a writeback event as this instruction is not
             // complete.
@@ -559,6 +571,7 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
                     "Store idx %i to load addr %#x\n",
                     store_idx, req->vaddr);
 
+            ++lsqBlockedLoads;
             return NoFault;
         }
     }
@@ -579,6 +592,10 @@ LSQUnit<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     // if we have a cache, do cache access too
     if (fault == NoFault && dcacheInterface) {
         if (dcacheInterface->isBlocked()) {
+            ++lsqCacheBlocked;
+
+            iewStage->decrWb(inst->seqNum);
+
             // There's an older load that's already going to squash.
             if (isLoadBlocked && blockedLoadSeqNum < inst->seqNum)
                 return NoFault;

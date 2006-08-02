@@ -100,32 +100,15 @@ BaseDynInst<Impl>::initVars()
 
     readyRegs = 0;
 
-    completed = false;
-    resultReady = false;
-    canIssue = false;
-    issued = false;
-    executed = false;
-    canCommit = false;
-    committed = false;
-    squashed = false;
-    squashedInIQ = false;
-    squashedInLSQ = false;
-    squashedInROB = false;
+    instResult.integer = 0;
+
+    status.reset();
+
     eaCalcDone = false;
     memOpDone = false;
+
     lqIdx = -1;
     sqIdx = -1;
-    reachedCommit = false;
-
-    blockingInst = false;
-    recoverInst = false;
-
-    iqEntry = false;
-    robEntry = false;
-
-    serializeBefore = false;
-    serializeAfter = false;
-    serializeHandled = false;
 
     // Eventually make this a parameter.
     threadNumber = 0;
@@ -395,7 +378,7 @@ void
 BaseDynInst<Impl>::markSrcRegReady()
 {
     if (++readyRegs == numSrcRegs()) {
-        canIssue = true;
+        status.set(CanIssue);
     }
 }
 
@@ -403,13 +386,9 @@ template <class Impl>
 void
 BaseDynInst<Impl>::markSrcRegReady(RegIndex src_idx)
 {
-    ++readyRegs;
-
     _readySrcRegIdx[src_idx] = true;
 
-    if (readyRegs == numSrcRegs()) {
-        canIssue = true;
-    }
+    markSrcRegReady();
 }
 
 template <class Impl>

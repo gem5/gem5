@@ -126,6 +126,47 @@ LSQUnit<Impl>::name() const
 
 template<class Impl>
 void
+LSQUnit<Impl>::regStats()
+{
+    lsqForwLoads
+        .name(name() + ".forwLoads")
+        .desc("Number of loads that had data forwarded from stores");
+
+    invAddrLoads
+        .name(name() + ".invAddrLoads")
+        .desc("Number of loads ignored due to an invalid address");
+
+    lsqSquashedLoads
+        .name(name() + ".squashedLoads")
+        .desc("Number of loads squashed");
+
+    lsqIgnoredResponses
+        .name(name() + ".ignoredResponses")
+        .desc("Number of memory responses ignored because the instruction is squashed");
+
+    lsqSquashedStores
+        .name(name() + ".squashedStores")
+        .desc("Number of stores squashed");
+
+    invAddrSwpfs
+        .name(name() + ".invAddrSwpfs")
+        .desc("Number of software prefetches ignored due to an invalid address");
+
+    lsqBlockedLoads
+        .name(name() + ".blockedLoads")
+        .desc("Number of blocked loads due to partial load-store forwarding");
+
+    lsqRescheduledLoads
+        .name(name() + ".rescheduledLoads")
+        .desc("Number of loads that were rescheduled");
+
+    lsqCacheBlocked
+        .name(name() + ".cacheBlocked")
+        .desc("Number of times an access to memory failed due to the cache being blocked");
+}
+
+template<class Impl>
+void
 LSQUnit<Impl>::clearLQ()
 {
     loadQueue.clear();
@@ -548,6 +589,7 @@ LSQUnit<Impl>::writebackStores()
         if (dcacheInterface && dcacheInterface->isBlocked()) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
                     " is blocked!\n");
+            ++lsqCacheBlocked;
             break;
         }
 
@@ -705,7 +747,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        loadQueue[load_idx]->squashed = true;
+        loadQueue[load_idx]->setSquashed();
         loadQueue[load_idx] = NULL;
         --loads;
 
@@ -748,7 +790,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        storeQueue[store_idx].inst->squashed = true;
+        storeQueue[store_idx].inst->setSquashed();
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
 
@@ -765,6 +807,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         storeTail = store_idx;
 
         decrStIdx(store_idx);
+        ++lsqSquashedStores;
     }
 }
 

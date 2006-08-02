@@ -138,6 +138,8 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
         // Create space to store a cache line.
         cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
 
         stalls[tid].decode = 0;
         stalls[tid].rename = 0;
@@ -334,6 +336,7 @@ DefaultFetch<Impl>::processCacheCompletion(MemReqPtr &req)
     // Wake up the CPU (if it went to sleep and was waiting on this completion
     // event).
     cpu->wakeCPU();
+    cacheDataValid[tid] = true;
 
     DPRINTF(Activity, "[tid:%u] Activating fetch due to cache completion\n",
             tid);
@@ -466,7 +469,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (interruptPending && flags == 0 || switchedOut) {
+    if (interruptPending && flags == 0) {
         // Hold off fetch from getting new instructions while an interrupt
         // is pending.
         return false;
@@ -474,6 +477,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
     // Align the fetch PC so it's at the start of a cache block.
     fetch_PC = icacheBlockAlignPC(fetch_PC);
+
+    // If we've already got the block, no need to try to fetch it again.
+    if (cacheDataValid[tid] && fetch_PC == cacheDataPC[tid]) {
+        return true;
+    }
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
@@ -524,6 +532,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
             memReq[tid]->time = curTick;
 
             MemAccessResult result = icacheInterface->access(memReq[tid]);
+
+            cacheDataPC[tid] = fetch_PC;
+            cacheDataValid[tid] = false;
 
             fetchedCacheLines++;
 
@@ -1002,8 +1013,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             fetch_PC = next_PC;
 
             if (instruction->isQuiesce()) {
-                warn("%lli: Quiesce instruction encountered, halting fetch!",
-                     curTick);
+//                warn("%lli: Quiesce instruction encountered, halting fetch!",
+//                     curTick);
                 fetchStatus[tid] = QuiescePending;
                 ++numInst;
                 status_change = true;
@@ -1067,7 +1078,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
-        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
+//        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #else // !FULL_SYSTEM
         fatal("fault (%d) detected @ PC %08p", fault, PC[tid]);
 #endif // FULL_SYSTEM

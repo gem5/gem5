@@ -358,6 +358,12 @@ class DefaultFetch
     /** The cache line being fetched. */
     uint8_t *cacheData[Impl::MaxThreads];
 
+    /** The PC of the cacheline that has been loaded. */
+    Addr cacheDataPC[Impl::MaxThreads];
+
+    /** Whether or not the cache data is valid. */
+    bool cacheDataValid[Impl::MaxThreads];
+
     /** Size of instructions. */
     int instSize;
 

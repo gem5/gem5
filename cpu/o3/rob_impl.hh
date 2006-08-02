@@ -38,10 +38,10 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
     : numEntries(_numEntries),
       squashWidth(_squashWidth),
       numInstsInROB(0),
-      squashedSeqNum(0),
       numThreads(_numThreads)
 {
     for (int tid=0; tid  < numThreads; tid++) {
+        squashedSeqNum[tid] = 0;
         doneSquashing[tid] = true;
         threadEntries[tid] = 0;
     }
@@ -274,7 +274,7 @@ ROB<Impl>::retireHead(unsigned tid)
     --numInstsInROB;
     --threadEntries[tid];
 
-    head_inst->removeInROB();
+    head_inst->clearInROB();
     head_inst->setCommitted();
 
     instList[tid].erase(head_it);
@@ -349,11 +349,11 @@ void
 ROB<Impl>::doSquash(unsigned tid)
 {
     DPRINTF(ROB, "[tid:%u]: Squashing instructions until [sn:%i].\n",
-            tid, squashedSeqNum);
+            tid, squashedSeqNum[tid]);
 
     assert(squashIt[tid] != instList[tid].end());
 
-    if ((*squashIt[tid])->seqNum < squashedSeqNum) {
+    if ((*squashIt[tid])->seqNum < squashedSeqNum[tid]) {
         DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
                 tid);
 
@@ -368,7 +368,7 @@ ROB<Impl>::doSquash(unsigned tid)
     for (int numSquashed = 0;
          numSquashed < squashWidth &&
          squashIt[tid] != instList[tid].end() &&
-         (*squashIt[tid])->seqNum > squashedSeqNum;
+         (*squashIt[tid])->seqNum > squashedSeqNum[tid];
          ++numSquashed)
     {
         DPRINTF(ROB, "[tid:%u]: Squashing instruction PC %#x, seq num %i.\n",
@@ -405,7 +405,7 @@ ROB<Impl>::doSquash(unsigned tid)
 
 
     // Check if ROB is done squashing.
-    if ((*squashIt[tid])->seqNum <= squashedSeqNum) {
+    if ((*squashIt[tid])->seqNum <= squashedSeqNum[tid]) {
         DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
                 tid);
 
@@ -517,7 +517,7 @@ ROB<Impl>::squash(InstSeqNum squash_num,unsigned tid)
 
     doneSquashing[tid] = false;
 
-    squashedSeqNum = squash_num;
+    squashedSeqNum[tid] = squash_num;
 
     if (!instList[tid].empty()) {
         InstIt tail_thread = instList[tid].end();
