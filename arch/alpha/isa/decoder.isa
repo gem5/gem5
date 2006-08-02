@@ -694,7 +694,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall();
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsSerializeAfter);
             // Read uniq reg into ABI return value register (r0)
             0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
             // Write uniq reg with value from ABI arg register (r16)
@@ -768,10 +768,10 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
                 AlphaPseudo::quiesceCycles(xc->xcBase(), R16);
-            }}, IsNonSpeculative, IsQuiesce);
+            }}, IsNonSpeculative, IsQuiesce, IsUnverifiable);
             0x04: quiesceTime({{
                 R0 = AlphaPseudo::quiesceTime(xc->xcBase());
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
             0x10: ivlb({{
                 AlphaPseudo::ivlb(xc->xcBase());
             }}, No_OpClass, IsNonSpeculative);
