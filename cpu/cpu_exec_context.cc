@@ -306,7 +306,7 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
     }
 
     // Copy misc. registers
-    regs.miscRegs.copyMiscRegs(xc);
+    TheISA::copyMiscRegs(xc, proxy);
 
     // Lastly copy PC/NPC
     setPC(xc->readPC());

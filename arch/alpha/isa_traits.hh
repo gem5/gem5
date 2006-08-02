@@ -212,7 +212,16 @@ extern const int reg_redir[NumIntRegs];
         Fault setRegWithEffect(int misc_reg, const MiscReg &val,
                                ExecContext *xc);
 
-        void copyMiscRegs(ExecContext *xc);
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+        void clear()
+        {
+            fpcr = uniq = 0;
+            lock_flag = 0;
+            lock_addr = 0;
+        }
 
 #if FULL_SYSTEM
       protected:
@@ -360,6 +369,14 @@ extern const int reg_redir[NumIntRegs];
             regs->intRegFile[ReturnValueReg] = -return_value.value();
         }
     }
+#endif
+
+    void copyRegs(ExecContext *src, ExecContext *dest);
+
+    void copyMiscRegs(ExecContext *src, ExecContext *dest);
+
+#if FULL_SYSTEM
+    void copyIprs(ExecContext *src, ExecContext *dest);
 #endif
 };
 
