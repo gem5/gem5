@@ -1,6 +1,7 @@
 from m5 import *
 from HierParams import HierParams
 from Serialize import Serialize
+from Serialize import Statreset
 from Statistics import Statistics
 from Trace import Trace
 from ExeTrace import ExecutionTrace
@@ -23,3 +24,4 @@ class Root(SimObject):
     trace = Trace()
     exetrace = ExecutionTrace()
     serialize = Serialize()
+    statsreset = Statreset()

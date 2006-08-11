@@ -203,11 +203,18 @@ class CPUExecContext
     // else.
     CPUExecContext(RegFile *regFile);
 #endif
+
+    CPUExecContext();
+
     virtual ~CPUExecContext();
 
     virtual void takeOverFrom(ExecContext *oldContext);
 
     void regStats(const std::string &name);
+
+    void copyXC(ExecContext *context);
+
+    void copyState(ExecContext *oldContext);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

@@ -54,6 +54,26 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
+void
+CPUProgressEvent::process()
+{
+#ifndef NDEBUG
+    Counter temp = cpu->totalInstructions();
+    double ipc = double(temp - lastNumInst) / (interval / cpu->cycles(1));
+    DPRINTFN("%s progress event, instructions committed: %lli, IPC: %0.8d\n",
+             cpu->name(), temp - lastNumInst, ipc);
+    ipc = 0.0;
+    lastNumInst = temp;
+    schedule(curTick + interval);
+#endif
+}
+
+const char *
+CPUProgressEvent::description()
+{
+    return "CPU Progress event";
+}
+
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : SimObject(p->name), clock(p->clock), checkInterrupts(true),
@@ -150,7 +170,6 @@ BaseCPU::BaseCPU(Params *p)
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
 #endif
-
 }
 
 BaseCPU::Params::Params()
@@ -185,6 +204,11 @@ BaseCPU::startup()
     if (!params->deferRegistration && profileEvent)
         profileEvent->schedule(curTick);
 #endif
+
+    if (params->progress_interval) {
+        new CPUProgressEvent(&mainEventQueue, params->progress_interval,
+                             this);
+    }
 }
 
 

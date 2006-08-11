@@ -43,6 +43,23 @@ class CheckerCPU;
 class ExecContext;
 class System;
 
+class CPUProgressEvent : public Event
+{
+  protected:
+    Tick interval;
+    Counter lastNumInst;
+    BaseCPU *cpu;
+
+  public:
+    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu)
+        : Event(q, Event::Stat_Event_Pri), interval(ival), lastNumInst(0), cpu(_cpu)
+    { schedule(curTick + interval); }
+
+    void process();
+
+    virtual const char *description();
+};
+
 class BaseCPU : public SimObject
 {
   protected:
@@ -125,6 +142,7 @@ class BaseCPU : public SimObject
         int cpu_id;
         Tick profile;
 #endif
+        Tick progress_interval;
         BaseCPU *checker;
 
         Params();

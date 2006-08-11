@@ -1499,7 +1499,6 @@ template <class Impl>
 void
 LWBackEnd<Impl>::takeOverFrom(ExecContext *old_xc)
 {
-    switchedOut = false;
     xcSquash = false;
     trapSquash = false;
 

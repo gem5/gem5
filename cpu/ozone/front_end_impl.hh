@@ -353,7 +353,7 @@ FrontEnd<Impl>::tick()
 
 #if FULL_SYSTEM
         if (inst->isQuiesce()) {
-            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
+//            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
             status = QuiescePending;
             break;
         }

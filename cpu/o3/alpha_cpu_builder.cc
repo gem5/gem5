@@ -68,6 +68,7 @@ Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
+Param<Tick> progress_interval;
 
 SimObjectParam<BaseCache *> icache;
 SimObjectParam<BaseCache *> dcache;
@@ -189,6 +190,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
                     "Terminate when all threads have reached this load"
                     "count",
                     0),
+    INIT_PARAM_DFLT(progress_interval, "Progress interval", 0),
 
     INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
     INIT_PARAM_DFLT(dcache, "L1 data cache", NULL),
@@ -327,6 +329,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
+    params->progress_interval = progress_interval;
 
     //
     // Caches

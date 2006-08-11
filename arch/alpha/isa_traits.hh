@@ -168,6 +168,9 @@ namespace AlphaISA
     typedef union {
         uint64_t q[NumFloatRegs];	// integer qword view
         double d[NumFloatRegs];		// double-precision floating point view
+
+        void clear()
+        { bzero(d, sizeof(d)); }
     } FloatRegFile;
 
 extern const Addr PageShift;
@@ -266,6 +269,13 @@ extern const int reg_redir[NumIntRegs];
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
+
+        void clear()
+        {
+            bzero(intRegFile, sizeof(intRegFile));
+            floatRegFile.clear();
+            miscRegs.clear();
+        }
     };
 
     static inline ExtMachInst makeExtMI(MachInst inst, const uint64_t &pc);

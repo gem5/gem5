@@ -304,7 +304,7 @@ SimpleCPU::serialize(ostream &os)
     BaseCPU::serialize(os);
     SERIALIZE_ENUM(_status);
     SERIALIZE_SCALAR(inst);
-    nameOut(os, csprintf("%s.xc", name()));
+    nameOut(os, csprintf("%s.xc.0", name()));
     cpuXC->serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -318,7 +318,7 @@ SimpleCPU::unserialize(Checkpoint *cp, const string &section)
     BaseCPU::unserialize(cp, section);
     UNSERIALIZE_ENUM(_status);
     UNSERIALIZE_SCALAR(inst);
-    cpuXC->unserialize(cp, csprintf("%s.xc", section));
+    cpuXC->unserialize(cp, csprintf("%s.xc.0", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
     cacheCompletionEvent
         .unserialize(cp, csprintf("%s.cacheCompletionEvent", section));
@@ -863,6 +863,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     Param<Counter> max_insts_all_threads;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
+    Param<Tick> progress_interval;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
@@ -896,6 +897,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
                "terminate when any thread reaches this load count"),
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
+    INIT_PARAM_DFLT(progress_interval, "CPU Progress interval", 0),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
@@ -936,6 +938,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->dcache_interface = (dcache) ? dcache->getInterface() : NULL;
     params->width = width;
 
+    params->progress_interval = progress_interval;
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;

@@ -249,6 +249,9 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
+    thread.trapPending = false;
+    thread.inSyscall = false;
+
     backEnd->takeOverFrom();
     frontEnd->takeOverFrom();
     assert(!tickEvent.scheduled());
@@ -288,6 +291,8 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     scheduleTickEvent(delay);
     _status = Running;
     thread._status = ExecContext::Active;
+    if (thread.quiesceEvent && thread.quiesceEvent->scheduled())
+        thread.quiesceEvent->deschedule();
     frontEnd->wakeFromQuiesce();
 }
 
@@ -395,11 +400,17 @@ void
 OzoneCPU<Impl>::serialize(std::ostream &os)
 {
     BaseCPU::serialize(os);
-    SERIALIZE_ENUM(_status);
-    nameOut(os, csprintf("%s.xc", name()));
-    ozoneXC.serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // write out the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    nameOut(os, csprintf("%s.xc.0", name()));
+    temp.copyXC(thread.getXCProxy());
+    temp.serialize(os);
 }
 
 template <class Impl>
@@ -407,9 +418,16 @@ void
 OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
     BaseCPU::unserialize(cp, section);
-    UNSERIALIZE_ENUM(_status);
-    ozoneXC.unserialize(cp, csprintf("%s.xc", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // read in the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    temp.copyXC(thread.getXCProxy());
+    temp.unserialize(cp, csprintf("%s.xc.0", section));
+    thread.getXCProxy()->copyArchRegs(temp.getProxy());
 }
 
 template <class Impl>

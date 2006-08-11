@@ -118,6 +118,20 @@ CPUExecContext::CPUExecContext(RegFile *regFile)
 
 #endif
 
+CPUExecContext::CPUExecContext()
+#if !FULL_SYSTEM
+    : cpu(NULL), thread_num(-1), process(NULL), mem(NULL), asid(-1),
+      func_exe_inst(0), storeCondFailures(0)
+#else
+    : cpu(NULL), thread_num(-1), cpu_id(-1), lastActivate(0), lastSuspend(0),
+      mem(NULL), itb(NULL), dtb(NULL), system(NULL), memctrl(NULL),
+      physmem(NULL), profile(NULL), func_exe_inst(0), storeCondFailures(0)
+#endif
+{
+    regs.clear();
+    proxy = new ProxyExecContext<CPUExecContext>(this);
+}
+
 CPUExecContext::~CPUExecContext()
 {
     delete proxy;
@@ -158,13 +172,8 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     assert(process == oldContext->getProcessPtr());
 #endif
 
-    // copy over functional state
-    _status = oldContext->status();
-    copyArchRegs(oldContext);
-    cpu_id = oldContext->readCpuId();
-#if !FULL_SYSTEM
-    func_exe_inst = oldContext->readFuncExeInst();
-#else
+    copyState(oldContext);
+#if FULL_SYSTEM
     EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
     if (quiesce) {
         // Point the quiesce event's XC at this XC so that it wakes up
@@ -179,6 +188,36 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     storeCondFailures = 0;
 
     oldContext->setStatus(ExecContext::Unallocated);
+}
+
+void
+CPUExecContext::copyXC(ExecContext *context)
+{
+    copyState(context);
+
+#if FULL_SYSTEM
+    EndQuiesceEvent *quiesce = context->getQuiesceEvent();
+    if (quiesce) {
+        quiesceEvent = quiesce;
+    }
+    Kernel::Statistics *stats = context->getKernelStats();
+    if (stats) {
+        kernelStats = stats;
+    }
+#endif
+}
+
+void
+CPUExecContext::copyState(ExecContext *oldContext)
+{
+    // copy over functional state
+    _status = oldContext->status();
+    copyArchRegs(oldContext);
+    cpu_id = oldContext->readCpuId();
+#if !FULL_SYSTEM
+    func_exe_inst = oldContext->readFuncExeInst();
+#endif
+    inst = oldContext->getInst();
 }
 
 void
@@ -294,6 +333,8 @@ CPUExecContext::regStats(const string &name)
 void
 CPUExecContext::copyArchRegs(ExecContext *xc)
 {
+    TheISA::copyRegs(xc, proxy);
+/*
     // First loop through the integer registers.
     for (int i = 0; i < AlphaISA::NumIntRegs; ++i) {
         setIntReg(i, xc->readIntReg(i));
@@ -311,5 +352,6 @@ CPUExecContext::copyArchRegs(ExecContext *xc)
     // Lastly copy PC/NPC
     setPC(xc->readPC());
     setNextPC(xc->readNextPC());
+*/
 }
 

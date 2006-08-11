@@ -183,8 +183,10 @@ StatEvent::process()
     if (flags & Stats::Dump)
         DumpNow();
 
-    if (flags & Stats::Reset)
+    if (flags & Stats::Reset) {
+        cprintf("Resetting stats!\n");
         reset();
+    }
 
     if (repeat)
         schedule(curTick + repeat);

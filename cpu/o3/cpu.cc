@@ -29,6 +29,7 @@
 #include "config/full_system.hh"
 
 #if FULL_SYSTEM
+#include "cpu/quiesce_event.hh"
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
@@ -598,6 +599,9 @@ FullO3CPU<Impl>::activateContext(int tid, int delay)
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
     activityRec.activity();
+    if (thread[tid]->quiesceEvent && thread[tid]->quiesceEvent->scheduled())
+        thread[tid]->quiesceEvent->deschedule();
+
     fetch.wakeFromQuiesce();
 
     _status = Running;
@@ -759,7 +763,6 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         tickEvent.schedule(curTick);
 }
 
-/*
 template <class Impl>
 void
 FullO3CPU<Impl>::serialize(std::ostream &os)
@@ -771,11 +774,11 @@ FullO3CPU<Impl>::serialize(std::ostream &os)
     // Use SimpleThread's ability to checkpoint to make it easier to
     // write out the registers.  Also make this static so it doesn't
     // get instantiated multiple times (causes a panic in statistics).
-    static SimpleThread temp;
+    static CPUExecContext temp;
 
     for (int i = 0; i < thread.size(); i++) {
         nameOut(os, csprintf("%s.xc.%i", name(), i));
-        temp.copyXC(thread[i]->getXC());
+        temp.copyXC(thread[i]->getXCProxy());
         temp.serialize(os);
     }
 }
@@ -790,15 +793,15 @@ FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
     // Use SimpleThread's ability to checkpoint to make it easier to
     // read in the registers.  Also make this static so it doesn't
     // get instantiated multiple times (causes a panic in statistics).
-    static SimpleThread temp;
+    static CPUExecContext temp;
 
     for (int i = 0; i < thread.size(); i++) {
-        temp.copyXC(thread[i]->getXC());
+        temp.copyXC(thread[i]->getXCProxy());
         temp.unserialize(cp, csprintf("%s.xc.%i", section, i));
-        thread[i]->getXC()->copyArchRegs(temp.getXC());
+        thread[i]->getXCProxy()->copyArchRegs(temp.getProxy());
     }
 }
-*/
+
 template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readIntReg(int reg_idx)

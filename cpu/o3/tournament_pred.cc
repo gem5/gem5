@@ -60,6 +60,8 @@ TournamentBP::TournamentBP(unsigned _localPredictorSize,
     for (int i = 0; i < localPredictorSize; ++i)
         localCtrs[i].setBits(localCtrBits);
 
+    localPredictorMask = floorPow2(localPredictorSize) - 1;
+
     if (!isPowerOf2(localHistoryTableSize)) {
         fatal("Invalid local history table size!\n");
     }
@@ -156,7 +158,7 @@ TournamentBP::lookup(Addr &branch_addr, void * &bp_history)
     //Lookup in the local predictor to get its branch prediction
     local_history_idx = calcLocHistIdx(branch_addr);
     local_predictor_idx = localHistoryTable[local_history_idx]
-        & localHistoryMask;
+        & localPredictorMask;
     local_prediction = localCtrs[local_predictor_idx].read() > threshold;
 
     //Lookup in the global predictor to get its branch prediction
@@ -174,7 +176,8 @@ TournamentBP::lookup(Addr &branch_addr, void * &bp_history)
     bp_history = (void *)history;
 
     assert(globalHistory < globalPredictorSize &&
-           local_history_idx < localPredictorSize);
+           local_history_idx < localHistoryTableSize &&
+           local_predictor_idx < localPredictorSize);
 
     // Commented code is for doing speculative update of counters and
     // all histories.
@@ -232,7 +235,7 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history)
     // Get the local predictor's current prediction
     local_history_idx = calcLocHistIdx(branch_addr);
     local_predictor_hist = localHistoryTable[local_history_idx];
-    local_predictor_idx = local_predictor_hist & localHistoryMask;
+    local_predictor_idx = local_predictor_hist & localPredictorMask;
 
     // Update the choice predictor to tell it which one was correct if
     // there was a prediction.
@@ -254,6 +257,7 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history)
     }
 
     assert(globalHistory < globalPredictorSize &&
+           local_history_idx < localHistoryTableSize &&
            local_predictor_idx < localPredictorSize);
 
     // Update the counters and local history with the proper

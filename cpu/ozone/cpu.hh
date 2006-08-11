@@ -300,8 +300,6 @@ class OzoneCPU : public BaseCPU
     Status _status;
 
   public:
-    bool checkInterrupts;
-
     void post_interrupt(int int_num, int index);
 
     void zero_fill_64(Addr addr) {
