@@ -1,3 +1,3 @@
-/benchmarks/micros/lmbench/bin/alphaev6-linux-gnu/lat_mem_rd_2MB 2 8192 
+/benchmarks/micros/lmbench/bin/alphaev6-linux-gnu/lat_tlb
 m5 exit
 
