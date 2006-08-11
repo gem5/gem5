@@ -25,44 +25,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
- *          Korey Sewell
+ * Authors: Korey Sewell
  */
 
-#include "arch/mips/types.hh"
-#include "cpu/o3/thread_context.hh"
+#ifndef __ARCH_MIPS_REGFILE_HH__
+#define __ARCH_MIPS_REGFILE_HH__
 
-template <class Impl>
-class MipsTC : public O3ThreadContext<Impl>
-{
-  public:
-    virtual uint64_t readNextNPC()
-    {
-        return this->cpu->readNextNPC(this->thread->readTid());
-    }
+#include "arch/mips/regfile/regfile.hh"
 
-    virtual void setNextNPC(uint64_t val)
-    {
-        this->cpu->setNextNPC(val, this->thread->readTid());
-    }
-
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-                                      TheISA::RegContextVal val)
-    { panic("Not supported on Mips!"); }
-
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
-    {
-        this->deallocate();
-
-        // If there are still threads executing in the system
-        if (this->cpu->numActiveThreads())
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
-    }
-};
+#endif

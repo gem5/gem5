@@ -26,24 +26,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_MIPS_FLOAT_REGFILE_HH__
-#define __ARCH_MIPS_FLOAT_REGFILE_HH__
+#ifndef __ARCH_MIPS_REGFILE_FLOAT_REGFILE_HH__
+#define __ARCH_MIPS_REGFILE_FLOAT_REGFILE_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/constants.hh"
+#include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
-#include "config/full_system.hh"
-#include "sim/byteswap.hh"
 #include "sim/faults.hh"
-#include "sim/host.hh"
+
+#include <string>
 
 class Checkpoint;
-class ExecContext;
-class Regfile;
 
 namespace MipsISA
 {
+    const uint32_t MIPS32_QNAN = 0x7fbfffff;
+    const uint64_t MIPS64_QNAN = ULL(0x7fbfffffffffffff);
+
+    enum FPControlRegNums {
+       FIR = NumFloatArchRegs,
+       FCCR,
+       FEXR,
+       FENR,
+       FCSR
+    };
+
+    enum FCSRBits {
+        Inexact = 1,
+        Underflow,
+        Overflow,
+        DivideByZero,
+        Invalid,
+        Unimplemented
+    };
+
+    enum FCSRFields {
+        Flag_Field = 1,
+        Enable_Field = 6,
+        Cause_Field = 11
+    };
+
+    const int SingleWidth = 32;
+    const int SingleBytes = SingleWidth / 4;
+
+    const int DoubleWidth = 64;
+    const int DoubleBytes = DoubleWidth / 4;
+
+    const int QuadWidth = 128;
+    const int QuadBytes = QuadWidth / 4;
+
     class FloatRegFile
     {
       protected:

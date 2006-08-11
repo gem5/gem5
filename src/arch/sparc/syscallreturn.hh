@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,66 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
- *          Korey Sewell
+ * Authors: Gabe Black
  */
 
-#include "arch/mips/types.hh"
-#include "cpu/o3/thread_context.hh"
+#ifndef __ARCH_SPARC_SYSCALLRETURN_HH__
+#define __ARCH_SPARC_SYSCALLRETURN_HH__
 
-template <class Impl>
-class MipsTC : public O3ThreadContext<Impl>
+#include <inttypes.h>
+
+class SyscallReturn
 {
   public:
-    virtual uint64_t readNextNPC()
+    template <class T>
+    SyscallReturn(T v, bool s)
     {
-        return this->cpu->readNextNPC(this->thread->readTid());
+        retval = (uint64_t)v;
+        success = s;
     }
 
-    virtual void setNextNPC(uint64_t val)
+    template <class T>
+    SyscallReturn(T v)
     {
-        this->cpu->setNextNPC(val, this->thread->readTid());
+        success = (v >= 0);
+        retval = (uint64_t)v;
     }
 
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-                                      TheISA::RegContextVal val)
-    { panic("Not supported on Mips!"); }
+    ~SyscallReturn() {}
 
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
+    SyscallReturn& operator=(const SyscallReturn& s)
     {
-        this->deallocate();
+        retval = s.retval;
+        success = s.success;
+        return *this;
+    }
 
-        // If there are still threads executing in the system
-        if (this->cpu->numActiveThreads())
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
+    bool successful() { return success; }
+    uint64_t value() { return retval; }
+
+    private:
+    uint64_t retval;
+    bool success;
+};
+
+namespace SparcISA
+{
+    static inline void setSyscallReturn(SyscallReturn return_value,
+            RegFile *regs)
+    {
+        // check for error condition.  SPARC syscall convention is to
+        // indicate success/failure in reg the carry bit of the ccr
+        // and put the return value itself in the standard return value reg ().
+        if (return_value.successful()) {
+            // no error, clear XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEF);
+            regs->setIntReg(ReturnValueReg, return_value.value());
+        } else {
+            // got an error, set XCC.C
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x10);
+            regs->setIntReg(ReturnValueReg, return_value.value());
+        }
     }
 };
+
+#endif

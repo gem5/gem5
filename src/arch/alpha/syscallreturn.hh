@@ -25,74 +25,63 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
- *          Korey Sewell
+ * Authors: Steve Reinhardt
+ *          Gabe Black
  */
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/regfile/regfile.hh"
-#include "sim/serialize.hh"
-#include "base/bitfield.hh"
+#ifndef __ARCH_ALPHA_SYSCALLRETURN_HH__
+#define __ARCH_ALPHA_SYSCALLRETURN_HH__
 
-using namespace MipsISA;
-using namespace std;
+class SyscallReturn {
+    public:
+       template <class T>
+       SyscallReturn(T v, bool s)
+       {
+           retval = (uint64_t)v;
+           success = s;
+       }
 
-void
-MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
+       template <class T>
+       SyscallReturn(T v)
+       {
+           success = (v >= 0);
+           retval = (uint64_t)v;
+       }
+
+       ~SyscallReturn() {}
+
+       SyscallReturn& operator=(const SyscallReturn& s) {
+           retval = s.retval;
+           success = s.success;
+           return *this;
+       }
+
+       bool successful() { return success; }
+       uint64_t value() { return retval; }
+
+
+   private:
+       uint64_t retval;
+       bool success;
+};
+
+namespace AlphaISA
 {
-    panic("Copy Regs Not Implemented Yet\n");
+    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    {
+        // check for error condition.  Alpha syscall convention is to
+        // indicate success/failure in reg a3 (r19) and put the
+        // return value itself in the standard return value reg (v0).
+        if (return_value.successful()) {
+            // no error
+            regs->setIntReg(SyscallSuccessReg, 0);
+            regs->setIntReg(ReturnValueReg, return_value.value());
+        } else {
+            // got an error, return details
+            regs->setIntReg(SyscallSuccessReg, (IntReg)-1);
+            regs->setIntReg(ReturnValueReg, -return_value.value());
+        }
+    }
 }
 
-void
-MipsISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
-void
-MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
-void
-IntRegFile::serialize(std::ostream &os)
-{
-    SERIALIZE_ARRAY(regs, NumIntRegs);
-}
-
-void
-IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_ARRAY(regs, NumIntRegs);
-}
-
-void
-RegFile::serialize(std::ostream &os)
-{
-    intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    //SERIALZE_ARRAY(miscRegFile);
-    //SERIALIZE_SCALAR(miscRegs.fpcr);
-    //SERIALIZE_SCALAR(miscRegs.lock_flag);
-    //SERIALIZE_SCALAR(miscRegs.lock_addr);
-    SERIALIZE_SCALAR(pc);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
-}
-
-
-void
-RegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
-    //UNSERIALZE_ARRAY(miscRegFile);
-    //UNSERIALIZE_SCALAR(miscRegs.fpcr);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_flag);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_addr);
-    UNSERIALIZE_SCALAR(pc);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
-
-}
+#endif

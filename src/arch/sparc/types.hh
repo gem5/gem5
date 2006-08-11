@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
- *          Korey Sewell
+ * Authors: Gabe Black
  */
 
-#include "arch/mips/types.hh"
-#include "cpu/o3/thread_context.hh"
+#ifndef __ARCH_SPARC_TYPES_HH__
+#define __ARCH_SPARC_TYPES_HH__
 
-template <class Impl>
-class MipsTC : public O3ThreadContext<Impl>
+#include <inttypes.h>
+
+namespace SparcISA
 {
-  public:
-    virtual uint64_t readNextNPC()
+    typedef uint32_t MachInst;
+    typedef uint64_t ExtMachInst;
+
+    typedef uint64_t IntReg;
+    typedef uint64_t MiscReg;
+    typedef double FloatReg;
+    typedef uint64_t FloatRegBits;
+    typedef union
     {
-        return this->cpu->readNextNPC(this->thread->readTid());
-    }
+        IntReg intReg;
+        FloatReg fpreg;
+        MiscReg ctrlreg;
+    } AnyReg;
 
-    virtual void setNextNPC(uint64_t val)
+    enum RegContextParam
     {
-        this->cpu->setNextNPC(val, this->thread->readTid());
-    }
+        CONTEXT_CWP,
+        CONTEXT_GLOBALS
+    };
 
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-                                      TheISA::RegContextVal val)
-    { panic("Not supported on Mips!"); }
+    typedef int RegContextVal;
 
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
-    {
-        this->deallocate();
+    typedef uint8_t RegIndex;
+}
 
-        // If there are still threads executing in the system
-        if (this->cpu->numActiveThreads())
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
-    }
-};
+#endif

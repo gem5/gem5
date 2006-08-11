@@ -34,6 +34,8 @@
 #include <bitset>
 #include <string>
 
+#include "arch/isa_traits.hh"
+#include "arch/faults.hh"
 #include "base/bitfield.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
@@ -41,7 +43,6 @@
 #include "cpu/op_class.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "sim/host.hh"
-#include "arch/isa_traits.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;

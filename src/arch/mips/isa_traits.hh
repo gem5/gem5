@@ -32,149 +32,87 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
-#include "arch/mips/constants.hh"
 #include "arch/mips/types.hh"
-#include "arch/mips/regfile/regfile.hh"
-#include "arch/mips/faults.hh"
-#include "arch/mips/utility.hh"
-#include "base/misc.hh"
-#include "config/full_system.hh"
-#include "sim/byteswap.hh"
 #include "sim/host.hh"
-#include "sim/faults.hh"
-
-#include <vector>
-
-class FastCPU;
-class FullCPU;
-class Checkpoint;
-class ThreadContext;
 
 namespace LittleEndianGuest {};
 
 #define TARGET_MIPS
 
-class StaticInst;
 class StaticInstPtr;
-
-class SyscallReturn {
-        public:
-           template <class T>
-           SyscallReturn(T v, bool s)
-           {
-               retval = (uint32_t)v;
-               success = s;
-           }
-
-           template <class T>
-           SyscallReturn(T v)
-           {
-               success = (v >= 0);
-               retval = (uint32_t)v;
-           }
-
-           ~SyscallReturn() {}
-
-           SyscallReturn& operator=(const SyscallReturn& s) {
-               retval = s.retval;
-               success = s.success;
-               return *this;
-           }
-
-           bool successful() { return success; }
-           uint64_t value() { return retval; }
-
-
-       private:
-           uint64_t retval;
-           bool success;
-};
 
 namespace MipsISA
 {
     using namespace LittleEndianGuest;
 
-    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
-    {
-        if (return_value.successful()) {
-            // no error
-            regs->setIntReg(SyscallSuccessReg, 0);
-            regs->setIntReg(ReturnValueReg1, return_value.value());
-        } else {
-            // got an error, return details
-            regs->setIntReg(SyscallSuccessReg, (IntReg) -1);
-            regs->setIntReg(ReturnValueReg1, -return_value.value());
-        }
-    }
-
     StaticInstPtr decodeInst(ExtMachInst);
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, const uint64_t &pc) {
-#if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
-        if (pc && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
-#endif
-    }
+    const Addr PageShift = 13;
+    const Addr PageBytes = ULL(1) << PageShift;
+    const Addr PageMask = ~(PageBytes - 1);
+    const Addr PageOffset = PageBytes - 1;
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
+    // return a no-op instruction... used for instruction fetch faults
+    const ExtMachInst NoopMachInst = 0x00000000;
 
-//    const Addr MaxAddr = (Addr)-1;
+    // Constants Related to the number of registers
+    const int NumIntArchRegs = 32;
+    const int NumIntSpecialRegs = 2;
+    const int NumFloatArchRegs = 32;
+    const int NumFloatSpecialRegs = 5;
+    const int NumControlRegs = 265;
+    const int NumInternalProcRegs = 0;
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
+    const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;        //HI & LO Regs
+    const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
+    const int NumMiscRegs = NumControlRegs;
 
-    // Machine operations
+    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
+    NumMiscRegs + 0/*NumInternalProcRegs*/;
 
-    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
-                               int regnum);
+    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
-    void restoreMachineReg(RegFile &regs, const AnyReg &reg,
-                                  int regnum);
+    // Static instruction parameters
+    const int MaxInstSrcRegs = 3;
+    const int MaxInstDestRegs = 2;
 
-#if 0
-    static void serializeSpecialRegs(const Serializable::Proxy &proxy,
-                                     const RegFile &regs);
+    // semantically meaningful register indices
+    const int ZeroReg = 0;
+    const int AssemblerReg = 1;
+    const int ReturnValueReg = 2;
+    const int ReturnValueReg1 = 2;
+    const int ReturnValueReg2 = 3;
+    const int ArgumentReg0 = 4;
+    const int ArgumentReg1 = 5;
+    const int ArgumentReg2 = 6;
+    const int ArgumentReg3 = 7;
+    const int KernelReg0 = 26;
+    const int KernelReg1 = 27;
+    const int GlobalPointerReg = 28;
+    const int StackPointerReg = 29;
+    const int FramePointerReg = 30;
+    const int ReturnAddressReg = 31;
 
-    static void unserializeSpecialRegs(const IniFile *db,
-                                       const std::string &category,
-                                       ConfigNode *node,
-                                       RegFile &regs);
-#endif
+    const int SyscallNumReg = ReturnValueReg1;
+    const int SyscallPseudoReturnReg = ReturnValueReg1;
+    const int SyscallSuccessReg = ArgumentReg3;
 
-    static inline Addr alignAddress(const Addr &addr,
-                                         unsigned int nbytes) {
-        return (addr & ~(nbytes - 1));
-    }
+    const int LogVMPageSize = 13;	// 8K bytes
+    const int VMPageSize = (1 << LogVMPageSize);
 
-    // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr) {
-        return addr;
-    }
+    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
 
-    static inline Addr fetchPCToRealPC(const Addr &addr) {
-        return addr;
-    }
+    const int MachineBytes = 4;
+    const int WordBytes = 4;
+    const int HalfwordBytes = 2;
+    const int ByteBytes = 1;
 
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    static inline size_t fetchInstSize() {
-        return sizeof(MachInst);
-    }
+    // These help enumerate all the registers for dependence tracking.
+    const int FP_Base_DepTag = 34;
+    const int Ctrl_Base_DepTag = 257;
 
-    static inline MachInst makeRegisterCopy(int dest, int src) {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
+    const int ANNOTE_NONE = 0;
+    const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 
 };
 

@@ -38,6 +38,7 @@
 
 #include <string>
 
+#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/hashmap.hh"
 #include "base/trace.hh"

@@ -47,13 +47,12 @@ sources = []
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
-	arguments.hh
-	constants.hh
 	faults.hh
 	isa_traits.hh
 	process.hh
 	regfile.hh
 	stacktrace.hh
+	syscallreturn.hh
 	tlb.hh
 	types.hh
 	utility.hh

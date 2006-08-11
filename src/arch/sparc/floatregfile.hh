@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,59 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
- *          Korey Sewell
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
-#include "arch/mips/types.hh"
-#include "cpu/o3/thread_context.hh"
+#ifndef __ARCH_SPARC_FLOATREGFILE_HH__
+#define __ARCH_SPARC_FLOATREGFILE_HH__
 
-template <class Impl>
-class MipsTC : public O3ThreadContext<Impl>
+#include "arch/sparc/faults.hh"
+#include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/types.hh"
+
+#include <string>
+
+namespace SparcISA
 {
-  public:
-    virtual uint64_t readNextNPC()
+    std::string getFloatRegName(RegIndex);
+
+    typedef float float32_t;
+    typedef double float64_t;
+    //FIXME long double refers to a 10 byte float, rather than a
+    //16 byte float as required. This data type may have to be emulated.
+    typedef double float128_t;
+
+    class FloatRegFile
     {
-        return this->cpu->readNextNPC(this->thread->readTid());
-    }
+      public:
+        static const int SingleWidth = 32;
+        static const int DoubleWidth = 64;
+        static const int QuadWidth = 128;
 
-    virtual void setNextNPC(uint64_t val)
-    {
-        this->cpu->setNextNPC(val, this->thread->readTid());
-    }
+      protected:
 
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-                                      TheISA::RegContextVal val)
-    { panic("Not supported on Mips!"); }
+        //Since the floating point registers overlap each other,
+        //A generic storage space is used. The float to be returned is
+        //pulled from the appropriate section of this region.
+        char regSpace[(SingleWidth / 8) * NumFloatRegs];
 
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
-    {
-        this->deallocate();
+      public:
 
-        // If there are still threads executing in the system
-        if (this->cpu->numActiveThreads())
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
-    }
-};
+        void clear();
+
+        FloatReg readReg(int floatReg, int width);
+
+        FloatRegBits readRegBits(int floatReg, int width);
+
+        Fault setReg(int floatReg, const FloatReg &val, int width);
+
+        Fault setRegBits(int floatReg, const FloatRegBits &val, int width);
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+}
+
+#endif

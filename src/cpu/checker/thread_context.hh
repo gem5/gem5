@@ -31,6 +31,7 @@
 #ifndef __CPU_CHECKER_THREAD_CONTEXT_HH__
 #define __CPU_CHECKER_THREAD_CONTEXT_HH__
 
+#include "arch/types.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
@@ -295,8 +296,8 @@ class CheckerThreadContext : public ThreadContext
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
-    void changeRegFileContext(RegFile::ContextParam param,
-            RegFile::ContextVal val)
+    void changeRegFileContext(TheISA::RegContextParam param,
+            TheISA::RegContextVal val)
     {
         actualTC->changeRegFileContext(param, val);
         checkerTC->changeRegFileContext(param, val);

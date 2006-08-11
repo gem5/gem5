@@ -28,20 +28,24 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __ARCH_MIPS_INT_REGFILE_HH__
-#define __ARCH_MIPS_INT_REGFILE_HH__
+#ifndef __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
+#define __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/constants.hh"
+#include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
 
 class Checkpoint;
 class ThreadContext;
-class Regfile;
 
 namespace MipsISA
 {
+    enum MiscIntRegNums {
+       HI = NumIntArchRegs,
+       LO
+    };
+
     class IntRegFile
     {
       protected:

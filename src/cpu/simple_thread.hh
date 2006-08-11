@@ -449,8 +449,8 @@ class SimpleThread : public ThreadState
     }
 #endif
 
-    void changeRegFileContext(RegFile::ContextParam param,
-            RegFile::ContextVal val)
+    void changeRegFileContext(TheISA::RegContextParam param,
+            TheISA::RegContextVal val)
     {
         regs.changeContext(param, val);
     }

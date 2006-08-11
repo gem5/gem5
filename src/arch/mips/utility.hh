@@ -33,8 +33,10 @@
 #define __ARCH_MIPS_UTILITY_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/constants.hh"
+#include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
+//XXX This is needed for size_t. We should use something other than size_t
+#include "kern/linux/linux.hh"
 #include "sim/host.hh"
 
 namespace MipsISA {
@@ -51,6 +53,48 @@ namespace MipsISA {
     bool isNan(void *val_ptr, int size);
     bool isQnan(void *val_ptr, int size);
     bool isSnan(void *val_ptr, int size);
+
+    /**
+     * Function to insure ISA semantics about 0 registers.
+     * @param tc The thread context.
+     */
+    template <class TC>
+    void zeroRegisters(TC *tc);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    // Instruction address compression hooks
+    static inline Addr realPCToFetchPC(const Addr &addr) {
+        return addr;
+    }
+
+    static inline Addr fetchPCToRealPC(const Addr &addr) {
+        return addr;
+    }
+
+    // the size of "fetched" instructions (not necessarily the size
+    // of real instructions for PISA)
+    static inline size_t fetchInstSize() {
+        return sizeof(MachInst);
+    }
+
+    static inline MachInst makeRegisterCopy(int dest, int src) {
+        panic("makeRegisterCopy not implemented");
+        return 0;
+    }
+
+    static inline ExtMachInst
+    makeExtMI(MachInst inst, const uint64_t &pc) {
+#if FULL_SYSTEM
+        ExtMachInst ext_inst = inst;
+        if (pc && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+        else
+            return ext_inst;
+#else
+        return ExtMachInst(inst);
+#endif
+    }
 };
 
 

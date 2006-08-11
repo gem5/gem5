@@ -25,13 +25,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Korey Sewell
- *          Gabe Black
+ * Authors: Gabe Black
  */
 
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
+#include "arch/sparc/types.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
@@ -46,70 +46,45 @@ class StaticInstPtr;
 
 namespace BigEndianGuest {}
 
-#if !FULL_SYSTEM
-class SyscallReturn
-{
-  public:
-    template <class T>
-    SyscallReturn(T v, bool s)
-    {
-        retval = (uint64_t)v;
-        success = s;
-    }
-
-    template <class T>
-    SyscallReturn(T v)
-    {
-        success = (v >= 0);
-        retval = (uint64_t)v;
-    }
-
-    ~SyscallReturn() {}
-
-    SyscallReturn& operator=(const SyscallReturn& s)
-    {
-        retval = s.retval;
-        success = s.success;
-        return *this;
-    }
-
-    bool successful() { return success; }
-    uint64_t value() { return retval; }
-
-    private:
-    uint64_t retval;
-    bool success;
-};
-
-#endif
-
 #if FULL_SYSTEM
 #include "arch/sparc/isa_fullsys_traits.hh"
 #endif
 
 namespace SparcISA
 {
+    class RegFile;
+
+    //This makes sure the big endian versions of certain functions are used.
+    using namespace BigEndianGuest;
+
+    //TODO this needs to be a SPARC Noop
+    // Alpha UNOP (ldq_u r31,0(r0))
+    const MachInst NoopMachInst = 0x2ffe0000;
+
+    const int NumIntRegs = 32;
+    const int NumFloatRegs = 64;
+    const int NumMiscRegs = 40;
 
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
         // 0..31 are the integer regs 0..31
-        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-        FP_Base_DepTag = 32,
-        Ctrl_Base_DepTag = 96,
+        // 32..95 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
+        FP_Base_DepTag = NumIntRegs,
+        Ctrl_Base_DepTag = NumIntRegs + NumFloatRegs,
         //XXX These are here solely to get compilation and won't work
         Fpcr_DepTag = 0,
         Uniq_DepTag = 0
     };
 
-    //This makes sure the big endian versions of certain functions are used.
-    using namespace BigEndianGuest;
 
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
+    // MAXTL - maximum trap level
+    const int MaxPTL = 2;
+    const int MaxTL  = 6;
+    const int MaxGL  = 3;
+    const int MaxPGL = 2;
 
-    const int NumIntRegs = 32;
-    const int NumFloatRegs = 64;
-    const int NumMiscRegs = 32;
+    // NWINDOWS - number of register windows, can be 3 to 32
+    const int NWindows = 32;
 
     // semantically meaningful register indices
     const int ZeroReg = 0;	// architecturally meaningful
@@ -130,14 +105,6 @@ namespace SparcISA
     //XXX These numbers are bogus
     const int MaxInstSrcRegs = 8;
     const int MaxInstDestRegs = 9;
-
-    typedef uint64_t IntReg;
-
-    // control register file contents
-    typedef uint64_t MiscReg;
-
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
 
     //8K. This value is implmentation specific; and should probably
     //be somewhere else.
@@ -164,30 +131,5 @@ namespace SparcISA
     // return a no-op instruction... used for instruction fetch faults
     extern const MachInst NoopMachInst;
 }
-
-#include "arch/sparc/regfile.hh"
-
-namespace SparcISA
-{
-
-#if !FULL_SYSTEM
-    static inline void setSyscallReturn(SyscallReturn return_value,
-            RegFile *regs)
-    {
-        // check for error condition.  SPARC syscall convention is to
-        // indicate success/failure in reg the carry bit of the ccr
-        // and put the return value itself in the standard return value reg ().
-        if (return_value.successful()) {
-            // no error, clear XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEF);
-            regs->setIntReg(ReturnValueReg, return_value.value());
-        } else {
-            // got an error, set XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x10);
-            regs->setIntReg(ReturnValueReg, return_value.value());
-        }
-    }
-#endif
-};
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

@@ -32,7 +32,7 @@
 #ifndef __ARCH_ALPHA_TYPES_HH__
 #define __ARCH_ALPHA_TYPES_HH__
 
-#include "sim/host.hh"
+#include <inttypes.h>
 
 namespace AlphaISA
 {
@@ -55,6 +55,13 @@ namespace AlphaISA
         FloatReg   fpreg;
         MiscReg ctrlreg;
     } AnyReg;
+
+    enum RegContextParam
+    {
+        CONTEXT_PALMODE
+    };
+
+    typedef bool RegContextVal;
 
     enum annotes {
         ANNOTE_NONE = 0,

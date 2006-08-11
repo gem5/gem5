@@ -29,7 +29,7 @@
  *          Ali Saidi
  */
 
-#include "arch/alpha/constants.hh"
+#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/process.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"

@@ -34,7 +34,7 @@
 
 #include "config/full_system.hh"
 #include "arch/alpha/types.hh"
-#include "arch/alpha/constants.hh"
+#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/regfile.hh"
 #include "base/misc.hh"
 

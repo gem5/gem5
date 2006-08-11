@@ -31,6 +31,9 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
+#include "arch/types.hh"
+#include "arch/regfile.hh"
+#include "arch/syscallreturn.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
@@ -254,8 +257,8 @@ class ThreadContext
     virtual int exit() { return 1; };
 #endif
 
-    virtual void changeRegFileContext(RegFile::ContextParam param,
-            RegFile::ContextVal val) = 0;
+    virtual void changeRegFileContext(TheISA::RegContextParam param,
+            TheISA::RegContextVal val) = 0;
 };
 
 /**
@@ -438,8 +441,8 @@ class ProxyThreadContext : public ThreadContext
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
 
-    void changeRegFileContext(RegFile::ContextParam param,
-            RegFile::ContextVal val)
+    void changeRegFileContext(TheISA::RegContextParam param,
+            TheISA::RegContextVal val)
     {
         actualTC->changeRegFileContext(param, val);
     }

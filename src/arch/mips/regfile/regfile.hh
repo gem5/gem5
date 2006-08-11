@@ -28,11 +28,11 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __ARCH_MIPS_REGFILE_HH__
-#define __ARCH_MIPS_REGFILE_HH__
+#ifndef __ARCH_MIPS_REGFILE_REGFILE_HH__
+#define __ARCH_MIPS_REGFILE_REGFILE_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/constants.hh"
+#include "arch/mips/isa_traits.hh"
 #include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/float_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
@@ -171,10 +171,7 @@ namespace MipsISA
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 
-        typedef int ContextParam;
-        typedef int ContextVal;
-
-        void changeContext(ContextParam param, ContextVal val)
+        void changeContext(RegContextParam param, RegContextVal val)
         {
         }
     };

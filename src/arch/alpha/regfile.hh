@@ -32,14 +32,19 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/types.hh"
-#include "arch/alpha/constants.hh"
+#include "arch/alpha/isa_traits.hh"
 #include "sim/faults.hh"
+
+#include <string>
+
+//XXX These should be implemented by someone who knows the alpha stuff better
 
 class Checkpoint;
 class ThreadContext;
 
 namespace AlphaISA
 {
+
     class IntRegFile
     {
       protected:
@@ -268,14 +273,7 @@ namespace AlphaISA
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 
-        enum ContextParam
-        {
-            CONTEXT_PALMODE
-        };
-
-        typedef bool ContextVal;
-
-        void changeContext(ContextParam param, ContextVal val)
+        void changeContext(RegContextParam param, RegContextVal val)
         {
             //This would be an alternative place to call/implement
             //the swapPALShadow function
