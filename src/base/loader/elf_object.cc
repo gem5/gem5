@@ -153,8 +153,38 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             } // while sections
         }
 
+        ElfObject * result = new ElfObject(fname, fd, len, data, arch, opSys);
+
+        //The number of headers in the file
+        result->_programHeaderCount = ehdr.e_phnum;
+        //Record the size of each entry
+        result->_programHeaderSize = ehdr.e_phentsize;
+        if(result->_programHeaderCount) //If there is a program header table
+        {
+            //Figure out the virtual address of the header table in the
+            //final memory image. We use the program headers themselves
+            //to translate from a file offset to the address in the image.
+            GElf_Phdr phdr;
+            uint64_t e_phoff = ehdr.e_phoff;
+            result->_programHeaderTable = 0;
+            for(int hdrnum = 0; hdrnum < result->_programHeaderCount; hdrnum++)
+            {
+                gelf_getphdr(elf, hdrnum, &phdr);
+                //Check if we've found the segment with the headers in it
+                if(phdr.p_offset <= e_phoff &&
+                        phdr.p_offset + phdr.p_filesz > e_phoff)
+                {
+                    result->_programHeaderTable = phdr.p_vaddr + e_phoff;
+                    break;
+                }
+            }
+        }
+        else
+            result->_programHeaderTable = 0;
+
+
         elf_end(elf);
-        return new ElfObject(fname, fd, len, data, arch, opSys);
+        return result;
     }
 }
 

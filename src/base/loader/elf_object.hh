@@ -37,6 +37,12 @@ class ElfObject : public ObjectFile
 {
   protected:
 
+    //These values are provided to a linux process by the kernel, so we
+    //need to keep them around.
+    Addr _programHeaderTable;
+    uint16_t _programHeaderSize;
+    uint16_t _programHeaderCount;
+
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding);
 
@@ -52,6 +58,9 @@ class ElfObject : public ObjectFile
 
     static ObjectFile *tryFile(const std::string &fname, int fd,
                                size_t len, uint8_t *data);
+    Addr programHeaderTable() {return _programHeaderTable;}
+    uint16_t programHeaderSize() {return _programHeaderSize;}
+    uint16_t programHeaderCount() {return _programHeaderCount;}
 };
 
 #endif // __ELF_OBJECT_HH__

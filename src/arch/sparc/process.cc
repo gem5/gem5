@@ -32,6 +32,7 @@
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
 #include "base/loader/object_file.hh"
+#include "base/loader/elf_object.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
@@ -129,7 +130,8 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
         SPARC_AT_UID = 11,
         SPARC_AT_EUID = 12,
         SPARC_AT_GID = 13,
-        SPARC_AT_EGID = 14
+        SPARC_AT_EGID = 14,
+        SPARC_AT_SECURE = 23
     };
 
     enum hardwareCaps
@@ -153,31 +155,42 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
         M5_HWCAP_SPARC_V9 |
         M5_HWCAP_SPARC_ULTRA3;
 
-    //Setup the auxilliary vectors. These will already have
-    //endian conversion.
-    auxv.push_back(buildAuxVect(SPARC_AT_EGID, 100));
-    auxv.push_back(buildAuxVect(SPARC_AT_GID, 100));
-    auxv.push_back(buildAuxVect(SPARC_AT_EUID, 100));
-    auxv.push_back(buildAuxVect(SPARC_AT_UID, 100));
-    //This would work, but the entry point is a protected member
-    //auxv.push_back(buildAuxVect(SPARC_AT_ENTRY, objFile->entry));
-    auxv.push_back(buildAuxVect(SPARC_AT_FLAGS, 0));
-    //This is the address of the elf "interpreter", which I don't
-    //think we currently set up. It should be set to 0 (I think)
-    //auxv.push_back(buildAuxVect(SPARC_AT_BASE, 0));
-    //This is the number of headers which were in the original elf
-    //file. This information isn't avaibale by this point.
-    //auxv.push_back(buildAuxVect(SPARC_AT_PHNUM, 3));
-    //This is the size of a program header entry. This isn't easy
-    //to compute here.
-    //auxv.push_back(buildAuxVect(SPARC_AT_PHENT, blah));
-    //This is should be set to load_addr (whatever that is) +
-    //e_phoff. I think it's a pointer to the program headers.
-    //auxv.push_back(buildAuxVect(SPARC_AT_PHDR, blah));
-    //This should be easy to get right, but I won't set it for now
-    //auxv.push_back(buildAuxVect(SPARC_AT_CLKTCK, blah));
-    auxv.push_back(buildAuxVect(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
-    auxv.push_back(buildAuxVect(SPARC_AT_HWCAP, hwcap));
+
+    //Setup the auxilliary vectors. These will already have endian conversion.
+    //Auxilliary vectors are loaded only for elf formatted executables.
+    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    if(elfObject)
+    {
+        //Bits which describe the system hardware capabilities
+        auxv.push_back(buildAuxVect(SPARC_AT_HWCAP, hwcap));
+        //The system page size
+        auxv.push_back(buildAuxVect(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
+        //Defined to be 100 in the kernel source.
+        //Frequency at which times() increments
+        auxv.push_back(buildAuxVect(SPARC_AT_CLKTCK, 100));
+        // For statically linked executables, this is the virtual address of the
+        // program header tables if they appear in the executable image
+        auxv.push_back(buildAuxVect(SPARC_AT_PHDR, elfObject->programHeaderTable()));
+        // This is the size of a program header entry from the elf file.
+        auxv.push_back(buildAuxVect(SPARC_AT_PHENT, elfObject->programHeaderSize()));
+        // This is the number of program headers from the original elf file.
+        auxv.push_back(buildAuxVect(SPARC_AT_PHNUM, elfObject->programHeaderCount()));
+        //This is the address of the elf "interpreter", It should be set
+        //to 0 for regular executables. It should be something else
+        //(not sure what) for dynamic libraries.
+        auxv.push_back(buildAuxVect(SPARC_AT_BASE, 0));
+        //This is hardwired to 0 in the elf loading code in the kernel
+        auxv.push_back(buildAuxVect(SPARC_AT_FLAGS, 0));
+        //The entry point to the program
+        auxv.push_back(buildAuxVect(SPARC_AT_ENTRY, objFile->entryPoint()));
+        //Different user and group IDs
+        auxv.push_back(buildAuxVect(SPARC_AT_UID, 100));
+        auxv.push_back(buildAuxVect(SPARC_AT_EUID, 100));
+        auxv.push_back(buildAuxVect(SPARC_AT_GID, 100));
+        auxv.push_back(buildAuxVect(SPARC_AT_EGID, 100));
+        //Whether to enable "secure mode" in the executable
+        auxv.push_back(buildAuxVect(SPARC_AT_SECURE, 0));
+    }
 
     //Figure out how big the initial stack needs to be
 
