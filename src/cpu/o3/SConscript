@@ -59,13 +59,12 @@ elif env['TARGET_ISA'] == 'mips':
         mips/cpu_builder.cc
         ''')
 elif env['TARGET_ISA'] == 'sparc':
-    sys.exit('O3 CPU does not support Sparc')
-    #sources += Split('''
-    #    sparc/dyn_inst.cc
-    #    sparc/cpu.cc
-    #    sparc/thread_context.cc
-    #    sparc/cpu_builder.cc
-    #    ''')
+    sources += Split('''
+        sparc/dyn_inst.cc
+        sparc/cpu.cc
+        sparc/thread_context.cc
+        sparc/cpu_builder.cc
+        ''')
 else:
     sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
 

@@ -41,6 +41,10 @@
     template <class Impl> class MipsDynInst;
     struct MipsSimpleImpl;
     typedef MipsDynInst<MipsSimpleImpl> O3DynInst;
+#elif THE_ISA == SPARC_ISA
+    template <class Impl> class SparcDynInst;
+    struct SparcSimpleImpl;
+    typedef SparcDynInst<SparcSimpleImpl> O3DynInst;
 #else
     #error "O3DynInst not defined for this ISA"
 #endif
