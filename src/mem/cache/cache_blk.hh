@@ -38,6 +38,8 @@
 #include "sim/root.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
 
+#include <iostream>
+
 /**
  * Cache block status bit assignments
  */
