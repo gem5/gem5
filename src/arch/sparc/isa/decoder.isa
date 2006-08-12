@@ -117,15 +117,15 @@ decode OP default Unknown::unknown()
     0x2: decode OP3 {
         format IntOp {
             0x00: add({{Rd = Rs1.sdw + Rs2_or_imm13;}});
-            0x01: and({{Rd = Rs1.udw & Rs2_or_imm13;}});
-            0x02: or({{Rd = Rs1.udw | Rs2_or_imm13;}});
-            0x03: xor({{Rd = Rs1.udw ^ Rs2_or_imm13;}});
+            0x01: and({{Rd = Rs1.sdw & Rs2_or_imm13;}});
+            0x02: or({{Rd = Rs1.sdw | Rs2_or_imm13;}});
+            0x03: xor({{Rd = Rs1.sdw ^ Rs2_or_imm13;}});
             0x04: sub({{Rd = Rs1.sdw - Rs2_or_imm13;}});
-            0x05: andn({{Rd = Rs1.udw & ~Rs2_or_imm13;}});
-            0x06: orn({{Rd = Rs1.udw | ~Rs2_or_imm13;}});
-            0x07: xnor({{Rd = ~(Rs1.udw ^ Rs2_or_imm13);}});
+            0x05: andn({{Rd = Rs1.sdw & ~Rs2_or_imm13;}});
+            0x06: orn({{Rd = Rs1.sdw | ~Rs2_or_imm13;}});
+            0x07: xnor({{Rd = ~(Rs1.sdw ^ Rs2_or_imm13);}});
             0x08: addc({{Rd = Rs1.sdw + Rs2_or_imm13 + Ccr<0:0>;}});
-            0x09: mulx({{Rd = Rs1 * Rs2_or_imm13;}});
+            0x09: mulx({{Rd = Rs1.sdw * Rs2_or_imm13;}});
             0x0A: umul({{
                 Rd = Rs1.udw<31:0> * Rs2_or_imm13<31:0>;
                 Y = Rd<63:32>;
