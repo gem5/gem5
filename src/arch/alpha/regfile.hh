@@ -45,6 +45,21 @@ class ThreadContext;
 namespace AlphaISA
 {
 
+    static inline std::string getIntRegName(RegIndex)
+    {
+        return "";
+    }
+
+    static inline std::string getFloatRegName(RegIndex)
+    {
+        return "";
+    }
+
+    static inline std::string getMiscRegName(RegIndex)
+    {
+        return "";
+    }
+
     class IntRegFile
     {
       protected:

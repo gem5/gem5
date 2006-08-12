@@ -147,6 +147,7 @@ class InstRecord : public Record
         PRINT_INT_REGS,
         PRINT_FETCH_SEQ,
         PRINT_CP_SEQ,
+        PRINT_REG_DELTA,
         PC_SYMBOL,
         INTEL_FORMAT,
         NUM_BITS

@@ -41,6 +41,11 @@ class ThreadContext;
 
 namespace MipsISA
 {
+    static inline std::string getIntRegName(RegIndex)
+    {
+        return "";
+    }
+
     enum MiscIntRegNums {
        HI = NumIntArchRegs,
        LO

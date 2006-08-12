@@ -177,6 +177,8 @@ bool_option("print-fetch-seq", default=False,
     help="Print fetch sequence numbers in trace output")
 bool_option("print-cpseq", default=False,
     help="Print correct path sequence numbers in trace output")
+#bool_option("print-reg-delta", default=False,
+#    help="Print which registers changed to what in trace output")
 
 options = attrdict()
 arguments = []
@@ -290,6 +292,7 @@ def main():
     objects.ExecutionTrace.print_iregs = options.print_iregs
     objects.ExecutionTrace.print_fetchseq = options.print_fetch_seq
     objects.ExecutionTrace.print_cpseq = options.print_cpseq
+    #objects.ExecutionTrace.print_reg_delta = options.print_reg_delta
 
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path

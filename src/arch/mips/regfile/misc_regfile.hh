@@ -39,6 +39,11 @@ class ThreadContext;
 
 namespace MipsISA
 {
+    static inline std::string getMiscRegName(RegIndex)
+    {
+        return "";
+    }
+
     //Coprocessor 0 Register Names
     enum MiscRegTags {
         //Reference MIPS32 Arch. for Programmers, Vol. III, Ch.8

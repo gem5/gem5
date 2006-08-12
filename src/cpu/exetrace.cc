@@ -34,6 +34,7 @@
 #include <fstream>
 #include <iomanip>
 
+#include "arch/regfile.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -42,7 +43,7 @@
 #include "sim/system.hh"
 
 using namespace std;
-
+using namespace TheISA;
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -53,7 +54,43 @@ using namespace std;
 void
 Trace::InstRecord::dump(ostream &outs)
 {
-    if (flags[INTEL_FORMAT]) {
+    if (flags[PRINT_REG_DELTA])
+    {
+        outs << "PC = 0x" << setbase(16)
+                        << setfill('0')
+                        << setw(16) << PC << endl;
+        outs << setbase(10)
+             << setfill(' ')
+             << setw(0);
+        /*
+        int numSources = staticInst->numSrcRegs();
+        int numDests = staticInst->numDestRegs();
+        outs << "Sources:";
+        for(int x = 0; x < numSources; x++)
+        {
+            int sourceNum = staticInst->srcRegIdx(x);
+            if(sourceNum < FP_Base_DepTag)
+                outs << " " << getIntRegName(sourceNum);
+            else if(sourceNum < Ctrl_Base_DepTag)
+                outs << " " << getFloatRegName(sourceNum - FP_Base_DepTag);
+            else
+                outs << " " << getMiscRegName(sourceNum - Ctrl_Base_DepTag);
+        }
+        outs << endl;
+        outs << "Destinations:";
+        for(int x = 0; x < numDests; x++)
+        {
+            int destNum = staticInst->destRegIdx(x);
+            if(destNum < FP_Base_DepTag)
+                outs << " " << getIntRegName(destNum);
+            else if(destNum < Ctrl_Base_DepTag)
+                outs << " " << getFloatRegName(destNum - FP_Base_DepTag);
+            else
+                outs << " " << getMiscRegName(destNum - Ctrl_Base_DepTag);
+        }
+        outs << endl;*/
+    }
+    else if (flags[INTEL_FORMAT]) {
 #if FULL_SYSTEM
         bool is_trace_system = (cpu->system->name() == trace_system);
 #else
@@ -196,6 +233,8 @@ Param<bool> exe_trace_print_fetchseq(&exeTraceParams, "print_fetchseq",
                                   "print fetch sequence number", false);
 Param<bool> exe_trace_print_cp_seq(&exeTraceParams, "print_cpseq",
                                   "print correct-path sequence number", false);
+Param<bool> exe_trace_print_reg_delta(&exeTraceParams, "print_reg_delta",
+                                  "print which registers changed to what", false);
 Param<bool> exe_trace_pc_symbol(&exeTraceParams, "pc_symbol",
                                   "Use symbols for the PC if available", true);
 Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
@@ -222,6 +261,7 @@ Trace::InstRecord::setParams()
     flags[PRINT_INT_REGS]    = exe_trace_print_iregs;
     flags[PRINT_FETCH_SEQ]   = exe_trace_print_fetchseq;
     flags[PRINT_CP_SEQ]      = exe_trace_print_cp_seq;
+    flags[PRINT_REG_DELTA]   = exe_trace_print_reg_delta;
     flags[PC_SYMBOL]         = exe_trace_pc_symbol;
     flags[INTEL_FORMAT]      = exe_trace_intel_format;
     trace_system	     = exe_trace_system;

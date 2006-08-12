@@ -41,6 +41,11 @@ class Checkpoint;
 
 namespace MipsISA
 {
+    static inline std::string getFloatRegName(RegIndex)
+    {
+        return "";
+    }
+
     const uint32_t MIPS32_QNAN = 0x7fbfffff;
     const uint64_t MIPS64_QNAN = ULL(0x7fbfffffffffffff);
 
