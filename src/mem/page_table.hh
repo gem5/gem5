@@ -77,9 +77,9 @@ class PageTable
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    Fault page_check(Addr addr, int size) const;
+    Fault page_check(Addr addr, int64_t size) const;
 
-    void allocate(Addr vaddr, int size);
+    void allocate(Addr vaddr, int64_t size);
 
     /**
      * Translate function

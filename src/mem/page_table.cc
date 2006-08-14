@@ -64,7 +64,7 @@ PageTable::~PageTable()
 }
 
 Fault
-PageTable::page_check(Addr addr, int size) const
+PageTable::page_check(Addr addr, int64_t size) const
 {
     if (size < sizeof(uint64_t)) {
         if (!isPowerOf2(size)) {
@@ -92,7 +92,7 @@ PageTable::page_check(Addr addr, int size) const
 
 
 void
-PageTable::allocate(Addr vaddr, int size)
+PageTable::allocate(Addr vaddr, int64_t size)
 {
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
