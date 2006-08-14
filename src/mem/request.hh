@@ -31,7 +31,8 @@
  */
 
 /**
- * @file Decleration of a request, the overall memory request consisting of
+ * @file
+ * Declaration of a request, the overall memory request consisting of
  the parts of the request that are persistent throughout the transaction.
  */
 

@@ -29,7 +29,8 @@
  */
 
 /**
- * @file Port object definitions.
+ * @file
+ * Port object definitions.
  */
 
 #include "base/chunk_generator.hh"

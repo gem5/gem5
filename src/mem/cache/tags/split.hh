@@ -71,13 +71,13 @@ class Split : public BaseTags
 
     Addr blkMask;
 
-    /** Number of NIC requests that hit in the NIC partition */
+    /** Number of NIC pktuests that hit in the NIC partition */
     Stats::Scalar<> NR_NP_hits;
-    /** Number of NIC requests that hit in the CPU partition */
+    /** Number of NIC pktuests that hit in the CPU partition */
     Stats::Scalar<> NR_CP_hits;
-    /** Number of CPU requests that hit in the NIC partition */
+    /** Number of CPU pktuests that hit in the NIC partition */
     Stats::Scalar<> CR_NP_hits;
-    /** Number of CPU requests that hit in the CPU partition */
+    /** Number of CPU pktuests that hit in the CPU partition */
     Stats::Scalar<> CR_CP_hits;
     /** The number of nic replacements (i.e. misses) */
     Stats::Scalar<> nic_repl;
@@ -203,7 +203,7 @@ class Split : public BaseTags
     /**
      * Finds the given address in the cache and update replacement data.
      * Returns the access latency as a side effect.
-     * @param req The memory request whose block to find
+     * @param pkt The memory request whose block to find
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
@@ -219,7 +219,7 @@ class Split : public BaseTags
 
     /**
      * Find a replacement block for the address provided.
-     * @param req The request to a find a replacement candidate for.
+     * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
@@ -315,7 +315,7 @@ class Split : public BaseTags
      * @param source The block-aligned source address.
      * @param dest The block-aligned destination address.
      * @param asid The address space DI.
-     * @param writebacks List for any generated writeback requests.
+     * @param writebacks List for any generated writeback pktuests.
      */
     void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
 

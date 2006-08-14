@@ -96,7 +96,7 @@ class SimpleCoherence
 
     /**
      * Return the proper state given the current state and the bus response.
-     * @param req The bus response.
+     * @param pkt The bus response.
      * @param current The current block state.
      * @return The new state.
      */
@@ -107,7 +107,7 @@ class SimpleCoherence
 
     /**
      * Handle snooped bus requests.
-     * @param req The snooped bus request.
+     * @param pkt The snooped bus request.
      * @param blk The cache block corresponding to the request, if any.
      * @param mshr The MSHR corresponding to the request, if any.
      * @param new_state Return the new state for the block.

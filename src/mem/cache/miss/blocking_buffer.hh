@@ -107,7 +107,7 @@ public:
     /**
      * Handle a cache miss properly. Requests the bus and marks the cache as
      * blocked.
-     * @param req The request that missed in the cache.
+     * @param pkt The request that missed in the cache.
      * @param blk_size The block size of the cache.
      * @param time The time the miss is detected.
      */
@@ -128,43 +128,43 @@ public:
     }
 
     /**
-     * Selects a outstanding request to service.
-     * @return The request to service, NULL if none found.
+     * Selects a outstanding pktuest to service.
+     * @return The pktuest to service, NULL if none found.
      */
     Packet * getPacket();
 
     /**
      * Set the command to the given bus command.
-     * @param req The request to update.
+     * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
     void setBusCmd(Packet * &pkt, Packet::Command cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.
-     * @param req The request to reset.
+     * @param pkt The request to reset.
      */
     void restoreOrigCmd(Packet * &pkt);
 
     /**
-     * Marks a request as in service (sent on the bus). This can have side
+     * Marks a pktuest as in service (sent on the bus). This can have side
      * effect since storage for no response commands is deallocated once they
      * are successfully sent.
-     * @param req The request that was sent on the bus.
+     * @param pkt The request that was sent on the bus.
      */
     void markInService(Packet * &pkt);
 
     /**
-     * Frees the resources of the request and unblock the cache.
-     * @param req The request that has been satisfied.
-     * @param time The time when the request is satisfied.
+     * Frees the resources of the pktuest and unblock the cache.
+     * @param pkt The request that has been satisfied.
+     * @param time The time when the pktuest is satisfied.
      */
     void handleResponse(Packet * &pkt, Tick time);
 
     /**
-     * Removes all outstanding requests for a given thread number. If a request
+     * Removes all outstanding pktuests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
-     * @param req->getThreadNum()ber The thread number of the requests to squash.
+     * @param threadNum The thread number of the requests to squash.
      */
     void squash(int threadNum);
 
@@ -220,14 +220,14 @@ public:
                      int size, uint8_t *data, bool compressed);
 
     /**
-     * Perform a writeback request.
-     * @param req The writeback request.
+     * Perform a writeback pktuest.
+     * @param pkt The writeback request.
      */
     void doWriteback(Packet * &pkt);
 
     /**
-     * Returns true if there are outstanding requests.
-     * @return True if there are outstanding requests.
+     * Returns true if there are outstanding pktuests.
+     * @return True if there are outstanding pktuests.
      */
     bool havePending()
     {
@@ -237,7 +237,7 @@ public:
     /**
      * Add a target to the given MSHR. This assumes it is in the miss queue.
      * @param mshr The mshr to add a target to.
-     * @param req The target to add.
+     * @param pkt The target to add.
      */
     void addTarget(MSHR *mshr, Packet * &pkt)
     {

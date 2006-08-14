@@ -30,7 +30,7 @@
 
 /**
  * @file
- * Virtual Port Object Decleration. These ports incorporate some translation
+ * Virtual Port Object Declaration. These ports incorporate some translation
  * into their access methods. Thus you can use one to read and write data
  * to/from virtual addresses.
  */

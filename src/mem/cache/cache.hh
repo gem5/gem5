@@ -159,7 +159,7 @@ class Cache : public BaseCache
 
     /**
      * Performs the access specified by the request.
-     * @param req The request to perform.
+     * @param pkt The request to perform.
      * @return The result of the access.
      */
     bool access(Packet * &pkt);
@@ -172,26 +172,26 @@ class Cache : public BaseCache
 
     /**
      * Was the request was sent successfully?
-     * @param req The request.
+     * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
     virtual void sendResult(Packet * &pkt, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
-     * @param req The request being responded to.
+     * @param pkt The request being responded to.
      */
     void handleResponse(Packet * &pkt);
 
     /**
      * Start handling a copy transaction.
-     * @param req The copy request to perform.
+     * @param pkt The copy request to perform.
      */
     void startCopy(Packet * &pkt);
 
     /**
      * Handle a delayed copy transaction.
-     * @param req The delayed copy request to continue.
+     * @param pkt The delayed copy request to continue.
      * @param addr The address being responded to.
      * @param blk The block of the current response.
      * @param mshr The mshr being handled.
@@ -206,7 +206,7 @@ class Cache : public BaseCache
 
     /**
      * Snoops bus transactions to maintain coherence.
-     * @param req The current bus transaction.
+     * @param pkt The current bus transaction.
      */
     void snoop(Packet * &pkt);
 
@@ -221,9 +221,9 @@ class Cache : public BaseCache
     void invalidateBlk(Addr addr, int asid);
 
     /**
-     * Aquash all requests associated with specified thread.
+     * Squash all requests associated with specified thread.
      * intended for use by I-cache.
-     * @param req->getThreadNum()ber The thread to squash.
+     * @param threadNum The thread to squash.
      */
     void squash(int threadNum)
     {
@@ -246,7 +246,7 @@ class Cache : public BaseCache
      * time of completion. This function can either update the hierarchy state
      * or just perform the access wherever the data is found depending on the
      * state of the update flag.
-     * @param req The memory request to satisfy
+     * @param pkt The memory request to satisfy
      * @param update If true, update the hierarchy, otherwise just perform the
      * request.
      * @return The estimated completion time.
@@ -257,7 +257,7 @@ class Cache : public BaseCache
      * Snoop for the provided request in the cache and return the estimated
      * time of completion.
      * @todo Can a snoop probe not change state?
-     * @param req The memory request to satisfy
+     * @param pkt The memory request to satisfy
      * @param update If true, update the hierarchy, otherwise just perform the
      * request.
      * @return The estimated completion time.

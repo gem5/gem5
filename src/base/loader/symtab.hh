@@ -104,11 +104,11 @@ class SymbolTable
 
     /// Find the nearest symbol equal to or less than the supplied
     /// address (e.g., the label for the enclosing function).
-    /// @param address The address to look up.
-    /// @param symbol  Return reference for symbol string.
-    /// @param sym_address Return reference for symbol address.
-    /// @param next_sym_address Address of following symbol (for
-    /// determining valid range of symbol).
+    /// @param addr     The address to look up.
+    /// @param symbol   Return reference for symbol string.
+    /// @param symaddr  Return reference for symbol address.
+    /// @param nextaddr Address of following symbol (for
+    ///                 determining valid range of symbol).
     /// @retval True if a symbol was found.
     bool
     findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr,
@@ -126,7 +126,7 @@ class SymbolTable
     }
 
     /// Overload for findNearestSymbol() for callers who don't care
-    /// about next_sym_address.
+    /// about nextaddr.
     bool
     findNearestSymbol(Addr addr, std::string &symbol, Addr &symaddr) const
     {

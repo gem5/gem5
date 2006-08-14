@@ -47,7 +47,7 @@ class SplitBlk : public CacheBlk {
     bool isTouched;
     /** Has this block been used after being brought in? (for LIFO partition) */
     bool isUsed;
-    /** is this blk a NIC block? (i.e. requested by the NIC) */
+    /** is this blk a NIC block? (i.e. pktuested by the NIC) */
     bool isNIC;
     /** timestamp of the arrival of this block into the cache */
     Tick ts;

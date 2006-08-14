@@ -259,7 +259,7 @@ class BasicPioDevice : public PioDevice
     {}
 
     /** return the address ranges that this device responds to.
-     * @params range_list range list to populate with ranges
+     * @param range_list range list to populate with ranges
      */
     void addressRanges(AddrRangeList &range_list);
 

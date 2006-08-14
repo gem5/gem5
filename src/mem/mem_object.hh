@@ -30,7 +30,7 @@
 
 /**
  * @file
- * Base Memory Object decleration.
+ * Base Memory Object declaration.
  */
 
 #ifndef __MEM_MEM_OBJECT_HH__
