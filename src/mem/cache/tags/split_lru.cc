@@ -43,7 +43,7 @@
 using namespace std;
 
 SplitBlk*
-SplitCacheSet::findBlk(int asid, Addr tag) const
+SplitCacheSet::findBlk(Addr tag) const
 {
     for (int i = 0; i < assoc; ++i) {
         if (blks[i]->tag == tag && blks[i]->isValid()) {
@@ -135,7 +135,6 @@ SplitLRU::SplitLRU(int _numSets, int _blkSize, int _assoc, int _hit_latency, int
             // table; won't matter because the block is invalid
             blk->tag = j;
             blk->whenReady = 0;
-            blk->asid = -1;
             blk->isTouched = false;
             blk->size = blkSize;
             sets[i].blks[j]=blk;
@@ -172,23 +171,23 @@ SplitLRU::regStats(const std::string &name)
 
 // probe cache for presence of given block.
 bool
-SplitLRU::probe(int asid, Addr addr) const
+SplitLRU::probe(Addr addr) const
 {
     //  return(findBlock(Read, addr, asid) != 0);
     Addr tag = extractTag(addr);
     unsigned myset = extractSet(addr);
 
-    SplitBlk *blk = sets[myset].findBlk(asid, tag);
+    SplitBlk *blk = sets[myset].findBlk(tag);
 
     return (blk != NULL);	// true if in cache
 }
 
 SplitBlk*
-SplitLRU::findBlock(Addr addr, int asid, int &lat)
+SplitLRU::findBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
     lat = hitLatency;
     if (blk != NULL) {
         // move this block to head of the MRU list
@@ -207,11 +206,10 @@ SplitBlk*
 SplitLRU::findBlock(Packet * &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
-    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
     lat = hitLatency;
     if (blk != NULL) {
         // move this block to head of the MRU list
@@ -227,11 +225,11 @@ SplitLRU::findBlock(Packet * &pkt, int &lat)
 }
 
 SplitBlk*
-SplitLRU::findBlock(Addr addr, int asid) const
+SplitLRU::findBlock(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
     return blk;
 }
 
@@ -263,9 +261,9 @@ SplitLRU::findReplacement(Packet * &pkt, PacketList &writebacks,
 }
 
 void
-SplitLRU::invalidateBlk(int asid, Addr addr)
+SplitLRU::invalidateBlk(Addr addr)
 {
-    SplitBlk *blk = findBlock(addr, asid);
+    SplitBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;
@@ -274,15 +272,15 @@ SplitLRU::invalidateBlk(int asid, Addr addr)
 }
 
 void
-SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+SplitLRU::doCopy(Addr source, Addr dest, PacketList &writebacks)
 {
 //Copy not supported for now
 #if 0
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
-    SplitBlk *source_blk = findBlock(source, asid);
+    SplitBlk *source_blk = findBlock(source);
     assert(source_blk);
-    SplitBlk *dest_blk = findBlock(dest, asid);
+    SplitBlk *dest_blk = findBlock(dest);
     if (dest_blk == NULL) {
         // Need to do a replacement
         Packet * pkt = new Packet();
@@ -293,7 +291,6 @@ SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
             // Need to writeback data.
             pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
                                                       dest_blk->set),
-                                    dest_blk->req->asid,
                                     dest_blk->xc,
                                     blkSize,
                                     (cache->doData())?dest_blk->data:0,
@@ -301,7 +298,6 @@ SplitLRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
             writebacks.push_back(pkt);
         }
         dest_blk->tag = extractTag(dest);
-        dest_blk->req->asid = asid;
         /**
          * @todo Do we need to pass in the execution context, or can we
          * assume its the same?

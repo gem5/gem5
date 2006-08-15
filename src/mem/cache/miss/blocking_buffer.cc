@@ -76,7 +76,7 @@ BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
         if (!pkt->needsResponse()) {
             wb.allocateAsBuffer(pkt);
         } else {
-            wb.allocate(pkt->cmd, blk_addr, pkt->req->getAsid(), blk_size, pkt);
+            wb.allocate(pkt->cmd, blk_addr, blk_size, pkt);
         }
 
         memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), blk_size);
@@ -89,7 +89,7 @@ BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
     if (!pkt->needsResponse()) {
         miss.allocateAsBuffer(pkt);
     } else {
-        miss.allocate(pkt->cmd, blk_addr, pkt->req->getAsid(), blk_size, pkt);
+        miss.allocate(pkt->cmd, blk_addr, blk_size, pkt);
     }
     if (!pkt->req->isUncacheable()) {
         miss.pkt->flags |= CACHE_LINE_FILL;
@@ -202,7 +202,7 @@ BlockingBuffer::squash(int threadNum)
 }
 
 void
-BlockingBuffer::doWriteback(Addr addr, int asid,
+BlockingBuffer::doWriteback(Addr addr,
                             int size, uint8_t *data, bool compressed)
 {
     // Generate request

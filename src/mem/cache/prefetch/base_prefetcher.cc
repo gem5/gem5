@@ -198,7 +198,7 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             }
 
             //Check if it is already in the miss_queue
-            if (inMissQueue(prefetch->getAddr(), prefetch->req->getAsid())) {
+            if (inMissQueue(prefetch->getAddr())) {
                 addr++;
                 delay++;
                 continue;

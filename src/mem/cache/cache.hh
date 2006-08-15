@@ -108,7 +108,7 @@ class Cache : public BaseCache
      * Temporarily move a block into a MSHR.
      * @todo Remove this when LSQ/SB are fixed and implemented in memtest.
      */
-    void pseudoFill(Addr addr, int asid);
+    void pseudoFill(Addr addr);
 
     /**
      * Temporarily move a block into an existing MSHR.
@@ -218,7 +218,7 @@ class Cache : public BaseCache
      * @param asid The address space ID of the address.
      * @todo Is this function necessary?
      */
-    void invalidateBlk(Addr addr, int asid);
+    void invalidateBlk(Addr addr);
 
     /**
      * Squash all requests associated with specified thread.

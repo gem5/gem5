@@ -100,7 +100,7 @@ public:
      * @param size The number of bytes to pktuest.
      * @param pkt  The original miss.
      */
-    void allocate(Packet::Command cmd, Addr addr, int asid, int size,
+    void allocate(Packet::Command cmd, Addr addr, int size,
                   Packet * &pkt);
 
     /**

@@ -90,7 +90,7 @@ class MSHRQueue {
      * @param asid The address space id.
      * @return Pointer to the matching MSHR, null if not found.
      */
-    MSHR* findMatch(Addr addr, int asid) const;
+    MSHR* findMatch(Addr addr) const;
 
     /**
      * Find and return all the matching MSHRs in the provided vector.
@@ -100,7 +100,7 @@ class MSHRQueue {
      * @return True if any matches are found, false otherwise.
      * @todo Typedef the vector??
      */
-    bool findMatches(Addr addr, int asid, std::vector<MSHR*>& matches) const;
+    bool findMatches(Addr addr, std::vector<MSHR*>& matches) const;
 
     /**
      * Find any pending pktuests that overlap the given request.
@@ -129,7 +129,7 @@ class MSHRQueue {
      * @param target The first target for the pktuest.
      * @return Pointer to the new MSHR.
      */
-    MSHR* allocateFetch(Addr addr, int asid, int size, Packet * &target);
+    MSHR* allocateFetch(Addr addr, int size, Packet * &target);
 
     /**
      * Allocate a target list for the given address.
@@ -138,7 +138,7 @@ class MSHRQueue {
      * @param size The number of bytes to pktuest.
      * @return Pointer to the new MSHR.
      */
-    MSHR* allocateTargetList(Addr addr, int asid, int size);
+    MSHR* allocateTargetList(Addr addr, int size);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the

@@ -221,13 +221,13 @@ IIC::regStats(const string &name)
 
 // probe cache for presence of given block.
 bool
-IIC::probe(int asid, Addr addr) const
+IIC::probe(Addr addr) const
 {
-    return (findBlock(addr,asid) != NULL);
+    return (findBlock(addr) != NULL);
 }
 
 IICTag*
-IIC::findBlock(Addr addr, int asid, int &lat)
+IIC::findBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
@@ -238,11 +238,11 @@ IIC::findBlock(Addr addr, int asid, int &lat)
     if (PROFILE_IIC)
         setAccess.sample(set);
 
-    IICTag *tag_ptr = sets[set].findTag(asid, tag, chain_ptr);
+    IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
     set_lat = 1;
     if (tag_ptr == NULL && chain_ptr != tagNull) {
         int secondary_depth;
-        tag_ptr = secondaryChain(asid, tag, chain_ptr, &secondary_depth);
+        tag_ptr = secondaryChain(tag, chain_ptr, &secondary_depth);
         set_lat += secondary_depth;
         // set depth for statistics fix this later!!! egh
         sets[set].depth = set_lat;
@@ -252,7 +252,7 @@ IIC::findBlock(Addr addr, int asid, int &lat)
             // need to preserve chain: fix this egh
             sets[set].tags[assoc-1]->chain_ptr = tag_ptr->chain_ptr;
             tagSwap(tag_ptr - tagStore, sets[set].tags[assoc-1] - tagStore);
-            tag_ptr = sets[set].findTag(asid, tag, chain_ptr);
+            tag_ptr = sets[set].findTag(tag, chain_ptr);
             assert(tag_ptr!=NULL);
         }
 
@@ -288,7 +288,6 @@ IICTag*
 IIC::findBlock(Packet * &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
-    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
@@ -299,11 +298,11 @@ IIC::findBlock(Packet * &pkt, int &lat)
     if (PROFILE_IIC)
         setAccess.sample(set);
 
-    IICTag *tag_ptr = sets[set].findTag(asid, tag, chain_ptr);
+    IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
     set_lat = 1;
     if (tag_ptr == NULL && chain_ptr != tagNull) {
         int secondary_depth;
-        tag_ptr = secondaryChain(asid, tag, chain_ptr, &secondary_depth);
+        tag_ptr = secondaryChain(tag, chain_ptr, &secondary_depth);
         set_lat += secondary_depth;
         // set depth for statistics fix this later!!! egh
         sets[set].depth = set_lat;
@@ -313,7 +312,7 @@ IIC::findBlock(Packet * &pkt, int &lat)
             // need to preserve chain: fix this egh
             sets[set].tags[assoc-1]->chain_ptr = tag_ptr->chain_ptr;
             tagSwap(tag_ptr - tagStore, sets[set].tags[assoc-1] - tagStore);
-            tag_ptr = sets[set].findTag(asid, tag, chain_ptr);
+            tag_ptr = sets[set].findTag(tag, chain_ptr);
             assert(tag_ptr!=NULL);
         }
 
@@ -346,17 +345,17 @@ IIC::findBlock(Packet * &pkt, int &lat)
 }
 
 IICTag*
-IIC::findBlock(Addr addr, int asid) const
+IIC::findBlock(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
 
     unsigned long chain_ptr;
 
-    IICTag *tag_ptr = sets[set].findTag(asid, tag, chain_ptr);
+    IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
     if (tag_ptr == NULL && chain_ptr != tagNull) {
         int secondary_depth;
-        tag_ptr = secondaryChain(asid, tag, chain_ptr, &secondary_depth);
+        tag_ptr = secondaryChain(tag, chain_ptr, &secondary_depth);
     }
     return tag_ptr;
 }
@@ -658,7 +657,7 @@ IIC::tagSwap(unsigned long index1, unsigned long index2)
 
 
 IICTag *
-IIC::secondaryChain(int asid, Addr tag, unsigned long chain_ptr,
+IIC::secondaryChain(Addr tag, unsigned long chain_ptr,
                     int *_depth) const
 {
     int depth = 0;
@@ -666,7 +665,6 @@ IIC::secondaryChain(int asid, Addr tag, unsigned long chain_ptr,
         DPRINTF(IIC,"Searching secondary at %d for %x\n", chain_ptr,
                 tag<<tagShift);
         if (tagStore[chain_ptr].tag == tag &&
-            tagStore[chain_ptr].asid == asid &&
             (tagStore[chain_ptr].isValid())) {
             *_depth = depth;
             return &tagStore[chain_ptr];
@@ -697,9 +695,9 @@ IIC::compressBlock(unsigned long index)
 }
 
 void
-IIC::invalidateBlk(int asid, Addr addr)
+IIC::invalidateBlk(Addr addr)
 {
-    IICTag* tag_ptr = findBlock(addr, asid);
+    IICTag* tag_ptr = findBlock(addr);
     if (tag_ptr) {
         for (int i = 0; i < tag_ptr->numData; ++i) {
             dataReferenceCount[tag_ptr->data_ptr[i]]--;
@@ -781,11 +779,11 @@ IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
  * @todo This code can break if the src is evicted to get a tag for the dest.
  */
 void
-IIC::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+IIC::doCopy(Addr source, Addr dest, PacketList &writebacks)
 {
 //Copy unsuported now
 #if 0
-    IICTag *dest_tag = findBlock(dest, asid);
+    IICTag *dest_tag = findBlock(dest);
 
     if (dest_tag) {
         for (int i = 0; i < dest_tag->numData; ++i) {
@@ -799,12 +797,11 @@ IIC::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
         dest_tag->re = (void*) repl->add(dest_tag - tagStore);
         dest_tag->set = hash(dest);
         dest_tag->tag = extractTag(dest);
-        dest_tag->asid = asid;
         dest_tag->status = BlkValid | BlkWritable;
     }
     // Find the source tag here since it might move if we need to find a
     // tag for the destination.
-    IICTag *src_tag = findBlock(source, asid);
+    IICTag *src_tag = findBlock(source);
     assert(src_tag);
     assert(!cache->doData() || src_tag->size <= trivialSize
            || src_tag->numData > 0);
@@ -841,7 +838,7 @@ IIC::fixCopy(Packet * &pkt, PacketList &writebacks)
     // if reference counter is greater than 1, do copy
     // else do write
     Addr blk_addr = blkAlign(pkt->getAddr);
-    IICTag* blk = findBlock(blk_addr, pkt->req->getAsid());
+    IICTag* blk = findBlock(blk_addr);
 
     if (blk->numData > 0 && dataReferenceCount[blk->data_ptr[0]] != 1) {
         // copy the data
@@ -853,7 +850,7 @@ IIC::fixCopy(Packet * &pkt, PacketList &writebacks)
             /**
              * @todo Remove this refetch once we change IIC to pointer based
              */
-            blk = findBlock(blk_addr, pkt->req->getAsid());
+            blk = findBlock(blk_addr);
             assert(blk);
             if (cache->doData()) {
                 memcpy(&(dataBlks[new_data][0]),

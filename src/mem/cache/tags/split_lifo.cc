@@ -44,7 +44,7 @@
 using namespace std;
 
 SplitBlk*
-LIFOSet::findBlk(int asid, Addr tag) const
+LIFOSet::findBlk(Addr tag) const
 {
     for (SplitBlk *blk = firstIn; blk != NULL; blk = blk->next) {
         if (blk->tag == tag && blk->isValid()) {
@@ -216,21 +216,21 @@ SplitLIFO::regStats(const std::string &name)
 
 // probe cache for presence of given block.
 bool
-SplitLIFO::probe(int asid, Addr addr) const
+SplitLIFO::probe(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned myset = extractSet(addr);
 
-    SplitBlk* blk = sets[myset].findBlk(asid, tag);
+    SplitBlk* blk = sets[myset].findBlk(tag);
     return (blk != NULL);
 }
 
 SplitBlk*
-SplitLIFO::findBlock(Addr addr, int asid, int &lat)
+SplitLIFO::findBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
 
     lat = hitLatency;
 
@@ -258,11 +258,10 @@ SplitBlk*
 SplitLIFO::findBlock(Packet * &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
-    int asid = pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
 
     if (blk) {
         DPRINTF(Split, "Found LIFO blk %#x in set %d, with tag %#x\n",
@@ -282,11 +281,11 @@ SplitLIFO::findBlock(Packet * &pkt, int &lat)
 }
 
 SplitBlk*
-SplitLIFO::findBlock(Addr addr, int asid) const
+SplitLIFO::findBlock(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(asid, tag);
+    SplitBlk *blk = sets[set].findBlk(tag);
 
     return blk;
 }
@@ -336,9 +335,9 @@ SplitLIFO::findReplacement(Packet * &pkt, PacketList &writebacks,
 }
 
 void
-SplitLIFO::invalidateBlk(int asid, Addr addr)
+SplitLIFO::invalidateBlk(Addr addr)
 {
-    SplitBlk *blk = findBlock(addr, asid);
+    SplitBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;
@@ -348,15 +347,15 @@ SplitLIFO::invalidateBlk(int asid, Addr addr)
 }
 
 void
-SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+SplitLIFO::doCopy(Addr source, Addr dest, PacketList &writebacks)
 {
 //Copy Unsuported for now
 #if 0
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
-    SplitBlk *source_blk = findBlock(source, asid);
+    SplitBlk *source_blk = findBlock(source);
     assert(source_blk);
-    SplitBlk *dest_blk = findBlock(dest, asid);
+    SplitBlk *dest_blk = findBlock(dest);
     if (dest_blk == NULL) {
         // Need to do a replacement
         Packet * pkt = new Packet();
@@ -367,7 +366,6 @@ SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
             // Need to writeback data.
             pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
                                                       dest_blk->set),
-                                    dest_blk->req->asid,
                                     dest_blk->xc,
                                     blkSize,
                                     (cache->doData())?dest_blk->data:0,
@@ -375,7 +373,6 @@ SplitLIFO::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
             writebacks.push_back(pkt);
         }
         dest_blk->tag = extractTag(dest);
-        dest_blk->req->asid = asid;
         /**
          * @todo Do we need to pass in the execution context, or can we
          * assume its the same?

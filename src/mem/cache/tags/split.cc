@@ -253,14 +253,14 @@ Split::regStats(const string &name)
 
 // probe cache for presence of given block.
 bool
-Split::probe(int asid, Addr addr) const
+Split::probe(Addr addr) const
 {
-    bool success = lru->probe(asid, addr);
+    bool success = lru->probe(addr);
     if (!success) {
         if (lifo && lifo_net)
-            success = lifo_net->probe(asid, addr);
+            success = lifo_net->probe(addr);
         else if (lru_net)
-            success = lru_net->probe(asid, addr);
+            success = lru_net->probe(addr);
     }
 
     return success;
@@ -278,7 +278,7 @@ Split::findBlock(Packet * &pkt, int &lat)
         memHash[aligned] = 1;
     }
 
-    SplitBlk *blk = lru->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
+    SplitBlk *blk = lru->findBlock(pkt->getAddr(), lat);
     if (blk) {
         if (pkt->nic_pkt()) {
             NR_CP_hits++;
@@ -287,10 +287,10 @@ Split::findBlock(Packet * &pkt, int &lat)
         }
     } else {
         if (lifo && lifo_net) {
-            blk = lifo_net->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
+            blk = lifo_net->findBlock(pkt->getAddr(), lat);
 
         } else if (lru_net) {
-            blk = lru_net->findBlock(pkt->getAddr(), pkt->req->getAsid(), lat);
+            blk = lru_net->findBlock(pkt->getAddr(), lat);
         }
         if (blk) {
             if (pkt->nic_pkt()) {
@@ -320,14 +320,14 @@ Split::findBlock(Packet * &pkt, int &lat)
 }
 
 SplitBlk*
-Split::findBlock(Addr addr, int asid, int &lat)
+Split::findBlock(Addr addr, int &lat)
 {
-    SplitBlk *blk = lru->findBlock(addr, asid, lat);
+    SplitBlk *blk = lru->findBlock(addr, lat);
     if (!blk) {
         if (lifo && lifo_net) {
-            blk = lifo_net->findBlock(addr, asid, lat);
+            blk = lifo_net->findBlock(addr, lat);
         } else if (lru_net) {
-            blk = lru_net->findBlock(addr, asid, lat);
+            blk = lru_net->findBlock(addr, lat);
         }
     }
 
@@ -335,14 +335,14 @@ Split::findBlock(Addr addr, int asid, int &lat)
 }
 
 SplitBlk*
-Split::findBlock(Addr addr, int asid) const
+Split::findBlock(Addr addr) const
 {
-    SplitBlk *blk = lru->findBlock(addr, asid);
+    SplitBlk *blk = lru->findBlock(addr);
     if (!blk) {
         if (lifo && lifo_net) {
-            blk = lifo_net->findBlock(addr, asid);
+            blk = lifo_net->findBlock(addr);
         } else if (lru_net) {
-            blk = lru_net->findBlock(addr, asid);
+            blk = lru_net->findBlock(addr);
         }
     }
 
@@ -403,14 +403,14 @@ Split::findReplacement(Packet * &pkt, PacketList &writebacks,
 }
 
 void
-Split::invalidateBlk(int asid, Addr addr)
+Split::invalidateBlk(Addr addr)
 {
-    SplitBlk *blk = lru->findBlock(addr, asid);
+    SplitBlk *blk = lru->findBlock(addr);
     if (!blk) {
         if (lifo && lifo_net)
-            blk = lifo_net->findBlock(addr, asid);
+            blk = lifo_net->findBlock(addr);
         else if (lru_net)
-            blk = lru_net->findBlock(addr, asid);
+            blk = lru_net->findBlock(addr);
 
         if (!blk)
             return;
@@ -422,15 +422,15 @@ Split::invalidateBlk(int asid, Addr addr)
 }
 
 void
-Split::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+Split::doCopy(Addr source, Addr dest, PacketList &writebacks)
 {
-    if (lru->probe(asid, source))
-        lru->doCopy(source, dest, asid, writebacks);
+    if (lru->probe( source))
+        lru->doCopy(source, dest, writebacks);
     else {
         if (lifo && lifo_net)
-            lifo_net->doCopy(source, dest, asid, writebacks);
+            lifo_net->doCopy(source, dest, writebacks);
         else if (lru_net)
-            lru_net->doCopy(source, dest, asid, writebacks);
+            lru_net->doCopy(source, dest, writebacks);
     }
 }
 

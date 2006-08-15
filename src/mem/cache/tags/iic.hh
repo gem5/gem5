@@ -117,7 +117,7 @@ class IICSet{
      * @param chain_ptr The chain pointer to start the search of the secondary
      * @return Pointer to the tag, NULL if not found.
      */
-    IICTag* findTag(int asid, Addr tag, unsigned long &chain_ptr)
+    IICTag* findTag( Addr tag, unsigned long &chain_ptr)
     {
         depth = 1;
         for (int i = 0; i < assoc; ++i) {
@@ -401,7 +401,7 @@ class IIC : public BaseTags
      * @param addr The address to find.
      * @return true if it is found.
      */
-    bool probe(int asid, Addr addr) const;
+    bool probe(Addr addr) const;
 
     /**
      * Swap the position of two tags.
@@ -439,7 +439,7 @@ class IIC : public BaseTags
      * @param asid The address space ID.
      * @param addr The address to invalidate.
      */
-    void invalidateBlk(int asid, Addr addr);
+    void invalidateBlk(Addr addr);
 
     /**
      * Find the block and update the replacement data. This call also returns
@@ -449,7 +449,7 @@ class IIC : public BaseTags
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Addr addr, int asid, int &lat);
+    IICTag* findBlock(Addr addr, int &lat);
 
     /**
      * Find the block and update the replacement data. This call also returns
@@ -466,7 +466,7 @@ class IIC : public BaseTags
      * @param asid The address space ID.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Addr addr, int asid) const;
+    IICTag* findBlock(Addr addr) const;
 
     /**
      * Find a replacement block for the address provided.
@@ -504,7 +504,7 @@ class IIC : public BaseTags
      * @param asid The address space DI.
      * @param writebacks List for any generated writeback pktuests.
      */
-    void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
+    void doCopy(Addr source, Addr dest, PacketList &writebacks);
 
     /**
      * If a block is currently marked copy on write, copy it before writing.
@@ -534,7 +534,7 @@ private:
      * @param depth The number of hash lookups made while searching.
      * @return A pointer to the block if found.
      */
-    IICTag *secondaryChain(int asid, Addr tag, unsigned long chain_ptr,
+    IICTag *secondaryChain(Addr tag, unsigned long chain_ptr,
                             int *depth) const;
 
     /**

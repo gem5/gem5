@@ -184,8 +184,8 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
             && !pkt->isWrite()) {
             //Upgrade or Invalidate
             //Look into what happens if two slave caches on bus
-            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmdString(),
-                    pkt->req->getAsid(), pkt->getAddr() & (((ULL(1))<<48)-1),
+            DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
+                    pkt->getAddr() & (((ULL(1))<<48)-1),
                     pkt->getAddr() & ~((Addr)blkSize - 1));
 
             //@todo Should this return latency have the hit latency in it?
@@ -205,7 +205,7 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
     if (!blk && pkt->getSize() >= blkSize && coherence->allowFastWrites() &&
         (pkt->cmd == Packet::WriteReq || pkt->cmd == Packet::WriteInvalidateReq) ) {
         // not outstanding misses, can do this
-        MSHR* outstanding_miss = missQueue->findMSHR(pkt->getAddr(), pkt->req->getAsid());
+        MSHR* outstanding_miss = missQueue->findMSHR(pkt->getAddr());
         if (pkt->cmd == Packet::WriteInvalidateReq || !outstanding_miss) {
             if (outstanding_miss) {
                 warn("WriteInv doing a fastallocate"
@@ -220,8 +220,8 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         missQueue->doWriteback(writebacks.front());
         writebacks.pop_front();
     }
-    DPRINTF(Cache, "%s %d %x %s blk_addr: %x pc %x\n", pkt->cmdString(),
-            pkt->req->getAsid(), pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
+    DPRINTF(Cache, "%s %x %s blk_addr: %x pc %x\n", pkt->cmdString(),
+            pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
             pkt->getAddr() & ~((Addr)blkSize - 1), pkt->req->getPC());
     if (blk) {
         // Hit
@@ -311,10 +311,10 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::pseudoFill(Addr addr, int asid)
+Cache<TagStore,Buffering,Coherence>::pseudoFill(Addr addr)
 {
     // Need to temporarily move this blk into MSHRs
-    MSHR *mshr = missQueue->allocateTargetList(addr, asid);
+    MSHR *mshr = missQueue->allocateTargetList(addr);
     int lat;
     PacketList dummy;
     // Read the data into the mshr
@@ -324,7 +324,7 @@ Cache<TagStore,Buffering,Coherence>::pseudoFill(Addr addr, int asid)
     // can overload order since it isn't used on non pending blocks
     mshr->order = blk->status;
     // temporarily remove the block from the cache.
-    tags->invalidateBlk(addr, asid);
+    tags->invalidateBlk(addr);
 }
 
 template<class TagStore, class Buffering, class Coherence>
@@ -342,7 +342,7 @@ Cache<TagStore,Buffering,Coherence>::pseudoFill(MSHR *mshr)
     // can overload order since it isn't used on non pending blocks
     mshr->order = blk->status;
     // temporarily remove the block from the cache.
-    tags->invalidateBlk(mshr->pkt->getAddr(), mshr->pkt->req->getAsid());
+    tags->invalidateBlk(mshr->pkt->getAddr());
 }
 
 
@@ -361,7 +361,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
-    MSHR *mshr = missQueue->findMSHR(blk_addr, pkt->req->getAsid());
+    MSHR *mshr = missQueue->findMSHR(blk_addr);
     if (isTopLevel() && coherence->hasProtocol()) { //@todo Move this into handle bus req
         //If we find an mshr, and it is in service, we need to NACK or invalidate
         if (mshr) {
@@ -395,7 +395,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
         }
         //We also need to check the writeback buffers and handle those
         std::vector<MSHR *> writebacks;
-        if (missQueue->findWrites(blk_addr, pkt->req->getAsid(), writebacks)) {
+        if (missQueue->findWrites(blk_addr, writebacks)) {
             DPRINTF(Cache, "Snoop hit in writeback to blk_addr: %x\n", pkt->getAddr() & (((ULL(1))<<48)-1));
 
             //Look through writebacks for any non-uncachable writes, use that
@@ -461,9 +461,9 @@ Cache<TagStore,Buffering,Coherence>::snoopResponse(Packet * &pkt)
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::invalidateBlk(Addr addr, int asid)
+Cache<TagStore,Buffering,Coherence>::invalidateBlk(Addr addr)
 {
-    tags->invalidateBlk(addr,asid);
+    tags->invalidateBlk(addr);
 }
 
 
@@ -479,8 +479,8 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         if (pkt->isInvalidate() && !pkt->isRead()
             && !pkt->isWrite()) {
             //Upgrade or Invalidate, satisfy it, don't forward
-            DPRINTF(Cache, "%s %d %x ? blk_addr: %x\n", pkt->cmdString(),
-                    pkt->req->getAsid(), pkt->getAddr() & (((ULL(1))<<48)-1),
+            DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
+                    pkt->getAddr() & (((ULL(1))<<48)-1),
                     pkt->getAddr() & ~((Addr)blkSize - 1));
             pkt->flags |= SATISFIED;
             return 0;
@@ -496,11 +496,11 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
 
         // There can only be one matching outstanding miss.
-        MSHR* mshr = missQueue->findMSHR(blk_addr, pkt->req->getAsid());
+        MSHR* mshr = missQueue->findMSHR(blk_addr);
 
         // There can be many matching outstanding writes.
         std::vector<MSHR*> writes;
-        missQueue->findWrites(blk_addr, pkt->req->getAsid(), writes);
+        missQueue->findWrites(blk_addr, writes);
 
         if (!update) {
             memSidePort->sendFunctional(pkt);
@@ -645,7 +645,7 @@ Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt, bool update)
 {
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
-    MSHR *mshr = missQueue->findMSHR(blk_addr, pkt->req->getAsid());
+    MSHR *mshr = missQueue->findMSHR(blk_addr);
     CacheBlk::State new_state = 0;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {

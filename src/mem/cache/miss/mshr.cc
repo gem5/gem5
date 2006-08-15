@@ -54,7 +54,7 @@ MSHR::MSHR()
 }
 
 void
-MSHR::allocate(Packet::Command cmd, Addr _addr, int _asid, int size,
+MSHR::allocate(Packet::Command cmd, Addr _addr, int size,
                Packet * &target)
 {
     addr = _addr;
@@ -88,7 +88,6 @@ void
 MSHR::allocateAsBuffer(Packet * &target)
 {
     addr = target->getAddr();
-    asid = target->req->getAsid();
     threadNum = target->req->getThreadNum();
     pkt = new Packet(target->req, target->cmd, -1);
     pkt->allocate();
@@ -159,9 +158,9 @@ MSHR::dump()
 {
     ccprintf(cerr,
              "inService: %d thread: %d\n"
-             "Addr: %x asid: %d ntargets %d\n"
+             "Addr: %x ntargets %d\n"
              "Targets:\n",
-             inService, threadNum, addr, asid, ntargets);
+             inService, threadNum, addr, ntargets);
 
     TargetListIterator tar_it = targets.begin();
     for (int i = 0; i < ntargets; i++) {

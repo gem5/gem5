@@ -72,7 +72,7 @@ class CacheSet
      * @param tag The Tag to find.
      * @return Pointer to the block if found.
      */
-    LRUBlk* findBlk(int asid, Addr tag) const;
+    LRUBlk* findBlk(Addr tag) const;
 
     /**
      * Move the given block to the head of the list.
@@ -158,14 +158,14 @@ public:
      * @param addr The address to find.
      * @return True if the address is in the cache.
      */
-    bool probe(int asid, Addr addr) const;
+    bool probe(Addr addr) const;
 
     /**
      * Invalidate the block containing the given address.
      * @param asid The address space ID.
      * @param addr The address to invalidate.
      */
-    void invalidateBlk(int asid, Addr addr);
+    void invalidateBlk(Addr addr);
 
     /**
      * Finds the given address in the cache and update replacement data.
@@ -184,7 +184,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Addr addr, int asid, int &lat);
+    LRUBlk* findBlock(Addr addr, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -192,7 +192,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Addr addr, int asid) const;
+    LRUBlk* findBlock(Addr addr) const;
 
     /**
      * Find a replacement block for the address provided.
@@ -309,7 +309,7 @@ public:
      * @param asid The address space DI.
      * @param writebacks List for any generated writeback pktuests.
      */
-    void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
+    void doCopy(Addr source, Addr dest, PacketList &writebacks);
 
     /**
      * No impl.

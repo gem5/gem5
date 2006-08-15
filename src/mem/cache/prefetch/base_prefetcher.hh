@@ -108,7 +108,7 @@ class BasePrefetcher
 
     virtual bool inCache(Packet * &pkt) = 0;
 
-    virtual bool inMissQueue(Addr address, int asid) = 0;
+    virtual bool inMissQueue(Addr address) = 0;
 
     std::list<Packet *>::iterator inPrefetch(Addr address);
 };

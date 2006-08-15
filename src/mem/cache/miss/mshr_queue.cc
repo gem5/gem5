@@ -55,7 +55,7 @@ MSHRQueue::~MSHRQueue()
 }
 
 MSHR*
-MSHRQueue::findMatch(Addr addr, int asid) const
+MSHRQueue::findMatch(Addr addr) const
 {
     MSHR::ConstIterator i = allocatedList.begin();
     MSHR::ConstIterator end = allocatedList.end();
@@ -69,7 +69,7 @@ MSHRQueue::findMatch(Addr addr, int asid) const
 }
 
 bool
-MSHRQueue::findMatches(Addr addr, int asid, vector<MSHR*>& matches) const
+MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 {
     // Need an empty vector
     assert(matches.empty());
@@ -136,7 +136,7 @@ MSHRQueue::allocate(Packet * &pkt, int size)
         mshr->allocateAsBuffer(pkt);
     } else {
         assert(size !=0);
-        mshr->allocate(pkt->cmd, aligned_addr, pkt->req->getAsid(), size, pkt);
+        mshr->allocate(pkt->cmd, aligned_addr, size, pkt);
         allocatedTargets += 1;
     }
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
@@ -147,12 +147,12 @@ MSHRQueue::allocate(Packet * &pkt, int size)
 }
 
 MSHR*
-MSHRQueue::allocateFetch(Addr addr, int asid, int size, Packet * &target)
+MSHRQueue::allocateFetch(Addr addr, int size, Packet * &target)
 {
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
-    mshr->allocate(Packet::ReadReq, addr, asid, size, target);
+    mshr->allocate(Packet::ReadReq, addr, size, target);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
 
@@ -161,13 +161,13 @@ MSHRQueue::allocateFetch(Addr addr, int asid, int size, Packet * &target)
 }
 
 MSHR*
-MSHRQueue::allocateTargetList(Addr addr, int asid, int size)
+MSHRQueue::allocateTargetList(Addr addr, int size)
 {
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
     Packet * dummy;
-    mshr->allocate(Packet::ReadReq, addr, asid, size, dummy);
+    mshr->allocate(Packet::ReadReq, addr, size, dummy);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->inService = true;
     ++inServiceMSHRs;

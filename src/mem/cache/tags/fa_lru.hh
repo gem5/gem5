@@ -170,14 +170,14 @@ public:
      * @param addr The address to look for.
      * @return True if the address is in the cache.
      */
-    bool probe(int asid, Addr addr) const;
+    bool probe(Addr addr) const;
 
     /**
      * Invalidate the cache block that contains the given addr.
      * @param asid The address space ID.
      * @param addr The address to invalidate.
      */
-    void invalidateBlk(int asid, Addr addr);
+    void invalidateBlk(Addr addr);
 
     /**
      * Find the block in the cache and update the replacement data. Returns
@@ -188,7 +188,7 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Addr addr, int asid, int &lat, int *inCache = 0);
+    FALRUBlk* findBlock(Addr addr, int &lat, int *inCache = 0);
 
     /**
      * Find the block in the cache and update the replacement data. Returns
@@ -206,7 +206,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Addr addr, int asid) const;
+    FALRUBlk* findBlock(Addr addr) const;
 
     /**
      * Find a replacement block for the address provided.
@@ -330,7 +330,7 @@ public:
      * @param asid The address space ID.
      * @param writebacks List for any generated writeback pktuests.
      */
-    void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+    void doCopy(Addr source, Addr dest, PacketList &writebacks)
     {
     }
 

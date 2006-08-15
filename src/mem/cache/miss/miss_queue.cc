@@ -410,7 +410,7 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
     Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
     MSHR* mshr = NULL;
     if (!pkt->req->isUncacheable()) {
-        mshr = mq.findMatch(blkAddr, pkt->req->getAsid());
+        mshr = mq.findMatch(blkAddr);
         if (mshr) {
             //@todo remove hw_pf here
             mshr_hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
@@ -454,12 +454,12 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
 }
 
 MSHR*
-MissQueue::fetchBlock(Addr addr, int asid, int blk_size, Tick time,
+MissQueue::fetchBlock(Addr addr, int blk_size, Tick time,
                       Packet * &target)
 {
     Addr blkAddr = addr & ~(Addr)(blk_size - 1);
-    assert(mq.findMatch(addr, asid) == NULL);
-    MSHR *mshr = mq.allocateFetch(blkAddr, asid, blk_size, target);
+    assert(mq.findMatch(addr) == NULL);
+    MSHR *mshr = mq.allocateFetch(blkAddr, blk_size, target);
     mshr->order = order++;
     mshr->pkt->flags |= CACHE_LINE_FILL;
     if (mq.isFull()) {
@@ -697,19 +697,19 @@ MissQueue::squash(int threadNum)
 }
 
 MSHR*
-MissQueue::findMSHR(Addr addr, int asid) const
+MissQueue::findMSHR(Addr addr) const
 {
-    return mq.findMatch(addr,asid);
+    return mq.findMatch(addr);
 }
 
 bool
-MissQueue::findWrites(Addr addr, int asid, vector<MSHR*> &writes) const
+MissQueue::findWrites(Addr addr, vector<MSHR*> &writes) const
 {
-    return wb.findMatches(addr,asid,writes);
+    return wb.findMatches(addr,writes);
 }
 
 void
-MissQueue::doWriteback(Addr addr, int asid,
+MissQueue::doWriteback(Addr addr,
                        int size, uint8_t *data, bool compressed)
 {
     // Generate request
@@ -740,9 +740,9 @@ MissQueue::doWriteback(Packet * &pkt)
 
 
 MSHR*
-MissQueue::allocateTargetList(Addr addr, int asid)
+MissQueue::allocateTargetList(Addr addr)
 {
-   MSHR* mshr = mq.allocateTargetList(addr, asid, blkSize);
+   MSHR* mshr = mq.allocateTargetList(addr, blkSize);
    mshr->pkt->flags |= CACHE_LINE_FILL;
    if (mq.isFull()) {
        cache->setBlocked(Blocked_NoMSHRs);

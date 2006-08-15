@@ -121,7 +121,7 @@ public:
      * @param time The time the miss is detected.
      * @param target The target for the fetch.
      */
-    MSHR* fetchBlock(Addr addr, int asid, int blk_size, Tick time,
+    MSHR* fetchBlock(Addr addr, int blk_size, Tick time,
                      Packet * &target)
     {
         fatal("Unimplemented");
@@ -183,7 +183,7 @@ public:
      * @param asid The address space id.
      * @return A pointer to miss if it matches.
      */
-    MSHR* findMSHR(Addr addr, int asid)
+    MSHR* findMSHR(Addr addr)
     {
         if (miss.addr == addr && miss.pkt)
             return &miss;
@@ -197,7 +197,7 @@ public:
      * @param writes List of pointers to the matching writes.
      * @return True if there is a matching write.
      */
-    bool findWrites(Addr addr, int asid, std::vector<MSHR*>& writes)
+    bool findWrites(Addr addr, std::vector<MSHR*>& writes)
     {
         if (wb.addr == addr && wb.pkt) {
             writes.push_back(&wb);
@@ -216,7 +216,7 @@ public:
      * @param data The data to write, can be NULL.
      * @param compressed True if the data is compressed.
      */
-    void doWriteback(Addr addr, int asid,
+    void doWriteback(Addr addr,
                      int size, uint8_t *data, bool compressed);
 
     /**
@@ -247,7 +247,7 @@ public:
     /**
      * Dummy implmentation.
      */
-    MSHR* allocateTargetList(Addr addr, int asid)
+    MSHR* allocateTargetList(Addr addr)
     {
         fatal("Unimplemented");
     }

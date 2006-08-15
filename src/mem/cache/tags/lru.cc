@@ -43,7 +43,7 @@
 using namespace std;
 
 LRUBlk*
-CacheSet::findBlk(int asid, Addr tag) const
+CacheSet::findBlk(Addr tag) const
 {
     for (int i = 0; i < assoc; ++i) {
         if (blks[i]->tag == tag && blks[i]->isValid()) {
@@ -135,7 +135,6 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
             // table; won't matter because the block is invalid
             blk->tag = j;
             blk->whenReady = 0;
-            blk->asid = -1;
             blk->isTouched = false;
             blk->size = blkSize;
             sets[i].blks[j]=blk;
@@ -153,23 +152,23 @@ LRU::~LRU()
 
 // probe cache for presence of given block.
 bool
-LRU::probe(int asid, Addr addr) const
+LRU::probe(Addr addr) const
 {
     //  return(findBlock(Read, addr, asid) != 0);
     Addr tag = extractTag(addr);
     unsigned myset = extractSet(addr);
 
-    LRUBlk *blk = sets[myset].findBlk(asid, tag);
+    LRUBlk *blk = sets[myset].findBlk(tag);
 
     return (blk != NULL);	// true if in cache
 }
 
 LRUBlk*
-LRU::findBlock(Addr addr, int asid, int &lat)
+LRU::findBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(asid, tag);
+    LRUBlk *blk = sets[set].findBlk(tag);
     lat = hitLatency;
     if (blk != NULL) {
         // move this block to head of the MRU list
@@ -188,11 +187,10 @@ LRUBlk*
 LRU::findBlock(Packet * &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
-    int asid = 0;//pkt->req->getAsid();
 
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(asid, tag);
+    LRUBlk *blk = sets[set].findBlk(tag);
     lat = hitLatency;
     if (blk != NULL) {
         // move this block to head of the MRU list
@@ -208,11 +206,11 @@ LRU::findBlock(Packet * &pkt, int &lat)
 }
 
 LRUBlk*
-LRU::findBlock(Addr addr, int asid) const
+LRU::findBlock(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(asid, tag);
+    LRUBlk *blk = sets[set].findBlk(tag);
     return blk;
 }
 
@@ -242,9 +240,9 @@ LRU::findReplacement(Packet * &pkt, PacketList &writebacks,
 }
 
 void
-LRU::invalidateBlk(int asid, Addr addr)
+LRU::invalidateBlk(Addr addr)
 {
-    LRUBlk *blk = findBlock(addr, asid);
+    LRUBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;
@@ -253,13 +251,13 @@ LRU::invalidateBlk(int asid, Addr addr)
 }
 
 void
-LRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
+LRU::doCopy(Addr source, Addr dest, PacketList &writebacks)
 {
     assert(source == blkAlign(source));
     assert(dest == blkAlign(dest));
-    LRUBlk *source_blk = findBlock(source, asid);
+    LRUBlk *source_blk = findBlock(source);
     assert(source_blk);
-    LRUBlk *dest_blk = findBlock(dest, asid);
+    LRUBlk *dest_blk = findBlock(dest);
     if (dest_blk == NULL) {
         // Need to do a replacement
         Request *search = new Request(dest,1,0);
@@ -285,7 +283,6 @@ LRU::doCopy(Addr source, Addr dest, int asid, PacketList &writebacks)
             writebacks.push_back(writeback);
         }
         dest_blk->tag = extractTag(dest);
-        dest_blk->asid = asid;
         delete search;
         delete pkt;
     }

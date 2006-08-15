@@ -145,7 +145,7 @@ FALRU::hashLookup(Addr addr) const
 }
 
 bool
-FALRU::probe(int asid, Addr addr) const
+FALRU::probe(Addr addr) const
 {
     Addr blkAddr = blkAlign(addr);
     FALRUBlk* blk = hashLookup(blkAddr);
@@ -153,7 +153,7 @@ FALRU::probe(int asid, Addr addr) const
 }
 
 void
-FALRU::invalidateBlk(int asid, Addr addr)
+FALRU::invalidateBlk(Addr addr)
 {
     Addr blkAddr = blkAlign(addr);
     FALRUBlk* blk = (*tagHash.find(blkAddr)).second;
@@ -166,7 +166,7 @@ FALRU::invalidateBlk(int asid, Addr addr)
 }
 
 FALRUBlk*
-FALRU::findBlock(Addr addr, int asid, int &lat, int *inCache)
+FALRU::findBlock(Addr addr, int &lat, int *inCache)
 {
     accesses++;
     int tmp_in_cache = 0;
@@ -242,7 +242,7 @@ FALRU::findBlock(Packet * &pkt, int &lat, int *inCache)
 }
 
 FALRUBlk*
-FALRU::findBlock(Addr addr, int asid) const
+FALRU::findBlock(Addr addr) const
 {
     Addr blkAddr = blkAlign(addr);
     FALRUBlk* blk = hashLookup(blkAddr);

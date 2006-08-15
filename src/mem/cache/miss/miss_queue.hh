@@ -228,7 +228,7 @@ class MissQueue
      * @param time The time the miss is detected.
      * @param target The target for the fetch.
      */
-    MSHR* fetchBlock(Addr addr, int asid, int blk_size, Tick time,
+    MSHR* fetchBlock(Addr addr, int blk_size, Tick time,
                      Packet * &target);
 
     /**
@@ -289,7 +289,7 @@ class MissQueue
      * @warning Currently only searches the miss queue. If non write allocate
      * might need to search the write buffer for coherence.
      */
-    MSHR* findMSHR(Addr addr, int asid) const;
+    MSHR* findMSHR(Addr addr) const;
 
     /**
      * Searches for the supplied address in the write buffer.
@@ -298,7 +298,7 @@ class MissQueue
      * @param writes The list of writes that match the address.
      * @return True if any writes are found
      */
-    bool findWrites(Addr addr, int asid, std::vector<MSHR*>& writes) const;
+    bool findWrites(Addr addr, std::vector<MSHR*>& writes) const;
 
     /**
      * Perform a writeback of dirty data to the given address.
@@ -309,7 +309,7 @@ class MissQueue
      * @param data The data to write, can be NULL.
      * @param compressed True if the data is compressed.
      */
-    void doWriteback(Addr addr, int asid,
+    void doWriteback(Addr addr,
                      int size, uint8_t *data, bool compressed);
 
     /**
@@ -342,7 +342,7 @@ class MissQueue
      * @param asid The address space ID.
      * @return A pointer to the allocated MSHR.
      */
-    MSHR* allocateTargetList(Addr addr, int asid);
+    MSHR* allocateTargetList(Addr addr);
 
 };
 
