@@ -29,12 +29,9 @@
 import m5
 from m5 import makeList
 from m5.objects import *
+from Benchmarks import *
 from FullO3Config import *
-from SysPaths import *
 from Util import *
-
-script.dir =  '/z/saidi/work/m5.newmem/configs/boot'
-linux_image = env.get('LINUX_IMAGE', disk('linux-latest.img'))
 
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),
@@ -50,18 +47,19 @@ class BaseTsunami(Tsunami):
     ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                         pci_func=0, pci_dev=0, pci_bus=0)
 
-def makeLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l2cache=None):
+def makeLinuxAlphaSystem(cpu, mem_mode, mdesc, icache=None, dcache=None, l2cache=None):
     self = LinuxAlphaSystem()
+    self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
     self.bridge = Bridge()
-    self.physmem = PhysicalMemory(range = AddrRange('128MB'))
+    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
-    self.disk0.childImage(linux_image)
+    self.disk0.childImage(mdesc.disk())
     self.disk2.childImage(disk('linux-bigswap2.img'))
     self.tsunami = BaseTsunami()
     self.tsunami.attachIO(self.iobus)
@@ -71,7 +69,7 @@ def makeLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l
     self.tsunami.ethernet.pio = self.iobus.port
     self.tsunami.ethernet.dma = self.iobus.port
     self.tsunami.ethernet.config = self.iobus.port
-    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = linux_image,
+    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.cpu = cpu
@@ -89,14 +87,14 @@ def makeLinuxAlphaSystem(cpu, mem_mode, linux_image, icache=None, dcache=None, l
 
     return self
 
-def makeDualRoot(clientSystem, serverSystem):
+def makeDualRoot(testSystem, driveSystem):
     self = Root()
-    self.client = clientSystem
-    self.server = serverSystem
+    self.testsys = testSystem
+    self.drivesys = driveSystem
 
     self.etherdump = EtherDump(file='ethertrace')
-    self.etherlink = EtherLink(int1 = Parent.client.tsunami.etherint[0],
-                               int2 = Parent.server.tsunami.etherint[0],
+    self.etherlink = EtherLink(int1 = Parent.testsys.tsunami.etherint[0],
+                               int2 = Parent.drivesys.tsunami.etherint[0],
                                dump = Parent.etherdump)
     self.clock = '1THz'
     return self

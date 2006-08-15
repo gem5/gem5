@@ -6,6 +6,7 @@ m5.AddToPath('../common')
 from FSConfig import *
 from SysPaths import *
 from Util import *
+from Benchmarks import *
 
 parser = optparse.OptionParser()
 
@@ -13,8 +14,12 @@ parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("--maxtime", type="float")
-parser.add_option("--dual", help="Run full system using dual systems",
-                  action="store_true")
+parser.add_option("--dual", action="store_true",
+                  help="Simulate two systems attached with an ethernet link")
+parser.add_option("-b", "--benchmark", action="store", type="string",
+                  dest="benchmark",
+                  help="Specify the benchmark to run. Available benchmarks: %s"\
+                          % DefinedBenchmarks)
 
 (options, args) = parser.parse_args()
 
@@ -35,15 +40,34 @@ else:
     cpu2 = AtomicSimpleCPU()
     mem_mode = 'atomic'
 
-if options.dual:
-    root = makeDualRoot(
-        makeLinuxAlphaSystem(cpu, mem_mode, linux_image),
-        makeLinuxAlphaSystem(cpu2, mem_mode, linux_image))
-    root.client.readfile = script('netperf-stream-nt-client.rcS')
-    root.server.readfile = script('netperf-server.rcS')
+
+if options.benchmark:
+    if options.benchmark not in Benchmarks:
+        print "Error benchmark %s has not been defined." % options.benchmark
+        print "Valid benchmarks are: %s" % DefinedBenchmarks
+        sys.exit(1)
+
+    bm = Benchmarks[options.benchmark]
+
+    if len(bm) == 2:
+        root = makeDualRoot(makeLinuxAlphaSystem(cpu, mem_mode, bm[0]),
+                            makeLinuxAlphaSystem(cpu2, mem_mode, bm[1]))
+
+    elif len(bm) == 1:
+        root = Root(clock = '1THz',
+                    system = makeLinuxAlphaSystem(cpu, mem_mode, bm[0]))
+    else:
+        print "Error I don't know how to create more than 2 systems."
+        sys.exit(1)
+
 else:
-    root = Root(clock = '1THz',
-                system = makeLinuxAlphaSystem(cpu, mem_mode, linux_image))
+    if options.dual:
+        root = makeDualRoot(
+            makeLinuxAlphaSystem(cpu, mem_mode, Machine()),
+            makeLinuxAlphaSystem(cpu2, mem_mode, Machine()))
+    else:
+        root = Root(clock = '1THz',
+                    system = makeLinuxAlphaSystem(cpu, mem_mode, Machine()))
 
 m5.instantiate(root)
 
