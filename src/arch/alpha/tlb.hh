@@ -36,9 +36,11 @@
 
 #include "arch/alpha/ev5.hh"
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/faults.hh"
+#include "arch/alpha/utility.hh"
+#include "arch/alpha/vtophys.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
+#include "sim/faults.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;

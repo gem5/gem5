@@ -29,6 +29,7 @@
  *          Nathan Binkert
  */
 
+#include "base/misc.hh"
 #include "dev/platform.hh"
 #include "sim/builder.hh"
 #include "sim/sim_exit.hh"
