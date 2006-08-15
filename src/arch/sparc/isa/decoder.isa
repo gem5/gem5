@@ -235,17 +235,16 @@ decode OP default Unknown::unknown()
                 {{0}}
             );
             0x1F: sdivcc({{
-                int32_t resTemp, val2 = Rs2_or_imm13.sdw;
-                int32_t overflow = 0, underflow = 0;
+                int64_t val2 = Rs2_or_imm13.sdw<31:0>;
+                bool overflow = false, underflow = false;
                 if(val2 == 0) fault = new DivisionByZero;
                 else
                 {
-                    Rd = resTemp = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
-                    overflow = (resTemp<63:31> != 0);
-                    underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
-                    if(overflow) Rd = resTemp = 0x7FFFFFFF;
-                    else if(underflow) resTemp = Rd = 0xFFFFFFFF80000000ULL;
-                    else Rd = resTemp;
+                    Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
+                    overflow = (Rd<63:31> != 0);
+                    underflow = (Rd<63:> && Rd<62:31> != 0xFFFFFFFF);
+                    if(overflow) Rd = 0x7FFFFFFF;
+                    else if(underflow) Rd = 0xFFFFFFFF80000000ULL;
                 } }},
                 {{0}},
                 {{overflow || underflow}},
@@ -271,15 +270,15 @@ decode OP default Unknown::unknown()
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );
             0x22: taddcctv({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;
+                int64_t val2 = Rs2_or_imm13;
+                Rd = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> ||
                         (Rs1<31:> == val2<31:> && val2<31:> != Rd<31:>);
                 if(overflow) fault = new TagOverflow;}},
                 {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
+                {{Rs1<63:> == val2<63:> && val2<63:> != Rd<63:>}}
             );
             0x23: tsubcctv({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
