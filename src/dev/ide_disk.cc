@@ -110,7 +110,7 @@ IdeDisk::IdeDisk(const string &name, DiskImage *img,
     // Number of sectors on disk
     driveID.atap_capacity = lba_size;
     // Multiword DMA mode 2 and below supported
-    driveID.atap_dmamode_supp = 0x400;
+    driveID.atap_dmamode_supp = 0x4;
     // Set PIO mode 4 and 3 supported
     driveID.atap_piomode_supp = 0x3;
     // Set DMA mode 4 and below supported

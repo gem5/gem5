@@ -42,6 +42,7 @@
 #include "sim/host.hh"
 #include "sim/root.hh"
 #include <list>
+#include <cassert>
 
 struct Packet;
 typedef Packet* PacketPtr;

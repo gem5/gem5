@@ -42,6 +42,8 @@
 #include "sim/host.hh"
 #include "sim/root.hh"
 
+#include <cassert>
+
 class Request;
 
 typedef Request* RequestPtr;

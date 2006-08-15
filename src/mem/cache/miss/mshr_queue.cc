@@ -219,7 +219,7 @@ MSHRQueue::markInService(MSHR* mshr)
     }
     mshr->inService = true;
     pendingList.erase(mshr->readyIter);
-    mshr->readyIter = NULL;
+    //mshr->readyIter = NULL;
     inServiceMSHRs += 1;
     //pendingList.pop_front();
 }
@@ -227,7 +227,7 @@ MSHRQueue::markInService(MSHR* mshr)
 void
 MSHRQueue::markPending(MSHR* mshr, Packet::Command cmd)
 {
-    assert(mshr->readyIter == NULL);
+    //assert(mshr->readyIter == NULL);
     mshr->pkt->cmd = cmd;
     mshr->pkt->flags &= ~SATISFIED;
     mshr->inService = false;

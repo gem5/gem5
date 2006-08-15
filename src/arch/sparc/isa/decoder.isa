@@ -220,7 +220,7 @@ decode OP default Unknown::unknown()
                 ,{{0}},{{0}},{{0}},{{0}});
             0x1E: udivcc({{
                 uint32_t resTemp, val2 = Rs2_or_imm13.udw;
-                int32_t overflow;
+                int32_t overflow = 0;
                 if(val2 == 0) fault = new DivisionByZero;
                 else
                 {
@@ -236,7 +236,7 @@ decode OP default Unknown::unknown()
             );
             0x1F: sdivcc({{
                 int32_t resTemp, val2 = Rs2_or_imm13.sdw;
-                int32_t overflow, underflow;
+                int32_t overflow = 0, underflow = 0;
                 if(val2 == 0) fault = new DivisionByZero;
                 else
                 {
@@ -244,7 +244,7 @@ decode OP default Unknown::unknown()
                     overflow = (resTemp<63:31> != 0);
                     underflow = (resTemp<63:> && resTemp<62:31> != 0xFFFFFFFF);
                     if(overflow) Rd = resTemp = 0x7FFFFFFF;
-                    else if(underflow) Rd = resTemp = 0xFFFFFFFF80000000ULL;
+                    else if(underflow) resTemp = Rd = 0xFFFFFFFF80000000ULL;
                     else Rd = resTemp;
                 } }},
                 {{0}},
@@ -272,7 +272,7 @@ decode OP default Unknown::unknown()
             );
             0x22: taddcctv({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = Rs1 + val2;
+                Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> ||
                         (Rs1<31:> == val2<31:> && val2<31:> != Rd<31:>);
                 if(overflow) fault = new TagOverflow;}},

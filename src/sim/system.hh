@@ -141,7 +141,7 @@ class System : public SimObject
      * up in the specified symbol table.
      */
     template <class T>
-    T *System::addFuncEvent(SymbolTable *symtab, const char *lbl)
+    T *addFuncEvent(SymbolTable *symtab, const char *lbl)
     {
         Addr addr = 0; // initialize only to avoid compiler warning
 
@@ -155,7 +155,7 @@ class System : public SimObject
 
     /** Add a function-based event to kernel code. */
     template <class T>
-    T *System::addKernelFuncEvent(const char *lbl)
+    T *addKernelFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(kernelSymtab, lbl);
     }

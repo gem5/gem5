@@ -91,14 +91,14 @@ class AlphaSystem : public System
 
     /** Add a function-based event to PALcode. */
     template <class T>
-    T *AlphaSystem::addPalFuncEvent(const char *lbl)
+    T *addPalFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(palSymtab, lbl);
     }
 
     /** Add a function-based event to the console code. */
     template <class T>
-    T *AlphaSystem::addConsoleFuncEvent(const char *lbl)
+    T *addConsoleFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(consoleSymtab, lbl);
     }
