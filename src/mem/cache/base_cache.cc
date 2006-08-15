@@ -71,6 +71,11 @@ BaseCache::CachePort::deviceBlockSize()
 bool
 BaseCache::CachePort::recvTiming(Packet *pkt)
 {
+    if (blocked)
+    {
+        mustSendRetry = true;
+        return false;
+    }
     return cache->doTimingAccess(pkt, this, isCpuSide);
 }
 
@@ -95,6 +100,11 @@ BaseCache::CachePort::setBlocked()
 void
 BaseCache::CachePort::clearBlocked()
 {
+    if (mustSendRetry)
+    {
+        mustSendRetry = false;
+        sendRetry();
+    }
     blocked = false;
 }
 

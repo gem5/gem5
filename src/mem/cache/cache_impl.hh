@@ -69,7 +69,7 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
         else
             snoop(pkt);
     }
-    return true; //Deal with blocking....
+    return true;
 }
 
 template<class TagStore, class Buffering, class Coherence>
