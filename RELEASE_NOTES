@@ -1,10 +1,14 @@
-Aug. 14, 2006: m5_2.0_beta
+Aug. 15, 2006: m5_2.0_beta
 --------------------
 Major update to M5 including:
 - New CPU model
 - New memory system
 - More extensive python integration
 - Preliminary syscall emulation support for MIPS and SPARC
+This is a *beta* release, meaning that some features are not complete,
+and some features from M5 1.X aren't currently supported (e.g., MP
+coherence).  We are working to address these limitations and hope to
+have a complete 2.0 release soon.
 
 Oct. 8, 2005: m5_1.1
 --------------------
