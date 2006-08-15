@@ -179,5 +179,45 @@ SimObjectClass the##OBJ_CLASS##Class(CLASS_NAME,		\
 /* see param.hh */						\
 DEFINE_SIM_OBJECT_CLASS_NAME(CLASS_NAME, OBJ_CLASS)
 
+/* Macros that use the namespace for sinic... yuk. */
+#define BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(NAME_SPACE, OBJ_CLASS)		\
+class NAME_SPACE##OBJ_CLASS##Builder : public SimObjectBuilder		\
+{								\
+  public:
+
+#define END_DECLARE_SIM_OBJECT_PARAMS_WNS(NAME_SPACE, OBJ_CLASS)		\
+                                                                \
+    NAME_SPACE##OBJ_CLASS##Builder(const std::string &iniSection);          \
+    virtual ~NAME_SPACE##OBJ_CLASS##Builder() {}				\
+                                                                \
+    NAME_SPACE::OBJ_CLASS *create();					\
+};
+
+#define BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(NAME_SPACE, OBJ_CLASS)			\
+    NAME_SPACE::OBJ_CLASS##Builder::OBJ_CLASS##Builder(const std::string &iSec) \
+    : SimObjectBuilder(iSec),
+
+
+#define END_INIT_SIM_OBJECT_PARAMS_WNS(NAME_SPACE, OBJ_CLASS)			\
+{								\
+}
+
+#define CREATE_SIM_OBJECT_WNS(NAME_SPACE, OBJ_CLASS)				\
+NAME_SPACE::OBJ_CLASS *NAME_SPACE##OBJ_CLASS##Builder::create()
+
+#define REGISTER_SIM_OBJECT_WNS(NAME_SPACE, CLASS_NAME, OBJ_CLASS)		\
+SimObjectBuilder *						\
+new##NAME_SPACEi##OBJ_CLASS##Builder(const std::string &iniSection)          \
+{								\
+    return new NAME_SPACE##OBJ_CLASS##Builder(iniSection);			\
+}								\
+                                                                \
+SimObjectClass the##NAME_SPACE##OBJ_CLASS##Class(CLASS_NAME,		\
+                                     new##NAME_SPACE##OBJ_CLASS##Builder);	\
+                                                                \
+/* see param.hh */						\
+DEFINE_SIM_OBJECT_CLASS_NAME(CLASS_NAME, NAME_SPACE##OBJ_CLASS)
+
+
 
 #endif // __BUILDER_HH__

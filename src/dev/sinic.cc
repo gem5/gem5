@@ -1598,24 +1598,24 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
+/* namespace Sinic */ }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Interface)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
 
     SimObjectParam<EtherInt *> peer;
-    SimObjectParam<Device *> device;
+    SimObjectParam<Sinic::Device *> device;
+END_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
 
-END_DECLARE_SIM_OBJECT_PARAMS(Interface)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Interface)
+BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
 
     INIT_PARAM_DFLT(peer, "peer interface", NULL),
     INIT_PARAM(device, "Ethernet device of this interface")
 
-END_INIT_SIM_OBJECT_PARAMS(Interface)
+END_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
 
-CREATE_SIM_OBJECT(Interface)
+CREATE_SIM_OBJECT_WNS(Sinic, SinicInterface)
 {
-    Interface *dev_int = new Interface(getInstanceName(), device);
+    Sinic::Interface *dev_int = new Sinic::Interface(getInstanceName(), device);
 
     EtherInt *p = (EtherInt *)peer;
     if (p) {
@@ -1626,10 +1626,10 @@ CREATE_SIM_OBJECT(Interface)
     return dev_int;
 }
 
-REGISTER_SIM_OBJECT("SinicInt", Interface)
+REGISTER_SIM_OBJECT_WNS(Sinic, "SinicInt", SinicInterface)
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
+BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
 
     SimObjectParam<System *> system;
@@ -1670,9 +1670,9 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Device)
     Param<bool> delay_copy;
     Param<bool> virtual_addr;
 
-END_DECLARE_SIM_OBJECT_PARAMS(Device)
+END_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
-BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
+BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
 
     INIT_PARAM(system, "System pointer"),
@@ -1713,12 +1713,12 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Device)
     INIT_PARAM(delay_copy, ""),
     INIT_PARAM(virtual_addr, "")
 
-END_INIT_SIM_OBJECT_PARAMS(Device)
+END_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
 
-CREATE_SIM_OBJECT(Device)
+CREATE_SIM_OBJECT_WNS(Sinic, SinicDevice)
 {
-    Device::Params *params = new Device::Params;
+    Sinic::Sinic::Device::Params *params = new Device::Params;
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
@@ -1758,9 +1758,8 @@ CREATE_SIM_OBJECT(Device)
     params->delay_copy = delay_copy;
     params->virtual_addr = virtual_addr;
 
-    return new Device(params);
+    return new Sinic::Device(params);
 }
 
-REGISTER_SIM_OBJECT("Sinic", Device)
+REGISTER_SIM_OBJECT_WNS(Sinic, "Sinic", SinicDevice)
 
-/* namespace Sinic */ }

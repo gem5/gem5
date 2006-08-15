@@ -32,6 +32,7 @@
 #ifndef __BASE_TIMEBUF_HH__
 #define __BASE_TIMEBUF_HH__
 
+#include <cassert>
 #include <vector>
 
 template <class T>
