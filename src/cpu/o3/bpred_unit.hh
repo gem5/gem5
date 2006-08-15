@@ -31,8 +31,6 @@
 #ifndef __CPU_O3_BPRED_UNIT_HH__
 #define __CPU_O3_BPRED_UNIT_HH__
 
-// For Addr type.
-#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
 
@@ -40,6 +38,8 @@
 #include "cpu/o3/btb.hh"
 #include "cpu/o3/ras.hh"
 #include "cpu/o3/tournament_pred.hh"
+
+#include "sim/host.hh"
 
 #include <list>
 

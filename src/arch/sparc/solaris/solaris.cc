@@ -30,6 +30,8 @@
 
 #include "arch/sparc/solaris/solaris.hh"
 
+#include <fcntl.h>
+
 // open(2) flags translation table
 OpenFlagTransTable SparcSolaris::openFlagTable[] = {
 #ifdef _MSC_VER

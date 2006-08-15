@@ -36,8 +36,8 @@
 #include <utility>
 #include <vector>
 
-#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
+#include "sim/host.hh"
 
 struct ltseqnum {
     bool operator()(const InstSeqNum &lhs, const InstSeqNum &rhs) const

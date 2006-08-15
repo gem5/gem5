@@ -29,11 +29,9 @@
  */
 
 #include "arch/faults.hh"
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "cpu/ozone/inorder_back_end.hh"
 #include "cpu/ozone/thread_state.hh"
-
-using namespace TheISA;
 
 template <class Impl>
 InorderBackEnd<Impl>::InorderBackEnd(Params *params)

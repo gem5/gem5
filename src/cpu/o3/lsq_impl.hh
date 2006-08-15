@@ -29,11 +29,10 @@
  */
 
 #include <algorithm>
+#include <list>
 #include <string>
 
 #include "cpu/o3/lsq.hh"
-
-using namespace std;
 
 template <class Impl>
 Tick
@@ -89,7 +88,7 @@ LSQ<Impl>::LSQ(Params *params)
     //**********************************************/
     //************ Handle SMT Parameters ***********/
     //**********************************************/
-    string policy = params->smtLSQPolicy;
+    std::string policy = params->smtLSQPolicy;
 
     //Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -163,7 +162,7 @@ LSQ<Impl>::regStats()
 
 template<class Impl>
 void
-LSQ<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+LSQ<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     activeThreads = at_ptr;
     assert(activeThreads != 0);
@@ -229,8 +228,8 @@ LSQ<Impl>::resetEntries()
     if (lsqPolicy != Dynamic || numThreads > 1) {
         int active_threads = (*activeThreads).size();
 
-        list<unsigned>::iterator threads  = (*activeThreads).begin();
-        list<unsigned>::iterator list_end = (*activeThreads).end();
+        std::list<unsigned>::iterator threads  = (*activeThreads).begin();
+        std::list<unsigned>::iterator list_end = (*activeThreads).end();
 
         int maxEntries;
 
@@ -268,7 +267,7 @@ template<class Impl>
 void
 LSQ<Impl>::tick()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -317,7 +316,7 @@ template<class Impl>
 void
 LSQ<Impl>::writebackStores()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -336,7 +335,7 @@ bool
 LSQ<Impl>::violation()
 {
     /* Answers: Does Anybody Have a Violation?*/
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -353,7 +352,7 @@ LSQ<Impl>::getCount()
 {
     unsigned total = 0;
 
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -369,7 +368,7 @@ LSQ<Impl>::numLoads()
 {
     unsigned total = 0;
 
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -385,7 +384,7 @@ LSQ<Impl>::numStores()
 {
     unsigned total = 0;
 
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -401,7 +400,7 @@ LSQ<Impl>::numLoadsReady()
 {
     unsigned total = 0;
 
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -417,7 +416,7 @@ LSQ<Impl>::numFreeEntries()
 {
     unsigned total = 0;
 
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -441,7 +440,7 @@ template<class Impl>
 bool
 LSQ<Impl>::isFull()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -468,7 +467,7 @@ template<class Impl>
 bool
 LSQ<Impl>::lqFull()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -495,7 +494,7 @@ template<class Impl>
 bool
 LSQ<Impl>::sqFull()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -522,7 +521,7 @@ template<class Impl>
 bool
 LSQ<Impl>::isStalled()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -547,7 +546,7 @@ template<class Impl>
 bool
 LSQ<Impl>::hasStoresToWB()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     if ((*activeThreads).empty())
         return false;
@@ -565,7 +564,7 @@ template<class Impl>
 bool
 LSQ<Impl>::willWB()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;
@@ -580,7 +579,7 @@ template<class Impl>
 void
 LSQ<Impl>::dumpInsts()
 {
-    list<unsigned>::iterator active_threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator active_threads = (*activeThreads).begin();
 
     while (active_threads != (*activeThreads).end()) {
         unsigned tid = *active_threads++;

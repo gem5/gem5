@@ -45,8 +45,6 @@
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/thread_state.hh"
 
-using namespace TheISA;
-
 template <class Impl>
 MipsO3CPU<Impl>::MipsO3CPU(Params *params)
     : FullO3CPU<Impl>(params)
@@ -240,12 +238,13 @@ MipsO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
     // check for error condition.
     if (return_value.successful()) {
         // no error
-        this->setArchIntReg(SyscallSuccessReg, 0, tid);
-        this->setArchIntReg(ReturnValueReg, return_value.value(), tid);
+        this->setArchIntReg(TheISA::SyscallSuccessReg, 0, tid);
+        this->setArchIntReg(TheISA::ReturnValueReg, return_value.value(), tid);
     } else {
         // got an error, return details
-        this->setArchIntReg(SyscallSuccessReg, (IntReg) -1, tid);
-        this->setArchIntReg(ReturnValueReg, -return_value.value(), tid);
+        this->setArchIntReg(TheISA::SyscallSuccessReg,
+                (TheISA::IntReg) -1, tid);
+        this->setArchIntReg(TheISA::ReturnValueReg, -return_value.value(), tid);
     }
 }
 #endif

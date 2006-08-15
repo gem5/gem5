@@ -40,8 +40,7 @@
 #include <vector>
 
 #include "cpu/o3/free_list.hh"
-//For RegIndex
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
 
 class SimpleRenameMap
 {

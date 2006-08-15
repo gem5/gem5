@@ -31,8 +31,6 @@
 #ifndef __CPU_O3_THREAD_STATE_HH__
 #define __CPU_O3_THREAD_STATE_HH__
 
-#include "arch/faults.hh"
-#include "arch/isa_traits.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 

@@ -28,14 +28,10 @@
  * Authors: Kevin Lim
  */
 
-#include <list>
-#include <vector>
-
+#include "arch/types.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "cpu/o3/bpred_unit.hh"
-
-using namespace std;
 
 template<class Impl>
 BPredUnit<Impl>::BPredUnit(Params *params)

@@ -31,9 +31,8 @@
 #ifndef __CPU_O3_BTB_HH__
 #define __CPU_O3_BTB_HH__
 
-// For Addr type.
-#include "arch/isa_traits.hh"
 #include "base/misc.hh"
+#include "sim/host.hh"
 
 class DefaultBTB
 {

@@ -35,8 +35,8 @@
 #include <list>
 #include <utility>
 
-#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
+#include "sim/host.hh"
 
 /**
  * Simple class to hold onto a list of pairs, each pair having a memory

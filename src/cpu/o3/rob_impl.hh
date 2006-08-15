@@ -32,11 +32,11 @@
 #include "config/full_system.hh"
 #include "cpu/o3/rob.hh"
 
-using namespace std;
+#include <list>
 
 template <class Impl>
 ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
-               string _smtROBPolicy, unsigned _smtROBThreshold,
+               std::string _smtROBPolicy, unsigned _smtROBThreshold,
                unsigned _numThreads)
     : numEntries(_numEntries),
       squashWidth(_squashWidth),
@@ -49,7 +49,7 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
         threadEntries[tid] = 0;
     }
 
-    string policy = _smtROBPolicy;
+    std::string policy = _smtROBPolicy;
 
     //Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -118,7 +118,7 @@ ROB<Impl>::setCPU(O3CPU *cpu_ptr)
 
 template <class Impl>
 void
-ROB<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+ROB<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(ROB, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -157,8 +157,8 @@ ROB<Impl>::resetEntries()
     if (robPolicy != Dynamic || numThreads > 1) {
         int active_threads = (*activeThreads).size();
 
-        list<unsigned>::iterator threads  = (*activeThreads).begin();
-        list<unsigned>::iterator list_end = (*activeThreads).end();
+        std::list<unsigned>::iterator threads  = (*activeThreads).begin();
+        std::list<unsigned>::iterator list_end = (*activeThreads).end();
 
         while (threads != list_end) {
             if (robPolicy == Partitioned) {
@@ -318,7 +318,7 @@ bool
 ROB<Impl>::canCommit()
 {
     //@todo: set ActiveThreads through ROB or CPU
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -432,7 +432,7 @@ ROB<Impl>::updateHead()
     bool first_valid = true;
 
     // @todo: set ActiveThreads through ROB or CPU
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned thread_num = *threads++;
@@ -472,7 +472,7 @@ ROB<Impl>::updateTail()
     tail = instList[0].end();
     bool first_valid = true;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;

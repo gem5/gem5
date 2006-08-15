@@ -31,7 +31,6 @@
 #ifndef __ARCH_MIPS_REGFILE_MISC_REGFILE_HH__
 #define __ARCH_MIPS_REGFILE_MISC_REGFILE_HH__
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
 #include "sim/faults.hh"
 

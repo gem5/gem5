@@ -28,15 +28,12 @@
  * Authors: Korey Sewell
  */
 
-#include "arch/mips/isa_traits.hh"
+#include "arch/mips/regfile.hh"
 #include "arch/mips/utility.hh"
-#include "config/full_system.hh"
-#include "cpu/static_inst.hh"
-#include "sim/serialize.hh"
+#include "base/misc.hh"
 #include "base/bitfield.hh"
 
 using namespace MipsISA;
-using namespace std;
 
 uint64_t
 MipsISA::fpConvert(ConvertType cvt_type, double fp_val)

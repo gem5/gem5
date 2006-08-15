@@ -31,7 +31,8 @@
 #ifndef __CPU_O3_ALPHA_CPU_HH__
 #define __CPU_O3_ALPHA_CPU_HH__
 
-#include "arch/isa_traits.hh"
+#include "arch/regfile.hh"
+#include "arch/types.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"

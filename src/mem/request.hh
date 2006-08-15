@@ -38,7 +38,7 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
-#include "arch/isa_traits.hh"
+#include "sim/host.hh"
 #include "sim/root.hh"
 
 class Request;

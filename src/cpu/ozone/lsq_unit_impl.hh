@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/isa_traits.hh"
+#include "arch/faults.hh"
 #include "base/str.hh"
 #include "cpu/ozone/lsq_unit.hh"
 

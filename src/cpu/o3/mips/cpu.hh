@@ -32,10 +32,12 @@
 #ifndef __CPU_O3_MIPS_CPU_HH__
 #define __CPU_O3_MIPS_CPU_HH__
 
-#include "arch/isa_traits.hh"
+#include "arch/mips/regfile.hh"
+#include "arch/mips/syscallreturn.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
+#include "sim/faults.hh"
 
 class EndQuiesceEvent;
 namespace Kernel {
@@ -55,14 +57,6 @@ class TranslatingPort;
 template <class Impl>
 class MipsO3CPU : public FullO3CPU<Impl>
 {
-  protected:
-    typedef TheISA::IntReg IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscReg MiscReg;
-    typedef TheISA::RegFile RegFile;
-    typedef TheISA::MiscRegFile MiscRegFile;
-
   public:
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
@@ -93,20 +87,22 @@ class MipsO3CPU : public FullO3CPU<Impl>
     }
 
     /** Reads a miscellaneous register. */
-    MiscReg readMiscReg(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault, unsigned tid);
+    TheISA::MiscReg readMiscRegWithEffect(int misc_reg,
+            Fault &fault, unsigned tid);
 
     /** Sets a miscellaneous register. */
-    Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
+    Fault setMiscReg(int misc_reg, const TheISA::MiscReg &val, unsigned tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val, unsigned tid);
+    Fault setMiscRegWithEffect(int misc_reg,
+            const TheISA::MiscReg &val, unsigned tid);
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
@@ -122,10 +118,10 @@ class MipsO3CPU : public FullO3CPU<Impl>
      */
     void syscall(int64_t callnum, int tid);
     /** Gets a syscall argument. */
-    IntReg getSyscallArg(int i, int tid);
+    TheISA::IntReg getSyscallArg(int i, int tid);
 
     /** Used to shift args for indirect syscall. */
-    void setSyscallArg(int i, IntReg val, int tid);
+    void setSyscallArg(int i, TheISA::IntReg val, int tid);
 
     /** Sets the return value of a syscall. */
     void setSyscallReturn(SyscallReturn return_value, int tid);

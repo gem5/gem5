@@ -31,7 +31,6 @@
 #ifndef __CPU_OZONE_OZONE_IMPL_HH__
 #define __CPU_OZONE_OZONE_IMPL_HH__
 
-#include "arch/alpha/isa_traits.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/front_end.hh"
 #include "cpu/ozone/inst_queue.hh"

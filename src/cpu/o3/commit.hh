@@ -32,7 +32,6 @@
 #ifndef __CPU_O3_COMMIT_HH__
 #define __CPU_O3_COMMIT_HH__
 
-#include "arch/faults.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"

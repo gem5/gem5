@@ -47,6 +47,7 @@
 #include "arch/faults.hh"
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
+#include "arch/alpha/types.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
 //#include "base/remote_gdb.hh"

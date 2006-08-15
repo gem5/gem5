@@ -36,14 +36,11 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "cpu/exetrace.hh"
 #include "mem/request.hh"
 
 #include "cpu/base_dyn_inst.hh"
-
-using namespace std;
-using namespace TheISA;
 
 #define NOHASH
 #ifndef NOHASH
@@ -65,7 +62,7 @@ my_hash_t thishash;
 #endif
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(ExtMachInst machInst, Addr inst_PC,
+BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
                                Addr pred_PC, InstSeqNum seq_num,
                                ImplCPU *cpu)
   : staticInst(machInst), traceData(NULL), cpu(cpu)
@@ -73,8 +70,8 @@ BaseDynInst<Impl>::BaseDynInst(ExtMachInst machInst, Addr inst_PC,
     seqNum = seq_num;
 
     PC = inst_PC;
-    nextPC = PC + sizeof(MachInst);
-    nextNPC = nextPC + sizeof(MachInst);
+    nextPC = PC + sizeof(TheISA::MachInst);
+    nextNPC = nextPC + sizeof(TheISA::MachInst);
     predPC = pred_PC;
 
     initVars();
@@ -250,7 +247,7 @@ void
 BaseDynInst<Impl>::dump()
 {
     cprintf("T%d : %#08d `", threadNumber, PC);
-    cout << staticInst->disassemble(PC);
+    std::cout << staticInst->disassemble(PC);
     cprintf("'\n");
 }
 

@@ -31,8 +31,8 @@
 #ifndef __CPU_OZONE_NULL_PREDICTOR_HH__
 #define __CPU_OZONE_NULL_PREDICTOR_HH__
 
-#include "arch/isa_traits.hh"
 #include "cpu/inst_seq.hh"
+#include "sim/host.hh"
 
 template <class Impl>
 class NullPredictor

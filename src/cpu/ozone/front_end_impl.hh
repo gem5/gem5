@@ -32,6 +32,7 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
+#include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"

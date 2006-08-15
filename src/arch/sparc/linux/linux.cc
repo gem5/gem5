@@ -29,6 +29,7 @@
  */
 
 #include "arch/sparc/linux/linux.hh"
+#include <fcntl.h>
 
 // open(2) flags translation table
 OpenFlagTransTable SparcLinux::openFlagTable[] = {

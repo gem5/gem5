@@ -45,8 +45,6 @@
 #include "cpu/checker/cpu.hh"
 #endif
 
-using namespace std;
-
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           unsigned _tid)
@@ -87,7 +85,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
 {
     _status = Active;
     _nextStatus = Inactive;
-    string policy = params->smtCommitPolicy;
+    std::string policy = params->smtCommitPolicy;
 
     //Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -236,7 +234,7 @@ DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setThreads(vector<Thread *> &threads)
+DefaultCommit<Impl>::setThreads(std::vector<Thread *> &threads)
 {
     thread = threads;
 }
@@ -297,7 +295,7 @@ DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 
 template<class Impl>
 void
-DefaultCommit<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+DefaultCommit<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(Commit, "Commit: Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -391,7 +389,7 @@ void
 DefaultCommit<Impl>::updateStatus()
 {
     // reset ROB changed variable
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
         changedROBNumEntries[tid] = false;
@@ -420,7 +418,7 @@ DefaultCommit<Impl>::setNextStatus()
 {
     int squashes = 0;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -443,7 +441,7 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::changedROBEntries()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -570,7 +568,7 @@ DefaultCommit<Impl>::tick()
     if ((*activeThreads).size() <= 0)
         return;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
@@ -688,7 +686,7 @@ DefaultCommit<Impl>::commit()
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -1119,10 +1117,10 @@ DefaultCommit<Impl>::getInsts()
 
 #if THE_ISA == ALPHA_ISA
     // Read any renamed instructions and place them into the ROB.
-    int insts_to_process = min((int)renameWidth, fromRename->size);
+    int insts_to_process = std::min((int)renameWidth, fromRename->size);
 #else
     // Read any renamed instructions and place them into the ROB.
-    int insts_to_process = min((int)renameWidth,
+    int insts_to_process = std::min((int)renameWidth,
                                (int)(fromRename->size + skidBuffer.size()));
     int rename_idx = 0;
 
@@ -1244,7 +1242,7 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::robDoneSquashing()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -1341,8 +1339,8 @@ template<class Impl>
 int
 DefaultCommit<Impl>::roundRobin()
 {
-    list<unsigned>::iterator pri_iter = priority_list.begin();
-    list<unsigned>::iterator end      = priority_list.end();
+    std::list<unsigned>::iterator pri_iter = priority_list.begin();
+    std::list<unsigned>::iterator end      = priority_list.end();
 
     while (pri_iter != end) {
         unsigned tid = *pri_iter;
@@ -1372,7 +1370,7 @@ DefaultCommit<Impl>::oldestReady()
     unsigned oldest = 0;
     bool first = true;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;

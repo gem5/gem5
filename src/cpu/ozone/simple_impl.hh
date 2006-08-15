@@ -31,7 +31,6 @@
 #ifndef __CPU_OZONE_SIMPLE_IMPL_HH__
 #define __CPU_OZONE_SIMPLE_IMPL_HH__
 
-#include "arch/isa_traits.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/cpu.hh"
 #include "cpu/ozone/front_end.hh"

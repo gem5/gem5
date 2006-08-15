@@ -37,8 +37,6 @@
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
 
-using namespace std;
-
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
                                                    int fu_idx,
@@ -100,7 +98,7 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
 
     resetState();
 
-    string policy = params->smtIQPolicy;
+    std::string policy = params->smtIQPolicy;
 
     //Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -279,7 +277,7 @@ InstructionQueue<Impl>::regStats()
         ;
 
     for (int i=0; i<Num_OpClasses; ++i) {
-        stringstream subname;
+        std::stringstream subname;
         subname << opClassStrings[i] << "_delay";
         issueDelayDist.subname(i, subname.str());
     }
@@ -359,7 +357,7 @@ InstructionQueue<Impl>::resetState()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+InstructionQueue<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(IQ, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -421,8 +419,8 @@ InstructionQueue<Impl>::resetEntries()
     if (iqPolicy != Dynamic || numThreads > 1) {
         int active_threads = (*activeThreads).size();
 
-        list<unsigned>::iterator threads  = (*activeThreads).begin();
-        list<unsigned>::iterator list_end = (*activeThreads).end();
+        std::list<unsigned>::iterator threads  = (*activeThreads).begin();
+        std::list<unsigned>::iterator list_end = (*activeThreads).end();
 
         while (threads != list_end) {
             if (iqPolicy == Partitioned) {

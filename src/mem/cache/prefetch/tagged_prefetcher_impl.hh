@@ -33,6 +33,7 @@
  * Describes a tagged prefetcher based on template policies.
  */
 
+#include "arch/isa_traits.hh"
 #include "mem/cache/prefetch/tagged_prefetcher.hh"
 
 template <class TagStore, class Buffering>

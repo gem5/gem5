@@ -31,9 +31,8 @@
 #ifndef __CPU_O3_TOURNAMENT_PRED_HH__
 #define __CPU_O3_TOURNAMENT_PRED_HH__
 
-// For Addr type.
-#include "arch/isa_traits.hh"
 #include "cpu/o3/sat_counter.hh"
+#include "sim/host.hh"
 #include <vector>
 
 /**

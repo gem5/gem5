@@ -40,8 +40,6 @@
 #include "sim/eventq.hh" // for Event declaration.
 #include "mem/request.hh"
 
-using namespace TheISA;
-
 /**
  * @todo Move writebacks into shared BaseBuffer class.
  */

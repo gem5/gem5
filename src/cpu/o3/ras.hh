@@ -31,8 +31,7 @@
 #ifndef __CPU_O3_RAS_HH__
 #define __CPU_O3_RAS_HH__
 
-// For Addr type.
-#include "arch/isa_traits.hh"
+#include "sim/host.hh"
 #include <vector>
 
 /** Return address stack class, implements a simple RAS. */

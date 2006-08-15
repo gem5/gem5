@@ -33,8 +33,7 @@
 
 #include <vector>
 
-#include "arch/faults.hh"
-#include "arch/isa_traits.hh"
+#include "sim/faults.hh"
 #include "cpu/inst_seq.hh"
 #include "sim/host.hh"
 

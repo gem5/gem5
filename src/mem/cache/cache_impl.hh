@@ -53,8 +53,6 @@
 
 #include "sim/sim_events.hh" // for SimExitEvent
 
-using namespace std;
-
 template<class TagStore, class Buffering, class Coherence>
 bool
 Cache<TagStore,Buffering,Coherence>::
@@ -501,7 +499,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         MSHR* mshr = missQueue->findMSHR(blk_addr, pkt->req->getAsid());
 
         // There can be many matching outstanding writes.
-        vector<MSHR*> writes;
+        std::vector<MSHR*> writes;
         missQueue->findWrites(blk_addr, pkt->req->getAsid(), writes);
 
         if (!update) {

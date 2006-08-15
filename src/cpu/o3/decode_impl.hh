@@ -30,8 +30,6 @@
 
 #include "cpu/o3/decode.hh"
 
-using namespace std;
-
 template<class Impl>
 DefaultDecode<Impl>::DefaultDecode(Params *params)
     : renameToDecodeDelay(params->renameToDecodeDelay),
@@ -160,7 +158,7 @@ DefaultDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+DefaultDecode<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(Decode, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -426,7 +424,7 @@ template<class Impl>
 bool
 DefaultDecode<Impl>::skidsEmpty()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         if (!skidBuffer[*threads++].empty())
@@ -442,7 +440,7 @@ DefaultDecode<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     threads = (*activeThreads).begin();
 
@@ -599,7 +597,7 @@ DefaultDecode<Impl>::tick()
 
     toRenameIndex = 0;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     sortInsts();
 

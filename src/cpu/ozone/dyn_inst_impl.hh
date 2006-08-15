@@ -29,12 +29,9 @@
  */
 
 #include "arch/faults.hh"
-#include "arch/isa_traits.hh"
 #include "config/full_system.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "kern/kernel_stats.hh"
-
-using namespace TheISA;
 
 template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)

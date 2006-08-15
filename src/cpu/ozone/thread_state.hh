@@ -32,7 +32,8 @@
 #define __CPU_OZONE_THREAD_STATE_HH__
 
 #include "arch/faults.hh"
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "arch/regfile.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "sim/process.hh"

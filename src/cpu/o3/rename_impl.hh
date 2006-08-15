@@ -34,8 +34,6 @@
 #include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
 
-using namespace std;
-
 template <class Impl>
 DefaultRename<Impl>::DefaultRename(Params *params)
     : iewToRenameDelay(params->iewToRenameDelay),
@@ -223,7 +221,7 @@ DefaultRename<Impl>::initStage()
 
 template<class Impl>
 void
-DefaultRename<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+DefaultRename<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(Rename, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -272,7 +270,8 @@ DefaultRename<Impl>::switchOut()
 {
     // Clear any state, fix up the rename map.
     for (int i = 0; i < numThreads; i++) {
-        typename list<RenameHistory>::iterator hb_it = historyBuffer[i].begin();
+        typename std::list<RenameHistory>::iterator hb_it =
+            historyBuffer[i].begin();
 
         while (!historyBuffer[i].empty()) {
             assert(hb_it != historyBuffer[i].end());
@@ -407,7 +406,7 @@ DefaultRename<Impl>::tick()
 
     sortInsts();
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check stall and squash signals.
     while (threads != (*activeThreads).end()) {
@@ -759,7 +758,7 @@ template<class Impl>
 bool
 DefaultRename<Impl>::skidsEmpty()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         if (!skidBuffer[*threads++].empty())
@@ -775,7 +774,7 @@ DefaultRename<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     threads = (*activeThreads).begin();
 
@@ -865,7 +864,8 @@ template <class Impl>
 void
 DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, unsigned tid)
 {
-    typename list<RenameHistory>::iterator hb_it = historyBuffer[tid].begin();
+    typename std::list<RenameHistory>::iterator hb_it =
+        historyBuffer[tid].begin();
 
     // After a syscall squashes everything, the history buffer may be empty
     // but the ROB may still be squashing instructions.
@@ -903,7 +903,8 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, unsigned tid)
             "history buffer %u (size=%i), until [sn:%lli].\n",
             tid, tid, historyBuffer[tid].size(), inst_seq_num);
 
-    typename list<RenameHistory>::iterator hb_it = historyBuffer[tid].end();
+    typename std::list<RenameHistory>::iterator hb_it =
+        historyBuffer[tid].end();
 
     --hb_it;
 
@@ -1302,7 +1303,7 @@ template <class Impl>
 void
 DefaultRename<Impl>::dumpHistory()
 {
-    typename list<RenameHistory>::iterator buf_it;
+    typename std::list<RenameHistory>::iterator buf_it;
 
     for (int i = 0; i < numThreads; i++) {
 

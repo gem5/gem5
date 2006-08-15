@@ -33,11 +33,13 @@
 #define __ARCH_MIPS_UTILITY_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 //XXX This is needed for size_t. We should use something other than size_t
-#include "kern/linux/linux.hh"
+//#include "kern/linux/linux.hh"
 #include "sim/host.hh"
+
+class ThreadContext;
 
 namespace MipsISA {
 

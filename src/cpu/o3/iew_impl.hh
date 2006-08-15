@@ -38,8 +38,6 @@
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
 
-using namespace std;
-
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(Params *params)
     : issueToExecQueue(params->backComSize, params->forwardComSize),
@@ -336,7 +334,7 @@ DefaultIEW<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+DefaultIEW<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(IEW, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -663,7 +661,7 @@ DefaultIEW<Impl>::skidCount()
 {
     int max=0;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned thread_count = skidBuffer[*threads++].size();
@@ -678,7 +676,7 @@ template<class Impl>
 bool
 DefaultIEW<Impl>::skidsEmpty()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         if (!skidBuffer[*threads++].empty())
@@ -694,7 +692,7 @@ DefaultIEW<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     threads = (*activeThreads).begin();
 
@@ -1195,13 +1193,13 @@ DefaultIEW<Impl>::printAvailableInsts()
 {
     int inst = 0;
 
-    cout << "Available Instructions: ";
+    std::cout << "Available Instructions: ";
 
     while (fromIssue->insts[inst]) {
 
-        if (inst%3==0) cout << "\n\t";
+        if (inst%3==0) std::cout << "\n\t";
 
-        cout << "PC: " << fromIssue->insts[inst]->readPC()
+        std::cout << "PC: " << fromIssue->insts[inst]->readPC()
              << " TN: " << fromIssue->insts[inst]->threadNumber
              << " SN: " << fromIssue->insts[inst]->seqNum << " | ";
 
@@ -1209,7 +1207,7 @@ DefaultIEW<Impl>::printAvailableInsts()
 
     }
 
-    cout << "\n";
+    std::cout << "\n";
 }
 
 template <class Impl>
@@ -1219,7 +1217,7 @@ DefaultIEW<Impl>::executeInsts()
     wbNumInst = 0;
     wbCycle = 0;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -1443,7 +1441,7 @@ DefaultIEW<Impl>::tick()
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     // Check stall and squash signals, dispatch any instructions.
     while (threads != (*activeThreads).end()) {

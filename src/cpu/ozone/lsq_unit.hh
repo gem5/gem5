@@ -36,7 +36,7 @@
 #include <algorithm>
 
 #include "arch/faults.hh"
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "config/full_system.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"

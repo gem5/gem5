@@ -38,7 +38,7 @@
 #include <set>
 #include <vector>
 
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"

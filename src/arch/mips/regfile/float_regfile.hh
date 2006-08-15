@@ -139,7 +139,6 @@ namespace MipsISA
 
         Fault setReg(int floatReg, const FloatRegVal &val, int width)
         {
-            using namespace std;
             switch(width)
             {
               case SingleWidth:
@@ -168,7 +167,6 @@ namespace MipsISA
 
         Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            using namespace std;
 
             switch(width)
             {

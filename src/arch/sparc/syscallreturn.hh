@@ -33,6 +33,8 @@
 
 #include <inttypes.h>
 
+#include "arch/sparc/regfile.hh"
+
 class SyscallReturn
 {
   public:

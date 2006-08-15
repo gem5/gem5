@@ -51,9 +51,6 @@
 
 #include <algorithm>
 
-using namespace std;
-using namespace TheISA;
-
 template<class Impl>
 Tick
 DefaultFetch<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
@@ -118,7 +115,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     // Set fetch stage's status to inactive.
     _status = Inactive;
 
-    string policy = params->smtFetchPolicy;
+    std::string policy = params->smtFetchPolicy;
 
     // Convert string to lowercase
     std::transform(policy.begin(), policy.end(), policy.begin(),
@@ -177,7 +174,7 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
     }
 
     // Get the size of an instruction.
-    instSize = sizeof(MachInst);
+    instSize = sizeof(TheISA::MachInst);
 }
 
 template <class Impl>
@@ -317,7 +314,7 @@ DefaultFetch<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setActiveThreads(list<unsigned> *at_ptr)
+DefaultFetch<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     DPRINTF(Fetch, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -739,7 +736,7 @@ typename DefaultFetch<Impl>::FetchStatus
 DefaultFetch<Impl>::updateFetchStatus()
 {
     //Check Running
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
 
@@ -802,7 +799,7 @@ template <class Impl>
 void
 DefaultFetch<Impl>::tick()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
     bool status_change = false;
 
     wroteToTimeBuffer = false;
@@ -1350,8 +1347,8 @@ template<class Impl>
 int
 DefaultFetch<Impl>::roundRobin()
 {
-    list<unsigned>::iterator pri_iter = priorityList.begin();
-    list<unsigned>::iterator end      = priorityList.end();
+    std::list<unsigned>::iterator pri_iter = priorityList.begin();
+    std::list<unsigned>::iterator end      = priorityList.end();
 
     int high_pri;
 
@@ -1380,9 +1377,9 @@ template<class Impl>
 int
 DefaultFetch<Impl>::iqCount()
 {
-    priority_queue<unsigned> PQ;
+    std::priority_queue<unsigned> PQ;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -1410,10 +1407,10 @@ template<class Impl>
 int
 DefaultFetch<Impl>::lsqCount()
 {
-    priority_queue<unsigned> PQ;
+    std::priority_queue<unsigned> PQ;
 
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
         unsigned tid = *threads++;
@@ -1441,7 +1438,7 @@ template<class Impl>
 int
 DefaultFetch<Impl>::branchCount()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = (*activeThreads).begin();
     panic("Branch Count Fetch policy unimplemented\n");
     return *threads;
 }

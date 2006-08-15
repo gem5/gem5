@@ -30,10 +30,8 @@
 
 class ThreadContext;
 
-//We need the "Tick" data type from here
+//We need the "Tick" and "Addr" data types from here
 #include "sim/host.hh"
-//We need the "Addr" data type from here
-#include "arch/isa_traits.hh"
 
 namespace AlphaPseudo
 {

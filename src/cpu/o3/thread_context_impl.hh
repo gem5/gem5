@@ -32,8 +32,6 @@
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 
-using namespace TheISA;
-
 #if FULL_SYSTEM
 template <class Impl>
 VirtualPort *

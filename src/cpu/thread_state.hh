@@ -31,7 +31,7 @@
 #ifndef __CPU_THREAD_STATE_HH__
 #define __CPU_THREAD_STATE_HH__
 
-#include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "cpu/thread_context.hh"
 
 #if !FULL_SYSTEM

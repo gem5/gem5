@@ -53,8 +53,6 @@
 #include "sim/system.hh"
 #endif
 
-using namespace TheISA;
-
 template <class Impl>
 AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
 #if FULL_SYSTEM

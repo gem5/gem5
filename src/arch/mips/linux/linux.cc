@@ -30,6 +30,8 @@
 
 #include "arch/mips/linux/linux.hh"
 
+#include <fcntl.h>
+
 // open(2) flags translation table
 OpenFlagTransTable MipsLinux::openFlagTable[] = {
 #ifdef _MSC_VER

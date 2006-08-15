@@ -30,6 +30,8 @@
 
 #include "arch/alpha/linux/linux.hh"
 
+#include <fcntl.h>
+
 // open(2) flags translation table
 OpenFlagTransTable AlphaLinux::openFlagTable[] = {
 #ifdef _MSC_VER
