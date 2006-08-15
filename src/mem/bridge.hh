@@ -30,7 +30,8 @@
  */
 
 /**
- * @file Decleration of a simple bus bridge object with no buffering
+ * @file
+ * Declaration of a simple bus bridge object with no buffering
  */
 
 #ifndef __MEM_BRIDGE_HH__
@@ -49,7 +50,7 @@
 class Bridge : public MemObject
 {
   protected:
-    /** Decleration of the buses port type, one will be instantiated for each
+    /** Declaration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
     class BridgePort : public Port
     {

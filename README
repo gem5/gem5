@@ -1,11 +1,11 @@
 This is release 2.0 of the M5 simulator.
 
 For information about building the simulator and getting started please refer
-to: http://m5.eecs.umich.edu/
+to: http://www.m5sim.org/
 
 Specific Pages of Interest are:
-http://m5.eecs.umich.edu/wiki/index.php/Compiling_M5
-http://m5.eecs.umich.edu/wiki/index.php/Running_M5
+http://www.m5sim.org/wiki/index.php/Compiling_M5
+http://www.m5sim.org/wiki/index.php/Running_M5
 
 If you have questions, please send mail to m5sim-users@lists.sourceforge.net.
 
@@ -15,30 +15,17 @@ WHAT'S INCLUDED (AND NOT)
 The basic source release includes these subdirectories:
  - m5: 
    - src: source code of the m5 simulator
-   - test: regression tests
+   - tests: regression tests
    - ext: less-common external packages needed to build m5
    - system/alpha: source for Alpha console and PALcode
 
 To run full-system simulations, you will need compiled console,
 PALcode, and kernel binaries and one or more disk images.  These files
 are collected in a separate archive, m5_system_2.0.tar.bz2.  This file
-is included on the CD release, or you can download it separately from
-Sourceforge.
+can he downloaded separately from Sourceforge.
 
 M5 supports Linux 2.4/2.6, FreeBSD, and the proprietary Compaq/HP
 Tru64 version of Unix. We are able to distribute Linux and FreeBSD
 bootdisks, but we are unable to distribute bootable disk images of
 Tru64 Unix. If you have a Tru64 license and are interested in
 obtaining disk images, contact us at m5-dev@eecs.umich.edu.
-
-The CD release includes a few extra goodies, such as a tar file
-containing doxygen-generated HTML documentation (html-docs.tar.gz), a
-set of Linux source patches (linux_m5-2.6.8.1.diff), and the scons
-program needed to build M5.  If you do not have the CD, the same HTML
-documentation is available online at http://m5.eecs.umich.edu/docs,
-the Linux source patches are available at
-http://m5.eecs.umich.edu/dist/linux_m5-2.6.8.1.diff, the scons
-program is available from http://www.scons.org, and swig is available from
-http://www.swig.org.
-
-

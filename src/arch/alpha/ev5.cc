@@ -29,9 +29,10 @@
  *          Nathan Binkert
  */
 
-#include "arch/alpha/tlb.hh"
+#include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/osfpal.hh"
+#include "arch/alpha/tlb.hh"
 #include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"

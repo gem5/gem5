@@ -39,7 +39,7 @@
 #include "mem/cache/miss/mshr.hh"
 
 /**
- * A Class for maintaining a list of pending and allocated memory requests.
+ * A Class for maintaining a list of pending and allocated memory pktuests.
  */
 class MSHRQueue {
   private:
@@ -55,7 +55,7 @@ class MSHRQueue {
     // Parameters
     /**
      * The total number of MSHRs in this queue. This number is set as the
-     * number of MSHRs requested plus (numReserve - 1). This allows for
+     * number of MSHRs pktuested plus (numReserve - 1). This allows for
      * the same number of effective MSHRs while still maintaining the reserve.
      */
     const int numMSHRs;
@@ -103,16 +103,16 @@ class MSHRQueue {
     bool findMatches(Addr addr, int asid, std::vector<MSHR*>& matches) const;
 
     /**
-     * Find any pending requests that overlap the given request.
-     * @param req The request to find.
+     * Find any pending pktuests that overlap the given request.
+     * @param pkt The request to find.
      * @return A pointer to the earliest matching MSHR.
      */
     MSHR* findPending(Packet * &pkt) const;
 
     /**
-     * Allocates a new MSHR for the request and size. This places the request
+     * Allocates a new MSHR for the pktuest and size. This places the request
      * as the first target in the MSHR.
-     * @param req The request to handle.
+     * @param pkt The request to handle.
      * @param size The number in bytes to fetch from memory.
      * @return The a pointer to the MSHR allocated.
      *
@@ -121,12 +121,12 @@ class MSHRQueue {
     MSHR* allocate(Packet * &pkt, int size = 0);
 
     /**
-     * Allocate a read request for the given address, and places the given
+     * Allocate a read pktuest for the given address, and places the given
      * target on the target list.
      * @param addr The address to fetch.
      * @param asid The address space for the fetch.
-     * @param size The number of bytes to request.
-     * @param target The first target for the request.
+     * @param size The number of bytes to pktuest.
+     * @param target The first target for the pktuest.
      * @return Pointer to the new MSHR.
      */
     MSHR* allocateFetch(Addr addr, int asid, int size, Packet * &target);
@@ -135,7 +135,7 @@ class MSHRQueue {
      * Allocate a target list for the given address.
      * @param addr The address to fetch.
      * @param asid The address space for the fetch.
-     * @param size The number of bytes to request.
+     * @param size The number of bytes to pktuest.
      * @return Pointer to the new MSHR.
      */
     MSHR* allocateTargetList(Addr addr, int asid, int size);
@@ -151,7 +151,7 @@ class MSHRQueue {
      * Allocates a target to the given MSHR. Used to keep track of the number
      * of outstanding targets.
      * @param mshr The MSHR to allocate the target to.
-     * @param req The target request.
+     * @param pkt The target request.
      */
     void allocateTarget(MSHR* mshr, Packet * &pkt)
     {
@@ -181,22 +181,22 @@ class MSHRQueue {
     void markInService(MSHR* mshr);
 
     /**
-     * Mark an in service mshr as pending, used to resend a request.
+     * Mark an in service mshr as pending, used to resend a pktuest.
      * @param mshr The MSHR to resend.
      * @param cmd The command to resend.
      */
     void markPending(MSHR* mshr, Packet::Command cmd);
 
     /**
-     * Squash outstanding requests with the given thread number. If a request
+     * Squash outstanding pktuests with the given thread number. If a request
      * is in service, just squashes the targets.
-     * @param req->getThreadNum()ber The thread to squash.
+     * @param threadNum The thread to squash.
      */
     void squash(int threadNum);
 
     /**
      * Returns true if the pending list is not empty.
-     * @return True if there are outstanding requests.
+     * @return True if there are outstanding pktuests.
      */
     bool havePending() const
     {
@@ -213,8 +213,8 @@ class MSHRQueue {
     }
 
     /**
-     * Returns the request at the head of the pendingList.
-     * @return The next request to service.
+     * Returns the pktuest at the head of the pendingList.
+     * @return The next pktuest to service.
      */
     Packet * getReq() const
     {

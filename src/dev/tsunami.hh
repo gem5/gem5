@@ -83,7 +83,8 @@ class Tsunami : public Platform
     /**
      * Constructor for the Tsunami Class.
      * @param name name of the object
-     * @param intrctrl pointer to the interrupt controller
+     * @param s system the object belongs to
+     * @param intctrl pointer to the interrupt controller
      */
     Tsunami(const std::string &name, System *s, IntrControl *intctrl);
 

@@ -65,14 +65,14 @@ class IsaFake : public BasicPioDevice
 
     /**
      * This read always returns -1.
-     * @param req The memory request.
+     * @param pkt The memory request.
      * @param data Where to put the data.
      */
     virtual Tick read(Packet *pkt);
 
     /**
      * All writes are simply ignored.
-     * @param req The memory request.
+     * @param pkt The memory request.
      * @param data the data to not write.
      */
     virtual Tick write(Packet *pkt);

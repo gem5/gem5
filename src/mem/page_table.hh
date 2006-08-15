@@ -49,7 +49,7 @@
 class System;
 
 /**
- * Page Table Decleration.
+ * Page Table Declaration.
  */
 class PageTable
 {

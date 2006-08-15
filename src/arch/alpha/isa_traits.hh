@@ -35,16 +35,10 @@
 namespace LittleEndianGuest {}
 
 #include "arch/alpha/types.hh"
-#include "arch/alpha/isa_traits.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
 
 class StaticInstPtr;
-
-#if FULL_SYSTEM
-#include "arch/alpha/isa_fullsys_traits.hh"
-#endif
-
 
 namespace AlphaISA
 {

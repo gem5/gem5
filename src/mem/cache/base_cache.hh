@@ -488,7 +488,7 @@ class BaseCache : public MemObject
 
     /**
      * Send a response to the slave interface.
-     * @param req The request being responded to.
+     * @param pkt The request being responded to.
      * @param time The time the response is ready.
      */
     void respond(Packet *pkt, Tick time)
@@ -501,7 +501,7 @@ class BaseCache : public MemObject
 
     /**
      * Send a reponse to the slave interface and calculate miss latency.
-     * @param req The request to respond to.
+     * @param pkt The request to respond to.
      * @param time The time the response is ready.
      */
     void respondToMiss(Packet *pkt, Tick time)
@@ -517,7 +517,7 @@ class BaseCache : public MemObject
 
     /**
      * Suppliess the data if cache to cache transfers are enabled.
-     * @param req The bus transaction to fulfill.
+     * @param pkt The bus transaction to fulfill.
      */
     void respondToSnoop(Packet *pkt)
     {

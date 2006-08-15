@@ -454,7 +454,7 @@ class IIC : public BaseTags
     /**
      * Find the block and update the replacement data. This call also returns
      * the access latency as a side effect.
-     * @param req The req whose block to find
+     * @param pkt The req whose block to find
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
@@ -470,7 +470,7 @@ class IIC : public BaseTags
 
     /**
      * Find a replacement block for the address provided.
-     * @param req The request to a find a replacement candidate for.
+     * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
@@ -502,14 +502,14 @@ class IIC : public BaseTags
      * @param source The block-aligned source address.
      * @param dest The block-aligned destination address.
      * @param asid The address space DI.
-     * @param writebacks List for any generated writeback requests.
+     * @param writebacks List for any generated writeback pktuests.
      */
     void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
 
     /**
      * If a block is currently marked copy on write, copy it before writing.
-     * @param req The write request.
-     * @param writebacks List for any generated writeback requests.
+     * @param pkt The write request.
+     * @param writebacks List for any generated writeback pktuests.
      */
     void fixCopy(Packet * &pkt, PacketList &writebacks);
 

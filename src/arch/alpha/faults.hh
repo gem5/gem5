@@ -32,7 +32,7 @@
 #ifndef __ALPHA_FAULTS_HH__
 #define __ALPHA_FAULTS_HH__
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/pagetable.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh

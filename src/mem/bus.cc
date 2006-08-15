@@ -29,7 +29,8 @@
  */
 
 /**
- * @file Definition of a bus object.
+ * @file
+ * Definition of a bus object.
  */
 
 

@@ -30,7 +30,8 @@
  */
 
 /**
- * @file Decleration of a bus object.
+ * @file
+ * Declaration of a bus object.
  */
 
 #ifndef __MEM_BUS_HH__
@@ -97,7 +98,7 @@ class Bus : public MemObject
     void addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id);
 
 
-    /** Decleration of the buses port type, one will be instantiated for each
+    /** Declaration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
     class BusPort : public Port
     {

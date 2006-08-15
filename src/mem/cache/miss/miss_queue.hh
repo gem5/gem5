@@ -77,7 +77,7 @@ class MissQueue
     /** The block size of the parent cache. */
     int blkSize;
 
-    /** Increasing order number assigned to each incoming request. */
+    /** Increasing order number assigned to each incoming pktuest. */
     uint64_t order;
 
     bool prefetchMiss;
@@ -164,7 +164,7 @@ class MissQueue
 
     /**
      * Allocate a new MSHR to handle the provided miss.
-     * @param req The miss to buffer.
+     * @param pkt The miss to buffer.
      * @param size The number of bytes to fetch.
      * @param time The time the miss occurs.
      * @return A pointer to the new MSHR.
@@ -173,7 +173,7 @@ class MissQueue
 
     /**
      * Allocate a new WriteBuffer to handle the provided write.
-     * @param req The write to handle.
+     * @param pkt The write to handle.
      * @param size The number of bytes to write.
      * @param time The time the write occurs.
      * @return A pointer to the new write buffer.
@@ -212,9 +212,9 @@ class MissQueue
     void setPrefetcher(BasePrefetcher *_prefetcher);
 
     /**
-     * Handle a cache miss properly. Either allocate an MSHR for the request,
+     * Handle a cache miss properly. Either allocate an MSHR for the pktuest,
      * or forward it through the write buffer.
-     * @param req The request that missed in the cache.
+     * @param pkt The request that missed in the cache.
      * @param blk_size The block size of the cache.
      * @param time The time the miss is detected.
      */
@@ -232,43 +232,43 @@ class MissQueue
                      Packet * &target);
 
     /**
-     * Selects a outstanding request to service.
-     * @return The request to service, NULL if none found.
+     * Selects a outstanding pktuest to service.
+     * @return The pktuest to service, NULL if none found.
      */
     Packet * getPacket();
 
     /**
      * Set the command to the given bus command.
-     * @param req The request to update.
+     * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
     void setBusCmd(Packet * &pkt, Packet::Command cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.
-     * @param req The request to reset.
+     * @param pkt The request to reset.
      */
     void restoreOrigCmd(Packet * &pkt);
 
     /**
-     * Marks a request as in service (sent on the bus). This can have side
+     * Marks a pktuest as in service (sent on the bus). This can have side
      * effect since storage for no response commands is deallocated once they
      * are successfully sent.
-     * @param req The request that was sent on the bus.
+     * @param pkt The request that was sent on the bus.
      */
     void markInService(Packet * &pkt);
 
     /**
-     * Collect statistics and free resources of a satisfied request.
-     * @param req The request that has been satisfied.
-     * @param time The time when the request is satisfied.
+     * Collect statistics and free resources of a satisfied pktuest.
+     * @param pkt The request that has been satisfied.
+     * @param time The time when the pktuest is satisfied.
      */
     void handleResponse(Packet * &pkt, Tick time);
 
     /**
-     * Removes all outstanding requests for a given thread number. If a request
+     * Removes all outstanding pktuests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
-     * @param req->getThreadNum()ber The thread number of the requests to squash.
+     * @param threadNum The thread number of the requests to squash.
      */
     void squash(int threadNum);
 
@@ -313,21 +313,21 @@ class MissQueue
                      int size, uint8_t *data, bool compressed);
 
     /**
-     * Perform the given writeback request.
-     * @param req The writeback request.
+     * Perform the given writeback pktuest.
+     * @param pkt The writeback request.
      */
     void doWriteback(Packet * &pkt);
 
     /**
-     * Returns true if there are outstanding requests.
-     * @return True if there are outstanding requests.
+     * Returns true if there are outstanding pktuests.
+     * @return True if there are outstanding pktuests.
      */
     bool havePending();
 
     /**
      * Add a target to the given MSHR. This assumes it is in the miss queue.
      * @param mshr The mshr to add a target to.
-     * @param req The target to add.
+     * @param pkt The target to add.
      */
     void addTarget(MSHR *mshr, Packet * &pkt)
     {

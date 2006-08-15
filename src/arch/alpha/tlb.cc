@@ -33,7 +33,9 @@
 #include <string>
 #include <vector>
 
+#include "arch/alpha/pagetable.hh"
 #include "arch/alpha/tlb.hh"
+#include "arch/alpha/faults.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

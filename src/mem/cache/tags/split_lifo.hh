@@ -203,7 +203,7 @@ public:
     /**
      * Finds the given address in the cache and update replacement data.
      * Returns the access latency as a side effect.
-     * @param req The req whose block to find
+     * @param pkt The req whose block to find
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
@@ -219,7 +219,7 @@ public:
 
     /**
      * Find a replacement block for the address provided.
-     * @param req The request to a find a replacement candidate for.
+     * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
@@ -330,7 +330,7 @@ public:
      * @param source The block-aligned source address.
      * @param dest The block-aligned destination address.
      * @param asid The address space DI.
-     * @param writebacks List for any generated writeback requests.
+     * @param writebacks List for any generated writeback pktuests.
      */
     void doCopy(Addr source, Addr dest, int asid, PacketList &writebacks);
 

@@ -47,6 +47,7 @@ sources = []
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
+	arguments.hh
 	faults.hh
 	isa_traits.hh
 	process.hh

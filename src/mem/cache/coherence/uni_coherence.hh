@@ -88,7 +88,7 @@ class UniCoherence
 
     /**
      * Just return readable and writeable.
-     * @param req The bus response.
+     * @param pkt The bus response.
      * @param current The current block state.
      * @return The new state.
      */
@@ -116,7 +116,7 @@ class UniCoherence
 
     /**
      * Handle snooped bus requests.
-     * @param req The snooped bus request.
+     * @param pkt The snooped bus request.
      * @param blk The cache block corresponding to the request, if any.
      * @param mshr The MSHR corresponding to the request, if any.
      * @param new_state The new coherence state of the block.

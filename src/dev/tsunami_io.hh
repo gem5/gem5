@@ -126,12 +126,14 @@ class TsunamiIO : public BasicPioDevice
 
         /**
           * Serialize this object to the given output stream.
+          * @param base The base name of the counter object.
           * @param os The stream to serialize to.
           */
         void serialize(const std::string &base, std::ostream &os);
 
         /**
          * Reconstruct the state of this object from a checkpoint.
+          * @param base The base name of the counter object.
          * @param cp The checkpoint use.
          * @param section The section name of this object
          */
@@ -221,12 +223,14 @@ class TsunamiIO : public BasicPioDevice
 
             /**
              * Serialize this object to the given output stream.
-             * @param os The stream to serialize to.
+             * @param base The base name of the counter object.
+             * @param os   The stream to serialize to.
              */
             void serialize(const std::string &base, std::ostream &os);
 
             /**
              * Reconstruct the state of this object from a checkpoint.
+             * @param base The base name of the counter object.
              * @param cp The checkpoint use.
              * @param section The section name of this object
              */
@@ -254,12 +258,14 @@ class TsunamiIO : public BasicPioDevice
 
         /**
          * Serialize this object to the given output stream.
+         * @param base The base name of the counter object.
          * @param os The stream to serialize to.
          */
         void serialize(const std::string &base, std::ostream &os);
 
         /**
          * Reconstruct the state of this object from a checkpoint.
+         * @param base The base name of the counter object.
          * @param cp The checkpoint use.
          * @param section The section name of this object
          */

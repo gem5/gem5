@@ -31,7 +31,8 @@
  */
 
 /**
- * @file Definition of a simple bus bridge without buffering.
+ * @file
+ * Definition of a simple bus bridge without buffering.
  */
 
 #include <algorithm>

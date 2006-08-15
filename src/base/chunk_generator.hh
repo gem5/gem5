@@ -72,7 +72,7 @@ class ChunkGenerator
   public:
     /**
      * Constructor.
-     * @param startAddr The starting address of the region.
+     * @param _startAddr The starting address of the region.
      * @param totalSize The total size of the region.
      * @param _chunkSize The size/alignment of chunks into which
      *    the region should be decomposed.

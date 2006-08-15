@@ -37,7 +37,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
     int64_t time;
     SparcSystem *sys;
     switch (miscReg) {
-        /** Full system only ASRs */
+        /* Full system only ASRs */
         case MISCREG_SOFTINT:
           if (isNonPriv())
               return new PrivilegedOpcode;
@@ -94,7 +94,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
               sTickCompare.schedule(time * Clock::Int::ns);
           return NoFault;
 
-        /** Fullsystem only Priv registers. */
+        /* Fullsystem only Priv registers. */
         case MISCREG_PIL:
           if (FULL_SYSTEM) {
               setReg(miscReg, val);
@@ -104,7 +104,7 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           } else
               panic("PIL not implemented for syscall emulation\n");
 
-        /** Hyper privileged registers */
+        /* Hyper privileged registers */
         case MISCREG_HPSTATE:
         case MISCREG_HINTP:
           setReg(miscReg, val);
@@ -147,7 +147,7 @@ MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext * tc)
 {
     switch (miscReg) {
 
-        /** Privileged registers. */
+        /* Privileged registers. */
         case MISCREG_SOFTINT:
            if (isNonPriv()) {
                fault = new PrivilegedOpcode;
@@ -177,7 +177,7 @@ MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext * tc)
            return readReg(miscReg);
 
 
-        /** Hyper privileged registers */
+        /* Hyper privileged registers */
         case MISCREG_HPSTATE:
         case MISCREG_HINTP:
           return readReg(miscReg);

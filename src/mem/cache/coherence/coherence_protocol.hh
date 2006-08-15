@@ -85,7 +85,7 @@ class CoherenceProtocol : public SimObject
 
     /**
      * Return the proper state given the current state and the bus response.
-     * @param req The bus response.
+     * @param pkt The bus response.
      * @param oldState The current block state.
      * @return The new state.
      */
@@ -95,7 +95,7 @@ class CoherenceProtocol : public SimObject
     /**
      * Handle snooped bus requests.
      * @param cache The cache that snooped the request.
-     * @param req The snooped bus request.
+     * @param pkt The snooped bus request.
      * @param blk The cache block corresponding to the request, if any.
      * @param mshr The MSHR corresponding to the request, if any.
      * @param new_state The new coherence state of the block.

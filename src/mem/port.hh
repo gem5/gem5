@@ -30,7 +30,7 @@
 
 /**
  * @file
- * Port Object Decleration. Ports are used to interface memory objects to
+ * Port Object Declaration. Ports are used to interface memory objects to
  * each other.  They will always come in pairs, and we refer to the other
  * port object as the peer.  These are used to make the design more
  * modular so that a specific interface between every type of objcet doesn't
