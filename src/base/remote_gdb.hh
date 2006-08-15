@@ -33,6 +33,7 @@
 
 #include <map>
 
+#include "arch/types.hh"
 #include "base/kgdb.h"
 #include "cpu/pc_event.hh"
 #include "base/pollevent.hh"

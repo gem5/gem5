@@ -1106,7 +1106,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             assert(offset <= cacheBlkSize - instSize);
 
             // Get the instruction from the array of the cache line.
-            inst = gtoh(*reinterpret_cast<MachInst *>
+            inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                         (&cacheData[tid][offset]));
 
             ext_inst = TheISA::makeExtMI(inst, fetch_PC);

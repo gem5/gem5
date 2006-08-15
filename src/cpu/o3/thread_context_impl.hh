@@ -283,7 +283,7 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
     }
 
     // Copy the misc regs.
-    copyMiscRegs(tc, this);
+    TheISA::copyMiscRegs(tc, this);
 
     // Then finally set the PC and the next PC.
     cpu->setPC(tc->readPC(), tid);
@@ -306,7 +306,7 @@ O3ThreadContext<Impl>::readIntReg(int reg_idx)
 }
 
 template <class Impl>
-FloatReg
+TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx, int width)
 {
     switch(width) {
@@ -321,14 +321,14 @@ O3ThreadContext<Impl>::readFloatReg(int reg_idx, int width)
 }
 
 template <class Impl>
-FloatReg
+TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx)
 {
     return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
 }
 
 template <class Impl>
-FloatRegBits
+TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx, int width)
 {
     DPRINTF(Fault, "Reading floatint register through the TC!\n");
@@ -336,7 +336,7 @@ O3ThreadContext<Impl>::readFloatRegBits(int reg_idx, int width)
 }
 
 template <class Impl>
-FloatRegBits
+TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
 {
     return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
