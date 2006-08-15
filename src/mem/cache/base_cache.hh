@@ -105,6 +105,8 @@ class BaseCache : public MemObject
 
         bool blocked;
 
+        bool mustSendRetry;
+
         bool isCpuSide;
     };
 
