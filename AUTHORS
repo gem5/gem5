@@ -23,6 +23,7 @@ Andrew L. Schultz
 
 Kevin T. Lim
 -----------------------
+O3CPU model, CPU checker, revisions to CPU interfaces, transitioning some functionality and configurations over to Python.
 
 Ronald G. Dreslinski Jr
 -----------------------
