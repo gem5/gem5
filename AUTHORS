@@ -46,6 +46,7 @@ Ronald G. Dreslinski Jr
 * Caches/Cache coherence
 * Prefetching
 * New memory system (port, request, packet, cache porting)
+* Tru64 MP support
 
 Lisa R. Hsu
 -----------------------
