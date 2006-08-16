@@ -102,21 +102,19 @@ else:
 
 m5.instantiate(root)
 
-#exit_event = m5.simulate(2600000000000)
-#if exit_event.getCause() != "user interrupt received":
-#    m5.checkpoint(root, 'cpt')
-#    exit_event = m5.simulate(300000000000)
-#    if exit_event.getCause() != "user interrupt received":
-#        m5.checkpoint(root, 'cptA')
-
-
 if options.maxtick:
-    exit_event = m5.simulate(options.maxtick)
+    arg = options.maxtick
 elif options.maxtime:
     simtime = int(options.maxtime * root.clock.value)
     print "simulating for: ", simtime
-    exit_event = m5.simulate(simtime)
+    arg = simtime
 else:
-    exit_event = m5.simulate()
+    arg = -1
+
+exit_event = m5.simulate(arg)
+
+while exit_event.getCause() == "checkpoint":
+        m5.checkpoint(root, "cpt.%d")
+        exit_event = m5.simulate(arg)
 
 print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
