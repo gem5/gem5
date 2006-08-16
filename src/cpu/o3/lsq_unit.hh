@@ -646,6 +646,8 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // handle it.
     if (lsq->cacheBlocked()) {
         ++lsqCacheBlocked;
+
+        iewStage->decrWb(load_inst->seqNum);
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < load_inst->seqNum)
             return NoFault;
