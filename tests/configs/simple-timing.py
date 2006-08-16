@@ -37,8 +37,8 @@ class MyCache(BaseCache):
     tgts_per_mshr = 5
 
 cpu = TimingSimpleCPU()
-cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
-                              MyCache(size = '2MB'))
+#cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
+#                              MyCache(size = '2MB'))
 
 system = System(cpu = cpu,
                 physmem = PhysicalMemory(),

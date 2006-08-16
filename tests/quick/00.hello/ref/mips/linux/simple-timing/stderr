@@ -1,3 +1,2 @@
 warn: Entering event queue @ 0.  Starting simulation...
-
-gzip: stdout: Broken pipe
+warn: Increasing stack size by one page.
