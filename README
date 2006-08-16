@@ -19,7 +19,7 @@ http://wwww.swig.org.
 will build the debug version of the m5 binary (m5.debug) for the Alpha
 syscall emulation target, and run the quick regression tests on it.
 
-If you have questions, please send mail to m5sim-users@lists.sourceforge.net.
+If you have questions, please send mail to m5-users@m5sim.org
 
 WHAT'S INCLUDED (AND NOT)
 -------------------------
@@ -33,7 +33,7 @@ The basic source release includes these subdirectories:
 
 To run full-system simulations, you will need compiled console,
 PALcode, and kernel binaries and one or more disk images.  These files
-are collected in a separate archive, m5_system_1.1.tar.bz2.  This file
+are collected in a separate archive, m5_system.tar.bz2.  This file
 can he downloaded separately.
 
 M5 supports Linux 2.4/2.6, FreeBSD, and the proprietary Compaq/HP
