@@ -1,47 +1,94 @@
-Steven K. Reinhardt
------------------------
 
 Nathan L. Binkert
 -----------------------
+* Alpha full system support
+* Statistics package
+* Event queue
+* Pseudo instructions
+* Remote GDB facilities
+* PC sampling
+* Trace facilities
+* Tru64 support
+* Ethernet (Link, NSGIGE, Sinic) device support
+* PCI device support
 
-Erik G. Hallnor
+Steven K. Reinhardt
 -----------------------
-
-Steve E. Raasch
------------------------
-
-Lisa R. Hsu
------------------------
-DP83820 NIC device model
-
+* Alpha support
+* ISA parsing
+* SWIG intergration
+* New memory system
+* Simple CPU
+* Instruction tracing
+* PC sampling
+* Deprecated detailed CPU
+* Binary Loading
 
 Ali G. Saidi
 -----------------------
-
-Andrew L. Schultz
------------------------
+* Alpha Linux support
+* Alpha (Tsunami) platform and devices
+* I/O <-> memory interface
+* PCI device interface
+* Multiple ISA support
+* Memory bridge, bus, packet, port interfaces
+* SPARC IPRs
 
 Kevin T. Lim
 -----------------------
-O3CPU model, CPU checker, revisions to CPU interfaces, transitioning some functionality and configurations over to Python.
+* New CPU model
+* CPU checker
+* CPU class restructuring
+* Quiecsing/Draining
 
 Ronald G. Dreslinski Jr
 -----------------------
+* Caches/Cache coherence
+* Prefetching
+* New memory system (port, request, packet, cache porting)
+
+Lisa R. Hsu
+-----------------------
+* DP83820 NIC device model
+* Kernel stats stuff
+* Linux Dist disk image building
 
 Gabriel Black
 -----------------------
-SPARC ISA
+* Multiple ISA support
+* Alpha support reorgization
+* SPARC SE support
 
 Korey L. Sewell
 -----------------------
-MIPS ISA / O3CPU SMT Support
+* O3CPU SMT support
+* MIPS support
+
+Andrew L. Schultz
+-----------------------
+* IDE controller/disk model
+* PCI devices interface
+* Linux Dist disk image building
+
+Erik G. Hallnor
+-----------------------
+* Caches
+* Trace reader support
+
+Steve E. Raasch
+-----------------------
+* Deprecated CPU model
+* Generic CPU structures
 
 David Green
 -----------------------
+* Deprecated CPU model
+* Caches
 
 Benjamin S. Nash
 -----------------------
+* Alpha FreeBSD support
 
 Miguel J. Serrano
 -----------------------
-
+* Alpha FreeBSD support
