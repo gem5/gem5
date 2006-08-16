@@ -94,6 +94,7 @@ base_sources = Split('''
 
         mem/bridge.cc
         mem/bus.cc
+        mem/dram.cc
         mem/mem_object.cc
         mem/packet.cc
         mem/physical.cc

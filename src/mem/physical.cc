@@ -54,25 +54,22 @@ using namespace std;
 using namespace TheISA;
 
 
-PhysicalMemory::PhysicalMemory(const string &n, Tick latency)
-    : MemObject(n),base_addr(0), pmem_addr(NULL), port(NULL), lat(latency)
+PhysicalMemory::PhysicalMemory(Params *p)
+    : MemObject(p->name), pmemAddr(NULL), port(NULL), lat(p->latency), _params(p)
 {
-    // Hardcoded to 128 MB for now.
-    pmem_size = 1 << 27;
-
-    if (pmem_size % TheISA::PageBytes != 0)
+    if (params()->addrRange.size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
 
     int map_flags = MAP_ANON | MAP_PRIVATE;
-    pmem_addr = (uint8_t *)mmap(NULL, pmem_size, PROT_READ | PROT_WRITE,
+    pmemAddr = (uint8_t *)mmap(NULL, params()->addrRange.size(), PROT_READ | PROT_WRITE,
                                 map_flags, -1, 0);
 
-    if (pmem_addr == (void *)MAP_FAILED) {
+    if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
         fatal("Could not mmap!\n");
     }
 
-    page_ptr = 0;
+    pagePtr = 0;
 }
 
 void
@@ -85,18 +82,18 @@ PhysicalMemory::init()
 
 PhysicalMemory::~PhysicalMemory()
 {
-    if (pmem_addr)
-        munmap(pmem_addr, pmem_size);
+    if (pmemAddr)
+        munmap(pmemAddr, params()->addrRange.size());
     //Remove memPorts?
 }
 
 Addr
 PhysicalMemory::new_page()
 {
-    Addr return_addr = page_ptr << LogVMPageSize;
-    return_addr += base_addr;
+    Addr return_addr = pagePtr << LogVMPageSize;
+    return_addr += params()->addrRange.start;
 
-    ++page_ptr;
+    ++pagePtr;
     return return_addr;
 }
 
@@ -107,20 +104,25 @@ PhysicalMemory::deviceBlockSize()
     return 0;
 }
 
+Tick
+PhysicalMemory::calculateLatency(Packet *pkt)
+{
+    return lat;
+}
 
 Tick
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
-    assert(pkt->getAddr() + pkt->getSize() < pmem_size);
+    assert(pkt->getAddr() + pkt->getSize() < params()->addrRange.size());
 
     switch (pkt->cmd) {
       case Packet::ReadReq:
         memcpy(pkt->getPtr<uint8_t>(),
-               pmem_addr + pkt->getAddr() - base_addr,
+               pmemAddr + pkt->getAddr() - params()->addrRange.start,
                pkt->getSize());
         break;
       case Packet::WriteReq:
-        memcpy(pmem_addr + pkt->getAddr() - base_addr,
+        memcpy(pmemAddr + pkt->getAddr() - params()->addrRange.start,
                pkt->getPtr<uint8_t>(),
                pkt->getSize());
         // temporary hack: will need to add real LL/SC implementation
@@ -134,7 +136,7 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
     }
 
     pkt->result = Packet::Success;
-    return lat;
+    return calculateLatency(pkt);
 }
 
 Port *
@@ -181,7 +183,7 @@ PhysicalMemory::getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 {
     snoop.clear();
     resp.clear();
-    resp.push_back(RangeSize(base_addr, pmem_size));
+    resp.push_back(RangeSize(params()->addrRange.start, params()->addrRange.size()));
 }
 
 int
@@ -232,7 +234,6 @@ PhysicalMemory::serialize(ostream &os)
     gzFile compressedMem;
     string filename = name() + ".physmem";
 
-    SERIALIZE_SCALAR(pmem_size);
     SERIALIZE_SCALAR(filename);
 
     // write memory file
@@ -248,7 +249,7 @@ PhysicalMemory::serialize(ostream &os)
         fatal("Insufficient memory to allocate compression state for %s\n",
                 filename);
 
-    if (gzwrite(compressedMem, pmem_addr, pmem_size) != pmem_size) {
+    if (gzwrite(compressedMem, pmemAddr, params()->addrRange.size()) != params()->addrRange.size()) {
         fatal("Write failed on physical memory checkpoint file '%s'\n",
               filename);
     }
@@ -269,12 +270,8 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
     const int chunkSize = 16384;
 
 
-    // unmap file that was mmaped in the constructor
-    munmap(pmem_addr, pmem_size);
-
     string filename;
 
-    UNSERIALIZE_SCALAR(pmem_size);
     UNSERIALIZE_SCALAR(filename);
 
     filename = cp->cptDir + "/" + filename;
@@ -291,11 +288,15 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
         fatal("Insufficient memory to allocate compression state for %s\n",
                 filename);
 
+    // unmap file that was mmaped in the constructor
+    // This is done here to make sure that gzip and open don't muck with our
+    // nice large space of memory before we reallocate it
+    munmap(pmemAddr, params()->addrRange.size());
 
-    pmem_addr = (uint8_t *)mmap(NULL, pmem_size, PROT_READ | PROT_WRITE,
+    pmemAddr = (uint8_t *)mmap(NULL, params()->addrRange.size(), PROT_READ | PROT_WRITE,
                                 MAP_ANON | MAP_PRIVATE, -1, 0);
 
-    if (pmem_addr == (void *)MAP_FAILED) {
+    if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
         fatal("Could not mmap physical memory!\n");
     }
@@ -306,19 +307,19 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
         fatal("Unable to malloc memory to read file %s\n", filename);
 
     /* Only copy bytes that are non-zero, so we don't give the VM system hell */
-    while (curSize < pmem_size) {
+    while (curSize < params()->addrRange.size()) {
         bytesRead = gzread(compressedMem, tempPage, chunkSize);
-        if (bytesRead != chunkSize && bytesRead != pmem_size - curSize)
+        if (bytesRead != chunkSize && bytesRead != params()->addrRange.size() - curSize)
             fatal("Read failed on physical memory checkpoint file '%s'"
                   " got %d bytes, expected %d or %d bytes\n",
-                  filename, bytesRead, chunkSize, pmem_size-curSize);
+                  filename, bytesRead, chunkSize, params()->addrRange.size()-curSize);
 
         assert(bytesRead % sizeof(long) == 0);
 
         for (int x = 0; x < bytesRead/sizeof(long); x++)
         {
              if (*(tempPage+x) != 0) {
-                 pmem_current = (long*)(pmem_addr + curSize + x * sizeof(long));
+                 pmem_current = (long*)(pmemAddr + curSize + x * sizeof(long));
                  *pmem_current = *(tempPage+x);
              }
         }
@@ -352,8 +353,11 @@ END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
 CREATE_SIM_OBJECT(PhysicalMemory)
 {
-
-    return new PhysicalMemory(getInstanceName(), latency);
+    PhysicalMemory::Params *p = new PhysicalMemory::Params;
+    p->name = getInstanceName();
+    p->addrRange = range;
+    p->latency = latency;
+    return new PhysicalMemory(p);
 }
 
 REGISTER_SIM_OBJECT("PhysicalMemory", PhysicalMemory)
