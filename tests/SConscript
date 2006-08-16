@@ -66,6 +66,7 @@ def check_test(target, source, env):
                       '-I "^M5 executing on " ' +	# for stderr file
                       '-I "^Simulation complete at" ' +	# for stderr file
                       '-I "^Listening for" ' +		# for stderr file
+                      '-I "listening for remote gdb" ' + # for stderr file
                       '--exclude=m5stats.txt --exclude=SCCS ' +
                       '--exclude=${TARGETS[0].file} ' +
                       '> ${TARGETS[0]}', target=target, source=source), None)
