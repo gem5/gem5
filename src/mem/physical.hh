@@ -80,19 +80,28 @@ class PhysicalMemory : public MemObject
     const PhysicalMemory &operator=(const PhysicalMemory &specmem);
 
   protected:
-    Addr base_addr;
-    Addr pmem_size;
-    uint8_t *pmem_addr;
+    uint8_t *pmemAddr;
     MemoryPort *port;
-    int page_ptr;
+    int pagePtr;
     Tick lat;
 
   public:
     Addr new_page();
-    uint64_t size() { return pmem_size; }
+    uint64_t size() { return params()->addrRange.size(); }
+
+    struct Params
+    {
+        std::string name;
+        Range<Addr> addrRange;
+        Tick latency;
+    };
+
+  protected:
+    Params *_params;
 
   public:
-    PhysicalMemory(const std::string &n, Tick latency);
+    const Params *params() const { return _params; }
+    PhysicalMemory(Params *p);
     virtual ~PhysicalMemory();
 
   public:
@@ -102,9 +111,9 @@ class PhysicalMemory : public MemObject
     void virtual init();
     unsigned int drain(Event *de);
 
-  private:
+  protected:
     Tick doFunctionalAccess(Packet *pkt);
-
+    virtual Tick calculateLatency(Packet *pkt);
     void recvStatusChange(Port::Status status);
 
   public:
