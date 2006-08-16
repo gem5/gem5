@@ -139,130 +139,65 @@ def update_test_string(target, source, env):
 
 updateAction = env.Action(update_test, update_test_string)
 
-def test_builder(env, category, cpu_list=[], os_list=[], refdir='ref',
-                 timeout=15):
-    """Define a test.
+def test_builder(env, ref_dir):
+    """Define a test."""
 
-    Args:
-    category -- string describing test category (e.g., 'quick')
-    cpu_list -- list of CPUs to runs this test on (blank means all compiled CPUs)
-    os_list -- list of OSs to run this test on
-    refdir -- subdirectory containing reference output (default 'ref')
-    timeout -- test timeout in minutes (only enforced on pool)
+    (category, name, _ref, isa, opsys, config) = ref_dir.split('/')
+    assert(_ref == 'ref')
 
-    """
+    # target path (where test output goes) is the same except without
+    # the 'ref' component
+    tgt_dir = os.path.join(category, name, isa, opsys, config)
 
-    default_refdir = False
-    if refdir == 'ref':
-        default_refdir = True
-    valid_cpu_list = []
-    if len(cpu_list) == 0:
-        valid_cpu_list = env['CPU_MODELS']
+    # prepend file name with tgt_dir
+    def tgt(f):
+        return os.path.join(tgt_dir, f)
+
+    ref_stats = os.path.join(ref_dir, 'm5stats.txt')
+    new_stats = tgt('m5stats.txt')
+    status_file = tgt('status')
+
+    # Base command for running test.  We mess around with indirectly
+    # referring to files via SOURCES and TARGETS so that scons can
+    # mess with paths all it wants to and we still get the right
+    # files.
+    base_cmd = '${SOURCES[0]} -d $TARGET.dir ${SOURCES[1]} %s' % tgt_dir
+    # stdout and stderr files
+    cmd_stdout = '${TARGETS[0]}'
+    cmd_stderr = '${TARGETS[1]}'
+
+    # Prefix test run with batch job submission command if appropriate.
+    # Output redirection is also different for batch runs.
+    # Batch command also supports timeout arg (in seconds, not minutes).
+    if env['BATCH']:
+        cmd = [env['BATCH_CMD'], '-t', str(timeout * 60),
+               '-o', cmd_stdout, '-e', cmd_stderr, base_cmd]
     else:
-        for i in cpu_list:
-            if i in env['CPU_MODELS']:
-                valid_cpu_list.append(i)
-    cpu_list = valid_cpu_list
-    if env['TEST_CPU_MODELS']:
-        valid_cpu_list = []
-        for i in env['TEST_CPU_MODELS']:
-            if i in cpu_list:
-                valid_cpu_list.append(i)
-        cpu_list = valid_cpu_list
-# Code commented out that shows the general structure if we want to test
-# different OS's as well.
-#    if len(os_list) == 0:
-#        for test_cpu in cpu_list:
-#            build_cpu_test(env, category, '', test_cpu, refdir, timeout)
-#    else:
-#        for test_os in os_list:
-#            for test_cpu in cpu_list:
-#                build_cpu_test(env, category, test_os, test_cpu, refdir,
-#                               timeout)
-    # Loop through CPU models and generate proper options, ref directories
-    for cpu in cpu_list:
-        test_os = ''
-        if cpu == "AtomicSimpleCPU":
-            cpu_option = ('','atomic/')
-        elif cpu == "TimingSimpleCPU":
-            cpu_option = ('--timing','timing/')
-        elif cpu == "O3CPU":
-            cpu_option = ('--detailed','detailed/')
-        else:
-            raise TypeError, "Unknown CPU model specified"
-
-        if default_refdir:
-            # Reference stats located in ref/arch/os/cpu or ref/arch/cpu
-            # if no OS specified
-            test_refdir = os.path.join(refdir, env['TARGET_ISA'])
-            if test_os != '':
-                test_refdir = os.path.join(test_refdir, test_os)
-            cpu_refdir = os.path.join(test_refdir, cpu_option[1])
-
-        ref_stats = os.path.join(cpu_refdir, 'm5stats.txt')
-
-        # base command for running test
-        base_cmd = '${SOURCES[0]} -d $TARGET.dir ${SOURCES[1]}'
-        base_cmd = base_cmd + ' ' + cpu_option[0]
-        # stdout and stderr files
-        cmd_stdout = '${TARGETS[0]}'
-        cmd_stderr = '${TARGETS[1]}'
-
-        stdout_string = cpu_option[1] + 'stdout'
-        stderr_string = cpu_option[1] + 'stderr'
-        m5stats_string = cpu_option[1] + 'm5stats.txt'
-        outdiff_string =  cpu_option[1] + 'outdiff'
-        statsdiff_string = cpu_option[1] + 'statsdiff'
-        status_string = cpu_option[1] + 'status'
-
-        # Prefix test run with batch job submission command if appropriate.
-        # Output redirection is also different for batch runs.
-        # Batch command also supports timeout arg (in seconds, not minutes).
-        if env['BATCH']:
-            cmd = [env['BATCH_CMD'], '-t', str(timeout * 60),
-                   '-o', cmd_stdout, '-e', cmd_stderr, base_cmd]
-        else:
-            cmd = [base_cmd, '>', cmd_stdout, '2>', cmd_stderr]
+        cmd = [base_cmd, '>', cmd_stdout, '2>', cmd_stderr]
             
-        env.Command([stdout_string, stderr_string, m5stats_string],
-                    [env.M5Binary, 'run.py'], ' '.join(cmd))
+    env.Command([tgt('stdout'), tgt('stderr'), new_stats],
+                [env.M5Binary, 'run.py'], ' '.join(cmd))
 
-        # order of targets is important... see check_test
-        env.Command([outdiff_string, statsdiff_string, status_string],
-                    [ref_stats, m5stats_string],
-                    testAction)
+    # order of targets is important... see check_test
+    env.Command([tgt('outdiff'), tgt('statsdiff'), status_file],
+                [ref_stats, new_stats],
+                testAction)
 
-        # phony target to echo status
-        if env['update_ref']:
-            p = env.Command(cpu_option[1] + '_update',
-                            [ref_stats, m5stats_string, status_string],
-                            updateAction)
-        else:
-            p = env.Command(cpu_option[1] + '_print', [status_string],
-                            printAction)
-        env.AlwaysBuild(p)
+    # phony target to echo status
+    if env['update_ref']:
+        p = env.Command(tgt('_update'),
+                        [ref_stats, new_stats, status_file],
+                        updateAction)
+    else:
+        p = env.Command(tgt('_print'), [status_file], printAction)
 
-        env.Tests.setdefault(category, [])
-        env.Tests[category] += p
+    env.AlwaysBuild(p)
 
-# Make test_builder a "wrapper" function.  See SCons wiki page at
-# http://www.scons.org/cgi-bin/wiki/WrapperFunctions.
-SConsEnvironment.Test = test_builder
 
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))
-scripts = glob.glob('*/SConscript')
+for config in ['simple-atomic']:
+    dirs = glob.glob('*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
+    for d in dirs:
+        test_builder(env, d)
 os.chdir(cwd)
-
-for s in scripts:
-    SConscript(s, exports = 'env', duplicate = False)
-
-# Set up phony commands for various test categories
-allTests = []
-for (key, val) in env.Tests.iteritems():
-    env.Command(key, val, env.NoAction)
-    allTests += val
-
-# The 'all' target is redundant since just specifying the test
-# directory name (e.g., ALPHA_SE/test/opt) has the same effect.
-env.Command('all', allTests, env.NoAction)
