@@ -11,11 +11,13 @@ class MyCache(BaseCache):
     tgts_per_mshr = 5
 
 cpu = TimingSimpleCPU()
-cpu.icache = MyCache(size = '128kB')
-cpu.dcache = MyCache(size = '256kB')
-cpu.l2cache = MyCache(size = '2MB')
+cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
+                              MyCache(size = '2MB'))
 
-cpu.icache_port = cpu.icache.cpu_side
-cpu.dcache_port = cpu.dcache.cpu_side
+system = System(cpu = cpu,
+                physmem = PhysicalMemory(),
+                membus = Bus())
+system.physmem.port = system.membus.port
+cpu.connectMemPorts(system.membus)
 
-root = makeSESystem(cpu)
+root = Root(system = system)

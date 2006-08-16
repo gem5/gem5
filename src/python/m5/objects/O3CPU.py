@@ -22,6 +22,7 @@ class DerivO3CPU(BaseCPU):
     cachePorts = Param.Unsigned("Cache Ports")
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
+    _mem_ports = ['icache_port', 'dcache_port']
 
     decodeToFetchDelay = Param.Unsigned(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned(1 ,"Rename to fetch delay")

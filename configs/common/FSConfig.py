@@ -31,7 +31,6 @@ from m5 import makeList
 from m5.objects import *
 from Benchmarks import *
 from FullO3Config import *
-from Util import *
 
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),
@@ -47,7 +46,7 @@ class BaseTsunami(Tsunami):
     ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                         pci_func=0, pci_dev=0, pci_bus=0)
 
-def makeLinuxAlphaSystem(cpu, mem_mode, mdesc, icache=None, dcache=None, l2cache=None):
+def makeLinuxAlphaSystem(mem_mode, mdesc):
     self = LinuxAlphaSystem()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
@@ -72,13 +71,7 @@ def makeLinuxAlphaSystem(cpu, mem_mode, mdesc, icache=None, dcache=None, l2cache
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
-    self.cpu = cpu
     self.mem_mode = mem_mode
-    connectCpu(self.cpu, self.membus, icache, dcache, l2cache)
-    for each_cpu in makeList(self.cpu):
-        each_cpu.itb = AlphaITB()
-        each_cpu.dtb = AlphaDTB()
-    self.cpu.clock = '2GHz'
     self.sim_console = SimConsole(listener=ConsoleListener(port=3456))
     self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')

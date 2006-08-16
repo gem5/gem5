@@ -5,7 +5,6 @@ from m5.objects import *
 m5.AddToPath('../common')
 from FSConfig import *
 from SysPaths import *
-from Util import *
 from Benchmarks import *
 
 parser = optparse.OptionParser()
@@ -50,12 +49,15 @@ if options.benchmark:
     bm = Benchmarks[options.benchmark]
 
     if len(bm) == 2:
-        root = makeDualRoot(makeLinuxAlphaSystem(cpu, mem_mode, bm[0]),
-                            makeLinuxAlphaSystem(cpu2, mem_mode, bm[1]))
-
+        s1 = makeLinuxAlphaSystem(mem_mode, bm[0])
+        s2 = makeLinuxAlphaSystem(mem_mode, bm[1])
+        cpu.connectMemPorts(s1.membus)
+        cpu2.connectMemPorts(s2.membus)
+        root = makeDualRoot(s1, s2)
     elif len(bm) == 1:
         root = Root(clock = '1THz',
-                    system = makeLinuxAlphaSystem(cpu, mem_mode, bm[0]))
+                    system = makeLinuxAlphaSystem(mem_mode, bm[0]))
+        cpu.connectMemPorts(root.system.membus)
     else:
         print "Error I don't know how to create more than 2 systems."
         sys.exit(1)
