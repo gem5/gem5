@@ -46,8 +46,11 @@ class BaseTsunami(Tsunami):
     ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                         pci_func=0, pci_dev=0, pci_bus=0)
 
-def makeLinuxAlphaSystem(mem_mode, mdesc):
+def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self = LinuxAlphaSystem()
+    if not mdesc:
+        # generic system
+        mdesc = Machine()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)

@@ -194,9 +194,21 @@ def test_builder(env, ref_dir):
     env.AlwaysBuild(p)
 
 
+# Figure out applicable configs based on build type
+configs = []
+if env['FULL_SYSTEM']:
+    if env['TARGET_ISA'] == 'alpha':
+        if not env['ALPHA_TLASER']:
+            configs += ['tsunami-simple-atomic',
+                        'tsunami-simple-timing',
+                        'tsunami-simple-atomic-dual',
+                        'tsunami-simple-timing-dual']
+else:
+    configs += ['simple-atomic', 'simple-timing']
+
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))
-for config in ['simple-atomic']:
+for config in configs:
     dirs = glob.glob('*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
     for d in dirs:
         test_builder(env, d)

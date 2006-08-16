@@ -26,6 +26,18 @@
 #
 # Authors: Steve Reinhardt
 
-root.system.cpu.workload = EioProcess(file = binpath('anagram',
-                                                     'anagram-vshort.eio.gz'))
-root.system.cpu.max_insts_any_thread = 500000
+import m5
+from m5.objects import *
+m5.AddToPath('../configs/common')
+import FSConfig
+
+AlphaConsole.cpu = Parent.cpu[0]
+IntrControl.cpu = Parent.cpu[0]
+
+cpus = [ TimingSimpleCPU() for i in xrange(2) ]
+system = FSConfig.makeLinuxAlphaSystem('timing')
+system.cpu = cpus
+for c in cpus:
+    c.connectMemPorts(system.membus)
+
+root = Root(clock = '2GHz', system = system)

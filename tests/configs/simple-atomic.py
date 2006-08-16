@@ -26,6 +26,13 @@
 #
 # Authors: Steve Reinhardt
 
-root.system.cpu.workload = EioProcess(file = binpath('anagram',
-                                                     'anagram-vshort.eio.gz'))
-root.system.cpu.max_insts_any_thread = 500000
+import m5
+from m5.objects import *
+
+system = System(cpu = AtomicSimpleCPU(),
+                physmem = PhysicalMemory(),
+                membus = Bus())
+system.physmem.port = system.membus.port
+system.cpu.connectMemPorts(system.membus)
+
+root = Root(system = system)

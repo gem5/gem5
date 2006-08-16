@@ -319,9 +319,8 @@ LiveProcess::argsInit(int intSize, int pageSize)
 
     int space_needed =
         argv_array_size + envp_array_size + arg_data_size + env_data_size;
-    // for SimpleScalar compatibility
-    if (space_needed < 16384)
-        space_needed = 16384;
+    if (space_needed < 32*1024)
+        space_needed = 32*1024;
 
     // set bottom of stack
     stack_min = stack_base - space_needed;

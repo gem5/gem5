@@ -43,7 +43,7 @@ def binpath(app, file=None):
     return os.path.join(test_progs, app, 'bin', isa, opsys, file)
 
 # build configuration
-execfile(os.path.join(tests_root, config + '.py'))
+execfile(os.path.join(tests_root, 'configs', config + '.py'))
 
 # set default maxtick... script can override
 # -1 means run forever

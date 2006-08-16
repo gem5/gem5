@@ -26,6 +26,4 @@
 #
 # Authors: Steve Reinhardt
 
-root.system.cpu.workload = EioProcess(file = binpath('anagram',
-                                                     'anagram-vshort.eio.gz'))
-root.system.cpu.max_insts_any_thread = 500000
+root.system.readfile = os.path.join(tests_root, 'halt.sh')

@@ -6,7 +6,7 @@ from Bus import Bus
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
-    mem = Param.MemObject("memory")
+    mem = Param.PhysicalMemory(Parent.any, "memory")
 
     system = Param.System(Parent.any, "system object")
     if build_env['FULL_SYSTEM']:

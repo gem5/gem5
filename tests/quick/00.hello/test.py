@@ -26,4 +26,5 @@
 #
 # Authors: Steve Reinhardt
 
-root.system.cpu.workload = LiveProcess(file = binpath('hello'))
+root.system.cpu.workload = LiveProcess(cmd = 'hello',
+                                       executable = binpath('hello'))
