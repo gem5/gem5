@@ -57,13 +57,14 @@ Lisa R. Hsu
 Gabriel Black
 -----------------------
 * Multiple ISA support
-* Alpha support reorgization
+* Alpha support reorganization
 * SPARC SE support
 
 Korey L. Sewell
 -----------------------
 * O3CPU SMT support
-* MIPS support
+* MIPS ISA support
+* Multiple ISA support in O3CPU
 
 Andrew L. Schultz
 -----------------------
