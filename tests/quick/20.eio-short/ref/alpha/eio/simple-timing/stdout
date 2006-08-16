@@ -1,14 +1,11 @@
-main dictionary has 1245 entries
-49508 bytes wasted
->M5 Simulator System
+M5 Simulator System
 
 Copyright (c) 2001-2006
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 27 2006 17:25:03
-M5 started Thu Jul 27 17:25:14 2006
-M5 executing on zamp.eecs.umich.edu
-command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/test/opt/test1/timing tests/test1/run.py --timing
-Exiting @ tick 680774 because a thread reached the max instruction count
+M5 compiled Aug 16 2006 13:05:10
+M5 started Wed Aug 16 14:41:54 2006
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/test/opt/quick/20.eio-short/alpha/eio/simple-timing tests/run.py quick/20.eio-short/alpha/eio/simple-timing

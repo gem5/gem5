@@ -1,3 +1,11 @@
-warn: Entering event queue @ 0.  Starting simulation...
-
-gzip: stdout: Broken pipe
+Traceback (most recent call last):
+  File "<string>", line 1, in ?
+  File "build/ALPHA_SE/python/m5/main.py", line 314, in main
+    execfile(sys.argv[0], scope)
+  File "tests/run.py", line 18, in ?
+    execfile(os.path.join(tests_root, 'configs', config + '.py'))
+  File "tests/configs/simple-timing.py", line 13, in ?
+    MyCache(size = '2MB'))
+  File "build/ALPHA_SE/python/m5/objects/BaseCPU.py", line 52, in addTwoLevelCacheHierarchy
+    self.l2cache.cpu_side = toL2Bus.port
+NameError: global name 'toL2Bus' is not defined

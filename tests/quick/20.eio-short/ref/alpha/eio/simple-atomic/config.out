@@ -16,16 +16,16 @@ type=System
 physmem=system.physmem
 mem_mode=atomic
 
-[system.workload]
+[system.membus]
+type=Bus
+bus_id=0
+
+[system.cpu.workload]
 type=EioProcess
-file=/z/ktlim2/clean/newmem-merge/tests/test-progs/anagram/bin/anagram-vshort.eio.gz
+file=tests/test-progs/anagram/bin/alpha/eio/anagram-vshort.eio.gz
 chkpt=
 output=cout
 system=system
-
-[system.cpu.mem]
-type=Bus
-bus_id=0
 
 [system.cpu]
 type=AtomicSimpleCPU
@@ -33,9 +33,9 @@ max_insts_any_thread=500000
 max_insts_all_threads=0
 max_loads_any_thread=0
 max_loads_all_threads=0
-mem=system.cpu.mem
+mem=system.physmem
 system=system
-workload=system.workload
+workload=system.cpu.workload
 clock=1
 defer_registration=false
 width=1
@@ -81,6 +81,7 @@ print_data=true
 print_iregs=false
 print_fetchseq=false
 print_cpseq=false
+print_reg_delta=false
 pc_symbol=true
 intel_format=false
 trace_system=client
