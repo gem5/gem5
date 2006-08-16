@@ -49,5 +49,5 @@ class BaseCPU(SimObject):
         self.toL2Bus = Bus()
         self.connectMemPorts(self.toL2Bus)
         self.l2cache = l2c
-        self.l2cache.cpu_side = toL2Bus.port
+        self.l2cache.cpu_side = self.toL2Bus.port
         self._mem_ports = ['l2cache.mem_side']
