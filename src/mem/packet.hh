@@ -217,7 +217,7 @@ class Packet
     bool isRequest()	 { return (cmd & IsRequest)  != 0; }
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
-    bool isInvalidate()  { return (cmd * IsInvalidate) != 0; }
+    bool isInvalidate()  { return (cmd & IsInvalidate) != 0; }
 
     bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }

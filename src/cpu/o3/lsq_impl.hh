@@ -71,6 +71,11 @@ template <class Impl>
 void
 LSQ<Impl>::DcachePort::recvRetry()
 {
+    if (lsq->retryTid == -1)
+    {
+        //Squashed, so drop it
+        return;
+    }
     lsq->thread[lsq->retryTid].recvRetry();
     // Speculatively clear the retry Tid.  This will get set again if
     // the LSQUnit was unable to complete its access.

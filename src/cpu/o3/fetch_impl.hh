@@ -672,9 +672,9 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
         assert(cacheBlocked);
         cacheBlocked = false;
         retryTid = -1;
-        retryPkt = NULL;
         delete retryPkt->req;
         delete retryPkt;
+        retryPkt = NULL;
     }
 
     fetchStatus[tid] = Squashing;

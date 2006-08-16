@@ -626,6 +626,7 @@ LSQUnit<Impl>::writebackStores()
             ++lsqCacheBlocked;
             assert(retryPkt == NULL);
             retryPkt = data_pkt;
+            lsq->setRetryTid(lsqID);
         } else {
             storePostSend(data_pkt);
         }
@@ -869,6 +870,7 @@ LSQUnit<Impl>::recvRetry()
             storePostSend(retryPkt);
             retryPkt = NULL;
             isStoreBlocked = false;
+            lsq->setRetryTid(-1);
         } else {
             // Still blocked!
             ++lsqCacheBlocked;

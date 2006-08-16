@@ -73,6 +73,7 @@ BaseCache::CachePort::recvTiming(Packet *pkt)
 {
     if (blocked)
     {
+        DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
     }
@@ -92,20 +93,62 @@ BaseCache::CachePort::recvFunctional(Packet *pkt)
 }
 
 void
+BaseCache::CachePort::recvRetry()
+{
+    Packet *pkt;
+
+    if (!isCpuSide)
+    {
+        pkt = cache->getPacket();
+        bool success = sendTiming(pkt);
+        DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                pkt->getAddr(), success ? "succesful" : "unsuccesful");
+        cache->sendResult(pkt, success);
+        if (success && cache->doMasterRequest())
+        {
+            //Still more to issue, rerequest in 1 cycle
+            pkt = NULL;
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            reqCpu->schedule(curTick + 1);
+        }
+    }
+    else
+    {
+        pkt = cache->getCoherencePacket();
+        bool success = sendTiming(pkt);
+        if (success && cache->doSlaveRequest())
+        {
+            //Still more to issue, rerequest in 1 cycle
+            pkt = NULL;
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            reqCpu->schedule(curTick + 1);
+        }
+
+    }
+    return;
+}
+void
 BaseCache::CachePort::setBlocked()
 {
+    assert(!blocked);
+    DPRINTF(Cache, "Cache Blocking\n");
     blocked = true;
+    //Clear the retry flag
+    mustSendRetry = false;
 }
 
 void
 BaseCache::CachePort::clearBlocked()
 {
+    assert(blocked);
+    DPRINTF(Cache, "Cache Unblocking\n");
+    blocked = false;
     if (mustSendRetry)
     {
+        DPRINTF(Cache, "Cache Sending Retry\n");
         mustSendRetry = false;
         sendRetry();
     }
-    blocked = false;
 }
 
 BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort)
@@ -128,6 +171,7 @@ BaseCache::CacheEvent::process()
     {
         if (!cachePort->isCpuSide)
         {
+            //MSHR
             pkt = cachePort->cache->getPacket();
             bool success = cachePort->sendTiming(pkt);
             DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
@@ -142,11 +186,19 @@ BaseCache::CacheEvent::process()
         }
         else
         {
+            //CSHR
             pkt = cachePort->cache->getCoherencePacket();
-            cachePort->sendTiming(pkt);
+            bool success = cachePort->sendTiming(pkt);
+            if (success && cachePort->cache->doSlaveRequest())
+            {
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
+            }
         }
         return;
     }
+    //Response
     //Know the packet to send, no need to mark in service (must succed)
     bool success = cachePort->sendTiming(pkt);
     assert(success);

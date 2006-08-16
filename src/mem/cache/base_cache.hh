@@ -98,6 +98,8 @@ class BaseCache : public MemObject
 
         virtual int deviceBlockSize();
 
+        virtual void recvRetry();
+
       public:
         void setBlocked();
 
@@ -407,17 +409,23 @@ class BaseCache : public MemObject
     void clearBlocked(BlockedCause cause)
     {
         uint8_t flag = 1 << cause;
-        blocked &= ~flag;
-        blockedSnoop &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %s, causes left=%i\n",
                 cause, blocked);
-        if (!isBlocked()) {
-            blocked_cycles[cause] += curTick - blockedCycle;
-            DPRINTF(Cache,"Unblocking from all causes\n");
-            cpuSidePort->clearBlocked();
+        if (blocked & flag)
+        {
+            blocked &= ~flag;
+            if (!isBlocked()) {
+                blocked_cycles[cause] += curTick - blockedCycle;
+                DPRINTF(Cache,"Unblocking from all causes\n");
+                cpuSidePort->clearBlocked();
+            }
         }
-        if (!isBlockedForSnoop()) {
-           memSidePort->clearBlocked();
+        if (blockedSnoop & flag)
+        {
+            blockedSnoop &= ~flag;
+            if (!isBlockedForSnoop()) {
+                memSidePort->clearBlocked();
+            }
         }
     }
 
