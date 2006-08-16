@@ -3,10 +3,7 @@
  * The Regents of The University of Michigan
  * All Rights Reserved
  *
- * This code is part of the M5 simulator, developed by Nathan Binkert,
- * Erik Hallnor, Steve Raasch, and Steve Reinhardt, with contributions
- * from Ron Dreslinski, Dave Greene, Lisa Hsu, Ali Saidi, and Andrew
- * Schultz.
+ * This code is part of the M5 simulator.
  *
  * Permission is granted to use, copy, create derivative works and
  * redistribute this software and such derivative works for any purpose,
@@ -26,7 +23,10 @@
  * DAMAGES, WITH RESPECT TO ANY CLAIM ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OF THE SOFTWARE, EVEN IF IT HAS BEEN OR IS HEREAFTER
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ *
+ * Modified for M5 by: Ali G. Saidi
  */
+
 /*
  * Copyright 1993 Hewlett-Packard Development Company, L.P.
  *
