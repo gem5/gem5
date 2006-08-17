@@ -54,8 +54,8 @@ Ronald G. Dreslinski Jr
 Lisa R. Hsu
 -----------------------
 * DP83820 NIC device model
-* Kernel stats stuff
-* Linux Dist disk image building
+* Kernel stats
+* Linux Dist disk image building (current)
 
 Gabriel Black
 -----------------------
@@ -74,7 +74,7 @@ Andrew L. Schultz
 -----------------------
 * IDE controller/disk model
 * PCI devices interface
-* Linux Dist disk image building
+* Linux Dist disk image building (deprecated)
 
 Erik G. Hallnor
 -----------------------
