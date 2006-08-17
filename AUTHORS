@@ -57,6 +57,7 @@ Lisa R. Hsu
 Gabriel Black
 -----------------------
 * Multiple ISA support
+* SPARC ISA support
 * Alpha support reorganization
 * SPARC SE support
 
