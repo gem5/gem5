@@ -498,7 +498,7 @@ for build_path in build_paths:
     # Set up the regression tests for each build.
     for e in envList:
         SConscript('tests/SConscript',
-                   build_dir = os.path.join(build_path, 'test', e.Label),
+                   build_dir = os.path.join(build_path, 'tests', e.Label),
                    exports = { 'env' : e }, duplicate = False)
 
 Help(help_text)
