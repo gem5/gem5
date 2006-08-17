@@ -47,6 +47,9 @@ parser.add_option("-b", "--benchmark", action="store", type="string",
                   dest="benchmark",
                   help="Specify the benchmark to run. Available benchmarks: %s"\
                           % DefinedBenchmarks)
+parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
+                  help="Specify the filename to dump a pcap capture of the ethernet"
+                  "traffic")
 
 (options, args) = parser.parse_args()
 
@@ -90,7 +93,7 @@ if len(bm) == 2:
     s2 = makeLinuxAlphaSystem(mem_mode, bm[1])
     s2.cpu = cpu2
     cpu2.connectMemPorts(s2.membus)
-    root = makeDualRoot(s1, s2)
+    root = makeDualRoot(s1, s2, options.etherdump)
 elif len(bm) == 1:
     root = Root(clock = '1THz',
                 system = makeLinuxAlphaSystem(mem_mode, bm[0]))

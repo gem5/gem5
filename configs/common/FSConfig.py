@@ -83,14 +83,15 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeDualRoot(testSystem, driveSystem):
+def makeDualRoot(testSystem, driveSystem, dumpfile):
     self = Root()
     self.testsys = testSystem
     self.drivesys = driveSystem
-
-    self.etherdump = EtherDump(file='ethertrace')
     self.etherlink = EtherLink(int1 = Parent.testsys.tsunami.etherint[0],
-                               int2 = Parent.drivesys.tsunami.etherint[0],
-                               dump = Parent.etherdump)
+                               int2 = Parent.drivesys.tsunami.etherint[0])
+    if dumpfile:
+        self.etherdump = EtherDump(file=dumpfile)
+        self.etherlink.dump = Parent.etherdump
+
     self.clock = '1THz'
     return self
