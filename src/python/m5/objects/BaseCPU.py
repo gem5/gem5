@@ -6,7 +6,7 @@ from Bus import Bus
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
-    mem = Param.PhysicalMemory(Parent.any, "memory")
+    mem = Param.MemObject(Parent.any, "memory")
 
     system = Param.System(Parent.any, "system object")
     if build_env['FULL_SYSTEM']:
@@ -43,11 +43,12 @@ class BaseCPU(SimObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
+#        self.mem = dc
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)
         self.toL2Bus = Bus()
         self.connectMemPorts(self.toL2Bus)
         self.l2cache = l2c
-        self.l2cache.cpu_side = toL2Bus.port
+        self.l2cache.cpu_side = self.toL2Bus.port
         self._mem_ports = ['l2cache.mem_side']
