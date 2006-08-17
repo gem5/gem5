@@ -110,7 +110,7 @@ PhysicalMemory::calculateLatency(Packet *pkt)
     return lat;
 }
 
-Tick
+void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
     assert(pkt->getAddr() + pkt->getSize() < params()->addrRange.size());
@@ -136,7 +136,6 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
     }
 
     pkt->result = Packet::Success;
-    return calculateLatency(pkt);
 }
 
 Port *
@@ -197,7 +196,9 @@ PhysicalMemory::MemoryPort::recvTiming(Packet *pkt)
 {
     assert(pkt->result != Packet::Nacked);
 
-    Tick latency = memory->doFunctionalAccess(pkt);
+    Tick latency = memory->calculateLatency(pkt);
+
+    memory->doFunctionalAccess(pkt);
 
     pkt->makeTimingResponse();
     sendTiming(pkt, latency);
@@ -208,7 +209,8 @@ PhysicalMemory::MemoryPort::recvTiming(Packet *pkt)
 Tick
 PhysicalMemory::MemoryPort::recvAtomic(Packet *pkt)
 {
-    return memory->doFunctionalAccess(pkt);
+    memory->doFunctionalAccess(pkt);
+    return memory->calculateLatency(pkt);
 }
 
 void

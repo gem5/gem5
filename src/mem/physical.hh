@@ -112,7 +112,7 @@ class PhysicalMemory : public MemObject
     unsigned int drain(Event *de);
 
   protected:
-    Tick doFunctionalAccess(Packet *pkt);
+    void doFunctionalAccess(Packet *pkt);
     virtual Tick calculateLatency(Packet *pkt);
     void recvStatusChange(Port::Status status);
 
