@@ -59,7 +59,7 @@ echo "Exporting shares..."
 
 echo -n "signal client to mount..."
 sleep 5
-echo "server ready" | /usr/bin/netcat -c 10.0.0.2 8000
+echo "server ready" | netcat -c 10.0.0.2 8000
 echo "done."
 
 echo -n "starting bash shell..."

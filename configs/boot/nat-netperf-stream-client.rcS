@@ -24,9 +24,9 @@ echo "modifying route table"
 route add default gw 10.0.0.1
 
 echo -n "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
-BINARY=/benchmarks/netperf/netperf
+BINARY=/benchmarks/netperf-bin/netperf
 TEST="TCP_STREAM"
 SHORT_ARGS="-l -100k"
 LONG_ARGS="-k16384,0 -K16384,0 -- -m 65536 -M 65536 -s 262144 -S 262144"

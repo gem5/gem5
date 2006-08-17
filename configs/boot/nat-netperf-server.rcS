@@ -21,11 +21,11 @@ echo "262143" > /proc/sys/net/core/optmem_max
 echo "100000" > /proc/sys/net/core/netdev_max_backlog
 
 echo "running netserver..."
-/benchmarks/netperf/netserver
+/benchmarks/netperf-bin/netserver
 
 echo -n "signal natbox to begin..."
 sleep 5
-echo "server ready" | /usr/bin/netcat -c $NATBOX 8000
+echo "server ready" | netcat -c $NATBOX 8000
 echo "done."
 
 echo "starting bash..."

@@ -36,13 +36,13 @@ echo -n "starting nfs client..."
 echo "done."
 
 echo -n "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 echo -n "mounting remote share..."
 mkdir /nfs
 mount -o tcp 10.0.0.1:/nfs /nfs
 echo "done."
 
-/bin/bonnie++ -u 99 -s 700 -r 0 -n 0 -f -F -d /nfs
+/usr/bin/bonnie++ -u 99 -s 700 -r 0 -n 0 -f -F -d /nfs
 
 /sbin/m5 exit

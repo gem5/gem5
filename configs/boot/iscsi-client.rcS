@@ -59,7 +59,7 @@ node.cnx[0].iscsi.MaxRecvDataSegmentLength = 65536
 #discovery.sendtargets.auth.password = aloha
 EOF
 
-mount -t sysfs none /sys
+#mount -t sysfs none /sys
 
 echo "" > /var/log/iscsi.log
 chmod 0600 /var/log/iscsi.log
@@ -74,8 +74,10 @@ echo "/sbin/hotplug" > /proc/sys/kernel/hotplug
 echo "Starting iscsid..."
 /iscsi/iscsid -f &
 
+sleep 1
+
 echo "Waiting for server..."
-/usr/bin/netcat -c -l -p 8000 
+netcat -c -l -p 8000 
 
 echo "Attaching target..."
 /iscsi/iscsiadm -m discovery -t st -p 192.168.0.1
@@ -92,7 +94,7 @@ sleep 5
 #PARAMS="-n 16 -s 32 -r 1 -c 50"          # stable ~1.5 Gbps
 #PARAMS="-n 50 -s 32 -r 1 -c 50"          # stable ~1.5 Gbps
 PARAMS="-n 50 -s 8 -r .666 -c 50"
-COMMAND="/benchmarks/aio_bench/aio-bench $PARAMS -i 1000000 -C 50000 /dev/sda"
+COMMAND="/benchmarks/aio-bench $PARAMS -i 1000000 -C 50000 /dev/sda"
 
 echo "Starting aio benchmark..."
 echo $COMMAND

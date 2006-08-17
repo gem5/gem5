@@ -19,7 +19,7 @@ echo "262143" > /proc/sys/net/core/optmem_max
 echo "100000" > /proc/sys/net/core/netdev_max_backlog
 
 echo -n "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 ping $SERVER
 /sbin/m5 exit

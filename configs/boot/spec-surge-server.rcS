@@ -40,13 +40,13 @@ mount /dev/hdb1 /z/htdocs
 echo "done."
 
 echo -n "starting httpd..."
-/benchmarks/apache2/bin/apachectl start
+/usr/sbin/apache2 -f /etc/apache2/httpd.conf -k start
 sleep 2
-cat /benchmarks/apache2/logs/error_log
+cat /usr/share/apache2/logs/error_log
 echo "done."
 
 echo "notifying client..."
-echo "server ready" | /usr/bin/netcat -c 192.168.0.10 8000
+echo "server ready" | netcat -c 192.168.0.10 8000
 echo "done"
 
 echo -n "starting bash shell..."

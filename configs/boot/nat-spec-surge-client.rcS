@@ -38,7 +38,7 @@ echo "changing route table..."
 route add default gw 10.0.0.1 
 
 echo "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 echo -n "running surge client..."
 /bin/bash -c "cd /benchmarks/surge && ./spec-m5 1 20 1 $SERVER 5 40000 1000000000 1000"

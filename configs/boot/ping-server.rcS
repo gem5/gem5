@@ -19,7 +19,7 @@ echo "262143" > /proc/sys/net/core/optmem_max
 echo "100000" > /proc/sys/net/core/netdev_max_backlog
 
 echo -n "signal client to begin..."
-echo "server ready" | /usr/bin/netcat -c $CLIENT 8000
+echo "server ready" | netcat -c $CLIENT 8000
 echo "done."
 
 echo "starting bash..."

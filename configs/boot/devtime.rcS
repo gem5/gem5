@@ -1,3 +1,6 @@
+echo "switching cpus"
+m5 switchcpu
+echo "done"
 insmod /modules/devtime.ko dataAddr=0x9000004 count=100
 rmmod devtime
 insmod /modules/devtime.ko dataAddr=0x1a0000300 count=100
