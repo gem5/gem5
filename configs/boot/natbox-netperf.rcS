@@ -24,7 +24,7 @@ echo "100000" > /proc/sys/net/core/netdev_max_backlog
 echo "1" > /proc/sys/net/ipv4/ip_forward
 
 echo "waiting for netserver..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 echo "setting up iptables..."
 IPTABLES=/sbin/iptables
@@ -47,7 +47,7 @@ $IPTABLES -t nat -A POSTROUTING -o $EXTIF -j MASQUERADE
 
 echo "informing client..."
 sleep 5
-echo "server ready" | /usr/bin/netcat -c $CLIENT 8000
+echo "server ready" | netcat -c $CLIENT 8000
 
 echo "starting bash..."
 exec /bin/bash

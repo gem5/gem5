@@ -31,10 +31,10 @@ echo "131072" > /proc/sys/fs/file-max
 echo "done."
 
 echo "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 echo -n "running surge client..."
-/bin/bash -c "cd /benchmarks/surge && ./Surge 2 100 1 192.168.0.1 5"
+/bin/bash -c "cd /benchmarks/specsurge && ./Surge 2 100 1 192.168.0.1 5"
 echo "done."
 
 echo -n "halting machine"

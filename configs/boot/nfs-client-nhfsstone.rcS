@@ -36,7 +36,7 @@ echo -n "starting nfs client..."
 echo "done."
 
 echo -n "waiting for server..."
-/usr/bin/netcat -c -l -p 8000
+netcat -c -l -p 8000
 
 echo -n "mounting remote share..."
 mkdir /nfs
@@ -44,6 +44,6 @@ mount 10.0.0.1:/nfs /nfs
 echo "done."
 
 /sbin/m5 checkpoint 8000000000 2000000000
-/benchmarks/nfs/nhfsstone -l 300 -t 50 -p 14 -m /benchmarks/nfs/nfs.mix2 /nfs
+/sbin/nhfsstone /nfs
 
 /sbin/m5 exit

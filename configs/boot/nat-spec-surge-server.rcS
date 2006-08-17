@@ -49,7 +49,7 @@ echo "done."
 
 echo "notifying natbox..."
 sleep 5
-echo "server ready" | /usr/bin/netcat -c $NATBOX 8000
+echo "server ready" | netcat -c $NATBOX 8000
 echo "done"
 
 echo -n "starting bash shell..."
