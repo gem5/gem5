@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "m5op.h"
 
@@ -49,6 +50,7 @@ usage()
            "       m5 dumpstats [delay [period]]\n"
            "       m5 dumpresetstats [delay [period]]\n"
            "       m5 checkpoint [delay [period]]\n"
+           "       m5 readfile\n"
            "\n"
            "All times in nanoseconds!\n");
     exit(1);
@@ -182,6 +184,22 @@ main(int argc, char *argv[])
         }
 
         return 0;
+    }
+
+    if (COMPARE("readfile")) {
+            char buf[256*1024];
+            int offset = 0;
+            int len;
+
+            if (argc != 2)
+                    usage();
+
+            while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
+                    write(STDOUT_FILENO, buf, len);
+                    offset += len;
+            }
+
+            return 0;
     }
 
     usage();
