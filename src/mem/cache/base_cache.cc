@@ -200,8 +200,7 @@ BaseCache::CacheEvent::process()
     }
     //Response
     //Know the packet to send, no need to mark in service (must succed)
-    bool success = cachePort->sendTiming(pkt);
-    assert(success);
+    assert(cachePort->sendTiming(pkt));
 }
 
 const char *

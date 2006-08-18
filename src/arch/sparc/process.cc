@@ -249,7 +249,10 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
+#ifndef NDEBUG
+    // only used in DPRINTF
     Addr window_save_base = argc_base - window_save_size;
+#endif
 
     DPRINTF(Sparc, "The addresses of items on the initial stack:\n");
     DPRINTF(Sparc, "0x%x - aux data\n", aux_data_base);

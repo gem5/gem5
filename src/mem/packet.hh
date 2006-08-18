@@ -223,7 +223,7 @@ class Packet
     bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
     bool isCompressed() { return (flags & COMPRESSED) != 0; }
 
-    bool nic_pkt() { assert("Unimplemented\n" && 0); }
+    bool nic_pkt() { assert("Unimplemented\n" && 0); return false; }
 
     /** Possible results of a packet's request. */
     enum Result
