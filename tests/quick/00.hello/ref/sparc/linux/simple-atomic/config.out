@@ -8,7 +8,7 @@ output_file=cout
 [system.physmem]
 type=PhysicalMemory
 file=
-// range not specified
+range=[0,134217727]
 latency=1
 
 [system]

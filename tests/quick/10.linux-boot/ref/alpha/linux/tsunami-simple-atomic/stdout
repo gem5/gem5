@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 16 2006 13:33:58
-M5 started Wed Aug 16 14:37:55 2006
+M5 compiled Aug 17 2006 23:41:21
+M5 started Thu Aug 17 23:41:25 2006
 M5 executing on zizzer.eecs.umich.edu
-command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/test/opt/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
+command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
 Exiting @ tick 3493545624 because m5_exit instruction encountered
