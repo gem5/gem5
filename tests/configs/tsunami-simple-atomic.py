@@ -35,5 +35,6 @@ cpu = AtomicSimpleCPU()
 system = FSConfig.makeLinuxAlphaSystem('atomic')
 system.cpu = cpu
 cpu.connectMemPorts(system.membus)
+cpu.mem = system.physmem
 
 root = Root(clock = '2GHz', system = system)
