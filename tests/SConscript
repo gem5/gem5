@@ -171,6 +171,7 @@ def test_builder(env, ref_dir):
     # Prefix test run with batch job submission command if appropriate.
     # Output redirection is also different for batch runs.
     # Batch command also supports timeout arg (in seconds, not minutes).
+    timeout = 15 # used to be a param, probably should be again
     if env['BATCH']:
         cmd = [env['BATCH_CMD'], '-t', str(timeout * 60),
                '-o', cmd_stdout, '-e', cmd_stderr, base_cmd]
