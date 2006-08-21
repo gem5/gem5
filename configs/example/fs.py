@@ -106,18 +106,18 @@ else:
 m5.instantiate(root)
 
 if options.maxtick:
-    arg = options.maxtick
+    maxtick = options.maxtick
 elif options.maxtime:
     simtime = int(options.maxtime * root.clock.value)
     print "simulating for: ", simtime
-    arg = simtime
+    maxtick = simtime
 else:
-    arg = -1
+    maxtick = -1
 
-exit_event = m5.simulate(arg)
+exit_event = m5.simulate(maxtick)
 
 while exit_event.getCause() == "checkpoint":
-        m5.checkpoint(root, "cpt.%d")
-        exit_event = m5.simulate(arg)
+    m5.checkpoint(root, "cpt.%d")
+    exit_event = m5.simulate(maxtick - m5.curTick())
 
 print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
