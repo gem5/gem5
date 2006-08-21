@@ -1,0 +1,3 @@
+warn: Entering event queue @ 0.  Starting simulation...
+warn: Increasing stack 0x11ff92000:0x11ff9b000 to 0x11ff90000:0x11ff9b000 because of access to 0x11ff91ff8
+warn: ignoring syscall sigprocmask(1, 18446744073709547831, ...)
