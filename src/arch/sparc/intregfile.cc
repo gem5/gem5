@@ -60,9 +60,9 @@ void IntRegFile::clear()
 {
     int x;
     for (x = 0; x < MaxGL; x++)
-        memset(regGlobals[x], 0, sizeof(regGlobals[x]));
+        memset(regGlobals[x], 0, sizeof(IntReg) * RegsPerFrame);
     for(int x = 0; x < 2 * NWindows; x++)
-        bzero(regSegments[x], sizeof(regSegments[x]));
+        bzero(regSegments[x], sizeof(IntReg) * RegsPerFrame);
 }
 
 IntRegFile::IntRegFile()
@@ -84,8 +84,10 @@ IntReg IntRegFile::readReg(int intReg)
 Fault IntRegFile::setReg(int intReg, const IntReg &val)
 {
     if(intReg)
+    {
         DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
-    regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
+        regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
+    }
     return NoFault;
 }
 
