@@ -266,6 +266,7 @@ class Packet
            result(Unknown)
     {
         flags = 0;
+        time = curTick;
     }
 
     /** Alternate constructor if you are trying to create a packet with
@@ -280,6 +281,7 @@ class Packet
            result(Unknown)
     {
         flags = 0;
+        time = curTick;
     }
 
     /** Destructor. */
@@ -295,6 +297,7 @@ class Packet
         assert(req->validPaddr);
         addr = req->paddr;
         size = req->size;
+        time = req->time;
         addrSizeValid = true;
         result = Unknown;
         if (dynamicData) {

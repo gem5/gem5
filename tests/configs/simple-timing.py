@@ -40,7 +40,7 @@ cpu = TimingSimpleCPU()
 cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
                               MyCache(size = '2MB'))
 cpu.mem = cpu.dcache
-
+cpu.mem = cpu.dcache
 system = System(cpu = cpu,
                 physmem = PhysicalMemory(),
                 membus = Bus())

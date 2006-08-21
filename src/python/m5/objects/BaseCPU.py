@@ -43,6 +43,7 @@ class BaseCPU(SimObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
+#        self.mem = dc
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)
