@@ -119,6 +119,22 @@ def rfind(l, elt, offs = -1):
             return i
     raise ValueError, "element not found"
 
+# helper function: compare dotted version numbers.
+# E.g., compare_version('1.3.25', '1.4.1')
+# returns -1, 0, 1 if v1 is <, ==, > v2
+def compare_versions(v1, v2):
+    # Convert dotted strings to lists
+    v1 = map(int, v1.split('.'))
+    v2 = map(int, v2.split('.'))
+    # Compare corresponding elements of lists
+    for n1,n2 in zip(v1, v2):
+        if n1 < n2: return -1
+        if n1 > n2: return  1
+    # all corresponding values are equal... see if one has extra values
+    if len(v1) < len(v2): return -1
+    if len(v1) > len(v2): return  1
+    return 0
+
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
 # example, for target 'foo/bar/build/ALPHA_SE/arch/alpha/blah.do' we
@@ -202,8 +218,26 @@ env.Append(LIBS = py_version_name)
 if sys.exec_prefix != '/usr':
     env.Append(LIBPATH = os.path.join(sys.exec_prefix, 'lib'))
 
-# Set up SWIG flags & scanner
+# Check for SWIG
+if not env.has_key('SWIG'):
+    print 'Error: SWIG utility not found.'
+    print '       Please install (see http://www.swig.org) and retry.'
+    Exit(1)
 
+# Check for appropriate SWIG version
+swig_version = os.popen('swig -version').read().split()
+# First 3 words should be "SWIG Version x.y.z"
+if swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
+    print 'Error determining SWIG version.'
+    Exit(1)
+
+min_swig_version = '1.3.28'
+if compare_versions(swig_version[2], min_swig_version) < 0:
+    print 'Error: SWIG version', min_swig_version, 'or newer required.'
+    print '       Installed version:', swig_version[2]
+    Exit(1)
+
+# Set up SWIG flags & scanner
 env.Append(SWIGFLAGS=Split('-c++ -python -modern $_CPPINCFLAGS'))
 
 import SCons.Scanner
@@ -215,14 +249,19 @@ swig_scanner = SCons.Scanner.ClassicCPP("SwigScan", ".i", "CPPPATH",
 
 env.Append(SCANNERS = swig_scanner)
 
-# Other default libraries
-env.Append(LIBS=['z'])
-
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(env,
                  conf_dir = os.path.join(build_root, '.scons_config'),
                  log_file = os.path.join(build_root, 'scons_config.log'))
+
+# Check for zlib.  If the check passes, libz will be automatically
+# added to the LIBS environment variable.
+if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++'):
+    print 'Error: did not find needed zlib compression library '\
+          'and/or zlib.h header file.'
+    print '       Please install zlib and try again.'
+    Exit(1)
 
 # Check for <fenv.h> (C99 FP environment control)
 have_fenv = conf.CheckHeader('fenv.h', '<>')
@@ -237,13 +276,10 @@ have_mysql = mysql_config != None
 # Check MySQL version.
 if have_mysql:
     mysql_version = os.popen(mysql_config + ' --version').read()
-    mysql_version = mysql_version.split('.')
-    mysql_major = int(mysql_version[0])
-    mysql_minor = int(mysql_version[1])
-    # This version check is probably overly conservative, but it deals
-    # with the versions we have installed.
-    if mysql_major < 4 or (mysql_major == 4 and mysql_minor < 1):
-        print "Warning: MySQL v4.1 or newer required."
+    min_mysql_version = '4.1'
+    if compare_versions(mysql_version, min_mysql_version) < 0:
+        print 'Warning: MySQL', min_mysql_version, 'or newer required.'
+        print '         Version', mysql_version, 'detected.'
         have_mysql = False
 
 # Set up mysql_config commands.
