@@ -56,11 +56,11 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 
     // Set up stack. On SPARC Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space.
-    stack_base = ((Addr)0x80000000000ULL);
+    stack_base = (Addr)0x80000000000ULL;
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
-    mmap_start = mmap_end = 0x800000;
+    mmap_start = mmap_end = 0xfffff80000000000ULL;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -109,6 +109,12 @@ void
 SparcLiveProcess::argsInit(int intSize, int pageSize)
 {
     Process::startup();
+
+    string filename;
+    if(argv.size() < 1)
+        filename = "";
+    else
+        filename = argv[0];
 
     Addr alignmentMask = ~(intSize - 1);
 
@@ -194,8 +200,13 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
 
     //Figure out how big the initial stack needs to be
 
-    //Each auxilliary vector is two 8 byte words
-    int aux_data_size = 2 * intSize * auxv.size();
+    // The unaccounted for 0 at the top of the stack
+    int mysterious_size = intSize;
+
+    //This is the name of the file which is present on the initial stack
+    //It's purpose is to let the user space linker examine the original file.
+    int file_name_size = filename.size() + 1;
+
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
@@ -205,27 +216,33 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
         arg_data_size += argv[i].size() + 1;
     }
 
+    //The info_block needs to be padded so it's size is a multiple of the
+    //alignment mask. Also, it appears that there needs to be at least some
+    //padding, so if the size is already a multiple, we need to increase it
+    //anyway.
+    int info_block_size =
+        (file_name_size +
+        env_data_size +
+        arg_data_size +
+        intSize) & alignmentMask;
+
+    int info_block_padding =
+        info_block_size -
+        file_name_size -
+        env_data_size -
+        arg_data_size;
+
+    //Each auxilliary vector is two 8 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
 
-    int argv_array_size = intSize * (argv.size() + 1);
     int envp_array_size = intSize * (envp.size() + 1);
+    int argv_array_size = intSize * (argv.size() + 1);
 
     int argc_size = intSize;
     int window_save_size = intSize * 16;
 
-    int info_block_size =
-        (aux_data_size +
-        env_data_size +
-        arg_data_size +
-        ~alignmentMask) & alignmentMask;
-
-    int info_block_padding =
-        info_block_size -
-        aux_data_size -
-        env_data_size -
-        arg_data_size;
-
     int space_needed =
+        mysterious_size +
         info_block_size +
         aux_array_size +
         envp_array_size +
@@ -242,10 +259,11 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
                      roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr aux_data_base = stack_base - aux_data_size - info_block_padding;
-    Addr env_data_base = aux_data_base - env_data_size;
+    Addr mysterious_base = stack_base - mysterious_size;
+    Addr file_name_base = mysterious_base - file_name_size;
+    Addr env_data_base = file_name_base - env_data_size;
     Addr arg_data_base = env_data_base - arg_data_size;
-    Addr auxv_array_base = arg_data_base - aux_array_size;
+    Addr auxv_array_base = arg_data_base - aux_array_size - info_block_padding;
     Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
@@ -255,7 +273,7 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
 #endif
 
     DPRINTF(Sparc, "The addresses of items on the initial stack:\n");
-    DPRINTF(Sparc, "0x%x - aux data\n", aux_data_base);
+    DPRINTF(Sparc, "0x%x - file name\n", file_name_base);
     DPRINTF(Sparc, "0x%x - env data\n", env_data_base);
     DPRINTF(Sparc, "0x%x - arg data\n", arg_data_base);
     DPRINTF(Sparc, "0x%x - auxv array\n", auxv_array_base);
@@ -266,8 +284,18 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     DPRINTF(Sparc, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
+
+    // figure out argc
     uint64_t argc = argv.size();
     uint64_t guestArgc = TheISA::htog(argc);
+
+    //Write out the mysterious 0
+    uint64_t mysterious_zero = 0;
+    initVirtMem->writeBlob(mysterious_base,
+            (uint8_t*)&mysterious_zero, mysterious_size);
+
+    //Write the file name
+    initVirtMem->writeString(file_name_base, filename.c_str());
 
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
