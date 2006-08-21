@@ -67,7 +67,7 @@ output header {{
             {
             }
 
-            int32_t imm;
+            int64_t imm;
 
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;

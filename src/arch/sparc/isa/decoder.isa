@@ -106,7 +106,7 @@ decode OP default Unknown::unknown()
             }
         }
         //SETHI (or NOP if rd == 0 and imm == 0)
-        0x4: SetHi::sethi({{Rd = imm;}});
+        0x4: SetHi::sethi({{Rd.udw = imm;}});
         0x5: Trap::fbpfcc({{fault = new FpDisabled;}});
         0x6: Trap::fbfcc({{fault = new FpDisabled;}});
     }
@@ -535,15 +535,15 @@ decode OP default Unknown::unknown()
                 0x10: Trap::array8({{fault = new IllegalInstruction;}});
                 0x12: Trap::array16({{fault = new IllegalInstruction;}});
                 0x14: Trap::array32({{fault = new IllegalInstruction;}});
-                0x18: BasicOperate::alignaddress({{
+                0x18: BasicOperate::alignaddr({{
                     uint64_t sum = Rs1 + Rs2;
-                    Frd = sum & ~7;
+                    Rd = sum & ~7;
                     Gsr = (Gsr & ~7) | (sum & 7);
                 }});
                 0x19: Trap::bmask({{fault = new IllegalInstruction;}});
                 0x1A: BasicOperate::alignaddresslittle({{
                     uint64_t sum = Rs1 + Rs2;
-                    Frd = sum & ~7;
+                    Rd = sum & ~7;
                     Gsr = (Gsr & ~7) | ((~sum + 1) & 7);
                 }});
                 0x20: Trap::fcmple16({{fault = new IllegalInstruction;}});
