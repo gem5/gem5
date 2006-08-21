@@ -302,8 +302,6 @@ sticky_opts.AddOptions(
 # Non-sticky options only apply to the current build.
 nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
-    ListOption('TEST_CPU_MODELS', 'CPU models to test if regression is being run', '',
-               env['ALL_CPU_LIST']),
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
 
