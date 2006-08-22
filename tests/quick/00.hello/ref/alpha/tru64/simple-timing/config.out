@@ -62,7 +62,7 @@ hit_latency=1
 [system.cpu.workload]
 type=LiveProcess
 cmd=hello
-executable=tests/test-progs/hello/bin/alpha/linux/hello
+executable=tests/test-progs/hello/bin/alpha/tru64/hello
 input=cin
 output=cout
 env=
