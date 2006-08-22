@@ -60,6 +60,9 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
     {
+        if (pkt->isWrite() && (pkt->req->getFlags() & LOCKED)) {
+            pkt->req->setScResult(1);
+        }
         access(pkt);
     }
     else
@@ -79,6 +82,11 @@ doAtomicAccess(Packet *pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
+        //Temporary solution to LL/SC
+        if (pkt->isWrite() && (pkt->req->getFlags() & LOCKED)) {
+            pkt->req->setScResult(1);
+        }
+
         probe(pkt, true);
         //TEMP ALWAYS SUCCES FOR NOW
         pkt->result = Packet::Success;
@@ -103,6 +111,12 @@ doFunctionalAccess(Packet *pkt, bool isCpuSide)
     {
         //TEMP USE CPU?THREAD 0 0
         pkt->req->setThreadContext(0,0);
+
+        //Temporary solution to LL/SC
+        if (pkt->isWrite() && (pkt->req->getFlags() & LOCKED)) {
+            assert("Can't handle LL/SC on functional path\n");
+        }
+
         probe(pkt, true);
         //TEMP ALWAYS SUCCESFUL FOR NOW
         pkt->result = Packet::Success;
