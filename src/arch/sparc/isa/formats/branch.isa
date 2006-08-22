@@ -224,7 +224,6 @@ let {{
 
 // Primary format for branch instructions:
 def format Branch(code, *opt_flags) {{
-        code = re.sub(r'handle_annul', handle_annul, code)
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
         iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
@@ -246,7 +245,14 @@ def format Branch(code, *opt_flags) {{
 def format BranchN(bits, code, *opt_flags) {{
         code = re.sub(r'handle_annul', handle_annul, code)
         codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, codeBlk, opt_flags)
+        new_opt_flags = []
+        for flag in opt_flags:
+            if flag == ',a':
+                name += ',a'
+                Name += 'Annul'
+            else:
+                new_opt_flags += flag
+        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, codeBlk, new_opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = BranchExecute.subst(iop)
