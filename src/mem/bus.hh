@@ -60,6 +60,9 @@ class Bus : public MemObject
     };
     std::vector<DevMap> portList;
     AddrRangeList defaultRange;
+    std::vector<DevMap> portSnoopList;
+
+    std::vector<int> snoopCallbacks;
 
 
     /** Function called by the port when the bus is recieving a Timing
@@ -89,6 +92,29 @@ class Bus : public MemObject
      * @return pointer to port that the packet should be sent out of.
      */
     Port *findPort(Addr addr, int id);
+
+    /** Find all ports with a matching snoop range, except src port.  Keep in mind
+     * that the ranges shouldn't overlap or you will get a double snoop to the same
+     * interface.and the cache will assert out.
+     * @param addr Address to find snoop prts for.
+     * @param id Id of the src port of the request to avoid calling snoop on src
+     * @return vector of IDs to snoop on
+     */
+    std::vector<int> findSnoopPorts(Addr addr, int id);
+
+    /** Snoop all relevant ports atomicly. */
+    void atomicSnoop(Packet *pkt);
+
+    /** Snoop for NACK and Blocked in phase 1
+     * @return True if succeds.
+     */
+    bool timingSnoopPhase1(Packet *pkt);
+
+    /** @todo Don't need to commit all snoops just those that need it
+     *(register somehow). */
+    /** Commit all snoops now that we know if any of them would have blocked.
+     */
+    void timingSnoopPhase2(Packet *pkt);
 
     /** Process address range request.
      * @param resp addresses that we can respond to

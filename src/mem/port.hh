@@ -106,7 +106,8 @@ class Port
     /** Holds the ports status.  Currently just that a range recomputation needs
      * to be done. */
     enum Status {
-        RangeChange
+        RangeChange,
+        SnoopSquash
     };
 
     void setName(const std::string &name)

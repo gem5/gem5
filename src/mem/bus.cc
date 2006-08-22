@@ -79,7 +79,17 @@ Bus::recvTiming(Packet *pkt)
 
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        port = findPort(pkt->getAddr(), pkt->getSrc());
+        if ( timingSnoopPhase1(pkt) )
+        {
+            timingSnoopPhase2(pkt);
+            port = findPort(pkt->getAddr(), pkt->getSrc());
+        }
+        else
+        {
+            //Snoop didn't succeed
+            retryList.push_back(interfaces[pkt->getSrc()]);
+            return false;
+        }
     } else {
         assert(dest >= 0 && dest < interfaces.size());
         assert(dest != pkt->getSrc()); // catch infinite loops
@@ -151,6 +161,77 @@ Bus::findPort(Addr addr, int id)
     return interfaces[dest_id];
 }
 
+std::vector<int>
+Bus::findSnoopPorts(Addr addr, int id)
+{
+    int i = 0;
+    AddrRangeIter iter;
+    std::vector<int> ports;
+
+    while (i < portSnoopList.size())
+    {
+        if (portSnoopList[i].range == addr && portSnoopList[i].portId != id) {
+            //Careful  to not overlap ranges
+            //or snoop will be called more than once on the port
+            ports.push_back(portSnoopList[i].portId);
+            DPRINTF(Bus, "  found snoop addr 0x%llx on device%d\n", addr,
+                    portSnoopList[i].portId);
+        }
+        i++;
+    }
+    return ports;
+}
+
+void
+Bus::atomicSnoop(Packet *pkt)
+{
+    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+
+    while (!ports.empty())
+    {
+        interfaces[ports.back()]->sendAtomic(pkt);
+        ports.pop_back();
+    }
+}
+
+bool
+Bus::timingSnoopPhase1(Packet *pkt)
+{
+    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+    bool success = true;
+
+    while (!ports.empty() && success)
+    {
+        snoopCallbacks.push_back(ports.back());
+        success = interfaces[ports.back()]->sendTiming(pkt);
+        ports.pop_back();
+    }
+    if (!success)
+    {
+        while (!snoopCallbacks.empty())
+        {
+            interfaces[snoopCallbacks.back()]->sendStatusChange(Port::SnoopSquash);
+            snoopCallbacks.pop_back();
+        }
+        return false;
+    }
+    return true;
+}
+
+void
+Bus::timingSnoopPhase2(Packet *pkt)
+{
+    bool success;
+    pkt->flags |= SNOOP_COMMIT;
+    while (!snoopCallbacks.empty())
+    {
+        success = interfaces[snoopCallbacks.back()]->sendTiming(pkt);
+        //We should not fail on snoop callbacks
+        assert(success);
+        snoopCallbacks.pop_back();
+    }
+}
+
 /** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
 Tick
@@ -159,6 +240,7 @@ Bus::recvAtomic(Packet *pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    atomicSnoop(pkt);
     return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
 }
 
@@ -193,7 +275,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         assert(snoops.size() == 0);
         for(iter = ranges.begin(); iter != ranges.end(); iter++) {
             defaultRange.push_back(*iter);
-            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for default\n",
+            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for default range\n",
                     iter->start, iter->end);
         }
     } else {
@@ -201,6 +283,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         assert((id < interfaces.size() && id >= 0) || id == -1);
         Port *port = interfaces[id];
         std::vector<DevMap>::iterator portIter;
+        std::vector<DevMap>::iterator snoopIter;
 
         // Clean out any previously existent ids
         for (portIter = portList.begin(); portIter != portList.end(); ) {
@@ -210,10 +293,25 @@ Bus::recvStatusChange(Port::Status status, int id)
                 portIter++;
         }
 
+        for (snoopIter = portSnoopList.begin(); snoopIter != portSnoopList.end(); ) {
+            if (snoopIter->portId == id)
+                snoopIter = portSnoopList.erase(snoopIter);
+            else
+                snoopIter++;
+        }
+
         port->getPeerAddressRanges(ranges, snoops);
 
-        // not dealing with snooping yet either
-        assert(snoops.size() == 0);
+        for(iter = snoops.begin(); iter != snoops.end(); iter++) {
+            DevMap dm;
+            dm.portId = id;
+            dm.range = *iter;
+
+            DPRINTF(BusAddrRanges, "Adding snoop range %llx - %llx for id %d\n",
+                    dm.range.start, dm.range.end, id);
+            portSnoopList.push_back(dm);
+        }
+
         for(iter = ranges.begin(); iter != ranges.end(); iter++) {
             DevMap dm;
             dm.portId = id;

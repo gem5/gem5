@@ -56,6 +56,7 @@ typedef std::list<PacketPtr> PacketList;
 #define CACHE_LINE_FILL 1 << 3
 #define COMPRESSED 1 << 4
 #define NO_ALLOCATE 1 << 5
+#define SNOOP_COMMIT 1 << 6
 
 //For statistics we need max number of commands, hard code it at
 //20 for now.  @todo fix later
