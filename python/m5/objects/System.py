@@ -11,6 +11,7 @@ class System(SimObject):
     binned_fns = VectorParam.String([], "functions broken down and binned")
     kernel = Param.String("file that contains the kernel code")
     readfile = Param.String("", "file to read startup script from")
+    symbolfile = Param.String("", "file to get the symbols from")
 
 class AlphaSystem(System):
     type = 'AlphaSystem'

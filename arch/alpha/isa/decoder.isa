@@ -785,6 +785,9 @@ decode OPCODE default Unknown::unknown() {
                 AlphaPseudo::m5exit(xc->xcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{ Ra = xc->xcBase()->getCpuPtr()->system->init_param; }});
+            0x31: loadsymbol({{
+                AlphaPseudo::loadsymbol(xc->xcBase());
+            }}, No_OpClass, IsNonSpeculative);
             0x40: resetstats({{
                 AlphaPseudo::resetstats(xc->xcBase(), R16, R17);
             }}, IsNonSpeculative);

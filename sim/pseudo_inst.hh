@@ -51,6 +51,7 @@ namespace AlphaPseudo
     void ivle(ExecContext *xc);
     void m5exit(ExecContext *xc, Tick delay);
     void m5exit_old(ExecContext *xc);
+    void loadsymbol(ExecContext *xc);
     void resetstats(ExecContext *xc, Tick delay, Tick period);
     void dumpstats(ExecContext *xc, Tick delay, Tick period);
     void dumpresetstats(ExecContext *xc, Tick delay, Tick period);
