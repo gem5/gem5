@@ -55,6 +55,7 @@ SimObjectParam<System *> system;
 Param<int> cpu_id;
 SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
+Param<Tick> profile;
 #else
 SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
@@ -68,6 +69,7 @@ Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
+Param<Counter> stats_reset_inst;
 Param<Tick> progress_interval;
 
 SimObjectParam<BaseCache *> icache;
@@ -167,6 +169,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
+    INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "Processes to run"),
 //    INIT_PARAM(page_table, "Page table"),
@@ -189,6 +192,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivAlphaFullCPU)
     INIT_PARAM_DFLT(max_loads_all_threads,
                     "Terminate when all threads have reached this load"
                     "count",
+                    0),
+    INIT_PARAM_DFLT(stats_reset_inst,
+                    "blah",
                     0),
     INIT_PARAM_DFLT(progress_interval, "Progress interval", 0),
 
@@ -316,6 +322,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->cpu_id = cpu_id;
     params->itb = itb;
     params->dtb = dtb;
+    params->profile = profile;
 #else
     params->workload = workload;
 //    params->pTable = page_table;
@@ -329,6 +336,7 @@ CREATE_SIM_OBJECT(DerivAlphaFullCPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
+    params->stats_reset_inst = stats_reset_inst;
     params->progress_interval = progress_interval;
 
     //

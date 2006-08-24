@@ -71,6 +71,7 @@ SimObjectParam<System *> system;
 Param<int> cpu_id;
 SimObjectParam<AlphaITB *> itb;
 SimObjectParam<AlphaDTB *> dtb;
+Param<Tick> profile;
 #else
 SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
@@ -84,6 +85,7 @@ Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
+Param<Counter> stats_reset_inst;
 Param<Tick> progress_interval;
 
 SimObjectParam<BaseCache *> icache;
@@ -91,10 +93,11 @@ SimObjectParam<BaseCache *> dcache;
 
 Param<unsigned> cachePorts;
 Param<unsigned> width;
+Param<unsigned> frontEndLatency;
 Param<unsigned> frontEndWidth;
+Param<unsigned> backEndLatency;
 Param<unsigned> backEndWidth;
 Param<unsigned> backEndSquashLatency;
-Param<unsigned> backEndLatency;
 Param<unsigned> maxInstBufferSize;
 Param<unsigned> numPhysicalRegs;
 Param<unsigned> maxOutstandingMemOps;
@@ -149,6 +152,7 @@ Param<unsigned> RASSize;
 
 Param<unsigned> LQEntries;
 Param<unsigned> SQEntries;
+Param<bool> lsqLimits;
 Param<unsigned> LFSTSize;
 Param<unsigned> SSITSize;
 
@@ -190,6 +194,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
+    INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "Processes to run"),
 //    INIT_PARAM(page_table, "Page table"),
@@ -213,6 +218,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
                     "Terminate when all threads have reached this load"
                     "count",
                     0),
+    INIT_PARAM_DFLT(stats_reset_inst,
+                    "blah",
+                    0),
     INIT_PARAM_DFLT(progress_interval, "Progress interval", 0),
 
     INIT_PARAM_DFLT(icache, "L1 instruction cache", NULL),
@@ -220,10 +228,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
 
     INIT_PARAM_DFLT(cachePorts, "Cache Ports", 200),
     INIT_PARAM_DFLT(width, "Width", 1),
+    INIT_PARAM_DFLT(frontEndLatency, "Front end latency", 1),
     INIT_PARAM_DFLT(frontEndWidth, "Front end width", 1),
+    INIT_PARAM_DFLT(backEndLatency, "Back end latency", 1),
     INIT_PARAM_DFLT(backEndWidth, "Back end width", 1),
     INIT_PARAM_DFLT(backEndSquashLatency, "Back end squash latency", 1),
-    INIT_PARAM_DFLT(backEndLatency, "Back end latency", 1),
     INIT_PARAM_DFLT(maxInstBufferSize, "Maximum instruction buffer size", 16),
     INIT_PARAM(numPhysicalRegs, "Number of physical registers"),
     INIT_PARAM_DFLT(maxOutstandingMemOps, "Maximum outstanding memory operations", 4),
@@ -284,6 +293,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
 
     INIT_PARAM(LQEntries, "Number of load queue entries"),
     INIT_PARAM(SQEntries, "Number of store queue entries"),
+    INIT_PARAM_DFLT(lsqLimits, "LSQ size limits dispatch", true),
     INIT_PARAM(LFSTSize, "Last fetched store table size"),
     INIT_PARAM(SSITSize, "Store set ID table size"),
 
@@ -346,6 +356,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->cpu_id = cpu_id;
     params->itb = itb;
     params->dtb = dtb;
+    params->profile = profile;
 #else
     params->workload = workload;
 //    params->pTable = page_table;
@@ -357,6 +368,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
+    params->stats_reset_inst = stats_reset_inst;
     params->progress_interval = progress_interval;
 
     //
@@ -368,6 +380,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
 
     params->width = width;
     params->frontEndWidth = frontEndWidth;
+    params->frontEndLatency = frontEndLatency;
     params->backEndWidth = backEndWidth;
     params->backEndSquashLatency = backEndSquashLatency;
     params->backEndLatency = backEndLatency;
@@ -425,6 +438,7 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
 
     params->LQEntries = LQEntries;
     params->SQEntries = SQEntries;
+    params->lsqLimits = lsqLimits;
 
     params->SSITSize = SSITSize;
     params->LFSTSize = LFSTSize;

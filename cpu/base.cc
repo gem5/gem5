@@ -45,6 +45,9 @@
 
 #include "base/trace.hh"
 
+// Hack
+#include "sim/stat_control.hh"
+
 using namespace std;
 
 vector<BaseCPU *> BaseCPU::cpuList;
@@ -84,6 +87,7 @@ BaseCPU::BaseCPU(Params *p)
       number_of_threads(p->numberOfThreads)
 #endif
 {
+//    currentTick = curTick;
     DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
 
     // add self to global list of CPUs
@@ -143,6 +147,12 @@ BaseCPU::BaseCPU(Params *p)
             new CountedExitEvent(comLoadEventQueue[i],
                 "all threads reached the max load count",
                 p->max_loads_all_threads, *counter);
+    }
+
+    if (p->stats_reset_inst != 0) {
+        Stats::SetupEvent(Stats::Reset, p->stats_reset_inst, 0, comInstEventQueue[0]);
+        cprintf("Stats reset event scheduled for %lli insts\n",
+                p->stats_reset_inst);
     }
 
 #if FULL_SYSTEM
@@ -261,12 +271,17 @@ BaseCPU::registerExecContexts()
 void
 BaseCPU::switchOut(Sampler *sampler)
 {
-    panic("This CPU doesn't support sampling!");
+//    panic("This CPU doesn't support sampling!");
+#if FULL_SYSTEM
+    if (profileEvent && profileEvent->scheduled())
+        profileEvent->deschedule();
+#endif
 }
 
 void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
+//    currentTick = oldCPU->currentTick;
     assert(execContexts.size() == oldCPU->execContexts.size());
 
     for (int i = 0; i < execContexts.size(); ++i) {
@@ -281,18 +296,22 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         assert(newXC->getProcessPtr() == oldXC->getProcessPtr());
         newXC->getProcessPtr()->replaceExecContext(newXC, newXC->readCpuId());
 #endif
+
+//    TheISA::compareXCs(oldXC, newXC);
     }
 
 #if FULL_SYSTEM
     for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
+    checkInterrupts = oldCPU->checkInterrupts;
 
-    for (int i = 0; i < execContexts.size(); ++i)
-        execContexts[i]->profileClear();
+//    for (int i = 0; i < execContexts.size(); ++i)
+//        execContexts[i]->profileClear();
 
-    if (profileEvent)
-        profileEvent->schedule(curTick);
+    // The Sampler must take care of this!
+//    if (profileEvent)
+//        profileEvent->schedule(curTick);
 #endif
 }
 

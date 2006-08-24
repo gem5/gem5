@@ -67,9 +67,11 @@ class BaseCPU : public SimObject
     Tick clock;
 
   public:
+//    Tick currentTick;
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick cycles(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
+//    inline Tick curCycle() { currentTick+=10000; return currentTick; }
 
 #if FULL_SYSTEM
   protected:
@@ -134,6 +136,7 @@ class BaseCPU : public SimObject
         Counter max_insts_all_threads;
         Counter max_loads_any_thread;
         Counter max_loads_all_threads;
+        Counter stats_reset_inst;
         Tick clock;
         bool functionTrace;
         Tick functionTraceStart;
