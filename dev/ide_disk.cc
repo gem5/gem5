@@ -406,6 +406,39 @@ IdeDisk::regStats()
         .name(name() + ".dma_write_txs")
         .desc("Number of DMA write transactions.")
         ;
+
+    rdBandwidth
+        .name(name() + ".rdBandwidth")
+        .desc("Read Bandwidth (bits/s)")
+        .precision(0)
+        .prereq(dmaReadBytes)
+        ;
+
+    wrBandwidth
+        .name(name() + ".wrBandwidth")
+        .desc("Write Bandwidth (bits/s)")
+        .precision(0)
+        .prereq(dmaWriteBytes)
+        ;
+
+    totBandwidth
+        .name(name() + ".totBandwidth")
+        .desc("Total Bandwidth (bits/s)")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    totBytes
+        .name(name() + ".totBytes")
+        .desc("Total Bytes")
+        .precision(0)
+        .prereq(totBytes)
+        ;
+
+    rdBandwidth = dmaReadBytes * Stats::constant(8) / simSeconds;
+    wrBandwidth = dmaWriteBytes * Stats::constant(8) / simSeconds;
+    totBandwidth = rdBandwidth + wrBandwidth;
+    totBytes = dmaReadBytes + dmaWriteBytes;
 }
 
 void

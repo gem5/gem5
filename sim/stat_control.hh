@@ -32,6 +32,8 @@
 #include <fstream>
 #include <list>
 
+class EventQueue;
+
 namespace Stats {
 
 enum {
@@ -43,7 +45,7 @@ class Output;
 extern std::list<Output *> OutputList;
 
 void DumpNow();
-void SetupEvent(int flags, Tick when, Tick repeat = 0);
+void SetupEvent(int flags, Tick when, Tick repeat = 0, EventQueue *queue = NULL);
 
 void InitSimStats();
 
