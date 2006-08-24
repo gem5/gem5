@@ -43,6 +43,7 @@
 #include "sim/host.hh"	// for Tick
 
 #include "base/fast_alloc.hh"
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "sim/serialize.hh"
 
@@ -131,7 +132,7 @@ class Event : public Serializable, public FastAlloc
         /// same cycle (after unscheduling the old CPU's tick event).
         /// The switch needs to come before any tick events to make
         /// sure we don't tick both CPUs in the same cycle.
-        CPU_Switch_Pri		=   31,
+        CPU_Switch_Pri		=   -31,
 
         /// Serailization needs to occur before tick events also, so
         /// that a serialize/unserialize is identical to an on-line
@@ -344,7 +345,8 @@ inline void
 Event::schedule(Tick t)
 {
     assert(!scheduled());
-    assert(t >= curTick);
+//    if (t < curTick)
+//        warn("t is less than curTick, ensure you don't want cycles");
 
     setFlags(Scheduled);
 #if TRACING_ON

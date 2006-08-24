@@ -230,7 +230,7 @@ InstructionQueue<Impl>::regStats()
         .name(name() + ".iqSquashedNonSpecRemoved")
         .desc("Number of squashed non-spec instructions that were removed")
         .prereq(iqSquashedNonSpecRemoved);
-
+/*
     queueResDist
         .init(Num_OpClasses, 0, 99, 2)
         .name(name() + ".IQ:residence:")
@@ -240,6 +240,7 @@ InstructionQueue<Impl>::regStats()
     for (int i = 0; i < Num_OpClasses; ++i) {
         queueResDist.subname(i, opClassStrings[i]);
     }
+*/
     numIssuedDist
         .init(0,totalWidth,1)
         .name(name() + ".ISSUE:issued_per_cycle")
@@ -268,7 +269,7 @@ InstructionQueue<Impl>::regStats()
     //
     //  How long did instructions for a particular FU type wait prior to issue
     //
-
+/*
     issueDelayDist
         .init(Num_OpClasses,0,99,2)
         .name(name() + ".ISSUE:")
@@ -281,7 +282,7 @@ InstructionQueue<Impl>::regStats()
         subname << opClassStrings[i] << "_delay";
         issueDelayDist.subname(i, subname.str());
     }
-
+*/
     issueRate
         .name(name() + ".ISSUE:rate")
         .desc("Inst issue rate")

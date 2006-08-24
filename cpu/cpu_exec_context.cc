@@ -183,6 +183,11 @@ CPUExecContext::takeOverFrom(ExecContext *oldContext)
     if (quiesceEvent) {
         quiesceEvent->xc = proxy;
     }
+
+    Kernel::Statistics *stats = oldContext->getKernelStats();
+    if (stats) {
+        kernelStats = stats;
+    }
 #endif
 
     storeCondFailures = 0;

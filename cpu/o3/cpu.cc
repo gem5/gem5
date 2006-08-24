@@ -599,8 +599,11 @@ FullO3CPU<Impl>::activateContext(int tid, int delay)
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
     activityRec.activity();
+
+#if FULL_SYSTEM
     if (thread[tid]->quiesceEvent && thread[tid]->quiesceEvent->scheduled())
         thread[tid]->quiesceEvent->deschedule();
+#endif
 
     fetch.wakeFromQuiesce();
 
@@ -671,6 +674,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::switchOut(Sampler *_sampler)
 {
+    DPRINTF(FullCPU, "Switching out\n");
+    BaseCPU::switchOut(_sampler);
     sampler = _sampler;
     switchCount = 0;
     fetch.switchOut();
@@ -694,6 +699,41 @@ FullO3CPU<Impl>::signalSwitched()
         rename.doSwitchOut();
         commit.doSwitchOut();
         instList.clear();
+
+#ifndef NDEBUG
+        PhysRegIndex renamed_reg;
+        // First loop through the integer registers.
+        for (int i = 0; i < AlphaISA::NumIntRegs; ++i) {
+            renamed_reg = renameMap[0].lookup(i);
+            assert(renamed_reg == commitRenameMap[0].lookup(i));
+
+            DPRINTF(FullCPU, "FullCPU: Checking if register %i is ready.\n",
+                    renamed_reg);
+
+            assert(scoreboard.getReg(renamed_reg));
+        }
+
+        // Then loop through the floating point registers.
+        for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
+            renamed_reg = renameMap[0].lookup(i + AlphaISA::FP_Base_DepTag);
+            assert(renamed_reg == commitRenameMap[0].lookup(i + AlphaISA::FP_Base_DepTag));
+
+            DPRINTF(FullCPU, "FullCPU: Checking if register %i is ready.\n",
+                    renamed_reg);
+
+            assert(scoreboard.getReg(renamed_reg));
+        }
+
+        for (int i = 0; i < AlphaISA::NumMiscRegs; ++i) {
+            renamed_reg = i + ((Params *)params)->numPhysFloatRegs + ((Params *)params)->numPhysIntRegs;
+
+            DPRINTF(FullCPU, "FullCPU: Checking if register %i is ready.\n",
+                    renamed_reg);
+
+            assert(scoreboard.getReg(renamed_reg));
+        }
+#endif
+
         while (!removeList.empty()) {
             removeList.pop();
         }

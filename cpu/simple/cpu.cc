@@ -181,7 +181,9 @@ SimpleCPU::switchOut(Sampler *s)
         _status = SwitchedOut;
 
         if (tickEvent.scheduled())
-            tickEvent.squash();
+            tickEvent.deschedule();
+
+        assert(!tickEvent.scheduled());
 
         sampler->signalSwitched();
     }
@@ -294,7 +296,7 @@ SimpleCPU::regStats()
 void
 SimpleCPU::resetStats()
 {
-    startNumInst = numInst;
+//    startNumInst = numInst;
     notIdleFraction = (_status != Idle);
 }
 
@@ -352,6 +354,7 @@ SimpleCPU::copySrcTranslate(Addr src)
     Fault fault = cpuXC->translateDataReadReq(memReq);
 
     if (fault == NoFault) {
+        panic("We can't copy!");
         cpuXC->copySrcAddr = src;
         cpuXC->copySrcPhysAddr = memReq->paddr + offset;
     } else {
@@ -600,6 +603,8 @@ SimpleCPU::dbg_vtophys(Addr addr)
 void
 SimpleCPU::processCacheCompletion()
 {
+    Fault fault;
+
     switch (status()) {
       case IcacheMissStall:
         icacheStallCycles += curTick - lastIcacheStall;
@@ -618,12 +623,17 @@ SimpleCPU::processCacheCompletion()
         break;
       case DcacheMissSwitch:
         if (memReq->cmd.isRead()) {
-            curStaticInst->execute(this,traceData);
+            fault = curStaticInst->execute(this,traceData);
             if (traceData)
                 traceData->finalize();
+        } else {
+            fault = NoFault;
         }
+        assert(fault == NoFault);
+        assert(!tickEvent.scheduled());
         _status = SwitchedOut;
         sampler->signalSwitched();
+        return;
       case SwitchedOut:
         // If this CPU has been switched out due to sampling/warm-up,
         // ignore any further status changes (e.g., due to cache
@@ -787,9 +797,10 @@ SimpleCPU::tick()
         }
 
         if (cpuXC->profile) {
-            bool usermode =
-                (cpuXC->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
-            cpuXC->profilePC = usermode ? 1 : cpuXC->readPC();
+//            bool usermode =
+//                (cpuXC->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+//            cpuXC->profilePC = usermode ? 1 : cpuXC->readPC();
+            cpuXC->profilePC = cpuXC->readPC();
             ProfileNode *node = cpuXC->profile->consume(xcProxy, inst);
             if (node)
                 cpuXC->profileNode = node;
@@ -849,8 +860,10 @@ SimpleCPU::tick()
            status() == Idle ||
            status() == DcacheMissStall);
 
-    if (status() == Running && !tickEvent.scheduled())
+    if (status() == Running && !tickEvent.scheduled()) {
+        assert(_status != SwitchedOut);
         tickEvent.schedule(curTick + cycles(1));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -863,6 +876,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleCPU)
     Param<Counter> max_insts_all_threads;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
+    Param<Counter> stats_reset_inst;
     Param<Tick> progress_interval;
 
 #if FULL_SYSTEM
@@ -897,6 +911,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleCPU)
                "terminate when any thread reaches this load count"),
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
+    INIT_PARAM(stats_reset_inst,
+               "instruction to reset stats on"),
     INIT_PARAM_DFLT(progress_interval, "CPU Progress interval", 0),
 
 #if FULL_SYSTEM
@@ -930,6 +946,7 @@ CREATE_SIM_OBJECT(SimpleCPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
+    params->stats_reset_inst = stats_reset_inst;
     params->deferRegistration = defer_registration;
     params->clock = clock;
     params->functionTrace = function_trace;

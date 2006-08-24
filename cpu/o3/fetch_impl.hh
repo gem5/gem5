@@ -391,6 +391,7 @@ DefaultFetch<Impl>::takeOverFrom()
     wroteToTimeBuffer = false;
     _status = Inactive;
     switchedOut = false;
+    interruptPending = false;
     branchPred.takeOverFrom();
 }
 
@@ -469,7 +470,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (interruptPending && flags == 0) {
+    if (isSwitchedOut() || (interruptPending && flags == 0)) {
         // Hold off fetch from getting new instructions while an interrupt
         // is pending.
         return false;

@@ -184,7 +184,9 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     globalSeqNum = 1;
 
+#if FULL_SYSTEM
     checkInterrupts = false;
+#endif
 
     lockFlag = 0;
 
@@ -213,6 +215,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::switchOut(Sampler *_sampler)
 {
+    BaseCPU::switchOut(_sampler);
     sampler = _sampler;
     switchCount = 0;
     // Front end needs state from back end, so switch out the back end first.
@@ -234,6 +237,16 @@ OzoneCPU<Impl>::signalSwitched()
             checker->switchOut(sampler);
 
         _status = SwitchedOut;
+#ifndef NDEBUG
+        // Loop through all registers
+        for (int i = 0; i < AlphaISA::TotalNumRegs; ++i) {
+            assert(thread.renameTable[i] == frontEnd->renameTable[i]);
+
+            assert(thread.renameTable[i] == backEnd->renameTable[i]);
+
+            DPRINTF(OzoneCPU, "Checking if register %i matches.\n", i);
+        }
+#endif
 
         if (tickEvent.scheduled())
             tickEvent.squash();
@@ -256,9 +269,16 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     frontEnd->takeOverFrom();
     assert(!tickEvent.scheduled());
 
+#ifndef NDEBUG
+    // Check rename table.
+    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
+        assert(thread.renameTable[i]->isResultReady());
+    }
+#endif
+
     // @todo: Fix hardcoded number
     // Clear out any old information in time buffer.
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 15; ++i) {
         comm.advance();
     }
 
@@ -291,8 +311,10 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     scheduleTickEvent(delay);
     _status = Running;
     thread._status = ExecContext::Active;
+#if FULL_SYSTEM
     if (thread.quiesceEvent && thread.quiesceEvent->scheduled())
         thread.quiesceEvent->deschedule();
+#endif
     frontEnd->wakeFromQuiesce();
 }
 
@@ -369,7 +391,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::resetStats()
 {
-    startNumInst = numInst;
+//    startNumInst = numInst;
     notIdleFraction = (_status != Idle);
 }
 
@@ -777,7 +799,9 @@ OzoneCPU<Impl>::OzoneXC::halt()
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::dumpFuncProfile()
-{ }
+{
+    thread->dumpFuncProfile();
+}
 #endif
 
 template <class Impl>
@@ -797,6 +821,7 @@ OzoneCPU<Impl>::OzoneXC::takeOverFrom(ExecContext *old_context)
     copyArchRegs(old_context);
     setCpuId(old_context->readCpuId());
 
+    thread->inst = old_context->getInst();
 #if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
 #else
@@ -869,16 +894,14 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::profileClear()
 {
-    if (thread->profile)
-        thread->profile->clear();
+    thread->profileClear();
 }
 
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneXC::profileSample()
 {
-    if (thread->profile)
-        thread->profile->sample(thread->profileNode, thread->profilePC);
+    thread->profileSample();
 }
 #endif
 
@@ -906,14 +929,20 @@ OzoneCPU<Impl>::OzoneXC::copyArchRegs(ExecContext *xc)
     cpu->frontEnd->setPC(thread->PC);
     cpu->frontEnd->setNextPC(thread->nextPC);
 
-    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
-        if (i < TheISA::FP_Base_DepTag) {
-            thread->renameTable[i]->setIntResult(xc->readIntReg(i));
-        } else if (i < (TheISA::FP_Base_DepTag + TheISA::NumFloatRegs)) {
-            int fp_idx = i - TheISA::FP_Base_DepTag;
-            thread->renameTable[i]->setDoubleResult(
-                xc->readFloatRegDouble(fp_idx));
-        }
+    // First loop through the integer registers.
+    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
+/*        DPRINTF(OzoneCPU, "Copying over register %i, had data %lli, "
+                "now has data %lli.\n",
+                i, thread->renameTable[i]->readIntResult(),
+                xc->readIntReg(i));
+*/
+        thread->renameTable[i]->setIntResult(xc->readIntReg(i));
+    }
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+        int fp_idx = i + TheISA::FP_Base_DepTag;
+        thread->renameTable[fp_idx]->setIntResult(xc->readFloatRegInt(i));
     }
 
 #if !FULL_SYSTEM

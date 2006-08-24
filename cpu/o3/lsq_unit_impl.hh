@@ -144,6 +144,10 @@ LSQUnit<Impl>::regStats()
         .name(name() + ".ignoredResponses")
         .desc("Number of memory responses ignored because the instruction is squashed");
 
+    lsqMemOrderViolation
+        .name(name() + ".memOrderViolation")
+        .desc("Number of memory ordering violations");
+
     lsqSquashedStores
         .name(name() + ".squashedStores")
         .desc("Number of stores squashed");
@@ -495,6 +499,7 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
                 // A load incorrectly passed this store.  Squash and refetch.
                 // For now return a fault to show that it was unsuccessful.
                 memDepViolator = loadQueue[load_idx];
+                ++lsqMemOrderViolation;
 
                 return genMachineCheckFault();
             }
