@@ -151,8 +151,10 @@ LWBackEnd<Impl>::LdWritebackEvent::process()
 
 //    iewStage->wakeCPU();
 
-    if (be->isSwitchedOut())
-        return;
+    assert(inst->isSquashed() || !be->isSwitchedOut());
+
+//    if (be->isSwitchedOut() && inst->isLoad())
+//        return;
 
     if (dcacheMiss) {
         be->removeDcacheMiss(inst);
@@ -208,14 +210,14 @@ LWBackEnd<Impl>::DCacheCompletionEvent::description()
 
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
-    : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
+    : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(params->backEndLatency, 0),
       trapSquash(false), xcSquash(false), cacheCompletionEvent(this),
-      dcacheInterface(params->dcacheInterface), width(params->backEndWidth),
+      dcacheInterface(params->dcacheInterface), latency(params->backEndLatency),
+      width(params->backEndWidth), lsqLimits(params->lsqLimits),
       exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
     numInsts = 0;
-    numDispatchEntries = 32;
     maxOutstandingMemOps = params->maxOutstandingMemOps;
     numWaitingMemOps = 0;
     waitingInsts = 0;
@@ -251,6 +253,8 @@ void
 LWBackEnd<Impl>::regStats()
 {
     using namespace Stats;
+    LSQ.regStats();
+
     robCapEvents
         .init(cpu->number_of_threads)
         .name(name() + ".ROB:cap_events")
@@ -377,6 +381,7 @@ LWBackEnd<Impl>::regStats()
         .desc("Number of insts issued each cycle")
         .flags(total | pdf | dist)
         ;
+/*
     issueDelayDist
         .init(Num_OpClasses,0,99,2)
         .name(name() + ".ISSUE:")
@@ -393,7 +398,7 @@ LWBackEnd<Impl>::regStats()
     for (int i = 0; i < Num_OpClasses; ++i) {
         queueResDist.subname(i, opClassStrings[i]);
     }
-
+*/
     writebackCount
         .init(cpu->number_of_threads)
         .name(name() + ".WB:count")
@@ -555,13 +560,14 @@ LWBackEnd<Impl>::regStats()
         .flags(total)
         ;
     ROBOccRate = ROBCount / cpu->numCycles;
-
+/*
     ROBOccDist
         .init(cpu->number_of_threads,0,numROBEntries,2)
         .name(name() + ".ROB:occ_dist")
         .desc("ROB Occupancy per cycle")
         .flags(total | cdf)
         ;
+*/
 }
 
 template <class Impl>
@@ -654,17 +660,21 @@ LWBackEnd<Impl>::tick()
 {
     DPRINTF(BE, "Ticking back end\n");
 
+    // Read in any done instruction information and update the IQ or LSQ.
+    updateStructures();
+
     if (switchPending && robEmpty() && !LSQ.hasStoresToWB()) {
         cpu->signalSwitched();
         return;
     }
 
+    readyInstsForCommit();
+
+    numInstsToWB.advance();
+
     ROBCount[0]+= numInsts;
 
     wbCycle = 0;
-
-    // Read in any done instruction information and update the IQ or LSQ.
-    updateStructures();
 
 #if FULL_SYSTEM
     checkInterrupts();
@@ -740,6 +750,10 @@ LWBackEnd<Impl>::dispatchInsts()
     while (numInsts < numROBEntries &&
            numWaitingMemOps < maxOutstandingMemOps) {
         // Get instruction from front of time buffer
+        if (lsqLimits && LSQ.isFull()) {
+            break;
+        }
+
         DynInstPtr inst = frontEnd->getInst();
         if (!inst) {
             break;
@@ -798,6 +812,7 @@ LWBackEnd<Impl>::dispatchInsts()
                 inst->setIssued();
                 inst->setExecuted();
                 inst->setCanCommit();
+                numInstsToWB[0]++;
             } else {
                 DPRINTF(BE, "Instruction [sn:%lli] ready, addding to "
                         "exeList.\n",
@@ -987,16 +1002,10 @@ template<class Impl>
 void
 LWBackEnd<Impl>::instToCommit(DynInstPtr &inst)
 {
-
     DPRINTF(BE, "Sending instructions to commit [sn:%lli] PC %#x.\n",
             inst->seqNum, inst->readPC());
 
     if (!inst->isSquashed()) {
-        DPRINTF(BE, "Writing back instruction [sn:%lli] PC %#x.\n",
-                inst->seqNum, inst->readPC());
-
-        inst->setCanCommit();
-
         if (inst->isExecuted()) {
             inst->setResultReady();
             int dependents = wakeDependents(inst);
@@ -1007,8 +1016,32 @@ LWBackEnd<Impl>::instToCommit(DynInstPtr &inst)
         }
     }
 
+    writeback.push_back(inst);
+
+    numInstsToWB[0]++;
+
     writebackCount[0]++;
 }
+
+template <class Impl>
+void
+LWBackEnd<Impl>::readyInstsForCommit()
+{
+    for (int i = numInstsToWB[-latency];
+         !writeback.empty() && i;
+         --i)
+    {
+        DynInstPtr inst = writeback.front();
+        writeback.pop_front();
+        if (!inst->isSquashed()) {
+            DPRINTF(BE, "Writing back instruction [sn:%lli] PC %#x.\n",
+                    inst->seqNum, inst->readPC());
+
+            inst->setCanCommit();
+        }
+    }
+}
+
 #if 0
 template <class Impl>
 void
@@ -1221,6 +1254,20 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         ++freed_regs;
     }
 
+#if FULL_SYSTEM
+    if (thread->profile) {
+//        bool usermode =
+//            (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+//        thread->profilePC = usermode ? 1 : inst->readPC();
+        thread->profilePC = inst->readPC();
+        ProfileNode *node = thread->profile->consume(thread->getXCProxy(),
+                                                     inst->staticInst);
+
+        if (node)
+            thread->profileNode = node;
+    }
+#endif
+
     if (inst->traceData) {
         inst->traceData->setFetchSeq(inst->seqNum);
         inst->traceData->setCPSeq(thread->numInst);
@@ -1280,9 +1327,9 @@ LWBackEnd<Impl>::commitInsts()
     while (!instList.empty() && inst_num < commitWidth) {
         if (instList.back()->isSquashed()) {
             instList.back()->clearDependents();
+            ROBSquashedInsts[instList.back()->threadNumber]++;
             instList.pop_back();
             --numInsts;
-            ROBSquashedInsts[instList.back()->threadNumber]++;
             continue;
         }
 
@@ -1304,10 +1351,10 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
     LSQ.squash(sn);
 
     int freed_regs = 0;
-    InstListIt waiting_list_end = waitingList.end();
+    InstListIt insts_end_it = waitingList.end();
     InstListIt insts_it = waitingList.begin();
 
-    while (insts_it != waiting_list_end && (*insts_it)->seqNum > sn)
+    while (insts_it != insts_end_it && (*insts_it)->seqNum > sn)
     {
         if ((*insts_it)->isSquashed()) {
             ++insts_it;
@@ -1333,6 +1380,7 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
     while (!instList.empty() && (*insts_it)->seqNum > sn)
     {
         if ((*insts_it)->isSquashed()) {
+            panic("Instruction should not be already squashed and on list!");
             ++insts_it;
             continue;
         }
@@ -1364,18 +1412,6 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
         --numInsts;
     }
 
-    insts_it = waitingList.begin();
-    while (!waitingList.empty() && insts_it != waitingList.end()) {
-        if ((*insts_it)->seqNum < sn) {
-            ++insts_it;
-            continue;
-        }
-        assert((*insts_it)->isSquashed());
-
-        waitingList.erase(insts_it++);
-        waitingInsts--;
-    }
-
     while (memBarrier && memBarrier->seqNum > sn) {
         DPRINTF(BE, "[sn:%lli] Memory barrier squashed (or previously "
                 "squashed)\n", memBarrier->seqNum);
@@ -1391,6 +1427,18 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
             DPRINTF(BE, "Previous barrier: [sn:%lli]\n",
                     memBarrier->seqNum);
         }
+    }
+
+    insts_it = replayList.begin();
+    insts_end_it = replayList.end();
+    while (!replayList.empty() && insts_it != insts_end_it) {
+        if ((*insts_it)->seqNum < sn) {
+            ++insts_it;
+            continue;
+        }
+        assert((*insts_it)->isSquashed());
+
+        replayList.erase(insts_it++);
     }
 
     frontEnd->addFreeRegs(freed_regs);
@@ -1465,14 +1513,6 @@ LWBackEnd<Impl>::squashDueToMemBlocked(DynInstPtr &inst)
 
 template <class Impl>
 void
-LWBackEnd<Impl>::fetchFault(Fault &fault)
-{
-    faultFromFetch = fault;
-    fetchHasFault = true;
-}
-
-template <class Impl>
-void
 LWBackEnd<Impl>::switchOut()
 {
     switchPending = true;
@@ -1489,16 +1529,25 @@ LWBackEnd<Impl>::doSwitchOut()
     // yet written back.
     assert(robEmpty());
     assert(!LSQ.hasStoresToWB());
+    writeback.clear();
+    for (int i = 0; i < numInstsToWB.getSize() + 1; ++i)
+        numInstsToWB.advance();
 
+//    squash(0);
+    assert(waitingList.empty());
+    assert(instList.empty());
+    assert(replayList.empty());
+    assert(writeback.empty());
     LSQ.switchOut();
-
-    squash(0);
 }
 
 template <class Impl>
 void
 LWBackEnd<Impl>::takeOverFrom(ExecContext *old_xc)
 {
+    assert(!squashPending);
+    squashSeqNum = 0;
+    squashNextPC = 0;
     xcSquash = false;
     trapSquash = false;
 
@@ -1607,6 +1656,45 @@ LWBackEnd<Impl>::dumpInsts()
     cprintf("Inst list size: %i\n", instList.size());
 
     while (inst_list_it != instList.end())
+    {
+        cprintf("Instruction:%i\n",
+                num);
+        if (!(*inst_list_it)->isSquashed()) {
+            if (!(*inst_list_it)->isIssued()) {
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            } else if ((*inst_list_it)->isMemRef() &&
+                       !(*inst_list_it)->memOpDone) {
+                // Loads that have not been marked as executed still count
+                // towards the total instructions.
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            }
+        }
+
+        cprintf("PC:%#x\n[sn:%lli]\n[tid:%i]\n"
+                "Issued:%i\nSquashed:%i\n",
+                (*inst_list_it)->readPC(),
+                (*inst_list_it)->seqNum,
+                (*inst_list_it)->threadNumber,
+                (*inst_list_it)->isIssued(),
+                (*inst_list_it)->isSquashed());
+
+        if ((*inst_list_it)->isMemRef()) {
+            cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone);
+        }
+
+        cprintf("\n");
+
+        inst_list_it--;
+        ++num;
+    }
+
+    inst_list_it = --(writeback.end());
+
+    cprintf("Writeback list size: %i\n", writeback.size());
+
+    while (inst_list_it != writeback.end())
     {
         cprintf("Instruction:%i\n",
                 num);

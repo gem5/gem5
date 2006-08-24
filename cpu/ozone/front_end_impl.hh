@@ -41,8 +41,10 @@ template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
       icacheInterface(params->icacheInterface),
+      numInstsReady(params->frontEndLatency, 0),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
+      latency(params->frontEndLatency),
       width(params->frontEndWidth),
       freeRegs(params->numPhysicalRegs),
       numPhysRegs(params->numPhysicalRegs),
@@ -261,6 +263,18 @@ FrontEnd<Impl>::tick()
     if (switchedOut)
         return;
 
+    for (int insts_to_queue = numInstsReady[-latency];
+         !instBuffer.empty() && insts_to_queue;
+         --insts_to_queue)
+    {
+        DPRINTF(FE, "Transferring instruction [sn:%lli] to the feBuffer\n",
+                instBuffer.front()->seqNum);
+        feBuffer.push_back(instBuffer.front());
+        instBuffer.pop_front();
+    }
+
+    numInstsReady.advance();
+
     // @todo: Maybe I want to just have direct communication...
     if (fromCommit->doneSeqNum) {
         branchPred.update(fromCommit->doneSeqNum, 0);
@@ -349,6 +363,7 @@ FrontEnd<Impl>::tick()
         // latency
         instBuffer.push_back(inst);
         ++instBufferSize;
+        numInstsReady[0]++;
         ++num_inst;
 
 #if FULL_SYSTEM
@@ -570,6 +585,7 @@ FrontEnd<Impl>::handleFault(Fault &fault)
     instruction->fault = fault;
     instruction->setCanIssue();
     instBuffer.push_back(instruction);
+    numInstsReady[0]++;
     ++instBufferSize;
 }
 
@@ -594,6 +610,21 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
         inst->clearDependents();
 
         instBuffer.pop_back();
+        --instBufferSize;
+
+        freeRegs+= inst->numDestRegs();
+    }
+
+    while (!feBuffer.empty() &&
+           feBuffer.back()->seqNum > squash_num) {
+        DynInstPtr inst = feBuffer.back();
+
+        DPRINTF(FE, "Squashing instruction [sn:%lli] PC %#x\n",
+                inst->seqNum, inst->readPC());
+
+        inst->clearDependents();
+
+        feBuffer.pop_back();
         --instBufferSize;
 
         freeRegs+= inst->numDestRegs();
@@ -633,13 +664,13 @@ template <class Impl>
 typename Impl::DynInstPtr
 FrontEnd<Impl>::getInst()
 {
-    if (instBufferSize == 0) {
+    if (feBuffer.empty()) {
         return NULL;
     }
 
-    DynInstPtr inst = instBuffer.front();
+    DynInstPtr inst = feBuffer.front();
 
-    instBuffer.pop_front();
+    feBuffer.pop_front();
 
     --instBufferSize;
 
@@ -857,6 +888,7 @@ FrontEnd<Impl>::doSwitchOut()
     squash(0, 0);
     instBuffer.clear();
     instBufferSize = 0;
+    feBuffer.clear();
     status = Idle;
 }
 

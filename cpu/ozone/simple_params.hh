@@ -70,10 +70,11 @@ class SimpleParams : public BaseCPU::Params
 
     unsigned cachePorts;
     unsigned width;
+    unsigned frontEndLatency;
     unsigned frontEndWidth;
+    unsigned backEndLatency;
     unsigned backEndWidth;
     unsigned backEndSquashLatency;
-    unsigned backEndLatency;
     unsigned maxInstBufferSize;
     unsigned numPhysicalRegs;
     unsigned maxOutstandingMemOps;
@@ -149,6 +150,7 @@ class SimpleParams : public BaseCPU::Params
     //
     unsigned LQEntries;
     unsigned SQEntries;
+    bool lsqLimits;
 
     //
     // Memory dependence

@@ -31,6 +31,7 @@
 
 #include <deque>
 
+#include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/rename_table.hh"
@@ -210,14 +211,20 @@ class FrontEnd
     void dumpInsts();
 
   private:
+    TimeBuffer<int> numInstsReady;
+
     typedef typename std::deque<DynInstPtr> InstBuff;
     typedef typename InstBuff::iterator InstBuffIt;
+
+    InstBuff feBuffer;
 
     InstBuff instBuffer;
 
     int instBufferSize;
 
     int maxInstBufferSize;
+
+    int latency;
 
     int width;
 

@@ -110,6 +110,8 @@ class OzoneLWLSQ {
     /** Returns the name of the LSQ unit. */
     std::string name() const;
 
+    void regStats();
+
     /** Sets the CPU pointer. */
     void setCPU(FullCPU *cpu_ptr)
     { cpu = cpu_ptr; }
@@ -203,7 +205,7 @@ class OzoneLWLSQ {
     int numLoads() { return loads; }
 
     /** Returns the number of stores in the SQ. */
-    int numStores() { return stores; }
+    int numStores() { return stores + storesInFlight; }
 
     /** Returns if either the LQ or SQ is full. */
     bool isFull() { return lqFull() || sqFull(); }
@@ -212,7 +214,7 @@ class OzoneLWLSQ {
     bool lqFull() { return loads >= (LQEntries - 1); }
 
     /** Returns if the SQ is full. */
-    bool sqFull() { return stores >= (SQEntries - 1); }
+    bool sqFull() { return (stores + storesInFlight) >= (SQEntries - 1); }
 
     /** Debugging function to dump instructions in the LSQ. */
     void dumpInsts();
@@ -241,7 +243,9 @@ class OzoneLWLSQ {
 
   private:
     /** Completes the store at the specified index. */
-    void completeStore(int store_idx);
+    void completeStore(DynInstPtr &inst);
+
+    void removeStore(int store_idx);
 
   private:
     /** Pointer to the CPU. */
@@ -342,6 +346,10 @@ class OzoneLWLSQ {
 
     int storesToWB;
 
+  public:
+    int storesInFlight;
+
+  private:
     /// @todo Consider moving to a more advanced model with write vs read ports
     /** The number of cache ports available each cycle. */
     int cachePorts;
@@ -350,6 +358,9 @@ class OzoneLWLSQ {
     int usedPorts;
 
     //list<InstSeqNum> mshrSeqNums;
+
+    /** Tota number of memory ordering violations. */
+    Stats::Scalar<> lsqMemOrderViolation;
 
      //Stats::Scalar<> dcacheStallCycles;
     Counter lastDcacheStall;

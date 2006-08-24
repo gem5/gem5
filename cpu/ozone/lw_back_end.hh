@@ -78,7 +78,7 @@ class LWBackEnd
     TimeBuffer<IssueToExec> i2e;
     typename TimeBuffer<IssueToExec>::wire instsToExecute;
     TimeBuffer<ExecToCommit> e2c;
-    TimeBuffer<Writeback> numInstsToWB;
+    TimeBuffer<int> numInstsToWB;
 
     TimeBuffer<CommStruct> *comm;
     typename TimeBuffer<CommStruct>::wire toIEW;
@@ -157,7 +157,7 @@ class LWBackEnd
 
     Tick lastCommitCycle;
 
-    bool robEmpty() { return instList.empty(); }
+    bool robEmpty() { return numInsts == 0; }
 
     bool isFull() { return numInsts >= numROBEntries; }
     bool isBlocked() { return status == Blocked || dispatchStatus == Blocked; }
@@ -212,6 +212,7 @@ class LWBackEnd
     }
 
     void instToCommit(DynInstPtr &inst);
+    void readyInstsForCommit();
 
     void switchOut();
     void doSwitchOut();
@@ -293,12 +294,13 @@ class LWBackEnd
 
     MemReqPtr memReq;
 
+    int latency;
+
     // General back end width. Used if the more specific isn't given.
     int width;
 
     // Dispatch width.
     int dispatchWidth;
-    int numDispatchEntries;
     int dispatchSize;
 
     int waitingInsts;
@@ -323,6 +325,7 @@ class LWBackEnd
 
     int numROBEntries;
     int numInsts;
+    bool lsqLimits;
 
     std::set<InstSeqNum> waitingMemOps;
     typedef std::set<InstSeqNum>::iterator MemIt;
@@ -332,9 +335,6 @@ class LWBackEnd
     bool squashPending;
     InstSeqNum squashSeqNum;
     Addr squashNextPC;
-
-    Fault faultFromFetch;
-    bool fetchHasFault;
 
     bool switchedOut;
     bool switchPending;
@@ -358,8 +358,6 @@ class LWBackEnd
     std::list<DynInstPtr> waitingList;
     std::list<DynInstPtr> replayList;
     std::list<DynInstPtr> writeback;
-
-    int latency;
 
     int squashLatency;
 
@@ -397,9 +395,11 @@ class LWBackEnd
     Stats::Scalar<> lsqInversion;
 
     Stats::Vector<> nIssuedDist;
+/*
     Stats::VectorDistribution<> issueDelayDist;
 
     Stats::VectorDistribution<> queueResDist;
+*/
 /*
     Stats::Vector<> stat_fu_busy;
     Stats::Vector2d<> stat_fuBusy;
@@ -447,7 +447,7 @@ class LWBackEnd
 
     Stats::Vector<>  ROBCount;	 // cumulative ROB occupancy
     Stats::Formula ROBOccRate;
-    Stats::VectorDistribution<> ROBOccDist;
+//    Stats::VectorDistribution<> ROBOccDist;
   public:
     void dumpInsts();
 
