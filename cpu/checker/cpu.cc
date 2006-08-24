@@ -410,6 +410,14 @@ CheckerCPU::checkFlags(MemReqPtr &req)
     }
 }
 
+void
+CheckerCPU::dumpAndExit()
+{
+    warn("%lli: Checker PC:%#x, next PC:%#x",
+         curTick, cpuXC->readPC(), cpuXC->readNextPC());
+    panic("Checker found an error!");
+}
+
 template <class DynInstPtr>
 void
 Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
@@ -487,7 +495,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                     warn("%lli: Changed PC does not match expected PC, "
                          "changed: %#x, expected: %#x",
                          curTick, cpuXC->readPC(), newPC);
-                    handleError();
+                    CheckerCPU::handleError();
                 }
                 willChangePC = false;
             }
@@ -523,7 +531,7 @@ Checker<DynInstPtr>::tick(DynInstPtr &completed_inst)
                 // possible that its ITB entry was kicked out.
                 warn("%lli: Instruction PC %#x was not found in the ITB!",
                      curTick, cpuXC->readPC());
-                handleError();
+                handleError(inst);
 
                 // go to the next instruction
                 cpuXC->setPC(cpuXC->readNextPC());
@@ -661,7 +669,7 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
             warn("%lli: Changed PCs recently, may not be an error",
                  curTick);
         } else {
-            handleError();
+            handleError(inst);
         }
     }
 
@@ -671,7 +679,7 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
         warn("%lli: Binary instructions do not match! Inst: %#x, "
              "checker: %#x",
              curTick, mi, machInst);
-        handleError();
+        handleError(inst);
     }
 }
 
@@ -697,7 +705,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
             warn("%lli: Instruction results do not match! (Results may not "
                  "actually be integers) Inst: %#x, checker: %#x",
                  curTick, inst->readIntResult(), result.integer);
-            handleError();
+            handleError(inst);
         }
     }
 
@@ -705,7 +713,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         warn("%lli: Instruction next PCs do not match! Inst: %#x, "
              "checker: %#x",
              curTick, inst->readNextPC(), cpuXC->readNextPC());
-        handleError();
+        handleError(inst);
     }
 
     // Checking side effect registers can be difficult if they are not
@@ -724,7 +732,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
                  curTick, misc_reg_idx,
                  inst->xcBase()->readMiscReg(misc_reg_idx),
                  cpuXC->readMiscReg(misc_reg_idx));
-            handleError();
+            handleError(inst);
         }
     }
 }
@@ -751,6 +759,22 @@ Checker<DynInstPtr>::validateState()
 #endif
         updateThisCycle = false;
     }
+}
+
+template <class DynInstPtr>
+void
+Checker<DynInstPtr>::dumpAndExit(DynInstPtr &inst)
+{
+    cprintf("Error detected, instruction information:\n");
+    cprintf("PC:%#x, nextPC:%#x\n[sn:%lli]\n[tid:%i]\n"
+            "Completed:%i\n",
+            inst->readPC(),
+            inst->readNextPC(),
+            inst->seqNum,
+            inst->threadNumber,
+            inst->isCompleted());
+    inst->dump();
+    CheckerCPU::dumpAndExit();
 }
 
 template <class DynInstPtr>

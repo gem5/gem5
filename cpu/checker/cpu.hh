@@ -129,7 +129,7 @@ class CheckerCPU : public BaseCPU
 
     union Result {
         uint64_t integer;
-        float fp;
+//        float fp;
         double dbl;
     };
 
@@ -230,7 +230,7 @@ class CheckerCPU : public BaseCPU
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         cpuXC->setFloatRegSingle(reg_idx, val);
-        result.fp = val;
+        result.dbl = (double)val;
     }
 
     void setFloatRegDouble(const StaticInst *si, int idx, double val)
@@ -275,7 +275,7 @@ class CheckerCPU : public BaseCPU
         return cpuXC->setMiscRegWithEffect(misc_reg, val);
     }
 
-    void recordPCChange(uint64_t val) { changedPC = true; }
+    void recordPCChange(uint64_t val) { changedPC = true; newPC = val; }
     void recordNextPCChange(uint64_t val) { changedNextPC = true; }
 
     bool translateInstReq(MemReqPtr &req);
@@ -295,9 +295,15 @@ class CheckerCPU : public BaseCPU
     void syscall() { }
 #endif
 
-    virtual void handleError() = 0;
+    void handleError()
+    {
+        if (exitOnError)
+            dumpAndExit();
+    }
 
     bool checkFlags(MemReqPtr &req);
+
+    void dumpAndExit();
 
     ExecContext *xcBase() { return xcProxy; }
     CPUExecContext *cpuXCBase() { return cpuXC; }
@@ -338,13 +344,16 @@ class Checker : public CheckerCPU
     void validateExecution(DynInstPtr &inst);
     void validateState();
 
-    virtual void handleError()
+    void handleError(DynInstPtr &inst)
     {
-        if (exitOnError)
-            panic("Checker found error!");
-        else if (updateOnError)
+        if (exitOnError) {
+            dumpAndExit(inst);
+        } else if (updateOnError) {
             updateThisCycle = true;
+        }
     }
+
+    void dumpAndExit(DynInstPtr &inst);
 
     bool updateThisCycle;
 
