@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cd /benchmarks/spec/gzip00/
+
+/sbin/m5 checkpoint 0 0
+/sbin/m5 checkpoint 100000000 200000000
+
+/sbin/m5 loadsymbol
+
+/sbin/m5 resetstats 
+./gzip lgred.log 1
+/sbin/m5 exit
