@@ -31,9 +31,12 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
+#include "base/callback.hh"
+#include "base/output.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/thread_state.hh"
 #include "sim/process.hh"
+#include "sim/sim_exit.hh"
 
 class Event;
 //class Process;
@@ -62,9 +65,22 @@ struct OzoneThreadState : public ThreadState {
 #if FULL_SYSTEM
     OzoneThreadState(FullCPU *_cpu, int _thread_num, FunctionalMemory *_mem)
         : ThreadState(-1, _thread_num, _mem),
-          inSyscall(0), trapPending(0)
+          cpu(_cpu), inSyscall(0), trapPending(0)
     {
         memset(&regs, 0, sizeof(TheISA::RegFile));
+        if (cpu->params->profile) {
+            profile = new FunctionProfile(cpu->params->system->kernelSymtab);
+            Callback *cb =
+                new MakeCallback<OzoneThreadState,
+                &OzoneThreadState::dumpFuncProfile>(this);
+            registerExitCallback(cb);
+        }
+
+        // let's fill with a dummy node for now so we don't get a segfault
+        // on the first cycle when there's no node available.
+        static ProfileNode dummyNode;
+        profileNode = &dummyNode;
+        profilePC = 3;
     }
 #else
     OzoneThreadState(FullCPU *_cpu, int _thread_num, Process *_process, int _asid)
@@ -187,6 +203,14 @@ struct OzoneThreadState : public ThreadState {
     Counter readFuncExeInst() { return funcExeInst; }
 
     void setFuncExeInst(Counter new_val) { funcExeInst = new_val; }
+
+#if FULL_SYSTEM
+    void dumpFuncProfile()
+    {
+        std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+        profile->dump(xcProxy, *os);
+    }
+#endif
 };
 
 #endif // __CPU_OZONE_THREAD_STATE_HH__

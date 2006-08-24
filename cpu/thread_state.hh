@@ -30,6 +30,7 @@
 #define __CPU_THREAD_STATE_HH__
 
 #include "cpu/exec_context.hh"
+#include "cpu/profile.hh"
 
 #if FULL_SYSTEM
 class EndQuiesceEvent;
@@ -101,6 +102,20 @@ struct ThreadState {
     // one of the FunctionalMemory pointers above.
     short asid;
 
+#endif
+
+#if FULL_SYSTEM
+    void profileClear()
+    {
+        if (profile)
+            profile->clear();
+    }
+
+    void profileSample()
+    {
+        if (profile)
+            profile->sample(profileNode, profilePC);
+    }
 #endif
 
     /**

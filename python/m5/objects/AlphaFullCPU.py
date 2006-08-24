@@ -10,6 +10,8 @@ class DerivAlphaFullCPU(BaseCPU):
         mem = Param.FunctionalMemory(NULL, "memory")
 
     checker = Param.BaseCPU(NULL, "checker")
+    if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
 
     cachePorts = Param.Unsigned("Cache Ports")
 

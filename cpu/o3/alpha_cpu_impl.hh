@@ -153,15 +153,6 @@ AlphaFullCPU<Impl>::regStats()
     this->commit.regStats();
 }
 
-#if FULL_SYSTEM
-template <class Impl>
-void
-AlphaFullCPU<Impl>::AlphaXC::dumpFuncProfile()
-{
-    // Currently not supported
-}
-#endif
-
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::takeOverFrom(ExecContext *old_context)
@@ -336,13 +327,24 @@ AlphaFullCPU<Impl>::AlphaXC::readLastSuspend()
 
 template <class Impl>
 void
+AlphaFullCPU<Impl>::AlphaXC::dumpFuncProfile()
+{
+    thread->dumpFuncProfile();
+}
+
+template <class Impl>
+void
 AlphaFullCPU<Impl>::AlphaXC::profileClear()
-{}
+{
+    thread->profileClear();
+}
 
 template <class Impl>
 void
 AlphaFullCPU<Impl>::AlphaXC::profileSample()
-{}
+{
+    thread->profileSample();
+}
 #endif
 
 template <class Impl>
