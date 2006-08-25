@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ optparser.add_option('--scratch', dest='scratch', action='store_true',
                      default=False,
                      help='rebuld from scratch')
 optparser.add_option('--builds', dest='builds',
-                     default='ALPHA_SE,ALPHA_FS,ALPHA_FS_TL',
+                     default='ALPHA_SE,ALPHA_FS,MIPS_SE,SPARC_SE',
                      help='comma-separated list of builds to test')
 optparser.add_option('--variants', dest='variants',
                      default='opt',
@@ -74,7 +74,7 @@ builds = options.builds.split(',')
 variants = options.variants.split(',')
 
 # Repositories to clone/update
-repos = ['m5', 'm5-test', 'ext']
+repos = ['m5']
 
 # Call os.system() and raise exception if return status is non-zero
 def system(cmd):
@@ -140,11 +140,18 @@ try:
         sys.exit(1)
 
     if options.verbose:
-        print 'cd m5/build'
-    os.chdir('m5/build')
+        print 'cd m5'
+    os.chdir('m5')
 
-    targets = ['%s/test/%s/%s' % (build, variant, test)
-               for build in builds for variant in variants for test in tests]
+    if 'all' in tests:
+	targets = ['build/%s/tests/%s' % (build, variant)
+		   for build in builds
+		   for variant in variants]
+    else:
+	targets = ['build/%s/tests/%s/%s' % (build, variant, test)
+		   for build in builds
+		   for variant in variants
+		   for test in tests]
 
     system('scons %s %s' % (options.scons_opts, ' '.join(targets)))
 
