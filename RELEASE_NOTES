@@ -1,3 +1,8 @@
+Aug. 25, 2006: m5_2.0_beta patch 1
+--------------------
+Handful of minor bug fixes for m5_2.0_beta,
+along with a few new regression tests.
+
 Aug. 15, 2006: m5_2.0_beta
 --------------------
 Major update to M5 including:
