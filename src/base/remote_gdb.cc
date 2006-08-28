@@ -796,7 +796,6 @@ RemoteGDB::trap(int type)
     size_t datalen, len;
     char data[KGDB_BUFLEN + 1];
     char buffer[sizeof(gdbregs) * 2 + 256];
-    char temp[KGDB_BUFLEN];
     const char *p;
     char command, subcmd;
     string var;
@@ -904,10 +903,14 @@ RemoteGDB::trap(int type)
             }
 
             if (read(val, (size_t)len, (char *)buffer)) {
-              mem2hex(temp, buffer, len);
-              send(temp);
+               // variable length array would be nice, but C++ doesn't
+               // officially support those...
+               char *temp = new char[2*len+1];
+               mem2hex(temp, buffer, len);
+               send(temp);
+               delete [] temp;
             } else {
-              send("E05");
+               send("E05");
             }
             continue;
 
