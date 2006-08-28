@@ -82,7 +82,8 @@ PciDev::PciConfigPort::recvFunctional(Packet *pkt)
 }
 
 void
-PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
+                                              AddrRangeList &snoop)
 {
     snoop.clear();
     resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
@@ -157,21 +158,21 @@ PciDev::readConfig(Packet *pkt)
       case sizeof(uint8_t):
         pkt->set<uint8_t>(config.data[offset]);
         DPRINTF(PCIDEV,
-            "read device: %#x function: %#x register: %#x 1 bytes: data: %#x\n",
+            "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
         pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
-            "read device: %#x function: %#x register: %#x 2 bytes: data: %#x\n",
+            "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
         pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
-            "read device: %#x function: %#x register: %#x 4 bytes: data: %#x\n",
+            "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;
@@ -221,7 +222,7 @@ PciDev::writeConfig(Packet *pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PCIDEV,
-            "write device: %#x function: %#x register: %#x 1 bytes: data: %#x\n",
+            "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
@@ -238,7 +239,7 @@ PciDev::writeConfig(Packet *pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PCIDEV,
-            "write device: %#x function: %#x register: %#x 2 bytes: data: %#x\n",
+            "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
@@ -305,7 +306,7 @@ PciDev::writeConfig(Packet *pkt)
             DPRINTF(PCIDEV, "Writing to a read only register");
         }
         DPRINTF(PCIDEV,
-            "write device: %#x function: %#x register: %#x 4 bytes: data: %#x\n",
+            "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
             params()->deviceNum, params()->functionNum, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;

@@ -78,7 +78,7 @@ class PciConfigData : public SimObject
 
 
 /**
- * PCI device, base implemnation is only config space.
+ * PCI device, base implementation is only config space.
  */
 class PciDev : public DmaDevice
 {
@@ -93,7 +93,8 @@ class PciDev : public DmaDevice
 
         virtual void recvFunctional(Packet *pkt) ;
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            AddrRangeList &snoop);
 
         Platform *platform;
 
@@ -107,7 +108,7 @@ class PciDev : public DmaDevice
         PciConfigPort(PciDev *dev, int busid, int devid, int funcid,
                 Platform *p);
 
-      friend class PioPort::SendEvent;
+        friend class PioPort::SendEvent;
     };
 
   public:
@@ -151,6 +152,10 @@ class PciDev : public DmaDevice
     /** The current address mapping of the BARs */
     Addr BARAddrs[6];
 
+    /**
+     * Does the given address lie within the space mapped by the given
+     * base address register?
+     */
     bool
     isBAR(Addr addr, int bar) const
     {
@@ -158,6 +163,10 @@ class PciDev : public DmaDevice
         return BARAddrs[bar] <= addr && addr < BARAddrs[bar] + BARSize[bar];
     }
 
+    /**
+     * Which base address register (if any) maps the given address?
+     * @return The BAR number (0-5 inclusive), or -1 if none.
+     */
     int
     getBAR(Addr addr)
     {
@@ -168,14 +177,23 @@ class PciDev : public DmaDevice
         return -1;
     }
 
+    /**
+     * Which base address register (if any) maps the given address?
+     * @param addr The address to check.
+     * @retval bar The BAR number (0-5 inclusive),
+     *             only valid if return value is true.
+     * @retval offs The offset from the base address,
+     *              only valid if return value is true.
+     * @return True iff address maps to a base address register's region.
+     */
     bool
-    getBAR(Addr paddr, Addr &daddr, int &bar)
+    getBAR(Addr addr, int &bar, Addr &offs)
     {
-        int b = getBAR(paddr);
+        int b = getBAR(addr);
         if (b < 0)
             return false;
 
-        daddr = paddr - BARAddrs[b];
+        offs = addr - BARAddrs[b];
         bar = b;
         return true;
     }
