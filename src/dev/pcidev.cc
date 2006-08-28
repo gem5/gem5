@@ -429,12 +429,12 @@ CREATE_SIM_OBJECT(PciConfigData)
     data->config.headerType = htole(HeaderType);
     data->config.bist = htole(BIST);
 
-    data->config.baseAddr0 = htole(BAR0);
-    data->config.baseAddr1 = htole(BAR1);
-    data->config.baseAddr2 = htole(BAR2);
-    data->config.baseAddr3 = htole(BAR3);
-    data->config.baseAddr4 = htole(BAR4);
-    data->config.baseAddr5 = htole(BAR5);
+    data->config.baseAddr[0] = htole(BAR0);
+    data->config.baseAddr[1] = htole(BAR1);
+    data->config.baseAddr[2] = htole(BAR2);
+    data->config.baseAddr[3] = htole(BAR3);
+    data->config.baseAddr[4] = htole(BAR4);
+    data->config.baseAddr[5] = htole(BAR5);
     data->config.cardbusCIS = htole(CardbusCIS);
     data->config.subsystemVendorID = htole(SubsystemVendorID);
     data->config.subsystemID = htole(SubsystemVendorID);
@@ -450,6 +450,14 @@ CREATE_SIM_OBJECT(PciConfigData)
     data->BARSize[3] = BAR3Size;
     data->BARSize[4] = BAR4Size;
     data->BARSize[5] = BAR5Size;
+
+    for (int i = 0; i < 6; ++i) {
+        uint32_t barsize = data->BARSize[i];
+        if (barsize != 0 && !isPowerOf2(barsize)) {
+            fatal("%s: BAR %d size %d is not a power of 2\n",
+                  getInstanceName(), i, data->BARSize[i]);
+        }
+    }
 
     return data;
 }

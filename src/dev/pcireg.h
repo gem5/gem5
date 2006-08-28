@@ -54,18 +54,7 @@ union PCIConfig {
         uint8_t latencyTimer;
         uint8_t headerType;
         uint8_t bist;
-        union {
-            uint32_t baseAddr[6];
-
-            struct {
-                uint32_t baseAddr0;
-                uint32_t baseAddr1;
-                uint32_t baseAddr2;
-                uint32_t baseAddr3;
-                uint32_t baseAddr4;
-                uint32_t baseAddr5;
-            };
-        };
+        uint32_t baseAddr[6];
         uint32_t cardbusCIS;
         uint16_t subsystemVendorID;
         uint16_t subsystemID;
