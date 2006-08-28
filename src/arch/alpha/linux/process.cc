@@ -162,7 +162,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 38 */ SyscallDesc("osf_old_stat", unimplementedFunc),
     /* 39 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 40 */ SyscallDesc("osf_old_lstat", unimplementedFunc),
-    /* 41 */ SyscallDesc("dup", unimplementedFunc),
+    /* 41 */ SyscallDesc("dup", dupFunc),
     /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
     /* 43 */ SyscallDesc("osf_set_program_attributes", unimplementedFunc),
     /* 44 */ SyscallDesc("osf_profil", unimplementedFunc),

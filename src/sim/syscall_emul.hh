@@ -245,6 +245,10 @@ SyscallReturn chownFunc(SyscallDesc *desc, int num,
 SyscallReturn fchownFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
 
+/// Target dup() handler.
+SyscallReturn dupFunc(SyscallDesc *desc, int num,
+                      Process *process, ThreadContext *tc);
+
 /// Target fnctl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
                         Process *process, ThreadContext *tc);

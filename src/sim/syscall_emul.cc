@@ -301,6 +301,19 @@ fchownFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
 
 
 SyscallReturn
+dupFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
+{
+    int fd = process->sim_fd(tc->getSyscallArg(0));
+
+    if (fd < 0)
+        return -EBADF;
+
+    int result = dup(fd);
+    return (result == -1) ? -errno : process->alloc_fd(result);
+}
+
+
+SyscallReturn
 fcntlFunc(SyscallDesc *desc, int num, Process *process,
           ThreadContext *tc)
 {
