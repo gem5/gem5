@@ -58,8 +58,8 @@ $dir2 = "tracediff-$$-2";
 mkdir($dir1) or die "Can't create dir $dir1\n";
 mkdir($dir2) or die "Can't create dir $dir2\n";
 
-$cmd1 = "$sim1 $simargs -d $dir1 2>&1 |";
-$cmd2 = "$sim2 $simargs -d $dir2 2>&1 |";
+$cmd1 = "$sim1 -d $dir1 $simargs 2>&1 |";
+$cmd2 = "$sim2 -d $dir2 $simargs 2>&1 |";
 
 # This only works if you have rundiff in your path.  I just edit it
 # with an explicit path if necessary.
