@@ -138,7 +138,7 @@ Bus::findPort(Addr addr, int id)
         if (portList[i].range == addr) {
             dest_id = portList[i].portId;
             found = true;
-            DPRINTF(Bus, "  found addr 0x%llx on device %d\n", addr, dest_id);
+            DPRINTF(Bus, "  found addr %#llx on device %d\n", addr, dest_id);
         }
         i++;
     }
@@ -147,11 +147,11 @@ Bus::findPort(Addr addr, int id)
     if (dest_id == -1) {
         for (iter = defaultRange.begin(); iter != defaultRange.end(); iter++) {
             if (*iter == addr) {
-                DPRINTF(Bus, "  found addr 0x%llx on default\n", addr);
+                DPRINTF(Bus, "  found addr %#llx on default\n", addr);
                 return defaultPort;
             }
         }
-        panic("Unable to find destination for addr: %llx", addr);
+        panic("Unable to find destination for addr: %#llx", addr);
     }
 
 
@@ -174,7 +174,7 @@ Bus::findSnoopPorts(Addr addr, int id)
             //Careful  to not overlap ranges
             //or snoop will be called more than once on the port
             ports.push_back(portSnoopList[i].portId);
-            DPRINTF(Bus, "  found snoop addr 0x%llx on device%d\n", addr,
+            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
                     portSnoopList[i].portId);
         }
         i++;
@@ -275,7 +275,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         assert(snoops.size() == 0);
         for(iter = ranges.begin(); iter != ranges.end(); iter++) {
             defaultRange.push_back(*iter);
-            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for default range\n",
+            DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
                     iter->start, iter->end);
         }
     } else {
@@ -307,7 +307,7 @@ Bus::recvStatusChange(Port::Status status, int id)
             dm.portId = id;
             dm.range = *iter;
 
-            DPRINTF(BusAddrRanges, "Adding snoop range %llx - %llx for id %d\n",
+            DPRINTF(BusAddrRanges, "Adding snoop range %#llx - %#llx for id %d\n",
                     dm.range.start, dm.range.end, id);
             portSnoopList.push_back(dm);
         }
@@ -317,7 +317,7 @@ Bus::recvStatusChange(Port::Status status, int id)
             dm.portId = id;
             dm.range = *iter;
 
-            DPRINTF(BusAddrRanges, "Adding range %llx - %llx for id %d\n",
+            DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
                     dm.range.start, dm.range.end, id);
             portList.push_back(dm);
         }
@@ -349,7 +349,7 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
             dflt_iter++) {
         resp.push_back(*dflt_iter);
-        DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",dflt_iter->start,
+        DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
@@ -365,13 +365,13 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
             if (portIter->range.start >= dflt_iter->start &&
                 portIter->range.end <= dflt_iter->end) {
                 subset = true;
-                DPRINTF(BusAddrRanges, "  -- %#llX : %#llX is a SUBSET\n",
+                DPRINTF(BusAddrRanges, "  -- %#llx : %#llx is a SUBSET\n",
                     portIter->range.start, portIter->range.end);
             }
         }
         if (portIter->portId != id && !subset) {
             resp.push_back(portIter->range);
-            DPRINTF(BusAddrRanges, "  -- %#llX : %#llX\n",
+            DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
                     portIter->range.start, portIter->range.end);
         }
     }
