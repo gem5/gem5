@@ -116,9 +116,10 @@ PciDev::PciDev(Params *p)
     if (configData) {
         memcpy(config.data, configData->config.data, sizeof(config.data));
         memcpy(BARSize, configData->BARSize, sizeof(BARSize));
-        memcpy(BARAddrs, configData->BARAddrs, sizeof(BARAddrs));
     } else
         panic("NULL pointer to configuration data");
+
+    memset(BARAddrs, 0, sizeof(BARAddrs));
 
     plat->registerPciDevice(0, p->deviceNum, p->functionNum,
             letoh(configData->config.interruptLine));

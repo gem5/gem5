@@ -62,7 +62,6 @@ class PciConfigData : public SimObject
         : SimObject(name)
     {
         memset(config.data, 0, sizeof(config.data));
-        memset(BARAddrs, 0, sizeof(BARAddrs));
         memset(BARSize, 0, sizeof(BARSize));
     }
 
@@ -71,9 +70,6 @@ class PciConfigData : public SimObject
 
     /** The size of the BARs */
     uint32_t BARSize[6];
-
-    /** The addresses of the BARs */
-    Addr BARAddrs[6];
 };
 
 
