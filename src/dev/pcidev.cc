@@ -252,40 +252,33 @@ PciDev::writeConfig(Packet *pkt)
           case PCI0_BASE_ADDR3:
           case PCI0_BASE_ADDR4:
           case PCI0_BASE_ADDR5:
+            {
+                int barnum = BAR_NUMBER(offset);
 
-            uint32_t barnum, bar_mask;
-            Addr base_addr, base_size, space_base;
+                // convert BAR values to host endianness
+                uint32_t he_old_bar = letoh(config.baseAddr[barnum]);
+                uint32_t he_new_bar = letoh(pkt->get<uint32_t>());
 
-            barnum = BAR_NUMBER(offset);
+                uint32_t bar_mask =
+                    BAR_IO_SPACE(he_old_bar) ? BAR_IO_MASK : BAR_MEM_MASK;
 
-            if (BAR_IO_SPACE(letoh(config.baseAddr[barnum]))) {
-                bar_mask = BAR_IO_MASK;
-                space_base = TSUNAMI_PCI0_IO;
-            } else {
-                bar_mask = BAR_MEM_MASK;
-                space_base = TSUNAMI_PCI0_MEMORY;
-            }
-
-            // Writing 0xffffffff to a BAR tells the card to set the
-            // value of the bar to size of memory it needs
-            if (letoh(pkt->get<uint32_t>()) == 0xffffffff) {
-                // This is I/O Space, bottom two bits are read only
-
-                config.baseAddr[barnum] = letoh(
-                        (~(BARSize[barnum] - 1) & ~bar_mask) |
-                        (letoh(config.baseAddr[barnum]) & bar_mask));
-            } else {
-                config.baseAddr[barnum] = letoh(
-                    (letoh(pkt->get<uint32_t>()) & ~bar_mask) |
-                    (letoh(config.baseAddr[barnum]) & bar_mask));
-
-                if (letoh(config.baseAddr[barnum]) & ~bar_mask) {
-                    base_addr = (letoh(pkt->get<uint32_t>()) & ~bar_mask) + space_base;
-                    base_size = BARSize[barnum];
-                    BARAddrs[barnum] = base_addr;
-
-                pioPort->sendStatusChange(Port::RangeChange);
+                // Writing 0xffffffff to a BAR tells the card to set the
+                // value of the bar to a bitmask indicating the size of
+                // memory it needs
+                if (he_new_bar == 0xffffffff) {
+                    he_new_bar = ~(BARSize[barnum] - 1);
+                } else {
+                    // does it mean something special to write 0 to a BAR?
+                    he_new_bar &= ~bar_mask;
+                    if (he_new_bar) {
+                        Addr space_base = BAR_IO_SPACE(he_old_bar) ?
+                            TSUNAMI_PCI0_IO : TSUNAMI_PCI0_MEMORY;
+                        BARAddrs[barnum] = he_new_bar + space_base;
+                        pioPort->sendStatusChange(Port::RangeChange);
+                    }
                 }
+                config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
+                                                (he_old_bar & bar_mask));
             }
             break;
 
