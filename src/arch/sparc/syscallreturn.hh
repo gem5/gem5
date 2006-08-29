@@ -79,11 +79,11 @@ namespace SparcISA
         // and put the return value itself in the standard return value reg ().
         if (return_value.successful()) {
             // no error, clear XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEF);
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEE);
             regs->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, set XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x10);
+            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x11);
             regs->setIntReg(ReturnValueReg, return_value.value());
         }
     }
