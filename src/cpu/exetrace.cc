@@ -54,14 +54,63 @@ using namespace TheISA;
 void
 Trace::InstRecord::dump(ostream &outs)
 {
+    static uint64_t regs[32] = {
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0};
+    static uint64_t ccr = 0;
+    static uint64_t y = 0;
+    static uint64_t floats[32];
+    uint64_t newVal;
+    static const char * prefixes[4] = {"G", "O", "L", "I"};
     if (flags[PRINT_REG_DELTA])
     {
-        outs << "PC = 0x" << setbase(16)
-                        << setfill('0')
-                        << setw(16) << PC << endl;
-        outs << setbase(10)
-             << setfill(' ')
-             << setw(0);
+        ThreadContext * context = cpu->threadContexts[0];
+        char buf[256];
+        sprintf(buf, "PC = 0x%016llx", context->readNextPC());
+        outs << buf;
+        sprintf(buf, " NPC = 0x%016llx", context->readNextNPC());
+        outs << buf;
+        newVal = context->readMiscReg(SparcISA::MISCREG_CCR);
+        if(newVal != ccr)
+        {
+            sprintf(buf, " CCR = 0x%016llx", newVal);
+            outs << buf;
+            ccr = newVal;
+        }
+        newVal = context->readMiscReg(SparcISA::MISCREG_Y);
+        if(newVal != y)
+        {
+            sprintf(buf, " Y = 0x%016llx", newVal);
+            outs << buf;
+            y = newVal;
+        }
+        for(int y = 0; y < 4; y++)
+        {
+            for(int x = 0; x < 8; x++)
+            {
+                int index = x + 8 * y;
+                newVal = context->readIntReg(index);
+                if(regs[index] != newVal)
+                {
+                    sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
+                    outs << buf;
+                    regs[index] = newVal;
+                }
+            }
+        }
+        for(int y = 0; y < 32; y++)
+        {
+            newVal = context->readFloatRegBits(2 * y, 64);
+            if(floats[y] != newVal)
+            {
+                sprintf(buf, " F%d = 0x%016llx", y, newVal);
+                outs << buf;
+                floats[y] = newVal;
+            }
+        }
+        outs << endl;
         /*
         int numSources = staticInst->numSrcRegs();
         int numDests = staticInst->numDestRegs();
