@@ -97,6 +97,7 @@ system = System(cpu = cpu,
                 membus = Bus())
 system.physmem.port = system.membus.port
 system.cpu.connectMemPorts(system.membus)
+system.cpu.mem = system.physmem
 
 root = Root(system = system)
 
