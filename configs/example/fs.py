@@ -35,6 +35,9 @@ from FSConfig import *
 from SysPaths import *
 from Benchmarks import *
 
+if not m5.build_env['FULL_SYSTEM']:
+    m5.panic("This script requires full-system mode (ALPHA_FS).")
+
 parser = optparse.OptionParser()
 
 parser.add_option("-d", "--detailed", action="store_true")
