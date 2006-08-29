@@ -63,23 +63,28 @@ FloatReg FloatRegFile::readReg(int floatReg, int width)
     //In each of these cases, we have to copy the value into a temporary
     //variable. This is because we may otherwise try to access an
     //unaligned portion of memory.
+    FloatReg result;
     switch(width)
     {
       case SingleWidth:
         float32_t result32;
         memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
-        return htog(result32);
+        result = htog(result32);
+        break;
       case DoubleWidth:
         float64_t result64;
         memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
-        return htog(result64);
+        result = htog(result64);
+        break;
       case QuadWidth:
         float128_t result128;
         memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
-        return htog(result128);
+        result = htog(result128);
+        break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);
     }
+    return result;
 }
 
 FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
@@ -87,23 +92,28 @@ FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
     //In each of these cases, we have to copy the value into a temporary
     //variable. This is because we may otherwise try to access an
     //unaligned portion of memory.
+    FloatRegBits result;
     switch(width)
     {
       case SingleWidth:
         uint32_t result32;
         memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
-        return htog(result32);
+        result = htog(result32);
+        break;
       case DoubleWidth:
         uint64_t result64;
         memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
-        return htog(result64);
+        result = htog(result64);
+        break;
       case QuadWidth:
         uint64_t result128;
         memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
-        return htog(result128);
+        result = htog(result128);
+        break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);
     }
+    return result;
 }
 
 Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
@@ -114,7 +124,6 @@ Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
 
     uint32_t result32;
     uint64_t result64;
-    DPRINTF(Sparc, "Setting floating point register %d\n", floatReg);
     switch(width)
     {
       case SingleWidth:
