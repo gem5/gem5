@@ -252,11 +252,13 @@ class FunctionalPort : public Port
         : Port(_name)
     {}
 
+  protected:
     virtual bool recvTiming(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual Tick recvAtomic(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvFunctional(Packet *pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {}
 
+  public:
     /** a write function that also does an endian conversion. */
     template <typename T>
     inline void writeHtoG(Addr addr, T d);

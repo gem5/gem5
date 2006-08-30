@@ -31,18 +31,41 @@
 #include "mem/tport.hh"
 
 void
+SimpleTimingPort::recvFunctional(Packet *pkt)
+{
+    // just do an atomic access and throw away the returned latency
+    recvAtomic(pkt);
+}
+
+bool
+SimpleTimingPort::recvTiming(Packet *pkt)
+{
+    // If the device is only a slave, it should only be sending
+    // responses, which should never get nacked.  There used to be
+    // code to hanldle nacks here, but I'm pretty sure it didn't work
+    // correctly with the drain code, so that would need to be fixed
+    // if we ever added it back.
+    assert(pkt->result != Packet::Nacked);
+    Tick latency = recvAtomic(pkt);
+    // turn packet around to go back to requester
+    pkt->makeTimingResponse();
+    sendTimingLater(pkt, latency);
+    return true;
+}
+
+void
 SimpleTimingPort::recvRetry()
 {
     bool result = true;
     while (result && transmitList.size()) {
-        result = Port::sendTiming(transmitList.front());
+        result = sendTiming(transmitList.front());
         if (result)
             transmitList.pop_front();
     }
-   if (transmitList.size() == 0 && drainEvent) {
-       drainEvent->process();
-       drainEvent = NULL;
-   }
+    if (transmitList.size() == 0 && drainEvent) {
+        drainEvent->process();
+        drainEvent = NULL;
+    }
 }
 
 void
@@ -50,26 +73,18 @@ SimpleTimingPort::SendEvent::process()
 {
     port->outTiming--;
     assert(port->outTiming >= 0);
-    if (port->Port::sendTiming(packet))
-       if (port->transmitList.size() == 0 && port->drainEvent) {
-           port->drainEvent->process();
-           port->drainEvent = NULL;
-       }
-       return;
-
-    port->transmitList.push_back(packet);
-}
-
-void
-SimpleTimingPort::resendNacked(Packet *pkt) {
-    pkt->reinitNacked();
-    if (transmitList.size()) {
-         transmitList.push_front(pkt);
+    if (port->sendTiming(packet)) {
+        // send successfule
+        if (port->transmitList.size() == 0 && port->drainEvent) {
+            port->drainEvent->process();
+            port->drainEvent = NULL;
+        }
     } else {
-        if (!Port::sendTiming(pkt))
-            transmitList.push_front(pkt);
+        // send unsuccessful (due to flow control).  Will get retry
+        // callback later; save for then.
+        port->transmitList.push_back(packet);
     }
-};
+}
 
 
 unsigned int

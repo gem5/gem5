@@ -182,28 +182,14 @@ PhysicalMemory::getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
 {
     snoop.clear();
     resp.clear();
-    resp.push_back(RangeSize(params()->addrRange.start, params()->addrRange.size()));
+    resp.push_back(RangeSize(params()->addrRange.start,
+                             params()->addrRange.size()));
 }
 
 int
 PhysicalMemory::MemoryPort::deviceBlockSize()
 {
     return memory->deviceBlockSize();
-}
-
-bool
-PhysicalMemory::MemoryPort::recvTiming(Packet *pkt)
-{
-    assert(pkt->result != Packet::Nacked);
-
-    Tick latency = memory->calculateLatency(pkt);
-
-    memory->doFunctionalAccess(pkt);
-
-    pkt->makeTimingResponse();
-    sendTiming(pkt, latency);
-
-    return true;
 }
 
 Tick
@@ -216,6 +202,9 @@ PhysicalMemory::MemoryPort::recvAtomic(Packet *pkt)
 void
 PhysicalMemory::MemoryPort::recvFunctional(Packet *pkt)
 {
+    // Default implementation of SimpleTimingPort::recvFunctional()
+    // calls recvAtomic() and throws away the latency; we can save a
+    // little here by just not calculating the latency.
     memory->doFunctionalAccess(pkt);
 }
 

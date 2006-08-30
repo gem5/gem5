@@ -56,28 +56,14 @@ class PioPort : public SimpleTimingPort
     /** The device that this port serves. */
     PioDevice *device;
 
-    /** The system that device/port are in. This is used to select which mode
-     * we are currently operating in. */
-    System *sys;
-
-    /** The current status of the peer(bus) that we are connected to. */
-    Status peerStatus;
-
-    virtual bool recvTiming(Packet *pkt);
-
     virtual Tick recvAtomic(Packet *pkt);
-
-    virtual void recvFunctional(Packet *pkt) ;
-
-    virtual void recvStatusChange(Status status)
-    { peerStatus = status; }
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                         AddrRangeList &snoop);
 
   public:
-    PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
 
+    PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
 };
 
 
@@ -171,12 +157,6 @@ class PioDevice : public MemObject
     PioPort *pioPort;
 
     virtual void addressRanges(AddrRangeList &range_list) = 0;
-
-    /** As far as the devices are concerned they only accept atomic
-     * transactions which are converted to either a write or a
-     * read. */
-    Tick recvAtomic(Packet *pkt)
-    { return pkt->isRead() ? this->read(pkt) : this->write(pkt); }
 
     /** Pure virtual function that the device must implement. Called
      * when a read command is recieved by the port.

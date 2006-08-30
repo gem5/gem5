@@ -37,20 +37,14 @@
 
 
 PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
-    : SimpleTimingPort(dev->name() + pname), device(dev), sys(s)
+    : SimpleTimingPort(dev->name() + pname), device(dev)
 { }
 
 
 Tick
 PioPort::recvAtomic(Packet *pkt)
 {
-    return device->recvAtomic(pkt);
-}
-
-void
-PioPort::recvFunctional(Packet *pkt)
-{
-    device->recvAtomic(pkt);
+    return pkt->isRead() ? device->read(pkt) : device->write(pkt);
 }
 
 void
@@ -60,20 +54,6 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
     device->addressRanges(resp);
 }
 
-
-bool
-PioPort::recvTiming(Packet *pkt)
-{
-    if (pkt->result == Packet::Nacked) {
-        resendNacked(pkt);
-    } else {
-        Tick latency = device->recvAtomic(pkt);
-        // turn packet around to go back to requester
-        pkt->makeTimingResponse();
-        sendTiming(pkt, latency);
-    }
-    return true;
-}
 
 PioDevice::~PioDevice()
 {

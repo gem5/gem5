@@ -57,8 +57,8 @@ using namespace std;
 
 PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
         int funcid, Platform *p)
-        : PioPort(dev,p->system,"-pciconf"), device(dev), platform(p),
-          busId(busid), deviceId(devid), functionId(funcid)
+    : SimpleTimingPort(dev->name() + "-pciconf"), device(dev), platform(p),
+      busId(busid), deviceId(devid), functionId(funcid)
 {
     configAddr = platform->calcConfigAddr(busId, deviceId, functionId);
 }
@@ -70,16 +70,7 @@ PciDev::PciConfigPort::recvAtomic(Packet *pkt)
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= configAddr &&
            pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
-    return device->recvConfig(pkt);
-}
-
-void
-PciDev::PciConfigPort::recvFunctional(Packet *pkt)
-{
-    assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= configAddr &&
-           pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
-    device->recvConfig(pkt);
+    return pkt->isRead() ? device->readConfig(pkt) : device->writeConfig(pkt);
 }
 
 void
@@ -90,23 +81,6 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
     resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
 }
 
-
-bool
-PciDev::PciConfigPort::recvTiming(Packet *pkt)
-{
-    if (pkt->result == Packet::Nacked) {
-        resendNacked(pkt);
-    } else {
-        assert(pkt->result == Packet::Unknown);
-        assert(pkt->getAddr() >= configAddr &&
-               pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
-        Tick latency = device->recvConfig(pkt);
-        // turn packet around to go back to requester
-        pkt->makeTimingResponse();
-        sendTiming(pkt, latency);
-    }
-    return true;
-}
 
 PciDev::PciDev(Params *p)
     : DmaDevice(p), plat(p->platform), configData(p->configData),

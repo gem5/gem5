@@ -57,8 +57,6 @@ class PhysicalMemory : public MemObject
 
       protected:
 
-        virtual bool recvTiming(Packet *pkt);
-
         virtual Tick recvAtomic(Packet *pkt);
 
         virtual void recvFunctional(Packet *pkt);

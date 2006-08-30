@@ -78,16 +78,12 @@ class PciConfigData : public SimObject
  */
 class PciDev : public DmaDevice
 {
-    class PciConfigPort : public PioPort
+    class PciConfigPort : public SimpleTimingPort
     {
       protected:
         PciDev *device;
 
-        virtual bool recvTiming(Packet *pkt);
-
         virtual Tick recvAtomic(Packet *pkt);
-
-        virtual void recvFunctional(Packet *pkt) ;
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop);
@@ -102,9 +98,7 @@ class PciDev : public DmaDevice
 
       public:
         PciConfigPort(PciDev *dev, int busid, int devid, int funcid,
-                Platform *p);
-
-        friend class PioPort::SendEvent;
+                      Platform *p);
     };
 
   public:
@@ -238,10 +232,6 @@ class PciDev : public DmaDevice
      * @params range_list range list to populate with ranges
      */
     void addressRanges(AddrRangeList &range_list);
-
-    /** Do a PCI Configspace memory access. */
-    Tick recvConfig(Packet *pkt)
-    { return pkt->isRead() ? readConfig(pkt) : writeConfig(pkt); }
 
     /**
      * Constructor for PCI Dev. This function copies data from the
