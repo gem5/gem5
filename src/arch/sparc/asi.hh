@@ -140,10 +140,10 @@ namespace SparcISA
         ASI_PST16_SECONDARY = ASI_PST16_S,
         ASI_PST32_P = 0xC4,
         ASI_PST32_PRIMARY = ASI_PST32_P,
-        ASI_PST32_S = 0xC5
+        ASI_PST32_S = 0xC5,
         ASI_PST32_SECONDARY = ASI_PST32_S,
         //0xC6-0xC7 implementation dependent
-        ASI_PST8_PL = 0xC8
+        ASI_PST8_PL = 0xC8,
         ASI_PST8_PRIMARY_LITTLE = ASI_PST8_PL,
         ASI_PST8_SL = 0xC9,
         ASI_PST8_SECONDARY_LITTLE = ASI_PST8_SL,
