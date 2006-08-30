@@ -32,13 +32,12 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
-#include "base/chunk_generator.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet_impl.hh"
-#include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 #include "mem/tport.hh"
 
+class Event;
 class Platform;
 class PioDevice;
 class DmaDevice;
@@ -49,8 +48,8 @@ class System;
  * sensitive to an address range use. The port takes all the memory
  * access types and roles them into one read() and write() call that the device
  * must respond to. The device must also provide the addressRanges() function
- * with which it returns the address ranges it is interested in. */
-
+ * with which it returns the address ranges it is interested in.
+ */
 class PioPort : public SimpleTimingPort
 {
   protected:
@@ -73,7 +72,8 @@ class PioPort : public SimpleTimingPort
     virtual void recvStatusChange(Status status)
     { peerStatus = status; }
 
-    virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+    virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                        AddrRangeList &snoop);
 
   public:
     PioPort(PioDevice *dev, System *s, std::string pname = "-pioport");
@@ -132,7 +132,8 @@ class DmaPort : public Port
 
     virtual void recvRetry() ;
 
-    virtual void getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                        AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
 
     void sendDma(Packet *pkt, bool front = false);
@@ -155,7 +156,6 @@ class DmaPort : public Port
  * mode we are in, etc is handled by the PioPort so the device doesn't have to
  * bother.
  */
-
 class PioDevice : public MemObject
 {
   protected:
@@ -172,13 +172,14 @@ class PioDevice : public MemObject
 
     virtual void addressRanges(AddrRangeList &range_list) = 0;
 
-    /** As far as the devices are concerned they only accept atomic transactions
-     * which are converted to either a write or a read. */
+    /** As far as the devices are concerned they only accept atomic
+     * transactions which are converted to either a write or a
+     * read. */
     Tick recvAtomic(Packet *pkt)
     { return pkt->isRead() ? this->read(pkt) : this->write(pkt); }
 
-    /** Pure virtual function that the device must implement. Called when a read
-     * command is recieved by the port.
+    /** Pure virtual function that the device must implement. Called
+     * when a read command is recieved by the port.
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
@@ -192,10 +193,9 @@ class PioDevice : public MemObject
     virtual Tick write(Packet *pkt) = 0;
 
   public:
-    /** Params struct which is extended through each device based on the
-     * parameters it needs. Since we are re-writing everything, we might as well
-     * start from the bottom this time. */
-
+    /** Params struct which is extended through each device based on
+     * the parameters it needs. Since we are re-writing everything, we
+     * might as well start from the bottom this time. */
     struct Params
     {
         std::string name;
@@ -255,7 +255,8 @@ class BasicPioDevice : public PioDevice
 
   public:
     BasicPioDevice(Params *p)
-        : PioDevice(p), pioAddr(p->pio_addr), pioSize(0), pioDelay(p->pio_delay)
+        : PioDevice(p), pioAddr(p->pio_addr), pioSize(0),
+          pioDelay(p->pio_delay)
     {}
 
     /** return the address ranges that this device responds to.

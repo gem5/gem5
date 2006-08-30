@@ -29,6 +29,7 @@
  *          Nathan Binkert
  */
 
+#include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "dev/io_device.hh"
 #include "sim/builder.hh"

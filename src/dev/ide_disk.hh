@@ -43,6 +43,8 @@
 #include "dev/io_device.hh"
 #include "sim/eventq.hh"
 
+class ChunkGenerator;
+
 #define DMA_BACKOFF_PERIOD 200
 
 #define MAX_DMA_SIZE    (131072)  // 128K

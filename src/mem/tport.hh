@@ -76,19 +76,21 @@ PioDevice::drain(Event *de)
 class SimpleTimingPort : public Port
 {
   protected:
-    /** A list of outgoing timing response packets that haven't been serviced
-     * yet. */
+    /** A list of outgoing timing response packets that haven't been
+     * serviced yet. */
     std::list<Packet*> transmitList;
     /**
-     * This class is used to implemented sendTiming() with a delay. When a delay
-     * is requested a new event is created. When the event time expires it
-     * attempts to send the packet. If it cannot, the packet is pushed onto the
-     * transmit list to be sent when recvRetry() is called. */
+     * This class is used to implemented sendTiming() with a delay. When
+     * a delay is requested a new event is created. When the event time
+     * expires it attempts to send the packet. If it cannot, the packet
+     * is pushed onto the transmit list to be sent when recvRetry() is
+     * called. */
     class SendEvent : public Event
     {
         SimpleTimingPort *port;
         Packet *packet;
 
+      public:
         SendEvent(SimpleTimingPort *p, Packet *pkt, Tick t)
             : Event(&mainEventQueue), port(p), packet(pkt)
         { setFlags(AutoDelete); schedule(curTick + t); }
@@ -97,8 +99,6 @@ class SimpleTimingPort : public Port
 
         virtual const char *description()
         { return "Future scheduled sendTiming event"; }
-
-        friend class SimpleTimingPort;
     };
 
 
@@ -127,8 +127,6 @@ class SimpleTimingPort : public Port
     {}
 
     unsigned int drain(Event *de);
-
-    friend class SimpleTimingPort::SendEvent;
 };
 
 #endif // __MEM_TPORT_HH__

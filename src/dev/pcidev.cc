@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "base/inifile.hh"
+#include "base/intmath.hh" // for isPowerOf2(
 #include "base/misc.hh"
 #include "base/str.hh"	// for to_number
 #include "base/trace.hh"
@@ -67,8 +68,8 @@ Tick
 PciDev::PciConfigPort::recvAtomic(Packet *pkt)
 {
     assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
-            PCI_CONFIG_SIZE);
+    assert(pkt->getAddr() >= configAddr &&
+           pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
     return device->recvConfig(pkt);
 }
 
@@ -76,8 +77,8 @@ void
 PciDev::PciConfigPort::recvFunctional(Packet *pkt)
 {
     assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
-            PCI_CONFIG_SIZE);
+    assert(pkt->getAddr() >= configAddr &&
+           pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
     device->recvConfig(pkt);
 }
 
@@ -97,8 +98,8 @@ PciDev::PciConfigPort::recvTiming(Packet *pkt)
         resendNacked(pkt);
     } else {
         assert(pkt->result == Packet::Unknown);
-        assert(pkt->getAddr() >= configAddr && pkt->getAddr() < configAddr +
-                PCI_CONFIG_SIZE);
+        assert(pkt->getAddr() >= configAddr &&
+               pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
         Tick latency = device->recvConfig(pkt);
         // turn packet around to go back to requester
         pkt->makeTimingResponse();
