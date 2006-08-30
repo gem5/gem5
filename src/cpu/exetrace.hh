@@ -41,7 +41,7 @@
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 
-class BaseCPU;
+class ThreadContext;
 
 
 namespace Trace {
@@ -53,13 +53,12 @@ class InstRecord : public Record
 
     // The following fields are initialized by the constructor and
     // thus guaranteed to be valid.
-    BaseCPU *cpu;
+    ThreadContext *thread;
     // need to make this ref-counted so it doesn't go away before we
     // dump the record
     StaticInstPtr staticInst;
     Addr PC;
     bool misspeculating;
-    unsigned thread;
 
     // The remaining fields are only valid for particular instruction
     // types (e.g, addresses for memory ops) or when particular
@@ -95,11 +94,12 @@ class InstRecord : public Record
     bool regs_valid;
 
   public:
-    InstRecord(Tick _cycle, BaseCPU *_cpu,
+    InstRecord(Tick _cycle, ThreadContext *_thread,
                const StaticInstPtr &_staticInst,
-               Addr _pc, bool spec, int _thread)
-        : Record(_cycle), cpu(_cpu), staticInst(_staticInst), PC(_pc),
-          misspeculating(spec), thread(_thread)
+               Addr _pc, bool spec)
+        : Record(_cycle), thread(_thread),
+          staticInst(_staticInst), PC(_pc),
+          misspeculating(spec)
     {
         data_status = DataInvalid;
         addr_valid = false;
@@ -174,14 +174,14 @@ InstRecord::setRegs(const IntRegFile &regs)
 
 inline
 InstRecord *
-getInstRecord(Tick cycle, ThreadContext *tc, BaseCPU *cpu,
+getInstRecord(Tick cycle, ThreadContext *tc,
               const StaticInstPtr staticInst,
-              Addr pc, int thread = 0)
+              Addr pc)
 {
     if (DTRACE(InstExec) &&
         (InstRecord::traceMisspec() || !tc->misspeculating())) {
-        return new InstRecord(cycle, cpu, staticInst, pc,
-                              tc->misspeculating(), thread);
+        return new InstRecord(cycle, tc, staticInst, pc,
+                              tc->misspeculating());
     }
 
     return NULL;

@@ -398,7 +398,7 @@ BaseSimpleCPU::preExecute()
     inst = gtoh(inst);
     curStaticInst = StaticInst::decode(makeExtMI(inst, thread->readPC()));
 
-    traceData = Trace::getInstRecord(curTick, tc, this, curStaticInst,
+    traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
                                      thread->readPC());
 
     DPRINTF(Decode,"Decode: Decoded %s instruction (opcode: 0x%x): 0x%x\n",
