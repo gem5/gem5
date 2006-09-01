@@ -598,7 +598,7 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** The global sequence number counter. */
-    InstSeqNum globalSeqNum;
+    InstSeqNum globalSeqNum;//[Impl::MaxThreads];
 
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it

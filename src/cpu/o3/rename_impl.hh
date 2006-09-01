@@ -355,9 +355,7 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
     // "insts[tid].clear();" or "skidBuffer[tid].clear()" since there is
     // a possible delay slot inst for different architectures
     // insts[tid].clear();
-#if THE_ISA == ALPHA_ISA
-    insts[tid].clear();
-#else
+#if ISA_HAS_DELAY_SLOT
     DPRINTF(Rename, "[tid:%i] Squashing incoming decode instructions until "
             "[sn:%i].\n",tid, squash_seq_num);
     ListIt ilist_it = insts[tid].begin();
@@ -369,14 +367,14 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
         }
         ilist_it++;
     }
+#else
+    insts[tid].clear();
 #endif
 
     // Clear the skid buffer in case it has any data in it.
     // See comments above.
     //     skidBuffer[tid].clear();
-#if THE_ISA == ALPHA_ISA
-    skidBuffer[tid].clear();
-#else
+#if ISA_HAS_DELAY_SLOT
     DPRINTF(Rename, "[tid:%i] Squashing incoming skidbuffer instructions "
             "until [sn:%i].\n", tid, squash_seq_num);
     ListIt slist_it = skidBuffer[tid].begin();
@@ -388,6 +386,8 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
         }
         slist_it++;
     }
+#else
+    skidBuffer[tid].clear();
 #endif
     doSquash(squash_seq_num, tid);
 }
@@ -743,7 +743,7 @@ DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
 #ifdef DEBUG
-#if THE_ISA == ALPHA_ISA
+#if !ISA_HAS_DELAY_SLOT
     for (int i=0; i < numThreads; i++)
         assert(insts[i].empty());
 #endif
@@ -1182,10 +1182,10 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
         DPRINTF(Rename, "[tid:%u]: Squashing instructions due to squash from "
                 "commit.\n", tid);
 
-#if THE_ISA == ALPHA_ISA
-        InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].doneSeqNum;
-#else
+#if ISA_HAS_DELAY_SLOT
         InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
+#else
+        InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].doneSeqNum;
 #endif
 
         squash(squashed_seq_num, tid);

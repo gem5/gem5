@@ -57,6 +57,9 @@ namespace SparcISA
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
 
+    // Alpha Does NOT have a delay slot
+    #define ISA_HAS_DELAY_SLOT 1
+
     //TODO this needs to be a SPARC Noop
     // Alpha UNOP (ldq_u r31,0(r0))
     const MachInst NoopMachInst = 0x2ffe0000;

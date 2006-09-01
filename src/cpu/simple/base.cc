@@ -358,12 +358,12 @@ Fault
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
     // set up memory request for instruction fetch
-#if THE_ISA == ALPHA_ISA
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
-            thread->readNextPC());
-#else
+#if ISA_HAS_DELAY_SLOT
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",thread->readPC(),
             thread->readNextPC(),thread->readNextNPC());
+#else
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
+            thread->readNextPC());
 #endif
 
     req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst),
@@ -450,12 +450,12 @@ BaseSimpleCPU::advancePC(Fault fault)
     else {
         // go to the next instruction
         thread->setPC(thread->readNextPC());
-#if THE_ISA == ALPHA_ISA
-        thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
-#else
+#if ISA_HAS_DELAY_SLOT
         thread->setNextPC(thread->readNextNPC());
         thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
         assert(thread->readNextPC() != thread->readNextNPC());
+#else
+        thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 #endif
 
     }
