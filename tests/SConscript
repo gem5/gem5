@@ -207,7 +207,7 @@ if env['FULL_SYSTEM']:
                         'tsunami-simple-atomic-dual',
                         'tsunami-simple-timing-dual']
 else:
-    configs += ['simple-atomic', 'simple-timing']
+    configs += ['simple-atomic', 'simple-timing', 'o3-timing']
 
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))

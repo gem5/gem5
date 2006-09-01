@@ -1,0 +1,13 @@
+Hello world!
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Sep  1 2006 16:10:44
+M5 started Fri Sep  1 16:23:45 2006
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/00.hello/alpha/tru64/o3-timing tests/run.py quick/00.hello/alpha/tru64/o3-timing
+Exiting @ tick 2886 because target called exit()
