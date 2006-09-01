@@ -282,12 +282,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
-#if THE_ISA == ALPHA_ISA
-    toFetch->decodeInfo[tid].branchTaken =
-        inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
-
-    InstSeqNum squash_seq_num = inst->seqNum;
-#else
+#if ISA_HAS_DELAY_SLOT
     toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
         (inst->readNextPC() + sizeof(TheISA::MachInst));
 
@@ -295,6 +290,11 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     squashAfterDelaySlot[tid] = false;
 
     InstSeqNum squash_seq_num = bdelayDoneSeqNum[tid];
+#else
+    toFetch->decodeInfo[tid].branchTaken =
+        inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
+
+    InstSeqNum squash_seq_num = inst->seqNum;
 #endif
 
     // Might have to tell fetch to unblock.
@@ -317,7 +317,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     // insts in them.
     while (!insts[tid].empty()) {
 
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         if (insts[tid].front()->seqNum <= squash_seq_num) {
             DPRINTF(Decode, "[tid:%i]: Cannot remove incoming decode "
                     "instructions before delay slot [sn:%i]. %i insts"
@@ -331,7 +331,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
 
     while (!skidBuffer[tid].empty()) {
 
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
             DPRINTF(Decode, "[tid:%i]: Cannot remove skidBuffer "
                     "instructions before delay slot [sn:%i]. %i insts"
@@ -765,7 +765,7 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
-#if THE_ISA == ALPHA_ISA
+#if !ISA_HAS_DELAY_SLOT
                 squash(inst, inst->threadNumber);
                 inst->setPredTarg(inst->branchTarget());
                 break;

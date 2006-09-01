@@ -291,18 +291,18 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Returns whether the instruction was predicted taken or not. */
     bool predTaken()
-#if THE_ISA == ALPHA_ISA
-    { return predPC != (PC + sizeof(MachInst)); }
-#else
+#if ISA_HAS_DELAY_SLOT
     { return predPC != (nextPC + sizeof(MachInst)); }
+#else
+    { return predPC != (PC + sizeof(MachInst)); }
 #endif
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted()
-#if THE_ISA == ALPHA_ISA
-    { return predPC != nextPC; }
-#else
+#if ISA_HAS_DELAY_SLOT
     { return predPC != nextNPC; }
+#else
+    { return predPC != nextPC; }
 #endif
     //
     //  Instruction types.  Forward checks to StaticInst object.

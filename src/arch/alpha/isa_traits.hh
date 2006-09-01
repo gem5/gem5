@@ -42,7 +42,6 @@ class StaticInstPtr;
 
 namespace AlphaISA
 {
-
     using namespace LittleEndianGuest;
 
     // These enumerate all the registers for dependence tracking.
@@ -60,11 +59,13 @@ namespace AlphaISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
+    // Alpha Does NOT have a delay slot
+    #define ISA_HAS_DELAY_SLOT 0
+
     const Addr PageShift = 13;
     const Addr PageBytes = ULL(1) << PageShift;
     const Addr PageMask = ~(PageBytes - 1);
     const Addr PageOffset = PageBytes - 1;
-
 
 #if FULL_SYSTEM
 

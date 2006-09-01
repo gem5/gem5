@@ -181,7 +181,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
                   params->activity),
 
       globalSeqNum(1),
-
 #if FULL_SYSTEM
       system(params->system),
       physmem(system->physmem),
@@ -321,6 +320,11 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
     lastRunningCycle = curTick;
 
     lastActivatedCycle = -1;
+
+    // Give renameMap & rename stage access to the freeList;
+    //for (int i=0; i < numThreads; i++) {
+        //globalSeqNum[i] = 1;
+        //}
 
     contextSwitch = false;
 }
@@ -627,7 +631,7 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     //Set PC/NPC/NNPC
     setPC(src_tc->readPC(), tid);
     setNextPC(src_tc->readNextPC(), tid);
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
     setNextNPC(src_tc->readNextNPC(), tid);
 #endif
 
@@ -1197,7 +1201,7 @@ FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
     while (inst_it != end_it) {
         assert(!instList.empty());
 
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         if(!squash_delay_slot &&
            delay_slot_seq_num >= (*inst_it)->seqNum) {
             break;

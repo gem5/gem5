@@ -47,6 +47,9 @@ namespace MipsISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
+    // MIPS DOES a delay slot
+    #define ISA_HAS_DELAY_SLOT 1
+
     const Addr PageShift = 13;
     const Addr PageBytes = ULL(1) << PageShift;
     const Addr PageMask = ~(PageBytes - 1);
