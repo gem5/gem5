@@ -722,7 +722,7 @@ DefaultCommit<Impl>::commit()
             // then use one older sequence number.
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
             InstSeqNum bdelay_done_seq_num;
             bool squash_bdelay_slot;
 
@@ -748,7 +748,7 @@ DefaultCommit<Impl>::commit()
 
             if (fromIEW->includeSquashInst[tid] == true) {
                 squashed_inst--;
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
                 bdelay_done_seq_num--;
 #endif
             }
@@ -756,13 +756,13 @@ DefaultCommit<Impl>::commit()
             // number as the youngest instruction in the ROB.
             youngestSeqNum[tid] = squashed_inst;
 
-#if THE_ISA == ALPHA_ISA
-            rob->squash(squashed_inst, tid);
-            toIEW->commitInfo[tid].squashDelaySlot = true;
-#else
+#if ISA_HAS_DELAY_SLOT
             rob->squash(bdelay_done_seq_num, tid);
             toIEW->commitInfo[tid].squashDelaySlot = squash_bdelay_slot;
             toIEW->commitInfo[tid].bdelayDoneSeqNum = bdelay_done_seq_num;
+#else
+            rob->squash(squashed_inst, tid);
+            toIEW->commitInfo[tid].squashDelaySlot = true;
 #endif
             changedROBNumEntries[tid] = true;
 
@@ -800,7 +800,7 @@ DefaultCommit<Impl>::commit()
         // Try to commit any instructions.
         commitInsts();
     } else {
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         skidInsert();
 #endif
     }
@@ -906,11 +906,11 @@ DefaultCommit<Impl>::commitInsts()
                 }
 
                 PC[tid] = nextPC[tid];
-#if THE_ISA == ALPHA_ISA
-                nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
-#else
+#if ISA_HAS_DELAY_SLOT
                 nextPC[tid] = nextNPC[tid];
                 nextNPC[tid] = nextNPC[tid] + sizeof(TheISA::MachInst);
+#else
+                nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
 #endif
 
 #if FULL_SYSTEM
@@ -1115,10 +1115,7 @@ DefaultCommit<Impl>::getInsts()
 {
     DPRINTF(Commit, "Getting instructions from Rename stage.\n");
 
-#if THE_ISA == ALPHA_ISA
-    // Read any renamed instructions and place them into the ROB.
-    int insts_to_process = std::min((int)renameWidth, fromRename->size);
-#else
+#if ISA_HAS_DELAY_SLOT
     // Read any renamed instructions and place them into the ROB.
     int insts_to_process = std::min((int)renameWidth,
                                (int)(fromRename->size + skidBuffer.size()));
@@ -1127,15 +1124,16 @@ DefaultCommit<Impl>::getInsts()
     DPRINTF(Commit, "%i insts available to process. Rename Insts:%i "
             "SkidBuffer Insts:%i\n", insts_to_process, fromRename->size,
             skidBuffer.size());
+#else
+    // Read any renamed instructions and place them into the ROB.
+    int insts_to_process = std::min((int)renameWidth, fromRename->size);
 #endif
 
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
         DynInstPtr inst;
 
-#if THE_ISA == ALPHA_ISA
-        inst = fromRename->insts[inst_num];
-#else
+#if ISA_HAS_DELAY_SLOT
         // Get insts from skidBuffer or from Rename
         if (skidBuffer.size() > 0) {
             DPRINTF(Commit, "Grabbing skidbuffer inst.\n");
@@ -1145,6 +1143,8 @@ DefaultCommit<Impl>::getInsts()
             DPRINTF(Commit, "Grabbing rename inst.\n");
             inst = fromRename->insts[rename_idx++];
         }
+#else
+        inst = fromRename->insts[inst_num];
 #endif
         int tid = inst->threadNumber;
 
@@ -1167,7 +1167,7 @@ DefaultCommit<Impl>::getInsts()
         }
     }
 
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
     if (rename_idx < fromRename->size) {
         DPRINTF(Commit,"Placing Rename Insts into skidBuffer.\n");
 

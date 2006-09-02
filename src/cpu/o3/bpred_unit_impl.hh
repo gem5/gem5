@@ -29,6 +29,7 @@
  */
 
 #include "arch/types.hh"
+#include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "cpu/o3/bpred_unit.hh"
@@ -197,10 +198,10 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
             ++BTBLookups;
 
             if (inst->isCall()) {
-#if THE_ISA == ALPHA_ISA
-                Addr ras_pc = PC + sizeof(MachInst); // Next PC
-#else
+#if ISA_HAS_DELAY_SLOT
                 Addr ras_pc = PC + (2 * sizeof(MachInst)); // Next Next PC
+#else
+                Addr ras_pc = PC + sizeof(MachInst); // Next PC
 #endif
                 RAS[tid].push(ras_pc);
 
@@ -209,8 +210,8 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
                 predict_record.wasCall = true;
 
                 DPRINTF(Fetch, "BranchPred: [tid:%i]: Instruction %#x was a call"
-                        ", adding %#x to the RAS.\n",
-                        tid, inst->readPC(), ras_pc);
+                        ", adding %#x to the RAS index: %i.\n",
+                        tid, inst->readPC(), ras_pc, RAS[tid].topIdx());
             }
 
             if (BTB.valid(PC, tid)) {
@@ -283,7 +284,6 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, unsigned tid)
 
             RAS[tid].restore(pred_hist.front().RASIndex,
                              pred_hist.front().RASTarget);
-
         } else if (pred_hist.front().wasCall) {
             DPRINTF(Fetch, "BranchPred: [tid:%i]: Removing speculative entry "
                     "added to the RAS.\n",tid);

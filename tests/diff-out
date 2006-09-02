@@ -398,8 +398,8 @@ if ($added_stats)
 }
 
 cleanup();
-# Exit code is 0 if no stats error, 1 otherwise
-$status = ($max_err_mag == 0.0) ? 0 : 1;
+# Exit code is 0 if some stats found & no stats error, 1 otherwise
+$status = ($#key_stats >= 0 && $max_err_mag == 0.0) ? 0 : 1;
 exit $status;
 
 sub cleanup

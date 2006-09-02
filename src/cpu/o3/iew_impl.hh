@@ -427,10 +427,10 @@ DefaultIEW<Impl>::squash(unsigned tid)
     instQueue.squash(tid);
 
     // Tell the LDSTQ to start squashing.
-#if THE_ISA == ALPHA_ISA
-    ldstQueue.squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
-#else
+#if ISA_HAS_DELAY_SLOT
     ldstQueue.squash(fromCommit->commitInfo[tid].bdelayDoneSeqNum, tid);
+#else
+    ldstQueue.squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
 #endif
     updatedQueues = true;
 
@@ -439,7 +439,7 @@ DefaultIEW<Impl>::squash(unsigned tid)
             tid, fromCommit->commitInfo[tid].bdelayDoneSeqNum);
 
     while (!skidBuffer[tid].empty()) {
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         if (skidBuffer[tid].front()->seqNum <=
             fromCommit->commitInfo[tid].bdelayDoneSeqNum) {
             DPRINTF(IEW, "[tid:%i]: Cannot remove skidbuffer instructions "
@@ -479,11 +479,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     toCommit->mispredPC[tid] = inst->readPC();
     toCommit->branchMispredict[tid] = true;
 
-#if THE_ISA == ALPHA_ISA
-    toCommit->branchTaken[tid] = inst->readNextPC() !=
-        (inst->readPC() + sizeof(TheISA::MachInst));
-    toCommit->nextPC[tid] = inst->readNextPC();
-#else
+#if ISA_HAS_DELAY_SLOT
     bool branch_taken = inst->readNextNPC() !=
         (inst->readNextPC() + sizeof(TheISA::MachInst));
 
@@ -496,6 +492,10 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     } else {
         toCommit->nextPC[tid] = inst->readNextNPC();
     }
+#else
+    toCommit->branchTaken[tid] = inst->readNextPC() !=
+        (inst->readPC() + sizeof(TheISA::MachInst));
+    toCommit->nextPC[tid] = inst->readNextPC();
 #endif
 
     toCommit->includeSquashInst[tid] = false;
@@ -860,7 +860,7 @@ DefaultIEW<Impl>::sortInsts()
 {
     int insts_from_rename = fromRename->size;
 #ifdef DEBUG
-#if THE_ISA == ALPHA_ISA
+#if !ISA_HAS_DELAY_SLOT
     for (int i = 0; i < numThreads; i++)
         assert(insts[i].empty());
 #endif
@@ -878,8 +878,7 @@ DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
             "[sn:%i].\n", tid, bdelayDoneSeqNum[tid]);
 
     while (!insts[tid].empty()) {
-
-#if THE_ISA != ALPHA_ISA
+#if ISA_HAS_DELAY_SLOT
         if (insts[tid].front()->seqNum <= bdelayDoneSeqNum[tid]) {
             DPRINTF(IEW, "[tid:%i]: Done removing, cannot remove instruction"
                     " that occurs at or before delay slot [sn:%i].\n",
@@ -1316,12 +1315,12 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
-#if THE_ISA == ALPHA_ISA
-                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
-                        inst->nextPC);
-#else
+#if ISA_HAS_DELAY_SLOT
                 DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
                         inst->nextNPC);
+#else
+                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
+                        inst->nextPC);
 #endif
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
