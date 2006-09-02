@@ -40,12 +40,14 @@ optparser.add_option('-v', '--verbose', dest='verbose', action='store_true',
                      help='echo commands before executing')
 optparser.add_option('--builds', dest='builds',
                      default='ALPHA_SE,ALPHA_FS,MIPS_SE,SPARC_SE',
-                     help='comma-separated list of builds to test')
+                     help='comma-separated list of build targets to test  '
+                     " (default: '%default')" )
 optparser.add_option('--variants', dest='variants',
                      default='opt',
-                     help='comma-separated list of build variants to test')
+                     help='comma-separated list of build variants to test '
+                     " (default: '%default')" )
 optparser.add_option('--scons-opts', dest='scons_opts', default='',
-                     help='scons options')
+                     help='scons options', metavar='OPTS')
 
 (options, tests) = optparser.parse_args()
 
