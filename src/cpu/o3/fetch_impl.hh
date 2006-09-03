@@ -1129,9 +1129,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     tid, instruction->staticInst->disassemble(fetch_PC));
 
             instruction->traceData =
-                Trace::getInstRecord(curTick, cpu->tcBase(tid), cpu,
+                Trace::getInstRecord(curTick, cpu->tcBase(tid),
                                      instruction->staticInst,
-                                     instruction->readPC(),tid);
+                                     instruction->readPC());
 
             predicted_branch = lookupAndUpdateNextPC(instruction, next_PC,
                                                      next_NPC);
