@@ -11,6 +11,12 @@ class LiveProcess(Process):
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String('', "environment settings")
     input = Param.String('cin', "filename for stdin")
+    uid = Param.Int(100, 'user id')
+    euid = Param.Int(100, 'effective user id')
+    gid = Param.Int(100, 'group id')
+    egid = Param.Int(100, 'effective group id')
+    pid = Param.Int(100, 'process id')
+    ppid = Param.Int(99, 'parent process id')
 
 class AlphaLiveProcess(LiveProcess):
     type = 'AlphaLiveProcess'

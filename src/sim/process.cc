@@ -460,6 +460,12 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
     Param<string> output;
     VectorParam<string> env;
     SimObjectParam<System *> system;
+    Param<uint64_t> uid;
+    Param<uint64_t> euid;
+    Param<uint64_t> gid;
+    Param<uint64_t> egid;
+    Param<uint64_t> pid;
+    Param<uint64_t> ppid;
 
 END_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
 
@@ -471,7 +477,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
     INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
     INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
     INIT_PARAM(env, "environment settings"),
-    INIT_PARAM(system, "system")
+    INIT_PARAM(system, "system"),
+    INIT_PARAM(uid, "user id"),
+    INIT_PARAM(euid, "effective user id"),
+    INIT_PARAM(gid, "group id"),
+    INIT_PARAM(egid, "effective group id"),
+    INIT_PARAM(pid, "process id"),
+    INIT_PARAM(ppid, "parent process id")
 
 END_INIT_SIM_OBJECT_PARAMS(LiveProcess)
 
