@@ -61,6 +61,7 @@ output exec {{
 #include <fenv.h>
 #endif
 
+#include "arch/sparc/asi.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
