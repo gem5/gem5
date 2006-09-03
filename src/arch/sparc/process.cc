@@ -190,10 +190,10 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
         //The entry point to the program
         auxv.push_back(buildAuxVect(SPARC_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
-        auxv.push_back(buildAuxVect(SPARC_AT_UID, 100));
-        auxv.push_back(buildAuxVect(SPARC_AT_EUID, 100));
-        auxv.push_back(buildAuxVect(SPARC_AT_GID, 100));
-        auxv.push_back(buildAuxVect(SPARC_AT_EGID, 100));
+        auxv.push_back(buildAuxVect(SPARC_AT_UID, uid));
+        auxv.push_back(buildAuxVect(SPARC_AT_EUID, euid));
+        auxv.push_back(buildAuxVect(SPARC_AT_GID, gid));
+        auxv.push_back(buildAuxVect(SPARC_AT_EGID, egid));
         //Whether to enable "secure mode" in the executable
         auxv.push_back(buildAuxVect(SPARC_AT_SECURE, 0));
     }
