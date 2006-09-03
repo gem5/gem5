@@ -855,9 +855,9 @@ FrontEnd<Impl>::getInstFromCacheline()
             instruction->staticInst->disassemble(PC));
 
     instruction->traceData =
-        Trace::getInstRecord(curTick, tc, cpu,
+        Trace::getInstRecord(curTick, tc,
                              instruction->staticInst,
-                             instruction->readPC(), 0);
+                             instruction->readPC());
 
     // Increment stat of fetched instructions.
     ++fetchedInsts;
