@@ -42,6 +42,9 @@
 #include "sim/param.hh"
 #include "sim/system.hh"
 
+//XXX This is temporary
+#include "arch/isa_specific.hh"
+
 using namespace std;
 using namespace TheISA;
 
@@ -54,18 +57,20 @@ using namespace TheISA;
 void
 Trace::InstRecord::dump(ostream &outs)
 {
-    static uint64_t regs[32] = {
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0};
-    static uint64_t ccr = 0;
-    static uint64_t y = 0;
-    static uint64_t floats[32];
-    uint64_t newVal;
-    static const char * prefixes[4] = {"G", "O", "L", "I"};
     if (flags[PRINT_REG_DELTA])
     {
+#if THE_ISA == SPARC_ISA
+        static uint64_t regs[32] = {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0};
+        static uint64_t ccr = 0;
+        static uint64_t y = 0;
+        static uint64_t floats[32];
+        uint64_t newVal;
+        static const char * prefixes[4] = {"G", "O", "L", "I"};
+
         char buf[256];
         sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
         outs << buf;
@@ -110,6 +115,7 @@ Trace::InstRecord::dump(ostream &outs)
             }
         }
         outs << endl;
+#endif
     }
     else if (flags[INTEL_FORMAT]) {
 #if FULL_SYSTEM
