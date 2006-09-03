@@ -401,8 +401,8 @@ getpidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     // fake_syscall mode, so there's no way for a process to know it's
     // not getting a unique value.
 
-    tc->setIntReg(SyscallPseudoReturnReg, 99);
-    return 100;
+    tc->setIntReg(SyscallPseudoReturnReg, process->ppid);
+    return process->pid;
 }
 
 
@@ -414,8 +414,8 @@ getuidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     // simulation to be deterministic.
 
     // EUID goes in r20.
-    tc->setIntReg(SyscallPseudoReturnReg, 100); //EUID
-    return 100;		// UID
+    tc->setIntReg(SyscallPseudoReturnReg, process->euid); //EUID
+    return process->uid;		// UID
 }
 
 
@@ -424,8 +424,8 @@ getgidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
     // Get current group ID.  EGID goes in r20.
-    tc->setIntReg(SyscallPseudoReturnReg, 100); //EGID
-    return 100;
+    tc->setIntReg(SyscallPseudoReturnReg, process->egid); //EGID
+    return process->gid;
 }
 
 
@@ -446,43 +446,43 @@ getpidFunc(SyscallDesc *desc, int callnum, Process *process,
     // fake_syscall mode, so there's no way for a process to know it's
     // not getting a unique value.
 
-    tc->setIntReg(SyscallPseudoReturnReg, 99); //PID
-    return 100;
+    tc->setIntReg(SyscallPseudoReturnReg, process->ppid); //PID
+    return process->pid;
 }
 
 SyscallReturn
 getppidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    return 99;
+    return process->ppid;
 }
 
 SyscallReturn
 getuidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    return 100;		// UID
+    return process->uid;		// UID
 }
 
 SyscallReturn
 geteuidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    return 100;		// UID
+    return process->euid;		// UID
 }
 
 SyscallReturn
 getgidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    return 100;
+    return process->gid;
 }
 
 SyscallReturn
 getegidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    return 100;
+    return process->egid;
 }
 
 
