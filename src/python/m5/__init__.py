@@ -71,17 +71,12 @@ build_env.update(defines.m5_build_env)
 env = smartdict.SmartDict()
 env.update(os.environ)
 
-# Function to provide to C++ so it can look up instances based on paths
-def resolveSimObject(name):
-    obj = config.instanceDict[name]
-    return obj.getCCObject()
-
 from main import options, arguments, main
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(root):
-    config.ticks_per_sec = float(root.clock.frequency)
+    params.ticks_per_sec = float(root.clock.frequency)
     # ugly temporary hack to get output to config.ini
     sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
     root.print_ini()
@@ -108,11 +103,6 @@ def curTick():
 
 # register our C++ exit callback function with Python
 atexit.register(cc_main.doExitCleanup)
-
-# This import allows user scripts to reference 'm5.objects.Foo' after
-# just doing an 'import m5' (without an 'import m5.objects').  May not
-# matter since most scripts will probably 'from m5.objects import *'.
-import objects
 
 # This loops until all objects have been fully drained.
 def doDrain(root):
@@ -206,3 +196,15 @@ def switchCpus(cpuList):
         new_cpu.takeOverFrom(old_cpus[index])
         new_cpu._ccObject.resume()
         index += 1
+
+# Since we have so many mutual imports in this package, we should:
+# 1. Put all intra-package imports at the *bottom* of the file, unless
+#    they're absolutely needed before that (for top-level statements
+#    or class attributes).  Imports of "trivial" packages that don't
+#    import other packages (e.g., 'smartdict') can be at the top.
+# 2. Never use 'from foo import *' on an intra-package import since
+#    you can get the wrong result if foo is only partially imported
+#    at the point you do that (i.e., because foo is in the middle of
+#    importing *you*).
+import objects
+import params
