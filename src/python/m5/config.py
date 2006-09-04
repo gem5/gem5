@@ -141,7 +141,10 @@ class MetaSimObject(type):
     init_keywords = { 'abstract' : types.BooleanType,
                       'type' : types.StringType }
     # Attributes that can be set any time
-    keywords = { 'check' : types.FunctionType }
+    keywords = { 'check' : types.FunctionType,
+                 'cxx_type' : types.StringType,
+                 'cxx_predecls' : types.ListType,
+                 'swig_predecls' : types.ListType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
@@ -224,6 +227,12 @@ class MetaSimObject(type):
             else:
                 setattr(cls, key, val)
 
+        cls.cxx_type = cls.type + '*'
+        # A forward class declaration is sufficient since we are just
+        # declaring a pointer.
+        cls.cxx_predecls = ['class %s;' % cls.type]
+        cls.swig_predecls = cls.cxx_predecls
+
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
             raise TypeError, 'keyword %s has bad type %s (expecting %s)' % \
@@ -232,10 +241,13 @@ class MetaSimObject(type):
             val = classmethod(val)
         type.__setattr__(cls, keyword, val)
 
-    def _new_param(cls, name, value):
-        cls._params[name] = value
-        if hasattr(value, 'default'):
-            setattr(cls, name, value.default)
+    def _new_param(cls, name, pdesc):
+        # each param desc should be uniquely assigned to one variable
+        assert(not hasattr(pdesc, 'name'))
+        pdesc.name = name
+        cls._params[name] = pdesc
+        if hasattr(pdesc, 'default'):
+            setattr(cls, name, pdesc.default)
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -283,6 +295,104 @@ class MetaSimObject(type):
         raise AttributeError, \
               "object '%s' has no attribute '%s'" % (cls.__name__, attr)
 
+    def __str__(cls):
+        return cls.__name__
+
+    def cxx_decl(cls):
+        code = "#ifndef __PARAMS__%s\n#define __PARAMS__%s\n\n" % (cls, cls)
+
+        if str(cls) != 'SimObject':
+            base = cls.__bases__[0].type
+        else:
+            base = None
+
+        # The 'dict' attribute restricts us to the params declared in
+        # the object itself, not including inherited params (which
+        # will also be inherited from the base class's param struct
+        # here).
+        params = cls._params.dict.values()
+        try:
+            ptypes = [p.ptype for p in params]
+        except:
+            print cls, p, p.ptype_str
+            print params
+            raise
+
+        # get a list of lists of predeclaration lines
+        predecls = [p.cxx_predecls() for p in params]
+        # flatten
+        predecls = reduce(lambda x,y:x+y, predecls, [])
+        # remove redundant lines
+        predecls2 = []
+        for pd in predecls:
+            if pd not in predecls2:
+                predecls2.append(pd)
+        predecls2.sort()
+        code += "\n".join(predecls2)
+        code += "\n\n";
+
+        if base:
+            code += '#include "params/%s.hh"\n\n' % base
+
+        # Generate declarations for locally defined enumerations.
+        enum_ptypes = [t for t in ptypes if issubclass(t, Enum)]
+        if enum_ptypes:
+            code += "\n".join([t.cxx_decl() for t in enum_ptypes])
+            code += "\n\n"
+
+        # now generate the actual param struct
+        code += "struct %sParams" % cls
+        if base:
+            code += " : public %sParams" % base
+        code += " {\n"
+        decls = [p.cxx_decl() for p in params]
+        decls.sort()
+        code += "".join(["    %s\n" % d for d in decls])
+        code += "};\n"
+
+        # close #ifndef __PARAMS__* guard
+        code += "\n#endif\n"
+        return code
+
+    def swig_decl(cls):
+
+        code = '%%module %sParams\n' % cls
+
+        if str(cls) != 'SimObject':
+            base = cls.__bases__[0].type
+        else:
+            base = None
+
+        # The 'dict' attribute restricts us to the params declared in
+        # the object itself, not including inherited params (which
+        # will also be inherited from the base class's param struct
+        # here).
+        params = cls._params.dict.values()
+        ptypes = [p.ptype for p in params]
+
+        # get a list of lists of predeclaration lines
+        predecls = [p.swig_predecls() for p in params]
+        # flatten
+        predecls = reduce(lambda x,y:x+y, predecls, [])
+        # remove redundant lines
+        predecls2 = []
+        for pd in predecls:
+            if pd not in predecls2:
+                predecls2.append(pd)
+        predecls2.sort()
+        code += "\n".join(predecls2)
+        code += "\n\n";
+
+        if base:
+            code += '%%import "python/m5/swig/%sParams.i"\n\n' % base
+
+        code += '%{\n'
+        code += '#include "params/%s.hh"\n' % cls
+        code += '%}\n\n'
+        code += '%%include "params/%s.hh"\n\n' % cls
+
+        return code
+
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
@@ -290,6 +400,9 @@ class SimObject(object):
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
     __metaclass__ = MetaSimObject
+    type = 'SimObject'
+
+    name = Param.String("Object name")
 
     # Initialize new instance.  For objects with SimObject-valued
     # children, we need to recursively clone the classes represented
@@ -795,6 +908,9 @@ Self = ProxyFactory(search_self = True, search_up = False)
 # parameters.
 class ParamValue(object):
 
+    cxx_predecls = []
+    swig_predecls = []
+
     # default for printing to .ini file is regular string conversion.
     # will be overridden in some cases
     def ini_str(self):
@@ -865,6 +981,15 @@ class ParamDesc(object):
             return value
         return self.ptype(value)
 
+    def cxx_predecls(self):
+        return self.ptype.cxx_predecls
+
+    def swig_predecls(self):
+        return self.ptype.swig_predecls
+
+    def cxx_decl(self):
+        return '%s %s;' % (self.ptype.cxx_type, self.name)
+
 # Vector-valued parameter description.  Just like ParamDesc, except
 # that the value is a vector (list) of the specified type instead of a
 # single value.
@@ -897,6 +1022,14 @@ class VectorParamDesc(ParamDesc):
             # list here, but for some historical reason we don't...
             return ParamDesc.convert(self, value)
 
+    def cxx_predecls(self):
+        return ['#include <vector>'] + self.ptype.cxx_predecls
+
+    def swig_predecls(self):
+        return ['%include "std_vector.i"'] + self.ptype.swig_predecls
+
+    def cxx_decl(self):
+        return 'std::vector< %s > %s;' % (self.ptype.cxx_type, self.name)
 
 class ParamFactory(object):
     def __init__(self, param_desc_class, ptype_str = None):
@@ -926,6 +1059,15 @@ class ParamFactory(object):
 
 Param = ParamFactory(ParamDesc)
 VectorParam = ParamFactory(VectorParamDesc)
+
+# String-valued parameter.  Just mixin the ParamValue class
+# with the built-in str class.
+class String(ParamValue,str):
+    cxx_type = 'std::string'
+    cxx_predecls = ['#include <string>']
+    swig_predecls = ['%include "std_string.i"\n' +
+                     '%apply const std::string& {std::string *};']
+    pass
 
 #####################################################################
 #
@@ -975,10 +1117,129 @@ class NumericParamValue(ParamValue):
         newobj._check()
         return newobj
 
-class Range(ParamValue):
-    type = int # default; can be overridden in subclasses
-    def __init__(self, *args, **kwargs):
+# Metaclass for bounds-checked integer parameters.  See CheckedInt.
+class CheckedIntType(type):
+    def __init__(cls, name, bases, dict):
+        super(CheckedIntType, cls).__init__(name, bases, dict)
 
+        # CheckedInt is an abstract base class, so we actually don't
+        # want to do any processing on it... the rest of this code is
+        # just for classes that derive from CheckedInt.
+        if name == 'CheckedInt':
+            return
+
+        if not cls.cxx_predecls:
+            # most derived types require this, so we just do it here once
+            cls.cxx_predecls = ['#include "sim/host.hh"']
+
+        if not cls.swig_predecls:
+            # most derived types require this, so we just do it here once
+            cls.swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+                                 '%import "sim/host.hh"']
+
+        if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
+            if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
+                panic("CheckedInt subclass %s must define either\n" \
+                      "    'min' and 'max' or 'size' and 'unsigned'\n" \
+                      % name);
+            if cls.unsigned:
+                cls.min = 0
+                cls.max = 2 ** cls.size - 1
+            else:
+                cls.min = -(2 ** (cls.size - 1))
+                cls.max = (2 ** (cls.size - 1)) - 1
+
+# Abstract superclass for bounds-checked integer parameters.  This
+# class is subclassed to generate parameter classes with specific
+# bounds.  Initialization of the min and max bounds is done in the
+# metaclass CheckedIntType.__init__.
+class CheckedInt(NumericParamValue):
+    __metaclass__ = CheckedIntType
+
+    def _check(self):
+        if not self.min <= self.value <= self.max:
+            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
+                  (self.min, self.value, self.max)
+
+    def __init__(self, value):
+        if isinstance(value, str):
+            self.value = toInteger(value)
+        elif isinstance(value, (int, long, float)):
+            self.value = long(value)
+        self._check()
+
+class Int(CheckedInt):      cxx_type = 'int';      size = 32; unsigned = False
+class Unsigned(CheckedInt): cxx_type = 'unsigned'; size = 32; unsigned = True
+
+class Int8(CheckedInt):     cxx_type =   'int8_t'; size =  8; unsigned = False
+class UInt8(CheckedInt):    cxx_type =  'uint8_t'; size =  8; unsigned = True
+class Int16(CheckedInt):    cxx_type =  'int16_t'; size = 16; unsigned = False
+class UInt16(CheckedInt):   cxx_type = 'uint16_t'; size = 16; unsigned = True
+class Int32(CheckedInt):    cxx_type =  'int32_t'; size = 32; unsigned = False
+class UInt32(CheckedInt):   cxx_type = 'uint32_t'; size = 32; unsigned = True
+class Int64(CheckedInt):    cxx_type =  'int64_t'; size = 64; unsigned = False
+class UInt64(CheckedInt):   cxx_type = 'uint64_t'; size = 64; unsigned = True
+
+class Counter(CheckedInt):  cxx_type = 'Counter';  size = 64; unsigned = True
+class Tick(CheckedInt):     cxx_type = 'Tick';     size = 64; unsigned = True
+class TcpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True
+class UdpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True
+
+class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
+
+class Float(ParamValue, float):
+    pass
+
+class MemorySize(CheckedInt):
+    cxx_type = 'uint64_t'
+    size = 64
+    unsigned = True
+    def __init__(self, value):
+        if isinstance(value, MemorySize):
+            self.value = value.value
+        else:
+            self.value = toMemorySize(value)
+        self._check()
+
+class MemorySize32(CheckedInt):
+    size = 32
+    unsigned = True
+    def __init__(self, value):
+        if isinstance(value, MemorySize):
+            self.value = value.value
+        else:
+            self.value = toMemorySize(value)
+        self._check()
+
+class Addr(CheckedInt):
+    cxx_type = 'Addr'
+    cxx_predecls = ['#include "targetarch/isa_traits.hh"']
+    size = 64
+    unsigned = True
+    def __init__(self, value):
+        if isinstance(value, Addr):
+            self.value = value.value
+        else:
+            try:
+                self.value = toMemorySize(value)
+            except TypeError:
+                self.value = long(value)
+        self._check()
+
+
+class MetaRange(type):
+    def __init__(cls, name, bases, dict):
+        super(MetaRange, cls).__init__(name, bases, dict)
+        if name == 'Range':
+            return
+        cls.cxx_type = 'Range< %s >' % cls.type.cxx_type
+        cls.cxx_predecls = \
+                       ['#include "base/range.hh"'] + cls.type.cxx_predecls
+
+class Range(ParamValue):
+    __metaclass__ = MetaRange
+    type = Int # default; can be overridden in subclasses
+    def __init__(self, *args, **kwargs):
         def handle_kwargs(self, kwargs):
             if 'end' in kwargs:
                 self.second = self.type(kwargs.pop('end'))
@@ -1014,115 +1275,17 @@ class Range(ParamValue):
     def __str__(self):
         return '%s:%s' % (self.first, self.second)
 
-# Metaclass for bounds-checked integer parameters.  See CheckedInt.
-class CheckedIntType(type):
-    def __init__(cls, name, bases, dict):
-        super(CheckedIntType, cls).__init__(name, bases, dict)
-
-        # CheckedInt is an abstract base class, so we actually don't
-        # want to do any processing on it... the rest of this code is
-        # just for classes that derive from CheckedInt.
-        if name == 'CheckedInt':
-            return
-
-        if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
-            if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
-                panic("CheckedInt subclass %s must define either\n" \
-                      "    'min' and 'max' or 'size' and 'unsigned'\n" \
-                      % name);
-            if cls.unsigned:
-                cls.min = 0
-                cls.max = 2 ** cls.size - 1
-            else:
-                cls.min = -(2 ** (cls.size - 1))
-                cls.max = (2 ** (cls.size - 1)) - 1
-
-# Abstract superclass for bounds-checked integer parameters.  This
-# class is subclassed to generate parameter classes with specific
-# bounds.  Initialization of the min and max bounds is done in the
-# metaclass CheckedIntType.__init__.
-class CheckedInt(NumericParamValue):
-    __metaclass__ = CheckedIntType
-
-    def _check(self):
-        if not self.min <= self.value <= self.max:
-            raise TypeError, 'Integer param out of bounds %d < %d < %d' % \
-                  (self.min, self.value, self.max)
-
-    def __init__(self, value):
-        if isinstance(value, str):
-            self.value = toInteger(value)
-        elif isinstance(value, (int, long, float)):
-            self.value = long(value)
-        self._check()
-
-class Int(CheckedInt):      size = 32; unsigned = False
-class Unsigned(CheckedInt): size = 32; unsigned = True
-
-class Int8(CheckedInt):     size =  8; unsigned = False
-class UInt8(CheckedInt):    size =  8; unsigned = True
-class Int16(CheckedInt):    size = 16; unsigned = False
-class UInt16(CheckedInt):   size = 16; unsigned = True
-class Int32(CheckedInt):    size = 32; unsigned = False
-class UInt32(CheckedInt):   size = 32; unsigned = True
-class Int64(CheckedInt):    size = 64; unsigned = False
-class UInt64(CheckedInt):   size = 64; unsigned = True
-
-class Counter(CheckedInt):  size = 64; unsigned = True
-class Tick(CheckedInt):     size = 64; unsigned = True
-class TcpPort(CheckedInt):  size = 16; unsigned = True
-class UdpPort(CheckedInt):  size = 16; unsigned = True
-
-class Percent(CheckedInt):  min = 0; max = 100
-
-class Float(ParamValue, float):
-    pass
-
-class MemorySize(CheckedInt):
-    size = 64
-    unsigned = True
-    def __init__(self, value):
-        if isinstance(value, MemorySize):
-            self.value = value.value
-        else:
-            self.value = toMemorySize(value)
-        self._check()
-
-class MemorySize32(CheckedInt):
-    size = 32
-    unsigned = True
-    def __init__(self, value):
-        if isinstance(value, MemorySize):
-            self.value = value.value
-        else:
-            self.value = toMemorySize(value)
-        self._check()
-
-class Addr(CheckedInt):
-    size = 64
-    unsigned = True
-    def __init__(self, value):
-        if isinstance(value, Addr):
-            self.value = value.value
-        else:
-            try:
-                self.value = toMemorySize(value)
-            except TypeError:
-                self.value = long(value)
-        self._check()
-
 class AddrRange(Range):
     type = Addr
 
-# String-valued parameter.  Just mixin the ParamValue class
-# with the built-in str class.
-class String(ParamValue,str):
-    pass
+class TickRange(Range):
+    type = Tick
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and
 # False.  Thus this is a little more complicated than String.
 class Bool(ParamValue):
+    cxx_type = 'bool'
     def __init__(self, value):
         try:
             self.value = toBool(value)
@@ -1157,6 +1320,9 @@ class NextEthernetAddr(object):
         NextEthernetAddr.addr = IncEthernetAddr(NextEthernetAddr.addr, inc)
 
 class EthernetAddr(ParamValue):
+    cxx_type = 'Net::EthAddr'
+    cxx_predecls = ['#include "base/inet.hh"']
+    swig_predecls = ['class Net::EthAddr;']
     def __init__(self, value):
         if value == NextEthernetAddr:
             self.value = value
@@ -1253,12 +1419,17 @@ class MetaEnum(type):
             raise TypeError, "Enum-derived class must define "\
                   "attribute 'map' or 'vals'"
 
+        cls.cxx_type = name + '::Enum'
+
         super(MetaEnum, cls).__init__(name, bases, init_dict)
 
-    def cpp_declare(cls):
-        s = 'enum %s {\n    ' % cls.__name__
+    # Generate C++ class declaration for this enum type.
+    # Note that we wrap the enum in a class/struct to act as a namespace,
+    # so that the enum strings can be brief w/o worrying about collisions.
+    def cxx_decl(cls):
+        s = 'struct %s {\n  enum Enum {\n    ' % cls.__name__
         s += ',\n    '.join(['%s = %d' % (v,cls.map[v]) for v in cls.vals])
-        s += '\n};\n'
+        s += '\n  };\n};\n'
         return s
 
 # Base class for enum types.
@@ -1310,6 +1481,10 @@ def getLatency(value):
 
 
 class Latency(NumericParamValue):
+    cxx_type = 'Tick'
+    cxx_predecls = ['#include "sim/host.hh"']
+    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+                     '%import "sim/host.hh"']
     def __init__(self, value):
         self.value = getLatency(value)
 
@@ -1325,6 +1500,10 @@ class Latency(NumericParamValue):
         return str(tick_check(self.value * ticks_per_sec))
 
 class Frequency(NumericParamValue):
+    cxx_type = 'Tick'
+    cxx_predecls = ['#include "sim/host.hh"']
+    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+                     '%import "sim/host.hh"']
     def __init__(self, value):
         self.value = 1 / getLatency(value)
 
@@ -1343,6 +1522,10 @@ class Frequency(NumericParamValue):
 # We can't inherit from Frequency because we don't want it to be directly
 # assignable to a regular Frequency parameter.
 class RootClock(ParamValue):
+    cxx_type = 'Tick'
+    cxx_predecls = ['#include "sim/host.hh"']
+    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+                     '%import "sim/host.hh"']
     def __init__(self, value):
         self.value = 1 / getLatency(value)
 
@@ -1360,6 +1543,10 @@ class RootClock(ParamValue):
 # but to avoid ambiguity this object does not support numeric ops (* or /).
 # An explicit conversion to a Latency or Frequency must be made first.
 class Clock(ParamValue):
+    cxx_type = 'Tick'
+    cxx_predecls = ['#include "sim/host.hh"']
+    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+                     '%import "sim/host.hh"']
     def __init__(self, value):
         self.value = getLatency(value)
 
@@ -1374,6 +1561,7 @@ class Clock(ParamValue):
         return self.period.ini_str()
 
 class NetworkBandwidth(float,ParamValue):
+    cxx_type = 'float'
     def __new__(cls, value):
         val = toNetworkBandwidth(value) / 8.0
         return super(cls, NetworkBandwidth).__new__(cls, val)
@@ -1385,6 +1573,7 @@ class NetworkBandwidth(float,ParamValue):
         return '%f' % (ticks_per_sec / float(self))
 
 class MemoryBandwidth(float,ParamValue):
+    cxx_type = 'float'
     def __new__(self, value):
         val = toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
@@ -1520,7 +1709,8 @@ __all__ = ['SimObject', 'ParamContext', 'Param', 'VectorParam',
            'MemorySize', 'MemorySize32',
            'Latency', 'Frequency', 'RootClock', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
-           'Range', 'AddrRange', 'MaxAddr', 'MaxTick', 'AllMemory',
+           'Range', 'AddrRange', 'TickRange',
+           'MaxAddr', 'MaxTick', 'AllMemory',
            'Null', 'NULL',
            'NextEthernetAddr',
            'Port', 'VectorPort']
