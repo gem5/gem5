@@ -761,6 +761,12 @@ class PortRef(object):
         self.peer = None   # not associated with another port yet
         self.ccConnected = False # C++ port connection done?
 
+    def __str__(self):
+        ext = ''
+        if self.isVec:
+            ext = '[%d]' % self.index
+        return '%s.%s%s' % (self.simobj.path(), self.name, ext)
+
     # Set peer port reference.  Called via __setattr__ as a result of
     # a port assignment, e.g., "obj1.port1 = obj2.port2".
     def setPeer(self, other):

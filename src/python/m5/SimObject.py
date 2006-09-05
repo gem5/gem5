@@ -604,6 +604,20 @@ class SimObject(object):
                     setattr(self, param, value)
                 print '%s=%s' % (param, self._values[param].ini_str())
 
+        port_names = self._ports.keys()
+        port_names.sort()
+        for port_name in port_names:
+            port = self._port_map.get(port_name, None)
+            if port == None:
+                default = getattr(self._ports[port_name], 'default', None)
+                if default == None:
+                    # port is unbound... that's OK, go to next port
+                    continue
+                else:
+                    print port_name, default
+            port = m5.makeList(port) # make list even if it's a scalar port
+            print '%s=%s' % (port_name, ' '.join([str(p) for p in port]))
+
         print	# blank line between objects
 
         for child in child_names:
@@ -722,3 +736,4 @@ __all__ = ['SimObject', 'ParamContext']
 # see comment on imports at end of __init__.py.
 import proxy
 import cc_main
+import m5
