@@ -1,4 +1,4 @@
-from m5.config import *
+from m5.params import *
 from MemObject import MemObject
 
 class Bus(MemObject):

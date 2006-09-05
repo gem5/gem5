@@ -151,8 +151,8 @@ main(int argc, char **argv)
     // initialize SWIG 'cc_main' module
     init_cc_main();
 
-    PyRun_SimpleString("import m5");
-    PyRun_SimpleString("m5.main()");
+    PyRun_SimpleString("import m5.main");
+    PyRun_SimpleString("m5.main.main()");
 
     // clean up Python intepreter.
     Py_Finalize();

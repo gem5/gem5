@@ -71,8 +71,6 @@ build_env.update(defines.m5_build_env)
 env = smartdict.SmartDict()
 env.update(os.environ)
 
-from main import options, arguments, main
-
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(root):
@@ -206,5 +204,7 @@ def switchCpus(cpuList):
 #    you can get the wrong result if foo is only partially imported
 #    at the point you do that (i.e., because foo is in the middle of
 #    importing *you*).
+from main import options
 import objects
 import params
+from SimObject import resolveSimObject

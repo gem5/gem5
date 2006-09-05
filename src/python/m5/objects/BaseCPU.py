@@ -1,5 +1,7 @@
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
 from m5 import build_env
-from m5.config import *
 from AlphaTLB import AlphaDTB, AlphaITB
 from Bus import Bus
 

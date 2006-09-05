@@ -1,4 +1,5 @@
-from m5.config import *
+from m5.params import *
+from m5.proxy import *
 from Device import BasicPioDevice
 from Platform import Platform
 from AlphaConsole import AlphaConsole

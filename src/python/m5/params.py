@@ -46,6 +46,7 @@
 
 import sys, inspect, copy
 import convert
+from util import *
 
 # Dummy base class to identify types that are legitimate for SimObject
 # parameters.
@@ -100,13 +101,14 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                ptype = eval(self.ptype_str, m5.objects.__dict__)
+                ptype = eval(self.ptype_str, objects.__dict__)
                 if not isinstance(ptype, type):
-                    panic("Param qualifier is not a type: %s" % self.ptype)
+                    raise NameError
                 self.ptype = ptype
                 return ptype
             except NameError:
-                pass
+                raise TypeError, \
+                      "Param qualifier '%s' is not a type" % self.ptype_str
         raise AttributeError, "'%s' object has no attribute '%s'" % \
               (type(self).__name__, attr)
 
@@ -120,7 +122,7 @@ class ParamDesc(object):
             return value
         if isinstance(value, self.ptype):
             return value
-        if isNullPointer(value) and issubclass(self.ptype, SimObject):
+        if isNullPointer(value) and isSimObjectClass(self.ptype):
             return value
         return self.ptype(value)
 
@@ -305,7 +307,7 @@ class CheckedInt(NumericParamValue):
 
     def __init__(self, value):
         if isinstance(value, str):
-            self.value = toInteger(value)
+            self.value = convert.toInteger(value)
         elif isinstance(value, (int, long, float)):
             self.value = long(value)
         self._check()
@@ -340,7 +342,7 @@ class MemorySize(CheckedInt):
         if isinstance(value, MemorySize):
             self.value = value.value
         else:
-            self.value = toMemorySize(value)
+            self.value = convert.toMemorySize(value)
         self._check()
 
 class MemorySize32(CheckedInt):
@@ -350,7 +352,7 @@ class MemorySize32(CheckedInt):
         if isinstance(value, MemorySize):
             self.value = value.value
         else:
-            self.value = toMemorySize(value)
+            self.value = convert.toMemorySize(value)
         self._check()
 
 class Addr(CheckedInt):
@@ -363,7 +365,7 @@ class Addr(CheckedInt):
             self.value = value.value
         else:
             try:
-                self.value = toMemorySize(value)
+                self.value = convert.toMemorySize(value)
             except TypeError:
                 self.value = long(value)
         self._check()
@@ -430,7 +432,7 @@ class Bool(ParamValue):
     cxx_type = 'bool'
     def __init__(self, value):
         try:
-            self.value = toBool(value)
+            self.value = convert.toBool(value)
         except TypeError:
             self.value = bool(value)
 
@@ -586,10 +588,10 @@ def getLatency(value):
         return 1 / value.value
     elif isinstance(value, str):
         try:
-            return toLatency(value)
+            return convert.toLatency(value)
         except ValueError:
             try:
-                return 1 / toFrequency(value)
+                return 1 / convert.toFrequency(value)
             except ValueError:
                 pass # fall through
     raise ValueError, "Invalid Frequency/Latency value '%s'" % value
@@ -678,7 +680,7 @@ class Clock(ParamValue):
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(cls, value):
-        val = toNetworkBandwidth(value) / 8.0
+        val = convert.toNetworkBandwidth(value) / 8.0
         return super(cls, NetworkBandwidth).__new__(cls, val)
 
     def __str__(self):
@@ -690,7 +692,7 @@ class NetworkBandwidth(float,ParamValue):
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(self, value):
-        val = toMemoryBandwidth(value)
+        val = convert.toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
 
     def __str__(self):
@@ -702,6 +704,36 @@ class MemoryBandwidth(float,ParamValue):
 #
 # "Constants"... handy aliases for various values.
 #
+
+# Special class for NULL pointers.  Note the special check in
+# make_param_value() above that lets these be assigned where a
+# SimObject is required.
+# only one copy of a particular node
+class NullSimObject(object):
+    __metaclass__ = Singleton
+
+    def __call__(cls):
+        return cls
+
+    def _instantiate(self, parent = None, path = ''):
+        pass
+
+    def ini_str(self):
+        return 'Null'
+
+    def unproxy(self, base):
+        return self
+
+    def set_path(self, parent, name):
+        pass
+    def __str__(self):
+        return 'Null'
+
+# The only instance you'll ever need...
+NULL = NullSimObject()
+
+def isNullPointer(value):
+    return isinstance(value, NullSimObject)
 
 # Some memory range specifications use this as a default upper bound.
 MaxAddr = Addr.max
@@ -821,11 +853,11 @@ __all__ = ['Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'TickRange',
            'MaxAddr', 'MaxTick', 'AllMemory',
-           'Null', 'NULL',
-           'NextEthernetAddr',
+           'NextEthernetAddr', 'NULL',
            'Port', 'VectorPort']
 
 # see comment on imports at end of __init__.py.
-from SimObject import SimObject, isSimObject, isSimObjectSequence, \
-     isNullPointer
+from SimObject import isSimObject, isSimObjectSequence, isSimObjectClass
 import proxy
+import objects
+import cc_main

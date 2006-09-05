@@ -29,10 +29,39 @@
 
 import sys, types
 
-import m5
-from m5 import panic, cc_main
-from convert import *
+from util import *
 from multidict import multidict
+
+# These utility functions have to come first because they're
+# referenced in params.py... otherwise they won't be defined when we
+# import params below, and the recursive import of this file from
+# params.py will not find these names.
+def isSimObject(value):
+    return isinstance(value, SimObject)
+
+def isSimObjectClass(value):
+    return issubclass(value, SimObject)
+
+def isSimObjectSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
+        return False
+
+    for val in value:
+        if not isNullPointer(val) and not isSimObject(val):
+            return False
+
+    return True
+
+def isSimObjectOrSequence(value):
+    return isSimObject(value) or isSimObjectSequence(value)
+
+# Have to import params up top since Param is referenced on initial
+# load (when SimObject class references Param to create a class
+# variable, the 'name' param)...
+from params import *
+# There are a few things we need that aren't in params.__all__ since
+# normal users don't need them
+from params import ParamDesc, isNullPointer, SimObjVector
 
 noDot = False
 try:
@@ -564,7 +593,7 @@ class SimObject(object):
         for param in param_names:
             value = self._values.get(param, None)
             if value != None:
-                if isproxy(value):
+                if proxy.isproxy(value):
                     try:
                         value = value.unproxy(self)
                     except:
@@ -679,52 +708,6 @@ class SimObject(object):
 class ParamContext(SimObject):
     pass
 
-# Special class for NULL pointers.  Note the special check in
-# make_param_value() above that lets these be assigned where a
-# SimObject is required.
-# only one copy of a particular node
-class NullSimObject(object):
-    __metaclass__ = Singleton
-
-    def __call__(cls):
-        return cls
-
-    def _instantiate(self, parent = None, path = ''):
-        pass
-
-    def ini_str(self):
-        return 'Null'
-
-    def unproxy(self, base):
-        return self
-
-    def set_path(self, parent, name):
-        pass
-    def __str__(self):
-        return 'Null'
-
-# The only instance you'll ever need...
-Null = NULL = NullSimObject()
-
-def isSimObject(value):
-    return isinstance(value, SimObject)
-
-def isNullPointer(value):
-    return isinstance(value, NullSimObject)
-
-def isSimObjectSequence(value):
-    if not isinstance(value, (list, tuple)) or len(value) == 0:
-        return False
-
-    for val in value:
-        if not isNullPointer(val) and not isSimObject(val):
-            return False
-
-    return True
-
-def isSimObjectOrSequence(value):
-    return isSimObject(value) or isSimObjectSequence(value)
-
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
     obj = instanceDict[name]
@@ -735,3 +718,7 @@ def resolveSimObject(name):
 # short to avoid polluting other namespaces.
 __all__ = ['SimObject', 'ParamContext']
 
+
+# see comment on imports at end of __init__.py.
+import proxy
+import cc_main
