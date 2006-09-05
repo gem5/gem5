@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1371456                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 194364                       # Number of bytes of host memory used
-host_seconds                                    43.70                       # Real time elapsed on the host
-host_tick_rate                               79947218                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1346129                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 194392                       # Number of bytes of host memory used
+host_seconds                                    44.52                       # Real time elapsed on the host
+host_tick_rate                               78470813                       # Simulator tick rate (ticks/s)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
 sim_insts                                    59929520                       # Number of instructions simulated
 sim_seconds                                  1.746773                       # Number of seconds simulated
@@ -138,7 +138,7 @@ system.tsunami.ethernet.coalescedRxOrn   <err: div-0>                       # av
 system.tsunami.ethernet.coalescedSwi     <err: div-0>                       # average number of Swi's coalesced into each post
 system.tsunami.ethernet.coalescedTotal   <err: div-0>                       # average number of interrupts coalesced into each post
 system.tsunami.ethernet.coalescedTxDesc  <err: div-0>                       # average number of TxDesc's coalesced into each post
-system.tsunami.ethernet.coalescedTxIdle      no value                       # average number of TxIdle's coalesced into each post
+system.tsunami.ethernet.coalescedTxIdle  <err: div-0>                       # average number of TxIdle's coalesced into each post
 system.tsunami.ethernet.coalescedTxOk    <err: div-0>                       # average number of TxOk's coalesced into each post
 system.tsunami.ethernet.descDMAReads                0                       # Number of descriptors the device read w/ DMA
 system.tsunami.ethernet.descDMAWrites               0                       # Number of descriptors the device wrote w/ DMA

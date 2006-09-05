@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 289509                       # Simulator instruction rate (inst/s)
+host_inst_rate                                 129834                       # Simulator instruction rate (inst/s)
 host_mem_usage                                 158964                       # Number of bytes of host memory used
-host_seconds                                     0.02                       # Real time elapsed on the host
-host_tick_rate                                 429531                       # Simulator tick rate (ticks/s)
+host_seconds                                     0.04                       # Real time elapsed on the host
+host_tick_rate                                 194881                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                        5657                       # Number of instructions simulated
 sim_seconds                                  0.000000                       # Number of seconds simulated
@@ -90,8 +90,8 @@ system.cpu.icache.ReadReq_misses                  303                       # nu
 system.cpu.icache.ReadReq_mshr_miss_latency          604                       # number of ReadReq MSHR miss cycles
 system.cpu.icache.ReadReq_mshr_miss_rate     0.053552                       # mshr miss rate for ReadReq accesses
 system.cpu.icache.ReadReq_mshr_misses             303                       # number of ReadReq MSHR misses
-system.cpu.icache.avg_blocked_cycles_no_mshrs     no value                       # average number of cycles each access was blocked
-system.cpu.icache.avg_blocked_cycles_no_targets     no value                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.icache.avg_refs                  17.673267                       # Average number of references to valid blocks.
 system.cpu.icache.blocked_no_mshrs                  0                       # number of cycles access was blocked
 system.cpu.icache.blocked_no_targets                0                       # number of cycles access was blocked

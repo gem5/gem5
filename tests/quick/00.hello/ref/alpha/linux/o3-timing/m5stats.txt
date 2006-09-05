@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    420                       # Nu
 global.BPredUnit.condPredicted                   1304                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         2256                       # Number of BP lookups
 global.BPredUnit.usedRAS                          291                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  34296                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 160076                       # Number of bytes of host memory used
-host_seconds                                     0.16                       # Real time elapsed on the host
-host_tick_rate                                  41824                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  41797                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 160344                       # Number of bytes of host memory used
+host_seconds                                     0.13                       # Real time elapsed on the host
+host_tick_rate                                  50948                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 12                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores               259                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                  2050                       # Number of loads inserted to the mem dependence unit.
@@ -170,8 +170,8 @@ system.cpu.icache.ReadReq_mshr_hits                 6                       # nu
 system.cpu.icache.ReadReq_mshr_miss_latency          641                       # number of ReadReq MSHR miss cycles
 system.cpu.icache.ReadReq_mshr_miss_rate     0.202908                       # mshr miss rate for ReadReq accesses
 system.cpu.icache.ReadReq_mshr_misses             321                       # number of ReadReq MSHR misses
-system.cpu.icache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
-system.cpu.icache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles_no_mshrs     no value                       # average number of cycles each access was blocked
+system.cpu.icache.avg_blocked_cycles_no_targets     no value                       # average number of cycles each access was blocked
 system.cpu.icache.avg_refs                   3.909657                       # Average number of references to valid blocks.
 system.cpu.icache.blocked_no_mshrs                  0                       # number of cycles access was blocked
 system.cpu.icache.blocked_no_targets                0                       # number of cycles access was blocked

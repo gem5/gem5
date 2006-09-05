@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 24 2006 13:31:50
-M5 started Thu Aug 24 14:29:35 2006
+M5 compiled Sep  5 2006 15:39:50
+M5 started Tue Sep  5 15:49:24 2006
 M5 executing on zizzer.eecs.umich.edu
 command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/00.hello/sparc/linux/simple-atomic tests/run.py quick/00.hello/sparc/linux/simple-atomic
 Exiting @ tick 4482 because target called exit()
