@@ -752,60 +752,71 @@ AllMemory = AddrRange(0, MaxAddr)
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
 class PortRef(object):
-    def __init__(self, simobj, name, isVec):
-        assert(isSimObject(simobj))
+    def __init__(self, simobj, name):
+        assert(isSimObject(simobj) or isSimObjectClass(simobj))
         self.simobj = simobj
         self.name = name
-        self.index = -1
-        self.isVec = isVec # is this a vector port?
         self.peer = None   # not associated with another port yet
         self.ccConnected = False # C++ port connection done?
+        self.index = -1  # always -1 for non-vector ports
 
     def __str__(self):
-        ext = ''
-        if self.isVec:
-            ext = '[%d]' % self.index
-        return '%s.%s%s' % (self.simobj.path(), self.name, ext)
+        return '%s.%s' % (self.simobj, self.name)
 
-    # Set peer port reference.  Called via __setattr__ as a result of
-    # a port assignment, e.g., "obj1.port1 = obj2.port2".
-    def setPeer(self, other):
-        if self.isVec:
-            curMap = self.simobj._port_map.get(self.name, [])
-            self.index = len(curMap)
-            curMap.append(other)
-        else:
-            curMap = self.simobj._port_map.get(self.name)
-            if curMap and not self.isVec:
-                print "warning: overwriting port", self.simobj, self.name
-            curMap = other
-        self.simobj._port_map[self.name] = curMap
+    # for config.ini, print peer's name (not ours)
+    def ini_str(self):
+        return str(self.peer)
+
+    def __getattr__(self, attr):
+        if attr == 'peerObj':
+            # shorthand for proxies
+            return self.peer.simobj
+        raise AttributeError, "'%s' object has no attribute '%s'" % \
+              (self.__class__.__name__, attr)
+
+    # Full connection is symmetric (both ways).  Called via
+    # SimObject.__setattr__ as a result of a port assignment, e.g.,
+    # "obj1.portA = obj2.portB", or via VectorPortRef.__setitem__,
+    # e.g., "obj1.portA[3] = obj2.portB".
+    def connect(self, other):
+        if isinstance(other, VectorPortRef):
+            # reference to plain VectorPort is implicit append
+            other = other._get_next()
+        if not (isinstance(other, PortRef) or proxy.isproxy(other)):
+            raise TypeError, \
+                  "assigning non-port reference '%s' to port '%s'" \
+                  % (other, self)
+        if self.peer and not proxy.isproxy(self.peer):
+            print "warning: overwriting port", self, \
+                  "value", self.peer, "with", other
         self.peer = other
+        assert(not isinstance(self.peer, VectorPortRef))
+        if isinstance(other, PortRef) and other.peer is not self:
+            other.connect(self)
 
-    def clone(self, memo):
+    def clone(self, simobj, memo):
+        if memo.has_key(self):
+            return memo[self]
         newRef = copy.copy(self)
+        memo[self] = newRef
+        newRef.simobj = simobj
         assert(isSimObject(newRef.simobj))
-        newRef.simobj = newRef.simobj(_memo=memo)
-        # Tricky: if I'm the *second* PortRef in the pair to be
-        # cloned, then my peer is still in the middle of its clone
-        # method, and thus hasn't returned to its owner's
-        # SimObject.__init__ to get installed in _port_map.  As a
-        # result I have no way of finding the *new* peer object.  So I
-        # mark myself as "waiting" for my peer, and I let the *first*
-        # PortRef clone call set up both peer pointers after I return.
-        newPeer = newRef.simobj._port_map.get(self.name)
-        if newPeer:
-            if self.isVec:
-                assert(self.index != -1)
-                newPeer = newPeer[self.index]
-            # other guy is all set up except for his peer pointer
-            assert(newPeer.peer == -1) # peer must be waiting for handshake
-            newPeer.peer = newRef
-            newRef.peer = newPeer
-        else:
-            # other guy is in clone; just wait for him to do the work
-            newRef.peer = -1 # mark as waiting for handshake
+        if self.peer and not proxy.isproxy(self.peer):
+            peerObj = memo[self.peer.simobj]
+            newRef.peer = self.peer.clone(peerObj, memo)
+            assert(not isinstance(newRef.peer, VectorPortRef))
         return newRef
+
+    def unproxy(self, simobj):
+        assert(simobj is self.simobj)
+        if proxy.isproxy(self.peer):
+            try:
+                realPeer = self.peer.unproxy(self.simobj)
+            except:
+                print "Error in unproxying port '%s' of %s" % \
+                      (self.name, self.simobj.path())
+                raise
+            self.connect(realPeer)
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
@@ -817,35 +828,93 @@ class PortRef(object):
         self.ccConnected = True
         peer.ccConnected = True
 
+# A reference to an individual element of a VectorPort... much like a
+# PortRef, but has an index.
+class VectorPortElementRef(PortRef):
+    def __init__(self, simobj, name, index):
+        PortRef.__init__(self, simobj, name)
+        self.index = index
+
+    def __str__(self):
+        return '%s.%s[%d]' % (self.simobj, self.name, self.index)
+
+# A reference to a complete vector-valued port (not just a single element).
+# Can be indexed to retrieve individual VectorPortElementRef instances.
+class VectorPortRef(object):
+    def __init__(self, simobj, name):
+        assert(isSimObject(simobj) or isSimObjectClass(simobj))
+        self.simobj = simobj
+        self.name = name
+        self.elements = []
+
+    # for config.ini, print peer's name (not ours)
+    def ini_str(self):
+        return ' '.join([el.ini_str() for el in self.elements])
+
+    def __getitem__(self, key):
+        if not isinstance(key, int):
+            raise TypeError, "VectorPort index must be integer"
+        if key >= len(self.elements):
+            # need to extend list
+            ext = [VectorPortElementRef(self.simobj, self.name, i)
+                   for i in range(len(self.elements), key+1)]
+            self.elements.extend(ext)
+        return self.elements[key]
+
+    def _get_next(self):
+        return self[len(self.elements)]
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, int):
+            raise TypeError, "VectorPort index must be integer"
+        self[key].connect(value)
+
+    def connect(self, other):
+        # reference to plain VectorPort is implicit append
+        self._get_next().connect(other)
+
+    def unproxy(self, simobj):
+        [el.unproxy(simobj) for el in self.elements]
+
+    def ccConnect(self):
+        [el.ccConnect() for el in self.elements]
+
 # Port description object.  Like a ParamDesc object, this represents a
 # logical port in the SimObject class, not a particular port on a
 # SimObject instance.  The latter are represented by PortRef objects.
 class Port(object):
-    def __init__(self, desc):
-        self.desc = desc
-        self.isVec = False
+    # Port("description") or Port(default, "description")
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.desc = args[0]
+        elif len(args) == 2:
+            self.default = args[0]
+            self.desc = args[1]
+        else:
+            raise TypeError, 'wrong number of arguments'
+        # self.name is set by SimObject class on assignment
+        # e.g., pio_port = Port("blah") sets self.name to 'pio_port'
 
     # Generate a PortRef for this port on the given SimObject with the
     # given name
-    def makeRef(self, simobj, name):
-        return PortRef(simobj, name, self.isVec)
+    def makeRef(self, simobj):
+        return PortRef(simobj, self.name)
 
     # Connect an instance of this port (on the given SimObject with
     # the given name) with the port described by the supplied PortRef
-    def connect(self, simobj, name, ref):
-        if not isinstance(ref, PortRef):
-            raise TypeError, \
-                  "assigning non-port reference port '%s'" % name
-        myRef = self.makeRef(simobj, name)
-        myRef.setPeer(ref)
-        ref.setPeer(myRef)
+    def connect(self, simobj, ref):
+        self.makeRef(simobj).connect(ref)
 
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a Bus).
 class VectorPort(Port):
-    def __init__(self, desc):
-        Port.__init__(self, desc)
+    def __init__(self, *args):
+        Port.__init__(self, *args)
         self.isVec = True
+
+    def makeRef(self, simobj):
+        return VectorPortRef(simobj, self.name)
+
 
 
 __all__ = ['Param', 'VectorParam',

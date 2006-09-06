@@ -161,7 +161,7 @@ class MetaSimObject(type):
 
         # class or instance attributes
         cls._values = multidict()   # param values
-        cls._port_map = multidict() # port bindings
+        cls._port_refs = multidict() # port ref objects
         cls._instantiated = False # really instantiated, cloned, or subclassed
 
         # We don't support multiple inheritance.  If you want to, you
@@ -179,7 +179,7 @@ class MetaSimObject(type):
             cls._params.parent = base._params
             cls._ports.parent = base._ports
             cls._values.parent = base._values
-            cls._port_map.parent = base._port_map
+            cls._port_refs.parent = base._port_refs
             # mark base as having been subclassed
             base._instantiated = True
 
@@ -197,7 +197,7 @@ class MetaSimObject(type):
 
             # port objects
             elif isinstance(val, Port):
-                cls._ports[key] = val
+                cls._new_port(key, val)
 
             # init-time-only keywords
             elif cls.init_keywords.has_key(key):
@@ -227,7 +227,36 @@ class MetaSimObject(type):
         pdesc.name = name
         cls._params[name] = pdesc
         if hasattr(pdesc, 'default'):
-            setattr(cls, name, pdesc.default)
+            cls._set_param(name, pdesc.default, pdesc)
+
+    def _set_param(cls, name, value, param):
+        assert(param.name == name)
+        try:
+            cls._values[name] = param.convert(value)
+        except Exception, e:
+            msg = "%s\nError setting param %s.%s to %s\n" % \
+                  (e, cls.__name__, name, value)
+            e.args = (msg, )
+            raise
+
+    def _new_port(cls, name, port):
+        # each port should be uniquely assigned to one variable
+        assert(not hasattr(port, 'name'))
+        port.name = name
+        cls._ports[name] = port
+        if hasattr(port, 'default'):
+            cls._cls_get_port_ref(name).connect(port.default)
+
+    # same as _get_port_ref, effectively, but for classes
+    def _cls_get_port_ref(cls, attr):
+        # Return reference that can be assigned to another port
+        # via __setattr__.  There is only ever one reference
+        # object per port, but we create them lazily here.
+        ref = cls._port_refs.get(attr)
+        if not ref:
+            ref = cls._ports[attr].makeRef(cls)
+            cls._port_refs[attr] = ref
+        return ref
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -242,7 +271,7 @@ class MetaSimObject(type):
             return
 
         if cls._ports.has_key(attr):
-            self._ports[attr].connect(self, attr, value)
+            cls._cls_get_port_ref(attr).connect(value)
             return
 
         if isSimObjectOrSequence(value) and cls._instantiated:
@@ -252,21 +281,23 @@ class MetaSimObject(type):
                   % (attr, cls.__name__)
 
         # check for param
-        param = cls._params.get(attr, None)
+        param = cls._params.get(attr)
         if param:
-            try:
-                cls._values[attr] = param.convert(value)
-            except Exception, e:
-                msg = "%s\nError setting param %s.%s to %s\n" % \
-                      (e, cls.__name__, attr, value)
-                e.args = (msg, )
-                raise
-        elif isSimObjectOrSequence(value):
-            # if RHS is a SimObject, it's an implicit child assignment
+            cls._set_param(attr, value, param)
+            return
+
+        if isSimObjectOrSequence(value):
+            # If RHS is a SimObject, it's an implicit child assignment.
+            # Classes don't have children, so we just put this object
+            # in _values; later, each instance will do a 'setattr(self,
+            # attr, _values[attr])' in SimObject.__init__ which will
+            # add this object as a child.
             cls._values[attr] = value
-        else:
-            raise AttributeError, \
-                  "Class %s has no parameter \'%s\'" % (cls.__name__, attr)
+            return
+
+        # no valid assignment... raise exception
+        raise AttributeError, \
+              "Class %s has no parameter \'%s\'" % (cls.__name__, attr)
 
     def __getattr__(cls, attr):
         if cls._values.has_key(attr):
@@ -422,9 +453,9 @@ class SimObject(object):
                 setattr(self, key, [ v(_memo=memo_dict) for v in val ])
         # clone port references.  no need to use a multidict here
         # since we will be creating new references for all ports.
-        self._port_map = {}
-        for key,val in ancestor._port_map.iteritems():
-            self._port_map[key] = applyOrMap(val, 'clone', memo_dict)
+        self._port_refs = {}
+        for key,val in ancestor._port_refs.iteritems():
+            self._port_refs[key] = val.clone(self, memo_dict)
         # apply attribute assignments from keyword args, if any
         for key,val in kwargs.iteritems():
             setattr(self, key, val)
@@ -451,11 +482,19 @@ class SimObject(object):
             return memo_dict[self]
         return self.__class__(_ancestor = self, **kwargs)
 
+    def _get_port_ref(self, attr):
+        # Return reference that can be assigned to another port
+        # via __setattr__.  There is only ever one reference
+        # object per port, but we create them lazily here.
+        ref = self._port_refs.get(attr)
+        if not ref:
+            ref = self._ports[attr].makeRef(self)
+            self._port_refs[attr] = ref
+        return ref
+
     def __getattr__(self, attr):
         if self._ports.has_key(attr):
-            # return reference that can be assigned to another port
-            # via __setattr__
-            return self._ports[attr].makeRef(self, attr)
+            return self._get_port_ref(attr)
 
         if self._values.has_key(attr):
             return self._values[attr]
@@ -473,7 +512,7 @@ class SimObject(object):
 
         if self._ports.has_key(attr):
             # set up port connection
-            self._ports[attr].connect(self, attr, value)
+            self._get_port_ref(attr).connect(value)
             return
 
         if isSimObjectOrSequence(value) and self._instantiated:
@@ -482,7 +521,7 @@ class SimObject(object):
                   "    instance been cloned %s" % (attr, `self`)
 
         # must be SimObject param
-        param = self._params.get(attr, None)
+        param = self._params.get(attr)
         if param:
             try:
                 value = param.convert(value)
@@ -491,22 +530,17 @@ class SimObject(object):
                       (e, self.__class__.__name__, attr, value)
                 e.args = (msg, )
                 raise
-        elif isSimObjectOrSequence(value):
-            pass
-        else:
-            raise AttributeError, "Class %s has no parameter %s" \
-                  % (self.__class__.__name__, attr)
+            self._set_child(attr, value)
+            return
 
-        # clear out old child with this name, if any
-        self.clear_child(attr)
+        if isSimObjectOrSequence(value):
+            self._set_child(attr, value)
+            return
 
-        if isSimObject(value):
-            value.set_path(self, attr)
-        elif isSimObjectSequence(value):
-            value = SimObjVector(value)
-            [v.set_path(self, "%s%d" % (attr, i)) for i,v in enumerate(value)]
+        # no valid assignment... raise exception
+        raise AttributeError, "Class %s has no parameter %s" \
+              % (self.__class__.__name__, attr)
 
-        self._values[attr] = value
 
     # this hack allows tacking a '[0]' onto parameters that may or may
     # not be vectors, and always getting the first element (e.g. cpus)
@@ -528,11 +562,25 @@ class SimObject(object):
     def add_child(self, name, value):
         self._children[name] = value
 
-    def set_path(self, parent, name):
+    def _maybe_set_parent(self, parent, name):
         if not self._parent:
             self._parent = parent
             self._name = name
             parent.add_child(name, self)
+
+    def _set_child(self, attr, value):
+        # if RHS is a SimObject, it's an implicit child assignment
+        # clear out old child with this name, if any
+        self.clear_child(attr)
+
+        if isSimObject(value):
+            value._maybe_set_parent(self, attr)
+        elif isSimObjectSequence(value):
+            value = SimObjVector(value)
+            [v._maybe_set_parent(self, "%s%d" % (attr, i))
+             for i,v in enumerate(value)]
+
+        self._values[attr] = value
 
     def path(self):
         if not self._parent:
@@ -573,6 +621,26 @@ class SimObject(object):
     def unproxy(self, base):
         return self
 
+    def unproxy_all(self):
+        for param in self._params.iterkeys():
+            value = self._values.get(param)
+            if value != None and proxy.isproxy(value):
+                try:
+                    value = value.unproxy(self)
+                except:
+                    print "Error in unproxying param '%s' of %s" % \
+                          (param, self.path())
+                    raise
+                setattr(self, param, value)
+
+        for port_name in self._ports.iterkeys():
+            port = self._port_refs.get(port_name)
+            if port != None:
+                port.unproxy(self)
+
+        for child in self._children.itervalues():
+            child.unproxy_all()
+
     def print_ini(self):
         print '[' + self.path() + ']'	# .ini section header
 
@@ -591,32 +659,16 @@ class SimObject(object):
         param_names = self._params.keys()
         param_names.sort()
         for param in param_names:
-            value = self._values.get(param, None)
+            value = self._values.get(param)
             if value != None:
-                if proxy.isproxy(value):
-                    try:
-                        value = value.unproxy(self)
-                    except:
-                        print >> sys.stderr, \
-                              "Error in unproxying param '%s' of %s" % \
-                              (param, self.path())
-                        raise
-                    setattr(self, param, value)
                 print '%s=%s' % (param, self._values[param].ini_str())
 
         port_names = self._ports.keys()
         port_names.sort()
         for port_name in port_names:
-            port = self._port_map.get(port_name, None)
-            if port == None:
-                default = getattr(self._ports[port_name], 'default', None)
-                if default == None:
-                    # port is unbound... that's OK, go to next port
-                    continue
-                else:
-                    print port_name, default
-            port = m5.makeList(port) # make list even if it's a scalar port
-            print '%s=%s' % (port_name, ' '.join([str(p) for p in port]))
+            port = self._port_refs.get(port_name, None)
+            if port != None:
+                print '%s=%s' % (port_name, port.ini_str())
 
         print	# blank line between objects
 
@@ -643,10 +695,10 @@ class SimObject(object):
         return self._ccObject
 
     # Create C++ port connections corresponding to the connections in
-    # _port_map (& recursively for all children)
+    # _port_refs (& recursively for all children)
     def connectPorts(self):
-        for portRef in self._port_map.itervalues():
-            applyOrMap(portRef, 'ccConnect')
+        for portRef in self._port_refs.itervalues():
+            portRef.ccConnect()
         for child in self._children.itervalues():
             child.connectPorts()
 

@@ -41,7 +41,8 @@ class BaseProxy(object):
 
     def __setattr__(self, attr, value):
         if not attr.startswith('_'):
-            raise AttributeError, 'cannot set attribute on proxy object'
+            raise AttributeError, \
+                  "cannot set attribute '%s' on proxy object" % attr
         super(BaseProxy, self).__setattr__(attr, value)
 
     # support multiplying proxies by constants

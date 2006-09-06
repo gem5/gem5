@@ -18,4 +18,4 @@ class BasicPioDevice(PioDevice):
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
-    dma = Port("DMA port")
+    dma = Port(Self.pio.peerObj.port, "DMA port")

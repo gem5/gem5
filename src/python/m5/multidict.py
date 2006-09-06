@@ -29,7 +29,6 @@
 __all__ = [ 'multidict' ]
 
 class multidict(object):
-    __nodefault = object()
     def __init__(self, parent = {}, **kwargs):
         self.local = dict(**kwargs)
         self.parent = parent
@@ -102,14 +101,11 @@ class multidict(object):
     def values(self):
         return [ value for key,value in self.next() ]
 
-    def get(self, key, default=__nodefault):
+    def get(self, key, default=None):
         try:
             return self[key]
         except KeyError, e:
-            if default != self.__nodefault:
-                return default
-            else:
-                raise KeyError, e
+            return default
 
     def setdefault(self, key, default):
         try:

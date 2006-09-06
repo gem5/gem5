@@ -44,6 +44,7 @@ def panic(string):
     print >>sys.stderr, 'panic:', string
     sys.exit(1)
 
+# force scalars to one-element lists for uniformity
 def makeList(objOrList):
     if isinstance(objOrList, list):
         return objOrList
@@ -75,6 +76,7 @@ env.update(os.environ)
 # once the config is built.
 def instantiate(root):
     params.ticks_per_sec = float(root.clock.frequency)
+    root.unproxy_all()
     # ugly temporary hack to get output to config.ini
     sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
     root.print_ini()

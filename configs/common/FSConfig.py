@@ -66,11 +66,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.tsunami = BaseTsunami()
     self.tsunami.attachIO(self.iobus)
     self.tsunami.ide.pio = self.iobus.port
-    self.tsunami.ide.dma = self.iobus.port
-    self.tsunami.ide.config = self.iobus.port
     self.tsunami.ethernet.pio = self.iobus.port
-    self.tsunami.ethernet.dma = self.iobus.port
-    self.tsunami.ethernet.config = self.iobus.port
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
