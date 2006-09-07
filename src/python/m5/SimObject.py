@@ -633,13 +633,20 @@ class SimObject(object):
                     raise
                 setattr(self, param, value)
 
-        for port_name in self._ports.iterkeys():
+        # Unproxy ports in sorted order so that 'append' operations on
+        # vector ports are done in a deterministic fashion.
+        port_names = self._ports.keys()
+        port_names.sort()
+        for port_name in port_names:
             port = self._port_refs.get(port_name)
             if port != None:
                 port.unproxy(self)
 
-        for child in self._children.itervalues():
-            child.unproxy_all()
+        # Unproxy children in sorted order for determinism also.
+        child_names = self._children.keys()
+        child_names.sort()
+        for child in child_names:
+            self._children[child].unproxy_all()
 
     def print_ini(self):
         print '[' + self.path() + ']'	# .ini section header
