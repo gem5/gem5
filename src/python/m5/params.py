@@ -776,23 +776,25 @@ class PortRef(object):
 
     # Full connection is symmetric (both ways).  Called via
     # SimObject.__setattr__ as a result of a port assignment, e.g.,
-    # "obj1.portA = obj2.portB", or via VectorPortRef.__setitem__,
+    # "obj1.portA = obj2.portB", or via VectorPortElementRef.__setitem__,
     # e.g., "obj1.portA[3] = obj2.portB".
     def connect(self, other):
         if isinstance(other, VectorPortRef):
             # reference to plain VectorPort is implicit append
             other = other._get_next()
-        if not (isinstance(other, PortRef) or proxy.isproxy(other)):
-            raise TypeError, \
-                  "assigning non-port reference '%s' to port '%s'" \
-                  % (other, self)
         if self.peer and not proxy.isproxy(self.peer):
             print "warning: overwriting port", self, \
                   "value", self.peer, "with", other
         self.peer = other
-        assert(not isinstance(self.peer, VectorPortRef))
-        if isinstance(other, PortRef) and other.peer is not self:
-            other.connect(self)
+        if proxy.isproxy(other):
+            other.set_param_desc(PortParamDesc())
+        elif isinstance(other, PortRef):
+            if other.peer is not self:
+                other.connect(self)
+        else:
+            raise TypeError, \
+                  "assigning non-port reference '%s' to port '%s'" \
+                  % (other, self)
 
     def clone(self, simobj, memo):
         if memo.has_key(self):
@@ -847,6 +849,9 @@ class VectorPortRef(object):
         self.name = name
         self.elements = []
 
+    def __str__(self):
+        return '%s.%s[:]' % (self.simobj, self.name)
+
     # for config.ini, print peer's name (not ours)
     def ini_str(self):
         return ' '.join([el.ini_str() for el in self.elements])
@@ -870,8 +875,25 @@ class VectorPortRef(object):
         self[key].connect(value)
 
     def connect(self, other):
-        # reference to plain VectorPort is implicit append
-        self._get_next().connect(other)
+        if isinstance(other, (list, tuple)):
+            # Assign list of port refs to vector port.
+            # For now, append them... not sure if that's the right semantics
+            # or if it should replace the current vector.
+            for ref in other:
+                self._get_next().connect(ref)
+        else:
+            # scalar assignment to plain VectorPort is implicit append
+            self._get_next().connect(other)
+
+    def clone(self, simobj, memo):
+        if memo.has_key(self):
+            return memo[self]
+        newRef = copy.copy(self)
+        memo[self] = newRef
+        newRef.simobj = simobj
+        assert(isSimObject(newRef.simobj))
+        newRef.elements = [el.clone(simobj, memo) for el in self.elements]
+        return newRef
 
     def unproxy(self, simobj):
         [el.unproxy(simobj) for el in self.elements]
@@ -915,6 +937,14 @@ class VectorPort(Port):
     def makeRef(self, simobj):
         return VectorPortRef(simobj, self.name)
 
+# 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
+# proxy objects (via set_param_desc()) so that proxy error messages
+# make sense.
+class PortParamDesc(object):
+    __metaclass__ = Singleton
+
+    ptype_str = 'Port'
+    ptype = Port
 
 
 __all__ = ['Param', 'VectorParam',

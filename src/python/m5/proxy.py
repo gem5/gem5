@@ -39,6 +39,15 @@ class BaseProxy(object):
         self._search_up = search_up
         self._multiplier = None
 
+    def __str__(self):
+        if self._search_self and not self._search_up:
+            s = 'Self'
+        elif not self._search_self and self._search_up:
+            s = 'Parent'
+        else:
+            s = 'ConfusedProxy'
+        return s + '.' + self.path()
+
     def __setattr__(self, attr, value):
         if not attr.startswith('_'):
             raise AttributeError, \
@@ -102,6 +111,9 @@ class BaseProxy(object):
         return obj
     getindex = staticmethod(getindex)
 
+    # This method should be called once the proxy is assigned to a
+    # particular parameter or port to set the expected type of the
+    # resolved proxy
     def set_param_desc(self, pdesc):
         self._pdesc = pdesc
 
