@@ -823,7 +823,12 @@ decode OPCODE default Unknown::unknown() {
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());
             }}, IsNonSpeculative);
-
+            0x55: m5anBegin({{
+                AlphaPseudo::anBegin(xc->tcBase(), R16);
+            }}, IsNonSpeculative);
+            0x56: m5anWait({{
+                AlphaPseudo::anWait(xc->tcBase(), R16, R17);
+            }}, IsNonSpeculative);
         }
     }
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,49 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
  */
 
-class ThreadContext;
+#ifndef __BASE__ANNOTATE_HH__
+#define __BASE__ANNOTATE_HH__
 
-//We need the "Tick" and "Addr" data types from here
 #include "sim/host.hh"
 
-namespace AlphaPseudo
-{
-    /**
-     * @todo these externs are only here for a hack in fullCPU::takeOver...
-     */
-    extern bool doStatisticsInsts;
-    extern bool doCheckpointInsts;
-    extern bool doQuiesce;
+#include <string>
+#include <list>
+#include <map>
 
-    void arm(ThreadContext *tc);
-    void quiesce(ThreadContext *tc);
-    void quiesceNs(ThreadContext *tc, uint64_t ns);
-    void quiesceCycles(ThreadContext *tc, uint64_t cycles);
-    uint64_t quiesceTime(ThreadContext *tc);
-    void ivlb(ThreadContext *tc);
-    void ivle(ThreadContext *tc);
-    void m5exit(ThreadContext *tc, Tick delay);
-    void m5exit_old(ThreadContext *tc);
-    void resetstats(ThreadContext *tc, Tick delay, Tick period);
-    void dumpstats(ThreadContext *tc, Tick delay, Tick period);
-    void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
-    void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
-    uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset);
-    void debugbreak(ThreadContext *tc);
-    void switchcpu(ThreadContext *tc);
-    void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
-    void anBegin(ThreadContext *tc, uint64_t cur);
-    void anWait(ThreadContext *tc, uint64_t cur, uint64_t wait);
-}
+
+class System;
+
+namespace Annotate {
+
+
+class Annotate {
+
+  protected:
+    struct AnnotateData {
+        Tick time;
+        std::string system;
+        Addr stack;
+        uint32_t stateMachine;
+        uint32_t curState;
+        uint32_t waitMachine;
+        uint32_t waitState;
+    };
+
+    std::list<AnnotateData*> data;
+    std::map<System*, std::string> nameCache;
+
+  public:
+   Annotate();
+   void add(System *sys, Addr stack, uint32_t sm, uint32_t st, uint32_t
+           wm, uint32_t ws);
+   void dump();
+};
+
+extern Annotate annotations;
+} //namespace Annotate
+
+#endif //__BASE__ANNOTATE_HH__
+

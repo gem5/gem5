@@ -50,6 +50,7 @@ ccfilename = sys.argv[1] + '.cc'
 baseFlags = [
     'Activity',
     'AlphaConsole',
+    'Annotate',
     'BADADDR',
     'BE',
     'BPredRAS',

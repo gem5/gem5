@@ -1,0 +1,3 @@
+cd /benchmarks/bn
+./bottleneck-app
+m5 exit
