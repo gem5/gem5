@@ -53,5 +53,7 @@ void m5_debugbreak(void);
 void m5_switchcpu(void);
 void m5_addsymbol(uint64_t addr, char *symbol);
 void m5_panic(void);
+void m5_anbegin(uint64_t s);
+void m5_anwait(uint64_t s, uint64_t w);
 
 #endif // __M5OP_H__

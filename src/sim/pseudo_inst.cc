@@ -36,6 +36,7 @@
 
 #include "sim/pseudo_inst.hh"
 #include "arch/vtophys.hh"
+#include "base/annotate.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
@@ -186,6 +187,21 @@ namespace AlphaPseudo
 
         tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
     }
+
+    void
+    anBegin(ThreadContext *tc, uint64_t cur)
+    {
+        Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
+                0xFFFFFFFF, 0,0);
+    }
+
+    void
+    anWait(ThreadContext *tc, uint64_t cur, uint64_t wait)
+    {
+        Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
+                0xFFFFFFFF, wait >> 32, wait & 0xFFFFFFFF);
+    }
+
 
     void
     dumpresetstats(ThreadContext *tc, Tick delay, Tick period)

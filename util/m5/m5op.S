@@ -50,6 +50,8 @@
 #define switchcpu_func 0x52
 #define addsymbol_func 0x53
 #define panic_func     0x54
+#define anbegin_func     0x55
+#define anwait_func     0x56
 
 #define INST(op, ra, rb, func) \
         .long (((op) << 26) | ((ra) << 21) | ((rb) << 16) | (func))
@@ -84,6 +86,8 @@ func:
 #define SWITCHCPU INST(m5_op, 0, 0, switchcpu_func)
 #define ADDSYMBOL(r1,r2) INST(m5_op, r1, r2, addsymbol_func)
 #define PANIC INST(m5_op, 0, 0, panic_func)
+#define AN_BEGIN(r1) INST(m5_op, r1, 0, anbegin_func)
+#define AN_WAIT(r1,r2) INST(m5_op, r1, r2, anwait_func)
 
         .set noreorder
 
@@ -195,5 +199,19 @@ LEAF(m5_panic)
         PANIC
         RET
 END(m5_panic)
+
+
+        .align 4
+LEAF(m5_anbegin)
+        AN_BEGIN(16)
+        RET
+END(m5_anbegin)
+
+
+        .align 4
+LEAF(m5_anwait)
+        AN_WAIT(16,17)
+        RET
+END(m5_anwait)
 
 

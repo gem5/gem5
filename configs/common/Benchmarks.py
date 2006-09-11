@@ -98,6 +98,9 @@ Benchmarks['ValStream']         = [Machine('micro_stream.rcS', '512MB')]
 Benchmarks['ValStreamScale']	= [Machine('micro_streamscale.rcS', '512MB')]
 Benchmarks['ValStreamCopy']	= [Machine('micro_streamcopy.rcS', '512MB')]
 
+
+Benchmarks['bnAn']              = [Machine('/z/saidi/work/m5.newmem.head/configs/boot/bn-app.rcS', '128MB', '/z/saidi/work/bottleneck/bnimg.img')]
+
 benchs = Benchmarks.keys()
 benchs.sort()
 DefinedBenchmarks = ", ".join(benchs)
