@@ -111,10 +111,10 @@ def template MemExecute {{
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
             %(load)s;
             %(code)s;
-            %(store)s;
 
             if(fault == NoFault)
             {
+                %(store)s;
                 //Write the resulting state to the execution context
                 %(op_wb)s;
             }

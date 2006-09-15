@@ -441,47 +441,39 @@ decode OP default Unknown::unknown()
             0x34: decode OPF{
                 format BasicOperate{
                     0x01: fmovs({{
-                        Frd.sf = Frs2.sf;
+                        Frd.uw = Frs2.uw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
                     0x02: fmovd({{
-                        Frd.df = Frs2.df;
+                        Frd.udw = Frs2.udw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
                     0x03: Trap::fmovq({{fault = new FpDisabled;}});
                     0x05: fnegs({{
-                        //XXX might want to explicitly flip the sign bit
-                        //So cases with Nan and +/-0 don't do weird things
-                        Frd.sf = -Frs2.sf;
+                        Frd.uw = Frs2.uw ^ (1UL << 31);
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
                     0x06: fnegd({{
-                        //XXX might want to explicitly flip the sign bit
-                        //So cases with Nan and +/-0 don't do weird things
-                        Frd.df = -Frs2.df;
+                        Frd.udw = Frs2.udw ^ (1ULL << 63);
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
                     0x07: Trap::fnegq({{fault = new FpDisabled;}});
                     0x09: fabss({{
-                        //XXX this instruction should be tested individually
-                        //Clear the sign bit
-                        Frd.sf = (float)(~(1 << 31) & ((uint32_t)Frs2.sf));
+                        Frd.uw = ((1UL << 31) - 1) & Frs2.uw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
                     0x0A: fabsd({{
-                        //XXX this instruction should be tested individually
-                        //Clear the sign bit
-                        Frd.df = (float)(~((uint64_t)1 << 63) & ((uint64_t)Frs2.df));
+                        Frd.udw = ((1ULL << 63) - 1) & Frs2.udw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
@@ -591,14 +583,30 @@ decode OP default Unknown::unknown()
                 0x3D: Trap::fpackfix({{fault = new IllegalInstruction;}});
                 0x3E: Trap::pdist({{fault = new IllegalInstruction;}});
                 0x48: BasicOperate::faligndata({{
-                        uint64_t msbX = (uint64_t)Frs1;
-                        uint64_t lsbX = (uint64_t)Frs2;
-                        uint64_t msbShift = Gsr<2:0> * 8;
-                        uint64_t lsbShift = (8 - Gsr<2:0>) * 8;
-                        uint64_t msbMask = ((uint64_t)(-1)) << msbShift;
-                        uint64_t lsbMask = ((uint64_t)(-1)) << lsbShift;
-                        Frd = ((msbX << msbShift) & msbMask) |
-                                ((lsbX << lsbShift) & lsbMask);
+                        uint64_t msbX = Frs1.udw;
+                        uint64_t lsbX = Frs2.udw;
+                        //Some special cases need to be split out, first
+                        //because they're the most likely to be used, and
+                        //second because otherwise, we end up shifting by
+                        //greater than the width of the type being shifted,
+                        //namely 64, which produces undefined results according
+                        //to the C standard.
+                        switch(Gsr<2:0>)
+                        {
+                            case 0:
+                                Frd.udw = msbX;
+                                break;
+                            case 8:
+                                Frd.udw = lsbX;
+                                break;
+                            default:
+                                uint64_t msbShift = Gsr<2:0> * 8;
+                                uint64_t lsbShift = (8 - Gsr<2:0>) * 8;
+                                uint64_t msbMask = ((uint64_t)(-1)) >> msbShift;
+                                uint64_t lsbMask = ((uint64_t)(-1)) << lsbShift;
+                                Frd.udw = ((msbX & msbMask) << msbShift) |
+                                        ((lsbX & lsbMask) >> lsbShift);
+                        }
                 }});
                 0x4B: Trap::fpmerge({{fault = new IllegalInstruction;}});
                 0x4C: Trap::bshuffle({{fault = new IllegalInstruction;}});
@@ -639,12 +647,12 @@ decode OP default Unknown::unknown()
                 0x71: Trap::fands({{fault = new IllegalInstruction;}});
                 0x72: Trap::fxnor({{fault = new IllegalInstruction;}});
                 0x73: Trap::fxnors({{fault = new IllegalInstruction;}});
-                0x74: BasicOperate::fsrc1({{Frd.df = Frs1.df;}});
-                0x75: BasicOperate::fsrc1s({{Frd.sf = Frs1.sf;}});
+                0x74: BasicOperate::fsrc1({{Frd.udw = Frs1.udw;}});
+                0x75: BasicOperate::fsrc1s({{Frd.uw = Frs1.uw;}});
                 0x76: Trap::fornot2({{fault = new IllegalInstruction;}});
                 0x77: Trap::fornot2s({{fault = new IllegalInstruction;}});
-                0x78: BasicOperate::fsrc2({{Frd.df = Frs2.df;}});
-                0x79: BasicOperate::fsrc2s({{Frd.sf = Frs2.sf;}});
+                0x78: BasicOperate::fsrc2({{Frd.udw = Frs2.udw;}});
+                0x79: BasicOperate::fsrc2s({{Frd.uw = Frs2.uw;}});
                 0x7A: Trap::fornot1({{fault = new IllegalInstruction;}});
                 0x7B: Trap::fornot1s({{fault = new IllegalInstruction;}});
                 0x7C: Trap::for({{fault = new IllegalInstruction;}});
@@ -825,7 +833,7 @@ decode OP default Unknown::unknown()
             0x04: stw({{Mem = Rd.sw;}}, {{32}});
             0x05: stb({{Mem = Rd.sb;}}, {{8}});
             0x06: sth({{Mem = Rd.shw;}}, {{16}});
-            0x07: std({{Mem = RdLow<31:0> | RdHigh<31:0> << 32;}}, {{64}});
+            0x07: std({{Mem = RdLow<31:0> | (RdHigh<31:0> << 32);}}, {{64}});
         }
         format Load {
             0x08: ldsw({{Rd = (int32_t)Mem;}}, {{32}});
@@ -876,28 +884,28 @@ decode OP default Unknown::unknown()
             Mem = temp;
         }}, {{32}});
         format Trap {
-            0x20: Load::ldf({{Frd.sf = ((float)Mem);}}, {{32}});
+            0x20: Load::ldf({{Frd.uw = Mem;}}, {{32}});
             0x21: decode X {
                 0x0: Load::ldfsr({{Fsr = Mem<31:0> | Fsr<63:32>;}}, {{32}});
                 0x1: Load::ldxfsr({{Fsr = Mem;}}, {{64}});
             }
             0x22: ldqf({{fault = new FpDisabled;}});
-            0x23: Load::lddf({{Frd.df = ((double)Mem);}}, {{64}});
-            0x24: Store::stf({{Mem = ((int32_t)Frd.sf);}}, {{32}});
+            0x23: Load::lddf({{Frd.udw = Mem;}}, {{64}});
+            0x24: Store::stf({{Mem = Frd.uw;}}, {{32}});
             0x25: decode X {
                 0x0: Store::stfsr({{Mem = Fsr<31:0>;}}, {{32}});
                 0x1: Store::stxfsr({{Mem = Fsr;}}, {{64}});
             }
             0x26: stqf({{fault = new FpDisabled;}});
-            0x27: Store::stdf({{Mem = ((int64_t)Frd.df);}}, {{64}});
+            0x27: Store::stdf({{Mem = Frd.udw;}}, {{64}});
             0x2D: Nop::prefetch({{ }});
-            0x30: Load::ldfa({{Frd.sf = ((float)Mem);}}, {{32}});
+            0x30: Load::ldfa({{Frd.uw = Mem;}}, {{32}});
             0x32: ldqfa({{fault = new FpDisabled;}});
-            0x33: Load::lddfa({{Frd.df = ((double)Mem);}}, {{64}});
-            0x34: Store::stfa({{Mem = ((int32_t)Frd.sf);}}, {{32}});
+            0x33: Load::lddfa({{Frd.udw = Mem;}}, {{64}});
+            0x34: Store::stfa({{Mem = Frd.uw;}}, {{32}});
             0x36: stqfa({{fault = new FpDisabled;}});
             //XXX need to work in the ASI thing
-            0x37: Store::stdfa({{Mem = ((uint64_t)Frd.df);}}, {{64}});
+            0x37: Store::stdfa({{Mem = Frd.udw;}}, {{64}});
             0x3C: Cas::casa({{
                 uint64_t val = Mem.uw;
                 if(Rs2.uw == val)

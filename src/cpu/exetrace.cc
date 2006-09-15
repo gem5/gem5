@@ -42,6 +42,9 @@
 #include "sim/param.hh"
 #include "sim/system.hh"
 
+//XXX This is temporary
+#include "arch/isa_specific.hh"
+
 using namespace std;
 using namespace TheISA;
 
@@ -56,43 +59,67 @@ Trace::InstRecord::dump(ostream &outs)
 {
     if (flags[PRINT_REG_DELTA])
     {
-        outs << "PC = 0x" << setbase(16)
-                        << setfill('0')
-                        << setw(16) << PC << endl;
-        outs << setbase(10)
-             << setfill(' ')
-             << setw(0);
-        /*
-        int numSources = staticInst->numSrcRegs();
-        int numDests = staticInst->numDestRegs();
-        outs << "Sources:";
-        for(int x = 0; x < numSources; x++)
+#if THE_ISA == SPARC_ISA
+        static uint64_t regs[32] = {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0};
+        static uint64_t ccr = 0;
+        static uint64_t y = 0;
+        static uint64_t floats[32];
+        uint64_t newVal;
+        static const char * prefixes[4] = {"G", "O", "L", "I"};
+
+        char buf[256];
+        sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
+        outs << buf;
+        sprintf(buf, " NPC = 0x%016llx", thread->readNextNPC());
+        outs << buf;
+        newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
+        if(newVal != ccr)
         {
-            int sourceNum = staticInst->srcRegIdx(x);
-            if(sourceNum < FP_Base_DepTag)
-                outs << " " << getIntRegName(sourceNum);
-            else if(sourceNum < Ctrl_Base_DepTag)
-                outs << " " << getFloatRegName(sourceNum - FP_Base_DepTag);
-            else
-                outs << " " << getMiscRegName(sourceNum - Ctrl_Base_DepTag);
+            sprintf(buf, " CCR = 0x%016llx", newVal);
+            outs << buf;
+            ccr = newVal;
+        }
+        newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
+        if(newVal != y)
+        {
+            sprintf(buf, " Y = 0x%016llx", newVal);
+            outs << buf;
+            y = newVal;
+        }
+        for(int y = 0; y < 4; y++)
+        {
+            for(int x = 0; x < 8; x++)
+            {
+                int index = x + 8 * y;
+                newVal = thread->readIntReg(index);
+                if(regs[index] != newVal)
+                {
+                    sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
+                    outs << buf;
+                    regs[index] = newVal;
+                }
+            }
+        }
+        for(int y = 0; y < 32; y++)
+        {
+            newVal = thread->readFloatRegBits(2 * y, 64);
+            if(floats[y] != newVal)
+            {
+                sprintf(buf, " F%d = 0x%016llx", y, newVal);
+                outs << buf;
+                floats[y] = newVal;
+            }
         }
         outs << endl;
-        outs << "Destinations:";
-        for(int x = 0; x < numDests; x++)
-        {
-            int destNum = staticInst->destRegIdx(x);
-            if(destNum < FP_Base_DepTag)
-                outs << " " << getIntRegName(destNum);
-            else if(destNum < Ctrl_Base_DepTag)
-                outs << " " << getFloatRegName(destNum - FP_Base_DepTag);
-            else
-                outs << " " << getMiscRegName(destNum - Ctrl_Base_DepTag);
-        }
-        outs << endl;*/
+#endif
     }
     else if (flags[INTEL_FORMAT]) {
 #if FULL_SYSTEM
-        bool is_trace_system = (cpu->system->name() == trace_system);
+        bool is_trace_system = (thread->getCpuPtr()->system->name() == trace_system);
 #else
         bool is_trace_system = true;
 #endif
@@ -112,13 +139,13 @@ Trace::InstRecord::dump(ostream &outs)
         if (flags[PRINT_CYCLE])
             ccprintf(outs, "%7d: ", cycle);
 
-        outs << cpu->name() << " ";
+        outs << thread->getCpuPtr()->name() << " ";
 
         if (flags[TRACE_MISSPEC])
             outs << (misspeculating ? "-" : "+") << " ";
 
         if (flags[PRINT_THREAD_NUM])
-            outs << "T" << thread << " : ";
+            outs << "T" << thread->getThreadNum() << " : ";
 
 
         std::string sym_str;

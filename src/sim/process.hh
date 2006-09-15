@@ -75,6 +75,16 @@ class Process : public SimObject
     // number of CPUs (esxec contexts, really) assigned to this process.
     unsigned int numCpus() { return threadContexts.size(); }
 
+    // Id of the owner of the process
+    uint64_t uid;
+    uint64_t euid;
+    uint64_t gid;
+    uint64_t egid;
+
+    // pid of the process and it's parent
+    uint64_t pid;
+    uint64_t ppid;
+
     // record of blocked context
     struct WaitRec
     {
