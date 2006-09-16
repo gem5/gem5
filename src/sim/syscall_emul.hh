@@ -46,9 +46,11 @@
 #ifdef __CYGWIN32__
 #include <sys/fcntl.h>	// for O_BINARY
 #endif
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/uio.h>
 
-#include "arch/isa_traits.hh"	// for Addr
+#include "sim/host.hh"	// for Addr
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"	// for RoundUp
 #include "base/misc.hh"
@@ -305,15 +307,6 @@ SyscallReturn getgidPseudoFunc(SyscallDesc *desc, int num,
                                Process *p, ThreadContext *tc);
 
 
-/// This struct is used to build an target-OS-dependent table that
-/// maps the target's open() flags to the host open() flags.
-struct OpenFlagTransTable {
-    int tgtFlag;	//!< Target system flag value.
-    int hostFlag;	//!< Corresponding host system flag value.
-};
-
-
-
 /// A readable name for 1,000,000, for converting microseconds to seconds.
 const int one_million = 1000000;
 
@@ -339,6 +332,92 @@ getElapsedTime(T1 &sec, T2 &usec)
 // templated to account for differences in types, constants, etc.
 //
 //////////////////////////////////////////////////////////////////////
+
+#if NO_STAT64
+    typedef struct stat hst_stat;
+    typedef struct stat hst_stat64;
+#else
+    typedef struct stat hst_stat;
+    typedef struct stat64 hst_stat64;
+#endif
+
+//// Helper function to convert a host stat buffer to a target stat
+//// buffer.  Also copies the target buffer out to the simulated
+//// memory space.  Used by stat(), fstat(), and lstat().
+
+template <typename target_stat, typename host_stat>
+static void
+convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
+{
+    if (fakeTTY)
+        tgt->st_dev = 0xA;
+    else
+        tgt->st_dev = host->st_dev;
+    tgt->st_dev = htog(tgt->st_dev);
+    tgt->st_ino = host->st_ino;
+    tgt->st_ino = htog(tgt->st_ino);
+    if (fakeTTY)
+        tgt->st_rdev = 0x880d;
+    else
+        tgt->st_rdev = host->st_rdev;
+    tgt->st_rdev = htog(tgt->st_rdev);
+    tgt->st_size = host->st_size;
+    tgt->st_size = htog(tgt->st_size);
+    tgt->st_atimeX = host->st_atimeX;
+    tgt->st_atimeX = htog(tgt->st_atimeX);
+    tgt->st_mtimeX = host->st_mtimeX;
+    tgt->st_mtimeX = htog(tgt->st_mtimeX);
+    tgt->st_ctimeX = host->st_ctimeX;
+    tgt->st_ctimeX = htog(tgt->st_ctimeX);
+    tgt->st_blksize = host->st_blksize;
+    tgt->st_blksize = htog(tgt->st_blksize);
+    tgt->st_blocks = host->st_blocks;
+    tgt->st_blocks = htog(tgt->st_blocks);
+}
+
+// Same for stat64
+
+template <typename target_stat, typename host_stat64>
+static void
+convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
+{
+    convertStatBuf<target_stat, host_stat64>(tgt, host, fakeTTY);
+#if defined(STAT_HAVE_NSEC)
+    tgt->st_atime_nsec = host->st_atime_nsec;
+    tgt->st_atime_nsec = htog(tgt->st_atime_nsec);
+    tgt->st_mtime_nsec = host->st_mtime_nsec;
+    tgt->st_mtime_nsec = htog(tgt->st_mtime_nsec);
+    tgt->st_ctime_nsec = host->st_ctime_nsec;
+    tgt->st_ctime_nsec = htog(tgt->st_ctime_nsec);
+#else
+    tgt->st_atime_nsec = 0;
+    tgt->st_mtime_nsec = 0;
+    tgt->st_ctime_nsec = 0;
+#endif
+}
+
+//Here are a couple convenience functions
+template<class OS>
+static void
+copyOutStatBuf(TranslatingPort * mem, Addr addr,
+        hst_stat *host, bool fakeTTY = false)
+{
+    typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
+    tgt_stat_buf tgt(addr);
+    convertStatBuf<tgt_stat_buf, hst_stat>(tgt, host, fakeTTY);
+    tgt.copyOut(mem);
+}
+
+template<class OS>
+static void
+copyOutStat64Buf(TranslatingPort * mem, Addr addr,
+        hst_stat64 *host, bool fakeTTY = false)
+{
+    typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
+    tgt_stat_buf tgt(addr);
+    convertStatBuf<tgt_stat_buf, hst_stat64>(tgt, host, fakeTTY);
+    tgt.copyOut(mem);
+}
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
 /// only to find out if their stdout is a tty, to determine whether to
@@ -492,7 +571,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -521,7 +600,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStat64Buf(tc->getMemPort(), fd, tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), fd, tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -544,7 +623,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -571,7 +650,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStat64Buf(tc->getMemPort(), -1, tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), -1, tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -595,7 +674,7 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatBuf(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -618,7 +697,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -641,7 +720,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }

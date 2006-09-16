@@ -37,6 +37,25 @@ class SparcLinux : public Linux
 {
   public:
 
+    typedef struct {
+        uint32_t st_dev;
+        char __pad1[4];
+        uint64_t st_ino;
+        uint32_t st_mode;
+        uint16_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t st_rdev;
+        char __pad2[4];
+        int64_t st_size;
+        int64_t st_atimeX;
+        int64_t st_mtimeX;
+        int64_t st_ctimeX;
+        int64_t st_blksize;
+        int64_t st_blocks;
+        uint64_t __unused4[2];
+    } tgt_stat;
+
     static OpenFlagTransTable openFlagTable[];
 
     static const int TGT_O_RDONLY	= 0x00000000;	//!< O_RDONLY

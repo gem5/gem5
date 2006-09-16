@@ -25,123 +25,82 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
  */
 
-#ifndef __LINUX_HH__
-#define __LINUX_HH__
+#ifndef __KERN_OPERATINGSYSTEM_HH__
+#define __KERN_OPERATINGSYSTEM_HH__
+
 #include "config/full_system.hh"
-
-#if FULL_SYSTEM
-
-class Linux {};
-
-#else //!FULL_SYSTEM
 
 #include <inttypes.h>
 
-#include "kern/operatingsystem.hh"
+#if FULL_SYSTEM
+
+class OperatingSystem {};
+
+#else //!FULL_SYSTEM
+
+/// This struct is used to build an target-OS-dependent table that
+/// maps the target's open() flags to the host open() flags.
+struct OpenFlagTransTable {
+    int tgtFlag;	//!< Target system flag value.
+    int hostFlag;	//!< Corresponding host system flag value.
+};
+
 
 ///
 /// This class encapsulates the types, structures, constants,
-/// functions, and syscall-number mappings specific to the Alpha Linux
+/// functions, and syscall-number mappings specific to an operating system
 /// syscall interface.
 ///
-class Linux : public OperatingSystem
-{
+class OperatingSystem {
 
   public:
-
-    //@{
-    /// Basic Linux types.
-/*    typedef uint64_t size_t;
-    typedef uint64_t off_t;
-    typedef int64_t time_t;
-    typedef uint32_t uid_t;
-    typedef uint32_t gid_t;*/
-    //@}
 
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
-    typedef struct {
-        uint32_t	st_dev;		//!< device
-        uint32_t	st_ino;		//!< inode
-        uint32_t	st_mode;	//!< mode
-        uint32_t	st_nlink;	//!< link count
-        uint32_t	st_uid;		//!< owner's user ID
-        uint32_t	st_gid;		//!< owner's group ID
-        uint32_t	st_rdev;	//!< device number
-        int32_t		_pad1;		//!< for alignment
-        int64_t		st_size;	//!< file size in bytes
-        uint64_t	st_atimeX;	//!< time of last access
-        uint64_t	st_mtimeX;	//!< time of last modification
-        uint64_t	st_ctimeX;	//!< time of last status change
-        uint32_t	st_blksize;	//!< optimal I/O block size
-        int32_t		st_blocks;	//!< number of blocks allocated
-        uint32_t	st_flags;	//!< flags
-        uint32_t	st_gen;		//!< unknown
-    } tgt_stat;
+    typedef void tgt_stat;
 
     // same for stat64
-    typedef struct {
-        uint64_t	st_dev;
-        uint64_t	st_ino;
-        uint64_t	st_rdev;
-        int64_t		st_size;
-        uint64_t	st_blocks;
-
-        uint32_t	st_mode;
-        uint32_t	st_uid;
-        uint32_t	st_gid;
-        uint32_t	st_blksize;
-        uint32_t	st_nlink;
-        uint32_t	__pad0;
-
-        uint64_t	st_atimeX;
-        uint64_t 	st_atime_nsec;
-        uint64_t	st_mtimeX;
-        uint64_t	st_mtime_nsec;
-        uint64_t	st_ctimeX;
-        uint64_t	st_ctime_nsec;
-        int64_t		___unused[3];
-    } tgt_stat64;
+    typedef void tgt_stat64;
 
     /// Length of strings in struct utsname (plus 1 for null char).
     static const int _SYS_NMLN = 65;
 
     /// Interface struct for uname().
-    struct utsname {
+    typedef struct {
         char sysname[_SYS_NMLN];	//!< System name.
         char nodename[_SYS_NMLN];	//!< Node name.
         char release[_SYS_NMLN];	//!< OS release.
         char version[_SYS_NMLN];	//!< OS version.
         char machine[_SYS_NMLN];	//!< Machine type.
-    };
+    } utsname;
 
     /// Limit struct for getrlimit/setrlimit.
-    struct rlimit {
+    typedef struct {
         uint64_t  rlim_cur;	//!< soft limit
         uint64_t  rlim_max;	//!< hard limit
-    };
+    } rlimit;
 
     /// For gettimeofday().
-    struct timeval {
+    typedef struct {
         int64_t tv_sec;		//!< seconds
         int64_t tv_usec;	//!< microseconds
-    };
+    } timeval;
 
     // For writev/readv
-    struct tgt_iovec {
+    typedef struct {
         uint64_t iov_base; // void *
         uint64_t iov_len;
-    };
+    } tgt_iovec;
 
 
     /// For getrusage().
-    struct rusage {
-        struct timeval ru_utime;	//!< user time used
-        struct timeval ru_stime;	//!< system time used
+    typedef struct {
+        timeval ru_utime;	//!< user time used
+        timeval ru_stime;	//!< system time used
         int64_t ru_maxrss;		//!< max rss
         int64_t ru_ixrss;		//!< integral shared memory size
         int64_t ru_idrss;		//!< integral unshared data "
@@ -156,11 +115,11 @@ class Linux : public OperatingSystem
         int64_t ru_nsignals;		//!< signals received
         int64_t ru_nvcsw;		//!< voluntary context switches
         int64_t ru_nivcsw;		//!< involuntary "
-    };
+    } rusage;
 
-};  // class Linux
+};  // class OperatingSystem
 
 
 #endif // FULL_SYSTEM
 
-#endif // __LINUX_HH__
+#endif // __OPERATINGSYSTEM_HH__

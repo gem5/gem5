@@ -32,6 +32,7 @@
 #ifndef __TRU64_HH__
 #define __TRU64_HH__
 #include "config/full_system.hh"
+#include "kern/operatingsystem.hh"
 
 #if FULL_SYSTEM
 
@@ -69,7 +70,8 @@ class TranslatingPort;
 /// functions, and syscall-number mappings specific to the Alpha Tru64
 /// syscall interface.
 ///
-class Tru64 {
+class Tru64 : public OperatingSystem
+{
 
   public:
 
