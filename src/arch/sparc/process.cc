@@ -45,9 +45,11 @@ using namespace SparcISA;
 
 SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
         System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-        std::vector<std::string> &argv, std::vector<std::string> &envp)
+        std::vector<std::string> &argv, std::vector<std::string> &envp,
+        uint64_t _uid, uint64_t _euid, uint64_t _gid, uint64_t _egid,
+        uint64_t _pid, uint64_t _ppid)
     : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
-        argv, envp)
+        argv, envp, _uid, _euid, _gid, _egid, _pid, _ppid)
 {
 
     // XXX all the below need to be updated for SPARC - Ali
@@ -190,10 +192,10 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
         //The entry point to the program
         auxv.push_back(buildAuxVect(SPARC_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
-        auxv.push_back(buildAuxVect(SPARC_AT_UID, uid));
-        auxv.push_back(buildAuxVect(SPARC_AT_EUID, euid));
-        auxv.push_back(buildAuxVect(SPARC_AT_GID, gid));
-        auxv.push_back(buildAuxVect(SPARC_AT_EGID, egid));
+        auxv.push_back(buildAuxVect(SPARC_AT_UID, uid()));
+        auxv.push_back(buildAuxVect(SPARC_AT_EUID, euid()));
+        auxv.push_back(buildAuxVect(SPARC_AT_GID, gid()));
+        auxv.push_back(buildAuxVect(SPARC_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
         auxv.push_back(buildAuxVect(SPARC_AT_SECURE, 0));
     }

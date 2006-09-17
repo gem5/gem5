@@ -70,7 +70,7 @@ class SyscallDesc {
 
     /// Typedef for target syscall handler functions.
     typedef SyscallReturn (*FuncPtr)(SyscallDesc *, int num,
-                           Process *, ThreadContext *);
+                           LiveProcess *, ThreadContext *);
 
     const char *name;	//!< Syscall name (e.g., "open").
     FuncPtr funcPtr;	//!< Pointer to emulation function.
@@ -92,7 +92,7 @@ class SyscallDesc {
     }
 
     /// Emulate the syscall.  Public interface for calling through funcPtr.
-    void doSyscall(int callnum, Process *proc, ThreadContext *tc);
+    void doSyscall(int callnum, LiveProcess *proc, ThreadContext *tc);
 };
 
 
@@ -174,137 +174,137 @@ class TypedBufferArg : public BaseBufferArg
 
 /// Handler for unimplemented syscalls that we haven't thought about.
 SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
-                                Process *p, ThreadContext *tc);
+                                LiveProcess *p, ThreadContext *tc);
 
 /// Handler for unimplemented syscalls that we never intend to
 /// implement (signal handling, etc.) and should not affect the correct
 /// behavior of the program.  Print a warning only if the appropriate
 /// trace flag is enabled.  Return success to the target program.
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target exit() handler: terminate simulation.
 SyscallReturn exitFunc(SyscallDesc *desc, int num,
-                       Process *p, ThreadContext *tc);
+                       LiveProcess *p, ThreadContext *tc);
 
 /// Target getpagesize() handler.
 SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num,
-                              Process *p, ThreadContext *tc);
+                              LiveProcess *p, ThreadContext *tc);
 
 /// Target obreak() handler: set brk address.
 SyscallReturn obreakFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target close() handler.
 SyscallReturn closeFunc(SyscallDesc *desc, int num,
-                        Process *p, ThreadContext *tc);
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target read() handler.
 SyscallReturn readFunc(SyscallDesc *desc, int num,
-                       Process *p, ThreadContext *tc);
+                       LiveProcess *p, ThreadContext *tc);
 
 /// Target write() handler.
 SyscallReturn writeFunc(SyscallDesc *desc, int num,
-                        Process *p, ThreadContext *tc);
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target lseek() handler.
 SyscallReturn lseekFunc(SyscallDesc *desc, int num,
-                        Process *p, ThreadContext *tc);
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target munmap() handler.
 SyscallReturn munmapFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target gethostname() handler.
 SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
-                              Process *p, ThreadContext *tc);
+                              LiveProcess *p, ThreadContext *tc);
 
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target rename() handler.
 SyscallReturn renameFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 
 /// Target truncate() handler.
 SyscallReturn truncateFunc(SyscallDesc *desc, int num,
-                           Process *p, ThreadContext *tc);
+                           LiveProcess *p, ThreadContext *tc);
 
 
 /// Target ftruncate() handler.
 SyscallReturn ftruncateFunc(SyscallDesc *desc, int num,
-                            Process *p, ThreadContext *tc);
+                            LiveProcess *p, ThreadContext *tc);
 
 
 /// Target chown() handler.
 SyscallReturn chownFunc(SyscallDesc *desc, int num,
-                        Process *p, ThreadContext *tc);
+                        LiveProcess *p, ThreadContext *tc);
 
 
 /// Target fchown() handler.
 SyscallReturn fchownFunc(SyscallDesc *desc, int num,
-                         Process *p, ThreadContext *tc);
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target dup() handler.
 SyscallReturn dupFunc(SyscallDesc *desc, int num,
-                      Process *process, ThreadContext *tc);
+                      LiveProcess *process, ThreadContext *tc);
 
 /// Target fnctl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
-                        Process *process, ThreadContext *tc);
+                        LiveProcess *process, ThreadContext *tc);
 
 /// Target fcntl64() handler.
 SyscallReturn fcntl64Func(SyscallDesc *desc, int num,
-                        Process *process, ThreadContext *tc);
+                        LiveProcess *process, ThreadContext *tc);
 
 /// Target setuid() handler.
 SyscallReturn setuidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getuid() handler.
 SyscallReturn getuidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getgid() handler.
 SyscallReturn getgidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getppid() handler.
 SyscallReturn getppidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target geteuid() handler.
 SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getegid() handler.
 SyscallReturn getegidFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 
 
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, int num,
-                             Process *process, ThreadContext *tc);
+                             LiveProcess *process, ThreadContext *tc);
 
 /// Target getpidPseudo() handler.
 SyscallReturn getpidPseudoFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getuidPseudo() handler.
 SyscallReturn getuidPseudoFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 /// Target getgidPseudo() handler.
 SyscallReturn getgidPseudoFunc(SyscallDesc *desc, int num,
-                               Process *p, ThreadContext *tc);
+                               LiveProcess *p, ThreadContext *tc);
 
 
 /// A readable name for 1,000,000, for converting microseconds to seconds.
@@ -363,11 +363,11 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_rdev = htog(tgt->st_rdev);
     tgt->st_size = host->st_size;
     tgt->st_size = htog(tgt->st_size);
-    tgt->st_atimeX = host->st_atimeX;
+    tgt->st_atimeX = host->st_atime;
     tgt->st_atimeX = htog(tgt->st_atimeX);
-    tgt->st_mtimeX = host->st_mtimeX;
+    tgt->st_mtimeX = host->st_mtime;
     tgt->st_mtimeX = htog(tgt->st_mtimeX);
-    tgt->st_ctimeX = host->st_ctimeX;
+    tgt->st_ctimeX = host->st_ctime;
     tgt->st_ctimeX = htog(tgt->st_ctimeX);
     tgt->st_blksize = host->st_blksize;
     tgt->st_blksize = htog(tgt->st_blksize);
@@ -424,7 +424,7 @@ copyOutStat64Buf(TranslatingPort * mem, Addr addr,
 /// do line or block buffering.
 template <class OS>
 SyscallReturn
-ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
+ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int fd = tc->getSyscallArg(0);
@@ -457,7 +457,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target open() handler.
 template <class OS>
 SyscallReturn
-openFunc(SyscallDesc *desc, int callnum, Process *process,
+openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
          ThreadContext *tc)
 {
     std::string path;
@@ -504,7 +504,7 @@ openFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target chmod() handler.
 template <class OS>
 SyscallReturn
-chmodFunc(SyscallDesc *desc, int callnum, Process *process,
+chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     std::string path;
@@ -530,7 +530,7 @@ chmodFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target fchmod() handler.
 template <class OS>
 SyscallReturn
-fchmodFunc(SyscallDesc *desc, int callnum, Process *process,
+fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int fd = tc->getSyscallArg(0);
@@ -557,7 +557,7 @@ fchmodFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target stat() handler.
 template <class OS>
 SyscallReturn
-statFunc(SyscallDesc *desc, int callnum, Process *process,
+statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
          ThreadContext *tc)
 {
     std::string path;
@@ -580,7 +580,7 @@ statFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstat64() handler.
 template <class OS>
 SyscallReturn
-fstat64Func(SyscallDesc *desc, int callnum, Process *process,
+fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int fd = tc->getSyscallArg(0);
@@ -600,7 +600,8 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemPort(), fd, tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1),
+        &hostBuf, (fd == 1));
 
     return 0;
 }
@@ -609,7 +610,7 @@ fstat64Func(SyscallDesc *desc, int callnum, Process *process,
 /// Target lstat() handler.
 template <class OS>
 SyscallReturn
-lstatFunc(SyscallDesc *desc, int callnum, Process *process,
+lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     std::string path;
@@ -631,7 +632,7 @@ lstatFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target lstat64() handler.
 template <class OS>
 SyscallReturn
-lstat64Func(SyscallDesc *desc, int callnum, Process *process,
+lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     std::string path;
@@ -650,7 +651,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemPort(), -1, tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
 
     return 0;
 }
@@ -658,7 +659,7 @@ lstat64Func(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstat() handler.
 template <class OS>
 SyscallReturn
-fstatFunc(SyscallDesc *desc, int callnum, Process *process,
+fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int fd = process->sim_fd(tc->getSyscallArg(0));
@@ -674,7 +675,8 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1),
+        &hostBuf, (fd == 1));
 
     return 0;
 }
@@ -683,7 +685,7 @@ fstatFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target statfs() handler.
 template <class OS>
 SyscallReturn
-statfsFunc(SyscallDesc *desc, int callnum, Process *process,
+statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     std::string path;
@@ -697,7 +699,8 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatfsBuf(tc->getMemPort(),
+            (Addr)(tc->getSyscallArg(1)), &hostBuf);
 
     return 0;
 }
@@ -706,7 +709,7 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target fstatfs() handler.
 template <class OS>
 SyscallReturn
-fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
+fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int fd = process->sim_fd(tc->getSyscallArg(0));
@@ -720,7 +723,8 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    OS::copyOutStatfsBuf(tc->getMemPort(), tc->getSyscallArg(1),
+        &hostBuf);
 
     return 0;
 }
@@ -729,7 +733,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target writev() handler.
 template <class OS>
 SyscallReturn
-writevFunc(SyscallDesc *desc, int callnum, Process *process,
+writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int fd = tc->getSyscallArg(0);
@@ -782,7 +786,7 @@ writevFunc(SyscallDesc *desc, int callnum, Process *process,
 /// anything else.
 template <class OS>
 SyscallReturn
-mmapFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     Addr start = tc->getSyscallArg(0);
     uint64_t length = tc->getSyscallArg(1);
@@ -820,7 +824,7 @@ mmapFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 /// Target getrlimit() handler.
 template <class OS>
 SyscallReturn
-getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
+getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
     unsigned resource = tc->getSyscallArg(0);
@@ -848,7 +852,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target gettimeofday() handler.
 template <class OS>
 SyscallReturn
-gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
+gettimeofdayFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
     TypedBufferArg<typename OS::timeval> tp(tc->getSyscallArg(0));
@@ -867,7 +871,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target utimes() handler.
 template <class OS>
 SyscallReturn
-utimesFunc(SyscallDesc *desc, int callnum, Process *process,
+utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     std::string path;
@@ -894,7 +898,7 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 /// Target getrusage() function.
 template <class OS>
 SyscallReturn
-getrusageFunc(SyscallDesc *desc, int callnum, Process *process,
+getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
     int who = tc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN

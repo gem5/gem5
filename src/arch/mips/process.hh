@@ -47,7 +47,10 @@ class MipsLiveProcess : public LiveProcess
     MipsLiveProcess(const std::string &nm, ObjectFile *objFile,
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
-                std::vector<std::string> &envp);
+                std::vector<std::string> &envp,
+                uint64_t _uid, uint64_t _euid,
+                uint64_t _gid, uint64_t _egid,
+                uint64_t _pid, uint64_t _ppid);
 
     void startup();
 

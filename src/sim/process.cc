@@ -278,10 +278,20 @@ copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
 LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
                          System *_system,
                          int stdin_fd, int stdout_fd, int stderr_fd,
-                         vector<string> &_argv, vector<string> &_envp)
+                         vector<string> &_argv, vector<string> &_envp,
+                         uint64_t _uid, uint64_t _euid,
+                         uint64_t _gid, uint64_t _egid,
+                         uint64_t _pid, uint64_t _ppid)
     : Process(nm, _system, stdin_fd, stdout_fd, stderr_fd),
       objFile(_objFile), argv(_argv), envp(_envp)
 {
+    __uid = _uid;
+    __euid = _euid;
+    __gid = _gid;
+    __egid = _egid;
+    __pid = _pid;
+    __ppid = _ppid;
+
     prog_fname = argv[0];
 
     // load up symbols, if any... these may be used for debugging or
@@ -381,7 +391,10 @@ LiveProcess *
 LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
                     int stdout_fd, int stderr_fd, std::string executable,
                     std::vector<std::string> &argv,
-                    std::vector<std::string> &envp)
+                    std::vector<std::string> &envp,
+                    uint64_t _uid, uint64_t _euid,
+                    uint64_t _gid, uint64_t _egid,
+                    uint64_t _pid, uint64_t _ppid)
 {
     LiveProcess *process = NULL;
 
@@ -397,13 +410,15 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Tru64:
         process = new AlphaTru64Process(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
+                                        argv, envp,
+                                        _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
       case ObjectFile::Linux:
         process = new AlphaLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
+                                        argv, envp,
+                                        _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
       default:
@@ -416,14 +431,16 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Linux:
         process = new SparcLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
+                                        argv, envp,
+                                        _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
 
       case ObjectFile::Solaris:
         process = new SparcSolarisProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
+                                        argv, envp,
+                                        _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
       default:
         fatal("Unknown/unsupported operating system.");
@@ -435,7 +452,8 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp);
+                                        argv, envp,
+                                        _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
       default:
@@ -513,7 +531,8 @@ CREATE_SIM_OBJECT(LiveProcess)
     return LiveProcess::create(getInstanceName(), system,
                                stdin_fd, stdout_fd, stderr_fd,
                                (string)executable == "" ? cmd[0] : executable,
-                               cmd, env);
+                               cmd, env,
+                               uid, euid, gid, egid, pid, ppid);
 }
 
 

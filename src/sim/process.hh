@@ -75,16 +75,6 @@ class Process : public SimObject
     // number of CPUs (esxec contexts, really) assigned to this process.
     unsigned int numCpus() { return threadContexts.size(); }
 
-    // Id of the owner of the process
-    uint64_t uid;
-    uint64_t euid;
-    uint64_t gid;
-    uint64_t egid;
-
-    // pid of the process and it's parent
-    uint64_t pid;
-    uint64_t ppid;
-
     // record of blocked context
     struct WaitRec
     {
@@ -188,11 +178,32 @@ class LiveProcess : public Process
     LiveProcess(const std::string &nm, ObjectFile *objFile,
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
-                std::vector<std::string> &envp);
+                std::vector<std::string> &envp,
+                uint64_t _uid, uint64_t _euid,
+                uint64_t _gid, uint64_t _egid,
+                uint64_t _pid, uint64_t _ppid);
 
     virtual void argsInit(int intSize, int pageSize);
 
+    // Id of the owner of the process
+    uint64_t __uid;
+    uint64_t __euid;
+    uint64_t __gid;
+    uint64_t __egid;
+
+    // pid of the process and it's parent
+    uint64_t __pid;
+    uint64_t __ppid;
+
   public:
+
+    inline uint64_t uid() {return __uid;}
+    inline uint64_t euid() {return __euid;}
+    inline uint64_t gid() {return __gid;}
+    inline uint64_t egid() {return __egid;}
+    inline uint64_t pid() {return __pid;}
+    inline uint64_t ppid() {return __ppid;}
+
     virtual void syscall(int64_t callnum, ThreadContext *tc);
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
@@ -205,7 +216,10 @@ class LiveProcess : public Process
                                int stdin_fd, int stdout_fd, int stderr_fd,
                                std::string executable,
                                std::vector<std::string> &argv,
-                               std::vector<std::string> &envp);
+                               std::vector<std::string> &envp,
+                               uint64_t _uid, uint64_t _euid,
+                               uint64_t _gid, uint64_t _egid,
+                               uint64_t _pid, uint64_t _ppid);
 };
 
 

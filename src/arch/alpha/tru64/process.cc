@@ -44,7 +44,7 @@ using namespace AlphaISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
+unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     TypedBufferArg<AlphaTru64::utsname> name(tc->getSyscallArg(0));
@@ -61,7 +61,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target getsysyinfo() handler.
 static SyscallReturn
-getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                ThreadContext *tc)
 {
     unsigned op = tc->getSyscallArg(0);
@@ -140,7 +140,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target setsysyinfo() handler.
 static SyscallReturn
-setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                ThreadContext *tc)
 {
     unsigned op = tc->getSyscallArg(0);
@@ -162,7 +162,7 @@ setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target table() handler.
 static
-SyscallReturn tableFunc(SyscallDesc *desc, int callnum,Process *process,
+SyscallReturn tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
 {
     using namespace std;
@@ -269,8 +269,8 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 64 */ SyscallDesc("getpagesize", getpagesizeFunc),
     /* 65 */ SyscallDesc("mremap", unimplementedFunc),
     /* 66 */ SyscallDesc("vfork", unimplementedFunc),
-    /* 67 */ SyscallDesc("pre_F64_stat", statFunc<AlphaTru64::PreF64>),
-    /* 68 */ SyscallDesc("pre_F64_lstat", lstatFunc<AlphaTru64::PreF64>),
+    /* 67 */ SyscallDesc("pre_F64_stat", statFunc<Tru64_PreF64>),
+    /* 68 */ SyscallDesc("pre_F64_lstat", lstatFunc<Tru64_PreF64>),
     /* 69 */ SyscallDesc("sbrk", unimplementedFunc),
     /* 70 */ SyscallDesc("sstk", unimplementedFunc),
     /* 71 */ SyscallDesc("mmap", mmapFunc<AlphaTru64>),
@@ -293,7 +293,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 88 */ SyscallDesc("sethostname", unimplementedFunc),
     /* 89 */ SyscallDesc("getdtablesize", unimplementedFunc),
     /* 90 */ SyscallDesc("dup2", unimplementedFunc),
-    /* 91 */ SyscallDesc("pre_F64_fstat", fstatFunc<AlphaTru64::PreF64>),
+    /* 91 */ SyscallDesc("pre_F64_fstat", fstatFunc<Tru64_PreF64>),
     /* 92 */ SyscallDesc("fcntl", fcntlFunc),
     /* 93 */ SyscallDesc("select", unimplementedFunc),
     /* 94 */ SyscallDesc("poll", unimplementedFunc),
@@ -363,8 +363,8 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 157 */ SyscallDesc("sigwaitprim", unimplementedFunc),
     /* 158 */ SyscallDesc("nfssvc", unimplementedFunc),
     /* 159 */ SyscallDesc("getdirentries", AlphaTru64::getdirentriesFunc),
-    /* 160 */ SyscallDesc("pre_F64_statfs", statfsFunc<AlphaTru64::PreF64>),
-    /* 161 */ SyscallDesc("pre_F64_fstatfs", fstatfsFunc<AlphaTru64::PreF64>),
+    /* 160 */ SyscallDesc("pre_F64_statfs", statfsFunc<Tru64_PreF64>),
+    /* 161 */ SyscallDesc("pre_F64_fstatfs", fstatfsFunc<Tru64_PreF64>),
     /* 162 */ SyscallDesc("unknown #162", unimplementedFunc),
     /* 163 */ SyscallDesc("async_daemon", unimplementedFunc),
     /* 164 */ SyscallDesc("getfh", unimplementedFunc),
@@ -427,11 +427,11 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 221 */ SyscallDesc("unknown #221", unimplementedFunc),
     /* 222 */ SyscallDesc("security", unimplementedFunc),
     /* 223 */ SyscallDesc("kloadcall", unimplementedFunc),
-    /* 224 */ SyscallDesc("stat", statFunc<AlphaTru64::F64>),
-    /* 225 */ SyscallDesc("lstat", lstatFunc<AlphaTru64::F64>),
-    /* 226 */ SyscallDesc("fstat", fstatFunc<AlphaTru64::F64>),
-    /* 227 */ SyscallDesc("statfs", statfsFunc<AlphaTru64::F64>),
-    /* 228 */ SyscallDesc("fstatfs", fstatfsFunc<AlphaTru64::F64>),
+    /* 224 */ SyscallDesc("stat", statFunc<Tru64_F64>),
+    /* 225 */ SyscallDesc("lstat", lstatFunc<Tru64_F64>),
+    /* 226 */ SyscallDesc("fstat", fstatFunc<Tru64_F64>),
+    /* 227 */ SyscallDesc("statfs", statfsFunc<Tru64_F64>),
+    /* 228 */ SyscallDesc("fstatfs", fstatfsFunc<Tru64_F64>),
     /* 229 */ SyscallDesc("getfsstat", unimplementedFunc),
     /* 230 */ SyscallDesc("gettimeofday64", unimplementedFunc),
     /* 231 */ SyscallDesc("settimeofday64", unimplementedFunc),
@@ -580,9 +580,12 @@ AlphaTru64Process::AlphaTru64Process(const std::string &name,
                                      int stdout_fd,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp)
+                                     std::vector<std::string> &envp,
+                                     uint64_t _uid, uint64_t _euid,
+                                     uint64_t _gid, uint64_t _egid,
+                                     uint64_t _pid, uint64_t _ppid)
     : AlphaLiveProcess(name, objFile, system, stdin_fd, stdout_fd,
-            stderr_fd, argv, envp),
+            stderr_fd, argv, envp, _uid, _euid, _gid, _egid, _pid, _ppid),
       Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
       Num_Mach_Syscall_Descs(sizeof(machSyscallDescs) / sizeof(SyscallDesc))
 {

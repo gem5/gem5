@@ -47,7 +47,7 @@ using namespace SparcISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
+unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
@@ -65,7 +65,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 
 
 SyscallReturn SparcISA::getresuidFunc(SyscallDesc *desc, int num,
-                                         Process *p, ThreadContext *tc)
+                                         LiveProcess *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
     Addr ruid = tc->getSyscallArg(0);
@@ -390,9 +390,13 @@ SparcLinuxProcess::SparcLinuxProcess(const std::string &name,
                                      int stdout_fd,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp)
+                                     std::vector<std::string> &envp,
+                                     uint64_t _uid, uint64_t _euid,
+                                     uint64_t _gid, uint64_t _egid,
+                                     uint64_t _pid, uint64_t _ppid)
     : SparcLiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp),
+            stdin_fd, stdout_fd, stderr_fd, argv, envp,
+            _uid, _euid, _gid, _egid, _pid, _ppid),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     // The sparc syscall table must be <= 284 entries because that is all there

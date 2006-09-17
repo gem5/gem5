@@ -47,7 +47,7 @@ using namespace AlphaISA;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
+unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
@@ -66,7 +66,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
     unsigned op = tc->getSyscallArg(0);
@@ -93,7 +93,7 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target osf_setsysinfo() handler.
 static SyscallReturn
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
+osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
     unsigned op = tc->getSyscallArg(0);
@@ -575,9 +575,15 @@ AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
                                      int stdout_fd,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp)
+                                     std::vector<std::string> &envp,
+                                     uint64_t _uid,
+                                     uint64_t _euid,
+                                     uint64_t _gid,
+                                     uint64_t _egid,
+                                     uint64_t _pid,
+                                     uint64_t _ppid)
     : AlphaLiveProcess(name, objFile, system, stdin_fd, stdout_fd,
-            stderr_fd, argv, envp),
+            stderr_fd, argv, envp, _uid, _euid, _gid, _egid, _pid, _ppid),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     //init_regs->intRegFile[0] = 0;

@@ -48,7 +48,10 @@ class SparcLinuxProcess : public SparcLiveProcess
                       System * system,
                       int stdin_fd, int stdout_fd, int stderr_fd,
                       std::vector<std::string> &argv,
-                      std::vector<std::string> &envp);
+                      std::vector<std::string> &envp,
+                      uint64_t _uid, uint64_t _euid,
+                      uint64_t _gid, uint64_t _egid,
+                      uint64_t _pid, uint64_t _ppid);
 
     virtual SyscallDesc* getDesc(int callnum);
 
@@ -62,7 +65,7 @@ class SparcLinuxProcess : public SparcLiveProcess
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
-                                 Process *p, ThreadContext *tc);
+                                 LiveProcess *p, ThreadContext *tc);
 
 } // namespace SparcISA
 #endif // __ALPHA_LINUX_PROCESS_HH__

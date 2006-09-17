@@ -90,71 +90,6 @@ class Tru64 : public OperatingSystem
     typedef quad fsid_t;
     //@}
 
-    /// Stat buffer.  Note that Tru64 v5.0+ use a new "F64" stat
-    /// structure, and a new set of syscall numbers for stat calls.
-    /// On some hosts (notably Linux) define st_atime, st_mtime, and
-    /// st_ctime as macros, so we append an X to get around this.
-    struct F64_stat {
-        dev_t	st_dev;			//!< st_dev
-        int32_t	st_retired1;		//!< st_retired1
-        mode_t	st_mode;		//!< st_mode
-        nlink_t	st_nlink;		//!< st_nlink
-        uint16_t st_nlink_reserved;	//!< st_nlink_reserved
-        uid_t	st_uid;			//!< st_uid
-        gid_t	st_gid;			//!< st_gid
-        dev_t	st_rdev;		//!< st_rdev
-        dev_t	st_ldev;		//!< st_ldev
-        off_t	st_size;		//!< st_size
-        time_t	st_retired2;		//!< st_retired2
-        int32_t	st_uatime;		//!< st_uatime
-        time_t	st_retired3;		//!< st_retired3
-        int32_t	st_umtime;		//!< st_umtime
-        time_t	st_retired4;		//!< st_retired4
-        int32_t	st_uctime;		//!< st_uctime
-        int32_t	st_retired5;		//!< st_retired5
-        int32_t	st_retired6;		//!< st_retired6
-        uint32_t	st_flags;	//!< st_flags
-        uint32_t	st_gen;		//!< st_gen
-        uint64_t	st_spare[4];	//!< st_spare[4]
-        ino_t	st_ino;			//!< st_ino
-        int32_t	st_ino_reserved;	//!< st_ino_reserved
-        time_t	st_atimeX;		//!< st_atime
-        int32_t	st_atime_reserved;	//!< st_atime_reserved
-        time_t	st_mtimeX;		//!< st_mtime
-        int32_t	st_mtime_reserved;	//!< st_mtime_reserved
-        time_t	st_ctimeX;		//!< st_ctime
-        int32_t	st_ctime_reserved;	//!< st_ctime_reserved
-        uint64_t	st_blksize;	//!< st_blksize
-        uint64_t	st_blocks;	//!< st_blocks
-    };
-
-
-    /// Old Tru64 v4.x stat struct.
-    /// Tru64 maintains backwards compatibility with v4.x by
-    /// implementing another set of stat functions using the old
-    /// structure definition and binding them to the old syscall
-    /// numbers.
-
-    struct pre_F64_stat {
-        dev_t   st_dev;
-        ino_t   st_ino;
-        mode_t  st_mode;
-        nlink_t st_nlink;
-        uid_t   st_uid __attribute__ ((aligned(sizeof(uid_t))));
-        gid_t   st_gid;
-        dev_t   st_rdev;
-        off_t   st_size __attribute__ ((aligned(sizeof(off_t))));
-        time_t  st_atimeX;
-        int32_t st_uatime;
-        time_t  st_mtimeX;
-        int32_t st_umtime;
-        time_t  st_ctimeX;
-        int32_t st_uctime;
-        uint32_t st_blksize;
-        int32_t st_blocks;
-        uint32_t st_flags;
-        uint32_t st_gen;
-    };
 
     /// For statfs().
     struct F64_statfs {
@@ -458,7 +393,7 @@ class Tru64 : public OperatingSystem
         uint64_t pad2[2];	//!< pad2
     };
 
-    /// Helper function to convert a host stat buffer to a target stat
+    /*/// Helper function to convert a host stat buffer to a target stat
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by stat(), fstat(), and lstat().
     template <class T>
@@ -484,7 +419,7 @@ class Tru64 : public OperatingSystem
         tgt->st_blocks = htog(host->st_blocks);
 
         tgt.copyOut(mem);
-    }
+    }*/
 
     /// Helper function to convert a host statfs buffer to a target statfs
     /// buffer.  Also copies the target buffer out to the simulated
@@ -515,37 +450,7 @@ class Tru64 : public OperatingSystem
         tgt.copyOut(mem);
     }
 
-    class F64 {
-      public:
-        static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
-                                   global_stat *host)
-        {
-            Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
-        }
-
-        static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
-                                     global_statfs *host)
-        {
-            Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
-        }
-    };
-
-    class PreF64 {
-      public:
-        static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
-                                   global_stat *host)
-        {
-            Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
-        }
-
-        static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
-                                     global_statfs *host)
-        {
-            Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
-        }
-    };
-
-    /// Helper function to convert a host stat buffer to an old pre-F64
+/*    /// Helper function to convert a host stat buffer to an old pre-F64
     /// (4.x) target stat buffer.  Also copies the target buffer out to
     /// the simulated memory space.  Used by pre_F64_stat(),
     /// pre_F64_fstat(), and pre_F64_lstat().
@@ -571,7 +476,7 @@ class Tru64 : public OperatingSystem
         tgt->st_blocks = htog(host->st_blocks);
 
         tgt.copyOut(mem);
-    }
+    }*/
 
 
     /// The target system's hostname.
@@ -580,7 +485,7 @@ class Tru64 : public OperatingSystem
 
     /// Target getdirentries() handler.
     static SyscallReturn
-    getdirentriesFunc(SyscallDesc *desc, int callnum, Process *process,
+    getdirentriesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                       ThreadContext *tc)
     {
         using namespace TheISA;
@@ -641,7 +546,7 @@ class Tru64 : public OperatingSystem
 
     /// Target sigreturn() handler.
     static SyscallReturn
-    sigreturnFunc(SyscallDesc *desc, int callnum, Process *process,
+    sigreturnFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                   ThreadContext *tc)
     {
         using namespace TheISA;
@@ -674,7 +579,7 @@ class Tru64 : public OperatingSystem
 
     /// Create a stack region for a thread.
     static SyscallReturn
-    stack_createFunc(SyscallDesc *desc, int callnum, Process *process,
+    stack_createFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                      ThreadContext *tc)
     {
         using namespace TheISA;
@@ -704,7 +609,7 @@ class Tru64 : public OperatingSystem
     /// schedulers by creating a shared-memory region.  The shared memory
     /// region has several structs, some global, some per-RAD, some per-VP.
     static SyscallReturn
-    nxm_task_initFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_task_initFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                       ThreadContext *tc)
     {
         using namespace std;
@@ -838,7 +743,7 @@ class Tru64 : public OperatingSystem
 
     /// Create thread.
     static SyscallReturn
-    nxm_thread_createFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_thread_createFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                           ThreadContext *tc)
     {
         using namespace std;
@@ -955,7 +860,7 @@ class Tru64 : public OperatingSystem
 
     /// Thread idle call (like yield()).
     static SyscallReturn
-    nxm_idleFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_idleFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                  ThreadContext *tc)
     {
         return 0;
@@ -963,7 +868,7 @@ class Tru64 : public OperatingSystem
 
     /// Block thread.
     static SyscallReturn
-    nxm_thread_blockFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_thread_blockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                          ThreadContext *tc)
     {
         using namespace std;
@@ -982,7 +887,7 @@ class Tru64 : public OperatingSystem
 
     /// block.
     static SyscallReturn
-    nxm_blockFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_blockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                   ThreadContext *tc)
     {
         using namespace std;
@@ -1005,7 +910,7 @@ class Tru64 : public OperatingSystem
 
     /// Unblock thread.
     static SyscallReturn
-    nxm_unblockFunc(SyscallDesc *desc, int callnum, Process *process,
+    nxm_unblockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                     ThreadContext *tc)
     {
         using namespace std;
@@ -1020,7 +925,7 @@ class Tru64 : public OperatingSystem
 
     /// Switch thread priority.
     static SyscallReturn
-    swtch_priFunc(SyscallDesc *desc, int callnum, Process *process,
+    swtch_priFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                   ThreadContext *tc)
     {
         // Attempts to switch to another runnable thread (if there is
@@ -1037,7 +942,7 @@ class Tru64 : public OperatingSystem
     /// Activate thread context waiting on a channel.  Just activate one
     /// by default.
     static int
-    activate_waiting_context(Addr uaddr, Process *process,
+    activate_waiting_context(Addr uaddr, LiveProcess *process,
                              bool activate_all = false)
     {
         using namespace std;
@@ -1068,7 +973,7 @@ class Tru64 : public OperatingSystem
 
     /// M5 hacked-up lock acquire.
     static void
-    m5_lock_mutex(Addr uaddr, Process *process, ThreadContext *tc)
+    m5_lock_mutex(Addr uaddr, LiveProcess *process, ThreadContext *tc)
     {
         using namespace TheISA;
 
@@ -1089,7 +994,7 @@ class Tru64 : public OperatingSystem
 
     /// M5 unlock call.
     static void
-    m5_unlock_mutex(Addr uaddr, Process *process, ThreadContext *tc)
+    m5_unlock_mutex(Addr uaddr, LiveProcess *process, ThreadContext *tc)
     {
         TypedBufferArg<uint64_t> lockp(uaddr);
 
@@ -1108,7 +1013,7 @@ class Tru64 : public OperatingSystem
 
     /// Lock acquire syscall handler.
     static SyscallReturn
-    m5_mutex_lockFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_mutex_lockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                       ThreadContext *tc)
     {
         Addr uaddr = tc->getSyscallArg(0);
@@ -1123,7 +1028,7 @@ class Tru64 : public OperatingSystem
 
     /// Try lock (non-blocking).
     static SyscallReturn
-    m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_mutex_trylockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                          ThreadContext *tc)
     {
         using namespace TheISA;
@@ -1145,7 +1050,7 @@ class Tru64 : public OperatingSystem
 
     /// Unlock syscall handler.
     static SyscallReturn
-    m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
     {
         Addr uaddr = tc->getSyscallArg(0);
@@ -1157,7 +1062,7 @@ class Tru64 : public OperatingSystem
 
     /// Signal ocndition.
     static SyscallReturn
-    m5_cond_signalFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_cond_signalFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                        ThreadContext *tc)
     {
         Addr cond_addr = tc->getSyscallArg(0);
@@ -1170,7 +1075,7 @@ class Tru64 : public OperatingSystem
 
     /// Wake up all processes waiting on the condition variable.
     static SyscallReturn
-    m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                           ThreadContext *tc)
     {
         Addr cond_addr = tc->getSyscallArg(0);
@@ -1182,7 +1087,7 @@ class Tru64 : public OperatingSystem
 
     /// Wait on a condition.
     static SyscallReturn
-    m5_cond_waitFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_cond_waitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                      ThreadContext *tc)
     {
         using namespace TheISA;
@@ -1206,7 +1111,7 @@ class Tru64 : public OperatingSystem
 
     /// Thread exit.
     static SyscallReturn
-    m5_thread_exitFunc(SyscallDesc *desc, int callnum, Process *process,
+    m5_thread_exitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                        ThreadContext *tc)
     {
         assert(tc->status() == ThreadContext::Active);
@@ -1217,18 +1122,16 @@ class Tru64 : public OperatingSystem
 
     /// Indirect syscall invocation (call #0).
     static SyscallReturn
-    indirectSyscallFunc(SyscallDesc *desc, int callnum, Process *process,
+    indirectSyscallFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
     {
         int new_callnum = tc->getSyscallArg(0);
-        LiveProcess *lp = dynamic_cast<LiveProcess*>(process);
-        assert(lp);
 
         for (int i = 0; i < 5; ++i)
             tc->setSyscallArg(i, tc->getSyscallArg(i+1));
 
 
-        SyscallDesc *new_desc = lp->getDesc(new_callnum);
+        SyscallDesc *new_desc = process->getDesc(new_callnum);
         if (desc == NULL)
             fatal("Syscall %d out of range", callnum);
 
@@ -1239,6 +1142,108 @@ class Tru64 : public OperatingSystem
 
 };  // class Tru64
 
+class Tru64_F64 : public Tru64
+{
+  public:
+
+    /// Stat buffer.  Note that Tru64 v5.0+ use a new "F64" stat
+    /// structure, and a new set of syscall numbers for stat calls.
+    /// On some hosts (notably Linux) define st_atime, st_mtime, and
+    /// st_ctime as macros, so we append an X to get around this.
+    struct F64_stat {
+        dev_t	st_dev;			//!< st_dev
+        int32_t	st_retired1;		//!< st_retired1
+        mode_t	st_mode;		//!< st_mode
+        nlink_t	st_nlink;		//!< st_nlink
+        uint16_t st_nlink_reserved;	//!< st_nlink_reserved
+        uid_t	st_uid;			//!< st_uid
+        gid_t	st_gid;			//!< st_gid
+        dev_t	st_rdev;		//!< st_rdev
+        dev_t	st_ldev;		//!< st_ldev
+        off_t	st_size;		//!< st_size
+        time_t	st_retired2;		//!< st_retired2
+        int32_t	st_uatime;		//!< st_uatime
+        time_t	st_retired3;		//!< st_retired3
+        int32_t	st_umtime;		//!< st_umtime
+        time_t	st_retired4;		//!< st_retired4
+        int32_t	st_uctime;		//!< st_uctime
+        int32_t	st_retired5;		//!< st_retired5
+        int32_t	st_retired6;		//!< st_retired6
+        uint32_t	st_flags;	//!< st_flags
+        uint32_t	st_gen;		//!< st_gen
+        uint64_t	st_spare[4];	//!< st_spare[4]
+        ino_t	st_ino;			//!< st_ino
+        int32_t	st_ino_reserved;	//!< st_ino_reserved
+        time_t	st_atimeX;		//!< st_atime
+        int32_t	st_atime_reserved;	//!< st_atime_reserved
+        time_t	st_mtimeX;		//!< st_mtime
+        int32_t	st_mtime_reserved;	//!< st_mtime_reserved
+        time_t	st_ctimeX;		//!< st_ctime
+        int32_t	st_ctime_reserved;	//!< st_ctime_reserved
+        uint64_t	st_blksize;	//!< st_blksize
+        uint64_t	st_blocks;	//!< st_blocks
+    };
+
+    typedef F64_stat tgt_stat;
+/*
+    static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
+                               global_stat *host)
+    {
+        Tru64::copyOutStatBuf<Tru64::F64_stat>(mem, addr, host);
+    }*/
+
+    static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
+                                 global_statfs *host)
+    {
+        Tru64::copyOutStatfsBuf<Tru64::F64_statfs>(mem, addr, host);
+    }
+};
+
+class Tru64_PreF64 : public Tru64
+{
+  public:
+
+    /// Old Tru64 v4.x stat struct.
+    /// Tru64 maintains backwards compatibility with v4.x by
+    /// implementing another set of stat functions using the old
+    /// structure definition and binding them to the old syscall
+    /// numbers.
+
+    struct pre_F64_stat {
+        dev_t   st_dev;
+        ino_t   st_ino;
+        mode_t  st_mode;
+        nlink_t st_nlink;
+        uid_t   st_uid __attribute__ ((aligned(sizeof(uid_t))));
+        gid_t   st_gid;
+        dev_t   st_rdev;
+        off_t   st_size __attribute__ ((aligned(sizeof(off_t))));
+        time_t  st_atimeX;
+        int32_t st_uatime;
+        time_t  st_mtimeX;
+        int32_t st_umtime;
+        time_t  st_ctimeX;
+        int32_t st_uctime;
+        uint32_t st_blksize;
+        int32_t st_blocks;
+        uint32_t st_flags;
+        uint32_t st_gen;
+    };
+
+    typedef pre_F64_stat tgt_stat;
+/*
+    static void copyOutStatBuf(TranslatingPort *mem, Addr addr,
+                               global_stat *host)
+    {
+        Tru64::copyOutStatBuf<Tru64::pre_F64_stat>(mem, addr, host);
+    }*/
+
+    static void copyOutStatfsBuf(TranslatingPort *mem, Addr addr,
+                                 global_statfs *host)
+    {
+        Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
+    }
+};
 
 #endif // FULL_SYSTEM
 
