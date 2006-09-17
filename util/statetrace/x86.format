@@ -1,0 +1,6 @@
+######################
+EIP = %(eip)
+EAX = %(eax), EBX = %(ebx), ECX = %(ecx), EDX = %(edx)
+EDI = %(edi), ESI = %(esi)
+EBP = %(ebp), ESP = %(esp)
+CS  = %(cs), DS  = %(ds), ES  = %(es), FS  = %(fs), GS  = %(gs), SS  = %(ss)
