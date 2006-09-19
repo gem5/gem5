@@ -64,13 +64,43 @@ if build_env['ALPHA_TLASER']:
         type = 'EtherDevInt'
         device = Param.EtherDev("Ethernet device of this interface")
 
+
+class IGbE(PciDevice):
+    type = 'IGbE'
+    hardware_address = Param.EthernetAddr(NextEthernetAddr, "Ethernet Hardware Address")
+
+class IGbEPciData(PciConfigData):
+    VendorID = 0x8086
+    DeviceID = 0x1026
+    SubsystemID = 0x1008
+    SubsystemVendorID = 0x8086
+    Status = 0x0000
+    SubClassCode = 0x00
+    ClassCode = 0x02
+    ProgIF = 0x00
+    BAR0 = 0x00000000
+    BAR1 = 0x00000000
+    BAR2 = 0x00000000
+    BAR3 = 0x00000000
+    BAR4 = 0x00000000
+    BAR5 = 0x00000000
+    MaximumLatency = 0x00
+    MinimumGrant = 0xff
+    InterruptLine = 0x1e
+    InterruptPin = 0x01
+    BAR0Size = '128kB'
+
+class IGbEInt(EtherInt):
+    type = 'IGbEInt'
+    device = Param.IGbE("Ethernet device of this interface")
+
+
+
 class EtherDevBase(PciDevice):
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
     clock = Param.Clock('0ns', "State machine processor frequency")
-
-    config_latency = Param.Latency('20ns', "Config read or write latency")
 
     dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
     dma_read_factor = Param.Latency('0us', "multiplier for dma reads")

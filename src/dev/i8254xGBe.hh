@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ */
+
+/* @file
+ * Device model for Intel's 8254x line of gigabit ethernet controllers.
+ */
+
+#ifndef __DEV_I8254XGBE_HH__
+#define __DEV_I8254XGBE_HH__
+
+#include "base/inet.hh"
+#include "base/statistics.hh"
+#include "dev/etherint.hh"
+#include "dev/etherpkt.hh"
+#include "dev/pcidev.hh"
+#include "dev/pktfifo.hh"
+#include "sim/eventq.hh"
+
+class IGbEInt;
+
+class IGbE : public PciDev
+{
+  private:
+    IGbEInt *etherInt;
+
+  public:
+    struct Params : public PciDev::Params
+    {
+        ;
+    };
+
+    IGbE(Params *params);
+    ~IGbE() {;}
+
+    virtual Tick read(Packet *pkt);
+    virtual Tick write(Packet *pkt);
+
+    virtual Tick writeConfig(Packet *pkt);
+
+    bool ethRxPkt(EthPacketPtr packet);
+    void ethTxDone();
+
+    void setEthInt(IGbEInt *i) { assert(!etherInt); etherInt = i; }
+
+    const Params *params() const {return (const Params *)_params; }
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+
+};
+
+class IGbEInt : public EtherInt
+{
+  private:
+    IGbE *dev;
+
+  public:
+    IGbEInt(const std::string &name, IGbE *d)
+        : EtherInt(name), dev(d)
+        { dev->setEthInt(this); }
+
+    virtual bool recvPacket(EthPacketPtr pkt) { return dev->ethRxPkt(pkt); }
+    virtual void sendDone() { dev->ethTxDone(); }
+};
+
+
+
+
+
+#endif //__DEV_I8254XGBE_HH__
+

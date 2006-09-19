@@ -405,7 +405,7 @@ CREATE_SIM_OBJECT(PciConfigData)
     data->config.baseAddr[5] = htole(BAR5);
     data->config.cardbusCIS = htole(CardbusCIS);
     data->config.subsystemVendorID = htole(SubsystemVendorID);
-    data->config.subsystemID = htole(SubsystemVendorID);
+    data->config.subsystemID = htole(SubsystemID);
     data->config.expansionROM = htole(ExpansionROM);
     data->config.interruptLine = htole(InterruptLine);
     data->config.interruptPin = htole(InterruptPin);
