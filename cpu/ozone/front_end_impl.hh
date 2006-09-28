@@ -288,8 +288,8 @@ FrontEnd<Impl>::tick()
         cacheBlkValid = true;
 
         status = Running;
-        if (barrierInst)
-            status = SerializeBlocked;
+//        if (barrierInst)
+//            status = SerializeBlocked;
         if (freeRegs <= 0)
             status = RenameBlocked;
         checkBE();
@@ -537,10 +537,10 @@ FrontEnd<Impl>::processBarriers(DynInstPtr &inst)
 
         // Change status over to SerializeBlocked so that other stages know
         // what this is blocked on.
-        status = SerializeBlocked;
+//        status = SerializeBlocked;
 
-        barrierInst = inst;
-        return true;
+//        barrierInst = inst;
+//        return true;
     } else if ((inst->isStoreConditional() || inst->isSerializeAfter())
                && !inst->isSerializeHandled()) {
         DPRINTF(FE, "Serialize after instruction encountered.\n");
@@ -647,12 +647,12 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
         DPRINTF(FE, "Squashing outstanding Icache miss.\n");
         memReq = NULL;
     }
-
+/*
     if (status == SerializeBlocked) {
         assert(barrierInst->seqNum > squash_num);
         barrierInst = NULL;
     }
-
+*/
     // Unless this squash originated from the front end, we're probably
     // in running mode now.
     // Actually might want to make this latency dependent.
@@ -669,6 +669,15 @@ FrontEnd<Impl>::getInst()
     }
 
     DynInstPtr inst = feBuffer.front();
+
+    if (inst->isSerializeBefore() || inst->isIprAccess()) {
+        DPRINTF(FE, "Back end is getting a serialize before inst\n");
+        if (!backEnd->robEmpty()) {
+            DPRINTF(FE, "Rob is not empty yet, not returning inst\n");
+            return NULL;
+        }
+        inst->clearSerializeBefore();
+    }
 
     feBuffer.pop_front();
 
@@ -740,11 +749,11 @@ FrontEnd<Impl>::updateStatus()
     }
 
     if (status == BEBlocked && !be_block) {
-        if (barrierInst) {
-            status = SerializeBlocked;
-        } else {
+//        if (barrierInst) {
+//            status = SerializeBlocked;
+//        } else {
             status = Running;
-        }
+//        }
         ret_val = true;
     }
     return ret_val;
@@ -766,6 +775,7 @@ template <class Impl>
 typename Impl::DynInstPtr
 FrontEnd<Impl>::getInstFromCacheline()
 {
+/*
     if (status == SerializeComplete) {
         DynInstPtr inst = barrierInst;
         status = Running;
@@ -773,7 +783,7 @@ FrontEnd<Impl>::getInstFromCacheline()
         inst->clearSerializeBefore();
         return inst;
     }
-
+*/
     InstSeqNum inst_seq;
     MachInst inst;
     // @todo: Fix this magic number used here to handle word offset (and

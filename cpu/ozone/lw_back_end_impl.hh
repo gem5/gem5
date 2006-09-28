@@ -952,8 +952,17 @@ LWBackEnd<Impl>::executeInsts()
             if (inst->isLoad()) {
                 LSQ.executeLoad(inst);
             } else if (inst->isStore()) {
-                LSQ.executeStore(inst);
-                if (inst->req && !(inst->req->flags & LOCKED)) {
+                Fault fault = LSQ.executeStore(inst);
+
+                if (!inst->isStoreConditional() && fault == NoFault) {
+                    inst->setExecuted();
+
+                    instToCommit(inst);
+                } else if (fault != NoFault) {
+                    // If the instruction faulted, then we need to send it along to commit
+                    // without the instruction completing.
+                    // Send this instruction to commit, also make sure iew stage
+                    // realizes there is activity.
                     inst->setExecuted();
 
                     instToCommit(inst);
@@ -1114,7 +1123,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     // or store inst.  Signal backwards that it should be executed.
     if (!inst->isExecuted()) {
         if (inst->isNonSpeculative() ||
-            inst->isStoreConditional() ||
+            (inst->isStoreConditional() && inst->getFault() == NoFault) ||
             inst->isMemBarrier() ||
             inst->isWriteBarrier()) {
 #if !FULL_SYSTEM

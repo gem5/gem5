@@ -486,7 +486,7 @@ OzoneLWLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 
         store_size = (*sq_it).size;
 
-        if (store_size == 0) {
+        if (store_size == 0 || (*sq_it).committed) {
             sq_it++;
             continue;
         }

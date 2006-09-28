@@ -267,6 +267,8 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     backEnd->takeOverFrom();
     frontEnd->takeOverFrom();
+    frontEnd->renameTable.copyFrom(thread.renameTable);
+    backEnd->renameTable.copyFrom(thread.renameTable);
     assert(!tickEvent.scheduled());
 
 #ifndef NDEBUG
