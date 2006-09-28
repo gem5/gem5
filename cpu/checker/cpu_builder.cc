@@ -144,6 +144,7 @@ CREATE_SIM_OBJECT(OzoneChecker)
     temp = max_insts_all_threads;
     temp = max_loads_any_thread;
     temp = max_loads_all_threads;
+    temp = stats_reset_inst;
     Tick temp2 = progress_interval;
     temp2++;
     params->progress_interval = 0;

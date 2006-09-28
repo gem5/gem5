@@ -60,15 +60,19 @@ int maxThreadsPerCPU = 1;
 void
 CPUProgressEvent::process()
 {
-#ifndef NDEBUG
     Counter temp = cpu->totalInstructions();
+#ifndef NDEBUG
     double ipc = double(temp - lastNumInst) / (interval / cpu->cycles(1));
+
     DPRINTFN("%s progress event, instructions committed: %lli, IPC: %0.8d\n",
              cpu->name(), temp - lastNumInst, ipc);
     ipc = 0.0;
+#else
+    cprintf("%lli: %s progress event, instructions committed: %lli\n",
+            curTick, cpu->name(), temp - lastNumInst);
+#endif
     lastNumInst = temp;
     schedule(curTick + interval);
-#endif
 }
 
 const char *

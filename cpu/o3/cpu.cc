@@ -697,6 +697,7 @@ FullO3CPU<Impl>::signalSwitched()
     if (++switchCount == NumStages) {
         fetch.doSwitchOut();
         rename.doSwitchOut();
+        iew.doSwitchOut();
         commit.doSwitchOut();
         instList.clear();
 

@@ -198,62 +198,12 @@ void
 LSQUnit<Impl>::switchOut()
 {
     switchedOut = true;
-    for (int i = 0; i < loadQueue.size(); ++i)
+    for (int i = 0; i < loadQueue.size(); ++i) {
+        assert(!loadQueue[i]);
         loadQueue[i] = NULL;
+    }
 
     assert(storesToWB == 0);
-
-    while (storesToWB > 0 &&
-           storeWBIdx != storeTail &&
-           storeQueue[storeWBIdx].inst &&
-           storeQueue[storeWBIdx].canWB) {
-
-        if (storeQueue[storeWBIdx].size == 0 ||
-            storeQueue[storeWBIdx].inst->isDataPrefetch() ||
-            storeQueue[storeWBIdx].committed ||
-            storeQueue[storeWBIdx].req->flags & LOCKED) {
-            incrStIdx(storeWBIdx);
-
-            continue;
-        }
-
-        assert(storeQueue[storeWBIdx].req);
-        assert(!storeQueue[storeWBIdx].committed);
-
-        MemReqPtr req = storeQueue[storeWBIdx].req;
-        storeQueue[storeWBIdx].committed = true;
-
-        req->cmd = Write;
-        req->completionEvent = NULL;
-        req->time = curTick;
-        assert(!req->data);
-        req->data = new uint8_t[64];
-        memcpy(req->data, (uint8_t *)&storeQueue[storeWBIdx].data, req->size);
-
-        DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
-                "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx,storeQueue[storeWBIdx].inst->readPC(),
-                req->paddr, *(req->data),
-                storeQueue[storeWBIdx].inst->seqNum);
-
-        switch(storeQueue[storeWBIdx].size) {
-          case 1:
-            cpu->write(req, (uint8_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 2:
-            cpu->write(req, (uint16_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 4:
-            cpu->write(req, (uint32_t &)storeQueue[storeWBIdx].data);
-            break;
-          case 8:
-            cpu->write(req, (uint64_t &)storeQueue[storeWBIdx].data);
-            break;
-          default:
-            panic("Unexpected store size!\n");
-        }
-        incrStIdx(storeWBIdx);
-    }
 }
 
 template<class Impl>
@@ -439,6 +389,11 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     if (load_fault != NoFault) {
         // Send this instruction to commit, also make sure iew stage
         // realizes there is activity.
+        // Mark it as executed unless it is an uncached load that
+        // needs to hit the head of commit.
+        if (!(inst->req->flags & UNCACHEABLE) || inst->isAtCommit()) {
+            inst->setExecuted();
+        }
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     }

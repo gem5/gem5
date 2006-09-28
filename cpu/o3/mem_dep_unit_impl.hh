@@ -107,6 +107,9 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::switchOut()
 {
+    assert(instList[0].empty());
+    assert(instsToReplay.empty());
+    assert(memDepHash.empty());
     // Clear any state.
     for (int i = 0; i < Impl::MaxThreads; ++i) {
         instList[i].clear();

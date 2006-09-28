@@ -864,6 +864,11 @@ DefaultRename<Impl>::doSquash(unsigned tid)
         // Put the renamed physical register back on the free list.
         freeList->addReg(hb_it->newPhysReg);
 
+        // Be sure to mark its register as ready if it's a misc register.
+        if (hb_it->newPhysReg >= maxPhysicalRegs) {
+            scoreboard->setReg(hb_it->newPhysReg);
+        }
+
         historyBuffer[tid].erase(hb_it++);
 
         ++renameUndoneMaps;
