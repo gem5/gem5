@@ -156,23 +156,23 @@ namespace SparcISA
         ASI_PST32_SL = 0xCD,
         ASI_PST32_SECONDARY_LITTLE = ASI_PST32_SL,
         //0xCE-0xCF implementation dependent
-        ASI_PL8_P = 0xD0,
-        ASI_PL8_PRIMARY = ASI_PL8_P,
-        ASI_PL8_S = 0xD1,
-        ASI_PL8_SECONDARY = ASI_PL8_S,
-        ASI_PL16_P = 0xD2,
-        ASI_PL16_PRIMARY = ASI_PL16_P,
-        ASI_PL16_S = 0xD3,
-        ASI_PL16_SECONDARY = ASI_PL16_S,
+        ASI_FL8_P = 0xD0,
+        ASI_FL8_PRIMARY = ASI_FL8_P,
+        ASI_FL8_S = 0xD1,
+        ASI_FL8_SECONDARY = ASI_FL8_S,
+        ASI_FL16_P = 0xD2,
+        ASI_FL16_PRIMARY = ASI_FL16_P,
+        ASI_FL16_S = 0xD3,
+        ASI_FL16_SECONDARY = ASI_FL16_S,
         //0xD4-0xD7 implementation dependent
-        ASI_PL8_PL = 0xD8,
-        ASI_PL8_PRIMARY_LITTLE = ASI_PL8_PL,
-        ASI_PL8_SL = 0xD9,
-        ASI_PL8_SECONDARY_LITTLE = ASI_PL8_SL,
-        ASI_PL16_PL = 0xDA,
-        ASI_PL16_PRIMARY_LITTLE = ASI_PL16_PL,
-        ASI_PL16_SL = 0xDB,
-        ASI_PL16_SECONDARY_LITTLE = ASI_PL16_SL,
+        ASI_FL8_PL = 0xD8,
+        ASI_FL8_PRIMARY_LITTLE = ASI_FL8_PL,
+        ASI_FL8_SL = 0xD9,
+        ASI_FL8_SECONDARY_LITTLE = ASI_FL8_SL,
+        ASI_FL16_PL = 0xDA,
+        ASI_FL16_PRIMARY_LITTLE = ASI_FL16_PL,
+        ASI_FL16_SL = 0xDB,
+        ASI_FL16_SECONDARY_LITTLE = ASI_FL16_SL,
         //0xDC-0xDF implementation dependent
         //0xE0-0xE1 reserved
         ASI_LDTX_P = 0xE2,
@@ -193,9 +193,30 @@ namespace SparcISA
         ASI_BLK_PL = 0xF8,
         ASI_BLOCK_PRIMARY_LITTLE = ASI_BLK_PL,
         ASI_BLK_SL = 0xF9,
-        ASI_BLOCK_SECONDARY_LITTLE = ASI_BLK_SL
+        ASI_BLOCK_SECONDARY_LITTLE = ASI_BLK_SL,
         //0xFA-0xFF implementation dependent
+        MAX_ASI = 0xFF
     };
+
+    //Functions that classify an asi
+    bool AsiIsBlock(ASI);
+    bool AsiIsPrimary(ASI);
+    bool AsiIsSecondary(ASI);
+    bool AsiIsNucleus(ASI);
+    bool AsiIsAsIfUser(ASI);
+    bool AsiIsIO(ASI);
+    bool AsiIsReal(ASI);
+    bool AsiIsLittle(ASI);
+    bool AsiIsTwin(ASI);
+    bool AsiIsPartialStore(ASI);
+    bool AsiIsFloatingLoad(ASI);
+    bool AsiIsNoFault(ASI);
+    bool AsiIsScratchPad(ASI);
+    bool AsiIsCmt(ASI);
+    bool AsiIsQueue(ASI);
+    bool AsiIsDtlb(ASI);
+    bool AsiIsMmu(ASI);
+
 };
 
 #endif // __ARCH_SPARC_TLB_HH__
