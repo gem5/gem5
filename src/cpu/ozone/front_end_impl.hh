@@ -842,7 +842,7 @@ FrontEnd<Impl>::getInstFromCacheline()
     // Get the instruction from the array of the cache line.
     inst = htog(*reinterpret_cast<MachInst *>(&cacheData[offset]));
 
-    ExtMachInst decode_inst = TheISA::makeExtMI(inst, PC);
+    ExtMachInst decode_inst = TheISA::makeExtMI(inst, tc);
 
     // Create a new DynInst from the instruction fetched.
     DynInstPtr instruction = new DynInst(decode_inst, PC, PC+sizeof(MachInst),

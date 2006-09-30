@@ -35,6 +35,7 @@
 #include "arch/mips/types.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "cpu/thread_context.hh"
 //XXX This is needed for size_t. We should use something other than size_t
 //#include "kern/linux/linux.hh"
 #include "sim/host.hh"
@@ -86,11 +87,11 @@ namespace MipsISA {
     }
 
     static inline ExtMachInst
-    makeExtMI(MachInst inst, const uint64_t &pc) {
+    makeExtMI(MachInst inst, ThreadContext * xc) {
 #if FULL_SYSTEM
         ExtMachInst ext_inst = inst;
-        if (pc && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+        if (xc->readPC() && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
         else
             return ext_inst;
 #else

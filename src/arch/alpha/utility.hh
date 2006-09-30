@@ -37,16 +37,17 @@
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/regfile.hh"
 #include "base/misc.hh"
+#include "cpu/thread_context.hh"
 
 namespace AlphaISA
 {
 
     static inline ExtMachInst
-    makeExtMI(MachInst inst, const uint64_t &pc) {
+    makeExtMI(MachInst inst, ThreadContext * xc) {
 #if FULL_SYSTEM
         ExtMachInst ext_inst = inst;
-        if (pc && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+        if (xc->readPC() && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
         else
             return ext_inst;
 #else

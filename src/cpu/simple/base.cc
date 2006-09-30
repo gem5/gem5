@@ -396,7 +396,7 @@ BaseSimpleCPU::preExecute()
 
     // decode the instruction
     inst = gtoh(inst);
-    curStaticInst = StaticInst::decode(makeExtMI(inst, thread->readPC()));
+    curStaticInst = StaticInst::decode(makeExtMI(inst, thread->getTC()));
 
     traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
                                      thread->readPC());

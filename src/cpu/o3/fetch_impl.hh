@@ -1109,7 +1109,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                         (&cacheData[tid][offset]));
 
-            ext_inst = TheISA::makeExtMI(inst, fetch_PC);
+            ext_inst = TheISA::makeExtMI(inst, cpu->tcBase(tid));
 
             // Create a new DynInst from the instruction fetched.
             DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,

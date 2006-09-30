@@ -200,7 +200,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
             validateInst(inst);
 
             curStaticInst = StaticInst::decode(makeExtMI(machInst,
-                                                         thread->readPC()));
+                                                         thread->getTC()));
 
 #if FULL_SYSTEM
             thread->setInst(machInst);
