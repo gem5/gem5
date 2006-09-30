@@ -56,7 +56,7 @@ class Solaris : public OperatingSystem
 
     //@{
     /// Basic Solaris types.
-/*    typedef uint64_t size_t;
+    typedef uint64_t size_t;
     typedef uint64_t off_t;
     typedef int64_t time_t;
     typedef int32_t uid_t;
@@ -65,7 +65,7 @@ class Solaris : public OperatingSystem
     typedef uint64_t ino_t;
     typedef uint64_t dev_t;
     typedef uint32_t mode_t;
-    typedef uint32_t nlink_t;*/
+    typedef uint32_t nlink_t;
     //@}
 
     struct tgt_timespec {

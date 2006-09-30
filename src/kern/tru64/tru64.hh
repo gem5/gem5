@@ -393,34 +393,6 @@ class Tru64 : public OperatingSystem
         uint64_t pad2[2];	//!< pad2
     };
 
-    /*/// Helper function to convert a host stat buffer to a target stat
-    /// buffer.  Also copies the target buffer out to the simulated
-    /// memory space.  Used by stat(), fstat(), and lstat().
-    template <class T>
-    static void
-    copyOutStatBuf(TranslatingPort *mem, Addr addr, global_stat *host)
-    {
-        using namespace TheISA;
-
-        TypedBufferArg<T> tgt(addr);
-
-        tgt->st_dev = htog(host->st_dev);
-        tgt->st_ino = htog(host->st_ino);
-        tgt->st_mode = htog(host->st_mode);
-        tgt->st_nlink = htog(host->st_nlink);
-        tgt->st_uid = htog(host->st_uid);
-        tgt->st_gid = htog(host->st_gid);
-        tgt->st_rdev = htog(host->st_rdev);
-        tgt->st_size = htog(host->st_size);
-        tgt->st_atimeX = htog(host->st_atime);
-        tgt->st_mtimeX = htog(host->st_mtime);
-        tgt->st_ctimeX = htog(host->st_ctime);
-        tgt->st_blksize = htog(host->st_blksize);
-        tgt->st_blocks = htog(host->st_blocks);
-
-        tgt.copyOut(mem);
-    }*/
-
     /// Helper function to convert a host statfs buffer to a target statfs
     /// buffer.  Also copies the target buffer out to the simulated
     /// memory space.  Used by statfs() and fstatfs().
@@ -449,34 +421,6 @@ class Tru64 : public OperatingSystem
 
         tgt.copyOut(mem);
     }
-
-/*    /// Helper function to convert a host stat buffer to an old pre-F64
-    /// (4.x) target stat buffer.  Also copies the target buffer out to
-    /// the simulated memory space.  Used by pre_F64_stat(),
-    /// pre_F64_fstat(), and pre_F64_lstat().
-    static void
-    copyOutPreF64StatBuf(TranslatingPort *mem, Addr addr, struct stat *host)
-    {
-        using namespace TheISA;
-
-        TypedBufferArg<Tru64::pre_F64_stat> tgt(addr);
-
-        tgt->st_dev = htog(host->st_dev);
-        tgt->st_ino = htog(host->st_ino);
-        tgt->st_mode = htog(host->st_mode);
-        tgt->st_nlink = htog(host->st_nlink);
-        tgt->st_uid = htog(host->st_uid);
-        tgt->st_gid = htog(host->st_gid);
-        tgt->st_rdev = htog(host->st_rdev);
-        tgt->st_size = htog(host->st_size);
-        tgt->st_atimeX = htog(host->st_atime);
-        tgt->st_mtimeX = htog(host->st_mtime);
-        tgt->st_ctimeX = htog(host->st_ctime);
-        tgt->st_blksize = htog(host->st_blksize);
-        tgt->st_blocks = htog(host->st_blocks);
-
-        tgt.copyOut(mem);
-    }*/
 
 
     /// The target system's hostname.
