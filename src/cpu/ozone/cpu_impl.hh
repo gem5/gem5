@@ -35,6 +35,7 @@
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
 #include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
@@ -53,6 +54,7 @@
 //#include "base/remote_gdb.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/physical.hh"
 #include "sim/faults.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
