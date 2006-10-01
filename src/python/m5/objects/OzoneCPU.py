@@ -8,12 +8,15 @@ class DerivOzoneCPU(BaseCPU):
     numThreads = Param.Unsigned("number of HW thread contexts")
 
     checker = Param.BaseCPU("Checker CPU")
+    if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
 
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
 
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")
+    frontEndLatency = Param.Unsigned("Front end latency")
     backEndWidth = Param.Unsigned("Back end width")
     backEndSquashLatency = Param.Unsigned("Back end squash latency")
     backEndLatency = Param.Unsigned("Back end latency")
@@ -76,6 +79,7 @@ class DerivOzoneCPU(BaseCPU):
 
     LQEntries = Param.Unsigned("Number of load queue entries")
     SQEntries = Param.Unsigned("Number of store queue entries")
+    lsqLimits = Param.Bool(True, "LSQ size limits dispatch")
     LFSTSize = Param.Unsigned("Last fetched store table size")
     SSITSize = Param.Unsigned("Store set ID table size")
 

@@ -92,8 +92,10 @@ FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
       icachePort(this),
       mem(params->mem),
+      numInstsReady(params->frontEndLatency, 0),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
+      latency(params->frontEndLatency),
       width(params->frontEndWidth),
       freeRegs(params->numPhysicalRegs),
       numPhysRegs(params->numPhysicalRegs),
@@ -326,6 +328,18 @@ FrontEnd<Impl>::tick()
     if (switchedOut)
         return;
 
+    for (int insts_to_queue = numInstsReady[-latency];
+         !instBuffer.empty() && insts_to_queue;
+         --insts_to_queue)
+    {
+        DPRINTF(FE, "Transferring instruction [sn:%lli] to the feBuffer\n",
+                instBuffer.front()->seqNum);
+        feBuffer.push_back(instBuffer.front());
+        instBuffer.pop_front();
+    }
+
+    numInstsReady.advance();
+
     // @todo: Maybe I want to just have direct communication...
     if (fromCommit->doneSeqNum) {
         branchPred.update(fromCommit->doneSeqNum, 0);
@@ -339,8 +353,8 @@ FrontEnd<Impl>::tick()
         cacheBlkValid = true;
 
         status = Running;
-        if (barrierInst)
-            status = SerializeBlocked;
+//        if (barrierInst)
+//            status = SerializeBlocked;
         if (freeRegs <= 0)
             status = RenameBlocked;
         checkBE();
@@ -414,11 +428,12 @@ FrontEnd<Impl>::tick()
         // latency
         instBuffer.push_back(inst);
         ++instBufferSize;
+        numInstsReady[0]++;
         ++num_inst;
 
 #if FULL_SYSTEM
         if (inst->isQuiesce()) {
-            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
+//            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
             status = QuiescePending;
             break;
         }
@@ -572,10 +587,10 @@ FrontEnd<Impl>::processBarriers(DynInstPtr &inst)
 
         // Change status over to SerializeBlocked so that other stages know
         // what this is blocked on.
-        status = SerializeBlocked;
+//        status = SerializeBlocked;
 
-        barrierInst = inst;
-        return true;
+//        barrierInst = inst;
+//        return true;
     } else if ((inst->isStoreConditional() || inst->isSerializeAfter())
                && !inst->isSerializeHandled()) {
         DPRINTF(FE, "Serialize after instruction encountered.\n");
@@ -620,6 +635,7 @@ FrontEnd<Impl>::handleFault(Fault &fault)
     instruction->fault = fault;
     instruction->setCanIssue();
     instBuffer.push_back(instruction);
+    numInstsReady[0]++;
     ++instBufferSize;
 }
 
@@ -649,6 +665,21 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
         freeRegs+= inst->numDestRegs();
     }
 
+    while (!feBuffer.empty() &&
+           feBuffer.back()->seqNum > squash_num) {
+        DynInstPtr inst = feBuffer.back();
+
+        DPRINTF(FE, "Squashing instruction [sn:%lli] PC %#x\n",
+                inst->seqNum, inst->readPC());
+
+        inst->clearDependents();
+
+        feBuffer.pop_back();
+        --instBufferSize;
+
+        freeRegs+= inst->numDestRegs();
+    }
+
     // Copy over rename table from the back end.
     renameTable.copyFrom(backEnd->renameTable);
 
@@ -666,12 +697,12 @@ FrontEnd<Impl>::squash(const InstSeqNum &squash_num, const Addr &next_PC,
         DPRINTF(FE, "Squashing outstanding Icache access.\n");
         memReq = NULL;
     }
-
+/*
     if (status == SerializeBlocked) {
         assert(barrierInst->seqNum > squash_num);
         barrierInst = NULL;
     }
-
+*/
     // Unless this squash originated from the front end, we're probably
     // in running mode now.
     // Actually might want to make this latency dependent.
@@ -683,13 +714,22 @@ template <class Impl>
 typename Impl::DynInstPtr
 FrontEnd<Impl>::getInst()
 {
-    if (instBufferSize == 0) {
+    if (feBuffer.empty()) {
         return NULL;
     }
 
-    DynInstPtr inst = instBuffer.front();
+    DynInstPtr inst = feBuffer.front();
 
-    instBuffer.pop_front();
+    if (inst->isSerializeBefore() || inst->isIprAccess()) {
+        DPRINTF(FE, "Back end is getting a serialize before inst\n");
+        if (!backEnd->robEmpty()) {
+            DPRINTF(FE, "Rob is not empty yet, not returning inst\n");
+            return NULL;
+        }
+        inst->clearSerializeBefore();
+    }
+
+    feBuffer.pop_front();
 
     --instBufferSize;
 
@@ -784,11 +824,11 @@ FrontEnd<Impl>::updateStatus()
     }
 
     if (status == BEBlocked && !be_block) {
-        if (barrierInst) {
-            status = SerializeBlocked;
-        } else {
+//        if (barrierInst) {
+//            status = SerializeBlocked;
+//        } else {
             status = Running;
-        }
+//        }
         ret_val = true;
     }
     return ret_val;
@@ -810,6 +850,7 @@ template <class Impl>
 typename Impl::DynInstPtr
 FrontEnd<Impl>::getInstFromCacheline()
 {
+/*
     if (status == SerializeComplete) {
         DynInstPtr inst = barrierInst;
         status = Running;
@@ -817,7 +858,7 @@ FrontEnd<Impl>::getInstFromCacheline()
         inst->clearSerializeBefore();
         return inst;
     }
-
+*/
     InstSeqNum inst_seq;
     MachInst inst;
     // @todo: Fix this magic number used here to handle word offset (and
@@ -932,6 +973,7 @@ FrontEnd<Impl>::doSwitchOut()
     squash(0, 0);
     instBuffer.clear();
     instBufferSize = 0;
+    feBuffer.clear();
     status = Idle;
 }
 

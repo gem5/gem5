@@ -230,7 +230,7 @@ InstructionQueue<Impl>::regStats()
         .name(name() + ".iqSquashedNonSpecRemoved")
         .desc("Number of squashed non-spec instructions that were removed")
         .prereq(iqSquashedNonSpecRemoved);
-
+/*
     queueResDist
         .init(Num_OpClasses, 0, 99, 2)
         .name(name() + ".IQ:residence:")
@@ -240,6 +240,7 @@ InstructionQueue<Impl>::regStats()
     for (int i = 0; i < Num_OpClasses; ++i) {
         queueResDist.subname(i, opClassStrings[i]);
     }
+*/
     numIssuedDist
         .init(0,totalWidth,1)
         .name(name() + ".ISSUE:issued_per_cycle")
@@ -268,7 +269,7 @@ InstructionQueue<Impl>::regStats()
     //
     //  How long did instructions for a particular FU type wait prior to issue
     //
-
+/*
     issueDelayDist
         .init(Num_OpClasses,0,99,2)
         .name(name() + ".ISSUE:")
@@ -281,7 +282,7 @@ InstructionQueue<Impl>::regStats()
         subname << opClassStrings[i] << "_delay";
         issueDelayDist.subname(i, subname.str());
     }
-
+*/
     issueRate
         .name(name() + ".ISSUE:rate")
         .desc("Inst issue rate")
@@ -385,8 +386,16 @@ template <class Impl>
 void
 InstructionQueue<Impl>::switchOut()
 {
+/*
+    if (!instList[0].empty() || (numEntries != freeEntries) ||
+        !readyInsts[0].empty() || !nonSpecInsts.empty() || !listOrder.empty()) {
+        dumpInsts();
+//        assert(0);
+    }
+*/
     resetState();
     dependGraph.reset();
+    instsToExecute.clear();
     switchedOut = true;
     for (int i = 0; i < numThreads; ++i) {
         memDepUnit[i].switchOut();
@@ -642,9 +651,12 @@ template <class Impl>
 void
 InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
 {
+    DPRINTF(IQ, "Processing FU completion [sn:%lli]\n", inst->seqNum);
     // The CPU could have been sleeping until this op completed (*extremely*
     // long latency op).  Wake it if it was.  This may be overkill.
     if (isSwitchedOut()) {
+        DPRINTF(IQ, "FU completion not processed, IQ is switched out [sn:%lli]\n",
+                inst->seqNum);
         return;
     }
 
@@ -1036,6 +1048,10 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
             (squashed_inst->isMemRef() &&
              !squashed_inst->memOpDone)) {
 
+            DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %#x "
+                    "squashed.\n",
+                    tid, squashed_inst->seqNum, squashed_inst->readPC());
+
             // Remove the instruction from the dependency list.
             if (!squashed_inst->isNonSpeculative() &&
                 !squashed_inst->isStoreConditional() &&
@@ -1066,7 +1082,7 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
 
                     ++iqSquashedOperandsExamined;
                 }
-            } else {
+            } else if (!squashed_inst->isStoreConditional() || !squashed_inst->isCompleted()) {
                 NonSpecMapIt ns_inst_it =
                     nonSpecInsts.find(squashed_inst->seqNum);
                 assert(ns_inst_it != nonSpecInsts.end());
@@ -1093,10 +1109,6 @@ InstructionQueue<Impl>::doSquash(unsigned tid)
             count[squashed_inst->threadNumber]--;
 
             ++freeEntries;
-
-            DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %#x "
-                    "squashed.\n",
-                    tid, squashed_inst->seqNum, squashed_inst->readPC());
         }
 
         instList[tid].erase(squash_it--);

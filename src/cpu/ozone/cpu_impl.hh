@@ -50,7 +50,6 @@
 #include "arch/alpha/types.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
-//#include "base/remote_gdb.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
 #include "sim/faults.hh"
@@ -66,15 +65,6 @@
 #endif
 
 using namespace TheISA;
-
-template <class Impl>
-template<typename T>
-void
-OzoneCPU<Impl>::trace_data(T data) {
-    if (traceData) {
-        traceData->setData(data);
-    }
-}
 
 template <class Impl>
 OzoneCPU<Impl>::TickEvent::TickEvent(OzoneCPU *c, int w)
@@ -112,7 +102,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     _status = Idle;
 
     if (p->checker) {
-#if USE_CHECKER
+
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
@@ -126,6 +116,8 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
         panic("Checker enabled but not compiled in!");
 #endif
     } else {
+        // If checker is not being used, then the xcProxy points
+        // directly to the CPU's ExecContext.
         checker = NULL;
         thread.tc = &ozoneTC;
         tc = &ozoneTC;
@@ -138,7 +130,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     thread.setStatus(ThreadContext::Suspended);
 #if FULL_SYSTEM
-    /***** All thread state stuff *****/
+    // Setup thread state stuff.
     thread.cpu = this;
     thread.setTid(0);
 
@@ -187,12 +179,15 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->setBackEnd(backEnd);
     backEnd->setFrontEnd(frontEnd);
 
-    decoupledFrontEnd = p->decoupledFrontEnd;
-
     globalSeqNum = 1;
 
+#if FULL_SYSTEM
     checkInterrupts = false;
+#endif
 
+    lockFlag = 0;
+
+    // Setup rename table, initializing all values to ready.
     for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
         thread.renameTable[i] = new DynInst(this);
         thread.renameTable[i]->setResultReady();
@@ -233,8 +228,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.setVirtPort(virt_port);
 #endif
 
-    lockFlag = 0;
-
     DPRINTF(OzoneCPU, "OzoneCPU: Created Ozone cpu object.\n");
 }
 
@@ -247,6 +240,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::switchOut()
 {
+    BaseCPU::switchOut(_sampler);
     switchCount = 0;
     // Front end needs state from back end, so switch out the back end first.
     backEnd->switchOut();
@@ -257,6 +251,8 @@ template <class Impl>
 void
 OzoneCPU<Impl>::signalSwitched()
 {
+    // Only complete the switchout when both the front end and back
+    // end have signalled they are ready to switch.
     if (++switchCount == 2) {
         backEnd->doSwitchOut();
         frontEnd->doSwitchOut();
@@ -266,6 +262,17 @@ OzoneCPU<Impl>::signalSwitched()
 #endif
 
         _status = SwitchedOut;
+#ifndef NDEBUG
+        // Loop through all registers
+        for (int i = 0; i < AlphaISA::TotalNumRegs; ++i) {
+            assert(thread.renameTable[i] == frontEnd->renameTable[i]);
+
+            assert(thread.renameTable[i] == backEnd->renameTable[i]);
+
+            DPRINTF(OzoneCPU, "Checking if register %i matches.\n", i);
+        }
+#endif
+
         if (tickEvent.scheduled())
             tickEvent.squash();
     }
@@ -278,13 +285,25 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
+    thread.trapPending = false;
+    thread.inSyscall = false;
+
     backEnd->takeOverFrom();
     frontEnd->takeOverFrom();
+    frontEnd->renameTable.copyFrom(thread.renameTable);
+    backEnd->renameTable.copyFrom(thread.renameTable);
     assert(!tickEvent.scheduled());
+
+#ifndef NDEBUG
+    // Check rename table.
+    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
+        assert(thread.renameTable[i]->isResultReady());
+    }
+#endif
 
     // @todo: Fix hardcoded number
     // Clear out any old information in time buffer.
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 15; ++i) {
         comm.advance();
     }
 
@@ -316,6 +335,10 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     notIdleFraction++;
     scheduleTickEvent(delay);
     _status = Running;
+#if FULL_SYSTEM
+    if (thread.quiesceEvent && thread.quiesceEvent->scheduled())
+        thread.quiesceEvent->deschedule();
+#endif
     thread.setStatus(ThreadContext::Active);
     frontEnd->wakeFromQuiesce();
 }
@@ -393,7 +416,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::resetStats()
 {
-    startNumInst = numInst;
+//    startNumInst = numInst;
     notIdleFraction = (_status != Idle);
 }
 
@@ -441,6 +464,15 @@ OzoneCPU<Impl>::serialize(std::ostream &os)
     ozoneTC.serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // write out the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    nameOut(os, csprintf("%s.xc.0", name()));
+    temp.copyXC(thread.getXCProxy());
+    temp.serialize(os);
 }
 
 template <class Impl>
@@ -451,6 +483,15 @@ OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ENUM(_status);
     ozoneTC.unserialize(cp, csprintf("%s.tc", section));
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // read in the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    temp.copyXC(thread.getXCProxy());
+    temp.unserialize(cp, csprintf("%s.xc.0", section));
+    thread.getXCProxy()->copyArchRegs(temp.getProxy());
 }
 
 template <class Impl>
@@ -810,7 +851,9 @@ OzoneCPU<Impl>::OzoneTC::halt()
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::dumpFuncProfile()
-{ }
+{
+    thread->dumpFuncProfile();
+}
 #endif
 
 template <class Impl>
@@ -829,6 +872,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     copyArchRegs(old_context);
     setCpuId(old_context->readCpuId());
 
+    thread->inst = old_context->getInst();
 #if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
 #else
@@ -842,6 +886,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
         thread->quiesceEvent->tc = this;
     }
 
+    // Copy kernel stats pointer from old context.
     thread->kernelStats = old_context->getKernelStats();
 //    storeCondFailures = 0;
     cpu->lockFlag = false;
@@ -863,7 +908,11 @@ OzoneCPU<Impl>::OzoneTC::regStats(const std::string &name)
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::serialize(std::ostream &os)
-{ }
+{
+    // Once serialization is added, serialize the quiesce event and
+    // kernel stats.  Will need to make sure there aren't multiple
+    // things that serialize them.
+}
 
 template <class Impl>
 void
@@ -896,16 +945,14 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::profileClear()
 {
-    if (thread->profile)
-        thread->profile->clear();
+    thread->profileClear();
 }
 
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::profileSample()
 {
-    if (thread->profile)
-        thread->profile->sample(thread->profileNode, thread->profilePC);
+    thread->profileSample();
 }
 #endif
 
@@ -916,7 +963,6 @@ OzoneCPU<Impl>::OzoneTC::getThreadNum()
     return thread->readTid();
 }
 
-// Also somewhat obnoxious.  Really only used for the TLB fault.
 template <class Impl>
 TheISA::MachInst
 OzoneCPU<Impl>::OzoneTC::getInst()
@@ -934,14 +980,20 @@ OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
     cpu->frontEnd->setPC(thread->PC);
     cpu->frontEnd->setNextPC(thread->nextPC);
 
-    for (int i = 0; i < TheISA::TotalNumRegs; ++i) {
-        if (i < TheISA::FP_Base_DepTag) {
-            thread->renameTable[i]->setIntResult(tc->readIntReg(i));
-        } else if (i < (TheISA::FP_Base_DepTag + TheISA::NumFloatRegs)) {
-            int fp_idx = i - TheISA::FP_Base_DepTag;
-            thread->renameTable[i]->setDoubleResult(
-                tc->readFloatReg(fp_idx, 64));
-        }
+    // First loop through the integer registers.
+    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
+/*        DPRINTF(OzoneCPU, "Copying over register %i, had data %lli, "
+                "now has data %lli.\n",
+                i, thread->renameTable[i]->readIntResult(),
+                tc->readIntReg(i));
+*/
+        thread->renameTable[i]->setIntResult(tc->readIntReg(i));
+    }
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+        int fp_idx = i + TheISA::FP_Base_DepTag;
+        thread->renameTable[fp_idx]->setIntResult(tc->readFloatRegBits(i));
     }
 
 #if !FULL_SYSTEM

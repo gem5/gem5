@@ -102,6 +102,7 @@ class CheckerCPU : public BaseCPU
         Process *process;
 #endif
         bool exitOnError;
+        bool updateOnError;
         bool warnOnlyOnLoadError;
     };
 
@@ -148,7 +149,7 @@ class CheckerCPU : public BaseCPU
 
     union Result {
         uint64_t integer;
-        float fp;
+//        float fp;
         double dbl;
     };
 
@@ -269,7 +270,7 @@ class CheckerCPU : public BaseCPU
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val);
-        result.fp = val;
+        result.dbl = (double)val;
     }
 
     void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val,
@@ -318,7 +319,7 @@ class CheckerCPU : public BaseCPU
         return thread->setMiscRegWithEffect(misc_reg, val);
     }
 
-    void recordPCChange(uint64_t val) { changedPC = true; }
+    void recordPCChange(uint64_t val) { changedPC = true; newPC = val; }
     void recordNextPCChange(uint64_t val) { changedNextPC = true; }
 
     bool translateInstReq(Request *req);
@@ -360,6 +361,7 @@ class CheckerCPU : public BaseCPU
     uint64_t newPC;
     bool changedNextPC;
     bool exitOnError;
+    bool updateOnError;
     bool warnOnlyOnLoadError;
 
     InstSeqNum youngestSN;
@@ -376,7 +378,7 @@ class Checker : public CheckerCPU
 {
   public:
     Checker(Params *p)
-        : CheckerCPU(p)
+        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
     { }
 
     void switchOut();
@@ -393,11 +395,18 @@ class Checker : public CheckerCPU
   private:
     void handleError(DynInstPtr &inst)
     {
-        if (exitOnError)
+        if (exitOnError) {
             dumpAndExit(inst);
+        } else if (updateOnError) {
+            updateThisCycle = true;
+        }
     }
 
     void dumpAndExit(DynInstPtr &inst);
+
+    bool updateThisCycle;
+
+    DynInstPtr unverifiedInst;
 
     std::list<DynInstPtr> instList;
     typedef typename std::list<DynInstPtr>::iterator InstListIt;

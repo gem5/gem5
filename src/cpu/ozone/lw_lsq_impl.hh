@@ -132,7 +132,7 @@ OzoneLWLSQ<Impl>::completeDataAccess(PacketPtr pkt)
 template <class Impl>
 OzoneLWLSQ<Impl>::OzoneLWLSQ()
     : switchedOut(false), dcachePort(this), loads(0), stores(0),
-      storesToWB(0), stalled(false), isStoreBlocked(false),
+      storesToWB(0), storesInFlight(0), stalled(false), isStoreBlocked(false),
       isLoadBlocked(false), loadBlockedHandled(false)
 {
 }
@@ -173,6 +173,11 @@ OzoneLWLSQ<Impl>::name() const
 
 template<class Impl>
 void
+OzoneLWLSQ<Impl>::regStats()
+{
+    lsqMemOrderViolation
+        .name(name() + ".memOrderViolation")
+        .desc("Number of memory ordering violations");
 OzoneLWLSQ<Impl>::setCPU(OzoneCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
@@ -321,7 +326,7 @@ unsigned
 OzoneLWLSQ<Impl>::numFreeEntries()
 {
     unsigned free_lq_entries = LQEntries - loads;
-    unsigned free_sq_entries = SQEntries - stores;
+    unsigned free_sq_entries = SQEntries - (stores + storesInFlight);
 
     // Both the LQ and SQ entries have an extra dummy entry to differentiate
     // empty/full conditions.  Subtract 1 from the free entries.
@@ -385,6 +390,9 @@ OzoneLWLSQ<Impl>::executeLoad(DynInstPtr &inst)
     // Actually probably want the oldest faulting load
     if (load_fault != NoFault) {
         DPRINTF(OzoneLSQ, "Load [sn:%lli] has a fault\n", inst->seqNum);
+        if (!(inst->req->flags & UNCACHEABLE && !inst->isAtCommit())) {
+            inst->setExecuted();
+        }
         // Maybe just set it as can commit here, although that might cause
         // some other problems with sending traps to the ROB too quickly.
         be->instToCommit(inst);
@@ -461,6 +469,7 @@ OzoneLWLSQ<Impl>::executeStore(DynInstPtr &store_inst)
                 // A load incorrectly passed this store.  Squash and refetch.
                 // For now return a fault to show that it was unsuccessful.
                 memDepViolator = (*lq_it);
+                ++lsqMemOrderViolation;
 
                 return TheISA::genMachineCheckFault();
             }
@@ -553,8 +562,8 @@ OzoneLWLSQ<Impl>::writebackStores()
 
         if ((*sq_it).size == 0 && !(*sq_it).completed) {
             sq_it--;
-            completeStore(inst->sqIdx);
-
+            removeStore(inst->sqIdx);
+            completeStore(inst);
             continue;
         }
 
@@ -626,6 +635,8 @@ OzoneLWLSQ<Impl>::writebackStores()
                 inst->sqIdx,inst->readPC(),
                 req->paddr, *(req->data),
                 inst->seqNum);
+        DPRINTF(OzoneLSQ, "StoresInFlight: %i\n",
+                storesInFlight + 1);
 
         if (dcacheInterface) {
             assert(!req->completionEvent);
@@ -687,6 +698,8 @@ OzoneLWLSQ<Impl>::writebackStores()
                 }
                 sq_it--;
             }
+            ++storesInFlight;
+//            removeStore(inst->sqIdx);
         } else {
             panic("Must HAVE DCACHE!!!!!\n");
         }
@@ -704,7 +717,7 @@ void
 OzoneLWLSQ<Impl>::squash(const InstSeqNum &squashed_num)
 {
     DPRINTF(OzoneLSQ, "Squashing until [sn:%lli]!"
-            "(Loads:%i Stores:%i)\n",squashed_num,loads,stores);
+            "(Loads:%i Stores:%i)\n",squashed_num,loads,stores+storesInFlight);
 
 
     LQIt lq_it = loadQueue.begin();
@@ -881,7 +894,7 @@ OzoneLWLSQ<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
 
 template <class Impl>
 void
-OzoneLWLSQ<Impl>::completeStore(int store_idx)
+OzoneLWLSQ<Impl>::removeStore(int store_idx)
 {
     SQHashIt sq_hash_it = SQItHash.find(store_idx);
     assert(sq_hash_it != SQItHash.end());
@@ -890,8 +903,6 @@ OzoneLWLSQ<Impl>::completeStore(int store_idx)
     assert((*sq_it).inst);
     (*sq_it).completed = true;
     DynInstPtr inst = (*sq_it).inst;
-
-    --storesToWB;
 
     if (isStalled() &&
         inst->seqNum == stallingStoreIsn) {
@@ -910,6 +921,13 @@ OzoneLWLSQ<Impl>::completeStore(int store_idx)
     SQItHash.erase(sq_hash_it);
     SQIndices.push(inst->sqIdx);
     storeQueue.erase(sq_it);
+}
+
+template <class Impl>
+void
+OzoneLWLSQ<Impl>::completeStore(DynInstPtr &inst)
+{
+    --storesToWB;
     --stores;
 
     inst->setCompleted();
@@ -935,9 +953,14 @@ OzoneLWLSQ<Impl>::switchOut()
     switchedOut = true;
 
     // Clear the queue to free up resources
+    assert(stores == 0);
+    assert(storeQueue.empty());
+    assert(loads == 0);
+    assert(loadQueue.empty());
+    assert(storesInFlight == 0);
     storeQueue.clear();
     loadQueue.clear();
-    loads = stores = storesToWB = 0;
+    loads = stores = storesToWB = storesInFlight = 0;
 }
 
 template <class Impl>

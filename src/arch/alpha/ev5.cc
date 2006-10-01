@@ -554,6 +554,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
     return NoFault;
 }
 
+
 void
 AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
 {
@@ -561,6 +562,7 @@ AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
         dest->setMiscReg(i, src->readMiscReg(i));
     }
 }
+
 
 /**
  * Check for special simulator handling of specific PAL calls.

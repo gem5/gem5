@@ -407,19 +407,8 @@ class LSQUnit {
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
-
     /** Total number of loads forwaded from LSQ stores. */
     Stats::Scalar<> lsqForwLoads;
-
-    /** Total number of loads ignored due to invalid addresses. */
-    Stats::Scalar<> invAddrLoads;
-
-    /** Total number of squashed loads. */
-    Stats::Scalar<> lsqSquashedLoads;
-
-    /** Total number of responses from the memory system that are
-     * ignored due to the instruction already being squashed. */
-    Stats::Scalar<> lsqIgnoredResponses;
 
     /** Total number of squashed stores. */
     Stats::Scalar<> lsqSquashedStores;

@@ -159,6 +159,9 @@ class TournamentBP
     /** Size of the local predictor. */
     unsigned localPredictorSize;
 
+    /** Mask to get the proper index bits into the predictor. */
+    unsigned localPredictorMask;
+
     /** Number of bits of the local predictor's counters. */
     unsigned localCtrBits;
 

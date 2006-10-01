@@ -46,6 +46,23 @@ class ThreadContext;
 class System;
 class Port;
 
+class CPUProgressEvent : public Event
+{
+  protected:
+    Tick interval;
+    Counter lastNumInst;
+    BaseCPU *cpu;
+
+  public:
+    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu)
+        : Event(q, Event::Stat_Event_Pri), interval(ival), lastNumInst(0), cpu(_cpu)
+    { schedule(curTick + interval); }
+
+    void process();
+
+    virtual const char *description();
+};
+
 class BaseCPU : public MemObject
 {
   protected:
@@ -53,6 +70,7 @@ class BaseCPU : public MemObject
     Tick clock;
 
   public:
+//    Tick currentTick;
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick cycles(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
@@ -120,6 +138,7 @@ class BaseCPU : public MemObject
         Counter max_insts_all_threads;
         Counter max_loads_any_thread;
         Counter max_loads_all_threads;
+        Counter stats_reset_inst;
         Tick clock;
         bool functionTrace;
         Tick functionTraceStart;
@@ -128,6 +147,7 @@ class BaseCPU : public MemObject
         int cpu_id;
         Tick profile;
 #endif
+        Tick progress_interval;
         BaseCPU *checker;
 
         Params();

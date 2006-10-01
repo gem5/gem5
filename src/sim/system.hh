@@ -182,6 +182,7 @@ class System : public SimObject
 
         std::string kernel_path;
         std::string readfile;
+        std::string symbolfile;
 #endif
     };
 

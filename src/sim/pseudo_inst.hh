@@ -51,6 +51,7 @@ namespace AlphaPseudo
     void ivle(ThreadContext *tc);
     void m5exit(ThreadContext *tc, Tick delay);
     void m5exit_old(ThreadContext *tc);
+    void loadsymbol(ThreadContext *xc);
     void resetstats(ThreadContext *tc, Tick delay, Tick period);
     void dumpstats(ThreadContext *tc, Tick delay, Tick period);
     void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);

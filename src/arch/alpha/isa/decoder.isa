@@ -779,10 +779,10 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
                 AlphaPseudo::quiesceCycles(xc->tcBase(), R16);
-            }}, IsNonSpeculative, IsQuiesce);
+            }}, IsNonSpeculative, IsQuiesce, IsUnverifiable);
             0x04: quiesceTime({{
                 R0 = AlphaPseudo::quiesceTime(xc->tcBase());
-            }}, IsNonSpeculative);
+            }}, IsNonSpeculative, IsUnverifiable);
             0x10: ivlb({{
                 AlphaPseudo::ivlb(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
@@ -794,6 +794,9 @@ decode OPCODE default Unknown::unknown() {
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
                 AlphaPseudo::m5exit(xc->tcBase(), R16);
+            }}, No_OpClass, IsNonSpeculative);
+            0x31: loadsymbol({{
+                AlphaPseudo::loadsymbol(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{ Ra = xc->tcBase()->getCpuPtr()->system->init_param; }});
             0x40: resetstats({{

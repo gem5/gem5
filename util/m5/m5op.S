@@ -41,6 +41,7 @@
 #define exit_old_func 0x20 // deprectated!
 #define exit_func 0x21
 #define initparam_func 0x30
+#define loadsymbol_func 0x31
 #define resetstats_func 0x40
 #define dumpstats_func 0x41
 #define dumprststats_func 0x42
@@ -77,6 +78,7 @@ func:
 #define IVLE(reg) INST(m5_op, reg, 0, ivle_func)
 #define M5EXIT(reg) INST(m5_op, reg, 0, exit_func)
 #define INITPARAM(reg) INST(m5_op, reg, 0, initparam_func)
+#define LOADSYMBOL(reg) INST(m5_op, reg, 0, loadsymbol_func)
 #define RESET_STATS(r1, r2) INST(m5_op, r1, r2, resetstats_func)
 #define DUMP_STATS(r1, r2) INST(m5_op, r1, r2, dumpstats_func)
 #define DUMPRST_STATS(r1, r2) INST(m5_op, r1, r2, dumprststats_func)
@@ -145,6 +147,12 @@ LEAF(m5_initparam)
         INITPARAM(0)
         RET
 END(m5_initparam)
+
+        .align 4
+LEAF(m5_loadsymbol)
+        LOADSYMBOL(0)
+        RET
+END(m5_loadsymbol)
 
         .align 4
 LEAF(m5_reset_stats)

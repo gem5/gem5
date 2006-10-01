@@ -33,6 +33,7 @@
 #include "config/use_checker.hh"
 
 #if FULL_SYSTEM
+#include "cpu/quiesce_event.hh"
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
@@ -793,6 +794,8 @@ template <class Impl>
 unsigned int
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
+    DPRINTF(O3CPU, "Switching out\n");
+    BaseCPU::switchOut(_sampler);
     drainCount = 0;
     fetch.drain();
     decode.drain();
@@ -863,6 +866,7 @@ FullO3CPU<Impl>::switchOut()
 {
     fetch.switchOut();
     rename.switchOut();
+    iew.switchOut();
     commit.switchOut();
     instList.clear();
     while (!removeList.empty()) {
@@ -928,6 +932,45 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     }
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::serialize(std::ostream &os)
+{
+    BaseCPU::serialize(os);
+    nameOut(os, csprintf("%s.tickEvent", name()));
+    tickEvent.serialize(os);
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // write out the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    for (int i = 0; i < thread.size(); i++) {
+        nameOut(os, csprintf("%s.xc.%i", name(), i));
+        temp.copyXC(thread[i]->getXCProxy());
+        temp.serialize(os);
+    }
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
+{
+    BaseCPU::unserialize(cp, section);
+    tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
+
+    // Use SimpleThread's ability to checkpoint to make it easier to
+    // read in the registers.  Also make this static so it doesn't
+    // get instantiated multiple times (causes a panic in statistics).
+    static CPUExecContext temp;
+
+    for (int i = 0; i < thread.size(); i++) {
+        temp.copyXC(thread[i]->getXCProxy());
+        temp.unserialize(cp, csprintf("%s.xc.%i", section, i));
+        thread[i]->getXCProxy()->copyArchRegs(temp.getProxy());
+    }
 }
 
 template <class Impl>

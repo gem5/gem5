@@ -31,8 +31,11 @@
 #ifndef __CPU_O3_THREAD_STATE_HH__
 #define __CPU_O3_THREAD_STATE_HH__
 
+#include "base/callback.hh"
+#include "base/output.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "sim/sim_exit.hh"
 
 class Event;
 class Process;
@@ -75,8 +78,22 @@ struct O3ThreadState : public ThreadState {
 #if FULL_SYSTEM
     O3ThreadState(O3CPU *_cpu, int _thread_num)
         : ThreadState(-1, _thread_num),
-          inSyscall(0), trapPending(0)
-    { }
+          cpu(_cpu), inSyscall(0), trapPending(0)
+    {
+        if (cpu->params->profile) {
+            profile = new FunctionProfile(cpu->params->system->kernelSymtab);
+            Callback *cb =
+                new MakeCallback<O3ThreadState,
+                &O3ThreadState::dumpFuncProfile>(this);
+            registerExitCallback(cb);
+        }
+
+        // let's fill with a dummy node for now so we don't get a segfault
+        // on the first cycle when there's no node available.
+        static ProfileNode dummyNode;
+        profileNode = &dummyNode;
+        profilePC = 3;
+    }
 #else
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process, int _asid,
                   MemObject *mem)
@@ -94,6 +111,14 @@ struct O3ThreadState : public ThreadState {
 #if !FULL_SYSTEM
     /** Handles the syscall. */
     void syscall(int64_t callnum) { process->syscall(callnum, tc); }
+#endif
+
+#if FULL_SYSTEM
+    void dumpFuncProfile()
+    {
+        std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+        profile->dump(xcProxy, *os);
+    }
 #endif
 };
 

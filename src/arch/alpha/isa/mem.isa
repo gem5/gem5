@@ -528,7 +528,7 @@ def template MiscInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        panic("Misc instruction does not support split access method!");
+        warn("Misc instruction does not support split access method!");
         return NoFault;
     }
 }};
@@ -539,7 +539,7 @@ def template MiscCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        panic("Misc instruction does not support split access method!");
+        warn("Misc instruction does not support split access method!");
 
         return NoFault;
     }

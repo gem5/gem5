@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# /etc/init.d/rcS
+#
+
+echo -n "Mounting empty disk..."
+mkdir /tmp-space
+/bin/mount /dev/hdb1 /tmp-space
+chmod a+rwx /tmp-space
+echo "done."
+
+/bin/bonnie++ -u 99 -s 700 -r 0 -n 0 -f -F -d /tmp-space
+m5 exit

@@ -48,6 +48,9 @@
 
 #include "base/trace.hh"
 
+// Hack
+#include "sim/stat_control.hh"
+
 using namespace std;
 
 vector<BaseCPU *> BaseCPU::cpuList;
@@ -56,6 +59,30 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // careful to only use it once all the CPUs that you care about have
 // been initialized
 int maxThreadsPerCPU = 1;
+
+void
+CPUProgressEvent::process()
+{
+    Counter temp = cpu->totalInstructions();
+#ifndef NDEBUG
+    double ipc = double(temp - lastNumInst) / (interval / cpu->cycles(1));
+
+    DPRINTFN("%s progress event, instructions committed: %lli, IPC: %0.8d\n",
+             cpu->name(), temp - lastNumInst, ipc);
+    ipc = 0.0;
+#else
+    cprintf("%lli: %s progress event, instructions committed: %lli\n",
+            curTick, cpu->name(), temp - lastNumInst);
+#endif
+    lastNumInst = temp;
+    schedule(curTick + interval);
+}
+
+const char *
+CPUProgressEvent::description()
+{
+    return "CPU Progress event";
+}
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
@@ -67,6 +94,7 @@ BaseCPU::BaseCPU(Params *p)
       number_of_threads(p->numberOfThreads), system(p->system)
 #endif
 {
+//    currentTick = curTick;
     DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
 
     // add self to global list of CPUs
@@ -128,6 +156,12 @@ BaseCPU::BaseCPU(Params *p)
                 p->max_loads_all_threads, *counter);
     }
 
+    if (p->stats_reset_inst != 0) {
+        Stats::SetupEvent(Stats::Reset, p->stats_reset_inst, 0, comInstEventQueue[0]);
+        cprintf("Stats reset event scheduled for %lli insts\n",
+                p->stats_reset_inst);
+    }
+
 #if FULL_SYSTEM
     memset(interrupts, 0, sizeof(interrupts));
     intstatus = 0;
@@ -153,7 +187,6 @@ BaseCPU::BaseCPU(Params *p)
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
 #endif
-
 }
 
 BaseCPU::Params::Params()
@@ -188,6 +221,11 @@ BaseCPU::startup()
     if (!params->deferRegistration && profileEvent)
         profileEvent->schedule(curTick);
 #endif
+
+    if (params->progress_interval) {
+        new CPUProgressEvent(&mainEventQueue, params->progress_interval,
+                             this);
+    }
 }
 
 
@@ -238,7 +276,11 @@ BaseCPU::registerThreadContexts()
 void
 BaseCPU::switchOut()
 {
-    panic("This CPU doesn't support sampling!");
+//    panic("This CPU doesn't support sampling!");
+#if FULL_SYSTEM
+    if (profileEvent && profileEvent->scheduled())
+        profileEvent->deschedule();
+#endif
 }
 
 void
@@ -261,18 +303,22 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
         assert(newTC->getProcessPtr() == oldTC->getProcessPtr());
         newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
 #endif
+
+//    TheISA::compareXCs(oldXC, newXC);
     }
 
 #if FULL_SYSTEM
     for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
         interrupts[i] = oldCPU->interrupts[i];
     intstatus = oldCPU->intstatus;
+    checkInterrupts = oldCPU->checkInterrupts;
 
     for (int i = 0; i < threadContexts.size(); ++i)
         threadContexts[i]->profileClear();
 
-    if (profileEvent)
-        profileEvent->schedule(curTick);
+    // The Sampler must take care of this!
+//    if (profileEvent)
+//        profileEvent->schedule(curTick);
 #endif
 }
 

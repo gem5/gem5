@@ -162,6 +162,11 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
     if (quiesceEvent) {
         quiesceEvent->tc = tc;
     }
+
+    Kernel::Statistics *stats = oldContext->getKernelStats();
+    if (stats) {
+        kernelStats = stats;
+    }
 #endif
 
     storeCondFailures = 0;

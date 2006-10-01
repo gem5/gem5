@@ -94,6 +94,8 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         }
     }
 
+    unverifiedInst = inst;
+
     // Try to check all instructions that are completed, ending if we
     // run out of instructions to check or if an instruction is not
     // yet completed.
@@ -171,7 +173,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
                 thread->setPC(thread->readNextPC());
                 thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 
-                return;
+                break;
             } else {
                 // The instruction is carrying an ITB fault.  Handle
                 // the fault and see if our results match the CPU on
@@ -220,7 +222,8 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 
             thread->funcExeInst++;
 
-            fault = curStaticInst->execute(this, NULL);
+            if (!inst->isUnverifiable())
+                fault = curStaticInst->execute(this, NULL);
 
             // Checks to make sure instrution results are correct.
             validateExecution(inst);
@@ -289,6 +292,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
             break;
         }
     }
+    unverifiedInst = NULL;
 }
 
 template <class DynInstPtr>
@@ -395,6 +399,23 @@ template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateState()
 {
+    if (updateThisCycle) {
+        warn("%lli: Instruction PC %#x results didn't match up, copying all "
+             "registers from main CPU", curTick, unverifiedInst->readPC());
+        // Heavy-weight copying of all registers
+        cpuXC->copyArchRegs(unverifiedInst->xcBase());
+        // Also advance the PC.  Hopefully no PC-based events happened.
+#if THE_ISA != MIPS_ISA
+        // go to the next instruction
+        cpuXC->setPC(cpuXC->readNextPC());
+        cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+#else
+        // go to the next instruction
+        cpuXC->setPC(cpuXC->readNextPC());
+        cpuXC->setNextPC(cpuXC->readNextNPC());
+        cpuXC->setNextNPC(cpuXC->readNextNPC() + sizeof(MachInst));
+#endif
+        updateThisCycle = false;
 }
 
 template <class DynInstPtr>

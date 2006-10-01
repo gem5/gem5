@@ -80,7 +80,7 @@ class LWBackEnd
     TimeBuffer<IssueToExec> i2e;
     typename TimeBuffer<IssueToExec>::wire instsToExecute;
     TimeBuffer<ExecToCommit> e2c;
-    TimeBuffer<Writeback> numInstsToWB;
+    TimeBuffer<int> numInstsToWB;
 
     TimeBuffer<CommStruct> *comm;
     typename TimeBuffer<CommStruct>::wire toIEW;
@@ -139,7 +139,7 @@ class LWBackEnd
 
     Tick lastCommitCycle;
 
-    bool robEmpty() { return instList.empty(); }
+    bool robEmpty() { return numInsts == 0; }
 
     bool isFull() { return numInsts >= numROBEntries; }
     bool isBlocked() { return status == Blocked || dispatchStatus == Blocked; }
@@ -194,6 +194,7 @@ class LWBackEnd
     }
 
     void instToCommit(DynInstPtr &inst);
+    void readyInstsForCommit();
 
     void switchOut();
     void doSwitchOut();
@@ -255,12 +256,13 @@ class LWBackEnd
 
     RenameTable<Impl> renameTable;
   private:
+    int latency;
+
     // General back end width. Used if the more specific isn't given.
     int width;
 
     // Dispatch width.
     int dispatchWidth;
-    int numDispatchEntries;
     int dispatchSize;
 
     int waitingInsts;
@@ -285,6 +287,7 @@ class LWBackEnd
 
     int numROBEntries;
     int numInsts;
+    bool lsqLimits;
 
     std::set<InstSeqNum> waitingMemOps;
     typedef std::set<InstSeqNum>::iterator MemIt;
@@ -294,9 +297,6 @@ class LWBackEnd
     bool squashPending;
     InstSeqNum squashSeqNum;
     Addr squashNextPC;
-
-    Fault faultFromFetch;
-    bool fetchHasFault;
 
     bool switchedOut;
     bool switchPending;
@@ -321,8 +321,6 @@ class LWBackEnd
     std::list<DynInstPtr> replayList;
     std::list<DynInstPtr> writeback;
 
-    int latency;
-
     int squashLatency;
 
     bool exactFullStall;
@@ -331,37 +329,39 @@ class LWBackEnd
 /*    Stats::Scalar<> dcacheStallCycles;
       Counter lastDcacheStall;
 */
-    Stats::Vector<> rob_cap_events;
-    Stats::Vector<> rob_cap_inst_count;
-    Stats::Vector<> iq_cap_events;
-    Stats::Vector<> iq_cap_inst_count;
+    Stats::Vector<> robCapEvents;
+    Stats::Vector<> robCapInstCount;
+    Stats::Vector<> iqCapEvents;
+    Stats::Vector<> iqCapInstCount;
     // total number of instructions executed
-    Stats::Vector<> exe_inst;
-    Stats::Vector<> exe_swp;
-    Stats::Vector<> exe_nop;
-    Stats::Vector<> exe_refs;
-    Stats::Vector<> exe_loads;
-    Stats::Vector<> exe_branches;
+    Stats::Vector<> exeInst;
+    Stats::Vector<> exeSwp;
+    Stats::Vector<> exeNop;
+    Stats::Vector<> exeRefs;
+    Stats::Vector<> exeLoads;
+    Stats::Vector<> exeBranches;
 
-    Stats::Vector<> issued_ops;
+    Stats::Vector<> issuedOps;
 
     // total number of loads forwaded from LSQ stores
-    Stats::Vector<> lsq_forw_loads;
+    Stats::Vector<> lsqForwLoads;
 
     // total number of loads ignored due to invalid addresses
-    Stats::Vector<> inv_addr_loads;
+    Stats::Vector<> invAddrLoads;
 
     // total number of software prefetches ignored due to invalid addresses
-    Stats::Vector<> inv_addr_swpfs;
+    Stats::Vector<> invAddrSwpfs;
     // ready loads blocked due to memory disambiguation
-    Stats::Vector<> lsq_blocked_loads;
+    Stats::Vector<> lsqBlockedLoads;
 
     Stats::Scalar<> lsqInversion;
 
-    Stats::Vector<> n_issued_dist;
-    Stats::VectorDistribution<> issue_delay_dist;
+    Stats::Vector<> nIssuedDist;
+/*
+    Stats::VectorDistribution<> issueDelayDist;
 
-    Stats::VectorDistribution<> queue_res_dist;
+    Stats::VectorDistribution<> queueResDist;
+*/
 /*
     Stats::Vector<> stat_fu_busy;
     Stats::Vector2d<> stat_fuBusy;
@@ -379,37 +379,37 @@ class LWBackEnd
     Stats::Formula commit_ipb;
     Stats::Formula lsq_inv_rate;
 */
-    Stats::Vector<> writeback_count;
-    Stats::Vector<> producer_inst;
-    Stats::Vector<> consumer_inst;
-    Stats::Vector<> wb_penalized;
+    Stats::Vector<> writebackCount;
+    Stats::Vector<> producerInst;
+    Stats::Vector<> consumerInst;
+    Stats::Vector<> wbPenalized;
 
-    Stats::Formula wb_rate;
-    Stats::Formula wb_fanout;
-    Stats::Formula wb_penalized_rate;
+    Stats::Formula wbRate;
+    Stats::Formula wbFanout;
+    Stats::Formula wbPenalizedRate;
 
     // total number of instructions committed
-    Stats::Vector<> stat_com_inst;
-    Stats::Vector<> stat_com_swp;
-    Stats::Vector<> stat_com_refs;
-    Stats::Vector<> stat_com_loads;
-    Stats::Vector<> stat_com_membars;
-    Stats::Vector<> stat_com_branches;
+    Stats::Vector<> statComInst;
+    Stats::Vector<> statComSwp;
+    Stats::Vector<> statComRefs;
+    Stats::Vector<> statComLoads;
+    Stats::Vector<> statComMembars;
+    Stats::Vector<> statComBranches;
 
-    Stats::Distribution<> n_committed_dist;
+    Stats::Distribution<> nCommittedDist;
 
-    Stats::Scalar<> commit_eligible_samples;
-    Stats::Vector<> commit_eligible;
+    Stats::Scalar<> commitEligibleSamples;
+    Stats::Vector<> commitEligible;
 
     Stats::Vector<> squashedInsts;
     Stats::Vector<> ROBSquashedInsts;
 
-    Stats::Scalar<> ROB_fcount;
-    Stats::Formula ROB_full_rate;
+    Stats::Scalar<> ROBFcount;
+    Stats::Formula ROBFullRate;
 
-    Stats::Vector<>  ROB_count;	 // cumulative ROB occupancy
-    Stats::Formula ROB_occ_rate;
-    Stats::VectorDistribution<> ROB_occ_dist;
+    Stats::Vector<>  ROBCount;	 // cumulative ROB occupancy
+    Stats::Formula ROBOccRate;
+//    Stats::VectorDistribution<> ROBOccDist;
   public:
     void dumpInsts();
 

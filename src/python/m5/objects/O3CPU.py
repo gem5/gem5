@@ -9,6 +9,8 @@ class DerivO3CPU(BaseCPU):
     activity = Param.Unsigned(0, "Initial count")
     numThreads = Param.Unsigned(1, "number of HW thread contexts")
 
+    if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
     if build_env['USE_CHECKER']:
         if not build_env['FULL_SYSTEM']:
             checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
