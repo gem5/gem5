@@ -416,7 +416,7 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
-        if (!(inst->req->flags & UNCACHEABLE) || inst->isAtCommit()) {
+        if (!(inst->req->getFlags() & UNCACHEABLE) || inst->isAtCommit()) {
             inst->setExecuted();
         }
         iewStage->instToCommit(inst);
@@ -832,6 +832,7 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // A bit conservative because a store completion may not free up entries,
     // but hopefully avoids two store completions in one cycle from making
     // the CPU tick twice.
+    cpu->wakeCPU();
     cpu->activityThisCycle();
 
     if (store_idx == storeHead) {

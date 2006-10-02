@@ -60,6 +60,15 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
+CPUProgressEvent::CPUProgressEvent(EventQueue *q, Tick ival,
+                                   BaseCPU *_cpu)
+    : Event(q, Event::Stat_Event_Pri), interval(ival),
+      lastNumInst(0), cpu(_cpu)
+{
+    if (interval)
+        schedule(curTick + interval);
+}
+
 void
 CPUProgressEvent::process()
 {
@@ -154,12 +163,6 @@ BaseCPU::BaseCPU(Params *p)
             new CountedExitEvent(comLoadEventQueue[i],
                 "all threads reached the max load count",
                 p->max_loads_all_threads, *counter);
-    }
-
-    if (p->stats_reset_inst != 0) {
-        Stats::SetupEvent(Stats::Reset, p->stats_reset_inst, 0, comInstEventQueue[0]);
-        cprintf("Stats reset event scheduled for %lli insts\n",
-                p->stats_reset_inst);
     }
 
 #if FULL_SYSTEM

@@ -121,7 +121,7 @@ OzoneLWLSQ<Impl>::completeDataAccess(PacketPtr pkt)
         }
 
         if (inst->isStore()) {
-            completeStore(state->idx);
+            completeStore(inst);
         }
     }
 
@@ -178,6 +178,10 @@ OzoneLWLSQ<Impl>::regStats()
     lsqMemOrderViolation
         .name(name() + ".memOrderViolation")
         .desc("Number of memory ordering violations");
+}
+
+template<class Impl>
+void
 OzoneLWLSQ<Impl>::setCPU(OzoneCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
@@ -390,7 +394,7 @@ OzoneLWLSQ<Impl>::executeLoad(DynInstPtr &inst)
     // Actually probably want the oldest faulting load
     if (load_fault != NoFault) {
         DPRINTF(OzoneLSQ, "Load [sn:%lli] has a fault\n", inst->seqNum);
-        if (!(inst->req->flags & UNCACHEABLE && !inst->isAtCommit())) {
+        if (!(inst->req->getFlags() & UNCACHEABLE && !inst->isAtCommit())) {
             inst->setExecuted();
         }
         // Maybe just set it as can commit here, although that might cause

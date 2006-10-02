@@ -33,6 +33,7 @@
 
 #include <set>
 
+#include "arch/regfile.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
@@ -257,8 +258,8 @@ class OzoneCPU : public BaseCPU
         void setFuncExeInst(Counter new_val)
         { thread->funcExeInst = new_val; }
 #endif
-        void changeRegFileContext(TheISA::RegFile::ContextParam param,
-                                          TheISA::RegFile::ContextVal val)
+        void changeRegFileContext(TheISA::RegContextParam param,
+                                          TheISA::RegContextVal val)
         { panic("Not supported on Alpha!"); }
     };
 

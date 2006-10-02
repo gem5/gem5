@@ -35,6 +35,7 @@
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
 #include "cpu/base.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/cpu.hh"
@@ -52,6 +53,7 @@
 #include "base/callback.hh"
 #include "cpu/profile.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/physical.hh"
 #include "sim/faults.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -102,7 +104,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     _status = Idle;
 
     if (p->checker) {
-
+#if USE_CHECKER
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
         checker->setMemory(mem);
@@ -240,7 +242,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::switchOut()
 {
-    BaseCPU::switchOut(_sampler);
+    BaseCPU::switchOut();
     switchCount = 0;
     // Front end needs state from back end, so switch out the back end first.
     backEnd->switchOut();
@@ -468,10 +470,10 @@ OzoneCPU<Impl>::serialize(std::ostream &os)
     // Use SimpleThread's ability to checkpoint to make it easier to
     // write out the registers.  Also make this static so it doesn't
     // get instantiated multiple times (causes a panic in statistics).
-    static CPUExecContext temp;
+    static SimpleThread temp;
 
     nameOut(os, csprintf("%s.xc.0", name()));
-    temp.copyXC(thread.getXCProxy());
+    temp.copyTC(thread.getTC());
     temp.serialize(os);
 }
 
@@ -487,11 +489,11 @@ OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
     // Use SimpleThread's ability to checkpoint to make it easier to
     // read in the registers.  Also make this static so it doesn't
     // get instantiated multiple times (causes a panic in statistics).
-    static CPUExecContext temp;
+    static SimpleThread temp;
 
-    temp.copyXC(thread.getXCProxy());
+    temp.copyTC(thread.getTC());
     temp.unserialize(cp, csprintf("%s.xc.0", section));
-    thread.getXCProxy()->copyArchRegs(temp.getProxy());
+    thread.getTC()->copyArchRegs(temp.getTC());
 }
 
 template <class Impl>
@@ -746,11 +748,13 @@ OzoneCPU<Impl>::processInterrupts()
     if (ipl && ipl > thread.readMiscReg(IPR_IPLR)) {
         thread.setMiscReg(IPR_ISR, summary);
         thread.setMiscReg(IPR_INTID, ipl);
+#if USE_CHECKER
         // @todo: Make this more transparent
         if (checker) {
             checker->threadBase()->setMiscReg(IPR_ISR, summary);
             checker->threadBase()->setMiscReg(IPR_INTID, ipl);
         }
+#endif
         Fault fault = new InterruptFault;
         fault->invoke(thread.getTC());
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
@@ -872,7 +876,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     copyArchRegs(old_context);
     setCpuId(old_context->readCpuId());
 
-    thread->inst = old_context->getInst();
+    thread->setInst(old_context->getInst());
 #if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
 #else

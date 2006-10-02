@@ -195,20 +195,6 @@ struct ThreadState {
 
 #endif
 
-#if FULL_SYSTEM
-    void profileClear()
-    {
-        if (profile)
-            profile->clear();
-    }
-
-    void profileSample()
-    {
-        if (profile)
-            profile->sample(profileNode, profilePC);
-    }
-#endif
-
     /** Current instruction the thread is committing.  Only set and
      * used for DTB faults currently.
      */

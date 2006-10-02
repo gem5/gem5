@@ -403,19 +403,20 @@ Checker<DynInstPtr>::validateState()
         warn("%lli: Instruction PC %#x results didn't match up, copying all "
              "registers from main CPU", curTick, unverifiedInst->readPC());
         // Heavy-weight copying of all registers
-        cpuXC->copyArchRegs(unverifiedInst->xcBase());
+        thread->copyArchRegs(unverifiedInst->tcBase());
         // Also advance the PC.  Hopefully no PC-based events happened.
 #if THE_ISA != MIPS_ISA
         // go to the next instruction
-        cpuXC->setPC(cpuXC->readNextPC());
-        cpuXC->setNextPC(cpuXC->readNextPC() + sizeof(MachInst));
+        thread->setPC(thread->readNextPC());
+        thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 #else
         // go to the next instruction
-        cpuXC->setPC(cpuXC->readNextPC());
-        cpuXC->setNextPC(cpuXC->readNextNPC());
-        cpuXC->setNextNPC(cpuXC->readNextNPC() + sizeof(MachInst));
+        thread->setPC(thread->readNextPC());
+        thread->setNextPC(thread->readNextNPC());
+        thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
 #endif
         updateThisCycle = false;
+    }
 }
 
 template <class DynInstPtr>

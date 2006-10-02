@@ -54,9 +54,7 @@ class CPUProgressEvent : public Event
     BaseCPU *cpu;
 
   public:
-    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu)
-        : Event(q, Event::Stat_Event_Pri), interval(ival), lastNumInst(0), cpu(_cpu)
-    { schedule(curTick + interval); }
+    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu);
 
     void process();
 
@@ -138,7 +136,6 @@ class BaseCPU : public MemObject
         Counter max_insts_all_threads;
         Counter max_loads_any_thread;
         Counter max_loads_all_threads;
-        Counter stats_reset_inst;
         Tick clock;
         bool functionTrace;
         Tick functionTraceStart;

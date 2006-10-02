@@ -1197,7 +1197,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 //            (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
 //        thread->profilePC = usermode ? 1 : inst->readPC();
         thread->profilePC = inst->readPC();
-        ProfileNode *node = thread->profile->consume(thread->getXCProxy(),
+        ProfileNode *node = thread->profile->consume(thread->getTC(),
                                                      inst->staticInst);
 
         if (node)

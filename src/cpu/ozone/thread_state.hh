@@ -68,7 +68,7 @@ struct OzoneThreadState : public ThreadState {
 #if FULL_SYSTEM
     OzoneThreadState(CPUType *_cpu, int _thread_num)
         : ThreadState(-1, _thread_num),
-          cpu(_cpu), intrflag(0), inSyscall(0), trapPending(0)
+          intrflag(0), cpu(_cpu), inSyscall(0), trapPending(0)
     {
         if (cpu->params->profile) {
             profile = new FunctionProfile(cpu->params->system->kernelSymtab);
@@ -151,7 +151,7 @@ struct OzoneThreadState : public ThreadState {
     void dumpFuncProfile()
     {
         std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
-        profile->dump(xcProxy, *os);
+        profile->dump(tc, *os);
     }
 #endif
 };

@@ -54,7 +54,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::dumpFuncProfile()
 {
-    // Currently not supported
+    thread->dumpFuncProfile();
 }
 #endif
 
@@ -239,12 +239,16 @@ O3ThreadContext<Impl>::readLastSuspend()
 template <class Impl>
 void
 O3ThreadContext<Impl>::profileClear()
-{}
+{
+    thread->profileClear();
+}
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::profileSample()
-{}
+{
+    thread->profileSample();
+}
 #endif
 
 template <class Impl>

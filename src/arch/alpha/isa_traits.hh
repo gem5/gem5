@@ -42,16 +42,205 @@ class StaticInstPtr;
 
 namespace AlphaISA
 {
+    using namespace LittleEndianGuest;
 
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
-    typedef uint8_t  RegIndex;
+    // These enumerate all the registers for dependence tracking.
+    enum DependenceTags {
+        // 0..31 are the integer regs 0..31
+        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
+        FP_Base_DepTag = 40,
+        Ctrl_Base_DepTag = 72,
+        Fpcr_DepTag = 72,		// floating point control register
+        Uniq_DepTag = 73,
+        Lock_Flag_DepTag = 74,
+        Lock_Addr_DepTag = 75,
+        IPR_Base_DepTag = 76
+    };
+
+    StaticInstPtr decodeInst(ExtMachInst);
+
+    // Alpha Does NOT have a delay slot
+    #define ISA_HAS_DELAY_SLOT 0
+
+    const Addr PageShift = 13;
+    const Addr PageBytes = ULL(1) << PageShift;
+    const Addr PageMask = ~(PageBytes - 1);
+    const Addr PageOffset = PageBytes - 1;
+
+#if FULL_SYSTEM
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    //  Translation stuff
+    //
+
+   const Addr PteShift = 3;
+    const Addr NPtePageShift = PageShift - PteShift;
+    const Addr NPtePage = ULL(1) << NPtePageShift;
+    const Addr PteMask = NPtePage - 1;
+
+    // User Virtual
+    const Addr USegBase = ULL(0x0);
+    const Addr USegEnd = ULL(0x000003ffffffffff);
+
+    // Kernel Direct Mapped
+    const Addr K0SegBase = ULL(0xfffffc0000000000);
+    const Addr K0SegEnd = ULL(0xfffffdffffffffff);
+
+    // Kernel Virtual
+    const Addr K1SegBase = ULL(0xfffffe0000000000);
+    const Addr K1SegEnd = ULL(0xffffffffffffffff);
+
+    // For loading... XXX This maybe could be USegEnd?? --ali
+    const Addr LoadAddrMask = ULL(0xffffffffff);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    //  Interrupt levels
+    //
+    enum InterruptLevels
+    {
+        INTLEVEL_SOFTWARE_MIN = 4,
+        INTLEVEL_SOFTWARE_MAX = 19,
+
+        INTLEVEL_EXTERNAL_MIN = 20,
+        INTLEVEL_EXTERNAL_MAX = 34,
+
+        INTLEVEL_IRQ0 = 20,
+        INTLEVEL_IRQ1 = 21,
+        INTINDEX_ETHERNET = 0,
+        INTINDEX_SCSI = 1,
+        INTLEVEL_IRQ2 = 22,
+        INTLEVEL_IRQ3 = 23,
+
+        INTLEVEL_SERIAL = 33,
+
+        NumInterruptLevels = INTLEVEL_EXTERNAL_MAX
+    };
+
+
+    // EV5 modes
+    enum mode_type
+    {
+        mode_kernel = 0,		// kernel
+        mode_executive = 1,		// executive (unused by unix)
+        mode_supervisor = 2,	// supervisor (unused by unix)
+        mode_user = 3,		// user mode
+        mode_number			// number of modes
+    };
+
+#endif
+
+#if FULL_SYSTEM
+    ////////////////////////////////////////////////////////////////////////
+    //
+    //  Internal Processor Reigsters
+    //
+    enum md_ipr_names
+    {
+        IPR_ISR = 0x100,		// interrupt summary register
+        IPR_ITB_TAG = 0x101,	// ITLB tag register
+        IPR_ITB_PTE = 0x102,	// ITLB page table entry register
+        IPR_ITB_ASN = 0x103,	// ITLB address space register
+        IPR_ITB_PTE_TEMP = 0x104,	// ITLB page table entry temp register
+        IPR_ITB_IA = 0x105,		// ITLB invalidate all register
+        IPR_ITB_IAP = 0x106,	// ITLB invalidate all process register
+        IPR_ITB_IS = 0x107,		// ITLB invalidate select register
+        IPR_SIRR = 0x108,		// software interrupt request register
+        IPR_ASTRR = 0x109,		// asynchronous system trap request register
+        IPR_ASTER = 0x10a,		// asynchronous system trap enable register
+        IPR_EXC_ADDR = 0x10b,	// exception address register
+        IPR_EXC_SUM = 0x10c,	// exception summary register
+        IPR_EXC_MASK = 0x10d,	// exception mask register
+        IPR_PAL_BASE = 0x10e,	// PAL base address register
+        IPR_ICM = 0x10f,		// instruction current mode
+        IPR_IPLR = 0x110,		// interrupt priority level register
+        IPR_INTID = 0x111,		// interrupt ID register
+        IPR_IFAULT_VA_FORM = 0x112,	// formatted faulting virtual addr register
+        IPR_IVPTBR = 0x113,		// virtual page table base register
+        IPR_HWINT_CLR = 0x115,	// H/W interrupt clear register
+        IPR_SL_XMIT = 0x116,	// serial line transmit register
+        IPR_SL_RCV = 0x117,		// serial line receive register
+        IPR_ICSR = 0x118,		// instruction control and status register
+        IPR_IC_FLUSH = 0x119,	// instruction cache flush control
+        IPR_IC_PERR_STAT = 0x11a,	// inst cache parity error status register
+        IPR_PMCTR = 0x11c,		// performance counter register
+
+        // PAL temporary registers...
+        // register meanings gleaned from osfpal.s source code
+        IPR_PALtemp0 = 0x140,	// local scratch
+        IPR_PALtemp1 = 0x141,	// local scratch
+        IPR_PALtemp2 = 0x142,	// entUna
+        IPR_PALtemp3 = 0x143,	// CPU specific impure area pointer
+        IPR_PALtemp4 = 0x144,	// memory management temp
+        IPR_PALtemp5 = 0x145,	// memory management temp
+        IPR_PALtemp6 = 0x146,	// memory management temp
+        IPR_PALtemp7 = 0x147,	// entIF
+        IPR_PALtemp8 = 0x148,	// intmask
+        IPR_PALtemp9 = 0x149,	// entSys
+        IPR_PALtemp10 = 0x14a,	// ??
+        IPR_PALtemp11 = 0x14b,	// entInt
+        IPR_PALtemp12 = 0x14c,	// entArith
+        IPR_PALtemp13 = 0x14d,	// reserved for platform specific PAL
+        IPR_PALtemp14 = 0x14e,	// reserved for platform specific PAL
+        IPR_PALtemp15 = 0x14f,	// reserved for platform specific PAL
+        IPR_PALtemp16 = 0x150,	// scratch / whami<7:0> / mces<4:0>
+        IPR_PALtemp17 = 0x151,	// sysval
+        IPR_PALtemp18 = 0x152,	// usp
+        IPR_PALtemp19 = 0x153,	// ksp
+        IPR_PALtemp20 = 0x154,	// PTBR
+        IPR_PALtemp21 = 0x155,	// entMM
+        IPR_PALtemp22 = 0x156,	// kgp
+        IPR_PALtemp23 = 0x157,	// PCBB
+
+        IPR_DTB_ASN = 0x200,	// DTLB address space number register
+        IPR_DTB_CM = 0x201,		// DTLB current mode register
+        IPR_DTB_TAG = 0x202,	// DTLB tag register
+        IPR_DTB_PTE = 0x203,	// DTLB page table entry register
+        IPR_DTB_PTE_TEMP = 0x204,	// DTLB page table entry temporary register
+
+        IPR_MM_STAT = 0x205,	// data MMU fault status register
+        IPR_VA = 0x206,		// fault virtual address register
+        IPR_VA_FORM = 0x207,	// formatted virtual address register
+        IPR_MVPTBR = 0x208,		// MTU virtual page table base register
+        IPR_DTB_IAP = 0x209,	// DTLB invalidate all process register
+        IPR_DTB_IA = 0x20a,		// DTLB invalidate all register
+        IPR_DTB_IS = 0x20b,		// DTLB invalidate single register
+        IPR_ALT_MODE = 0x20c,	// alternate mode register
+        IPR_CC = 0x20d,		// cycle counter register
+        IPR_CC_CTL = 0x20e,		// cycle counter control register
+        IPR_MCSR = 0x20f,		// MTU control register
+
+        IPR_DC_FLUSH = 0x210,
+        IPR_DC_PERR_STAT = 0x212,	// Dcache parity error status register
+        IPR_DC_TEST_CTL = 0x213,	// Dcache test tag control register
+        IPR_DC_TEST_TAG = 0x214,	// Dcache test tag register
+        IPR_DC_TEST_TAG_TEMP = 0x215, // Dcache test tag temporary register
+        IPR_DC_MODE = 0x216,	// Dcache mode register
+        IPR_MAF_MODE = 0x217,	// miss address file mode register
+
+        NumInternalProcRegs		// number of IPR registers
+    };
+#else
+    const int NumInternalProcRegs = 0;
+#endif
+
+    // Constants Related to the number of registers
 
     const int NumIntArchRegs = 32;
     const int NumPALShadowRegs = 8;
     const int NumFloatArchRegs = 32;
     // @todo: Figure out what this number really should be.
     const int NumMiscArchRegs = 32;
+
+    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
+    const int NumFloatRegs = NumFloatArchRegs;
+    const int NumMiscRegs = NumMiscArchRegs;
+
+    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
+        NumMiscRegs + NumInternalProcRegs;
+
+    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
     // Static instruction parameters
     const int MaxInstSrcRegs = 3;
@@ -76,270 +265,23 @@ namespace AlphaISA
     const int SyscallPseudoReturnReg = ArgumentReg4;
     const int SyscallSuccessReg = 19;
 
-
-
     const int LogVMPageSize = 13;	// 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
 
+    const int MachineBytes = 8;
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;
 
-
-    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
-    const int NumFloatRegs = NumFloatArchRegs;
-    const int NumMiscRegs = NumMiscArchRegs;
-
-    // These enumerate all the registers for dependence tracking.
-    enum DependenceTags {
-        // 0..31 are the integer regs 0..31
-        // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-        FP_Base_DepTag = 40,
-        Ctrl_Base_DepTag = 72,
-        Fpcr_DepTag = 72,		// floating point control register
-        Uniq_DepTag = 73,
-        Lock_Flag_DepTag = 74,
-        Lock_Addr_DepTag = 75,
-        IPR_Base_DepTag = 76
-    };
-
-    typedef uint64_t IntReg;
-    typedef IntReg IntRegFile[NumIntRegs];
-
-    // floating point register file entry type
-    typedef union {
-        uint64_t q;
-        double d;
-    } FloatReg;
-
-    typedef union {
-        uint64_t q[NumFloatRegs];	// integer qword view
-        double d[NumFloatRegs];		// double-precision floating point view
-
-        void clear()
-        { bzero(d, sizeof(d)); }
-    } FloatRegFile;
-
-extern const Addr PageShift;
-extern const Addr PageBytes;
-extern const Addr PageMask;
-extern const Addr PageOffset;
-
-// redirected register map, really only used for the full system case.
-extern const int reg_redir[NumIntRegs];
-
-#if FULL_SYSTEM
-
-    typedef uint64_t InternalProcReg;
-
-#include "arch/alpha/isa_fullsys_traits.hh"
-
-#else
-    const int NumInternalProcRegs = 0;
-#endif
-
-    // control register file contents
-    typedef uint64_t MiscReg;
-    class MiscRegFile {
-      protected:
-        uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
-        bool		lock_flag;	// lock flag for LL/SC
-        Addr		lock_addr;	// lock address for LL/SC
-
-      public:
-        MiscReg readReg(int misc_reg);
-
-        //These functions should be removed once the simplescalar cpu model
-        //has been replaced.
-        int getInstAsid();
-        int getDataAsid();
-
-        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ExecContext *xc);
-
-        Fault setReg(int misc_reg, const MiscReg &val);
-
-        Fault setRegWithEffect(int misc_reg, const MiscReg &val,
-                               ExecContext *xc);
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        {
-            fpcr = uniq = 0;
-            lock_flag = 0;
-            lock_addr = 0;
-        }
-
-#if FULL_SYSTEM
-      protected:
-        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
-
-      private:
-        MiscReg readIpr(int idx, Fault &fault, ExecContext *xc);
-
-        Fault setIpr(int idx, uint64_t val, ExecContext *xc);
-
-        void copyIprs(ExecContext *xc);
-#endif
-        friend class RegFile;
-    };
-
-    const int TotalNumRegs = NumIntRegs + NumFloatRegs +
-        NumMiscRegs + NumInternalProcRegs;
-
-    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
-
-    typedef union {
-        IntReg  intreg;
-        FloatReg   fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
-
-    struct RegFile {
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegs;		// control register file
-        Addr pc;			// program counter
-        Addr npc;			// next-cycle program counter
-        Addr nnpc;
-
-#if FULL_SYSTEM
-        int intrflag;			// interrupt flag
-        inline int instAsid()
-        { return EV5::ITB_ASN_ASN(miscRegs.ipr[IPR_ITB_ASN]); }
-        inline int dataAsid()
-        { return EV5::DTB_ASN_ASN(miscRegs.ipr[IPR_DTB_ASN]); }
-#endif // FULL_SYSTEM
-
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        {
-            bzero(intRegFile, sizeof(intRegFile));
-            floatRegFile.clear();
-            miscRegs.clear();
-        }
-    };
-
-    static inline ExtMachInst makeExtMI(MachInst inst, const uint64_t &pc);
-
-    StaticInstPtr decodeInst(ExtMachInst);
-
-    // Alpha Does NOT have a delay slot
-    #define ISA_HAS_DELAY_SLOT 0
-
     // return a no-op instruction... used for instruction fetch faults
-    extern const ExtMachInst NoopMachInst;
+    // Alpha UNOP (ldq_u r31,0(r0))
+    const ExtMachInst NoopMachInst = 0x2ffe0000;
 
-    enum annotes {
-        ANNOTE_NONE = 0,
-        // An impossible number for instruction annotations
-        ITOUCH_ANNOTE = 0xffffffff,
-    };
+    // redirected register map, really only used for the full system case.
+    extern const int reg_redir[NumIntRegs];
 
-    static inline bool isCallerSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
-    }
-
-    static inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return (reg >= 9 && reg <= 15);
-    }
-
-    static inline bool isCallerSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    static inline bool isCalleeSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    static inline Addr alignAddress(const Addr &addr,
-                                         unsigned int nbytes) {
-        return (addr & ~(nbytes - 1));
-    }
-
-    // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr) {
-        return addr;
-    }
-
-    static inline Addr fetchPCToRealPC(const Addr &addr) {
-        return addr;
-    }
-
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    static inline size_t fetchInstSize() {
-        return sizeof(MachInst);
-    }
-
-    static inline MachInst makeRegisterCopy(int dest, int src) {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
-
-    // Machine operations
-
-    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
-                               int regnum);
-
-    void restoreMachineReg(RegFile &regs, const AnyReg &reg,
-                                  int regnum);
-
-#if 0
-    static void serializeSpecialRegs(const Serializable::Proxy &proxy,
-                                     const RegFile &regs);
-
-    static void unserializeSpecialRegs(const IniFile *db,
-                                       const std::string &category,
-                                       ConfigNode *node,
-                                       RegFile &regs);
-#endif
-
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param xc The execution context.
-     */
-    template <class XC>
-    void zeroRegisters(XC *xc);
-
-    const Addr MaxAddr = (Addr)-1;
-
-#if !FULL_SYSTEM
-    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
-    {
-        // check for error condition.  Alpha syscall convention is to
-        // indicate success/failure in reg a3 (r19) and put the
-        // return value itself in the standard return value reg (v0).
-        if (return_value.successful()) {
-            // no error
-            regs->intRegFile[SyscallSuccessReg] = 0;
-            regs->intRegFile[ReturnValueReg] = return_value.value();
-        } else {
-            // got an error, return details
-            regs->intRegFile[SyscallSuccessReg] = (IntReg) -1;
-            regs->intRegFile[ReturnValueReg] = -return_value.value();
-        }
-    }
-#endif
-
-    void copyRegs(ExecContext *src, ExecContext *dest);
-
-    void copyMiscRegs(ExecContext *src, ExecContext *dest);
-
-#if FULL_SYSTEM
-    void copyIprs(ExecContext *src, ExecContext *dest);
-#endif
 };
 
 #endif // __ARCH_ALPHA_ISA_TRAITS_HH__

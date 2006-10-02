@@ -906,22 +906,6 @@ DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
-{
-    while (!insts[tid].empty()) {
-        if (insts[tid].front()->isLoad() ||
-            insts[tid].front()->isStore() ) {
-            toRename->iewInfo[tid].dispatchedToLSQ++;
-        }
-
-        toRename->iewInfo[tid].dispatched++;
-
-        insts[tid].pop();
-    }
-}
-
-template <class Impl>
-void
 DefaultIEW<Impl>::wakeCPU()
 {
     cpu->wakeCPU();

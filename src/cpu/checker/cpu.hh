@@ -258,7 +258,7 @@ class CheckerCPU : public BaseCPU
         thread->setFloatReg(reg_idx, val, width);
         switch(width) {
           case 32:
-            result.fp = val;
+            result.dbl = (double)val;
             break;
           case 64:
             result.dbl = val;

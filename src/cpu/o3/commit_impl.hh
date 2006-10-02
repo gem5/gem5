@@ -1095,7 +1095,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 //            (cpu->readMiscReg(AlphaISA::IPR_DTB_CM, tid) & 0x18) != 0;
 //        thread[tid]->profilePC = usermode ? 1 : head_inst->readPC();
         thread[tid]->profilePC = head_inst->readPC();
-        ProfileNode *node = thread[tid]->profile->consume(thread[tid]->getXCProxy(),
+        ProfileNode *node = thread[tid]->profile->consume(thread[tid]->getTC(),
                                                           head_inst->staticInst);
 
         if (node)

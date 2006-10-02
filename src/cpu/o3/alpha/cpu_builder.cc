@@ -69,7 +69,6 @@ Param<Counter> max_insts_any_thread;
 Param<Counter> max_insts_all_threads;
 Param<Counter> max_loads_any_thread;
 Param<Counter> max_loads_all_threads;
-Param<Counter> stats_reset_inst;
 Param<Tick> progress_interval;
 
 Param<unsigned> cachePorts;
@@ -187,9 +186,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
     INIT_PARAM_DFLT(max_loads_all_threads,
                     "Terminate when all threads have reached this load"
                     "count",
-                    0),
-    INIT_PARAM_DFLT(stats_reset_inst,
-                    "blah",
                     0),
     INIT_PARAM_DFLT(progress_interval, "Progress interval", 0),
 
@@ -326,7 +322,6 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
-    params->stats_reset_inst = stats_reset_inst;
     params->progress_interval = progress_interval;
 
     //

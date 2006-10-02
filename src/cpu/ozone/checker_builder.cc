@@ -65,7 +65,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
     Param<Counter> max_insts_all_threads;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
-    Param<Counter> stats_reset_inst;
     Param<Tick> progress_interval;
 
 #if FULL_SYSTEM
@@ -98,8 +97,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
                "terminate when any thread reaches this load count"),
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
-    INIT_PARAM(stats_reset_inst,
-               "blah"),
     INIT_PARAM_DFLT(progress_interval, "CPU Progress Interval", 0),
 
 #if FULL_SYSTEM
@@ -134,7 +131,6 @@ CREATE_SIM_OBJECT(OzoneChecker)
     params->max_insts_all_threads = 0;
     params->max_loads_any_thread = 0;
     params->max_loads_all_threads = 0;
-    params->stats_reset_inst = 0;
     params->exitOnError = exitOnError;
     params->updateOnError = updateOnError;
     params->warnOnlyOnLoadError = warnOnlyOnLoadError;
@@ -149,7 +145,6 @@ CREATE_SIM_OBJECT(OzoneChecker)
     temp = max_insts_all_threads;
     temp = max_loads_any_thread;
     temp = max_loads_all_threads;
-    temp = stats_reset_inst;
     Tick temp2 = progress_interval;
     temp2++;
     params->progress_interval = 0;

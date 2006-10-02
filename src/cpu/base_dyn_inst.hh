@@ -409,7 +409,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         if (width == 32)
-            instResult.fp = val;
+            instResult.dbl = (double)val;
         else if (width == 64)
             instResult.dbl = val;
         else

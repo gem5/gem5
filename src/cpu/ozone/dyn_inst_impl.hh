@@ -215,14 +215,14 @@ OzoneDynInst<Impl>::clearMemDependents()
 }
 
 template <class Impl>
-MiscReg
+TheISA::MiscReg
 OzoneDynInst<Impl>::readMiscReg(int misc_reg)
 {
     return this->thread->readMiscReg(misc_reg);
 }
 
 template <class Impl>
-MiscReg
+TheISA::MiscReg
 OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault)
 {
     return this->thread->readMiscRegWithEffect(misc_reg, fault);

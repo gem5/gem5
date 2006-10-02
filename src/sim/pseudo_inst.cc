@@ -149,9 +149,9 @@ namespace AlphaPseudo
     }
 
     void
-    loadsymbol(ExecContext *xc)
+    loadsymbol(ThreadContext *tc)
     {
-        const string &filename = xc->getCpuPtr()->system->params()->symbolfile;
+        const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
         if (filename.empty()) {
             return;
         }
@@ -187,7 +187,7 @@ namespace AlphaPseudo
             if (!to_number(address, addr))
                 continue;
 
-            if (!xc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
+            if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
                 continue;
 
 
