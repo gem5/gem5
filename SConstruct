@@ -201,23 +201,6 @@ if sys.platform == 'cygwin':
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
 env.Append(CPPPATH=[Dir('ext/dnet')])
 
-# Find Python include and library directories for embedding the
-# interpreter.  For consistency, we will use the same Python
-# installation used to run scons (and thus this script).  If you want
-# to link in an alternate version, see above for instructions on how
-# to invoke scons with a different copy of the Python interpreter.
-
-# Get brief Python version name (e.g., "python2.4") for locating
-# include & library files
-py_version_name = 'python' + sys.version[:3]
-
-# include path, e.g. /usr/local/include/python2.4
-env.Append(CPPPATH = os.path.join(sys.exec_prefix, 'include', py_version_name))
-env.Append(LIBS = py_version_name)
-# add library path too if it's not in the default place
-if sys.exec_prefix != '/usr':
-    env.Append(LIBPATH = os.path.join(sys.exec_prefix, 'lib'))
-
 # Check for SWIG
 if not env.has_key('SWIG'):
     print 'Error: SWIG utility not found.'
@@ -254,6 +237,38 @@ env.Append(SCANNERS = swig_scanner)
 conf = Configure(env,
                  conf_dir = os.path.join(build_root, '.scons_config'),
                  log_file = os.path.join(build_root, 'scons_config.log'))
+
+# Find Python include and library directories for embedding the
+# interpreter.  For consistency, we will use the same Python
+# installation used to run scons (and thus this script).  If you want
+# to link in an alternate version, see above for instructions on how
+# to invoke scons with a different copy of the Python interpreter.
+
+# Get brief Python version name (e.g., "python2.4") for locating
+# include & library files
+py_version_name = 'python' + sys.version[:3]
+
+# include path, e.g. /usr/local/include/python2.4
+py_header_path = os.path.join(sys.exec_prefix, 'include', py_version_name)
+env.Append(CPPPATH = py_header_path)
+# verify that it works
+if not conf.CheckHeader('Python.h', '<>'):
+    print "Error: can't find Python.h header in", py_header_path
+    Exit(1)
+
+# add library path too if it's not in the default place
+py_lib_path = None
+if sys.exec_prefix != '/usr':
+    py_lib_path = os.path.join(sys.exec_prefix, 'lib')
+elif sys.platform == 'cygwin':
+    # cygwin puts the .dll in /bin for some reason
+    py_lib_path = '/bin'
+if py_lib_path:
+    env.Append(LIBPATH = py_lib_path)
+    print 'Adding', py_lib_path, 'to LIBPATH for', py_version_name
+if not conf.CheckLib(py_version_name):
+    print "Error: can't find Python library", py_version_name
+    Exit(1)
 
 # Check for zlib.  If the check passes, libz will be automatically
 # added to the LIBS environment variable.
