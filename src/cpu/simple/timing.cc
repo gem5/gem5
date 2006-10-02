@@ -589,6 +589,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Counter> max_insts_all_threads;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
+    Param<Tick> progress_interval;
     SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
 
@@ -621,6 +622,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
                "terminate when any thread reaches this load count"),
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
+    INIT_PARAM(progress_interval, "Progress interval"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
 
@@ -652,6 +654,7 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->max_insts_all_threads = max_insts_all_threads;
     params->max_loads_any_thread = max_loads_any_thread;
     params->max_loads_all_threads = max_loads_all_threads;
+    params->progress_interval = progress_interval;
     params->deferRegistration = defer_registration;
     params->clock = clock;
     params->functionTrace = function_trace;
