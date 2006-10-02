@@ -144,6 +144,8 @@ add_option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
     help="Sets the flags for tracing")
 add_option("--trace-start", metavar="TIME", default='0s',
     help="Start tracing at TIME (must have units)")
+add_option("--trace-cycle", metavar="CYCLE", default='0',
+    help="Start tracing at CYCLE")
 add_option("--trace-file", metavar="FILE", default="cout",
     help="Sets the output file for tracing [Default: %default]")
 add_option("--trace-circlebuf", metavar="SIZE", type="int", default=0,
