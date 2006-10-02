@@ -32,6 +32,7 @@
 #define __CPU_THREAD_STATE_HH__
 
 #include "arch/types.hh"
+#include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 
 #if !FULL_SYSTEM
@@ -191,6 +192,7 @@ struct ThreadState {
     // simulation only; all functional memory accesses should use
     // one of the FunctionalMemory pointers above.
     short asid;
+
 #endif
 
     /** Current instruction the thread is committing.  Only set and

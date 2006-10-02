@@ -1,6 +1,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from Serialize import Serialize
+from Serialize import Statreset
 from Statistics import Statistics
 from Trace import Trace
 from ExeTrace import ExecutionTrace

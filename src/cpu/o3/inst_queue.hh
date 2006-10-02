@@ -479,13 +479,13 @@ class InstructionQueue
     /** Distribution of number of instructions in the queue.
      * @todo: Need to create struct to track the entry time for each
      * instruction. */
-    Stats::VectorDistribution<> queueResDist;
+//    Stats::VectorDistribution<> queueResDist;
     /** Distribution of the number of instructions issued. */
     Stats::Distribution<> numIssuedDist;
     /** Distribution of the cycles it takes to issue an instruction.
      * @todo: Need to create struct to track the ready time for each
      * instruction. */
-    Stats::VectorDistribution<> issueDelayDist;
+//    Stats::VectorDistribution<> issueDelayDist;
 
     /** Number of times an instruction could not be issued because a
      * FU was busy.

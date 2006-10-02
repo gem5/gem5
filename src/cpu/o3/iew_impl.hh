@@ -162,17 +162,17 @@ DefaultIEW<Impl>::regStats()
     branchMispredicts = predictedTakenIncorrect + predictedNotTakenIncorrect;
 
     iewExecutedInsts
-        .name(name() + ".EXEC:insts")
+        .name(name() + ".iewExecutedInsts")
         .desc("Number of executed instructions");
 
     iewExecLoadInsts
         .init(cpu->number_of_threads)
-        .name(name() + ".EXEC:loads")
+        .name(name() + ".iewExecLoadInsts")
         .desc("Number of load instructions executed")
         .flags(total);
 
     iewExecSquashedInsts
-        .name(name() + ".EXEC:squashedInsts")
+        .name(name() + ".iewExecSquashedInsts")
         .desc("Number of squashed instructions skipped in execute");
 
     iewExecutedSwp
@@ -372,6 +372,8 @@ DefaultIEW<Impl>::switchOut()
 {
     // Clear any state.
     switchedOut = true;
+    assert(insts[0].empty());
+    assert(skidBuffer[0].empty());
 
     instQueue.switchOut();
     ldstQueue.switchOut();
@@ -410,7 +412,6 @@ DefaultIEW<Impl>::takeOverFrom()
 
     updateLSQNextCycle = false;
 
-    // @todo: Fix hardcoded number
     for (int i = 0; i < issueToExecQueue.getSize(); ++i) {
         issueToExecQueue.advance();
     }
@@ -611,9 +612,11 @@ DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
             wbNumInst = 0;
         }
 
-        assert((wbCycle * wbWidth + wbNumInst) < wbMax);
+        assert((wbCycle * wbWidth + wbNumInst) <= wbMax);
     }
 
+    DPRINTF(IEW, "Current wb cycle: %i, width: %i, numInst: %i\nwbActual:%i\n",
+            wbCycle, wbWidth, wbNumInst, wbCycle * wbWidth + wbNumInst);
     // Add finished instruction to queue to commit.
     (*iewQueue)[wbCycle].insts[wbNumInst] = inst;
     (*iewQueue)[wbCycle].size++;
@@ -1273,13 +1276,23 @@ DefaultIEW<Impl>::executeInsts()
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
             } else if (inst->isStore()) {
-                ldstQueue.executeStore(inst);
+                fault = ldstQueue.executeStore(inst);
 
                 // If the store had a fault then it may not have a mem req
-                if (inst->req && !(inst->req->getFlags() & LOCKED)) {
+                if (!inst->isStoreConditional() && fault == NoFault) {
                     inst->setExecuted();
 
                     instToCommit(inst);
+                } else if (fault != NoFault) {
+                    // If the instruction faulted, then we need to send it along to commit
+                    // without the instruction completing.
+
+                    // Send this instruction to commit, also make sure iew stage
+                    // realizes there is activity.
+                    inst->setExecuted();
+
+                    instToCommit(inst);
+                    activityThisCycle();
                 }
 
                 // Store conditionals will mark themselves as
@@ -1404,7 +1417,7 @@ DefaultIEW<Impl>::writebackInsts()
         // E.g. Uncached loads have not actually executed when they
         // are first sent to commit.  Instead commit must tell the LSQ
         // when it's ready to execute the uncached load.
-        if (!inst->isSquashed() && inst->isExecuted()) {
+        if (!inst->isSquashed() && inst->isExecuted() && inst->getFault() == NoFault) {
             int dependents = instQueue.wakeDependents(inst);
 
             for (int i = 0; i < inst->numDestRegs(); i++) {

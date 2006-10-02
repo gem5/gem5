@@ -33,6 +33,7 @@
 #include "config/use_checker.hh"
 
 #if FULL_SYSTEM
+#include "cpu/quiesce_event.hh"
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
@@ -793,6 +794,7 @@ template <class Impl>
 unsigned int
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
+    DPRINTF(O3CPU, "Switching out\n");
     drainCount = 0;
     fetch.drain();
     decode.drain();
@@ -849,6 +851,8 @@ FullO3CPU<Impl>::signalDrained()
 
         changeState(SimObject::Drained);
 
+        BaseCPU::switchOut();
+
         if (drainEvent) {
             drainEvent->process();
             drainEvent = NULL;
@@ -863,6 +867,7 @@ FullO3CPU<Impl>::switchOut()
 {
     fetch.switchOut();
     rename.switchOut();
+    iew.switchOut();
     commit.switchOut();
     instList.clear();
     while (!removeList.empty()) {
@@ -874,6 +879,8 @@ FullO3CPU<Impl>::switchOut()
     if (checker)
         checker->switchOut();
 #endif
+    if (tickEvent.scheduled())
+        tickEvent.squash();
 }
 
 template <class Impl>

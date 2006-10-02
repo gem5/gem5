@@ -16,6 +16,7 @@ class System(SimObject):
         boot_osflags = Param.String("a", "boot flags to pass to the kernel")
         kernel = Param.String("file that contains the kernel code")
         readfile = Param.String("", "file to read startup script from")
+        symbolfile = Param.String("", "file to get the symbols from")
 
 class AlphaSystem(System):
     type = 'AlphaSystem'

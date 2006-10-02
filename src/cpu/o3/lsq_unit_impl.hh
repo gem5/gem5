@@ -180,6 +180,10 @@ LSQUnit<Impl>::regStats()
         .name(name() + ".ignoredResponses")
         .desc("Number of memory responses ignored because the instruction is squashed");
 
+    lsqMemOrderViolation
+        .name(name() + ".memOrderViolation")
+        .desc("Number of memory ordering violations");
+
     lsqSquashedStores
         .name(name() + ".squashedStores")
         .desc("Number of stores squashed");
@@ -220,8 +224,10 @@ void
 LSQUnit<Impl>::switchOut()
 {
     switchedOut = true;
-    for (int i = 0; i < loadQueue.size(); ++i)
+    for (int i = 0; i < loadQueue.size(); ++i) {
+        assert(!loadQueue[i]);
         loadQueue[i] = NULL;
+    }
 
     assert(storesToWB == 0);
 }
@@ -408,6 +414,11 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     if (load_fault != NoFault) {
         // Send this instruction to commit, also make sure iew stage
         // realizes there is activity.
+        // Mark it as executed unless it is an uncached load that
+        // needs to hit the head of commit.
+        if (!(inst->req->getFlags() & UNCACHEABLE) || inst->isAtCommit()) {
+            inst->setExecuted();
+        }
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     }
@@ -467,6 +478,7 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
                 // A load incorrectly passed this store.  Squash and refetch.
                 // For now return a fault to show that it was unsuccessful.
                 memDepViolator = loadQueue[load_idx];
+                ++lsqMemOrderViolation;
 
                 return genMachineCheckFault();
             }
@@ -820,6 +832,7 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // A bit conservative because a store completion may not free up entries,
     // but hopefully avoids two store completions in one cycle from making
     // the CPU tick twice.
+    cpu->wakeCPU();
     cpu->activityThisCycle();
 
     if (store_idx == storeHead) {

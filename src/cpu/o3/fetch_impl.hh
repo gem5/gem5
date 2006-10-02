@@ -442,6 +442,7 @@ DefaultFetch<Impl>::takeOverFrom()
     wroteToTimeBuffer = false;
     _status = Inactive;
     switchedOut = false;
+    interruptPending = false;
     branchPred.takeOverFrom();
 }
 
@@ -563,7 +564,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     unsigned flags = 0;
 #endif // FULL_SYSTEM
 
-    if (cacheBlocked || (interruptPending && flags == 0)) {
+    if (cacheBlocked || isSwitchedOut() || (interruptPending && flags == 0)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -1152,8 +1153,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             fetch_PC = next_PC;
 
             if (instruction->isQuiesce()) {
-                warn("cycle %lli: Quiesce instruction encountered, halting fetch!",
-                     curTick);
+//                warn("%lli: Quiesce instruction encountered, halting fetch!",
+//                     curTick);
                 fetchStatus[tid] = QuiescePending;
                 ++numInst;
                 status_change = true;
@@ -1268,7 +1269,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
-        warn("cycle %lli: fault (%s) detected @ PC %08p", curTick, fault->name(), PC[tid]);
+//        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #else // !FULL_SYSTEM
         warn("cycle %lli: fault (%s) detected @ PC %08p", curTick, fault->name(), PC[tid]);
 #endif // FULL_SYSTEM

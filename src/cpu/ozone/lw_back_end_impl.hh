@@ -141,13 +141,14 @@ LWBackEnd<Impl>::replayMemInst(DynInstPtr &inst)
 
 template <class Impl>
 LWBackEnd<Impl>::LWBackEnd(Params *params)
-    : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(5, 5),
+    : d2i(5, 5), i2e(5, 5), e2c(5, 5), numInstsToWB(params->backEndLatency, 0),
       trapSquash(false), tcSquash(false),
-      width(params->backEndWidth), exactFullStall(true)
+      latency(params->backEndLatency),
+      width(params->backEndWidth), lsqLimits(params->lsqLimits),
+      exactFullStall(true)
 {
     numROBEntries = params->numROBEntries;
     numInsts = 0;
-    numDispatchEntries = 32;
     maxOutstandingMemOps = params->maxOutstandingMemOps;
     numWaitingMemOps = 0;
     waitingInsts = 0;
@@ -184,78 +185,79 @@ void
 LWBackEnd<Impl>::regStats()
 {
     using namespace Stats;
-    rob_cap_events
+    LSQ.regStats();
+
+    robCapEvents
         .init(cpu->number_of_threads)
         .name(name() + ".ROB:cap_events")
         .desc("number of cycles where ROB cap was active")
         .flags(total)
         ;
 
-    rob_cap_inst_count
+    robCapInstCount
         .init(cpu->number_of_threads)
         .name(name() + ".ROB:cap_inst")
         .desc("number of instructions held up by ROB cap")
         .flags(total)
         ;
 
-    iq_cap_events
+    iqCapEvents
         .init(cpu->number_of_threads)
         .name(name() +".IQ:cap_events" )
         .desc("number of cycles where IQ cap was active")
         .flags(total)
         ;
 
-    iq_cap_inst_count
+    iqCapInstCount
         .init(cpu->number_of_threads)
         .name(name() + ".IQ:cap_inst")
         .desc("number of instructions held up by IQ cap")
         .flags(total)
         ;
 
-
-    exe_inst
+    exeInst
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:count")
         .desc("number of insts issued")
         .flags(total)
         ;
 
-    exe_swp
+    exeSwp
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:swp")
         .desc("number of swp insts issued")
         .flags(total)
         ;
 
-    exe_nop
+    exeNop
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:nop")
         .desc("number of nop insts issued")
         .flags(total)
         ;
 
-    exe_refs
+    exeRefs
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:refs")
         .desc("number of memory reference insts issued")
         .flags(total)
         ;
 
-    exe_loads
+    exeLoads
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:loads")
         .desc("number of load insts issued")
         .flags(total)
         ;
 
-    exe_branches
+    exeBranches
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:branches")
         .desc("Number of branches issued")
         .flags(total)
         ;
 
-    issued_ops
+    issuedOps
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:op_count")
         .desc("number of insts issued")
@@ -272,28 +274,28 @@ LWBackEnd<Impl>::regStats()
     //
     //  Other stats
     //
-    lsq_forw_loads
+    lsqForwLoads
         .init(cpu->number_of_threads)
         .name(name() + ".LSQ:forw_loads")
         .desc("number of loads forwarded via LSQ")
         .flags(total)
         ;
 
-    inv_addr_loads
+    invAddrLoads
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:addr_loads")
         .desc("number of invalid-address loads")
         .flags(total)
         ;
 
-    inv_addr_swpfs
+    invAddrSwpfs
         .init(cpu->number_of_threads)
         .name(name() + ".ISSUE:addr_swpfs")
         .desc("number of invalid-address SW prefetches")
         .flags(total)
         ;
 
-    lsq_blocked_loads
+    lsqBlockedLoads
         .init(cpu->number_of_threads)
         .name(name() + ".LSQ:blocked_loads")
         .desc("number of ready loads not issued due to memory disambiguation")
@@ -305,51 +307,52 @@ LWBackEnd<Impl>::regStats()
         .desc("Number of times LSQ instruction issued early")
         ;
 
-    n_issued_dist
+    nIssuedDist
         .init(issueWidth + 1)
         .name(name() + ".ISSUE:issued_per_cycle")
         .desc("Number of insts issued each cycle")
         .flags(total | pdf | dist)
         ;
-    issue_delay_dist
+/*
+    issueDelayDist
         .init(Num_OpClasses,0,99,2)
         .name(name() + ".ISSUE:")
         .desc("cycles from operands ready to issue")
         .flags(pdf | cdf)
         ;
 
-    queue_res_dist
+    queueResDist
         .init(Num_OpClasses, 0, 99, 2)
         .name(name() + ".IQ:residence:")
         .desc("cycles from dispatch to issue")
         .flags(total | pdf | cdf )
         ;
     for (int i = 0; i < Num_OpClasses; ++i) {
-        queue_res_dist.subname(i, opClassStrings[i]);
+        queueResDist.subname(i, opClassStrings[i]);
     }
-
-    writeback_count
+*/
+    writebackCount
         .init(cpu->number_of_threads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
         .flags(total)
         ;
 
-    producer_inst
+    producerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
         .flags(total)
         ;
 
-    consumer_inst
+    consumerInst
         .init(cpu->number_of_threads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
         .flags(total)
         ;
 
-    wb_penalized
+    wbPenalized
         .init(cpu->number_of_threads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
@@ -357,71 +360,71 @@ LWBackEnd<Impl>::regStats()
         ;
 
 
-    wb_penalized_rate
+    wbPenalizedRate
         .name(name() + ".WB:penalized_rate")
         .desc ("fraction of instructions written-back that wrote to 'other' IQ")
         .flags(total)
         ;
 
-    wb_penalized_rate = wb_penalized / writeback_count;
+    wbPenalizedRate = wbPenalized / writebackCount;
 
-    wb_fanout
+    wbFanout
         .name(name() + ".WB:fanout")
         .desc("average fanout of values written-back")
         .flags(total)
         ;
 
-    wb_fanout = producer_inst / consumer_inst;
+    wbFanout = producerInst / consumerInst;
 
-    wb_rate
+    wbRate
         .name(name() + ".WB:rate")
         .desc("insts written-back per cycle")
         .flags(total)
         ;
-    wb_rate = writeback_count / cpu->numCycles;
+    wbRate = writebackCount / cpu->numCycles;
 
-    stat_com_inst
+    statComInst
         .init(cpu->number_of_threads)
         .name(name() + ".COM:count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
-    stat_com_swp
+    statComSwp
         .init(cpu->number_of_threads)
         .name(name() + ".COM:swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
-    stat_com_refs
+    statComRefs
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
-    stat_com_loads
+    statComLoads
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
-    stat_com_membars
+    statComMembars
         .init(cpu->number_of_threads)
         .name(name() +  ".COM:membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
-    stat_com_branches
+    statComBranches
         .init(cpu->number_of_threads)
         .name(name() + ".COM:branches")
         .desc("Number of branches committed")
         .flags(total)
         ;
-    n_committed_dist
+    nCommittedDist
         .init(0,commitWidth,1)
         .name(name() + ".COM:committed_per_cycle")
         .desc("Number of insts commited each cycle")
@@ -441,14 +444,14 @@ LWBackEnd<Impl>::regStats()
     //  -> The standard deviation is computed only over cycles where
     //  we reached the BW limit
     //
-    commit_eligible
+    commitEligible
         .init(cpu->number_of_threads)
         .name(name() + ".COM:bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
         ;
 
-    commit_eligible_samples
+    commitEligibleSamples
         .name(name() + ".COM:bw_lim_events")
         .desc("number cycles where commit BW limit reached")
         ;
@@ -465,37 +468,38 @@ LWBackEnd<Impl>::regStats()
         .desc("Number of instructions removed from inst list when they reached the head of the ROB")
         ;
 
-    ROB_fcount
+    ROBFcount
         .name(name() + ".ROB:full_count")
         .desc("number of cycles where ROB was full")
         ;
 
-    ROB_count
+    ROBCount
         .init(cpu->number_of_threads)
         .name(name() + ".ROB:occupancy")
         .desc(name() + ".ROB occupancy (cumulative)")
         .flags(total)
         ;
 
-    ROB_full_rate
+    ROBFullRate
         .name(name() + ".ROB:full_rate")
         .desc("ROB full per cycle")
         ;
-    ROB_full_rate = ROB_fcount / cpu->numCycles;
+    ROBFullRate = ROBFcount / cpu->numCycles;
 
-    ROB_occ_rate
+    ROBOccRate
         .name(name() + ".ROB:occ_rate")
         .desc("ROB occupancy rate")
         .flags(total)
         ;
-    ROB_occ_rate = ROB_count / cpu->numCycles;
-
-    ROB_occ_dist
+    ROBOccRate = ROBCount / cpu->numCycles;
+/*
+    ROBOccDist
         .init(cpu->number_of_threads,0,numROBEntries,2)
         .name(name() + ".ROB:occ_dist")
         .desc("ROB Occupancy per cycle")
         .flags(total | cdf)
         ;
+*/
 }
 
 template <class Impl>
@@ -588,17 +592,21 @@ LWBackEnd<Impl>::tick()
 {
     DPRINTF(BE, "Ticking back end\n");
 
+    // Read in any done instruction information and update the IQ or LSQ.
+    updateStructures();
+
     if (switchPending && robEmpty() && !LSQ.hasStoresToWB()) {
         cpu->signalSwitched();
         return;
     }
 
-    ROB_count[0]+= numInsts;
+    readyInstsForCommit();
+
+    numInstsToWB.advance();
+
+    ROBCount[0]+= numInsts;
 
     wbCycle = 0;
-
-    // Read in any done instruction information and update the IQ or LSQ.
-    updateStructures();
 
 #if FULL_SYSTEM
     checkInterrupts();
@@ -674,6 +682,10 @@ LWBackEnd<Impl>::dispatchInsts()
     while (numInsts < numROBEntries &&
            numWaitingMemOps < maxOutstandingMemOps) {
         // Get instruction from front of time buffer
+        if (lsqLimits && LSQ.isFull()) {
+            break;
+        }
+
         DynInstPtr inst = frontEnd->getInst();
         if (!inst) {
             break;
@@ -732,6 +744,7 @@ LWBackEnd<Impl>::dispatchInsts()
                 inst->setIssued();
                 inst->setExecuted();
                 inst->setCanCommit();
+                numInstsToWB[0]++;
             } else {
                 DPRINTF(BE, "Instruction [sn:%lli] ready, addding to "
                         "exeList.\n",
@@ -866,8 +879,17 @@ LWBackEnd<Impl>::executeInsts()
             if (inst->isLoad()) {
                 LSQ.executeLoad(inst);
             } else if (inst->isStore()) {
-                LSQ.executeStore(inst);
-                if (inst->req && !(inst->req->getFlags() & LOCKED)) {
+                Fault fault = LSQ.executeStore(inst);
+
+                if (!inst->isStoreConditional() && fault == NoFault) {
+                    inst->setExecuted();
+
+                    instToCommit(inst);
+                } else if (fault != NoFault) {
+                    // If the instruction faulted, then we need to send it along to commit
+                    // without the instruction completing.
+                    // Send this instruction to commit, also make sure iew stage
+                    // realizes there is activity.
                     inst->setExecuted();
 
                     instToCommit(inst);
@@ -908,36 +930,54 @@ LWBackEnd<Impl>::executeInsts()
         }
     }
 
-    issued_ops[0]+= num_executed;
-    n_issued_dist[num_executed]++;
+    issuedOps[0]+= num_executed;
+    nIssuedDist[num_executed]++;
 }
 
 template<class Impl>
 void
 LWBackEnd<Impl>::instToCommit(DynInstPtr &inst)
 {
-
     DPRINTF(BE, "Sending instructions to commit [sn:%lli] PC %#x.\n",
             inst->seqNum, inst->readPC());
 
     if (!inst->isSquashed()) {
-        DPRINTF(BE, "Writing back instruction [sn:%lli] PC %#x.\n",
-                inst->seqNum, inst->readPC());
-
-        inst->setCanCommit();
-
         if (inst->isExecuted()) {
             inst->setResultReady();
             int dependents = wakeDependents(inst);
             if (dependents) {
-                producer_inst[0]++;
-                consumer_inst[0]+= dependents;
+                producerInst[0]++;
+                consumerInst[0]+= dependents;
             }
         }
     }
 
-    writeback_count[0]++;
+    writeback.push_back(inst);
+
+    numInstsToWB[0]++;
+
+    writebackCount[0]++;
 }
+
+template <class Impl>
+void
+LWBackEnd<Impl>::readyInstsForCommit()
+{
+    for (int i = numInstsToWB[-latency];
+         !writeback.empty() && i;
+         --i)
+    {
+        DynInstPtr inst = writeback.front();
+        writeback.pop_front();
+        if (!inst->isSquashed()) {
+            DPRINTF(BE, "Writing back instruction [sn:%lli] PC %#x.\n",
+                    inst->seqNum, inst->readPC());
+
+            inst->setCanCommit();
+        }
+    }
+}
+
 #if 0
 template <class Impl>
 void
@@ -1010,7 +1050,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     // or store inst.  Signal backwards that it should be executed.
     if (!inst->isExecuted()) {
         if (inst->isNonSpeculative() ||
-            inst->isStoreConditional() ||
+            (inst->isStoreConditional() && inst->getFault() == NoFault) ||
             inst->isMemBarrier() ||
             inst->isWriteBarrier()) {
 #if !FULL_SYSTEM
@@ -1151,12 +1191,29 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         ++freed_regs;
     }
 
+#if FULL_SYSTEM
+    if (thread->profile) {
+//        bool usermode =
+//            (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+//        thread->profilePC = usermode ? 1 : inst->readPC();
+        thread->profilePC = inst->readPC();
+        ProfileNode *node = thread->profile->consume(thread->getTC(),
+                                                     inst->staticInst);
+
+        if (node)
+            thread->profileNode = node;
+    }
+#endif
+
     if (inst->traceData) {
         inst->traceData->setFetchSeq(inst->seqNum);
         inst->traceData->setCPSeq(thread->numInst);
         inst->traceData->finalize();
         inst->traceData = NULL;
     }
+
+    if (inst->isCopy())
+        panic("Should not commit any copy instructions!");
 
     inst->clearDependents();
 
@@ -1207,9 +1264,9 @@ LWBackEnd<Impl>::commitInsts()
     while (!instList.empty() && inst_num < commitWidth) {
         if (instList.back()->isSquashed()) {
             instList.back()->clearDependents();
+            ROBSquashedInsts[instList.back()->threadNumber]++;
             instList.pop_back();
             --numInsts;
-            ROBSquashedInsts[instList.back()->threadNumber]++;
             continue;
         }
 
@@ -1221,7 +1278,7 @@ LWBackEnd<Impl>::commitInsts()
             break;
         }
     }
-    n_committed_dist.sample(inst_num);
+    nCommittedDist.sample(inst_num);
 }
 
 template <class Impl>
@@ -1231,10 +1288,10 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
     LSQ.squash(sn);
 
     int freed_regs = 0;
-    InstListIt waiting_list_end = waitingList.end();
+    InstListIt insts_end_it = waitingList.end();
     InstListIt insts_it = waitingList.begin();
 
-    while (insts_it != waiting_list_end && (*insts_it)->seqNum > sn)
+    while (insts_it != insts_end_it && (*insts_it)->seqNum > sn)
     {
         if ((*insts_it)->isSquashed()) {
             ++insts_it;
@@ -1260,6 +1317,7 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
     while (!instList.empty() && (*insts_it)->seqNum > sn)
     {
         if ((*insts_it)->isSquashed()) {
+            panic("Instruction should not be already squashed and on list!");
             ++insts_it;
             continue;
         }
@@ -1291,18 +1349,6 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
         --numInsts;
     }
 
-    insts_it = waitingList.begin();
-    while (!waitingList.empty() && insts_it != waitingList.end()) {
-        if ((*insts_it)->seqNum < sn) {
-            ++insts_it;
-            continue;
-        }
-        assert((*insts_it)->isSquashed());
-
-        waitingList.erase(insts_it++);
-        waitingInsts--;
-    }
-
     while (memBarrier && memBarrier->seqNum > sn) {
         DPRINTF(BE, "[sn:%lli] Memory barrier squashed (or previously "
                 "squashed)\n", memBarrier->seqNum);
@@ -1318,6 +1364,18 @@ LWBackEnd<Impl>::squash(const InstSeqNum &sn)
             DPRINTF(BE, "Previous barrier: [sn:%lli]\n",
                     memBarrier->seqNum);
         }
+    }
+
+    insts_it = replayList.begin();
+    insts_end_it = replayList.end();
+    while (!replayList.empty() && insts_it != insts_end_it) {
+        if ((*insts_it)->seqNum < sn) {
+            ++insts_it;
+            continue;
+        }
+        assert((*insts_it)->isSquashed());
+
+        replayList.erase(insts_it++);
     }
 
     frontEnd->addFreeRegs(freed_regs);
@@ -1392,14 +1450,6 @@ LWBackEnd<Impl>::squashDueToMemBlocked(DynInstPtr &inst)
 
 template <class Impl>
 void
-LWBackEnd<Impl>::fetchFault(Fault &fault)
-{
-    faultFromFetch = fault;
-    fetchHasFault = true;
-}
-
-template <class Impl>
-void
 LWBackEnd<Impl>::switchOut()
 {
     switchPending = true;
@@ -1416,17 +1466,25 @@ LWBackEnd<Impl>::doSwitchOut()
     // yet written back.
     assert(robEmpty());
     assert(!LSQ.hasStoresToWB());
+    writeback.clear();
+    for (int i = 0; i < numInstsToWB.getSize() + 1; ++i)
+        numInstsToWB.advance();
 
+//    squash(0);
+    assert(waitingList.empty());
+    assert(instList.empty());
+    assert(replayList.empty());
+    assert(writeback.empty());
     LSQ.switchOut();
-
-    squash(0);
 }
 
 template <class Impl>
 void
 LWBackEnd<Impl>::takeOverFrom(ThreadContext *old_tc)
 {
-    switchedOut = false;
+    assert(!squashPending);
+    squashSeqNum = 0;
+    squashNextPC = 0;
     tcSquash = false;
     trapSquash = false;
 
@@ -1451,27 +1509,27 @@ LWBackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        exe_swp[thread_number]++;
+        exeSwp[thread_number]++;
     else
-        exe_inst[thread_number]++;
+        exeInst[thread_number]++;
 #else
-    exe_inst[thread_number]++;
+    exeInst[thread_number]++;
 #endif
 
     //
     //  Control operations
     //
     if (inst->isControl())
-        exe_branches[thread_number]++;
+        exeBranches[thread_number]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        exe_refs[thread_number]++;
+        exeRefs[thread_number]++;
 
         if (inst->isLoad())
-            exe_loads[thread_number]++;
+            exeLoads[thread_number]++;
     }
 }
 
@@ -1491,33 +1549,33 @@ LWBackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch()) {
-        stat_com_swp[tid]++;
+        statComSwp[tid]++;
     } else {
-        stat_com_inst[tid]++;
+        statComInst[tid]++;
     }
 #else
-    stat_com_inst[tid]++;
+    statComInst[tid]++;
 #endif
 
     //
     //  Control Instructions
     //
     if (inst->isControl())
-        stat_com_branches[tid]++;
+        statComBranches[tid]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        stat_com_refs[tid]++;
+        statComRefs[tid]++;
 
         if (inst->isLoad()) {
-            stat_com_loads[tid]++;
+            statComLoads[tid]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        stat_com_membars[tid]++;
+        statComMembars[tid]++;
     }
 }
 
@@ -1535,6 +1593,45 @@ LWBackEnd<Impl>::dumpInsts()
     cprintf("Inst list size: %i\n", instList.size());
 
     while (inst_list_it != instList.end())
+    {
+        cprintf("Instruction:%i\n",
+                num);
+        if (!(*inst_list_it)->isSquashed()) {
+            if (!(*inst_list_it)->isIssued()) {
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            } else if ((*inst_list_it)->isMemRef() &&
+                       !(*inst_list_it)->memOpDone) {
+                // Loads that have not been marked as executed still count
+                // towards the total instructions.
+                ++valid_num;
+                cprintf("Count:%i\n", valid_num);
+            }
+        }
+
+        cprintf("PC:%#x\n[sn:%lli]\n[tid:%i]\n"
+                "Issued:%i\nSquashed:%i\n",
+                (*inst_list_it)->readPC(),
+                (*inst_list_it)->seqNum,
+                (*inst_list_it)->threadNumber,
+                (*inst_list_it)->isIssued(),
+                (*inst_list_it)->isSquashed());
+
+        if ((*inst_list_it)->isMemRef()) {
+            cprintf("MemOpDone:%i\n", (*inst_list_it)->memOpDone);
+        }
+
+        cprintf("\n");
+
+        inst_list_it--;
+        ++num;
+    }
+
+    inst_list_it = --(writeback.end());
+
+    cprintf("Writeback list size: %i\n", writeback.size());
+
+    while (inst_list_it != writeback.end())
     {
         cprintf("Instruction:%i\n",
                 num);

@@ -197,7 +197,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     union Result {
         uint64_t integer;
-        float fp;
+//        float fp;
         double dbl;
     };
 
@@ -394,7 +394,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     uint64_t readIntResult() { return instResult.integer; }
 
     /** Returns the result of a floating point instruction. */
-    float readFloatResult() { return instResult.fp; }
+    float readFloatResult() { return (float)instResult.dbl; }
 
     /** Returns the result of a floating point (double) instruction. */
     double readDoubleResult() { return instResult.dbl; }
@@ -409,7 +409,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
         if (width == 32)
-            instResult.fp = val;
+            instResult.dbl = (double)val;
         else if (width == 64)
             instResult.dbl = val;
         else
@@ -419,7 +419,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Records an fp register being set to a value. */
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
-        instResult.fp = val;
+//        instResult.fp = val;
+        instResult.dbl = (double)val;
     }
 
     /** Records an fp register being set to an integer value. */

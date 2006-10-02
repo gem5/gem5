@@ -417,6 +417,8 @@ class DefaultRename
     /** The maximum skid buffer size. */
     unsigned skidBufferMax;
 
+    PhysRegIndex maxPhysicalRegs;
+
     /** Enum to record the source of a structure full stall.  Can come from
      * either ROB, IQ, LSQ, and it is priortized in that order.
      */

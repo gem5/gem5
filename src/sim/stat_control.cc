@@ -160,13 +160,13 @@ class StatEvent : public Event
     Tick repeat;
 
   public:
-    StatEvent(int _flags, Tick _when, Tick _repeat);
+    StatEvent(EventQueue *queue, int _flags, Tick _when, Tick _repeat);
     virtual void process();
     virtual const char *description();
 };
 
-StatEvent::StatEvent(int _flags, Tick _when, Tick _repeat)
-    : Event(&mainEventQueue, Stat_Event_Pri),
+StatEvent::StatEvent(EventQueue *queue, int _flags, Tick _when, Tick _repeat)
+    : Event(queue, Stat_Event_Pri),
       flags(_flags), repeat(_repeat)
 {
     setFlags(AutoDelete);
@@ -185,8 +185,10 @@ StatEvent::process()
     if (flags & Stats::Dump)
         DumpNow();
 
-    if (flags & Stats::Reset)
+    if (flags & Stats::Reset) {
+        cprintf("Resetting stats!\n");
         reset();
+    }
 
     if (repeat)
         schedule(curTick + repeat);
@@ -214,9 +216,12 @@ DumpNow()
 }
 
 void
-SetupEvent(int flags, Tick when, Tick repeat)
+SetupEvent(int flags, Tick when, Tick repeat, EventQueue *queue)
 {
-    new StatEvent(flags, when, repeat);
+    if (queue == NULL)
+        queue = &mainEventQueue;
+
+    new StatEvent(queue, flags, when, repeat);
 }
 
 /* namespace Stats */ }

@@ -103,6 +103,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
 
     Param<string> boot_osflags;
     Param<string> readfile;
+    Param<string> symbolfile;
     Param<unsigned int> init_param;
 
     Param<uint64_t> system_type;
@@ -122,6 +123,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Tru64AlphaSystem)
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
+    INIT_PARAM_DFLT(symbolfile, "file to read symbols from", ""),
     INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 12),
     INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 2<<1)
@@ -141,6 +143,7 @@ CREATE_SIM_OBJECT(Tru64AlphaSystem)
     p->boot_osflags = boot_osflags;
     p->init_param = init_param;
     p->readfile = readfile;
+    p->symbolfile = symbolfile;
     p->system_type = system_type;
     p->system_rev = system_rev;
 

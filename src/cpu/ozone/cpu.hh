@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 
 #include <set>
 
+#include "arch/regfile.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
@@ -81,13 +82,13 @@ template <class>
 class Checker;
 
 /**
- * Declaration of Out-of-Order CPU class.  Basically it is a SimpleCPU with
- * simple out-of-order capabilities added to it.  It is still a 1 CPI machine
- * (?), but is capable of handling cache misses.  Basically it models having
- * a ROB/IQ by only allowing a certain amount of instructions to execute while
- * the cache miss is outstanding.
+ * Light weight out of order CPU model that approximates an out of
+ * order CPU.  It is separated into a front end and a back end, with
+ * the template parameter Impl describing the classes used for each.
+ * The goal is to be able to specify through the Impl the class to use
+ * for the front end and back end, with different classes used to
+ * model different levels of detail.
  */
-
 template <class Impl>
 class OzoneCPU : public BaseCPU
 {
@@ -273,6 +274,7 @@ class OzoneCPU : public BaseCPU
     typedef OzoneThreadState<Impl> ImplState;
 
   private:
+    // Committed thread state for the OzoneCPU.
     OzoneThreadState<Impl> thread;
 
   public:
@@ -310,12 +312,6 @@ class OzoneCPU : public BaseCPU
             tickEvent.squash();
     }
 
-  private:
-    Trace::InstRecord *traceData;
-
-    template<typename T>
-    void trace_data(T data);
-
   public:
     enum Status {
         Running,
@@ -326,8 +322,6 @@ class OzoneCPU : public BaseCPU
     Status _status;
 
   public:
-    bool checkInterrupts;
-
     void post_interrupt(int int_num, int index);
 
     void zero_fill_64(Addr addr) {
@@ -379,6 +373,7 @@ class OzoneCPU : public BaseCPU
     FrontEnd *frontEnd;
 
     BackEnd *backEnd;
+
   private:
     Status status() const { return _status; }
     void setStatus(Status new_status) { _status = new_status; }
@@ -410,11 +405,10 @@ class OzoneCPU : public BaseCPU
     // number of idle cycles
     Stats::Average<> notIdleFraction;
     Stats::Formula idleFraction;
-  public:
 
+  public:
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
 
 #if FULL_SYSTEM
     /** Translates instruction requestion. */
@@ -582,12 +576,9 @@ class OzoneCPU : public BaseCPU
 
     Fault copy(Addr dest);
 
-    InstSeqNum globalSeqNum;
-
   public:
     void squashFromTC();
 
-    // @todo: This can be a useful debug function.  Implement it.
     void dumpInsts() { frontEnd->dumpInsts(); }
 
 #if FULL_SYSTEM
@@ -605,7 +596,6 @@ class OzoneCPU : public BaseCPU
 
     ThreadContext *tcBase() { return tc; }
 
-    bool decoupledFrontEnd;
     struct CommStruct {
         InstSeqNum doneSeqNum;
         InstSeqNum nonSpecSeqNum;
@@ -614,7 +604,12 @@ class OzoneCPU : public BaseCPU
 
         bool stall;
     };
+
+    InstSeqNum globalSeqNum;
+
     TimeBuffer<CommStruct> comm;
+
+    bool decoupledFrontEnd;
 
     bool lockFlag;
 

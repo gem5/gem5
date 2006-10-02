@@ -169,6 +169,22 @@ main(int argc, char *argv[])
         }
     }
 
+    if (COMPARE("readfile")) {
+            char buf[256*1024];
+            int offset = 0;
+            int len;
+
+            if (argc != 2)
+                    usage();
+
+            while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
+                    write(STDOUT_FILENO, buf, len);
+                    offset += len;
+            }
+
+            return 0;
+    }
+
     if (COMPARE("checkpoint")) {
         switch (argc) {
           case 4:
@@ -186,6 +202,9 @@ main(int argc, char *argv[])
         return 0;
     }
 
+    if (COMPARE("loadsymbol")) {
+        m5_loadsymbol(arg1);
+        return 0;
     if (COMPARE("readfile")) {
             char buf[256*1024];
             int offset = 0;

@@ -216,6 +216,7 @@ class DefaultIEW
         if (++wbOutstanding == wbMax)
             ableToIssue = false;
         DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+        assert(wbOutstanding <= wbMax);
 #ifdef DEBUG
         wbList.insert(sn);
 #endif
@@ -226,6 +227,7 @@ class DefaultIEW
         if (wbOutstanding-- == wbMax)
             ableToIssue = true;
         DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+        assert(wbOutstanding >= 0);
 #ifdef DEBUG
         assert(wbList.find(sn) != wbList.end());
         wbList.erase(sn);
@@ -450,7 +452,9 @@ class DefaultIEW
     unsigned wbCycle;
 
     /** Number of instructions in flight that will writeback. */
-    unsigned wbOutstanding;
+
+    /** Number of instructions in flight that will writeback. */
+    int wbOutstanding;
 
     /** Writeback width. */
     unsigned wbWidth;
@@ -507,6 +511,8 @@ class DefaultIEW
     Stats::Scalar<> iewExecutedInsts;
     /** Stat for total number of executed load instructions. */
     Stats::Vector<> iewExecLoadInsts;
+    /** Stat for total number of executed store instructions. */
+//    Stats::Scalar<> iewExecStoreInsts;
     /** Stat for total number of squashed instructions skipped at execute. */
     Stats::Scalar<> iewExecSquashedInsts;
     /** Number of executed software prefetches. */

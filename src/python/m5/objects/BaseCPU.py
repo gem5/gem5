@@ -26,6 +26,7 @@ class BaseCPU(SimObject):
         "terminate when all threads have reached this load count")
     max_loads_any_thread = Param.Counter(0,
         "terminate when any thread reaches this load count")
+    progress_interval = Param.Tick(0, "interval to print out the progress message")
 
     defer_registration = Param.Bool(False,
         "defer registration with system (for sampling)")

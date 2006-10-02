@@ -149,6 +149,54 @@ namespace AlphaPseudo
     }
 
     void
+    loadsymbol(ThreadContext *tc)
+    {
+        const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
+        if (filename.empty()) {
+            return;
+        }
+
+        std::string buffer;
+        ifstream file(filename.c_str());
+
+        if (!file)
+            fatal("file error: Can't open symbol table file %s\n", filename);
+
+        while (!file.eof()) {
+            getline(file, buffer);
+
+            if (buffer.empty())
+                continue;
+
+            int idx = buffer.find(' ');
+            if (idx == string::npos)
+                continue;
+
+            string address = "0x" + buffer.substr(0, idx);
+            eat_white(address);
+            if (address.empty())
+                continue;
+
+            // Skip over letter and space
+            string symbol = buffer.substr(idx + 3);
+            eat_white(symbol);
+            if (symbol.empty())
+                continue;
+
+            Addr addr;
+            if (!to_number(address, addr))
+                continue;
+
+            if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
+                continue;
+
+
+            DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+        }
+        file.close();
+    }
+
+    void
     resetstats(ThreadContext *tc, Tick delay, Tick period)
     {
         if (!doStatisticsInsts)

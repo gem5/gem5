@@ -64,6 +64,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
     Param<Counter> max_insts_all_threads;
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
+    Param<Tick> progress_interval;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
@@ -78,6 +79,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(O3Checker)
 
     Param<bool> defer_registration;
     Param<bool> exitOnError;
+    Param<bool> updateOnError;
     Param<bool> warnOnlyOnLoadError;
     Param<bool> function_trace;
     Param<Tick> function_trace_start;
@@ -94,6 +96,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
                "terminate when any thread reaches this load count"),
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
+    INIT_PARAM_DFLT(progress_interval, "CPU Progress Interval", 0),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
@@ -109,6 +112,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(O3Checker)
 
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(exitOnError, "exit on error"),
+    INIT_PARAM(updateOnError, "Update the checker with the main CPU's state on error"),
     INIT_PARAM_DFLT(warnOnlyOnLoadError, "warn, but don't exit, if a load "
                     "result errors", false),
     INIT_PARAM(function_trace, "Enable function trace"),
@@ -127,6 +131,7 @@ CREATE_SIM_OBJECT(O3Checker)
     params->max_loads_any_thread = 0;
     params->max_loads_all_threads = 0;
     params->exitOnError = exitOnError;
+    params->updateOnError = updateOnError;
     params->warnOnlyOnLoadError = warnOnlyOnLoadError;
     params->deferRegistration = defer_registration;
     params->functionTrace = function_trace;
@@ -139,6 +144,9 @@ CREATE_SIM_OBJECT(O3Checker)
     temp = max_insts_all_threads;
     temp = max_loads_any_thread;
     temp = max_loads_all_threads;
+    Tick temp2 = progress_interval;
+    params->progress_interval = 0;
+    temp2++;
 
 #if FULL_SYSTEM
     params->itb = itb;

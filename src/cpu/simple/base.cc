@@ -170,7 +170,7 @@ BaseSimpleCPU::regStats()
 void
 BaseSimpleCPU::resetStats()
 {
-    startNumInst = numInst;
+//    startNumInst = numInst;
     // notIdleFraction = (_status != Idle);
 }
 
