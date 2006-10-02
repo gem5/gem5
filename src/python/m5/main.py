@@ -278,6 +278,7 @@ def main():
     # set tracing options
     objects.Trace.flags = options.trace_flags
     objects.Trace.start = options.trace_start
+    objects.Trace.cycle = options.trace_cycle
     objects.Trace.file = options.trace_file
     objects.Trace.bufsize = options.trace_circlebuf
     objects.Trace.dump_on_exit = options.trace_dumponexit
