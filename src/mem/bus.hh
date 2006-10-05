@@ -51,6 +51,14 @@ class Bus : public MemObject
 {
     /** a globally unique id for this bus. */
     int busId;
+    /** the clock speed for the bus */
+    int clock;
+    /** the width of the bus in bits */
+    int width;
+    /** the last tick the address bus was used */
+    Tick tickAddrLastUsed;
+    /** the last tick the data bus was used */
+    Tick tickDataLastUsed;
 
     static const int defaultId = -1;
 
@@ -199,8 +207,12 @@ class Bus : public MemObject
 
     virtual void init();
 
-    Bus(const std::string &n, int bus_id)
-        : MemObject(n), busId(bus_id), defaultPort(NULL)  {}
+    Bus(const std::string &n, int bus_id, int _clock, int _width)
+        : MemObject(n), busId(bus_id), clock(_clock), width(_width),
+        tickAddrLastUsed(0), tickDataLastUsed(0), defaultPort(NULL)
+    {
+        assert(width);
+    }
 
 };
 
