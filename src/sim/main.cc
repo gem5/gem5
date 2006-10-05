@@ -414,7 +414,12 @@ unserializeAll(const std::string &cpt_dir)
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */
-CallbackQueue exitCallbacks;
+CallbackQueue&
+exitCallbacks()
+{
+    static CallbackQueue theQueue;
+    return theQueue;
+}
 
 /**
  * Register an exit callback.
@@ -422,7 +427,7 @@ CallbackQueue exitCallbacks;
 void
 registerExitCallback(Callback *callback)
 {
-    exitCallbacks.add(callback);
+    exitCallbacks().add(callback);
 }
 
 BaseCPU *
@@ -442,8 +447,8 @@ convertToBaseCPUPtr(SimObject *obj)
 void
 doExitCleanup()
 {
-    exitCallbacks.process();
-    exitCallbacks.clear();
+    exitCallbacks().process();
+    exitCallbacks().clear();
 
     cout.flush();
 
