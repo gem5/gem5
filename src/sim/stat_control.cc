@@ -186,7 +186,7 @@ StatEvent::process()
         DumpNow();
 
     if (flags & Stats::Reset) {
-        cprintf("Resetting stats!\n");
+        cprintf("Resetting stats at cycle %d!\n", curTick);
         reset();
     }
 

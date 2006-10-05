@@ -124,6 +124,9 @@ exit_event = m5.simulate(maxtick)
 
 while exit_event.getCause() == "checkpoint":
     m5.checkpoint(root, "cpt.%d")
-    exit_event = m5.simulate(maxtick - m5.curTick())
+    if maxtick == -1:
+        exit_event = m5.simulate(maxtick)
+    else:
+        exit_event = m5.simulate(maxtick - m5.curTick())
 
 print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
