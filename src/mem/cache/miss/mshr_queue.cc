@@ -251,7 +251,7 @@ MSHRQueue::squash(int threadNum)
                 Packet * target = mshr->getTarget();
                 mshr->popTarget();
 
-                assert(target->req->getThreadNum() == threadNum);
+                assert(0/*target->req->getThreadNum()*/ == threadNum);
                 target = NULL;
             }
             assert(!mshr->hasTargets());
