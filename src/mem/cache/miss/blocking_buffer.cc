@@ -189,7 +189,7 @@ BlockingBuffer::squash(int threadNum)
     if (miss.threadNum == threadNum) {
         Packet * target = miss.getTarget();
         miss.popTarget();
-        assert(target->req->getThreadNum() == threadNum);
+        assert(0/*target->req->getThreadNum()*/ == threadNum);
         target = NULL;
         assert(!miss.hasTargets());
         miss.ntargets=0;
@@ -218,7 +218,7 @@ BlockingBuffer::doWriteback(Addr addr,
     }
 
     ///All writebacks charged to same thread @todo figure this out
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     wb.allocateAsBuffer(pkt);
     cache->setMasterRequest(Request_WB, curTick);
@@ -230,7 +230,7 @@ BlockingBuffer::doWriteback(Addr addr,
 void
 BlockingBuffer::doWriteback(Packet * &pkt)
 {
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     wb.allocateAsBuffer(pkt);
 

@@ -394,9 +394,12 @@ class BaseCache : public MemObject
             blocked_causes[cause]++;
             blockedCycle = curTick;
         }
-        blocked |= flag;
-        DPRINTF(Cache,"Blocking for cause %s\n", cause);
-        cpuSidePort->setBlocked();
+        if (!(blocked & flag)) {
+            //Wasn't already blocked for this cause
+            blocked |= flag;
+            DPRINTF(Cache,"Blocking for cause %s\n", cause);
+            cpuSidePort->setBlocked();
+        }
     }
 
     /**
@@ -407,8 +410,11 @@ class BaseCache : public MemObject
     void setBlockedForSnoop(BlockedCause cause)
     {
         uint8_t flag = 1 << cause;
-        blockedSnoop |= flag;
-        memSidePort->setBlocked();
+        if (!(blocked & flag)) {
+            //Wasn't already blocked for this cause
+            blockedSnoop |= flag;
+            memSidePort->setBlocked();
+        }
     }
 
     /**
@@ -527,7 +533,7 @@ class BaseCache : public MemObject
     void respondToMiss(Packet *pkt, Tick time)
     {
         if (!pkt->req->isUncacheable()) {
-            missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
+            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] += time - pkt->time;
         }
         CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
         reqCpu->schedule(time);

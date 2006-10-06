@@ -88,7 +88,7 @@ void
 MSHR::allocateAsBuffer(Packet * &target)
 {
     addr = target->getAddr();
-    threadNum = target->req->getThreadNum();
+    threadNum = 0/*target->req->getThreadNum()*/;
     pkt = new Packet(target->req, target->cmd, -1);
     pkt->allocate();
     pkt->senderState = (Packet::SenderState*)this;

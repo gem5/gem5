@@ -413,8 +413,8 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
         mshr = mq.findMatch(blkAddr);
         if (mshr) {
             //@todo remove hw_pf here
-            mshr_hits[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
-            if (mshr->threadNum != pkt->req->getThreadNum()) {
+            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            if (mshr->threadNum != 0/*pkt->req->getThreadNum()*/) {
                 mshr->threadNum = -1;
             }
             mq.allocateTarget(mshr, pkt);
@@ -434,11 +434,11 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
             mshr_no_allocate_misses++;
         }
         else {
-            mshr_misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
         }
     } else {
         //Count uncacheable accesses
-        mshr_uncacheable[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
+        mshr_uncacheable[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
         size = pkt->getSize();
     }
     if (pkt->isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
@@ -499,7 +499,7 @@ MissQueue::getPacket()
         pkt = prefetcher->getPacket();
         if (pkt) {
             //Update statistic on number of prefetches issued (hwpf_mshr_misses)
-            mshr_misses[pkt->cmdToIndex()][pkt->req->getThreadNum()]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
             //It will request the bus for the future, but should clear that immedieatley
             allocateMiss(pkt, pkt->getSize(), curTick);
             pkt = mq.getReq();
@@ -592,7 +592,7 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
     BlockedCause cause = NUM_BLOCKED_CAUSES;
 
     if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
-        mshr_miss_latency[mshr->originalCmd][pkt->req->getThreadNum()] +=
+        mshr_miss_latency[mshr->originalCmd][0/*pkt->req->getThreadNum()*/] +=
             curTick - pkt->time;
         // targets were handled in the cache tags
         if (mshr == noTargetMSHR) {
@@ -619,7 +619,7 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
         }
     } else {
         if (pkt->req->isUncacheable()) {
-            mshr_uncacheable_lat[pkt->cmd][pkt->req->getThreadNum()] +=
+            mshr_uncacheable_lat[pkt->cmd][0/*pkt->req->getThreadNum()*/] +=
                 curTick - pkt->time;
         }
         if (mshr->hasTargets() && pkt->req->isUncacheable()) {
@@ -725,7 +725,7 @@ MissQueue::doWriteback(Addr addr,
     }
 
     ///All writebacks charged to same thread @todo figure this out
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     allocateWrite(pkt, 0, curTick);
 }
@@ -734,7 +734,7 @@ MissQueue::doWriteback(Addr addr,
 void
 MissQueue::doWriteback(Packet * &pkt)
 {
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
     allocateWrite(pkt, 0, curTick);
 }
 
