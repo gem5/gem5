@@ -174,7 +174,8 @@ class Packet
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
         IsSWPrefetch    = 1 << 7,
-        IsHWPrefetch    = 1 << 8
+        IsHWPrefetch    = 1 << 8,
+        HasData		= 1 << 9
     };
 
   public:
@@ -183,21 +184,24 @@ class Packet
     {
         InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
-        WriteReq	= IsWrite | IsRequest | NeedsResponse,
-        WriteReqNoAck	= IsWrite | IsRequest,
-        ReadResp	= IsRead  | IsResponse | NeedsResponse,
+        WriteReq	= IsWrite | IsRequest | NeedsResponse,// | HasData,
+        WriteReqNoAck	= IsWrite | IsRequest,// | HasData,
+        ReadResp	= IsRead  | IsResponse | NeedsResponse,// | HasData,
         WriteResp	= IsWrite | IsResponse | NeedsResponse,
-        Writeback       = IsWrite | IsRequest,
+        Writeback       = IsWrite | IsRequest,// | HasData,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
-        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch | NeedsResponse,
-        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
+        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
+                                | NeedsResponse,// | HasData,
+        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
+                                | NeedsResponse,// | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,// | HasData,
         UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
         UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
-        ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
+        ReadExResp      = IsRead | IsInvalidate | IsResponse
+                                | NeedsResponse,// | HasData
     };
 
     /** Return the string name of the cmd field (for debugging and
@@ -219,6 +223,7 @@ class Packet
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
     bool isInvalidate()  { return (cmd & IsInvalidate) != 0; }
+    bool hasData()	 { return (cmd & HasData) != 0; }
 
     bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }

@@ -78,6 +78,16 @@ Bus::recvTiming(Packet *pkt)
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
     short dest = pkt->getDest();
+    //if (pkt->isRequest() && curTick < tickAddrLastUsed ||
+    //        (pkt->isResponse() || pkt->hasData()) && curTick < tickDataLastUsed) {
+        //We're going to need resources that have already been committed
+        //Send this guy to the back of the line
+        //We don't need to worry about scheduling an event to deal with when the
+        //bus is freed because that's handled when tick*LastUsed is incremented.
+    //    retryList.push_back(interfaces[pkt->getSrc()]);
+    //    return false;
+    //}
+
     if (dest == Packet::Broadcast) {
         if ( timingSnoopPhase1(pkt) )
         {
@@ -95,8 +105,29 @@ Bus::recvTiming(Packet *pkt)
         assert(dest != pkt->getSrc()); // catch infinite loops
         port = interfaces[dest];
     }
+
+
     if (port->sendTiming(pkt))  {
-        // packet was successfully sent, just return true.
+        // Packet was successfully sent.
+        // Figure out what resources were used, and then return true.
+        //if (pkt->isRequest()) {
+            // The address bus will be used for one cycle
+        //    while (tickAddrLastUsed <= curTick)
+        //        tickAddrLastUsed += clock;
+        //}
+        //if (pkt->isResponse() || pkt->hasData()) {
+            // Use up the data bus for at least one bus cycle
+        //    while (tickDataLastUsed <= curTick)
+        //        tickDataLastUsed += clock;
+            // Use up the data bus for however many cycles remain
+        //    if (pkt->hasData()) {
+        //        int dataSize = pkt->getSize();
+        //        for (int transmitted = width; transmitted < dataSize;
+        //                transmitted += width) {
+        //            tickDataLastUsed += clock;
+        //        }
+        //    }
+        //}
         return true;
     }
 
@@ -380,16 +411,20 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
     Param<int> bus_id;
+    Param<int> clock;
+    Param<int> width;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
-    INIT_PARAM(bus_id, "a globally unique bus id")
+    INIT_PARAM(bus_id, "a globally unique bus id"),
+    INIT_PARAM(clock, "bus clock speed"),
+    INIT_PARAM(width, "width of the bus (bits)")
 END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName(), bus_id);
+    return new Bus(getInstanceName(), bus_id, clock, width);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)
