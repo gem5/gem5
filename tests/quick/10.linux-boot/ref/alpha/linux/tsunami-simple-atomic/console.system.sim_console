@@ -69,7 +69,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 hdb: M5 IDE Disk, ATA DISK drive
 ide0 at 0x8410-0x8417,0x8422 on irq 31
 hda: max request size: 128KiB
-hda: 163296 sectors (83 MB), CHS=162/16/63, UDMA(33)
+hda: 511056 sectors (261 MB), CHS=507/16/63, UDMA(33)
  hda: hda1
 hdb: max request size: 128KiB
 hdb: 4177920 sectors (2139 MB), CHS=4144/16/63, UDMA(33)
@@ -97,10 +97,6 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 All bugs added by David S. Miller <davem@redhat.com>
 VFS: Mounted root (ext2 filesystem) readonly.
 Freeing unused kernel memory: 480k freed
-init started:  BusyBox v1.00-rc2 (2004.11.18-16:22+0000) multi-call binary
-
-PTXdist-0.7.0 (2004-11-18T11:23:40-0500)
-
+init started:  BusyBox v1.1.0 (2006.08.17-02:54+0000) multi-call binary
 mounting filesystems...
-EXT2-fs warning: checktime reached, running e2fsck is recommended
-loading script...
+loading script...
