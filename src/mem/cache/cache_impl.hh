@@ -63,14 +63,26 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
         if (pkt->isWrite() && (pkt->req->getFlags() & LOCKED)) {
             pkt->req->setScResult(1);
         }
-        access(pkt);
+        if (!(pkt->flags & SATISFIED)) {
+            access(pkt);
+        }
     }
     else
     {
         if (pkt->isResponse())
             handleResponse(pkt);
-        else
-            snoop(pkt);
+        else {
+            //Check if we are in phase1
+            if (!snoopPhase2) {
+                snoopPhase2 = true;
+            }
+            else {
+                //Check if we should do the snoop
+                if (pkt->flags && SNOOP_COMMIT)
+                    snoop(pkt);
+                snoopPhase2 = false;
+            }
+        }
     }
     return true;
 }
@@ -117,7 +129,7 @@ doFunctionalAccess(Packet *pkt, bool isCpuSide)
             assert("Can't handle LL/SC on functional path\n");
         }
 
-        probe(pkt, true);
+        probe(pkt, false);
         //TEMP ALWAYS SUCCESFUL FOR NOW
         pkt->result = Packet::Success;
     }
@@ -126,7 +138,7 @@ doFunctionalAccess(Packet *pkt, bool isCpuSide)
         if (pkt->isResponse())
             handleResponse(pkt);
         else
-            snoopProbe(pkt, true);
+            snoopProbe(pkt, false);
     }
 }
 
@@ -372,7 +384,7 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 {
-
+    DPRINTF(Cache, "SNOOPING");
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
@@ -385,7 +397,10 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //If the outstanding request was an invalidate (upgrade,readex,..)
                     //Then we need to ACK the request until we get the data
                     //Also NACK if the outstanding request is not a cachefill (writeback)
+                    pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
+                    assert("Don't detect these on the other side yet\n");
+                    respondToSnoop(pkt, curTick + hitLatency);
                     return;
                 }
                 else {
@@ -398,6 +413,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //@todo Make it so that a read to a pending read can't be exclusive now.
 
                     //Set the address so find match works
+                    assert("Don't have invalidates yet\n");
                     invalidatePkt->addrOverride(pkt->getAddr());
 
                     //Append the invalidate on
@@ -433,7 +449,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                         assert(offset + pkt->getSize() <=blkSize);
                         memcpy(pkt->getPtr<uint8_t>(), mshr->pkt->getPtr<uint8_t>() + offset, pkt->getSize());
 
-                        respondToSnoop(pkt);
+                        respondToSnoop(pkt, curTick + hitLatency);
                     }
 
                     if (pkt->isInvalidate()) {
@@ -449,7 +465,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {
         tags->handleSnoop(blk, new_state, pkt);
-        respondToSnoop(pkt);
+        respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
     tags->handleSnoop(blk, new_state);
@@ -517,7 +533,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update)
         missQueue->findWrites(blk_addr, writes);
 
         if (!update) {
-            memSidePort->sendFunctional(pkt);
+                memSidePort->sendFunctional(pkt);
             // Check for data in MSHR and writebuffer.
             if (mshr) {
                 warn("Found outstanding miss on an non-update probe");

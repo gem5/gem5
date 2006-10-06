@@ -127,6 +127,8 @@ class BaseCache : public MemObject
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 
+    bool snoopRangesSent;
+
   public:
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
@@ -149,16 +151,21 @@ class BaseCache : public MemObject
 
     void recvStatusChange(Port::Status status, bool isCpuSide)
     {
-        if (status == Port::RangeChange)
-        {
-            if (!isCpuSide)
-            {
+        if (status == Port::RangeChange){
+            if (!isCpuSide) {
                 cpuSidePort->sendStatusChange(Port::RangeChange);
+                if (topLevelCache && !snoopRangesSent) {
+                    snoopRangesSent = true;
+                    memSidePort->sendStatusChange(Port::RangeChange);
+                }
             }
-            else
-            {
+            else {
                 memSidePort->sendStatusChange(Port::RangeChange);
             }
+        }
+        else if (status == Port::SnoopSquash) {
+            assert(snoopPhase2);
+            snoopPhase2 = false;
         }
     }
 
@@ -204,6 +211,10 @@ class BaseCache : public MemObject
 
     /** True if this cache is connected to the CPU. */
     bool topLevelCache;
+
+
+    /** True if we are now in phase 2 of the snoop process. */
+    bool snoopPhase2;
 
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
@@ -332,6 +343,7 @@ class BaseCache : public MemObject
         //Start ports at null if more than one is created we should panic
         cpuSidePort = NULL;
         memSidePort = NULL;
+        snoopRangesSent = false;
     }
 
     virtual void init();
@@ -519,8 +531,6 @@ class BaseCache : public MemObject
         if (!pkt->req->isUncacheable()) {
             missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
         }
-        pkt->makeTimingResponse();
-        pkt->result = Packet::Success;
         CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
         reqCpu->schedule(time);
     }
@@ -529,10 +539,12 @@ class BaseCache : public MemObject
      * Suppliess the data if cache to cache transfers are enabled.
      * @param pkt The bus transaction to fulfill.
      */
-    void respondToSnoop(Packet *pkt)
+    void respondToSnoop(Packet *pkt, Tick time)
     {
-        assert("Implement\n" && 0);
+//        assert("Implement\n" && 0);
 //	mi->respond(pkt,curTick + hitLatency);
+        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
+        reqMem->schedule(time);
     }
 
     /**
@@ -551,6 +563,16 @@ class BaseCache : public MemObject
         else
         {
             //This is where snoops get updated
+            AddrRangeList dummy;
+            if (!topLevelCache)
+            {
+                cpuSidePort->getPeerAddressRanges(dummy, snoop);
+            }
+            else
+            {
+                snoop.push_back(RangeSize(0,-1));
+            }
+
             return;
         }
     }

@@ -252,6 +252,7 @@ Bus::recvFunctional(Packet *pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    atomicSnoop(pkt);
     findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
 }
 

@@ -199,7 +199,9 @@ BaseCache::CacheEvent::process()
         return;
     }
     //Response
-    //Know the packet to send, no need to mark in service (must succed)
+    //Know the packet to send
+    pkt->result = Packet::Success;
+    pkt->makeTimingResponse();
     assert(cachePort->sendTiming(pkt));
 }
 
