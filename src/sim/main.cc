@@ -317,8 +317,8 @@ simulate(Tick num_cycles = -1)
     else
         num_cycles = curTick + num_cycles;
 
-    Event *limit_event = new SimLoopExitEvent(num_cycles,
-                                              "simulate() limit reached");
+    Event *limit_event = schedExitSimLoop("simulate() limit reached",
+                                          num_cycles);
 
     while (1) {
         // there should always be at least one event (the SimLoopExitEvent
