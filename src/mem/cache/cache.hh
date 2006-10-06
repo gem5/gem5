@@ -251,7 +251,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick probe(Packet * &pkt, bool update);
+    Tick probe(Packet * &pkt, bool update, CachePort * otherSidePort);
 
     /**
      * Snoop for the provided request in the cache and return the estimated
@@ -262,7 +262,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick snoopProbe(Packet * &pkt, bool update);
+    Tick snoopProbe(Packet * &pkt);
 };
 
 #endif // __CACHE_HH__

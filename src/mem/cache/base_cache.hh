@@ -515,8 +515,6 @@ class BaseCache : public MemObject
      */
     void respond(Packet *pkt, Tick time)
     {
-        pkt->makeTimingResponse();
-        pkt->result = Packet::Success;
         CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
         reqCpu->schedule(time);
     }

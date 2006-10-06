@@ -312,7 +312,7 @@ class Packet
      *   for returning as a response to that request.  Used for timing
      *   accesses only.  For atomic and functional accesses, the
      *   request packet is always implicitly passed back *without*
-     *   modifying the command or destination fields, so this function
+     *   modifying the destination fields, so this function
      *   should not be called. */
     void makeTimingResponse() {
         assert(needsResponse());
@@ -323,6 +323,18 @@ class Packet
         cmd = (Command)icmd;
         dest = src;
         srcValid = false;
+    }
+
+    /** Take a request packet and modify it in place to be suitable
+     *   for returning as a response to that request.
+     */
+    void makeAtomicResponse() {
+        assert(needsResponse());
+        assert(isRequest());
+        int icmd = (int)cmd;
+        icmd &= ~(IsRequest);
+        icmd |= IsResponse;
+        cmd = (Command)icmd;
     }
 
     /** Take a request packet that has been returned as NACKED and modify it so
