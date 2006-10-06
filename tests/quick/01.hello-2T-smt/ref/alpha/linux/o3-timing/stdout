@@ -1,0 +1,14 @@
+Hello world!
+Hello world!
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Oct  6 2006 00:21:18
+M5 started Fri Oct  6 02:55:30 2006
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_SE/m5.debug configs/example/se.py -d --cmd=tests/test-progs/hello/bin/alpha/linux/hello;tests/test-progs/hello/bin/alpha/linux/hello
+Exiting @ tick 7478 because target called exit()
