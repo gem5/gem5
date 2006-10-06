@@ -41,6 +41,7 @@
 #include "cpu/cpuevent.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
+#include "sim/sim_exit.hh"
 #include "sim/param.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
@@ -125,8 +126,9 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_insts_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimLoopExitEvent(comInstEventQueue[i], p->max_insts_any_thread,
-                                 "a thread reached the max instruction count");
+            schedExitSimLoop("a thread reached the max instruction count",
+                             p->max_insts_any_thread, 0,
+                             comInstEventQueue[i]);
 
     if (p->max_insts_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will
@@ -150,8 +152,9 @@ BaseCPU::BaseCPU(Params *p)
     //
     if (p->max_loads_any_thread != 0)
         for (int i = 0; i < number_of_threads; ++i)
-            new SimLoopExitEvent(comLoadEventQueue[i], p->max_loads_any_thread,
-                                 "a thread reached the max load count");
+            schedExitSimLoop("a thread reached the max load count",
+                             p->max_loads_any_thread, 0,
+                             comLoadEventQueue[i]);
 
     if (p->max_loads_all_threads != 0) {
         // allocate & initialize shared downcounter: each event will

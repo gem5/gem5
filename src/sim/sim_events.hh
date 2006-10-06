@@ -42,6 +42,7 @@ class SimLoopExitEvent : public Event
     // string explaining why we're terminating
     std::string cause;
     int code;
+    Tick repeat;
 
   public:
     // Default constructor.  Only really used for derived classes.
@@ -49,15 +50,18 @@ class SimLoopExitEvent : public Event
         : Event(&mainEventQueue, Sim_Exit_Pri)
     { }
 
-    SimLoopExitEvent(Tick _when, const std::string &_cause, int c = 0)
-        : Event(&mainEventQueue, Sim_Exit_Pri), cause(_cause),
-          code(c)
+    SimLoopExitEvent(EventQueue *q,
+                     Tick _when, Tick _repeat, const std::string &_cause,
+                     int c = 0)
+        : Event(q, Sim_Exit_Pri), cause(_cause),
+          code(c), repeat(_repeat)
     { setFlags(IsExitEvent); schedule(_when); }
 
-    SimLoopExitEvent(EventQueue *q,
-                     Tick _when, const std::string &_cause, int c = 0)
-        : Event(q, Sim_Exit_Pri), cause(_cause), code(c)
-    { setFlags(IsExitEvent); schedule(_when); }
+//     SimLoopExitEvent(EventQueue *q,
+// 		     Tick _when, const std::string &_cause,
+// 		     Tick _repeat = 0, int c = 0)
+// 	: Event(q, Sim_Exit_Pri), cause(_cause), code(c), repeat(_repeat)
+//     { setFlags(IsExitEvent); schedule(_when); }
 
     std::string getCause() { return cause; }
     int getCode() { return code; }

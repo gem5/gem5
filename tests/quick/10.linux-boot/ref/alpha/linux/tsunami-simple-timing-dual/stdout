@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep  5 2006 15:32:34
-M5 started Tue Sep  5 15:45:11 2006
+M5 compiled Oct  5 2006 22:13:02
+M5 started Fri Oct  6 00:26:09 2006
 M5 executing on zizzer.eecs.umich.edu
 command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual
-Exiting @ tick 3539435029 because m5_exit instruction encountered
+Exiting @ tick 3526987181 because m5_exit instruction encountered

@@ -100,7 +100,7 @@ void
 Root::startup()
 {
     if (max_tick != 0)
-        exitSimLoop(curTick + max_tick, "reached maximum cycle count");
+        schedExitSimLoop("reached maximum cycle count", curTick + max_tick);
 
     if (progress_interval != 0)
         new ProgressEvent(&mainEventQueue, progress_interval);

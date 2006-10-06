@@ -57,6 +57,11 @@ SimLoopExitEvent::process()
 
     // otherwise do nothing... the IsExitEvent flag takes care of
     // exiting the simulation loop and returning this object to Python
+
+    // but if you are doing this on intervals, don't forget to make another
+    if (repeat) {
+        schedule(curTick + repeat);
+    }
 }
 
 
@@ -66,16 +71,20 @@ SimLoopExitEvent::description()
     return "simulation loop exit";
 }
 
-void
-exitSimLoop(Tick when, const std::string &message, int exit_code)
+SimLoopExitEvent *
+schedExitSimLoop(const std::string &message, Tick when, Tick repeat,
+                 EventQueue *q, int exit_code)
 {
-    new SimLoopExitEvent(when, message, exit_code);
+    if (q == NULL)
+        q = &mainEventQueue;
+
+    return new SimLoopExitEvent(q, when, repeat, message, exit_code);
 }
 
 void
 exitSimLoop(const std::string &message, int exit_code)
 {
-    exitSimLoop(curTick, message, exit_code);
+    schedExitSimLoop(message, curTick, 0, NULL, exit_code);
 }
 
 void

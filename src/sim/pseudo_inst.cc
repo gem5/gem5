@@ -138,14 +138,14 @@ namespace AlphaPseudo
     void
     m5exit_old(ThreadContext *tc)
     {
-        exitSimLoop(curTick, "m5_exit_old instruction encountered");
+        exitSimLoop("m5_exit_old instruction encountered");
     }
 
     void
     m5exit(ThreadContext *tc, Tick delay)
     {
         Tick when = curTick + delay * Clock::Int::ns;
-        exitSimLoop(when, "m5_exit instruction encountered");
+        schedExitSimLoop("m5_exit instruction encountered", when);
     }
 
     void
@@ -270,7 +270,11 @@ namespace AlphaPseudo
     {
         if (!doCheckpointInsts)
             return;
-        exitSimLoop("checkpoint");
+
+        Tick when = curTick + delay * Clock::Int::ns;
+        Tick repeat = period * Clock::Int::ns;
+
+        schedExitSimLoop("checkpoint", when, repeat);
     }
 
     uint64_t

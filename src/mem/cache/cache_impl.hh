@@ -51,7 +51,7 @@
 #include "mem/cache/miss/mshr.hh"
 #include "mem/cache/prefetch/prefetcher.hh"
 
-#include "sim/sim_events.hh" // for SimExitEvent
+#include "sim/sim_exit.hh" // for SimExitEvent
 
 template<class TagStore, class Buffering, class Coherence>
 bool
@@ -263,7 +263,7 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         if (missCount) {
             --missCount;
             if (missCount == 0)
-                new SimLoopExitEvent(curTick, "A cache reached the maximum miss count");
+                exitSimLoop("A cache reached the maximum miss count");
         }
     }
     missQueue->handleMiss(pkt, size, curTick + hitLatency);

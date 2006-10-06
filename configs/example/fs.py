@@ -49,10 +49,12 @@ parser.add_option("--dual", action="store_true",
 parser.add_option("-b", "--benchmark", action="store", type="string",
                   dest="benchmark",
                   help="Specify the benchmark to run. Available benchmarks: %s"\
-                          % DefinedBenchmarks)
+                  % DefinedBenchmarks)
 parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
-                  help="Specify the filename to dump a pcap capture of the ethernet"
-                  "traffic")
+                  help="Specify the filename to dump a pcap capture of the" \
+                  "ethernet traffic")
+parser.add_option("--checkpoint_dir", action="store", type="string",
+                  help="Place all checkpoints in this absolute directory")
 
 (options, args) = parser.parse_args()
 
@@ -123,7 +125,11 @@ else:
 exit_event = m5.simulate(maxtick)
 
 while exit_event.getCause() == "checkpoint":
-    m5.checkpoint(root, "cpt.%d")
+    if options.checkpoint_dir:
+        m5.checkpoint(root, "/".join([options.checkpoint_dir, "cpt.%d"]))
+    else:
+        m5.checkpoint(root, "cpt.%d")
+
     if maxtick == -1:
         exit_event = m5.simulate(maxtick)
     else:
