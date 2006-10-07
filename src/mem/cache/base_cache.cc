@@ -211,7 +211,11 @@ BaseCache::CacheEvent::process()
     //Know the packet to send
     pkt->result = Packet::Success;
     pkt->makeTimingResponse();
-    if (!cachePort->sendTiming(pkt)) {
+    if (!drainList.empty()) {
+        //Already blocked waiting for bus, just append
+        cachePort->drainList.push_back(pkt);
+    }
+    else if (!cachePort->sendTiming(pkt)) {
         //It failed, save it to list of drain events
         cachePort->drainList.push_back(pkt);
     }
