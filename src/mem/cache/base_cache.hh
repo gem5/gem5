@@ -110,6 +110,8 @@ class BaseCache : public MemObject
         bool mustSendRetry;
 
         bool isCpuSide;
+
+        std::list<Packet *> drainList;
     };
 
     struct CacheEvent : public Event

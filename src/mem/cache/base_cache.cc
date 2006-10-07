@@ -96,6 +96,15 @@ void
 BaseCache::CachePort::recvRetry()
 {
     Packet *pkt;
+    if (!drainList.empty()) {
+        //We have some responses to drain first
+        bool result = true;
+        while (result && !drainList.empty()) {
+            result = sendTiming(drainList.front());
+            if (result)
+                drainList.pop_front();
+        }
+    }
 
     if (!isCpuSide)
     {
@@ -202,7 +211,10 @@ BaseCache::CacheEvent::process()
     //Know the packet to send
     pkt->result = Packet::Success;
     pkt->makeTimingResponse();
-    assert(cachePort->sendTiming(pkt));
+    if (!cachePort->sendTiming(pkt)) {
+        //It failed, save it to list of drain events
+        cachePort->drainList.push_back(pkt);
+    }
 }
 
 const char *
