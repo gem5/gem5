@@ -326,6 +326,7 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
                                    writebacks, pkt);
             while (!writebacks.empty()) {
                     missQueue->doWriteback(writebacks.front());
+                    writebacks.pop_front();
             }
         }
         missQueue->handleResponse(pkt, curTick + hitLatency);
