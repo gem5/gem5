@@ -6,8 +6,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep  5 2006 15:28:48
-M5 started Tue Sep  5 15:42:18 2006
+M5 compiled Oct  7 2006 11:12:49
+M5 started Sat Oct  7 11:13:09 2006
 M5 executing on zizzer.eecs.umich.edu
 command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/00.hello/alpha/tru64/simple-atomic tests/run.py quick/00.hello/alpha/tru64/simple-atomic
 Exiting @ tick 2577 because target called exit()
