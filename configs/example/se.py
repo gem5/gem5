@@ -34,7 +34,6 @@ import m5
 from m5.objects import *
 import os, optparse, sys
 m5.AddToPath('../common')
-from FullO3Config import *
 
 parser = optparse.OptionParser()
 
@@ -86,7 +85,7 @@ if options.detailed:
 if options.timing:
     cpu = TimingSimpleCPU()
 elif options.detailed:
-    cpu = DetailedO3CPU()
+    cpu = DerivO3CPU()
 else:
     cpu = AtomicSimpleCPU()
 

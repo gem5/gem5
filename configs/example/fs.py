@@ -63,8 +63,8 @@ if args:
     sys.exit(1)
 
 if options.detailed:
-    cpu = DetailedO3CPU()
-    cpu2 = DetailedO3CPU()
+    cpu = DerivO3CPU()
+    cpu2 = DerivO3CPU()
     mem_mode = 'timing'
 elif options.timing:
     cpu = TimingSimpleCPU()

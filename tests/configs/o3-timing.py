@@ -29,7 +29,6 @@
 import m5
 from m5.objects import *
 m5.AddToPath('../configs/common')
-from FullO3Config import *
 
 class MyCache(BaseCache):
     assoc = 2
@@ -38,7 +37,7 @@ class MyCache(BaseCache):
     mshrs = 10
     tgts_per_mshr = 5
 
-cpu = DetailedO3CPU()
+cpu = DerivO3CPU()
 cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
                               MyCache(size = '2MB'))
 cpu.mem = cpu.dcache

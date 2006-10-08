@@ -58,7 +58,7 @@ def system():
     if not binary.dir:
         binary.dir = joinpath(system.dir, 'binaries')
     if not disk.dir:
-        disk.dir = joinpath(system.dir, 'disks')
+        disk.dir = joinpath('/n/zamp/z/ktlim/local/clean/linux', 'disks')
     if not script.dir:
         script.dir = joinpath(system.dir, 'boot')
 

@@ -29,7 +29,6 @@
 import m5
 from m5.objects import *
 m5.AddToPath('../configs/common')
-from FullO3Config import *
 
 # --------------------
 # Base L1 Cache
@@ -54,7 +53,7 @@ class L2(BaseCache):
     write_buffers = 8
 
 nb_cores = 4
-cpus = [ DetailedO3CPU() for i in xrange(nb_cores) ]
+cpus = [ DerivO3CPU() for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, physmem = PhysicalMemory(), membus =
