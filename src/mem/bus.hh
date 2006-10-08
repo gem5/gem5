@@ -62,9 +62,6 @@ class Bus : public MemObject
     AddrRangeList defaultRange;
     std::vector<DevMap> portSnoopList;
 
-    std::vector<int> snoopCallbacks;
-
-
     /** Function called by the port when the bus is recieving a Timing
       transaction.*/
     bool recvTiming(Packet *pkt);
@@ -105,16 +102,11 @@ class Bus : public MemObject
     /** Snoop all relevant ports atomicly. */
     void atomicSnoop(Packet *pkt);
 
-    /** Snoop for NACK and Blocked in phase 1
+    /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
+     * the snoop to happen
      * @return True if succeds.
      */
-    bool timingSnoopPhase1(Packet *pkt);
-
-    /** @todo Don't need to commit all snoops just those that need it
-     *(register somehow). */
-    /** Commit all snoops now that we know if any of them would have blocked.
-     */
-    void timingSnoopPhase2(Packet *pkt);
+    bool timingSnoop(Packet *pkt);
 
     /** Process address range request.
      * @param resp addresses that we can respond to

@@ -79,9 +79,15 @@ Bus::recvTiming(Packet *pkt)
 
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        if ( timingSnoopPhase1(pkt) )
+        if (timingSnoop(pkt))
         {
-            timingSnoopPhase2(pkt);
+            pkt->flags |= SNOOP_COMMIT;
+            bool success = timingSnoop(pkt);
+            assert(success);
+            if (pkt->flags & SATISFIED) {
+                //Cache-Cache transfer occuring
+                return true;
+            }
             port = findPort(pkt->getAddr(), pkt->getSrc());
         }
         else
@@ -195,42 +201,20 @@ Bus::atomicSnoop(Packet *pkt)
 }
 
 bool
-Bus::timingSnoopPhase1(Packet *pkt)
+Bus::timingSnoop(Packet *pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     bool success = true;
 
     while (!ports.empty() && success)
     {
-        snoopCallbacks.push_back(ports.back());
         success = interfaces[ports.back()]->sendTiming(pkt);
         ports.pop_back();
     }
-    if (!success)
-    {
-        while (!snoopCallbacks.empty())
-        {
-            interfaces[snoopCallbacks.back()]->sendStatusChange(Port::SnoopSquash);
-            snoopCallbacks.pop_back();
-        }
-        return false;
-    }
-    return true;
+
+    return success;
 }
 
-void
-Bus::timingSnoopPhase2(Packet *pkt)
-{
-    bool success;
-    pkt->flags |= SNOOP_COMMIT;
-    while (!snoopCallbacks.empty())
-    {
-        success = interfaces[snoopCallbacks.back()]->sendTiming(pkt);
-        //We should not fail on snoop callbacks
-        assert(success);
-        snoopCallbacks.pop_back();
-    }
-}
 
 /** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
