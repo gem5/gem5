@@ -227,35 +227,35 @@ template <class T>
 Fault
 TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    // need to fill in CPU & thread IDs here
-    Request *data_read_req = new Request();
-    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
-    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    Request *req =
+        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
+                    /* CPU ID */ 0, /* thread ID */ 0);
 
     if (traceData) {
-        traceData->setAddr(data_read_req->getVaddr());
+        traceData->setAddr(req->getVaddr());
     }
 
    // translate to physical address
-    Fault fault = thread->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_read_pkt =
-            new Packet(data_read_req, Packet::ReadReq, Packet::Broadcast);
-        data_read_pkt->dataDynamic<T>(new T);
+        Packet *pkt =
+            new Packet(req, Packet::ReadReq, Packet::Broadcast);
+        pkt->dataDynamic<T>(new T);
 
-        if (!dcachePort.sendTiming(data_read_pkt)) {
+        if (!dcachePort.sendTiming(pkt)) {
             _status = DcacheRetry;
-            dcache_pkt = data_read_pkt;
+            dcache_pkt = pkt;
         } else {
             _status = DcacheWaitResponse;
+            // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
     }
 
     // This will need a new way to tell if it has a dcache attached.
-    if (data_read_req->getFlags() & UNCACHEABLE)
+    if (req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Read");
 
     return fault;
@@ -308,31 +308,31 @@ template <class T>
 Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    // need to fill in CPU & thread IDs here
-    Request *data_write_req = new Request();
-    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
-    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    Request *req =
+        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
+                    /* CPU ID */ 0, /* thread ID */ 0);
 
     // translate to physical address
-    Fault fault = thread->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(req);
+
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_write_pkt =
-            new Packet(data_write_req, Packet::WriteReq, Packet::Broadcast);
-        data_write_pkt->allocate();
-        data_write_pkt->set(data);
+        assert(dcache_pkt == NULL);
+        dcache_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        dcache_pkt->allocate();
+        dcache_pkt->set(data);
 
-        if (!dcachePort.sendTiming(data_write_pkt)) {
+        if (!dcachePort.sendTiming(dcache_pkt)) {
             _status = DcacheRetry;
-            dcache_pkt = data_write_pkt;
         } else {
             _status = DcacheWaitResponse;
+            // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (data_write_req->getFlags() & UNCACHEABLE)
+    if (req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling

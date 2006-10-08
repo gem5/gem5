@@ -253,29 +253,32 @@ template <class T>
 Fault
 AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    // use the CPU's statically allocated read request and packet objects
+    Request *req = data_read_req;
+    Packet  *pkt = data_read_pkt;
+
+    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = thread->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
-        data_read_pkt->reinitFromRequest();
+        pkt->reinitFromRequest();
 
-        dcache_latency = dcachePort.sendAtomic(data_read_pkt);
+        dcache_latency = dcachePort.sendAtomic(pkt);
         dcache_access = true;
 
-        assert(data_read_pkt->result == Packet::Success);
-        data = data_read_pkt->get<T>();
-
+        assert(pkt->result == Packet::Success);
+        data = pkt->get<T>();
     }
 
     // This will need a new way to tell if it has a dcache attached.
-    if (data_read_req->getFlags() & UNCACHEABLE)
+    if (req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Read");
 
     return fault;
@@ -328,33 +331,37 @@ template <class T>
 Fault
 AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    // use the CPU's statically allocated write request and packet objects
+    Request *req = data_write_req;
+    Packet  *pkt = data_write_pkt;
+
+    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = thread->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
         data = htog(data);
-        data_write_pkt->reinitFromRequest();
-        data_write_pkt->dataStatic(&data);
+        pkt->reinitFromRequest();
+        pkt->dataStatic(&data);
 
-        dcache_latency = dcachePort.sendAtomic(data_write_pkt);
+        dcache_latency = dcachePort.sendAtomic(pkt);
         dcache_access = true;
 
-        assert(data_write_pkt->result == Packet::Success);
+        assert(pkt->result == Packet::Success);
 
-        if (res && data_write_req->getFlags() & LOCKED) {
-            *res = data_write_req->getScResult();
+        if (res && req->getFlags() & LOCKED) {
+            *res = req->getScResult();
         }
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (data_write_req->getFlags() & UNCACHEABLE)
+    if (req->getFlags() & UNCACHEABLE)
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
