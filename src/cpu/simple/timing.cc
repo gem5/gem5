@@ -28,6 +28,7 @@
  * Authors: Steve Reinhardt
  */
 
+#include "arch/locked_mem.hh"
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/timing.hh"
@@ -94,7 +95,8 @@ TimingSimpleCPU::CpuPort::TickEvent::schedule(Packet *_pkt, Tick t)
 }
 
 TimingSimpleCPU::TimingSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
+    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock),
+      cpu_id(p->cpu_id)
 {
     _status = Idle;
     ifetch_pkt = dcache_pkt = NULL;
@@ -229,7 +231,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    /* CPU ID */ 0, /* thread ID */ 0);
+                    cpu_id, /* thread ID */ 0);
 
     if (traceData) {
         traceData->setAddr(req->getVaddr());
@@ -310,7 +312,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    /* CPU ID */ 0, /* thread ID */ 0);
+                    cpu_id, /* thread ID */ 0);
 
     // translate to physical address
     Fault fault = thread->translateDataWriteReq(req);
@@ -322,12 +324,20 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         dcache_pkt->allocate();
         dcache_pkt->set(data);
 
-        if (!dcachePort.sendTiming(dcache_pkt)) {
-            _status = DcacheRetry;
-        } else {
-            _status = DcacheWaitResponse;
-            // memory system takes ownership of packet
-            dcache_pkt = NULL;
+        bool do_access = true;  // flag to suppress cache access
+
+        if (req->isLocked()) {
+            do_access = TheISA::handleLockedWrite(thread, req);
+        }
+
+        if (do_access) {
+            if (!dcachePort.sendTiming(dcache_pkt)) {
+                _status = DcacheRetry;
+            } else {
+                _status = DcacheWaitResponse;
+                // memory system takes ownership of packet
+                dcache_pkt = NULL;
+            }
         }
     }
 
@@ -392,9 +402,8 @@ TimingSimpleCPU::fetch()
 {
     checkForInterrupts();
 
-    // need to fill in CPU & thread IDs here
     Request *ifetch_req = new Request();
-    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    ifetch_req->setThreadContext(cpu_id, /* thread ID */ 0);
     Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
@@ -453,12 +462,20 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     if (curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
         // load or store: just send to dcache
         Fault fault = curStaticInst->initiateAcc(this, traceData);
-        if (fault == NoFault) {
-            // successfully initiated access: instruction will
-            // complete in dcache response callback
-            assert(_status == DcacheWaitResponse);
+        if (_status != Running) {
+            // instruction will complete in dcache response callback
+            assert(_status == DcacheWaitResponse || _status == DcacheRetry);
+            assert(fault == NoFault);
         } else {
-            // fault: complete now to invoke fault handler
+            if (fault == NoFault) {
+                // early fail on store conditional: complete now
+                assert(dcache_pkt != NULL);
+                fault = curStaticInst->completeAcc(dcache_pkt, this,
+                                                   traceData);
+                delete dcache_pkt->req;
+                delete dcache_pkt;
+                dcache_pkt = NULL;
+            }
             postExecute();
             advanceInst(fault);
         }
@@ -479,8 +496,7 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    // These next few lines could be replaced with something faster
-    // who knows what though
+    // delay processing of returned data until next CPU clock edge
     Tick time = pkt->req->getTime();
     while (time < curTick)
         time += lat;
@@ -527,6 +543,10 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
+    if (pkt->isRead() && pkt->req->isLocked()) {
+        TheISA::handleLockedRead(thread, pkt->req);
+    }
+
     delete pkt->req;
     delete pkt;
 
@@ -546,6 +566,7 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
 {
+    // delay processing of returned data until next CPU clock edge
     Tick time = pkt->req->getTime();
     while (time < curTick)
         time += lat;
@@ -574,6 +595,7 @@ TimingSimpleCPU::DcachePort::recvRetry()
     Packet *tmp = cpu->dcache_pkt;
     if (sendTiming(tmp)) {
         cpu->_status = DcacheWaitResponse;
+        // memory system takes ownership of packet
         cpu->dcache_pkt = NULL;
     }
 }
@@ -592,11 +614,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Tick> progress_interval;
     SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
+    Param<int> cpu_id;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    Param<int> cpu_id;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -625,11 +647,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     INIT_PARAM(progress_interval, "Progress interval"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
+    INIT_PARAM(cpu_id, "processor ID"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
@@ -661,11 +683,11 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->functionTraceStart = function_trace_start;
     params->mem = mem;
     params->system = system;
+    params->cpu_id = cpu_id;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->cpu_id = cpu_id;
     params->profile = profile;
 #else
     params->process = workload;

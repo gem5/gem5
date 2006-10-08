@@ -36,7 +36,7 @@ class MyCache(BaseCache):
     mshrs = 10
     tgts_per_mshr = 5
 
-cpu = TimingSimpleCPU()
+cpu = TimingSimpleCPU(cpu_id=0)
 cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
                               MyCache(size = '2MB'))
 cpu.mem = cpu.dcache

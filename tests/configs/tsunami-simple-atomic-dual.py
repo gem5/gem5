@@ -34,7 +34,7 @@ import FSConfig
 AlphaConsole.cpu = Parent.cpu[0]
 IntrControl.cpu = Parent.cpu[0]
 
-cpus = [ AtomicSimpleCPU() for i in xrange(2) ]
+cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(2) ]
 system = FSConfig.makeLinuxAlphaSystem('atomic')
 system.cpu = cpus
 for c in cpus:

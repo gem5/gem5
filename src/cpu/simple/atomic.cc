@@ -28,6 +28,7 @@
  * Authors: Steve Reinhardt
  */
 
+#include "arch/locked_mem.hh"
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/atomic.hh"
@@ -133,20 +134,19 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
 {
     _status = Idle;
 
-    // @todo fix me and get the real cpu id & thread number!!!
     ifetch_req = new Request();
-    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     data_read_req = new Request();
-    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    data_read_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
     data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
                                Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
 
     data_write_req = new Request();
-    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    data_write_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
     data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
                                 Packet::Broadcast);
 }
@@ -275,6 +275,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
         assert(pkt->result == Packet::Success);
         data = pkt->get<T>();
+
+        if (req->isLocked()) {
+            TheISA::handleLockedRead(thread, req);
+        }
     }
 
     // This will need a new way to tell if it has a dcache attached.
@@ -346,17 +350,32 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
-        data = htog(data);
-        pkt->reinitFromRequest();
-        pkt->dataStatic(&data);
+        bool do_access = true;  // flag to suppress cache access
 
-        dcache_latency = dcachePort.sendAtomic(pkt);
-        dcache_access = true;
+        if (req->isLocked()) {
+            do_access = TheISA::handleLockedWrite(thread, req);
+        }
 
-        assert(pkt->result == Packet::Success);
+        if (do_access) {
+            data = htog(data);
+            pkt->reinitFromRequest();
+            pkt->dataStatic(&data);
 
-        if (res && req->getFlags() & LOCKED) {
-            *res = req->getScResult();
+            dcache_latency = dcachePort.sendAtomic(pkt);
+            dcache_access = true;
+
+            assert(pkt->result == Packet::Success);
+        }
+
+        if (req->isLocked()) {
+            uint64_t scResult = req->getScResult();
+            if (scResult != 0) {
+                // clear failure counter
+                thread->setStCondFailures(0);
+            }
+            if (res) {
+                *res = req->getScResult();
+            }
         }
     }
 
@@ -474,11 +493,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<Tick> progress_interval;
     SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
+    Param<int> cpu_id;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    Param<int> cpu_id;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -507,11 +526,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(progress_interval, "Progress interval"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
+    INIT_PARAM(cpu_id, "processor ID"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
@@ -545,11 +564,11 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->simulate_stalls = simulate_stalls;
     params->mem = mem;
     params->system = system;
+    params->cpu_id = cpu_id;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->cpu_id = cpu_id;
     params->profile = profile;
 #else
     params->process = workload;

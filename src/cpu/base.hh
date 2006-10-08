@@ -140,8 +140,8 @@ class BaseCPU : public MemObject
         bool functionTrace;
         Tick functionTraceStart;
         System *system;
-#if FULL_SYSTEM
         int cpu_id;
+#if FULL_SYSTEM
         Tick profile;
 #endif
         Tick progress_interval;

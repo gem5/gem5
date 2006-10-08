@@ -166,6 +166,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Packet *ifetch_pkt;
     Packet *dcache_pkt;
 
+    int cpu_id;
+
   public:
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);

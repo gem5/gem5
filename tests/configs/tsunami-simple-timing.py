@@ -31,7 +31,7 @@ from m5.objects import *
 m5.AddToPath('../configs/common')
 import FSConfig
 
-cpu = TimingSimpleCPU()
+cpu = TimingSimpleCPU(cpu_id=0)
 system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpu
 cpu.connectMemPorts(system.membus)

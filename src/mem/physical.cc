@@ -110,6 +110,88 @@ PhysicalMemory::calculateLatency(Packet *pkt)
     return lat;
 }
 
+
+
+// Add load-locked to tracking list.  Should only be called if the
+// operation is a load and the LOCKED flag is set.
+void
+PhysicalMemory::trackLoadLocked(Request *req)
+{
+    Addr paddr = LockedAddr::mask(req->getPaddr());
+
+    // first we check if we already have a locked addr for this
+    // xc.  Since each xc only gets one, we just update the
+    // existing record with the new address.
+    list<LockedAddr>::iterator i;
+
+    for (i = lockedAddrList.begin(); i != lockedAddrList.end(); ++i) {
+        if (i->matchesContext(req)) {
+            DPRINTF(LLSC, "Modifying lock record: cpu %d thread %d addr %#x\n",
+                    req->getCpuNum(), req->getThreadNum(), paddr);
+            i->addr = paddr;
+            return;
+        }
+    }
+
+    // no record for this xc: need to allocate a new one
+    DPRINTF(LLSC, "Adding lock record: cpu %d thread %d addr %#x\n",
+            req->getCpuNum(), req->getThreadNum(), paddr);
+    lockedAddrList.push_front(LockedAddr(req));
+}
+
+
+// Called on *writes* only... both regular stores and
+// store-conditional operations.  Check for conventional stores which
+// conflict with locked addresses, and for success/failure of store
+// conditionals.
+bool
+PhysicalMemory::checkLockedAddrList(Request *req)
+{
+    Addr paddr = LockedAddr::mask(req->getPaddr());
+    bool isLocked = req->isLocked();
+
+    // Initialize return value.  Non-conditional stores always
+    // succeed.  Assume conditional stores will fail until proven
+    // otherwise.
+    bool success = !isLocked;
+
+    // Iterate over list.  Note that there could be multiple matching
+    // records, as more than one context could have done a load locked
+    // to this location.
+    list<LockedAddr>::iterator i = lockedAddrList.begin();
+
+    while (i != lockedAddrList.end()) {
+
+        if (i->addr == paddr) {
+            // we have a matching address
+
+            if (isLocked && i->matchesContext(req)) {
+                // it's a store conditional, and as far as the memory
+                // system can tell, the requesting context's lock is
+                // still valid.
+                DPRINTF(LLSC, "StCond success: cpu %d thread %d addr %#x\n",
+                        req->getCpuNum(), req->getThreadNum(), paddr);
+                success = true;
+            }
+
+            // Get rid of our record of this lock and advance to next
+            DPRINTF(LLSC, "Erasing lock record: cpu %d thread %d addr %#x\n",
+                    i->cpuNum, i->threadNum, paddr);
+            i = lockedAddrList.erase(i);
+        }
+        else {
+            // no match: advance to next record
+            ++i;
+        }
+    }
+
+    if (isLocked) {
+        req->setScResult(success ? 1 : 0);
+    }
+
+    return success;
+}
+
 void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
@@ -117,18 +199,17 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
 
     switch (pkt->cmd) {
       case Packet::ReadReq:
+        if (pkt->req->isLocked()) {
+            trackLoadLocked(pkt->req);
+        }
         memcpy(pkt->getPtr<uint8_t>(),
                pmemAddr + pkt->getAddr() - params()->addrRange.start,
                pkt->getSize());
         break;
       case Packet::WriteReq:
-        memcpy(pmemAddr + pkt->getAddr() - params()->addrRange.start,
-               pkt->getPtr<uint8_t>(),
-               pkt->getSize());
-        // temporary hack: will need to add real LL/SC implementation
-        // for cacheless systems later.
-        if (pkt->req->getFlags() & LOCKED) {
-            pkt->req->setScResult(1);
+        if (writeOK(pkt->req)) {
+            memcpy(pmemAddr + pkt->getAddr() - params()->addrRange.start,
+                   pkt->getPtr<uint8_t>(), pkt->getSize());
         }
         break;
       default:
