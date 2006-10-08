@@ -67,6 +67,47 @@ Bus::init()
         (*intIter)->sendStatusChange(Port::RangeChange);
 }
 
+Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
+{
+    assert(!scheduled());
+}
+
+void Bus::BusFreeEvent::process()
+{
+    bus->recvRetry(0);
+}
+
+const char * Bus::BusFreeEvent::description()
+{
+    return "bus became available";
+}
+
+void
+Bus::occupyBus(int numCycles)
+{
+    //Move up when the bus will next be free
+    //We avoid the use of divide by adding repeatedly
+    //This should be faster if the value is updated frequently, but should
+    //be may be slower otherwise.
+
+    //Bring tickNextIdle up to the present tick
+    //There is some potential ambiguity where a cycle starts, which might make
+    //a difference when devices are acting right around a cycle boundary. Using
+    //a < allows things which happen exactly on a cycle boundary to take up only
+    //the following cycle. Anthing that happens later will have to "wait" for the
+    //end of that cycle, and then start using the bus after that.
+    while (tickNextIdle < curTick)
+        tickNextIdle += clock;
+    //Advance it numCycles bus cycles.
+    //XXX Should this use the repeating add trick as well?
+    tickNextIdle += (numCycles * clock);
+    if (!busIdle.scheduled()) {
+        busIdle.schedule(tickNextIdle);
+    } else {
+        busIdle.reschedule(tickNextIdle);
+    }
+    DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n", curTick, tickNextIdle);
+}
 
 /** Function called by the port when the bus is receiving a Timing
  * transaction.*/
@@ -79,8 +120,10 @@ Bus::recvTiming(Packet *pkt)
 
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
+        if ( timingSnoopPhase1(pkt) )
         if (timingSnoop(pkt))
         {
+            timingSnoopPhase2(pkt);
             pkt->flags |= SNOOP_COMMIT;
             bool success = timingSnoop(pkt);
             assert(success);
@@ -102,33 +145,55 @@ Bus::recvTiming(Packet *pkt)
         port = interfaces[dest];
     }
     if (port->sendTiming(pkt))  {
-        // packet was successfully sent, just return true.
+        // Packet was successfully sent. Return true.
+        // Also take care of retries
+        if (retryingPort) {
+            retryList.pop_front();
+            retryingPort = NULL;
+        }
         return true;
     }
 
-    // packet not successfully sent
-    retryList.push_back(interfaces[pkt->getSrc()]);
+    // Packet not successfully sent. Leave or put it on the retry list.
+    addToRetryList(pktPort);
     return false;
 }
 
 void
 Bus::recvRetry(int id)
 {
-    // Go through all the elements on the list calling sendRetry on each
-    // This is not very efficient at all but it works. Ultimately we should end
-    // up with something that is more intelligent.
-    int initialSize = retryList.size();
-    int i;
-    Port *p;
-
-    for (i = 0; i < initialSize; i++) {
-        assert(retryList.size() > 0);
-        p = retryList.front();
-        retryList.pop_front();
-        p->sendRetry();
+    // If there's anything waiting...
+    if (retryList.size()) {
+        retryingPort = retryList.front();
+        retryingPort->sendRetry();
+        // If the retryingPort pointer isn't null, sendTiming wasn't called
+        if (retryingPort) {
+            warn("sendRetry didn't call sendTiming\n");
+            retryList.pop_front();
+            retryingPort = NULL;
+        }
     }
 }
 
+Port *
+Bus::findDestPort(PacketPtr pkt, int id)
+{
+    Port * port = NULL;
+    short dest = pkt->getDest();
+
+    if (dest == Packet::Broadcast) {
+        if (timingSnoopPhase1(pkt)) {
+            timingSnoopPhase2(pkt);
+            port = findPort(pkt->getAddr(), pkt->getSrc());
+        }
+        //else, port stays NULL
+    } else {
+        assert(dest >= 0 && dest < interfaces.size());
+        assert(dest != pkt->getSrc()); // catch infinite loops
+        port = interfaces[dest];
+    }
+    return port;
+}
 
 Port *
 Bus::findPort(Addr addr, int id)
@@ -365,16 +430,20 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
     Param<int> bus_id;
+    Param<int> clock;
+    Param<int> width;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
-    INIT_PARAM(bus_id, "a globally unique bus id")
+    INIT_PARAM(bus_id, "a globally unique bus id"),
+    INIT_PARAM(clock, "bus clock speed"),
+    INIT_PARAM(width, "width of the bus (bits)")
 END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName(), bus_id);
+    return new Bus(getInstanceName(), bus_id, clock, width);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)

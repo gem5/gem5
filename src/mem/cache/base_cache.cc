@@ -105,8 +105,7 @@ BaseCache::CachePort::recvRetry()
                 drainList.pop_front();
         }
     }
-
-    if (!isCpuSide)
+    else if (!isCpuSide)
     {
         pkt = cache->getPacket();
         bool success = sendTiming(pkt);
