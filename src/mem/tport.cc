@@ -47,9 +47,11 @@ SimpleTimingPort::recvTiming(Packet *pkt)
     // if we ever added it back.
     assert(pkt->result != Packet::Nacked);
     Tick latency = recvAtomic(pkt);
-    // turn packet around to go back to requester
-    pkt->makeTimingResponse();
-    sendTimingLater(pkt, latency);
+    // turn packet around to go back to requester if response expected
+    if (pkt->needsResponse()) {
+        pkt->makeTimingResponse();
+        sendTimingLater(pkt, latency);
+    }
     return true;
 }
 

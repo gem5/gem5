@@ -197,22 +197,25 @@ PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
     assert(pkt->getAddr() + pkt->getSize() < params()->addrRange.size());
 
-    switch (pkt->cmd) {
-      case Packet::ReadReq:
+    if (pkt->isRead()) {
         if (pkt->req->isLocked()) {
             trackLoadLocked(pkt->req);
         }
         memcpy(pkt->getPtr<uint8_t>(),
                pmemAddr + pkt->getAddr() - params()->addrRange.start,
                pkt->getSize());
-        break;
-      case Packet::WriteReq:
+    }
+    else if (pkt->isWrite()) {
         if (writeOK(pkt->req)) {
             memcpy(pmemAddr + pkt->getAddr() - params()->addrRange.start,
                    pkt->getPtr<uint8_t>(), pkt->getSize());
         }
-        break;
-      default:
+    }
+    else if (pkt->isInvalidate()) {
+        //upgrade or invalidate
+        pkt->flags |= SATISFIED;
+    }
+    else {
         panic("unimplemented");
     }
 
