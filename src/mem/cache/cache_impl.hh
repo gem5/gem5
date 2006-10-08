@@ -72,16 +72,9 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
         if (pkt->isResponse())
             handleResponse(pkt);
         else {
-            //Check if we are in phase1
-            if (!snoopPhase2) {
-                snoopPhase2 = true;
-            }
-            else {
-                //Check if we should do the snoop
-                if (pkt->flags && SNOOP_COMMIT)
-                    snoop(pkt);
-                snoopPhase2 = false;
-            }
+            //Check if we should do the snoop
+            if (pkt->flags && SNOOP_COMMIT)
+                snoop(pkt);
         }
     }
     return true;

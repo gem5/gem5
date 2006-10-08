@@ -165,10 +165,6 @@ class BaseCache : public MemObject
                 memSidePort->sendStatusChange(Port::RangeChange);
             }
         }
-        else if (status == Port::SnoopSquash) {
-            assert(snoopPhase2);
-            snoopPhase2 = false;
-        }
     }
 
     virtual Packet *getPacket()
@@ -214,9 +210,6 @@ class BaseCache : public MemObject
     /** True if this cache is connected to the CPU. */
     bool topLevelCache;
 
-
-    /** True if we are now in phase 2 of the snoop process. */
-    bool snoopPhase2;
 
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
