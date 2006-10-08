@@ -608,9 +608,9 @@ LSQUnit<Impl>::writebackStores()
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx, storeQueue[storeWBIdx].inst->readPC(),
+                storeWBIdx, inst->readPC(),
                 req->getPaddr(), *(inst->memData),
-                storeQueue[storeWBIdx].inst->seqNum);
+                inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
         if (req->getFlags() & LOCKED) {
@@ -619,10 +619,19 @@ LSQUnit<Impl>::writebackStores()
             } else {
                 if (cpu->lockFlag) {
                     req->setScResult(1);
+                    DPRINTF(LSQUnit, "Store conditional [sn:%lli] succeeded.",
+                            inst->seqNum);
                 } else {
                     req->setScResult(0);
                     // Hack: Instantly complete this store.
-                    completeDataAccess(data_pkt);
+//                    completeDataAccess(data_pkt);
+                    DPRINTF(LSQUnit, "Store conditional [sn:%lli] failed.  "
+                            "Instantly completing it.\n",
+                            inst->seqNum);
+                    WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
+                    wb->schedule(curTick + 1);
+                    delete state;
+                    completeStore(storeWBIdx);
                     incrStIdx(storeWBIdx);
                     continue;
                 }
@@ -633,7 +642,13 @@ LSQUnit<Impl>::writebackStores()
         }
 
         if (!dcachePort->sendTiming(data_pkt)) {
+            if (data_pkt->result == Packet::BadAddress) {
+                panic("LSQ sent out a bad address for a completed store!");
+            }
             // Need to handle becoming blocked on a store.
+            DPRINTF(IEW, "D-Cache became blcoked when writing [sn:%lli], will"
+                    "retry later\n",
+                    inst->seqNum);
             isStoreBlocked = true;
             ++lsqCacheBlocked;
             assert(retryPkt == NULL);
@@ -880,6 +895,9 @@ LSQUnit<Impl>::recvRetry()
         assert(retryPkt != NULL);
 
         if (dcachePort->sendTiming(retryPkt)) {
+            if (retryPkt->result == Packet::BadAddress) {
+                panic("LSQ sent out a bad address for a completed store!");
+            }
             storePostSend(retryPkt);
             retryPkt = NULL;
             isStoreBlocked = false;

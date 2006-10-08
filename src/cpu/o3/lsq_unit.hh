@@ -638,6 +638,11 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // if we the cache is not blocked, do cache access
     if (!lsq->cacheBlocked()) {
         if (!dcachePort->sendTiming(data_pkt)) {
+            if (data_pkt->result == Packet::BadAddress) {
+                delete data_pkt;
+                return TheISA::genMachineCheckFault();
+            }
+
             // If the access didn't succeed, tell the LSQ by setting
             // the retry thread id.
             lsq->setRetryTid(lsqID);

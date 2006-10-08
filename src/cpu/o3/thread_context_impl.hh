@@ -165,14 +165,14 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::deallocate(int delay)
 {
-    DPRINTF(O3CPU, "Calling deallocate on Thread Context %d\n",
-            getThreadNum());
+    DPRINTF(O3CPU, "Calling deallocate on Thread Context %d delay %d\n",
+            getThreadNum(), delay);
 
     if (thread->status() == ThreadContext::Unallocated)
         return;
 
     thread->setStatus(ThreadContext::Unallocated);
-    cpu->deallocateContext(thread->readTid(), delay);
+    cpu->deallocateContext(thread->readTid(), true, delay);
 }
 
 template <class Impl>

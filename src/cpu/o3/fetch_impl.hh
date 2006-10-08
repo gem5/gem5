@@ -623,6 +623,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Now do the timing access to see whether or not the instruction
         // exists within the cache.
         if (!icachePort->sendTiming(data_pkt)) {
+            if (data_pkt->result == Packet::BadAddress) {
+                fault = TheISA::genMachineCheckFault();
+                delete mem_req;
+                memReq[tid] = NULL;
+            }
             assert(retryPkt == NULL);
             assert(retryTid == -1);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);

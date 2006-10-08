@@ -342,12 +342,6 @@ DefaultCommit<Impl>::drain()
 {
     drainPending = true;
 
-    // If it's already drained, return true.
-    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
-        cpu->signalDrained();
-        return true;
-    }
-
     return false;
 }
 
@@ -1218,16 +1212,16 @@ DefaultCommit<Impl>::skidInsert()
 
     for (int inst_num = 0; inst_num < fromRename->size; ++inst_num) {
         DynInstPtr inst = fromRename->insts[inst_num];
-        int tid = inst->threadNumber;
 
         if (!inst->isSquashed()) {
             DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
-                    "skidBuffer.\n", inst->readPC(), inst->seqNum, tid);
+                    "skidBuffer.\n", inst->readPC(), inst->seqNum,
+                    inst->threadNumber);
             skidBuffer.push(inst);
         } else {
             DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
                     "squashed, skipping.\n",
-                    inst->readPC(), inst->seqNum, tid);
+                    inst->readPC(), inst->seqNum, inst->threadNumber);
         }
     }
 }

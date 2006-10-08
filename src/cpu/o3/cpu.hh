@@ -202,8 +202,11 @@ class FullO3CPU : public BaseO3CPU
     class DeallocateContextEvent : public Event
     {
       private:
-        /** Number of Thread to Activate */
+        /** Number of Thread to deactivate */
         int tid;
+
+        /** Should the thread be removed from the CPU? */
+        bool remove;
 
         /** Pointer to the CPU. */
         FullO3CPU<Impl> *cpu;
@@ -218,12 +221,15 @@ class FullO3CPU : public BaseO3CPU
         /** Processes the event, calling activateThread() on the CPU. */
         void process();
 
+        /** Sets whether the thread should also be removed from the CPU. */
+        void setRemove(bool _remove) { remove = _remove; }
+
         /** Returns the description of the event. */
         const char *description();
     };
 
     /** Schedule cpu to deallocate thread context.*/
-    void scheduleDeallocateContextEvent(int tid, int delay)
+    void scheduleDeallocateContextEvent(int tid, bool remove, int delay)
     {
         // Schedule thread to activate, regardless of its current state.
         if (deallocateContextEvent[tid].squashed())
@@ -296,9 +302,9 @@ class FullO3CPU : public BaseO3CPU
     void suspendContext(int tid);
 
     /** Remove Thread from Active Threads List &&
-     *  Remove Thread Context from CPU.
+     *  Possibly Remove Thread Context from CPU.
      */
-    void deallocateContext(int tid, int delay = 1);
+    bool deallocateContext(int tid, bool remove, int delay = 1);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
@@ -625,11 +631,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;
-
-    /** Pointer to the icache interface. */
-    MemInterface *icacheInterface;
-    /** Pointer to the dcache interface. */
-    MemInterface *dcacheInterface;
 
     /** Whether or not the CPU should defer its registration. */
     bool deferRegistration;
