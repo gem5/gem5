@@ -58,10 +58,6 @@ typedef std::list<PacketPtr> PacketList;
 #define NO_ALLOCATE 1 << 5
 #define SNOOP_COMMIT 1 << 6
 
-//For statistics we need max number of commands, hard code it at
-//20 for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 9
-
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -164,6 +160,8 @@ class Packet
 
   private:
     /** List of command attributes. */
+    // If you add a new CommandAttribute, make sure to increase NUM_MEM_CMDS
+    // as well.
     enum CommandAttribute
     {
         IsRead		= 1 << 0,
@@ -178,30 +176,34 @@ class Packet
         HasData		= 1 << 9
     };
 
+//For statistics we need max number of commands, hard code it at
+//20 for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 10
+
   public:
     /** List of all commands associated with a packet. */
     enum Command
     {
         InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
-        WriteReq	= IsWrite | IsRequest | NeedsResponse,// | HasData,
-        WriteReqNoAck	= IsWrite | IsRequest,// | HasData,
-        ReadResp	= IsRead  | IsResponse | NeedsResponse,// | HasData,
+        WriteReq	= IsWrite | IsRequest | NeedsResponse | HasData,
+        WriteReqNoAck	= IsWrite | IsRequest | HasData,
+        ReadResp	= IsRead  | IsResponse | NeedsResponse | HasData,
         WriteResp	= IsWrite | IsResponse | NeedsResponse,
-        Writeback       = IsWrite | IsRequest,// | HasData,
+        Writeback       = IsWrite | IsRequest | HasData,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
         SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
-                                | NeedsResponse,// | HasData,
+                                | NeedsResponse | HasData,
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
-                                | NeedsResponse,// | HasData,
+                                | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,// | HasData,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
         UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
         UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse
-                                | NeedsResponse,// | HasData
+                                | NeedsResponse | HasData
     };
 
     /** Return the string name of the cmd field (for debugging and
