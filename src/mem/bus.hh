@@ -46,11 +46,18 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
+#include "sim/eventq.hh"
 
 class Bus : public MemObject
 {
     /** a globally unique id for this bus. */
     int busId;
+    /** the clock speed for the bus */
+    int clock;
+    /** the width of the bus in bits */
+    int width;
+    /** the next tick at which the bus will be idle */
+    Tick tickNextIdle;
 
     static const int defaultId = -1;
 
@@ -92,6 +99,15 @@ class Bus : public MemObject
      * @return pointer to port that the packet should be sent out of.
      */
     Port *findPort(Addr addr, int id);
+
+    /** Finds the port a packet should be sent to. If the bus is blocked, no port
+     * is returned.
+     * @param pkt Packet to find a destination port for.
+     * @param id Id of the port this packet was received from
+     *           (to prevent loops)
+     */
+
+    Port *findDestPort(PacketPtr pkt, int id);
 
     /** Find all ports with a matching snoop range, except src port.  Keep in mind
      * that the ranges shouldn't overlap or you will get a double snoop to the same
@@ -181,6 +197,22 @@ class Bus : public MemObject
 
     };
 
+    class BusFreeEvent : public Event
+    {
+        Bus * bus;
+
+      public:
+        BusFreeEvent(Bus * _bus);
+        void process();
+        const char *description();
+    };
+
+    BusFreeEvent busIdle;
+
+    void occupyBus(int numCycles);
+
+    Port * retryingPort;
+
     /** An array of pointers to the peer port interfaces
         connected to this bus.*/
     std::vector<Port*> interfaces;
@@ -188,6 +220,23 @@ class Bus : public MemObject
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
     std::list<Port*> retryList;
+
+    void addToRetryList(Port * port)
+    {
+        if (!retryingPort) {
+            // The device wasn't retrying a packet, or wasn't at an appropriate
+            // time.
+            retryList.push_back(port);
+        } else {
+            // The device was retrying a packet. It didn't work, so we'll leave
+            // it at the head of the retry list.
+            retryingPort = 0;
+
+            // We shouldn't be receiving a packet from one port when a different
+            // one is retrying.
+            assert(port == retryingPort);
+        }
+    }
 
     /** Port that handles requests that don't match any of the interfaces.*/
     Port *defaultPort;
@@ -199,8 +248,14 @@ class Bus : public MemObject
 
     virtual void init();
 
-    Bus(const std::string &n, int bus_id)
-        : MemObject(n), busId(bus_id), defaultPort(NULL)  {}
+    Bus(const std::string &n, int bus_id, int _clock, int _width)
+        : MemObject(n), busId(bus_id), clock(_clock), width(_width),
+        tickNextIdle(0), busIdle(this), retryingPort(0), defaultPort(NULL)
+    {
+        //Both the width and clock period must be positive
+        assert(width);
+        assert(clock);
+    }
 
 };
 
