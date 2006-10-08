@@ -7,8 +7,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct  7 2006 11:12:49
-M5 started Sat Oct  7 11:13:17 2006
+M5 compiled Oct  8 2006 14:00:39
+M5 started Sun Oct  8 14:00:58 2006
 M5 executing on zizzer.eecs.umich.edu
 command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/20.eio-short/alpha/eio/simple-atomic tests/run.py quick/20.eio-short/alpha/eio/simple-atomic
 Exiting @ tick 499999 because a thread reached the max instruction count

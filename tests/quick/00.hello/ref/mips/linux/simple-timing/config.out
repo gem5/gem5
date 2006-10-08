@@ -67,6 +67,12 @@ input=cin
 output=cout
 env=
 system=system
+uid=100
+euid=100
+gid=100
+egid=100
+pid=100
+ppid=99
 
 [system.cpu]
 type=TimingSimpleCPU
@@ -74,8 +80,10 @@ max_insts_any_thread=0
 max_insts_all_threads=0
 max_loads_any_thread=0
 max_loads_all_threads=0
+progress_interval=0
 mem=system.cpu.dcache
 system=system
+cpu_id=0
 workload=system.cpu.workload
 clock=1
 defer_registration=false
@@ -169,6 +177,7 @@ hit_latency=1
 [trace]
 flags=
 start=0
+cycle=0
 bufsize=0
 file=cout
 dump_on_exit=false
@@ -211,4 +220,7 @@ trace_system=client
 
 [debug]
 break_cycles=
+
+[statsreset]
+reset_cycle=0
 

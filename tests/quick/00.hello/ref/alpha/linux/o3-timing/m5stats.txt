@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    420                       # Nu
 global.BPredUnit.condPredicted                   1302                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         2254                       # Number of BP lookups
 global.BPredUnit.usedRAS                          291                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  47059                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 160380                       # Number of bytes of host memory used
-host_seconds                                     0.12                       # Real time elapsed on the host
-host_tick_rate                                  57322                       # Simulator tick rate (ticks/s)
+host_inst_rate                                   1748                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 160364                       # Number of bytes of host memory used
+host_seconds                                     3.22                       # Real time elapsed on the host
+host_tick_rate                                   2135                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 12                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores               259                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                  2049                       # Number of loads inserted to the mem dependence unit.

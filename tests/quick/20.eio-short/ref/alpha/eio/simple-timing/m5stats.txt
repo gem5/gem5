@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 618043                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 159232                       # Number of bytes of host memory used
-host_seconds                                     0.81                       # Real time elapsed on the host
-host_tick_rate                                 843177                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 598582                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 159216                       # Number of bytes of host memory used
+host_seconds                                     0.84                       # Real time elapsed on the host
+host_tick_rate                                 816632                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                      500000                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
@@ -115,7 +115,7 @@ system.cpu.icache.no_allocate_misses                0                       # Nu
 system.cpu.icache.overall_accesses             500000                       # number of overall (read+write) accesses
 system.cpu.icache.overall_avg_miss_latency            3                       # average overall miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency            2                       # average overall mshr miss latency
-system.cpu.icache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
+system.cpu.icache.overall_avg_mshr_uncacheable_latency     no value                       # average overall mshr uncacheable latency
 system.cpu.icache.overall_hits                 499597                       # number of overall hits
 system.cpu.icache.overall_miss_latency           1209                       # number of overall miss cycles
 system.cpu.icache.overall_miss_rate          0.000806                       # miss rate for overall accesses
