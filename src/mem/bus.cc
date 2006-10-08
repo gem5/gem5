@@ -67,6 +67,44 @@ Bus::init()
         (*intIter)->sendStatusChange(Port::RangeChange);
 }
 
+Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
+{}
+
+void Bus::BusFreeEvent::process()
+{
+    bus->recvRetry(0);
+}
+
+const char * Bus::BusFreeEvent::description()
+{
+    return "bus became available";
+}
+
+void
+Bus::occupyBus(int numCycles)
+{
+    //Move up when the bus will next be free
+    //We avoid the use of divide by adding repeatedly
+    //This should be faster if the value is updated frequently, but should
+    //be may be slower otherwise.
+
+    //Bring tickNextIdle up to the present tick
+    //There is some potential ambiguity where a cycle starts, which might make
+    //a difference when devices are acting right around a cycle boundary. Using
+    //a < allows things which happen exactly on a cycle boundary to take up only
+    //the following cycle. Anthing that happens later will have to "wait" for the
+    //end of that cycle, and then start using the bus after that.
+    while (tickNextIdle < curTick)
+        tickNextIdle += clock;
+    //Advance it numCycles bus cycles.
+    //XXX Should this use the repeating add trick as well?
+    tickNextIdle += (numCycles * clock);
+    if (!busIdle.scheduled()) {
+        busIdle.schedule(tickNextIdle);
+    } else {
+        busIdle.reschedule(tickNextIdle);
+    }
+}
 
 /** Function called by the port when the bus is receiving a Timing
  * transaction.*/
@@ -77,83 +115,89 @@ Bus::recvTiming(Packet *pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
-    short dest = pkt->getDest();
-    //if (pkt->isRequest() && curTick < tickAddrLastUsed ||
-    //        (pkt->isResponse() || pkt->hasData()) && curTick < tickDataLastUsed) {
-        //We're going to need resources that have already been committed
-        //Send this guy to the back of the line
-        //We don't need to worry about scheduling an event to deal with when the
-        //bus is freed because that's handled when tick*LastUsed is incremented.
-    //    retryList.push_back(interfaces[pkt->getSrc()]);
-    //    return false;
-    //}
+    Port *pktPort = interfaces[pkt->getSrc()];
 
-    if (dest == Packet::Broadcast) {
-        if ( timingSnoopPhase1(pkt) )
-        {
-            timingSnoopPhase2(pkt);
-            port = findPort(pkt->getAddr(), pkt->getSrc());
-        }
-        else
-        {
-            //Snoop didn't succeed
-            retryList.push_back(interfaces[pkt->getSrc()]);
-            return false;
-        }
-    } else {
-        assert(dest >= 0 && dest < interfaces.size());
-        assert(dest != pkt->getSrc()); // catch infinite loops
-        port = interfaces[dest];
+    // If the bus is busy, or other devices are in line ahead of the current one,
+    // put this device on the retry list.
+    if (tickNextIdle > curTick || (retryList.size() && pktPort != retryingPort)) {
+        addToRetryList(pktPort);
+        return false;
     }
 
+    // If the bus is blocked, make the device wait.
+    if (!(port = findDestPort(pkt, pkt->getSrc()))) {
+        addToRetryList(pktPort);
+        return false;
+    }
+
+    // The packet will be sent. Figure out how long it occupies the bus.
+    int numCycles = 0;
+    // Requests need one cycle to send an address
+    if (pkt->isRequest())
+        numCycles++;
+    else if (pkt->isResponse() || pkt->hasData()) {
+        // If a packet has data, it needs ceil(size/width) cycles to send it
+        // We're using the "adding instead of dividing" trick again here
+        if (pkt->hasData()) {
+            int dataSize = pkt->getSize();
+            for (int transmitted = 0; transmitted < dataSize;
+                    transmitted += width) {
+                numCycles++;
+            }
+        } else {
+            // If the packet didn't have data, it must have been a response.
+            // Those use the bus for one cycle to send their data.
+            numCycles++;
+        }
+    }
+
+    occupyBus(numCycles);
 
     if (port->sendTiming(pkt))  {
-        // Packet was successfully sent.
-        // Figure out what resources were used, and then return true.
-        //if (pkt->isRequest()) {
-            // The address bus will be used for one cycle
-        //    while (tickAddrLastUsed <= curTick)
-        //        tickAddrLastUsed += clock;
-        //}
-        //if (pkt->isResponse() || pkt->hasData()) {
-            // Use up the data bus for at least one bus cycle
-        //    while (tickDataLastUsed <= curTick)
-        //        tickDataLastUsed += clock;
-            // Use up the data bus for however many cycles remain
-        //    if (pkt->hasData()) {
-        //        int dataSize = pkt->getSize();
-        //        for (int transmitted = width; transmitted < dataSize;
-        //                transmitted += width) {
-        //            tickDataLastUsed += clock;
-        //        }
-        //    }
-        //}
+        // Packet was successfully sent. Return true.
         return true;
     }
 
-    // packet not successfully sent
-    retryList.push_back(interfaces[pkt->getSrc()]);
+    // Packet not successfully sent. Leave or put it on the retry list.
+    addToRetryList(pktPort);
     return false;
 }
 
 void
 Bus::recvRetry(int id)
 {
-    // Go through all the elements on the list calling sendRetry on each
-    // This is not very efficient at all but it works. Ultimately we should end
-    // up with something that is more intelligent.
-    int initialSize = retryList.size();
-    int i;
-    Port *p;
-
-    for (i = 0; i < initialSize; i++) {
-        assert(retryList.size() > 0);
-        p = retryList.front();
-        retryList.pop_front();
-        p->sendRetry();
+    //If there's anything waiting...
+    if (retryList.size()) {
+        retryingPort = retryList.front();
+        retryingPort->sendRetry();
+        //If the retryingPort pointer isn't null, either sendTiming wasn't
+        //called, or it was and the packet was successfully sent.
+        if (retryingPort) {
+            retryList.pop_front();
+            retryingPort = 0;
+        }
     }
 }
 
+Port *
+Bus::findDestPort(PacketPtr pkt, int id)
+{
+    Port * port = NULL;
+    short dest = pkt->getDest();
+
+    if (dest == Packet::Broadcast) {
+        if (timingSnoopPhase1(pkt)) {
+            timingSnoopPhase2(pkt);
+            port = findPort(pkt->getAddr(), pkt->getSrc());
+        }
+        //else, port stays NULL
+    } else {
+        assert(dest >= 0 && dest < interfaces.size());
+        assert(dest != pkt->getSrc()); // catch infinite loops
+        port = interfaces[dest];
+    }
+    return port;
+}
 
 Port *
 Bus::findPort(Addr addr, int id)
