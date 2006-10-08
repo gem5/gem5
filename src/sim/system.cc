@@ -219,6 +219,8 @@ System::new_page()
 {
     Addr return_addr = page_ptr << LogVMPageSize;
     ++page_ptr;
+    if (return_addr >= physmem->size())
+        fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
 #endif
