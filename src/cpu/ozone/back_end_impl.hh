@@ -1256,7 +1256,7 @@ BackEnd<Impl>::executeInsts()
 
 //                ++iewExecStoreInsts;
 
-                if (!(inst->req->flags & LOCKED)) {
+                if (!(inst->req->isLocked())) {
                     inst->setExecuted();
 
                     instToCommit(inst);

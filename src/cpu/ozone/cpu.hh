@@ -455,12 +455,12 @@ class OzoneCPU : public BaseCPU
     {
 #if 0
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
-        if (req->flags & LOCKED) {
+        if (req->isLocked()) {
             req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
         }
 #endif
-        if (req->flags & LOCKED) {
+        if (req->isLocked()) {
             lockAddrList.insert(req->paddr);
             lockFlag = true;
         }
@@ -489,10 +489,10 @@ class OzoneCPU : public BaseCPU
         ExecContext *xc;
 
         // If this is a store conditional, act appropriately
-        if (req->flags & LOCKED) {
+        if (req->isLocked()) {
             xc = req->xc;
 
-            if (req->flags & UNCACHEABLE) {
+            if (req->isUncacheable()) {
                 // Don't update result register (see stq_c in isa_desc)
                 req->result = 2;
                 xc->setStCondFailures(0);//Needed? [RGD]
@@ -532,8 +532,8 @@ class OzoneCPU : public BaseCPU
 
 #endif
 
-        if (req->flags & LOCKED) {
-            if (req->flags & UNCACHEABLE) {
+        if (req->isLocked()) {
+            if (req->isUncacheable()) {
                 req->result = 2;
             } else {
                 if (this->lockFlag) {

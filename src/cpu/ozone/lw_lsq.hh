@@ -507,7 +507,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
     // @todo: Fix uncached accesses.
-    if (req->getFlags() & UNCACHEABLE &&
+    if (req->isUncacheable() &&
         (inst != loadQueue.back() || !inst->isAtCommit())) {
         DPRINTF(OzoneLSQ, "[sn:%lli] Uncached load and not head of "
                 "commit/LSQ!\n",
@@ -659,7 +659,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
         return NoFault;
     }
 
-    if (req->getFlags() & LOCKED) {
+    if (req->isLocked()) {
         cpu->lockFlag = true;
     }
 

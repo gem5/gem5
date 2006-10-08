@@ -599,7 +599,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     if (fault == NoFault) {
 #if 0
         if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
-            memReq[tid]->flags & UNCACHEABLE) {
+            memReq[tid]->isUncacheable()) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path)!",
                     memReq[tid]->paddr);

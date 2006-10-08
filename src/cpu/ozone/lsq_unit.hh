@@ -426,7 +426,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
     // @todo: Fix uncached accesses.
-    if (req->flags & UNCACHEABLE &&
+    if (req->isUncacheable() &&
         (load_idx != loadHead || !loadQueue[load_idx]->readyToCommit())) {
 
         return TheISA::genMachineCheckFault();

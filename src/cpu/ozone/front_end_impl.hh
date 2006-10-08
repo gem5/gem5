@@ -493,7 +493,7 @@ FrontEnd<Impl>::fetchCacheLine()
     if (fault == NoFault) {
 #if 0
         if (cpu->system->memctrl->badaddr(memReq->paddr) ||
-            memReq->flags & UNCACHEABLE) {
+            memReq->isUncacheable()) {
             DPRINTF(FE, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path!",
                     memReq->paddr);

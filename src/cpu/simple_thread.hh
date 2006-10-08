@@ -237,7 +237,7 @@ class SimpleThread : public ThreadState
     Fault read(RequestPtr &req, T &data)
     {
 #if FULL_SYSTEM && THE_ISA == ALPHA_ISA
-        if (req->flags & LOCKED) {
+        if (req->isLocked()) {
             req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
             req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
         }
@@ -256,10 +256,10 @@ class SimpleThread : public ThreadState
         ExecContext *xc;
 
         // If this is a store conditional, act appropriately
-        if (req->flags & LOCKED) {
+        if (req->isLocked()) {
             xc = req->xc;
 
-            if (req->flags & UNCACHEABLE) {
+            if (req->isUncacheable()) {
                 // Don't update result register (see stq_c in isa_desc)
                 req->result = 2;
                 xc->setStCondFailures(0);//Needed? [RGD]

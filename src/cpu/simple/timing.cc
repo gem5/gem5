@@ -257,7 +257,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 
     // This will need a new way to tell if it has a dcache attached.
-    if (req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Read");
 
     return fault;
@@ -342,7 +342,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling

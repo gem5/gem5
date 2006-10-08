@@ -394,7 +394,7 @@ OzoneLWLSQ<Impl>::executeLoad(DynInstPtr &inst)
     // Actually probably want the oldest faulting load
     if (load_fault != NoFault) {
         DPRINTF(OzoneLSQ, "Load [sn:%lli] has a fault\n", inst->seqNum);
-        if (!(inst->req->getFlags() & UNCACHEABLE && !inst->isAtCommit())) {
+        if (!(inst->req->isUncacheable() && !inst->isAtCommit())) {
             inst->setExecuted();
         }
         // Maybe just set it as can commit here, although that might cause
@@ -605,8 +605,8 @@ OzoneLWLSQ<Impl>::writebackStores()
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
-        if (req->getFlags() & LOCKED) {
-            if (req->getFlags() & UNCACHEABLE) {
+        if (req->isLocked()) {
+            if (req->isUncacheable()) {
                 req->setScResult(2);
             } else {
                 if (cpu->lockFlag) {
@@ -663,7 +663,7 @@ OzoneLWLSQ<Impl>::writebackStores()
             if (result != MA_HIT && dcacheInterface->doEvents()) {
                 store_event->miss = true;
                 typename BackEnd::LdWritebackEvent *wb = NULL;
-                if (req->flags & LOCKED) {
+                if (req->isLocked()) {
                     wb = new typename BackEnd::LdWritebackEvent(inst,
                                                             be);
                     store_event->wbEvent = wb;
@@ -690,7 +690,7 @@ OzoneLWLSQ<Impl>::writebackStores()
 //                DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
 //                        inst->seqNum);
 
-                if (req->flags & LOCKED) {
+                if (req->isLocked()) {
                     // Stx_C does not generate a system port
                     // transaction in the 21264, but that might be
                     // hard to accomplish in this model.

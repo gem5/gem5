@@ -492,7 +492,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // A bit of a hackish way to get uncached accesses to work only if they're
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
-    if (req->getFlags() & UNCACHEABLE &&
+    if (req->isUncacheable() &&
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
@@ -509,7 +509,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             load_idx, store_idx, storeHead, req->getPaddr());
 
 #if FULL_SYSTEM
-    if (req->getFlags() & LOCKED) {
+    if (req->isLocked()) {
         cpu->lockAddr = req->getPaddr();
         cpu->lockFlag = true;
     }
