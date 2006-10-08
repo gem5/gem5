@@ -54,7 +54,7 @@ class Bus : public MemObject
     int busId;
     /** the clock speed for the bus */
     int clock;
-    /** the width of the bus in bits */
+    /** the width of the bus in bytes */
     int width;
     /** the next tick at which the bus will be idle */
     Tick tickNextIdle;
@@ -230,7 +230,7 @@ class Bus : public MemObject
         } else {
             // The device was retrying a packet. It didn't work, so we'll leave
             // it at the head of the retry list.
-            retryingPort = 0;
+            retryingPort = NULL;
 
             // We shouldn't be receiving a packet from one port when a different
             // one is retrying.
@@ -250,7 +250,7 @@ class Bus : public MemObject
 
     Bus(const std::string &n, int bus_id, int _clock, int _width)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
-        tickNextIdle(0), busIdle(this), retryingPort(0), defaultPort(NULL)
+        tickNextIdle(0), busIdle(this), retryingPort(NULL), defaultPort(NULL)
     {
         //Both the width and clock period must be positive
         assert(width);

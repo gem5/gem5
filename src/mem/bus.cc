@@ -68,7 +68,9 @@ Bus::init()
 }
 
 Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
-{}
+{
+    assert(!scheduled());
+}
 
 void Bus::BusFreeEvent::process()
 {
@@ -104,6 +106,7 @@ Bus::occupyBus(int numCycles)
     } else {
         busIdle.reschedule(tickNextIdle);
     }
+    DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n", curTick, tickNextIdle);
 }
 
 /** Function called by the port when the bus is receiving a Timing
@@ -155,6 +158,11 @@ Bus::recvTiming(Packet *pkt)
 
     if (port->sendTiming(pkt))  {
         // Packet was successfully sent. Return true.
+        // Also take care of retries
+        if (retryingPort) {
+            retryList.pop_front();
+            retryingPort = NULL;
+        }
         return true;
     }
 
@@ -166,15 +174,15 @@ Bus::recvTiming(Packet *pkt)
 void
 Bus::recvRetry(int id)
 {
-    //If there's anything waiting...
+    // If there's anything waiting...
     if (retryList.size()) {
         retryingPort = retryList.front();
         retryingPort->sendRetry();
-        //If the retryingPort pointer isn't null, either sendTiming wasn't
-        //called, or it was and the packet was successfully sent.
+        // If the retryingPort pointer isn't null, sendTiming wasn't called
         if (retryingPort) {
+            warn("sendRetry didn't call sendTiming\n");
             retryList.pop_front();
-            retryingPort = 0;
+            retryingPort = NULL;
         }
     }
 }
