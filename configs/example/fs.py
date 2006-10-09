@@ -77,6 +77,8 @@ else:
 
 cpu.clock = '2GHz'
 cpu2.clock = '2GHz'
+cpu.cpu_id = 0
+cpu2.cpu_id = 0
 
 if options.benchmark:
     if options.benchmark not in Benchmarks:
