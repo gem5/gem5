@@ -72,6 +72,7 @@ enum RequestCause{
     Request_PF
 };
 
+class MSHR;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
@@ -112,6 +113,8 @@ class BaseCache : public MemObject
         bool isCpuSide;
 
         std::list<Packet *> drainList;
+
+        Packet *cshrRetry;
     };
 
     struct CacheEvent : public Event
@@ -177,7 +180,7 @@ class BaseCache : public MemObject
         fatal("No implementation");
     }
 
-    virtual void sendResult(Packet* &pkt, bool success)
+    virtual void sendResult(Packet* &pkt, MSHR* mshr, bool success)
     {
 
         fatal("No implementation");

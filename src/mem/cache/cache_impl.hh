@@ -287,10 +287,10 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, bool success)
+Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
     if (success) {
-        missQueue->markInService(pkt);
+              missQueue->markInService(pkt, mshr);
           //Temp Hack for UPGRADES
           if (pkt->cmd == Packet::UpgradeReq) {
               handleResponse(pkt);
@@ -444,7 +444,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 
                     if (pkt->isInvalidate()) {
                         //This must be an upgrade or other cache will take ownership
-                        missQueue->markInService(mshr->pkt);
+                        missQueue->markInService(mshr->pkt, mshr);
                     }
                     return;
                 }
