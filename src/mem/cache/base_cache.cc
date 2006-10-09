@@ -71,7 +71,7 @@ BaseCache::CachePort::deviceBlockSize()
 bool
 BaseCache::CachePort::recvTiming(Packet *pkt)
 {
-    if (blocked)
+    if (pkt->isRequest() && blocked)
     {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
@@ -108,10 +108,11 @@ BaseCache::CachePort::recvRetry()
     else if (!isCpuSide)
     {
         pkt = cache->getPacket();
+        MSHR* mshr = (MSHR*)pkt->senderState;
         bool success = sendTiming(pkt);
         DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
-        cache->sendResult(pkt, success);
+        cache->sendResult(pkt, mshr, success);
         if (success && cache->doMasterRequest())
         {
             //Still more to issue, rerequest in 1 cycle
@@ -122,7 +123,9 @@ BaseCache::CachePort::recvRetry()
     }
     else
     {
-        pkt = cache->getCoherencePacket();
+        //pkt = cache->getCoherencePacket();
+        //We save the packet, no reordering on CSHRS
+        pkt = cshrRetry;
         bool success = sendTiming(pkt);
         if (success && cache->doSlaveRequest())
         {
@@ -181,10 +184,11 @@ BaseCache::CacheEvent::process()
         {
             //MSHR
             pkt = cachePort->cache->getPacket();
+            MSHR* mshr = (MSHR*) pkt->senderState;
             bool success = cachePort->sendTiming(pkt);
             DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                     pkt->getAddr(), success ? "succesful" : "unsuccesful");
-            cachePort->cache->sendResult(pkt, success);
+            cachePort->cache->sendResult(pkt, mshr, success);
             if (success && cachePort->cache->doMasterRequest())
             {
                 //Still more to issue, rerequest in 1 cycle
@@ -197,7 +201,11 @@ BaseCache::CacheEvent::process()
             //CSHR
             pkt = cachePort->cache->getCoherencePacket();
             bool success = cachePort->sendTiming(pkt);
-            if (success && cachePort->cache->doSlaveRequest())
+            if (!success) {
+                //Need to send on a retry
+                cachePort->cshrRetry = pkt;
+            }
+            else if (cachePort->cache->doSlaveRequest())
             {
                 //Still more to issue, rerequest in 1 cycle
                 pkt = NULL;

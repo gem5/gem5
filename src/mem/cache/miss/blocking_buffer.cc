@@ -123,12 +123,12 @@ BlockingBuffer::restoreOrigCmd(Packet * &pkt)
 }
 
 void
-BlockingBuffer::markInService(Packet * &pkt)
+BlockingBuffer::markInService(Packet * &pkt, MSHR* mshr)
 {
     if (!pkt->isCacheFill() && pkt->isWrite()) {
         // Forwarding a write/ writeback, don't need to change
         // the command
-        assert((MSHR*)pkt->senderState == &wb);
+        assert(mshr == &wb);
         cache->clearMasterRequest(Request_WB);
         if (!pkt->needsResponse()) {
             assert(wb.getNumTargets() == 0);
@@ -138,7 +138,7 @@ BlockingBuffer::markInService(Packet * &pkt)
             wb.inService = true;
         }
     } else {
-        assert((MSHR*)pkt->senderState == &miss);
+        assert(mshr == &miss);
         cache->clearMasterRequest(Request_MSHR);
         if (!pkt->needsResponse()) {
             assert(miss.getNumTargets() == 0);

@@ -94,7 +94,7 @@ AtomicSimpleCPU::init()
 bool
 AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
+    panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
     return true;
 }
 
@@ -108,7 +108,8 @@ AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 void
 AtomicSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvFunctional callback!");
+    //No internal storage to update, just return
+    return;
 }
 
 void
@@ -161,6 +162,8 @@ AtomicSimpleCPU::serialize(ostream &os)
 {
     SimObject::State so_state = SimObject::getState();
     SERIALIZE_ENUM(so_state);
+    Status _status = status();
+    SERIALIZE_ENUM(_status);
     BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -171,6 +174,7 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     SimObject::State so_state;
     UNSERIALIZE_ENUM(so_state);
+    UNSERIALIZE_ENUM(_status);
     BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }

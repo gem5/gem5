@@ -26,65 +26,19 @@
 #
 # Authors: Ron Dreslinski
 
-import m5
-from m5.objects import *
-m5.AddToPath('../configs/common')
-from FullO3Config import *
+# workload
+benchmarks = [
+    "tests/test-progs/hello/bin/alpha/linux/hello", "'hello'",
+    "tests/test-progs/hello/bin/alpha/linux/hello", "'hello'",
+    "tests/test-progs/hello/bin/alpha/linux/hello", "'hello'",
+    "tests/test-progs/hello/bin/alpha/linux/hello", "'hello'",
+    ]
 
-# --------------------
-# Base L1 Cache
-# ====================
-
-class L1(BaseCache):
-    latency = 1
-    block_size = 64
-    mshrs = 4
-    tgts_per_mshr = 8
-    protocol = CoherenceProtocol(protocol='moesi')
-
-# ----------------------
-# Base L2 Cache
-# ----------------------
-
-class L2(BaseCache):
-    block_size = 64
-    latency = 100
-    mshrs = 92
-    tgts_per_mshr = 16
-    write_buffers = 8
-
-nb_cores = 4
-cpus = [ DetailedO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
-
-# system simulated
-system = System(cpu = cpus, physmem = PhysicalMemory(), membus =
-Bus())
-
-# l2cache & bus
-system.toL2Bus = Bus()
-system.l2c = L2(size='4MB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.port
-
-# connect l2c to membus
-system.l2c.mem_side = system.membus.port
-
-# add L1 caches
-for cpu in cpus:
-    cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
-                                L1(size = '32kB', assoc = 4))
-    cpu.mem = cpu.dcache
-    # connect cpu level-1 caches to shared level-2 cache
-    cpu.connectMemPorts(system.toL2Bus)
-
-# connect memory to membus
-system.physmem.port = system.membus.port
-
-
-# -----------------------
-# run simulation
-# -----------------------
-
-root = Root( system = system )
-root.system.mem_mode = 'timing'
-#root.trace.flags="Bus Cache"
-#root.trace.flags = "BusAddrRanges"
+for i, cpu in zip(range(len(cpus)), root.system.cpu):
+    p            = LiveProcess()
+    p.executable = benchmarks[i*2]
+    p.cmd        = benchmarks[(i*2)+1]
+    root.system.cpu[i].workload = p
+    root.system.cpu[i].max_insts_all_threads = 10000000
+#root.system.cpu.workload = LiveProcess(cmd = 'hello',
+ #                                      executable = binpath('hello'))

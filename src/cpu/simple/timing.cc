@@ -74,7 +74,8 @@ TimingSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 void
 TimingSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
-    panic("TimingSimpleCPU doesn't expect recvFunctional callback!");
+    //No internal storage to update, jusst return
+    return;
 }
 
 void

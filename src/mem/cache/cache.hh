@@ -175,7 +175,7 @@ class Cache : public BaseCache
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    virtual void sendResult(Packet * &pkt, bool success);
+    virtual void sendResult(Packet * &pkt, MSHR* mshr, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.

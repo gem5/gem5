@@ -63,7 +63,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("DefaultFetch doesn't expect recvFunctional callback!");
+    warn("Default fetch doesn't update it's state from a functional call.");
 }
 
 template<class Impl>

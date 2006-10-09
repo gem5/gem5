@@ -59,7 +59,7 @@ template<class Impl>
 void
 FrontEnd<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("FrontEnd doesn't expect recvFunctional callback!");
+    warn("FrontEnd doesn't update state from functional calls");
 }
 
 template<class Impl>

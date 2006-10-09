@@ -231,7 +231,7 @@ PhysicalMemory::getPort(const std::string &if_name, int idx)
         port = new MemoryPort(name() + "-port", this);
         return port;
     } else if (if_name == "functional") {
-        /* special port for functional writes at startup. */
+        /* special port for functional writes at startup. And for memtester */
         return new MemoryPort(name() + "-funcport", this);
     } else {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);

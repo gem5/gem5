@@ -72,7 +72,7 @@ template <class Impl>
 void
 OzoneLWLSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("O3CPU doesn't expect recvFunctional callback!");
+    warn("O3CPU doesn't update things on a recvFunctional");
 }
 
 template <class Impl>

@@ -52,7 +52,7 @@ class L2(BaseCache):
     write_buffers = 8
 
 nb_cores = 4
-cpus = [ TimingSimpleCPU() for i in xrange(nb_cores) ]
+cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, physmem = PhysicalMemory(), membus =

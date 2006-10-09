@@ -28,8 +28,6 @@
 
 import m5
 from m5.objects import *
-m5.AddToPath('../configs/common')
-from FullO3Config import *
 
 # --------------------
 # Base L1 Cache
@@ -53,12 +51,13 @@ class L2(BaseCache):
     tgts_per_mshr = 16
     write_buffers = 8
 
-nb_cores = 4
-cpus = [ DetailedO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
+#MAX CORES IS 8 with the fals sharing method
+nb_cores = 8
+cpus = [ MemTest(max_loads=1e12) for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, physmem = PhysicalMemory(), membus =
-Bus())
+system = System(cpu = cpus, funcmem = PhysicalMemory(),
+                physmem = PhysicalMemory(), membus = Bus())
 
 # l2cache & bus
 system.toL2Bus = Bus()
@@ -68,13 +67,18 @@ system.l2c.cpu_side = system.toL2Bus.port
 # connect l2c to membus
 system.l2c.mem_side = system.membus.port
 
+which_port = 0
 # add L1 caches
 for cpu in cpus:
-    cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
-                                L1(size = '32kB', assoc = 4))
-    cpu.mem = cpu.dcache
-    # connect cpu level-1 caches to shared level-2 cache
-    cpu.connectMemPorts(system.toL2Bus)
+    cpu.l1c = L1(size = '32kB', assoc = 4)
+    cpu.l1c.cpu_side = cpu.test
+    cpu.l1c.mem_side = system.toL2Bus.port
+    if  which_port == 0:
+         system.funcmem.port = cpu.functional
+         which_port = 1
+    else:
+         system.funcmem.functional = cpu.functional
+
 
 # connect memory to membus
 system.physmem.port = system.membus.port
@@ -86,5 +90,5 @@ system.physmem.port = system.membus.port
 
 root = Root( system = system )
 root.system.mem_mode = 'timing'
-#root.trace.flags="Bus Cache"
-#root.trace.flags = "BusAddrRanges"
+#root.trace.flags="InstExec"
+root.trace.flags="Bus"

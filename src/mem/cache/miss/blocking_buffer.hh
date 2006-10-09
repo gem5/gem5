@@ -152,7 +152,7 @@ public:
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(Packet * &pkt);
+    void markInService(Packet * &pkt, MSHR* mshr);
 
     /**
      * Frees the resources of the pktuest and unblock the cache.
