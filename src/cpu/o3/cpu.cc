@@ -455,13 +455,16 @@ FullO3CPU<Impl>::tick()
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut ||
             getState() == SimObject::Drained) {
+            DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
             lastRunningCycle = curTick;
         } else if (!activityRec.active() || _status == Idle) {
+            DPRINTF(O3CPU, "Idle!\n");
             lastRunningCycle = curTick;
             timesIdled++;
         } else {
             tickEvent.schedule(curTick + cycles(1));
+            DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
 
@@ -520,6 +523,8 @@ FullO3CPU<Impl>::activateThread(unsigned tid)
     list<unsigned>::iterator isActive = find(
         activeThreads.begin(), activeThreads.end(), tid);
 
+    DPRINTF(O3CPU, "[tid:%i]: Calling activate thread.\n", tid);
+
     if (isActive == activeThreads.end()) {
         DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
                 tid);
@@ -535,6 +540,8 @@ FullO3CPU<Impl>::deactivateThread(unsigned tid)
     //Remove From Active List, if Active
     list<unsigned>::iterator thread_it =
         find(activeThreads.begin(), activeThreads.end(), tid);
+
+    DPRINTF(O3CPU, "[tid:%i]: Calling deactivate thread.\n", tid);
 
     if (thread_it != activeThreads.end()) {
         DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
@@ -836,7 +843,9 @@ template <class Impl>
 void
 FullO3CPU<Impl>::resume()
 {
+#if FULL_SYSTEM
     assert(system->getMemoryMode() == System::Timing);
+#endif
     fetch.resume();
     decode.resume();
     rename.resume();
