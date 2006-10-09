@@ -113,7 +113,7 @@ PhysicalMemory::calculateLatency(Packet *pkt)
 void
 PhysicalMemory::doFunctionalAccess(Packet *pkt)
 {
-    assert(pkt->getAddr() + pkt->getSize() < params()->addrRange.size());
+    assert(pkt->getAddr() + pkt->getSize() <= params()->addrRange.size());
 
     switch (pkt->cmd) {
       case Packet::ReadReq:
