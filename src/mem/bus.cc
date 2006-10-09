@@ -118,25 +118,26 @@ Bus::recvTiming(Packet *pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
+    Port *pktPort = interfaces[pkt->getSrc()];
+
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        if ( timingSnoopPhase1(pkt) )
-        if (timingSnoop(pkt))
-        {
-            timingSnoopPhase2(pkt);
+        if (timingSnoop(pkt)) {
             pkt->flags |= SNOOP_COMMIT;
             bool success = timingSnoop(pkt);
             assert(success);
             if (pkt->flags & SATISFIED) {
                 //Cache-Cache transfer occuring
+                if (retryingPort) {
+                    retryList.pop_front();
+                    retryingPort = NULL;
+                }
                 return true;
             }
             port = findPort(pkt->getAddr(), pkt->getSrc());
-        }
-        else
-        {
+        } else {
             //Snoop didn't succeed
-            retryList.push_back(interfaces[pkt->getSrc()]);
+            addToRetryList(pktPort);
             return false;
         }
     } else {
@@ -144,6 +145,30 @@ Bus::recvTiming(Packet *pkt)
         assert(dest != pkt->getSrc()); // catch infinite loops
         port = interfaces[dest];
     }
+
+    // The packet will be sent. Figure out how long it occupies the bus.
+    int numCycles = 0;
+    // Requests need one cycle to send an address
+    if (pkt->isRequest())
+        numCycles++;
+    else if (pkt->isResponse() || pkt->hasData()) {
+        // If a packet has data, it needs ceil(size/width) cycles to send it
+        // We're using the "adding instead of dividing" trick again here
+        if (pkt->hasData()) {
+            int dataSize = pkt->getSize();
+            for (int transmitted = 0; transmitted < dataSize;
+                    transmitted += width) {
+                numCycles++;
+            }
+        } else {
+            // If the packet didn't have data, it must have been a response.
+            // Those use the bus for one cycle to send their data.
+            numCycles++;
+        }
+    }
+
+    occupyBus(numCycles);
+
     if (port->sendTiming(pkt))  {
         // Packet was successfully sent. Return true.
         // Also take care of retries
@@ -173,26 +198,6 @@ Bus::recvRetry(int id)
             retryingPort = NULL;
         }
     }
-}
-
-Port *
-Bus::findDestPort(PacketPtr pkt, int id)
-{
-    Port * port = NULL;
-    short dest = pkt->getDest();
-
-    if (dest == Packet::Broadcast) {
-        if (timingSnoopPhase1(pkt)) {
-            timingSnoopPhase2(pkt);
-            port = findPort(pkt->getAddr(), pkt->getSrc());
-        }
-        //else, port stays NULL
-    } else {
-        assert(dest >= 0 && dest < interfaces.size());
-        assert(dest != pkt->getSrc()); // catch infinite loops
-        port = interfaces[dest];
-    }
-    return port;
 }
 
 Port *

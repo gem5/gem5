@@ -97,15 +97,6 @@ class Bus : public MemObject
      */
     Port *findPort(Addr addr, int id);
 
-    /** Finds the port a packet should be sent to. If the bus is blocked, no port
-     * is returned.
-     * @param pkt Packet to find a destination port for.
-     * @param id Id of the port this packet was received from
-     *           (to prevent loops)
-     */
-
-    Port *findDestPort(PacketPtr pkt, int id);
-
     /** Find all ports with a matching snoop range, except src port.  Keep in mind
      * that the ranges shouldn't overlap or you will get a double snoop to the same
      * interface.and the cache will assert out.
