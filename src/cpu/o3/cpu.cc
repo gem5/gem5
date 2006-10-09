@@ -960,7 +960,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     Port *peer;
     Port *icachePort = fetch.getIcachePort();
     if (icachePort->getPeer() == NULL) {
-        peer = oldCPU->getPort("icachePort")->getPeer();
+        peer = oldCPU->getPort("icache_port")->getPeer();
         icachePort->setPeer(peer);
     } else {
         peer = icachePort->getPeer();
@@ -969,7 +969,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     Port *dcachePort = iew.getDcachePort();
     if (dcachePort->getPeer() == NULL) {
-        Port *peer = oldCPU->getPort("dcachePort")->getPeer();
+        peer = oldCPU->getPort("dcache_port")->getPeer();
         dcachePort->setPeer(peer);
     } else {
         peer = dcachePort->getPeer();

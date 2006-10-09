@@ -191,9 +191,13 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         }
     }
 
+    if (_status != Running) {
+        _status = Idle;
+    }
+
     Port *peer;
     if (icachePort.getPeer() == NULL) {
-        peer = oldCPU->getPort("icachePort")->getPeer();
+        peer = oldCPU->getPort("icache_port")->getPeer();
         icachePort.setPeer(peer);
     } else {
         peer = icachePort.getPeer();
@@ -201,7 +205,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     peer->setPeer(&icachePort);
 
     if (dcachePort.getPeer() == NULL) {
-        peer = oldCPU->getPort("dcachePort")->getPeer();
+        peer = oldCPU->getPort("dcache_port")->getPeer();
         dcachePort.setPeer(peer);
     } else {
         peer = dcachePort.getPeer();
@@ -545,21 +549,20 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
     numCycles += curTick - previousTick;
     previousTick = curTick;
 
-    if (getState() == SimObject::Draining) {
-        completeDrain();
-
-        delete pkt->req;
-        delete pkt;
-
-        return;
-    }
-
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
     delete pkt->req;
     delete pkt;
 
     postExecute();
+
+    if (getState() == SimObject::Draining) {
+        advancePC(fault);
+        completeDrain();
+
+        return;
+    }
+
     advanceInst(fault);
 }
 
