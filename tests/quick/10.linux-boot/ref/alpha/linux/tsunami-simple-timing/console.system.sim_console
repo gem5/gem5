@@ -3,7 +3,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 memsize 8000000 pages 4000 
 First free page after ROM 0xFFFFFC0000018000
 HWRPB 0xFFFFFC0000018000 l1pt 0xFFFFFC0000040000 l2pt 0xFFFFFC0000042000 l3pt_rpb 0xFFFFFC0000044000 l3pt_kernel 0xFFFFFC0000048000 l2reserv 0xFFFFFC0000046000
-kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000855718, kentry = 0xFFFFFC0000310000, numCPUs = 0x1
+kstart = 0xFFFFFC0000310000, kend = 0xFFFFFC0000855898, kentry = 0xFFFFFC0000310000, numCPUs = 0x1
 CPU Clock at 2000 MHz IntrClockFrequency=1024 
 Booting with 1 processor(s) 
 KSP: 0x20043FE8 PTBR 0x20
@@ -16,7 +16,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 k_argc = 0 
 jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1067)
 CallbackFixup 0 18000, t7=FFFFFC000070C000
-Linux version 2.6.13 (hsul@zed.eecs.umich.edu) (gcc version 3.4.3) #7 SMP Tue Aug 15 14:40:31 EDT 2006
+Linux version 2.6.13 (hsul@zed.eecs.umich.edu) (gcc version 3.4.3) #1 SMP Sun Oct 8 19:52:07 EDT 2006
 Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
 Major Options: SMP LEGACY_START VERBOSE_MCHECK 
 Command line: root=/dev/hda1 console=ttyS0
@@ -32,7 +32,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 Console: colour dummy device 80x25
 Dentry cache hash table entries: 32768 (order: 5, 262144 bytes)
 Inode-cache hash table entries: 16384 (order: 4, 131072 bytes)
-Memory: 118784k/131072k available (3316k kernel code, 8952k reserved, 983k data, 224k init)
+Memory: 118784k/131072k available (3314k kernel code, 8952k reserved, 983k data, 224k init)
 Mount-cache hash table entries: 512
 SMP mode deactivated.
 Brought up 1 CPUs
@@ -54,9 +54,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 io scheduler cfq registered
 loop: loaded (max 8 devices)
 nbd: registered device at major 43
-sinic.c: M5 Simple Integrated NIC driver
 ns83820.c: National Semiconductor DP83820 10/100/1000 driver.
-ns83820: irq bound to CPU 0
 eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
 eth0: enabling optical transceiver
 eth0: using 64 bit addressing.
