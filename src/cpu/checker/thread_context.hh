@@ -133,7 +133,7 @@ class CheckerThreadContext : public ThreadContext
     void takeOverFrom(ThreadContext *oldContext)
     {
         actualTC->takeOverFrom(oldContext);
-        checkerTC->takeOverFrom(oldContext);
+        checkerTC->copyState(oldContext);
     }
 
     void regStats(const std::string &name) { actualTC->regStats(name); }
