@@ -302,6 +302,8 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     UNSERIALIZE_ARRAY(config.data,
                       sizeof(config.data) / sizeof(config.data[0]));
+    pioPort->sendStatusChange(Port::RangeChange);
+
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
