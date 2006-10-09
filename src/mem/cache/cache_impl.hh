@@ -236,9 +236,9 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         missQueue->doWriteback(writebacks.front());
         writebacks.pop_front();
     }
-    DPRINTF(Cache, "%s %x %s blk_addr: %x pc %x\n", pkt->cmdString(),
+    DPRINTF(Cache, "%s %x %s blk_addr: %x\n", pkt->cmdString(),
             pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
-            pkt->getAddr() & ~((Addr)blkSize - 1), pkt->req->getPC());
+            pkt->getAddr() & ~((Addr)blkSize - 1));
     if (blk) {
         // Hit
         hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
@@ -314,9 +314,11 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
             blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
+            CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
+            DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+                    pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
             blk = tags->handleFill(blk, (MSHR*)pkt->senderState,
-                                   coherence->getNewState(pkt,old_state),
-                                   writebacks, pkt);
+                                   new_state, writebacks, pkt);
             while (!writebacks.empty()) {
                     missQueue->doWriteback(writebacks.front());
                     writebacks.pop_front();
@@ -387,6 +389,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //If the outstanding request was an invalidate (upgrade,readex,..)
                     //Then we need to ACK the request until we get the data
                     //Also NACK if the outstanding request is not a cachefill (writeback)
+                    assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
                     assert("Don't detect these on the other side yet\n");
@@ -426,6 +429,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     if (pkt->isRead()) {
                         //Only Upgrades don't get here
                         //Supply the data
+                        assert(!(pkt->flags & SATISFIED));
                         pkt->flags |= SATISFIED;
 
                         //If we are in an exclusive protocol, make it ask again
@@ -454,10 +458,16 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
     CacheBlk::State new_state;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {
+        DPRINTF(Cache, "Cache snooped a %c request and now supplying data,"
+                "new state is %i\n",
+                pkt->cmdString(), new_state);
+
         tags->handleSnoop(blk, new_state, pkt);
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
+    if (blk) DPRINTF(Cache, "Cache snooped a %c request, new state is %i\n",
+                     pkt->cmdString(), new_state);
     tags->handleSnoop(blk, new_state);
 }
 
@@ -675,9 +685,15 @@ Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
         CacheBlk::State new_state = 0;
         bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
         if (satisfy) {
+            DPRINTF(Cache, "Cache snooped a %c request and now supplying data,"
+                    "new state is %i\n",
+                    pkt->cmdString(), new_state);
+
             tags->handleSnoop(blk, new_state, pkt);
             return hitLatency;
         }
+        if (blk) DPRINTF(Cache, "Cache snooped a %c request, new state is %i\n",
+                     pkt->cmdString(), new_state);
         tags->handleSnoop(blk, new_state);
         return 0;
 }
