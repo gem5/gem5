@@ -311,7 +311,7 @@ class LSQ {
         /** Returns the address ranges of this device. */
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
 
         /** Timing version of receive.  Handles writing back and
          * completing the load or store that has returned from

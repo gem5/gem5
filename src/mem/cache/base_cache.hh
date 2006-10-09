@@ -156,7 +156,7 @@ class BaseCache : public MemObject
         if (status == Port::RangeChange){
             if (!isCpuSide) {
                 cpuSidePort->sendStatusChange(Port::RangeChange);
-                if (topLevelCache && !snoopRangesSent) {
+                if (!snoopRangesSent) {
                     snoopRangesSent = true;
                     memSidePort->sendStatusChange(Port::RangeChange);
                 }
@@ -568,14 +568,14 @@ class BaseCache : public MemObject
         {
             //This is where snoops get updated
             AddrRangeList dummy;
-            if (!topLevelCache)
-            {
+//            if (!topLevelCache)
+//            {
                 cpuSidePort->getPeerAddressRanges(dummy, snoop);
-            }
-            else
-            {
-                snoop.push_back(RangeSize(0,-1));
-            }
+//            }
+//            else
+//            {
+//                snoop.push_back(RangeSize(0,-1));
+//            }
 
             return;
         }
