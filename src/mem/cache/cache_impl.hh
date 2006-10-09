@@ -620,7 +620,9 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
                 lat = memSidePort->sendAtomic(busPkt);
 
                 //Be sure to flip the response to a request for coherence
-                busPkt->makeAtomicResponse();
+                if (busPkt->needsResponse()) {
+                    busPkt->makeAtomicResponse();
+                }
 
 /*		if (!(busPkt->flags & SATISFIED)) {
                     // blocked at a higher level, just return
