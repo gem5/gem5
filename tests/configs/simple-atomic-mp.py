@@ -52,10 +52,10 @@ class L2(BaseCache):
     write_buffers = 8
 
 nb_cores = 4
-cpus = [ AtomicSimpleCPU() for i in xrange(nb_cores) ]
+cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
-system = System(cpu = cpus, physmem = PhysicalMemory(), membus =
+system = System(cpu = cpus, physmem = PhysicalMemory(range = AddrRange('1024MB')), membus =
 Bus())
 
 # l2cache & bus
