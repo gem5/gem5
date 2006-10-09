@@ -458,7 +458,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
     CacheBlk::State new_state;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {
-        DPRINTF(Cache, "Cache snooped a %c request and now supplying data,"
+        DPRINTF(Cache, "Cache snooped a %s request and now supplying data,"
                 "new state is %i\n",
                 pkt->cmdString(), new_state);
 
@@ -466,7 +466,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
-    if (blk) DPRINTF(Cache, "Cache snooped a %c request, new state is %i\n",
+    if (blk) DPRINTF(Cache, "Cache snooped a %s request, new state is %i\n",
                      pkt->cmdString(), new_state);
     tags->handleSnoop(blk, new_state);
 }
@@ -685,14 +685,14 @@ Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
         CacheBlk::State new_state = 0;
         bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
         if (satisfy) {
-            DPRINTF(Cache, "Cache snooped a %c request and now supplying data,"
+            DPRINTF(Cache, "Cache snooped a %s request and now supplying data,"
                     "new state is %i\n",
                     pkt->cmdString(), new_state);
 
             tags->handleSnoop(blk, new_state, pkt);
             return hitLatency;
         }
-        if (blk) DPRINTF(Cache, "Cache snooped a %c request, new state is %i\n",
+        if (blk) DPRINTF(Cache, "Cache snooped a %s request, new state is %i\n",
                      pkt->cmdString(), new_state);
         tags->handleSnoop(blk, new_state);
         return 0;
