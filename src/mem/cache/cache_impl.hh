@@ -73,7 +73,7 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
             handleResponse(pkt);
         else {
             //Check if we should do the snoop
-            if (pkt->flags && SNOOP_COMMIT)
+            if (pkt->flags & SNOOP_COMMIT)
                 snoop(pkt);
         }
     }
