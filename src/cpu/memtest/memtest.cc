@@ -71,7 +71,8 @@ MemTest::CpuPort::recvAtomic(Packet *pkt)
 void
 MemTest::CpuPort::recvFunctional(Packet *pkt)
 {
-    memtest->completeRequest(pkt);
+    //Do nothing if we see one come through
+    return;
 }
 
 void
@@ -325,7 +326,7 @@ MemTest::tick()
     } else {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    // bool probe = (random() % 2 == 1) && !req->isUncacheable();
+    //bool probe = (random() % 2 == 1) && !req->isUncacheable();
     bool probe = false;
 
     paddr &= ~((1 << access_size) - 1);
@@ -364,7 +365,7 @@ MemTest::tick()
 
         if (probe) {
             cachePort.sendFunctional(pkt);
-//	    completeRequest(pkt, result);
+            completeRequest(pkt);
         } else {
 //	    req->completionEvent = new MemCompleteEvent(req, result, this);
             if (!cachePort.sendTiming(pkt)) {

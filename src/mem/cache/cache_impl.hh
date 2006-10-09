@@ -306,6 +306,13 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
+        if (pkt->result == Packet::Nacked) {
+            pkt->reinitFromRequest();
+            panic("Unimplemented NACK of packet\n");
+        }
+        if (pkt->result == Packet::BadAddress) {
+            //Make the response a Bad address and send it
+        }
 //	MemDebug::cacheResponse(pkt);
         DPRINTF(Cache, "Handling reponse to %x, blk addr: %x\n",pkt->getAddr(),
                 pkt->getAddr() & (((ULL(1))<<48)-1));
@@ -392,7 +399,6 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
-                    assert("Don't detect these on the other side yet\n");
                     respondToSnoop(pkt, curTick + hitLatency);
                     return;
                 }
@@ -406,7 +412,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //@todo Make it so that a read to a pending read can't be exclusive now.
 
                     //Set the address so find match works
-                    assert("Don't have invalidates yet\n");
+                    panic("Don't have invalidates yet\n");
                     invalidatePkt->addrOverride(pkt->getAddr());
 
                     //Append the invalidate on
