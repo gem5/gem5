@@ -51,7 +51,8 @@ class L2(BaseCache):
     tgts_per_mshr = 16
     write_buffers = 8
 
-nb_cores = 1
+#MAX CORES IS 8 with the fals sharing method
+nb_cores = 8
 cpus = [ MemTest(max_loads=1e12) for i in xrange(nb_cores) ]
 
 # system simulated
@@ -66,12 +67,17 @@ system.l2c.cpu_side = system.toL2Bus.port
 # connect l2c to membus
 system.l2c.mem_side = system.membus.port
 
+which_port = 0
 # add L1 caches
 for cpu in cpus:
     cpu.l1c = L1(size = '32kB', assoc = 4)
     cpu.l1c.cpu_side = cpu.test
     cpu.l1c.mem_side = system.toL2Bus.port
-    system.funcmem.port = cpu.functional
+    if  which_port == 0:
+         system.funcmem.port = cpu.functional
+         which_port = 1
+    else:
+         system.funcmem.functional = cpu.functional
 
 
 # connect memory to membus
