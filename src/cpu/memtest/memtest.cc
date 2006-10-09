@@ -137,6 +137,8 @@ MemTest::MemTest(const string &name,
     tickEvent.schedule(0);
 
     id = TESTER_ALLOCATOR++;
+    if (TESTER_ALLOCATOR > 8)
+        panic("False sharing memtester only allows up to 8 testers");
 
     accessRetry = false;
 }
