@@ -194,8 +194,7 @@ class Packet
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
-        UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
-        UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
+        UpgradeReq      = IsInvalidate | IsRequest
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
     };

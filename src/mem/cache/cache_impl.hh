@@ -63,9 +63,8 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
         if (pkt->isWrite() && (pkt->req->isLocked())) {
             pkt->req->setScResult(1);
         }
-        if (!(pkt->flags & SATISFIED)) {
-            access(pkt);
-        }
+        access(pkt);
+
     }
     else
     {
@@ -204,9 +203,8 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
                     pkt->getAddr() & (((ULL(1))<<48)-1),
                     pkt->getAddr() & ~((Addr)blkSize - 1));
 
-            //@todo Should this return latency have the hit latency in it?
-//	    respond(pkt,curTick+lat);
             pkt->flags |= SATISFIED;
+            //Invalidates/Upgrades need no response if they get the bus
 //            return MA_HIT; //@todo, return values
             return true;
         }
