@@ -199,8 +199,7 @@ class Packet
                                 | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
-        UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
-        UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
+        UpgradeReq      = IsInvalidate | IsRequest,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse
                                 | NeedsResponse | HasData

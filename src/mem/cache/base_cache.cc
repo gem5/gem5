@@ -216,7 +216,10 @@ BaseCache::CacheEvent::process()
     }
     //Response
     //Know the packet to send
-    pkt->result = Packet::Success;
+    if (pkt->flags & NACKED_LINE)
+        pkt->result = Packet::Nacked;
+    else
+        pkt->result = Packet::Success;
     pkt->makeTimingResponse();
     if (!cachePort->drainList.empty()) {
         //Already blocked waiting for bus, just append
