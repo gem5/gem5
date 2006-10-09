@@ -102,6 +102,9 @@ class Bus : public MemObject
     /** Snoop all relevant ports atomicly. */
     void atomicSnoop(Packet *pkt);
 
+    /** Snoop all relevant ports functionally. */
+    void functionalSnoop(Packet *pkt);
+
     /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
      * the snoop to happen
      * @return True if succeds.

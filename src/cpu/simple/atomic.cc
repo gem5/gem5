@@ -94,7 +94,7 @@ AtomicSimpleCPU::init()
 bool
 AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
+    panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
     return true;
 }
 
@@ -108,7 +108,8 @@ AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 void
 AtomicSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvFunctional callback!");
+    //No internal storage to update, just return
+    return;
 }
 
 void

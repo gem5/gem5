@@ -200,6 +200,18 @@ Bus::atomicSnoop(Packet *pkt)
     }
 }
 
+void
+Bus::functionalSnoop(Packet *pkt)
+{
+    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+
+    while (!ports.empty())
+    {
+        interfaces[ports.back()]->sendFunctional(pkt);
+        ports.pop_back();
+    }
+}
+
 bool
 Bus::timingSnoop(Packet *pkt)
 {
@@ -236,7 +248,7 @@ Bus::recvFunctional(Packet *pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    atomicSnoop(pkt);
+    functionalSnoop(pkt);
     findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
 }
 
