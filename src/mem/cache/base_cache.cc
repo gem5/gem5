@@ -71,7 +71,7 @@ BaseCache::CachePort::deviceBlockSize()
 bool
 BaseCache::CachePort::recvTiming(Packet *pkt)
 {
-    if (blocked)
+    if (pkt->isRequest() && blocked)
     {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
