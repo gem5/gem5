@@ -603,7 +603,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
             // update the cache state and statistics
             if (mshr || !writes.empty()){
                 // Can't handle it, return pktuest unsatisfied.
-                return 0;
+                panic("Atomic access ran into outstanding MSHR's or WB's!");
             }
             if (!pkt->req->isUncacheable()) {
                 // Fetch the cache block to fill
@@ -655,7 +655,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
         } else if (pkt->isWrite()) {
             // Still need to change data in all locations.
-            return otherSidePort->sendAtomic(pkt);
+            otherSidePort->sendFunctional(pkt);
         }
         return curTick + lat;
     }
