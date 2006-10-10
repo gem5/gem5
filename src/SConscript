@@ -285,7 +285,6 @@ turbolaser_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
-        cpu/memtest/memtest.cc
         mem/translating_port.cc
         mem/page_table.cc
 	sim/process.cc
