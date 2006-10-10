@@ -287,13 +287,17 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
-    if (success) {
+    if (success && !(pkt->flags & NACKED_LINE)) {
               missQueue->markInService(pkt, mshr);
           //Temp Hack for UPGRADES
           if (pkt->cmd == Packet::UpgradeReq) {
+              pkt->flags &= ~CACHE_LINE_FILL;
               handleResponse(pkt);
           }
     } else if (pkt && !pkt->req->isUncacheable()) {
+        pkt->flags &= ~NACKED_LINE;
+        pkt->flags &= ~SATISFIED;
+        pkt->flags &= ~SNOOP_COMMIT;
         missQueue->restoreOrigCmd(pkt);
     }
 }
@@ -305,8 +309,9 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
     BlkType *blk = NULL;
     if (pkt->senderState) {
         if (pkt->result == Packet::Nacked) {
-            pkt->reinitFromRequest();
-            panic("Unimplemented NACK of packet\n");
+            //pkt->reinitFromRequest();
+            warn("NACKs from devices not connected to the same bus not implemented\n");
+            return;
         }
         if (pkt->result == Packet::BadAddress) {
             //Make the response a Bad address and send it
@@ -397,7 +402,8 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
-                    respondToSnoop(pkt, curTick + hitLatency);
+                    warn("NACKs from devices not connected to the same bus not implemented\n");
+                    //respondToSnoop(pkt, curTick + hitLatency);
                     return;
                 }
                 else {

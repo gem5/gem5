@@ -174,7 +174,8 @@ class Packet
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
         IsSWPrefetch    = 1 << 7,
-        IsHWPrefetch    = 1 << 8
+        IsHWPrefetch    = 1 << 8,
+        IsUpgrade       = 1 << 9
     };
 
   public:
@@ -194,7 +195,7 @@ class Packet
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
-        UpgradeReq      = IsInvalidate | IsRequest,
+        UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
     };
