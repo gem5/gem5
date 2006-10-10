@@ -701,10 +701,17 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     assert(iew.ldstQueue.getCount(tid) == 0);
 
     // Reset ROB/IQ/LSQ Entries
+
+    // Commented out for now.  This should be possible to do by
+    // telling all the pipeline stages to drain first, and then
+    // checking until the drain completes.  Once the pipeline is
+    // drained, call resetEntries(). - 10-09-06 ktlim
+/*
     if (activeThreads.size() >= 1) {
         commit.rob->resetEntries();
         iew.resetEntries();
     }
+*/
 }
 
 
