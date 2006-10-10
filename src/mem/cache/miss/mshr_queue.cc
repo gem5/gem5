@@ -215,6 +215,11 @@ MSHRQueue::markInService(MSHR* mshr)
     //assert(mshr == pendingList.front());
     if (!(mshr->pkt->needsResponse() || mshr->pkt->cmd == Packet::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
+        if ((mshr->pkt->flags & SATISFIED) && (mshr->pkt->cmd == Packet::Writeback)) {
+            //Writeback hit, so delete it
+            //otherwise the consumer will delete it
+            delete mshr->pkt->req;
+        }
         deallocate(mshr);
         return;
     }

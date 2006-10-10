@@ -112,6 +112,8 @@ class BaseCache : public MemObject
 
         bool isCpuSide;
 
+        bool waitingOnRetry;
+
         std::list<Packet *> drainList;
 
         Packet *cshrRetry;
@@ -465,7 +467,7 @@ class BaseCache : public MemObject
      */
     void setMasterRequest(RequestCause cause, Tick time)
     {
-        if (!doMasterRequest())
+        if (!doMasterRequest() && memSidePort->drainList.empty())
         {
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
             reqCpu->schedule(time);
@@ -527,6 +529,10 @@ class BaseCache : public MemObject
             CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
             reqCpu->schedule(time);
         }
+        else {
+            if (pkt->cmd == Packet::Writeback) delete pkt->req;
+            delete pkt;
+        }
     }
 
     /**
@@ -542,6 +548,10 @@ class BaseCache : public MemObject
         if (pkt->needsResponse()) {
             CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
             reqCpu->schedule(time);
+        }
+        else {
+            if (pkt->cmd == Packet::Writeback) delete pkt->req;
+            delete pkt;
         }
     }
 
