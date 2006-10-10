@@ -103,6 +103,7 @@ class Cache : public BaseCache
       * Used to append to target list, to cause an invalidation.
       */
     Packet * invalidatePkt;
+    Request *invalidateReq;
 
     /**
      * Temporarily move a block into a MSHR.

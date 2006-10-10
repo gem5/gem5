@@ -392,11 +392,13 @@ class BaseCache : public MemObject
             blocked_causes[cause]++;
             blockedCycle = curTick;
         }
+        int old_state = blocked;
         if (!(blocked & flag)) {
             //Wasn't already blocked for this cause
             blocked |= flag;
             DPRINTF(Cache,"Blocking for cause %s\n", cause);
-            cpuSidePort->setBlocked();
+            if (!old_state)
+                cpuSidePort->setBlocked();
         }
     }
 
@@ -408,10 +410,12 @@ class BaseCache : public MemObject
     void setBlockedForSnoop(BlockedCause cause)
     {
         uint8_t flag = 1 << cause;
-        if (!(blocked & flag)) {
+        uint8_t old_state = blockedSnoop;
+        if (!(blockedSnoop & flag)) {
             //Wasn't already blocked for this cause
             blockedSnoop |= flag;
-            memSidePort->setBlocked();
+            if (!old_state)
+                memSidePort->setBlocked();
         }
     }
 
