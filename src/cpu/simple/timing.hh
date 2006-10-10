@@ -92,7 +92,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
 
         struct TickEvent : public Event
         {
@@ -166,6 +166,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Packet *ifetch_pkt;
     Packet *dcache_pkt;
 
+    int cpu_id;
     Tick previousTick;
 
   public:

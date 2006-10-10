@@ -112,6 +112,7 @@ baseFlags = [
     'IdeDisk',
     'InstExec',
     'Interrupt',
+    'LLSC',
     'LSQ',
     'LSQUnit',
     'Loader',

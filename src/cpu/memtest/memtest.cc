@@ -38,16 +38,19 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "cpu/simple_thread.hh"
+//#include "cpu/simple_thread.hh"
 #include "cpu/memtest/memtest.hh"
 //#include "mem/cache/base_cache.hh"
-#include "mem/physical.hh"
+//#include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
+#include "mem/port.hh"
+#include "mem/mem_object.hh"
 
 using namespace std;
-using namespace TheISA;
 
 int TESTER_ALLOCATOR=0;
 
@@ -68,7 +71,8 @@ MemTest::CpuPort::recvAtomic(Packet *pkt)
 void
 MemTest::CpuPort::recvFunctional(Packet *pkt)
 {
-    memtest->completeRequest(pkt);
+    //Do nothing if we see one come through
+    return;
 }
 
 void
@@ -86,11 +90,10 @@ MemTest::CpuPort::recvRetry()
     memtest->doRetry();
 }
 
-
 MemTest::MemTest(const string &name,
 //		 MemInterface *_cache_interface,
-                 PhysicalMemory *main_mem,
-                 PhysicalMemory *check_mem,
+//		 PhysicalMemory *main_mem,
+//		 PhysicalMemory *check_mem,
                  unsigned _memorySize,
                  unsigned _percentReads,
 //		 unsigned _percentCopies,
@@ -102,10 +105,11 @@ MemTest::MemTest(const string &name,
                  Counter _max_loads)
     : MemObject(name),
       tickEvent(this),
-      cachePort("dcache", this),
+      cachePort("test", this),
+      funcPort("functional", this),
       retryPkt(NULL),
-      mainMem(main_mem),
-      checkMem(check_mem),
+//      mainMem(main_mem),
+//      checkMem(check_mem),
       size(_memorySize),
       percentReads(_percentReads),
 //      percentCopies(_percentCopies),
@@ -119,7 +123,7 @@ MemTest::MemTest(const string &name,
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
-    thread = new SimpleThread(NULL, 0, NULL, 0, mainMem);
+    //  thread = new SimpleThread(NULL, 0, NULL, 0, mainMem);
     curTick = 0;
 
     // Needs to be masked off once we know the block size.
@@ -134,16 +138,18 @@ MemTest::MemTest(const string &name,
     tickEvent.schedule(0);
 
     id = TESTER_ALLOCATOR++;
+    if (TESTER_ALLOCATOR > 8)
+        panic("False sharing memtester only allows up to 8 testers");
+
+    accessRetry = false;
 }
 
 Port *
 MemTest::getPort(const std::string &if_name, int idx)
 {
-    // ***** NOTE TO RON: I'm not sure what it should do if these get ports
-    // are called on it.
-    if (if_name == "dcache_port")
-        return &cachePort;
-    else if (if_name == "icache_port")
+    if (if_name == "functional")
+        return &funcPort;
+    else if (if_name == "test")
         return &cachePort;
     else
         panic("No Such Port\n");
@@ -157,29 +163,14 @@ MemTest::init()
     blockAddrMask = blockSize - 1;
     traceBlockAddr = blockAddr(traceBlockAddr);
 
-    //setup data storage with interesting values
-    uint8_t *data1 = new uint8_t[size];
-    uint8_t *data2 = new uint8_t[size];
-    uint8_t *data3 = new uint8_t[size];
-    memset(data1, 1, size);
-    memset(data2, 2, size);
-    memset(data3, 3, size);
-
     // set up intial memory contents here
-    // ***** NOTE FOR RON: I'm not sure how to setup initial memory
-    // contents. - Kevin
-/*
-    mainMem->prot_write(baseAddr1, data1, size);
-    checkMem->prot_write(baseAddr1, data1, size);
-    mainMem->prot_write(baseAddr2, data2, size);
-    checkMem->prot_write(baseAddr2, data2, size);
-    mainMem->prot_write(uncacheAddr, data3, size);
-    checkMem->prot_write(uncacheAddr, data3, size);
-*/
 
-    delete [] data1;
-    delete [] data2;
-    delete [] data3;
+    cachePort.memsetBlob(baseAddr1, 1, size);
+    funcPort.memsetBlob(baseAddr1, 1, size);
+    cachePort.memsetBlob(baseAddr2, 2, size);
+    funcPort.memsetBlob(baseAddr2, 2, size);
+    cachePort.memsetBlob(uncacheAddr, 3, size);
+    funcPort.memsetBlob(uncacheAddr, 3, size);
 }
 
 static void
@@ -209,7 +200,7 @@ MemTest::completeRequest(Packet *pkt)
     outstandingAddrs.erase(removeAddr);
 
     switch (pkt->cmd) {
-      case Packet::ReadReq:
+      case Packet::ReadResp:
 
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
             cerr << name() << ": on read of 0x" << hex << req->getPaddr()
@@ -236,7 +227,7 @@ MemTest::completeRequest(Packet *pkt)
             exitSimLoop("Maximum number of loads reached!");
         break;
 
-      case Packet::WriteReq:
+      case Packet::WriteResp:
         numWritesStat++;
         break;
 /*
@@ -319,20 +310,14 @@ MemTest::tick()
 
     //If we aren't doing copies, use id as offset, and do a false sharing
     //mem tester
-    // ***** NOTE FOR RON: We're not doing copies, but I'm not sure if this
-    // code should be used.
-/*
-    if (percentCopies == 0) {
-        //We can eliminate the lower bits of the offset, and then use the id
-        //to offset within the blks
-        offset &= ~63; //Not the low order bits
-        offset += id;
-        access_size = 0;
-    }
-*/
+    //We can eliminate the lower bits of the offset, and then use the id
+    //to offset within the blks
+    offset &= ~63; //Not the low order bits
+    offset += id;
+    access_size = 0;
 
     Request *req = new Request();
-    uint32_t flags = req->getFlags();
+    uint32_t flags = 0;
     Addr paddr;
 
     if (cacheable < percentUncacheable) {
@@ -341,11 +326,12 @@ MemTest::tick()
     } else {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    // bool probe = (random() % 2 == 1) && !req->isUncacheable();
+    //bool probe = (random() % 2 == 1) && !req->isUncacheable();
     bool probe = false;
 
     paddr &= ~((1 << access_size) - 1);
     req->setPhys(paddr, 1 << access_size, flags);
+    req->setThreadContext(id,0);
 
     uint8_t *result = new uint8_t[8];
 
@@ -359,7 +345,8 @@ MemTest::tick()
         else outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
-//	checkMem->access(Read, req->getPaddr(), result, req->size);
+        funcPort.readBlob(req->getPaddr(), result, req->getSize());
+
         if (blockAddr(paddr) == traceBlockAddr) {
             cerr << name()
                  << ": initiating read "
@@ -377,10 +364,8 @@ MemTest::tick()
         pkt->senderState = state;
 
         if (probe) {
-            // ***** NOTE FOR RON: Send functional access?  It used to
-            // be a probeAndUpdate access. - Kevin
             cachePort.sendFunctional(pkt);
-//	    completeRequest(pkt, result);
+            completeRequest(pkt);
         } else {
 //	    req->completionEvent = new MemCompleteEvent(req, result, this);
             if (!cachePort.sendTiming(pkt)) {
@@ -397,8 +382,6 @@ MemTest::tick()
         if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) return;
         else outstandingAddrs.insert(paddr);
 
-        // ***** NOTE FOR RON: Not sure how to access memory.
-//	checkMem->access(Write, req->paddr, req->data, req->size);
 /*
         if (blockAddr(req->getPaddr()) == traceBlockAddr) {
             cerr << name() << ": initiating write "
@@ -419,9 +402,9 @@ MemTest::tick()
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
 
+        funcPort.writeBlob(req->getPaddr(), pkt_data, req->getSize());
+
         if (probe) {
-            // ***** NOTE FOR RON: Send functional access?  It used to
-            // be a probe access. - Kevin
             cachePort.sendFunctional(pkt);
 //	    completeRequest(req, NULL);
         } else {
@@ -490,8 +473,8 @@ MemTest::doRetry()
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
 
 //    SimObjectParam<BaseCache *> cache;
-    SimObjectParam<PhysicalMemory *> main_mem;
-    SimObjectParam<PhysicalMemory *> check_mem;
+//    SimObjectParam<PhysicalMemory *> main_mem;
+//    SimObjectParam<PhysicalMemory *> check_mem;
     Param<unsigned> memory_size;
     Param<unsigned> percent_reads;
 //    Param<unsigned> percent_copies;
@@ -508,8 +491,8 @@ END_DECLARE_SIM_OBJECT_PARAMS(MemTest)
 BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
 
 //    INIT_PARAM(cache, "L1 cache"),
-    INIT_PARAM(main_mem, "hierarchical memory"),
-    INIT_PARAM(check_mem, "check memory"),
+//    INIT_PARAM(main_mem, "hierarchical memory"),
+//    INIT_PARAM(check_mem, "check memory"),
     INIT_PARAM(memory_size, "memory size"),
     INIT_PARAM(percent_reads, "target read percentage"),
 //    INIT_PARAM(percent_copies, "target copy percentage"),
@@ -527,8 +510,8 @@ END_INIT_SIM_OBJECT_PARAMS(MemTest)
 
 CREATE_SIM_OBJECT(MemTest)
 {
-    return new MemTest(getInstanceName(), /*cache->getInterface(),*/ main_mem,
-                       check_mem, memory_size, percent_reads, /*percent_copies,*/
+    return new MemTest(getInstanceName(), /*cache->getInterface(),*/ /*main_mem,*/
+                       /*check_mem,*/ memory_size, percent_reads, /*percent_copies,*/
                        percent_uncacheable, progress_interval,
                        percent_source_unaligned, percent_dest_unaligned,
                        trace_addr, max_loads);

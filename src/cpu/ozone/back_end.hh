@@ -493,7 +493,7 @@ BackEnd<Impl>::read(RequestPtr req, T &data, int load_idx)
     }
 */
 /*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+    if (!dcacheInterface && (memReq->isUncacheable()))
         recordEvent("Uncached Read");
 */
     return LSQ.read(req, data, load_idx);
@@ -534,7 +534,7 @@ BackEnd<Impl>::write(RequestPtr req, T &data, int store_idx)
         *res = memReq->result;
         */
 /*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+    if (!dcacheInterface && (memReq->isUncacheable()))
         recordEvent("Uncached Write");
 */
     return LSQ.write(req, data, store_idx);

@@ -28,6 +28,7 @@
  * Authors: Steve Reinhardt
  */
 
+#include "arch/locked_mem.hh"
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/atomic.hh"
@@ -93,7 +94,7 @@ AtomicSimpleCPU::init()
 bool
 AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
+    panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
     return true;
 }
 
@@ -107,7 +108,8 @@ AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 void
 AtomicSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvFunctional callback!");
+    //No internal storage to update, just return
+    return;
 }
 
 void
@@ -133,20 +135,19 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
 {
     _status = Idle;
 
-    // @todo fix me and get the real cpu id & thread number!!!
     ifetch_req = new Request();
-    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     data_read_req = new Request();
-    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    data_read_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
     data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
                                Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
 
     data_write_req = new Request();
-    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    data_write_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
     data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
                                 Packet::Broadcast);
 }
@@ -161,6 +162,8 @@ AtomicSimpleCPU::serialize(ostream &os)
 {
     SimObject::State so_state = SimObject::getState();
     SERIALIZE_ENUM(so_state);
+    Status _status = status();
+    SERIALIZE_ENUM(_status);
     BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -171,6 +174,7 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     SimObject::State so_state;
     UNSERIALIZE_ENUM(so_state);
+    UNSERIALIZE_ENUM(_status);
     BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
@@ -253,29 +257,36 @@ template <class T>
 Fault
 AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    // use the CPU's statically allocated read request and packet objects
+    Request *req = data_read_req;
+    Packet  *pkt = data_read_pkt;
+
+    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = thread->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
-        data_read_pkt->reinitFromRequest();
+        pkt->reinitFromRequest();
 
-        dcache_latency = dcachePort.sendAtomic(data_read_pkt);
+        dcache_latency = dcachePort.sendAtomic(pkt);
         dcache_access = true;
 
-        assert(data_read_pkt->result == Packet::Success);
-        data = data_read_pkt->get<T>();
+        assert(pkt->result == Packet::Success);
+        data = pkt->get<T>();
 
+        if (req->isLocked()) {
+            TheISA::handleLockedRead(thread, req);
+        }
     }
 
     // This will need a new way to tell if it has a dcache attached.
-    if (data_read_req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Read");
 
     return fault;
@@ -328,33 +339,52 @@ template <class T>
 Fault
 AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    // use the CPU's statically allocated write request and packet objects
+    Request *req = data_write_req;
+    Packet  *pkt = data_write_pkt;
+
+    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
     // translate to physical address
-    Fault fault = thread->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
-        data = htog(data);
-        data_write_pkt->reinitFromRequest();
-        data_write_pkt->dataStatic(&data);
+        bool do_access = true;  // flag to suppress cache access
 
-        dcache_latency = dcachePort.sendAtomic(data_write_pkt);
-        dcache_access = true;
+        if (req->isLocked()) {
+            do_access = TheISA::handleLockedWrite(thread, req);
+        }
 
-        assert(data_write_pkt->result == Packet::Success);
+        if (do_access) {
+            data = htog(data);
+            pkt->reinitFromRequest();
+            pkt->dataStatic(&data);
 
-        if (res && data_write_req->getFlags() & LOCKED) {
-            *res = data_write_req->getScResult();
+            dcache_latency = dcachePort.sendAtomic(pkt);
+            dcache_access = true;
+
+            assert(pkt->result == Packet::Success);
+        }
+
+        if (req->isLocked()) {
+            uint64_t scResult = req->getScResult();
+            if (scResult != 0) {
+                // clear failure counter
+                thread->setStCondFailures(0);
+            }
+            if (res) {
+                *res = req->getScResult();
+            }
         }
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (data_write_req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
@@ -467,11 +497,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<Tick> progress_interval;
     SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
+    Param<int> cpu_id;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    Param<int> cpu_id;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -500,11 +530,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(progress_interval, "Progress interval"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
+    INIT_PARAM(cpu_id, "processor ID"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
@@ -538,11 +568,11 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->simulate_stalls = simulate_stalls;
     params->mem = mem;
     params->system = system;
+    params->cpu_id = cpu_id;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->cpu_id = cpu_id;
     params->profile = profile;
 #else
     params->process = workload;

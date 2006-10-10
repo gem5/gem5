@@ -5,6 +5,7 @@ from MemObject import *
 class PhysicalMemory(MemObject):
     type = 'PhysicalMemory'
     port = Port("the access port")
+    functional = Port("Functional Access Port")
     range = Param.AddrRange(AddrRange('128MB'), "Device Address")
     file = Param.String('', "memory mapped file")
     latency = Param.Latency(Parent.clock, "latency of an access")

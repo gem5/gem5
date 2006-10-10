@@ -372,7 +372,7 @@ MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 MSHR*
 MissQueue::allocateWrite(Packet * &pkt, int size, Tick time)
 {
-    MSHR* mshr = wb.allocate(pkt,blkSize);
+    MSHR* mshr = wb.allocate(pkt,size);
     mshr->order = order++;
 
 //REMOVING COMPRESSION FOR NOW
@@ -446,7 +446,7 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
         /**
          * @todo Add write merging here.
          */
-        mshr = allocateWrite(pkt, blkSize, time);
+        mshr = allocateWrite(pkt, pkt->getSize(), time);
         return;
     }
 
@@ -526,9 +526,8 @@ MissQueue::restoreOrigCmd(Packet * &pkt)
 }
 
 void
-MissQueue::markInService(Packet * &pkt)
+MissQueue::markInService(Packet * &pkt, MSHR* mshr)
 {
-    assert(pkt->senderState != 0);
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
 
@@ -540,7 +539,7 @@ MissQueue::markInService(Packet * &pkt)
         // Forwarding a write/ writeback, don't need to change
         // the command
         unblock = wb.isFull();
-        wb.markInService((MSHR*)pkt->senderState);
+        wb.markInService(mshr);
         if (!wb.havePending()){
             cache->clearMasterRequest(Request_WB);
         }
@@ -551,11 +550,11 @@ MissQueue::markInService(Packet * &pkt)
         }
     } else {
         unblock = mq.isFull();
-        mq.markInService((MSHR*)pkt->senderState);
+        mq.markInService(mshr);
         if (!mq.havePending()){
             cache->clearMasterRequest(Request_MSHR);
         }
-        if (((MSHR*)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
+        if (mshr->originalCmd == Packet::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
                     cache->name());
             //Also clear pending if need be

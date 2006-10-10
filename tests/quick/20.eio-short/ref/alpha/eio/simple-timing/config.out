@@ -75,6 +75,7 @@ max_loads_all_threads=0
 progress_interval=0
 mem=system.cpu.dcache
 system=system
+cpu_id=0
 workload=system.cpu.workload
 clock=1
 defer_registration=false

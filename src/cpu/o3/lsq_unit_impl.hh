@@ -416,7 +416,7 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
-        if (!(inst->req->getFlags() & UNCACHEABLE) || inst->isAtCommit()) {
+        if (!(inst->req->isUncacheable()) || inst->isAtCommit()) {
             inst->setExecuted();
         }
         iewStage->instToCommit(inst);
@@ -613,8 +613,8 @@ LSQUnit<Impl>::writebackStores()
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
-        if (req->getFlags() & LOCKED) {
-            if (req->getFlags() & UNCACHEABLE) {
+        if (req->isLocked()) {
+            if (req->isUncacheable()) {
                 req->setScResult(2);
             } else {
                 if (cpu->lockFlag) {

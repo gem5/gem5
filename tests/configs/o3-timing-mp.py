@@ -53,7 +53,7 @@ class L2(BaseCache):
     write_buffers = 8
 
 nb_cores = 4
-cpus = [ DerivO3CPU() for i in xrange(nb_cores) ]
+cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, physmem = PhysicalMemory(), membus =
@@ -85,5 +85,5 @@ system.physmem.port = system.membus.port
 
 root = Root( system = system )
 root.system.mem_mode = 'timing'
-root.trace.flags="Bus Cache"
+#root.trace.flags="Bus Cache"
 #root.trace.flags = "BusAddrRanges"

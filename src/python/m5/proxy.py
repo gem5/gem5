@@ -33,6 +33,8 @@
 #
 #####################################################################
 
+import copy
+
 class BaseProxy(object):
     def __init__(self, search_self, search_up):
         self._search_self = search_self
@@ -129,15 +131,22 @@ class AttrProxy(BaseProxy):
             return super(AttrProxy, self).__getattr__(self, attr)
         if hasattr(self, '_pdesc'):
             raise AttributeError, "Attribute reference on bound proxy"
-        self._modifiers.append(attr)
-        return self
+        # Return a copy of self rather than modifying self in place
+        # since self could be an indirect reference via a variable or
+        # parameter
+        new_self = copy.deepcopy(self)
+        new_self._modifiers.append(attr)
+        return new_self
 
     # support indexing on proxies (e.g., Self.cpu[0])
     def __getitem__(self, key):
         if not isinstance(key, int):
             raise TypeError, "Proxy object requires integer index"
-        self._modifiers.append(key)
-        return self
+        if hasattr(self, '_pdesc'):
+            raise AttributeError, "Index operation on bound proxy"
+        new_self = copy.deepcopy(self)
+        new_self._modifiers.append(key)
+        return new_self
 
     def find(self, obj):
         try:

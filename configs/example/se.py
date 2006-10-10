@@ -90,6 +90,7 @@ else:
     cpu = AtomicSimpleCPU()
 
 cpu.workload = process
+cpu.cpu_id = 0
 
 system = System(cpu = cpu,
                 physmem = PhysicalMemory(),

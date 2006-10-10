@@ -742,7 +742,6 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(bm_enabled);
     UNSERIALIZE_ARRAY(cmd_in_progress,
                       sizeof(cmd_in_progress) / sizeof(cmd_in_progress[0]));
-    pioPort->sendStatusChange(Port::RangeChange);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

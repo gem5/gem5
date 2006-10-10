@@ -6,8 +6,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep  5 2006 15:37:09
-M5 started Tue Sep  5 15:46:32 2006
+M5 compiled Oct  9 2006 19:28:25
+M5 started Mon Oct  9 19:28:56 2006
 M5 executing on zizzer.eecs.umich.edu
-command line: build/MIPS_SE/m5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/simple-atomic tests/run.py quick/00.hello/mips/linux/simple-atomic
+command line: build/MIPS_SE/m5.debug -d build/MIPS_SE/tests/debug/quick/00.hello/mips/linux/simple-atomic tests/run.py quick/00.hello/mips/linux/simple-atomic
 Exiting @ tick 5656 because target called exit()

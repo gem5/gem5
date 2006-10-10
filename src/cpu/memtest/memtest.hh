@@ -41,17 +41,18 @@
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
 
-class PhysicalMemory;
-class ThreadContext;
+class Packet;
 class MemTest : public MemObject
 {
   public:
 
     MemTest(const std::string &name,
 //	    MemInterface *_cache_interface,
-            PhysicalMemory *main_mem,
-            PhysicalMemory *check_mem,
+//	    PhysicalMemory *main_mem,
+//	    PhysicalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
 //	    unsigned _percentCopies,
@@ -112,10 +113,11 @@ class MemTest : public MemObject
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
     };
 
     CpuPort cachePort;
+    CpuPort funcPort;
 
     class MemTestSenderState : public Packet::SenderState
     {
@@ -132,9 +134,9 @@ class MemTest : public MemObject
 //    Request *dataReq;
     Packet  *retryPkt;
 //    MemInterface *cacheInterface;
-    PhysicalMemory *mainMem;
-    PhysicalMemory *checkMem;
-    SimpleThread *thread;
+//    PhysicalMemory *mainMem;
+//    PhysicalMemory *checkMem;
+//    SimpleThread *thread;
 
     bool accessRetry;
 
