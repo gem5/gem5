@@ -178,9 +178,6 @@ class Packet
         IsUpgrade       = 1 << 9,
         HasData		= 1 << 10
     };
-//For statistics we need max number of commands, hard code it at
-//20 for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 10
 
   public:
     /** List of all commands associated with a packet. */
