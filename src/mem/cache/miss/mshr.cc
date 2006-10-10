@@ -100,6 +100,7 @@ MSHR::deallocate()
 {
     assert(targets.empty());
     assert(ntargets == 0);
+    delete pkt;
     pkt = NULL;
     inService = false;
     //allocIter = NULL;

@@ -36,7 +36,7 @@ from m5.objects import *
 class L1(BaseCache):
     latency = 1
     block_size = 64
-    mshrs = 4
+    mshrs = 12
     tgts_per_mshr = 8
     protocol = CoherenceProtocol(protocol='moesi')
 
@@ -46,14 +46,14 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    latency = 100
+    latency = 10
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest(max_loads=1e12) for i in xrange(nb_cores) ]
+cpus = [ MemTest(max_loads=1e12, percent_uncacheable=0) for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
@@ -61,7 +61,7 @@ system = System(cpu = cpus, funcmem = PhysicalMemory(),
 
 # l2cache & bus
 system.toL2Bus = Bus()
-system.l2c = L2(size='4MB', assoc=8)
+system.l2c = L2(size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.port
 
 # connect l2c to membus
@@ -90,5 +90,4 @@ system.physmem.port = system.membus.port
 
 root = Root( system = system )
 root.system.mem_mode = 'timing'
-#root.trace.flags="InstExec"
-root.trace.flags="Bus"
+root.trace.flags="Cache"

@@ -213,7 +213,7 @@ void
 MSHRQueue::markInService(MSHR* mshr)
 {
     //assert(mshr == pendingList.front());
-    if (!mshr->pkt->needsResponse()) {
+    if (!(mshr->pkt->needsResponse() || mshr->pkt->cmd == Packet::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
         deallocate(mshr);
         return;

@@ -104,9 +104,11 @@ BaseCache::CachePort::recvRetry()
             if (result)
                 drainList.pop_front();
         }
+        if (!result) return;
     }
     else if (!isCpuSide)
     {
+        if (!cache->doMasterRequest()) return;
         pkt = cache->getPacket();
         MSHR* mshr = (MSHR*)pkt->senderState;
         bool success = sendTiming(pkt);
@@ -178,10 +180,23 @@ BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, Packet *_pkt)
 void
 BaseCache::CacheEvent::process()
 {
+    if (!cachePort->drainList.empty()) {
+        //We have some responses to drain first
+        bool result = true;
+        while (result && !cachePort->drainList.empty()) {
+            result = cachePort->sendTiming(cachePort->drainList.front());
+            if (result)
+                cachePort->drainList.pop_front();
+        }
+        if (!result) return;
+    }
+
     if (!pkt)
     {
         if (!cachePort->isCpuSide)
         {
+            //For now, doMasterRequest somehow is still getting set
+            if (!cachePort->cache->doMasterRequest()) return;
             //MSHR
             pkt = cachePort->cache->getPacket();
             MSHR* mshr = (MSHR*) pkt->senderState;

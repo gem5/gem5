@@ -58,6 +58,8 @@ typedef std::list<PacketPtr> PacketList;
 #define NO_ALLOCATE 1 << 5
 #define SNOOP_COMMIT 1 << 6
 
+//for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 11
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -173,12 +175,9 @@ class Packet
         NeedsResponse	= 1 << 6,
         IsSWPrefetch    = 1 << 7,
         IsHWPrefetch    = 1 << 8,
-        HasData		= 1 << 9
+        IsUpgrade       = 1 << 9,
+        HasData		= 1 << 10
     };
-
-//For statistics we need max number of commands, hard code it at
-//20 for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 10
 
   public:
     /** List of all commands associated with a packet. */
@@ -199,7 +198,7 @@ class Packet
                                 | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
-        UpgradeReq      = IsInvalidate | IsRequest,
+        UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse
                                 | NeedsResponse | HasData
@@ -326,6 +325,10 @@ class Packet
         int icmd = (int)cmd;
         icmd &= ~(IsRequest);
         icmd |= IsResponse;
+        if (isRead())
+            icmd |= HasData;
+        if (isWrite())
+            icmd &= ~HasData;
         cmd = (Command)icmd;
         dest = src;
         srcValid = false;

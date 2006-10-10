@@ -163,10 +163,8 @@ Cache(const std::string &_name,
     prefetcher->setCache(this);
     prefetcher->setTags(tags);
     prefetcher->setBuffer(missQueue);
-#if 0
-    invalidatePkt = new Packet;
-    invalidatePkt->cmd = Packet::InvalidateReq;
-#endif
+    invalidateReq = new Request((Addr) NULL, blkSize, 0);
+    invalidatePkt = new Packet(invalidateReq, Packet::InvalidateReq, 0);
 }
 
 template<class TagStore, class Buffering, class Coherence>
@@ -267,6 +265,7 @@ template<class TagStore, class Buffering, class Coherence>
 Packet *
 Cache<TagStore,Buffering,Coherence>::getPacket()
 {
+    assert(missQueue->havePending());
     Packet * pkt = missQueue->getPacket();
     if (pkt) {
         if (!pkt->req->isUncacheable()) {
@@ -287,13 +286,27 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
-    if (success) {
+    if (success && !(pkt->flags & NACKED_LINE)) {
               missQueue->markInService(pkt, mshr);
           //Temp Hack for UPGRADES
           if (pkt->cmd == Packet::UpgradeReq) {
-              handleResponse(pkt);
+              pkt->flags &= ~CACHE_LINE_FILL;
+              BlkType *blk = tags->findBlock(pkt);
+              CacheBlk::State old_state = (blk) ? blk->status : 0;
+              CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
+              DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+                    pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
+              //Set the state on the upgrade
+              memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+              PacketList writebacks;
+              tags->handleFill(blk, mshr, new_state, writebacks, pkt);
+              assert(writebacks.empty());
+              missQueue->handleResponse(pkt, curTick + hitLatency);
           }
     } else if (pkt && !pkt->req->isUncacheable()) {
+        pkt->flags &= ~NACKED_LINE;
+        pkt->flags &= ~SATISFIED;
+        pkt->flags &= ~SNOOP_COMMIT;
         missQueue->restoreOrigCmd(pkt);
     }
 }
@@ -305,8 +318,9 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
     BlkType *blk = NULL;
     if (pkt->senderState) {
         if (pkt->result == Packet::Nacked) {
-            pkt->reinitFromRequest();
-            panic("Unimplemented NACK of packet\n");
+            //pkt->reinitFromRequest();
+            warn("NACKs from devices not connected to the same bus not implemented\n");
+            return;
         }
         if (pkt->result == Packet::BadAddress) {
             //Make the response a Bad address and send it
@@ -397,7 +411,9 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
-                    respondToSnoop(pkt, curTick + hitLatency);
+                    ///@todo NACK's from other levels
+                    //warn("NACKs from devices not connected to the same bus not implemented\n");
+                    //respondToSnoop(pkt, curTick + hitLatency);
                     return;
                 }
                 else {
@@ -410,7 +426,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                     //@todo Make it so that a read to a pending read can't be exclusive now.
 
                     //Set the address so find match works
-                    panic("Don't have invalidates yet\n");
+                    //panic("Don't have invalidates yet\n");
                     invalidatePkt->addrOverride(pkt->getAddr());
 
                     //Append the invalidate on
@@ -441,7 +457,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
                         pkt->flags |= SHARED_LINE;
 
                         assert(pkt->isRead());
-                        Addr offset = pkt->getAddr() & ~(blkSize - 1);
+                        Addr offset = pkt->getAddr() & (blkSize - 1);
                         assert(offset < blkSize);
                         assert(pkt->getSize() <= blkSize);
                         assert(offset + pkt->getSize() <=blkSize);
@@ -462,16 +478,16 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
     CacheBlk::State new_state;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {
-        DPRINTF(Cache, "Cache snooped a %s request and now supplying data,"
+        DPRINTF(Cache, "Cache snooped a %s request for addr %x and now supplying data,"
                 "new state is %i\n",
-                pkt->cmdString(), new_state);
+                pkt->cmdString(), blk_addr, new_state);
 
         tags->handleSnoop(blk, new_state, pkt);
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
-    if (blk) DPRINTF(Cache, "Cache snooped a %s request, new state is %i\n",
-                     pkt->cmdString(), new_state);
+    if (blk) DPRINTF(Cache, "Cache snooped a %s request for addr %x, new state is %i\n",
+                     pkt->cmdString(), blk_addr, new_state);
     tags->handleSnoop(blk, new_state);
 }
 
@@ -689,15 +705,15 @@ Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
         CacheBlk::State new_state = 0;
         bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
         if (satisfy) {
-            DPRINTF(Cache, "Cache snooped a %s request and now supplying data,"
+            DPRINTF(Cache, "Cache snooped a %s request for addr %x and now supplying data,"
                     "new state is %i\n",
-                    pkt->cmdString(), new_state);
+                    pkt->cmdString(), blk_addr, new_state);
 
             tags->handleSnoop(blk, new_state, pkt);
             return hitLatency;
         }
-        if (blk) DPRINTF(Cache, "Cache snooped a %s request, new state is %i\n",
-                     pkt->cmdString(), new_state);
+        if (blk) DPRINTF(Cache, "Cache snooped a %s request for addr %x, new state is %i\n",
+                     pkt->cmdString(), blk_addr, new_state);
         tags->handleSnoop(blk, new_state);
         return 0;
 }
