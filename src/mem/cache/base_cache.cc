@@ -221,6 +221,7 @@ BaseCache::CacheEvent::process()
         }
         else if (!cachePort->isCpuSide)
         {
+            assert(cachePort->cache->doMasterRequest());
             //MSHR
             pkt = cachePort->cache->getPacket();
             MSHR* mshr = (MSHR*) pkt->senderState;
@@ -238,6 +239,7 @@ BaseCache::CacheEvent::process()
         }
         else
         {
+            assert(cachePort->cache->doSlaveRequest());
             //CSHR
             pkt = cachePort->cache->getCoherencePacket();
             bool success = cachePort->sendTiming(pkt);

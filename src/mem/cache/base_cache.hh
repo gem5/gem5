@@ -467,7 +467,7 @@ class BaseCache : public MemObject
      */
     void setMasterRequest(RequestCause cause, Tick time)
     {
-        if (!doMasterRequest() && memSidePort->drainList.empty())
+        if (!doMasterRequest() && !memSidePort->waitingOnRetry)
         {
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
             reqCpu->schedule(time);
