@@ -195,8 +195,6 @@ class Bus : public MemObject
 
     BusFreeEvent busIdle;
 
-    void occupyBus(int numCycles);
-
     Port * retryingPort;
 
     /** An array of pointers to the peer port interfaces

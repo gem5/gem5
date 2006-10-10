@@ -92,7 +92,6 @@ class Packet
      *   be called on it rather than simply delete.*/
     bool arrayData;
 
-
     /** The address of the request.  This address could be virtual or
      *   physical, depending on the system configuration. */
     Addr addr;
@@ -123,6 +122,12 @@ class Packet
 
     /** Used to calculate latencies for each packet.*/
     Tick time;
+
+    /** The time at which the packet will be fully transmitted */
+    Tick finishTime;
+
+    /** The time at which the first chunk of the packet will be transmitted */
+    Tick firstWordTime;
 
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */

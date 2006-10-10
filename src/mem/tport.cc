@@ -59,6 +59,8 @@ void
 SimpleTimingPort::recvRetry()
 {
     bool result = true;
+
+    assert(transmitList.size());
     while (result && transmitList.size()) {
         result = sendTiming(transmitList.front());
         if (result)
@@ -75,8 +77,11 @@ SimpleTimingPort::SendEvent::process()
 {
     port->outTiming--;
     assert(port->outTiming >= 0);
-    if (port->sendTiming(packet)) {
-        // send successfule
+    if (port->transmitList.size()) {
+        port->transmitList.push_back(packet);
+    }
+    else if (port->sendTiming(packet)) {
+        // send successful
         if (port->transmitList.size() == 0 && port->drainEvent) {
             port->drainEvent->process();
             port->drainEvent = NULL;
