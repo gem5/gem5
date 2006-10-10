@@ -44,6 +44,7 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
     : Port(_name), cache(_cache), isCpuSide(_isCpuSide)
 {
     blocked = false;
+    cshrRetry = NULL;
     //Start ports at null if more than one is created we should panic
     //cpuSidePort = NULL;
     //memSidePort = NULL;
@@ -71,6 +72,22 @@ BaseCache::CachePort::deviceBlockSize()
 bool
 BaseCache::CachePort::recvTiming(Packet *pkt)
 {
+    if (isCpuSide
+        && !pkt->req->isUncacheable()
+        && pkt->isInvalidate()
+        && !pkt->isRead() && !pkt->isWrite()) {
+        //Upgrade or Invalidate
+        //Look into what happens if two slave caches on bus
+        DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
+                pkt->getAddr() & (((ULL(1))<<48)-1),
+                pkt->getAddr() & ~((Addr)cache->blkSize - 1));
+
+        assert(!(pkt->flags & SATISFIED));
+        pkt->flags |= SATISFIED;
+        //Invalidates/Upgrades need no response if they get the bus
+        return true;
+    }
+
     if (pkt->isRequest() && blocked)
     {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
@@ -123,7 +140,7 @@ BaseCache::CachePort::recvRetry()
             reqCpu->schedule(curTick + 1);
         }
     }
-    else
+    else if (cshrRetry)
     {
         //pkt = cache->getCoherencePacket();
         //We save the packet, no reordering on CSHRS
@@ -135,6 +152,7 @@ BaseCache::CachePort::recvRetry()
             pkt = NULL;
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
             reqCpu->schedule(curTick + 1);
+            cshrRetry = NULL;
         }
 
     }
