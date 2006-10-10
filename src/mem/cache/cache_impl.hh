@@ -193,19 +193,6 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         prefetcher->handleMiss(pkt, curTick);
     }
     if (!pkt->req->isUncacheable()) {
-        if (pkt->isInvalidate() && !pkt->isRead()
-            && !pkt->isWrite()) {
-            //Upgrade or Invalidate
-            //Look into what happens if two slave caches on bus
-            DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
-                    pkt->getAddr() & (((ULL(1))<<48)-1),
-                    pkt->getAddr() & ~((Addr)blkSize - 1));
-
-            pkt->flags |= SATISFIED;
-            //Invalidates/Upgrades need no response if they get the bus
-//            return MA_HIT; //@todo, return values
-            return true;
-        }
         blk = tags->handleAccess(pkt, lat, writebacks);
     } else {
         size = pkt->getSize();
@@ -241,7 +228,10 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         // clear dirty bit if write through
         if (pkt->needsResponse())
             respond(pkt, curTick+lat);
-//	return MA_HIT;
+        if (pkt->cmd == Packet::Writeback) {
+            //Signal that you can kill the pkt/req
+            pkt->flags |= SATISFIED;
+        }
         return true;
     }
 
@@ -287,22 +277,22 @@ void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
     if (success && !(pkt->flags & NACKED_LINE)) {
-              missQueue->markInService(pkt, mshr);
-          //Temp Hack for UPGRADES
-          if (pkt->cmd == Packet::UpgradeReq) {
-              pkt->flags &= ~CACHE_LINE_FILL;
-              BlkType *blk = tags->findBlock(pkt);
-              CacheBlk::State old_state = (blk) ? blk->status : 0;
-              CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
-              DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+        missQueue->markInService(pkt, mshr);
+        //Temp Hack for UPGRADES
+        if (pkt->cmd == Packet::UpgradeReq) {
+            pkt->flags &= ~CACHE_LINE_FILL;
+            BlkType *blk = tags->findBlock(pkt);
+            CacheBlk::State old_state = (blk) ? blk->status : 0;
+            CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
+            DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
                     pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
-              //Set the state on the upgrade
-              memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
-              PacketList writebacks;
-              tags->handleFill(blk, mshr, new_state, writebacks, pkt);
-              assert(writebacks.empty());
-              missQueue->handleResponse(pkt, curTick + hitLatency);
-          }
+            //Set the state on the upgrade
+            memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+            PacketList writebacks;
+            tags->handleFill(blk, mshr, new_state, writebacks, pkt);
+            assert(writebacks.empty());
+            missQueue->handleResponse(pkt, curTick + hitLatency);
+        }
     } else if (pkt && !pkt->req->isUncacheable()) {
         pkt->flags &= ~NACKED_LINE;
         pkt->flags &= ~SATISFIED;
