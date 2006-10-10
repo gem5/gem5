@@ -195,7 +195,7 @@ class Bus : public MemObject
 
     BusFreeEvent busIdle;
 
-    Port * retryingPort;
+    bool inRetry;
 
     /** An array of pointers to the peer port interfaces
         connected to this bus.*/
@@ -207,18 +207,18 @@ class Bus : public MemObject
 
     void addToRetryList(Port * port)
     {
-        if (!retryingPort) {
+        if (!inRetry) {
             // The device wasn't retrying a packet, or wasn't at an appropriate
             // time.
             retryList.push_back(port);
         } else {
             // The device was retrying a packet. It didn't work, so we'll leave
             // it at the head of the retry list.
-            retryingPort = NULL;
+            inRetry = false;
 
-            // We shouldn't be receiving a packet from one port when a different
+/*	    // We shouldn't be receiving a packet from one port when a different
             // one is retrying.
-            assert(port == retryingPort);
+            assert(port == retryingPort);*/
         }
     }
 
@@ -234,11 +234,13 @@ class Bus : public MemObject
 
     Bus(const std::string &n, int bus_id, int _clock, int _width)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
-        tickNextIdle(0), busIdle(this), retryingPort(NULL), defaultPort(NULL)
+        tickNextIdle(0), busIdle(this), inRetry(false), defaultPort(NULL)
     {
         //Both the width and clock period must be positive
-        assert(width);
-        assert(clock);
+        if (width <= 0)
+            fatal("Bus width must be positive\n");
+        if (clock <= 0)
+            fatal("Bus clock period must be positive\n");
     }
 
 };

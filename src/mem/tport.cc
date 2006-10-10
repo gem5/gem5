@@ -79,8 +79,7 @@ SimpleTimingPort::SendEvent::process()
     assert(port->outTiming >= 0);
     if (port->transmitList.size()) {
         port->transmitList.push_back(packet);
-    }
-    else if (port->sendTiming(packet)) {
+    } else if (port->sendTiming(packet)) {
         // send successful
         if (port->transmitList.size() == 0 && port->drainEvent) {
             port->drainEvent->process();

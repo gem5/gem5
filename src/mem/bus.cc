@@ -68,13 +68,11 @@ Bus::init()
 }
 
 Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
-{
-    assert(!scheduled());
-}
+{}
 
 void Bus::BusFreeEvent::process()
 {
-    bus->recvRetry(0);
+    bus->recvRetry(-1);
 }
 
 const char * Bus::BusFreeEvent::description()
@@ -96,7 +94,7 @@ Bus::recvTiming(Packet *pkt)
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
     if (tickNextIdle > curTick ||
-            (retryList.size() && pktPort != retryingPort)) {
+            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
         addToRetryList(pktPort);
         return false;
     }
@@ -109,9 +107,9 @@ Bus::recvTiming(Packet *pkt)
             assert(success);
             if (pkt->flags & SATISFIED) {
                 //Cache-Cache transfer occuring
-                if (retryingPort) {
+                if (inRetry) {
                     retryList.pop_front();
-                    retryingPort = NULL;
+                    inRetry = false;
                 }
                 return true;
             }
@@ -182,9 +180,9 @@ Bus::recvTiming(Packet *pkt)
     if (port->sendTiming(pkt))  {
         // Packet was successfully sent. Return true.
         // Also take care of retries
-        if (retryingPort) {
+        if (inRetry) {
             retryList.pop_front();
-            retryingPort = NULL;
+            inRetry = false;
         }
         return true;
     }
@@ -199,14 +197,14 @@ Bus::recvRetry(int id)
 {
     // If there's anything waiting...
     if (retryList.size()) {
-        retryingPort = retryList.front();
-        retryingPort->sendRetry();
-        // If the retryingPort pointer isn't null, sendTiming wasn't called
-        if (retryingPort) {
-            warn("sendRetry didn't call sendTiming\n");
-            retryList.pop_front();
-            retryingPort = NULL;
-        }
+        //retryingPort = retryList.front();
+        inRetry = true;
+        retryList.front()->sendRetry();
+        // If inRetry is still true, sendTiming wasn't called
+        if (inRetry)
+            panic("Port %s didn't call sendTiming in it's recvRetry\n",\
+                    retryList.front()->getPeer()->name());
+        //assert(!inRetry);
     }
 }
 
