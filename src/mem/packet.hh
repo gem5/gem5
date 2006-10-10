@@ -59,8 +59,8 @@ typedef std::list<PacketPtr> PacketList;
 #define SNOOP_COMMIT 1 << 6
 
 //For statistics we need max number of commands, hard code it at
-//20 for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 9
+//for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 10
 
 /**
  * A Packet is used to encapsulate a transfer between two objects in
