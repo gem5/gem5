@@ -102,15 +102,11 @@ bool
 Packet::intersect(Packet *p)
 {
     Addr s1 = getAddr();
-    Addr e1 = getAddr() + getSize();
+    Addr e1 = getAddr() + getSize() - 1;
     Addr s2 = p->getAddr();
-    Addr e2 = p->getAddr() + p->getSize();
+    Addr e2 = p->getAddr() + p->getSize() - 1;
 
-    if (s1 >= s2 && s1 < e2)
-        return true;
-    if (e1 >= s2 && e1 < e2)
-        return true;
-    return false;
+    return !(s1 > e2 || e1 < s2);
 }
 
 bool
