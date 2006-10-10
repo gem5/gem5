@@ -325,6 +325,8 @@ class Packet
         int icmd = (int)cmd;
         icmd &= ~(IsRequest);
         icmd |= IsResponse;
+        if (isRead())
+            icmd |= HasData;
         cmd = (Command)icmd;
         dest = src;
         srcValid = false;
