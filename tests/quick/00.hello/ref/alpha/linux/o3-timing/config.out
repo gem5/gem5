@@ -19,6 +19,8 @@ mem_mode=atomic
 [system.membus]
 type=Bus
 bus_id=0
+clock=1000
+width=64
 
 [system.cpu.workload]
 type=LiveProcess
@@ -361,6 +363,8 @@ hit_latency=1
 [system.cpu.toL2Bus]
 type=Bus
 bus_id=0
+clock=1000
+width=64
 
 [trace]
 flags=

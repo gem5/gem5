@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 719379                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 197268                       # Number of bytes of host memory used
-host_seconds                                    92.21                       # Real time elapsed on the host
-host_tick_rate                               40502079                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 255147                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 198260                       # Number of bytes of host memory used
+host_seconds                                   260.00                       # Real time elapsed on the host
+host_tick_rate                               14365182                       # Simulator tick rate (ticks/s)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
 sim_insts                                    66337257                       # Number of instructions simulated
 sim_seconds                                  1.867449                       # Number of seconds simulated
@@ -116,7 +116,7 @@ system.cpu0.kern.syscall_setgid                     1      0.56%     98.32% # nu
 system.cpu0.kern.syscall_getrlimit                  1      0.56%     98.88% # number of syscalls executed
 system.cpu0.kern.syscall_setsid                     2      1.12%    100.00% # number of syscalls executed
 system.cpu0.not_idle_fraction                0.017483                       # Percentage of non-idle cycles
-system.cpu0.numCycles                               0                       # number of cpu cycles simulated
+system.cpu0.numCycles                      3734379018                       # number of cpu cycles simulated
 system.cpu0.num_insts                        51973218                       # Number of instructions executed
 system.cpu0.num_refs                         13496062                       # Number of memory references
 system.cpu1.dtb.accesses                       477041                       # DTB accesses
@@ -217,7 +217,7 @@ system.cpu1.kern.syscall_fcntl                      2      1.33%     97.33% # nu
 system.cpu1.kern.syscall_setgid                     3      2.00%     99.33% # number of syscalls executed
 system.cpu1.kern.syscall_getrlimit                  1      0.67%    100.00% # number of syscalls executed
 system.cpu1.not_idle_fraction                0.005073                       # Percentage of non-idle cycles
-system.cpu1.numCycles                               0                       # number of cpu cycles simulated
+system.cpu1.numCycles                      3734898877                       # number of cpu cycles simulated
 system.cpu1.num_insts                        14364039                       # Number of instructions executed
 system.cpu1.num_refs                          4590544                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).
@@ -234,7 +234,7 @@ system.disk2.dma_write_full_pages                   1                       # Nu
 system.disk2.dma_write_txs                          1                       # Number of DMA write transactions.
 system.tsunami.ethernet.coalescedRxDesc  <err: div-0>                       # average number of RxDesc's coalesced into each post
 system.tsunami.ethernet.coalescedRxIdle  <err: div-0>                       # average number of RxIdle's coalesced into each post
-system.tsunami.ethernet.coalescedRxOk        no value                       # average number of RxOk's coalesced into each post
+system.tsunami.ethernet.coalescedRxOk    <err: div-0>                       # average number of RxOk's coalesced into each post
 system.tsunami.ethernet.coalescedRxOrn   <err: div-0>                       # average number of RxOrn's coalesced into each post
 system.tsunami.ethernet.coalescedSwi     <err: div-0>                       # average number of Swi's coalesced into each post
 system.tsunami.ethernet.coalescedTotal   <err: div-0>                       # average number of interrupts coalesced into each post

@@ -19,6 +19,8 @@ mem_mode=atomic
 [system.membus]
 type=Bus
 bus_id=0
+clock=1000
+width=64
 
 [system.cpu.dcache]
 type=BaseCache
@@ -95,6 +97,8 @@ function_trace_start=0
 [system.cpu.toL2Bus]
 type=Bus
 bus_id=0
+clock=1000
+width=64
 
 [system.cpu.icache]
 type=BaseCache

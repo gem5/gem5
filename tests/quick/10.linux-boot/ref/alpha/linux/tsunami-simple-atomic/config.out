@@ -29,6 +29,8 @@ system_rev=1024
 [system.membus]
 type=Bus
 bus_id=1
+clock=2
+width=64
 
 [system.bridge]
 type=Bridge
@@ -463,6 +465,8 @@ disks=system.disk0 system.disk2
 [system.iobus]
 type=Bus
 bus_id=0
+clock=2
+width=64
 
 [trace]
 flags=
