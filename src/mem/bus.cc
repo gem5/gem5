@@ -214,9 +214,24 @@ Bus::recvRetry(int id)
         retryList.front()->sendRetry();
         // If inRetry is still true, sendTiming wasn't called
         if (inRetry)
-            panic("Port %s didn't call sendTiming in it's recvRetry\n",\
-                    retryList.front()->getPeer()->name());
-        //assert(!inRetry);
+        {
+            retryList.front()->onRetryList(false);
+            retryList.pop_front();
+            inRetry = false;
+
+            //Bring tickNextIdle up to the present
+            while (tickNextIdle < curTick)
+                tickNextIdle += clock;
+
+            //Burn a cycle for the missed grant.
+            tickNextIdle += clock;
+
+            if (!busIdle.scheduled()) {
+                busIdle.schedule(tickNextIdle);
+            } else {
+                busIdle.reschedule(tickNextIdle);
+            }
+        }
     }
 }
 
