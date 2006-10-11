@@ -61,7 +61,8 @@ class MemTest : public MemObject
             unsigned _percentSourceUnaligned,
             unsigned _percentDestUnaligned,
             Addr _traceAddr,
-            Counter _max_loads);
+            Counter _max_loads,
+            bool _atomic);
 
     virtual void init();
 
@@ -175,12 +176,17 @@ class MemTest : public MemObject
 
     uint64_t numReads;
     uint64_t maxLoads;
+
+    bool atomic;
+
     Stats::Scalar<> numReadsStat;
     Stats::Scalar<> numWritesStat;
     Stats::Scalar<> numCopiesStat;
 
     // called by MemCompleteEvent::process()
     void completeRequest(Packet *pkt);
+
+    void sendPkt(Packet *pkt);
 
     void doRetry();
 

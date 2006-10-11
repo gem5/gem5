@@ -100,7 +100,7 @@ doAtomicAccess(Packet *pkt, bool isCpuSide)
         if (pkt->isResponse())
             handleResponse(pkt);
         else
-            snoopProbe(pkt);
+            return snoopProbe(pkt);
     }
     //Fix this timing info
     return hitLatency;
@@ -148,7 +148,8 @@ Cache(const std::string &_name,
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
       coherence(params.coherence), prefetcher(params.prefetcher),
-      doCopy(params.doCopy), blockOnCopy(params.blockOnCopy)
+      doCopy(params.doCopy), blockOnCopy(params.blockOnCopy),
+      hitLatency(params.hitLatency)
 {
 //FIX BUS POINTERS
 //    if (params.in == NULL) {
@@ -284,8 +285,9 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool
             BlkType *blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
-            DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
-                    pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
+            if (old_state != new_state)
+                DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+                        pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
             //Set the state on the upgrade
             memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
             PacketList writebacks;
@@ -324,8 +326,9 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
-            DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
-                    pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
+            if (old_state != new_state)
+                DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+                        pkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
             blk = tags->handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
             while (!writebacks.empty()) {
@@ -531,6 +534,10 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
     int lat;
     BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
 
+    DPRINTF(Cache, "%s %x %s blk_addr: %x\n", pkt->cmdString(),
+            pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
+            pkt->getAddr() & ~((Addr)blkSize - 1));
+
     if (!blk) {
         // Need to check for outstanding misses and writes
         Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
@@ -637,6 +644,11 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
 
                 busPkt->time = curTick;
 
+                DPRINTF(Cache, "Sending a atomic %s for %x blk_addr: %x\n",
+                        busPkt->cmdString(),
+                        busPkt->getAddr() & (((ULL(1))<<48)-1),
+                        busPkt->getAddr() & ~((Addr)blkSize - 1));
+
                 lat = memSidePort->sendAtomic(busPkt);
 
                 //Be sure to flip the response to a request for coherence
@@ -652,13 +664,26 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
 */		misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
 
                 CacheBlk::State old_state = (blk) ? blk->status : 0;
+                CacheBlk::State new_state = coherence->getNewState(busPkt, old_state);
+                    DPRINTF(Cache, "Receive response:%s for blk addr %x in state %i\n",
+                            busPkt->cmdString(),
+                            busPkt->getAddr() & (((ULL(1))<<48)-1), old_state);
+                if (old_state != new_state)
+                    DPRINTF(Cache, "Block for blk addr %x moving from state %i to %i\n",
+                            busPkt->getAddr() & (((ULL(1))<<48)-1), old_state, new_state);
+
                 tags->handleFill(blk, busPkt,
-                                 coherence->getNewState(busPkt, old_state),
+                                 new_state,
                                  writebacks, pkt);
+                //Free the packet
+                delete busPkt;
+
                 // Handle writebacks if needed
                 while (!writebacks.empty()){
-                    memSidePort->sendAtomic(writebacks.front());
+                    Packet *wbPkt = writebacks.front();
+                    memSidePort->sendAtomic(wbPkt);
                     writebacks.pop_front();
+                    delete wbPkt;
                 }
                 return lat + hitLatency;
             } else {
@@ -679,7 +704,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update, CachePort
             // Still need to change data in all locations.
             otherSidePort->sendFunctional(pkt);
         }
-        return curTick + lat;
+        return hitLatency;
     }
     fatal("Probe not handled.\n");
     return 0;

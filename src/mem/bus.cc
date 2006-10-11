@@ -293,16 +293,22 @@ Bus::findSnoopPorts(Addr addr, int id)
     return ports;
 }
 
-void
+Tick
 Bus::atomicSnoop(Packet *pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+    Tick response_time = 0;
 
     while (!ports.empty())
     {
-        interfaces[ports.back()]->sendAtomic(pkt);
+        Tick response = interfaces[ports.back()]->sendAtomic(pkt);
+        if (response) {
+            assert(!response_time);  //Multiple responders
+            response_time = response;
+        }
         ports.pop_back();
     }
+    return response_time;
 }
 
 void
@@ -341,8 +347,11 @@ Bus::recvAtomic(Packet *pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    atomicSnoop(pkt);
-    return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
+    Tick snoopTime = atomicSnoop(pkt);
+    if (snoopTime)
+        return snoopTime;  //Snoop satisfies it
+    else
+        return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
 }
 
 /** Function called by the port when the bus is receiving a Functional

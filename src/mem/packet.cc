@@ -39,9 +39,18 @@
 
 static const std::string ReadReqString("ReadReq");
 static const std::string WriteReqString("WriteReq");
-static const std::string WriteReqNoAckString("WriteReqNoAck");
+static const std::string WriteReqNoAckString("WriteReqNoAck|Writeback");
 static const std::string ReadRespString("ReadResp");
 static const std::string WriteRespString("WriteResp");
+static const std::string SoftPFReqString("SoftPFReq");
+static const std::string SoftPFRespString("SoftPFResp");
+static const std::string HardPFReqString("HardPFReq");
+static const std::string HardPFRespString("HardPFResp");
+static const std::string InvalidateReqString("InvalidateReq");
+static const std::string WriteInvalidateReqString("WriteInvalidateReq");
+static const std::string UpgradeReqString("UpgradeReq");
+static const std::string ReadExReqString("ReadExReq");
+static const std::string ReadExRespString("ReadExResp");
 static const std::string OtherCmdString("<other>");
 
 const std::string &
@@ -53,6 +62,15 @@ Packet::cmdString() const
       case WriteReqNoAck:   return WriteReqNoAckString;
       case ReadResp:        return ReadRespString;
       case WriteResp:       return WriteRespString;
+      case SoftPFReq:       return SoftPFReqString;
+      case SoftPFResp:      return SoftPFRespString;
+      case HardPFReq:       return HardPFReqString;
+      case HardPFResp:      return HardPFRespString;
+      case InvalidateReq:   return InvalidateReqString;
+      case WriteInvalidateReq:return WriteInvalidateReqString;
+      case UpgradeReq:      return UpgradeReqString;
+      case ReadExReq:       return ReadExReqString;
+      case ReadExResp:      return ReadExRespString;
       default:              return OtherCmdString;
     }
 }
@@ -66,6 +84,15 @@ Packet::cmdIdxToString(Packet::Command idx)
       case WriteReqNoAck:   return WriteReqNoAckString;
       case ReadResp:        return ReadRespString;
       case WriteResp:       return WriteRespString;
+      case SoftPFReq:       return SoftPFReqString;
+      case SoftPFResp:      return SoftPFRespString;
+      case HardPFReq:       return HardPFReqString;
+      case HardPFResp:      return HardPFRespString;
+      case InvalidateReq:   return InvalidateReqString;
+      case WriteInvalidateReq:return WriteInvalidateReqString;
+      case UpgradeReq:      return UpgradeReqString;
+      case ReadExReq:       return ReadExReqString;
+      case ReadExResp:      return ReadExRespString;
       default:              return OtherCmdString;
     }
 }

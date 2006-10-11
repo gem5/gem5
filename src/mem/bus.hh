@@ -107,7 +107,7 @@ class Bus : public MemObject
     std::vector<int> findSnoopPorts(Addr addr, int id);
 
     /** Snoop all relevant ports atomicly. */
-    void atomicSnoop(Packet *pkt);
+    Tick atomicSnoop(Packet *pkt);
 
     /** Snoop all relevant ports functionally. */
     void functionalSnoop(Packet *pkt);
