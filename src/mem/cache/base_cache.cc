@@ -284,7 +284,7 @@ BaseCache::CacheEvent::process()
         pkt->result = Packet::Success;
     pkt->makeTimingResponse();
     DPRINTF(CachePort, "%s attempting to send a response\n", cachePort->name());
-    if (!cachePort->drainList.empty()) {
+    if (!cachePort->drainList.empty() || cachePort->waitingOnRetry) {
         //Already have a list, just append
         cachePort->drainList.push_back(pkt);
         DPRINTF(CachePort, "%s appending response onto drain list\n", cachePort->name());
