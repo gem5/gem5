@@ -61,7 +61,7 @@ Bus::getPort(const std::string &if_name, int idx)
 void
 Bus::init()
 {
-    std::vector<Port*>::iterator intIter;
+    std::vector<BusPort*>::iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
         (*intIter)->sendStatusChange(Port::RangeChange);
@@ -89,7 +89,7 @@ Bus::recvTiming(Packet *pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
-    Port *pktPort = interfaces[pkt->getSrc()];
+    BusPort *pktPort = interfaces[pkt->getSrc()];
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -108,6 +108,7 @@ Bus::recvTiming(Packet *pkt)
             if (pkt->flags & SATISFIED) {
                 //Cache-Cache transfer occuring
                 if (inRetry) {
+                    retryList.front()->onRetryList(false);
                     retryList.pop_front();
                     inRetry = false;
                 }
@@ -181,6 +182,7 @@ Bus::recvTiming(Packet *pkt)
         // Packet was successfully sent. Return true.
         // Also take care of retries
         if (inRetry) {
+            retryList.front()->onRetryList(false);
             retryList.pop_front();
             inRetry = false;
         }
