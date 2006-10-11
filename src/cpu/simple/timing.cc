@@ -146,6 +146,8 @@ void
 TimingSimpleCPU::resume()
 {
     if (_status != SwitchedOut && _status != Idle) {
+        assert(system->getMemoryMode() == System::Timing);
+
         // Delete the old event if it existed.
         if (fetchEvent) {
             if (fetchEvent->scheduled())
@@ -159,7 +161,6 @@ TimingSimpleCPU::resume()
         fetchEvent->schedule(curTick);
     }
 
-    assert(system->getMemoryMode() == System::Timing);
     changeState(SimObject::Running);
 }
 
@@ -189,6 +190,10 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
             _status = Running;
             break;
         }
+    }
+
+    if (_status != Running) {
+        _status = Idle;
     }
 }
 
@@ -533,15 +538,6 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
-    if (getState() == SimObject::Draining) {
-        completeDrain();
-
-        delete pkt->req;
-        delete pkt;
-
-        return;
-    }
-
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
     if (pkt->isRead() && pkt->req->isLocked()) {
@@ -550,6 +546,13 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
 
     delete pkt->req;
     delete pkt;
+
+    if (getState() == SimObject::Draining) {
+        advancePC(fault);
+        completeDrain();
+
+        return;
+    }
 
     postExecute();
     advanceInst(fault);
