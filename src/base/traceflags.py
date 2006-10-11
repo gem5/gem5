@@ -58,6 +58,7 @@ baseFlags = [
     'BusAddrRanges',
     'BusBridge',
     'Cache',
+    'CachePort',
     'Chains',
     'Checker',
     'Clock',

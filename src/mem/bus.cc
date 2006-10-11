@@ -95,6 +95,7 @@ Bus::recvTiming(Packet *pkt)
     // one, put this device on the retry list.
     if (tickNextIdle > curTick ||
             (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
+        DPRINTF(Bus, "Adding RETRY for %i\n", pktPort);
         addToRetryList(pktPort);
         return false;
     }
@@ -108,6 +109,7 @@ Bus::recvTiming(Packet *pkt)
             if (pkt->flags & SATISFIED) {
                 //Cache-Cache transfer occuring
                 if (inRetry) {
+                    DPRINTF(Bus, "Removing RETRY %i\n", retryList.front());
                     retryList.pop_front();
                     inRetry = false;
                 }
@@ -116,6 +118,7 @@ Bus::recvTiming(Packet *pkt)
             port = findPort(pkt->getAddr(), pkt->getSrc());
         } else {
             //Snoop didn't succeed
+            DPRINTF(Bus, "Snoop caused adding to RETRY list %i\n", pktPort);
             addToRetryList(pktPort);
             return false;
         }
@@ -181,6 +184,7 @@ Bus::recvTiming(Packet *pkt)
         // Packet was successfully sent. Return true.
         // Also take care of retries
         if (inRetry) {
+            DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
             retryList.pop_front();
             inRetry = false;
         }
@@ -188,6 +192,7 @@ Bus::recvTiming(Packet *pkt)
     }
 
     // Packet not successfully sent. Leave or put it on the retry list.
+    DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
     addToRetryList(pktPort);
     return false;
 }
@@ -195,10 +200,12 @@ Bus::recvTiming(Packet *pkt)
 void
 Bus::recvRetry(int id)
 {
+    DPRINTF(Bus, "Received a retry\n");
     // If there's anything waiting...
     if (retryList.size()) {
         //retryingPort = retryList.front();
         inRetry = true;
+        DPRINTF(Bus, "Sending a retry\n");
         retryList.front()->sendRetry();
         // If inRetry is still true, sendTiming wasn't called
         if (inRetry)
@@ -258,8 +265,8 @@ Bus::findSnoopPorts(Addr addr, int id)
             //Careful  to not overlap ranges
             //or snoop will be called more than once on the port
             ports.push_back(portSnoopList[i].portId);
-            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
-                    portSnoopList[i].portId);
+//            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
+//                    portSnoopList[i].portId);
         }
         i++;
     }
