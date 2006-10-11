@@ -348,6 +348,10 @@ class Packet
         int icmd = (int)cmd;
         icmd &= ~(IsRequest);
         icmd |= IsResponse;
+        if (isRead())
+            icmd |= HasData;
+        if (isWrite())
+            icmd &= ~HasData;
         cmd = (Command)icmd;
     }
 
