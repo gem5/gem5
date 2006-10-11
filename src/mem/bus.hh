@@ -130,6 +130,8 @@ class Bus : public MemObject
         of the interfaces connecting to the bus. */
     class BusPort : public Port
     {
+        bool _onRetryList;
+
         /** A pointer to the bus to which this port belongs. */
         Bus *bus;
 
@@ -140,8 +142,14 @@ class Bus : public MemObject
 
         /** Constructor for the BusPort.*/
         BusPort(const std::string &_name, Bus *_bus, int _id)
-            : Port(_name), bus(_bus), id(_id)
+            : Port(_name), _onRetryList(false), bus(_bus), id(_id)
         { }
+
+        bool onRetryList()
+        { return _onRetryList; }
+
+        void onRetryList(bool newVal)
+        { _onRetryList = newVal; }
 
       protected:
 
@@ -199,17 +207,19 @@ class Bus : public MemObject
 
     /** An array of pointers to the peer port interfaces
         connected to this bus.*/
-    std::vector<Port*> interfaces;
+    std::vector<BusPort*> interfaces;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
-    std::list<Port*> retryList;
+    std::list<BusPort*> retryList;
 
-    void addToRetryList(Port * port)
+    void addToRetryList(BusPort * port)
     {
         if (!inRetry) {
             // The device wasn't retrying a packet, or wasn't at an appropriate
             // time.
+            assert(!port->onRetryList());
+            port->onRetryList(true);
             retryList.push_back(port);
         } else {
             // The device was retrying a packet. It didn't work, so we'll leave
