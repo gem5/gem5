@@ -206,8 +206,8 @@ void
 Bus::recvRetry(int id)
 {
     DPRINTF(Bus, "Received a retry\n");
-    // If there's anything waiting...
-    if (retryList.size()) {
+    // If there's anything waiting, and the bus isn't busy...
+    if (retryList.size() && curTick >= tickNextIdle) {
         //retryingPort = retryList.front();
         inRetry = true;
         DPRINTF(Bus, "Sending a retry\n");
