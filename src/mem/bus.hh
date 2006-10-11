@@ -125,6 +125,8 @@ class Bus : public MemObject
      */
     void addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id);
 
+    /** Occupy the bus with transmitting the packet pkt */
+    void occupyBus(PacketPtr pkt);
 
     /** Declaration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */

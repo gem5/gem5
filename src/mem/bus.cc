@@ -80,55 +80,8 @@ const char * Bus::BusFreeEvent::description()
     return "bus became available";
 }
 
-/** Function called by the port when the bus is receiving a Timing
- * transaction.*/
-bool
-Bus::recvTiming(Packet *pkt)
+void Bus::occupyBus(PacketPtr pkt)
 {
-    Port *port;
-    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
-
-    BusPort *pktPort = interfaces[pkt->getSrc()];
-
-    // If the bus is busy, or other devices are in line ahead of the current
-    // one, put this device on the retry list.
-    if (tickNextIdle > curTick ||
-            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
-        DPRINTF(Bus, "Adding RETRY for %i\n", pktPort);
-        addToRetryList(pktPort);
-        return false;
-    }
-
-    short dest = pkt->getDest();
-    if (dest == Packet::Broadcast) {
-        if (timingSnoop(pkt)) {
-            pkt->flags |= SNOOP_COMMIT;
-            bool success = timingSnoop(pkt);
-            assert(success);
-            if (pkt->flags & SATISFIED) {
-                //Cache-Cache transfer occuring
-                if (inRetry) {
-                    DPRINTF(Bus, "Removing RETRY %i\n", retryList.front());
-                    retryList.front()->onRetryList(false);
-                    retryList.pop_front();
-                    inRetry = false;
-                }
-                return true;
-            }
-            port = findPort(pkt->getAddr(), pkt->getSrc());
-        } else {
-            //Snoop didn't succeed
-            DPRINTF(Bus, "Snoop caused adding to RETRY list %i\n", pktPort);
-            addToRetryList(pktPort);
-            return false;
-        }
-    } else {
-        assert(dest >= 0 && dest < interfaces.size());
-        assert(dest != pkt->getSrc()); // catch infinite loops
-        port = interfaces[dest];
-    }
-
     //Bring tickNextIdle up to the present tick
     //There is some potential ambiguity where a cycle starts, which might make
     //a difference when devices are acting right around a cycle boundary. Using
@@ -180,6 +133,56 @@ Bus::recvTiming(Packet *pkt)
 
     // The bus will become idle once the current packet is delivered.
     pkt->finishTime = tickNextIdle;
+}
+
+/** Function called by the port when the bus is receiving a Timing
+ * transaction.*/
+bool
+Bus::recvTiming(Packet *pkt)
+{
+    Port *port;
+    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+
+    BusPort *pktPort = interfaces[pkt->getSrc()];
+
+    // If the bus is busy, or other devices are in line ahead of the current
+    // one, put this device on the retry list.
+    if (tickNextIdle > curTick ||
+            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
+        addToRetryList(pktPort);
+        return false;
+    }
+
+    short dest = pkt->getDest();
+    if (dest == Packet::Broadcast) {
+        if (timingSnoop(pkt)) {
+            pkt->flags |= SNOOP_COMMIT;
+            bool success = timingSnoop(pkt);
+            assert(success);
+            if (pkt->flags & SATISFIED) {
+                //Cache-Cache transfer occuring
+                if (inRetry) {
+                    retryList.front()->onRetryList(false);
+                    retryList.pop_front();
+                    inRetry = false;
+                }
+                occupyBus(pkt);
+                return true;
+            }
+            port = findPort(pkt->getAddr(), pkt->getSrc());
+        } else {
+            //Snoop didn't succeed
+            addToRetryList(pktPort);
+            return false;
+        }
+    } else {
+        assert(dest >= 0 && dest < interfaces.size());
+        assert(dest != pkt->getSrc()); // catch infinite loops
+        port = interfaces[dest];
+    }
+
+    occupyBus(pkt);
 
     if (port->sendTiming(pkt))  {
         // Packet was successfully sent. Return true.
