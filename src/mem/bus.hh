@@ -231,6 +231,7 @@ class Bus : public MemObject
                 inRetry = false;
             }
             else {
+                port->onRetryList(true);
                 retryList.push_back(port);
             }
         }
