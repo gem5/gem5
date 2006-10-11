@@ -224,13 +224,15 @@ class Bus : public MemObject
             port->onRetryList(true);
             retryList.push_back(port);
         } else {
-            // The device was retrying a packet. It didn't work, so we'll leave
-            // it at the head of the retry list.
-            inRetry = false;
-
-/*	    // We shouldn't be receiving a packet from one port when a different
-            // one is retrying.
-            assert(port == retryingPort);*/
+            if (port->onRetryList()) {
+                // The device was retrying a packet. It didn't work, so we'll leave
+                // it at the head of the retry list.
+                assert(port == retryList.front());
+                inRetry = false;
+            }
+            else {
+                retryList.push_back(port);
+            }
         }
     }
 

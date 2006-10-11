@@ -58,15 +58,17 @@ SimpleTimingPort::recvTiming(Packet *pkt)
 void
 SimpleTimingPort::recvRetry()
 {
-    bool result = true;
-
-    assert(transmitList.size());
-    while (result && transmitList.size()) {
-        result = sendTiming(transmitList.front());
-        if (result)
-            transmitList.pop_front();
+    assert(outTiming > 0);
+    assert(!transmitList.empty());
+    if (sendTiming(transmitList.front())) {
+        transmitList.pop_front();
+        outTiming--;
+        DPRINTF(Bus, "No Longer waiting on retry\n");
+        if (!transmitList.empty())
+            sendTimingLater(transmitList.front(), 1);
     }
-    if (transmitList.size() == 0 && drainEvent) {
+
+    if (transmitList.empty() && drainEvent) {
         drainEvent->process();
         drainEvent = NULL;
     }
@@ -75,20 +77,28 @@ SimpleTimingPort::recvRetry()
 void
 SimpleTimingPort::SendEvent::process()
 {
-    port->outTiming--;
-    assert(port->outTiming >= 0);
-    if (port->transmitList.size()) {
+    assert(port->outTiming > 0);
+    if (!port->transmitList.empty() && port->transmitList.front() != packet) {
+        //We are not the head of the list
         port->transmitList.push_back(packet);
     } else if (port->sendTiming(packet)) {
         // send successful
-        if (port->transmitList.size() == 0 && port->drainEvent) {
+        if (port->transmitList.size()) {
+            port->transmitList.pop_front();
+            port->outTiming--;
+           if (!port->transmitList.empty())
+                port->sendTimingLater(port->transmitList.front(), 1);
+        }
+        if (port->transmitList.empty() && port->drainEvent) {
             port->drainEvent->process();
             port->drainEvent = NULL;
         }
     } else {
         // send unsuccessful (due to flow control).  Will get retry
-        // callback later; save for then.
-        port->transmitList.push_back(packet);
+        // callback later; save for then if not already
+        DPRINTF(Bus, "Waiting on retry\n");
+        if (!(port->transmitList.front() == packet))
+            port->transmitList.push_back(packet);
     }
 }
 

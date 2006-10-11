@@ -173,6 +173,7 @@ Bus::recvTiming(Packet *pkt)
             port = findPort(pkt->getAddr(), pkt->getSrc());
         } else {
             //Snoop didn't succeed
+            DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
             addToRetryList(pktPort);
             return false;
         }
