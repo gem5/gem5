@@ -139,6 +139,7 @@ BaseCache::CachePort::recvRetry()
             //This can happen if I am the owner of a block and see an upgrade
             //while the block was in my WB Buffers.  I just remove the
             //wb and de-assert the masterRequest
+            waitingOnRetry = false;
             return;
         }
         pkt = cache->getPacket();
