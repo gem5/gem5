@@ -135,7 +135,12 @@ BaseCache::CachePort::recvRetry()
     else if (!isCpuSide)
     {
         DPRINTF(CachePort, "%s attempting to send a retry for MSHR\n", name());
-        assert(cache->doMasterRequest());
+        if (cache->doMasterRequest()) {
+            //This can happen if I am the owner of a block and see an upgrade
+            //while the block was in my WB Buffers.  I just remove the
+            //wb and de-assert the masterRequest
+            return;
+        }
         pkt = cache->getPacket();
         MSHR* mshr = (MSHR*)pkt->senderState;
         bool success = sendTiming(pkt);
@@ -236,10 +241,15 @@ BaseCache::CacheEvent::process()
             }
         }
         else if (!cachePort->isCpuSide)
-        {
+        {            //MSHR
             DPRINTF(CachePort, "%s trying to send a MSHR request\n", cachePort->name());
-            assert(cachePort->cache->doMasterRequest());
-            //MSHR
+            if (cachePort->cache->doMasterRequest()) {
+                //This can happen if I am the owner of a block and see an upgrade
+                //while the block was in my WB Buffers.  I just remove the
+                //wb and de-assert the masterRequest
+                return;
+            }
+
             pkt = cachePort->cache->getPacket();
             MSHR* mshr = (MSHR*) pkt->senderState;
             bool success = cachePort->sendTiming(pkt);
