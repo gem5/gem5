@@ -189,7 +189,6 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
             reqCpu->schedule(curTick + 1);
         }
@@ -202,12 +201,13 @@ BaseCache::CachePort::recvRetry()
         pkt = cshrRetry;
         bool success = sendTiming(pkt);
         waitingOnRetry = !success;
-        if (success && cache->doSlaveRequest())
+        if (success)
         {
-            //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
-            reqCpu->schedule(curTick + 1);
+            if (cache->doSlaveRequest()) {
+                //Still more to issue, rerequest in 1 cycle
+                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+                reqCpu->schedule(curTick + 1);
+            }
             cshrRetry = NULL;
         }
     }
@@ -305,20 +305,28 @@ BaseCache::CacheEvent::process()
         }
         else
         {
-            assert(cachePort->cache->doSlaveRequest());
             //CSHR
-            pkt = cachePort->cache->getCoherencePacket();
+            if (!cachePort->cshrRetry) {
+                assert(cachePort->cache->doSlaveRequest());
+                pkt = cachePort->cache->getCoherencePacket();
+            }
+            else {
+                pkt = cachePort->cshrRetry;
+            }
             bool success = cachePort->sendTiming(pkt);
             if (!success) {
                 //Need to send on a retry
                 cachePort->cshrRetry = pkt;
                 cachePort->waitingOnRetry = true;
             }
-            else if (cachePort->cache->doSlaveRequest())
+            else
             {
-                //Still more to issue, rerequest in 1 cycle
-                pkt = NULL;
-                this->schedule(curTick+1);
+                cachePort->cshrRetry = NULL;
+                if (cachePort->cache->doSlaveRequest()) {
+                    //Still more to issue, rerequest in 1 cycle
+                    pkt = NULL;
+                    this->schedule(curTick+1);
+                }
             }
         }
         return;
