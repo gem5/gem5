@@ -1,0 +1,370 @@
+////////////////////////////////////////////////////////////////////
+//
+// Block Memory instructions
+//
+
+output header {{
+
+        class BlockMem : public SparcMacroInst
+        {
+          protected:
+
+            // Constructor
+            // We make the assumption that all block memory operations
+            // Will take 8 instructions to execute
+            BlockMem(const char *mnem,
+                    ExtMachInst _machInst, OpClass __opClass) :
+                SparcMacroInst(mnem, _machInst, __opClass, 8)
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+        };
+
+        class BlockMemImm : public BlockMem
+        {
+          protected:
+
+            // Constructor
+            BlockMemImm(const char *mnem,
+                    ExtMachInst _machInst, OpClass __opClass) :
+                BlockMem(mnem, _machInst, __opClass),
+                imm(sext<13>(SIMM13))
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            const int32_t imm;
+        };
+
+        class BlockMemMicro : public SparcDelayedMicroInst
+        {
+          protected:
+
+            // Constructor
+            BlockMemMicro(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, int8_t _offset) :
+                SparcDelayedMicroInst(mnem, _machInst, __opClass),
+                offset(_offset)
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            const int8_t offset;
+        };
+
+        class BlockMemImmMicro : public BlockMemMicro
+        {
+          protected:
+
+            // Constructor
+            BlockMemImmMicro(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, int8_t _offset) :
+                BlockMemMicro(mnem, _machInst, __opClass, _offset),
+                imm(sext<13>(SIMM13))
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            const int32_t imm;
+        };
+}};
+
+output decoder {{
+        std::string BlockMem::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            ccprintf(response, " + ");
+            printReg(response, _srcRegIdx[!save ? 1 : 2]);
+            ccprintf(response, " ]");
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+        std::string BlockMemImm::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            if(imm >= 0)
+                ccprintf(response, " + 0x%x ]", imm);
+            else
+                ccprintf(response, " + -0x%x ]", -imm);
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+}};
+
+def template LoadStoreExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            uint64_t write_result = 0;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(priv_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+def template BlockMemDeclare {{
+        /**
+         * Static instruction class for a block memory operation
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+            //Constructor
+            %(class_name)s(MachInst machInst);
+
+            class %(class_name)s_0 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_0(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[0]",
+                            machInst, %(op_class)s, 0*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_1 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_1(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[1]",
+                            machInst, %(op_class)s, 1*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_2 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_2(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[2]",
+                            machInst, %(op_class)s, 2*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_3 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_3(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[3]",
+                            machInst, %(op_class)s, 3*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_4 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_4(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[4]",
+                            machInst, %(op_class)s, 4*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_5 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_5(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[5]",
+                            machInst, %(op_class)s, 5*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_6 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_6(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[6]",
+                            machInst, %(op_class)s, 6*8)
+                {;}
+                %(BasicExecDeclare)s
+            };
+
+            class %(class_name)s_7 : public %(base_class)sMicro
+            {
+                //Constructor
+                %(class_name)s_7(MachInst machInst) :
+                    %(base_class)sMicro("%(mnemonic)s[7]",
+                            machInst, %(op_class)s, 7*8)
+                {
+                    flags[IsLastMicroOp] = true;
+                }
+                %(BasicExecDeclare)s
+            };
+        };
+}};
+
+// Basic instruction class constructor template.
+def template BlockMemConstructor {{
+        inline %(class_name)s::%(class_name)s(MachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+            %(constructor)s;
+            microOps =
+                {new %(class_name)s_0(machInst),
+                new %(class_name)s_1(machInst),
+                new %(class_name)s_2(machInst),
+                new %(class_name)s_3(machInst),
+                new %(class_name)s_4(machInst),
+                new %(class_name)s_5(machInst),
+                new %(class_name)s_6(machInst),
+                new %(class_name)s_7(machInst)}
+        }
+}};
+
+def template MicroLoadExecute {{
+        Fault %(class_name)s_%(micro_pc)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(fault_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+def template MicroStoreExecute {{
+        Fault %(class_name)s_%(micro_pc)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            uint64_t write_result = 0;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(fault_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+let {{
+
+    def doBlockMemFormat(code, execute, name, Name, opt_flags):
+        # XXX Need to take care of pstate.hpriv as well. The lower ASIs
+        # are split into ones that are available in priv and hpriv, and
+        # those that are only available in hpriv
+        faultCheck = '''if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
+                    return new PrivilegedAction;
+                if(AsiIsAsIfUser(EXT_ASI) && !bits(Pstate,2,2))
+                    return new PrivilegedAction;
+                if(RD & 0xf)
+                    return new IllegalInstruction;
+                if(EA & 0x3f)
+                    return new MemAddressNotAligned;'''
+        addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
+        addrCalcImm = 'EA = Rs1 + imm + offset;'
+        iop = InstObjParams(name, Name, 'Mem', code, opt_flags)
+        iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code, opt_flags)
+        header_output = BlockMemDeclare.subst(iop) + BlockMemDeclare.subst(iop_imm)
+        decoder_output = BlockMemConstructor.subst(iop) + BlockMemConstructor.subst(iop_imm)
+        decode_block = ROrImmDecode.subst(iop)
+        for microPC in range(8):
+            pcedCode = code % ("micro_pc", microPC)
+            iop = InstObjParams(name, Name, 'Mem', pcedCode,
+                    opt_flags, ("ea_code", addrCalcReg),
+                    ("fault_check", faultCheck), ("micro_pc", microPC))
+            iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', pcedCode,
+                    opt_flags, ("ea_code", addrCalcImm),
+                    ("fault_check", faultCheck), ("micro_pc", microPC))
+            exec_output += execute.subst(iop)
+            exec_output += execute.subst(iop_imm)
+            faultCheck = ''
+        return (header_output, decoder_output, exec_output, decode_block)
+}};
+
+def format BlockLoad(code, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doBlockMemFormat(code, MicroLoadExecute,
+             name, Name, opt_flags)
+}};
+
+def format BlockStore(code, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doBlockMemFormat(code, MicroStoreExecute,
+            name, Name, opt_flags)
+}};
