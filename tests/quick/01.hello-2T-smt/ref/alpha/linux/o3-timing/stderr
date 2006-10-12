@@ -1,0 +1,22 @@
+warn: Entering event queue @ 0.  Starting simulation...
+warn: cycle 0: fault (page_table_fault) detected @ PC 0x000000
+warn: Increasing stack 0x11ff92000:0x11ff9b000 to 0x11ff90000:0x11ff9b000 because of access to 0x11ff91ff0
+warn: Increasing stack 0x11ff92000:0x11ff9b000 to 0x11ff90000:0x11ff9b000 because of access to 0x11ff91ff0
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.
+warn: Default fetch doesn't update it's state from a functional call.

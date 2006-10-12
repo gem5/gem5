@@ -50,6 +50,7 @@ isa_switch_hdrs = Split('''
 	arguments.hh
 	faults.hh
 	isa_traits.hh
+        locked_mem.hh
 	process.hh
 	regfile.hh
 	stacktrace.hh

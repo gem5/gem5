@@ -701,7 +701,7 @@ decode OPCODE default Unknown::unknown() {
     0x00: decode PALFUNC {
         format EmulatedCallPal {
             0x00: halt ({{
-                exitSimLoop(curTick, "halt instruction encountered");
+                exitSimLoop("halt instruction encountered");
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall(R0);

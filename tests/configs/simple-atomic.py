@@ -29,7 +29,7 @@
 import m5
 from m5.objects import *
 
-system = System(cpu = AtomicSimpleCPU(),
+system = System(cpu = AtomicSimpleCPU(cpu_id=0),
                 physmem = PhysicalMemory(),
                 membus = Bus())
 system.physmem.port = system.membus.port

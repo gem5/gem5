@@ -61,12 +61,79 @@ Bus::getPort(const std::string &if_name, int idx)
 void
 Bus::init()
 {
-    std::vector<Port*>::iterator intIter;
+    std::vector<BusPort*>::iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
         (*intIter)->sendStatusChange(Port::RangeChange);
 }
 
+Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
+{}
+
+void Bus::BusFreeEvent::process()
+{
+    bus->recvRetry(-1);
+}
+
+const char * Bus::BusFreeEvent::description()
+{
+    return "bus became available";
+}
+
+void Bus::occupyBus(PacketPtr pkt)
+{
+    //Bring tickNextIdle up to the present tick
+    //There is some potential ambiguity where a cycle starts, which might make
+    //a difference when devices are acting right around a cycle boundary. Using
+    //a < allows things which happen exactly on a cycle boundary to take up only
+    //the following cycle. Anthing that happens later will have to "wait" for
+    //the end of that cycle, and then start using the bus after that.
+    while (tickNextIdle < curTick)
+        tickNextIdle += clock;
+
+    // The packet will be sent. Figure out how long it occupies the bus, and
+    // how much of that time is for the first "word", aka bus width.
+    int numCycles = 0;
+    // Requests need one cycle to send an address
+    if (pkt->isRequest())
+        numCycles++;
+    else if (pkt->isResponse() || pkt->hasData()) {
+        // If a packet has data, it needs ceil(size/width) cycles to send it
+        // We're using the "adding instead of dividing" trick again here
+        if (pkt->hasData()) {
+            int dataSize = pkt->getSize();
+            for (int transmitted = 0; transmitted < dataSize;
+                    transmitted += width) {
+                numCycles++;
+            }
+        } else {
+            // If the packet didn't have data, it must have been a response.
+            // Those use the bus for one cycle to send their data.
+            numCycles++;
+        }
+    }
+
+    // The first word will be delivered after the current tick, the delivery
+    // of the address if any, and one bus cycle to deliver the data
+    pkt->firstWordTime =
+        tickNextIdle +
+        pkt->isRequest() ? clock : 0 +
+        clock;
+
+    //Advance it numCycles bus cycles.
+    //XXX Should this use the repeated addition trick as well?
+    tickNextIdle += (numCycles * clock);
+    if (!busIdle.scheduled()) {
+        busIdle.schedule(tickNextIdle);
+    } else {
+        busIdle.reschedule(tickNextIdle);
+    }
+    DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n",
+            curTick, tickNextIdle);
+
+    // The bus will become idle once the current packet is delivered.
+    pkt->finishTime = tickNextIdle;
+}
 
 /** Function called by the port when the bus is receiving a Timing
  * transaction.*/
@@ -77,17 +144,40 @@ Bus::recvTiming(Packet *pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
+    BusPort *pktPort;
+    if (pkt->getSrc() == defaultId)
+        pktPort = defaultPort;
+    else pktPort = interfaces[pkt->getSrc()];
+
+    // If the bus is busy, or other devices are in line ahead of the current
+    // one, put this device on the retry list.
+    if (tickNextIdle > curTick ||
+            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
+        addToRetryList(pktPort);
+        return false;
+    }
+
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        if ( timingSnoopPhase1(pkt) )
-        {
-            timingSnoopPhase2(pkt);
+        if (timingSnoop(pkt)) {
+            pkt->flags |= SNOOP_COMMIT;
+            bool success = timingSnoop(pkt);
+            assert(success);
+            if (pkt->flags & SATISFIED) {
+                //Cache-Cache transfer occuring
+                if (inRetry) {
+                    retryList.front()->onRetryList(false);
+                    retryList.pop_front();
+                    inRetry = false;
+                }
+                occupyBus(pkt);
+                return true;
+            }
             port = findPort(pkt->getAddr(), pkt->getSrc());
-        }
-        else
-        {
+        } else {
             //Snoop didn't succeed
-            retryList.push_back(interfaces[pkt->getSrc()]);
+            DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+            addToRetryList(pktPort);
             return false;
         }
     } else {
@@ -95,34 +185,59 @@ Bus::recvTiming(Packet *pkt)
         assert(dest != pkt->getSrc()); // catch infinite loops
         port = interfaces[dest];
     }
+
+    occupyBus(pkt);
+
     if (port->sendTiming(pkt))  {
-        // packet was successfully sent, just return true.
+        // Packet was successfully sent. Return true.
+        // Also take care of retries
+        if (inRetry) {
+            DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
+            retryList.front()->onRetryList(false);
+            retryList.pop_front();
+            inRetry = false;
+        }
         return true;
     }
 
-    // packet not successfully sent
-    retryList.push_back(interfaces[pkt->getSrc()]);
+    // Packet not successfully sent. Leave or put it on the retry list.
+    DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+    addToRetryList(pktPort);
     return false;
 }
 
 void
 Bus::recvRetry(int id)
 {
-    // Go through all the elements on the list calling sendRetry on each
-    // This is not very efficient at all but it works. Ultimately we should end
-    // up with something that is more intelligent.
-    int initialSize = retryList.size();
-    int i;
-    Port *p;
+    DPRINTF(Bus, "Received a retry\n");
+    // If there's anything waiting, and the bus isn't busy...
+    if (retryList.size() && curTick >= tickNextIdle) {
+        //retryingPort = retryList.front();
+        inRetry = true;
+        DPRINTF(Bus, "Sending a retry\n");
+        retryList.front()->sendRetry();
+        // If inRetry is still true, sendTiming wasn't called
+        if (inRetry)
+        {
+            retryList.front()->onRetryList(false);
+            retryList.pop_front();
+            inRetry = false;
 
-    for (i = 0; i < initialSize; i++) {
-        assert(retryList.size() > 0);
-        p = retryList.front();
-        retryList.pop_front();
-        p->sendRetry();
+            //Bring tickNextIdle up to the present
+            while (tickNextIdle < curTick)
+                tickNextIdle += clock;
+
+            //Burn a cycle for the missed grant.
+            tickNextIdle += clock;
+
+            if (!busIdle.scheduled()) {
+                busIdle.schedule(tickNextIdle);
+            } else {
+                busIdle.reschedule(tickNextIdle);
+            }
+        }
     }
 }
-
 
 Port *
 Bus::findPort(Addr addr, int id)
@@ -174,63 +289,59 @@ Bus::findSnoopPorts(Addr addr, int id)
             //Careful  to not overlap ranges
             //or snoop will be called more than once on the port
             ports.push_back(portSnoopList[i].portId);
-            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
-                    portSnoopList[i].portId);
+//            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
+//                    portSnoopList[i].portId);
         }
         i++;
     }
     return ports;
 }
 
-void
+Tick
 Bus::atomicSnoop(Packet *pkt)
+{
+    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+    Tick response_time = 0;
+
+    while (!ports.empty())
+    {
+        Tick response = interfaces[ports.back()]->sendAtomic(pkt);
+        if (response) {
+            assert(!response_time);  //Multiple responders
+            response_time = response;
+        }
+        ports.pop_back();
+    }
+    return response_time;
+}
+
+void
+Bus::functionalSnoop(Packet *pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
     while (!ports.empty())
     {
-        interfaces[ports.back()]->sendAtomic(pkt);
+        interfaces[ports.back()]->sendFunctional(pkt);
         ports.pop_back();
     }
 }
 
 bool
-Bus::timingSnoopPhase1(Packet *pkt)
+Bus::timingSnoop(Packet *pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     bool success = true;
 
     while (!ports.empty() && success)
     {
-        snoopCallbacks.push_back(ports.back());
         success = interfaces[ports.back()]->sendTiming(pkt);
         ports.pop_back();
     }
-    if (!success)
-    {
-        while (!snoopCallbacks.empty())
-        {
-            interfaces[snoopCallbacks.back()]->sendStatusChange(Port::SnoopSquash);
-            snoopCallbacks.pop_back();
-        }
-        return false;
-    }
-    return true;
+
+    return success;
 }
 
-void
-Bus::timingSnoopPhase2(Packet *pkt)
-{
-    bool success;
-    pkt->flags |= SNOOP_COMMIT;
-    while (!snoopCallbacks.empty())
-    {
-        success = interfaces[snoopCallbacks.back()]->sendTiming(pkt);
-        //We should not fail on snoop callbacks
-        assert(success);
-        snoopCallbacks.pop_back();
-    }
-}
 
 /** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
@@ -240,8 +351,11 @@ Bus::recvAtomic(Packet *pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    atomicSnoop(pkt);
-    return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
+    Tick snoopTime = atomicSnoop(pkt);
+    if (snoopTime)
+        return snoopTime;  //Snoop satisfies it
+    else
+        return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
 }
 
 /** Function called by the port when the bus is receiving a Functional
@@ -252,6 +366,7 @@ Bus::recvFunctional(Packet *pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    functionalSnoop(pkt);
     findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
 }
 
@@ -280,7 +395,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         }
     } else {
 
-        assert((id < interfaces.size() && id >= 0) || id == -1);
+        assert((id < interfaces.size() && id >= 0) || id == defaultId);
         Port *port = interfaces[id];
         std::vector<DevMap>::iterator portIter;
         std::vector<DevMap>::iterator snoopIter;
@@ -380,16 +495,20 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
     Param<int> bus_id;
+    Param<int> clock;
+    Param<int> width;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
-    INIT_PARAM(bus_id, "a globally unique bus id")
+    INIT_PARAM(bus_id, "a globally unique bus id"),
+    INIT_PARAM(clock, "bus clock speed"),
+    INIT_PARAM(width, "width of the bus (bits)")
 END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName(), bus_id);
+    return new Bus(getInstanceName(), bus_id, clock, width);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)

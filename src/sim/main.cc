@@ -317,8 +317,8 @@ simulate(Tick num_cycles = -1)
     else
         num_cycles = curTick + num_cycles;
 
-    Event *limit_event = new SimLoopExitEvent(num_cycles,
-                                              "simulate() limit reached");
+    Event *limit_event = schedExitSimLoop("simulate() limit reached",
+                                          num_cycles);
 
     while (1) {
         // there should always be at least one event (the SimLoopExitEvent
@@ -414,7 +414,12 @@ unserializeAll(const std::string &cpt_dir)
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */
-CallbackQueue exitCallbacks;
+CallbackQueue&
+exitCallbacks()
+{
+    static CallbackQueue theQueue;
+    return theQueue;
+}
 
 /**
  * Register an exit callback.
@@ -422,7 +427,7 @@ CallbackQueue exitCallbacks;
 void
 registerExitCallback(Callback *callback)
 {
-    exitCallbacks.add(callback);
+    exitCallbacks().add(callback);
 }
 
 BaseCPU *
@@ -442,8 +447,8 @@ convertToBaseCPUPtr(SimObject *obj)
 void
 doExitCleanup()
 {
-    exitCallbacks.process();
-    exitCallbacks.clear();
+    exitCallbacks().process();
+    exitCallbacks().clear();
 
     cout.flush();
 

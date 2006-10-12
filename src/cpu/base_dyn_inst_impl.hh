@@ -193,7 +193,7 @@ BaseDynInst<Impl>::prefetch(Addr addr, unsigned flags)
     // note this is a local, not BaseDynInst::fault
     Fault trans_fault = cpu->translateDataReadReq(req);
 
-    if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
+    if (trans_fault == NoFault && !(req->isUncacheable())) {
         // It's a valid address to cacheable space.  Record key MemReq
         // parameters so we can generate another one just like it for
         // the timing access without calling translate() again (which

@@ -103,6 +103,7 @@ class Cache : public BaseCache
       * Used to append to target list, to cause an invalidation.
       */
     Packet * invalidatePkt;
+    Request *invalidateReq;
 
     /**
      * Temporarily move a block into a MSHR.
@@ -175,7 +176,7 @@ class Cache : public BaseCache
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    virtual void sendResult(Packet * &pkt, bool success);
+    virtual void sendResult(Packet * &pkt, MSHR* mshr, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
@@ -251,7 +252,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick probe(Packet * &pkt, bool update);
+    Tick probe(Packet * &pkt, bool update, CachePort * otherSidePort);
 
     /**
      * Snoop for the provided request in the cache and return the estimated
@@ -262,7 +263,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick snoopProbe(Packet * &pkt, bool update);
+    Tick snoopProbe(Packet * &pkt);
 };
 
 #endif // __CACHE_HH__

@@ -600,6 +600,11 @@ template<class Impl>
 void
 DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
 {
+    // This function should not be called after writebackInsts in a
+    // single cycle.  That will cause problems with an instruction
+    // being added to the queue to commit without being processed by
+    // writebackInsts prior to being sent to commit.
+
     // First check the time slot that this instruction will write
     // to.  If there are free write ports at the time, then go ahead
     // and write the instruction to that time.  If there are not,
@@ -1286,6 +1291,7 @@ DefaultIEW<Impl>::executeInsts()
                 } else if (fault != NoFault) {
                     // If the instruction faulted, then we need to send it along to commit
                     // without the instruction completing.
+                    DPRINTF(IEW, "Store has fault! [sn:%lli]\n", inst->seqNum);
 
                     // Send this instruction to commit, also make sure iew stage
                     // realizes there is activity.

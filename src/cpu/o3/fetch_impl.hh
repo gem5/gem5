@@ -63,7 +63,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("DefaultFetch doesn't expect recvFunctional callback!");
+    warn("Default fetch doesn't update it's state from a functional call.");
 }
 
 template<class Impl>
@@ -599,7 +599,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     if (fault == NoFault) {
 #if 0
         if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
-            memReq[tid]->flags & UNCACHEABLE) {
+            memReq[tid]->isUncacheable()) {
             DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path)!",
                     memReq[tid]->paddr);
@@ -623,6 +623,11 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
         // Now do the timing access to see whether or not the instruction
         // exists within the cache.
         if (!icachePort->sendTiming(data_pkt)) {
+            if (data_pkt->result == Packet::BadAddress) {
+                fault = TheISA::genMachineCheckFault();
+                delete mem_req;
+                memReq[tid] = NULL;
+            }
             assert(retryPkt == NULL);
             assert(retryTid == -1);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);

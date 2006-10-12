@@ -271,7 +271,7 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     }
 
     Packet::Command writeToSharedCmd = doUpgrades ? Packet::UpgradeReq : Packet::ReadExReq;
-    Packet::Command writeToSharedResp = doUpgrades ? Packet::UpgradeResp : Packet::ReadExResp;
+    Packet::Command writeToSharedResp = doUpgrades ? Packet::UpgradeReq : Packet::ReadExResp;
 
 //@todo add in hardware prefetch to this list
     if (protocol == "msi") {

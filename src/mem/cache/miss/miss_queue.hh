@@ -256,7 +256,7 @@ class MissQueue
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(Packet * &pkt);
+    void markInService(Packet * &pkt, MSHR* mshr);
 
     /**
      * Collect statistics and free resources of a satisfied pktuest.

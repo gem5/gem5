@@ -128,6 +128,7 @@ MSHR*
 MSHRQueue::allocate(Packet * &pkt, int size)
 {
     Addr aligned_addr = pkt->getAddr() & ~((Addr)size - 1);
+    assert(!freeList.empty());
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
@@ -212,8 +213,13 @@ void
 MSHRQueue::markInService(MSHR* mshr)
 {
     //assert(mshr == pendingList.front());
-    if (!mshr->pkt->needsResponse()) {
+    if (!(mshr->pkt->needsResponse() || mshr->pkt->cmd == Packet::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
+        if ((mshr->pkt->flags & SATISFIED) && (mshr->pkt->cmd == Packet::Writeback)) {
+            //Writeback hit, so delete it
+            //otherwise the consumer will delete it
+            delete mshr->pkt->req;
+        }
         deallocate(mshr);
         return;
     }
@@ -251,7 +257,7 @@ MSHRQueue::squash(int threadNum)
                 Packet * target = mshr->getTarget();
                 mshr->popTarget();
 
-                assert(target->req->getThreadNum() == threadNum);
+                assert(0/*target->req->getThreadNum()*/ == threadNum);
                 target = NULL;
             }
             assert(!mshr->hasTargets());

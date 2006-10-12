@@ -232,9 +232,11 @@ class Request
     Addr getPC() { assert(validPC); return pc; }
 
     /** Accessor Function to Check Cacheability. */
-    bool isUncacheable() { return getFlags() & UNCACHEABLE; }
+    bool isUncacheable() { return (getFlags() & UNCACHEABLE) != 0; }
 
-    bool isInstRead() { return getFlags() & INST_READ; }
+    bool isInstRead() { return (getFlags() & INST_READ) != 0; }
+
+    bool isLocked() { return (getFlags() & LOCKED) != 0; }
 
     friend class Packet;
 };

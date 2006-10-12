@@ -34,7 +34,7 @@ import FSConfig
 AlphaConsole.cpu = Parent.cpu[0]
 IntrControl.cpu = Parent.cpu[0]
 
-cpus = [ TimingSimpleCPU() for i in xrange(2) ]
+cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
 system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpus
 for c in cpus:

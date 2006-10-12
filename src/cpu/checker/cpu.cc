@@ -175,7 +175,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
 
     pkt->dataStatic(&data);
 
-    if (!(memReq->getFlags() & UNCACHEABLE)) {
+    if (!(memReq->isUncacheable())) {
         // Access memory to see if we have the same data
         dcachePort->sendFunctional(pkt);
     } else {
@@ -251,9 +251,9 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // This is because the LSQ would have to be snooped in the CPU to
     // verify this data.
     if (unverifiedReq &&
-        !(unverifiedReq->getFlags() & UNCACHEABLE) &&
-        (!(unverifiedReq->getFlags() & LOCKED) ||
-         ((unverifiedReq->getFlags() & LOCKED) &&
+        !(unverifiedReq->isUncacheable()) &&
+        (!(unverifiedReq->isLocked()) ||
+         ((unverifiedReq->isLocked()) &&
           unverifiedReq->getScResult() == 1))) {
         T inst_data;
 /*

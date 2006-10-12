@@ -11,10 +11,11 @@ class BaseCPU(SimObject):
     mem = Param.MemObject("memory")
 
     system = Param.System(Parent.any, "system object")
+    cpu_id = Param.Int("CPU identifier")
+
     if build_env['FULL_SYSTEM']:
         dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
-        cpu_id = Param.Int(-1, "CPU identifier")
     else:
         workload = VectorParam.Process("processes to run")
 

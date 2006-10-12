@@ -123,12 +123,12 @@ BlockingBuffer::restoreOrigCmd(Packet * &pkt)
 }
 
 void
-BlockingBuffer::markInService(Packet * &pkt)
+BlockingBuffer::markInService(Packet * &pkt, MSHR* mshr)
 {
     if (!pkt->isCacheFill() && pkt->isWrite()) {
         // Forwarding a write/ writeback, don't need to change
         // the command
-        assert((MSHR*)pkt->senderState == &wb);
+        assert(mshr == &wb);
         cache->clearMasterRequest(Request_WB);
         if (!pkt->needsResponse()) {
             assert(wb.getNumTargets() == 0);
@@ -138,7 +138,7 @@ BlockingBuffer::markInService(Packet * &pkt)
             wb.inService = true;
         }
     } else {
-        assert((MSHR*)pkt->senderState == &miss);
+        assert(mshr == &miss);
         cache->clearMasterRequest(Request_MSHR);
         if (!pkt->needsResponse()) {
             assert(miss.getNumTargets() == 0);
@@ -189,7 +189,7 @@ BlockingBuffer::squash(int threadNum)
     if (miss.threadNum == threadNum) {
         Packet * target = miss.getTarget();
         miss.popTarget();
-        assert(target->req->getThreadNum() == threadNum);
+        assert(0/*target->req->getThreadNum()*/ == threadNum);
         target = NULL;
         assert(!miss.hasTargets());
         miss.ntargets=0;
@@ -218,7 +218,7 @@ BlockingBuffer::doWriteback(Addr addr,
     }
 
     ///All writebacks charged to same thread @todo figure this out
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     wb.allocateAsBuffer(pkt);
     cache->setMasterRequest(Request_WB, curTick);
@@ -230,7 +230,7 @@ BlockingBuffer::doWriteback(Addr addr,
 void
 BlockingBuffer::doWriteback(Packet * &pkt)
 {
-    writebacks[pkt->req->getThreadNum()]++;
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     wb.allocateAsBuffer(pkt);
 

@@ -492,7 +492,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // A bit of a hackish way to get uncached accesses to work only if they're
     // at the head of the LSQ and are ready to commit (at the head of the ROB
     // too).
-    if (req->getFlags() & UNCACHEABLE &&
+    if (req->isUncacheable() &&
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
@@ -509,7 +509,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             load_idx, store_idx, storeHead, req->getPaddr());
 
 #if FULL_SYSTEM
-    if (req->getFlags() & LOCKED) {
+    if (req->isLocked()) {
         cpu->lockAddr = req->getPaddr();
         cpu->lockFlag = true;
     }
@@ -626,18 +626,30 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
 
     ++usedPorts;
 
-    PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
-    data_pkt->dataStatic(load_inst->memData);
-
-    LSQSenderState *state = new LSQSenderState;
-    state->isLoad = true;
-    state->idx = load_idx;
-    state->inst = load_inst;
-    data_pkt->senderState = state;
-
     // if we the cache is not blocked, do cache access
     if (!lsq->cacheBlocked()) {
+        PacketPtr data_pkt =
+            new Packet(req, Packet::ReadReq, Packet::Broadcast);
+        data_pkt->dataStatic(load_inst->memData);
+
+        LSQSenderState *state = new LSQSenderState;
+        state->isLoad = true;
+        state->idx = load_idx;
+        state->inst = load_inst;
+        data_pkt->senderState = state;
+
         if (!dcachePort->sendTiming(data_pkt)) {
+            Packet::Result result = data_pkt->result;
+
+            // Delete state and data packet because a load retry
+            // initiates a pipeline restart; it does not retry.
+            delete state;
+            delete data_pkt;
+
+            if (result == Packet::BadAddress) {
+                return TheISA::genMachineCheckFault();
+            }
+
             // If the access didn't succeed, tell the LSQ by setting
             // the retry thread id.
             lsq->setRetryTid(lsqID);
@@ -662,16 +674,6 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
         blockedLoadSeqNum = load_inst->seqNum;
         // No fault occurred, even though the interface is blocked.
         return NoFault;
-    }
-
-    if (data_pkt->result != Packet::Success) {
-        DPRINTF(LSQUnit, "LSQUnit: D-cache miss!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
-                load_inst->seqNum);
-    } else {
-        DPRINTF(LSQUnit, "LSQUnit: D-cache hit!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
-                load_inst->seqNum);
     }
 
     return NoFault;

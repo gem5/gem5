@@ -35,31 +35,36 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "mem/functional/functional.hh"
-#include "mem/mem_interface.hh"
+//#include "mem/functional/functional.hh"
+//#include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
 
-class ThreadContext;
-class MemTest : public SimObject
+class Packet;
+class MemTest : public MemObject
 {
   public:
 
     MemTest(const std::string &name,
-            MemInterface *_cache_interface,
-            FunctionalMemory *main_mem,
-            FunctionalMemory *check_mem,
+//	    MemInterface *_cache_interface,
+//	    PhysicalMemory *main_mem,
+//	    PhysicalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
-            unsigned _percentCopies,
+//	    unsigned _percentCopies,
             unsigned _percentUncacheable,
             unsigned _progressInterval,
             unsigned _percentSourceUnaligned,
             unsigned _percentDestUnaligned,
             Addr _traceAddr,
-            Counter _max_loads);
+            Counter _max_loads,
+            bool _atomic);
+
+    virtual void init();
 
     // register statistics
     virtual void regStats();
@@ -68,6 +73,8 @@ class MemTest : public SimObject
 
     // main simulation loop (one cycle)
     void tick();
+
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
   protected:
     class TickEvent : public Event
@@ -82,16 +89,62 @@ class MemTest : public SimObject
     };
 
     TickEvent tickEvent;
+    class CpuPort : public Port
+    {
 
-    MemInterface *cacheInterface;
-    FunctionalMemory *mainMem;
-    FunctionalMemory *checkMem;
-    SimpleThread *thread;
+        MemTest *memtest;
+
+      public:
+
+        CpuPort(const std::string &_name, MemTest *_memtest)
+            : Port(_name), memtest(_memtest)
+        { }
+
+      protected:
+
+        virtual bool recvTiming(Packet *pkt);
+
+        virtual Tick recvAtomic(Packet *pkt);
+
+        virtual void recvFunctional(Packet *pkt);
+
+        virtual void recvStatusChange(Status status);
+
+        virtual void recvRetry();
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+            AddrRangeList &snoop)
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
+    };
+
+    CpuPort cachePort;
+    CpuPort funcPort;
+
+    class MemTestSenderState : public Packet::SenderState
+    {
+      public:
+        /** Constructor. */
+        MemTestSenderState(uint8_t *_data)
+            : data(_data)
+        { }
+
+        // Hold onto data pointer
+        uint8_t *data;
+    };
+
+//    Request *dataReq;
+    Packet  *retryPkt;
+//    MemInterface *cacheInterface;
+//    PhysicalMemory *mainMem;
+//    PhysicalMemory *checkMem;
+//    SimpleThread *thread;
+
+    bool accessRetry;
 
     unsigned size;		// size of testing memory region
 
     unsigned percentReads;	// target percentage of read accesses
-    unsigned percentCopies;	// target percentage of copy accesses
+//    unsigned percentCopies;	// target percentage of copy accesses
     unsigned percentUncacheable;
 
     int id;
@@ -123,34 +176,21 @@ class MemTest : public SimObject
 
     uint64_t numReads;
     uint64_t maxLoads;
+
+    bool atomic;
+
     Stats::Scalar<> numReadsStat;
     Stats::Scalar<> numWritesStat;
     Stats::Scalar<> numCopiesStat;
 
     // called by MemCompleteEvent::process()
-    void completeRequest(MemReqPtr &req, uint8_t *data);
+    void completeRequest(Packet *pkt);
+
+    void sendPkt(Packet *pkt);
+
+    void doRetry();
 
     friend class MemCompleteEvent;
-};
-
-
-class MemCompleteEvent : public Event
-{
-    MemReqPtr req;
-    uint8_t *data;
-    MemTest *tester;
-
-  public:
-
-    MemCompleteEvent(MemReqPtr &_req, uint8_t *_data, MemTest *_tester)
-        : Event(&mainEventQueue),
-          req(_req), data(_data), tester(_tester)
-    {
-    }
-
-    void process();
-
-    virtual const char *description();
 };
 
 #endif // __CPU_MEMTEST_MEMTEST_HH__

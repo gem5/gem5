@@ -231,7 +231,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
         }
     }
 /*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+    if (!dcacheInterface && (memReq->isUncacheable()))
         recordEvent("Uncached Read");
 */
     return fault;
@@ -243,7 +243,7 @@ Fault
 InorderBackEnd<Impl>::read(MemReqPtr &req, T &data)
 {
 #if FULL_SYSTEM && defined(TARGET_ALPHA)
-    if (req->flags & LOCKED) {
+    if (req->isLocked()) {
         req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
         req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
     }
@@ -291,7 +291,7 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (res && (fault == NoFault))
         *res = memReq->result;
 /*
-    if (!dcacheInterface && (memReq->flags & UNCACHEABLE))
+    if (!dcacheInterface && (memReq->isUncacheable()))
         recordEvent("Uncached Write");
 */
     return fault;
@@ -306,10 +306,10 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data)
     ExecContext *xc;
 
     // If this is a store conditional, act appropriately
-    if (req->flags & LOCKED) {
+    if (req->isLocked()) {
         xc = req->xc;
 
-        if (req->flags & UNCACHEABLE) {
+        if (req->isUncacheable()) {
             // Don't update result register (see stq_c in isa_desc)
             req->result = 2;
             xc->setStCondFailures(0);//Needed? [RGD]
@@ -391,7 +391,7 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     }
 
 /*
-    if (!dcacheInterface && (req->flags & UNCACHEABLE))
+    if (!dcacheInterface && (req->isUncacheable()))
         recordEvent("Uncached Read");
 */
     return NoFault;
@@ -455,8 +455,8 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         }
     }
 /*
-    if (req->flags & LOCKED) {
-        if (req->flags & UNCACHEABLE) {
+    if (req->isLocked()) {
+        if (req->isUncacheable()) {
             // Don't update result register (see stq_c in isa_desc)
             req->result = 2;
         } else {
@@ -469,7 +469,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         *res = req->result;
         */
 /*
-    if (!dcacheInterface && (req->flags & UNCACHEABLE))
+    if (!dcacheInterface && (req->isUncacheable()))
         recordEvent("Uncached Write");
 */
     return NoFault;

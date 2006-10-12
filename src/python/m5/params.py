@@ -804,7 +804,7 @@ class PortRef(object):
         newRef.simobj = simobj
         assert(isSimObject(newRef.simobj))
         if self.peer and not proxy.isproxy(self.peer):
-            peerObj = memo[self.peer.simobj]
+            peerObj = self.peer.simobj(_memo=memo)
             newRef.peer = self.peer.clone(peerObj, memo)
             assert(not isinstance(newRef.peer, VectorPortRef))
         return newRef

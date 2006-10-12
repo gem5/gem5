@@ -49,10 +49,14 @@ parser.add_option("--dual", action="store_true",
 parser.add_option("-b", "--benchmark", action="store", type="string",
                   dest="benchmark",
                   help="Specify the benchmark to run. Available benchmarks: %s"\
-                          % DefinedBenchmarks)
+                  % DefinedBenchmarks)
 parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
-                  help="Specify the filename to dump a pcap capture of the ethernet"
-                  "traffic")
+                  help="Specify the filename to dump a pcap capture of the" \
+                  "ethernet traffic")
+parser.add_option("--checkpoint_dir", action="store", type="string",
+                  help="Place all checkpoints in this absolute directory")
+parser.add_option("-c", "--checkpoint", action="store", type="int",
+                  help="restore from checkpoint <N>")
 
 (options, args) = parser.parse_args()
 
@@ -61,8 +65,8 @@ if args:
     sys.exit(1)
 
 if options.detailed:
-    cpu = DetailedO3CPU()
-    cpu2 = DetailedO3CPU()
+    cpu = DerivO3CPU()
+    cpu2 = DerivO3CPU()
     mem_mode = 'timing'
 elif options.timing:
     cpu = TimingSimpleCPU()
@@ -75,6 +79,8 @@ else:
 
 cpu.clock = '2GHz'
 cpu2.clock = '2GHz'
+cpu.cpu_id = 0
+cpu2.cpu_id = 0
 
 if options.benchmark:
     if options.benchmark not in Benchmarks:
@@ -111,6 +117,31 @@ else:
 
 m5.instantiate(root)
 
+if options.checkpoint:
+    from os.path import isdir
+    from os import listdir, getcwd
+    import re
+    if options.checkpoint_dir:
+        cptdir = options.checkpoint_dir
+    else:
+        cptdir = getcwd()
+
+    if not isdir(cptdir):
+        m5.panic("checkpoint dir %s does not exist!" % cptdir)
+
+    dirs = listdir(cptdir)
+    expr = re.compile('cpt.([0-9]*)')
+    cpts = []
+    for dir in dirs:
+        match = expr.match(dir)
+        if match:
+            cpts.append(match.group(1))
+
+    if options.checkpoint > len(cpts):
+        m5.panic('Checkpoint %d not found' % options.checkpoint)
+
+    m5.restoreCheckpoint(root, "/".join([cptdir, "cpt.%s" % cpts[options.checkpoint - 1]]))
+
 if options.maxtick:
     maxtick = options.maxtick
 elif options.maxtime:
@@ -123,7 +154,14 @@ else:
 exit_event = m5.simulate(maxtick)
 
 while exit_event.getCause() == "checkpoint":
-    m5.checkpoint(root, "cpt.%d")
-    exit_event = m5.simulate(maxtick - m5.curTick())
+    if options.checkpoint_dir:
+        m5.checkpoint(root, "/".join([options.checkpoint_dir, "cpt.%d"]))
+    else:
+        m5.checkpoint(root, "cpt.%d")
+
+    if maxtick == -1:
+        exit_event = m5.simulate(maxtick)
+    else:
+        exit_event = m5.simulate(maxtick - m5.curTick())
 
 print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()

@@ -28,6 +28,7 @@
  * Authors: Steve Reinhardt
  */
 
+#include "arch/locked_mem.hh"
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/timing.hh"
@@ -73,7 +74,8 @@ TimingSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 void
 TimingSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
 {
-    panic("TimingSimpleCPU doesn't expect recvFunctional callback!");
+    //No internal storage to update, jusst return
+    return;
 }
 
 void
@@ -94,12 +96,14 @@ TimingSimpleCPU::CpuPort::TickEvent::schedule(Packet *_pkt, Tick t)
 }
 
 TimingSimpleCPU::TimingSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
+    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock),
+      cpu_id(p->cpu_id)
 {
     _status = Idle;
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
     fetchEvent = NULL;
+    previousTick = 0;
     changeState(SimObject::Running);
 }
 
@@ -158,6 +162,7 @@ TimingSimpleCPU::resume()
 
     assert(system->getMemoryMode() == System::Timing);
     changeState(SimObject::Running);
+    previousTick = curTick;
 }
 
 void
@@ -165,6 +170,7 @@ TimingSimpleCPU::switchOut()
 {
     assert(status() == Running || status() == Idle);
     _status = SwitchedOut;
+    numCycles += curTick - previousTick;
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
@@ -187,6 +193,27 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
             break;
         }
     }
+
+    if (_status != Running) {
+        _status = Idle;
+    }
+
+    Port *peer;
+    if (icachePort.getPeer() == NULL) {
+        peer = oldCPU->getPort("icache_port")->getPeer();
+        icachePort.setPeer(peer);
+    } else {
+        peer = icachePort.getPeer();
+    }
+    peer->setPeer(&icachePort);
+
+    if (dcachePort.getPeer() == NULL) {
+        peer = oldCPU->getPort("dcache_port")->getPeer();
+        dcachePort.setPeer(peer);
+    } else {
+        peer = dcachePort.getPeer();
+    }
+    peer->setPeer(&dcachePort);
 }
 
 
@@ -227,35 +254,35 @@ template <class T>
 Fault
 TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    // need to fill in CPU & thread IDs here
-    Request *data_read_req = new Request();
-    data_read_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
-    data_read_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    Request *req =
+        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
+                    cpu_id, /* thread ID */ 0);
 
     if (traceData) {
-        traceData->setAddr(data_read_req->getVaddr());
+        traceData->setAddr(req->getVaddr());
     }
 
    // translate to physical address
-    Fault fault = thread->translateDataReadReq(data_read_req);
+    Fault fault = thread->translateDataReadReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_read_pkt =
-            new Packet(data_read_req, Packet::ReadReq, Packet::Broadcast);
-        data_read_pkt->dataDynamic<T>(new T);
+        Packet *pkt =
+            new Packet(req, Packet::ReadReq, Packet::Broadcast);
+        pkt->dataDynamic<T>(new T);
 
-        if (!dcachePort.sendTiming(data_read_pkt)) {
+        if (!dcachePort.sendTiming(pkt)) {
             _status = DcacheRetry;
-            dcache_pkt = data_read_pkt;
+            dcache_pkt = pkt;
         } else {
             _status = DcacheWaitResponse;
+            // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
     }
 
     // This will need a new way to tell if it has a dcache attached.
-    if (data_read_req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Read");
 
     return fault;
@@ -308,31 +335,39 @@ template <class T>
 Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    // need to fill in CPU & thread IDs here
-    Request *data_write_req = new Request();
-    data_write_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
-    data_write_req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+    Request *req =
+        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
+                    cpu_id, /* thread ID */ 0);
 
     // translate to physical address
-    Fault fault = thread->translateDataWriteReq(data_write_req);
+    Fault fault = thread->translateDataWriteReq(req);
+
     // Now do the access.
     if (fault == NoFault) {
-        Packet *data_write_pkt =
-            new Packet(data_write_req, Packet::WriteReq, Packet::Broadcast);
-        data_write_pkt->allocate();
-        data_write_pkt->set(data);
+        assert(dcache_pkt == NULL);
+        dcache_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        dcache_pkt->allocate();
+        dcache_pkt->set(data);
 
-        if (!dcachePort.sendTiming(data_write_pkt)) {
-            _status = DcacheRetry;
-            dcache_pkt = data_write_pkt;
-        } else {
-            _status = DcacheWaitResponse;
-            dcache_pkt = NULL;
+        bool do_access = true;  // flag to suppress cache access
+
+        if (req->isLocked()) {
+            do_access = TheISA::handleLockedWrite(thread, req);
+        }
+
+        if (do_access) {
+            if (!dcachePort.sendTiming(dcache_pkt)) {
+                _status = DcacheRetry;
+            } else {
+                _status = DcacheWaitResponse;
+                // memory system takes ownership of packet
+                dcache_pkt = NULL;
+            }
         }
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
-    if (data_write_req->getFlags() & UNCACHEABLE)
+    if (req->isUncacheable())
         recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
@@ -392,9 +427,8 @@ TimingSimpleCPU::fetch()
 {
     checkForInterrupts();
 
-    // need to fill in CPU & thread IDs here
     Request *ifetch_req = new Request();
-    ifetch_req->setThreadContext(0,0); //Need CPU/Thread IDS HERE
+    ifetch_req->setThreadContext(cpu_id, /* thread ID */ 0);
     Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
@@ -414,6 +448,9 @@ TimingSimpleCPU::fetch()
         // fetch fault: advance directly to next instruction (fault handler)
         advanceInst(fault);
     }
+
+    numCycles += curTick - previousTick;
+    previousTick = curTick;
 }
 
 
@@ -444,6 +481,9 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     delete pkt->req;
     delete pkt;
 
+    numCycles += curTick - previousTick;
+    previousTick = curTick;
+
     if (getState() == SimObject::Draining) {
         completeDrain();
         return;
@@ -453,12 +493,20 @@ TimingSimpleCPU::completeIfetch(Packet *pkt)
     if (curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
         // load or store: just send to dcache
         Fault fault = curStaticInst->initiateAcc(this, traceData);
-        if (fault == NoFault) {
-            // successfully initiated access: instruction will
-            // complete in dcache response callback
-            assert(_status == DcacheWaitResponse);
+        if (_status != Running) {
+            // instruction will complete in dcache response callback
+            assert(_status == DcacheWaitResponse || _status == DcacheRetry);
+            assert(fault == NoFault);
         } else {
-            // fault: complete now to invoke fault handler
+            if (fault == NoFault) {
+                // early fail on store conditional: complete now
+                assert(dcache_pkt != NULL);
+                fault = curStaticInst->completeAcc(dcache_pkt, this,
+                                                   traceData);
+                delete dcache_pkt->req;
+                delete dcache_pkt;
+                dcache_pkt = NULL;
+            }
             postExecute();
             advanceInst(fault);
         }
@@ -479,8 +527,7 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    // These next few lines could be replaced with something faster
-    // who knows what though
+    // delay processing of returned data until next CPU clock edge
     Tick time = pkt->req->getTime();
     while (time < curTick)
         time += lat;
@@ -516,21 +563,27 @@ TimingSimpleCPU::completeDataAccess(Packet *pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
-    if (getState() == SimObject::Draining) {
-        completeDrain();
-
-        delete pkt->req;
-        delete pkt;
-
-        return;
-    }
+    numCycles += curTick - previousTick;
+    previousTick = curTick;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
+
+    if (pkt->isRead() && pkt->req->isLocked()) {
+        TheISA::handleLockedRead(thread, pkt->req);
+    }
 
     delete pkt->req;
     delete pkt;
 
     postExecute();
+
+    if (getState() == SimObject::Draining) {
+        advancePC(fault);
+        completeDrain();
+
+        return;
+    }
+
     advanceInst(fault);
 }
 
@@ -546,6 +599,7 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
 {
+    // delay processing of returned data until next CPU clock edge
     Tick time = pkt->req->getTime();
     while (time < curTick)
         time += lat;
@@ -574,6 +628,7 @@ TimingSimpleCPU::DcachePort::recvRetry()
     Packet *tmp = cpu->dcache_pkt;
     if (sendTiming(tmp)) {
         cpu->_status = DcacheWaitResponse;
+        // memory system takes ownership of packet
         cpu->dcache_pkt = NULL;
     }
 }
@@ -592,11 +647,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Tick> progress_interval;
     SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
+    Param<int> cpu_id;
 
 #if FULL_SYSTEM
     SimObjectParam<AlphaITB *> itb;
     SimObjectParam<AlphaDTB *> dtb;
-    Param<int> cpu_id;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -625,11 +680,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     INIT_PARAM(progress_interval, "Progress interval"),
     INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
+    INIT_PARAM(cpu_id, "processor ID"),
 
 #if FULL_SYSTEM
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(profile, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
@@ -661,11 +716,11 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->functionTraceStart = function_trace_start;
     params->mem = mem;
     params->system = system;
+    params->cpu_id = cpu_id;
 
 #if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
-    params->cpu_id = cpu_id;
     params->profile = profile;
 #else
     params->process = workload;

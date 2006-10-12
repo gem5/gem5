@@ -78,6 +78,68 @@ class PhysicalMemory : public MemObject
     const PhysicalMemory &operator=(const PhysicalMemory &specmem);
 
   protected:
+
+    class LockedAddr {
+      public:
+        // on alpha, minimum LL/SC granularity is 16 bytes, so lower
+        // bits need to masked off.
+        static const Addr Addr_Mask = 0xf;
+
+        static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
+
+        Addr addr; 	// locked address
+        int cpuNum;	// locking CPU
+        int threadNum;	// locking thread ID within CPU
+
+        // check for matching execution context
+        bool matchesContext(Request *req)
+        {
+            return (cpuNum == req->getCpuNum() &&
+                    threadNum == req->getThreadNum());
+        }
+
+        LockedAddr(Request *req)
+            : addr(mask(req->getPaddr())),
+              cpuNum(req->getCpuNum()),
+              threadNum(req->getThreadNum())
+        {
+        }
+    };
+
+    std::list<LockedAddr> lockedAddrList;
+
+    // helper function for checkLockedAddrs(): we really want to
+    // inline a quick check for an empty locked addr list (hopefully
+    // the common case), and do the full list search (if necessary) in
+    // this out-of-line function
+    bool checkLockedAddrList(Request *req);
+
+    // Record the address of a load-locked operation so that we can
+    // clear the execution context's lock flag if a matching store is
+    // performed
+    void trackLoadLocked(Request *req);
+
+    // Compare a store address with any locked addresses so we can
+    // clear the lock flag appropriately.  Return value set to 'false'
+    // if store operation should be suppressed (because it was a
+    // conditional store and the address was no longer locked by the
+    // requesting execution context), 'true' otherwise.  Note that
+    // this method must be called on *all* stores since even
+    // non-conditional stores must clear any matching lock addresses.
+    bool writeOK(Request *req) {
+        if (lockedAddrList.empty()) {
+            // no locked addrs: nothing to check, store_conditional fails
+            bool isLocked = req->isLocked();
+            if (isLocked) {
+                req->setScResult(0);
+            }
+            return !isLocked; // only do write if not an sc
+        } else {
+            // iterate over list...
+            return checkLockedAddrList(req);
+        }
+    }
+
     uint8_t *pmemAddr;
     MemoryPort *port;
     int pagePtr;

@@ -532,15 +532,25 @@ class Tru64 : public OperatingSystem
 
         argp.copyIn(tc->getMemPort());
 
+        int stack_size =
+            gtoh(argp->rsize) + gtoh(argp->ysize) + gtoh(argp->gsize);
+
         // if the user chose an address, just let them have it.  Otherwise
         // pick one for them.
-        if (htog(argp->address) == 0) {
-            argp->address = htog(process->next_thread_stack_base);
-            int stack_size = (htog(argp->rsize) + htog(argp->ysize) +
-                    htog(argp->gsize));
+        Addr stack_base = gtoh(argp->address);
+
+        if (stack_base == 0) {
+            stack_base = process->next_thread_stack_base;
             process->next_thread_stack_base -= stack_size;
-            argp.copyOut(tc->getMemPort());
         }
+
+        stack_base = roundDown(stack_base, VMPageSize);
+
+        // map memory
+        process->pTable->allocate(stack_base, roundUp(stack_size, VMPageSize));
+
+        argp->address = gtoh(stack_base);
+        argp.copyOut(tc->getMemPort());
 
         return 0;
     }
@@ -577,7 +587,7 @@ class Tru64 : public OperatingSystem
             abort();
         }
 
-        const Addr base_addr = 0x12000; // was 0x3f0000000LL;
+        Addr base_addr = 0x12000; // was 0x3f0000000LL;
         Addr cur_addr = base_addr; // next addresses to use
         // first comes the config_info struct
         Addr config_addr = cur_addr;
@@ -603,8 +613,6 @@ class Tru64 : public OperatingSystem
         config->nxm_slot_state = htog(slot_state_addr);
         config->nxm_rad[0] = htog(rad_state_addr);
 
-        config.copyOut(tc->getMemPort());
-
         // initialize the slot_state array and copy it out
         TypedBufferArg<Tru64::nxm_slot_state_t> slot_state(slot_state_addr,
                                                            slot_state_size);
@@ -615,8 +623,6 @@ class Tru64 : public OperatingSystem
             slot_state[i] =
                 (i == 0) ? Tru64::NXM_SLOT_BOUND : Tru64::NXM_SLOT_AVAIL;
         }
-
-        slot_state.copyOut(tc->getMemPort());
 
         // same for the per-RAD "shared" struct.  Note that we need to
         // allocate extra bytes for the per-VP array which is embedded at
@@ -650,17 +656,20 @@ class Tru64 : public OperatingSystem
             }
         }
 
-        rad_state.copyOut(tc->getMemPort());
-
         //
         // copy pointer to shared config area out to user
         //
         *configptr_ptr = htog(config_addr);
-        configptr_ptr.copyOut(tc->getMemPort());
 
         // Register this as a valid address range with the process
-        process->nxm_start = base_addr;
-        process->nxm_end = cur_addr;
+        base_addr = roundDown(base_addr, VMPageSize);
+        int size = cur_addr - base_addr;
+        process->pTable->allocate(base_addr, roundUp(size, VMPageSize));
+
+        config.copyOut(tc->getMemPort());
+        slot_state.copyOut(tc->getMemPort());
+        rad_state.copyOut(tc->getMemPort());
+        configptr_ptr.copyOut(tc->getMemPort());
 
         return 0;
     }

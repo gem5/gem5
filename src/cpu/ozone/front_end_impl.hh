@@ -59,7 +59,7 @@ template<class Impl>
 void
 FrontEnd<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("FrontEnd doesn't expect recvFunctional callback!");
+    warn("FrontEnd doesn't update state from functional calls");
 }
 
 template<class Impl>
@@ -493,7 +493,7 @@ FrontEnd<Impl>::fetchCacheLine()
     if (fault == NoFault) {
 #if 0
         if (cpu->system->memctrl->badaddr(memReq->paddr) ||
-            memReq->flags & UNCACHEABLE) {
+            memReq->isUncacheable()) {
             DPRINTF(FE, "Fetch: Bad address %#x (hopefully on a "
                     "misspeculating path!",
                     memReq->paddr);

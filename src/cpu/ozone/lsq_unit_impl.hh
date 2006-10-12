@@ -577,7 +577,7 @@ OzoneLSQ<Impl>::writebackStores()
             MemAccessResult result = dcacheInterface->access(req);
 
             //@todo temp fix for LL/SC (works fine for 1 CPU)
-            if (req->flags & LOCKED) {
+            if (req->isLocked()) {
                 req->result=1;
                 panic("LL/SC! oh no no support!!!");
             }
@@ -596,7 +596,7 @@ OzoneLSQ<Impl>::writebackStores()
                 Event *wb = NULL;
 /*
                 typename IEW::LdWritebackEvent *wb = NULL;
-                if (req->flags & LOCKED) {
+                if (req->isLocked()) {
                     // Stx_C does not generate a system port transaction.
                     req->result=0;
                     wb = new typename IEW::LdWritebackEvent(storeQueue[storeWBIdx].inst,
@@ -630,7 +630,7 @@ OzoneLSQ<Impl>::writebackStores()
 //                DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
 //                        storeQueue[storeWBIdx].inst->seqNum);
 
-                if (req->flags & LOCKED) {
+                if (req->isLocked()) {
                     // Stx_C does not generate a system port transaction.
                     req->result=1;
                     typename BackEnd::LdWritebackEvent *wb =

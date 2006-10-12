@@ -3,6 +3,7 @@ from m5.proxy import *
 from m5 import build_env
 from BaseCPU import BaseCPU
 from Checker import O3Checker
+from FUPool import *
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
@@ -14,11 +15,13 @@ class DerivO3CPU(BaseCPU):
     if build_env['USE_CHECKER']:
         if not build_env['FULL_SYSTEM']:
             checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
-                                              exitOnError=True,
+                                              exitOnError=False,
+                                              updateOnError=True,
                                               warnOnlyOnLoadError=False),
                                     "checker")
         else:
-            checker = Param.BaseCPU(O3Checker(exitOnError=True, warnOnlyOnLoadError=False), "checker")
+            checker = Param.BaseCPU(O3Checker(exitOnError=False, updateOnError=True,
+                                              warnOnlyOnLoadError=False), "checker")
             checker.itb = Parent.itb
             checker.dtb = Parent.dtb
 
@@ -57,7 +60,7 @@ class DerivO3CPU(BaseCPU):
     issueWidth = Param.Unsigned(8, "Issue width")
     wbWidth = Param.Unsigned(8, "Writeback width")
     wbDepth = Param.Unsigned(1, "Writeback depth")
-    fuPool = Param.FUPool("Functional Unit pool")
+    fuPool = Param.FUPool(DefaultFUPool(), "Functional Unit pool")
 
     iewToCommitDelay = Param.Unsigned(1, "Issue/Execute/Writeback to commit "
                "delay")
@@ -77,7 +80,7 @@ class DerivO3CPU(BaseCPU):
     localHistoryBits = Param.Unsigned(11, "Bits for the local history")
     globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
     globalCtrBits = Param.Unsigned(2, "Bits per counter")
-    globalHistoryBits = Param.Unsigned(4096, "Bits of history")
+    globalHistoryBits = Param.Unsigned(13, "Bits of history")
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 

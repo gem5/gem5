@@ -30,7 +30,6 @@ import m5
 from m5 import makeList
 from m5.objects import *
 from Benchmarks import *
-from FullO3Config import *
 
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),

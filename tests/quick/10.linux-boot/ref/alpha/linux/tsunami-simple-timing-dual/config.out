@@ -21,6 +21,7 @@ console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
 readfile=tests/halt.sh
+symbolfile=
 init_param=0
 system_type=34
 system_rev=1024
@@ -28,6 +29,8 @@ system_rev=1024
 [system.membus]
 type=Bus
 bus_id=1
+clock=2
+width=64
 
 [system.bridge]
 type=Bridge
@@ -86,11 +89,12 @@ max_insts_any_thread=0
 max_insts_all_threads=0
 max_loads_any_thread=0
 max_loads_all_threads=0
+progress_interval=0
 mem=system.physmem
 system=system
+cpu_id=0
 itb=system.cpu0.itb
 dtb=system.cpu0.dtb
-cpu_id=-1
 profile=0
 clock=1
 defer_registration=false
@@ -113,11 +117,12 @@ max_insts_any_thread=0
 max_insts_all_threads=0
 max_loads_any_thread=0
 max_loads_all_threads=0
+progress_interval=0
 mem=system.physmem
 system=system
+cpu_id=1
 itb=system.cpu1.itb
 dtb=system.cpu1.dtb
-cpu_id=-1
 profile=0
 clock=1
 defer_registration=false
@@ -488,10 +493,13 @@ disks=system.disk0 system.disk2
 [system.iobus]
 type=Bus
 bus_id=0
+clock=2
+width=64
 
 [trace]
 flags=
 start=0
+cycle=0
 bufsize=0
 file=cout
 dump_on_exit=false
@@ -534,6 +542,9 @@ trace_system=client
 
 [debug]
 break_cycles=
+
+[statsreset]
+reset_cycle=0
 
 [pseudo_inst]
 quiesce=true

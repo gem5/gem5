@@ -58,10 +58,8 @@ typedef std::list<PacketPtr> PacketList;
 #define NO_ALLOCATE 1 << 5
 #define SNOOP_COMMIT 1 << 6
 
-//For statistics we need max number of commands, hard code it at
-//20 for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 9
-
+//for now.  @todo fix later
+#define NUM_MEM_CMDS 1 << 11
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -94,7 +92,6 @@ class Packet
      *   be called on it rather than simply delete.*/
     bool arrayData;
 
-
     /** The address of the request.  This address could be virtual or
      *   physical, depending on the system configuration. */
     Addr addr;
@@ -125,6 +122,12 @@ class Packet
 
     /** Used to calculate latencies for each packet.*/
     Tick time;
+
+    /** The time at which the packet will be fully transmitted */
+    Tick finishTime;
+
+    /** The time at which the first chunk of the packet will be transmitted */
+    Tick firstWordTime;
 
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */
@@ -164,6 +167,8 @@ class Packet
 
   private:
     /** List of command attributes. */
+    // If you add a new CommandAttribute, make sure to increase NUM_MEM_CMDS
+    // as well.
     enum CommandAttribute
     {
         IsRead		= 1 << 0,
@@ -174,7 +179,9 @@ class Packet
         IsResponse 	= 1 << 5,
         NeedsResponse	= 1 << 6,
         IsSWPrefetch    = 1 << 7,
-        IsHWPrefetch    = 1 << 8
+        IsHWPrefetch    = 1 << 8,
+        IsUpgrade       = 1 << 9,
+        HasData		= 1 << 10
     };
 
   public:
@@ -183,21 +190,23 @@ class Packet
     {
         InvalidCmd      = 0,
         ReadReq		= IsRead  | IsRequest | NeedsResponse,
-        WriteReq	= IsWrite | IsRequest | NeedsResponse,
-        WriteReqNoAck	= IsWrite | IsRequest,
-        ReadResp	= IsRead  | IsResponse | NeedsResponse,
+        WriteReq	= IsWrite | IsRequest | NeedsResponse | HasData,
+        WriteReqNoAck	= IsWrite | IsRequest | HasData,
+        ReadResp	= IsRead  | IsResponse | NeedsResponse | HasData,
         WriteResp	= IsWrite | IsResponse | NeedsResponse,
-        Writeback       = IsWrite | IsRequest,
+        Writeback       = IsWrite | IsRequest | HasData,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
-        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch | NeedsResponse,
-        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch | NeedsResponse,
+        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
+                                | NeedsResponse | HasData,
+        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
+                                | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest,
-        UpgradeReq      = IsInvalidate | IsRequest | NeedsResponse,
-        UpgradeResp     = IsInvalidate | IsResponse | NeedsResponse,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
+        UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
-        ReadExResp      = IsRead | IsInvalidate | IsResponse | NeedsResponse
+        ReadExResp      = IsRead | IsInvalidate | IsResponse
+                                | NeedsResponse | HasData
     };
 
     /** Return the string name of the cmd field (for debugging and
@@ -219,6 +228,7 @@ class Packet
     bool isResponse()	 { return (cmd & IsResponse) != 0; }
     bool needsResponse() { return (cmd & NeedsResponse) != 0; }
     bool isInvalidate()  { return (cmd & IsInvalidate) != 0; }
+    bool hasData()	 { return (cmd & HasData) != 0; }
 
     bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
@@ -312,7 +322,7 @@ class Packet
      *   for returning as a response to that request.  Used for timing
      *   accesses only.  For atomic and functional accesses, the
      *   request packet is always implicitly passed back *without*
-     *   modifying the command or destination fields, so this function
+     *   modifying the destination fields, so this function
      *   should not be called. */
     void makeTimingResponse() {
         assert(needsResponse());
@@ -320,9 +330,29 @@ class Packet
         int icmd = (int)cmd;
         icmd &= ~(IsRequest);
         icmd |= IsResponse;
+        if (isRead())
+            icmd |= HasData;
+        if (isWrite())
+            icmd &= ~HasData;
         cmd = (Command)icmd;
         dest = src;
         srcValid = false;
+    }
+
+    /** Take a request packet and modify it in place to be suitable
+     *   for returning as a response to that request.
+     */
+    void makeAtomicResponse() {
+        assert(needsResponse());
+        assert(isRequest());
+        int icmd = (int)cmd;
+        icmd &= ~(IsRequest);
+        icmd |= IsResponse;
+        if (isRead())
+            icmd |= HasData;
+        if (isWrite())
+            icmd &= ~HasData;
+        cmd = (Command)icmd;
     }
 
     /** Take a request packet that has been returned as NACKED and modify it so

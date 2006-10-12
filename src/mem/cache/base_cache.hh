@@ -72,6 +72,7 @@ enum RequestCause{
     Request_PF
 };
 
+class MSHR;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
@@ -110,6 +111,12 @@ class BaseCache : public MemObject
         bool mustSendRetry;
 
         bool isCpuSide;
+
+        bool waitingOnRetry;
+
+        std::list<Packet *> drainList;
+
+        Packet *cshrRetry;
     };
 
     struct CacheEvent : public Event
@@ -126,6 +133,8 @@ class BaseCache : public MemObject
   protected:
     CachePort *cpuSidePort;
     CachePort *memSidePort;
+
+    bool snoopRangesSent;
 
   public:
     virtual Port *getPort(const std::string &if_name, int idx = -1);
@@ -149,14 +158,15 @@ class BaseCache : public MemObject
 
     void recvStatusChange(Port::Status status, bool isCpuSide)
     {
-        if (status == Port::RangeChange)
-        {
-            if (!isCpuSide)
-            {
+        if (status == Port::RangeChange){
+            if (!isCpuSide) {
                 cpuSidePort->sendStatusChange(Port::RangeChange);
+                if (!snoopRangesSent) {
+                    snoopRangesSent = true;
+                    memSidePort->sendStatusChange(Port::RangeChange);
+                }
             }
-            else
-            {
+            else {
                 memSidePort->sendStatusChange(Port::RangeChange);
             }
         }
@@ -172,7 +182,7 @@ class BaseCache : public MemObject
         fatal("No implementation");
     }
 
-    virtual void sendResult(Packet* &pkt, bool success)
+    virtual void sendResult(Packet* &pkt, MSHR* mshr, bool success)
     {
 
         fatal("No implementation");
@@ -204,6 +214,7 @@ class BaseCache : public MemObject
 
     /** True if this cache is connected to the CPU. */
     bool topLevelCache;
+
 
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
@@ -332,6 +343,7 @@ class BaseCache : public MemObject
         //Start ports at null if more than one is created we should panic
         cpuSidePort = NULL;
         memSidePort = NULL;
+        snoopRangesSent = false;
     }
 
     virtual void init();
@@ -382,9 +394,14 @@ class BaseCache : public MemObject
             blocked_causes[cause]++;
             blockedCycle = curTick;
         }
-        blocked |= flag;
-        DPRINTF(Cache,"Blocking for cause %s\n", cause);
-        cpuSidePort->setBlocked();
+        int old_state = blocked;
+        if (!(blocked & flag)) {
+            //Wasn't already blocked for this cause
+            blocked |= flag;
+            DPRINTF(Cache,"Blocking for cause %s\n", cause);
+            if (!old_state)
+                cpuSidePort->setBlocked();
+        }
     }
 
     /**
@@ -395,8 +412,13 @@ class BaseCache : public MemObject
     void setBlockedForSnoop(BlockedCause cause)
     {
         uint8_t flag = 1 << cause;
-        blockedSnoop |= flag;
-        memSidePort->setBlocked();
+        uint8_t old_state = blockedSnoop;
+        if (!(blockedSnoop & flag)) {
+            //Wasn't already blocked for this cause
+            blockedSnoop |= flag;
+            if (!old_state)
+                memSidePort->setBlocked();
+        }
     }
 
     /**
@@ -445,7 +467,7 @@ class BaseCache : public MemObject
      */
     void setMasterRequest(RequestCause cause, Tick time)
     {
-        if (!doMasterRequest())
+        if (!doMasterRequest() && !memSidePort->waitingOnRetry)
         {
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
             reqCpu->schedule(time);
@@ -503,10 +525,14 @@ class BaseCache : public MemObject
      */
     void respond(Packet *pkt, Tick time)
     {
-        pkt->makeTimingResponse();
-        pkt->result = Packet::Success;
-        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-        reqCpu->schedule(time);
+        if (pkt->needsResponse()) {
+            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+            reqCpu->schedule(time);
+        }
+        else {
+            if (pkt->cmd == Packet::Writeback) delete pkt->req;
+            delete pkt;
+        }
     }
 
     /**
@@ -517,22 +543,29 @@ class BaseCache : public MemObject
     void respondToMiss(Packet *pkt, Tick time)
     {
         if (!pkt->req->isUncacheable()) {
-            missLatency[pkt->cmdToIndex()][pkt->req->getThreadNum()] += time - pkt->time;
+            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] += time - pkt->time;
         }
-        pkt->makeTimingResponse();
-        pkt->result = Packet::Success;
-        CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-        reqCpu->schedule(time);
+        if (pkt->needsResponse()) {
+            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+            reqCpu->schedule(time);
+        }
+        else {
+            if (pkt->cmd == Packet::Writeback) delete pkt->req;
+            delete pkt;
+        }
     }
 
     /**
      * Suppliess the data if cache to cache transfers are enabled.
      * @param pkt The bus transaction to fulfill.
      */
-    void respondToSnoop(Packet *pkt)
+    void respondToSnoop(Packet *pkt, Tick time)
     {
-        assert("Implement\n" && 0);
+//        assert("Implement\n" && 0);
 //	mi->respond(pkt,curTick + hitLatency);
+        assert (pkt->needsResponse());
+        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
+        reqMem->schedule(time);
     }
 
     /**
@@ -551,6 +584,16 @@ class BaseCache : public MemObject
         else
         {
             //This is where snoops get updated
+            AddrRangeList dummy;
+//            if (!topLevelCache)
+//            {
+                cpuSidePort->getPeerAddressRanges(dummy, snoop);
+//            }
+//            else
+//            {
+//                snoop.push_back(RangeSize(0,-1));
+//            }
+
             return;
         }
     }
