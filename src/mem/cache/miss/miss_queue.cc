@@ -352,7 +352,7 @@ MissQueue::setPrefetcher(BasePrefetcher *_prefetcher)
 MSHR*
 MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 {
-    MSHR* mshr = mq.allocate(pkt, blkSize);
+    MSHR* mshr = mq.allocate(pkt, size);
     mshr->order = order++;
     if (!pkt->req->isUncacheable() ){//&& !pkt->isNoAllocate()) {
         // Mark this as a cache line fill

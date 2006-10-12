@@ -122,6 +122,7 @@ baseFlags = [
     'MSHR',
     'Mbox',
     'MemDepUnit',
+    'MemoryAccess',
     'O3CPU',
     'OzoneCPU',
     'OzoneLSQ',

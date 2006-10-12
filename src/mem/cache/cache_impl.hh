@@ -389,6 +389,11 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 {
+    if (pkt->req->isUncacheable()) {
+        //Can't get a hit on an uncacheable address
+        //Revisit this for multi level coherence
+        return;
+    }
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
