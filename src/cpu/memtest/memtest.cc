@@ -400,7 +400,7 @@ MemTest::tick()
         //This means we assume CPU does write forwarding to reads that alias something
         //in the cpu store buffer.
         if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
-            delete result;
+            delete [] result;
             delete req;
             return;
         }
