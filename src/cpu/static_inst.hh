@@ -67,6 +67,8 @@ namespace Trace {
     class InstRecord;
 }
 
+typedef uint32_t MicroPC;
+
 /**
  * Base, ISA-independent static instruction class.
  *
@@ -138,6 +140,14 @@ class StaticInstBase : public RefCounted
 
         IsIprAccess,    ///< Accesses IPRs
         IsUnverifiable, ///< Can't be verified by a checker
+
+        //Flags for microcode
+        IsMacroOp,      ///< Is a macroop containing microops
+        IsMicroOp,	///< Is a microop
+        IsDelayedCommit,	///< This microop doesn't commit right away
+        IsLastMicroOp,	///< This microop ends a microop sequence
+        //This flag doesn't do anything yet
+        IsMicroBranch,	///< This microop branches within the microcode for a macroop
 
         NumFlags
     };
@@ -230,6 +240,12 @@ class StaticInstBase : public RefCounted
     bool isQuiesce() const { return flags[IsQuiesce]; }
     bool isIprAccess() const { return flags[IsIprAccess]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
+    bool isMacroOp() const { return flags[IsMacroOp]; }
+    bool isMicroOp() const { return flags[IsMicroOp]; }
+    bool isDelayedCommit() const { return flags[IsDelayedCommit]; }
+    bool isLastMicroOp() const { return flags[IsLastMicroOp]; }
+    //This flag doesn't do anything yet
+    bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}
 
     /// Operation class.  Used to select appropriate function unit in issue.
@@ -345,6 +361,12 @@ class StaticInst : public StaticInstBase
  * set of CPU models we are compiling in today.
  */
 #include "cpu/static_inst_exec_sigs.hh"
+
+    /**
+     * Return the microop that goes with a particular micropc. This should
+     * only be defined/used in macroops which will contain microops
+     */
+    virtual StaticInstPtr fetchMicroOp(MicroPC micropc);
 
     /**
      * Return the target address for a PC-relative branch.

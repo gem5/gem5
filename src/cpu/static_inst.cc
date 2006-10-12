@@ -75,3 +75,10 @@ StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
     return false;
 }
 
+StaticInstPtr
+StaticInst::fetchMicroOp(MicroPC micropc)
+{
+    panic("StaticInst::fetchMicroOp() called on instruction "
+            "that is not microcoded.");
+}
+
