@@ -144,7 +144,10 @@ Bus::recvTiming(Packet *pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
-    BusPort *pktPort = interfaces[pkt->getSrc()];
+    BusPort *pktPort;
+    if (pkt->getSrc() == defaultId)
+        pktPort = defaultPort;
+    else pktPort = interfaces[pkt->getSrc()];
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -392,7 +395,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         }
     } else {
 
-        assert((id < interfaces.size() && id >= 0) || id == -1);
+        assert((id < interfaces.size() && id >= 0) || id == defaultId);
         Port *port = interfaces[id];
         std::vector<DevMap>::iterator portIter;
         std::vector<DevMap>::iterator snoopIter;

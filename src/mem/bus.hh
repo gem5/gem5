@@ -59,7 +59,7 @@ class Bus : public MemObject
     /** the next tick at which the bus will be idle */
     Tick tickNextIdle;
 
-    static const int defaultId = -1;
+    static const int defaultId = -3; //Make it unique from Broadcast
 
     struct DevMap {
         int portId;
@@ -238,7 +238,7 @@ class Bus : public MemObject
     }
 
     /** Port that handles requests that don't match any of the interfaces.*/
-    Port *defaultPort;
+    BusPort *defaultPort;
 
   public:
 
