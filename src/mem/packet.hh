@@ -171,17 +171,17 @@ class Packet
     // as well.
     enum CommandAttribute
     {
-        IsRead		= 1 << 0,
-        IsWrite		= 1 << 1,
-        IsPrefetch	= 1 << 2,
-        IsInvalidate	= 1 << 3,
-        IsRequest	= 1 << 4,
-        IsResponse 	= 1 << 5,
-        NeedsResponse	= 1 << 6,
+        IsRead                = 1 << 0,
+        IsWrite                = 1 << 1,
+        IsPrefetch        = 1 << 2,
+        IsInvalidate        = 1 << 3,
+        IsRequest        = 1 << 4,
+        IsResponse         = 1 << 5,
+        NeedsResponse        = 1 << 6,
         IsSWPrefetch    = 1 << 7,
         IsHWPrefetch    = 1 << 8,
         IsUpgrade       = 1 << 9,
-        HasData		= 1 << 10
+        HasData                = 1 << 10
     };
 
   public:
@@ -189,18 +189,18 @@ class Packet
     enum Command
     {
         InvalidCmd      = 0,
-        ReadReq		= IsRead  | IsRequest | NeedsResponse,
-        WriteReq	= IsWrite | IsRequest | NeedsResponse | HasData,
-        WriteReqNoAck	= IsWrite | IsRequest | HasData,
-        ReadResp	= IsRead  | IsResponse | NeedsResponse | HasData,
-        WriteResp	= IsWrite | IsResponse | NeedsResponse,
+        ReadReq                = IsRead  | IsRequest | NeedsResponse,
+        WriteReq        = IsWrite | IsRequest | NeedsResponse | HasData,
+        WriteReqNoAck        = IsWrite | IsRequest | HasData,
+        ReadResp        = IsRead  | IsResponse | NeedsResponse | HasData,
+        WriteResp        = IsWrite | IsResponse | NeedsResponse,
         Writeback       = IsWrite | IsRequest | HasData,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
         SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
                                 | NeedsResponse | HasData,
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
-                                | NeedsResponse | HasData,
+                                    | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
         UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
@@ -222,17 +222,17 @@ class Packet
     /** The command field of the packet. */
     Command cmd;
 
-    bool isRead() 	 { return (cmd & IsRead)  != 0; }
-    bool isWrite()       { return (cmd & IsWrite) != 0; }
-    bool isRequest()	 { return (cmd & IsRequest)  != 0; }
-    bool isResponse()	 { return (cmd & IsResponse) != 0; }
-    bool needsResponse() { return (cmd & NeedsResponse) != 0; }
-    bool isInvalidate()  { return (cmd & IsInvalidate) != 0; }
-    bool hasData()	 { return (cmd & HasData) != 0; }
+    bool isRead() const         { return (cmd & IsRead)  != 0; }
+    bool isWrite()  const       { return (cmd & IsWrite) != 0; }
+    bool isRequest() const      { return (cmd & IsRequest)  != 0; }
+    bool isResponse() const     { return (cmd & IsResponse) != 0; }
+    bool needsResponse() const  { return (cmd & NeedsResponse) != 0; }
+    bool isInvalidate() const   { return (cmd & IsInvalidate) != 0; }
+    bool hasData() const        { return (cmd & HasData) != 0; }
 
-    bool isCacheFill() { return (flags & CACHE_LINE_FILL) != 0; }
-    bool isNoAllocate() { return (flags & NO_ALLOCATE) != 0; }
-    bool isCompressed() { return (flags & COMPRESSED) != 0; }
+    bool isCacheFill() const    { return (flags & CACHE_LINE_FILL) != 0; }
+    bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }
+    bool isCompressed() const   { return (flags & COMPRESSED) != 0; }
 
     bool nic_pkt() { assert("Unimplemented\n" && 0); return false; }
 
@@ -397,5 +397,14 @@ class Packet
     bool intersect(Packet *p);
 };
 
+
+/** This function given a functional packet and a timing packet either satisfies
+ * the timing packet, or updates the timing packet to reflect the updated state
+ * in the timing packet. It returns if the functional packet should continue to
+ * traverse the memory hierarchy or not.
+ */
 bool fixPacket(Packet *func, Packet *timing);
+
+std::ostream & operator<<(std::ostream &o, const Packet &p);
+
 #endif //__MEM_PACKET_HH

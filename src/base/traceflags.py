@@ -94,6 +94,7 @@ baseFlags = [
     'Flow',
     'FreeList',
     'FullCPU',
+    'FunctionalAccess',
     'GDBAcc',
     'GDBExtra',
     'GDBMisc',
