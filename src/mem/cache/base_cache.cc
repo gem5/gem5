@@ -107,6 +107,42 @@ BaseCache::CachePort::recvAtomic(Packet *pkt)
 void
 BaseCache::CachePort::recvFunctional(Packet *pkt)
 {
+    //Check storage here first
+    list<Packet *>::iterator i = drainList.begin();
+    list<Packet *>::iterator end = drainList.end();
+    for (; i != end; ++i) {
+        Packet * target = *i;
+        // If the target contains data, and it overlaps the
+        // probed request, need to update data
+        if (target->intersect(pkt)) {
+            uint8_t* pkt_data;
+            uint8_t* write_data;
+            int data_size;
+            if (target->getAddr() < pkt->getAddr()) {
+                int offset = pkt->getAddr() - target->getAddr();
+                            pkt_data = pkt->getPtr<uint8_t>();
+                            write_data = target->getPtr<uint8_t>() + offset;
+                            data_size = target->getSize() - offset;
+                            assert(data_size > 0);
+                            if (data_size > pkt->getSize())
+                                data_size = pkt->getSize();
+            } else {
+                int offset = target->getAddr() - pkt->getAddr();
+                pkt_data = pkt->getPtr<uint8_t>() + offset;
+                write_data = target->getPtr<uint8_t>();
+                data_size = pkt->getSize() - offset;
+                assert(data_size > pkt->getSize());
+                if (data_size > target->getSize())
+                    data_size = target->getSize();
+            }
+
+            if (pkt->isWrite()) {
+                memcpy(pkt_data, write_data, data_size);
+            } else {
+                memcpy(write_data, pkt_data, data_size);
+            }
+        }
+    }
     cache->doFunctionalAccess(pkt, isCpuSide);
 }
 
