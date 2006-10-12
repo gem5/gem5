@@ -80,7 +80,7 @@ output header {{
                     OpClass __opClass) :
                 BranchDisp(mnem, _machInst, __opClass)
             {
-                disp = sign_ext(_machInst << 2, bits + 2);
+                disp = sext<bits + 2>((_machInst & mask(bits)) << 2);
             }
         };
 
@@ -95,7 +95,7 @@ output header {{
                     OpClass __opClass) :
                 BranchDisp(mnem, _machInst, __opClass)
             {
-                disp = sign_ext((D16HI << 16) | (D16LO << 2), 18);
+                disp = sext<18>((D16HI << 16) | (D16LO << 2));
             }
         };
 
@@ -108,7 +108,7 @@ output header {{
           protected:
             // Constructor
             BranchImm13(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                Branch(mnem, _machInst, __opClass), imm(sign_ext(SIMM13, 13))
+                Branch(mnem, _machInst, __opClass), imm(sext<13>(SIMM13))
             {
             }
 

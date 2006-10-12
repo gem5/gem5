@@ -87,7 +87,7 @@ output header {{
                     OpClass __opClass) :
                 IntOpImm(mnem, _machInst, __opClass)
             {
-                imm = sign_ext(SIMM10, 10);
+                imm = sext<10>(SIMM10);
             }
         };
 
@@ -102,7 +102,7 @@ output header {{
                     OpClass __opClass) :
                 IntOpImm(mnem, _machInst, __opClass)
             {
-                imm = sign_ext(SIMM11, 11);
+                imm = sext<11>(SIMM11);
             }
         };
 
@@ -117,7 +117,7 @@ output header {{
                     OpClass __opClass) :
                 IntOpImm(mnem, _machInst, __opClass)
             {
-                imm = sign_ext(SIMM13, 13);
+                imm = sext<13>(SIMM13);
             }
         };
 
