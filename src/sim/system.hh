@@ -62,22 +62,16 @@ class RemoteGDB;
 class System : public SimObject
 {
   public:
-    enum MemoryMode {
-        Invalid=0,
-        Atomic,
-        Timing
-    };
 
     static const char *MemoryModeStrings[3];
 
-
-    MemoryMode getMemoryMode() { assert(memoryMode); return memoryMode; }
+    SimObject::MemoryMode getMemoryMode() { assert(memoryMode); return memoryMode; }
 
     /** Change the memory mode of the system. This should only be called by the
      * python!!
      * @param mode Mode to change to (atomic/timing)
      */
-    void setMemoryMode(MemoryMode mode);
+    void setMemoryMode(SimObject::MemoryMode mode);
 
     PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
@@ -126,7 +120,7 @@ class System : public SimObject
 
   protected:
 
-    MemoryMode memoryMode;
+    SimObject::MemoryMode memoryMode;
 
 #if FULL_SYSTEM
     /**
@@ -173,7 +167,7 @@ class System : public SimObject
     {
         std::string name;
         PhysicalMemory *physmem;
-        MemoryMode mem_mode;
+        SimObject::MemoryMode mem_mode;
 
 #if FULL_SYSTEM
         Tick boot_cpu_frequency;

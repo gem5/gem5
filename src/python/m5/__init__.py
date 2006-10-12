@@ -144,7 +144,7 @@ def restoreCheckpoint(root, dir):
     resume(root)
 
 def changeToAtomic(system):
-    if not isinstance(system, objects.Root) and not isinstance(system, System):
+    if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
     doDrain(system)
@@ -153,7 +153,7 @@ def changeToAtomic(system):
     resume(system)
 
 def changeToTiming(system):
-    if not isinstance(system, objects.Root) and not isinstance(system, System):
+    if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
         raise TypeError, "Object is not a root or system object.  Checkpoint must be "
         "called on a root object."
     doDrain(system)
@@ -162,6 +162,7 @@ def changeToTiming(system):
     resume(system)
 
 def switchCpus(cpuList):
+    print "switching cpus"
     if not isinstance(cpuList, list):
         raise RuntimeError, "Must pass a list to this function"
     for i in cpuList:
@@ -189,9 +190,9 @@ def switchCpus(cpuList):
     cc_main.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
+        print "switching"
         old_cpu._ccObject.switchOut()
     index = 0
-    print "Switching CPUs"
     for new_cpu in new_cpus:
         new_cpu.takeOverFrom(old_cpus[index])
         new_cpu._ccObject.resume()

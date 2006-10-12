@@ -726,7 +726,12 @@ class SimObject(object):
             child.resume()
 
     def changeTiming(self, mode):
-        if isinstance(self, System):
+        if isinstance(self, m5.objects.System):
+            # i don't know if there's a better way to do this - calling
+            # setMemoryMode directly from self._ccObject results in calling
+            # SimObject::setMemoryMode, not the System::setMemoryMode
+##            system_ptr = cc_main.convertToSystemPtr(self._ccObject)
+##            system_ptr.setMemoryMode(mode)
             self._ccObject.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)

@@ -147,6 +147,8 @@ void
 TimingSimpleCPU::resume()
 {
     if (_status != SwitchedOut && _status != Idle) {
+        assert(system->getMemoryMode() == System::Timing);
+
         // Delete the old event if it existed.
         if (fetchEvent) {
             if (fetchEvent->scheduled())
@@ -160,7 +162,6 @@ TimingSimpleCPU::resume()
         fetchEvent->schedule(curTick);
     }
 
-    assert(system->getMemoryMode() == System::Timing);
     changeState(SimObject::Running);
     previousTick = curTick;
 }

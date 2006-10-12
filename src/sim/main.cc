@@ -66,6 +66,7 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/root.hh"
@@ -439,6 +440,17 @@ convertToBaseCPUPtr(SimObject *obj)
         warn("Casting to BaseCPU pointer failed");
     return ptr;
 }
+
+System *
+convertToSystemPtr(SimObject *obj)
+{
+    System *ptr = dynamic_cast<System *>(obj);
+
+    if (ptr == NULL)
+        warn("Casting to System pointer failed");
+    return ptr;
+}
+
 
 /**
  * Do C++ simulator exit processing.  Exported to SWIG to be invoked
