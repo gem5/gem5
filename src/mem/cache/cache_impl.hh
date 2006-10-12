@@ -151,12 +151,7 @@ Cache(const std::string &_name,
       doCopy(params.doCopy), blockOnCopy(params.blockOnCopy),
       hitLatency(params.hitLatency)
 {
-//FIX BUS POINTERS
-//    if (params.in == NULL) {
-        topLevelCache = true;
-//    }
-//PLEASE FIX THIS, BUS SIZES NOT BEING USED
-        tags->setCache(this, blkSize, 1/*params.out->width, params.out->clockRate*/);
+    tags->setCache(this);
     tags->setPrefetcher(prefetcher);
     missQueue->setCache(this);
     missQueue->setPrefetcher(prefetcher);
@@ -397,7 +392,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
-    if (isTopLevel() && coherence->hasProtocol()) { //@todo Move this into handle bus req
+    if (coherence->hasProtocol()) { //@todo Move this into handle bus req
         //If we find an mshr, and it is in service, we need to NACK or invalidate
         if (mshr) {
             if (mshr->inService) {
