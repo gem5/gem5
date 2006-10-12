@@ -32,7 +32,7 @@ output header {{
             MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 Mem(mnem, _machInst, __opClass)
             {
-                imm = sign_ext(SIMM13, 13);
+                imm = sext<13>(SIMM13);
             }
 
             std::string generateDisassembly(Addr pc,
@@ -97,9 +97,10 @@ output decoder {{
 
             return response.str();
         }
+
 }};
 
-def template MemExecute {{
+def template LoadExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
@@ -107,14 +108,65 @@ def template MemExecute {{
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
+            %(priv_check)s;
             %(ea_code)s;
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            %(load)s;
+            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
             %(code)s;
 
             if(fault == NoFault)
             {
-                %(store)s;
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+def template StoreExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            uint64_t write_result = 0;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(priv_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
+        }
+}};
+
+def template LoadStoreExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            uint64_t write_result = 0;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(priv_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            %(code)s;
+
+            if(fault == NoFault)
+            {
+                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
                 //Write the resulting state to the execution context
                 %(op_wb)s;
             }
@@ -124,48 +176,66 @@ def template MemExecute {{
 }};
 
 let {{
-    # Leave memAccessFlags at 0 for now
-    loadString = "xc->read(EA, (uint%(width)s_t&)Mem, 0);"
-    storeString = "uint64_t write_result = 0; \
-    xc->write((uint%(width)s_t)Mem, EA, 0, &write_result);"
+    # XXX Need to take care of pstate.hpriv as well. The lower ASIs are split
+    # into ones that are available in priv and hpriv, and those that are only
+    # available in hpriv
+    privilegedString = '''if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
+                return new PrivilegedAction;
+            if(AsiIsAsIfUser(EXT_ASI) && !bits(Pstate,2,2))
+                return new PrivilegedAction;'''
 
-    def doMemFormat(code, load, store, name, Name, opt_flags):
+    def doMemFormat(code, execute, priv, name, Name, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + imm;'
         iop = InstObjParams(name, Name, 'Mem', code,
                 opt_flags, ("ea_code", addrCalcReg),
-                ("load", load), ("store", store))
+                ("priv_check", priv))
         iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code,
                 opt_flags, ("ea_code", addrCalcImm),
-                ("load", load), ("store", store))
+                ("priv_check", priv))
         header_output = BasicDeclare.subst(iop) + BasicDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
-        exec_output = MemExecute.subst(iop) + MemExecute.subst(iop_imm)
+        exec_output = execute.subst(iop) + execute.subst(iop_imm)
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-def format Load(code, width, *opt_flags) {{
+def format LoadAlt(code, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code, LoadExecute,
+            privelegedString, name, Name, opt_flags)
+}};
+
+def format StoreAlt(code, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code, StoreExecute,
+            privilegedString, name, Name, opt_flags)
+}};
+
+def format Load(code, *opt_flags) {{
         (header_output,
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             loadString % {"width":width}, '', name, Name, opt_flags)
+             LoadExecute, '', name, Name, opt_flags)
 }};
 
-def format Store(code, width, *opt_flags) {{
-        (header_output,
-         decoder_output,
-         exec_output,
-         decode_block) = doMemFormat(code, '',
-             storeString % {"width":width}, name, Name, opt_flags)
-}};
-
-def format LoadStore(code, width, *opt_flags) {{
+def format Store(code, *opt_flags) {{
         (header_output,
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             loadString % {"width":width}, storeString % {"width":width},
-             name, Name, opt_flags)
+             StoreExecute, '', name, Name, opt_flags)
+}};
+
+def format LoadStore(code, *opt_flags) {{
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             LoadStoreExecute, '', name, Name, opt_flags)
 }};

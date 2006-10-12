@@ -76,3 +76,7 @@ def bitfield SIMM11	<10:0>;
 def bitfield SIMM13	<12:0>;
 def bitfield SW_TRAP	<7:0>;
 def bitfield X		<12>;
+
+// Extended bitfields which aren't part of the actual instruction.
+
+def bitfield EXT_ASI	<39:32>;

@@ -33,12 +33,21 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "base/misc.hh"
+#include "cpu/thread_context.hh"
 
 namespace SparcISA
 {
     inline ExtMachInst
-    makeExtMI(MachInst inst, const Addr &pc) {
-        return ExtMachInst(inst);
+    makeExtMI(MachInst inst, ThreadContext * xc) {
+        ExtMachInst emi = (unsigned MachInst) inst;
+        //The I bit, bit 13, is used to figure out where the ASI
+        //should come from. Use that in the ExtMachInst. This is
+        //slightly redundant, but it removes the need to put a condition
+        //into all the execute functions
+        if(inst & (1 << 13))
+            emi |= (static_cast<ExtMachInst>(xc->readMiscReg(MISCREG_ASI))
+                    << (sizeof(MachInst) * 8));
+        return emi;
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

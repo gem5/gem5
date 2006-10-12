@@ -820,92 +820,189 @@ decode OP default Unknown::unknown()
     }
     0x3: decode OP3 {
         format Load {
-            0x00: lduw({{Rd = Mem;}}, {{32}});
-            0x01: ldub({{Rd = Mem;}}, {{8}});
-            0x02: lduh({{Rd = Mem;}}, {{16}});
+            0x00: lduw({{Rd = Mem.uw;}});
+            0x01: ldub({{Rd = Mem.ub;}});
+            0x02: lduh({{Rd = Mem.uhw;}});
             0x03: ldd({{
-                uint64_t val = Mem;
+                uint64_t val = Mem.udw;
                 RdLow = val<31:0>;
                 RdHigh = val<63:32>;
-            }}, {{64}});
+            }});
         }
         format Store {
-            0x04: stw({{Mem = Rd.sw;}}, {{32}});
-            0x05: stb({{Mem = Rd.sb;}}, {{8}});
-            0x06: sth({{Mem = Rd.shw;}}, {{16}});
-            0x07: std({{Mem = RdLow<31:0> | (RdHigh<31:0> << 32);}}, {{64}});
+            0x04: stw({{Mem.uw = Rd.sw;}});
+            0x05: stb({{Mem.ub = Rd.sb;}});
+            0x06: sth({{Mem.uhw = Rd.shw;}});
+            0x07: std({{Mem.udw = RdLow<31:0> | (RdHigh<31:0> << 32);}});
         }
         format Load {
-            0x08: ldsw({{Rd = (int32_t)Mem;}}, {{32}});
-            0x09: ldsb({{Rd = (int8_t)Mem;}}, {{8}});
-            0x0A: ldsh({{Rd = (int16_t)Mem;}}, {{16}});
-            0x0B: ldx({{Rd = (int64_t)Mem;}}, {{64}});
+            0x08: ldsw({{Rd = (int32_t)Mem.sw;}});
+            0x09: ldsb({{Rd = (int8_t)Mem.sb;}});
+            0x0A: ldsh({{Rd = (int16_t)Mem.shw;}});
+            0x0B: ldx({{Rd = (int64_t)Mem.sdw;}});
             0x0D: ldstub({{
-                Rd = Mem;
-                Mem = 0xFF;
-            }}, {{8}});
+                Rd = Mem.ub;
+                Mem.ub = 0xFF;
+            }});
         }
-        0x0E: Store::stx({{Mem = Rd}}, {{64}});
+        0x0E: Store::stx({{Mem.udw = Rd}});
         0x0F: LoadStore::swap({{
             uint32_t temp = Rd;
-            Rd = Mem;
-            Mem = temp;
-        }}, {{32}});
+            Rd = Mem.uw;
+            Mem.uw = temp;
+        }});
         format Load {
-            0x10: lduwa({{Rd = Mem;}}, {{32}});
-            0x11: lduba({{Rd = Mem;}}, {{8}});
-            0x12: lduha({{Rd = Mem;}}, {{16}});
+            0x10: lduwa({{Rd = Mem.uw;}});
+            0x11: lduba({{Rd = Mem.ub;}});
+            0x12: lduha({{Rd = Mem.uhw;}});
             0x13: ldda({{
-                uint64_t val = Mem;
+                uint64_t val = Mem.udw;
                 RdLow = val<31:0>;
                 RdHigh = val<63:32>;
-            }}, {{64}});
+            }});
         }
         format Store {
-            0x14: stwa({{Mem = Rd;}}, {{32}});
-            0x15: stba({{Mem = Rd;}}, {{8}});
-            0x16: stha({{Mem = Rd;}}, {{16}});
-            0x17: stda({{Mem = RdLow<31:0> | RdHigh<31:0> << 32;}}, {{64}});
+            0x14: stwa({{Mem.uw = Rd;}});
+            0x15: stba({{Mem.ub = Rd;}});
+            0x16: stha({{Mem.uhw = Rd;}});
+            0x17: stda({{Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;}});
         }
         format Load {
-            0x18: ldswa({{Rd = (int32_t)Mem;}}, {{32}});
-            0x19: ldsba({{Rd = (int8_t)Mem;}}, {{8}});
-            0x1A: ldsha({{Rd = (int16_t)Mem;}}, {{16}});
-            0x1B: ldxa({{Rd = (int64_t)Mem;}}, {{64}});
+            0x18: ldswa({{Rd = (int32_t)Mem.sw;}});
+            0x19: ldsba({{Rd = (int8_t)Mem.sb;}});
+            0x1A: ldsha({{Rd = (int16_t)Mem.shw;}});
+            0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}});
         }
         0x1D: LoadStore::ldstuba({{
-            Rd = Mem;
-            Mem = 0xFF;
-        }}, {{8}});
-        0x1E: Store::stxa({{Mem = Rd}}, {{64}});
+            Rd = Mem.ub;
+            Mem.ub = 0xFF;
+        }});
+        0x1E: Store::stxa({{Mem.udw = Rd}});
         0x1F: LoadStore::swapa({{
             uint32_t temp = Rd;
-            Rd = Mem;
-            Mem = temp;
-        }}, {{32}});
+            Rd = Mem.uw;
+            Mem.uw = temp;
+        }});
         format Trap {
-            0x20: Load::ldf({{Frd.uw = Mem;}}, {{32}});
+            0x20: Load::ldf({{Frd.uw = Mem.uw;}});
             0x21: decode X {
-                0x0: Load::ldfsr({{Fsr = Mem<31:0> | Fsr<63:32>;}}, {{32}});
-                0x1: Load::ldxfsr({{Fsr = Mem;}}, {{64}});
+                0x0: Load::ldfsr({{Fsr = Mem.uw | Fsr<63:32>;}});
+                0x1: Load::ldxfsr({{Fsr = Mem.udw;}});
             }
             0x22: ldqf({{fault = new FpDisabled;}});
-            0x23: Load::lddf({{Frd.udw = Mem;}}, {{64}});
-            0x24: Store::stf({{Mem = Frd.uw;}}, {{32}});
+            0x23: Load::lddf({{Frd.udw = Mem.udw;}});
+            0x24: Store::stf({{Mem.uw = Frd.uw;}});
             0x25: decode X {
-                0x0: Store::stfsr({{Mem = Fsr<31:0>;}}, {{32}});
-                0x1: Store::stxfsr({{Mem = Fsr;}}, {{64}});
+                0x0: Store::stfsr({{Mem.uw = Fsr<31:0>;}});
+                0x1: Store::stxfsr({{Mem.udw = Fsr;}});
             }
             0x26: stqf({{fault = new FpDisabled;}});
-            0x27: Store::stdf({{Mem = Frd.udw;}}, {{64}});
+            0x27: Store::stdf({{Mem.udw = Frd.udw;}});
             0x2D: Nop::prefetch({{ }});
-            0x30: Load::ldfa({{Frd.uw = Mem;}}, {{32}});
+            0x30: Load::ldfa({{Frd.uw = Mem.uw;}});
             0x32: ldqfa({{fault = new FpDisabled;}});
-            0x33: Load::lddfa({{Frd.udw = Mem;}}, {{64}});
-            0x34: Store::stfa({{Mem = Frd.uw;}}, {{32}});
+            format LoadAlt {
+                0x33: decode EXT_ASI {
+                    //ASI_NUCLEUS
+                    0x04: FailUnimpl::lddfa_n();
+                    //ASI_NUCLEUS_LITTLE
+                    0x0C: FailUnimpl::lddfa_nl();
+                    //ASI_AS_IF_USER_PRIMARY
+                    0x10: FailUnimpl::lddfa_aiup();
+                    //ASI_AS_IF_USER_PRIMARY_LITTLE
+                    0x18: FailUnimpl::lddfa_aiupl();
+                    //ASI_AS_IF_USER_SECONDARY
+                    0x11: FailUnimpl::lddfa_aius();
+                    //ASI_AS_IF_USER_SECONDARY_LITTLE
+                    0x19: FailUnimpl::lddfa_aiusl();
+                    //ASI_REAL
+                    0x14: FailUnimpl::lddfa_real();
+                    //ASI_REAL_LITTLE
+                    0x1C: FailUnimpl::lddfa_real_l();
+                    //ASI_REAL_IO
+                    0x15: FailUnimpl::lddfa_real_io();
+                    //ASI_REAL_IO_LITTLE
+                    0x1D: FailUnimpl::lddfa_real_io_l();
+                    //ASI_PRIMARY
+                    0x80: FailUnimpl::lddfa_p();
+                    //ASI_PRIMARY_LITTLE
+                    0x88: FailUnimpl::lddfa_pl();
+                    //ASI_SECONDARY
+                    0x81: FailUnimpl::lddfa_s();
+                    //ASI_SECONDARY_LITTLE
+                    0x89: FailUnimpl::lddfa_sl();
+                    //ASI_PRIMARY_NO_FAULT
+                    0x82: FailUnimpl::lddfa_pnf();
+                    //ASI_PRIMARY_NO_FAULT_LITTLE
+                    0x8A: FailUnimpl::lddfa_pnfl();
+                    //ASI_SECONDARY_NO_FAULT
+                    0x83: FailUnimpl::lddfa_snf();
+                    //ASI_SECONDARY_NO_FAULT_LITTLE
+                    0x8B: FailUnimpl::lddfa_snfl();
+
+                    format BlockLoad {
+                        // LDBLOCKF
+                        //ASI_BLOCK_AS_IF_USER_PRIMARY
+                        0x16: FailUnimpl::ldblockf_aiup();
+                        //ASI_BLOCK_AS_IF_USER_SECONDARY
+                        0x17: FailUnimpl::ldblockf_aius();
+                        //ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
+                        0x1E: FailUnimpl::ldblockf_aiupl();
+                        //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
+                        0x1F: FailUnimpl::ldblockf_aiusl();
+                        //ASI_BLOCK_PRIMARY
+                        0xF0: ldblockf_p({{Frd_%(micro_pc)d = Mem.udw}});
+                        //ASI_BLOCK_SECONDARY
+                        0xF1: FailUnimpl::ldblockf_s();
+                        //ASI_BLOCK_PRIMARY_LITTLE
+                        0xF8: FailUnimpl::ldblockf_pl();
+                        //ASI_BLOCK_SECONDARY_LITTLE
+                        0xF9: FailUnimpl::ldblockf_sl();
+                    }
+
+                    //LDSHORTF
+                    //ASI_FL8_PRIMARY
+                    0xD0: FailUnimpl::ldshortf_8p();
+                    //ASI_FL8_SECONDARY
+                    0xD1: FailUnimpl::ldshortf_8s();
+                    //ASI_FL8_PRIMARY_LITTLE
+                    0xD8: FailUnimpl::ldshortf_8pl();
+                    //ASI_FL8_SECONDARY_LITTLE
+                    0xD9: FailUnimpl::ldshortf_8sl();
+                    //ASI_FL16_PRIMARY
+                    0xD2: FailUnimpl::ldshortf_16p();
+                    //ASI_FL16_SECONDARY
+                    0xD3: FailUnimpl::ldshortf_16s();
+                    //ASI_FL16_PRIMARY_LITTLE
+                    0xDA: FailUnimpl::ldshortf_16pl();
+                    //ASI_FL16_SECONDARY_LITTLE
+                    0xDB: FailUnimpl::ldshortf_16sl();
+                    //Not an ASI which is legal with lddfa
+                    default: Trap::lddfa_bad_asi({{fault = new DataAccessException;}});
+
+                    //LoadAlt::lddfa({{
+                    //Do the actual loading
+                    //if(fault == NoFault)
+                    //{
+                        //if(AsiIsBlock(asi))
+                        //{
+                            //Do the block transfer
+                        //}
+                        //else
+                        //{
+                            //uint64_t val = Mem;
+                            //if(AsiIsLittle(asi))
+                                //val = gtole(val);
+                            //Frd.udw = val;
+                        //}
+                    //}
+                    //}}, {{64}});*/
+                }
+            }
+            0x34: Store::stfa({{Mem.uw = Frd.uw;}});
             0x36: stqfa({{fault = new FpDisabled;}});
             //XXX need to work in the ASI thing
-            0x37: Store::stdfa({{Mem = Frd.udw;}}, {{64}});
+            0x37: Store::stdfa({{Mem.udw = Frd.udw;}});
             0x3C: Cas::casa({{
                 uint64_t val = Mem.uw;
                 if(Rs2.uw == val)
