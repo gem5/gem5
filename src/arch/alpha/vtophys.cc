@@ -141,12 +141,12 @@ void
 AlphaISA::CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
     int len = 0;
+    char *start = dst;
     VirtualPort *vp = tc->getVirtPort(tc);
 
     do {
         vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
-        len++;
-    } while (len < maxlen && dst[len] != 0 );
+    } while (len < maxlen && start[len++] != 0 );
 
     tc->delVirtPort(vp);
     dst[len] = 0;
