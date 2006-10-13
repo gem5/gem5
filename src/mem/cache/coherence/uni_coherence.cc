@@ -43,19 +43,29 @@ UniCoherence::UniCoherence()
 Packet *
 UniCoherence::getPacket()
 {
-    bool unblock = cshrs.isFull();
     Packet* pkt = cshrs.getReq();
-    cshrs.markInService((MSHR*)pkt->senderState);
-    if (!cshrs.havePending()) {
-        cache->clearSlaveRequest(Request_Coherence);
-    }
-    if (unblock) {
-        //since CSHRs are always used as buffers, should always get rid of one
-        assert(!cshrs.isFull());
-        cache->clearBlocked(Blocked_Coherence);
-    }
     return pkt;
 }
+
+void
+UniCoherence::sendResult(Packet * &pkt, MSHR* cshr, bool success)
+{
+    if (success)
+    {
+        bool unblock = cshrs.isFull();
+        cshrs.markInService(cshr);
+        if (!cshrs.havePending()) {
+            cache->clearSlaveRequest(Request_Coherence);
+        }
+        cshrs.deallocate(cshr);
+        if (unblock) {
+            //since CSHRs are always used as buffers, should always get rid of one
+            assert(!cshrs.isFull());
+            cache->clearBlocked(Blocked_Coherence);
+        }
+    }
+}
+
 
 /**
  * @todo add support for returning slave requests, not doing them here.

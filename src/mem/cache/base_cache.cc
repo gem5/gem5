@@ -44,7 +44,6 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
     : Port(_name), cache(_cache), isCpuSide(_isCpuSide)
 {
     blocked = false;
-    cshrRetry = NULL;
     waitingOnRetry = false;
     //Start ports at null if more than one is created we should panic
     //cpuSidePort = NULL;
@@ -195,20 +194,20 @@ BaseCache::CachePort::recvRetry()
     }
     else
     {
-        assert(cshrRetry);
+        assert(cache->doSlaveRequest());
         //pkt = cache->getCoherencePacket();
         //We save the packet, no reordering on CSHRS
-        pkt = cshrRetry;
+        pkt = cache->getCoherencePacket();
+        MSHR* cshr = (MSHR*)pkt->senderState;
         bool success = sendTiming(pkt);
+        cache->sendCoherenceResult(pkt, cshr, success);
         waitingOnRetry = !success;
-        if (success)
+        if (success && cache->doSlaveRequest())
         {
-            if (cache->doSlaveRequest()) {
-                //Still more to issue, rerequest in 1 cycle
-                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
-                reqCpu->schedule(curTick + 1);
-            }
-            cshrRetry = NULL;
+            DPRINTF(CachePort, "%s has more requests\n", name());
+            //Still more to issue, rerequest in 1 cycle
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            reqCpu->schedule(curTick + 1);
         }
     }
     if (waitingOnRetry) DPRINTF(CachePort, "%s STILL Waiting on retry\n", name());
@@ -294,10 +293,12 @@ BaseCache::CacheEvent::process()
                     pkt->getAddr(), success ? "succesful" : "unsuccesful");
             cachePort->cache->sendResult(pkt, mshr, success);
             cachePort->waitingOnRetry = !success;
-            if (cachePort->waitingOnRetry) DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            if (cachePort->waitingOnRetry)
+                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
             if (success && cachePort->cache->doMasterRequest())
             {
-                DPRINTF(CachePort, "%s still more MSHR requests to send\n", cachePort->name());
+                DPRINTF(CachePort, "%s still more MSHR requests to send\n",
+                        cachePort->name());
                 //Still more to issue, rerequest in 1 cycle
                 pkt = NULL;
                 this->schedule(curTick+1);
@@ -306,27 +307,21 @@ BaseCache::CacheEvent::process()
         else
         {
             //CSHR
-            if (!cachePort->cshrRetry) {
-                assert(cachePort->cache->doSlaveRequest());
-                pkt = cachePort->cache->getCoherencePacket();
-            }
-            else {
-                pkt = cachePort->cshrRetry;
-            }
+            assert(cachePort->cache->doSlaveRequest());
+            pkt = cachePort->cache->getCoherencePacket();
+            MSHR* cshr = (MSHR*) pkt->senderState;
             bool success = cachePort->sendTiming(pkt);
-            if (!success) {
-                //Need to send on a retry
-                cachePort->cshrRetry = pkt;
-                cachePort->waitingOnRetry = true;
-            }
-            else
+            cachePort->cache->sendResult(pkt, cshr, success);
+            cachePort->waitingOnRetry = !success;
+            if (cachePort->waitingOnRetry)
+                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            if (success && cachePort->cache->doSlaveRequest())
             {
-                cachePort->cshrRetry = NULL;
-                if (cachePort->cache->doSlaveRequest()) {
-                    //Still more to issue, rerequest in 1 cycle
-                    pkt = NULL;
-                    this->schedule(curTick+1);
-                }
+                DPRINTF(CachePort, "%s still more CSHR requests to send\n",
+                        cachePort->name());
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
             }
         }
         return;

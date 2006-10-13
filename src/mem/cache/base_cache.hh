@@ -116,7 +116,6 @@ class BaseCache : public MemObject
 
         std::list<Packet *> drainList;
 
-        Packet *cshrRetry;
     };
 
     struct CacheEvent : public Event
@@ -183,6 +182,12 @@ class BaseCache : public MemObject
     }
 
     virtual void sendResult(Packet* &pkt, MSHR* mshr, bool success)
+    {
+
+        fatal("No implementation");
+    }
+
+    virtual void sendCoherenceResult(Packet* &pkt, MSHR* mshr, bool success)
     {
 
         fatal("No implementation");
@@ -489,10 +494,13 @@ class BaseCache : public MemObject
      */
     void setSlaveRequest(RequestCause cause, Tick time)
     {
+        if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
+        {
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(cpuSidePort);
+            reqCpu->schedule(time);
+        }
         uint8_t flag = 1<<cause;
         slaveRequests |= flag;
-        assert("Implement\n" && 0);
-//	si->pktuest(time);
     }
 
     /**

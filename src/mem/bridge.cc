@@ -153,6 +153,7 @@ Bridge::BridgePort::trySend()
     DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
+    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
     if (sendTiming(pkt)) {
         // send successful
         sendQueue.pop_front();

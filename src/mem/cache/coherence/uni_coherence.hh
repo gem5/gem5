@@ -108,11 +108,19 @@ class UniCoherence
         else
             return BlkValid | BlkWritable;
     }
+
     /**
      * Return outstanding invalidate to forward.
      * @return The next invalidate to forward to lower levels of cache.
      */
     Packet * getPacket();
+
+    /**
+     * Was the CSHR request was sent successfully?
+     * @param pkt The request.
+     * @param success True if the request was sent successfully.
+     */
+    void sendResult(Packet * &pkt, MSHR* cshr, bool success);
 
     /**
      * Handle snooped bus requests.
