@@ -1285,8 +1285,8 @@ template<class Impl>
 void
 DefaultFetch<Impl>::recvRetry()
 {
-    assert(cacheBlocked);
     if (retryPkt != NULL) {
+        assert(cacheBlocked);
         assert(retryTid != -1);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
 
