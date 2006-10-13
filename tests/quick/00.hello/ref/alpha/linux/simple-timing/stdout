@@ -6,8 +6,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 10 2006 01:56:36
-M5 started Tue Oct 10 01:57:04 2006
+M5 compiled Oct 13 2006 16:07:10
+M5 started Fri Oct 13 16:08:16 2006
 M5 executing on zizzer.eecs.umich.edu
-command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/00.hello/alpha/linux/simple-timing tests/run.py quick/00.hello/alpha/linux/simple-timing
-Exiting @ tick 8316 because target called exit()
+command line: build/ALPHA_SE/m5.debug -d build/ALPHA_SE/tests/debug/quick/00.hello/alpha/linux/simple-timing tests/run.py quick/00.hello/alpha/linux/simple-timing
+Exiting @ tick 1767066 because target called exit()

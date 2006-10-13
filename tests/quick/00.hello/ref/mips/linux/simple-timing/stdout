@@ -6,8 +6,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct  9 2006 19:28:25
-M5 started Mon Oct  9 19:28:56 2006
+M5 compiled Oct 13 2006 18:43:33
+M5 started Fri Oct 13 18:44:16 2006
 M5 executing on zizzer.eecs.umich.edu
 command line: build/MIPS_SE/m5.debug -d build/MIPS_SE/tests/debug/quick/00.hello/mips/linux/simple-timing tests/run.py quick/00.hello/mips/linux/simple-timing
-Exiting @ tick 8579 because target called exit()
+Exiting @ tick 1738011 because target called exit()
