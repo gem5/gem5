@@ -304,6 +304,7 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
+        ((MSHR*)pkt->senderState)->pkt = pkt;
         if (pkt->result == Packet::Nacked) {
             //pkt->reinitFromRequest();
             warn("NACKs from devices not connected to the same bus not implemented\n");
@@ -377,6 +378,15 @@ Packet *
 Cache<TagStore,Buffering,Coherence>::getCoherencePacket()
 {
     return coherence->getPacket();
+}
+
+template<class TagStore, class Buffering, class Coherence>
+void
+Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(Packet* &pkt,
+                                                         MSHR *cshr,
+                                                         bool success)
+{
+    coherence->sendResult(pkt, cshr, success);
 }
 
 

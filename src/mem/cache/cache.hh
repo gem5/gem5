@@ -179,6 +179,13 @@ class Cache : public BaseCache
     virtual void sendResult(Packet * &pkt, MSHR* mshr, bool success);
 
     /**
+     * Was the CSHR request was sent successfully?
+     * @param pkt The request.
+     * @param success True if the request was sent successfully.
+     */
+    virtual void sendCoherenceResult(Packet * &pkt, MSHR* cshr, bool success);
+
+    /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The request being responded to.
      */
