@@ -38,8 +38,6 @@
 #include "sim/root.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
 
-#include <iostream>
-
 /**
  * Cache block status bit assignments
  */
@@ -179,22 +177,5 @@ class CacheBlk
 
 
 };
-
-/**
- * Output a CacheBlk to the given ostream.
- * @param out The stream for the output.
- * @param blk The cache block to print.
- *
- * @return The output stream.
- */
-inline std::ostream &
-operator<<(std::ostream &out, const CacheBlk &blk)
-{
-    out << std::hex << std::endl;
-    out << "  Tag: " << blk.tag << std::endl;
-    out << "  Status: " <<  blk.status << std::endl;
-
-    return(out << std::dec);
-}
 
 #endif //__CACHE_BLK_HH__
