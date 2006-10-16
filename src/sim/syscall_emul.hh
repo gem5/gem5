@@ -356,6 +356,14 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_dev = htog(tgt->st_dev);
     tgt->st_ino = host->st_ino;
     tgt->st_ino = htog(tgt->st_ino);
+    tgt->st_mode = host->st_mode;
+    tgt->st_mode = htog(tgt->st_mode);
+    tgt->st_nlink = host->st_nlink;
+    tgt->st_nlink = htog(tgt->st_nlink);
+    tgt->st_uid = host->st_uid;
+    tgt->st_uid = htog(tgt->st_uid);
+    tgt->st_gid = host->st_gid;
+    tgt->st_gid = htog(tgt->st_gid);
     if (fakeTTY)
         tgt->st_rdev = 0x880d;
     else
