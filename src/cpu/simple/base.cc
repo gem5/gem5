@@ -402,10 +402,12 @@ BaseSimpleCPU::preExecute()
         if (instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;
             curStaticInst = curMacroStaticInst->fetchMicroOp(0);
+        } else {
+            curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->fetchMicroOp(thread->readMicroPc());
+        curStaticInst = curMacroStaticInst->fetchMicroOp(thread->readMicroPC());
     }
 
 
@@ -464,17 +466,17 @@ BaseSimpleCPU::advancePC(Fault fault)
             assert(curMacroStaticInst);
             //Close out this macro op, and clean up the
             //microcode state
-            curMacroStaticInst = nullStaticInst;
+            curMacroStaticInst = StaticInst::nullStaticInstPtr;
             thread->setMicroPC(0);
-            thread->setNextMicroPC(0);
+            thread->setNextMicroPC(1);
         }
         //If we're still in a macro op
         if (curMacroStaticInst) {
             //Advance the micro pc
-            thread->setMicroPC(thread->getNextMicroPC());
+            thread->setMicroPC(thread->readNextMicroPC());
             //Advance the "next" micro pc. Note that there are no delay
             //slots, and micro ops are "word" addressed.
-            thread->setNextMicroPC(thread->getNextMicroPC() + 1);
+            thread->setNextMicroPC(thread->readNextMicroPC() + 1);
         } else {
             // go to the next instruction
             thread->setPC(thread->readNextPC());

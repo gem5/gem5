@@ -42,13 +42,13 @@
 ThreadState::ThreadState(int _cpuId, int _tid)
     : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      funcExeInst(0), storeCondFailures(0)
+      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
 ThreadState::ThreadState(int _cpuId, int _tid, Process *_process,
                          short _asid, MemObject *mem)
     : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
       process(_process), asid(_asid),
-      funcExeInst(0), storeCondFailures(0)
+      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif
 {
     numInst = 0;
