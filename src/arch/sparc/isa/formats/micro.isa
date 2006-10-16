@@ -59,6 +59,8 @@ output header {{
                 assert(microPC < numMicroOps);
                 return microOps[microPC];
             }
+
+            %(BasicExecPanic)s
         };
 
         class SparcMicroInst : public SparcStaticInst

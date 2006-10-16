@@ -33,6 +33,14 @@ def template BasicExecDeclare {{
         Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
+// Definitions of execute methods that panic.
+def template BasicExecPanic {{
+        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+        {
+            panic("Execute method called when it shouldn't!");
+        }
+}};
+
 // Basic instruction class declaration template.
 def template BasicDeclare {{
         /**
