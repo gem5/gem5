@@ -68,14 +68,12 @@ UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
     if (pkt->isInvalidate()) {
         DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
                 pkt->getAddr(), blk);
-        if (!cache->isTopLevel()) {
-            // Forward to other caches
-            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
-            cshrs.allocate(tmp);
-            cache->setSlaveRequest(Request_Coherence, curTick);
-            if (cshrs.isFull()) {
-                cache->setBlockedForSnoop(Blocked_Coherence);
-            }
+        // Forward to other caches
+        Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+        cshrs.allocate(tmp);
+        cache->setSlaveRequest(Request_Coherence, curTick);
+        if (cshrs.isFull()) {
+            cache->setBlockedForSnoop(Blocked_Coherence);
         }
     } else {
         if (blk) {

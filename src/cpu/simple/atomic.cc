@@ -182,9 +182,9 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 void
 AtomicSimpleCPU::resume()
 {
-    assert(system->getMemoryMode() == System::Atomic);
     changeState(SimObject::Running);
     if (thread->status() == ThreadContext::Active) {
+        assert(system->getMemoryMode() == System::Atomic);
         if (!tickEvent.scheduled())
             tickEvent.schedule(curTick);
     }

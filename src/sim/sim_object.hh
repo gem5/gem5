@@ -64,6 +64,13 @@ class SimObject : public Serializable, protected StartupCallback
         Draining,
         Drained
     };
+
+    enum MemoryMode {
+        Invalid=0,
+        Atomic,
+        Timing
+    };
+
   private:
     State state;
 

@@ -320,7 +320,7 @@ Bus::functionalSnoop(Packet *pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
-    while (!ports.empty())
+    while (!ports.empty() && pkt->result != Packet::Success)
     {
         interfaces[ports.back()]->sendFunctional(pkt);
         ports.pop_back();
@@ -367,7 +367,10 @@ Bus::recvFunctional(Packet *pkt)
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
     functionalSnoop(pkt);
-    findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
+
+    // If the snooping found what we were looking for, we're done.
+    if (pkt->result != Packet::Success)
+        findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
 }
 
 /** Function called by the port when the bus is receiving a status change.*/

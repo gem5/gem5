@@ -107,6 +107,42 @@ BaseCache::CachePort::recvAtomic(Packet *pkt)
 void
 BaseCache::CachePort::recvFunctional(Packet *pkt)
 {
+    //Check storage here first
+    list<Packet *>::iterator i = drainList.begin();
+    list<Packet *>::iterator end = drainList.end();
+    for (; i != end; ++i) {
+        Packet * target = *i;
+        // If the target contains data, and it overlaps the
+        // probed request, need to update data
+        if (target->intersect(pkt)) {
+            uint8_t* pkt_data;
+            uint8_t* write_data;
+            int data_size;
+            if (target->getAddr() < pkt->getAddr()) {
+                int offset = pkt->getAddr() - target->getAddr();
+                            pkt_data = pkt->getPtr<uint8_t>();
+                            write_data = target->getPtr<uint8_t>() + offset;
+                            data_size = target->getSize() - offset;
+                            assert(data_size > 0);
+                            if (data_size > pkt->getSize())
+                                data_size = pkt->getSize();
+            } else {
+                int offset = target->getAddr() - pkt->getAddr();
+                pkt_data = pkt->getPtr<uint8_t>() + offset;
+                write_data = target->getPtr<uint8_t>();
+                data_size = pkt->getSize() - offset;
+                assert(data_size > pkt->getSize());
+                if (data_size > target->getSize())
+                    data_size = target->getSize();
+            }
+
+            if (pkt->isWrite()) {
+                memcpy(pkt_data, write_data, data_size);
+            } else {
+                memcpy(write_data, pkt_data, data_size);
+            }
+        }
+    }
     cache->doFunctionalAccess(pkt, isCpuSide);
 }
 
@@ -153,7 +189,6 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
             BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
             reqCpu->schedule(curTick + 1);
         }
@@ -166,12 +201,13 @@ BaseCache::CachePort::recvRetry()
         pkt = cshrRetry;
         bool success = sendTiming(pkt);
         waitingOnRetry = !success;
-        if (success && cache->doSlaveRequest())
+        if (success)
         {
-            //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
-            reqCpu->schedule(curTick + 1);
+            if (cache->doSlaveRequest()) {
+                //Still more to issue, rerequest in 1 cycle
+                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+                reqCpu->schedule(curTick + 1);
+            }
             cshrRetry = NULL;
         }
     }
@@ -269,20 +305,28 @@ BaseCache::CacheEvent::process()
         }
         else
         {
-            assert(cachePort->cache->doSlaveRequest());
             //CSHR
-            pkt = cachePort->cache->getCoherencePacket();
+            if (!cachePort->cshrRetry) {
+                assert(cachePort->cache->doSlaveRequest());
+                pkt = cachePort->cache->getCoherencePacket();
+            }
+            else {
+                pkt = cachePort->cshrRetry;
+            }
             bool success = cachePort->sendTiming(pkt);
             if (!success) {
                 //Need to send on a retry
                 cachePort->cshrRetry = pkt;
                 cachePort->waitingOnRetry = true;
             }
-            else if (cachePort->cache->doSlaveRequest())
+            else
             {
-                //Still more to issue, rerequest in 1 cycle
-                pkt = NULL;
-                this->schedule(curTick+1);
+                cachePort->cshrRetry = NULL;
+                if (cachePort->cache->doSlaveRequest()) {
+                    //Still more to issue, rerequest in 1 cycle
+                    pkt = NULL;
+                    this->schedule(curTick+1);
+                }
             }
         }
         return;

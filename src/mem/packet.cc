@@ -34,8 +34,11 @@
  * Definition of the Packet Class, a packet is a transaction occuring
  * between a single level of the memory heirarchy (ie L1->L2).
  */
+
+#include <iostream>
 #include "base/misc.hh"
 #include "mem/packet.hh"
+#include "base/trace.hh"
 
 static const std::string ReadReqString("ReadReq");
 static const std::string WriteReqString("WriteReq");
@@ -139,5 +142,93 @@ Packet::intersect(Packet *p)
 bool
 fixPacket(Packet *func, Packet *timing)
 {
-    panic("Need to implement!");
+    Addr funcStart      = func->getAddr();
+    Addr funcEnd        = func->getAddr() + func->getSize() - 1;
+    Addr timingStart    = timing->getAddr();
+    Addr timingEnd      = timing->getAddr() + timing->getSize() - 1;
+
+    assert(!(funcStart > timingEnd || timingStart < funcEnd));
+
+    if (DTRACE(FunctionalAccess)) {
+       DebugOut() << func;
+       DebugOut() << timing;
+    }
+
+    // this packet can't solve our problem, continue on
+    if (!timing->hasData())
+        return true;
+
+    if (func->isRead()) {
+        if (funcStart >= timingStart && funcEnd <= timingEnd) {
+            func->allocate();
+            memcpy(func->getPtr<uint8_t>(), timing->getPtr<uint8_t>() +
+                    funcStart - timingStart, func->getSize());
+            func->result = Packet::Success;
+            return false;
+        } else {
+            // In this case the timing packet only partially satisfies the
+            // requset, so we would need more information to make this work.
+            // Like bytes valid in the packet or something, so the request could
+            // continue and get this bit of possibly newer data along with the
+            // older data not written to yet.
+            panic("Timing packet only partially satisfies the functional"
+                    "request. Now what?");
+        }
+    } else if (func->isWrite()) {
+        if (funcStart >= timingStart) {
+            memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
+                   func->getPtr<uint8_t>(),
+                   funcStart - std::min(funcEnd, timingEnd));
+        } else { // timingStart > funcStart
+            memcpy(timing->getPtr<uint8_t>(),
+                   func->getPtr<uint8_t>() + (timingStart - funcStart),
+                   timingStart - std::min(funcEnd, timingEnd));
+        }
+        // we always want to keep going with a write
+        return true;
+    } else
+        panic("Don't know how to handle command type %#x\n",
+                func->cmdToIndex());
+
 }
+
+
+std::ostream &
+operator<<(std::ostream &o, const Packet &p)
+{
+
+    o << "[0x";
+    o.setf(std::ios_base::hex, std::ios_base::showbase);
+    o <<  p.getAddr();
+    o.unsetf(std::ios_base::hex| std::ios_base::showbase);
+    o <<  ":";
+    o.setf(std::ios_base::hex, std::ios_base::showbase);
+    o <<  p.getAddr() + p.getSize() - 1 << "] ";
+    o.unsetf(std::ios_base::hex| std::ios_base::showbase);
+
+    if (p.result == Packet::Success)
+        o << "Successful ";
+    if (p.result == Packet::BadAddress)
+        o << "BadAddress ";
+    if (p.result == Packet::Nacked)
+        o << "Nacked ";
+    if (p.result == Packet::Unknown)
+        o << "Inflight ";
+
+    if (p.isRead())
+        o << "Read ";
+    if (p.isWrite())
+        o << "Read ";
+    if (p.isInvalidate())
+        o << "Read ";
+    if (p.isRequest())
+        o << "Request ";
+    if (p.isResponse())
+        o << "Response ";
+    if (p.hasData())
+        o << "w/Data ";
+
+    o << std::endl;
+    return o;
+}
+

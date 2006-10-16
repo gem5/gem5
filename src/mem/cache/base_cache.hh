@@ -212,10 +212,6 @@ class BaseCache : public MemObject
 
   protected:
 
-    /** True if this cache is connected to the CPU. */
-    bool topLevelCache;
-
-
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
 
@@ -337,7 +333,7 @@ class BaseCache : public MemObject
      */
     BaseCache(const std::string &name, Params &params)
         : MemObject(name), blocked(0), blockedSnoop(0), masterRequests(0),
-          slaveRequests(0), topLevelCache(false),  blkSize(params.blkSize),
+          slaveRequests(0), blkSize(params.blkSize),
           missCount(params.maxMisses)
     {
         //Start ports at null if more than one is created we should panic
@@ -355,15 +351,6 @@ class BaseCache : public MemObject
     int getBlockSize() const
     {
         return blkSize;
-    }
-
-    /**
-     * Returns true if this cache is connect to the CPU.
-     * @return True if this is a L1 cache.
-     */
-    bool isTopLevel()
-    {
-        return topLevelCache;
     }
 
     /**
@@ -561,8 +548,6 @@ class BaseCache : public MemObject
      */
     void respondToSnoop(Packet *pkt, Tick time)
     {
-//        assert("Implement\n" && 0);
-//	mi->respond(pkt,curTick + hitLatency);
         assert (pkt->needsResponse());
         CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
         reqMem->schedule(time);
@@ -585,15 +570,7 @@ class BaseCache : public MemObject
         {
             //This is where snoops get updated
             AddrRangeList dummy;
-//            if (!topLevelCache)
-//            {
-                cpuSidePort->getPeerAddressRanges(dummy, snoop);
-//            }
-//            else
-//            {
-//                snoop.push_back(RangeSize(0,-1));
-//            }
-
+            cpuSidePort->getPeerAddressRanges(dummy, snoop);
             return;
         }
     }

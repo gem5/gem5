@@ -360,7 +360,11 @@ MemTest::tick()
         //For now we only allow one outstanding request per addreess per tester
         //This means we assume CPU does write forwarding to reads that alias something
         //in the cpu store buffer.
-        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) return;
+        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
+            delete result;
+            delete req;
+            return;
+        }
         else outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
@@ -395,7 +399,12 @@ MemTest::tick()
         //For now we only allow one outstanding request per addreess per tester
         //This means we assume CPU does write forwarding to reads that alias something
         //in the cpu store buffer.
-        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) return;
+        if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
+            delete [] result;
+            delete req;
+            return;
+        }
+
         else outstandingAddrs.insert(paddr);
 
 /*
