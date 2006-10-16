@@ -33,6 +33,7 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "base/misc.hh"
+#include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 
 namespace SparcISA
@@ -46,6 +47,9 @@ namespace SparcISA
         //into all the execute functions
         if(inst & (1 << 13))
             emi |= (static_cast<ExtMachInst>(xc->readMiscReg(MISCREG_ASI))
+                    << (sizeof(MachInst) * 8));
+        else
+            emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
                     << (sizeof(MachInst) * 8));
         return emi;
     }

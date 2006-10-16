@@ -34,7 +34,7 @@ output header {{
             const uint32_t numMicroOps;
 
             //Constructor.
-            SparcMacroInst(const char *mnem, MachInst _machInst,
+            SparcMacroInst(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, uint32_t _numMicroOps)
                         : SparcStaticInst(mnem, _machInst, __opClass),
                         numMicroOps(_numMicroOps)
@@ -68,7 +68,7 @@ output header {{
           protected:
             //Constructor.
             SparcMicroInst(const char *mnem,
-                    MachInst _machInst, OpClass __opClass)
+                    ExtMachInst _machInst, OpClass __opClass)
                         : SparcStaticInst(mnem, _machInst, __opClass)
             {
                 flags[IsMicroOp] = true;
@@ -80,7 +80,7 @@ output header {{
           protected:
             //Constructor.
             SparcDelayedMicroInst(const char *mnem,
-                    MachInst _machInst, OpClass __opClass)
+                    ExtMachInst _machInst, OpClass __opClass)
                         : SparcMicroInst(mnem, _machInst, __opClass)
             {
                 flags[IsDelayedCommit] = true;

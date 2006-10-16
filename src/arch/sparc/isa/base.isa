@@ -77,7 +77,7 @@ output header {{
           protected:
             // Constructor.
             SparcStaticInst(const char *mnem,
-                 MachInst _machInst, OpClass __opClass)
+                 ExtMachInst _machInst, OpClass __opClass)
                     : StaticInst(mnem, _machInst, __opClass)
                 {
                 }
