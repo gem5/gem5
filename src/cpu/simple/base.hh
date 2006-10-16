@@ -128,6 +128,7 @@ class BaseSimpleCPU : public BaseCPU
     TheISA::IntReg dataReg;
 
     StaticInstPtr curStaticInst;
+    StaticInstPtr curMacroStaticInst;
 
     void checkForInterrupts();
     Fault setupFetchRequest(Request *req);

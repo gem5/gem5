@@ -396,7 +396,18 @@ BaseSimpleCPU::preExecute()
 
     // decode the instruction
     inst = gtoh(inst);
-    curStaticInst = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+    //If we're not in the middle of a macro instruction
+    if (!curMacroStaticInst) {
+        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+        if (instPtr->isMacroOp()) {
+            curMacroStaticInst = instPtr;
+            curStaticInst = curMacroStaticInst->fetchMicroOp(0);
+        }
+    } else {
+        //Read the next micro op from the macro op
+        curStaticInst = curMacroStaticInst->fetchMicroOp(thread->readMicroPc());
+    }
+
 
     traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
                                      thread->readPC());
@@ -446,18 +457,35 @@ BaseSimpleCPU::advancePC(Fault fault)
 {
     if (fault != NoFault) {
         fault->invoke(tc);
-    }
-    else {
-        // go to the next instruction
-        thread->setPC(thread->readNextPC());
+    } else {
+        //If we're at the last micro op for this instruction
+        if (curStaticInst->isLastMicroOp()) {
+            //We should be working with a macro op
+            assert(curMacroStaticInst);
+            //Close out this macro op, and clean up the
+            //microcode state
+            curMacroStaticInst = nullStaticInst;
+            thread->setMicroPC(0);
+            thread->setNextMicroPC(0);
+        }
+        //If we're still in a macro op
+        if (curMacroStaticInst) {
+            //Advance the micro pc
+            thread->setMicroPC(thread->getNextMicroPC());
+            //Advance the "next" micro pc. Note that there are no delay
+            //slots, and micro ops are "word" addressed.
+            thread->setNextMicroPC(thread->getNextMicroPC() + 1);
+        } else {
+            // go to the next instruction
+            thread->setPC(thread->readNextPC());
 #if ISA_HAS_DELAY_SLOT
-        thread->setNextPC(thread->readNextNPC());
-        thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
-        assert(thread->readNextPC() != thread->readNextNPC());
+            thread->setNextPC(thread->readNextNPC());
+            thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
+            assert(thread->readNextPC() != thread->readNextNPC());
 #else
-        thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
+            thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
 #endif
-
+        }
     }
 
 #if FULL_SYSTEM

@@ -200,6 +200,16 @@ struct ThreadState {
      */
     TheISA::MachInst inst;
 
+    /** The current microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC microPC;
+
+    /** The next microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC nextMicroPC;
+
   public:
     /**
      * Temporary storage to pass the source address from copy_load to

@@ -377,6 +377,16 @@ class SimpleThread : public ThreadState
         regs.setPC(val);
     }
 
+    uint64_t readMicroPC()
+    {
+        return microPC;
+    }
+
+    void setMicroPC(uint64_t val)
+    {
+        microPC = val;
+    }
+
     uint64_t readNextPC()
     {
         return regs.readNextPC();
@@ -385,6 +395,16 @@ class SimpleThread : public ThreadState
     void setNextPC(uint64_t val)
     {
         regs.setNextPC(val);
+    }
+
+    uint64_t readNextMicroPC()
+    {
+        return nextMicroPC;
+    }
+
+    void setNextMicroPC(uint64_t val)
+    {
+        nextMicroPC = val;
     }
 
     uint64_t readNextNPC()
