@@ -188,11 +188,11 @@ let {{
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + imm;'
         iop = InstObjParams(name, Name, 'Mem', code,
-                opt_flags, ("ea_code", addrCalcReg),
-                ("priv_check", priv))
+                opt_flags, {"ea_code": addrCalcReg,
+                "priv_check": priv})
         iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code,
-                opt_flags, ("ea_code", addrCalcImm),
-                ("priv_check", priv))
+                opt_flags, {"ea_code": addrCalcImm,
+                "priv_check": priv})
         header_output = BasicDeclare.subst(iop) + BasicDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)

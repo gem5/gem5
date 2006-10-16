@@ -1636,7 +1636,7 @@ opClassRE = re.compile(r'.*Op|No_OpClass')
 
 class InstObjParams:
     def __init__(self, mnem, class_name, base_class = '',
-                 code = None, opt_args = [], *extras):
+                 code = None, opt_args = [], extras = {}):
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class
@@ -1648,13 +1648,23 @@ class InstObjParams:
             else:
                 origCode = code
                 codeBlock = CodeBlock(code)
-            compositeCode = '\n'.join([origCode] +
-                    [pair[1] for pair in extras])
+            stringExtras = {}
+            otherExtras = {}
+            for (k, v) in extras.items():
+                if type(v) == str:
+                    stringExtras[k] = v
+                else:
+                    otherExtras[k] = v
+            compositeCode = "\n".join([origCode] + stringExtras.values())
+            # compositeCode = '\n'.join([origCode] +
+            #	    [pair[1] for pair in extras])
             compositeBlock = CodeBlock(compositeCode)
             for code_attr in compositeBlock.__dict__.keys():
                 setattr(self, code_attr, getattr(compositeBlock, code_attr))
-            for (key, snippet) in extras:
+            for (key, snippet) in stringExtras.items():
                 setattr(self, key, CodeBlock(snippet).code)
+            for (key, item) in otherExtras.items():
+                setattr(self, key, item)
             self.code = codeBlock.code
             self.orig_code = origCode
         else:

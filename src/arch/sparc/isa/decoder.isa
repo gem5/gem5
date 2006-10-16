@@ -951,7 +951,7 @@ decode OP default Unknown::unknown()
                         //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::ldblockf_aiusl();
                         //ASI_BLOCK_PRIMARY
-                        0xF0: ldblockf_p({{Frd_%(micro_pc)d = Mem.udw}});
+                        0xF0: ldblockf_p({{Frd_N = Mem.udw;}});
                         //ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::ldblockf_s();
                         //ASI_BLOCK_PRIMARY_LITTLE

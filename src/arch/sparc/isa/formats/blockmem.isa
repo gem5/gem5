@@ -167,8 +167,10 @@ def template BlockMemDeclare {{
             //Constructor
             %(class_name)s(MachInst machInst);
 
+          protected:
             class %(class_name)s_0 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_0(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[0]",
@@ -179,6 +181,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_1 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_1(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[1]",
@@ -189,6 +192,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_2 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_2(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[2]",
@@ -199,6 +203,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_3 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_3(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[3]",
@@ -209,6 +214,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_4 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_4(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[4]",
@@ -219,6 +225,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_5 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_5(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[5]",
@@ -229,6 +236,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_6 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_6(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[6]",
@@ -239,6 +247,7 @@ def template BlockMemDeclare {{
 
             class %(class_name)s_7 : public %(base_class)sMicro
             {
+              public:
                 //Constructor
                 %(class_name)s_7(MachInst machInst) :
                     %(base_class)sMicro("%(mnemonic)s[7]",
@@ -257,15 +266,14 @@ def template BlockMemConstructor {{
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
             %(constructor)s;
-            microOps =
-                {new %(class_name)s_0(machInst),
-                new %(class_name)s_1(machInst),
-                new %(class_name)s_2(machInst),
-                new %(class_name)s_3(machInst),
-                new %(class_name)s_4(machInst),
-                new %(class_name)s_5(machInst),
-                new %(class_name)s_6(machInst),
-                new %(class_name)s_7(machInst)}
+            microOps[0] = new %(class_name)s_0(machInst);
+            microOps[1] = new %(class_name)s_1(machInst);
+            microOps[2] = new %(class_name)s_2(machInst);
+            microOps[3] = new %(class_name)s_3(machInst);
+            microOps[4] = new %(class_name)s_4(machInst);
+            microOps[5] = new %(class_name)s_5(machInst);
+            microOps[6] = new %(class_name)s_6(machInst);
+            microOps[7] = new %(class_name)s_7(machInst);
         }
 }};
 
@@ -334,19 +342,21 @@ let {{
                     return new MemAddressNotAligned;'''
         addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
         addrCalcImm = 'EA = Rs1 + imm + offset;'
-        iop = InstObjParams(name, Name, 'Mem', code, opt_flags)
-        iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code, opt_flags)
+        iop = InstObjParams(name, Name, 'BlockMem', code, opt_flags)
+        iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', code, opt_flags)
         header_output = BlockMemDeclare.subst(iop) + BlockMemDeclare.subst(iop_imm)
         decoder_output = BlockMemConstructor.subst(iop) + BlockMemConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
+        matcher = re.compile(r'Frd_N')
+        exec_output = ''
         for microPC in range(8):
-            pcedCode = code % ("micro_pc", microPC)
-            iop = InstObjParams(name, Name, 'Mem', pcedCode,
-                    opt_flags, ("ea_code", addrCalcReg),
-                    ("fault_check", faultCheck), ("micro_pc", microPC))
-            iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', pcedCode,
-                    opt_flags, ("ea_code", addrCalcImm),
-                    ("fault_check", faultCheck), ("micro_pc", microPC))
+            pcedCode = matcher.sub("Frd_%d" % microPC, code)
+            iop = InstObjParams(name, Name, 'BlockMem', pcedCode,
+                    opt_flags, {"ea_code": addrCalcReg,
+                    "fault_check": faultCheck, "micro_pc": microPC})
+            iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', pcedCode,
+                    opt_flags, {"ea_code": addrCalcImm,
+                    "fault_check": faultCheck, "micro_pc": microPC})
             exec_output += execute.subst(iop)
             exec_output += execute.subst(iop_imm)
             faultCheck = ''

@@ -264,13 +264,13 @@ let {{
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
         iop = InstObjParams(name, Name,	'IntOp', code,
-                opt_flags, ("cc_code", ccCode))
+                opt_flags, {"cc_code": ccCode})
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = IntOpExecute.subst(iop)
         if usesImm:
             imm_iop = InstObjParams(name, Name + 'Imm', 'IntOpImm' + iString,
-                    immCode, opt_flags, ("cc_code", ccCode))
+                    immCode, opt_flags, {"cc_code": ccCode})
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += IntOpExecute.subst(imm_iop)
@@ -341,7 +341,7 @@ def format IntOpCcRes(code, *opt_flags) {{
 
 def format SetHi(code, *opt_flags) {{
     iop = InstObjParams(name, Name, 'SetHi',
-            code, opt_flags, ("cc_code", ''))
+            code, opt_flags, {"cc_code": ''})
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     exec_output = IntOpExecute.subst(iop)

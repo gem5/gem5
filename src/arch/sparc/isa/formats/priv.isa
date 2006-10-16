@@ -103,13 +103,13 @@ let {{
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
         iop = InstObjParams(name, Name, 'Priv', code,
-                opt_flags, ("check", checkCode))
+                opt_flags, {"check": checkCode})
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = PrivExecute.subst(iop)
         if usesImm:
             imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm',
-                    immCode, opt_flags, ("check", checkCode))
+                    immCode, opt_flags, {"check": checkCode})
             header_output += BasicDeclare.subst(imm_iop)
             decoder_output += BasicConstructor.subst(imm_iop)
             exec_output += PrivExecute.subst(imm_iop)
