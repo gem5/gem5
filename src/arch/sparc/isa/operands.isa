@@ -42,6 +42,16 @@ def operand_types {{
     'qf' : ('float', 128)
 }};
 
+output header {{
+    // A function to "decompress" double and quad floating point
+    // register numbers stuffed into 5 bit fields. These have their
+    // MSB put in the LSB position but are otherwise normal.
+    static inline unsigned int dfpr(unsigned int regNum)
+    {
+        return regNum | ((regNum & 1) << 5);
+    }
+}};
+
 def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
@@ -51,17 +61,22 @@ def operands {{
     'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 3),
     'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 4),
     'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 5),
-    'Frd':		('FloatReg', 'df', 'RD', 'IsFloating', 10),
-    'Frd_0':		('FloatReg', 'df', 'RD', 'IsFloating', 10),
-    'Frd_1':		('FloatReg', 'df', 'RD + 1', 'IsFloating', 10),
-    'Frd_2':		('FloatReg', 'df', 'RD + 2', 'IsFloating', 10),
-    'Frd_3':		('FloatReg', 'df', 'RD + 3', 'IsFloating', 10),
-    'Frd_4':		('FloatReg', 'df', 'RD + 4', 'IsFloating', 10),
-    'Frd_5':		('FloatReg', 'df', 'RD + 5', 'IsFloating', 10),
-    'Frd_6':		('FloatReg', 'df', 'RD + 6', 'IsFloating', 10),
-    'Frd_7':		('FloatReg', 'df', 'RD + 7', 'IsFloating', 10),
-    'Frs1':		('FloatReg', 'df', 'RS1', 'IsFloating', 11),
-    'Frs2':		('FloatReg', 'df', 'RS2', 'IsFloating', 12),
+    'Frds':		('FloatReg', 'sf', 'RD', 'IsFloating', 10),
+    'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
+    # Each Frd_N refers to the Nth double precision register from Frd.
+    # Note that this adds twice N to the register number.
+    'Frd_0':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
+    'Frd_1':		('FloatReg', 'df', 'dfpr(RD) + 2', 'IsFloating', 10),
+    'Frd_2':		('FloatReg', 'df', 'dfpr(RD) + 4', 'IsFloating', 10),
+    'Frd_3':		('FloatReg', 'df', 'dfpr(RD) + 6', 'IsFloating', 10),
+    'Frd_4':		('FloatReg', 'df', 'dfpr(RD) + 8', 'IsFloating', 10),
+    'Frd_5':		('FloatReg', 'df', 'dfpr(RD) + 10', 'IsFloating', 10),
+    'Frd_6':		('FloatReg', 'df', 'dfpr(RD) + 12', 'IsFloating', 10),
+    'Frd_7':		('FloatReg', 'df', 'dfpr(RD) + 14', 'IsFloating', 10),
+    'Frs1s':		('FloatReg', 'df', 'RS1', 'IsFloating', 11),
+    'Frs1':		('FloatReg', 'df', 'dfpr(RS1)', 'IsFloating', 11),
+    'Frs2s':		('FloatReg', 'df', 'RS2', 'IsFloating', 12),
+    'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
     'Mem': 		('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 20),
     'NPC': 		('NPC', 'udw', None, ( None, None, 'IsControl' ), 31),
     'NNPC':		('NNPC', 'udw', None, (None, None, 'IsControl' ), 32),

@@ -441,7 +441,7 @@ decode OP default Unknown::unknown()
             0x34: decode OPF{
                 format BasicOperate{
                     0x01: fmovs({{
-                        Frd.uw = Frs2.uw;
+                        Frds.uw = Frs2s.uw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
@@ -454,7 +454,7 @@ decode OP default Unknown::unknown()
                     }});
                     0x03: Trap::fmovq({{fault = new FpDisabled;}});
                     0x05: fnegs({{
-                        Frd.uw = Frs2.uw ^ (1UL << 31);
+                        Frds.uw = Frs2s.uw ^ (1UL << 31);
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
@@ -467,7 +467,7 @@ decode OP default Unknown::unknown()
                     }});
                     0x07: Trap::fnegq({{fault = new FpDisabled;}});
                     0x09: fabss({{
-                        Frd.uw = ((1UL << 31) - 1) & Frs2.uw;
+                        Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;
                         //fsr.ftt = fsr.cexc = 0
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
@@ -479,55 +479,55 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(0x1F);
                     }});
                     0x0B: Trap::fabsq({{fault = new FpDisabled;}});
-                    0x29: fsqrts({{Frd.sf = sqrt(Frs2.sf);}});
+                    0x29: fsqrts({{Frds.sf = sqrt(Frs2s.sf);}});
                     0x2A: fsqrtd({{Frd.df = sqrt(Frs2.df);}});
                     0x2B: Trap::fsqrtq({{fault = new FpDisabled;}});
-                    0x41: fadds({{Frd.sf = Frs1.sf + Frs2.sf;}});
+                    0x41: fadds({{Frds.sf = Frs1s.sf + Frs2s.sf;}});
                     0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});
                     0x43: Trap::faddq({{fault = new FpDisabled;}});
-                    0x45: fsubs({{Frd.sf = Frs1.sf - Frs2.sf;}});
+                    0x45: fsubs({{Frds.sf = Frs1s.sf - Frs2s.sf;}});
                     0x46: fsubd({{Frd.df = Frs1.df - Frs2.df;}});
                     0x47: Trap::fsubq({{fault = new FpDisabled;}});
-                    0x49: fmuls({{Frd.sf = Frs1.sf * Frs2.sf;}});
+                    0x49: fmuls({{Frds.sf = Frs1s.sf * Frs2s.sf;}});
                     0x4A: fmuld({{Frd.df = Frs1.df * Frs2.df;}});
                     0x4B: Trap::fmulq({{fault = new FpDisabled;}});
-                    0x4D: fdivs({{Frd.sf = Frs1.sf / Frs2.sf;}});
+                    0x4D: fdivs({{Frds.sf = Frs1s.sf / Frs2s.sf;}});
                     0x4E: fdivd({{Frd.df = Frs1.df / Frs2.df;}});
                     0x4F: Trap::fdivq({{fault = new FpDisabled;}});
-                    0x69: fsmuld({{Frd.df = Frs1.sf * Frs2.sf;}});
+                    0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
                     0x6E: Trap::fdmulq({{fault = new FpDisabled;}});
                     0x81: fstox({{
-                            Frd.df = (double)static_cast<int64_t>(Frs2.sf);
+                            Frd.df = (double)static_cast<int64_t>(Frs2s.sf);
                     }});
                     0x82: fdtox({{
                             Frd.df = (double)static_cast<int64_t>(Frs2.df);
                     }});
                     0x83: Trap::fqtox({{fault = new FpDisabled;}});
                     0x84: fxtos({{
-                            Frd.sf = static_cast<float>((int64_t)Frs2.df);
+                            Frds.sf = static_cast<float>((int64_t)Frs2.df);
                     }});
                     0x88: fxtod({{
                             Frd.df = static_cast<double>((int64_t)Frs2.df);
                     }});
                     0x8C: Trap::fxtoq({{fault = new FpDisabled;}});
                     0xC4: fitos({{
-                            Frd.sf = static_cast<float>((int32_t)Frs2.sf);
+                            Frds.sf = static_cast<float>((int32_t)Frs2s.sf);
                     }});
-                    0xC6: fdtos({{Frd.sf = Frs2.df;}});
+                    0xC6: fdtos({{Frds.sf = Frs2.df;}});
                     0xC7: Trap::fqtos({{fault = new FpDisabled;}});
                     0xC8: fitod({{
-                            Frd.df = static_cast<double>((int32_t)Frs2.sf);
+                            Frd.df = static_cast<double>((int32_t)Frs2s.sf);
                     }});
-                    0xC9: fstod({{Frd.df = Frs2.sf;}});
+                    0xC9: fstod({{Frd.df = Frs2s.sf;}});
                     0xCB: Trap::fqtod({{fault = new FpDisabled;}});
                     0xCC: Trap::fitoq({{fault = new FpDisabled;}});
                     0xCD: Trap::fstoq({{fault = new FpDisabled;}});
                     0xCE: Trap::fdtoq({{fault = new FpDisabled;}});
                     0xD1: fstoi({{
-                            Frd.sf = (float)static_cast<int32_t>(Frs2.sf);
+                            Frds.sf = (float)static_cast<int32_t>(Frs2s.sf);
                     }});
                     0xD2: fdtoi({{
-                            Frd.sf = (float)static_cast<int32_t>(Frs2.df);
+                            Frds.sf = (float)static_cast<int32_t>(Frs2.df);
                     }});
                     0xD3: Trap::fqtoi({{fault = new FpDisabled;}});
                     default: Trap::fpop1({{fault = new FpDisabled;}});
@@ -620,7 +620,7 @@ decode OP default Unknown::unknown()
                 0x56: Trap::fpsub32({{fault = new IllegalInstruction;}});
                 0x57: Trap::fpsub32s({{fault = new IllegalInstruction;}});
                 0x60: BasicOperate::fzero({{Frd.df = 0;}});
-                0x61: BasicOperate::fzeros({{Frd.sf = 0;}});
+                0x61: BasicOperate::fzeros({{Frds.sf = 0;}});
                 0x62: Trap::fnor({{fault = new IllegalInstruction;}});
                 0x63: Trap::fnors({{fault = new IllegalInstruction;}});
                 0x64: Trap::fandnot2({{fault = new IllegalInstruction;}});
@@ -629,7 +629,7 @@ decode OP default Unknown::unknown()
                         Frd.df = (double)(~((uint64_t)Frs2.df));
                 }});
                 0x67: BasicOperate::fnot2s({{
-                        Frd.sf = (float)(~((uint32_t)Frs2.sf));
+                        Frds.sf = (float)(~((uint32_t)Frs2s.sf));
                 }});
                 0x68: Trap::fandnot1({{fault = new IllegalInstruction;}});
                 0x69: Trap::fandnot1s({{fault = new IllegalInstruction;}});
@@ -637,7 +637,7 @@ decode OP default Unknown::unknown()
                         Frd.df = (double)(~((uint64_t)Frs1.df));
                 }});
                 0x6B: BasicOperate::fnot1s({{
-                        Frd.sf = (float)(~((uint32_t)Frs1.sf));
+                        Frds.sf = (float)(~((uint32_t)Frs1s.sf));
                 }});
                 0x6C: Trap::fxor({{fault = new IllegalInstruction;}});
                 0x6D: Trap::fxors({{fault = new IllegalInstruction;}});
