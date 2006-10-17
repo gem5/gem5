@@ -49,7 +49,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self = LinuxAlphaSystem()
     if not mdesc:
         # generic system
-        mdesc = Machine()
+        mdesc = SysConfig()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
