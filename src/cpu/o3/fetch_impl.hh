@@ -80,7 +80,10 @@ template<class Impl>
 bool
 DefaultFetch<Impl>::IcachePort::recvTiming(Packet *pkt)
 {
-    fetch->processCacheCompletion(pkt);
+    if (pkt->isResponse()) {
+        fetch->processCacheCompletion(pkt);
+    }
+    //else Snooped a coherence request, just return
     return true;
 }
 

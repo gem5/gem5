@@ -101,7 +101,7 @@ AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
 Tick
 AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
 {
-    panic("AtomicSimpleCPU doesn't expect recvAtomic callback!");
+    //Snooping a coherence request, just return
     return curTick;
 }
 

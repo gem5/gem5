@@ -53,11 +53,11 @@ UniCoherence::sendResult(Packet * &pkt, MSHR* cshr, bool success)
     if (success)
     {
         bool unblock = cshrs.isFull();
-        cshrs.markInService(cshr);
+//        cshrs.markInService(cshr);
+        cshrs.deallocate(cshr);
         if (!cshrs.havePending()) {
             cache->clearSlaveRequest(Request_Coherence);
         }
-        cshrs.deallocate(cshr);
         if (unblock) {
             //since CSHRs are always used as buffers, should always get rid of one
             assert(!cshrs.isFull());

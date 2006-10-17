@@ -528,17 +528,23 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
 {
-    // delay processing of returned data until next CPU clock edge
-    Tick time = pkt->req->getTime();
-    while (time < curTick)
-        time += lat;
+    if (pkt->isResponse()) {
+        // delay processing of returned data until next CPU clock edge
+        Tick time = pkt->req->getTime();
+        while (time < curTick)
+            time += lat;
 
-    if (time == curTick)
-        cpu->completeIfetch(pkt);
-    else
-        tickEvent.schedule(pkt, time);
+        if (time == curTick)
+            cpu->completeIfetch(pkt);
+        else
+            tickEvent.schedule(pkt, time);
 
-    return true;
+        return true;
+    }
+    else {
+        //Snooping a Coherence Request, do nothing
+        return true;
+    }
 }
 
 void
@@ -600,17 +606,23 @@ TimingSimpleCPU::completeDrain()
 bool
 TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
 {
-    // delay processing of returned data until next CPU clock edge
-    Tick time = pkt->req->getTime();
-    while (time < curTick)
-        time += lat;
+    if (pkt->isResponse()) {
+        // delay processing of returned data until next CPU clock edge
+        Tick time = pkt->req->getTime();
+        while (time < curTick)
+            time += lat;
 
-    if (time == curTick)
-        cpu->completeDataAccess(pkt);
-    else
-        tickEvent.schedule(pkt, time);
+        if (time == curTick)
+            cpu->completeDataAccess(pkt);
+        else
+            tickEvent.schedule(pkt, time);
 
-    return true;
+        return true;
+    }
+    else {
+        //Snooping a coherence req, do nothing
+        return true;
+    }
 }
 
 void

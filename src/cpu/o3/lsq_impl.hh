@@ -63,7 +63,14 @@ template <class Impl>
 bool
 LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
 {
-    lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
+    if (pkt->isResponse()) {
+        lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
+    }
+    else {
+    //else it is a coherence request, maybe you need to do something
+        warn("Recieved a coherence request (Invalidate??), 03CPU doesn't"
+             "update LSQ for these\n");
+    }
     return true;
 }
 

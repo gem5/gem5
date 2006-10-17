@@ -331,7 +331,7 @@ BaseCache::CacheEvent::process()
             pkt = cachePort->cache->getCoherencePacket();
             MSHR* cshr = (MSHR*) pkt->senderState;
             bool success = cachePort->sendTiming(pkt);
-            cachePort->cache->sendResult(pkt, cshr, success);
+            cachePort->cache->sendCoherenceResult(pkt, cshr, success);
             cachePort->waitingOnRetry = !success;
             if (cachePort->waitingOnRetry)
                 DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
