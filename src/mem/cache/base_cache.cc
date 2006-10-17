@@ -179,16 +179,23 @@ BaseCache::CachePort::recvRetry()
             return;
         }
         pkt = cache->getPacket();
-        MSHR* mshr = (MSHR*)pkt->senderState;
+        MSHR* mshr = (MSHR*) pkt->senderState;
         //Copy the packet, it may be modified/destroyed elsewhere
         Packet * copyPkt = new Packet(*pkt);
         copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
         mshr->pkt = copyPkt;
+
         bool success = sendTiming(pkt);
         DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
-        cache->sendResult(pkt, mshr, success);
+
         waitingOnRetry = !success;
+        if (waitingOnRetry) {
+            DPRINTF(CachePort, "%s now waiting on a retry\n", name());
+        }
+
+        cache->sendResult(pkt, mshr, success);
+
         if (success && cache->doMasterRequest())
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
@@ -301,10 +308,13 @@ BaseCache::CacheEvent::process()
             bool success = cachePort->sendTiming(pkt);
             DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                     pkt->getAddr(), success ? "succesful" : "unsuccesful");
-            cachePort->cache->sendResult(pkt, mshr, success);
+
             cachePort->waitingOnRetry = !success;
-            if (cachePort->waitingOnRetry)
+            if (cachePort->waitingOnRetry) {
                 DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            }
+
+            cachePort->cache->sendResult(pkt, mshr, success);
             if (success && cachePort->cache->doMasterRequest())
             {
                 DPRINTF(CachePort, "%s still more MSHR requests to send\n",

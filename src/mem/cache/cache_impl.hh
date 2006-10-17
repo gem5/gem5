@@ -273,9 +273,14 @@ void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
     if (success && !(pkt && (pkt->flags & NACKED_LINE))) {
+        if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == Packet::UpgradeReq)
+            && (pkt && (pkt->flags & SATISFIED))) {
+            //Writeback, clean up the non copy version of the packet
+            delete pkt;
+        }
         missQueue->markInService(mshr->pkt, mshr);
         //Temp Hack for UPGRADES
-        if (mshr->pkt->cmd == Packet::UpgradeReq) {
+        if (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq) {
             assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
             BlkType *blk = tags->findBlock(pkt);
@@ -295,6 +300,11 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool
         pkt->flags &= ~NACKED_LINE;
         pkt->flags &= ~SATISFIED;
         pkt->flags &= ~SNOOP_COMMIT;
+
+//Rmove copy from mshr
+        delete mshr->pkt;
+        mshr->pkt = pkt;
+
         missQueue->restoreOrigCmd(pkt);
     }
 }

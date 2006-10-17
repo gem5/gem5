@@ -525,8 +525,11 @@ class BaseCache : public MemObject
             reqCpu->schedule(time);
         }
         else {
-            if (pkt->cmd == Packet::Writeback) delete pkt->req;
-            delete pkt;
+            if (pkt->cmd != Packet::UpgradeReq)
+            {
+                delete pkt->req;
+                delete pkt;
+            }
         }
     }
 
@@ -545,8 +548,11 @@ class BaseCache : public MemObject
             reqCpu->schedule(time);
         }
         else {
-            if (pkt->cmd == Packet::Writeback) delete pkt->req;
-            delete pkt;
+            if (pkt->cmd != Packet::UpgradeReq)
+            {
+                delete pkt->req;
+                delete pkt;
+            }
         }
     }
 

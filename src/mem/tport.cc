@@ -66,6 +66,13 @@ SimpleTimingPort::recvTiming(Packet *pkt)
         pkt->makeTimingResponse();
         sendTimingLater(pkt, latency);
     }
+    else {
+        if (pkt->cmd != Packet::UpgradeReq)
+        {
+            delete pkt->req;
+            delete pkt;
+        }
+    }
     return true;
 }
 
