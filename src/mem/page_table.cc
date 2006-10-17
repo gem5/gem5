@@ -27,6 +27,7 @@
  *
  * Authors: Steve Reinhardt
  *          Ron Dreslinski
+ *          Ali Saidi
  */
 
 /**
@@ -97,6 +98,8 @@ PageTable::allocate(Addr vaddr, int64_t size)
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
+    DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
+
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
         m5::hash_map<Addr,Addr>::iterator iter = pTable.find(vaddr);
 
@@ -159,3 +162,37 @@ PageTable::translate(RequestPtr &req)
     req->setPaddr(paddr);
     return page_check(req->getPaddr(), req->getSize());
 }
+
+void
+PageTable::serialize(std::ostream &os)
+{
+    paramOut(os, "ptable.size", pTable.size());
+    int count = 0;
+
+    m5::hash_map<Addr,Addr>::iterator iter;
+    while (iter != pTable.end()) {
+        paramOut(os, csprintf("ptable.entry%dvaddr", count),iter->first);
+        paramOut(os, csprintf("ptable.entry%dpaddr", count),iter->second);
+        ++count;
+    }
+    assert(count == pTable.size());
+}
+
+void
+PageTable::unserialize(Checkpoint *cp, const std::string &section)
+{
+    int i = 0, count;
+    paramIn(cp, section, "ptable.size", count);
+    Addr vaddr, paddr;
+
+    pTable.clear();
+
+    while(i < count) {
+        paramIn(cp, section, csprintf("ptable.entry%dvaddr", i), vaddr);
+        paramIn(cp, section, csprintf("ptable.entry%dpaddr", i), paddr);
+        pTable[vaddr] = paddr;
+        ++i;
+   }
+
+}
+
