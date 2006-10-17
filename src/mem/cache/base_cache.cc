@@ -36,6 +36,7 @@
 #include "mem/cache/base_cache.hh"
 #include "cpu/smt.hh"
 #include "cpu/base.hh"
+#include "mem/cache/miss/mshr.hh"
 
 using namespace std;
 
@@ -179,6 +180,10 @@ BaseCache::CachePort::recvRetry()
         }
         pkt = cache->getPacket();
         MSHR* mshr = (MSHR*)pkt->senderState;
+        //Copy the packet, it may be modified/destroyed elsewhere
+        Packet * copyPkt = new Packet(*pkt);
+        copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+        mshr->pkt = copyPkt;
         bool success = sendTiming(pkt);
         DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
@@ -288,6 +293,11 @@ BaseCache::CacheEvent::process()
 
             pkt = cachePort->cache->getPacket();
             MSHR* mshr = (MSHR*) pkt->senderState;
+            //Copy the packet, it may be modified/destroyed elsewhere
+            Packet * copyPkt = new Packet(*pkt);
+            copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+            mshr->pkt = copyPkt;
+
             bool success = cachePort->sendTiming(pkt);
             DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                     pkt->getAddr(), success ? "succesful" : "unsuccesful");

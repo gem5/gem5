@@ -273,9 +273,9 @@ void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
     if (success && !(pkt->flags & NACKED_LINE)) {
-        missQueue->markInService(pkt, mshr);
+        missQueue->markInService(mshr->pkt, mshr);
         //Temp Hack for UPGRADES
-        if (pkt->cmd == Packet::UpgradeReq) {
+        if (mshr->pkt->cmd == Packet::UpgradeReq) {
             pkt->flags &= ~CACHE_LINE_FILL;
             BlkType *blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
@@ -304,6 +304,8 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
+        //Delete temp copy in MSHR, restore it.
+        delete ((MSHR*)pkt->senderState)->pkt;
         ((MSHR*)pkt->senderState)->pkt = pkt;
         if (pkt->result == Packet::Nacked) {
             //pkt->reinitFromRequest();
