@@ -64,53 +64,50 @@ if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
 
-if options.detailed:
-    cpu = DerivO3CPU()
-    cpu2 = DerivO3CPU()
-    mem_mode = 'timing'
-elif options.timing:
-    cpu = TimingSimpleCPU()
-    cpu2 = TimingSimpleCPU()
-    mem_mode = 'timing'
-else:
-    cpu = AtomicSimpleCPU()
-    cpu2 = AtomicSimpleCPU()
-    mem_mode = 'atomic'
+# client system CPU is always simple... note this is an assignment of
+# a class, not an instance.
+ClientCPUClass = AtomicSimpleCPU
+client_mem_mode = 'atomic'
 
-cpu.clock = '2GHz'
-cpu2.clock = '2GHz'
-cpu.cpu_id = 0
-cpu2.cpu_id = 0
+if options.detailed:
+    ServerCPUClass = DerivO3CPU
+    server_mem_mode = 'timing'
+elif options.timing:
+    ServerCPUClass = TimingSimpleCPU
+    server_mem_mode = 'timing'
+else:
+    ServerCPUClass = AtomicSimpleCPU
+    server_mem_mode = 'atomic'
+
+ServerCPUClass.clock = '2GHz'
+ClientCPUClass.clock = '2GHz'
 
 if options.benchmark:
-    if options.benchmark not in Benchmarks:
+    try:
+        bm = Benchmarks[options.benchmark]
+    except KeyError:
         print "Error benchmark %s has not been defined." % options.benchmark
         print "Valid benchmarks are: %s" % DefinedBenchmarks
         sys.exit(1)
-
-    bm = Benchmarks[options.benchmark]
 else:
     if options.dual:
-        bm = [Machine(), Machine()]
+        bm = [SysConfig(), SysConfig()]
     else:
-        bm = [Machine()]
+        bm = [SysConfig()]
+
+server_sys = makeLinuxAlphaSystem(server_mem_mode, bm[0])
+server_sys.cpu = ServerCPUClass(cpu_id=0)
+server_sys.cpu.connectMemPorts(server_sys.membus)
+server_sys.cpu.mem = server_sys.physmem
 
 if len(bm) == 2:
-    s1 = makeLinuxAlphaSystem(mem_mode, bm[0])
-    s1.cpu = cpu
-    cpu.connectMemPorts(s1.membus)
-    cpu.mem = s1.physmem
-    s2 = makeLinuxAlphaSystem(mem_mode, bm[1])
-    s2.cpu = cpu2
-    cpu2.connectMemPorts(s2.membus)
-    cpu2.mem = s2.physmem
-    root = makeDualRoot(s1, s2, options.etherdump)
+    client_sys = makeLinuxAlphaSystem(client_mem_mode, bm[1])
+    client_sys.cpu = ClientCPUClass(cpu_id=0)
+    client_sys.cpu.connectMemPorts(client_sys.membus)
+    client_sys.cpu.mem = client_sys.physmem
+    root = makeDualRoot(server_sys, client_sys, options.etherdump)
 elif len(bm) == 1:
-    root = Root(clock = '1THz',
-                system = makeLinuxAlphaSystem(mem_mode, bm[0]))
-    root.system.cpu = cpu
-    cpu.connectMemPorts(root.system.membus)
-    cpu.mem = root.system.physmem
+    root = Root(clock = '1THz', system = server_sys)
 else:
     print "Error I don't know how to create more than 2 systems."
     sys.exit(1)
