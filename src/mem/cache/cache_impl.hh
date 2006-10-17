@@ -272,10 +272,11 @@ template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
 {
-    if (success && !(pkt->flags & NACKED_LINE)) {
+    if (success && !(pkt && (pkt->flags & NACKED_LINE))) {
         missQueue->markInService(mshr->pkt, mshr);
         //Temp Hack for UPGRADES
         if (mshr->pkt->cmd == Packet::UpgradeReq) {
+            assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
             BlkType *blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
