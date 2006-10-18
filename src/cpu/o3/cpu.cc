@@ -850,9 +850,6 @@ template <class Impl>
 void
 FullO3CPU<Impl>::resume()
 {
-#if FULL_SYSTEM
-    assert(system->getMemoryMode() == System::Timing);
-#endif
     fetch.resume();
     decode.resume();
     rename.resume();
@@ -863,6 +860,10 @@ FullO3CPU<Impl>::resume()
 
     if (_status == SwitchedOut || _status == Idle)
         return;
+
+#if FULL_SYSTEM
+    assert(system->getMemoryMode() == System::Timing);
+#endif
 
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
