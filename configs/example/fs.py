@@ -42,6 +42,8 @@ parser = optparse.OptionParser()
 
 parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-n", "--num_cpus", type="int", default=1)
+parser.add_option("--caches", action="store_true")
 parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("--maxtime", type="float")
 parser.add_option("--dual", action="store_true",
@@ -63,6 +65,13 @@ parser.add_option("-c", "--checkpoint", action="store", type="int",
 if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
+
+class MyCache(BaseCache):
+    assoc = 2
+    block_size = 64
+    latency = 1
+    mshrs = 10
+    tgts_per_mshr = 5
 
 # client system CPU is always simple... note this is an assignment of
 # a class, not an instance.
@@ -96,9 +105,14 @@ else:
         bm = [SysConfig()]
 
 server_sys = makeLinuxAlphaSystem(server_mem_mode, bm[0])
-server_sys.cpu = ServerCPUClass(cpu_id=0)
-server_sys.cpu.connectMemPorts(server_sys.membus)
-server_sys.cpu.mem = server_sys.physmem
+np = options.num_cpus
+server_sys.cpu = [ServerCPUClass(cpu_id=i) for i in xrange(np)]
+for i in xrange(np):
+    if options.caches:
+        server_sys.cpu[i].addPrivateSplitL1Caches(MyCache(size = '32kB'),
+                                                  MyCache(size = '64kB'))
+    server_sys.cpu[i].connectMemPorts(server_sys.membus)
+    server_sys.cpu[i].mem = server_sys.physmem
 
 if len(bm) == 2:
     client_sys = makeLinuxAlphaSystem(client_mem_mode, bm[1])

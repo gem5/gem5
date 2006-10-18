@@ -75,12 +75,6 @@ class Cache : public BaseCache
     /** Prefetcher */
     Prefetcher<TagStore, Buffering> *prefetcher;
 
-    /** Do fast copies in this cache. */
-    bool doCopy;
-
-    /** Block on a delayed copy. */
-    bool blockOnCopy;
-
     /**
      * The clock ratio of the outgoing bus.
      * Used for calculating critical word first.
@@ -105,18 +99,6 @@ class Cache : public BaseCache
     Packet * invalidatePkt;
     Request *invalidateReq;
 
-    /**
-     * Temporarily move a block into a MSHR.
-     * @todo Remove this when LSQ/SB are fixed and implemented in memtest.
-     */
-    void pseudoFill(Addr addr);
-
-    /**
-     * Temporarily move a block into an existing MSHR.
-     * @todo Remove this when LSQ/SB are fixed and implemented in memtest.
-     */
-    void pseudoFill(MSHR *mshr);
-
   public:
 
     class Params
@@ -125,19 +107,17 @@ class Cache : public BaseCache
         TagStore *tags;
         Buffering *missQueue;
         Coherence *coherence;
-        bool doCopy;
-        bool blockOnCopy;
         BaseCache::Params baseParams;
         Prefetcher<TagStore, Buffering> *prefetcher;
         bool prefetchAccess;
         int hitLatency;
 
         Params(TagStore *_tags, Buffering *mq, Coherence *coh,
-               bool do_copy, BaseCache::Params params,
+               BaseCache::Params params,
                Prefetcher<TagStore, Buffering> *_prefetcher,
                bool prefetch_access, int hit_latency)
-            : tags(_tags), missQueue(mq), coherence(coh), doCopy(do_copy),
-              blockOnCopy(false), baseParams(params),
+            : tags(_tags), missQueue(mq), coherence(coh),
+              baseParams(params),
               prefetcher(_prefetcher), prefetchAccess(prefetch_access),
               hitLatency(hit_latency)
         {
@@ -190,21 +170,6 @@ class Cache : public BaseCache
      * @param pkt The request being responded to.
      */
     void handleResponse(Packet * &pkt);
-
-    /**
-     * Start handling a copy transaction.
-     * @param pkt The copy request to perform.
-     */
-    void startCopy(Packet * &pkt);
-
-    /**
-     * Handle a delayed copy transaction.
-     * @param pkt The delayed copy request to continue.
-     * @param addr The address being responded to.
-     * @param blk The block of the current response.
-     * @param mshr The mshr being handled.
-     */
-    void handleCopy(Packet * &pkt, Addr addr, BlkType *blk, MSHR *mshr);
 
     /**
      * Selects a coherence message to forward to lower levels of the hierarchy.

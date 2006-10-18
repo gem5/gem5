@@ -711,8 +711,8 @@ IIC::invalidateBlk(Addr addr)
 }
 
 void
-IIC::readData(IICTag *blk, uint8_t *data){
-//    assert(cache->doData());
+IIC::readData(IICTag *blk, uint8_t *data)
+{
     assert(blk->size <= trivialSize || blk->numData > 0);
     int data_size = blk->size;
     if (data_size > trivialSize) {
@@ -729,8 +729,8 @@ IIC::readData(IICTag *blk, uint8_t *data){
 
 void
 IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
-               PacketList & writebacks){
-//    assert(cache->doData());
+               PacketList & writebacks)
+{
     assert(size < blkSize || !blk->isCompressed());
     DPRINTF(IIC, "Writing %d bytes to %x\n", size,
             blk->tag<<tagShift);
@@ -750,10 +750,6 @@ IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
         // can free data blocks
         for (int i=num_subs; i < blk->numData; ++i){
             // decrement reference count and compare to zero
-            /**
-             * @todo
-             * Make this work with copying.
-             */
             if (--dataReferenceCount[blk->data_ptr[i]] == 0) {
                 freeDataBlock(blk->data_ptr[i]);
             }
@@ -774,96 +770,6 @@ IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
     }
 }
 
-
-/**
- * @todo This code can break if the src is evicted to get a tag for the dest.
- */
-void
-IIC::doCopy(Addr source, Addr dest, PacketList &writebacks)
-{
-//Copy unsuported now
-#if 0
-    IICTag *dest_tag = findBlock(dest);
-
-    if (dest_tag) {
-        for (int i = 0; i < dest_tag->numData; ++i) {
-            if (--dataReferenceCount[dest_tag->data_ptr[i]] == 0) {
-                freeDataBlock(dest_tag->data_ptr[i]);
-            }
-        }
-        // Reset replacement entry
-    } else {
-        dest_tag = getFreeTag(hash(dest), writebacks);
-        dest_tag->re = (void*) repl->add(dest_tag - tagStore);
-        dest_tag->set = hash(dest);
-        dest_tag->tag = extractTag(dest);
-        dest_tag->status = BlkValid | BlkWritable;
-    }
-    // Find the source tag here since it might move if we need to find a
-    // tag for the destination.
-    IICTag *src_tag = findBlock(source);
-    assert(src_tag);
-    assert(!cache->doData() || src_tag->size <= trivialSize
-           || src_tag->numData > 0);
-    // point dest to source data and inc counter
-    for (int i = 0; i < src_tag->numData; ++i) {
-        dest_tag->data_ptr[i] = src_tag->data_ptr[i];
-        ++dataReferenceCount[dest_tag->data_ptr[i]];
-    }
-
-    // Maintain fast access data.
-    memcpy(dest_tag->data, src_tag->data, blkSize);
-
-    dest_tag->xc = src_tag->xc;
-    dest_tag->size = src_tag->size;
-    dest_tag->numData = src_tag->numData;
-    if (src_tag->numData == 0) {
-        // Data is stored in the trivial data, just copy it.
-        memcpy(dest_tag->trivialData, src_tag->trivialData, src_tag->size);
-    }
-
-    dest_tag->status |= BlkDirty;
-    if (dest_tag->size < blkSize) {
-        dest_tag->status |= BlkCompressed;
-    } else {
-        dest_tag->status &= ~BlkCompressed;
-    }
-#endif
-}
-
-void
-IIC::fixCopy(Packet * &pkt, PacketList &writebacks)
-{
-#if 0
-    // if reference counter is greater than 1, do copy
-    // else do write
-    Addr blk_addr = blkAlign(pkt->getAddr);
-    IICTag* blk = findBlock(blk_addr);
-
-    if (blk->numData > 0 && dataReferenceCount[blk->data_ptr[0]] != 1) {
-        // copy the data
-        // Mark the block as referenced so it doesn't get replaced.
-        blk->status |= BlkReferenced;
-        for (int i = 0; i < blk->numData; ++i){
-            unsigned long new_data = getFreeDataBlock(writebacks);
-            // Need to refresh pointer
-            /**
-             * @todo Remove this refetch once we change IIC to pointer based
-             */
-            blk = findBlock(blk_addr);
-            assert(blk);
-            if (cache->doData()) {
-                memcpy(&(dataBlks[new_data][0]),
-                       &(dataBlks[blk->data_ptr[i]][0]),
-                       subSize);
-            }
-            dataReferenceCount[blk->data_ptr[i]]--;
-            dataReferenceCount[new_data]++;
-            blk->data_ptr[i] = new_data;
-        }
-    }
-#endif
-}
 
 void
 IIC::cleanupRefs()

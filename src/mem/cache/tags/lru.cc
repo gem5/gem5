@@ -251,51 +251,6 @@ LRU::invalidateBlk(Addr addr)
 }
 
 void
-LRU::doCopy(Addr source, Addr dest, PacketList &writebacks)
-{
-    assert(source == blkAlign(source));
-    assert(dest == blkAlign(dest));
-    LRUBlk *source_blk = findBlock(source);
-    assert(source_blk);
-    LRUBlk *dest_blk = findBlock(dest);
-    if (dest_blk == NULL) {
-        // Need to do a replacement
-        Request *search = new Request(dest,1,0);
-        Packet * pkt = new Packet(search, Packet::ReadReq, -1);
-        BlkList dummy_list;
-        dest_blk = findReplacement(pkt, writebacks, dummy_list);
-        if (dest_blk->isValid() && dest_blk->isModified()) {
-            // Need to writeback data.
-/*	    pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
-                                                      dest_blk->set),
-                                    dest_blk->req->asid,
-                                    dest_blk->xc,
-                                    blkSize,
-                                    dest_blk->data,
-                                    dest_blk->size);
-*/
-            Request *writebackReq = new Request(regenerateBlkAddr(dest_blk->tag,
-                                                                  dest_blk->set),
-                                                blkSize, 0);
-            Packet *writeback = new Packet(writebackReq, Packet::Writeback, -1);
-            writeback->allocate();
-            memcpy(writeback->getPtr<uint8_t>(),dest_blk->data, blkSize);
-            writebacks.push_back(writeback);
-        }
-        dest_blk->tag = extractTag(dest);
-        delete search;
-        delete pkt;
-    }
-    /**
-     * @todo Can't assume the status once we have coherence on copies.
-     */
-
-    // Set this block as readable, writeable, and dirty.
-    dest_blk->status = 7;
-    memcpy(dest_blk->data, source_blk->data, blkSize);
-}
-
-void
 LRU::cleanupRefs()
 {
     for (int i = 0; i < numSets*assoc; ++i) {

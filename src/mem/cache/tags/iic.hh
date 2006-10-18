@@ -498,22 +498,6 @@ class IIC : public BaseTags
                    PacketList & writebacks);
 
     /**
-     * Perform a block aligned copy from the source address to the destination.
-     * @param source The block-aligned source address.
-     * @param dest The block-aligned destination address.
-     * @param asid The address space DI.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void doCopy(Addr source, Addr dest, PacketList &writebacks);
-
-    /**
-     * If a block is currently marked copy on write, copy it before writing.
-     * @param pkt The write request.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void fixCopy(Packet * &pkt, PacketList &writebacks);
-
-    /**
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();

@@ -347,52 +347,6 @@ SplitLIFO::invalidateBlk(Addr addr)
 }
 
 void
-SplitLIFO::doCopy(Addr source, Addr dest, PacketList &writebacks)
-{
-//Copy Unsuported for now
-#if 0
-    assert(source == blkAlign(source));
-    assert(dest == blkAlign(dest));
-    SplitBlk *source_blk = findBlock(source);
-    assert(source_blk);
-    SplitBlk *dest_blk = findBlock(dest);
-    if (dest_blk == NULL) {
-        // Need to do a replacement
-        Packet * pkt = new Packet();
-        pkt->paddr = dest;
-        BlkList dummy_list;
-        dest_blk = findReplacement(pkt, writebacks, dummy_list);
-        if (dest_blk->isValid() && dest_blk->isModified()) {
-            // Need to writeback data.
-            pkt = buildWritebackReq(regenerateBlkAddr(dest_blk->tag,
-                                                      dest_blk->set),
-                                    dest_blk->xc,
-                                    blkSize,
-                                    (cache->doData())?dest_blk->data:0,
-                                    dest_blk->size);
-            writebacks.push_back(pkt);
-        }
-        dest_blk->tag = extractTag(dest);
-        /**
-         * @todo Do we need to pass in the execution context, or can we
-         * assume its the same?
-         */
-        assert(source_blk->xc);
-        dest_blk->xc = source_blk->xc;
-    }
-    /**
-     * @todo Can't assume the status once we have coherence on copies.
-     */
-
-    // Set this block as readable, writeable, and dirty.
-    dest_blk->status = 7;
-    if (cache->doData()) {
-        memcpy(dest_blk->data, source_blk->data, blkSize);
-    }
-#endif
-}
-
-void
 SplitLIFO::cleanupRefs()
 {
     for (int i = 0; i < numBlks; ++i) {

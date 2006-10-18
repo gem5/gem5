@@ -95,6 +95,8 @@ class PageTable
      */
     Fault translate(RequestPtr &req);
 
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 #endif

@@ -34,9 +34,10 @@
  */
 
 #include "mem/cache/base_cache.hh"
+#include "mem/cache/miss/mshr.hh"
+#include "mem/packet_impl.hh"
 #include "cpu/smt.hh"
 #include "cpu/base.hh"
-#include "mem/cache/miss/mshr.hh"
 
 using namespace std;
 
