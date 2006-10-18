@@ -42,6 +42,7 @@ parser = optparse.OptionParser()
 
 parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-n", "--num_cpus", type="int", default=1)
 parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("--maxtime", type="float")
 parser.add_option("--dual", action="store_true",
@@ -96,9 +97,11 @@ else:
         bm = [SysConfig()]
 
 server_sys = makeLinuxAlphaSystem(server_mem_mode, bm[0])
-server_sys.cpu = ServerCPUClass(cpu_id=0)
-server_sys.cpu.connectMemPorts(server_sys.membus)
-server_sys.cpu.mem = server_sys.physmem
+np = options.num_cpus
+server_sys.cpu = [ServerCPUClass(cpu_id=i) for i in xrange(np)]
+for i in xrange(np):
+    server_sys.cpu[i].connectMemPorts(server_sys.membus)
+    server_sys.cpu[i].mem = server_sys.physmem
 
 if len(bm) == 2:
     client_sys = makeLinuxAlphaSystem(client_mem_mode, bm[1])

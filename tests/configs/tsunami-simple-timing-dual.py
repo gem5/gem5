@@ -31,9 +31,6 @@ from m5.objects import *
 m5.AddToPath('../configs/common')
 import FSConfig
 
-AlphaConsole.cpu = Parent.cpu[0]
-IntrControl.cpu = Parent.cpu[0]
-
 cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
 system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpus
