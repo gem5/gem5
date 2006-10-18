@@ -103,23 +103,6 @@ MSHRQueue::findPending(Packet * &pkt) const
                 return mshr;
             }
         }
-
-        //need to check destination address for copies.
-        //TEMP NOT DOING COPIES
-#if 0
-        if (mshr->pkt->cmd == Copy) {
-            Addr dest = mshr->pkt->dest;
-            if (dest < pkt->addr) {
-                if (dest + mshr->pkt->size > pkt->addr) {
-                    return mshr;
-                }
-            } else {
-                if (pkt->addr + pkt->size > dest) {
-                    return mshr;
-                }
-            }
-        }
-#endif
     }
     return NULL;
 }

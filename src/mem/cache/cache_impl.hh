@@ -148,7 +148,6 @@ Cache(const std::string &_name,
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
       coherence(params.coherence), prefetcher(params.prefetcher),
-      doCopy(params.doCopy), blockOnCopy(params.blockOnCopy),
       hitLatency(params.hitLatency)
 {
     tags->setCache(this);
@@ -348,43 +347,6 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
         missQueue->handleResponse(pkt, curTick + hitLatency);
     }
 }
-
-template<class TagStore, class Buffering, class Coherence>
-void
-Cache<TagStore,Buffering,Coherence>::pseudoFill(Addr addr)
-{
-    // Need to temporarily move this blk into MSHRs
-    MSHR *mshr = missQueue->allocateTargetList(addr);
-    int lat;
-    PacketList dummy;
-    // Read the data into the mshr
-    BlkType *blk = tags->handleAccess(mshr->pkt, lat, dummy, false);
-    assert(dummy.empty());
-    assert(mshr->pkt->flags & SATISFIED);
-    // can overload order since it isn't used on non pending blocks
-    mshr->order = blk->status;
-    // temporarily remove the block from the cache.
-    tags->invalidateBlk(addr);
-}
-
-template<class TagStore, class Buffering, class Coherence>
-void
-Cache<TagStore,Buffering,Coherence>::pseudoFill(MSHR *mshr)
-{
-    // Need to temporarily move this blk into MSHRs
-    assert(mshr->pkt->cmd == Packet::ReadReq);
-    int lat;
-    PacketList dummy;
-    // Read the data into the mshr
-    BlkType *blk = tags->handleAccess(mshr->pkt, lat, dummy, false);
-    assert(dummy.empty());
-    assert(mshr->pkt->flags & SATISFIED);
-    // can overload order since it isn't used on non pending blocks
-    mshr->order = blk->status;
-    // temporarily remove the block from the cache.
-    tags->invalidateBlk(mshr->pkt->getAddr());
-}
-
 
 template<class TagStore, class Buffering, class Coherence>
 Packet *

@@ -422,19 +422,6 @@ Split::invalidateBlk(Addr addr)
 }
 
 void
-Split::doCopy(Addr source, Addr dest, PacketList &writebacks)
-{
-    if (lru->probe( source))
-        lru->doCopy(source, dest, writebacks);
-    else {
-        if (lifo && lifo_net)
-            lifo_net->doCopy(source, dest, writebacks);
-        else if (lru_net)
-            lru_net->doCopy(source, dest, writebacks);
-    }
-}
-
-void
 Split::cleanupRefs()
 {
     lru->cleanupRefs();

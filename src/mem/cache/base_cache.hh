@@ -58,7 +58,6 @@ enum BlockedCause{
     Blocked_NoTargets,
     Blocked_NoWBBuffers,
     Blocked_Coherence,
-    Blocked_Copy,
     NUM_BLOCKED_CAUSES
 };
 

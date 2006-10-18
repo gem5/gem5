@@ -322,25 +322,6 @@ public:
                    PacketList &writebacks)
     {
     }
-
-    /**
-     * Unimplemented. Perform a cache block copy from block aligned addresses.
-     * @param source The block aligned source address.
-     * @param dest The block aligned destination adddress.
-     * @param asid The address space ID.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void doCopy(Addr source, Addr dest, PacketList &writebacks)
-    {
-    }
-
-    /**
-     * Unimplemented.
-     */
-    void fixCopy(Packet * &pkt, PacketList &writebacks)
-    {
-    }
-
 };
 
 #endif
