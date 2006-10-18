@@ -711,8 +711,8 @@ IIC::invalidateBlk(Addr addr)
 }
 
 void
-IIC::readData(IICTag *blk, uint8_t *data){
-//    assert(cache->doData());
+IIC::readData(IICTag *blk, uint8_t *data)
+{
     assert(blk->size <= trivialSize || blk->numData > 0);
     int data_size = blk->size;
     if (data_size > trivialSize) {
@@ -729,8 +729,8 @@ IIC::readData(IICTag *blk, uint8_t *data){
 
 void
 IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
-               PacketList & writebacks){
-//    assert(cache->doData());
+               PacketList & writebacks)
+{
     assert(size < blkSize || !blk->isCompressed());
     DPRINTF(IIC, "Writing %d bytes to %x\n", size,
             blk->tag<<tagShift);
