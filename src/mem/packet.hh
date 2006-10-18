@@ -204,7 +204,8 @@ class Packet
         InvalidateReq   = IsInvalidate | IsRequest,
         WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest
                                    | HasData | NeedsResponse,
-        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest | NeedsResponse,
+        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest | NeedsResponse
+                                   | IsResponse,
         UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse

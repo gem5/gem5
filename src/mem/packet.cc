@@ -51,6 +51,7 @@ static const std::string HardPFReqString("HardPFReq");
 static const std::string HardPFRespString("HardPFResp");
 static const std::string InvalidateReqString("InvalidateReq");
 static const std::string WriteInvalidateReqString("WriteInvalidateReq");
+static const std::string WriteInvalidateRespString("WriteInvalidateResp");
 static const std::string UpgradeReqString("UpgradeReq");
 static const std::string ReadExReqString("ReadExReq");
 static const std::string ReadExRespString("ReadExResp");
@@ -71,6 +72,7 @@ Packet::cmdString() const
       case HardPFResp:      return HardPFRespString;
       case InvalidateReq:   return InvalidateReqString;
       case WriteInvalidateReq:return WriteInvalidateReqString;
+      case WriteInvalidateResp:return WriteInvalidateRespString;
       case UpgradeReq:      return UpgradeReqString;
       case ReadExReq:       return ReadExReqString;
       case ReadExResp:      return ReadExRespString;
@@ -93,6 +95,7 @@ Packet::cmdIdxToString(Packet::Command idx)
       case HardPFResp:      return HardPFRespString;
       case InvalidateReq:   return InvalidateReqString;
       case WriteInvalidateReq:return WriteInvalidateReqString;
+      case WriteInvalidateResp:return WriteInvalidateRespString;
       case UpgradeReq:      return UpgradeReqString;
       case ReadExReq:       return ReadExReqString;
       case ReadExResp:      return ReadExRespString;
