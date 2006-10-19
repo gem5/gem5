@@ -730,9 +730,8 @@ class SimObject(object):
             # i don't know if there's a better way to do this - calling
             # setMemoryMode directly from self._ccObject results in calling
             # SimObject::setMemoryMode, not the System::setMemoryMode
-##            system_ptr = cc_main.convertToSystemPtr(self._ccObject)
-##            system_ptr.setMemoryMode(mode)
-            self._ccObject.setMemoryMode(mode)
+            system_ptr = cc_main.convertToSystemPtr(self._ccObject)
+            system_ptr.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)
 
