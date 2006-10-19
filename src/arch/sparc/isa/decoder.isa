@@ -951,7 +951,7 @@ decode OP default Unknown::unknown()
                         //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::ldblockf_aiusl();
                         //ASI_BLOCK_PRIMARY
-                        0xF0: ldblockf_p({{Frd_N = Mem.udw;}});
+                        0xF0: ldblockf_p({{Frd_N.udw = Mem.udw;}});
                         //ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::ldblockf_s();
                         //ASI_BLOCK_PRIMARY_LITTLE
@@ -978,31 +978,93 @@ decode OP default Unknown::unknown()
                     //ASI_FL16_SECONDARY_LITTLE
                     0xDB: FailUnimpl::ldshortf_16sl();
                     //Not an ASI which is legal with lddfa
-                    default: Trap::lddfa_bad_asi({{fault = new DataAccessException;}});
-
-                    //LoadAlt::lddfa({{
-                    //Do the actual loading
-                    //if(fault == NoFault)
-                    //{
-                        //if(AsiIsBlock(asi))
-                        //{
-                            //Do the block transfer
-                        //}
-                        //else
-                        //{
-                            //uint64_t val = Mem;
-                            //if(AsiIsLittle(asi))
-                                //val = gtole(val);
-                            //Frd.udw = val;
-                        //}
-                    //}
-                    //}}, {{64}});*/
+                    default: Trap::lddfa_bad_asi(
+                        {{fault = new DataAccessException;}});
                 }
             }
             0x34: Store::stfa({{Mem.uw = Frd.uw;}});
             0x36: stqfa({{fault = new FpDisabled;}});
-            //XXX need to work in the ASI thing
-            0x37: Store::stdfa({{Mem.udw = Frd.udw;}});
+            format StoreAlt {
+                0x37: decode EXT_ASI {
+                    //ASI_NUCLEUS
+                    0x04: FailUnimpl::stdfa_n();
+                    //ASI_NUCLEUS_LITTLE
+                    0x0C: FailUnimpl::stdfa_nl();
+                    //ASI_AS_IF_USER_PRIMARY
+                    0x10: FailUnimpl::stdfa_aiup();
+                    //ASI_AS_IF_USER_PRIMARY_LITTLE
+                    0x18: FailUnimpl::stdfa_aiupl();
+                    //ASI_AS_IF_USER_SECONDARY
+                    0x11: FailUnimpl::stdfa_aius();
+                    //ASI_AS_IF_USER_SECONDARY_LITTLE
+                    0x19: FailUnimpl::stdfa_aiusl();
+                    //ASI_REAL
+                    0x14: FailUnimpl::stdfa_real();
+                    //ASI_REAL_LITTLE
+                    0x1C: FailUnimpl::stdfa_real_l();
+                    //ASI_REAL_IO
+                    0x15: FailUnimpl::stdfa_real_io();
+                    //ASI_REAL_IO_LITTLE
+                    0x1D: FailUnimpl::stdfa_real_io_l();
+                    //ASI_PRIMARY
+                    0x80: FailUnimpl::stdfa_p();
+                    //ASI_PRIMARY_LITTLE
+                    0x88: FailUnimpl::stdfa_pl();
+                    //ASI_SECONDARY
+                    0x81: FailUnimpl::stdfa_s();
+                    //ASI_SECONDARY_LITTLE
+                    0x89: FailUnimpl::stdfa_sl();
+                    //ASI_PRIMARY_NO_FAULT
+                    0x82: FailUnimpl::stdfa_pnf();
+                    //ASI_PRIMARY_NO_FAULT_LITTLE
+                    0x8A: FailUnimpl::stdfa_pnfl();
+                    //ASI_SECONDARY_NO_FAULT
+                    0x83: FailUnimpl::stdfa_snf();
+                    //ASI_SECONDARY_NO_FAULT_LITTLE
+                    0x8B: FailUnimpl::stdfa_snfl();
+
+                    format BlockStore {
+                        // STBLOCKF
+                        //ASI_BLOCK_AS_IF_USER_PRIMARY
+                        0x16: FailUnimpl::stblockf_aiup();
+                        //ASI_BLOCK_AS_IF_USER_SECONDARY
+                        0x17: FailUnimpl::stblockf_aius();
+                        //ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
+                        0x1E: FailUnimpl::stblockf_aiupl();
+                        //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
+                        0x1F: FailUnimpl::stblockf_aiusl();
+                        //ASI_BLOCK_PRIMARY
+                        0xF0: stblockf_p({{Mem.udw = Frd_N.udw;}});
+                        //ASI_BLOCK_SECONDARY
+                        0xF1: FailUnimpl::stblockf_s();
+                        //ASI_BLOCK_PRIMARY_LITTLE
+                        0xF8: FailUnimpl::stblockf_pl();
+                        //ASI_BLOCK_SECONDARY_LITTLE
+                        0xF9: FailUnimpl::stblockf_sl();
+                    }
+
+                    //STSHORTF
+                    //ASI_FL8_PRIMARY
+                    0xD0: FailUnimpl::stshortf_8p();
+                    //ASI_FL8_SECONDARY
+                    0xD1: FailUnimpl::stshortf_8s();
+                    //ASI_FL8_PRIMARY_LITTLE
+                    0xD8: FailUnimpl::stshortf_8pl();
+                    //ASI_FL8_SECONDARY_LITTLE
+                    0xD9: FailUnimpl::stshortf_8sl();
+                    //ASI_FL16_PRIMARY
+                    0xD2: FailUnimpl::stshortf_16p();
+                    //ASI_FL16_SECONDARY
+                    0xD3: FailUnimpl::stshortf_16s();
+                    //ASI_FL16_PRIMARY_LITTLE
+                    0xDA: FailUnimpl::stshortf_16pl();
+                    //ASI_FL16_SECONDARY_LITTLE
+                    0xDB: FailUnimpl::stshortf_16sl();
+                    //Not an ASI which is legal with lddfa
+                    default: Trap::stdfa_bad_asi(
+                        {{fault = new DataAccessException;}});
+                }
+            }
             0x3C: Cas::casa({{
                 uint64_t val = Mem.uw;
                 if(Rs2.uw == val)
