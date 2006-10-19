@@ -105,11 +105,11 @@ output decoder {{
             printMnemonic(response, mnemonic);
             if(save)
             {
-                printReg(response, _srcRegIdx[0]);
+                printReg(response, _srcRegIdx[1]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
-            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            printReg(response, _srcRegIdx[0]);
             if(imm >= 0)
                 ccprintf(response, " + 0x%x ]", imm);
             else
@@ -282,8 +282,8 @@ def template MicroLoadExecute {{
 }};
 
 def template MicroStoreExecute {{
-        Fault %(class_name)s_%(micro_pc)s::execute(%(CPU_exec_context)s *xc,
-                Trace::InstRecord *traceData) const
+        Fault %(class_name)s::%(class_name)s_%(micro_pc)s::execute(
+                %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             uint64_t write_result = 0;
@@ -323,8 +323,8 @@ let {{
                 if(EA & 0x3f)
                     return new MemAddressNotAligned;
                 '''
-        addrCalcReg = 'EA = Rs1 + Rs2 + offset * 8;'
-        addrCalcImm = 'EA = Rs1 + imm + offset * 8;'
+        addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
+        addrCalcImm = 'EA = Rs1 + imm + offset;'
         iop = InstObjParams(name, Name, 'BlockMem', code, opt_flags)
         iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', code, opt_flags)
         header_output = BlockMemDeclare.subst(iop) + BlockMemDeclare.subst(iop_imm)
