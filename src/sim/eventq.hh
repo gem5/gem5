@@ -120,9 +120,21 @@ class Event : public Serializable, public FastAlloc
     /// priority; these values are used to control events that need to
     /// be ordered within a cycle.
     enum Priority {
-        /// Breakpoints should happen before anything else, so we
-        /// don't miss any action when debugging.
+        /// If we enable tracing on a particular cycle, do that as the
+        /// very first thing so we don't miss any of the events on
+        /// that cycle (even if we enter the debugger).
+        Trace_Enable_Pri        = -101,
+
+        /// Breakpoints should happen before anything else (except
+        /// enabling trace output), so we don't miss any action when
+        /// debugging.
         Debug_Break_Pri		= -100,
+
+        /// CPU switches schedule the new CPU's tick event for the
+        /// same cycle (after unscheduling the old CPU's tick event).
+        /// The switch needs to come before any tick events to make
+        /// sure we don't tick both CPUs in the same cycle.
+        CPU_Switch_Pri		=   -31,
 
         /// For some reason "delayed" inter-cluster writebacks are
         /// scheduled before regular writebacks (which have default
@@ -131,12 +143,6 @@ class Event : public Serializable, public FastAlloc
 
         /// Default is zero for historical reasons.
         Default_Pri		=    0,
-
-        /// CPU switches schedule the new CPU's tick event for the
-        /// same cycle (after unscheduling the old CPU's tick event).
-        /// The switch needs to come before any tick events to make
-        /// sure we don't tick both CPUs in the same cycle.
-        CPU_Switch_Pri		=   -31,
 
         /// Serailization needs to occur before tick events also, so
         /// that a serialize/unserialize is identical to an on-line
