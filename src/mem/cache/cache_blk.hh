@@ -35,8 +35,11 @@
 #ifndef __CACHE_BLK_HH__
 #define __CACHE_BLK_HH__
 
+#include <list>
+
 #include "sim/root.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
+#include "mem/request.hh"
 
 /**
  * Cache block status bit assignments
@@ -95,6 +98,35 @@ class CacheBlk
 
     /** Number of references to this block since it was brought in. */
     int refCount;
+
+  protected:
+    /**
+     * Represents that the indicated thread context has a "lock" on
+     * the block, in the LL/SC sense.
+     */
+    class Lock {
+      public:
+        int cpuNum;	// locking CPU
+        int threadNum;	// locking thread ID within CPU
+
+        // check for matching execution context
+        bool matchesContext(Request *req)
+        {
+            return (cpuNum == req->getCpuNum() &&
+                    threadNum == req->getThreadNum());
+        }
+
+        Lock(Request *req)
+            : cpuNum(req->getCpuNum()), threadNum(req->getThreadNum())
+        {
+        }
+    };
+
+    /** List of thread contexts that have performed a load-locked (LL)
+     * on the block since the last store. */
+    std::list<Lock> lockList;
+
+  public:
 
     CacheBlk()
         : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
@@ -175,7 +207,58 @@ class CacheBlk
         return (status & BlkHWPrefetched) != 0;
     }
 
+    /**
+     * Track the fact that a local locked was issued to the block.  If
+     * multiple LLs get issued from the same context we could have
+     * redundant records on the list, but that's OK, as they'll all
+     * get blown away at the next store.
+     */
+    void trackLoadLocked(Request *req)
+    {
+        assert(req->isLocked());
+        lockList.push_front(Lock(req));
+    }
 
+    /**
+     * Clear the list of valid load locks.  Should be called whenever
+     * block is written to or invalidated.
+     */
+    void clearLoadLocks() { lockList.clear(); }
+
+    /**
+     * Handle interaction of load-locked operations and stores.
+     * @return True if write should proceed, false otherwise.  Returns
+     * false only in the case of a failed store conditional.
+     */
+    bool checkWrite(Request *req)
+    {
+        if (req->isLocked()) {
+            // it's a store conditional... have to check for matching
+            // load locked.
+            bool success = false;
+
+            for (std::list<Lock>::iterator i = lockList.begin();
+                 i != lockList.end(); ++i)
+            {
+                if (i->matchesContext(req)) {
+                    // it's a store conditional, and as far as the memory
+                    // system can tell, the requesting context's lock is
+                    // still valid.
+                    success = true;
+                    break;
+                }
+            }
+
+            req->setScResult(success ? 1 : 0);
+            clearLoadLocks();
+            return success;
+        } else {
+            // for *all* stores (conditional or otherwise) we have to
+            // clear the list of load-locks as they're all invalid now.
+            clearLoadLocks();
+            return true;
+        }
+    }
 };
 
 #endif //__CACHE_BLK_HH__

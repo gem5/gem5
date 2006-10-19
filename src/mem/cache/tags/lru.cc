@@ -246,6 +246,7 @@ LRU::invalidateBlk(Addr addr)
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;
+        blk->clearLoadLocks();
         tagsInUse--;
     }
 }
