@@ -57,10 +57,10 @@ public:
                 //Input registers
                 I0, I1, I2, I3, I4, I5, I6, I7,
                 //Floating point
-                F0, F1, F2, F3, F4, F5, F6, F7,
-                F8, F9, F10, F11, F12, F13, F14, F15,
-                F16, F17, F18, F19, F20, F21, F22, F23,
-                F24, F25, F26, F27, F28, F29, F30, F31,
+                F0, F2, F4, F6, F8, F10, F12, F14,
+                F16, F18, F20, F22, F24, F26, F28, F30,
+                F32, F34, F36, F38, F40, F42, F44, F46,
+                F48, F50, F52, F54, F56, F58, F60, F62,
                 //Miscelaneous
                 FSR, FPRS, PC, NPC, Y, CWP, PSTATE, ASI, CCR,
                 numregs

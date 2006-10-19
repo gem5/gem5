@@ -47,10 +47,10 @@ string SparcTraceChild::regNames[numregs] = {
     //Input registers
     "i0", "i1", "i2", "i3", "i4", "i5", "i6", "i7",
     //Floating point
-    "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7",
-    "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
-    "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
-    "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
+    "f0", "f2", "f4", "f6", "f8", "f10", "f12", "f14",
+    "f16", "f18", "f20", "f22", "f24", "f26", "f28", "f30",
+    "f32", "f34", "f36", "f38", "f40", "f42", "f44", "f46",
+    "f48", "f50", "f52", "f54", "f56", "f58", "f60", "f62",
     //Miscelaneous
     "fsr", "fprs", "pc", "npc", "y", "cwp", "pstate", "asi", "ccr"};
 
@@ -98,37 +98,37 @@ int64_t getRegs(regs & myregs, fpu & myfpu,
         case SparcTraceChild::I7: return inputs[7];
         //Floating point
         case SparcTraceChild::F0: return myfpu.f_fpstatus.fpu_fr[0];
-        case SparcTraceChild::F1: return myfpu.f_fpstatus.fpu_fr[1];
-        case SparcTraceChild::F2: return myfpu.f_fpstatus.fpu_fr[2];
-        case SparcTraceChild::F3: return myfpu.f_fpstatus.fpu_fr[3];
-        case SparcTraceChild::F4: return myfpu.f_fpstatus.fpu_fr[4];
-        case SparcTraceChild::F5: return myfpu.f_fpstatus.fpu_fr[5];
-        case SparcTraceChild::F6: return myfpu.f_fpstatus.fpu_fr[6];
-        case SparcTraceChild::F7: return myfpu.f_fpstatus.fpu_fr[7];
-        case SparcTraceChild::F8: return myfpu.f_fpstatus.fpu_fr[8];
-        case SparcTraceChild::F9: return myfpu.f_fpstatus.fpu_fr[9];
-        case SparcTraceChild::F10: return myfpu.f_fpstatus.fpu_fr[10];
-        case SparcTraceChild::F11: return myfpu.f_fpstatus.fpu_fr[11];
-        case SparcTraceChild::F12: return myfpu.f_fpstatus.fpu_fr[12];
-        case SparcTraceChild::F13: return myfpu.f_fpstatus.fpu_fr[13];
-        case SparcTraceChild::F14: return myfpu.f_fpstatus.fpu_fr[14];
-        case SparcTraceChild::F15: return myfpu.f_fpstatus.fpu_fr[15];
-        case SparcTraceChild::F16: return myfpu.f_fpstatus.fpu_fr[16];
-        case SparcTraceChild::F17: return myfpu.f_fpstatus.fpu_fr[17];
-        case SparcTraceChild::F18: return myfpu.f_fpstatus.fpu_fr[18];
-        case SparcTraceChild::F19: return myfpu.f_fpstatus.fpu_fr[19];
-        case SparcTraceChild::F20: return myfpu.f_fpstatus.fpu_fr[20];
-        case SparcTraceChild::F21: return myfpu.f_fpstatus.fpu_fr[21];
-        case SparcTraceChild::F22: return myfpu.f_fpstatus.fpu_fr[22];
-        case SparcTraceChild::F23: return myfpu.f_fpstatus.fpu_fr[23];
-        case SparcTraceChild::F24: return myfpu.f_fpstatus.fpu_fr[24];
-        case SparcTraceChild::F25: return myfpu.f_fpstatus.fpu_fr[25];
-        case SparcTraceChild::F26: return myfpu.f_fpstatus.fpu_fr[26];
-        case SparcTraceChild::F27: return myfpu.f_fpstatus.fpu_fr[27];
-        case SparcTraceChild::F28: return myfpu.f_fpstatus.fpu_fr[28];
-        case SparcTraceChild::F29: return myfpu.f_fpstatus.fpu_fr[29];
-        case SparcTraceChild::F30: return myfpu.f_fpstatus.fpu_fr[30];
-        case SparcTraceChild::F31: return myfpu.f_fpstatus.fpu_fr[31];
+        case SparcTraceChild::F2: return myfpu.f_fpstatus.fpu_fr[1];
+        case SparcTraceChild::F4: return myfpu.f_fpstatus.fpu_fr[2];
+        case SparcTraceChild::F6: return myfpu.f_fpstatus.fpu_fr[3];
+        case SparcTraceChild::F8: return myfpu.f_fpstatus.fpu_fr[4];
+        case SparcTraceChild::F10: return myfpu.f_fpstatus.fpu_fr[5];
+        case SparcTraceChild::F12: return myfpu.f_fpstatus.fpu_fr[6];
+        case SparcTraceChild::F14: return myfpu.f_fpstatus.fpu_fr[7];
+        case SparcTraceChild::F16: return myfpu.f_fpstatus.fpu_fr[8];
+        case SparcTraceChild::F18: return myfpu.f_fpstatus.fpu_fr[9];
+        case SparcTraceChild::F20: return myfpu.f_fpstatus.fpu_fr[10];
+        case SparcTraceChild::F22: return myfpu.f_fpstatus.fpu_fr[11];
+        case SparcTraceChild::F24: return myfpu.f_fpstatus.fpu_fr[12];
+        case SparcTraceChild::F26: return myfpu.f_fpstatus.fpu_fr[13];
+        case SparcTraceChild::F28: return myfpu.f_fpstatus.fpu_fr[14];
+        case SparcTraceChild::F30: return myfpu.f_fpstatus.fpu_fr[15];
+        case SparcTraceChild::F32: return myfpu.f_fpstatus.fpu_fr[16];
+        case SparcTraceChild::F34: return myfpu.f_fpstatus.fpu_fr[17];
+        case SparcTraceChild::F36: return myfpu.f_fpstatus.fpu_fr[18];
+        case SparcTraceChild::F38: return myfpu.f_fpstatus.fpu_fr[19];
+        case SparcTraceChild::F40: return myfpu.f_fpstatus.fpu_fr[20];
+        case SparcTraceChild::F42: return myfpu.f_fpstatus.fpu_fr[21];
+        case SparcTraceChild::F44: return myfpu.f_fpstatus.fpu_fr[22];
+        case SparcTraceChild::F46: return myfpu.f_fpstatus.fpu_fr[23];
+        case SparcTraceChild::F48: return myfpu.f_fpstatus.fpu_fr[24];
+        case SparcTraceChild::F50: return myfpu.f_fpstatus.fpu_fr[25];
+        case SparcTraceChild::F52: return myfpu.f_fpstatus.fpu_fr[26];
+        case SparcTraceChild::F54: return myfpu.f_fpstatus.fpu_fr[27];
+        case SparcTraceChild::F56: return myfpu.f_fpstatus.fpu_fr[28];
+        case SparcTraceChild::F58: return myfpu.f_fpstatus.fpu_fr[29];
+        case SparcTraceChild::F60: return myfpu.f_fpstatus.fpu_fr[30];
+        case SparcTraceChild::F62: return myfpu.f_fpstatus.fpu_fr[31];
         //Miscelaneous
         case SparcTraceChild::FSR: return myfpu.f_fpstatus.Fpu_fsr;
         case SparcTraceChild::FPRS: return myregs.r_fprs;

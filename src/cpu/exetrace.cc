@@ -60,61 +60,66 @@ Trace::InstRecord::dump(ostream &outs)
     if (flags[PRINT_REG_DELTA])
     {
 #if THE_ISA == SPARC_ISA
-        static uint64_t regs[32] = {
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0};
-        static uint64_t ccr = 0;
-        static uint64_t y = 0;
-        static uint64_t floats[32];
-        uint64_t newVal;
-        static const char * prefixes[4] = {"G", "O", "L", "I"};
+        //Don't print what happens for each micro-op, just print out
+        //once at the last op, and for regular instructions.
+        if(!staticInst->isMicroOp() || staticInst->isLastMicroOp())
+        {
+            static uint64_t regs[32] = {
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0};
+            static uint64_t ccr = 0;
+            static uint64_t y = 0;
+            static uint64_t floats[32];
+            uint64_t newVal;
+            static const char * prefixes[4] = {"G", "O", "L", "I"};
 
-        char buf[256];
-        sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
-        outs << buf;
-        sprintf(buf, " NPC = 0x%016llx", thread->readNextNPC());
-        outs << buf;
-        newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
-        if(newVal != ccr)
-        {
-            sprintf(buf, " CCR = 0x%016llx", newVal);
+            char buf[256];
+            sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
             outs << buf;
-            ccr = newVal;
-        }
-        newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
-        if(newVal != y)
-        {
-            sprintf(buf, " Y = 0x%016llx", newVal);
+            sprintf(buf, " NPC = 0x%016llx", thread->readNextNPC());
             outs << buf;
-            y = newVal;
-        }
-        for(int y = 0; y < 4; y++)
-        {
-            for(int x = 0; x < 8; x++)
+            newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
+            if(newVal != ccr)
             {
-                int index = x + 8 * y;
-                newVal = thread->readIntReg(index);
-                if(regs[index] != newVal)
+                sprintf(buf, " CCR = 0x%016llx", newVal);
+                outs << buf;
+                ccr = newVal;
+            }
+            newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
+            if(newVal != y)
+            {
+                sprintf(buf, " Y = 0x%016llx", newVal);
+                outs << buf;
+                y = newVal;
+            }
+            for(int y = 0; y < 4; y++)
+            {
+                for(int x = 0; x < 8; x++)
                 {
-                    sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
-                    outs << buf;
-                    regs[index] = newVal;
+                    int index = x + 8 * y;
+                    newVal = thread->readIntReg(index);
+                    if(regs[index] != newVal)
+                    {
+                        sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
+                        outs << buf;
+                        regs[index] = newVal;
+                    }
                 }
             }
-        }
-        for(int y = 0; y < 32; y++)
-        {
-            newVal = thread->readFloatRegBits(2 * y, 64);
-            if(floats[y] != newVal)
+            for(int y = 0; y < 32; y++)
             {
-                sprintf(buf, " F%d = 0x%016llx", y, newVal);
-                outs << buf;
-                floats[y] = newVal;
+                newVal = thread->readFloatRegBits(2 * y, 64);
+                if(floats[y] != newVal)
+                {
+                    sprintf(buf, " F%d = 0x%016llx", 2 * y, newVal);
+                    outs << buf;
+                    floats[y] = newVal;
+                }
             }
+            outs << endl;
         }
-        outs << endl;
 #endif
     }
     else if (flags[INTEL_FORMAT]) {
