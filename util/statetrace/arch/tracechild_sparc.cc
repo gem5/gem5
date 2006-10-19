@@ -188,46 +188,110 @@ bool SparcTraceChild::step()
     //being breakpointed should be word (64bit) aligned, and that both the
     //next instruction and the instruction after that need to be breakpointed
     //so that annulled branches will still stop as well.
+
+    /*
+     * Useful constants
+     */
     const static uint64_t breakInst = 0x91d02001;
     const static uint64_t breakWord = breakInst | (breakInst << 32);
-    const static uint64_t lowMask = (uint64_t)(0xFFFFFFFF);
+    const static uint64_t lowMask = 0xFFFFFFFFULL;
     const static uint64_t highMask = lowMask << 32;
+
+    /*
+     * storage for the original contents of the child process's memory
+     */
     uint64_t originalInst, originalAnnulInst;
+
+    /*
+     * Get information about where the process is and is headed next.
+     */
+    uint64_t currentPC = getRegVal(PC);
+    bool unalignedPC = currentPC & 7;
+    uint64_t alignedPC = currentPC & (~7);
     uint64_t nextPC = getRegVal(NPC);
-    bool unaligned = nextPC & 7;
-    uint64_t alignedPC = nextPC & (~7);
-    originalInst = ptrace(PTRACE_PEEKTEXT, pid, alignedPC, 0);
-    if(unaligned)
+    bool unalignedNPC = nextPC & 7;
+    uint64_t alignedNPC = nextPC & (~7);
+
+    /*
+     * Store the original contents of the child process's memory
+     */
+    originalInst = ptrace(PTRACE_PEEKTEXT, pid, alignedNPC, 0);
+    //Save a ptrace call if we can
+    if(unalignedNPC)
     {
-        originalAnnulInst = ptrace(PTRACE_PEEKTEXT, pid, alignedPC+8, 0);
+        originalAnnulInst = ptrace(PTRACE_PEEKTEXT, pid, alignedNPC+8, 0);
     }
-    uint64_t newInst;
-    if(unaligned)
+
+    /*
+     * Prepare breakpointed copies of child processes memory
+     */
+    uint64_t newInst, newAnnulInst;
+    //If the current instruction is in the same word as the npc
+    if(alignedPC == alignedNPC)
     {
-        newInst = (originalInst & highMask) | (breakInst << 0);
-        if(ptrace(PTRACE_POKETEXT, pid, alignedPC, newInst) != 0)
-            cerr << "Poke failed" << endl;
-        newInst = (originalAnnulInst & lowMask) | (breakInst << 32);
-        if(ptrace(PTRACE_POKETEXT, pid, alignedPC+8, newInst) != 0)
-            cerr << "Poke failed" << endl;
+        //Make sure we only replace the other part
+        if(unalignedPC)
+            newInst = (originalInst & lowMask) | (breakWord & highMask);
+        else
+            newInst = (originalInst & highMask) | (breakWord & lowMask);
     }
     else
     {
-        if(ptrace(PTRACE_POKETEXT, pid, alignedPC, breakWord) != 0)
+        //otherwise replace the whole thing
+        newInst = breakWord;
+    }
+    //If the current instruction is in the same word as the word after
+    //the npc
+    if(alignedPC == alignedNPC+8)
+    {
+        //Make sure we only replace the other part
+        if(unalignedPC)
+            newAnnulInst = (originalAnnulInst & lowMask) | (breakWord & highMask);
+        else
+            newAnnulInst = (originalAnnulInst & highMask) | (breakWord & lowMask);
+    }
+    else
+    {
+        //otherwise replace the whole thing
+        newAnnulInst = breakWord;
+    }
+
+    /*
+     * Stuff the breakpoint instructions into the child's address space.
+     */
+    //Replace the word at npc
+    if(ptrace(PTRACE_POKETEXT, pid, alignedNPC, newInst) != 0)
+        cerr << "Poke failed" << endl;
+    //Replace the next word, if necessary
+    if(unalignedNPC)
+    {
+        if(ptrace(PTRACE_POKETEXT, pid, alignedNPC+8, newAnnulInst) != 0)
             cerr << "Poke failed" << endl;
     }
+
+    /*
+     * Restart the child process
+     */
     //Note that the "addr" parameter is supposed to be ignored, but in at
     //least one version of the kernel, it must be 1 or it will set what
     //pc to continue from
-    if(ptrace(PTRACE_CONT, pid, /*nextPC - 4*/ 1, 0) != 0)
+    if(ptrace(PTRACE_CONT, pid, 1, 0) != 0)
         cerr << "Cont failed" << endl;
     doWait();
+
+    /*
+     * Update our record of the child's state
+     */
     update(pid);
-    if(ptrace(PTRACE_POKETEXT, pid, alignedPC, originalInst) != 0)
+
+    /*
+     * Put back the original contents of the childs address space
+     */
+    if(ptrace(PTRACE_POKETEXT, pid, alignedNPC, originalInst) != 0)
         cerr << "Repoke failed" << endl;
-    if(unaligned)
+    if(unalignedNPC)
     {
-        if(ptrace(PTRACE_POKETEXT, pid, alignedPC+8, originalAnnulInst) != 0)
+        if(ptrace(PTRACE_POKETEXT, pid, alignedNPC+8, originalAnnulInst) != 0)
             cerr << "Repoke failed" << endl;
     }
     return true;
