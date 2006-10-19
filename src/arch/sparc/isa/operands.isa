@@ -48,7 +48,7 @@ output header {{
     // MSB put in the LSB position but are otherwise normal.
     static inline unsigned int dfpr(unsigned int regNum)
     {
-        return regNum | ((regNum & 1) << 5);
+        return (regNum & (~1)) | ((regNum & 1) << 5);
     }
 }};
 
