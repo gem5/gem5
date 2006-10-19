@@ -536,6 +536,13 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
         }
     }
 
+    if (!update && (pkt->isWrite() || (otherSidePort == cpuSidePort))) {
+        // Still need to change data in all locations.
+        otherSidePort->sendFunctional(pkt);
+        if (pkt->isRead() && pkt->result == Packet::Success)
+            return 0;
+    }
+
     PacketList writebacks;
     int lat;
     BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
@@ -544,83 +551,48 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
             pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
             pkt->getAddr() & ~((Addr)blkSize - 1));
 
-    if (!blk) {
-        // Need to check for outstanding misses and writes
-        Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
 
-        // There can only be one matching outstanding miss.
-        MSHR* mshr = missQueue->findMSHR(blk_addr);
+    // Need to check for outstanding misses and writes
+    Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
 
-        // There can be many matching outstanding writes.
-        std::vector<MSHR*> writes;
-        missQueue->findWrites(blk_addr, writes);
+    // There can only be one matching outstanding miss.
+    MSHR* mshr = missQueue->findMSHR(blk_addr);
 
-        if (!update) {
-                otherSidePort->sendFunctional(pkt);
+    // There can be many matching outstanding writes.
+    std::vector<MSHR*> writes;
+    missQueue->findWrites(blk_addr, writes);
 
-            // Check for data in MSHR and writebuffer.
-            if (mshr) {
-                warn("Found outstanding miss on an non-update probe");
-                MSHR::TargetList *targets = mshr->getTargetList();
-                MSHR::TargetList::iterator i = targets->begin();
-                MSHR::TargetList::iterator end = targets->end();
-                for (; i != end; ++i) {
-                    Packet * target = *i;
-                    // If the target contains data, and it overlaps the
-                    // probed request, need to update data
-                    if (target->isWrite() && target->intersect(pkt)) {
-                        uint8_t* pkt_data;
-                        uint8_t* write_data;
-                        int data_size;
-                        if (target->getAddr() < pkt->getAddr()) {
-                            int offset = pkt->getAddr() - target->getAddr();
-                            pkt_data = pkt->getPtr<uint8_t>();
-                            write_data = target->getPtr<uint8_t>() + offset;
-                            data_size = target->getSize() - offset;
-                            assert(data_size > 0);
-                            if (data_size > pkt->getSize())
-                                data_size = pkt->getSize();
-                        } else {
-                            int offset = target->getAddr() - pkt->getAddr();
-                            pkt_data = pkt->getPtr<uint8_t>() + offset;
-                            write_data = target->getPtr<uint8_t>();
-                            data_size = pkt->getSize() - offset;
-                            assert(data_size > pkt->getSize());
-                            if (data_size > target->getSize())
-                                data_size = target->getSize();
-                        }
-
-                        if (pkt->isWrite()) {
-                            memcpy(pkt_data, write_data, data_size);
-                        } else {
-                            memcpy(write_data, pkt_data, data_size);
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < writes.size(); ++i) {
-                Packet * write = writes[i]->pkt;
-                if (write->intersect(pkt)) {
-                    warn("Found outstanding write on an non-update probe");
+    if (!update) {
+        // Check for data in MSHR and writebuffer.
+        if (mshr) {
+            warn("Found outstanding miss on an non-update probe");
+            MSHR::TargetList *targets = mshr->getTargetList();
+            MSHR::TargetList::iterator i = targets->begin();
+            MSHR::TargetList::iterator end = targets->end();
+            for (; i != end; ++i) {
+                Packet * target = *i;
+                // If the target contains data, and it overlaps the
+                // probed request, need to update data
+                if (target->isWrite() && target->intersect(pkt)) {
                     uint8_t* pkt_data;
                     uint8_t* write_data;
                     int data_size;
-                    if (write->getAddr() < pkt->getAddr()) {
-                        int offset = pkt->getAddr() - write->getAddr();
+                    if (target->getAddr() < pkt->getAddr()) {
+                        int offset = pkt->getAddr() - target->getAddr();
                         pkt_data = pkt->getPtr<uint8_t>();
-                        write_data = write->getPtr<uint8_t>() + offset;
-                        data_size = write->getSize() - offset;
+                        write_data = target->getPtr<uint8_t>() + offset;
+                        data_size = target->getSize() - offset;
                         assert(data_size > 0);
                         if (data_size > pkt->getSize())
                             data_size = pkt->getSize();
                     } else {
-                        int offset = write->getAddr() - pkt->getAddr();
+                        int offset = target->getAddr() - pkt->getAddr();
                         pkt_data = pkt->getPtr<uint8_t>() + offset;
-                        write_data = write->getPtr<uint8_t>();
+                        write_data = target->getPtr<uint8_t>();
                         data_size = pkt->getSize() - offset;
                         assert(data_size > pkt->getSize());
-                        if (data_size > write->getSize())
-                            data_size = write->getSize();
+                        if (data_size > target->getSize())
+                            data_size = target->getSize();
                     }
 
                     if (pkt->isWrite()) {
@@ -628,77 +600,108 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
                     } else {
                         memcpy(write_data, pkt_data, data_size);
                     }
-
                 }
             }
-            return 0;
-        } else {
-            // update the cache state and statistics
-            if (mshr || !writes.empty()){
-                // Can't handle it, return pktuest unsatisfied.
-                panic("Atomic access ran into outstanding MSHR's or WB's!");
+        }
+        for (int i = 0; i < writes.size(); ++i) {
+            Packet * write = writes[i]->pkt;
+            if (write->intersect(pkt)) {
+                warn("Found outstanding write on an non-update probe");
+                uint8_t* pkt_data;
+                uint8_t* write_data;
+                int data_size;
+                if (write->getAddr() < pkt->getAddr()) {
+                    int offset = pkt->getAddr() - write->getAddr();
+                    pkt_data = pkt->getPtr<uint8_t>();
+                    write_data = write->getPtr<uint8_t>() + offset;
+                    data_size = write->getSize() - offset;
+                    assert(data_size > 0);
+                    if (data_size > pkt->getSize())
+                        data_size = pkt->getSize();
+                } else {
+                    int offset = write->getAddr() - pkt->getAddr();
+                    pkt_data = pkt->getPtr<uint8_t>() + offset;
+                    write_data = write->getPtr<uint8_t>();
+                    data_size = pkt->getSize() - offset;
+                    assert(data_size > pkt->getSize());
+                    if (data_size > write->getSize())
+                        data_size = write->getSize();
+                }
+
+                if (pkt->isWrite()) {
+                    memcpy(pkt_data, write_data, data_size);
+                } else {
+                    memcpy(write_data, pkt_data, data_size);
+                }
+
             }
-            if (!pkt->req->isUncacheable()) {
+        }
+    } else if (!blk) {
+        // update the cache state and statistics
+        if (mshr || !writes.empty()){
+            // Can't handle it, return pktuest unsatisfied.
+            panic("Atomic access ran into outstanding MSHR's or WB's!");
+        }
+        if (!pkt->req->isUncacheable()) {
                 // Fetch the cache block to fill
-                BlkType *blk = tags->findBlock(pkt);
-                Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
-                                                   (blk)? blk->status : 0);
+            BlkType *blk = tags->findBlock(pkt);
+            Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
+                                                            (blk)? blk->status : 0);
 
-                Packet * busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
+            Packet * busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
 
-                busPkt->allocate();
+            busPkt->allocate();
 
-                busPkt->time = curTick;
+            busPkt->time = curTick;
 
-                DPRINTF(Cache, "Sending a atomic %s for %x blk_addr: %x\n",
-                        busPkt->cmdString(),
-                        busPkt->getAddr() & (((ULL(1))<<48)-1),
-                        busPkt->getAddr() & ~((Addr)blkSize - 1));
+            DPRINTF(Cache, "Sending a atomic %s for %x blk_addr: %x\n",
+                    busPkt->cmdString(),
+                    busPkt->getAddr() & (((ULL(1))<<48)-1),
+                    busPkt->getAddr() & ~((Addr)blkSize - 1));
 
-                lat = memSidePort->sendAtomic(busPkt);
+            lat = memSidePort->sendAtomic(busPkt);
 
-                //Be sure to flip the response to a request for coherence
-                if (busPkt->needsResponse()) {
-                    busPkt->makeAtomicResponse();
-                }
+            //Be sure to flip the response to a request for coherence
+            if (busPkt->needsResponse()) {
+                busPkt->makeAtomicResponse();
+            }
 
 /*		if (!(busPkt->flags & SATISFIED)) {
-                    // blocked at a higher level, just return
-                    return 0;
-                }
+// blocked at a higher level, just return
+return 0;
+}
 
 */		misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
 
-                CacheBlk::State old_state = (blk) ? blk->status : 0;
-                CacheBlk::State new_state =
-                    coherence->getNewState(busPkt, old_state);
-                DPRINTF(Cache,
+            CacheBlk::State old_state = (blk) ? blk->status : 0;
+            CacheBlk::State new_state =
+                coherence->getNewState(busPkt, old_state);
+            DPRINTF(Cache,
                         "Receive response:%s for blk addr %x in state %i\n",
-                        busPkt->cmdString(),
-                        busPkt->getAddr() & (((ULL(1))<<48)-1), old_state);
-                if (old_state != new_state)
+                    busPkt->cmdString(),
+                    busPkt->getAddr() & (((ULL(1))<<48)-1), old_state);
+            if (old_state != new_state)
                     DPRINTF(Cache, "Block for blk addr %x moving from "
                             "state %i to %i\n",
                             busPkt->getAddr() & (((ULL(1))<<48)-1),
                             old_state, new_state);
 
-                tags->handleFill(blk, busPkt,
-                                 new_state,
-                                 writebacks, pkt);
-                //Free the packet
-                delete busPkt;
+            tags->handleFill(blk, busPkt,
+                             new_state,
+                             writebacks, pkt);
+            //Free the packet
+            delete busPkt;
 
-                // Handle writebacks if needed
-                while (!writebacks.empty()){
-                    Packet *wbPkt = writebacks.front();
-                    memSidePort->sendAtomic(wbPkt);
-                    writebacks.pop_front();
-                    delete wbPkt;
-                }
-                return lat + hitLatency;
-            } else {
-                return memSidePort->sendAtomic(pkt);
+            // Handle writebacks if needed
+            while (!writebacks.empty()){
+                Packet *wbPkt = writebacks.front();
+                memSidePort->sendAtomic(wbPkt);
+                writebacks.pop_front();
+                delete wbPkt;
             }
+                return lat + hitLatency;
+        } else {
+            return memSidePort->sendAtomic(pkt);
         }
     } else {
         // There was a cache hit.
@@ -708,12 +711,8 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
             writebacks.pop_front();
         }
 
-        if (update) {
-            hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
-        } else if (pkt->isWrite()) {
-            // Still need to change data in all locations.
-            otherSidePort->sendFunctional(pkt);
-        }
+        hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+
         return hitLatency;
     }
     fatal("Probe not handled.\n");
