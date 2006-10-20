@@ -160,9 +160,12 @@ Bus::recvTiming(Packet *pkt)
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
         if (timingSnoop(pkt)) {
+            bool success;
+
             pkt->flags |= SNOOP_COMMIT;
-            bool success = timingSnoop(pkt);
+            success = timingSnoop(pkt);
             assert(success);
+
             if (pkt->flags & SATISFIED) {
                 //Cache-Cache transfer occuring
                 if (inRetry) {
