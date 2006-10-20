@@ -72,8 +72,8 @@ void
 MemTest::CpuPort::recvFunctional(Packet *pkt)
 {
     //Do nothing if we see one come through
-    if (curTick != 0)//Supress warning durring initialization
-        warn("Functional Writes not implemented in MemTester\n");
+//    if (curTick != 0)//Supress warning durring initialization
+//        warn("Functional Writes not implemented in MemTester\n");
     //Need to find any response values that intersect and update
     return;
 }
@@ -345,8 +345,8 @@ MemTest::tick()
     } else {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    //bool probe = (random() % 2 == 1) && !req->isUncacheable();
-    bool probe = false;
+    bool probe = (random() % 2 == 1) && !(flags & UNCACHEABLE);
+    //bool probe = false;
 
     paddr &= ~((1 << access_size) - 1);
     req->setPhys(paddr, 1 << access_size, flags);
@@ -388,6 +388,7 @@ MemTest::tick()
 
         if (probe) {
             cachePort.sendFunctional(pkt);
+            pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
 //	    req->completionEvent = new MemCompleteEvent(req, result, this);
@@ -431,6 +432,7 @@ MemTest::tick()
 
         if (probe) {
             cachePort.sendFunctional(pkt);
+            pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
 //	    req->completionEvent = new MemCompleteEvent(req, NULL, this);

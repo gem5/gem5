@@ -593,6 +593,8 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
                     if (pkt->isWrite()) {
                         memcpy(pkt_data, write_data, data_size);
                     } else {
+                        pkt->flags |= SATISFIED;
+                        pkt->result = Packet::Success;
                         memcpy(write_data, pkt_data, data_size);
                     }
                 }
@@ -626,10 +628,18 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
                 if (pkt->isWrite()) {
                     memcpy(pkt_data, write_data, data_size);
                 } else {
+                    pkt->flags |= SATISFIED;
+                    pkt->result = Packet::Success;
                     memcpy(write_data, pkt_data, data_size);
                 }
 
             }
+        }
+        if (pkt->isRead()
+            && pkt->result != Packet::Success
+            && otherSidePort == memSidePort) {
+            otherSidePort->sendFunctional(pkt);
+            assert(pkt->result == Packet::Success);
         }
         return 0;
     } else if (!blk) {
