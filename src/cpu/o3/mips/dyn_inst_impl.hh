@@ -100,7 +100,7 @@ MipsDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-MipsDynInst<Impl>::completeAcc(Packet *pkt)
+MipsDynInst<Impl>::completeAcc(PacketPtr pkt)
 {
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 

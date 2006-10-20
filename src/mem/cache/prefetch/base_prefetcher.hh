@@ -45,7 +45,7 @@ class BasePrefetcher
   protected:
 
     /** The Prefetch Queue. */
-    std::list<Packet *> pf;
+    std::list<PacketPtr> pf;
 
     // PARAMETERS
 
@@ -93,24 +93,24 @@ class BasePrefetcher
 
     void setCache(BaseCache *_cache);
 
-    void handleMiss(Packet * &pkt, Tick time);
+    void handleMiss(PacketPtr &pkt, Tick time);
 
-    Packet * getPacket();
+    PacketPtr getPacket();
 
     bool havePending()
     {
         return !pf.empty();
     }
 
-    virtual void calculatePrefetch(Packet * &pkt,
+    virtual void calculatePrefetch(PacketPtr &pkt,
                                    std::list<Addr> &addresses,
                                    std::list<Tick> &delays) = 0;
 
-    virtual bool inCache(Packet * &pkt) = 0;
+    virtual bool inCache(PacketPtr &pkt) = 0;
 
     virtual bool inMissQueue(Addr address) = 0;
 
-    std::list<Packet *>::iterator inPrefetch(Addr address);
+    std::list<PacketPtr>::iterator inPrefetch(Addr address);
 };
 
 

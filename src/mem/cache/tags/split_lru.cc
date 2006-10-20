@@ -203,7 +203,7 @@ SplitLRU::findBlock(Addr addr, int &lat)
 }
 
 SplitBlk*
-SplitLRU::findBlock(Packet * &pkt, int &lat)
+SplitLRU::findBlock(PacketPtr &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
 
@@ -234,7 +234,7 @@ SplitLRU::findBlock(Addr addr) const
 }
 
 SplitBlk*
-SplitLRU::findReplacement(Packet * &pkt, PacketList &writebacks,
+SplitLRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
     unsigned set = extractSet(pkt->getAddr());

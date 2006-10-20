@@ -169,7 +169,7 @@ class MissQueue
      * @param time The time the miss occurs.
      * @return A pointer to the new MSHR.
      */
-    MSHR* allocateMiss(Packet * &pkt, int size, Tick time);
+    MSHR* allocateMiss(PacketPtr &pkt, int size, Tick time);
 
     /**
      * Allocate a new WriteBuffer to handle the provided write.
@@ -178,7 +178,7 @@ class MissQueue
      * @param time The time the write occurs.
      * @return A pointer to the new write buffer.
      */
-    MSHR* allocateWrite(Packet * &pkt, int size, Tick time);
+    MSHR* allocateWrite(PacketPtr &pkt, int size, Tick time);
 
   public:
     /**
@@ -218,7 +218,7 @@ class MissQueue
      * @param blk_size The block size of the cache.
      * @param time The time the miss is detected.
      */
-    void handleMiss(Packet * &pkt, int blk_size, Tick time);
+    void handleMiss(PacketPtr &pkt, int blk_size, Tick time);
 
     /**
      * Fetch the block for the given address and buffer the given target.
@@ -229,26 +229,26 @@ class MissQueue
      * @param target The target for the fetch.
      */
     MSHR* fetchBlock(Addr addr, int blk_size, Tick time,
-                     Packet * &target);
+                     PacketPtr &target);
 
     /**
      * Selects a outstanding pktuest to service.
      * @return The pktuest to service, NULL if none found.
      */
-    Packet * getPacket();
+    PacketPtr getPacket();
 
     /**
      * Set the command to the given bus command.
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    void setBusCmd(Packet * &pkt, Packet::Command cmd);
+    void setBusCmd(PacketPtr &pkt, Packet::Command cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.
      * @param pkt The request to reset.
      */
-    void restoreOrigCmd(Packet * &pkt);
+    void restoreOrigCmd(PacketPtr &pkt);
 
     /**
      * Marks a pktuest as in service (sent on the bus). This can have side
@@ -256,14 +256,14 @@ class MissQueue
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(Packet * &pkt, MSHR* mshr);
+    void markInService(PacketPtr &pkt, MSHR* mshr);
 
     /**
      * Collect statistics and free resources of a satisfied pktuest.
      * @param pkt The request that has been satisfied.
      * @param time The time when the pktuest is satisfied.
      */
-    void handleResponse(Packet * &pkt, Tick time);
+    void handleResponse(PacketPtr &pkt, Tick time);
 
     /**
      * Removes all outstanding pktuests for a given thread number. If a request
@@ -316,7 +316,7 @@ class MissQueue
      * Perform the given writeback pktuest.
      * @param pkt The writeback request.
      */
-    void doWriteback(Packet * &pkt);
+    void doWriteback(PacketPtr &pkt);
 
     /**
      * Returns true if there are outstanding pktuests.
@@ -329,7 +329,7 @@ class MissQueue
      * @param mshr The mshr to add a target to.
      * @param pkt The target to add.
      */
-    void addTarget(MSHR *mshr, Packet * &pkt)
+    void addTarget(MSHR *mshr, PacketPtr &pkt)
     {
         mq.allocateTarget(mshr, pkt);
     }

@@ -55,7 +55,7 @@ MSHR::MSHR()
 
 void
 MSHR::allocate(Packet::Command cmd, Addr _addr, int size,
-               Packet * &target)
+               PacketPtr &target)
 {
     addr = _addr;
     if (target)
@@ -85,7 +85,7 @@ MSHR::allocate(Packet::Command cmd, Addr _addr, int size,
  * @todo When we have a "global" data flag, might want to copy data here.
  */
 void
-MSHR::allocateAsBuffer(Packet * &target)
+MSHR::allocateAsBuffer(PacketPtr &target)
 {
     addr = target->getAddr();
     threadNum = 0/*target->req->getThreadNum()*/;
@@ -111,13 +111,13 @@ MSHR::deallocate()
  * Adds a target to an MSHR
  */
 void
-MSHR::allocateTarget(Packet * &target)
+MSHR::allocateTarget(PacketPtr &target)
 {
     //If we append an invalidate and we issued a read to the bus,
     //but now have some pending writes, we need to move
     //the invalidate to before the first non-read
     if (inService && pkt->isRead() && target->isInvalidate()) {
-        std::list<Packet *> temp;
+        std::list<PacketPtr> temp;
 
         while (!targets.empty()) {
             if (!targets.front()->isRead()) break;

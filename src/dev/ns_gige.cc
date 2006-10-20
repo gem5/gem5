@@ -467,7 +467,7 @@ NSGigE::regStats()
  * This is to write to the PCI general configuration registers
  */
 Tick
-NSGigE::writeConfig(Packet *pkt)
+NSGigE::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
@@ -495,7 +495,7 @@ NSGigE::writeConfig(Packet *pkt)
  * spec sheet
  */
 Tick
-NSGigE::read(Packet *pkt)
+NSGigE::read(PacketPtr pkt)
 {
     assert(ioEnable);
 
@@ -719,7 +719,7 @@ NSGigE::read(Packet *pkt)
 }
 
 Tick
-NSGigE::write(Packet *pkt)
+NSGigE::write(PacketPtr pkt)
 {
     assert(ioEnable);
 

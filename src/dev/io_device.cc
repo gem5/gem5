@@ -42,7 +42,7 @@ PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
 
 
 Tick
-PioPort::recvAtomic(Packet *pkt)
+PioPort::recvAtomic(PacketPtr pkt)
 {
     return pkt->isRead() ? device->read(pkt) : device->write(pkt);
 }
@@ -97,7 +97,7 @@ DmaPort::DmaPort(DmaDevice *dev, System *s)
 { }
 
 bool
-DmaPort::recvTiming(Packet *pkt)
+DmaPort::recvTiming(PacketPtr pkt)
 {
 
 
@@ -165,7 +165,7 @@ DmaPort::drain(Event *de)
 void
 DmaPort::recvRetry()
 {
-    Packet* pkt = transmitList.front();
+    PacketPtr pkt = transmitList.front();
     bool result = true;
     while (result && transmitList.size()) {
         DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
@@ -194,7 +194,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
             Request *req = new Request(gen.addr(), gen.size(), 0);
-            Packet *pkt = new Packet(req, cmd, Packet::Broadcast);
+            PacketPtr pkt = new Packet(req, cmd, Packet::Broadcast);
 
             // Increment the data pointer on a write
             if (data)
@@ -211,7 +211,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
 
 void
-DmaPort::sendDma(Packet *pkt, bool front)
+DmaPort::sendDma(PacketPtr pkt, bool front)
 {
     // some kind of selction between access methods
     // more work is going to have to be done to make

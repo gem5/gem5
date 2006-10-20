@@ -78,7 +78,7 @@ DefaultFetch<Impl>::IcachePort::recvStatusChange(Status status)
 
 template<class Impl>
 bool
-DefaultFetch<Impl>::IcachePort::recvTiming(Packet *pkt)
+DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         fetch->processCacheCompletion(pkt);

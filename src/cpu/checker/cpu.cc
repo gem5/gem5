@@ -169,7 +169,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
     // translate to physical address
     translateDataReadReq(memReq);
 
-    Packet *pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
+    PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
 
     pkt->dataStatic(&data);
 
@@ -256,7 +256,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         T inst_data;
 /*
         // This code would work if the LSQ allowed for snooping.
-        Packet *pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
         pkt.dataStatic(&inst_data);
 
         dcachePort->sendFunctional(pkt);

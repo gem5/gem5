@@ -458,7 +458,7 @@ class IIC : public BaseTags
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Packet * &pkt, int &lat);
+    IICTag* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Find the block, do not update the replacement data.
@@ -475,7 +475,7 @@ class IIC : public BaseTags
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(Packet * &pkt, PacketList &writebacks,
+    IICTag* findReplacement(PacketPtr &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**

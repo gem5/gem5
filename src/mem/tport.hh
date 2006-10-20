@@ -60,7 +60,7 @@ class SimpleTimingPort : public Port
   protected:
     /** A list of outgoing timing response packets that haven't been
      * serviced yet. */
-    std::list<Packet*> transmitList;
+    std::list<PacketPtr> transmitList;
 
     /**
      * This class is used to implemented sendTiming() with a delay. When
@@ -71,10 +71,10 @@ class SimpleTimingPort : public Port
     class SendEvent : public Event
     {
         SimpleTimingPort *port;
-        Packet *packet;
+        PacketPtr packet;
 
       public:
-        SendEvent(SimpleTimingPort *p, Packet *pkt, Tick t)
+        SendEvent(SimpleTimingPort *p, PacketPtr pkt, Tick t)
             : Event(&mainEventQueue), port(p), packet(pkt)
         { setFlags(AutoDelete); schedule(curTick + t); }
 
@@ -95,7 +95,7 @@ class SimpleTimingPort : public Port
     Event *drainEvent;
 
     /** Schedule a sendTiming() event to be called in the future. */
-    void sendTimingLater(Packet *pkt, Tick time)
+    void sendTimingLater(PacketPtr pkt, Tick time)
     { outTiming++; new SendEvent(this, pkt, time); }
 
     /** This function is notification that the device should attempt to send a
@@ -103,10 +103,10 @@ class SimpleTimingPort : public Port
     virtual void recvRetry();
 
     /** Implemented using recvAtomic(). */
-    void recvFunctional(Packet *pkt);
+    void recvFunctional(PacketPtr pkt);
 
     /** Implemented using recvAtomic(). */
-    bool recvTiming(Packet *pkt);
+    bool recvTiming(PacketPtr pkt);
 
     /**
      * Simple ports generally don't care about any status

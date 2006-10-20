@@ -38,23 +38,25 @@ output header {{
 #include <iostream>
 #include <iomanip>
 
-#include "cpu/static_inst.hh"
 #include "arch/mips/isa_traits.hh"
+#include "cpu/static_inst.hh"
+#include "mem/packet.hh"
 }};
 
 output decoder {{
-#include "arch/mips/isa_traits.hh"
-#include "base/cprintf.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
-#include "arch/mips/faults.hh"
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/utility.hh"
-
-#include <math.h>
+#include <cmath>
 #if defined(linux)
 #include <fenv.h>
 #endif
+
+#include "arch/mips/faults.hh"
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/utility.hh"
+#include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
+#include "cpu/thread_context.hh"
 
 using namespace MipsISA;
 }};

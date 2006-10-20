@@ -56,7 +56,7 @@
 template<class TagStore, class Buffering, class Coherence>
 bool
 Cache<TagStore,Buffering,Coherence>::
-doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
+doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -82,7 +82,7 @@ doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
 template<class TagStore, class Buffering, class Coherence>
 Tick
 Cache<TagStore,Buffering,Coherence>::
-doAtomicAccess(Packet *pkt, bool isCpuSide)
+doAtomicAccess(PacketPtr pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -104,7 +104,7 @@ doAtomicAccess(Packet *pkt, bool isCpuSide)
 template<class TagStore, class Buffering, class Coherence>
 void
 Cache<TagStore,Buffering,Coherence>::
-doFunctionalAccess(Packet *pkt, bool isCpuSide)
+doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
 {
     if (isCpuSide)
     {
@@ -238,11 +238,11 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
 
 
 template<class TagStore, class Buffering, class Coherence>
-Packet *
+PacketPtr
 Cache<TagStore,Buffering,Coherence>::getPacket()
 {
     assert(missQueue->havePending());
-    Packet * pkt = missQueue->getPacket();
+    PacketPtr pkt = missQueue->getPacket();
     if (pkt) {
         if (!pkt->req->isUncacheable()) {
             if (pkt->cmd == Packet::HardPFReq)
@@ -306,7 +306,7 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
+Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
@@ -348,7 +348,7 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(Packet * &pkt)
 }
 
 template<class TagStore, class Buffering, class Coherence>
-Packet *
+PacketPtr
 Cache<TagStore,Buffering,Coherence>::getCoherencePacket()
 {
     return coherence->getPacket();
@@ -356,7 +356,7 @@ Cache<TagStore,Buffering,Coherence>::getCoherencePacket()
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(Packet* &pkt,
+Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(PacketPtr &pkt,
                                                          MSHR *cshr,
                                                          bool success)
 {
@@ -366,7 +366,7 @@ Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(Packet* &pkt,
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
+Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
 {
     if (pkt->req->isUncacheable()) {
         //Can't get a hit on an uncacheable address
@@ -485,7 +485,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
 
 template<class TagStore, class Buffering, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::snoopResponse(Packet * &pkt)
+Cache<TagStore,Buffering,Coherence>::snoopResponse(PacketPtr &pkt)
 {
     //Need to handle the response, if NACKED
     if (pkt->flags & NACKED_LINE) {
@@ -515,7 +515,7 @@ Cache<TagStore,Buffering,Coherence>::invalidateBlk(Addr addr)
  */
 template<class TagStore, class Buffering, class Coherence>
 Tick
-Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
+Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
                                            CachePort* otherSidePort)
 {
 //    MemDebug::cacheProbe(pkt);
@@ -565,7 +565,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
             MSHR::TargetList::iterator i = targets->begin();
             MSHR::TargetList::iterator end = targets->end();
             for (; i != end; ++i) {
-                Packet * target = *i;
+                PacketPtr target = *i;
                 // If the target contains data, and it overlaps the
                 // probed request, need to update data
                 if (target->isWrite() && target->intersect(pkt)) {
@@ -601,7 +601,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
             }
         }
         for (int i = 0; i < writes.size(); ++i) {
-            Packet * write = writes[i]->pkt;
+            PacketPtr write = writes[i]->pkt;
             if (write->intersect(pkt)) {
                 warn("Found outstanding write on an non-update probe");
                 uint8_t* pkt_data;
@@ -654,7 +654,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
             Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
                                                             (blk)? blk->status : 0);
 
-            Packet * busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
+            PacketPtr busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
 
             busPkt->allocate();
 
@@ -700,7 +700,7 @@ return 0;
 
             // Handle writebacks if needed
             while (!writebacks.empty()){
-                Packet *wbPkt = writebacks.front();
+                PacketPtr wbPkt = writebacks.front();
                 memSidePort->sendAtomic(wbPkt);
                 writebacks.pop_front();
                 delete wbPkt;

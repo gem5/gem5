@@ -100,7 +100,7 @@ AlphaDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::completeAcc(Packet *pkt)
+AlphaDynInst<Impl>::completeAcc(PacketPtr pkt)
 {
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 

@@ -108,7 +108,7 @@ OzoneDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-OzoneDynInst<Impl>::completeAcc(Packet *pkt)
+OzoneDynInst<Impl>::completeAcc(PacketPtr pkt)
 {
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 

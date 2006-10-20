@@ -74,7 +74,7 @@ TsunamiCChip::TsunamiCChip(Params *p)
 }
 
 Tick
-TsunamiCChip::read(Packet *pkt)
+TsunamiCChip::read(PacketPtr pkt)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
@@ -184,7 +184,7 @@ TsunamiCChip::read(Packet *pkt)
 }
 
 Tick
-TsunamiCChip::write(Packet *pkt)
+TsunamiCChip::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;

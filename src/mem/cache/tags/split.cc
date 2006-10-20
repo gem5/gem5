@@ -267,7 +267,7 @@ Split::probe(Addr addr) const
 }
 
 SplitBlk*
-Split::findBlock(Packet * &pkt, int &lat)
+Split::findBlock(PacketPtr &pkt, int &lat)
 {
 
     Addr aligned = blkAlign(pkt->getAddr());
@@ -350,7 +350,7 @@ Split::findBlock(Addr addr) const
 }
 
 SplitBlk*
-Split::findReplacement(Packet * &pkt, PacketList &writebacks,
+Split::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
     SplitBlk *blk;

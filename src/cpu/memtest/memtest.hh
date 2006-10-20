@@ -102,11 +102,11 @@ class MemTest : public MemObject
 
       protected:
 
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -133,7 +133,7 @@ class MemTest : public MemObject
     };
 
 //    Request *dataReq;
-    Packet  *retryPkt;
+    PacketPtr retryPkt;
 //    MemInterface *cacheInterface;
 //    PhysicalMemory *mainMem;
 //    PhysicalMemory *checkMem;
@@ -184,9 +184,9 @@ class MemTest : public MemObject
     Stats::Scalar<> numCopiesStat;
 
     // called by MemCompleteEvent::process()
-    void completeRequest(Packet *pkt);
+    void completeRequest(PacketPtr pkt);
 
-    void sendPkt(Packet *pkt);
+    void sendPkt(PacketPtr pkt);
 
     void doRetry();
 

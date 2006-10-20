@@ -46,7 +46,7 @@
 #include "sim/root.hh"
 
 struct Packet;
-typedef Packet* PacketPtr;
+typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 
@@ -103,7 +103,7 @@ class Packet
     /** Device address (e.g., bus ID) of the source of the
      *   transaction. The source is not responsible for setting this
      *   field; it is set implicitly by the interconnect when the
-     *   packet * is first sent.  */
+     *   packet is first sent.  */
     short src;
 
     /** Device address (e.g., bus ID) of the destination of the
@@ -444,7 +444,7 @@ class Packet
     void allocate();
 
     /** Do the packet modify the same addresses. */
-    bool intersect(Packet *p);
+    bool intersect(PacketPtr p);
 };
 
 
@@ -453,7 +453,7 @@ class Packet
  * in the timing packet. It returns if the functional packet should continue to
  * traverse the memory hierarchy or not.
  */
-bool fixPacket(Packet *func, Packet *timing);
+bool fixPacket(PacketPtr func, PacketPtr timing);
 
 std::ostream & operator<<(std::ostream &o, const Packet &p);
 

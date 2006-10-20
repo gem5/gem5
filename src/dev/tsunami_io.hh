@@ -328,8 +328,8 @@ class TsunamiIO : public BasicPioDevice
      */
     TsunamiIO(Params *p);
 
-    virtual Tick read(Packet *pkt);
-    virtual Tick write(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 
     /**
      * Post an PIC interrupt to the CPU via the CChip

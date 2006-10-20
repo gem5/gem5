@@ -133,7 +133,7 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
     Fault initiateAcc();
 
-    Fault completeAcc(Packet *pkt);
+    Fault completeAcc(PacketPtr pkt);
 
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural

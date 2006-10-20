@@ -350,7 +350,7 @@ MissQueue::setPrefetcher(BasePrefetcher *_prefetcher)
 }
 
 MSHR*
-MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
+MissQueue::allocateMiss(PacketPtr &pkt, int size, Tick time)
 {
     MSHR* mshr = mq.allocate(pkt, size);
     mshr->order = order++;
@@ -370,7 +370,7 @@ MissQueue::allocateMiss(Packet * &pkt, int size, Tick time)
 
 
 MSHR*
-MissQueue::allocateWrite(Packet * &pkt, int size, Tick time)
+MissQueue::allocateWrite(PacketPtr &pkt, int size, Tick time)
 {
     MSHR* mshr = wb.allocate(pkt,size);
     mshr->order = order++;
@@ -401,7 +401,7 @@ MissQueue::allocateWrite(Packet * &pkt, int size, Tick time)
  * @todo Remove SW prefetches on mshr hits.
  */
 void
-MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
+MissQueue::handleMiss(PacketPtr &pkt, int blkSize, Tick time)
 {
 //    if (!cache->isTopLevel())
     if (prefetchMiss) prefetcher->handleMiss(pkt, time);
@@ -455,7 +455,7 @@ MissQueue::handleMiss(Packet * &pkt, int blkSize, Tick time)
 
 MSHR*
 MissQueue::fetchBlock(Addr addr, int blk_size, Tick time,
-                      Packet * &target)
+                      PacketPtr &target)
 {
     Addr blkAddr = addr & ~(Addr)(blk_size - 1);
     assert(mq.findMatch(addr) == NULL);
@@ -469,10 +469,10 @@ MissQueue::fetchBlock(Addr addr, int blk_size, Tick time,
     return mshr;
 }
 
-Packet *
+PacketPtr
 MissQueue::getPacket()
 {
-    Packet * pkt = mq.getReq();
+    PacketPtr pkt = mq.getReq();
     if (((wb.isFull() && wb.inServiceMSHRs == 0) || !pkt ||
          pkt->time > curTick) && wb.havePending()) {
         pkt = wb.getReq();
@@ -510,7 +510,7 @@ MissQueue::getPacket()
 }
 
 void
-MissQueue::setBusCmd(Packet * &pkt, Packet::Command cmd)
+MissQueue::setBusCmd(PacketPtr &pkt, Packet::Command cmd)
 {
     assert(pkt->senderState != 0);
     MSHR * mshr = (MSHR*)pkt->senderState;
@@ -528,13 +528,13 @@ MissQueue::setBusCmd(Packet * &pkt, Packet::Command cmd)
 }
 
 void
-MissQueue::restoreOrigCmd(Packet * &pkt)
+MissQueue::restoreOrigCmd(PacketPtr &pkt)
 {
     pkt->cmd = ((MSHR*)(pkt->senderState))->originalCmd;
 }
 
 void
-MissQueue::markInService(Packet * &pkt, MSHR* mshr)
+MissQueue::markInService(PacketPtr &pkt, MSHR* mshr)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
@@ -583,7 +583,7 @@ MissQueue::markInService(Packet * &pkt, MSHR* mshr)
 
 
 void
-MissQueue::handleResponse(Packet * &pkt, Tick time)
+MissQueue::handleResponse(PacketPtr &pkt, Tick time)
 {
     MSHR* mshr = (MSHR*)pkt->senderState;
     if (((MSHR*)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
@@ -632,7 +632,7 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
         if (mshr->hasTargets() && pkt->req->isUncacheable()) {
             // Should only have 1 target if we had any
             assert(num_targets == 1);
-            Packet * target = mshr->getTarget();
+            PacketPtr target = mshr->getTarget();
             mshr->popTarget();
             if (pkt->isRead()) {
                 memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(),
@@ -645,7 +645,7 @@ MissQueue::handleResponse(Packet * &pkt, Tick time)
             //Must be a no_allocate with possibly more than one target
             assert(mshr->pkt->isNoAllocate());
             while (mshr->hasTargets()) {
-                Packet * target = mshr->getTarget();
+                PacketPtr target = mshr->getTarget();
                 mshr->popTarget();
                 if (pkt->isRead()) {
                     memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(),
@@ -721,7 +721,7 @@ MissQueue::doWriteback(Addr addr,
 {
     // Generate request
     Request * req = new Request(addr, size, 0);
-    Packet * pkt = new Packet(req, Packet::Writeback, -1);
+    PacketPtr pkt = new Packet(req, Packet::Writeback, -1);
     pkt->allocate();
     if (data) {
         memcpy(pkt->getPtr<uint8_t>(), data, size);
@@ -739,7 +739,7 @@ MissQueue::doWriteback(Addr addr,
 
 
 void
-MissQueue::doWriteback(Packet * &pkt)
+MissQueue::doWriteback(PacketPtr &pkt)
 {
     writebacks[0/*pkt->req->getThreadNum()*/]++;
     allocateWrite(pkt, 0, curTick);

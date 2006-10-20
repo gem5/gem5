@@ -181,7 +181,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         }
 
         if (fault == NoFault) {
-            Packet *pkt = new Packet(memReq, Packet::ReadReq,
+            PacketPtr pkt = new Packet(memReq, Packet::ReadReq,
                                      Packet::Broadcast);
 
             pkt->dataStatic(&machInst);

@@ -763,7 +763,7 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
 
 template <class Impl>
 void
-LSQUnit<Impl>::storePostSend(Packet *pkt)
+LSQUnit<Impl>::storePostSend(PacketPtr pkt)
 {
     if (isStalled() &&
         storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {

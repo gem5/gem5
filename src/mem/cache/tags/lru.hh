@@ -174,7 +174,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Packet * &pkt, int &lat);
+    LRUBlk* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Finds the given address in the cache and update replacement data.
@@ -201,7 +201,7 @@ public:
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    LRUBlk* findReplacement(Packet * &pkt, PacketList &writebacks,
+    LRUBlk* findReplacement(PacketPtr &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**

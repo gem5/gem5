@@ -111,7 +111,7 @@ public:
      * @param blk_size The block size of the cache.
      * @param time The time the miss is detected.
      */
-    void handleMiss(Packet * &pkt, int blk_size, Tick time);
+    void handleMiss(PacketPtr &pkt, int blk_size, Tick time);
 
     /**
      * Fetch the block for the given address and buffer the given target.
@@ -122,7 +122,7 @@ public:
      * @param target The target for the fetch.
      */
     MSHR* fetchBlock(Addr addr, int blk_size, Tick time,
-                     Packet * &target)
+                     PacketPtr &target)
     {
         fatal("Unimplemented");
     }
@@ -131,20 +131,20 @@ public:
      * Selects a outstanding pktuest to service.
      * @return The pktuest to service, NULL if none found.
      */
-    Packet * getPacket();
+    PacketPtr getPacket();
 
     /**
      * Set the command to the given bus command.
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    void setBusCmd(Packet * &pkt, Packet::Command cmd);
+    void setBusCmd(PacketPtr &pkt, Packet::Command cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.
      * @param pkt The request to reset.
      */
-    void restoreOrigCmd(Packet * &pkt);
+    void restoreOrigCmd(PacketPtr &pkt);
 
     /**
      * Marks a pktuest as in service (sent on the bus). This can have side
@@ -152,14 +152,14 @@ public:
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(Packet * &pkt, MSHR* mshr);
+    void markInService(PacketPtr &pkt, MSHR* mshr);
 
     /**
      * Frees the resources of the pktuest and unblock the cache.
      * @param pkt The request that has been satisfied.
      * @param time The time when the pktuest is satisfied.
      */
-    void handleResponse(Packet * &pkt, Tick time);
+    void handleResponse(PacketPtr &pkt, Tick time);
 
     /**
      * Removes all outstanding pktuests for a given thread number. If a request
@@ -223,7 +223,7 @@ public:
      * Perform a writeback pktuest.
      * @param pkt The writeback request.
      */
-    void doWriteback(Packet * &pkt);
+    void doWriteback(PacketPtr &pkt);
 
     /**
      * Returns true if there are outstanding pktuests.
@@ -239,7 +239,7 @@ public:
      * @param mshr The mshr to add a target to.
      * @param pkt The target to add.
      */
-    void addTarget(MSHR *mshr, Packet * &pkt)
+    void addTarget(MSHR *mshr, PacketPtr &pkt)
     {
         fatal("Shouldn't call this on a blocking buffer.");
     }

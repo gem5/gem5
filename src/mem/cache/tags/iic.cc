@@ -285,7 +285,7 @@ IIC::findBlock(Addr addr, int &lat)
 }
 
 IICTag*
-IIC::findBlock(Packet * &pkt, int &lat)
+IIC::findBlock(PacketPtr &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
 
@@ -362,7 +362,7 @@ IIC::findBlock(Addr addr) const
 
 
 IICTag*
-IIC::findReplacement(Packet * &pkt, PacketList &writebacks,
+IIC::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
     DPRINTF(IIC, "Finding Replacement for %x\n", pkt->getAddr());
@@ -423,7 +423,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
         tag_ptr->refCount = 0;
 
         if (tag_ptr->isModified()) {
-/*	    Packet * writeback =
+/*	    PacketPtr writeback =
                 buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
                                   tag_ptr->req->asid, tag_ptr->xc, blkSize,
                                   tag_ptr->data,
@@ -431,7 +431,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
 */
             Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
                                            blkSize, 0);
-            Packet *writeback = new Packet(writebackReq, Packet::Writeback, -1);
+            PacketPtr writeback = new Packet(writebackReq, Packet::Writeback, -1);
             writeback->allocate();
             memcpy(writeback->getPtr<uint8_t>(), tag_ptr->data, blkSize);
 

@@ -45,20 +45,22 @@ output header {{
 #include <iostream>
 #include <iomanip>
 
+#include "arch/alpha/faults.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
-#include "arch/alpha/faults.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
+#include "mem/packet.hh"
 }};
 
 output decoder {{
+#include <cmath>
+
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
-
-#include <math.h>
+#include "mem/packet.hh"
 
 using namespace AlphaISA;
 }};

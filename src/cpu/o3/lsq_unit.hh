@@ -219,7 +219,7 @@ class LSQUnit {
     void writeback(DynInstPtr &inst, PacketPtr pkt);
 
     /** Handles completing the send of a store to memory. */
-    void storePostSend(Packet *pkt);
+    void storePostSend(PacketPtr pkt);
 
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);

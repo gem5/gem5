@@ -93,21 +93,21 @@ AtomicSimpleCPU::init()
 }
 
 bool
-AtomicSimpleCPU::CpuPort::recvTiming(Packet *pkt)
+AtomicSimpleCPU::CpuPort::recvTiming(PacketPtr pkt)
 {
     panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
     return true;
 }
 
 Tick
-AtomicSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
+AtomicSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
 {
     //Snooping a coherence request, just return
     return curTick;
 }
 
 void
-AtomicSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
+AtomicSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 {
     //No internal storage to update, just return
     return;
@@ -260,7 +260,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     // use the CPU's statically allocated read request and packet objects
     Request *req = data_read_req;
-    Packet  *pkt = data_read_pkt;
+    PacketPtr pkt = data_read_pkt;
 
     req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
@@ -342,7 +342,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
     Request *req = data_write_req;
-    Packet  *pkt = data_write_pkt;
+    PacketPtr pkt = data_write_pkt;
 
     req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 

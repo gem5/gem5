@@ -56,7 +56,7 @@ class PioPort : public SimpleTimingPort
     /** The device that this port serves. */
     PioDevice *device;
 
-    virtual Tick recvAtomic(Packet *pkt);
+    virtual Tick recvAtomic(PacketPtr pkt);
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                         AddrRangeList &snoop);
@@ -91,7 +91,7 @@ class DmaPort : public Port
     };
 
     DmaDevice *device;
-    std::list<Packet*> transmitList;
+    std::list<PacketPtr> transmitList;
 
     /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
@@ -107,10 +107,10 @@ class DmaPort : public Port
      * here.*/
     Event *drainEvent;
 
-    virtual bool recvTiming(Packet *pkt);
-    virtual Tick recvAtomic(Packet *pkt)
+    virtual bool recvTiming(PacketPtr pkt);
+    virtual Tick recvAtomic(PacketPtr pkt)
     { panic("dma port shouldn't be used for pio access."); }
-    virtual void recvFunctional(Packet *pkt)
+    virtual void recvFunctional(PacketPtr pkt)
     { panic("dma port shouldn't be used for pio access."); }
 
     virtual void recvStatusChange(Status status)
@@ -122,7 +122,7 @@ class DmaPort : public Port
                                         AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
 
-    void sendDma(Packet *pkt, bool front = false);
+    void sendDma(PacketPtr pkt, bool front = false);
 
   public:
     DmaPort(DmaDevice *dev, System *s);
@@ -163,14 +163,14 @@ class PioDevice : public MemObject
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick read(Packet *pkt) = 0;
+    virtual Tick read(PacketPtr pkt) = 0;
 
     /** Pure virtual function that the device must implement. Called when a
      * write command is recieved by the port.
      * @param pkt Packet describing this request
      * @return number of ticks it took to complete
      */
-    virtual Tick write(Packet *pkt) = 0;
+    virtual Tick write(PacketPtr pkt) = 0;
 
   public:
     /** Params struct which is extended through each device based on

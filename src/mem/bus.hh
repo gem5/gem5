@@ -71,15 +71,15 @@ class Bus : public MemObject
 
     /** Function called by the port when the bus is recieving a Timing
       transaction.*/
-    bool recvTiming(Packet *pkt);
+    bool recvTiming(PacketPtr pkt);
 
     /** Function called by the port when the bus is recieving a Atomic
       transaction.*/
-    Tick recvAtomic(Packet *pkt);
+    Tick recvAtomic(PacketPtr pkt);
 
     /** Function called by the port when the bus is recieving a Functional
         transaction.*/
-    void recvFunctional(Packet *pkt);
+    void recvFunctional(PacketPtr pkt);
 
     /** Timing function called by port when it is once again able to process
      * requests. */
@@ -107,16 +107,16 @@ class Bus : public MemObject
     std::vector<int> findSnoopPorts(Addr addr, int id);
 
     /** Snoop all relevant ports atomicly. */
-    Tick atomicSnoop(Packet *pkt);
+    Tick atomicSnoop(PacketPtr pkt);
 
     /** Snoop all relevant ports functionally. */
-    void functionalSnoop(Packet *pkt);
+    void functionalSnoop(PacketPtr pkt);
 
     /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
      * the snoop to happen
      * @return True if succeds.
      */
-    bool timingSnoop(Packet *pkt);
+    bool timingSnoop(PacketPtr pkt);
 
     /** Process address range request.
      * @param resp addresses that we can respond to
@@ -157,17 +157,17 @@ class Bus : public MemObject
 
         /** When reciving a timing request from the peer port (at id),
             pass it to the bus. */
-        virtual bool recvTiming(Packet *pkt)
+        virtual bool recvTiming(PacketPtr pkt)
         { pkt->setSrc(id); return bus->recvTiming(pkt); }
 
         /** When reciving a Atomic requestfrom the peer port (at id),
             pass it to the bus. */
-        virtual Tick recvAtomic(Packet *pkt)
+        virtual Tick recvAtomic(PacketPtr pkt)
         { pkt->setSrc(id); return bus->recvAtomic(pkt); }
 
         /** When reciving a Functional requestfrom the peer port (at id),
             pass it to the bus. */
-        virtual void recvFunctional(Packet *pkt)
+        virtual void recvFunctional(PacketPtr pkt)
         { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
         /** When reciving a status changefrom the peer port (at id),

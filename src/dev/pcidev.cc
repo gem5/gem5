@@ -66,7 +66,7 @@ PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
 
 
 Tick
-PciDev::PciConfigPort::recvAtomic(Packet *pkt)
+PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= configAddr &&
@@ -123,7 +123,7 @@ PciDev::drain(Event *de)
 }
 
 Tick
-PciDev::readConfig(Packet *pkt)
+PciDev::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)
@@ -172,7 +172,7 @@ PciDev::addressRanges(AddrRangeList &range_list)
 }
 
 Tick
-PciDev::writeConfig(Packet *pkt)
+PciDev::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset >= PCI_DEVICE_SPECIFIC)

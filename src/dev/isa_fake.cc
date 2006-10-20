@@ -53,7 +53,7 @@ IsaFake::IsaFake(Params *p)
 }
 
 Tick
-IsaFake::read(Packet *pkt)
+IsaFake::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -80,7 +80,7 @@ IsaFake::read(Packet *pkt)
 }
 
 Tick
-IsaFake::write(Packet *pkt)
+IsaFake::write(PacketPtr pkt)
 {
     DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->getAddr(), pkt->getSize());
     pkt->result = Packet::Success;

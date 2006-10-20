@@ -207,7 +207,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    SplitBlk* findBlock(Packet * &pkt, int &lat);
+    SplitBlk* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -224,7 +224,7 @@ public:
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    SplitBlk* findReplacement(Packet * &pkt, PacketList &writebacks,
+    SplitBlk* findReplacement(PacketPtr &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**

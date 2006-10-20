@@ -52,7 +52,7 @@ PciConfigAll::PciConfigAll(Params *p)
 
 
 Tick
-PciConfigAll::read(Packet *pkt)
+PciConfigAll::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
 
@@ -79,7 +79,7 @@ PciConfigAll::read(Packet *pkt)
 }
 
 Tick
-PciConfigAll::write(Packet *pkt)
+PciConfigAll::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     panic("Attempting to write to config space on non-existant device\n");

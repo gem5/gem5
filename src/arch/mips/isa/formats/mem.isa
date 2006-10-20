@@ -162,7 +162,7 @@ def template InitiateAccDeclare {{
 
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(Packet *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
 
@@ -288,7 +288,7 @@ def template LoadInitiateAcc {{
 
 
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -412,7 +412,7 @@ def template StoreInitiateAcc {{
 
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -434,7 +434,7 @@ def template StoreCompleteAcc {{
 }};
 
 def template StoreCondCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -509,7 +509,7 @@ def template MiscInitiateAcc {{
 
 
 def template MiscCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {

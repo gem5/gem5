@@ -59,10 +59,10 @@ class IGbE : public PciDev
     IGbE(Params *params);
     ~IGbE() {;}
 
-    virtual Tick read(Packet *pkt);
-    virtual Tick write(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 
-    virtual Tick writeConfig(Packet *pkt);
+    virtual Tick writeConfig(PacketPtr pkt);
 
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();

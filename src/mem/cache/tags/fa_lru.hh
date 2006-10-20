@@ -198,7 +198,7 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Packet * &pkt, int &lat, int *inCache = 0);
+    FALRUBlk* findBlock(PacketPtr &pkt, int &lat, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -215,7 +215,7 @@ public:
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findReplacement(Packet * &pkt, PacketList & writebacks,
+    FALRUBlk* findReplacement(PacketPtr &pkt, PacketList & writebacks,
                               BlkList &compress_blocks);
 
     /**

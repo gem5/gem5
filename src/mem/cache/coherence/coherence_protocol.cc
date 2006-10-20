@@ -192,7 +192,7 @@ CoherenceProtocol::regStats()
 
 
 bool
-CoherenceProtocol::invalidateTrans(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::invalidateTrans(BaseCache *cache, PacketPtr &pkt,
                                    CacheBlk *blk, MSHR *mshr,
                                    CacheBlk::State & new_state)
 {
@@ -203,7 +203,7 @@ CoherenceProtocol::invalidateTrans(BaseCache *cache, Packet * &pkt,
 
 
 bool
-CoherenceProtocol::supplyTrans(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::supplyTrans(BaseCache *cache, PacketPtr &pkt,
                                CacheBlk *blk,
                                MSHR *mshr,
                                CacheBlk::State & new_state
@@ -214,7 +214,7 @@ CoherenceProtocol::supplyTrans(BaseCache *cache, Packet * &pkt,
 
 
 bool
-CoherenceProtocol::supplyAndGotoSharedTrans(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::supplyAndGotoSharedTrans(BaseCache *cache, PacketPtr &pkt,
                                             CacheBlk *blk,
                                             MSHR *mshr,
                                             CacheBlk::State & new_state)
@@ -226,7 +226,7 @@ CoherenceProtocol::supplyAndGotoSharedTrans(BaseCache *cache, Packet * &pkt,
 
 
 bool
-CoherenceProtocol::supplyAndGotoOwnedTrans(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::supplyAndGotoOwnedTrans(BaseCache *cache, PacketPtr &pkt,
                                            CacheBlk *blk,
                                            MSHR *mshr,
                                            CacheBlk::State & new_state)
@@ -238,7 +238,7 @@ CoherenceProtocol::supplyAndGotoOwnedTrans(BaseCache *cache, Packet * &pkt,
 
 
 bool
-CoherenceProtocol::supplyAndInvalidateTrans(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::supplyAndInvalidateTrans(BaseCache *cache, PacketPtr &pkt,
                                             CacheBlk *blk,
                                             MSHR *mshr,
                                             CacheBlk::State & new_state)
@@ -248,7 +248,7 @@ CoherenceProtocol::supplyAndInvalidateTrans(BaseCache *cache, Packet * &pkt,
 }
 
 bool
-CoherenceProtocol::assertShared(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::assertShared(BaseCache *cache, PacketPtr &pkt,
                                             CacheBlk *blk,
                                             MSHR *mshr,
                                             CacheBlk::State & new_state)
@@ -463,7 +463,7 @@ CoherenceProtocol::getBusCmd(Packet::Command cmdIn, CacheBlk::State state,
 
 
 CacheBlk::State
-CoherenceProtocol::getNewState(Packet * &pkt, CacheBlk::State oldState)
+CoherenceProtocol::getNewState(PacketPtr &pkt, CacheBlk::State oldState)
 {
     CacheBlk::State state = oldState & stateMask;
     int cmd_idx = pkt->cmdToIndex();
@@ -488,7 +488,7 @@ CoherenceProtocol::getNewState(Packet * &pkt, CacheBlk::State oldState)
 
 
 bool
-CoherenceProtocol::handleBusRequest(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::handleBusRequest(BaseCache *cache, PacketPtr &pkt,
                                     CacheBlk *blk,
                                     MSHR *mshr,
                                     CacheBlk::State & new_state)
@@ -518,7 +518,7 @@ CoherenceProtocol::handleBusRequest(BaseCache *cache, Packet * &pkt,
 }
 
 bool
-CoherenceProtocol::nullTransition(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::nullTransition(BaseCache *cache, PacketPtr &pkt,
                                   CacheBlk *blk, MSHR *mshr,
                                   CacheBlk::State & new_state)
 {
@@ -530,7 +530,7 @@ CoherenceProtocol::nullTransition(BaseCache *cache, Packet * &pkt,
 
 
 bool
-CoherenceProtocol::invalidTransition(BaseCache *cache, Packet * &pkt,
+CoherenceProtocol::invalidTransition(BaseCache *cache, PacketPtr &pkt,
                                      CacheBlk *blk, MSHR *mshr,
                                      CacheBlk::State & new_state)
 {

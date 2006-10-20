@@ -448,7 +448,7 @@ TsunamiIO::frequency() const
 }
 
 Tick
-TsunamiIO::read(Packet *pkt)
+TsunamiIO::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -514,7 +514,7 @@ TsunamiIO::read(Packet *pkt)
 }
 
 Tick
-TsunamiIO::write(Packet *pkt)
+TsunamiIO::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

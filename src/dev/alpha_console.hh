@@ -118,8 +118,8 @@ class AlphaConsole : public BasicPioDevice
     /**
      * memory mapped reads and writes
      */
-    virtual Tick read(Packet *pkt);
-    virtual Tick write(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 
     /**
      * standard serialization routines for checkpointing

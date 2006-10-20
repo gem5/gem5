@@ -69,7 +69,7 @@ TsunamiPChip::TsunamiPChip(Params *p)
 }
 
 Tick
-TsunamiPChip::read(Packet *pkt)
+TsunamiPChip::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -151,7 +151,7 @@ TsunamiPChip::read(Packet *pkt)
 }
 
 Tick
-TsunamiPChip::write(Packet *pkt)
+TsunamiPChip::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

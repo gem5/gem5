@@ -101,7 +101,7 @@ PhysicalMemory::deviceBlockSize()
 }
 
 Tick
-PhysicalMemory::calculateLatency(Packet *pkt)
+PhysicalMemory::calculateLatency(PacketPtr pkt)
 {
     return lat;
 }
@@ -189,7 +189,7 @@ PhysicalMemory::checkLockedAddrList(Request *req)
 }
 
 void
-PhysicalMemory::doFunctionalAccess(Packet *pkt)
+PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 {
     assert(pkt->getAddr() + pkt->getSize() <= params()->addrRange.size());
 
@@ -277,14 +277,14 @@ PhysicalMemory::MemoryPort::deviceBlockSize()
 }
 
 Tick
-PhysicalMemory::MemoryPort::recvAtomic(Packet *pkt)
+PhysicalMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     memory->doFunctionalAccess(pkt);
     return memory->calculateLatency(pkt);
 }
 
 void
-PhysicalMemory::MemoryPort::recvFunctional(Packet *pkt)
+PhysicalMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
     // Default implementation of SimpleTimingPort::recvFunctional()
     // calls recvAtomic() and throws away the latency; we can save a

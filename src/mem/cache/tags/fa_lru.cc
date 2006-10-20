@@ -203,7 +203,7 @@ FALRU::findBlock(Addr addr, int &lat, int *inCache)
 }
 
 FALRUBlk*
-FALRU::findBlock(Packet * &pkt, int &lat, int *inCache)
+FALRU::findBlock(PacketPtr &pkt, int &lat, int *inCache)
 {
     Addr addr = pkt->getAddr();
 
@@ -256,7 +256,7 @@ FALRU::findBlock(Addr addr) const
 }
 
 FALRUBlk*
-FALRU::findReplacement(Packet * &pkt, PacketList &writebacks,
+FALRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                        BlkList &compress_blocks)
 {
     FALRUBlk * blk = tail;

@@ -96,7 +96,7 @@ class Cache : public BaseCache
       * A permanent mem req to always be used to cause invalidations.
       * Used to append to target list, to cause an invalidation.
       */
-    Packet * invalidatePkt;
+    PacketPtr invalidatePkt;
     Request *invalidateReq;
 
   public:
@@ -127,12 +127,12 @@ class Cache : public BaseCache
     /** Instantiates a basic cache object. */
     Cache(const std::string &_name, Params &params);
 
-    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort,
+    virtual bool doTimingAccess(PacketPtr pkt, CachePort *cachePort,
                         bool isCpuSide);
 
-    virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide);
+    virtual Tick doAtomicAccess(PacketPtr pkt, bool isCpuSide);
 
-    virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide);
+    virtual void doFunctionalAccess(PacketPtr pkt, bool isCpuSide);
 
     virtual void recvStatusChange(Port::Status status, bool isCpuSide);
 
@@ -143,47 +143,47 @@ class Cache : public BaseCache
      * @param pkt The request to perform.
      * @return The result of the access.
      */
-    bool access(Packet * &pkt);
+    bool access(PacketPtr &pkt);
 
     /**
      * Selects a request to send on the bus.
      * @return The memory request to service.
      */
-    virtual Packet * getPacket();
+    virtual PacketPtr getPacket();
 
     /**
      * Was the request was sent successfully?
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    virtual void sendResult(Packet * &pkt, MSHR* mshr, bool success);
+    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success);
 
     /**
      * Was the CSHR request was sent successfully?
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    virtual void sendCoherenceResult(Packet * &pkt, MSHR* cshr, bool success);
+    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* cshr, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The request being responded to.
      */
-    void handleResponse(Packet * &pkt);
+    void handleResponse(PacketPtr &pkt);
 
     /**
      * Selects a coherence message to forward to lower levels of the hierarchy.
      * @return The coherence message to forward.
      */
-    virtual Packet * getCoherencePacket();
+    virtual PacketPtr getCoherencePacket();
 
     /**
      * Snoops bus transactions to maintain coherence.
      * @param pkt The current bus transaction.
      */
-    void snoop(Packet * &pkt);
+    void snoop(PacketPtr &pkt);
 
-    void snoopResponse(Packet * &pkt);
+    void snoopResponse(PacketPtr &pkt);
 
     /**
      * Invalidates the block containing address if found.
@@ -224,7 +224,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick probe(Packet * &pkt, bool update, CachePort * otherSidePort);
+    Tick probe(PacketPtr &pkt, bool update, CachePort * otherSidePort);
 
     /**
      * Snoop for the provided request in the cache and return the estimated
@@ -235,7 +235,7 @@ class Cache : public BaseCache
      * request.
      * @return The estimated completion time.
      */
-    Tick snoopProbe(Packet * &pkt);
+    Tick snoopProbe(PacketPtr &pkt);
 };
 
 #endif // __CACHE_HH__

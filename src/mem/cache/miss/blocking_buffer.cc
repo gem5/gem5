@@ -68,7 +68,7 @@ BlockingBuffer::setPrefetcher(BasePrefetcher *_prefetcher)
     prefetcher = _prefetcher;
 }
 void
-BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
+BlockingBuffer::handleMiss(PacketPtr &pkt, int blk_size, Tick time)
 {
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blk_size - 1);
     if (pkt->isWrite() && (pkt->req->isUncacheable() || !writeAllocate ||
@@ -98,7 +98,7 @@ BlockingBuffer::handleMiss(Packet * &pkt, int blk_size, Tick time)
     cache->setMasterRequest(Request_MSHR, time);
 }
 
-Packet *
+PacketPtr
 BlockingBuffer::getPacket()
 {
     if (miss.pkt && !miss.inService) {
@@ -108,7 +108,7 @@ BlockingBuffer::getPacket()
 }
 
 void
-BlockingBuffer::setBusCmd(Packet * &pkt, Packet::Command cmd)
+BlockingBuffer::setBusCmd(PacketPtr &pkt, Packet::Command cmd)
 {
     MSHR *mshr = (MSHR*) pkt->senderState;
     mshr->originalCmd = pkt->cmd;
@@ -117,13 +117,13 @@ BlockingBuffer::setBusCmd(Packet * &pkt, Packet::Command cmd)
 }
 
 void
-BlockingBuffer::restoreOrigCmd(Packet * &pkt)
+BlockingBuffer::restoreOrigCmd(PacketPtr &pkt)
 {
     pkt->cmdOverride(((MSHR*)(pkt->senderState))->originalCmd);
 }
 
 void
-BlockingBuffer::markInService(Packet * &pkt, MSHR* mshr)
+BlockingBuffer::markInService(PacketPtr &pkt, MSHR* mshr)
 {
     if (!pkt->isCacheFill() && pkt->isWrite()) {
         // Forwarding a write/ writeback, don't need to change
@@ -152,7 +152,7 @@ BlockingBuffer::markInService(Packet * &pkt, MSHR* mshr)
 }
 
 void
-BlockingBuffer::handleResponse(Packet * &pkt, Tick time)
+BlockingBuffer::handleResponse(PacketPtr &pkt, Tick time)
 {
     if (pkt->isCacheFill()) {
         // targets were handled in the cache tags
@@ -163,7 +163,7 @@ BlockingBuffer::handleResponse(Packet * &pkt, Tick time)
         if (((MSHR*)(pkt->senderState))->hasTargets()) {
             // Should only have 1 target if we had any
             assert(((MSHR*)(pkt->senderState))->getNumTargets() == 1);
-            Packet * target = ((MSHR*)(pkt->senderState))->getTarget();
+            PacketPtr target = ((MSHR*)(pkt->senderState))->getTarget();
             ((MSHR*)(pkt->senderState))->popTarget();
             if (pkt->isRead()) {
                 memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), target->getSize());
@@ -187,7 +187,7 @@ void
 BlockingBuffer::squash(int threadNum)
 {
     if (miss.threadNum == threadNum) {
-        Packet * target = miss.getTarget();
+        PacketPtr target = miss.getTarget();
         miss.popTarget();
         assert(0/*target->req->getThreadNum()*/ == threadNum);
         target = NULL;
@@ -207,7 +207,7 @@ BlockingBuffer::doWriteback(Addr addr,
 {
     // Generate request
     Request * req = new Request(addr, size, 0);
-    Packet * pkt = new Packet(req, Packet::Writeback, -1);
+    PacketPtr pkt = new Packet(req, Packet::Writeback, -1);
     pkt->allocate();
     if (data) {
         memcpy(pkt->getPtr<uint8_t>(), data, size);
@@ -228,7 +228,7 @@ BlockingBuffer::doWriteback(Addr addr,
 
 
 void
-BlockingBuffer::doWriteback(Packet * &pkt)
+BlockingBuffer::doWriteback(PacketPtr &pkt)
 {
     writebacks[0/*pkt->req->getThreadNum()*/]++;
 

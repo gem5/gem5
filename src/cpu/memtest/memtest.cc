@@ -55,21 +55,21 @@ using namespace std;
 int TESTER_ALLOCATOR=0;
 
 bool
-MemTest::CpuPort::recvTiming(Packet *pkt)
+MemTest::CpuPort::recvTiming(PacketPtr pkt)
 {
     memtest->completeRequest(pkt);
     return true;
 }
 
 Tick
-MemTest::CpuPort::recvAtomic(Packet *pkt)
+MemTest::CpuPort::recvAtomic(PacketPtr pkt)
 {
     panic("MemTest doesn't expect recvAtomic callback!");
     return curTick;
 }
 
 void
-MemTest::CpuPort::recvFunctional(Packet *pkt)
+MemTest::CpuPort::recvFunctional(PacketPtr pkt)
 {
     //Do nothing if we see one come through
 //    if (curTick != 0)//Supress warning durring initialization
@@ -94,7 +94,7 @@ MemTest::CpuPort::recvRetry()
 }
 
 void
-MemTest::sendPkt(Packet *pkt) {
+MemTest::sendPkt(PacketPtr pkt) {
     if (atomic) {
         cachePort.sendAtomic(pkt);
         pkt->makeAtomicResponse();
@@ -204,7 +204,7 @@ printData(ostream &os, uint8_t *data, int nbytes)
 }
 
 void
-MemTest::completeRequest(Packet *pkt)
+MemTest::completeRequest(PacketPtr pkt)
 {
     MemTestSenderState *state =
         dynamic_cast<MemTestSenderState *>(pkt->senderState);
@@ -381,7 +381,7 @@ MemTest::tick()
                  << dec << curTick << endl;
         }
 
-        Packet *pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
         pkt->dataDynamicArray(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
@@ -421,7 +421,7 @@ MemTest::tick()
                  << dec << curTick << endl;
         }
 */
-        Packet *pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
         pkt->dataDynamicArray(pkt_data);
         memcpy(pkt_data, &data, req->getSize());

@@ -66,14 +66,14 @@ TimingSimpleCPU::init()
 }
 
 Tick
-TimingSimpleCPU::CpuPort::recvAtomic(Packet *pkt)
+TimingSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
 {
     panic("TimingSimpleCPU doesn't expect recvAtomic callback!");
     return curTick;
 }
 
 void
-TimingSimpleCPU::CpuPort::recvFunctional(Packet *pkt)
+TimingSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 {
     //No internal storage to update, jusst return
     return;
@@ -90,7 +90,7 @@ TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
 
 
 void
-TimingSimpleCPU::CpuPort::TickEvent::schedule(Packet *_pkt, Tick t)
+TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 {
     pkt = _pkt;
     Event::schedule(t);
@@ -269,7 +269,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet *pkt =
+        PacketPtr pkt =
             new Packet(req, Packet::ReadReq, Packet::Broadcast);
         pkt->dataDynamic<T>(new T);
 
@@ -471,7 +471,7 @@ TimingSimpleCPU::advanceInst(Fault fault)
 
 
 void
-TimingSimpleCPU::completeIfetch(Packet *pkt)
+TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
     // received a response from the icache: execute the received
     // instruction
@@ -527,7 +527,7 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 }
 
 bool
-TimingSimpleCPU::IcachePort::recvTiming(Packet *pkt)
+TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
@@ -555,7 +555,7 @@ TimingSimpleCPU::IcachePort::recvRetry()
     // waiting to transmit
     assert(cpu->ifetch_pkt != NULL);
     assert(cpu->_status == IcacheRetry);
-    Packet *tmp = cpu->ifetch_pkt;
+    PacketPtr tmp = cpu->ifetch_pkt;
     if (sendTiming(tmp)) {
         cpu->_status = IcacheWaitResponse;
         cpu->ifetch_pkt = NULL;
@@ -563,7 +563,7 @@ TimingSimpleCPU::IcachePort::recvRetry()
 }
 
 void
-TimingSimpleCPU::completeDataAccess(Packet *pkt)
+TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 {
     // received a response from the dcache: complete the load or store
     // instruction
@@ -605,7 +605,7 @@ TimingSimpleCPU::completeDrain()
 }
 
 bool
-TimingSimpleCPU::DcachePort::recvTiming(Packet *pkt)
+TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
@@ -639,7 +639,7 @@ TimingSimpleCPU::DcachePort::recvRetry()
     // waiting to transmit
     assert(cpu->dcache_pkt != NULL);
     assert(cpu->_status == DcacheRetry);
-    Packet *tmp = cpu->dcache_pkt;
+    PacketPtr tmp = cpu->dcache_pkt;
     if (sendTiming(tmp)) {
         cpu->_status = DcacheWaitResponse;
         // memory system takes ownership of packet

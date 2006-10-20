@@ -31,15 +31,15 @@
 #include "mem/tport.hh"
 
 void
-SimpleTimingPort::recvFunctional(Packet *pkt)
+SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
     //First check queued events
-    std::list<Packet *>::iterator i = transmitList.begin();
-    std::list<Packet *>::iterator end = transmitList.end();
+    std::list<PacketPtr>::iterator i = transmitList.begin();
+    std::list<PacketPtr>::iterator end = transmitList.end();
     bool cont = true;
 
     while (i != end && cont) {
-        Packet * target = *i;
+        PacketPtr target = *i;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt))
@@ -52,7 +52,7 @@ SimpleTimingPort::recvFunctional(Packet *pkt)
 }
 
 bool
-SimpleTimingPort::recvTiming(Packet *pkt)
+SimpleTimingPort::recvTiming(PacketPtr pkt)
 {
     // If the device is only a slave, it should only be sending
     // responses, which should never get nacked.  There used to be

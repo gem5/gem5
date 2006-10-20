@@ -255,7 +255,7 @@ SplitLIFO::findBlock(Addr addr, int &lat)
 }
 
 SplitBlk*
-SplitLIFO::findBlock(Packet * &pkt, int &lat)
+SplitLIFO::findBlock(PacketPtr &pkt, int &lat)
 {
     Addr addr = pkt->getAddr();
 
@@ -291,7 +291,7 @@ SplitLIFO::findBlock(Addr addr) const
 }
 
 SplitBlk*
-SplitLIFO::findReplacement(Packet * &pkt, PacketList &writebacks,
+SplitLIFO::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                            BlkList &compress_blocks)
 {
     unsigned set = extractSet(pkt->getAddr());

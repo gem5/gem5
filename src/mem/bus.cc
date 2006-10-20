@@ -138,7 +138,7 @@ void Bus::occupyBus(PacketPtr pkt)
 /** Function called by the port when the bus is receiving a Timing
  * transaction.*/
 bool
-Bus::recvTiming(Packet *pkt)
+Bus::recvTiming(PacketPtr pkt)
 {
     Port *port;
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
@@ -301,7 +301,7 @@ Bus::findSnoopPorts(Addr addr, int id)
 }
 
 Tick
-Bus::atomicSnoop(Packet *pkt)
+Bus::atomicSnoop(PacketPtr pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     Tick response_time = 0;
@@ -319,7 +319,7 @@ Bus::atomicSnoop(Packet *pkt)
 }
 
 void
-Bus::functionalSnoop(Packet *pkt)
+Bus::functionalSnoop(PacketPtr pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
@@ -331,7 +331,7 @@ Bus::functionalSnoop(Packet *pkt)
 }
 
 bool
-Bus::timingSnoop(Packet *pkt)
+Bus::timingSnoop(PacketPtr pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     bool success = true;
@@ -349,7 +349,7 @@ Bus::timingSnoop(Packet *pkt)
 /** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
 Tick
-Bus::recvAtomic(Packet *pkt)
+Bus::recvAtomic(PacketPtr pkt)
 {
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
@@ -364,7 +364,7 @@ Bus::recvAtomic(Packet *pkt)
 /** Function called by the port when the bus is receiving a Functional
  * transaction.*/
 void
-Bus::recvFunctional(Packet *pkt)
+Bus::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());

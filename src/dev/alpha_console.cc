@@ -94,7 +94,7 @@ AlphaConsole::startup()
 }
 
 Tick
-AlphaConsole::read(Packet *pkt)
+AlphaConsole::read(PacketPtr pkt)
 {
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
@@ -195,7 +195,7 @@ AlphaConsole::read(Packet *pkt)
 }
 
 Tick
-AlphaConsole::write(Packet *pkt)
+AlphaConsole::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

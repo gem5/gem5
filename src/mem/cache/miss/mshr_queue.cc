@@ -88,7 +88,7 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 }
 
 MSHR*
-MSHRQueue::findPending(Packet * &pkt) const
+MSHRQueue::findPending(PacketPtr &pkt) const
 {
     MSHR::ConstIterator i = pendingList.begin();
     MSHR::ConstIterator end = pendingList.end();
@@ -108,7 +108,7 @@ MSHRQueue::findPending(Packet * &pkt) const
 }
 
 MSHR*
-MSHRQueue::allocate(Packet * &pkt, int size)
+MSHRQueue::allocate(PacketPtr &pkt, int size)
 {
     Addr aligned_addr = pkt->getAddr() & ~((Addr)size - 1);
     assert(!freeList.empty());
@@ -131,7 +131,7 @@ MSHRQueue::allocate(Packet * &pkt, int size)
 }
 
 MSHR*
-MSHRQueue::allocateFetch(Addr addr, int size, Packet * &target)
+MSHRQueue::allocateFetch(Addr addr, int size, PacketPtr &target)
 {
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
@@ -150,7 +150,7 @@ MSHRQueue::allocateTargetList(Addr addr, int size)
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
-    Packet * dummy;
+    PacketPtr dummy;
     mshr->allocate(Packet::ReadReq, addr, size, dummy);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->inService = true;
@@ -237,7 +237,7 @@ MSHRQueue::squash(int threadNum)
         MSHR *mshr = *i;
         if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {
-                Packet * target = mshr->getTarget();
+                PacketPtr target = mshr->getTarget();
                 mshr->popTarget();
 
                 assert(0/*target->req->getThreadNum()*/ == threadNum);

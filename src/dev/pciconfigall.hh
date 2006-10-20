@@ -73,7 +73,7 @@ class PciConfigAll : public PioDevice
      * @param pkt Contains information about the read operation
      * @return Amount of time to do the read
      */
-    virtual Tick read(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
 
     /**
      * Write to PCI config spcae. If the device does not exit the simulator
@@ -83,7 +83,7 @@ class PciConfigAll : public PioDevice
      * @return Amount of time to do the read
      */
 
-    virtual Tick write(Packet *pkt);
+    virtual Tick write(PacketPtr pkt);
 
     void addressRanges(AddrRangeList &range_list);
 

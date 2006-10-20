@@ -89,7 +89,7 @@ class SimpleCoherence
      * This policy does not forward invalidates, return NULL.
      * @return NULL.
      */
-    Packet * getPacket()
+    PacketPtr getPacket()
     {
         return NULL;
     }
@@ -99,7 +99,7 @@ class SimpleCoherence
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    void sendResult(Packet * &pkt, MSHR* cshr, bool success)
+    void sendResult(PacketPtr &pkt, MSHR* cshr, bool success)
     {
         //Don't do coherence
         return;
@@ -112,7 +112,7 @@ class SimpleCoherence
      * @param current The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(Packet * &pkt, CacheBlk::State current)
+    CacheBlk::State getNewState(PacketPtr &pkt, CacheBlk::State current)
     {
         return protocol->getNewState(pkt, current);
     }
@@ -124,7 +124,7 @@ class SimpleCoherence
      * @param mshr The MSHR corresponding to the request, if any.
      * @param new_state Return the new state for the block.
      */
-    bool handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
+    bool handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
                           CacheBlk::State &new_state)
     {
 //	assert(mshr == NULL);
@@ -161,7 +161,7 @@ class SimpleCoherence
 
     bool hasProtocol() { return true; }
 
-    void propogateInvalidate(Packet *pkt, bool isTiming)
+    void propogateInvalidate(PacketPtr pkt, bool isTiming)
     {
         //For now we do nothing, asssumes simple coherence is top level of cache
         return;

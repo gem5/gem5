@@ -40,15 +40,15 @@ UniCoherence::UniCoherence()
 {
 }
 
-Packet *
+PacketPtr
 UniCoherence::getPacket()
 {
-    Packet* pkt = cshrs.getReq();
+    PacketPtr pkt = cshrs.getReq();
     return pkt;
 }
 
 void
-UniCoherence::sendResult(Packet * &pkt, MSHR* cshr, bool success)
+UniCoherence::sendResult(PacketPtr &pkt, MSHR* cshr, bool success)
 {
     if (success)
     {
@@ -71,7 +71,7 @@ UniCoherence::sendResult(Packet * &pkt, MSHR* cshr, bool success)
  * @todo add support for returning slave requests, not doing them here.
  */
 bool
-UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
+UniCoherence::handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
                                CacheBlk::State &new_state)
 {
     new_state = 0;
@@ -86,19 +86,19 @@ UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
 }
 
 void
-UniCoherence::propogateInvalidate(Packet *pkt, bool isTiming)
+UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
 {
     if (pkt->isInvalidate()) {
         if (isTiming) {
             // Forward to other caches
-            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
             cshrs.allocate(tmp);
             cache->setSlaveRequest(Request_Coherence, curTick);
             if (cshrs.isFull())
                 cache->setBlockedForSnoop(Blocked_Coherence);
         }
         else {
-            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
             cache->cpuSidePort->sendAtomic(tmp);
             delete tmp;
         }

@@ -92,11 +92,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -110,12 +110,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     CpuPort icachePort;
     CpuPort dcachePort;
 
-    Request *ifetch_req;
-    Packet  *ifetch_pkt;
-    Request *data_read_req;
-    Packet  *data_read_pkt;
-    Request *data_write_req;
-    Packet  *data_write_pkt;
+    Request  *ifetch_req;
+    PacketPtr ifetch_pkt;
+    Request  *data_read_req;
+    PacketPtr data_read_pkt;
+    Request  *data_write_req;
+    PacketPtr data_write_pkt;
 
     bool dcache_access;
     Tick dcache_latency;
