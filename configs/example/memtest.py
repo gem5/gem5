@@ -85,7 +85,7 @@ else:
               for i in xrange(options.numtesters) ]
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(), membus = Bus(clock="500GHz", width=16))
+                physmem = PhysicalMemory(latency = "50ps"), membus = Bus(clock="500GHz", width=16))
 
 # l2cache & bus
 if options.caches:
