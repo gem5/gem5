@@ -47,6 +47,7 @@
 #include "dev/pcidev.hh"
 #include "dev/tsunamireg.h"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/param.hh"

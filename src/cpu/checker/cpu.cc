@@ -34,10 +34,8 @@
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
-#include "mem/packet_impl.hh"
-#include "sim/byteswap.hh"
+#include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"

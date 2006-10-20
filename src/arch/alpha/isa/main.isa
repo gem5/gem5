@@ -73,8 +73,9 @@ output exec {{
 #include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/sim_exit.hh"
-#include "mem/packet_impl.hh"
 
 using namespace AlphaISA;
 }};

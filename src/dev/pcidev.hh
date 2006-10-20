@@ -40,6 +40,7 @@
 #include "dev/io_device.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
+#include "sim/byteswap.hh"
 
 #define BAR_IO_MASK 0x3
 #define BAR_MEM_MASK 0xF

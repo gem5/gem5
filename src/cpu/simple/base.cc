@@ -47,7 +47,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/packet_impl.hh"
+#include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"

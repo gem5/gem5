@@ -43,6 +43,7 @@
 #include "dev/ns_gige.hh"
 #include "dev/pciconfigall.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"

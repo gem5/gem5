@@ -32,7 +32,8 @@
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/timing.hh"
-#include "mem/packet_impl.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 

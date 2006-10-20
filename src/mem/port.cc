@@ -35,7 +35,6 @@
 
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
-#include "mem/packet_impl.hh"
 #include "mem/port.hh"
 
 void

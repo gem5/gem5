@@ -33,9 +33,9 @@
 #define __DEV_IO_DEVICE_HH__
 
 #include "mem/mem_object.hh"
-#include "mem/packet_impl.hh"
-#include "sim/sim_object.hh"
+#include "mem/packet.hh"
 #include "mem/tport.hh"
+#include "sim/sim_object.hh"
 
 class Event;
 class Platform;

@@ -33,11 +33,10 @@
  * Definition of BaseCache functions.
  */
 
+#include "cpu/base.hh"
+#include "cpu/smt.hh"
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/miss/mshr.hh"
-#include "mem/packet_impl.hh"
-#include "cpu/smt.hh"
-#include "cpu/base.hh"
 
 using namespace std;
 

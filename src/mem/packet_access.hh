@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Miguel Serrano
- *          Ali Saidi
+ * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
-/** @file
- * Declaration of a fake device.
- */
-
-#ifndef __ISA_FAKE_HH__
-#define __ISA_FAKE_HH__
-
-#include "base/range.hh"
-#include "dev/io_device.hh"
-#include "dev/tsunami.hh"
+#include "arch/isa_traits.hh"
 #include "mem/packet.hh"
+#include "sim/byteswap.hh"
 
-/**
- * IsaFake is a device that returns -1 on all reads and
- * accepts all writes. It is meant to be placed at an address range
- * so that an mcheck doesn't occur when an os probes a piece of hw
- * that doesn't exist (e.g. UARTs1-3).
- */
-class IsaFake : public BasicPioDevice
+#ifndef __MEM_PACKET_ACCESS_HH__
+#define __MEM_PACKET_ACCESS_HH__
+// The memory system needs to have an endianness. This is the easiest
+// way to deal with it for now. At some point, we will have to remove
+// these functions and make the users do their own byte swapping since
+// the memory system does not in fact have an endianness.
+
+/** return the value of what is pointed to in the packet. */
+template <typename T>
+inline T
+Packet::get()
 {
-  public:
-    struct Params : public BasicPioDevice::Params
-    {
-        Addr pio_size;
-    };
-  protected:
-    const Params *params() const { return (const Params*)_params; }
+    assert(staticData || dynamicData);
+    assert(sizeof(T) <= size);
+    return TheISA::gtoh(*(T*)data);
+}
 
-  public:
-    /**
-      * The constructor for Tsunmami Fake just registers itself with the MMU.
-      * @param p params structure
-      */
-    IsaFake(Params *p);
+/** set the value in the data pointer to v. */
+template <typename T>
+inline void
+Packet::set(T v)
+{
+    assert(sizeof(T) <= size);
+    *(T*)data = TheISA::htog(v);
+}
 
-    /**
-     * This read always returns -1.
-     * @param pkt The memory request.
-     * @param data Where to put the data.
-     */
-    virtual Tick read(Packet *pkt);
-
-    /**
-     * All writes are simply ignored.
-     * @param pkt The memory request.
-     * @param data the data to not write.
-     */
-    virtual Tick write(Packet *pkt);
-};
-
-#endif // __TSUNAMI_FAKE_HH__
+#endif //__MEM_PACKET_ACCESS_HH__

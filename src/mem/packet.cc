@@ -36,9 +36,10 @@
  */
 
 #include <iostream>
+
 #include "base/misc.hh"
-#include "mem/packet.hh"
 #include "base/trace.hh"
+#include "mem/packet.hh"
 
 static const std::string ReadReqString("ReadReq");
 static const std::string WriteReqString("WriteReq");

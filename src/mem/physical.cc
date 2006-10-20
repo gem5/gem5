@@ -39,20 +39,16 @@
 #include <iostream>
 #include <string>
 
-
+#include "arch/isa_traits.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
-#include "mem/packet_impl.hh"
 #include "mem/physical.hh"
-#include "sim/host.hh"
 #include "sim/builder.hh"
 #include "sim/eventq.hh"
-#include "arch/isa_traits.hh"
-
+#include "sim/host.hh"
 
 using namespace std;
 using namespace TheISA;
-
 
 PhysicalMemory::PhysicalMemory(Params *p)
     : MemObject(p->name), pmemAddr(NULL), port(NULL), lat(p->latency), _params(p)

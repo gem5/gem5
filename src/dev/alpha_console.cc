@@ -48,6 +48,8 @@
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"

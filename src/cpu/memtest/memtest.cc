@@ -38,17 +38,17 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-//#include "cpu/simple_thread.hh"
 #include "cpu/memtest/memtest.hh"
+//#include "cpu/simple_thread.hh"
 //#include "mem/cache/base_cache.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
+#include "mem/packet.hh"
 //#include "mem/physical.hh"
+#include "mem/request.hh"
 #include "sim/builder.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
-#include "mem/packet.hh"
-#include "mem/request.hh"
-#include "mem/port.hh"
-#include "mem/mem_object.hh"
 
 using namespace std;
 

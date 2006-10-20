@@ -40,7 +40,7 @@
 #include "config/full_system.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
-#include "mem/packet_impl.hh"
+#include "mem/packet.hh"
 #include "mem/port.hh"
 
 /**

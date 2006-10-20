@@ -43,6 +43,7 @@
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/byteswap.hh"

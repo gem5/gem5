@@ -42,6 +42,7 @@
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 

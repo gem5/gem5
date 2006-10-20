@@ -42,6 +42,8 @@
 #include "dev/simconsole.hh"
 #include "dev/uart8250.hh"
 #include "dev/platform.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 
 using namespace std;

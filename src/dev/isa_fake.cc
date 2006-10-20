@@ -40,6 +40,7 @@
 #include "base/trace.hh"
 #include "dev/isa_fake.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
