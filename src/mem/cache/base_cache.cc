@@ -132,7 +132,7 @@ BaseCache::CachePort::recvFunctional(Packet *pkt)
                 pkt_data = pkt->getPtr<uint8_t>() + offset;
                 write_data = target->getPtr<uint8_t>();
                 data_size = pkt->getSize() - offset;
-                assert(data_size > pkt->getSize());
+                assert(data_size >= pkt->getSize());
                 if (data_size > target->getSize())
                     data_size = target->getSize();
             }

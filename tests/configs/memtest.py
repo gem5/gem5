@@ -53,7 +53,7 @@ class L2(BaseCache):
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest(max_loads=1e12, percent_uncacheable=0, progress_interval=1000) for i in xrange(nb_cores) ]
+cpus = [ MemTest(atomic=False, max_loads=1e12, percent_uncacheable=10, progress_interval=1000) for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
@@ -90,6 +90,6 @@ system.physmem.port = system.membus.port
 
 root = Root( system = system )
 root.system.mem_mode = 'timing'
-#root.trace.flags="Cache CachePort Bus"
-#root.trace.cycle=3810800
+#root.trace.flags="Cache CachePort MemoryAccess"
+#root.trace.cycle=1
 
