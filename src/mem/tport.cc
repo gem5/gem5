@@ -35,7 +35,6 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketPtr>::iterator i = transmitList.begin();
     std::list<PacketPtr>::iterator end = transmitList.end();
-    bool cont = true;
 
     while (i != end) {
         PacketPtr target = *i;
