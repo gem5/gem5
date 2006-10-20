@@ -190,7 +190,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    SplitBlk* findBlock(Packet * &pkt, int &lat);
+    SplitBlk* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -207,7 +207,7 @@ public:
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    SplitBlk* findReplacement(Packet * &pkt, PacketList &writebacks,
+    SplitBlk* findReplacement(PacketPtr &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**
@@ -306,22 +306,6 @@ public:
     {
         assert(size <= blkSize);
         blk->size = size;
-    }
-
-    /**
-     * Perform a block aligned copy from the source address to the destination.
-     * @param source The block-aligned source address.
-     * @param dest The block-aligned destination address.
-     * @param asid The address space DI.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void doCopy(Addr source, Addr dest, PacketList &writebacks);
-
-    /**
-     * No impl.
-     */
-    void fixCopy(Packet * &pkt, PacketList &writebacks)
-    {
     }
 
     /**

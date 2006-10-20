@@ -129,7 +129,7 @@ class FrontEnd
                 const bool is_branch = false, const bool branch_taken = false);
     DynInstPtr getInst();
 
-    void processCacheCompletion(Packet *pkt);
+    void processCacheCompletion(PacketPtr pkt);
 
     void addFreeRegs(int num_freed);
 

@@ -102,7 +102,7 @@ BasePrefetcher::regStats(const std::string &name)
         ;
 }
 
-Packet *
+PacketPtr
 BasePrefetcher::getPacket()
 {
     DPRINTF(HWPrefetch, "%s:Requesting a hw_pf to issue\n", cache->name());
@@ -112,7 +112,7 @@ BasePrefetcher::getPacket()
         return NULL;
     }
 
-    Packet * pkt;
+    PacketPtr pkt;
     bool keepTrying = false;
     do {
         pkt = *pf.begin();
@@ -131,7 +131,7 @@ BasePrefetcher::getPacket()
 }
 
 void
-BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
+BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
 {
     if (!pkt->req->isUncacheable() && !(pkt->req->isInstRead() && only_data))
     {
@@ -139,7 +139,7 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
         Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
         //Check if miss is in pfq, if so remove it
-        std::list<Packet *>::iterator iter = inPrefetch(blkAddr);
+        std::list<PacketPtr>::iterator iter = inPrefetch(blkAddr);
         if (iter != pf.end()) {
             DPRINTF(HWPrefetch, "%s:Saw a miss to a queued prefetch, removing it\n", cache->name());
             pfRemovedMSHR++;
@@ -179,7 +179,7 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
             pfIdentified++;
             //create a prefetch memreq
             Request * prefetchReq = new Request(*addr, blkSize, 0);
-            Packet * prefetch;
+            PacketPtr prefetch;
             prefetch = new Packet(prefetchReq, Packet::HardPFReq, -1);
             prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->getCpuNum(),
@@ -233,11 +233,11 @@ BasePrefetcher::handleMiss(Packet * &pkt, Tick time)
     }
 }
 
-std::list<Packet *>::iterator
+std::list<PacketPtr>::iterator
 BasePrefetcher::inPrefetch(Addr address)
 {
     //Guaranteed to only be one match, we always check before inserting
-    std::list<Packet *>::iterator iter;
+    std::list<PacketPtr>::iterator iter;
     for (iter=pf.begin(); iter != pf.end(); iter++) {
         if (((*iter)->getAddr() & ~(Addr)(blkSize-1)) == address) {
             return iter;

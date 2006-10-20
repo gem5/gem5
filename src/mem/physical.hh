@@ -57,9 +57,9 @@ class PhysicalMemory : public MemObject
 
       protected:
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -172,8 +172,8 @@ class PhysicalMemory : public MemObject
     unsigned int drain(Event *de);
 
   protected:
-    void doFunctionalAccess(Packet *pkt);
-    virtual Tick calculateLatency(Packet *pkt);
+    void doFunctionalAccess(PacketPtr pkt);
+    virtual Tick calculateLatency(PacketPtr pkt);
     void recvStatusChange(Port::Status status);
 
   public:

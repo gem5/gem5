@@ -48,6 +48,8 @@
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
@@ -92,7 +94,7 @@ AlphaConsole::startup()
 }
 
 Tick
-AlphaConsole::read(Packet *pkt)
+AlphaConsole::read(PacketPtr pkt)
 {
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
@@ -193,7 +195,7 @@ AlphaConsole::read(Packet *pkt)
 }
 
 Tick
-AlphaConsole::write(Packet *pkt)
+AlphaConsole::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

@@ -140,7 +140,7 @@ class DRAMMemory : public PhysicalMemory
 
 
   protected:
-    Tick calculateLatency(Packet *pkt);
+    Tick calculateLatency(PacketPtr pkt);
     int prechargeBanksAround(int bank);
 
   public:

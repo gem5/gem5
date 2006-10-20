@@ -36,9 +36,10 @@
 #ifndef __ISA_FAKE_HH__
 #define __ISA_FAKE_HH__
 
-#include "dev/tsunami.hh"
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "dev/tsunami.hh"
+#include "mem/packet.hh"
 
 /**
  * IsaFake is a device that returns -1 on all reads and
@@ -68,14 +69,14 @@ class IsaFake : public BasicPioDevice
      * @param pkt The memory request.
      * @param data Where to put the data.
      */
-    virtual Tick read(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
 
     /**
      * All writes are simply ignored.
      * @param pkt The memory request.
      * @param data the data to not write.
      */
-    virtual Tick write(Packet *pkt);
+    virtual Tick write(PacketPtr pkt);
 };
 
 #endif // __TSUNAMI_FAKE_HH__

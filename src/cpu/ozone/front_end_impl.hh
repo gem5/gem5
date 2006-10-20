@@ -74,7 +74,7 @@ FrontEnd<Impl>::IcachePort::recvStatusChange(Status status)
 
 template<class Impl>
 bool
-FrontEnd<Impl>::IcachePort::recvTiming(Packet *pkt)
+FrontEnd<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
     fe->processCacheCompletion(pkt);
     return true;

@@ -458,7 +458,7 @@ class IIC : public BaseTags
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Packet * &pkt, int &lat);
+    IICTag* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Find the block, do not update the replacement data.
@@ -475,7 +475,7 @@ class IIC : public BaseTags
      * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(Packet * &pkt, PacketList &writebacks,
+    IICTag* findReplacement(PacketPtr &pkt, PacketList &writebacks,
                             BlkList &compress_blocks);
 
     /**
@@ -496,22 +496,6 @@ class IIC : public BaseTags
      */
     void writeData(IICTag *blk, uint8_t *data, int size,
                    PacketList & writebacks);
-
-    /**
-     * Perform a block aligned copy from the source address to the destination.
-     * @param source The block-aligned source address.
-     * @param dest The block-aligned destination address.
-     * @param asid The address space DI.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void doCopy(Addr source, Addr dest, PacketList &writebacks);
-
-    /**
-     * If a block is currently marked copy on write, copy it before writing.
-     * @param pkt The write request.
-     * @param writebacks List for any generated writeback pktuests.
-     */
-    void fixCopy(Packet * &pkt, PacketList &writebacks);
 
     /**
      * Called at end of simulation to complete average block reference stats.

@@ -85,8 +85,8 @@ class TsunamiPChip : public BasicPioDevice
 
     Addr calcConfigAddr(int bus, int dev, int func);
 
-    virtual Tick read(Packet *pkt);
-    virtual Tick write(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 
     /**
      * Serialize this object to the given output stream.

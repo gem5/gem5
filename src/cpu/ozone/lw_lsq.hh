@@ -222,7 +222,7 @@ class OzoneLWLSQ {
     void writeback(DynInstPtr &inst, PacketPtr pkt);
 
     /** Handles completing the send of a store to memory. */
-    void storePostSend(Packet *pkt, DynInstPtr &inst);
+    void storePostSend(PacketPtr pkt, DynInstPtr &inst);
 
     /** Completes the store at the specified index. */
     void completeStore(DynInstPtr &inst);

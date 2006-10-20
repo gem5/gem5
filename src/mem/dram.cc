@@ -359,7 +359,7 @@ DRAMMemory::regStats()
 static char *mem_access_output=NULL;
                 /* latency of access [CPU cycles]*/
 Tick
-DRAMMemory::calculateLatency(Packet *pkt)
+DRAMMemory::calculateLatency(PacketPtr pkt)
 {
 
   bool cmdIsRead = pkt->isRead();

@@ -86,7 +86,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     Fault initiateAcc();
 
     /** Completes the access.  Only valid for memory operations. */
-    Fault completeAcc(Packet *pkt);
+    Fault completeAcc(PacketPtr pkt);
 
   private:
     /** Initializes variables. */

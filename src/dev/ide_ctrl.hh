@@ -204,8 +204,8 @@ class IdeController : public PciDev
     IdeController(Params *p);
     ~IdeController();
 
-    virtual Tick writeConfig(Packet *pkt);
-    virtual Tick readConfig(Packet *pkt);
+    virtual Tick writeConfig(PacketPtr pkt);
+    virtual Tick readConfig(PacketPtr pkt);
 
     void setDmaComplete(IdeDisk *disk);
 
@@ -214,14 +214,14 @@ class IdeController : public PciDev
      * @param pkt Packet describing what is to be read
      * @return The amount of time to complete this request
      */
-    virtual Tick read(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
 
     /**
      * Write a done field for a given target.
      * @param pkt Packet describing what is to be written
      * @return The amount of time to complete this request
      */
-    virtual Tick write(Packet *pkt);
+    virtual Tick write(PacketPtr pkt);
 
     /**
      * Serialize this object to the given output stream.

@@ -36,9 +36,10 @@
  */
 
 #include <iostream>
+
 #include "base/misc.hh"
-#include "mem/packet.hh"
 #include "base/trace.hh"
+#include "mem/packet.hh"
 
 static const std::string ReadReqString("ReadReq");
 static const std::string WriteReqString("WriteReq");
@@ -51,6 +52,7 @@ static const std::string HardPFReqString("HardPFReq");
 static const std::string HardPFRespString("HardPFResp");
 static const std::string InvalidateReqString("InvalidateReq");
 static const std::string WriteInvalidateReqString("WriteInvalidateReq");
+static const std::string WriteInvalidateRespString("WriteInvalidateResp");
 static const std::string UpgradeReqString("UpgradeReq");
 static const std::string ReadExReqString("ReadExReq");
 static const std::string ReadExRespString("ReadExResp");
@@ -71,6 +73,7 @@ Packet::cmdString() const
       case HardPFResp:      return HardPFRespString;
       case InvalidateReq:   return InvalidateReqString;
       case WriteInvalidateReq:return WriteInvalidateReqString;
+      case WriteInvalidateResp:return WriteInvalidateRespString;
       case UpgradeReq:      return UpgradeReqString;
       case ReadExReq:       return ReadExReqString;
       case ReadExResp:      return ReadExRespString;
@@ -93,6 +96,7 @@ Packet::cmdIdxToString(Packet::Command idx)
       case HardPFResp:      return HardPFRespString;
       case InvalidateReq:   return InvalidateReqString;
       case WriteInvalidateReq:return WriteInvalidateReqString;
+      case WriteInvalidateResp:return WriteInvalidateRespString;
       case UpgradeReq:      return UpgradeReqString;
       case ReadExReq:       return ReadExReqString;
       case ReadExResp:      return ReadExRespString;
@@ -129,7 +133,7 @@ Packet::allocate()
 
 /** Do the packet modify the same addresses. */
 bool
-Packet::intersect(Packet *p)
+Packet::intersect(PacketPtr p)
 {
     Addr s1 = getAddr();
     Addr e1 = getAddr() + getSize() - 1;
@@ -140,14 +144,14 @@ Packet::intersect(Packet *p)
 }
 
 bool
-fixPacket(Packet *func, Packet *timing)
+fixPacket(PacketPtr func, PacketPtr timing)
 {
     Addr funcStart      = func->getAddr();
     Addr funcEnd        = func->getAddr() + func->getSize() - 1;
     Addr timingStart    = timing->getAddr();
     Addr timingEnd      = timing->getAddr() + timing->getSize() - 1;
 
-    assert(!(funcStart > timingEnd || timingStart < funcEnd));
+    assert(!(funcStart > timingEnd || timingStart > funcEnd));
 
     if (DTRACE(FunctionalAccess)) {
        DebugOut() << func;

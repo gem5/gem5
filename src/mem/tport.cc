@@ -31,28 +31,27 @@
 #include "mem/tport.hh"
 
 void
-SimpleTimingPort::recvFunctional(Packet *pkt)
+SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
-    //First check queued events
-    std::list<Packet *>::iterator i = transmitList.begin();
-    std::list<Packet *>::iterator end = transmitList.end();
-    bool cont = true;
+    std::list<PacketPtr>::iterator i = transmitList.begin();
+    std::list<PacketPtr>::iterator end = transmitList.end();
 
-    while (i != end && cont) {
-        Packet * target = *i;
+    while (i != end) {
+        PacketPtr target = *i;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt))
             fixPacket(pkt, target);
 
     }
+
     //Then just do an atomic access and throw away the returned latency
-    if (cont)
+    if (pkt->result != Packet::Success)
         recvAtomic(pkt);
 }
 
 bool
-SimpleTimingPort::recvTiming(Packet *pkt)
+SimpleTimingPort::recvTiming(PacketPtr pkt)
 {
     // If the device is only a slave, it should only be sending
     // responses, which should never get nacked.  There used to be
@@ -65,6 +64,13 @@ SimpleTimingPort::recvTiming(Packet *pkt)
     if (pkt->needsResponse()) {
         pkt->makeTimingResponse();
         sendTimingLater(pkt, latency);
+    }
+    else {
+        if (pkt->cmd != Packet::UpgradeReq)
+        {
+            delete pkt->req;
+            delete pkt;
+        }
     }
     return true;
 }

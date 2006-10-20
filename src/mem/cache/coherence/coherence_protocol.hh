@@ -89,7 +89,7 @@ class CoherenceProtocol : public SimObject
      * @param oldState The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(Packet * &pkt,
+    CacheBlk::State getNewState(PacketPtr &pkt,
                                 CacheBlk::State oldState);
 
     /**
@@ -101,12 +101,12 @@ class CoherenceProtocol : public SimObject
      * @param new_state The new coherence state of the block.
      * @return True if the request should be satisfied locally.
      */
-    bool handleBusRequest(BaseCache *cache, Packet * &pkt, CacheBlk *blk,
+    bool handleBusRequest(BaseCache *cache, PacketPtr &pkt, CacheBlk *blk,
                           MSHR *mshr, CacheBlk::State &new_state);
 
   protected:
     /** Snoop function type. */
-    typedef bool (*SnoopFuncType)(BaseCache *, Packet *&, CacheBlk *,
+    typedef bool (*SnoopFuncType)(BaseCache *, PacketPtr &, CacheBlk *,
                                   MSHR *, CacheBlk::State&);
 
     //
@@ -116,49 +116,49 @@ class CoherenceProtocol : public SimObject
     /**
      * Do nothing transition.
      */
-    static bool nullTransition(BaseCache *, Packet *&, CacheBlk *,
+    static bool nullTransition(BaseCache *, PacketPtr &, CacheBlk *,
                                MSHR *, CacheBlk::State&);
 
     /**
      * Invalid transition, basically panic.
      */
-    static bool invalidTransition(BaseCache *, Packet *&, CacheBlk *,
+    static bool invalidTransition(BaseCache *, PacketPtr &, CacheBlk *,
                                   MSHR *, CacheBlk::State&);
 
     /**
      * Invalidate block, move to Invalid state.
      */
-    static bool invalidateTrans(BaseCache *, Packet *&, CacheBlk *,
+    static bool invalidateTrans(BaseCache *, PacketPtr &, CacheBlk *,
                                 MSHR *, CacheBlk::State&);
 
     /**
      * Supply data, no state transition.
      */
-    static bool supplyTrans(BaseCache *, Packet *&, CacheBlk *,
+    static bool supplyTrans(BaseCache *, PacketPtr &, CacheBlk *,
                             MSHR *, CacheBlk::State&);
 
     /**
      * Supply data and go to Shared state.
      */
-    static bool supplyAndGotoSharedTrans(BaseCache *, Packet *&, CacheBlk *,
+    static bool supplyAndGotoSharedTrans(BaseCache *, PacketPtr &, CacheBlk *,
                                          MSHR *, CacheBlk::State&);
 
     /**
      * Supply data and go to Owned state.
      */
-    static bool supplyAndGotoOwnedTrans(BaseCache *, Packet *&, CacheBlk *,
+    static bool supplyAndGotoOwnedTrans(BaseCache *, PacketPtr &, CacheBlk *,
                                         MSHR *, CacheBlk::State&);
 
     /**
      * Invalidate block, supply data, and go to Invalid state.
      */
-    static bool supplyAndInvalidateTrans(BaseCache *, Packet *&, CacheBlk *,
+    static bool supplyAndInvalidateTrans(BaseCache *, PacketPtr &, CacheBlk *,
                                          MSHR *, CacheBlk::State&);
 
     /**
      * Assert the shared line for a block that is shared/exclusive.
      */
-    static bool assertShared(BaseCache *, Packet *&, CacheBlk *,
+    static bool assertShared(BaseCache *, PacketPtr &, CacheBlk *,
                                          MSHR *, CacheBlk::State&);
 
     /**

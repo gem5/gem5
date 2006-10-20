@@ -38,14 +38,15 @@
 #ifndef __MEM_PACKET_HH__
 #define __MEM_PACKET_HH__
 
+#include <cassert>
+#include <list>
+
 #include "mem/request.hh"
 #include "sim/host.hh"
 #include "sim/root.hh"
-#include <list>
-#include <cassert>
 
 struct Packet;
-typedef Packet* PacketPtr;
+typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 
@@ -102,7 +103,7 @@ class Packet
     /** Device address (e.g., bus ID) of the source of the
      *   transaction. The source is not responsible for setting this
      *   field; it is set implicitly by the interconnect when the
-     *   packet * is first sent.  */
+     *   packet is first sent.  */
     short src;
 
     /** Device address (e.g., bus ID) of the destination of the
@@ -202,7 +203,10 @@ class Packet
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
                                     | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest | HasData,
+        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest
+                                   | HasData | NeedsResponse,
+        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest | NeedsResponse
+                                   | IsResponse,
         UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse
@@ -339,10 +343,12 @@ class Packet
         srcValid = false;
     }
 
-    /** Take a request packet and modify it in place to be suitable
-     *   for returning as a response to that request.
+    /**
+     * Take a request packet and modify it in place to be suitable for
+     * returning as a response to that request.
      */
-    void makeAtomicResponse() {
+    void makeAtomicResponse()
+    {
         assert(needsResponse());
         assert(isRequest());
         int icmd = (int)cmd;
@@ -355,50 +361,90 @@ class Packet
         cmd = (Command)icmd;
     }
 
-    /** Take a request packet that has been returned as NACKED and modify it so
-     * that it can be sent out again. Only packets that need a response can be
-     * NACKED, so verify that that is true. */
-    void reinitNacked() {
+    /**
+     * Take a request packet that has been returned as NACKED and
+     * modify it so that it can be sent out again. Only packets that
+     * need a response can be NACKED, so verify that that is true.
+     */
+    void
+    reinitNacked()
+    {
         assert(needsResponse() && result == Nacked);
         dest =  Broadcast;
         result = Unknown;
     }
 
 
-    /** Set the data pointer to the following value that should not be freed. */
-    template <typename T>
-    void dataStatic(T *p);
-
-    /** Set the data pointer to a value that should have delete [] called on it.
+    /**
+     * Set the data pointer to the following value that should not be
+     * freed.
      */
     template <typename T>
-    void dataDynamicArray(T *p);
+    void
+    dataStatic(T *p)
+    {
+        if(dynamicData)
+            dynamicData = false;
+        data = (PacketDataPtr)p;
+        staticData = true;
+    }
 
-    /** set the data pointer to a value that should have delete called on it. */
+    /**
+     * Set the data pointer to a value that should have delete []
+     * called on it.
+     */
     template <typename T>
-    void dataDynamic(T *p);
+    void
+    dataDynamicArray(T *p)
+    {
+        assert(!staticData && !dynamicData);
+        data = (PacketDataPtr)p;
+        dynamicData = true;
+        arrayData = true;
+    }
+
+    /**
+     * set the data pointer to a value that should have delete called
+     * on it.
+     */
+    template <typename T>
+    void
+    dataDynamic(T *p)
+    {
+        assert(!staticData && !dynamicData);
+        data = (PacketDataPtr)p;
+        dynamicData = true;
+        arrayData = false;
+    }
+
+    /** get a pointer to the data ptr. */
+    template <typename T>
+    T*
+    getPtr()
+    {
+        assert(staticData || dynamicData);
+        return (T*)data;
+    }
 
     /** return the value of what is pointed to in the packet. */
     template <typename T>
     T get();
 
-    /** get a pointer to the data ptr. */
-    template <typename T>
-    T* getPtr();
-
     /** set the value in the data pointer to v. */
     template <typename T>
     void set(T v);
 
-    /** delete the data pointed to in the data pointer. Ok to call to matter how
-     * data was allocted. */
+    /**
+     * delete the data pointed to in the data pointer. Ok to call to
+     * matter how data was allocted.
+     */
     void deleteData();
 
     /** If there isn't data in the packet, allocate some. */
     void allocate();
 
     /** Do the packet modify the same addresses. */
-    bool intersect(Packet *p);
+    bool intersect(PacketPtr p);
 };
 
 
@@ -407,7 +453,7 @@ class Packet
  * in the timing packet. It returns if the functional packet should continue to
  * traverse the memory hierarchy or not.
  */
-bool fixPacket(Packet *func, Packet *timing);
+bool fixPacket(PacketPtr func, PacketPtr timing);
 
 std::ostream & operator<<(std::ostream &o, const Packet &p);
 

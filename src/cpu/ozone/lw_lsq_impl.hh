@@ -832,7 +832,7 @@ OzoneLWLSQ<Impl>::dumpInsts()
 
 template <class Impl>
 void
-OzoneLWLSQ<Impl>::storePostSend(Packet *pkt, DynInstPtr &inst)
+OzoneLWLSQ<Impl>::storePostSend(PacketPtr pkt, DynInstPtr &inst)
 {
     if (isStalled() &&
         inst->seqNum == stallingStoreIsn) {

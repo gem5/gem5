@@ -107,7 +107,7 @@ class MSHRQueue {
      * @param pkt The request to find.
      * @return A pointer to the earliest matching MSHR.
      */
-    MSHR* findPending(Packet * &pkt) const;
+    MSHR* findPending(PacketPtr &pkt) const;
 
     /**
      * Allocates a new MSHR for the pktuest and size. This places the request
@@ -118,7 +118,7 @@ class MSHRQueue {
      *
      * @pre There are free MSHRs.
      */
-    MSHR* allocate(Packet * &pkt, int size = 0);
+    MSHR* allocate(PacketPtr &pkt, int size = 0);
 
     /**
      * Allocate a read pktuest for the given address, and places the given
@@ -129,7 +129,7 @@ class MSHRQueue {
      * @param target The first target for the pktuest.
      * @return Pointer to the new MSHR.
      */
-    MSHR* allocateFetch(Addr addr, int size, Packet * &target);
+    MSHR* allocateFetch(Addr addr, int size, PacketPtr &target);
 
     /**
      * Allocate a target list for the given address.
@@ -153,7 +153,7 @@ class MSHRQueue {
      * @param mshr The MSHR to allocate the target to.
      * @param pkt The target request.
      */
-    void allocateTarget(MSHR* mshr, Packet * &pkt)
+    void allocateTarget(MSHR* mshr, PacketPtr &pkt)
     {
         mshr->allocateTarget(pkt);
         allocatedTargets += 1;
@@ -216,7 +216,7 @@ class MSHRQueue {
      * Returns the pktuest at the head of the pendingList.
      * @return The next pktuest to service.
      */
-    Packet * getReq() const
+    PacketPtr getReq() const
     {
         if (pendingList.empty()) {
             return NULL;

@@ -43,6 +43,7 @@
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/byteswap.hh"
@@ -228,7 +229,7 @@ IdeController::setDmaComplete(IdeDisk *disk)
 ////
 
 Tick
-IdeController::readConfig(Packet *pkt)
+IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
@@ -301,7 +302,7 @@ IdeController::readConfig(Packet *pkt)
 
 
 Tick
-IdeController::writeConfig(Packet *pkt)
+IdeController::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC) {
@@ -408,7 +409,7 @@ IdeController::writeConfig(Packet *pkt)
 
 
 Tick
-IdeController::read(Packet *pkt)
+IdeController::read(PacketPtr pkt)
 {
     Addr offset;
     IdeChannel channel;
@@ -494,7 +495,7 @@ IdeController::read(Packet *pkt)
 }
 
 Tick
-IdeController::write(Packet *pkt)
+IdeController::write(PacketPtr pkt)
 {
     Addr offset;
     IdeChannel channel;

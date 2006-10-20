@@ -47,6 +47,8 @@
 #include "dev/tsunami.hh"
 #include "dev/tsunami_io.hh"
 #include "dev/tsunamireg.h"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "mem/port.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
@@ -446,7 +448,7 @@ TsunamiIO::frequency() const
 }
 
 Tick
-TsunamiIO::read(Packet *pkt)
+TsunamiIO::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -512,7 +514,7 @@ TsunamiIO::read(Packet *pkt)
 }
 
 Tick
-TsunamiIO::write(Packet *pkt)
+TsunamiIO::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

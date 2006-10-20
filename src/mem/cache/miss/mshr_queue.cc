@@ -88,7 +88,7 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 }
 
 MSHR*
-MSHRQueue::findPending(Packet * &pkt) const
+MSHRQueue::findPending(PacketPtr &pkt) const
 {
     MSHR::ConstIterator i = pendingList.begin();
     MSHR::ConstIterator end = pendingList.end();
@@ -103,29 +103,12 @@ MSHRQueue::findPending(Packet * &pkt) const
                 return mshr;
             }
         }
-
-        //need to check destination address for copies.
-        //TEMP NOT DOING COPIES
-#if 0
-        if (mshr->pkt->cmd == Copy) {
-            Addr dest = mshr->pkt->dest;
-            if (dest < pkt->addr) {
-                if (dest + mshr->pkt->size > pkt->addr) {
-                    return mshr;
-                }
-            } else {
-                if (pkt->addr + pkt->size > dest) {
-                    return mshr;
-                }
-            }
-        }
-#endif
     }
     return NULL;
 }
 
 MSHR*
-MSHRQueue::allocate(Packet * &pkt, int size)
+MSHRQueue::allocate(PacketPtr &pkt, int size)
 {
     Addr aligned_addr = pkt->getAddr() & ~((Addr)size - 1);
     assert(!freeList.empty());
@@ -148,7 +131,7 @@ MSHRQueue::allocate(Packet * &pkt, int size)
 }
 
 MSHR*
-MSHRQueue::allocateFetch(Addr addr, int size, Packet * &target)
+MSHRQueue::allocateFetch(Addr addr, int size, PacketPtr &target)
 {
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
@@ -167,7 +150,7 @@ MSHRQueue::allocateTargetList(Addr addr, int size)
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
-    Packet * dummy;
+    PacketPtr dummy;
     mshr->allocate(Packet::ReadReq, addr, size, dummy);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->inService = true;
@@ -213,7 +196,7 @@ void
 MSHRQueue::markInService(MSHR* mshr)
 {
     //assert(mshr == pendingList.front());
-    if (!(mshr->pkt->needsResponse() || mshr->pkt->cmd == Packet::UpgradeReq)) {
+    if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == Packet::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
         if ((mshr->pkt->flags & SATISFIED) && (mshr->pkt->cmd == Packet::Writeback)) {
             //Writeback hit, so delete it
@@ -254,7 +237,7 @@ MSHRQueue::squash(int threadNum)
         MSHR *mshr = *i;
         if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {
-                Packet * target = mshr->getTarget();
+                PacketPtr target = mshr->getTarget();
                 mshr->popTarget();
 
                 assert(0/*target->req->getThreadNum()*/ == threadNum);

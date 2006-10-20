@@ -267,7 +267,7 @@ Split::probe(Addr addr) const
 }
 
 SplitBlk*
-Split::findBlock(Packet * &pkt, int &lat)
+Split::findBlock(PacketPtr &pkt, int &lat)
 {
 
     Addr aligned = blkAlign(pkt->getAddr());
@@ -350,7 +350,7 @@ Split::findBlock(Addr addr) const
 }
 
 SplitBlk*
-Split::findReplacement(Packet * &pkt, PacketList &writebacks,
+Split::findReplacement(PacketPtr &pkt, PacketList &writebacks,
                      BlkList &compress_blocks)
 {
     SplitBlk *blk;
@@ -419,19 +419,6 @@ Split::invalidateBlk(Addr addr)
     blk->status = 0;
     blk->isTouched = false;
     tagsInUse--;
-}
-
-void
-Split::doCopy(Addr source, Addr dest, PacketList &writebacks)
-{
-    if (lru->probe( source))
-        lru->doCopy(source, dest, writebacks);
-    else {
-        if (lifo && lifo_net)
-            lifo_net->doCopy(source, dest, writebacks);
-        else if (lru_net)
-            lru_net->doCopy(source, dest, writebacks);
-    }
 }
 
 void

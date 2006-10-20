@@ -113,7 +113,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<bool> prioritizeRequests;
 //    SimObjectParam<Bus *> in_bus;
 //    SimObjectParam<Bus *> out_bus;
-    Param<bool> do_copy;
     SimObjectParam<CoherenceProtocol *> protocol;
     Param<Addr> trace_addr;
     Param<int> hash_delay;
@@ -163,7 +162,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
 /*    INIT_PARAM_DFLT(in_bus, "incoming bus object", NULL),
     INIT_PARAM(out_bus, "outgoing bus object"),
 */
-    INIT_PARAM_DFLT(do_copy, "perform fast copies in the cache", false),
     INIT_PARAM_DFLT(protocol, "coherence protocol to use in the cache", NULL),
     INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
 
@@ -228,7 +226,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
              BUILD_NULL_PREFETCHER(t, comp, b); \
         } \
         Cache<CacheTags<t, comp>, b, c>::Params params(tagStore, mq, coh, \
-                                                       do_copy, base_params, \
+                                                       base_params, \
                                                        /*in_bus, out_bus,*/ pf,  \
                                                        prefetch_access, hit_latency); \
         Cache<CacheTags<t, comp>, b, c> *retval =			\

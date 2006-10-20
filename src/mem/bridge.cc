@@ -89,7 +89,7 @@ Bridge::init()
 /** Function called by the port when the bus is receiving a Timing
  * transaction.*/
 bool
-Bridge::BridgePort::recvTiming(Packet *pkt)
+Bridge::BridgePort::recvTiming(PacketPtr pkt)
 {
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr());
@@ -99,7 +99,7 @@ Bridge::BridgePort::recvTiming(Packet *pkt)
 
 
 bool
-Bridge::BridgePort::queueForSendTiming(Packet *pkt)
+Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 {
     if (queueFull())
         return false;
@@ -148,11 +148,12 @@ Bridge::BridgePort::trySend()
 
     assert(buf->ready <= curTick);
 
-    Packet *pkt = buf->pkt;
+    PacketPtr pkt = buf->pkt;
 
     DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
+    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
     if (sendTiming(pkt)) {
         // send successful
         sendQueue.pop_front();
@@ -197,7 +198,7 @@ Bridge::BridgePort::recvRetry()
 /** Function called by the port when the bus is receiving a Atomic
  * transaction.*/
 Tick
-Bridge::BridgePort::recvAtomic(Packet *pkt)
+Bridge::BridgePort::recvAtomic(PacketPtr pkt)
 {
     return otherPort->sendAtomic(pkt) + delay;
 }
@@ -205,7 +206,7 @@ Bridge::BridgePort::recvAtomic(Packet *pkt)
 /** Function called by the port when the bus is receiving a Functional
  * transaction.*/
 void
-Bridge::BridgePort::recvFunctional(Packet *pkt)
+Bridge::BridgePort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketBuffer*>::iterator i;
     bool pktContinue = true;

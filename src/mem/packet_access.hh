@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Nathan Binkert
  */
 
-/** @file
- * This devices just panics when touched. For example if you have a
- * kernel that touches the frame buffer which isn't allowed.
- */
+#include "arch/isa_traits.hh"
+#include "mem/packet.hh"
+#include "sim/byteswap.hh"
 
-#ifndef __DEV_BADDEV_HH__
-#define __DEV_BADDEV_HH__
+#ifndef __MEM_PACKET_ACCESS_HH__
+#define __MEM_PACKET_ACCESS_HH__
+// The memory system needs to have an endianness. This is the easiest
+// way to deal with it for now. At some point, we will have to remove
+// these functions and make the users do their own byte swapping since
+// the memory system does not in fact have an endianness.
 
-#include "base/range.hh"
-#include "dev/io_device.hh"
-
-
-/**
- * BadDevice
- * This device just panics when accessed. It is supposed to warn
- * the user that the kernel they are running has unsupported
- * options (i.e. frame buffer)
- */
-class BadDevice : public BasicPioDevice
+/** return the value of what is pointed to in the packet. */
+template <typename T>
+inline T
+Packet::get()
 {
-  private:
-    std::string devname;
+    assert(staticData || dynamicData);
+    assert(sizeof(T) <= size);
+    return TheISA::gtoh(*(T*)data);
+}
 
-  public:
-    struct Params : public BasicPioDevice::Params
-    {
-        std::string device_name;
-    };
-  protected:
-    const Params *params() const { return (const Params *)_params; }
+/** set the value in the data pointer to v. */
+template <typename T>
+inline void
+Packet::set(T v)
+{
+    assert(sizeof(T) <= size);
+    *(T*)data = TheISA::htog(v);
+}
 
-  public:
-     /**
-      * Constructor for the Baddev Class.
-      * @param p object parameters
-      * @param a base address of the write
-      */
-    BadDevice(Params *p);
-
-    virtual Tick read(PacketPtr pkt);
-    virtual Tick write(PacketPtr pkt);
-};
-
-#endif // __DEV_BADDEV_HH__
+#endif //__MEM_PACKET_ACCESS_HH__

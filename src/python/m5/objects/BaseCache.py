@@ -14,7 +14,6 @@ class BaseCache(MemObject):
         "This cache connects to a compressed memory")
     compression_latency = Param.Latency('0ns',
         "Latency in cycles of compression algorithm")
-    do_copy = Param.Bool(False, "perform fast copies in the cache")
     hash_delay = Param.Int(1, "time in cycles of hash access")
     lifo = Param.Bool(False,
         "whether this NIC partition should use LIFO repl. policy")

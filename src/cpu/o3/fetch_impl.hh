@@ -78,9 +78,12 @@ DefaultFetch<Impl>::IcachePort::recvStatusChange(Status status)
 
 template<class Impl>
 bool
-DefaultFetch<Impl>::IcachePort::recvTiming(Packet *pkt)
+DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
-    fetch->processCacheCompletion(pkt);
+    if (pkt->isResponse()) {
+        fetch->processCacheCompletion(pkt);
+    }
+    //else Snooped a coherence request, just return
     return true;
 }
 

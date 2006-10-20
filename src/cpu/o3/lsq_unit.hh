@@ -40,7 +40,7 @@
 #include "config/full_system.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
-#include "mem/packet_impl.hh"
+#include "mem/packet.hh"
 #include "mem/port.hh"
 
 /**
@@ -219,7 +219,7 @@ class LSQUnit {
     void writeback(DynInstPtr &inst, PacketPtr pkt);
 
     /** Handles completing the send of a store to memory. */
-    void storePostSend(Packet *pkt);
+    void storePostSend(PacketPtr pkt);
 
     /** Completes the store at the specified index. */
     void completeStore(int store_idx);

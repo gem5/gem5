@@ -33,9 +33,10 @@
  * Definition of BaseCache functions.
  */
 
-#include "mem/cache/base_cache.hh"
-#include "cpu/smt.hh"
 #include "cpu/base.hh"
+#include "cpu/smt.hh"
+#include "mem/cache/base_cache.hh"
+#include "mem/cache/miss/mshr.hh"
 
 using namespace std;
 
@@ -44,7 +45,6 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
     : Port(_name), cache(_cache), isCpuSide(_isCpuSide)
 {
     blocked = false;
-    cshrRetry = NULL;
     waitingOnRetry = false;
     //Start ports at null if more than one is created we should panic
     //cpuSidePort = NULL;
@@ -71,7 +71,7 @@ BaseCache::CachePort::deviceBlockSize()
 }
 
 bool
-BaseCache::CachePort::recvTiming(Packet *pkt)
+BaseCache::CachePort::recvTiming(PacketPtr pkt)
 {
     if (isCpuSide
         && !pkt->req->isUncacheable()
@@ -99,48 +99,23 @@ BaseCache::CachePort::recvTiming(Packet *pkt)
 }
 
 Tick
-BaseCache::CachePort::recvAtomic(Packet *pkt)
+BaseCache::CachePort::recvAtomic(PacketPtr pkt)
 {
     return cache->doAtomicAccess(pkt, isCpuSide);
 }
 
 void
-BaseCache::CachePort::recvFunctional(Packet *pkt)
+BaseCache::CachePort::recvFunctional(PacketPtr pkt)
 {
     //Check storage here first
-    list<Packet *>::iterator i = drainList.begin();
-    list<Packet *>::iterator end = drainList.end();
+    list<PacketPtr>::iterator i = drainList.begin();
+    list<PacketPtr>::iterator end = drainList.end();
     for (; i != end; ++i) {
-        Packet * target = *i;
+        PacketPtr target = *i;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt)) {
-            uint8_t* pkt_data;
-            uint8_t* write_data;
-            int data_size;
-            if (target->getAddr() < pkt->getAddr()) {
-                int offset = pkt->getAddr() - target->getAddr();
-                            pkt_data = pkt->getPtr<uint8_t>();
-                            write_data = target->getPtr<uint8_t>() + offset;
-                            data_size = target->getSize() - offset;
-                            assert(data_size > 0);
-                            if (data_size > pkt->getSize())
-                                data_size = pkt->getSize();
-            } else {
-                int offset = target->getAddr() - pkt->getAddr();
-                pkt_data = pkt->getPtr<uint8_t>() + offset;
-                write_data = target->getPtr<uint8_t>();
-                data_size = pkt->getSize() - offset;
-                assert(data_size > pkt->getSize());
-                if (data_size > target->getSize())
-                    data_size = target->getSize();
-            }
-
-            if (pkt->isWrite()) {
-                memcpy(pkt_data, write_data, data_size);
-            } else {
-                memcpy(write_data, pkt_data, data_size);
-            }
+            fixPacket(pkt, target);
         }
     }
     cache->doFunctionalAccess(pkt, isCpuSide);
@@ -149,7 +124,7 @@ BaseCache::CachePort::recvFunctional(Packet *pkt)
 void
 BaseCache::CachePort::recvRetry()
 {
-    Packet *pkt;
+    PacketPtr pkt;
     assert(waitingOnRetry);
     if (!drainList.empty()) {
         DPRINTF(CachePort, "%s attempting to send a retry for response\n", name());
@@ -179,12 +154,23 @@ BaseCache::CachePort::recvRetry()
             return;
         }
         pkt = cache->getPacket();
-        MSHR* mshr = (MSHR*)pkt->senderState;
+        MSHR* mshr = (MSHR*) pkt->senderState;
+        //Copy the packet, it may be modified/destroyed elsewhere
+        PacketPtr copyPkt = new Packet(*pkt);
+        copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+        mshr->pkt = copyPkt;
+
         bool success = sendTiming(pkt);
         DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
-        cache->sendResult(pkt, mshr, success);
+
         waitingOnRetry = !success;
+        if (waitingOnRetry) {
+            DPRINTF(CachePort, "%s now waiting on a retry\n", name());
+        }
+
+        cache->sendResult(pkt, mshr, success);
+
         if (success && cache->doMasterRequest())
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
@@ -195,20 +181,20 @@ BaseCache::CachePort::recvRetry()
     }
     else
     {
-        assert(cshrRetry);
+        assert(cache->doSlaveRequest());
         //pkt = cache->getCoherencePacket();
         //We save the packet, no reordering on CSHRS
-        pkt = cshrRetry;
+        pkt = cache->getCoherencePacket();
+        MSHR* cshr = (MSHR*)pkt->senderState;
         bool success = sendTiming(pkt);
+        cache->sendCoherenceResult(pkt, cshr, success);
         waitingOnRetry = !success;
-        if (success)
+        if (success && cache->doSlaveRequest())
         {
-            if (cache->doSlaveRequest()) {
-                //Still more to issue, rerequest in 1 cycle
-                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
-                reqCpu->schedule(curTick + 1);
-            }
-            cshrRetry = NULL;
+            DPRINTF(CachePort, "%s has more requests\n", name());
+            //Still more to issue, rerequest in 1 cycle
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            reqCpu->schedule(curTick + 1);
         }
     }
     if (waitingOnRetry) DPRINTF(CachePort, "%s STILL Waiting on retry\n", name());
@@ -246,7 +232,7 @@ BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort)
     pkt = NULL;
 }
 
-BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, Packet *_pkt)
+BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, PacketPtr _pkt)
     : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort), pkt(_pkt)
 {
     this->setFlags(AutoDelete);
@@ -289,15 +275,25 @@ BaseCache::CacheEvent::process()
 
             pkt = cachePort->cache->getPacket();
             MSHR* mshr = (MSHR*) pkt->senderState;
+            //Copy the packet, it may be modified/destroyed elsewhere
+            PacketPtr copyPkt = new Packet(*pkt);
+            copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+            mshr->pkt = copyPkt;
+
             bool success = cachePort->sendTiming(pkt);
             DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
                     pkt->getAddr(), success ? "succesful" : "unsuccesful");
-            cachePort->cache->sendResult(pkt, mshr, success);
+
             cachePort->waitingOnRetry = !success;
-            if (cachePort->waitingOnRetry) DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            if (cachePort->waitingOnRetry) {
+                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            }
+
+            cachePort->cache->sendResult(pkt, mshr, success);
             if (success && cachePort->cache->doMasterRequest())
             {
-                DPRINTF(CachePort, "%s still more MSHR requests to send\n", cachePort->name());
+                DPRINTF(CachePort, "%s still more MSHR requests to send\n",
+                        cachePort->name());
                 //Still more to issue, rerequest in 1 cycle
                 pkt = NULL;
                 this->schedule(curTick+1);
@@ -306,27 +302,21 @@ BaseCache::CacheEvent::process()
         else
         {
             //CSHR
-            if (!cachePort->cshrRetry) {
-                assert(cachePort->cache->doSlaveRequest());
-                pkt = cachePort->cache->getCoherencePacket();
-            }
-            else {
-                pkt = cachePort->cshrRetry;
-            }
+            assert(cachePort->cache->doSlaveRequest());
+            pkt = cachePort->cache->getCoherencePacket();
+            MSHR* cshr = (MSHR*) pkt->senderState;
             bool success = cachePort->sendTiming(pkt);
-            if (!success) {
-                //Need to send on a retry
-                cachePort->cshrRetry = pkt;
-                cachePort->waitingOnRetry = true;
-            }
-            else
+            cachePort->cache->sendCoherenceResult(pkt, cshr, success);
+            cachePort->waitingOnRetry = !success;
+            if (cachePort->waitingOnRetry)
+                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+            if (success && cachePort->cache->doSlaveRequest())
             {
-                cachePort->cshrRetry = NULL;
-                if (cachePort->cache->doSlaveRequest()) {
-                    //Still more to issue, rerequest in 1 cycle
-                    pkt = NULL;
-                    this->schedule(curTick+1);
-                }
+                DPRINTF(CachePort, "%s still more CSHR requests to send\n",
+                        cachePort->name());
+                //Still more to issue, rerequest in 1 cycle
+                pkt = NULL;
+                this->schedule(curTick+1);
             }
         }
         return;

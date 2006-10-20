@@ -92,7 +92,7 @@ class UniCoherence
      * @param current The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(Packet * &pkt, CacheBlk::State current)
+    CacheBlk::State getNewState(PacketPtr &pkt, CacheBlk::State current)
     {
         if (pkt->senderState) //Blocking Buffers don't get mshrs
         {
@@ -108,11 +108,19 @@ class UniCoherence
         else
             return BlkValid | BlkWritable;
     }
+
     /**
      * Return outstanding invalidate to forward.
      * @return The next invalidate to forward to lower levels of cache.
      */
-    Packet * getPacket();
+    PacketPtr getPacket();
+
+    /**
+     * Was the CSHR request was sent successfully?
+     * @param pkt The request.
+     * @param success True if the request was sent successfully.
+     */
+    void sendResult(PacketPtr &pkt, MSHR* cshr, bool success);
 
     /**
      * Handle snooped bus requests.
@@ -122,7 +130,7 @@ class UniCoherence
      * @param new_state The new coherence state of the block.
      * @return True if the request should be satisfied locally.
      */
-    bool handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
+    bool handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
                           CacheBlk::State &new_state);
 
     /**
@@ -131,6 +139,8 @@ class UniCoherence
     bool allowFastWrites() { return true; }
 
     bool hasProtocol() { return false; }
+
+    void propogateInvalidate(PacketPtr pkt, bool isTiming);
 };
 
 #endif //__UNI_COHERENCE_HH__

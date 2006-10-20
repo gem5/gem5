@@ -37,8 +37,6 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
-#include "mem/packet_impl.hh"
-#include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
@@ -183,7 +181,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         }
 
         if (fault == NoFault) {
-            Packet *pkt = new Packet(memReq, Packet::ReadReq,
+            PacketPtr pkt = new Packet(memReq, Packet::ReadReq,
                                      Packet::Broadcast);
 
             pkt->dataStatic(&machInst);

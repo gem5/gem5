@@ -40,45 +40,67 @@ UniCoherence::UniCoherence()
 {
 }
 
-Packet *
+PacketPtr
 UniCoherence::getPacket()
 {
-    bool unblock = cshrs.isFull();
-    Packet* pkt = cshrs.getReq();
-    cshrs.markInService((MSHR*)pkt->senderState);
-    if (!cshrs.havePending()) {
-        cache->clearSlaveRequest(Request_Coherence);
-    }
-    if (unblock) {
-        //since CSHRs are always used as buffers, should always get rid of one
-        assert(!cshrs.isFull());
-        cache->clearBlocked(Blocked_Coherence);
-    }
+    PacketPtr pkt = cshrs.getReq();
     return pkt;
 }
+
+void
+UniCoherence::sendResult(PacketPtr &pkt, MSHR* cshr, bool success)
+{
+    if (success)
+    {
+        bool unblock = cshrs.isFull();
+//        cshrs.markInService(cshr);
+        cshrs.deallocate(cshr);
+        if (!cshrs.havePending()) {
+            cache->clearSlaveRequest(Request_Coherence);
+        }
+        if (unblock) {
+            //since CSHRs are always used as buffers, should always get rid of one
+            assert(!cshrs.isFull());
+            cache->clearBlocked(Blocked_Coherence);
+        }
+    }
+}
+
 
 /**
  * @todo add support for returning slave requests, not doing them here.
  */
 bool
-UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
+UniCoherence::handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
                                CacheBlk::State &new_state)
 {
     new_state = 0;
     if (pkt->isInvalidate()) {
-        DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
-                pkt->getAddr(), blk);
-        // Forward to other caches
-        Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
-        cshrs.allocate(tmp);
-        cache->setSlaveRequest(Request_Coherence, curTick);
-        if (cshrs.isFull()) {
-            cache->setBlockedForSnoop(Blocked_Coherence);
-        }
-    } else {
-        if (blk) {
-            new_state = blk->status;
-        }
+            DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
+                    pkt->getAddr(), blk);
+    }
+    else if (blk) {
+        new_state = blk->status;
     }
     return false;
+}
+
+void
+UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
+{
+    if (pkt->isInvalidate()) {
+        if (isTiming) {
+            // Forward to other caches
+            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cshrs.allocate(tmp);
+            cache->setSlaveRequest(Request_Coherence, curTick);
+            if (cshrs.isFull())
+                cache->setBlockedForSnoop(Blocked_Coherence);
+        }
+        else {
+            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cache->cpuSidePort->sendAtomic(tmp);
+            delete tmp;
+        }
+    }
 }

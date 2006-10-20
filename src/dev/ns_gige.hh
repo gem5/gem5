@@ -375,10 +375,10 @@ class NSGigE : public PciDev
     ~NSGigE();
     const Params *params() const { return (const Params *)_params; }
 
-    virtual Tick writeConfig(Packet *pkt);
+    virtual Tick writeConfig(PacketPtr pkt);
 
-    virtual Tick read(Packet *pkt);
-    virtual Tick write(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 
     bool cpuIntrPending() const;
     void cpuIntrAck() { cpuIntrClear(); }

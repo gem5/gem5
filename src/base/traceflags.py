@@ -182,7 +182,8 @@ compoundFlagMap = {
     'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
     'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
     'O3CPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'O3CPU', 'Activity','Scoreboard','Writeback'],
-    'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU']
+    'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU'],
+    'All' : baseFlags
 }
 
 #############################################################

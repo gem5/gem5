@@ -28,6 +28,25 @@
 
 import m5
 from m5.objects import *
+import os, optparse, sys
+m5.AddToPath('../common')
+
+parser = optparse.OptionParser()
+
+parser.add_option("--caches", action="store_true")
+parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("-l", "--maxloads", default = "1000000000000", type="int")
+parser.add_option("-n", "--numtesters", default = "8", type="int")
+parser.add_option("-p", "--protocol",
+                  default="moesi",
+                  help="The coherence protocol to use for the L1'a (i.e. MOESI, MOSI)")
+
+(options, args) = parser.parse_args()
+
+if args:
+     print "Error: script doesn't take any positional arguments"
+     sys.exit(1)
 
 # --------------------
 # Base L1 Cache
@@ -38,7 +57,7 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 12
     tgts_per_mshr = 8
-    protocol = CoherenceProtocol(protocol='moesi')
+    protocol = CoherenceProtocol(protocol=options.protocol)
 
 # ----------------------
 # Base L2 Cache
@@ -51,28 +70,41 @@ class L2(BaseCache):
     tgts_per_mshr = 16
     write_buffers = 8
 
-#MAX CORES IS 8 with the fals sharing method
-nb_cores = 8
-cpus = [ MemTest(atomic=False, max_loads=1e12, percent_uncacheable=10, progress_interval=1000) for i in xrange(nb_cores) ]
+#MAX CORES IS 8 with the false sharing method
+if options.numtesters > 8:
+     print "Error: NUmber of testers limited to 8 because of false sharing"
+     sys,exit(1)
 
+if options.timing:
+     cpus = [ MemTest(atomic=False, max_loads=options.maxloads, percent_functional=50,
+                      percent_uncacheable=10, progress_interval=1000)
+              for i in xrange(options.numtesters) ]
+else:
+     cpus = [ MemTest(atomic=True, max_loads=options.maxloads, percent_functional=50,
+                      percent_uncacheable=10, progress_interval=1000)
+              for i in xrange(options.numtesters) ]
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(), membus = Bus(clock="500GHz", width=16))
+                physmem = PhysicalMemory(latency = "50ps"), membus = Bus(clock="500GHz", width=16))
 
 # l2cache & bus
-system.toL2Bus = Bus(clock="500GHz", width=16)
-system.l2c = L2(size='64kB', assoc=8)
-system.l2c.cpu_side = system.toL2Bus.port
+if options.caches:
+    system.toL2Bus = Bus(clock="500GHz", width=16)
+    system.l2c = L2(size='64kB', assoc=8)
+    system.l2c.cpu_side = system.toL2Bus.port
 
-# connect l2c to membus
-system.l2c.mem_side = system.membus.port
+    # connect l2c to membus
+    system.l2c.mem_side = system.membus.port
 
 which_port = 0
 # add L1 caches
 for cpu in cpus:
-    cpu.l1c = L1(size = '32kB', assoc = 4)
-    cpu.l1c.cpu_side = cpu.test
-    cpu.l1c.mem_side = system.toL2Bus.port
+    if options.caches:
+         cpu.l1c = L1(size = '32kB', assoc = 4)
+         cpu.test = cpu.l1c.cpu_side
+         cpu.l1c.mem_side = system.toL2Bus.port
+    else:
+         cpu.test = system.membus.port
     if  which_port == 0:
          system.funcmem.port = cpu.functional
          which_port = 1
@@ -89,7 +121,18 @@ system.physmem.port = system.membus.port
 # -----------------------
 
 root = Root( system = system )
-root.system.mem_mode = 'timing'
-#root.trace.flags="Cache CachePort MemoryAccess"
-#root.trace.cycle=1
+if options.timing:
+    root.system.mem_mode = 'timing'
+else:
+    root.system.mem_mode = 'atomic'
 
+# instantiate configuration
+m5.instantiate(root)
+
+# simulate until program terminates
+if options.maxtick:
+    exit_event = m5.simulate(options.maxtick)
+else:
+    exit_event = m5.simulate()
+
+print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()

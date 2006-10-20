@@ -75,7 +75,7 @@ class GHBPrefetcher : public Prefetcher<TagStore, Buffering>
 
     ~GHBPrefetcher() {}
 
-    void calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
+    void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                            std::list<Tick> &delays)
     {
         Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);

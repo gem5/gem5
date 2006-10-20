@@ -70,12 +70,12 @@ class Bridge : public MemObject
 
           public:
             Tick ready;
-            Packet *pkt;
+            PacketPtr pkt;
             Packet::SenderState *origSenderState;
             short origSrc;
             bool expectResponse;
 
-            PacketBuffer(Packet *_pkt, Tick t)
+            PacketBuffer(PacketPtr _pkt, Tick t)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
                   expectResponse(_pkt->needsResponse())
@@ -84,7 +84,7 @@ class Bridge : public MemObject
                     pkt->senderState = this;
             }
 
-            void fixResponse(Packet *pkt)
+            void fixResponse(PacketPtr pkt)
             {
                 assert(pkt->senderState == this);
                 pkt->setDest(origSrc);
@@ -109,7 +109,7 @@ class Bridge : public MemObject
          */
         bool queueFull() { return (sendQueue.size() == queueLimit); }
 
-        bool queueForSendTiming(Packet *pkt);
+        bool queueForSendTiming(PacketPtr pkt);
 
         void finishSend(PacketBuffer *buf);
 
@@ -146,7 +146,7 @@ class Bridge : public MemObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
@@ -154,11 +154,11 @@ class Bridge : public MemObject
 
         /** When receiving a Atomic requestfrom the peer port,
             pass it to the bridge. */
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         /** When receiving a status changefrom the peer port,
             pass it to the bridge. */

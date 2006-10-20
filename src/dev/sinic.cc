@@ -38,6 +38,7 @@
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
@@ -313,7 +314,7 @@ Device::prepareWrite(int cpu, int index)
  * I/O read of device register
  */
 Tick
-Device::read(Packet *pkt)
+Device::read(PacketPtr pkt)
 {
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
@@ -400,7 +401,7 @@ Device::iprRead(Addr daddr, int cpu, uint64_t &result)
  * I/O write of device register
  */
 Tick
-Device::write(Packet *pkt)
+Device::write(PacketPtr pkt)
 {
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);

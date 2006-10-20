@@ -55,6 +55,7 @@
 #include "base/statistics.hh"
 #include "base/str.hh"
 #include "base/time.hh"
+#include "config/pythonhome.hh"
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
 #include "mem/mem_object.hh"
@@ -144,6 +145,11 @@ main(int argc, char **argv)
 
     if (setenv("PYTHONPATH", pythonpath.c_str(), true) == -1)
         fatal("setenv: %s\n", strerror(errno));
+
+    char *python_home = getenv("PYTHONHOME");
+    if (!python_home)
+        python_home = PYTHONHOME;
+    Py_SetPythonHome(python_home);
 
     // initialize embedded Python interpreter
     Py_Initialize();

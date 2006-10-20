@@ -162,6 +162,9 @@ class Process : public SimObject
     int sim_fd(int tgt_fd);
 
     virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 //

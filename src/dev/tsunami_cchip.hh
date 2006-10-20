@@ -94,9 +94,9 @@ class TsunamiCChip : public BasicPioDevice
      */
     TsunamiCChip(Params *p);
 
-    virtual Tick read(Packet *pkt);
+    virtual Tick read(PacketPtr pkt);
 
-    virtual Tick write(Packet *pkt);
+    virtual Tick write(PacketPtr pkt);
 
     /**
      * post an RTC interrupt to the CPU

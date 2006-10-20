@@ -58,7 +58,6 @@ enum BlockedCause{
     Blocked_NoTargets,
     Blocked_NoWBBuffers,
     Blocked_Coherence,
-    Blocked_Copy,
     NUM_BLOCKED_CAUSES
 };
 
@@ -86,11 +85,11 @@ class BaseCache : public MemObject
         CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
 
       protected:
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -114,24 +113,25 @@ class BaseCache : public MemObject
 
         bool waitingOnRetry;
 
-        std::list<Packet *> drainList;
+        std::list<PacketPtr> drainList;
 
-        Packet *cshrRetry;
     };
 
     struct CacheEvent : public Event
     {
         CachePort *cachePort;
-        Packet *pkt;
+        PacketPtr pkt;
 
         CacheEvent(CachePort *_cachePort);
-        CacheEvent(CachePort *_cachePort, Packet *_pkt);
+        CacheEvent(CachePort *_cachePort, PacketPtr _pkt);
         void process();
         const char *description();
     };
 
-  protected:
+  public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
+
+  protected:
     CachePort *memSidePort;
 
     bool snoopRangesSent;
@@ -141,17 +141,17 @@ class BaseCache : public MemObject
 
   private:
     //To be defined in cache_impl.hh not in base class
-    virtual bool doTimingAccess(Packet *pkt, CachePort *cachePort, bool isCpuSide)
+    virtual bool doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
     {
         fatal("No implementation");
     }
 
-    virtual Tick doAtomicAccess(Packet *pkt, bool isCpuSide)
+    virtual Tick doAtomicAccess(PacketPtr pkt, bool isCpuSide)
     {
         fatal("No implementation");
     }
 
-    virtual void doFunctionalAccess(Packet *pkt, bool isCpuSide)
+    virtual void doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
     {
         fatal("No implementation");
     }
@@ -172,17 +172,23 @@ class BaseCache : public MemObject
         }
     }
 
-    virtual Packet *getPacket()
+    virtual PacketPtr getPacket()
     {
         fatal("No implementation");
     }
 
-    virtual Packet *getCoherencePacket()
+    virtual PacketPtr getCoherencePacket()
     {
         fatal("No implementation");
     }
 
-    virtual void sendResult(Packet* &pkt, MSHR* mshr, bool success)
+    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
+    {
+
+        fatal("No implementation");
+    }
+
+    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* mshr, bool success)
     {
 
         fatal("No implementation");
@@ -489,10 +495,13 @@ class BaseCache : public MemObject
      */
     void setSlaveRequest(RequestCause cause, Tick time)
     {
+        if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
+        {
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(cpuSidePort);
+            reqCpu->schedule(time);
+        }
         uint8_t flag = 1<<cause;
         slaveRequests |= flag;
-        assert("Implement\n" && 0);
-//	si->pktuest(time);
     }
 
     /**
@@ -510,15 +519,18 @@ class BaseCache : public MemObject
      * @param pkt The request being responded to.
      * @param time The time the response is ready.
      */
-    void respond(Packet *pkt, Tick time)
+    void respond(PacketPtr pkt, Tick time)
     {
         if (pkt->needsResponse()) {
             CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
             reqCpu->schedule(time);
         }
         else {
-            if (pkt->cmd == Packet::Writeback) delete pkt->req;
-            delete pkt;
+            if (pkt->cmd != Packet::UpgradeReq)
+            {
+                delete pkt->req;
+                delete pkt;
+            }
         }
     }
 
@@ -527,7 +539,7 @@ class BaseCache : public MemObject
      * @param pkt The request to respond to.
      * @param time The time the response is ready.
      */
-    void respondToMiss(Packet *pkt, Tick time)
+    void respondToMiss(PacketPtr pkt, Tick time)
     {
         if (!pkt->req->isUncacheable()) {
             missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] += time - pkt->time;
@@ -537,8 +549,11 @@ class BaseCache : public MemObject
             reqCpu->schedule(time);
         }
         else {
-            if (pkt->cmd == Packet::Writeback) delete pkt->req;
-            delete pkt;
+            if (pkt->cmd != Packet::UpgradeReq)
+            {
+                delete pkt->req;
+                delete pkt;
+            }
         }
     }
 
@@ -546,7 +561,7 @@ class BaseCache : public MemObject
      * Suppliess the data if cache to cache transfers are enabled.
      * @param pkt The bus transaction to fulfill.
      */
-    void respondToSnoop(Packet *pkt, Tick time)
+    void respondToSnoop(PacketPtr pkt, Tick time)
     {
         assert (pkt->needsResponse());
         CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);

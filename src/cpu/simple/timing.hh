@@ -84,9 +84,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void recvFunctional(Packet *pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void recvStatusChange(Status status);
 
@@ -96,13 +96,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         struct TickEvent : public Event
         {
-            Packet *pkt;
+            PacketPtr pkt;
             TimingSimpleCPU *cpu;
 
             TickEvent(TimingSimpleCPU *_cpu)
                 :Event(&mainEventQueue), cpu(_cpu) {}
             const char *description() { return "Timing CPU clock event"; }
-            void schedule(Packet *_pkt, Tick t);
+            void schedule(PacketPtr _pkt, Tick t);
         };
 
     };
@@ -117,7 +117,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
         virtual void recvRetry();
 
@@ -144,7 +144,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
       protected:
 
-        virtual bool recvTiming(Packet *pkt);
+        virtual bool recvTiming(PacketPtr pkt);
 
         virtual void recvRetry();
 
@@ -163,8 +163,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     IcachePort icachePort;
     DcachePort dcachePort;
 
-    Packet *ifetch_pkt;
-    Packet *dcache_pkt;
+    PacketPtr ifetch_pkt;
+    PacketPtr dcache_pkt;
 
     int cpu_id;
     Tick previousTick;
@@ -192,8 +192,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
-    void completeIfetch(Packet *);
-    void completeDataAccess(Packet *);
+    void completeIfetch(PacketPtr );
+    void completeDataAccess(PacketPtr );
     void advanceInst(Fault fault);
   private:
     void completeDrain();

@@ -49,9 +49,9 @@ class MSHR;
 class MSHR {
   public:
     /** Defines the Data structure of the MSHR targetlist. */
-    typedef std::list<Packet *> TargetList;
+    typedef std::list<PacketPtr> TargetList;
     /** Target list iterator. */
-    typedef std::list<Packet *>::iterator TargetListIterator;
+    typedef std::list<PacketPtr>::iterator TargetListIterator;
     /** A list of MSHRs. */
     typedef std::list<MSHR *> List;
     /** MSHR list iterator. */
@@ -68,7 +68,7 @@ class MSHR {
     /** Thread number of the miss. */
     int threadNum;
     /** The pktuest that is forwarded to the next level of the hierarchy. */
-    Packet * pkt;
+    PacketPtr pkt;
     /** The number of currently allocated targets. */
     short ntargets;
     /** The original pktuesting command. */
@@ -101,13 +101,13 @@ public:
      * @param pkt  The original miss.
      */
     void allocate(Packet::Command cmd, Addr addr, int size,
-                  Packet * &pkt);
+                  PacketPtr &pkt);
 
     /**
      * Allocate this MSHR as a buffer for the given pktuest.
      * @param target The memory pktuest to buffer.
      */
-    void allocateAsBuffer(Packet * &target);
+    void allocateAsBuffer(PacketPtr &target);
 
     /**
      * Mark this MSHR as free.
@@ -118,7 +118,7 @@ public:
      * Add a pktuest to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(Packet * &target);
+    void allocateTarget(PacketPtr &target);
 
     /** A simple constructor. */
     MSHR();
@@ -147,7 +147,7 @@ public:
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Packet * getTarget()
+    PacketPtr getTarget()
     {
         return targets.front();
     }

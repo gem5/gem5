@@ -40,6 +40,7 @@
 #include "dev/io_device.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
+#include "sim/byteswap.hh"
 
 #define BAR_IO_MASK 0x3
 #define BAR_MEM_MASK 0xF
@@ -83,7 +84,7 @@ class PciDev : public DmaDevice
       protected:
         PciDev *device;
 
-        virtual Tick recvAtomic(Packet *pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop);
@@ -201,7 +202,7 @@ class PciDev : public DmaDevice
      * for normal operations that it does not need to override.
      * @param pkt packet containing the write the offset into config space
      */
-    virtual Tick writeConfig(Packet *pkt);
+    virtual Tick writeConfig(PacketPtr pkt);
 
 
     /**
@@ -210,7 +211,7 @@ class PciDev : public DmaDevice
      * for normal operations that it does not need to override.
      * @param pkt packet containing the write the offset into config space
      */
-    virtual Tick readConfig(Packet *pkt);
+    virtual Tick readConfig(PacketPtr pkt);
 
   public:
     Addr pciToDma(Addr pciAddr) const

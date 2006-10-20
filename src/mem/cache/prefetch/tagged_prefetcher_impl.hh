@@ -50,7 +50,7 @@ TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
 template <class TagStore, class Buffering>
 void
 TaggedPrefetcher<TagStore, Buffering>::
-calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
+calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                   std::list<Tick> &delays)
 {
     Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);

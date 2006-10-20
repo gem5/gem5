@@ -42,6 +42,8 @@
 #include "dev/simconsole.hh"
 #include "dev/uart8250.hh"
 #include "dev/platform.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 
 using namespace std;
@@ -110,7 +112,7 @@ Uart8250::Uart8250(Params *p)
 }
 
 Tick
-Uart8250::read(Packet *pkt)
+Uart8250::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -192,7 +194,7 @@ Uart8250::read(Packet *pkt)
 }
 
 Tick
-Uart8250::write(Packet *pkt)
+Uart8250::write(PacketPtr pkt)
 {
 
     assert(pkt->result == Packet::Unknown);

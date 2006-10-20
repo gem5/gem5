@@ -64,7 +64,7 @@ class TaggedPrefetcher : public Prefetcher<TagStore, Buffering>
 
     ~TaggedPrefetcher() {}
 
-    void calculatePrefetch(Packet * &pkt, std::list<Addr> &addresses,
+    void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                            std::list<Tick> &delays);
 };
 

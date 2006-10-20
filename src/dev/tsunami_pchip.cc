@@ -42,6 +42,7 @@
 #include "dev/tsunamireg.h"
 #include "dev/tsunami.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -68,7 +69,7 @@ TsunamiPChip::TsunamiPChip(Params *p)
 }
 
 Tick
-TsunamiPChip::read(Packet *pkt)
+TsunamiPChip::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -150,7 +151,7 @@ TsunamiPChip::read(Packet *pkt)
 }
 
 Tick
-TsunamiPChip::write(Packet *pkt)
+TsunamiPChip::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);

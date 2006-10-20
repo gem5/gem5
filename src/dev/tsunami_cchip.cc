@@ -39,12 +39,14 @@
 
 #include "arch/alpha/ev5.hh"
 #include "base/trace.hh"
+#include "cpu/intr_control.hh"
+#include "cpu/thread_context.hh"
+#include "dev/tsunami.hh"
 #include "dev/tsunami_cchip.hh"
 #include "dev/tsunamireg.h"
-#include "dev/tsunami.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "mem/port.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/intr_control.hh"
 #include "sim/builder.hh"
 #include "sim/system.hh"
 
@@ -72,7 +74,7 @@ TsunamiCChip::TsunamiCChip(Params *p)
 }
 
 Tick
-TsunamiCChip::read(Packet *pkt)
+TsunamiCChip::read(PacketPtr pkt)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
@@ -182,7 +184,7 @@ TsunamiCChip::read(Packet *pkt)
 }
 
 Tick
-TsunamiCChip::write(Packet *pkt)
+TsunamiCChip::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;
