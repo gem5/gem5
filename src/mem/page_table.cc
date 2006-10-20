@@ -170,11 +170,14 @@ PageTable::serialize(std::ostream &os)
 
     int count = 0;
 
-    m5::hash_map<Addr,Addr>::iterator iter;
-    m5::hash_map<Addr,Addr>::iterator end;
-    for (iter = pTable.begin(); iter != end; ++iter,++count) {
-        paramOut(os, csprintf("ptable.entry%dvaddr", count),iter->first);
-        paramOut(os, csprintf("ptable.entry%dpaddr", count),iter->second);
+    m5::hash_map<Addr,Addr>::iterator iter = pTable.begin();
+    m5::hash_map<Addr,Addr>::iterator end = pTable.end();
+    while (iter != end) {
+        paramOut(os, csprintf("ptable.entry%dvaddr", count), iter->first);
+        paramOut(os, csprintf("ptable.entry%dpaddr", count), iter->second);
+
+        ++iter;
+        ++count;
     }
     assert(count == pTable.size());
 }
