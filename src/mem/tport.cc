@@ -33,12 +33,13 @@
 void
 SimpleTimingPort::recvFunctional(Packet *pkt)
 {
-    //First check queued events
-    std::list<Packet *>::iterator i = transmitList.begin();
-    std::list<Packet *>::iterator end = transmitList.end();
-    bool cont = true;
+    std::list<Packet *>::iterator i;
+    std::list<Packet *>::iterator end;
 
-    while (i != end && cont) {
+     //First check queued events
+    i = transmitList.begin();
+    end = transmitList.end();
+    while (i != end) {
         Packet * target = *i;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
@@ -46,8 +47,9 @@ SimpleTimingPort::recvFunctional(Packet *pkt)
             fixPacket(pkt, target);
 
     }
+
     //Then just do an atomic access and throw away the returned latency
-    if (cont)
+    if (pkt->result != Packet::Success)
         recvAtomic(pkt);
 }
 

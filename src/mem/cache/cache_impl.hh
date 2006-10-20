@@ -560,7 +560,6 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
     if (!update) {
         // Check for data in MSHR and writebuffer.
         if (mshr) {
-            warn("Found outstanding miss on an non-update probe");
             MSHR::TargetList *targets = mshr->getTargetList();
             MSHR::TargetList::iterator i = targets->begin();
             MSHR::TargetList::iterator end = targets->end();
@@ -568,71 +567,15 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
                 Packet * target = *i;
                 // If the target contains data, and it overlaps the
                 // probed request, need to update data
-                if (target->isWrite() && target->intersect(pkt)) {
-                    uint8_t* pkt_data;
-                    uint8_t* write_data;
-                    int data_size;
-                    if (target->getAddr() < pkt->getAddr()) {
-                        int offset = pkt->getAddr() - target->getAddr();
-                        pkt_data = pkt->getPtr<uint8_t>();
-                        write_data = target->getPtr<uint8_t>() + offset;
-                        data_size = target->getSize() - offset;
-                        assert(data_size > 0);
-                        if (data_size > pkt->getSize())
-                            data_size = pkt->getSize();
-                    } else {
-                        int offset = target->getAddr() - pkt->getAddr();
-                        pkt_data = pkt->getPtr<uint8_t>() + offset;
-                        write_data = target->getPtr<uint8_t>();
-                        data_size = pkt->getSize() - offset;
-                        assert(data_size >= pkt->getSize());
-                        if (data_size > target->getSize())
-                            data_size = target->getSize();
-                    }
-
-                    if (pkt->isWrite()) {
-                        memcpy(pkt_data, write_data, data_size);
-                    } else {
-                        pkt->flags |= SATISFIED;
-                        pkt->result = Packet::Success;
-                        memcpy(write_data, pkt_data, data_size);
-                    }
+                if (target->intersect(pkt)) {
+                    fixPacket(pkt, target);
                 }
             }
         }
         for (int i = 0; i < writes.size(); ++i) {
             Packet * write = writes[i]->pkt;
             if (write->intersect(pkt)) {
-                warn("Found outstanding write on an non-update probe");
-                uint8_t* pkt_data;
-                uint8_t* write_data;
-                int data_size;
-                if (write->getAddr() < pkt->getAddr()) {
-                    int offset = pkt->getAddr() - write->getAddr();
-                    pkt_data = pkt->getPtr<uint8_t>();
-                    write_data = write->getPtr<uint8_t>() + offset;
-                    data_size = write->getSize() - offset;
-                    assert(data_size > 0);
-                    if (data_size > pkt->getSize())
-                        data_size = pkt->getSize();
-                } else {
-                    int offset = write->getAddr() - pkt->getAddr();
-                    pkt_data = pkt->getPtr<uint8_t>() + offset;
-                    write_data = write->getPtr<uint8_t>();
-                    data_size = pkt->getSize() - offset;
-                    assert(data_size >= pkt->getSize());
-                    if (data_size > write->getSize())
-                        data_size = write->getSize();
-                }
-
-                if (pkt->isWrite()) {
-                    memcpy(pkt_data, write_data, data_size);
-                } else {
-                    pkt->flags |= SATISFIED;
-                    pkt->result = Packet::Success;
-                    memcpy(write_data, pkt_data, data_size);
-                }
-
+                fixPacket(pkt, write);
             }
         }
         if (pkt->isRead()
