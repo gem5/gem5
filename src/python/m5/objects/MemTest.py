@@ -13,6 +13,7 @@ class MemTest(SimObject):
     percent_reads = Param.Percent(65, "target read percentage")
     percent_source_unaligned = Param.Percent(50,
         "percent of copy source address that are unaligned")
+    percent_functional = Param.Percent(50, "percent of access that are functional")
     percent_uncacheable = Param.Percent(10,
         "target uncacheable percentage")
     progress_interval = Param.Counter(1000000,

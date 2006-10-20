@@ -151,7 +151,7 @@ fixPacket(PacketPtr func, PacketPtr timing)
     Addr timingStart    = timing->getAddr();
     Addr timingEnd      = timing->getAddr() + timing->getSize() - 1;
 
-    assert(!(funcStart > timingEnd || timingStart < funcEnd));
+    assert(!(funcStart > timingEnd || timingStart > funcEnd));
 
     if (DTRACE(FunctionalAccess)) {
        DebugOut() << func;

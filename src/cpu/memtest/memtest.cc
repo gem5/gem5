@@ -113,7 +113,7 @@ MemTest::MemTest(const string &name,
 //		 PhysicalMemory *check_mem,
                  unsigned _memorySize,
                  unsigned _percentReads,
-//		 unsigned _percentCopies,
+                 unsigned _percentFunctional,
                  unsigned _percentUncacheable,
                  unsigned _progressInterval,
                  unsigned _percentSourceUnaligned,
@@ -130,7 +130,7 @@ MemTest::MemTest(const string &name,
 //      checkMem(check_mem),
       size(_memorySize),
       percentReads(_percentReads),
-//      percentCopies(_percentCopies),
+      percentFunctional(_percentFunctional),
       percentUncacheable(_percentUncacheable),
       progressInterval(_progressInterval),
       nextProgressMessage(_progressInterval),
@@ -345,7 +345,7 @@ MemTest::tick()
     } else {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    bool probe = (random() % 2 == 1) && !(flags & UNCACHEABLE);
+    bool probe = (random() % 100 < percentFunctional) && !(flags & UNCACHEABLE);
     //bool probe = false;
 
     paddr &= ~((1 << access_size) - 1);
@@ -501,7 +501,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
 //    SimObjectParam<PhysicalMemory *> check_mem;
     Param<unsigned> memory_size;
     Param<unsigned> percent_reads;
-//    Param<unsigned> percent_copies;
+    Param<unsigned> percent_functional;
     Param<unsigned> percent_uncacheable;
     Param<unsigned> progress_interval;
     Param<unsigned> percent_source_unaligned;
@@ -520,7 +520,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
 //    INIT_PARAM(check_mem, "check memory"),
     INIT_PARAM(memory_size, "memory size"),
     INIT_PARAM(percent_reads, "target read percentage"),
-//    INIT_PARAM(percent_copies, "target copy percentage"),
+    INIT_PARAM(percent_functional, "percentage of access that are functional"),
     INIT_PARAM(percent_uncacheable, "target uncacheable percentage"),
     INIT_PARAM(progress_interval, "progress report interval (in accesses)"),
     INIT_PARAM(percent_source_unaligned,
@@ -537,7 +537,7 @@ END_INIT_SIM_OBJECT_PARAMS(MemTest)
 CREATE_SIM_OBJECT(MemTest)
 {
     return new MemTest(getInstanceName(), /*cache->getInterface(),*/ /*main_mem,*/
-                       /*check_mem,*/ memory_size, percent_reads, /*percent_copies,*/
+                       /*check_mem,*/ memory_size, percent_reads, percent_functional,
                        percent_uncacheable, progress_interval,
                        percent_source_unaligned, percent_dest_unaligned,
                        trace_addr, max_loads, atomic);

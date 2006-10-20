@@ -55,7 +55,7 @@ class MemTest : public MemObject
 //	    PhysicalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
-//	    unsigned _percentCopies,
+            unsigned _percentFunctional,
             unsigned _percentUncacheable,
             unsigned _progressInterval,
             unsigned _percentSourceUnaligned,
@@ -144,7 +144,7 @@ class MemTest : public MemObject
     unsigned size;		// size of testing memory region
 
     unsigned percentReads;	// target percentage of read accesses
-//    unsigned percentCopies;	// target percentage of copy accesses
+    unsigned percentFunctional;	// target percentage of functional accesses
     unsigned percentUncacheable;
 
     int id;
