@@ -30,6 +30,9 @@
 
 /* @file
  * Device model for Intel's 8254x line of gigabit ethernet controllers.
+ * In particular an 82547 revision 2 (82547GI) MAC because it seems to have the
+ * fewest workarounds in the driver. It will probably work with most of the
+ * other MACs with slight modifications.
  */
 
 #include "base/inet.hh"
@@ -39,10 +42,38 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
+using namespace iGbReg;
+
 IGbE::IGbE(Params *p)
     : PciDev(p), etherInt(NULL)
 {
+    // Initialized internal registers per Intel documentation
+    regs.tctl.reg       = 0;
+    regs.rctl.reg       = 0;
+    regs.ctrl.reg       = 0;
+    regs.ctrl.fd        = 1;
+    regs.ctrl.lrst      = 1;
+    regs.ctrl.speed     = 2;
+    regs.ctrl.frcspd    = 1;
+    regs.sts.reg        = 0;
+    regs.eecd.reg       = 0;
+    regs.eecd.fwe       = 1;
+    regs.eecd.ee_type   = 1;
+    regs.eerd.reg       = 0;
+    regs.icd.reg        = 0;
+    regs.imc.reg        = 0;
+    regs.rctl.reg       = 0;
+    regs.tctl.reg       = 0;
+    regs.manc.reg       = 0;
 
+    eeOpBits            = 0;
+    eeAddrBits          = 0;
+    eeDataBits          = 0;
+    eeOpcode            = 0;
+
+    memset(&flash, 0, EEPROM_SIZE);
+    // Magic happy checksum value
+    flash[0] = 0xBABA;
 }
 
 
@@ -74,14 +105,48 @@ IGbE::read(Packet *pkt)
     // Only Memory register BAR is allowed
     assert(bar == 0);
 
-    DPRINTF(Ethernet, "Accessed devie register %#X\n", daddr);
+    // Only 32bit accesses allowed
+    assert(pkt->getSize() == 4);
+
+    DPRINTF(Ethernet, "Read device register %#X\n", daddr);
 
     pkt->allocate();
-
 
     ///
     /// Handle read of register here
     ///
+
+    switch (daddr) {
+      case CTRL:
+       pkt->set<uint32_t>(regs.ctrl.reg);
+       break;
+      case STATUS:
+       pkt->set<uint32_t>(regs.sts.reg);
+       break;
+      case EECD:
+       pkt->set<uint32_t>(regs.eecd.reg);
+       break;
+      case EERD:
+       pkt->set<uint32_t>(regs.eerd.reg);
+       break;
+      case ICR:
+       pkt->set<uint32_t>(regs.icd.reg);
+       break;
+      case IMC:
+       pkt->set<uint32_t>(regs.imc.reg);
+       break;
+      case RCTL:
+       pkt->set<uint32_t>(regs.rctl.reg);
+       break;
+      case TCTL:
+       pkt->set<uint32_t>(regs.tctl.reg);
+       break;
+      case MANC:
+       pkt->set<uint32_t>(regs.manc.reg);
+       break;
+      default:
+       panic("Read request to unknown register number: %#x\n", daddr);
+    };
 
     pkt->result = Packet::Success;
     return pioDelay;
@@ -93,17 +158,100 @@ IGbE::write(Packet *pkt)
     int bar;
     Addr daddr;
 
+
     if (!getBAR(pkt->getAddr(), bar, daddr))
         panic("Invalid PCI memory access to unmapped memory.\n");
 
     // Only Memory register BAR is allowed
     assert(bar == 0);
 
-    DPRINTF(Ethernet, "Accessed devie register %#X\n", daddr);
+    // Only 32bit accesses allowed
+    assert(pkt->getSize() == sizeof(uint32_t));
+
+    DPRINTF(Ethernet, "Wrote device register %#X value %#X\n", daddr, pkt->get<uint32_t>());
 
     ///
     /// Handle write of register here
     ///
+    uint32_t val = pkt->get<uint32_t>();
+
+    switch (daddr) {
+      case CTRL:
+       regs.ctrl.reg = val;
+       break;
+      case STATUS:
+       regs.sts.reg = val;
+       break;
+      case EECD:
+       int oldClk;
+       oldClk = regs.eecd.sk;
+       regs.eecd.reg = val;
+       // See if this is a eeprom access and emulate accordingly
+       if (!oldClk && regs.eecd.sk) {
+           if (eeOpBits < 8) {
+               eeOpcode = eeOpcode << 1 | regs.eecd.din;
+               eeOpBits++;
+           } else if (eeAddrBits < 8 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
+               eeAddr = eeAddr << 1 | regs.eecd.din;
+               eeAddrBits++;
+           } else if (eeDataBits < 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
+               assert(eeAddr < EEPROM_SIZE);
+               DPRINTF(Ethernet, "EEPROM bit read: %d word: %#X\n",
+                       flash[eeAddr] >> eeDataBits & 0x1, flash[eeAddr]);
+               regs.eecd.dout = (flash[eeAddr] >> eeDataBits) & 0x1;
+               eeDataBits++;
+           } else if (eeDataBits < 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI) {
+               regs.eecd.dout = 0;
+               eeDataBits++;
+           } else
+               panic("What's going on with eeprom interface? opcode:"
+                      " %#x:%d addr: %#x:%d, data: %d\n", (uint32_t)eeOpcode,
+                      (uint32_t)eeOpBits, (uint32_t)eeAddr,
+                      (uint32_t)eeAddrBits, (uint32_t)eeDataBits);
+
+           // Reset everything for the next command
+           if ((eeDataBits == 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) ||
+               (eeDataBits == 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI)) {
+               eeOpBits = 0;
+               eeAddrBits = 0;
+               eeDataBits = 0;
+               eeOpcode = 0;
+               eeAddr = 0;
+           }
+
+           DPRINTF(Ethernet, "EEPROM: opcode: %#X:%d\n",
+                   (uint32_t)eeOpcode, (uint32_t) eeOpBits);
+           if (eeOpBits == 8 && !(eeOpcode == EEPROM_READ_OPCODE_SPI ||
+                                  eeOpcode == EEPROM_RDSR_OPCODE_SPI ))
+               panic("Unknown eeprom opcode: %#X:%d\n", (uint32_t)eeOpcode,
+                       (uint32_t)eeOpBits);
+
+
+       }
+       // If driver requests eeprom access, immediately give it to it
+       regs.eecd.ee_gnt = regs.eecd.ee_req;
+       break;
+      case EERD:
+       regs.eerd.reg = val;
+       break;
+      case ICR:
+       regs.icd.reg = val;
+       break;
+      case IMC:
+       regs.imc.reg = val;
+       break;
+      case RCTL:
+       regs.rctl.reg = val;
+       break;
+      case TCTL:
+       regs.tctl.reg = val;
+       break;
+      case MANC:
+       regs.manc.reg = val;
+       break;
+      default:
+       panic("Write request to unknown register number: %#x\n", daddr);
+    };
 
     pkt->result = Packet::Success;
     return pioDelay;

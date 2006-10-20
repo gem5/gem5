@@ -71,7 +71,7 @@ class IGbE(PciDevice):
 
 class IGbEPciData(PciConfigData):
     VendorID = 0x8086
-    DeviceID = 0x1026
+    DeviceID = 0x1075
     SubsystemID = 0x1008
     SubsystemVendorID = 0x8086
     Status = 0x0000

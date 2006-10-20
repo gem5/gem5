@@ -39,6 +39,7 @@
 #include "base/statistics.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
+#include "dev/i8254xGBe_defs.hh"
 #include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
 #include "sim/eventq.hh"
@@ -49,6 +50,12 @@ class IGbE : public PciDev
 {
   private:
     IGbEInt *etherInt;
+    iGbReg::Regs regs;
+    int eeOpBits, eeAddrBits, eeDataBits;
+    uint8_t eeOpcode, eeAddr;
+
+    uint16_t flash[iGbReg::EEPROM_SIZE];
+
 
   public:
     struct Params : public PciDev::Params
