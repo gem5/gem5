@@ -76,19 +76,31 @@ UniCoherence::handleBusRequest(Packet * &pkt, CacheBlk *blk, MSHR *mshr,
 {
     new_state = 0;
     if (pkt->isInvalidate()) {
-        DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
-                pkt->getAddr(), blk);
-        // Forward to other caches
-        Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
-        cshrs.allocate(tmp);
-        cache->setSlaveRequest(Request_Coherence, curTick);
-        if (cshrs.isFull()) {
-            cache->setBlockedForSnoop(Blocked_Coherence);
-        }
-    } else {
-        if (blk) {
-            new_state = blk->status;
-        }
+            DPRINTF(Cache, "snoop inval on blk %x (blk ptr %x)\n",
+                    pkt->getAddr(), blk);
+    }
+    else if (blk) {
+        new_state = blk->status;
     }
     return false;
+}
+
+void
+UniCoherence::propogateInvalidate(Packet *pkt, bool isTiming)
+{
+    if (pkt->isInvalidate()) {
+        if (isTiming) {
+            // Forward to other caches
+            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cshrs.allocate(tmp);
+            cache->setSlaveRequest(Request_Coherence, curTick);
+            if (cshrs.isFull())
+                cache->setBlockedForSnoop(Blocked_Coherence);
+        }
+        else {
+            Packet * tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cache->cpuSidePort->sendAtomic(tmp);
+            delete tmp;
+        }
+    }
 }

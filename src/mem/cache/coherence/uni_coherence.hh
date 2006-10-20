@@ -139,6 +139,8 @@ class UniCoherence
     bool allowFastWrites() { return true; }
 
     bool hasProtocol() { return false; }
+
+    void propogateInvalidate(Packet *pkt, bool isTiming);
 };
 
 #endif //__UNI_COHERENCE_HH__

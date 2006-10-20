@@ -128,8 +128,10 @@ class BaseCache : public MemObject
         const char *description();
     };
 
-  protected:
+  public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
+
+  protected:
     CachePort *memSidePort;
 
     bool snoopRangesSent;

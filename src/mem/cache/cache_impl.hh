@@ -373,10 +373,15 @@ Cache<TagStore,Buffering,Coherence>::snoop(Packet * &pkt)
         //Revisit this for multi level coherence
         return;
     }
+
+    //Send a timing (true) invalidate up if the protocol calls for it
+    coherence->propogateInvalidate(pkt, true);
+
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
-    if (coherence->hasProtocol()) { //@todo Move this into handle bus req
+    if (coherence->hasProtocol() || pkt->isInvalidate()) {
+        //@todo Move this into handle bus req
         //If we find an mshr, and it is in service, we need to NACK or
         //invalidate
         if (mshr) {
@@ -626,6 +631,7 @@ Cache<TagStore,Buffering,Coherence>::probe(Packet * &pkt, bool update,
 
             }
         }
+        return 0;
     } else if (!blk) {
         // update the cache state and statistics
         if (mshr || !writes.empty()){
@@ -713,24 +719,27 @@ template<class TagStore, class Buffering, class Coherence>
 Tick
 Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
 {
-        Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-        BlkType *blk = tags->findBlock(pkt);
-        MSHR *mshr = missQueue->findMSHR(blk_addr);
-        CacheBlk::State new_state = 0;
-        bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
-        if (satisfy) {
-            DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
-                    "now supplying data, new state is %i\n",
-                    pkt->cmdString(), blk_addr, new_state);
+    //Send a atomic (false) invalidate up if the protocol calls for it
+    coherence->propogateInvalidate(pkt, true);
+
+    Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+    BlkType *blk = tags->findBlock(pkt);
+    MSHR *mshr = missQueue->findMSHR(blk_addr);
+    CacheBlk::State new_state = 0;
+    bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
+    if (satisfy) {
+        DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
+                "now supplying data, new state is %i\n",
+                pkt->cmdString(), blk_addr, new_state);
 
             tags->handleSnoop(blk, new_state, pkt);
             return hitLatency;
-        }
-        if (blk)
-            DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
-                    "new state is %i\n",
+    }
+    if (blk)
+        DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
+                "new state is %i\n",
                     pkt->cmdString(), blk_addr, new_state);
-        tags->handleSnoop(blk, new_state);
-        return 0;
+    tags->handleSnoop(blk, new_state);
+    return 0;
 }
 
