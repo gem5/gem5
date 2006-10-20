@@ -347,7 +347,10 @@ sticky_opts.AddOptions(
     ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
     ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
     BoolOption('BATCH', 'Use batch pool for build and tests', False),
-    ('BATCH_CMD', 'Batch pool submission command name', 'qdo')
+    ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
+    ('PYTHONHOME',
+     'Override the default PYTHONHOME for this system (use with caution)',
+     '%s:%s' % (sys.prefix, sys.exec_prefix))
     )
 
 # Non-sticky options only apply to the current build.
@@ -359,7 +362,7 @@ nonsticky_opts.AddOptions(
 # These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                      'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
-                     'USE_CHECKER']
+                     'USE_CHECKER', 'PYTHONHOME']
 
 # Define a handy 'no-op' action
 def no_action(target, source, env):
@@ -399,8 +402,13 @@ def config_emitter(target, source, env):
     option = str(target[0])
     # True target is config header file
     target = os.path.join('config', option.lower() + '.hh')
-    # Force value to 0/1 even if it's a Python bool
-    val = int(eval(str(env[option])))
+    val = env[option]
+    if isinstance(val, bool):
+        # Force value to 0/1
+        val = int(val)
+    elif isinstance(val, str):
+        val = '"' + val + '"'
+        
     # Sources are option name & value (packaged in SCons Value nodes)
     return ([target], [Value(option), Value(val)])
 
