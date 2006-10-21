@@ -46,17 +46,22 @@ parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("-n", "--numcpus",
                   help="Number of cpus in total", type="int")
 parser.add_option("-f", "--frequency",
+                  default = "1GHz",
                   help="Frequency of each CPU")
 parser.add_option("-p", "--protocol",
                   default="moesi",
                   help="The coherence protocol to use for the L1'a (i.e. MOESI, MOSI)")
-parser.add_option("--l1size")
-parser.add_option("--l1latency")
-parser.add_option("--l2size")
-parser.add_option("--l2latency")
+parser.add_option("--l1size",
+                  default = "32kB")
+parser.add_option("--l1latency",
+                  default = 1)
+parser.add_option("--l2size",
+                  default = "256kB")
+parser.add_option("--l2latency",
+                  default = 10)
 parser.add_option("--rootdir",
                   help="ROot directory of Splash2",
-                  default="../../Splash2/codes")
+                  default="/dist/splash2/codes")
 parser.add_option("-b", "--benchmark",
                   help="Splash 2 benchmark to run")
 
@@ -64,6 +69,10 @@ parser.add_option("-b", "--benchmark",
 
 if args:
     print "Error: script doesn't take any positional arguments"
+    sys.exit(1)
+
+if not options.numcpus:
+    print "Specify the number of cpus with -n"
     sys.exit(1)
 
 # --------------------
@@ -75,53 +84,53 @@ class Cholesky(LiveProcess):
              + options.rootdir + '/kernels/cholesky/inputs/tk23.O'
 
 class FFT(LiveProcess):
-        executable = options.rootdir + 'kernels/fft/FFT'
+        executable = options.rootdir + '/kernels/fft/FFT'
         cmd = 'FFT -p' + str(options.numcpus) + ' -m18'
 
 class LU_contig(LiveProcess):
-        executable = options.rootdir + 'kernels/lu/contiguous_blocks/LU'
+        executable = options.rootdir + '/kernels/lu/contiguous_blocks/LU'
         cmd = 'LU -p' + str(options.numcpus)
 
 class LU_noncontig(LiveProcess):
-        executable = options.rootdir + 'kernels/lu/non_contiguous_blocks/LU'
+        executable = options.rootdir + '/kernels/lu/non_contiguous_blocks/LU'
         cmd = 'LU -p' + str(options.numcpus)
 
 class Radix(LiveProcess):
-        executable = options.rootdir + 'kernels/radix/RADIX'
+        executable = options.rootdir + '/kernels/radix/RADIX'
         cmd = 'RADIX -n524288 -p' + str(options.numcpus)
 
 class Barnes(LiveProcess):
-        executable = options.rootdir + 'apps/barnes/BARNES'
+        executable = options.rootdir + '/apps/barnes/BARNES'
         cmd = 'BARNES'
-        input = options.rootdir + 'apps/barnes/input.p' + str(options.numcpus)
+        input = options.rootdir + '/apps/barnes/input.p' + str(options.numcpus)
 
 class FMM(LiveProcess):
-        executable = options.rootdir + 'apps/fmm/FMM'
+        executable = options.rootdir + '/apps/fmm/FMM'
         cmd = 'FMM'
-        input = options.rootdir + 'apps/fmm/inputs/input.2048.p' + str(options.numcpus)
+        input = options.rootdir + '/apps/fmm/inputs/input.2048.p' + str(options.numcpus)
 
 class Ocean_contig(LiveProcess):
-        executable = options.rootdir + 'apps/ocean/contiguous_partitions/OCEAN'
+        executable = options.rootdir + '/apps/ocean/contiguous_partitions/OCEAN'
         cmd = 'OCEAN -p' + str(options.numcpus)
 
 class Ocean_noncontig(LiveProcess):
-        executable = options.rootdir + 'apps/ocean/non_contiguous_partitions/OCEAN'
+        executable = options.rootdir + '/apps/ocean/non_contiguous_partitions/OCEAN'
         cmd = 'OCEAN -p' + str(options.numcpus)
 
 class Raytrace(LiveProcess):
-        executable = options.rootdir + 'apps/raytrace/RAYTRACE'
+        executable = options.rootdir + '/apps/raytrace/RAYTRACE'
         cmd = 'RAYTRACE -p' + str(options.numcpus) + ' ' \
              + options.rootdir + 'apps/raytrace/inputs/teapot.env'
 
 class Water_nsquared(LiveProcess):
-        executable = options.rootdir + 'apps/water-nsquared/WATER-NSQUARED'
+        executable = options.rootdir + '/apps/water-nsquared/WATER-NSQUARED'
         cmd = 'WATER-NSQUARED'
-        input = options.rootdir + 'apps/water-nsquared/input.p' + str(options.numcpus)
+        input = options.rootdir + '/apps/water-nsquared/input.p' + str(options.numcpus)
 
 class Water_spatial(LiveProcess):
-        executable = options.rootdir + 'apps/water-spatial/WATER-SPATIAL'
+        executable = options.rootdir + '/apps/water-spatial/WATER-SPATIAL'
         cmd = 'WATER-SPATIAL'
-        input = options.rootdir + 'apps/water-spatial/input.p' + str(options.numcpus)
+        input = options.rootdir + '/apps/water-spatial/input.p' + str(options.numcpus)
 
 
 # --------------------
