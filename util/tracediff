@@ -33,23 +33,51 @@
 # ******Note that you need to enable some trace flags in the args in order
 # to do anything useful!******
 #
-# If you want to pass different arguments to the two instances of m5,
-# you can embed them in the simulator arguments like this:
+# Script arguments are handled uniformly as follows:
+# - If the argument does not contain a '|' character, it is appended
+#   to both command lines.
+# - If the argument has a '|' character in it, the text on either side
+#   of the '|' is appended to the respective command lines.  Note that
+#   you'll have to quote the arg or escape the '|' with a backslash
+#   so that the shell doesn't think you're doing a pipe.
 #
-# % tracediff "m5.opt --option1" "m5.opt --option2" [common args]
+# For example:
+#
+# % tracediff m5.opt --opt1 "--opt2|--opt3" --opt4
+# would compare these two runs:
+# m5.opt --opt1 --opt2 --opt4
+# m5.opt --opt1 --opt3 --opt4
+#
+# If you want to compare two different simulator binaries, put a '|'
+# in the first script argument ("path1/m5.opt|path2/m5.opt").  If you
+# want to add arguments to one run only, just put a '|' in with text
+# only on one side ("--onlyOn1|").  You can do this with multiple
+# arguments together too ("|-a -b -c" adds three args to the second
+# run only).
 #
 
 if (@ARGV < 2) {
-    die "Usage: tracediff sim1 sim2 [--root.trace.flags=X args...]\n";
+    die "Usage: tracediff \"sim1|sim2\" [common-arg \"arg1|arg2\" ...]\n";
+}
+
+foreach $arg (@ARGV) {
+    @pair = split('\|', $arg, -1); # -1 enables null trailing fields
+    if ($#pair > 0) {
+	push @cmd1, $pair[0];
+	push @cmd2, $pair[1];
+    } else {
+	push @cmd1, $arg;
+	push @cmd2, $arg;
+    }
 }
 
 # First two args are the two simulator binaries to compare
-$sim1 = shift;
-$sim2 = shift;
+$sim1 = shift @cmd1;
+$sim2 = shift @cmd2;
 
-# Everything else on the command line is taken to be an m5 argument to
-# be given to both invocations
-$simargs = '"' . join('" "', @ARGV) . '"';
+# Everything else is a simulator arg.
+$args1 = join(' ', @cmd1);
+$args2 = join(' ', @cmd2);
 
 # Run individual invocations in separate dirs so output and intermediate
 # files (particularly config.py and config.ini) don't conflict.
@@ -58,8 +86,8 @@ $dir2 = "tracediff-$$-2";
 mkdir($dir1) or die "Can't create dir $dir1\n";
 mkdir($dir2) or die "Can't create dir $dir2\n";
 
-$cmd1 = "$sim1 -d $dir1 $simargs 2>&1 |";
-$cmd2 = "$sim2 -d $dir2 $simargs 2>&1 |";
+$cmd1 = "$sim1 -d $dir1 $args1 2>&1 |";
+$cmd2 = "$sim2 -d $dir2 $args2 2>&1 |";
 
 # This only works if you have rundiff in your path.  I just edit it
 # with an explicit path if necessary.
