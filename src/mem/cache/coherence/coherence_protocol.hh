@@ -211,31 +211,25 @@ class CoherenceProtocol : public SimObject
     friend class CoherenceProtocol::StateTransition;
 
     /** Mask to select status bits relevant to coherence protocol. */
-    const static CacheBlk::State
-        stateMask = BlkValid | BlkWritable | BlkDirty;
+    static const int stateMask = BlkValid | BlkWritable | BlkDirty;
 
     /** The Modified (M) state. */
-    const static CacheBlk::State
-        Modified = BlkValid | BlkWritable | BlkDirty;
+    static const int Modified = BlkValid | BlkWritable | BlkDirty;
     /** The Owned (O) state. */
-    const static CacheBlk::State
-        Owned = BlkValid | BlkDirty;
+    static const int Owned = BlkValid | BlkDirty;
     /** The Exclusive (E) state. */
-    const static CacheBlk::State
-        Exclusive = BlkValid | BlkWritable;
+    static const int Exclusive = BlkValid | BlkWritable;
     /** The Shared (S) state. */
-    const static CacheBlk::State
-        Shared = BlkValid;
+    static const int Shared = BlkValid;
     /** The Invalid (I) state. */
-    const static CacheBlk::State
-        Invalid = 0;
+    static const int Invalid = 0;
 
     /**
      * Maximum state encoding value (used to size transition lookup
      * table).  Could be more than number of states, depends on
      * encoding of status bits.
      */
-    const static int stateMax = stateMask;
+    static const int stateMax = stateMask;
 
     /**
      * The table of all possible transitions, organized by starting state and
