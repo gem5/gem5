@@ -600,12 +600,19 @@ class Tru64 : public OperatingSystem
             process->next_thread_stack_base -= stack_size;
         }
 
-        stack_base = roundDown(stack_base, VMPageSize);
+        Addr rounded_stack_base = roundDown(stack_base, VMPageSize);
+        Addr rounded_stack_size = roundUp(stack_size, VMPageSize);
+
+        DPRINTF(SyscallVerbose,
+                "stack_create: allocating stack @ %#x size %#x "
+                "(rounded from %#x, %#x)\n",
+                rounded_stack_base, rounded_stack_size,
+                stack_base, stack_size);
 
         // map memory
-        process->pTable->allocate(stack_base, roundUp(stack_size, VMPageSize));
+        process->pTable->allocate(rounded_stack_base, rounded_stack_size);
 
-        argp->address = gtoh(stack_base);
+        argp->address = gtoh(rounded_stack_base);
         argp.copyOut(tc->getMemPort());
 
         return 0;

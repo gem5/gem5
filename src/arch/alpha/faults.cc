@@ -194,7 +194,8 @@ void PageTableFault::invoke(ThreadContext *tc)
 
     // We've accessed the next page
     if (vaddr > p->stack_min - PageBytes) {
-        warn("Increasing stack %#x:%#x to %#x:%#x because of access to %#x",
+        DPRINTF(Stack,
+                "Increasing stack %#x:%#x to %#x:%#x because of access to %#x",
                 p->stack_min, p->stack_base, p->stack_min - PageBytes,
                 p->stack_base, vaddr);
         p->stack_min -= PageBytes;
@@ -202,6 +203,7 @@ void PageTableFault::invoke(ThreadContext *tc)
             fatal("Over max stack size for one thread\n");
         p->pTable->allocate(p->stack_min, PageBytes);
     } else {
+        warn("Page fault on address %#x\n", vaddr);
         FaultBase::invoke(tc);
     }
 }
