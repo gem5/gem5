@@ -51,16 +51,16 @@ typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 
 //Coherence Flags
-#define NACKED_LINE 1 << 0
-#define SATISFIED 1 << 1
-#define SHARED_LINE 1 << 2
-#define CACHE_LINE_FILL 1 << 3
-#define COMPRESSED 1 << 4
-#define NO_ALLOCATE 1 << 5
-#define SNOOP_COMMIT 1 << 6
+#define NACKED_LINE     (1 << 0)
+#define SATISFIED       (1 << 1)
+#define SHARED_LINE     (1 << 2)
+#define CACHE_LINE_FILL (1 << 3)
+#define COMPRESSED      (1 << 4)
+#define NO_ALLOCATE     (1 << 5)
+#define SNOOP_COMMIT    (1 << 6)
 
 //for now.  @todo fix later
-#define NUM_MEM_CMDS 1 << 11
+#define NUM_MEM_CMDS    (1 << 11)
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -172,17 +172,17 @@ class Packet
     // as well.
     enum CommandAttribute
     {
-        IsRead                = 1 << 0,
-        IsWrite                = 1 << 1,
-        IsPrefetch        = 1 << 2,
-        IsInvalidate        = 1 << 3,
-        IsRequest        = 1 << 4,
-        IsResponse         = 1 << 5,
-        NeedsResponse        = 1 << 6,
+        IsRead          = 1 << 0,
+        IsWrite         = 1 << 1,
+        IsPrefetch      = 1 << 2,
+        IsInvalidate    = 1 << 3,
+        IsRequest       = 1 << 4,
+        IsResponse      = 1 << 5,
+        NeedsResponse   = 1 << 6,
         IsSWPrefetch    = 1 << 7,
         IsHWPrefetch    = 1 << 8,
         IsUpgrade       = 1 << 9,
-        HasData                = 1 << 10
+        HasData         = 1 << 10
     };
 
   public:
@@ -190,27 +190,27 @@ class Packet
     enum Command
     {
         InvalidCmd      = 0,
-        ReadReq                = IsRead  | IsRequest | NeedsResponse,
+        ReadReq         = IsRead  | IsRequest | NeedsResponse,
         WriteReq        = IsWrite | IsRequest | NeedsResponse | HasData,
-        WriteReqNoAck        = IsWrite | IsRequest | HasData,
+        WriteReqNoAck   = IsWrite | IsRequest | HasData,
         ReadResp        = IsRead  | IsResponse | NeedsResponse | HasData,
-        WriteResp        = IsWrite | IsResponse | NeedsResponse,
+        WriteResp       = IsWrite | IsResponse | NeedsResponse,
         Writeback       = IsWrite | IsRequest | HasData,
         SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
         HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
         SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
-                                | NeedsResponse | HasData,
+                                  | NeedsResponse | HasData,
         HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
-                                    | NeedsResponse | HasData,
+                                  | NeedsResponse | HasData,
         InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq = IsWrite | IsInvalidate | IsRequest
-                                   | HasData | NeedsResponse,
-        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest | NeedsResponse
-                                   | IsResponse,
+        WriteInvalidateReq  = IsWrite | IsInvalidate | IsRequest
+                                      | HasData | NeedsResponse,
+        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest
+                                      | NeedsResponse | IsResponse,
         UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
         ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
         ReadExResp      = IsRead | IsInvalidate | IsResponse
-                                | NeedsResponse | HasData
+                                 | NeedsResponse | HasData
     };
 
     /** Return the string name of the cmd field (for debugging and
