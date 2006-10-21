@@ -61,6 +61,7 @@ IsaFake::read(PacketPtr pkt)
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
     switch (pkt->getSize()) {
+      case sizeof(uint64_t):
          pkt->set(0xFFFFFFFFFFFFFFFFULL);
          break;
       case sizeof(uint32_t):
