@@ -97,6 +97,8 @@ Benchmarks = {
     'ValStreamScale':	[SysConfig('micro_streamscale.rcS', '512MB')],
     'ValStreamCopy':	[SysConfig('micro_streamcopy.rcS', '512MB')],
 
+    'MutexTest':        [SysConfig('mutex-test.rcS', '128MB')],
+
     'bnAn': [SysConfig('/z/saidi/work/m5.newmem.head/configs/boot/bn-app.rcS',
                        '128MB', '/z/saidi/work/bottleneck/bnimg.img')]
 }
