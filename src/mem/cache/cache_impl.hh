@@ -231,8 +231,11 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
                 exitSimLoop("A cache reached the maximum miss count");
         }
     }
-    missQueue->handleMiss(pkt, size, curTick + hitLatency);
-//    return MA_CACHE_MISS;
+
+    if (!(pkt->flags & SATISFIED)) {
+        missQueue->handleMiss(pkt, size, curTick + hitLatency);
+    }
+
     return true;
 }
 
@@ -585,7 +588,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
             assert(pkt->result == Packet::Success);
         }
         return 0;
-    } else if (!blk) {
+    } else if (!blk && !(pkt->flags & SATISFIED)) {
         // update the cache state and statistics
         if (mshr || !writes.empty()){
             // Can't handle it, return pktuest unsatisfied.
@@ -653,18 +656,20 @@ return 0;
             return memSidePort->sendAtomic(pkt);
         }
     } else {
-        // There was a cache hit.
-        // Handle writebacks if needed
-        while (!writebacks.empty()){
-            memSidePort->sendAtomic(writebacks.front());
-            writebacks.pop_front();
-        }
+        if (blk) {
+            // There was a cache hit.
+            // Handle writebacks if needed
+            while (!writebacks.empty()){
+                memSidePort->sendAtomic(writebacks.front());
+                writebacks.pop_front();
+            }
 
-        hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+        }
 
         return hitLatency;
     }
-    fatal("Probe not handled.\n");
+
     return 0;
 }
 
