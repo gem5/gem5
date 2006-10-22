@@ -87,10 +87,15 @@ namespace AlphaPseudo
 
         EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
+        Tick resume = curTick + Clock::Int::ns * ns;
+
         if (quiesceEvent->scheduled())
-            quiesceEvent->reschedule(curTick + Clock::Int::ns * ns);
+            quiesceEvent->reschedule(resume);
         else
-            quiesceEvent->schedule(curTick + Clock::Int::ns * ns);
+            quiesceEvent->schedule(resume);
+
+        DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
+                tc->getCpuPtr()->name(), ns, resume);
 
         tc->suspend();
         if (tc->getKernelStats())
@@ -105,12 +110,15 @@ namespace AlphaPseudo
 
         EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
+        Tick resume = curTick + tc->getCpuPtr()->cycles(cycles);
+
         if (quiesceEvent->scheduled())
-            quiesceEvent->reschedule(curTick +
-                                     tc->getCpuPtr()->cycles(cycles));
+            quiesceEvent->reschedule(resume);
         else
-            quiesceEvent->schedule(curTick +
-                                   tc->getCpuPtr()->cycles(cycles));
+            quiesceEvent->schedule(resume);
+
+        DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
+                tc->getCpuPtr()->name(), cycles, resume);
 
         tc->suspend();
         if (tc->getKernelStats())
