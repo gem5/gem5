@@ -41,6 +41,10 @@
 #   you'll have to quote the arg or escape the '|' with a backslash
 #   so that the shell doesn't think you're doing a pipe.
 #
+# In other words, the arguments should look like the command line you
+# want to run, with "|" used to list the alternatives for the parts
+# that you want to differ between the two runs.
+#
 # For example:
 #
 # % tracediff m5.opt --opt1 "--opt2|--opt3" --opt4
@@ -78,6 +82,14 @@ $sim2 = shift @cmd2;
 # Everything else is a simulator arg.
 $args1 = join(' ', @cmd1);
 $args2 = join(' ', @cmd2);
+
+# Common mistake: if you don't set any traceflags this often isn't
+# doing what you want.
+if ($args1 !~ /--trace-flags/) {
+    print "****\n";
+    print "**** WARNING: no trace flags set... you may not be diffing much!\n";
+    print "****\n";
+}
 
 # Run individual invocations in separate dirs so output and intermediate
 # files (particularly config.py and config.ini) don't conflict.
