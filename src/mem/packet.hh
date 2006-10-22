@@ -310,6 +310,7 @@ class Packet
      *   multiple transactions. */
     void reinitFromRequest() {
         assert(req->validPaddr);
+        flags = 0;
         addr = req->paddr;
         size = req->size;
         time = req->time;

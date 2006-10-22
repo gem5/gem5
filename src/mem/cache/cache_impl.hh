@@ -232,7 +232,12 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         }
     }
 
-    if (!(pkt->flags & SATISFIED)) {
+    if (pkt->flags & SATISFIED) {
+        // happens when a store conditional fails because it missed
+        // the cache completely
+        if (pkt->needsResponse())
+            respond(pkt, curTick+lat);
+    } else {
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
