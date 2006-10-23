@@ -1,0 +1,12 @@
+Hello World!M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Oct 23 2006 07:47:36
+M5 started Mon Oct 23 07:47:41 2006
+M5 executing on zeep
+command line: build/SPARC_SE/m5.debug -d build/SPARC_SE/tests/debug/quick/00.hello/sparc/linux/simple-timing tests/run.py quick/00.hello/sparc/linux/simple-timing
+Exiting @ tick 1497001 because target called exit()
