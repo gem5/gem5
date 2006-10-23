@@ -206,6 +206,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     Result instResult;
 
+    /** Records changes to result? */
+    bool recordResult;
+
     /** PC of this instruction. */
     Addr PC;
 
@@ -262,6 +265,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Dumps out contents of this BaseDynInst into given string. */
     void dump(std::string &outstring);
+
+    /** Read this CPU's ID. */
+    int readCpuId() { return cpu->readCpuId(); }
 
     /** Returns the fault type. */
     Fault getFault() { return fault; }
@@ -402,37 +408,42 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Records an integer register being set to a value. */
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        instResult.integer = val;
+        if (recordResult)
+            instResult.integer = val;
     }
 
     /** Records an fp register being set to a value. */
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
-        if (width == 32)
-            instResult.dbl = (double)val;
-        else if (width == 64)
-            instResult.dbl = val;
-        else
-            panic("Unsupported width!");
+        if (recordResult) {
+            if (width == 32)
+                instResult.dbl = (double)val;
+            else if (width == 64)
+                instResult.dbl = val;
+            else
+                panic("Unsupported width!");
+        }
     }
 
     /** Records an fp register being set to a value. */
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
-//        instResult.fp = val;
-        instResult.dbl = (double)val;
+        if (recordResult)
+            instResult.dbl = (double)val;
     }
 
     /** Records an fp register being set to an integer value. */
     void setFloatRegBits(const StaticInst *si, int idx, uint64_t val, int width)
     {
-        instResult.integer = val;
+        if (recordResult)
+            instResult.integer = val;
     }
 
     /** Records an fp register being set to an integer value. */
     void setFloatRegBits(const StaticInst *si, int idx, uint64_t val)
     {
-        instResult.integer = val;
+        if (recordResult)
+            instResult.integer = val;
     }
 
     /** Records that one of the source registers is ready. */
@@ -624,6 +635,15 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Sets iterator for this instruction in the list of all insts. */
     void setInstListIt(ListIt _instListIt) { instListIt = _instListIt; }
+
+  public:
+    /** Returns the number of consecutive store conditional failures. */
+    unsigned readStCondFailures()
+    { return thread->storeCondFailures; }
+
+    /** Sets the number of consecutive store conditional failures. */
+    void setStCondFailures(unsigned sc_failures)
+    { thread->storeCondFailures = sc_failures; }
 };
 
 template<class Impl>

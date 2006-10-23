@@ -37,6 +37,7 @@
 #include <queue>
 
 #include "arch/faults.hh"
+#include "arch/locked_mem.hh"
 #include "config/full_system.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
@@ -510,8 +511,12 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
 
 #if FULL_SYSTEM
     if (req->isLocked()) {
-        cpu->lockAddr = req->getPaddr();
-        cpu->lockFlag = true;
+        // Disable recording the result temporarily.  Writing to misc
+        // regs normally updates the result, but this is not the
+        // desired behavior when handling store conditionals.
+        load_inst->recordResult = false;
+        TheISA::handleLockedRead(load_inst.get(), req);
+        load_inst->recordResult = true;
     }
 #endif
 

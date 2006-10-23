@@ -97,6 +97,7 @@ BaseDynInst<Impl>::initVars()
     readyRegs = 0;
 
     instResult.integer = 0;
+    recordResult = true;
 
     status.reset();
 
