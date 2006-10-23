@@ -150,7 +150,6 @@ def changeToAtomic(system):
     doDrain(system)
     print "Changing memory mode to atomic"
     system.changeTiming(cc_main.SimObject.Atomic)
-    resume(system)
 
 def changeToTiming(system):
     if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
@@ -159,7 +158,6 @@ def changeToTiming(system):
     doDrain(system)
     print "Changing memory mode to timing"
     system.changeTiming(cc_main.SimObject.Timing)
-    resume(system)
 
 def switchCpus(cpuList):
     print "switching cpus"
@@ -190,7 +188,6 @@ def switchCpus(cpuList):
     cc_main.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
-        print "switching"
         old_cpu._ccObject.switchOut()
     index = 0
     for new_cpu in new_cpus:
