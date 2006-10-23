@@ -146,26 +146,18 @@ def template MemDeclare {{
 }};
 
 let {{
-    # XXX Need to take care of pstate.hpriv as well. The lower ASIs are split
-    # into ones that are available in priv and hpriv, and those that are only
-    # available in hpriv
-    privilegedString = '''if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
-                return new PrivilegedAction;
-            if(AsiIsAsIfUser(EXT_ASI) && !bits(Pstate,2,2))
-                return new PrivilegedAction;'''
-
-    def doMemFormat(code, execute, priv, name, Name, opt_flags):
+    def doMemFormat(code, execute, faultCode, name, Name, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + imm;'
         iop = InstObjParams(name, Name, 'Mem', code,
-                opt_flags, {"priv_check": priv, "ea_code": addrCalcReg})
+                opt_flags, {"fault_check": faultCode, "ea_code": addrCalcReg})
         iop_imm = InstObjParams(name, Name + "Imm", 'MemImm', code,
-                opt_flags, {"priv_check": priv, "ea_code": addrCalcImm})
+                opt_flags, {"fault_check": faultCode, "ea_code": addrCalcImm})
         header_output = MemDeclare.subst(iop) + MemDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
         exec_output = doSplitExecute(code, addrCalcReg, addrCalcImm, execute,
-                priv, name, name + "Imm", Name, Name + "Imm", opt_flags)
+                faultCode, name, name + "Imm", Name, Name + "Imm", opt_flags)
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
@@ -174,7 +166,7 @@ def format LoadAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, LoadExecute,
-            privelegedString, name, Name, opt_flags)
+            AlternateAsiPrivFaultCheck, name, Name, opt_flags)
 }};
 
 def format StoreAlt(code, *opt_flags) {{
@@ -182,7 +174,7 @@ def format StoreAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, StoreExecute,
-            privilegedString, name, Name, opt_flags)
+            AlternateAsiPrivFaultCheck, name, Name, opt_flags)
 }};
 
 def format Load(code, *opt_flags) {{

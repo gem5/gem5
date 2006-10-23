@@ -42,11 +42,17 @@ def template LoadExecute {{
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
-            %(priv_check)s;
             %(ea_code)s;
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
-            %(code)s;
+            %(fault_check)s;
+            if(fault == NoFault)
+            {
+                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            }
+            if(fault == NoFault)
+            {
+                %(code)s;
+            }
             if(fault == NoFault)
             {
                 //Write the resulting state to the execution context
@@ -64,9 +70,12 @@ def template LoadExecute {{
             uint%(mem_acc_size)s_t Mem;
             %(ea_decl)s;
             %(ea_rd)s;
-            %(priv_check)s;
             %(ea_code)s;
-            fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            %(fault_check)s;
+            if(fault == NoFault)
+            {
+                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            }
             return fault;
         }
 
@@ -96,11 +105,13 @@ def template StoreExecute {{
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
-            %(priv_check)s;
             %(ea_code)s;
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            %(code)s;
-
+            %(fault_check)s;
+            if(fault == NoFault)
+            {
+                %(code)s;
+            }
             if(fault == NoFault)
             {
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
@@ -122,10 +133,13 @@ def template StoreExecute {{
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
-            %(priv_check)s;
             %(ea_code)s;
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            %(code)s;
+            %(fault_check)s;
+            if(fault == NoFault)
+            {
+                %(code)s;
+            }
             if(fault == NoFault)
             {
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
@@ -155,23 +169,52 @@ def template CompleteAccDeclare {{
     Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
+//Here are some code snippets which check for various fault conditions
+let {{
+    # The LSB can be zero, since it's really the MSB in doubles and quads
+    # and we're dealing with doubles
+    BlockAlignmentFaultCheck = '''
+        if(RD & 0xe)
+            fault = new IllegalInstruction;
+        else if(EA & 0x3f)
+            fault = new MemAddressNotAligned;
+    '''
+    # XXX Need to take care of pstate.hpriv as well. The lower ASIs
+    # are split into ones that are available in priv and hpriv, and
+    # those that are only available in hpriv
+    AlternateASIPrivFaultCheck = '''
+        if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
+            fault = new PrivilegedAction;
+        else if(AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
+            fault = new PrivilegedAction;
+    '''
+
+}};
+
+//A simple function to generate the name of the macro op of a certain
+//instruction at a certain micropc
+let {{
+    def makeMicroName(name, microPc):
+        return name + "::" + name + "_" + str(microPc)
+}};
+
 //This function properly generates the execute functions for one of the
 //templates above. This is needed because in one case, ea computation,
-//privelege checks and the actual code all occur in the same function,
+//fault checks and the actual code all occur in the same function,
 //and in the other they're distributed across two. Also note that for
 //execute functions, the name of the base class doesn't matter.
 let {{
     def doSplitExecute(code, eaRegCode, eaImmCode, execute,
-            priv, nameReg, nameImm, NameReg, NameImm, opt_flags):
+            faultCode, nameReg, nameImm, NameReg, NameImm, opt_flags):
         codeIop = InstObjParams(nameReg, NameReg, '', code, opt_flags)
         executeCode = ''
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
             eaIop = InstObjParams(name, Name, '', eaCode,
-                    opt_flags, {"priv_check": priv})
+                    opt_flags, {"fault_check": faultCode})
             iop = InstObjParams(name, Name, '', code, opt_flags,
-                    {"priv_check": priv, "ea_code" : eaCode})
+                    {"fault_check": faultCode, "ea_code" : eaCode})
             (iop.ea_decl,
              iop.ea_rd,
              iop.ea_wb) = (eaIop.op_decl, eaIop.op_rd, eaIop.op_wb)

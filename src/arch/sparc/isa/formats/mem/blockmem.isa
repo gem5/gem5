@@ -166,6 +166,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_0(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_1 : public %(base_class)sMicro
@@ -174,6 +176,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_1(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_2 : public %(base_class)sMicro
@@ -182,6 +186,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_2(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_3 : public %(base_class)sMicro
@@ -190,6 +196,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_3(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_4 : public %(base_class)sMicro
@@ -198,6 +206,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_4(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_5 : public %(base_class)sMicro
@@ -206,6 +216,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_5(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_6 : public %(base_class)sMicro
@@ -214,6 +226,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_6(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
 
             class %(class_name)s_7 : public %(base_class)sMicro
@@ -222,6 +236,8 @@ def template BlockMemDeclare {{
                 //Constructor
                 %(class_name)s_7(ExtMachInst machInst);
                 %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
             };
         };
 }};
@@ -255,72 +271,12 @@ def template BlockMemMicroConstructor {{
     }
 }};
 
-def template MicroLoadExecute {{
-        Fault %(class_name)s::%(class_name)s_%(micro_pc)s::execute(
-                %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
-            Addr EA;
-            %(op_decl)s;
-            %(op_rd)s;
-            %(ea_code)s;
-            %(fault_check)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
-            %(code)s;
-
-            if(fault == NoFault)
-            {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-            }
-
-            return fault;
-        }
-}};
-
-def template MicroStoreExecute {{
-        Fault %(class_name)s::%(class_name)s_%(micro_pc)s::execute(
-                %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
-            uint64_t write_result = 0;
-            Addr EA;
-            %(op_decl)s;
-            %(op_rd)s;
-            %(ea_code)s;
-            %(fault_check)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            %(code)s;
-
-            if(fault == NoFault)
-            {
-                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-            }
-
-            return fault;
-        }
-}};
-
 let {{
 
-    def doBlockMemFormat(code, execute, name, Name, opt_flags):
+    def doBlockMemFormat(code, faultCode, execute, name, Name, opt_flags):
         # XXX Need to take care of pstate.hpriv as well. The lower ASIs
         # are split into ones that are available in priv and hpriv, and
         # those that are only available in hpriv
-        faultCheck = '''if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
-                    return new PrivilegedAction;
-                if(AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
-                    return new PrivilegedAction;
-                //The LSB can be zero, since it's really the MSB in doubles
-                //and quads
-                if(RD & 0xe)
-                    return new IllegalInstruction;
-                if(EA & 0x3f)
-                    return new MemAddressNotAligned;
-                '''
         addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
         addrCalcImm = 'EA = Rs1 + imm + offset;'
         iop = InstObjParams(name, Name, 'BlockMem', code, opt_flags)
@@ -330,39 +286,52 @@ let {{
         decode_block = ROrImmDecode.subst(iop)
         matcher = re.compile(r'Frd_N')
         exec_output = ''
-        for microPC in range(8):
+        for microPc in range(8):
             flag_code = ''
-            if (microPC == 7):
+            if (microPc == 7):
                 flag_code = "flags[IsLastMicroOp] = true;"
-            pcedCode = matcher.sub("Frd_%d" % microPC, code)
+            pcedCode = matcher.sub("Frd_%d" % microPc, code)
             iop = InstObjParams(name, Name, 'BlockMem', pcedCode,
                     opt_flags, {"ea_code": addrCalcReg,
-                    "fault_check": faultCheck, "micro_pc": microPC,
+                    "fault_check": faultCode, "micro_pc": microPc,
                     "set_flags": flag_code})
             iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', pcedCode,
                     opt_flags, {"ea_code": addrCalcImm,
-                    "fault_check": faultCheck, "micro_pc": microPC,
+                    "fault_check": faultCode, "micro_pc": microPc,
                     "set_flags": flag_code})
-            exec_output += execute.subst(iop)
-            exec_output += execute.subst(iop_imm)
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
-            faultCheck = ''
+            exec_output += doSplitExecute(
+                    pcedCode, addrCalcReg, addrCalcImm, execute, faultCode,
+                    makeMicroName(name, microPc),
+                    makeMicroName(name + "Imm", microPc),
+                    makeMicroName(Name, microPc),
+                    makeMicroName(Name + "Imm", microPc),
+                    opt_flags);
+            faultCode = ''
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
 def format BlockLoad(code, *opt_flags) {{
+        # We need to make sure to check the highest priority fault last.
+        # That way, if other faults have been detected, they'll be overwritten
+        # rather than the other way around.
+        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
         (header_output,
          decoder_output,
          exec_output,
-         decode_block) = doBlockMemFormat(code, MicroLoadExecute,
-             name, Name, opt_flags)
+         decode_block) = doBlockMemFormat(code, faultCode,
+             LoadExecute, name, Name, opt_flags)
 }};
 
 def format BlockStore(code, *opt_flags) {{
+        # We need to make sure to check the highest priority fault last.
+        # That way, if other faults have been detected, they'll be overwritten
+        # rather than the other way around.
+        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
         (header_output,
          decoder_output,
          exec_output,
-         decode_block) = doBlockMemFormat(code, MicroStoreExecute,
-            name, Name, opt_flags)
+         decode_block) = doBlockMemFormat(code, faultCode,
+             StoreExecute, name, Name, opt_flags)
 }};
