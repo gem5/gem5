@@ -111,15 +111,43 @@ def template LoadExecute {{
             %(priv_check)s;
             %(ea_code)s;
             DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
             %(code)s;
-
             if(fault == NoFault)
             {
                 //Write the resulting state to the execution context
                 %(op_wb)s;
             }
 
+            return fault;
+        }
+
+        Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+                Trace::InstRecord * traceData) const
+        {
+            Fault fault = NoFault;
+            Addr EA;
+            uint%(mem_acc_size)s_t Mem;
+            %(ea_decl)s;
+            %(ea_rd)s;
+            %(priv_check)s;
+            %(ea_code)s;
+            fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+            return fault;
+        }
+
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, %(CPU_exec_context)s * xc,
+                Trace::InstRecord * traceData) const
+        {
+            Fault fault = NoFault;
+            %(code_decl)s;
+            %(code_rd)s;
+            Mem = pkt->get<typeof(Mem)>();
+            %(code)s;
+            if(fault == NoFault)
+            {
+                %(code_wb)s;
+            }
             return fault;
         }
 }};
@@ -140,12 +168,45 @@ def template StoreExecute {{
 
             if(fault == NoFault)
             {
-                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+            }
+            if(fault == NoFault)
+            {
                 //Write the resulting state to the execution context
                 %(op_wb)s;
             }
 
             return fault;
+        }
+
+        Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+                Trace::InstRecord * traceData) const
+        {
+            Fault fault = NoFault;
+            uint64_t write_result = 0;
+            Addr EA;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(priv_check)s;
+            %(ea_code)s;
+            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            %(code)s;
+            if(fault == NoFault)
+            {
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+            }
+            if(fault == NoFault)
+            {
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+            return fault;
+        }
+
+        Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
+                Trace::InstRecord * traceData) const
+        {
+            return NoFault;
         }
 }};
 
@@ -175,6 +236,34 @@ def template LoadStoreExecute {{
         }
 }};
 
+def template MemDeclare {{
+        /**
+         * Static instruction class for "%(mnemonic)s".
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+
+            /// Constructor.
+            %(class_name)s(ExtMachInst machInst);
+
+            %(BasicExecDeclare)s
+
+            %(InitiateAccDeclare)s
+
+            %(CompleteAccDeclare)s
+        };
+}};
+
+def template InitiateAccDeclare {{
+    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template CompleteAccDeclare {{
+    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+
 let {{
     # XXX Need to take care of pstate.hpriv as well. The lower ASIs are split
     # into ones that are available in priv and hpriv, and those that are only
@@ -187,13 +276,30 @@ let {{
     def doMemFormat(code, execute, priv, name, Name, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + imm;'
+        ea_iop = InstObjParams(name, Name, 'Mem',
+                addrCalcReg, opt_flags, {"priv_check": priv})
+        ea_iop_imm = InstObjParams(name, Name, 'MemImm',
+                addrCalcImm, opt_flags, {"priv_check": priv})
+        code_iop = InstObjParams(name, Name, 'Mem', code, opt_flags)
         iop = InstObjParams(name, Name, 'Mem', code,
                 opt_flags, {"ea_code": addrCalcReg,
                 "priv_check": priv})
+        (iop.ea_decl,
+         iop.ea_rd,
+         iop.ea_wb) = (ea_iop.op_decl, ea_iop.op_rd, ea_iop.op_wb)
+        (iop.code_decl,
+         iop.code_rd,
+         iop.code_wb) = (code_iop.op_decl, code_iop.op_rd, code_iop.op_wb)
         iop_imm = InstObjParams(name, Name + 'Imm', 'MemImm', code,
                 opt_flags, {"ea_code": addrCalcImm,
                 "priv_check": priv})
-        header_output = BasicDeclare.subst(iop) + BasicDeclare.subst(iop_imm)
+        (iop_imm.ea_decl,
+         iop_imm.ea_rd,
+         iop_imm.ea_wb) = (ea_iop_imm.op_decl, ea_iop_imm.op_rd, ea_iop_imm.op_wb)
+        (iop_imm.code_decl,
+         iop_imm.code_rd,
+         iop_imm.code_wb) = (code_iop.op_decl, code_iop.op_rd, code_iop.op_wb)
+        header_output = MemDeclare.subst(iop) + MemDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
         exec_output = execute.subst(iop) + execute.subst(iop_imm)

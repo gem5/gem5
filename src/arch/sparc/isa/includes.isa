@@ -40,6 +40,7 @@ output header {{
 #include "cpu/static_inst.hh"
 #include "arch/sparc/faults.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
+#include "mem/packet.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/regfile.hh"
 }};
