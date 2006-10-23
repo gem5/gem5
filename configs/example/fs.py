@@ -40,25 +40,48 @@ if not m5.build_env['FULL_SYSTEM']:
 
 parser = optparse.OptionParser()
 
-parser.add_option("-d", "--detailed", action="store_true")
-parser.add_option("-t", "--timing", action="store_true")
-parser.add_option("-n", "--num_cpus", type="int", default=1)
-parser.add_option("--caches", action="store_true")
-parser.add_option("-m", "--maxtick", type="int")
-parser.add_option("--maxtime", type="float")
+# Benchmark options
 parser.add_option("--dual", action="store_true",
                   help="Simulate two systems attached with an ethernet link")
 parser.add_option("-b", "--benchmark", action="store", type="string",
                   dest="benchmark",
                   help="Specify the benchmark to run. Available benchmarks: %s"\
                   % DefinedBenchmarks)
+
+# system options
+parser.add_option("-d", "--detailed", action="store_true")
+parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-n", "--num_cpus", type="int", default=1)
+parser.add_option("--caches", action="store_true")
+
+# Run duration options
+parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("--maxtime", type="float")
+
+# Metafile options
 parser.add_option("--etherdump", action="store", type="string", dest="etherdump",
                   help="Specify the filename to dump a pcap capture of the" \
                   "ethernet traffic")
+
+# Checkpointing options
+###Note that performing checkpointing via python script files will override
+###checkpoint instructions built into binaries.
+parser.add_option("--take_checkpoints", action="store", type="string",
+                  help="<M,N> will take checkpoint at cycle M and every N cycles \
+                  thereafter")
+parser.add_option("--max_checkpoints", action="store", type="int",
+                  help="the maximum number of checkpoints to drop",
+                  default=5)
 parser.add_option("--checkpoint_dir", action="store", type="string",
                   help="Place all checkpoints in this absolute directory")
-parser.add_option("-c", "--checkpoint", action="store", type="int",
+parser.add_option("-r", "--checkpoint_restore", action="store", type="int",
                   help="restore from checkpoint <N>")
+
+# CPU Switching - default switch model goes from a checkpoint
+# to a timing simple CPU with caches to warm up, then to detailed CPU for
+# data measurement
+parser.add_option("-s", "--standard_switch", action="store_true",
+                  help="switch from one cpu mode to another")
 
 (options, args) = parser.parse_args()
 
@@ -74,23 +97,24 @@ class MyCache(BaseCache):
     tgts_per_mshr = 5
     protocol = CoherenceProtocol(protocol='moesi')
 
-# client system CPU is always simple... note this is an assignment of
+# driver system CPU is always simple... note this is an assignment of
 # a class, not an instance.
-ClientCPUClass = AtomicSimpleCPU
-client_mem_mode = 'atomic'
+DriveCPUClass = AtomicSimpleCPU
+drive_mem_mode = 'atomic'
 
+# system under test can be any of these CPUs
 if options.detailed:
-    ServerCPUClass = DerivO3CPU
-    server_mem_mode = 'timing'
+    TestCPUClass = DerivO3CPU
+    test_mem_mode = 'timing'
 elif options.timing:
-    ServerCPUClass = TimingSimpleCPU
-    server_mem_mode = 'timing'
+    TestCPUClass = TimingSimpleCPU
+    test_mem_mode = 'timing'
 else:
-    ServerCPUClass = AtomicSimpleCPU
-    server_mem_mode = 'atomic'
+    TestCPUClass = AtomicSimpleCPU
+    test_mem_mode = 'atomic'
 
-ServerCPUClass.clock = '2GHz'
-ClientCPUClass.clock = '2GHz'
+TestCPUClass.clock = '2GHz'
+DriveCPUClass.clock = '2GHz'
 
 if options.benchmark:
     try:
@@ -105,38 +129,59 @@ else:
     else:
         bm = [SysConfig()]
 
-server_sys = makeLinuxAlphaSystem(server_mem_mode, bm[0])
+test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 np = options.num_cpus
-server_sys.cpu = [ServerCPUClass(cpu_id=i) for i in xrange(np)]
+test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 for i in xrange(np):
-    if options.caches:
-        server_sys.cpu[i].addPrivateSplitL1Caches(MyCache(size = '32kB'),
+    if options.caches and not options.standard_switch:
+        test_sys.cpu[i].addPrivateSplitL1Caches(MyCache(size = '32kB'),
                                                   MyCache(size = '64kB'))
-    server_sys.cpu[i].connectMemPorts(server_sys.membus)
-    server_sys.cpu[i].mem = server_sys.physmem
+    test_sys.cpu[i].connectMemPorts(test_sys.membus)
+    test_sys.cpu[i].mem = test_sys.physmem
 
 if len(bm) == 2:
-    client_sys = makeLinuxAlphaSystem(client_mem_mode, bm[1])
-    client_sys.cpu = ClientCPUClass(cpu_id=0)
-    client_sys.cpu.connectMemPorts(client_sys.membus)
-    client_sys.cpu.mem = client_sys.physmem
-    root = makeDualRoot(server_sys, client_sys, options.etherdump)
+    drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
+    drive_sys.cpu = DriveCPUClass(cpu_id=0)
+    drive_sys.cpu.connectMemPorts(drive_sys.membus)
+    drive_sys.cpu.mem = drive_sys.physmem
+    root = makeDualRoot(test_sys, drive_sys, options.etherdump)
 elif len(bm) == 1:
-    root = Root(clock = '1THz', system = server_sys)
+    root = Root(clock = '1THz', system = test_sys)
 else:
     print "Error I don't know how to create more than 2 systems."
     sys.exit(1)
 
+if options.standard_switch:
+    switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i) for i in xrange(np))]
+    switch_cpus1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i) for i in xrange(np))]
+    for i in xrange(np):
+        switch_cpus[i].system =  test_sys
+        switch_cpus1[i].system =  test_sys
+        switch_cpus[i].clock = TestCPUClass.clock
+        switch_cpus1[i].clock = TestCPUClass.clock
+        if options.caches:
+            switch_cpus[i].addPrivateSplitL1Caches(MyCache(size = '32kB'),
+                                                    MyCache(size = '64kB'))
+
+        switch_cpus[i].mem = test_sys.physmem
+        switch_cpus1[i].mem = test_sys.physmem
+        switch_cpus[i].connectMemPorts(test_sys.membus)
+        root.switch_cpus = switch_cpus
+        root.switch_cpus1 = switch_cpus1
+        switch_cpu_list = [(test_sys.cpu[i], switch_cpus[i]) for i in xrange(np)]
+        switch_cpu_list1 = [(switch_cpus[i], switch_cpus1[i]) for i in xrange(np)]
+
 m5.instantiate(root)
 
-if options.checkpoint:
+if options.checkpoint_dir:
+    cptdir = options.checkpoint_dir
+else:
+    cptdir = getcwd()
+
+if options.checkpoint_restore:
     from os.path import isdir
     from os import listdir, getcwd
     import re
-    if options.checkpoint_dir:
-        cptdir = options.checkpoint_dir
-    else:
-        cptdir = getcwd()
 
     if not isdir(cptdir):
         m5.panic("checkpoint dir %s does not exist!" % cptdir)
@@ -149,10 +194,26 @@ if options.checkpoint:
         if match:
             cpts.append(match.group(1))
 
-    if options.checkpoint > len(cpts):
-        m5.panic('Checkpoint %d not found' % options.checkpoint)
+    cpts.sort(lambda a,b: cmp(long(a), long(b)))
 
-    m5.restoreCheckpoint(root, "/".join([cptdir, "cpt.%s" % cpts[options.checkpoint - 1]]))
+    if options.checkpoint_restore > len(cpts):
+        m5.panic('Checkpoint %d not found' % options.checkpoint_restore)
+
+    m5.restoreCheckpoint(root, "/".join([cptdir, "cpt.%s" % cpts[options.checkpoint_restore - 1]]))
+
+if options.standard_switch:
+    exit_event = m5.simulate(1000)
+    ## when you change to Timing (or Atomic), you halt the system given
+    ## as argument.  When you are finished with the system changes
+    ## (including switchCpus), you must resume the system manually.
+    ## You DON'T need to resume after just switching CPUs if you haven't
+    ## changed anything on the system level.
+    m5.changeToTiming(test_sys)
+    m5.switchCpus(switch_cpu_list)
+    m5.resume(test_sys)
+
+    exit_event = m5.simulate(300000000000)
+    m5.switchCpus(switch_cpu_list1)
 
 if options.maxtick:
     maxtick = options.maxtick
@@ -163,17 +224,56 @@ elif options.maxtime:
 else:
     maxtick = -1
 
-exit_event = m5.simulate(maxtick)
+num_checkpoints = 0
 
-while exit_event.getCause() == "checkpoint":
-    if options.checkpoint_dir:
-        m5.checkpoint(root, "/".join([options.checkpoint_dir, "cpt.%d"]))
-    else:
-        m5.checkpoint(root, "cpt.%d")
+exit_cause = ''
 
-    if maxtick == -1:
-        exit_event = m5.simulate(maxtick)
-    else:
-        exit_event = m5.simulate(maxtick - m5.curTick())
+if options.take_checkpoints:
+    [when, period] = options.take_checkpoints.split(",", 1)
+    when = int(when)
+    period = int(period)
 
-print 'Exiting @ cycle', m5.curTick(), 'because', exit_event.getCause()
+    exit_event = m5.simulate(when)
+    while exit_event.getCause() == "checkpoint":
+        exit_event = m5.simulate(when - m5.curTick())
+
+    if exit_event.getCause() == "simulate() limit reached":
+        m5.checkpoint(root, cptdir + "cpt.%d")
+        num_checkpoints += 1
+
+    sim_ticks = when
+    exit_cause = "maximum %d checkpoints dropped" % options.max_checkpoints
+    while num_checkpoints < options.max_checkpoints:
+        if (sim_ticks + period) > maxtick and maxtick != -1:
+            exit_event = m5.simulate(maxtick - sim_ticks)
+            exit_cause = exit_event.getCause()
+            break
+        else:
+            exit_event = m5.simulate(period)
+            sim_ticks += period
+            while exit_event.getCause() == "checkpoint":
+                exit_event = m5.simulate(period - m5.curTick())
+            if exit_event.getCause() == "simulate() limit reached":
+                m5.checkpoint(root, cptdir + "cpt.%d")
+                num_checkpoints += 1
+
+else: #no checkpoints being taken via this script
+    exit_event = m5.simulate(maxtick)
+
+    while exit_event.getCause() == "checkpoint":
+        m5.checkpoint(root, cptdir + "cpt.%d")
+        num_checkpoints += 1
+        if num_checkpoints == options.max_checkpoints:
+            exit_cause =  "maximum %d checkpoints dropped" % options.max_checkpoints
+            break
+
+        if maxtick == -1:
+            exit_event = m5.simulate(maxtick)
+        else:
+            exit_event = m5.simulate(maxtick - m5.curTick())
+
+        exit_cause = exit_event.getCause()
+
+if exit_cause == '':
+    exit_cause = exit_event.getCause()
+print 'Exiting @ cycle', m5.curTick(), 'because ', exit_cause
