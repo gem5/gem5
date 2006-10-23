@@ -50,14 +50,14 @@ def template BasicDeclare {{
         {
           public:
             // Constructor.
-            %(class_name)s(MachInst machInst);
+            %(class_name)s(ExtMachInst machInst);
             %(BasicExecDeclare)s
         };
 }};
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-        inline %(class_name)s::%(class_name)s(MachInst machInst)
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
         {
                 %(constructor)s;
