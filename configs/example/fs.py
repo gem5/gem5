@@ -212,7 +212,7 @@ if options.standard_switch:
     m5.switchCpus(switch_cpu_list)
     m5.resume(test_sys)
 
-    exit_event = m5.simulate(300000000000)
+    exit_event = m5.simulate(500000000000)
     m5.switchCpus(switch_cpu_list1)
 
 if options.maxtick:
