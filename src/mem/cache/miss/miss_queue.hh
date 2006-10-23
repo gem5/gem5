@@ -77,7 +77,7 @@ class MissQueue
     /** The block size of the parent cache. */
     int blkSize;
 
-    /** Increasing order number assigned to each incoming pktuest. */
+    /** Increasing order number assigned to each incoming request. */
     uint64_t order;
 
     bool prefetchMiss;
@@ -212,7 +212,7 @@ class MissQueue
     void setPrefetcher(BasePrefetcher *_prefetcher);
 
     /**
-     * Handle a cache miss properly. Either allocate an MSHR for the pktuest,
+     * Handle a cache miss properly. Either allocate an MSHR for the request,
      * or forward it through the write buffer.
      * @param pkt The request that missed in the cache.
      * @param blk_size The block size of the cache.
@@ -232,8 +232,8 @@ class MissQueue
                      PacketPtr &target);
 
     /**
-     * Selects a outstanding pktuest to service.
-     * @return The pktuest to service, NULL if none found.
+     * Selects a outstanding request to service.
+     * @return The request to service, NULL if none found.
      */
     PacketPtr getPacket();
 
@@ -251,7 +251,7 @@ class MissQueue
     void restoreOrigCmd(PacketPtr &pkt);
 
     /**
-     * Marks a pktuest as in service (sent on the bus). This can have side
+     * Marks a request as in service (sent on the bus). This can have side
      * effect since storage for no response commands is deallocated once they
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
@@ -259,14 +259,14 @@ class MissQueue
     void markInService(PacketPtr &pkt, MSHR* mshr);
 
     /**
-     * Collect statistics and free resources of a satisfied pktuest.
+     * Collect statistics and free resources of a satisfied request.
      * @param pkt The request that has been satisfied.
-     * @param time The time when the pktuest is satisfied.
+     * @param time The time when the request is satisfied.
      */
     void handleResponse(PacketPtr &pkt, Tick time);
 
     /**
-     * Removes all outstanding pktuests for a given thread number. If a request
+     * Removes all outstanding requests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
      * @param threadNum The thread number of the requests to squash.
      */
@@ -313,14 +313,14 @@ class MissQueue
                      int size, uint8_t *data, bool compressed);
 
     /**
-     * Perform the given writeback pktuest.
+     * Perform the given writeback request.
      * @param pkt The writeback request.
      */
     void doWriteback(PacketPtr &pkt);
 
     /**
-     * Returns true if there are outstanding pktuests.
-     * @return True if there are outstanding pktuests.
+     * Returns true if there are outstanding requests.
+     * @return True if there are outstanding requests.
      */
     bool havePending();
 

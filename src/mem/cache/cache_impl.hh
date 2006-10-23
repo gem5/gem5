@@ -596,7 +596,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
     } else if (!blk && !(pkt->flags & SATISFIED)) {
         // update the cache state and statistics
         if (mshr || !writes.empty()){
-            // Can't handle it, return pktuest unsatisfied.
+            // Can't handle it, return request unsatisfied.
             panic("Atomic access ran into outstanding MSHR's or WB's!");
         }
         if (!pkt->req->isUncacheable()) {
