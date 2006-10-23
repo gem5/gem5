@@ -427,7 +427,8 @@ TimingSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 void
 TimingSimpleCPU::fetch()
 {
-    checkForInterrupts();
+    if (!curStaticInst || !curStaticInst->isDelayedCommit())
+        checkForInterrupts();
 
     Request *ifetch_req = new Request();
     ifetch_req->setThreadContext(cpu_id, /* thread ID */ 0);

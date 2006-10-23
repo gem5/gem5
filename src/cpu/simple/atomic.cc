@@ -448,7 +448,8 @@ AtomicSimpleCPU::tick()
     for (int i = 0; i < width; ++i) {
         numCycles++;
 
-        checkForInterrupts();
+        if (!curStaticInst || !curStaticInst->isDelayedCommit())
+            checkForInterrupts();
 
         Fault fault = setupFetchRequest(ifetch_req);
 
