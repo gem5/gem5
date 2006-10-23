@@ -63,7 +63,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    warn("Default fetch doesn't update it's state from a functional call.");
+    warn("DefaultFetch doesn't update its state from a functional call.");
 }
 
 template<class Impl>
@@ -1273,11 +1273,12 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         fetchStatus[tid] = TrapPending;
         status_change = true;
-
-//        warn("%lli fault (%d) detected @ PC %08p", curTick, fault, PC[tid]);
 #else // !FULL_SYSTEM
-        warn("cycle %lli: fault (%s) detected @ PC %08p", curTick, fault->name(), PC[tid]);
+        fetchStatus[tid] = TrapPending;
+        status_change = true;
+
 #endif // FULL_SYSTEM
+        DPRINTF(Fetch, "[tid:%i]: fault (%d) detected @ PC %08p", tid, fault, PC[tid]);
     }
 }
 
