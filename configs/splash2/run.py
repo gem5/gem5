@@ -1,4 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,243 @@
 #
 # Authors: Ron Dreslinski
 
-from m5 import *
-import Splash2
+# Splash2 Run Script
+#
 
-if 'SYSTEM' not in env:
-    panic("The SYSTEM environment variable must be set!\ne.g -ESYSTEM=Detailed\n")
+import m5
+from m5.objects import *
+import os, optparse, sys
+m5.AddToPath('../common')
 
-if env['SYSTEM'] == 'Simple':
-    from SimpleConfig import *
-    BaseCPU.workload = Parent.workload
-    SimpleStandAlone.cpu = [ CPU() for i in xrange(int(env['NP'])) ]
-    root = SimpleStandAlone()
-elif env['SYSTEM'] == 'Detailed':
-    from DetailedConfig import *
-    BaseCPU.workload = Parent.workload
-    DetailedStandAlone.cpu = [ DetailedCPU() for i in xrange(int(env['NP'])) ]
-    root = DetailedStandAlone()
+# --------------------
+# Define Command Line Options
+# ====================
+
+parser = optparse.OptionParser()
+
+parser.add_option("-d", "--detailed", action="store_true")
+parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("-n", "--numcpus",
+                  help="Number of cpus in total", type="int")
+parser.add_option("-f", "--frequency",
+                  default = "1GHz",
+                  help="Frequency of each CPU")
+parser.add_option("-p", "--protocol",
+                  default="moesi",
+                  help="The coherence protocol to use for the L1'a (i.e. MOESI, MOSI)")
+parser.add_option("--l1size",
+                  default = "32kB")
+parser.add_option("--l1latency",
+                  default = 1)
+parser.add_option("--l2size",
+                  default = "256kB")
+parser.add_option("--l2latency",
+                  default = 10)
+parser.add_option("--rootdir",
+                  help="ROot directory of Splash2",
+                  default="/dist/splash2/codes")
+parser.add_option("-b", "--benchmark",
+                  help="Splash 2 benchmark to run")
+
+(options, args) = parser.parse_args()
+
+if args:
+    print "Error: script doesn't take any positional arguments"
+    sys.exit(1)
+
+if not options.numcpus:
+    print "Specify the number of cpus with -n"
+    sys.exit(1)
+
+# --------------------
+# Define Splash2 Benchmarks
+# ====================
+class Cholesky(LiveProcess):
+        executable = options.rootdir + '/kernels/cholesky/CHOLESKY'
+        cmd = 'CHOLESKY -p' + str(options.numcpus) + ' '\
+             + options.rootdir + '/kernels/cholesky/inputs/tk23.O'
+
+class FFT(LiveProcess):
+        executable = options.rootdir + '/kernels/fft/FFT'
+        cmd = 'FFT -p' + str(options.numcpus) + ' -m18'
+
+class LU_contig(LiveProcess):
+        executable = options.rootdir + '/kernels/lu/contiguous_blocks/LU'
+        cmd = 'LU -p' + str(options.numcpus)
+
+class LU_noncontig(LiveProcess):
+        executable = options.rootdir + '/kernels/lu/non_contiguous_blocks/LU'
+        cmd = 'LU -p' + str(options.numcpus)
+
+class Radix(LiveProcess):
+        executable = options.rootdir + '/kernels/radix/RADIX'
+        cmd = 'RADIX -n524288 -p' + str(options.numcpus)
+
+class Barnes(LiveProcess):
+        executable = options.rootdir + '/apps/barnes/BARNES'
+        cmd = 'BARNES'
+        input = options.rootdir + '/apps/barnes/input.p' + str(options.numcpus)
+
+class FMM(LiveProcess):
+        executable = options.rootdir + '/apps/fmm/FMM'
+        cmd = 'FMM'
+        input = options.rootdir + '/apps/fmm/inputs/input.2048.p' + str(options.numcpus)
+
+class Ocean_contig(LiveProcess):
+        executable = options.rootdir + '/apps/ocean/contiguous_partitions/OCEAN'
+        cmd = 'OCEAN -p' + str(options.numcpus)
+
+class Ocean_noncontig(LiveProcess):
+        executable = options.rootdir + '/apps/ocean/non_contiguous_partitions/OCEAN'
+        cmd = 'OCEAN -p' + str(options.numcpus)
+
+class Raytrace(LiveProcess):
+        executable = options.rootdir + '/apps/raytrace/RAYTRACE'
+        cmd = 'RAYTRACE -p' + str(options.numcpus) + ' ' \
+             + options.rootdir + 'apps/raytrace/inputs/teapot.env'
+
+class Water_nsquared(LiveProcess):
+        executable = options.rootdir + '/apps/water-nsquared/WATER-NSQUARED'
+        cmd = 'WATER-NSQUARED'
+        input = options.rootdir + '/apps/water-nsquared/input.p' + str(options.numcpus)
+
+class Water_spatial(LiveProcess):
+        executable = options.rootdir + '/apps/water-spatial/WATER-SPATIAL'
+        cmd = 'WATER-SPATIAL'
+        input = options.rootdir + '/apps/water-spatial/input.p' + str(options.numcpus)
+
+
+# --------------------
+# Base L1 Cache Definition
+# ====================
+
+class L1(BaseCache):
+    latency = options.l1latency
+    block_size = 64
+    mshrs = 12
+    tgts_per_mshr = 8
+    protocol = CoherenceProtocol(protocol=options.protocol)
+
+# ----------------------
+# Base L2 Cache Definition
+# ----------------------
+
+class L2(BaseCache):
+    block_size = 64
+    latency = options.l2latency
+    mshrs = 92
+    tgts_per_mshr = 16
+    write_buffers = 8
+
+# ----------------------
+# Define the cpus
+# ----------------------
+
+busFrequency = Frequency(options.frequency)
+
+if options.timing:
+    cpus = [TimingSimpleCPU(cpu_id = i,
+                            clock=options.frequency)
+            for i in xrange(options.numcpus)]
+elif options.detailed:
+    cpus = [DerivO3CPU(cpu_id = i,
+                       clock=options.frequency)
+            for i in xrange(options.numcpus)]
 else:
-    panic("The SYSTEM environment variable was set to something improper.\n Use Simple or Detailed\n")
+    cpus = [AtomicSimpleCPU(cpu_id = i,
+                            clock=options.frequency)
+            for i in xrange(options.numcpus)]
 
-if 'BENCHMARK' not in env:
-        panic("The BENCHMARK environment variable must be set!\ne.g. -EBENCHMARK=Cholesky\n")
+# ----------------------
+# Create a system, and add system wide objects
+# ----------------------
+system = System(cpu = cpus, physmem = PhysicalMemory(),
+                membus = Bus(clock = busFrequency))
 
-if env['BENCHMARK'] == 'Cholesky':
-    root.workload = Splash2.Cholesky()
-elif env['BENCHMARK'] == 'FFT':
-    root.workload = Splash2.FFT()
-elif env['BENCHMARK'] == 'LUContig':
-    root.workload = Splash2.LU_contig()
-elif env['BENCHMARK'] == 'LUNoncontig':
-    root.workload = Splash2.LU_noncontig()
-elif env['BENCHMARK'] == 'Radix':
-    root.workload = Splash2.Radix()
-elif env['BENCHMARK'] == 'Barnes':
-    root.workload = Splash2.Barnes()
-elif env['BENCHMARK'] == 'FMM':
-    root.workload = Splash2.FMM()
-elif env['BENCHMARK'] == 'OceanContig':
-    root.workload = Splash2.Ocean_contig()
-elif env['BENCHMARK'] == 'OceanNoncontig':
-    root.workload = Splash2.Ocean_noncontig()
-elif env['BENCHMARK'] == 'Raytrace':
-    root.workload = Splash2.Raytrace()
-elif env['BENCHMARK'] == 'WaterNSquared':
-    root.workload = Splash2.Water_nsquared()
-elif env['BENCHMARK'] == 'WaterSpatial':
-    root.workload = Splash2.Water_spatial()
+system.toL2bus = Bus(clock = busFrequency)
+system.l2 = L2(size = options.l2size, assoc = 8)
+
+# ----------------------
+# Connect the L2 cache and memory together
+# ----------------------
+
+system.physmem.port = system.membus.port
+system.l2.cpu_side = system.toL2bus.port
+system.l2.mem_side = system.membus.port
+
+# ----------------------
+# Connect the L2 cache and clusters together
+# ----------------------
+for cpu in cpus:
+    cpu.addPrivateSplitL1Caches(L1(size = options.l1size, assoc = 1),
+                                L1(size = options.l1size, assoc = 4))
+    cpu.mem = cpu.dcache
+    # connect cpu level-1 caches to shared level-2 cache
+    cpu.connectMemPorts(system.toL2bus)
+
+
+# ----------------------
+# Define the root
+# ----------------------
+
+root = Root(system = system)
+
+# --------------------
+# Pick the correct Splash2 Benchmarks
+# ====================
+if options.benchmark == 'Cholesky':
+    root.workload = Cholesky()
+elif options.benchmark == 'FFT':
+    root.workload = FFT()
+elif options.benchmark == 'LUContig':
+    root.workload = LU_contig()
+elif options.benchmark == 'LUNoncontig':
+    root.workload = LU_noncontig()
+elif options.benchmark == 'Radix':
+    root.workload = Radix()
+elif options.benchmark == 'Barnes':
+    root.workload = Barnes()
+elif options.benchmark == 'FMM':
+    root.workload = FMM()
+elif options.benchmark == 'OceanContig':
+    root.workload = Ocean_contig()
+elif options.benchmark == 'OceanNoncontig':
+    root.workload = Ocean_noncontig()
+elif options.benchmark == 'Raytrace':
+    root.workload = Raytrace()
+elif options.benchmark == 'WaterNSquared':
+    root.workload = Water_nsquared()
+elif options.benchmark == 'WaterSpatial':
+    root.workload = Water_spatial()
 else:
-    panic("The BENCHMARK environment variable was set to something" \
+    panic("The --benchmark environment variable was set to something" \
           +" improper.\nUse Cholesky, FFT, LUContig, LUNoncontig, Radix" \
           +", Barnes, FMM, OceanContig,\nOceanNoncontig, Raytrace," \
           +" WaterNSquared, or WaterSpatial\n")
+
+# --------------------
+# Assign the workload to the cpus
+# ====================
+
+for cpu in cpus:
+    cpu.workload = root.workload
+
+# ----------------------
+# Run the simulation
+# ----------------------
+
+if options.timing or options.detailed:
+    root.system.mem_mode = 'timing'
+
+# instantiate configuration
+m5.instantiate(root)
+
+# simulate until program terminates
+if options.maxtick:
+    exit_event = m5.simulate(options.maxtick)
+else:
+    exit_event = m5.simulate()
+
+print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+

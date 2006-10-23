@@ -206,8 +206,7 @@ bool
 CoherenceProtocol::supplyTrans(BaseCache *cache, PacketPtr &pkt,
                                CacheBlk *blk,
                                MSHR *mshr,
-                               CacheBlk::State & new_state
-                               )
+                               CacheBlk::State & new_state)
 {
     return true;
 }
@@ -263,182 +262,106 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
                                      const bool doUpgrades)
     : SimObject(name)
 {
-    if ((protocol == "mosi" || protocol == "moesi") && !doUpgrades) {
-        cerr << "CoherenceProtocol: ownership protocols require upgrade transactions"
-             << "(write miss on owned block generates ReadExcl, which will clobber dirty block)"
-             << endl;
-        fatal("");
+    // Python should catch this, but in case it doesn't...
+    if (!(protocol == "msi"  || protocol == "mesi" ||
+          protocol == "mosi" || protocol == "moesi")) {
+        fatal("CoherenceProtocol: unrecognized protocol %s\n",  protocol);
     }
 
-    Packet::Command writeToSharedCmd = doUpgrades ? Packet::UpgradeReq : Packet::ReadExReq;
-    Packet::Command writeToSharedResp = doUpgrades ? Packet::UpgradeReq : Packet::ReadExResp;
+    bool hasOwned = (protocol == "mosi" || protocol == "moesi");
+    bool hasExclusive = (protocol == "mesi" || protocol == "moesi");
 
-//@todo add in hardware prefetch to this list
-    if (protocol == "msi") {
-        // incoming requests: specify outgoing bus request
-        transitionTable[Invalid][Packet::ReadReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::WriteReq].onRequest(Packet::ReadExReq);
-        transitionTable[Shared][Packet::WriteReq].onRequest(writeToSharedCmd);
-        //Prefetching causes a read
-        transitionTable[Invalid][Packet::SoftPFReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::HardPFReq].onRequest(Packet::ReadReq);
-
-        // on response to given request: specify new state
-        transitionTable[Invalid][Packet::ReadResp].onResponse(Shared);
-        transitionTable[Invalid][Packet::ReadExResp].onResponse(Modified);
-        transitionTable[Shared][writeToSharedResp].onResponse(Modified);
-
-        // bus snoop transition functions
-        transitionTable[Invalid][Packet::ReadReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::ReadExReq].onSnoop(nullTransition);
-        transitionTable[Shared][Packet::ReadReq].onSnoop(nullTransition);
-        transitionTable[Shared][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Modified][Packet::ReadReq].onSnoop(supplyAndGotoSharedTrans);
-        //Tansitions on seeing a DMA (writeInv(samelevel) or DMAInv)
-        transitionTable[Invalid][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Invalid][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-
-        if (doUpgrades) {
-            transitionTable[Invalid][Packet::UpgradeReq].onSnoop(nullTransition);
-            transitionTable[Shared][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        }
+    if (hasOwned && !doUpgrades) {
+        fatal("CoherenceProtocol: ownership protocols require upgrade "
+              "transactions\n(write miss on owned block generates ReadExcl, "
+              "which will clobber dirty block)\n");
     }
 
-    else if(protocol == "mesi") {
-        // incoming requests: specify outgoing bus request
-        transitionTable[Invalid][Packet::ReadReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::WriteReq].onRequest(Packet::ReadExReq);
-        transitionTable[Shared][Packet::WriteReq].onRequest(writeToSharedCmd);
-        //Prefetching causes a read
-        transitionTable[Invalid][Packet::SoftPFReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::HardPFReq].onRequest(Packet::ReadReq);
+    // set up a few shortcuts to save typing & visual clutter
+    typedef Packet P;
+    StateTransition (&tt)[stateMax+1][NUM_MEM_CMDS] = transitionTable;
 
-        // on response to given request: specify new state
-        transitionTable[Invalid][Packet::ReadResp].onResponse(Exclusive);
-        //It will move into shared if the shared line is asserted in the
-        //getNewState function
-        transitionTable[Invalid][Packet::ReadExResp].onResponse(Modified);
-        transitionTable[Shared][writeToSharedResp].onResponse(Modified);
+    P::Command writeToSharedCmd =  doUpgrades ? P::UpgradeReq : P::ReadExReq;
+    P::Command writeToSharedResp = doUpgrades ? P::UpgradeReq : P::ReadExResp;
 
-        // bus snoop transition functions
-        transitionTable[Invalid][Packet::ReadReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::ReadExReq].onSnoop(nullTransition);
-        transitionTable[Shared][Packet::ReadReq].onSnoop(assertShared);
-        transitionTable[Shared][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::ReadReq].onSnoop(assertShared);
-        transitionTable[Exclusive][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Modified][Packet::ReadReq].onSnoop(supplyAndGotoSharedTrans);
-        //Tansitions on seeing a DMA (writeInv(samelevel) or DMAInv)
-        transitionTable[Invalid][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Invalid][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
+    // Note that all transitions by default cause a panic.
+    // Override the valid transitions with the appropriate actions here.
 
-        if (doUpgrades) {
-            transitionTable[Invalid][Packet::UpgradeReq].onSnoop(nullTransition);
-            transitionTable[Shared][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        }
+    //
+    // ----- incoming requests: specify outgoing bus request -----
+    //
+    tt[Invalid][P::ReadReq].onRequest(P::ReadReq);
+    // we only support write allocate right now
+    tt[Invalid][P::WriteReq].onRequest(P::ReadExReq);
+    tt[Shared][P::WriteReq].onRequest(writeToSharedCmd);
+    if (hasOwned) {
+        tt[Owned][P::WriteReq].onRequest(writeToSharedCmd);
     }
 
-    else if(protocol == "mosi") {
-        // incoming requests: specify outgoing bus request
-        transitionTable[Invalid][Packet::ReadReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::WriteReq].onRequest(Packet::ReadExReq);
-        transitionTable[Shared][Packet::WriteReq].onRequest(writeToSharedCmd);
-        transitionTable[Owned][Packet::WriteReq].onRequest(writeToSharedCmd);
-        //Prefetching causes a read
-        transitionTable[Invalid][Packet::SoftPFReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::HardPFReq].onRequest(Packet::ReadReq);
+    // Prefetching causes a read
+    tt[Invalid][P::SoftPFReq].onRequest(P::ReadReq);
+    tt[Invalid][P::HardPFReq].onRequest(P::ReadReq);
 
-        // on response to given request: specify new state
-        transitionTable[Invalid][Packet::ReadResp].onResponse(Shared);
-        transitionTable[Invalid][Packet::ReadExResp].onResponse(Modified);
-        transitionTable[Shared][writeToSharedResp].onResponse(Modified);
-        transitionTable[Owned][writeToSharedResp].onResponse(Modified);
-
-        // bus snoop transition functions
-        transitionTable[Invalid][Packet::ReadReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::ReadExReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::UpgradeReq].onSnoop(nullTransition);
-        transitionTable[Shared][Packet::ReadReq].onSnoop(assertShared);
-        transitionTable[Shared][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Modified][Packet::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
-        transitionTable[Owned][Packet::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
-        transitionTable[Owned][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Owned][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        //Tansitions on seeing a DMA (writeInv(samelevel) or DMAInv)
-        transitionTable[Invalid][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Owned][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Invalid][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Owned][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
+    //
+    // ----- on response to given request: specify new state -----
+    //
+    tt[Invalid][P::ReadExResp].onResponse(Modified);
+    tt[Shared][writeToSharedResp].onResponse(Modified);
+    // Go to Exclusive state on read response if we have one (will
+    // move into shared if the shared line is asserted in the
+    // getNewState function)
+    //
+    // originally had this as:
+    // tt[Invalid][P::ReadResp].onResponse(hasExclusive ? Exclusive: Shared);
+    // ...but for some reason that caused a link error...
+    if (hasExclusive) {
+        tt[Invalid][P::ReadResp].onResponse(Exclusive);
+    } else {
+        tt[Invalid][P::ReadResp].onResponse(Shared);
+    }
+    if (hasOwned) {
+        tt[Owned][writeToSharedResp].onResponse(Modified);
     }
 
-    else if(protocol == "moesi") {
-        // incoming requests: specify outgoing bus request
-        transitionTable[Invalid][Packet::ReadReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::WriteReq].onRequest(Packet::ReadExReq);
-        transitionTable[Shared][Packet::WriteReq].onRequest(writeToSharedCmd);
-        transitionTable[Owned][Packet::WriteReq].onRequest(writeToSharedCmd);
-        //Prefetching causes a read
-        transitionTable[Invalid][Packet::SoftPFReq].onRequest(Packet::ReadReq);
-        transitionTable[Invalid][Packet::HardPFReq].onRequest(Packet::ReadReq);
+    //
+    // ----- bus snoop transition functions -----
+    //
+    tt[Invalid][P::ReadReq].onSnoop(nullTransition);
+    tt[Invalid][P::ReadExReq].onSnoop(nullTransition);
+    tt[Invalid][P::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Invalid][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+    tt[Shared][P::ReadReq].onSnoop(hasExclusive
+                                   ? assertShared : nullTransition);
+    tt[Shared][P::ReadExReq].onSnoop(invalidateTrans);
+    tt[Shared][P::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Shared][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+    if (doUpgrades) {
+        tt[Invalid][P::UpgradeReq].onSnoop(nullTransition);
+        tt[Shared][P::UpgradeReq].onSnoop(invalidateTrans);
+    }
+    tt[Modified][P::ReadExReq].onSnoop(supplyAndInvalidateTrans);
+    tt[Modified][P::ReadReq].onSnoop(hasOwned
+                                     ? supplyAndGotoOwnedTrans
+                                     : supplyAndGotoSharedTrans);
+    tt[Modified][P::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Modified][P::WriteInvalidateReq].onSnoop(invalidateTrans);
 
-        // on response to given request: specify new state
-        transitionTable[Invalid][Packet::ReadResp].onResponse(Exclusive);
-        //It will move into shared if the shared line is asserted in the
-        //getNewState function
-        transitionTable[Invalid][Packet::ReadExResp].onResponse(Modified);
-        transitionTable[Shared][writeToSharedResp].onResponse(Modified);
-        transitionTable[Owned][writeToSharedResp].onResponse(Modified);
-
-        // bus snoop transition functions
-        transitionTable[Invalid][Packet::ReadReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::ReadExReq].onSnoop(nullTransition);
-        transitionTable[Invalid][Packet::UpgradeReq].onSnoop(nullTransition);
-        transitionTable[Shared][Packet::ReadReq].onSnoop(assertShared);
-        transitionTable[Shared][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::ReadReq].onSnoop(assertShared);
-        transitionTable[Exclusive][Packet::ReadExReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
-        transitionTable[Modified][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Owned][Packet::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
-        transitionTable[Owned][Packet::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        transitionTable[Owned][Packet::UpgradeReq].onSnoop(invalidateTrans);
-        //Transitions on seeing a DMA (writeInv(samelevel) or DMAInv)
-        transitionTable[Invalid][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Owned][Packet::InvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Invalid][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Shared][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Exclusive][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Modified][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
-        transitionTable[Owned][Packet::WriteInvalidateReq].onSnoop(invalidateTrans);
+    if (hasExclusive) {
+        tt[Exclusive][P::ReadReq].onSnoop(assertShared);
+        tt[Exclusive][P::ReadExReq].onSnoop(invalidateTrans);
+        tt[Exclusive][P::InvalidateReq].onSnoop(invalidateTrans);
+        tt[Exclusive][P::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
 
-    else {
-        cerr << "CoherenceProtocol: unrecognized protocol " << protocol
-             <<  endl;
-        fatal("");
+    if (hasOwned) {
+        tt[Owned][P::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
+        tt[Owned][P::ReadExReq].onSnoop(supplyAndInvalidateTrans);
+        tt[Owned][P::UpgradeReq].onSnoop(invalidateTrans);
+        tt[Owned][P::InvalidateReq].onSnoop(invalidateTrans);
+        tt[Owned][P::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
+
+    // @todo add in hardware prefetch to this list
 }
 
 

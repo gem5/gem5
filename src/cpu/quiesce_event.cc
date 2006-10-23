@@ -28,6 +28,7 @@
  * Authors: Kevin Lim
  */
 
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 
@@ -39,6 +40,7 @@ EndQuiesceEvent::EndQuiesceEvent(ThreadContext *_tc)
 void
 EndQuiesceEvent::process()
 {
+    DPRINTF(Quiesce, "activating %s\n", tc->getCpuPtr()->name());
     tc->activate();
 }
 
