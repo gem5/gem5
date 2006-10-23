@@ -29,6 +29,7 @@
  *          Korey Sewell
  */
 
+#include "arch/locked_mem.hh"
 #include "config/use_checker.hh"
 
 #include "cpu/o3/lsq.hh"
@@ -614,27 +615,24 @@ LSQUnit<Impl>::writebackStores()
 
         // @todo: Remove this SC hack once the memory system handles it.
         if (req->isLocked()) {
-            if (req->isUncacheable()) {
-                req->setScResult(2);
-            } else {
-                if (cpu->lockFlag) {
-                    req->setScResult(1);
-                    DPRINTF(LSQUnit, "Store conditional [sn:%lli] succeeded.",
-                            inst->seqNum);
-                } else {
-                    req->setScResult(0);
-                    // Hack: Instantly complete this store.
-//                    completeDataAccess(data_pkt);
-                    DPRINTF(LSQUnit, "Store conditional [sn:%lli] failed.  "
-                            "Instantly completing it.\n",
-                            inst->seqNum);
-                    WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
-                    wb->schedule(curTick + 1);
-                    delete state;
-                    completeStore(storeWBIdx);
-                    incrStIdx(storeWBIdx);
-                    continue;
-                }
+            // Disable recording the result temporarily.  Writing to
+            // misc regs normally updates the result, but this is not
+            // the desired behavior when handling store conditionals.
+            inst->recordResult = false;
+            bool success = TheISA::handleLockedWrite(inst.get(), req);
+            inst->recordResult = true;
+
+            if (!success) {
+                // Instantly complete this store.
+                DPRINTF(LSQUnit, "Store conditional [sn:%lli] failed.  "
+                        "Instantly completing it.\n",
+                        inst->seqNum);
+                WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
+                wb->schedule(curTick + 1);
+                delete state;
+                completeStore(storeWBIdx);
+                incrStIdx(storeWBIdx);
+                continue;
             }
         } else {
             // Non-store conditionals do not need a writeback.
