@@ -846,11 +846,10 @@ decode OP default Unknown::unknown()
             }});
         }
         0x0E: Store::stx({{Mem.udw = Rd}});
-        0x0F: LoadStore::swap({{
-            uint32_t temp = Rd;
-            Rd = Mem.uw;
-            Mem.uw = temp;
-        }});
+        0x0F: LoadStore::swap(
+            {{*temp = Rd.uw;
+            Rd.uw = Mem.uw;}},
+            {{Mem.uw = *temp;}});
         format Load {
             0x10: lduwa({{Rd = Mem.uw;}});
             0x11: lduba({{Rd = Mem.ub;}});
@@ -873,16 +872,14 @@ decode OP default Unknown::unknown()
             0x1A: ldsha({{Rd = (int16_t)Mem.shw;}});
             0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}});
         }
-        0x1D: LoadStore::ldstuba({{
-            Rd = Mem.ub;
-            Mem.ub = 0xFF;
-        }});
+        0x1D: LoadStore::ldstuba(
+                {{Rd = Mem.ub;}},
+                {{Mem.ub = 0xFF}});
         0x1E: Store::stxa({{Mem.udw = Rd}});
-        0x1F: LoadStore::swapa({{
-            uint32_t temp = Rd;
-            Rd = Mem.uw;
-            Mem.uw = temp;
-        }});
+        0x1F: LoadStore::swapa(
+            {{*temp = Rd.uw;
+            Rd.uw = Mem.uw;}},
+            {{Mem.uw = *temp;}});
         format Trap {
             0x20: Load::ldf({{Frd.uw = Mem.uw;}});
             0x21: decode X {

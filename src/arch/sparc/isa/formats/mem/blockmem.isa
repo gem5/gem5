@@ -1,3 +1,32 @@
+// Copyright (c) 2006 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Ali Saidi
+//          Gabe Black
+
 ////////////////////////////////////////////////////////////////////
 //
 // Block Memory instructions
@@ -12,9 +41,8 @@ output header {{
             // Constructor
             // We make the assumption that all block memory operations
             // Will take 8 instructions to execute
-            BlockMem(const char *mnem,
-                    ExtMachInst _machInst, OpClass __opClass) :
-                SparcMacroInst(mnem, _machInst, __opClass, 8)
+            BlockMem(const char *mnem, ExtMachInst _machInst) :
+                SparcMacroInst(mnem, _machInst, No_OpClass, 8)
             {}
         };
 
@@ -23,13 +51,9 @@ output header {{
           protected:
 
             // Constructor
-            BlockMemImm(const char *mnem,
-                    ExtMachInst _machInst, OpClass __opClass) :
-                BlockMem(mnem, _machInst, __opClass),
-                imm(sext<13>(SIMM13))
+            BlockMemImm(const char *mnem, ExtMachInst _machInst) :
+                BlockMem(mnem, _machInst)
             {}
-
-            const int32_t imm;
         };
 
         class BlockMemMicro : public SparcDelayedMicroInst
@@ -125,32 +149,6 @@ output decoder {{
 
 }};
 
-def template LoadStoreExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-                Trace::InstRecord *traceData) const
-        {
-            Fault fault = NoFault;
-            uint64_t write_result = 0;
-            Addr EA;
-            %(op_decl)s;
-            %(op_rd)s;
-            %(priv_check)s;
-            %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
-            xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
-            %(code)s;
-
-            if(fault == NoFault)
-            {
-                xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
-                //Write the resulting state to the execution context
-                %(op_wb)s;
-            }
-
-            return fault;
-        }
-}};
-
 def template BlockMemDeclare {{
         /**
          * Static instruction class for a block memory operation
@@ -231,7 +229,7 @@ def template BlockMemDeclare {{
 // Basic instruction class constructor template.
 def template BlockMemConstructor {{
         inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+            : %(base_class)s("%(mnemonic)s", machInst)
         {
             %(constructor)s;
             microOps[0] = new %(class_name)s_0(machInst);
@@ -335,7 +333,7 @@ let {{
         for microPC in range(8):
             flag_code = ''
             if (microPC == 7):
-                flag_code = "flags[IsLastMicroOp] = true"
+                flag_code = "flags[IsLastMicroOp] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPC, code)
             iop = InstObjParams(name, Name, 'BlockMem', pcedCode,
                     opt_flags, {"ea_code": addrCalcReg,

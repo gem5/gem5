@@ -24,52 +24,39 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Ali Saidi
-//          Gabe Black
-//          Steve Reinhardt
+// Authors: Gabe Black
 
-////////////////////////////////////////////////////////////////////
-//
-// Output include file directives.
-//
+//Include the basic format
+//Templates from this format are used later
+##include "basic.isa"
 
-output header {{
-#include <sstream>
-#include <iostream>
+//Include base classes for microcoding instructions
+##include "micro.isa"
 
-#include "cpu/static_inst.hh"
-#include "arch/sparc/faults.hh"
-#include "mem/request.hh"  // some constructors use MemReq flags
-#include "mem/packet.hh"
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/regfile.hh"
-}};
+//Include the noop format
+##include "nop.isa"
 
-output decoder {{
-#include "base/cprintf.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"  // for Jump::branchTarget()
-#include "mem/packet.hh"
+//Include the integerOp and integerOpCc format
+##include "integerop.isa"
 
-#if defined(linux)
-#include <fenv.h>
-#endif
+//Include the memory formats
+##include "mem/mem.isa"
 
-using namespace SparcISA;
-}};
+//Include the compare and swap format
+##include "cas.isa"
 
-output exec {{
-#if defined(linux)
-#include <fenv.h>
-#endif
+//Include the trap format
+##include "trap.isa"
 
-#include "arch/sparc/asi.hh"
-#include "cpu/base.hh"
-#include "cpu/exetrace.hh"
-#include "sim/sim_exit.hh"
-#include "mem/packet.hh"
-#include "mem/packet_access.hh"
+//Include the unimplemented format
+##include "unimp.isa"
 
-using namespace SparcISA;
-}};
+//Include the "unknown" format
+##include "unknown.isa"
+
+//Include the priveleged mode format
+##include "priv.isa"
+
+//Include the branch format
+##include "branch.isa"
 

@@ -55,7 +55,7 @@ namespace SparcISA;
 ##include "base.isa"
 
 //Include the definitions for the instruction formats
-##include "formats.isa"
+##include "formats/formats.isa"
 
 //Include the decoder definition
 ##include "decoder.isa"
