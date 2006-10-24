@@ -84,6 +84,7 @@ baseFlags = [
     'EthernetDMA',
     'EthernetData',
     'EthernetDesc',
+    'EthernetEEPROM',
     'EthernetIntr',
     'EthernetPIO',
     'EthernetSM',
