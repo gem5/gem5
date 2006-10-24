@@ -205,9 +205,10 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         missQueue->doWriteback(writebacks.front());
         writebacks.pop_front();
     }
-    DPRINTF(Cache, "%s %x %s blk_addr: %x\n", pkt->cmdString(),
-            pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
-            pkt->getAddr() & ~((Addr)blkSize - 1));
+
+    DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
+            (blk) ? "hit" : "miss");
+
     if (blk) {
         // Hit
         hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
@@ -288,10 +289,8 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
             if (old_state != new_state)
-                DPRINTF(Cache, "Block for blk addr %x moving from "
-                        "state %i to %i\n",
-                        pkt->getAddr() & (((ULL(1))<<48)-1),
-                        old_state, new_state);
+                DPRINTF(Cache, "Block for blk addr %x moving from state "
+                        "%i to %i\n", pkt->getAddr(), old_state, new_state);
             //Set the state on the upgrade
             memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
             PacketList writebacks;
@@ -331,8 +330,7 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
             //Make the response a Bad address and send it
         }
 //	MemDebug::cacheResponse(pkt);
-        DPRINTF(Cache, "Handling reponse to %x, blk addr: %x\n",pkt->getAddr(),
-                pkt->getAddr() & (((ULL(1))<<48)-1));
+        DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
 
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
             blk = tags->findBlock(pkt);
@@ -342,7 +340,7 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
             if (old_state != new_state)
                 DPRINTF(Cache, "Block for blk addr %x moving from "
                         "state %i to %i\n",
-                        pkt->getAddr() & (((ULL(1))<<48)-1),
+                        pkt->getAddr(),
                         old_state, new_state);
             blk = tags->handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
@@ -427,8 +425,8 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
 
                     //Append the invalidate on
                     missQueue->addTarget(mshr,invalidatePkt);
-                    DPRINTF(Cache, "Appending Invalidate to blk_addr: %x\n",
-                            pkt->getAddr() & (((ULL(1))<<48)-1));
+                    DPRINTF(Cache, "Appending Invalidate to addr: %x\n",
+                            pkt->getAddr());
                     return;
                 }
             }
@@ -436,8 +434,8 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
         //We also need to check the writeback buffers and handle those
         std::vector<MSHR *> writebacks;
         if (missQueue->findWrites(blk_addr, writebacks)) {
-            DPRINTF(Cache, "Snoop hit in writeback to blk_addr: %x\n",
-                    pkt->getAddr() & (((ULL(1))<<48)-1));
+            DPRINTF(Cache, "Snoop hit in writeback to addr: %x\n",
+                    pkt->getAddr());
 
             //Look through writebacks for any non-uncachable writes, use that
             for (int i=0; i<writebacks.size(); i++) {
@@ -528,12 +526,9 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
 {
 //    MemDebug::cacheProbe(pkt);
     if (!pkt->req->isUncacheable()) {
-        if (pkt->isInvalidate() && !pkt->isRead()
-            && !pkt->isWrite()) {
+        if (pkt->isInvalidate() && !pkt->isRead() && !pkt->isWrite()) {
             //Upgrade or Invalidate, satisfy it, don't forward
-            DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
-                    pkt->getAddr() & (((ULL(1))<<48)-1),
-                    pkt->getAddr() & ~((Addr)blkSize - 1));
+            DPRINTF(Cache, "%s %x ?\n", pkt->cmdString(), pkt->getAddr());
             pkt->flags |= SATISFIED;
             return 0;
         }
@@ -550,9 +545,8 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
     int lat;
     BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
 
-    DPRINTF(Cache, "%s %x %s blk_addr: %x\n", pkt->cmdString(),
-            pkt->getAddr() & (((ULL(1))<<48)-1), (blk) ? "hit" : "miss",
-            pkt->getAddr() & ~((Addr)blkSize - 1));
+    DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(),
+            pkt->getAddr(), (blk) ? "hit" : "miss");
 
 
     // Need to check for outstanding misses and writes
@@ -596,7 +590,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
     } else if (!blk && !(pkt->flags & SATISFIED)) {
         // update the cache state and statistics
         if (mshr || !writes.empty()){
-            // Can't handle it, return pktuest unsatisfied.
+            // Can't handle it, return request unsatisfied.
             panic("Atomic access ran into outstanding MSHR's or WB's!");
         }
         if (!pkt->req->isUncacheable()) {
@@ -611,10 +605,8 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
 
             busPkt->time = curTick;
 
-            DPRINTF(Cache, "Sending a atomic %s for %x blk_addr: %x\n",
-                    busPkt->cmdString(),
-                    busPkt->getAddr() & (((ULL(1))<<48)-1),
-                    busPkt->getAddr() & ~((Addr)blkSize - 1));
+            DPRINTF(Cache, "Sending a atomic %s for %x\n",
+                    busPkt->cmdString(), busPkt->getAddr());
 
             lat = memSidePort->sendAtomic(busPkt);
 
@@ -633,19 +625,13 @@ return 0;
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state =
                 coherence->getNewState(busPkt, old_state);
-            DPRINTF(Cache,
-                        "Receive response:%s for blk addr %x in state %i\n",
-                    busPkt->cmdString(),
-                    busPkt->getAddr() & (((ULL(1))<<48)-1), old_state);
+            DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
+                    busPkt->cmdString(), busPkt->getAddr(), old_state);
             if (old_state != new_state)
-                    DPRINTF(Cache, "Block for blk addr %x moving from "
-                            "state %i to %i\n",
-                            busPkt->getAddr() & (((ULL(1))<<48)-1),
-                            old_state, new_state);
+                DPRINTF(Cache, "Block for blk addr %x moving from state "
+                        "%i to %i\n", busPkt->getAddr(), old_state, new_state);
 
-            tags->handleFill(blk, busPkt,
-                             new_state,
-                             writebacks, pkt);
+            tags->handleFill(blk, busPkt, new_state, writebacks, pkt);
             //Free the packet
             delete busPkt;
 

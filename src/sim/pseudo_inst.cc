@@ -74,6 +74,8 @@ namespace AlphaPseudo
         if (!doQuiesce)
             return;
 
+        DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
+
         tc->suspend();
         if (tc->getKernelStats())
             tc->getKernelStats()->quiesce();

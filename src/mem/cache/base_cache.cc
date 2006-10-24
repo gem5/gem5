@@ -79,9 +79,7 @@ BaseCache::CachePort::recvTiming(PacketPtr pkt)
         && !pkt->isRead() && !pkt->isWrite()) {
         //Upgrade or Invalidate
         //Look into what happens if two slave caches on bus
-        DPRINTF(Cache, "%s %x ? blk_addr: %x\n", pkt->cmdString(),
-                pkt->getAddr() & (((ULL(1))<<48)-1),
-                pkt->getAddr() & ~((Addr)cache->blkSize - 1));
+        DPRINTF(Cache, "%s %x ?\n", pkt->cmdString(), pkt->getAddr());
 
         assert(!(pkt->flags & SATISFIED));
         pkt->flags |= SATISFIED;

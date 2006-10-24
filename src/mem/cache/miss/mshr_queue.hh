@@ -39,7 +39,7 @@
 #include "mem/cache/miss/mshr.hh"
 
 /**
- * A Class for maintaining a list of pending and allocated memory pktuests.
+ * A Class for maintaining a list of pending and allocated memory requests.
  */
 class MSHRQueue {
   private:
@@ -55,7 +55,7 @@ class MSHRQueue {
     // Parameters
     /**
      * The total number of MSHRs in this queue. This number is set as the
-     * number of MSHRs pktuested plus (numReserve - 1). This allows for
+     * number of MSHRs requested plus (numReserve - 1). This allows for
      * the same number of effective MSHRs while still maintaining the reserve.
      */
     const int numMSHRs;
@@ -103,14 +103,14 @@ class MSHRQueue {
     bool findMatches(Addr addr, std::vector<MSHR*>& matches) const;
 
     /**
-     * Find any pending pktuests that overlap the given request.
+     * Find any pending requests that overlap the given request.
      * @param pkt The request to find.
      * @return A pointer to the earliest matching MSHR.
      */
     MSHR* findPending(PacketPtr &pkt) const;
 
     /**
-     * Allocates a new MSHR for the pktuest and size. This places the request
+     * Allocates a new MSHR for the request and size. This places the request
      * as the first target in the MSHR.
      * @param pkt The request to handle.
      * @param size The number in bytes to fetch from memory.
@@ -121,12 +121,12 @@ class MSHRQueue {
     MSHR* allocate(PacketPtr &pkt, int size = 0);
 
     /**
-     * Allocate a read pktuest for the given address, and places the given
+     * Allocate a read request for the given address, and places the given
      * target on the target list.
      * @param addr The address to fetch.
      * @param asid The address space for the fetch.
-     * @param size The number of bytes to pktuest.
-     * @param target The first target for the pktuest.
+     * @param size The number of bytes to request.
+     * @param target The first target for the request.
      * @return Pointer to the new MSHR.
      */
     MSHR* allocateFetch(Addr addr, int size, PacketPtr &target);
@@ -135,7 +135,7 @@ class MSHRQueue {
      * Allocate a target list for the given address.
      * @param addr The address to fetch.
      * @param asid The address space for the fetch.
-     * @param size The number of bytes to pktuest.
+     * @param size The number of bytes to request.
      * @return Pointer to the new MSHR.
      */
     MSHR* allocateTargetList(Addr addr, int size);
@@ -181,14 +181,14 @@ class MSHRQueue {
     void markInService(MSHR* mshr);
 
     /**
-     * Mark an in service mshr as pending, used to resend a pktuest.
+     * Mark an in service mshr as pending, used to resend a request.
      * @param mshr The MSHR to resend.
      * @param cmd The command to resend.
      */
     void markPending(MSHR* mshr, Packet::Command cmd);
 
     /**
-     * Squash outstanding pktuests with the given thread number. If a request
+     * Squash outstanding requests with the given thread number. If a request
      * is in service, just squashes the targets.
      * @param threadNum The thread to squash.
      */
@@ -196,7 +196,7 @@ class MSHRQueue {
 
     /**
      * Returns true if the pending list is not empty.
-     * @return True if there are outstanding pktuests.
+     * @return True if there are outstanding requests.
      */
     bool havePending() const
     {
@@ -213,8 +213,8 @@ class MSHRQueue {
     }
 
     /**
-     * Returns the pktuest at the head of the pendingList.
-     * @return The next pktuest to service.
+     * Returns the request at the head of the pendingList.
+     * @return The next request to service.
      */
     PacketPtr getReq() const
     {
