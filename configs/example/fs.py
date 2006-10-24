@@ -152,8 +152,8 @@ else:
     sys.exit(1)
 
 if options.standard_switch:
-    switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i) for i in xrange(np))]
-    switch_cpus1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i) for i in xrange(np))]
+    switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i)) for i in xrange(np)]
+    switch_cpus1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i)) for i in xrange(np)]
     for i in xrange(np):
         switch_cpus[i].system =  test_sys
         switch_cpus1[i].system =  test_sys
@@ -176,7 +176,7 @@ m5.instantiate(root)
 if options.checkpoint_dir:
     cptdir = options.checkpoint_dir
 else:
-    cptdir = getcwd()
+    cptdir = os.getcwd()
 
 if options.checkpoint_restore:
     from os.path import isdir
