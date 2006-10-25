@@ -55,6 +55,9 @@ class SparcLiveProcess : public LiveProcess
 
     static const Addr StackBias = 2047;
 
+    //The locations of the fill and spill handlers
+    Addr fillStart, spillStart;
+
     std::vector<m5_auxv_t> auxv;
 
     SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
@@ -70,6 +73,12 @@ class SparcLiveProcess : public LiveProcess
   public:
 
     void argsInit(int intSize, int pageSize);
+
+    Addr readFillStart()
+    { return fillStart; }
+
+    Addr readSpillStart()
+    { return spillStart; }
 
 };
 
