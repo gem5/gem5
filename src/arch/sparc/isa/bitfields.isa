@@ -50,7 +50,7 @@ def bitfield D16LO	<13:0>;
 def bitfield DISP19	<18:0>;
 def bitfield DISP22	<21:0>;
 def bitfield DISP30	<29:0>;
-def bitfield FCN	<29:26>;
+def bitfield FCN	<29:25>;
 def bitfield I		<13>;
 def bitfield IMM_ASI	<12:5>;
 def bitfield IMM22	<21:0>;
