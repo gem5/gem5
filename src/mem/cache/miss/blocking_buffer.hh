@@ -128,8 +128,8 @@ public:
     }
 
     /**
-     * Selects a outstanding pktuest to service.
-     * @return The pktuest to service, NULL if none found.
+     * Selects a outstanding request to service.
+     * @return The request to service, NULL if none found.
      */
     PacketPtr getPacket();
 
@@ -147,7 +147,7 @@ public:
     void restoreOrigCmd(PacketPtr &pkt);
 
     /**
-     * Marks a pktuest as in service (sent on the bus). This can have side
+     * Marks a request as in service (sent on the bus). This can have side
      * effect since storage for no response commands is deallocated once they
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
@@ -155,14 +155,14 @@ public:
     void markInService(PacketPtr &pkt, MSHR* mshr);
 
     /**
-     * Frees the resources of the pktuest and unblock the cache.
+     * Frees the resources of the request and unblock the cache.
      * @param pkt The request that has been satisfied.
-     * @param time The time when the pktuest is satisfied.
+     * @param time The time when the request is satisfied.
      */
     void handleResponse(PacketPtr &pkt, Tick time);
 
     /**
-     * Removes all outstanding pktuests for a given thread number. If a request
+     * Removes all outstanding requests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
      * @param threadNum The thread number of the requests to squash.
      */
@@ -220,14 +220,14 @@ public:
                      int size, uint8_t *data, bool compressed);
 
     /**
-     * Perform a writeback pktuest.
+     * Perform a writeback request.
      * @param pkt The writeback request.
      */
     void doWriteback(PacketPtr &pkt);
 
     /**
-     * Returns true if there are outstanding pktuests.
-     * @return True if there are outstanding pktuests.
+     * Returns true if there are outstanding requests.
+     * @return True if there are outstanding requests.
      */
     bool havePending()
     {

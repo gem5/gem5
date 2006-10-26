@@ -182,11 +182,11 @@ fixPacket(PacketPtr func, PacketPtr timing)
         if (funcStart >= timingStart) {
             memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
                    func->getPtr<uint8_t>(),
-                   funcStart - std::min(funcEnd, timingEnd));
+                   std::min(funcEnd, timingEnd) - funcStart);
         } else { // timingStart > funcStart
             memcpy(timing->getPtr<uint8_t>(),
                    func->getPtr<uint8_t>() + (timingStart - funcStart),
-                   timingStart - std::min(funcEnd, timingEnd));
+                   std::min(funcEnd, timingEnd) - timingStart);
         }
         // we always want to keep going with a write
         return true;

@@ -44,7 +44,7 @@ class MSHR;
 
 /**
  * Miss Status and handling Register. This class keeps all the information
- * needed to handle a cache miss including a list of target pktuests.
+ * needed to handle a cache miss including a list of target requests.
  */
 class MSHR {
   public:
@@ -63,15 +63,15 @@ class MSHR {
     Addr addr;
     /** Adress space id of the miss. */
     short asid;
-    /** True if the pktuest has been sent to the bus. */
+    /** True if the request has been sent to the bus. */
     bool inService;
     /** Thread number of the miss. */
     int threadNum;
-    /** The pktuest that is forwarded to the next level of the hierarchy. */
+    /** The request that is forwarded to the next level of the hierarchy. */
     PacketPtr pkt;
     /** The number of currently allocated targets. */
     short ntargets;
-    /** The original pktuesting command. */
+    /** The original requesting command. */
     Packet::Command originalCmd;
     /** Order number of assigned by the miss queue. */
     uint64_t order;
@@ -88,24 +88,24 @@ class MSHR {
     Iterator allocIter;
 
 private:
-    /** List of all pktuests that match the address */
+    /** List of all requests that match the address */
     TargetList targets;
 
 public:
     /**
      * Allocate a miss to this MSHR.
-     * @param cmd The pktuesting command.
+     * @param cmd The requesting command.
      * @param addr The address of the miss.
      * @param asid The address space id of the miss.
-     * @param size The number of bytes to pktuest.
+     * @param size The number of bytes to request.
      * @param pkt  The original miss.
      */
     void allocate(Packet::Command cmd, Addr addr, int size,
                   PacketPtr &pkt);
 
     /**
-     * Allocate this MSHR as a buffer for the given pktuest.
-     * @param target The memory pktuest to buffer.
+     * Allocate this MSHR as a buffer for the given request.
+     * @param target The memory request to buffer.
      */
     void allocateAsBuffer(PacketPtr &target);
 
@@ -115,7 +115,7 @@ public:
     void deallocate();
 
     /**
-     * Add a pktuest to the list of targets.
+     * Add a request to the list of targets.
      * @param target The target.
      */
     void allocateTarget(PacketPtr &target);

@@ -71,13 +71,13 @@ class Split : public BaseTags
 
     Addr blkMask;
 
-    /** Number of NIC pktuests that hit in the NIC partition */
+    /** Number of NIC requests that hit in the NIC partition */
     Stats::Scalar<> NR_NP_hits;
-    /** Number of NIC pktuests that hit in the CPU partition */
+    /** Number of NIC requests that hit in the CPU partition */
     Stats::Scalar<> NR_CP_hits;
-    /** Number of CPU pktuests that hit in the NIC partition */
+    /** Number of CPU requests that hit in the NIC partition */
     Stats::Scalar<> CR_NP_hits;
-    /** Number of CPU pktuests that hit in the CPU partition */
+    /** Number of CPU requests that hit in the CPU partition */
     Stats::Scalar<> CR_CP_hits;
     /** The number of nic replacements (i.e. misses) */
     Stats::Scalar<> nic_repl;
