@@ -129,14 +129,15 @@ cpu.cpu_id = 0
 system = System(cpu = cpu,
                 physmem = PhysicalMemory(range=AddrRange("512MB")),
                 membus = Bus())
-system.physmem.port = system.membus.port
-system.cpu.connectMemPorts(system.membus)
-system.cpu.mem = system.physmem
-system.cpu.clock = '2GHz'
+
 if options.caches and not options.standard_switch:
     system.cpu.addPrivateSplitL1Caches(MyCache(size = '32kB'),
                                        MyCache(size = '64kB'))
 
+system.physmem.port = system.membus.port
+system.cpu.connectMemPorts(system.membus)
+system.cpu.mem = system.physmem
+system.cpu.clock = '2GHz'
 root = Root(system = system)
 
 if options.timing or options.detailed:
@@ -169,7 +170,7 @@ m5.instantiate(root)
 if options.checkpoint_dir:
     cptdir = options.checkpoint_dir
 else:
-    cptdir = getcwd()
+    cptdir = os.getcwd()
 
 if options.checkpoint_restore:
     from os.path import isdir
