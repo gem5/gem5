@@ -234,6 +234,9 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
+    //Make sure ticks are still on multiples of cycles
+    Tick nextTick = curTick + cycles(1) - 1;
+    nextTick -= (nextTick % (cycles(1)));
     tickEvent.schedule(curTick + cycles(delay));
     _status = Running;
 }
