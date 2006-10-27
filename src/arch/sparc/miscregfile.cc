@@ -202,78 +202,27 @@ MiscReg MiscRegFile::readReg(int miscReg)
     }
 }
 
-MiscReg MiscRegFile::readRegWithEffect(int miscReg,
-        Fault &fault, ThreadContext * tc)
+MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
 {
-    fault = NoFault;
     switch (miscReg) {
-        case MISCREG_Y:
-        case MISCREG_CCR:
-        case MISCREG_ASI:
-          return readReg(miscReg);
-
         case MISCREG_TICK:
         case MISCREG_PRIVTICK:
-          // Check  for reading privilege
-          if (tickFields.npt && !isNonPriv()) {
-              fault = new PrivilegedAction;
-              return 0;
-          }
           return tc->getCpuPtr()->curCycle() - tickFields.counter |
               tickFields.npt << 63;
         case MISCREG_FPRS:
-          fault = new UnimpFault("FPU not implemented\n");
-          return 0;
+          panic("FPU not implemented\n");
         case MISCREG_PCR:
-          fault = new UnimpFault("Performance Instrumentation not impl\n");
-          return 0;
         case MISCREG_PIC:
-          fault = new UnimpFault("Performance Instrumentation not impl\n");
-          return 0;
-        case MISCREG_GSR:
-          return readReg(miscReg);
-
-        /** Privilged Registers */
-        case MISCREG_TPC:
-        case MISCREG_TNPC:
-        case MISCREG_TSTATE:
-        case MISCREG_TT:
-          if (tl == 0) {
-              fault = new IllegalInstruction;
-              return 0;
-          } // NOTE THE FALL THROUGH!
-        case MISCREG_PSTATE:
-        case MISCREG_TL:
-          return readReg(miscReg);
-
-        case MISCREG_TBA:
-          return readReg(miscReg) & ULL(~0x7FFF);
-
-        case MISCREG_PIL:
-
-        case MISCREG_CWP:
-        case MISCREG_CANSAVE:
-        case MISCREG_CANRESTORE:
-        case MISCREG_CLEANWIN:
-        case MISCREG_OTHERWIN:
-        case MISCREG_WSTATE:
-        case MISCREG_GL:
-          return readReg(miscReg);
+          panic("Performance Instrumentation not impl\n");
 
         /** Floating Point Status Register */
         case MISCREG_FSR:
           panic("Floating Point not implemented\n");
-        default:
-#if FULL_SYSTEM
-          return readFSRegWithEffect(miscReg, fault, tc);
-#else
-          fault = new IllegalInstruction;
-          return 0;
-#endif
     }
+    return readReg(miscReg);
 }
 
-Fault MiscRegFile::setReg(int miscReg, const MiscReg &val)
+void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 {
     switch (miscReg) {
         case MISCREG_Y:
@@ -386,10 +335,9 @@ Fault MiscRegFile::setReg(int miscReg, const MiscReg &val)
         default:
           panic("Miscellaneous register %d not implemented\n", miscReg);
     }
-    return NoFault;
 }
 
-Fault MiscRegFile::setRegWithEffect(int miscReg,
+void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     const uint64_t Bit64 = (1ULL << 63);
@@ -412,7 +360,6 @@ Fault MiscRegFile::setRegWithEffect(int miscReg,
           break;
     }
     setReg(miscReg, val);
-    return NoFault;
 }
 
 void MiscRegFile::serialize(std::ostream & os)
