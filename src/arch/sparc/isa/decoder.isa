@@ -447,12 +447,12 @@ decode OP default Unknown::unknown()
             0x32: Priv::wrpr({{
                 // XXX Need to protect with format that traps non-priv
                 // access
-                fault = xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
+                xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x33: HPriv::wrhpr({{
                 // XXX Need to protect with format that traps non-priv/priv
                 // access
-                fault = xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
+                xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x34: decode OPF{
                 format BasicOperate{
@@ -719,7 +719,6 @@ decode OP default Unknown::unknown()
                         //no matter what. This ensures that the results
                         //are written in the new window as well.
                         xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
-                        warn("About to set the CWP to %d\n", Cwp);
                     }
                 }
             }});
