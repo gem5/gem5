@@ -56,7 +56,6 @@ namespace SparcISA
         MISCREG_CCR = AsrStart + 2,
         MISCREG_ASI = AsrStart + 3,
         MISCREG_TICK = AsrStart + 4,
-        MISCREG_PC = AsrStart + 5,
         MISCREG_FPRS = AsrStart + 6,
         MISCREG_PCR = AsrStart + 16,
         MISCREG_PIC = AsrStart + 17,
