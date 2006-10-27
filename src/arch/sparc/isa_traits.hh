@@ -57,12 +57,11 @@ namespace SparcISA
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
 
-    // Alpha Does NOT have a delay slot
+    // SPARC have a delay slot
     #define ISA_HAS_DELAY_SLOT 1
 
-    //TODO this needs to be a SPARC Noop
-    // Alpha UNOP (ldq_u r31,0(r0))
-    const MachInst NoopMachInst = 0x2ffe0000;
+    // SPARC NOP (sethi %(hi(0), g0)
+    const MachInst NoopMachInst = 0x01000000;
 
     const int NumIntRegs = 32;
     const int NumFloatRegs = 64;
@@ -87,7 +86,7 @@ namespace SparcISA
     const int MaxPGL = 2;
 
     // NWINDOWS - number of register windows, can be 3 to 32
-    const int NWindows = 32;
+    const int NWindows = 8;
 
     // semantically meaningful register indices
     const int ZeroReg = 0;	// architecturally meaningful

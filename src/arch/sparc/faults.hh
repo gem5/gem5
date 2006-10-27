@@ -39,8 +39,8 @@
 namespace SparcISA
 {
 
-typedef const uint32_t TrapType;
-typedef const uint32_t FaultPriority;
+typedef uint32_t TrapType;
+typedef uint32_t FaultPriority;
 
 class SparcFault : public FaultBase
 {
@@ -547,6 +547,7 @@ class SpillNNormal : public EnumeratedFault
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
 };
 
 class SpillNOther : public EnumeratedFault
@@ -577,6 +578,7 @@ class FillNNormal : public EnumeratedFault
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
 };
 
 class FillNOther : public EnumeratedFault

@@ -1316,7 +1316,7 @@ class ControlRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
-        wb = 'xc->setMiscReg(%s, %s);\n' % (self.reg_spec, self.base_name)
+        wb = 'xc->setMiscRegWithEffect(%s, %s);\n' % (self.reg_spec, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
               self.base_name
         return wb

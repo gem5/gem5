@@ -121,15 +121,14 @@ let {{
 
 // Primary format for integer operate instructions:
 def format Priv(code, *opt_flags) {{
-        checkCode = '''((xc->readMiscReg(PrStart + MISCREG_PSTATE))<2:2>) ||
-                        ((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)'''
+        checkCode = "!(Pstate<2:2> || Hpstate<2:2>)"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
              checkCode, name, Name, opt_flags + ('IprAccessOp',))
 }};
 
 def format HPriv(code, *opt_flags) {{
-        checkCode = "((xc->readMiscReg(HprStart + MISCREG_HPSTATE))<2:2>)"
+        checkCode = "!Hpstate<2:2>"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
              checkCode, name, Name, opt_flags + ('IprAccessOp',))

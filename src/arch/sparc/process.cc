@@ -66,6 +66,10 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+
+    //Initialize these to 0s
+    fillStart = 0;
+    spillStart = 0;
 }
 
 void
@@ -88,15 +92,19 @@ SparcLiveProcess::startup()
      */
 
     //No windows contain info from other programs
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_OTHERWIN, 0);
+    threadContexts[0]->setMiscReg(MISCREG_OTHERWIN, 0);
     //There are no windows to pop
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANRESTORE, 0);
+    threadContexts[0]->setMiscReg(MISCREG_CANRESTORE, 0);
     //All windows are available to save into
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_CANSAVE, NWindows - 2);
+    threadContexts[0]->setMiscReg(MISCREG_CANSAVE, NWindows - 2);
     //All windows are "clean"
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_CLEANWIN, NWindows);
+    threadContexts[0]->setMiscReg(MISCREG_CLEANWIN, NWindows);
     //Start with register window 0
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_CWP, 0);
+    threadContexts[0]->setMiscReg(MISCREG_CWP, 0);
+    //Always use spill and fill traps 0
+    threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
+    //Set the trap level to 0
+    threadContexts[0]->setMiscReg(MISCREG_TL, 0);
 }
 
 m5_auxv_t buildAuxVect(int64_t type, int64_t val)
@@ -106,6 +114,83 @@ m5_auxv_t buildAuxVect(int64_t type, int64_t val)
     result.a_val = TheISA::htog(val);
     return result;
 }
+
+//We only use 19 instructions for the trap handlers, but there would be
+//space for 32 in a real SPARC trap table.
+const int numFillInsts = 32;
+const int numSpillInsts = 32;
+
+MachInst fillHandler[numFillInsts] =
+{
+    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0xe0dba7ff), //ldxa [%sp + BIAS + (0*8)] %asi, %l0
+    htog(0xe2dba807), //ldxa [%sp + BIAS + (1*8)] %asi, %l1
+    htog(0xe4dba80f), //ldxa [%sp + BIAS + (2*8)] %asi, %l2
+    htog(0xe6dba817), //ldxa [%sp + BIAS + (3*8)] %asi, %l3
+    htog(0xe8dba81f), //ldxa [%sp + BIAS + (4*8)] %asi, %l4
+    htog(0xeadba827), //ldxa [%sp + BIAS + (5*8)] %asi, %l5
+    htog(0xecdba82f), //ldxa [%sp + BIAS + (6*8)] %asi, %l6
+    htog(0xeedba837), //ldxa [%sp + BIAS + (7*8)] %asi, %l7
+    htog(0xf0dba83f), //ldxa [%sp + BIAS + (8*8)] %asi, %i0
+    htog(0xf2dba847), //ldxa [%sp + BIAS + (9*8)] %asi, %i1
+    htog(0xf4dba84f), //ldxa [%sp + BIAS + (10*8)] %asi, %i2
+    htog(0xf6dba857), //ldxa [%sp + BIAS + (11*8)] %asi, %i3
+    htog(0xf8dba85f), //ldxa [%sp + BIAS + (12*8)] %asi, %i4
+    htog(0xfadba867), //ldxa [%sp + BIAS + (13*8)] %asi, %i5
+    htog(0xfcdba86f), //ldxa [%sp + BIAS + (14*8)] %asi, %i6
+    htog(0xfedba877), //ldxa [%sp + BIAS + (15*8)] %asi, %i7
+    htog(0x83880000), //restored
+    htog(0x83F00000), //retry
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000)  //illtrap
+};
+
+MachInst spillHandler[numSpillInsts] =
+{
+    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0xe0f3a7ff), //stxa %l0, [%sp + BIAS + (0*8)] %asi
+    htog(0xe2f3a807), //stxa %l1, [%sp + BIAS + (1*8)] %asi
+    htog(0xe4f3a80f), //stxa %l2, [%sp + BIAS + (2*8)] %asi
+    htog(0xe6f3a817), //stxa %l3, [%sp + BIAS + (3*8)] %asi
+    htog(0xe8f3a81f), //stxa %l4, [%sp + BIAS + (4*8)] %asi
+    htog(0xeaf3a827), //stxa %l5, [%sp + BIAS + (5*8)] %asi
+    htog(0xecf3a82f), //stxa %l6, [%sp + BIAS + (6*8)] %asi
+    htog(0xeef3a837), //stxa %l7, [%sp + BIAS + (7*8)] %asi
+    htog(0xf0f3a83f), //stxa %i0, [%sp + BIAS + (8*8)] %asi
+    htog(0xf2f3a847), //stxa %i1, [%sp + BIAS + (9*8)] %asi
+    htog(0xf4f3a84f), //stxa %i2, [%sp + BIAS + (10*8)] %asi
+    htog(0xf6f3a857), //stxa %i3, [%sp + BIAS + (11*8)] %asi
+    htog(0xf8f3a85f), //stxa %i4, [%sp + BIAS + (12*8)] %asi
+    htog(0xfaf3a867), //stxa %i5, [%sp + BIAS + (13*8)] %asi
+    htog(0xfcf3a86f), //stxa %i6, [%sp + BIAS + (14*8)] %asi
+    htog(0xfef3a877), //stxa %i7, [%sp + BIAS + (15*8)] %asi
+    htog(0x81880000), //saved
+    htog(0x83F00000), //retry
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000), //illtrap
+    htog(0x00000000)  //illtrap
+};
 
 void
 SparcLiveProcess::argsInit(int intSize, int pageSize)
@@ -317,6 +402,17 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
+    //Stuff the trap handlers into the processes address space.
+    //Since the stack grows down and is the highest area in the processes
+    //address space, we can put stuff above it and stay out of the way.
+    int fillSize = sizeof(MachInst) * numFillInsts;
+    int spillSize = sizeof(MachInst) * numSpillInsts;
+    fillStart = stack_base;
+    spillStart = fillStart + fillSize;
+    initVirtMem->writeBlob(fillStart, (uint8_t*)fillHandler, fillSize);
+    initVirtMem->writeBlob(spillStart, (uint8_t*)spillHandler, spillSize);
+
+    //Set up the thread context to start running the process
     threadContexts[0]->setIntReg(ArgumentReg0, argc);
     threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);

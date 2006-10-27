@@ -357,13 +357,9 @@ decode OP default Unknown::unknown()
                 }});
             }
             0x29: HPriv::rdhpr({{
-                // XXX Need to protect with format that traps non-priv/priv
-                // access
                 Rd = xc->readMiscRegWithEffect(RS1 + HprStart, fault);
             }});
             0x2A: Priv::rdpr({{
-                // XXX Need to protect with format that traps non-priv
-                // access
                 Rd = xc->readMiscRegWithEffect(RS1 + PrStart, fault);
             }});
             0x2B: BasicOperate::flushw({{
@@ -425,18 +421,34 @@ decode OP default Unknown::unknown()
                 xc->setMiscRegWithEffect(RD + AsrStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x31: decode FCN {
-                0x0: BasicOperate::saved({{/*Boogy Boogy*/}});
-                0x1: BasicOperate::restored({{/*Boogy Boogy*/}});
+                0x0: Priv::saved({{
+                    assert(Cansave < NWindows - 2);
+                    assert(Otherwin || Canrestore);
+                    Cansave = Cansave + 1;
+                    if(Otherwin == 0)
+                        Canrestore = Canrestore - 1;
+                    else
+                        Otherwin = Otherwin - 1;
+                }});
+                0x1: BasicOperate::restored({{
+                    assert(Cansave || Otherwin);
+                    assert(Canrestore < NWindows - 2);
+                    Canrestore = Canrestore + 1;
+                    if(Otherwin == 0)
+                        Cansave = Cansave - 1;
+                    else
+                        Otherwin = Otherwin - 1;
+                }});
             }
             0x32: Priv::wrpr({{
                 // XXX Need to protect with format that traps non-priv
                 // access
-                fault = xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
+                xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x33: HPriv::wrhpr({{
                 // XXX Need to protect with format that traps non-priv/priv
                 // access
-                fault = xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
+                xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
             }});
             0x34: decode OPF{
                 format BasicOperate{
@@ -684,10 +696,6 @@ decode OP default Unknown::unknown()
                     NNPC = target;
                 if(fault == NoFault)
                 {
-                    //CWP should be set directly so that it always happens
-                    //Also, this will allow writing to the new window and
-                    //reading from the old one
-                    Cwp = (Cwp - 1 + NWindows) % NWindows;
                     if(Canrestore == 0)
                     {
                         if(Otherwin)
@@ -697,14 +705,17 @@ decode OP default Unknown::unknown()
                     }
                     else
                     {
-                        Rd = Rs1 + Rs2_or_imm13;
+                        //CWP should be set directly so that it always happens
+                        //Also, this will allow writing to the new window and
+                        //reading from the old one
+                        Cwp = (Cwp - 1 + NWindows) % NWindows;
                         Cansave = Cansave + 1;
                         Canrestore = Canrestore - 1;
+                        //This is here to make sure the CWP is written
+                        //no matter what. This ensures that the results
+                        //are written in the new window as well.
+                        xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                     }
-                    //This is here to make sure the CWP is written
-                    //no matter what. This ensures that the results
-                    //are written in the new window as well.
-                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                 }
             }});
             0x3A: decode CC
@@ -747,11 +758,11 @@ decode OP default Unknown::unknown()
                         fault = new SpillNOther(Wstate<5:3>);
                     else
                         fault = new SpillNNormal(Wstate<2:0>);
-                    Cwp = (Cwp + 2) % NWindows;
+                    //Cwp = (Cwp + 2) % NWindows;
                 }
                 else if(Cleanwin - Canrestore == 0)
                 {
-                    Cwp = (Cwp + 1) % NWindows;
+                    //Cwp = (Cwp + 1) % NWindows;
                     fault = new CleanWindow;
                 }
                 else
@@ -760,17 +771,13 @@ decode OP default Unknown::unknown()
                     Rd = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave - 1;
                     Canrestore = Canrestore + 1;
+                    //This is here to make sure the CWP is written
+                    //no matter what. This ensures that the results
+                    //are written in the new window as well.
+                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                 }
-                //This is here to make sure the CWP is written
-                //no matter what. This ensures that the results
-                //are written in the new window as well.
-                xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
             }});
             0x3D: restore({{
-                //CWP should be set directly so that it always happens
-                //Also, this will allow writing to the new window and
-                //reading from the old one
-                Cwp = (Cwp - 1 + NWindows) % NWindows;
                 if(Canrestore == 0)
                 {
                     if(Otherwin)
@@ -780,14 +787,18 @@ decode OP default Unknown::unknown()
                 }
                 else
                 {
+                    //CWP should be set directly so that it always happens
+                    //Also, this will allow writing to the new window and
+                    //reading from the old one
+                    Cwp = (Cwp - 1 + NWindows) % NWindows;
                     Rd = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave + 1;
                     Canrestore = Canrestore - 1;
+                    //This is here to make sure the CWP is written
+                    //no matter what. This ensures that the results
+                    //are written in the new window as well.
+                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                 }
-                //This is here to make sure the CWP is written
-                //no matter what. This ensures that the results
-                //are written in the new window as well.
-                xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
             }});
             0x3E: decode FCN {
                 0x0: Priv::done({{
@@ -812,7 +823,7 @@ decode OP default Unknown::unknown()
                     Ccr = Tstate<39:32>;
                     Gl = Tstate<42:40>;
                     NPC = Tpc;
-                    NNPC = Tnpc + 4;
+                    NNPC = Tnpc;
                     Tl = Tl - 1;
                 }});
             }
