@@ -470,7 +470,7 @@ Fault MiscRegFile::setRegWithEffect(int miscReg,
 
         /** Floating Point Status Register */
         case MISCREG_FSR:
-          panic("Floating Point not implemented\n");
+          setReg(miscReg, val);
         default:
 #if FULL_SYSTEM
               setFSRegWithEffect(miscReg, val, tc);
