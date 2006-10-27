@@ -86,7 +86,7 @@ namespace SparcISA
     const int MaxPGL = 2;
 
     // NWINDOWS - number of register windows, can be 3 to 32
-    const int NWindows = 32;
+    const int NWindows = 8;
 
     // semantically meaningful register indices
     const int ZeroReg = 0;	// architecturally meaningful
