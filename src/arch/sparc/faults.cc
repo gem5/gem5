@@ -336,22 +336,14 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
 
     bool changedCWP = true;
     if(tt == 0x24)
-    {
-        warn("Incrementing the CWP by 1\n");
         CWP++;
-    }
     else if(0x80 <= tt && tt <= 0xbf)
-    {
-        warn("Incrementing the CWP by %d\n", CANSAVE + 2);
         CWP += (CANSAVE + 2);
-    }
     else if(0xc0 <= tt && tt <= 0xff)
-    {
-        warn("Decrementing the CWP by 1\n");
         CWP--;
-    }
     else
         changedCWP = false;
+
     if(changedCWP)
     {
         CWP = (CWP + NWindows) % NWindows;
@@ -395,7 +387,6 @@ void TrapInstruction::invoke(ThreadContext * tc)
 
 void SpillNNormal::invoke(ThreadContext *tc)
 {
-    warn("I'm in a spill trap\n");
     doNormalFault(tc, trapType());
 
     Process *p = tc->getProcessPtr();
@@ -413,7 +404,6 @@ void SpillNNormal::invoke(ThreadContext *tc)
 
 void FillNNormal::invoke(ThreadContext *tc)
 {
-    warn("I'm in a fill trap\n");
     doNormalFault(tc, trapType());
 
     Process * p = tc->getProcessPtr();
