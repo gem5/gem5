@@ -82,18 +82,21 @@ MiscReg RegFile::readMiscReg(int miscReg)
 MiscReg RegFile::readMiscRegWithEffect(int miscReg,
         Fault &fault, ThreadContext *tc)
 {
-    return miscRegFile.readRegWithEffect(miscReg, fault, tc);
+    fault = NoFault;
+    return miscRegFile.readRegWithEffect(miscReg, tc);
 }
 
 Fault RegFile::setMiscReg(int miscReg, const MiscReg &val)
 {
-    return miscRegFile.setReg(miscReg, val);
+    miscRegFile.setReg(miscReg, val);
+    return NoFault;
 }
 
 Fault RegFile::setMiscRegWithEffect(int miscReg, const MiscReg &val,
         ThreadContext * tc)
 {
-    return miscRegFile.setRegWithEffect(miscReg, val, tc);
+    miscRegFile.setRegWithEffect(miscReg, val, tc);
+    return NoFault;
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
