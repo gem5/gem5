@@ -357,13 +357,9 @@ decode OP default Unknown::unknown()
                 }});
             }
             0x29: HPriv::rdhpr({{
-                // XXX Need to protect with format that traps non-priv/priv
-                // access
                 Rd = xc->readMiscRegWithEffect(RS1 + HprStart, fault);
             }});
             0x2A: Priv::rdpr({{
-                // XXX Need to protect with format that traps non-priv
-                // access
                 Rd = xc->readMiscRegWithEffect(RS1 + PrStart, fault);
             }});
             0x2B: BasicOperate::flushw({{
