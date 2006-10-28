@@ -29,7 +29,7 @@
  */
 
 #include "arch/utility.hh"
-#include "sim/faults.hh"
+#include "arch/faults.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
