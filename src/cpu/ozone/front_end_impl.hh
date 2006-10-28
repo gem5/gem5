@@ -30,7 +30,7 @@
 
 #include "config/use_checker.hh"
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/statistics.hh"

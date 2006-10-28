@@ -35,7 +35,7 @@
 #include <queue>
 #include <string>
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
