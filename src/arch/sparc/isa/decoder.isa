@@ -1072,19 +1072,21 @@ decode OP default Unknown::unknown()
                         {{fault = new DataAccessException;}});
                 }
             }
-            0x3C: Cas::casa({{
-                uint64_t val = Mem.uw;
-                if(Rs2.uw == val)
+            0x3C: Cas::casa(
+                {{uReg0 = Mem.uw;}},
+                {{if(Rs2.uw == uReg0)
                         Mem.uw = Rd.uw;
-                Rd.uw = val;
-            }});
+                else
+                        storeCond = false;
+                Rd.uw = uReg0;}});
             0x3D: Nop::prefetcha({{ }});
-            0x3E: Cas::casxa({{
-                uint64_t val = Mem.udw;
-                if(Rs2 == val)
+            0x3E: Cas::casxa(
+                {{uReg0 = Mem.udw;}},
+                {{if(Rs2 == uReg0)
                         Mem.udw = Rd;
-                Rd = val;
-            }});
+                else
+                        storeCond = false;
+                Rd = uReg0;}});
         }
     }
 }

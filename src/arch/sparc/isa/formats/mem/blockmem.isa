@@ -301,7 +301,7 @@ let {{
                     "set_flags": flag_code})
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
-            exec_output += doSplitExecute(
+            exec_output += doDualSplitExecute(
                     pcedCode, addrCalcReg, addrCalcImm, execute, faultCode,
                     makeMicroName(name, microPc),
                     makeMicroName(name + "Imm", microPc),

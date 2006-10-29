@@ -156,7 +156,7 @@ let {{
         header_output = MemDeclare.subst(iop) + MemDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
-        exec_output = doSplitExecute(code, addrCalcReg, addrCalcImm, execute,
+        exec_output = doDualSplitExecute(code, addrCalcReg, addrCalcImm, execute,
                 faultCode, name, name + "Imm", Name, Name + "Imm", opt_flags)
         return (header_output, decoder_output, exec_output, decode_block)
 }};

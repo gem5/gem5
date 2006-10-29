@@ -41,5 +41,5 @@
 //Include the block memory format
 ##include "blockmem.isa"
 
-//Include the load/store memory format
+//Include the load/store and cas memory format
 ##include "loadstore.isa"
