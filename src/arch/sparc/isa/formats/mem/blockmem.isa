@@ -56,14 +56,14 @@ output header {{
             {}
         };
 
-        class BlockMemMicro : public SparcDelayedMicroInst
+        class BlockMemMicro : public SparcMicroInst
         {
           protected:
 
             // Constructor
             BlockMemMicro(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, int8_t _offset) :
-                SparcDelayedMicroInst(mnem, _machInst, __opClass),
+                SparcMicroInst(mnem, _machInst, __opClass),
                 offset(_offset)
             {}
 
@@ -290,6 +290,8 @@ let {{
             flag_code = ''
             if (microPc == 7):
                 flag_code = "flags[IsLastMicroOp] = true;"
+            else:
+                flag_code = "flags[IsDelayedCommit] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPc, code)
             iop = InstObjParams(name, Name, 'BlockMem', pcedCode,
                     opt_flags, {"ea_code": addrCalcReg,
