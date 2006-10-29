@@ -57,13 +57,17 @@ namespace SparcISA
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
 
-    // SPARC have a delay slot
+    // SPARC has a delay slot
     #define ISA_HAS_DELAY_SLOT 1
 
     // SPARC NOP (sethi %(hi(0), g0)
     const MachInst NoopMachInst = 0x01000000;
 
-    const int NumIntRegs = 32;
+    const int NumRegularIntRegs = 32;
+    const int NumMicroIntRegs = 1;
+    const int NumIntRegs =
+        NumRegularIntRegs +
+        NumMicroIntRegs;
     const int NumFloatRegs = 64;
     const int NumMiscRegs = 40;
 

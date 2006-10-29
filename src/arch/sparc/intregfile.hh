@@ -65,6 +65,7 @@ namespace SparcISA
 
         IntReg regGlobals[MaxGL][RegsPerFrame];
         IntReg regSegments[2 * NWindows][RegsPerFrame];
+        IntReg microRegs[NumMicroIntRegs];
 
         enum regFrame {Globals, Outputs, Locals, Inputs, NumFrames};
 
