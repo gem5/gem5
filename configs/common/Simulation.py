@@ -116,12 +116,15 @@ def run(options, root, testsys):
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
 
-        exit_event = m5.simulate(3000000)
+        exit_event = m5.simulate(options.standard_switch)
         m5.switchCpus(switch_cpu_list1)
 
     num_checkpoints = 0
     exit_cause = ''
 
+    ## Checkpoints being taken via the command line at <when> and at subsequent
+    ## periods of <period>.  Checkpoint instructions received from the benchmark running
+    ## are ignored and skipped in favor of command line checkpoint instructions.
     if options.take_checkpoints:
         [when, period] = options.take_checkpoints.split(",", 1)
         when = int(when)
