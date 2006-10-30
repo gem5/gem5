@@ -116,7 +116,7 @@ def run(options, root, testsys):
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
 
-        exit_event = m5.simulate(options.standard_switch)
+        exit_event = m5.simulate(options.warmup)
         m5.switchCpus(switch_cpu_list1)
 
     num_checkpoints = 0
@@ -130,7 +130,6 @@ def run(options, root, testsys):
         when = int(when)
         period = int(period)
 
-        print "when is ", when, " period is ", period
         exit_event = m5.simulate(when)
         while exit_event.getCause() == "checkpoint":
             exit_event = m5.simulate(when - m5.curTick())
