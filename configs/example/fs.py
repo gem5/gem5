@@ -39,6 +39,10 @@ import Simulation
 if not m5.build_env['FULL_SYSTEM']:
     m5.panic("This script requires full-system mode (ALPHA_FS).")
 
+# Get paths we might need.  It's expected this file is in m5/configs/example.
+config_path = os.path.dirname(os.path.abspath(__file__))
+config_root = os.path.dirname(config_path)
+
 parser = optparse.OptionParser()
 
 # Benchmark options
@@ -54,8 +58,7 @@ parser.add_option("--etherdump", action="store", type="string", dest="etherdump"
                   help="Specify the filename to dump a pcap capture of the" \
                   "ethernet traffic")
 
-
-execfile("Options.py")
+execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
 

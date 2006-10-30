@@ -36,11 +36,16 @@ import os, optparse, sys
 m5.AddToPath('../common')
 import Simulation
 
+# Get paths we might need.  It's expected this file is in m5/configs/example.
+config_path = os.path.dirname(os.path.abspath(__file__))
+config_root = os.path.dirname(config_path)
+m5_root = os.path.dirname(config_root)
+
 parser = optparse.OptionParser()
 
 # Benchmark options
 parser.add_option("-c", "--cmd",
-                  default="../../tests/test-progs/hello/bin/alpha/linux/hello",
+                  default=os.path.join(m5_root, "tests/test-progs/hello/bin/alpha/linux/hello"),
                   help="The binary to run in syscall emulation mode.")
 parser.add_option("-o", "--options", default="",
                   help="The options to pass to the binary, use \" \" around the entire\
@@ -48,7 +53,7 @@ parser.add_option("-o", "--options", default="",
 parser.add_option("-i", "--input", default="",
                   help="A file of input to give to the binary.")
 
-execfile("Options.py")
+execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
 
