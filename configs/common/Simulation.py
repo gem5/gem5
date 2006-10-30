@@ -135,7 +135,7 @@ def run(options, root, testsys):
             exit_event = m5.simulate(when - m5.curTick())
 
         if exit_event.getCause() == "simulate() limit reached":
-            m5.checkpoint(root, cptdir + "cpt.%d")
+            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
             num_checkpoints += 1
 
         sim_ticks = when
@@ -151,14 +151,14 @@ def run(options, root, testsys):
                 while exit_event.getCause() == "checkpoint":
                     exit_event = m5.simulate(sim_ticks - m5.curTick())
                 if exit_event.getCause() == "simulate() limit reached":
-                    m5.checkpoint(root, cptdir + "cpt.%d")
+                    m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
                     num_checkpoints += 1
 
     else: #no checkpoints being taken via this script
         exit_event = m5.simulate(maxtick)
 
         while exit_event.getCause() == "checkpoint":
-            m5.checkpoint(root, cptdir + "cpt.%d")
+            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
             num_checkpoints += 1
             if num_checkpoints == max_checkpoints:
                 exit_cause =  "maximum %d checkpoints dropped" % max_checkpoints
