@@ -35,6 +35,7 @@ from FSConfig import *
 from SysPaths import *
 from Benchmarks import *
 import Simulation
+from Caches import *
 
 if not m5.build_env['FULL_SYSTEM']:
     m5.panic("This script requires full-system mode (ALPHA_FS).")
@@ -104,7 +105,7 @@ test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 for i in xrange(np):
     if options.caches and not options.standard_switch:
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                L2Cache(size = '64kB'))
+                                                L1Cache(size = '64kB'))
     test_sys.cpu[i].connectMemPorts(test_sys.membus)
     test_sys.cpu[i].mem = test_sys.physmem
 

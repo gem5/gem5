@@ -72,7 +72,8 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.mem_mode = mem_mode
     self.sim_console = SimConsole(listener=ConsoleListener(port=3456))
     self.kernel = binary('vmlinux')
-    self.pal = binary('ts_osfpal')
+##    self.pal = binary('ts_osfpal')
+    self.pal = '/z/hsul/work/m5/alpha-system/palcode/ts_osfpal'
     self.console = binary('console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 

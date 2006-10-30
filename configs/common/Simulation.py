@@ -30,7 +30,7 @@ from os import getcwd
 import m5
 from m5.objects import *
 m5.AddToPath('../common')
-from Caches import *
+from Caches import L1Cache
 
 def run(options, root, testsys):
     if options.maxtick:

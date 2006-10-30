@@ -35,11 +35,16 @@ from m5.objects import *
 import os, optparse, sys
 m5.AddToPath('../common')
 import Simulation
+from Caches import *
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
+print m5_root
+print config_path
+print config_root
+
 
 parser = optparse.OptionParser()
 
@@ -111,7 +116,7 @@ system.physmem.port = system.membus.port
 for i in xrange(np):
     if options.caches and not options.standard_switch:
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                              L2Cache(size = '64kB'))
+                                              L1Cache(size = '64kB'))
     system.cpu[i].connectMemPorts(system.membus)
     system.cpu[i].mem = system.physmem
     system.cpu[i].workload = process
