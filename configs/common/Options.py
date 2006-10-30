@@ -53,6 +53,8 @@ parser.add_option("-r", "--checkpoint_restore", action="store", type="int",
 # CPU Switching - default switch model goes from a checkpoint
 # to a timing simple CPU with caches to warm up, then to detailed CPU for
 # data measurement
-parser.add_option("-s", "--standard_switch", action="store", type="int",
-                  help="switch from timing CPU to Detailed CPU after a period of \
-                  <N> cycles warmup", default=5000000000)
+parser.add_option("-s", "--standard_switch", action="store_true",
+                  help="switch from timing CPU to Detailed CPU")
+parser.add_option("-w", "--warmup", action="store", type="int",
+                  help="if -s, then this is the warmup period.  else, this is ignored",
+                  default=5000000000)
