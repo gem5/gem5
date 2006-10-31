@@ -746,9 +746,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mfpr({{
                 int miscRegIndex = IprToMiscRegIndex[ipr_index];
-                if(miscRegIndex < 0 ||
-                    (miscRegIndex >= MinWriteOnlyIpr &&
-                     miscRegIndex <= MaxWriteOnlyIpr))
+                if(miscRegIndex < 0 || !IprIsReadable(miscRegIndex))
                         fault = new UnimplementedOpcodeFault;
                 else
                     Ra = xc->readMiscRegWithEffect(miscRegIndex, fault);
@@ -761,9 +759,7 @@ decode OPCODE default Unknown::unknown() {
         format HwMoveIPR {
             1: hw_mtpr({{
                 int miscRegIndex = IprToMiscRegIndex[ipr_index];
-                if(miscRegIndex < 0 ||
-                    (miscRegIndex >= MinReadOnlyIpr &&
-                     miscRegIndex <= MaxWriteOnlyIpr))
+                if(miscRegIndex < 0 || !IprIsWritable(miscRegIndex))
                         fault = new UnimplementedOpcodeFault;
                 else
                     xc->setMiscRegWithEffect(miscRegIndex, Ra);

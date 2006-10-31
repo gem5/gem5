@@ -218,6 +218,15 @@ namespace AlphaISA
         NumInternalProcRegs		// number of IPR registers
     };
 
+    inline bool IprIsWritable(int index)
+    {
+        return index < minReadOnlyIpr || index > maxReadOnlyIpr;
+    }
+
+    inline bool IprIsReadable(int index)
+    {
+        return index < minWriteOnlyIpr || index > maxWriteOnlyIpr;
+    }
 
     extern md_ipr_names MiscRegIndexToIpr[NumInternalProcRegs];
     extern int IprToMiscRegIndex[MaxInternalProcRegs];
