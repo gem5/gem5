@@ -745,7 +745,6 @@ decode OPCODE default Unknown::unknown() {
         0: OpcdecFault::hw_mfpr();
         format HwMoveIPR {
             1: hw_mfpr({{
-                miscRegIndex >= NumInternalProcRegs)
                 int miscRegIndex = (ipr_index < NumInternalProcRegs) ?
                         IprToMiscRegIndex[ipr_index] : -1;
                 if(miscRegIndex < 0 || !IprIsReadable(miscRegIndex) ||
