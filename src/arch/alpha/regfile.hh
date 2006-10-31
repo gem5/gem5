@@ -31,8 +31,9 @@
 #ifndef __ARCH_ALPHA_REGFILE_HH__
 #define __ARCH_ALPHA_REGFILE_HH__
 
-#include "arch/alpha/types.hh"
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/ipr.hh"
+#include "arch/alpha/types.hh"
 #include "sim/faults.hh"
 
 #include <string>
@@ -112,6 +113,11 @@ namespace AlphaISA
         int		intr_flag;
 
       public:
+        MiscRegFile()
+        {
+            initializeIprTable();
+        }
+
         MiscReg readReg(int misc_reg);
 
         MiscReg readRegWithEffect(int misc_reg, Fault &fault,

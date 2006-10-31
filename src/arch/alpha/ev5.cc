@@ -62,7 +62,7 @@ AlphaISA::initCPU(ThreadContext *tc, int cpuId)
 
     AlphaFault *reset = new ResetFault;
 
-    tc->setPC(tc->readMiscReg(IPR_PAL_BASE) + reset->vect());
+    tc->setPC(tc->readMiscReg(MISCREG_IPR_PAL_BASE) + reset->vect());
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 
     delete reset;
@@ -79,9 +79,9 @@ AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
         tc->setMiscReg(i, 0);
     }
 
-    tc->setMiscReg(IPR_PAL_BASE, PalBase);
-    tc->setMiscReg(IPR_MCSR, 0x6);
-    tc->setMiscReg(IPR_PALtemp16, cpuId);
+    tc->setMiscReg(MISCREG_IPR_PAL_BASE, PalBase);
+    tc->setMiscReg(MISCREG_IPR_MCSR, 0x6);
+    tc->setMiscReg(MISCREG_IPR_PALtemp16, cpuId);
 }
 
 
@@ -96,13 +96,13 @@ AlphaISA::processInterrupts(CPU *cpu)
 
     cpu->checkInterrupts = false;
 
-    if (cpu->readMiscReg(IPR_ASTRR))
+    if (cpu->readMiscReg(MISCREG_IPR_ASTRR))
         panic("asynchronous traps not implemented\n");
 
-    if (cpu->readMiscReg(IPR_SIRR)) {
+    if (cpu->readMiscReg(MISCREG_IPR_SIRR)) {
         for (int i = INTLEVEL_SOFTWARE_MIN;
              i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (cpu->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+            if (cpu->readMiscReg(MISCREG_IPR_SIRR) & (ULL(1) << i)) {
                 // See table 4-19 of the 21164 hardware reference
                 ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                 summary |= (ULL(1) << i);
@@ -123,12 +123,12 @@ AlphaISA::processInterrupts(CPU *cpu)
         }
     }
 
-    if (ipl && ipl > cpu->readMiscReg(IPR_IPLR)) {
-        cpu->setMiscReg(IPR_ISR, summary);
-        cpu->setMiscReg(IPR_INTID, ipl);
+    if (ipl && ipl > cpu->readMiscReg(MISCREG_IPR_IPLR)) {
+        cpu->setMiscReg(MISCREG_IPR_ISR, summary);
+        cpu->setMiscReg(MISCREG_IPR_INTID, ipl);
         cpu->trap(new InterruptFault);
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                cpu->readMiscReg(IPR_IPLR), ipl, summary);
+                cpu->readMiscReg(MISCREG_IPR_IPLR), ipl, summary);
     }
 
 }
@@ -150,7 +150,7 @@ SimpleThread::hwrei()
     if (!inPalMode())
         return new UnimplementedOpcodeFault;
 
-    setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
+    setNextPC(readMiscReg(AlphaISA::MISCREG_IPR_EXC_ADDR));
 
     if (!misspeculating()) {
         if (kernelStats)
@@ -166,13 +166,13 @@ SimpleThread::hwrei()
 int
 AlphaISA::MiscRegFile::getInstAsid()
 {
-    return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
+    return EV5::ITB_ASN_ASN(ipr[MISCREG_IPR_ITB_ASN]);
 }
 
 int
 AlphaISA::MiscRegFile::getDataAsid()
 {
-    return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
+    return EV5::DTB_ASN_ASN(ipr[MISCREG_IPR_DTB_ASN]);
 }
 
 AlphaISA::MiscReg
@@ -181,71 +181,71 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ThreadContext *tc)
     uint64_t retval = 0;	// return value, default 0
 
     switch (idx) {
-      case AlphaISA::IPR_PALtemp0:
-      case AlphaISA::IPR_PALtemp1:
-      case AlphaISA::IPR_PALtemp2:
-      case AlphaISA::IPR_PALtemp3:
-      case AlphaISA::IPR_PALtemp4:
-      case AlphaISA::IPR_PALtemp5:
-      case AlphaISA::IPR_PALtemp6:
-      case AlphaISA::IPR_PALtemp7:
-      case AlphaISA::IPR_PALtemp8:
-      case AlphaISA::IPR_PALtemp9:
-      case AlphaISA::IPR_PALtemp10:
-      case AlphaISA::IPR_PALtemp11:
-      case AlphaISA::IPR_PALtemp12:
-      case AlphaISA::IPR_PALtemp13:
-      case AlphaISA::IPR_PALtemp14:
-      case AlphaISA::IPR_PALtemp15:
-      case AlphaISA::IPR_PALtemp16:
-      case AlphaISA::IPR_PALtemp17:
-      case AlphaISA::IPR_PALtemp18:
-      case AlphaISA::IPR_PALtemp19:
-      case AlphaISA::IPR_PALtemp20:
-      case AlphaISA::IPR_PALtemp21:
-      case AlphaISA::IPR_PALtemp22:
-      case AlphaISA::IPR_PALtemp23:
-      case AlphaISA::IPR_PAL_BASE:
+      case AlphaISA::MISCREG_IPR_PALtemp0:
+      case AlphaISA::MISCREG_IPR_PALtemp1:
+      case AlphaISA::MISCREG_IPR_PALtemp2:
+      case AlphaISA::MISCREG_IPR_PALtemp3:
+      case AlphaISA::MISCREG_IPR_PALtemp4:
+      case AlphaISA::MISCREG_IPR_PALtemp5:
+      case AlphaISA::MISCREG_IPR_PALtemp6:
+      case AlphaISA::MISCREG_IPR_PALtemp7:
+      case AlphaISA::MISCREG_IPR_PALtemp8:
+      case AlphaISA::MISCREG_IPR_PALtemp9:
+      case AlphaISA::MISCREG_IPR_PALtemp10:
+      case AlphaISA::MISCREG_IPR_PALtemp11:
+      case AlphaISA::MISCREG_IPR_PALtemp12:
+      case AlphaISA::MISCREG_IPR_PALtemp13:
+      case AlphaISA::MISCREG_IPR_PALtemp14:
+      case AlphaISA::MISCREG_IPR_PALtemp15:
+      case AlphaISA::MISCREG_IPR_PALtemp16:
+      case AlphaISA::MISCREG_IPR_PALtemp17:
+      case AlphaISA::MISCREG_IPR_PALtemp18:
+      case AlphaISA::MISCREG_IPR_PALtemp19:
+      case AlphaISA::MISCREG_IPR_PALtemp20:
+      case AlphaISA::MISCREG_IPR_PALtemp21:
+      case AlphaISA::MISCREG_IPR_PALtemp22:
+      case AlphaISA::MISCREG_IPR_PALtemp23:
+      case AlphaISA::MISCREG_IPR_PAL_BASE:
 
-      case AlphaISA::IPR_IVPTBR:
-      case AlphaISA::IPR_DC_MODE:
-      case AlphaISA::IPR_MAF_MODE:
-      case AlphaISA::IPR_ISR:
-      case AlphaISA::IPR_EXC_ADDR:
-      case AlphaISA::IPR_IC_PERR_STAT:
-      case AlphaISA::IPR_DC_PERR_STAT:
-      case AlphaISA::IPR_MCSR:
-      case AlphaISA::IPR_ASTRR:
-      case AlphaISA::IPR_ASTER:
-      case AlphaISA::IPR_SIRR:
-      case AlphaISA::IPR_ICSR:
-      case AlphaISA::IPR_ICM:
-      case AlphaISA::IPR_DTB_CM:
-      case AlphaISA::IPR_IPLR:
-      case AlphaISA::IPR_INTID:
-      case AlphaISA::IPR_PMCTR:
+      case AlphaISA::MISCREG_IPR_IVPTBR:
+      case AlphaISA::MISCREG_IPR_DC_MODE:
+      case AlphaISA::MISCREG_IPR_MAF_MODE:
+      case AlphaISA::MISCREG_IPR_ISR:
+      case AlphaISA::MISCREG_IPR_EXC_ADDR:
+      case AlphaISA::MISCREG_IPR_IC_PERR_STAT:
+      case AlphaISA::MISCREG_IPR_DC_PERR_STAT:
+      case AlphaISA::MISCREG_IPR_MCSR:
+      case AlphaISA::MISCREG_IPR_ASTRR:
+      case AlphaISA::MISCREG_IPR_ASTER:
+      case AlphaISA::MISCREG_IPR_SIRR:
+      case AlphaISA::MISCREG_IPR_ICSR:
+      case AlphaISA::MISCREG_IPR_ICM:
+      case AlphaISA::MISCREG_IPR_DTB_CM:
+      case AlphaISA::MISCREG_IPR_IPLR:
+      case AlphaISA::MISCREG_IPR_INTID:
+      case AlphaISA::MISCREG_IPR_PMCTR:
         // no side-effect
         retval = ipr[idx];
         break;
 
-      case AlphaISA::IPR_CC:
+      case AlphaISA::MISCREG_IPR_CC:
         retval |= ipr[idx] & ULL(0xffffffff00000000);
         retval |= tc->getCpuPtr()->curCycle()  & ULL(0x00000000ffffffff);
         break;
 
-      case AlphaISA::IPR_VA:
+      case AlphaISA::MISCREG_IPR_VA:
         retval = ipr[idx];
         break;
 
-      case AlphaISA::IPR_VA_FORM:
-      case AlphaISA::IPR_MM_STAT:
-      case AlphaISA::IPR_IFAULT_VA_FORM:
-      case AlphaISA::IPR_EXC_MASK:
-      case AlphaISA::IPR_EXC_SUM:
+      case AlphaISA::MISCREG_IPR_VA_FORM:
+      case AlphaISA::MISCREG_IPR_MM_STAT:
+      case AlphaISA::MISCREG_IPR_IFAULT_VA_FORM:
+      case AlphaISA::MISCREG_IPR_EXC_MASK:
+      case AlphaISA::MISCREG_IPR_EXC_SUM:
         retval = ipr[idx];
         break;
 
-      case AlphaISA::IPR_DTB_PTE:
+      case AlphaISA::MISCREG_IPR_DTB_PTE:
         {
             AlphaISA::PTE &pte = tc->getDTBPtr()->index(!tc->misspeculating());
 
@@ -260,15 +260,15 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ThreadContext *tc)
         break;
 
         // write only registers
-      case AlphaISA::IPR_HWINT_CLR:
-      case AlphaISA::IPR_SL_XMIT:
-      case AlphaISA::IPR_DC_FLUSH:
-      case AlphaISA::IPR_IC_FLUSH:
-      case AlphaISA::IPR_ALT_MODE:
-      case AlphaISA::IPR_DTB_IA:
-      case AlphaISA::IPR_DTB_IAP:
-      case AlphaISA::IPR_ITB_IA:
-      case AlphaISA::IPR_ITB_IAP:
+      case AlphaISA::MISCREG_IPR_HWINT_CLR:
+      case AlphaISA::MISCREG_IPR_SL_XMIT:
+      case AlphaISA::MISCREG_IPR_DC_FLUSH:
+      case AlphaISA::MISCREG_IPR_IC_FLUSH:
+      case AlphaISA::MISCREG_IPR_ALT_MODE:
+      case AlphaISA::MISCREG_IPR_DTB_IA:
+      case AlphaISA::MISCREG_IPR_DTB_IAP:
+      case AlphaISA::MISCREG_IPR_ITB_IA:
+      case AlphaISA::MISCREG_IPR_ITB_IAP:
         fault = new UnimplementedOpcodeFault;
         break;
 
@@ -295,52 +295,52 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         return NoFault;
 
     switch (idx) {
-      case AlphaISA::IPR_PALtemp0:
-      case AlphaISA::IPR_PALtemp1:
-      case AlphaISA::IPR_PALtemp2:
-      case AlphaISA::IPR_PALtemp3:
-      case AlphaISA::IPR_PALtemp4:
-      case AlphaISA::IPR_PALtemp5:
-      case AlphaISA::IPR_PALtemp6:
-      case AlphaISA::IPR_PALtemp7:
-      case AlphaISA::IPR_PALtemp8:
-      case AlphaISA::IPR_PALtemp9:
-      case AlphaISA::IPR_PALtemp10:
-      case AlphaISA::IPR_PALtemp11:
-      case AlphaISA::IPR_PALtemp12:
-      case AlphaISA::IPR_PALtemp13:
-      case AlphaISA::IPR_PALtemp14:
-      case AlphaISA::IPR_PALtemp15:
-      case AlphaISA::IPR_PALtemp16:
-      case AlphaISA::IPR_PALtemp17:
-      case AlphaISA::IPR_PALtemp18:
-      case AlphaISA::IPR_PALtemp19:
-      case AlphaISA::IPR_PALtemp20:
-      case AlphaISA::IPR_PALtemp21:
-      case AlphaISA::IPR_PALtemp22:
-      case AlphaISA::IPR_PAL_BASE:
-      case AlphaISA::IPR_IC_PERR_STAT:
-      case AlphaISA::IPR_DC_PERR_STAT:
-      case AlphaISA::IPR_PMCTR:
+      case AlphaISA::MISCREG_IPR_PALtemp0:
+      case AlphaISA::MISCREG_IPR_PALtemp1:
+      case AlphaISA::MISCREG_IPR_PALtemp2:
+      case AlphaISA::MISCREG_IPR_PALtemp3:
+      case AlphaISA::MISCREG_IPR_PALtemp4:
+      case AlphaISA::MISCREG_IPR_PALtemp5:
+      case AlphaISA::MISCREG_IPR_PALtemp6:
+      case AlphaISA::MISCREG_IPR_PALtemp7:
+      case AlphaISA::MISCREG_IPR_PALtemp8:
+      case AlphaISA::MISCREG_IPR_PALtemp9:
+      case AlphaISA::MISCREG_IPR_PALtemp10:
+      case AlphaISA::MISCREG_IPR_PALtemp11:
+      case AlphaISA::MISCREG_IPR_PALtemp12:
+      case AlphaISA::MISCREG_IPR_PALtemp13:
+      case AlphaISA::MISCREG_IPR_PALtemp14:
+      case AlphaISA::MISCREG_IPR_PALtemp15:
+      case AlphaISA::MISCREG_IPR_PALtemp16:
+      case AlphaISA::MISCREG_IPR_PALtemp17:
+      case AlphaISA::MISCREG_IPR_PALtemp18:
+      case AlphaISA::MISCREG_IPR_PALtemp19:
+      case AlphaISA::MISCREG_IPR_PALtemp20:
+      case AlphaISA::MISCREG_IPR_PALtemp21:
+      case AlphaISA::MISCREG_IPR_PALtemp22:
+      case AlphaISA::MISCREG_IPR_PAL_BASE:
+      case AlphaISA::MISCREG_IPR_IC_PERR_STAT:
+      case AlphaISA::MISCREG_IPR_DC_PERR_STAT:
+      case AlphaISA::MISCREG_IPR_PMCTR:
         // write entire quad w/ no side-effect
         ipr[idx] = val;
         break;
 
-      case AlphaISA::IPR_CC_CTL:
+      case AlphaISA::MISCREG_IPR_CC_CTL:
         // This IPR resets the cycle counter.  We assume this only
         // happens once... let's verify that.
         assert(ipr[idx] == 0);
         ipr[idx] = 1;
         break;
 
-      case AlphaISA::IPR_CC:
+      case AlphaISA::MISCREG_IPR_CC:
         // This IPR only writes the upper 64 bits.  It's ok to write
         // all 64 here since we mask out the lower 32 in rpcc (see
         // isa_desc).
         ipr[idx] = val;
         break;
 
-      case AlphaISA::IPR_PALtemp23:
+      case AlphaISA::MISCREG_IPR_PALtemp23:
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
@@ -348,23 +348,23 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
             tc->getKernelStats()->context(old, val, tc);
         break;
 
-      case AlphaISA::IPR_DTB_PTE:
+      case AlphaISA::MISCREG_IPR_DTB_PTE:
         // write entire quad w/ no side-effect, tag is forthcoming
         ipr[idx] = val;
         break;
 
-      case AlphaISA::IPR_EXC_ADDR:
+      case AlphaISA::MISCREG_IPR_EXC_ADDR:
         // second least significant bit in PC is always zero
         ipr[idx] = val & ~2;
         break;
 
-      case AlphaISA::IPR_ASTRR:
-      case AlphaISA::IPR_ASTER:
+      case AlphaISA::MISCREG_IPR_ASTRR:
+      case AlphaISA::MISCREG_IPR_ASTER:
         // only write least significant four bits - privilege mask
         ipr[idx] = val & 0xf;
         break;
 
-      case AlphaISA::IPR_IPLR:
+      case AlphaISA::MISCREG_IPR_IPLR:
 #ifdef DEBUG
         if (break_ipl != -1 && break_ipl == (val & 0x1f))
             debug_break();
@@ -376,7 +376,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
             tc->getKernelStats()->swpipl(ipr[idx]);
         break;
 
-      case AlphaISA::IPR_DTB_CM:
+      case AlphaISA::MISCREG_IPR_DTB_CM:
         if (val & 0x18) {
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(Kernel::user, tc);
@@ -385,121 +385,121 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
                 tc->getKernelStats()->mode(Kernel::kernel, tc);
         }
 
-      case AlphaISA::IPR_ICM:
+      case AlphaISA::MISCREG_IPR_ICM:
         // only write two mode bits - processor mode
         ipr[idx] = val & 0x18;
         break;
 
-      case AlphaISA::IPR_ALT_MODE:
+      case AlphaISA::MISCREG_IPR_ALT_MODE:
         // only write two mode bits - processor mode
         ipr[idx] = val & 0x18;
         break;
 
-      case AlphaISA::IPR_MCSR:
+      case AlphaISA::MISCREG_IPR_MCSR:
         // more here after optimization...
         ipr[idx] = val;
         break;
 
-      case AlphaISA::IPR_SIRR:
+      case AlphaISA::MISCREG_IPR_SIRR:
         // only write software interrupt mask
         ipr[idx] = val & 0x7fff0;
         break;
 
-      case AlphaISA::IPR_ICSR:
+      case AlphaISA::MISCREG_IPR_ICSR:
         ipr[idx] = val & ULL(0xffffff0300);
         break;
 
-      case AlphaISA::IPR_IVPTBR:
-      case AlphaISA::IPR_MVPTBR:
+      case AlphaISA::MISCREG_IPR_IVPTBR:
+      case AlphaISA::MISCREG_IPR_MVPTBR:
         ipr[idx] = val & ULL(0xffffffffc0000000);
         break;
 
-      case AlphaISA::IPR_DC_TEST_CTL:
+      case AlphaISA::MISCREG_IPR_DC_TEST_CTL:
         ipr[idx] = val & 0x1ffb;
         break;
 
-      case AlphaISA::IPR_DC_MODE:
-      case AlphaISA::IPR_MAF_MODE:
+      case AlphaISA::MISCREG_IPR_DC_MODE:
+      case AlphaISA::MISCREG_IPR_MAF_MODE:
         ipr[idx] = val & 0x3f;
         break;
 
-      case AlphaISA::IPR_ITB_ASN:
+      case AlphaISA::MISCREG_IPR_ITB_ASN:
         ipr[idx] = val & 0x7f0;
         break;
 
-      case AlphaISA::IPR_DTB_ASN:
+      case AlphaISA::MISCREG_IPR_DTB_ASN:
         ipr[idx] = val & ULL(0xfe00000000000000);
         break;
 
-      case AlphaISA::IPR_EXC_SUM:
-      case AlphaISA::IPR_EXC_MASK:
+      case AlphaISA::MISCREG_IPR_EXC_SUM:
+      case AlphaISA::MISCREG_IPR_EXC_MASK:
         // any write to this register clears it
         ipr[idx] = 0;
         break;
 
-      case AlphaISA::IPR_INTID:
-      case AlphaISA::IPR_SL_RCV:
-      case AlphaISA::IPR_MM_STAT:
-      case AlphaISA::IPR_ITB_PTE_TEMP:
-      case AlphaISA::IPR_DTB_PTE_TEMP:
+      case AlphaISA::MISCREG_IPR_INTID:
+      case AlphaISA::MISCREG_IPR_SL_RCV:
+      case AlphaISA::MISCREG_IPR_MM_STAT:
+      case AlphaISA::MISCREG_IPR_ITB_PTE_TEMP:
+      case AlphaISA::MISCREG_IPR_DTB_PTE_TEMP:
         // read-only registers
         return new UnimplementedOpcodeFault;
 
-      case AlphaISA::IPR_HWINT_CLR:
-      case AlphaISA::IPR_SL_XMIT:
-      case AlphaISA::IPR_DC_FLUSH:
-      case AlphaISA::IPR_IC_FLUSH:
+      case AlphaISA::MISCREG_IPR_HWINT_CLR:
+      case AlphaISA::MISCREG_IPR_SL_XMIT:
+      case AlphaISA::MISCREG_IPR_DC_FLUSH:
+      case AlphaISA::MISCREG_IPR_IC_FLUSH:
         // the following are write only
         ipr[idx] = val;
         break;
 
-      case AlphaISA::IPR_DTB_IA:
+      case AlphaISA::MISCREG_IPR_DTB_IA:
         // really a control write
         ipr[idx] = 0;
 
         tc->getDTBPtr()->flushAll();
         break;
 
-      case AlphaISA::IPR_DTB_IAP:
+      case AlphaISA::MISCREG_IPR_DTB_IAP:
         // really a control write
         ipr[idx] = 0;
 
         tc->getDTBPtr()->flushProcesses();
         break;
 
-      case AlphaISA::IPR_DTB_IS:
+      case AlphaISA::MISCREG_IPR_DTB_IS:
         // really a control write
         ipr[idx] = val;
 
         tc->getDTBPtr()->flushAddr(val,
-                                   DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                                   DTB_ASN_ASN(ipr[AlphaISA::MISCREG_IPR_DTB_ASN]));
         break;
 
-      case AlphaISA::IPR_DTB_TAG: {
+      case AlphaISA::MISCREG_IPR_DTB_TAG: {
           struct AlphaISA::PTE pte;
 
           // FIXME: granularity hints NYI...
-          if (DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
+          if (DTB_PTE_GH(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]) != 0)
               panic("PTE GH field != 0");
 
           // write entire quad
           ipr[idx] = val;
 
           // construct PTE for new entry
-          pte.ppn = DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xre = DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xwe = DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonr = DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonw = DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asma = DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asn = DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
+          pte.ppn = DTB_PTE_PPN(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.xre = DTB_PTE_XRE(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.xwe = DTB_PTE_XWE(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.fonr = DTB_PTE_FONR(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.fonw = DTB_PTE_FONW(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.asma = DTB_PTE_ASMA(ipr[AlphaISA::MISCREG_IPR_DTB_PTE]);
+          pte.asn = DTB_ASN_ASN(ipr[AlphaISA::MISCREG_IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
           tc->getDTBPtr()->insert(val, pte);
       }
         break;
 
-      case AlphaISA::IPR_ITB_PTE: {
+      case AlphaISA::MISCREG_IPR_ITB_PTE: {
           struct AlphaISA::PTE pte;
 
           // FIXME: granularity hints NYI...
@@ -516,33 +516,33 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
           pte.fonr = ITB_PTE_FONR(val);
           pte.fonw = ITB_PTE_FONW(val);
           pte.asma = ITB_PTE_ASMA(val);
-          pte.asn = ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
+          pte.asn = ITB_ASN_ASN(ipr[AlphaISA::MISCREG_IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          tc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], pte);
+          tc->getITBPtr()->insert(ipr[AlphaISA::MISCREG_IPR_ITB_TAG], pte);
       }
         break;
 
-      case AlphaISA::IPR_ITB_IA:
+      case AlphaISA::MISCREG_IPR_ITB_IA:
         // really a control write
         ipr[idx] = 0;
 
         tc->getITBPtr()->flushAll();
         break;
 
-      case AlphaISA::IPR_ITB_IAP:
+      case AlphaISA::MISCREG_IPR_ITB_IAP:
         // really a control write
         ipr[idx] = 0;
 
         tc->getITBPtr()->flushProcesses();
         break;
 
-      case AlphaISA::IPR_ITB_IS:
+      case AlphaISA::MISCREG_IPR_ITB_IS:
         // really a control write
         ipr[idx] = val;
 
         tc->getITBPtr()->flushAddr(val,
-                                   ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
+                                   ITB_ASN_ASN(ipr[AlphaISA::MISCREG_IPR_ITB_ASN]));
         break;
 
       default:

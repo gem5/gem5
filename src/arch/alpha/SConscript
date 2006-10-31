@@ -56,6 +56,7 @@ full_system_sources = Split('''
 	tlb.cc
 	arguments.cc
 	ev5.cc
+	ipr.cc
 	osfpal.cc
 	stacktrace.cc
 	vtophys.cc

@@ -745,7 +745,13 @@ decode OPCODE default Unknown::unknown() {
         0: OpcdecFault::hw_mfpr();
         format HwMoveIPR {
             1: hw_mfpr({{
-                Ra = xc->readMiscRegWithEffect(ipr_index, fault);
+                int miscRegIndex = IprToMiscRegIndex[ipr_index];
+                if(miscRegIndex < 0 ||
+                    (miscRegIndex >= MinWriteOnlyIpr &&
+                     miscRegIndex <= MaxWriteOnlyIpr))
+                        fault = new UnimplementedOpcodeFault;
+                else
+                    Ra = xc->readMiscRegWithEffect(ipr_index, fault);
             }}, IsIprAccess);
         }
     }
@@ -754,7 +760,13 @@ decode OPCODE default Unknown::unknown() {
         0: OpcdecFault::hw_mtpr();
         format HwMoveIPR {
             1: hw_mtpr({{
-                xc->setMiscRegWithEffect(ipr_index, Ra);
+                int miscRegIndex = IprToMiscRegIndex[ipr_index];
+                if(miscRegIndex < 0 ||
+                    (miscRegIndex >= MinReadOnlyIpr &&
+                     miscRegIndex <= MaxWriteOnlyIpr))
+                        fault = new UnimplementedOpcodeFault;
+                else
+                    xc->setMiscRegWithEffect(ipr_index, Ra);
                 if (traceData) { traceData->setData(Ra); }
             }}, IsIprAccess);
         }
