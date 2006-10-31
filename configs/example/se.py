@@ -41,10 +41,6 @@ from Caches import *
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
-print m5_root
-print config_path
-print config_root
-
 
 parser = optparse.OptionParser()
 

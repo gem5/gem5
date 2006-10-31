@@ -67,8 +67,6 @@ def run(options, root, testsys):
                 switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                        L1Cache(size = '64kB'))
 
-            switch_cpus[i].mem = testsys.physmem
-            switch_cpus1[i].mem = testsys.physmem
             switch_cpus[i].connectMemPorts(testsys.membus)
             root.switch_cpus = switch_cpus
             root.switch_cpus1 = switch_cpus1
