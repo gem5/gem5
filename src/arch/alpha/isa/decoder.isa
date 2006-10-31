@@ -751,7 +751,7 @@ decode OPCODE default Unknown::unknown() {
                      miscRegIndex <= MaxWriteOnlyIpr))
                         fault = new UnimplementedOpcodeFault;
                 else
-                    Ra = xc->readMiscRegWithEffect(ipr_index, fault);
+                    Ra = xc->readMiscRegWithEffect(miscRegIndex, fault);
             }}, IsIprAccess);
         }
     }
@@ -766,7 +766,7 @@ decode OPCODE default Unknown::unknown() {
                      miscRegIndex <= MaxWriteOnlyIpr))
                         fault = new UnimplementedOpcodeFault;
                 else
-                    xc->setMiscRegWithEffect(ipr_index, Ra);
+                    xc->setMiscRegWithEffect(miscRegIndex, Ra);
                 if (traceData) { traceData->setData(Ra); }
             }}, IsIprAccess);
         }
