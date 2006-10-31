@@ -36,6 +36,7 @@
 
 #include "arch/alpha/ev5.hh"
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/pagetable.hh"
 #include "arch/alpha/utility.hh"
 #include "arch/alpha/vtophys.hh"
 #include "base/statistics.hh"
@@ -45,82 +46,87 @@
 
 class ThreadContext;
 
-class AlphaTLB : public SimObject
+namespace AlphaISA
 {
-  protected:
-    typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;	// Quick lookup into page table
+    class PTE;
 
-    AlphaISA::PTE *table;	// the Page Table
-    int size;			// TLB Size
-    int nlu;			// not last used entry (for replacement)
+    class TLB : public SimObject
+    {
+      protected:
+        typedef std::multimap<Addr, int> PageTable;
+        PageTable lookupTable;	// Quick lookup into page table
 
-    void nextnlu() { if (++nlu >= size) nlu = 0; }
-    AlphaISA::PTE *lookup(Addr vpn, uint8_t asn) const;
+        PTE *table;	// the Page Table
+        int size;			// TLB Size
+        int nlu;			// not last used entry (for replacement)
 
-  public:
-    AlphaTLB(const std::string &name, int size);
-    virtual ~AlphaTLB();
+        void nextnlu() { if (++nlu >= size) nlu = 0; }
+        PTE *lookup(Addr vpn, uint8_t asn) const;
 
-    int getsize() const { return size; }
+      public:
+        TLB(const std::string &name, int size);
+        virtual ~TLB();
 
-    AlphaISA::PTE &index(bool advance = true);
-    void insert(Addr vaddr, AlphaISA::PTE &pte);
+        int getsize() const { return size; }
 
-    void flushAll();
-    void flushProcesses();
-    void flushAddr(Addr addr, uint8_t asn);
+        PTE &index(bool advance = true);
+        void insert(Addr vaddr, PTE &pte);
 
-    // static helper functions... really EV5 VM traits
-    static bool validVirtualAddress(Addr vaddr) {
-        // unimplemented bits must be all 0 or all 1
-        Addr unimplBits = vaddr & EV5::VAddrUnImplMask;
-        return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
-    }
+        void flushAll();
+        void flushProcesses();
+        void flushAddr(Addr addr, uint8_t asn);
 
-    static Fault checkCacheability(RequestPtr &req);
+        // static helper functions... really EV5 VM traits
+        static bool validVirtualAddress(Addr vaddr) {
+            // unimplemented bits must be all 0 or all 1
+            Addr unimplBits = vaddr & EV5::VAddrUnImplMask;
+            return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
+        }
 
-    // Checkpointing
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-};
+        static Fault checkCacheability(RequestPtr &req);
 
-class AlphaITB : public AlphaTLB
-{
-  protected:
-    mutable Stats::Scalar<> hits;
-    mutable Stats::Scalar<> misses;
-    mutable Stats::Scalar<> acv;
-    mutable Stats::Formula accesses;
+        // Checkpointing
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
+    };
 
-  public:
-    AlphaITB(const std::string &name, int size);
-    virtual void regStats();
+    class ITB : public TLB
+    {
+      protected:
+        mutable Stats::Scalar<> hits;
+        mutable Stats::Scalar<> misses;
+        mutable Stats::Scalar<> acv;
+        mutable Stats::Formula accesses;
 
-    Fault translate(RequestPtr &req, ThreadContext *tc) const;
-};
+      public:
+        ITB(const std::string &name, int size);
+        virtual void regStats();
 
-class AlphaDTB : public AlphaTLB
-{
-  protected:
-    mutable Stats::Scalar<> read_hits;
-    mutable Stats::Scalar<> read_misses;
-    mutable Stats::Scalar<> read_acv;
-    mutable Stats::Scalar<> read_accesses;
-    mutable Stats::Scalar<> write_hits;
-    mutable Stats::Scalar<> write_misses;
-    mutable Stats::Scalar<> write_acv;
-    mutable Stats::Scalar<> write_accesses;
-    Stats::Formula hits;
-    Stats::Formula misses;
-    Stats::Formula acv;
-    Stats::Formula accesses;
+        Fault translate(RequestPtr &req, ThreadContext *tc) const;
+    };
 
-  public:
-    AlphaDTB(const std::string &name, int size);
-    virtual void regStats();
+    class DTB : public TLB
+    {
+      protected:
+        mutable Stats::Scalar<> read_hits;
+        mutable Stats::Scalar<> read_misses;
+        mutable Stats::Scalar<> read_acv;
+        mutable Stats::Scalar<> read_accesses;
+        mutable Stats::Scalar<> write_hits;
+        mutable Stats::Scalar<> write_misses;
+        mutable Stats::Scalar<> write_acv;
+        mutable Stats::Scalar<> write_accesses;
+        Stats::Formula hits;
+        Stats::Formula misses;
+        Stats::Formula acv;
+        Stats::Formula accesses;
 
-    Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const;
-};
+      public:
+        DTB(const std::string &name, int size);
+        virtual void regStats();
+
+        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const;
+    };
+}
 
 #endif // __ALPHA_MEMORY_HH__

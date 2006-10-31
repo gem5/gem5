@@ -60,7 +60,7 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           AlphaITB *_itb, AlphaDTB *_dtb,
+                           TheISA::ITB *_itb, TheISA::DTB *_dtb,
                            bool use_kernel_stats)
     : ThreadState(-1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)

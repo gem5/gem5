@@ -107,14 +107,14 @@ class SimpleThread : public ThreadState
     System *system;
 
 #if FULL_SYSTEM
-    AlphaITB *itb;
-    AlphaDTB *dtb;
+    TheISA::ITB *itb;
+    TheISA::DTB *dtb;
 #endif
 
     // constructor: initialize SimpleThread from given process structure
 #if FULL_SYSTEM
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 AlphaITB *_itb, AlphaDTB *_dtb,
+                 TheISA::ITB *_itb, TheISA::DTB *_dtb,
                  bool use_kernel_stats = true);
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
@@ -201,9 +201,9 @@ class SimpleThread : public ThreadState
 #if FULL_SYSTEM
     System *getSystemPtr() { return system; }
 
-    AlphaITB *getITBPtr() { return itb; }
+    TheISA::ITB *getITBPtr() { return itb; }
 
-    AlphaDTB *getDTBPtr() { return dtb; }
+    TheISA::DTB *getDTBPtr() { return dtb; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 

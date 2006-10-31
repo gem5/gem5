@@ -47,8 +47,11 @@
 // forward declarations
 #if FULL_SYSTEM
 class Processor;
-class AlphaITB;
-class AlphaDTB;
+namespace TheISA
+{
+    class ITB;
+    class DTB;
+}
 class MemObject;
 
 class RemoteGDB;
@@ -97,8 +100,8 @@ class BaseSimpleCPU : public BaseCPU
     {
         MemObject *mem;
 #if FULL_SYSTEM
-        AlphaITB *itb;
-        AlphaDTB *dtb;
+        TheISA::ITB *itb;
+        TheISA::DTB *dtb;
 #else
         Process *process;
 #endif

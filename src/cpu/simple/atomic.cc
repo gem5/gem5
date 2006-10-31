@@ -513,8 +513,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<int> cpu_id;
 
 #if FULL_SYSTEM
-    SimObjectParam<AlphaITB *> itb;
-    SimObjectParam<AlphaDTB *> dtb;
+    SimObjectParam<TheISA::ITB *> itb;
+    SimObjectParam<TheISA::DTB *> dtb;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;

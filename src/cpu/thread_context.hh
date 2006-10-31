@@ -31,9 +31,9 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
-#include "arch/types.hh"
 #include "arch/regfile.hh"
 #include "arch/syscallreturn.hh"
+#include "arch/types.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
@@ -43,8 +43,11 @@
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
-class AlphaDTB;
-class AlphaITB;
+namespace TheISA
+{
+    class DTB;
+    class ITB;
+}
 class BaseCPU;
 class EndQuiesceEvent;
 class Event;
@@ -117,9 +120,9 @@ class ThreadContext
 #if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
 
-    virtual AlphaITB *getITBPtr() = 0;
+    virtual TheISA::ITB *getITBPtr() = 0;
 
-    virtual AlphaDTB * getDTBPtr() = 0;
+    virtual TheISA::DTB *getDTBPtr() = 0;
 
     virtual Kernel::Statistics *getKernelStats() = 0;
 
@@ -292,9 +295,9 @@ class ProxyThreadContext : public ThreadContext
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
-    AlphaITB *getITBPtr() { return actualTC->getITBPtr(); }
+    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
 
