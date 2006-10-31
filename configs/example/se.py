@@ -39,7 +39,7 @@ parser = optparse.OptionParser()
 
 # Benchmark options
 parser.add_option("-c", "--cmd",
-                  default="../../tests/test-progs/hello/bin/alpha/linux/hello",
+                  default="../tests/test-progs/hello/bin/alpha/linux/hello",
                   help="The binary to run in syscall emulation mode.")
 parser.add_option("-o", "--options", default="",
                   help="The options to pass to the binary, use \" \" around the entire\
@@ -131,7 +131,6 @@ system = System(cpu = cpu,
                 membus = Bus())
 system.physmem.port = system.membus.port
 system.cpu.connectMemPorts(system.membus)
-system.cpu.mem = system.physmem
 system.cpu.clock = '2GHz'
 if options.caches and not options.standard_switch:
     system.cpu.addPrivateSplitL1Caches(MyCache(size = '32kB'),
@@ -155,8 +154,6 @@ if options.standard_switch:
 
     switch_cpu.workload = process
     switch_cpu1.workload = process
-    switch_cpu.mem = system.physmem
-    switch_cpu1.mem = system.physmem
     switch_cpu.connectMemPorts(system.membus)
     root.switch_cpu = switch_cpu
     root.switch_cpu1 = switch_cpu1

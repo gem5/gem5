@@ -37,7 +37,6 @@
 
 #if !FULL_SYSTEM
 #include "mem/mem_object.hh"
-#include "mem/translating_port.hh"
 #include "sim/process.hh"
 #endif
 
@@ -50,7 +49,9 @@ namespace Kernel {
 };
 #endif
 
+class BaseCPU;
 class Checkpoint;
+class TranslatingPort;
 
 /**
  *  Struct for holding general thread state that is needed across CPU
@@ -62,10 +63,10 @@ struct ThreadState {
     typedef ThreadContext::Status Status;
 
 #if FULL_SYSTEM
-    ThreadState(int _cpuId, int _tid);
+    ThreadState(BaseCPU *cpu, int _cpuId, int _tid);
 #else
-    ThreadState(int _cpuId, int _tid, Process *_process,
-                short _asid, MemObject *mem);
+    ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+                short _asid);
 #endif
 
     void serialize(std::ostream &os);
@@ -105,7 +106,7 @@ struct ThreadState {
 #else
     Process *getProcessPtr() { return process; }
 
-    TranslatingPort *getMemPort() { return port; }
+    TranslatingPort *getMemPort();
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
 
@@ -152,6 +153,9 @@ struct ThreadState {
 
   protected:
     ThreadContext::Status _status;
+
+    // Pointer to the base CPU.
+    BaseCPU *baseCpu;
 
     // ID of this context w.r.t. the System or Process object to which
     // it belongs.  For full-system mode, this is the system CPU ID.

@@ -112,10 +112,6 @@ class CheckerCPU : public BaseCPU
 
     Process *process;
 
-    void setMemory(MemObject *mem);
-
-    MemObject *memPtr;
-
     void setSystem(System *system);
 
     System *systemPtr;

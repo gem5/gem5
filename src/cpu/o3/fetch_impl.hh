@@ -96,8 +96,7 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(Params *params)
-    : mem(params->mem),
-      branchPred(params),
+    : branchPred(params),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),

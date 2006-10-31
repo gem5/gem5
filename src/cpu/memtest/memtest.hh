@@ -97,7 +97,7 @@ class MemTest : public MemObject
       public:
 
         CpuPort(const std::string &_name, MemTest *_memtest)
-            : Port(_name), memtest(_memtest)
+            : Port(_name, _memtest), memtest(_memtest)
         { }
 
       protected:

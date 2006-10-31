@@ -187,7 +187,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
       system(params->system),
       physmem(system->physmem),
 #endif // FULL_SYSTEM
-      mem(params->mem),
       drainCount(0),
       deferRegistration(params->deferRegistration),
       numThreads(number_of_threads)
@@ -204,7 +203,6 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 #if USE_CHECKER
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
-        checker->setMemory(mem);
 #if FULL_SYSTEM
         checker->setSystem(params->system);
 #endif

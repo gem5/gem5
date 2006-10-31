@@ -154,8 +154,6 @@ OzoneLWLSQ<Impl>::init(Params *params, unsigned maxLQEntries,
         SQIndices.push(i);
     }
 
-    mem = params->mem;
-
     usedPorts = 0;
     cachePorts = params->cachePorts;
 

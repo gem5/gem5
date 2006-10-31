@@ -62,7 +62,7 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            AlphaITB *_itb, AlphaDTB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(-1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
+    : ThreadState(_cpu, -1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)
 
 {
@@ -106,19 +106,10 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid, MemObject* memobj)
-    : ThreadState(-1, _thread_num, _process, _asid, memobj),
+                         Process *_process, int _asid)
+    : ThreadState(_cpu, -1, _thread_num, _process, _asid),
       cpu(_cpu)
 {
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *mem_port;
-    port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        cpu->name(), tid),
-                               process->pTable, false);
-    mem_port = memobj->getPort("functional");
-    mem_port->setPeer(port);
-    port->setPeer(mem_port);
-
     regs.clear();
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
@@ -127,9 +118,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
 
 SimpleThread::SimpleThread()
 #if FULL_SYSTEM
-    : ThreadState(-1, -1)
+    : ThreadState(NULL, -1, -1)
 #else
-    : ThreadState(-1, -1, NULL, -1, NULL)
+    : ThreadState(NULL, -1, -1, NULL, -1)
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -332,6 +323,25 @@ SimpleThread::delVirtPort(VirtualPort *vp)
     }
 }
 
+#else
+TranslatingPort *
+SimpleThread::getMemPort()
+{
+    if (port != NULL)
+        return port;
+
+    /* Use this port to for syscall emulation writes to memory. */
+    Port *dcache_port;
+    port = new TranslatingPort(csprintf("%s-%d-funcport",
+                                        cpu->name(), tid),
+                               process->pTable, false);
+    dcache_port = cpu->getPort("dcache_port");
+    assert(dcache_port != NULL);
+    dcache_port = dcache_port->getPeer();
+//    mem_port->setPeer(port);
+    port->setPeer(dcache_port);
+    return port;
+}
 
 #endif
 

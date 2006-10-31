@@ -70,13 +70,13 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(Params *p)
-    : BaseCPU(p), mem(p->mem), thread(NULL)
+    : BaseCPU(p), thread(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
     thread = new SimpleThread(this, /* thread_num */ 0, p->process,
-            /* asid */ 0, mem);
+            /* asid */ 0);
 #endif // !FULL_SYSTEM
 
     thread->setStatus(ThreadContext::Suspended);

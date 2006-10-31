@@ -91,7 +91,6 @@ template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
       icachePort(this),
-      mem(params->mem),
       numInstsReady(params->frontEndLatency, 0),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
