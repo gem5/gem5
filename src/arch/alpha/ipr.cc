@@ -38,89 +38,89 @@ namespace AlphaISA
     md_ipr_names MiscRegIndexToIpr[NumInternalProcRegs] =
     {
         //Write only
-        IPR_HWINT_CLR,	// H/W interrupt clear register
-        IPR_SL_XMIT,	// serial line transmit register
-        IPR_DC_FLUSH,
-        IPR_IC_FLUSH,	// instruction cache flush control
-        IPR_ALT_MODE,	// alternate mode register
-        IPR_DTB_IA,		// DTLB invalidate all register
-        IPR_DTB_IAP,	// DTLB invalidate all process register
-        IPR_ITB_IA,		// ITLB invalidate all register
-        IPR_ITB_IAP,	// ITLB invalidate all process register
+        RAW_IPR_HWINT_CLR,	// H/W interrupt clear register
+        RAW_IPR_SL_XMIT,	// serial line transmit register
+        RAW_IPR_DC_FLUSH,
+        RAW_IPR_IC_FLUSH,	// instruction cache flush control
+        RAW_IPR_ALT_MODE,	// alternate mode register
+        RAW_IPR_DTB_IA,		// DTLB invalidate all register
+        RAW_IPR_DTB_IAP,	// DTLB invalidate all process register
+        RAW_IPR_ITB_IA,		// ITLB invalidate all register
+        RAW_IPR_ITB_IAP,	// ITLB invalidate all process register
 
         //Read only
-        IPR_INTID,		// interrupt ID register
-        IPR_SL_RCV,		// serial line receive register
-        IPR_MM_STAT,	// data MMU fault status register
-        IPR_ITB_PTE_TEMP,	// ITLB page table entry temp register
-        IPR_DTB_PTE_TEMP,	// DTLB page table entry temporary register
+        RAW_IPR_INTID,		// interrupt ID register
+        RAW_IPR_SL_RCV,		// serial line receive register
+        RAW_IPR_MM_STAT,	// data MMU fault status register
+        RAW_IPR_ITB_PTE_TEMP,	// ITLB page table entry temp register
+        RAW_IPR_DTB_PTE_TEMP,	// DTLB page table entry temporary register
 
-        IPR_ISR,		// interrupt summary register
-        IPR_ITB_TAG,	// ITLB tag register
-        IPR_ITB_PTE,	// ITLB page table entry register
-        IPR_ITB_ASN,	// ITLB address space register
-        IPR_ITB_IS,		// ITLB invalidate select register
-        IPR_SIRR,		// software interrupt request register
-        IPR_ASTRR,		// asynchronous system trap request register
-        IPR_ASTER,		// asynchronous system trap enable register
-        IPR_EXC_ADDR,	// exception address register
-        IPR_EXC_SUM,	// exception summary register
-        IPR_EXC_MASK,	// exception mask register
-        IPR_PAL_BASE,	// PAL base address register
-        IPR_ICM,		// instruction current mode
-        IPR_IPLR,		// interrupt priority level register
-        IPR_IFAULT_VA_FORM,	// formatted faulting virtual addr register
-        IPR_IVPTBR,		// virtual page table base register
-        IPR_ICSR,		// instruction control and status register
-        IPR_IC_PERR_STAT,	// inst cache parity error status register
-        IPR_PMCTR,		// performance counter register
+        RAW_IPR_ISR,		// interrupt summary register
+        RAW_IPR_ITB_TAG,	// ITLB tag register
+        RAW_IPR_ITB_PTE,	// ITLB page table entry register
+        RAW_IPR_ITB_ASN,	// ITLB address space register
+        RAW_IPR_ITB_IS,		// ITLB invalidate select register
+        RAW_IPR_SIRR,		// software interrupt request register
+        RAW_IPR_ASTRR,		// asynchronous system trap request register
+        RAW_IPR_ASTER,		// asynchronous system trap enable register
+        RAW_IPR_EXC_ADDR,	// exception address register
+        RAW_IPR_EXC_SUM,	// exception summary register
+        RAW_IPR_EXC_MASK,	// exception mask register
+        RAW_IPR_PAL_BASE,	// PAL base address register
+        RAW_IPR_ICM,		// instruction current mode
+        RAW_IPR_IPLR,		// interrupt priority level register
+        RAW_IPR_IFAULT_VA_FORM,	// formatted faulting virtual addr register
+        RAW_IPR_IVPTBR,		// virtual page table base register
+        RAW_IPR_ICSR,		// instruction control and status register
+        RAW_IPR_IC_PERR_STAT,	// inst cache parity error status register
+        RAW_IPR_PMCTR,		// performance counter register
 
         // PAL temporary registers...
         // register meanings gleaned from osfpal.s source code
-        IPR_PALtemp0,	// local scratch
-        IPR_PALtemp1,	// local scratch
-        IPR_PALtemp2,	// entUna
-        IPR_PALtemp3,	// CPU specific impure area pointer
-        IPR_PALtemp4,	// memory management temp
-        IPR_PALtemp5,	// memory management temp
-        IPR_PALtemp6,	// memory management temp
-        IPR_PALtemp7,	// entIF
-        IPR_PALtemp8,	// intmask
-        IPR_PALtemp9,	// entSys
-        IPR_PALtemp10,	// ??
-        IPR_PALtemp11,	// entInt
-        IPR_PALtemp12,	// entArith
-        IPR_PALtemp13,	// reserved for platform specific PAL
-        IPR_PALtemp14,	// reserved for platform specific PAL
-        IPR_PALtemp15,	// reserved for platform specific PAL
-        IPR_PALtemp16,	// scratch / whami<7:0> / mces<4:0>
-        IPR_PALtemp17,	// sysval
-        IPR_PALtemp18,	// usp
-        IPR_PALtemp19,	// ksp
-        IPR_PALtemp20,	// PTBR
-        IPR_PALtemp21,	// entMM
-        IPR_PALtemp22,	// kgp
-        IPR_PALtemp23,	// PCBB
+        RAW_IPR_PALtemp0,	// local scratch
+        RAW_IPR_PALtemp1,	// local scratch
+        RAW_IPR_PALtemp2,	// entUna
+        RAW_IPR_PALtemp3,	// CPU specific impure area pointer
+        RAW_IPR_PALtemp4,	// memory management temp
+        RAW_IPR_PALtemp5,	// memory management temp
+        RAW_IPR_PALtemp6,	// memory management temp
+        RAW_IPR_PALtemp7,	// entIF
+        RAW_IPR_PALtemp8,	// intmask
+        RAW_IPR_PALtemp9,	// entSys
+        RAW_IPR_PALtemp10,	// ??
+        RAW_IPR_PALtemp11,	// entInt
+        RAW_IPR_PALtemp12,	// entArith
+        RAW_IPR_PALtemp13,	// reserved for platform specific PAL
+        RAW_IPR_PALtemp14,	// reserved for platform specific PAL
+        RAW_IPR_PALtemp15,	// reserved for platform specific PAL
+        RAW_IPR_PALtemp16,	// scratch / whami<7:0> / mces<4:0>
+        RAW_IPR_PALtemp17,	// sysval
+        RAW_IPR_PALtemp18,	// usp
+        RAW_IPR_PALtemp19,	// ksp
+        RAW_IPR_PALtemp20,	// PTBR
+        RAW_IPR_PALtemp21,	// entMM
+        RAW_IPR_PALtemp22,	// kgp
+        RAW_IPR_PALtemp23,	// PCBB
 
-        IPR_DTB_ASN,	// DTLB address space number register
-        IPR_DTB_CM,		// DTLB current mode register
-        IPR_DTB_TAG,	// DTLB tag register
-        IPR_DTB_PTE,	// DTLB page table entry register
+        RAW_IPR_DTB_ASN,	// DTLB address space number register
+        RAW_IPR_DTB_CM,		// DTLB current mode register
+        RAW_IPR_DTB_TAG,	// DTLB tag register
+        RAW_IPR_DTB_PTE,	// DTLB page table entry register
 
-        IPR_VA,		// fault virtual address register
-        IPR_VA_FORM,	// formatted virtual address register
-        IPR_MVPTBR,		// MTU virtual page table base register
-        IPR_DTB_IS,		// DTLB invalidate single register
-        IPR_CC,		// cycle counter register
-        IPR_CC_CTL,		// cycle counter control register
-        IPR_MCSR,		// MTU control register
+        RAW_IPR_VA,		// fault virtual address register
+        RAW_IPR_VA_FORM,	// formatted virtual address register
+        RAW_IPR_MVPTBR,		// MTU virtual page table base register
+        RAW_IPR_DTB_IS,		// DTLB invalidate single register
+        RAW_IPR_CC,		// cycle counter register
+        RAW_IPR_CC_CTL,		// cycle counter control register
+        RAW_IPR_MCSR,		// MTU control register
 
-        IPR_DC_PERR_STAT,	// Dcache parity error status register
-        IPR_DC_TEST_CTL,	// Dcache test tag control register
-        IPR_DC_TEST_TAG,	// Dcache test tag register
-        IPR_DC_TEST_TAG_TEMP, // Dcache test tag temporary register
-        IPR_DC_MODE,	// Dcache mode register
-        IPR_MAF_MODE	// miss address file mode register
+        RAW_IPR_DC_PERR_STAT,	// Dcache parity error status register
+        RAW_IPR_DC_TEST_CTL,	// Dcache test tag control register
+        RAW_IPR_DC_TEST_TAG,	// Dcache test tag register
+        RAW_IPR_DC_TEST_TAG_TEMP, // Dcache test tag temporary register
+        RAW_IPR_DC_MODE,	// Dcache mode register
+        RAW_IPR_MAF_MODE	// miss address file mode register
     };
 
     int IprToMiscRegIndex[MaxInternalProcRegs];
