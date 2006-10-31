@@ -42,7 +42,7 @@ using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
                                 bool _isCpuSide)
-    : Port(_name), cache(_cache), isCpuSide(_isCpuSide)
+    : Port(_name, _cache), cache(_cache), isCpuSide(_isCpuSide)
 {
     blocked = false;
     waitingOnRetry = false;

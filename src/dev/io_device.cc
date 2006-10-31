@@ -37,7 +37,7 @@
 
 
 PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
-    : SimpleTimingPort(dev->name() + pname), device(dev)
+    : SimpleTimingPort(dev->name() + pname, dev), device(dev)
 { }
 
 
@@ -92,8 +92,8 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 
 
 DmaPort::DmaPort(DmaDevice *dev, System *s)
-    : Port(dev->name() + "-dmaport"), device(dev), sys(s), pendingCount(0),
-      actionInProgress(0), drainEvent(NULL)
+    : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
+      pendingCount(0), actionInProgress(0), drainEvent(NULL)
 { }
 
 bool
