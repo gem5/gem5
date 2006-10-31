@@ -220,12 +220,12 @@ namespace AlphaISA
 
     inline bool IprIsWritable(int index)
     {
-        return index < minReadOnlyIpr || index > maxReadOnlyIpr;
+        return index < MinReadOnlyIpr || index > MaxReadOnlyIpr;
     }
 
     inline bool IprIsReadable(int index)
     {
-        return index < minWriteOnlyIpr || index > maxWriteOnlyIpr;
+        return index < MinWriteOnlyIpr || index > MaxWriteOnlyIpr;
     }
 
     extern md_ipr_names MiscRegIndexToIpr[NumInternalProcRegs];
