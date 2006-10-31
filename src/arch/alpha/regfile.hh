@@ -115,7 +115,9 @@ namespace AlphaISA
       public:
         MiscRegFile()
         {
+#if FULL_SYSTEM
             initializeIprTable();
+#endif
         }
 
         MiscReg readReg(int misc_reg);
