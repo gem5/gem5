@@ -61,6 +61,7 @@ def operands {{
     'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 3),
     'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 4),
     'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 5),
+    'uReg0':		('IntReg', 'udw', 'NumRegularIntRegs+0', 'IsInteger', 6),
     'Frds':		('FloatReg', 'sf', 'RD', 'IsFloating', 10),
     'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
     # Each Frd_N refers to the Nth double precision register from Frd.
@@ -95,18 +96,19 @@ def operands {{
     'Tnpc':		('ControlReg', 'udw', 'MISCREG_TNPC', None, 44),
     'Tstate':		('ControlReg', 'udw', 'MISCREG_TSTATE', None, 45),
     'Pstate':		('ControlReg', 'udw', 'MISCREG_PSTATE', None, 46),
-    'Tl':		('ControlReg', 'udw', 'MISCREG_TL', None, 47),
+    'Hpstate':		('ControlReg', 'udw', 'MISCREG_HPSTATE', None, 47),
+    'Tl':		('ControlReg', 'udw', 'MISCREG_TL', None, 48),
 
-    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', None, 48),
-    'Cansave':		('ControlReg', 'udw', 'MISCREG_CANSAVE', None, 49),
-    'Canrestore':	('ControlReg', 'udw', 'MISCREG_CANRESTORE', None, 50),
-    'Cleanwin':		('ControlReg', 'udw', 'MISCREG_CLEANWIN', None, 51),
-    'Otherwin':		('ControlReg', 'udw', 'MISCREG_OTHERWIN', None, 52),
-    'Wstate':		('ControlReg', 'udw', 'MISCREG_WSTATE', None, 53),
-    'Gl':               ('ControlReg', 'udw', 'MISCREG_GL', None, 54),
+    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', None, 49),
+    'Cansave':		('ControlReg', 'udw', 'MISCREG_CANSAVE', None, 50),
+    'Canrestore':	('ControlReg', 'udw', 'MISCREG_CANRESTORE', None, 51),
+    'Cleanwin':		('ControlReg', 'udw', 'MISCREG_CLEANWIN', None, 52),
+    'Otherwin':		('ControlReg', 'udw', 'MISCREG_OTHERWIN', None, 53),
+    'Wstate':		('ControlReg', 'udw', 'MISCREG_WSTATE', None, 54),
+    'Gl':               ('ControlReg', 'udw', 'MISCREG_GL', None, 55),
 
-    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 55),
-    'Gsr':		('ControlReg', 'udw', 'MISCREG_GSR', None, 56),
+    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 56),
+    'Gsr':		('ControlReg', 'udw', 'MISCREG_GSR', None, 57),
     # Mem gets a large number so it's always last
     'Mem': 		('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 

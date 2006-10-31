@@ -75,8 +75,14 @@ IntRegFile::IntRegFile()
 
 IntReg IntRegFile::readReg(int intReg)
 {
-    IntReg val =
-        regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
+    IntReg val;
+    if(intReg < NumRegularIntRegs)
+        val = regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
+    else if((intReg -= NumRegularIntRegs) < NumMicroIntRegs)
+        val = microRegs[intReg];
+    else
+        panic("Tried to read non-existant integer register\n");
+
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
     return val;
 }
@@ -86,7 +92,12 @@ Fault IntRegFile::setReg(int intReg, const IntReg &val)
     if(intReg)
     {
         DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
-        regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
+        if(intReg < NumRegularIntRegs)
+            regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
+        else if((intReg -= NumRegularIntRegs) < NumMicroIntRegs)
+            microRegs[intReg] = val;
+        else
+            panic("Tried to set non-existant integer register\n");
     }
     return NoFault;
 }
@@ -123,6 +134,7 @@ void IntRegFile::serialize(std::ostream &os)
         SERIALIZE_ARRAY(regGlobals[x], RegsPerFrame);
     for(x = 0; x < 2 * NWindows; x++)
         SERIALIZE_ARRAY(regSegments[x], RegsPerFrame);
+    SERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
 }
 
 void IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
@@ -132,4 +144,5 @@ void IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
         UNSERIALIZE_ARRAY(regGlobals[x], RegsPerFrame);
     for(unsigned int x = 0; x < 2 * NWindows; x++)
         UNSERIALIZE_ARRAY(regSegments[x], RegsPerFrame);
+    UNSERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
 }

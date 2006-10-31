@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "arch/types.hh"
 #include "cpu/ozone/inorder_back_end.hh"
 #include "cpu/ozone/thread_state.hh"

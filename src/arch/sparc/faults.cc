@@ -29,14 +29,21 @@
  *          Kevin Lim
  */
 
+#include <algorithm>
+
 #include "arch/sparc/faults.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/base.hh"
+#include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/process.hh"
+#include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #if !FULL_SYSTEM
-#include "sim/process.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 #endif
+
+using namespace std;
 
 namespace SparcISA
 {
@@ -229,6 +236,121 @@ FaultPriority PageTableFault::_priority = 0;
 FaultStat PageTableFault::_count;
 #endif
 
+/**
+ * This sets everything up for a normal trap except for actually jumping to
+ * the handler. It will need to be expanded to include the state machine in
+ * the manual. Right now it assumes that traps will always be to the
+ * privileged level.
+ */
+
+void doNormalFault(ThreadContext *tc, TrapType tt)
+{
+    uint64_t TL = tc->readMiscReg(MISCREG_TL);
+    uint64_t TSTATE = tc->readMiscReg(MISCREG_TSTATE);
+    uint64_t PSTATE = tc->readMiscReg(MISCREG_PSTATE);
+    uint64_t HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    uint64_t CCR = tc->readMiscReg(MISCREG_CCR);
+    uint64_t ASI = tc->readMiscReg(MISCREG_ASI);
+    uint64_t CWP = tc->readMiscReg(MISCREG_CWP);
+    uint64_t CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    uint64_t GL = tc->readMiscReg(MISCREG_GL);
+    uint64_t PC = tc->readPC();
+    uint64_t NPC = tc->readNextPC();
+
+    //Increment the trap level
+    TL++;
+    tc->setMiscReg(MISCREG_TL, TL);
+
+    //Save off state
+
+    //set TSTATE.gl to gl
+    replaceBits(TSTATE, 42, 40, GL);
+    //set TSTATE.ccr to ccr
+    replaceBits(TSTATE, 39, 32, CCR);
+    //set TSTATE.asi to asi
+    replaceBits(TSTATE, 31, 24, ASI);
+    //set TSTATE.pstate to pstate
+    replaceBits(TSTATE, 20, 8, PSTATE);
+    //set TSTATE.cwp to cwp
+    replaceBits(TSTATE, 4, 0, CWP);
+
+    //Write back TSTATE
+    tc->setMiscReg(MISCREG_TSTATE, TSTATE);
+
+    //set TPC to PC
+    tc->setMiscReg(MISCREG_TPC, PC);
+    //set TNPC to NPC
+    tc->setMiscReg(MISCREG_TNPC, NPC);
+
+    //set HTSTATE.hpstate to hpstate
+    tc->setMiscReg(MISCREG_HTSTATE, HPSTATE);
+
+    //TT = trap type;
+    tc->setMiscReg(MISCREG_TT, tt);
+
+    //Update the global register level
+    if(1/*We're delivering the trap in priveleged mode*/)
+        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxGL));
+    else
+        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxPGL));
+
+    //PSTATE.mm is unchanged
+    //PSTATE.pef = whether or not an fpu is present
+    //XXX We'll say there's one present, even though there aren't
+    //implementations for a decent number of the instructions
+    PSTATE |= (1 << 4);
+    //PSTATE.am = 0
+    PSTATE &= ~(1 << 3);
+    if(1/*We're delivering the trap in priveleged mode*/)
+    {
+        //PSTATE.priv = 1
+        PSTATE |= (1 << 2);
+        //PSTATE.cle = PSTATE.tle
+        replaceBits(PSTATE, 9, 9, PSTATE >> 8);
+    }
+    else
+    {
+        //PSTATE.priv = 0
+        PSTATE &= ~(1 << 2);
+        //PSTATE.cle = 0
+        PSTATE &= ~(1 << 9);
+    }
+    //PSTATE.ie = 0
+    PSTATE &= ~(1 << 1);
+    //PSTATE.tle is unchanged
+    //PSTATE.tct = 0
+    //XXX Where exactly is this field?
+    tc->setMiscReg(MISCREG_PSTATE, PSTATE);
+
+    if(0/*We're delivering the trap in hyperprivileged mode*/)
+    {
+        //HPSTATE.red = 0
+        HPSTATE &= ~(1 << 5);
+        //HPSTATE.hpriv = 1
+        HPSTATE |= (1 << 2);
+        //HPSTATE.ibe = 0
+        HPSTATE &= ~(1 << 10);
+        //HPSTATE.tlz is unchanged
+        tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+    }
+
+    bool changedCWP = true;
+    if(tt == 0x24)
+        CWP++;
+    else if(0x80 <= tt && tt <= 0xbf)
+        CWP += (CANSAVE + 2);
+    else if(0xc0 <= tt && tt <= 0xff)
+        CWP--;
+    else
+        changedCWP = false;
+
+    if(changedCWP)
+    {
+        CWP = (CWP + NWindows) % NWindows;
+        tc->setMiscRegWithEffect(MISCREG_CWP, CWP);
+    }
+}
+
 #if FULL_SYSTEM
 
 void SparcFault::invoke(ThreadContext * tc)
@@ -263,6 +385,40 @@ void TrapInstruction::invoke(ThreadContext * tc)
     // Should be handled in ISA.
 }
 
+void SpillNNormal::invoke(ThreadContext *tc)
+{
+    doNormalFault(tc, trapType());
+
+    Process *p = tc->getProcessPtr();
+
+    //This will only work in faults from a SparcLiveProcess
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    //Then adjust the PC and NPC
+    Addr spillStart = lp->readSpillStart();
+    tc->setPC(spillStart);
+    tc->setNextPC(spillStart + sizeof(MachInst));
+    tc->setNextNPC(spillStart + 2*sizeof(MachInst));
+}
+
+void FillNNormal::invoke(ThreadContext *tc)
+{
+    doNormalFault(tc, trapType());
+
+    Process * p = tc->getProcessPtr();
+
+    //This will only work in faults from a SparcLiveProcess
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    //The adjust the PC and NPC
+    Addr fillStart = lp->readFillStart();
+    tc->setPC(fillStart);
+    tc->setNextPC(fillStart + sizeof(MachInst));
+    tc->setNextNPC(fillStart + 2*sizeof(MachInst));
+}
+
 void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
@@ -282,6 +438,7 @@ void PageTableFault::invoke(ThreadContext *tc)
         FaultBase::invoke(tc);
     }
 }
+
 #endif
 
 } // namespace SparcISA

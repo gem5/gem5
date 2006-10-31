@@ -42,9 +42,6 @@
 //Include the memory formats
 ##include "mem/mem.isa"
 
-//Include the compare and swap format
-##include "cas.isa"
-
 //Include the trap format
 ##include "trap.isa"
 

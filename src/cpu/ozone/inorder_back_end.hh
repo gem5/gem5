@@ -33,7 +33,7 @@
 
 #include <list>
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "base/timebuf.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/inst_seq.hh"

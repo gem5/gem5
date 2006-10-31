@@ -31,7 +31,7 @@
 #ifndef __CPU_OZONE_THREAD_STATE_HH__
 #define __CPU_OZONE_THREAD_STATE_HH__
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "arch/types.hh"
 #include "arch/regfile.hh"
 #include "base/callback.hh"

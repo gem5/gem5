@@ -33,6 +33,100 @@
 // Mem utility templates and functions
 //
 
+output header {{
+        /**
+         * Base class for memory operations.
+         */
+        class Mem : public SparcStaticInst
+        {
+          protected:
+
+            // Constructor
+            Mem(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+
+        /**
+         * Class for memory operations which use an immediate offset.
+         */
+        class MemImm : public Mem
+        {
+          protected:
+
+            // Constructor
+            MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                Mem(mnem, _machInst, __opClass), imm(sext<13>(SIMM13))
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+
+            const int32_t imm;
+        };
+}};
+
+output decoder {{
+        std::string Mem::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            ccprintf(response, " + ");
+            printReg(response, _srcRegIdx[!save ? 1 : 2]);
+            ccprintf(response, " ]");
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+        std::string MemImm::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            if(imm >= 0)
+                ccprintf(response, " + 0x%x ]", imm);
+            else
+                ccprintf(response, " + -0x%x ]", -imm);
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+}};
+
 //This template provides the execute functions for a load
 def template LoadExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
@@ -102,6 +196,9 @@ def template StoreExecute {{
         {
             Fault fault = NoFault;
             uint64_t write_result = 0;
+            //This is to support the conditional store in cas instructions.
+            //It should be optomized out in all the others
+            bool storeCond = true;
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
@@ -112,7 +209,7 @@ def template StoreExecute {{
             {
                 %(code)s;
             }
-            if(fault == NoFault)
+            if(storeCond && fault == NoFault)
             {
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
             }
@@ -130,6 +227,7 @@ def template StoreExecute {{
         {
             Fault fault = NoFault;
             uint64_t write_result = 0;
+            bool storeCond = true;
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
@@ -140,7 +238,7 @@ def template StoreExecute {{
             {
                 %(code)s;
             }
-            if(fault == NoFault)
+            if(storeCond && fault == NoFault)
             {
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
             }
@@ -204,23 +302,29 @@ let {{
 //and in the other they're distributed across two. Also note that for
 //execute functions, the name of the base class doesn't matter.
 let {{
-    def doSplitExecute(code, eaRegCode, eaImmCode, execute,
+    def doSplitExecute(code, eaCode, execute,
+            faultCode, name, Name, opt_flags):
+        codeIop = InstObjParams(name, Name, '', code, opt_flags)
+        eaIop = InstObjParams(name, Name, '', eaCode,
+                opt_flags, {"fault_check": faultCode})
+        iop = InstObjParams(name, Name, '', code, opt_flags,
+                {"fault_check": faultCode, "ea_code" : eaCode})
+        (iop.ea_decl,
+         iop.ea_rd,
+         iop.ea_wb) = (eaIop.op_decl, eaIop.op_rd, eaIop.op_wb)
+        (iop.code_decl,
+         iop.code_rd,
+         iop.code_wb) = (codeIop.op_decl, codeIop.op_rd, codeIop.op_wb)
+        return execute.subst(iop)
+
+
+    def doDualSplitExecute(code, eaRegCode, eaImmCode, execute,
             faultCode, nameReg, nameImm, NameReg, NameImm, opt_flags):
-        codeIop = InstObjParams(nameReg, NameReg, '', code, opt_flags)
         executeCode = ''
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
-            eaIop = InstObjParams(name, Name, '', eaCode,
-                    opt_flags, {"fault_check": faultCode})
-            iop = InstObjParams(name, Name, '', code, opt_flags,
-                    {"fault_check": faultCode, "ea_code" : eaCode})
-            (iop.ea_decl,
-             iop.ea_rd,
-             iop.ea_wb) = (eaIop.op_decl, eaIop.op_rd, eaIop.op_wb)
-            (iop.code_decl,
-             iop.code_rd,
-             iop.code_wb) = (codeIop.op_decl, codeIop.op_rd, codeIop.op_wb)
-            executeCode += execute.subst(iop)
+            executeCode += doSplitExecute(code, eaCode,
+                    execute, faultCode, name, Name, opt_flags)
         return executeCode
 }};

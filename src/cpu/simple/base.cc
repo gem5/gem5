@@ -401,13 +401,15 @@ BaseSimpleCPU::preExecute()
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
         if (instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;
-            curStaticInst = curMacroStaticInst->fetchMicroOp(0);
+            curStaticInst = curMacroStaticInst->
+                fetchMicroOp(thread->readMicroPC());
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->fetchMicroOp(thread->readMicroPC());
+        curStaticInst = curMacroStaticInst->
+            fetchMicroOp(thread->readMicroPC());
     }
 
 

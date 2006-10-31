@@ -69,4 +69,28 @@ sext(uint64_t val)
     return sign_bit ? (val | ~mask(N)) : val;
 }
 
+/**
+ * Return val with bits first to last set to bit_val
+ */
+template <class T, class B>
+inline
+T
+insertBits(T val, int first, int last, B bit_val)
+{
+    T bmask = mask(first - last + 1) << last;
+    return ((bit_val << last) & bmask) | (val & ~bmask);
+}
+
+/**
+ * A convenience function to replace bits first to last of val with bit_val
+ * in place.
+ */
+template <class T, class B>
+inline
+void
+replaceBits(T& val, int first, int last, B bit_val)
+{
+    val = insertBits(val, first, last, bit_val);
+}
+
 #endif // __BASE_BITFIELD_HH__

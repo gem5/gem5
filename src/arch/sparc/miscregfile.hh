@@ -56,7 +56,6 @@ namespace SparcISA
         MISCREG_CCR = AsrStart + 2,
         MISCREG_ASI = AsrStart + 3,
         MISCREG_TICK = AsrStart + 4,
-        MISCREG_PC = AsrStart + 5,
         MISCREG_FPRS = AsrStart + 6,
         MISCREG_PCR = AsrStart + 16,
         MISCREG_PIC = AsrStart + 17,
@@ -366,31 +365,13 @@ namespace SparcISA
             reset();
         }
 
-        /** read a value out of an either an SE or FS IPR. No checking is done
-         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
-         * register are copied that are necessary for FS. However this prevents
-         * a bunch of ifdefs and is rarely called so is not performance
-         * criticial. */
         MiscReg readReg(int miscReg);
 
-        /** Read a value from an IPR. Only the SE iprs are here and the rest
-         * are are readFSRegWithEffect (which is called by readRegWithEffect()).
-         * Checking is done for permission based on state bits in the miscreg
-         * file. */
-        MiscReg readRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
+        MiscReg readRegWithEffect(int miscReg, ThreadContext *tc);
 
-        /** write a value into an either an SE or FS IPR. No checking is done
-         * about SE vs. FS as this is mostly used to copy the regfile. Thus more
-         * register are copied that are necessary for FS. However this prevents
-         * a bunch of ifdefs and is rarely called so is not performance
-         * criticial.*/
-        Fault setReg(int miscReg, const MiscReg &val);
+        void setReg(int miscReg, const MiscReg &val);
 
-        /** Write a value into an IPR. Only the SE iprs are here and the rest
-         * are are setFSRegWithEffect (which is called by setRegWithEffect()).
-         * Checking is done for permission based on state bits in the miscreg
-         * file. */
-        Fault setRegWithEffect(int miscReg,
+        void setRegWithEffect(int miscReg,
                 const MiscReg &val, ThreadContext * tc);
 
         void serialize(std::ostream & os);

@@ -38,6 +38,7 @@
 #include "base/inet.hh"
 #include "dev/i8254xGBe.hh"
 #include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "sim/builder.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
@@ -66,12 +67,17 @@ IGbE::IGbE(Params *p)
     regs.tctl.reg       = 0;
     regs.manc.reg       = 0;
 
+    regs.pba.rxa        = 0x30;
+    regs.pba.txa        = 0x10;
+
     eeOpBits            = 0;
     eeAddrBits          = 0;
     eeDataBits          = 0;
     eeOpcode            = 0;
 
-    memset(&flash, 0, EEPROM_SIZE);
+    // clear all 64 16 bit words of the eeprom
+    memset(&flash, 0, EEPROM_SIZE*2);
+
     // Magic happy checksum value
     flash[0] = 0xBABA;
 }
@@ -108,13 +114,14 @@ IGbE::read(PacketPtr pkt)
     // Only 32bit accesses allowed
     assert(pkt->getSize() == 4);
 
-    DPRINTF(Ethernet, "Read device register %#X\n", daddr);
+    //DPRINTF(Ethernet, "Read device register %#X\n", daddr);
 
     pkt->allocate();
 
     ///
     /// Handle read of register here
     ///
+
 
     switch (daddr) {
       case CTRL:
@@ -141,11 +148,23 @@ IGbE::read(PacketPtr pkt)
       case TCTL:
        pkt->set<uint32_t>(regs.tctl.reg);
        break;
+      case PBA:
+       pkt->set<uint32_t>(regs.pba.reg);
+       break;
+      case WUC:
+      case LEDCTL:
+       pkt->set<uint32_t>(0); // We don't care, so just return 0
+       break;
       case MANC:
        pkt->set<uint32_t>(regs.manc.reg);
        break;
       default:
-       panic("Read request to unknown register number: %#x\n", daddr);
+       if (!(daddr >= VFTA && daddr < (VFTA + VLAN_FILTER_TABLE_SIZE)*4) &&
+           !(daddr >= RAL && daddr < (RAL + RCV_ADDRESS_TABLE_SIZE)*4) &&
+           !(daddr >= MTA && daddr < (MTA + MULTICAST_TABLE_SIZE)*4))
+           pkt->set<uint32_t>(0);
+       else
+           panic("Read request to unknown register number: %#x\n", daddr);
     };
 
     pkt->result = Packet::Success;
@@ -168,7 +187,7 @@ IGbE::write(PacketPtr pkt)
     // Only 32bit accesses allowed
     assert(pkt->getSize() == sizeof(uint32_t));
 
-    DPRINTF(Ethernet, "Wrote device register %#X value %#X\n", daddr, pkt->get<uint32_t>());
+    //DPRINTF(Ethernet, "Wrote device register %#X value %#X\n", daddr, pkt->get<uint32_t>());
 
     ///
     /// Handle write of register here
@@ -195,10 +214,10 @@ IGbE::write(PacketPtr pkt)
                eeAddr = eeAddr << 1 | regs.eecd.din;
                eeAddrBits++;
            } else if (eeDataBits < 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
-               assert(eeAddr < EEPROM_SIZE);
-               DPRINTF(Ethernet, "EEPROM bit read: %d word: %#X\n",
-                       flash[eeAddr] >> eeDataBits & 0x1, flash[eeAddr]);
-               regs.eecd.dout = (flash[eeAddr] >> eeDataBits) & 0x1;
+               assert(eeAddr>>1 < EEPROM_SIZE);
+               DPRINTF(EthernetEEPROM, "EEPROM bit read: %d word: %#X\n",
+                       flash[eeAddr>>1] >> eeDataBits & 0x1, flash[eeAddr>>1]);
+               regs.eecd.dout = (flash[eeAddr>>1] >> (15-eeDataBits)) & 0x1;
                eeDataBits++;
            } else if (eeDataBits < 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI) {
                regs.eecd.dout = 0;
@@ -219,8 +238,9 @@ IGbE::write(PacketPtr pkt)
                eeAddr = 0;
            }
 
-           DPRINTF(Ethernet, "EEPROM: opcode: %#X:%d\n",
-                   (uint32_t)eeOpcode, (uint32_t) eeOpBits);
+           DPRINTF(EthernetEEPROM, "EEPROM: opcode: %#X:%d addr: %#X:%d\n",
+                   (uint32_t)eeOpcode, (uint32_t) eeOpBits,
+                   (uint32_t)eeAddr>>1, (uint32_t)eeAddrBits);
            if (eeOpBits == 8 && !(eeOpcode == EEPROM_READ_OPCODE_SPI ||
                                   eeOpcode == EEPROM_RDSR_OPCODE_SPI ))
                panic("Unknown eeprom opcode: %#X:%d\n", (uint32_t)eeOpcode,
@@ -246,11 +266,22 @@ IGbE::write(PacketPtr pkt)
       case TCTL:
        regs.tctl.reg = val;
        break;
+      case PBA:
+       regs.pba.rxa = val;
+       regs.pba.txa = 64 - regs.pba.rxa;
+       break;
+      case WUC:
+      case LEDCTL:
+       ; // We don't care, so don't store anything
+       break;
       case MANC:
        regs.manc.reg = val;
        break;
       default:
-       panic("Write request to unknown register number: %#x\n", daddr);
+       if (!(daddr >= VFTA && daddr < (VFTA + VLAN_FILTER_TABLE_SIZE)*4) &&
+           !(daddr >= RAL && daddr < (RAL + RCV_ADDRESS_TABLE_SIZE)*4) &&
+           !(daddr >= MTA && daddr < (MTA + MULTICAST_TABLE_SIZE)*4))
+           panic("Write request to unknown register number: %#x\n", daddr);
     };
 
     pkt->result = Packet::Success;

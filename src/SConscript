@@ -220,7 +220,6 @@ full_system_sources = Split('''
 	dev/etherlink.cc
 	dev/etherpkt.cc
 	dev/ethertap.cc	
-        dev/i8254xGBe.cc
         dev/ide_ctrl.cc
 	dev/ide_disk.cc
 	dev/io_device.cc
@@ -253,6 +252,7 @@ full_system_sources = Split('''
 	sim/pseudo_inst.cc
         ''')
 	#dev/sinic.cc
+        #dev/i8254xGBe.cc
 
 
 if env['TARGET_ISA'] == 'alpha':

@@ -60,23 +60,22 @@ class SimpleTimingPort : public Port
   protected:
     /** A list of outgoing timing response packets that haven't been
      * serviced yet. */
-    std::list<PacketPtr> transmitList;
+    std::list<std::pair<Tick,PacketPtr> > transmitList;
 
     /**
      * This class is used to implemented sendTiming() with a delay. When
-     * a delay is requested a new event is created. When the event time
-     * expires it attempts to send the packet. If it cannot, the packet
-     * is pushed onto the transmit list to be sent when recvRetry() is
-     * called. */
+     * a delay is requested a the event is scheduled if it isn't already.
+     * When the event time expires it attempts to send the packet.
+     * If it cannot, the packet sent when recvRetry() is called.
+     **/
     class SendEvent : public Event
     {
         SimpleTimingPort *port;
-        PacketPtr packet;
 
       public:
-        SendEvent(SimpleTimingPort *p, PacketPtr pkt, Tick t)
-            : Event(&mainEventQueue), port(p), packet(pkt)
-        { setFlags(AutoDelete); schedule(curTick + t); }
+        SendEvent(SimpleTimingPort *p)
+            : Event(&mainEventQueue), port(p)
+        { }
 
         virtual void process();
 
@@ -84,19 +83,17 @@ class SimpleTimingPort : public Port
         { return "Future scheduled sendTiming event"; }
     };
 
-
-    /** Number of timing requests that are emulating the device timing before
-     * attempting to end up on the bus.
-     */
-    int outTiming;
+    SendEvent sendEvent;
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
     Event *drainEvent;
 
-    /** Schedule a sendTiming() event to be called in the future. */
-    void sendTimingLater(PacketPtr pkt, Tick time)
-    { outTiming++; new SendEvent(this, pkt, time); }
+    /** Schedule a sendTiming() event to be called in the future.
+     * @param pkt packet to send
+     * @param time increment from now (in ticks) to send packet
+     */
+    void sendTiming(PacketPtr pkt, Tick time);
 
     /** This function is notification that the device should attempt to send a
      * packet again. */
@@ -118,7 +115,7 @@ class SimpleTimingPort : public Port
   public:
 
     SimpleTimingPort(std::string pname)
-        : Port(pname), outTiming(0), drainEvent(NULL)
+        : Port(pname), sendEvent(this), drainEvent(NULL)
     {}
 
     /** Hook for draining timing accesses from the system.  The

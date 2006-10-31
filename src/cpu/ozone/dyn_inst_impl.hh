@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/faults.hh"
+#include "sim/faults.hh"
 #include "config/full_system.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "kern/kernel_stats.hh"
