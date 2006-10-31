@@ -54,8 +54,6 @@ Param<int> activity;
 
 SimObjectVectorParam<Process *> workload;
 
-SimObjectParam<MemObject *> mem;
-
 SimObjectParam<BaseCPU *> checker;
 
 Param<Counter> max_insts_any_thread;
@@ -152,8 +150,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
     INIT_PARAM_DFLT(activity, "Initial activity count", 0),
 
     INIT_PARAM(workload, "Processes to run"),
-
-    INIT_PARAM(mem, "Memory"),
 
     INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
 
@@ -283,8 +279,6 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->activity = activity;
 
     params->workload = workload;
-
-    params->mem = mem;
 
     params->checker = checker;
 

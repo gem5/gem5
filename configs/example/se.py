@@ -118,7 +118,6 @@ for i in xrange(np):
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
     system.cpu[i].connectMemPorts(system.membus)
-    system.cpu[i].mem = system.physmem
     system.cpu[i].workload = process
 
 root = Root(system = system)

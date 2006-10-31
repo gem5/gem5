@@ -93,10 +93,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
     : BaseCPU(p), thread(this, 0), tickEvent(this, p->width),
 #else
-    : BaseCPU(p), thread(this, 0, p->workload[0], 0, p->mem),
+    : BaseCPU(p), thread(this, 0, p->workload[0], 0),
       tickEvent(this, p->width),
 #endif
-      mem(p->mem), comm(5, 5)
+      comm(5, 5)
 {
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
@@ -107,7 +107,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if USE_CHECKER
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
-        checker->setMemory(mem);
 #if FULL_SYSTEM
         checker->setSystem(p->system);
 #endif
@@ -198,19 +197,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
-#if !FULL_SYSTEM
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *mem_port;
-    TranslatingPort *trans_port;
-    trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                              name(), 0),
-                                     p->workload[0]->pTable,
-                                     false);
-    mem_port = p->mem->getPort("functional");
-    mem_port->setPeer(trans_port);
-    trans_port->setPeer(mem_port);
-    thread.setMemPort(trans_port);
-#else
+#if FULL_SYSTEM
     Port *mem_port;
     FunctionalPort *phys_port;
     VirtualPort *virt_port;

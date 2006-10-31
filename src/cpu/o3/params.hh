@@ -54,8 +54,6 @@ class O3Params : public BaseO3CPU::Params
     Process *process;
 #endif // FULL_SYSTEM
 
-    MemObject *mem;
-
     BaseCPU *checker;
 
     //

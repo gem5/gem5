@@ -61,8 +61,6 @@ class SimpleParams : public BaseCPU::Params
     //Page Table
     PageTable *pTable;
 
-    MemObject *mem;
-
     //
     // Caches
     //

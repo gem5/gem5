@@ -58,6 +58,8 @@
 typedef std::list<Range<Addr> > AddrRangeList;
 typedef std::list<Range<Addr> >::iterator AddrRangeIter;
 
+class MemObject;
+
 /**
  * Ports are used to interface memory objects to
  * each other.  They will always come in pairs, and we refer to the other
@@ -81,10 +83,13 @@ class Port
         memory objects. */
     Port *peer;
 
+    /** A pointer to the MemObject that owns this port. This may not be set. */
+    MemObject *owner;
+
   public:
 
     Port()
-        : peer(NULL)
+        : peer(NULL), owner(NULL)
     { }
 
     /**
@@ -92,9 +97,11 @@ class Port
      *
      * @param _name Port name for DPRINTF output.  Should include name
      * of memory system object to which the port belongs.
+     * @param _owner Pointer to the MemObject that owns this port.
+     * Will not necessarily be set.
      */
-    Port(const std::string &_name)
-        : portName(_name), peer(NULL)
+    Port(const std::string &_name, MemObject *_owner = NULL)
+        : portName(_name), peer(NULL), owner(_owner)
     { }
 
     /** Return port name (for DPRINTF). */
@@ -112,15 +119,17 @@ class Port
     void setName(const std::string &name)
     { portName = name; }
 
-    /** Function to set the pointer for the peer port.
-        @todo should be called by the configuration stuff (python).
-    */
+    /** Function to set the pointer for the peer port. */
     void setPeer(Port *port);
 
-    /** Function to set the pointer for the peer port.
-        @todo should be called by the configuration stuff (python).
-    */
+    /** Function to get the pointer to the peer port. */
     Port *getPeer() { return peer; }
+
+    /** Function to set the owner of this port. */
+    void setOwner(MemObject *_owner) { owner = _owner; }
+
+    /** Function to return the owner of this port. */
+    MemObject *getOwner() { return owner; }
 
   protected:
 
@@ -247,8 +256,8 @@ class Port
 class FunctionalPort : public Port
 {
   public:
-    FunctionalPort(const std::string &_name)
-        : Port(_name)
+    FunctionalPort(const std::string &_name, MemObject *_owner = NULL)
+        : Port(_name, _owner)
     {}
 
   protected:

@@ -239,8 +239,6 @@ class OzoneLWLSQ {
     /** Pointer to the back-end stage. */
     BackEnd *be;
 
-    MemObject *mem;
-
     class DcachePort : public Port
     {
       protected:
