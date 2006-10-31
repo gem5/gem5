@@ -359,21 +359,6 @@ void SparcFault::invoke(ThreadContext * tc)
     countStat()++;
 
     //Use the SPARC trap state machine
-    /*// exception restart address
-    if (setRestartAddress() || !tc->inPalMode())
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->regs.pc);
-
-    if (skipFaultingInstruction()) {
-        // traps...  skip faulting instruction.
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
-    }
-
-    if (!tc->inPalMode())
-        AlphaISA::swap_palshadow(&(tc->regs), true);
-
-    tc->regs.pc = tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    tc->regs.npc = tc->regs.pc + sizeof(MachInst);*/
 }
 
 #endif
