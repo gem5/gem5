@@ -661,12 +661,12 @@ decode OPCODE default Unknown::unknown() {
 #if FULL_SYSTEM
         format BasicOperate {
             0xe000: rc({{
-                Ra = xc->readIntrFlag();
-                xc->setIntrFlag(0);
+                Ra = IntrFlag;
+                IntrFlag = 0;
             }}, IsNonSpeculative, IsUnverifiable);
             0xf000: rs({{
-                Ra = xc->readIntrFlag();
-                xc->setIntrFlag(1);
+                Ra = IntrFlag;
+                IntrFlag = 1;
             }}, IsNonSpeculative, IsUnverifiable);
         }
 #else

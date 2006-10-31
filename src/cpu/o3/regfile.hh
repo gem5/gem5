@@ -251,12 +251,6 @@ class PhysRegFile
                                                     cpu->tcBase(thread_id));
     }
 
-#if FULL_SYSTEM
-    int readIntrFlag() { return intrflag; }
-    /** Sets an interrupt flag. */
-    void setIntrFlag(int val) { intrflag = val; }
-#endif
-
   public:
     /** (signed) integer register file. */
     IntReg *intRegFile;

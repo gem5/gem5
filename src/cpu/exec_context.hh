@@ -144,10 +144,6 @@ class ExecContext {
     /** Somewhat Alpha-specific function that handles returning from
      * an error or interrupt. */
     Fault hwrei();
-    /** Reads the interrupt flags. */
-    int readIntrFlag();
-    /** Sets the interrupt flags to a value. */
-    void setIntrFlag(int val);
 
     /**
      * Check for special simulator handling of specific PAL calls.  If

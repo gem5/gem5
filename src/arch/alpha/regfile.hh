@@ -109,6 +109,7 @@ namespace AlphaISA
         uint64_t	uniq;		// process-unique register
         bool		lock_flag;	// lock flag for LL/SC
         Addr		lock_addr;	// lock address for LL/SC
+        int		intr_flag;
 
       public:
         MiscReg readReg(int misc_reg);
@@ -131,6 +132,7 @@ namespace AlphaISA
             fpcr = uniq = 0;
             lock_flag = 0;
             lock_addr = 0;
+            intr_flag = 0;
         }
 
         void serialize(std::ostream &os);

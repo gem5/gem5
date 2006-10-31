@@ -168,8 +168,6 @@ class SimpleThread : public ThreadState
 
     void dumpFuncProfile();
 
-    int readIntrFlag() { return regs.intrflag; }
-    void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
 
     bool simPalCheck(int palFunc);

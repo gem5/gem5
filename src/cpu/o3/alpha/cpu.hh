@@ -145,10 +145,6 @@ class AlphaO3CPU : public FullO3CPU<Impl>
 #if FULL_SYSTEM
     /** Posts an interrupt. */
     void post_interrupt(int int_num, int index);
-    /** Reads the interrupt flag. */
-    int readIntrFlag();
-    /** Sets the interrupt flags. */
-    void setIntrFlag(int val);
     /** HW return from error interrupt. */
     Fault hwrei(unsigned tid);
     /** Returns if a specific PC is a PAL mode PC. */

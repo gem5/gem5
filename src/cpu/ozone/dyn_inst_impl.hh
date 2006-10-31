@@ -261,20 +261,6 @@ OzoneDynInst<Impl>::hwrei()
 }
 
 template <class Impl>
-int
-OzoneDynInst<Impl>::readIntrFlag()
-{
-return this->cpu->readIntrFlag();
-}
-
-template <class Impl>
-void
-OzoneDynInst<Impl>::setIntrFlag(int val)
-{
-    this->cpu->setIntrFlag(val);
-}
-
-template <class Impl>
 bool
 OzoneDynInst<Impl>::inPalMode()
 {

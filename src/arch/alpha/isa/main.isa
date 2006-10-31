@@ -183,8 +183,9 @@ def operands {{
     'Fc': ('FloatReg', 'df', 'FC', 'IsFloating', 3),
     'Mem': ('Mem', 'uq', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
     'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
-    'Runiq': ('ControlReg', 'uq', 'TheISA::Uniq_DepTag', None, 1),
-    'FPCR':  (' ControlReg', 'uq', 'TheISA::Fpcr_DepTag', None, 1),
+    'Runiq': ('ControlReg', 'uq', 'AlphaISA::Uniq_DepTag', None, 1),
+    'FPCR':  ('ControlReg', 'uq', 'AlphaISA::Fpcr_DepTag', None, 1),
+    'IntrFlag': ('ControlReg', 'uq', 'AlphaISA::Intr_Flag_DepTag', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
     'R0':  ('IntReg', 'uq', '0', None, 1),
     'R16': ('IntReg', 'uq', '16', None, 1),

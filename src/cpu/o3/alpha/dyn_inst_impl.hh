@@ -128,20 +128,6 @@ AlphaDynInst<Impl>::hwrei()
 }
 
 template <class Impl>
-int
-AlphaDynInst<Impl>::readIntrFlag()
-{
-    return this->cpu->readIntrFlag();
-}
-
-template <class Impl>
-void
-AlphaDynInst<Impl>::setIntrFlag(int val)
-{
-    this->cpu->setIntrFlag(val);
-}
-
-template <class Impl>
 bool
 AlphaDynInst<Impl>::inPalMode()
 {

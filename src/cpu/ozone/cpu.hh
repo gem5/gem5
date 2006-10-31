@@ -583,8 +583,6 @@ class OzoneCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei();
-    int readIntrFlag() { return thread.intrflag; }
-    void setIntrFlag(int val) { thread.intrflag = val; }
     bool inPalMode() { return AlphaISA::PcPAL(thread.PC); }
     bool inPalMode(Addr pc) { return AlphaISA::PcPAL(pc); }
     bool simPalCheck(int palFunc);

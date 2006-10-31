@@ -54,7 +54,8 @@ namespace AlphaISA
         Uniq_DepTag = 73,
         Lock_Flag_DepTag = 74,
         Lock_Addr_DepTag = 75,
-        IPR_Base_DepTag = 76
+        Intr_Flag_DepTag = 76,
+        IPR_Base_DepTag = 77
     };
 
     StaticInstPtr decodeInst(ExtMachInst);

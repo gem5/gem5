@@ -242,20 +242,6 @@ AlphaO3CPU<Impl>::post_interrupt(int int_num, int index)
 }
 
 template <class Impl>
-int
-AlphaO3CPU<Impl>::readIntrFlag()
-{
-    return this->regFile.readIntrFlag();
-}
-
-template <class Impl>
-void
-AlphaO3CPU<Impl>::setIntrFlag(int val)
-{
-    this->regFile.setIntrFlag(val);
-}
-
-template <class Impl>
 Fault
 AlphaO3CPU<Impl>::hwrei(unsigned tid)
 {
