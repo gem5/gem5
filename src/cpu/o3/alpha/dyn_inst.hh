@@ -127,10 +127,6 @@ class AlphaDynInst : public BaseDynInst<Impl>
 #if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
-    /** Reads interrupt flag. */
-    int readIntrFlag();
-    /** Sets interrupt flag. */
-    void setIntrFlag(int val);
     /** Checks if system is in PAL mode. */
     bool inPalMode();
     /** Traps to handle specified fault. */
