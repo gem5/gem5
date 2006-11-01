@@ -64,9 +64,16 @@ def run(options, root, testsys):
                 switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
             switch_cpus_1[i].clock = testsys.cpu[0].clock
+
+            ## add caches to the warmup timing CPU (which will be
+            ## xferred to O3 when you switch again)
             if options.caches:
                 switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                        L1Cache(size = '64kB'))
+            else: # O3 CPU must have a cache to work.
+                switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                         L1Cache(size = '64kB'))
+                switch_cpus_1[i].connectMemPorts(testsys.membus)
 
             switch_cpus[i].connectMemPorts(testsys.membus)
 
