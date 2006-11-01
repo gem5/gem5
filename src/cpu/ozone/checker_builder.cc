@@ -68,8 +68,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
     Param<Tick> progress_interval;
 
 #if FULL_SYSTEM
-    SimObjectParam<AlphaITB *> itb;
-    SimObjectParam<AlphaDTB *> dtb;
+    SimObjectParam<TheISA::ITB *> itb;
+    SimObjectParam<TheISA::DTB *> dtb;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
     Param<Tick> profile;

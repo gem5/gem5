@@ -223,24 +223,24 @@ OzoneDynInst<Impl>::readMiscReg(int misc_reg)
 
 template <class Impl>
 TheISA::MiscReg
-OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault)
+OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg)
 {
-    return this->thread->readMiscRegWithEffect(misc_reg, fault);
+    return this->thread->readMiscRegWithEffect(misc_reg);
 }
 
 template <class Impl>
-Fault
+void
 OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
     this->setIntResult(val);
-    return this->thread->setMiscReg(misc_reg, val);
+    this->thread->setMiscReg(misc_reg, val);
 }
 
 template <class Impl>
-Fault
+void
 OzoneDynInst<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
-    return this->thread->setMiscRegWithEffect(misc_reg, val);
+    this->thread->setMiscRegWithEffect(misc_reg, val);
 }
 
 #if FULL_SYSTEM

@@ -1156,37 +1156,31 @@ OzoneCPU<Impl>::OzoneTC::readMiscReg(int misc_reg)
 
 template <class Impl>
 TheISA::MiscReg
-OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg, Fault &fault)
+OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg)
 {
-    return thread->miscRegFile.readRegWithEffect(misc_reg,
-                                                 fault, this);
+    return thread->miscRegFile.readRegWithEffect(misc_reg, this);
 }
 
 template <class Impl>
-Fault
+void
 OzoneCPU<Impl>::OzoneTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->miscRegFile.setReg(misc_reg, val);
+    thread->miscRegFile.setReg(misc_reg, val);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();
     }
-
-    return ret_fault;
 }
 
 template <class Impl>
-Fault
+void
 OzoneCPU<Impl>::OzoneTC::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->miscRegFile.setRegWithEffect(misc_reg, val,
-                                                           this);
+    thread->miscRegFile.setRegWithEffect(misc_reg, val, this);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();
     }
-
-    return ret_fault;
 }

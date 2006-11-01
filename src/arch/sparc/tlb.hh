@@ -31,5 +31,33 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "sim/faults.hh"
+
+class ThreadContext;
+
+namespace SparcISA
+{
+    class TLB
+    {
+    };
+
+    class ITB : public TLB
+    {
+      public:
+        Fault translate(RequestPtr &req, ThreadContext *tc) const
+        {
+            return NoFault;
+        }
+    };
+
+    class DTB : public TLB
+    {
+      public:
+        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const
+        {
+            return NoFault;
+        }
+    };
+}
 
 #endif // __ARCH_SPARC_TLB_HH__

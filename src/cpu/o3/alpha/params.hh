@@ -35,8 +35,11 @@
 #include "cpu/o3/params.hh"
 
 //Forward declarations
-class AlphaDTB;
-class AlphaITB;
+namespace AlphaISA
+{
+    class DTB;
+    class ITB;
+}
 class MemObject;
 class Process;
 class System;
@@ -52,8 +55,8 @@ class AlphaSimpleParams : public O3Params
   public:
 
 #if FULL_SYSTEM
-    AlphaITB *itb;
-    AlphaDTB *dtb;
+    AlphaISA::ITB *itb;
+    AlphaISA::DTB *dtb;
 #endif
 };
 

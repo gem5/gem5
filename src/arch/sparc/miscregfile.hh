@@ -32,9 +32,11 @@
 #ifndef __ARCH_SPARC_MISCREGFILE_HH__
 #define __ARCH_SPARC_MISCREGFILE_HH__
 
+#include "arch/sparc/asi.hh"
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/types.hh"
+#include "cpu/cpuevent.hh"
 
 #include <string>
 
@@ -329,6 +331,9 @@ namespace SparcISA
             } fsrFields;
         };
 
+        ASI implicitInstAsi;
+        ASI implicitDataAsi;
+
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu
 #if FULL_SYSTEM
@@ -374,6 +379,16 @@ namespace SparcISA
         void setRegWithEffect(int miscReg,
                 const MiscReg &val, ThreadContext * tc);
 
+        ASI getInstAsid()
+        {
+            return implicitInstAsi;
+        }
+
+        ASI getDataAsid()
+        {
+            return implicitDataAsi;
+        }
+
         void serialize(std::ostream & os);
 
         void unserialize(Checkpoint * cp, const std::string & section);
@@ -385,6 +400,7 @@ namespace SparcISA
         bool isHyperPriv() { return hpstateFields.hpriv; }
         bool isPriv() { return hpstateFields.hpriv || pstateFields.priv; }
         bool isNonPriv() { return !isPriv(); }
+        inline void setImplicitAsis();
     };
 }
 

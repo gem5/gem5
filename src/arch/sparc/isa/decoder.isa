@@ -353,14 +353,14 @@ decode OP default Unknown::unknown()
                     0x1: Nop::membar({{/*stuff*/}});
                 }
                 default: rdasr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + AsrStart, fault);
+                Rd = xc->readMiscRegWithEffect(RS1 + AsrStart);
                 }});
             }
             0x29: HPriv::rdhpr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + HprStart, fault);
+                Rd = xc->readMiscRegWithEffect(RS1 + HprStart);
             }});
             0x2A: Priv::rdpr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + PrStart, fault);
+                Rd = xc->readMiscRegWithEffect(RS1 + PrStart);
             }});
             0x2B: BasicOperate::flushw({{
                 if(NWindows - 2 - Cansave == 0)

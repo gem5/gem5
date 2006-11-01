@@ -101,14 +101,14 @@ class ExecContext {
 
     /** Reads a miscellaneous register, handling any architectural
      * side effects due to reading that register. */
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault);
+    MiscReg readMiscRegWithEffect(int misc_reg);
 
     /** Sets a miscellaneous register. */
-    Fault setMiscReg(int misc_reg, const MiscReg &val);
+    void setMiscReg(int misc_reg, const MiscReg &val);
 
     /** Sets a miscellaneous register, handling any architectural
      * side effects due to writing that register. */
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val);
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val);
 
     /** Records the effective address of the instruction.  Only valid
      * for memory ops. */

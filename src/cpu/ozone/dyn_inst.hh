@@ -230,11 +230,11 @@ class OzoneDynInst : public BaseDynInst<Impl>
     // ISA stuff
     MiscReg readMiscReg(int misc_reg);
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault);
+    MiscReg readMiscRegWithEffect(int misc_reg);
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val);
+    void setMiscReg(int misc_reg, const MiscReg &val);
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val);
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val);
 
 #if FULL_SYSTEM
     Fault hwrei();

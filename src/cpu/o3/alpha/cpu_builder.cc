@@ -54,8 +54,8 @@ Param<int> activity;
 #if FULL_SYSTEM
 SimObjectParam<System *> system;
 Param<int> cpu_id;
-SimObjectParam<AlphaITB *> itb;
-SimObjectParam<AlphaDTB *> dtb;
+SimObjectParam<AlphaISA::ITB *> itb;
+SimObjectParam<AlphaISA::DTB *> dtb;
 Param<Tick> profile;
 #else
 SimObjectVectorParam<Process *> workload;

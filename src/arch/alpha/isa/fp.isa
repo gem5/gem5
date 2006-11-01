@@ -46,7 +46,7 @@ output exec {{
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         Fault fault = NoFault;	// dummy... this ipr access should not fault
-        if (!EV5::ICSR_FPE(xc->readMiscRegWithEffect(AlphaISA::IPR_ICSR, fault))) {
+        if (!EV5::ICSR_FPE(xc->readMiscRegWithEffect(AlphaISA::IPR_ICSR))) {
             fault = new FloatEnableFault;
         }
         return fault;

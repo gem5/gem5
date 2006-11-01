@@ -59,20 +59,21 @@ string SparcISA::getMiscRegName(RegIndex index)
 
 //XXX These need an implementation someplace
 /** Fullsystem only register version of ReadRegWithEffect() */
-MiscReg MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
+MiscReg MiscRegFile::readFSRegWithEffect(int miscReg, ThreadContext *tc);
 /** Fullsystem only register version of SetRegWithEffect() */
-Fault MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
+void MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         ThreadContext * tc);
 #endif
 
 void MiscRegFile::reset()
 {
-    pstateFields.pef = 0; //No FPU
+    //pstateFields.pef = 0; //No FPU
     //pstateFields.pef = 1; //FPU
 #if FULL_SYSTEM
     //For SPARC, when a system is first started, there is a power
     //on reset Trap which sets the processor into the following state.
     //Bits that aren't set aren't defined on startup.
+    //XXX this code should be moved into the POR fault.
     tl = MaxTL;
     gl = MaxGL;
 
@@ -98,22 +99,6 @@ void MiscRegFile::reset()
     hintp = 0; // no interrupts pending
     hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
     hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-#else
-/*	    //This sets up the initial state of the processor for usermode processes
-    pstateFields.priv = 0; //Process runs in user mode
-    pstateFields.ie = 1; //Interrupts are enabled
-    fsrFields.rd = 0; //Round to nearest
-    fsrFields.tem = 0; //Floating point traps not enabled
-    fsrFields.ns = 0; //Non standard mode off
-    fsrFields.qne = 0; //Floating point queue is empty
-    fsrFields.aexc = 0; //No accrued exceptions
-    fsrFields.cexc = 0; //No current exceptions
-
-    //Register window management registers
-    otherwin = 0; //No windows contain info from other programs
-    canrestore = 0; //There are no windows to pop
-    cansave = MaxTL - 2; //All windows are available to save into
-    cleanwin = MaxTL;*/
 #endif
 }
 
@@ -337,6 +322,30 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
     }
 }
 
+inline void MiscRegFile::setImplicitAsis()
+{
+    //The spec seems to use trap level to indicate the privilege level of the
+    //processor. It's unclear whether the implicit ASIs should directly depend
+    //on the trap level, or if they should really be based on the privelege
+    //bits
+    if(tl == 0)
+    {
+        implicitInstAsi = implicitDataAsi =
+            pstateFields.cle ? ASI_PRIMARY_LITTLE : ASI_PRIMARY;
+    }
+    else if(tl <= MaxPTL)
+    {
+        implicitInstAsi = ASI_NUCLEUS;
+        implicitDataAsi = pstateFields.cle ? ASI_NUCLEUS_LITTLE : ASI_NUCLEUS;
+    }
+    else
+    {
+        //This is supposed to force physical addresses to match the spec.
+        //It might not because of context values and partition values.
+        implicitInstAsi = implicitDataAsi = ASI_REAL;
+    }
+}
+
 void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
@@ -352,6 +361,14 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         case MISCREG_PCR:
           //Set up performance counting based on pcr value
           break;
+        case MISCREG_PSTATE:
+          pstate = val;
+          setImplicitAsis();
+          return;
+        case MISCREG_TL:
+          tl = val;
+          setImplicitAsis();
+          return;
         case MISCREG_CWP:
           tc->changeRegFileContext(CONTEXT_CWP, val);
           break;
@@ -389,6 +406,8 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_ARRAY(htstate, MaxTL);
     SERIALIZE_SCALAR(htba);
     SERIALIZE_SCALAR(hstick_cmpr);
+    SERIALIZE_SCALAR((int)implicitInstAsi);
+    SERIALIZE_SCALAR((int)implicitDataAsi);
 }
 
 void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
@@ -418,5 +437,10 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_ARRAY(htstate, MaxTL);
     UNSERIALIZE_SCALAR(htba);
     UNSERIALIZE_SCALAR(hstick_cmpr);
+    int temp;
+    UNSERIALIZE_SCALAR(temp);
+    implicitInstAsi = (ASI)temp;
+    UNSERIALIZE_SCALAR(temp);
+    implicitDataAsi = (ASI)temp;
 }
 

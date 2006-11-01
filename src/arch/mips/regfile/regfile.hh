@@ -62,22 +62,20 @@ namespace MipsISA
             return miscRegFile.readReg(miscReg);
         }
 
-        MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ThreadContext *tc)
+        MiscReg readMiscRegWithEffect(int miscReg, ThreadContext *tc)
         {
-            fault = NoFault;
-            return miscRegFile.readRegWithEffect(miscReg, fault, tc);
+            return miscRegFile.readRegWithEffect(miscReg, tc);
         }
 
-        Fault setMiscReg(int miscReg, const MiscReg &val)
+        void setMiscReg(int miscReg, const MiscReg &val)
         {
-            return miscRegFile.setReg(miscReg, val);
+            miscRegFile.setReg(miscReg, val);
         }
 
-        Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
+        void setMiscRegWithEffect(int miscReg, const MiscReg &val,
                 ThreadContext * tc)
         {
-            return miscRegFile.setRegWithEffect(miscReg, val, tc);
+            miscRegFile.setRegWithEffect(miscReg, val, tc);
         }
 
         FloatRegVal readFloatReg(int floatReg)
@@ -100,24 +98,24 @@ namespace MipsISA
             return floatRegFile.readRegBits(floatReg,width);
         }
 
-        Fault setFloatReg(int floatReg, const FloatRegVal &val)
+        void setFloatReg(int floatReg, const FloatRegVal &val)
         {
-            return floatRegFile.setReg(floatReg, val, SingleWidth);
+            floatRegFile.setReg(floatReg, val, SingleWidth);
         }
 
-        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width)
+        void setFloatReg(int floatReg, const FloatRegVal &val, int width)
         {
-            return floatRegFile.setReg(floatReg, val, width);
+            floatRegFile.setReg(floatReg, val, width);
         }
 
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
+        void setFloatRegBits(int floatReg, const FloatRegBits &val)
         {
-            return floatRegFile.setRegBits(floatReg, val, SingleWidth);
+            floatRegFile.setRegBits(floatReg, val, SingleWidth);
         }
 
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            return floatRegFile.setRegBits(floatReg, val, width);
+            floatRegFile.setRegBits(floatReg, val, width);
         }
 
         IntReg readIntReg(int intReg)
@@ -125,9 +123,9 @@ namespace MipsISA
             return intRegFile.readReg(intReg);
         }
 
-        Fault setIntReg(int intReg, const IntReg &val)
+        void setIntReg(int intReg, const IntReg &val)
         {
-            return intRegFile.setReg(intReg, val);
+            intRegFile.setReg(intReg, val);
         }
       protected:
 

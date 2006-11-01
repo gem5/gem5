@@ -37,7 +37,6 @@
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
-#include "sim/faults.hh"
 
 #if FULL_SYSTEM
 #include "kern/kernel_stats.hh"
@@ -232,22 +231,21 @@ class PhysRegFile
         return miscRegs[thread_id].readReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault,
-                                  unsigned thread_id)
+    MiscReg readMiscRegWithEffect(int misc_reg, unsigned thread_id)
     {
-        return miscRegs[thread_id].readRegWithEffect(misc_reg, fault,
+        return miscRegs[thread_id].readRegWithEffect(misc_reg,
                                                      cpu->tcBase(thread_id));
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned thread_id)
+    void setMiscReg(int misc_reg, const MiscReg &val, unsigned thread_id)
     {
-        return miscRegs[thread_id].setReg(misc_reg, val);
+        miscRegs[thread_id].setReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val,
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val,
                                unsigned thread_id)
     {
-        return miscRegs[thread_id].setRegWithEffect(misc_reg, val,
+        miscRegs[thread_id].setRegWithEffect(misc_reg, val,
                                                     cpu->tcBase(thread_id));
     }
 

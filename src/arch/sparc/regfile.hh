@@ -32,7 +32,6 @@
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
-#include "arch/sparc/faults.hh"
 #include "arch/sparc/floatregfile.hh"
 #include "arch/sparc/intregfile.hh"
 #include "arch/sparc/isa_traits.hh"
@@ -76,13 +75,22 @@ namespace SparcISA
 
         MiscReg readMiscReg(int miscReg);
 
-        MiscReg readMiscRegWithEffect(int miscReg,
-                Fault &fault, ThreadContext *tc);
+        MiscReg readMiscRegWithEffect(int miscReg, ThreadContext *tc);
 
-        Fault setMiscReg(int miscReg, const MiscReg &val);
+        void setMiscReg(int miscReg, const MiscReg &val);
 
-        Fault setMiscRegWithEffect(int miscReg, const MiscReg &val,
+        void setMiscRegWithEffect(int miscReg, const MiscReg &val,
                 ThreadContext * tc);
+
+        ASI instAsid()
+        {
+            return miscRegFile.getInstAsid();
+        }
+
+        ASI dataAsid()
+        {
+            return miscRegFile.getDataAsid();
+        }
 
         FloatReg readFloatReg(int floatReg, int width);
 
@@ -92,17 +100,17 @@ namespace SparcISA
 
         FloatRegBits readFloatRegBits(int floatReg);
 
-        Fault setFloatReg(int floatReg, const FloatReg &val, int width);
+        void setFloatReg(int floatReg, const FloatReg &val, int width);
 
-        Fault setFloatReg(int floatReg, const FloatReg &val);
+        void setFloatReg(int floatReg, const FloatReg &val);
 
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
+        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
 
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val);
+        void setFloatRegBits(int floatReg, const FloatRegBits &val);
 
         IntReg readIntReg(int intReg);
 
-        Fault setIntReg(int intReg, const IntReg &val);
+        void setIntReg(int intReg, const IntReg &val);
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

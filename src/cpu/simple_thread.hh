@@ -420,17 +420,17 @@ class SimpleThread : public ThreadState
         return regs.readMiscReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
+        return regs.readMiscRegWithEffect(misc_reg, tc);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         return regs.setMiscReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         return regs.setMiscRegWithEffect(misc_reg, val, tc);
     }
