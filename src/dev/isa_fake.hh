@@ -79,4 +79,21 @@ class IsaFake : public BasicPioDevice
     virtual Tick write(PacketPtr pkt);
 };
 
+/**
+ * BadAddr is a device that fills the packet's result field with "BadAddress".
+ * @todo: Consider consolidating with IsaFake and similar classes.
+ */
+class BadAddr : public BasicPioDevice
+{
+  public:
+    struct Params : public BasicPioDevice::Params
+    {
+    };
+
+    BadAddr(Params *p);
+    virtual void init();
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
+};
+
 #endif // __TSUNAMI_FAKE_HH__

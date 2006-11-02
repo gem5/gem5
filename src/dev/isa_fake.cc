@@ -88,6 +88,38 @@ IsaFake::write(PacketPtr pkt)
     return pioDelay;
 }
 
+BadAddr::BadAddr(Params *p)
+    : BasicPioDevice(p)
+{
+}
+
+void
+BadAddr::init()
+{
+    // Only init this device if it's connected to anything.
+    if (pioPort)
+        PioDevice::init();
+}
+
+Tick
+BadAddr::read(PacketPtr pkt)
+{
+    assert(pkt->result == Packet::Unknown);
+    DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
+            pkt->getAddr(), pkt->getSize());
+    pkt->result = Packet::BadAddress;
+    return pioDelay;
+}
+
+Tick
+BadAddr::write(PacketPtr pkt)
+{
+    DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
+            pkt->getAddr(), pkt->getSize());
+    pkt->result = Packet::BadAddress;
+    return pioDelay;
+}
+
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
 
     Param<Addr> pio_addr;
@@ -121,3 +153,34 @@ CREATE_SIM_OBJECT(IsaFake)
 }
 
 REGISTER_SIM_OBJECT("IsaFake", IsaFake)
+
+BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadAddr)
+
+    Param<Addr> pio_addr;
+    Param<Tick> pio_latency;
+    SimObjectParam<Platform *> platform;
+    SimObjectParam<System *> system;
+
+END_DECLARE_SIM_OBJECT_PARAMS(BadAddr)
+
+BEGIN_INIT_SIM_OBJECT_PARAMS(BadAddr)
+
+    INIT_PARAM(pio_addr, "Device Address"),
+    INIT_PARAM(pio_latency, "Programmed IO latency"),
+    INIT_PARAM(platform, "platform"),
+    INIT_PARAM(system, "system object")
+
+END_INIT_SIM_OBJECT_PARAMS(BadAddr)
+
+CREATE_SIM_OBJECT(BadAddr)
+{
+    BadAddr::Params *p = new BadAddr::Params;
+    p->name = getInstanceName();
+    p->pio_addr = pio_addr;
+    p->pio_delay = pio_latency;
+    p->platform = platform;
+    p->system = system;
+    return new BadAddr(p);
+}
+
+REGISTER_SIM_OBJECT("BadAddr", BadAddr)
