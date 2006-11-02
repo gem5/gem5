@@ -59,6 +59,8 @@ class Bus : public MemObject
     /** the next tick at which the bus will be idle */
     Tick tickNextIdle;
 
+    Event * drainEvent;
+
     static const int defaultId = -3; //Make it unique from Broadcast
 
     struct DevMap {
@@ -246,6 +248,8 @@ class Bus : public MemObject
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
+
+    unsigned int drain(Event *de);
 
     Bus(const std::string &n, int bus_id, int _clock, int _width)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),

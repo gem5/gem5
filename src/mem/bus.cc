@@ -239,6 +239,9 @@ Bus::recvRetry(int id)
                 busIdle.reschedule(tickNextIdle);
             }
         }
+        //If we weren't able to drain before, we might be able to now.
+        if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle)
+            drainEvent->process();
     }
 }
 
@@ -495,6 +498,20 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
                     portIter->range.start, portIter->range.end);
         }
+    }
+}
+
+unsigned int
+Bus::drain(Event * de)
+{
+    //We should check that we're not "doing" anything, and that noone is
+    //waiting. We might be idle but have someone waiting if the device we
+    //contacted for a retry didn't actually retry.
+    if (curTick >= tickNextIdle && retryList.size() == 0) {
+        drainEvent = de;
+        return 1;
+    } else {
+        return 0;
     }
 }
 
