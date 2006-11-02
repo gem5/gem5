@@ -88,16 +88,7 @@ if options.detailed:
             process += [smt_process, ]
             smt_idx += 1
 
-
-if options.timing:
-    CPUClass = TimingSimpleCPU
-    test_mem_mode = 'timing'
-elif options.detailed:
-    CPUClass = DerivO3CPU
-    test_mem_mode = 'timing'
-else:
-    CPUClass = AtomicSimpleCPU
-    test_mem_mode = 'atomic'
+(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 CPUClass.clock = '2GHz'
 
@@ -110,7 +101,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 system.physmem.port = system.membus.port
 
 for i in xrange(np):
-    if options.caches and not options.standard_switch:
+    if options.caches and not options.standard_switch and not FutureClass:
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
     system.cpu[i].connectMemPorts(system.membus)
@@ -118,4 +109,4 @@ for i in xrange(np):
 
 root = Root(system = system)
 
-Simulation.run(options, root, system)
+Simulation.run(options, root, system, FutureClass)

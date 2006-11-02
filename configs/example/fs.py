@@ -72,16 +72,8 @@ if args:
 DriveCPUClass = AtomicSimpleCPU
 drive_mem_mode = 'atomic'
 
-# system under test can be any of these CPUs
-if options.detailed:
-    TestCPUClass = DerivO3CPU
-    test_mem_mode = 'timing'
-elif options.timing:
-    TestCPUClass = TimingSimpleCPU
-    test_mem_mode = 'timing'
-else:
-    TestCPUClass = AtomicSimpleCPU
-    test_mem_mode = 'atomic'
+# system under test can be any CPU
+(TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 TestCPUClass.clock = '2GHz'
 DriveCPUClass.clock = '2GHz'
@@ -103,7 +95,7 @@ test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 np = options.num_cpus
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 for i in xrange(np):
-    if options.caches and not options.standard_switch:
+    if options.caches and not options.standard_switch and not FutureClass:
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                 L1Cache(size = '64kB'))
     test_sys.cpu[i].connectMemPorts(test_sys.membus)
@@ -119,4 +111,4 @@ else:
     print "Error I don't know how to create more than 2 systems."
     sys.exit(1)
 
-Simulation.run(options, root, test_sys)
+Simulation.run(options, root, test_sys, FutureClass)

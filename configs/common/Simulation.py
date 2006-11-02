@@ -32,7 +32,31 @@ from m5.objects import *
 m5.AddToPath('../common')
 from Caches import L1Cache
 
-def run(options, root, testsys):
+def setCPUClass(options):
+
+    atomic = False
+    if options.timing:
+        TmpClass = TimingSimpleCPU
+    elif options.detailed:
+        TmpClass = DerivO3CPU
+    else:
+        TmpClass = AtomicSimpleCPU
+        atomic = True
+
+    CPUClass = None
+    test_mem_mode = 'atomic'
+
+    if not atomic:
+        if options.checkpoint_restore:
+            CPUClass = TmpClass
+            TmpClass = AtomicSimpleCPU
+        else:
+            test_mem_mode = 'timing'
+
+    return (TmpClass, test_mem_mode, CPUClass)
+
+
+def run(options, root, testsys, cpu_class):
     if options.maxtick:
         maxtick = options.maxtick
     elif options.maxtime:
@@ -49,6 +73,24 @@ def run(options, root, testsys):
 
     np = options.num_cpus
     max_checkpoints = options.max_checkpoints
+    switch_cpus = None
+
+    if cpu_class:
+        switch_cpus = [cpu_class(defer_registration=True, cpu_id=(np+i))
+                       for i in xrange(np)]
+
+        for i in xrange(np):
+            switch_cpus[i].system =  testsys
+            if not m5.build_env['FULL_SYSTEM']:
+                switch_cpus[i].workload = testsys.cpu[i].workload
+            switch_cpus[i].clock = testsys.cpu[0].clock
+            if options.caches:
+                switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                       L1Cache(size = '64kB'))
+                switch_cpus[i].connectMemPorts(testsys.membus)
+
+        root.switch_cpus = switch_cpus
+        switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.standard_switch:
         switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
@@ -65,17 +107,16 @@ def run(options, root, testsys):
             switch_cpus[i].clock = testsys.cpu[0].clock
             switch_cpus_1[i].clock = testsys.cpu[0].clock
 
-            ## add caches to the warmup timing CPU (which will be
-            ## xferred to O3 when you switch again)
             if options.caches:
                 switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                        L1Cache(size = '64kB'))
-            else: # O3 CPU must have a cache to work.
+                switch_cpus[i].connectMemPorts(testsys.membus)
+            else:
+                # O3 CPU must have a cache to work.
                 switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                          L1Cache(size = '64kB'))
                 switch_cpus_1[i].connectMemPorts(testsys.membus)
 
-            switch_cpus[i].connectMemPorts(testsys.membus)
 
             root.switch_cpus = switch_cpus
             root.switch_cpus_1 = switch_cpus_1
@@ -110,7 +151,7 @@ def run(options, root, testsys):
         m5.restoreCheckpoint(root,
                              "/".join([cptdir, "cpt.%s" % cpts[cpt_num - 1]]))
 
-    if options.standard_switch:
+    if options.standard_switch or cpu_class:
         exit_event = m5.simulate(10000)
 
         ## when you change to Timing (or Atomic), you halt the system given
@@ -123,8 +164,9 @@ def run(options, root, testsys):
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
 
-        exit_event = m5.simulate(options.warmup)
-        m5.switchCpus(switch_cpu_list1)
+        if options.standard_switch:
+            exit_event = m5.simulate(options.warmup)
+            m5.switchCpus(switch_cpu_list1)
 
     num_checkpoints = 0
     exit_cause = ''
