@@ -129,6 +129,10 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
+#if FULL_SYSTEM
+    delete physPort;
+    delete virtPort;
+#endif
     delete tc;
 }
 
@@ -304,11 +308,9 @@ SimpleThread::getVirtPort(ThreadContext *src_tc)
     if (!src_tc)
         return virtPort;
 
-    VirtualPort *vp;
-    Port *mem_port;
+    VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
+    Port *mem_port = getMemFuncPort();
 
-    vp = new VirtualPort("tc-vport", src_tc);
-    mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(vp);
     vp->setPeer(mem_port);
     return vp;

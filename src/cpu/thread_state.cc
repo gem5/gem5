@@ -59,6 +59,16 @@ ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
     numLoad = 0;
 }
 
+ThreadState::~ThreadState()
+{
+#if !FULL_SYSTEM
+    if (port) {
+        delete port->getPeer();
+        delete port;
+    }
+#endif
+}
+
 void
 ThreadState::serialize(std::ostream &os)
 {
@@ -124,10 +134,23 @@ ThreadState::getMemPort()
         return port;
 
     /* Use this port to for syscall emulation writes to memory. */
-    Port *dcache_port, *func_mem_port;
     port = new TranslatingPort(csprintf("%s-%d-funcport",
                                         baseCpu->name(), tid),
                                process->pTable, false);
+
+    Port *func_port = getMemFuncPort();
+
+    func_port->setPeer(port);
+    port->setPeer(func_port);
+
+    return port;
+}
+#endif
+
+Port *
+ThreadState::getMemFuncPort()
+{
+    Port *dcache_port, *func_mem_port;
 
     dcache_port = baseCpu->getPort("dcache_port");
     assert(dcache_port != NULL);
@@ -138,9 +161,5 @@ ThreadState::getMemPort()
     func_mem_port = mem_object->getPort("functional");
     assert(func_mem_port != NULL);
 
-    func_mem_port->setPeer(port);
-    port->setPeer(func_mem_port);
-
-    return port;
+    return func_mem_port;
 }
-#endif
