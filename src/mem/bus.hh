@@ -242,6 +242,9 @@ class Bus : public MemObject
     /** Port that handles requests that don't match any of the interfaces.*/
     BusPort *defaultPort;
 
+    /** Has the user specified their own default responder? */
+    bool responderSet;
+
   public:
 
     /** A function used to return the port associated with this bus object. */
@@ -251,9 +254,11 @@ class Bus : public MemObject
 
     unsigned int drain(Event *de);
 
-    Bus(const std::string &n, int bus_id, int _clock, int _width)
+    Bus(const std::string &n, int bus_id, int _clock, int _width,
+        bool responder_set)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
-        tickNextIdle(0), busIdle(this), inRetry(false), defaultPort(NULL)
+          tickNextIdle(0), busIdle(this), inRetry(false), defaultPort(NULL),
+          responderSet(responder_set)
     {
         //Both the width and clock period must be positive
         if (width <= 0)

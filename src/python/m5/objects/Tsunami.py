@@ -15,6 +15,9 @@ class IsaFake(BasicPioDevice):
     type = 'IsaFake'
     pio_size = Param.Addr(0x8, "Size of address range")
 
+class BadAddr(BasicPioDevice):
+    type = 'BadAddr'
+
 class TsunamiIO(BasicPioDevice):
     type = 'TsunamiIO'
     time = Param.UInt64(1136073600,
@@ -70,6 +73,7 @@ class Tsunami(Platform):
         self.cchip.pio = bus.port
         self.pchip.pio = bus.port
         self.pciconfig.pio = bus.default
+        bus.responder_set = True
         self.fake_sm_chip.pio = bus.port
         self.fake_uart1.pio = bus.port
         self.fake_uart2.pio = bus.port

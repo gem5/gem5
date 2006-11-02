@@ -51,6 +51,7 @@ namespace Kernel {
 
 class BaseCPU;
 class Checkpoint;
+class Port;
 class TranslatingPort;
 
 /**
@@ -68,6 +69,8 @@ struct ThreadState {
     ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
                 short _asid);
 #endif
+
+    ~ThreadState();
 
     void serialize(std::ostream &os);
 
@@ -136,6 +139,12 @@ struct ThreadState {
     /** Sets the status of this thread. */
     void setStatus(Status new_status) { _status = new_status; }
 
+  protected:
+    /** Gets a functional port from the memory object that's connected
+     * to the CPU. */
+    Port *getMemFuncPort();
+
+  public:
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */

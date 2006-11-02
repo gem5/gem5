@@ -398,7 +398,11 @@ BaseSimpleCPU::preExecute()
     inst = gtoh(inst);
     //If we're not in the middle of a macro instruction
     if (!curMacroStaticInst) {
+#if THE_ISA == ALPHA_ISA
+        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->readPC()));
+#elif THE_ISA == SPARC_ISA
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+#endif
         if (instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;
             curStaticInst = curMacroStaticInst->

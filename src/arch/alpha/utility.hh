@@ -43,11 +43,11 @@ namespace AlphaISA
 {
 
     static inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
+    makeExtMI(MachInst inst, Addr pc) {
 #if FULL_SYSTEM
         ExtMachInst ext_inst = inst;
-        if (xc->readPC() && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
+        if (pc && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
         else
             return ext_inst;
 #else

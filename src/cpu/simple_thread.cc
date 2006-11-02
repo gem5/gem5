@@ -129,6 +129,10 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
+#if FULL_SYSTEM
+    delete physPort;
+    delete virtPort;
+#endif
     delete tc;
 }
 
@@ -304,11 +308,9 @@ SimpleThread::getVirtPort(ThreadContext *src_tc)
     if (!src_tc)
         return virtPort;
 
-    VirtualPort *vp;
-    Port *mem_port;
+    VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
+    Port *mem_port = getMemFuncPort();
 
-    vp = new VirtualPort("tc-vport", src_tc);
-    mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(vp);
     vp->setPeer(mem_port);
     return vp;
@@ -321,26 +323,6 @@ SimpleThread::delVirtPort(VirtualPort *vp)
         delete vp->getPeer();
         delete vp;
     }
-}
-
-#else
-TranslatingPort *
-SimpleThread::getMemPort()
-{
-    if (port != NULL)
-        return port;
-
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *dcache_port;
-    port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        cpu->name(), tid),
-                               process->pTable, false);
-    dcache_port = cpu->getPort("dcache_port");
-    assert(dcache_port != NULL);
-    dcache_port = dcache_port->getPeer();
-//    mem_port->setPeer(port);
-    port->setPeer(dcache_port);
-    return port;
 }
 
 #endif
