@@ -79,8 +79,6 @@ class BaseSimpleCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
 
-    MemObject *mem;
-
   protected:
     Trace::InstRecord *traceData;
 
@@ -98,7 +96,6 @@ class BaseSimpleCPU : public BaseCPU
   public:
     struct Params : public BaseCPU::Params
     {
-        MemObject *mem;
 #if FULL_SYSTEM
         TheISA::ITB *itb;
         TheISA::DTB *dtb;

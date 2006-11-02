@@ -41,10 +41,6 @@ from Caches import *
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
-print m5_root
-print config_path
-print config_root
-
 
 parser = optparse.OptionParser()
 
@@ -118,7 +114,6 @@ for i in xrange(np):
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
     system.cpu[i].connectMemPorts(system.membus)
-    system.cpu[i].mem = system.physmem
     system.cpu[i].workload = process
 
 root = Root(system = system)

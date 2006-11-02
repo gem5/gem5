@@ -53,27 +53,27 @@ def run(options, root, testsys):
     if options.standard_switch:
         switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]
-        switch_cpus1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
+        switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
                         for i in xrange(np)]
+
         for i in xrange(np):
             switch_cpus[i].system =  testsys
-            switch_cpus1[i].system =  testsys
+            switch_cpus_1[i].system =  testsys
             if not m5.build_env['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
-                switch_cpus1[i].workload = testsys.cpu[i].workload
+                switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
-            switch_cpus1[i].clock = testsys.cpu[0].clock
+            switch_cpus_1[i].clock = testsys.cpu[0].clock
             if options.caches:
                 switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                        L1Cache(size = '64kB'))
 
-            switch_cpus[i].mem = testsys.physmem
-            switch_cpus1[i].mem = testsys.physmem
             switch_cpus[i].connectMemPorts(testsys.membus)
+
             root.switch_cpus = switch_cpus
-            root.switch_cpus1 = switch_cpus1
+            root.switch_cpus_1 = switch_cpus_1
             switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
-            switch_cpu_list1 = [(switch_cpus[i], switch_cpus1[i]) for i in xrange(np)]
+            switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
 
     m5.instantiate(root)
 

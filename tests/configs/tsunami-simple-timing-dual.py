@@ -36,6 +36,5 @@ system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpus
 for c in cpus:
     c.connectMemPorts(system.membus)
-    c.mem = system.physmem
 
 root = Root(clock = '2GHz', system = system)

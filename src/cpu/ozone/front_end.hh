@@ -208,8 +208,6 @@ class FrontEnd
 
     IcachePort icachePort;
 
-    MemObject *mem;
-
     RequestPtr memReq;
 
     /** Mask to get a cache block's address. */

@@ -67,7 +67,7 @@ struct OzoneThreadState : public ThreadState {
 
 #if FULL_SYSTEM
     OzoneThreadState(CPUType *_cpu, int _thread_num)
-        : ThreadState(-1, _thread_num),
+        : ThreadState(_cpu, -1, _thread_num),
           intrflag(0), cpu(_cpu), inSyscall(0), trapPending(0)
     {
         if (cpu->params->profile) {
@@ -87,8 +87,8 @@ struct OzoneThreadState : public ThreadState {
     }
 #else
     OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process,
-                     int _asid, MemObject *mem)
-        : ThreadState(-1, _thread_num, _process, _asid, mem),
+                     int _asid)
+        : ThreadState(_cpu, -1, _thread_num, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         miscRegFile.clear();

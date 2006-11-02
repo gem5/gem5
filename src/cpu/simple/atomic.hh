@@ -87,7 +87,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
       public:
 
         CpuPort(const std::string &_name, AtomicSimpleCPU *_cpu)
-            : Port(_name), cpu(_cpu)
+            : Port(_name, _cpu), cpu(_cpu)
         { }
 
       protected:

@@ -69,8 +69,6 @@ SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
 #endif // FULL_SYSTEM
 
-SimObjectParam<MemObject *> mem;
-
 SimObjectParam<BaseCPU *> checker;
 
 Param<Counter> max_insts_any_thread;
@@ -190,8 +188,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM(workload, "Processes to run"),
 //    INIT_PARAM(page_table, "Page table"),
 #endif // FULL_SYSTEM
-
-    INIT_PARAM_DFLT(mem, "Memory", NULL),
 
     INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
 
@@ -350,7 +346,6 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
 //    params->pTable = page_table;
 #endif // FULL_SYSTEM
 
-    params->mem = mem;
     params->checker = checker;
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;

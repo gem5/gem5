@@ -107,13 +107,11 @@ for i in xrange(np):
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                 L1Cache(size = '64kB'))
     test_sys.cpu[i].connectMemPorts(test_sys.membus)
-    test_sys.cpu[i].mem = test_sys.physmem
 
 if len(bm) == 2:
     drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
-    drive_sys.cpu.mem = drive_sys.physmem
     root = makeDualRoot(test_sys, drive_sys, options.etherdump)
 elif len(bm) == 1:
     root = Root(clock = '1THz', system = test_sys)

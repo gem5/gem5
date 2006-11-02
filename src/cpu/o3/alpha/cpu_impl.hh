@@ -77,24 +77,10 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
         if (i < params->workload.size()) {
             DPRINTF(O3CPU, "Workload[%i] process is %#x",
                     i, this->thread[i]);
-            this->thread[i] = new Thread(this, i, params->workload[i],
-                                         i, params->mem);
+            this->thread[i] = new Thread(this, i, params->workload[i], i);
 
             this->thread[i]->setStatus(ThreadContext::Suspended);
 
-#if !FULL_SYSTEM
-            /* Use this port to for syscall emulation writes to memory. */
-            Port *mem_port;
-            TranslatingPort *trans_port;
-            trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                                      name(), i),
-                                             params->workload[i]->pTable,
-                                             false);
-            mem_port = params->mem->getPort("functional");
-            mem_port->setPeer(trans_port);
-            trans_port->setPeer(mem_port);
-            this->thread[i]->setMemPort(trans_port);
-#endif
             //usedTids[i] = true;
             //threadMap[i] = i;
         } else {
@@ -102,7 +88,7 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
             //when scheduling threads to CPU
             Process* dummy_proc = NULL;
 
-            this->thread[i] = new Thread(this, i, dummy_proc, i, params->mem);
+            this->thread[i] = new Thread(this, i, dummy_proc, i);
             //usedTids[i] = false;
         }
 #endif // !FULL_SYSTEM

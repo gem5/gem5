@@ -146,7 +146,7 @@ class Bus : public MemObject
 
         /** Constructor for the BusPort.*/
         BusPort(const std::string &_name, Bus *_bus, int _id)
-            : Port(_name), _onRetryList(false), bus(_bus), id(_id)
+            : Port(_name, _bus), _onRetryList(false), bus(_bus), id(_id)
         { }
 
         bool onRetryList()

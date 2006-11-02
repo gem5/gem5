@@ -44,6 +44,7 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
         if (target->intersect(pkt))
             done = fixPacket(pkt, target);
 
+        i++;
     }
 
     //Then just do an atomic access and throw away the returned latency
@@ -98,11 +99,29 @@ SimpleTimingPort::recvRetry()
 void
 SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
 {
+    // Nothing is on the list: add it and schedule an event
     if (transmitList.empty()) {
         assert(!sendEvent.scheduled());
         sendEvent.schedule(curTick+time);
+        transmitList.push_back(std::pair<Tick,PacketPtr>(time+curTick,pkt));
+        return;
     }
-    transmitList.push_back(std::pair<Tick,PacketPtr>(time+curTick,pkt));
+
+    // something is on the list and this belongs at the end
+    if (time+curTick >= transmitList.back().first) {
+        transmitList.push_back(std::pair<Tick,PacketPtr>(time+curTick,pkt));
+        return;
+    }
+    // Something is on the list and this belongs somewhere else
+    std::list<std::pair<Tick,PacketPtr> >::iterator i = transmitList.begin();
+    std::list<std::pair<Tick,PacketPtr> >::iterator end = transmitList.end();
+    bool done = false;
+
+    while (i != end && !done) {
+        if (time+curTick < i->first)
+            transmitList.insert(i,std::pair<Tick,PacketPtr>(time+curTick,pkt));
+        i++;
+    }
 }
 
 void

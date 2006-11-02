@@ -329,8 +329,6 @@ class DefaultFetch
     /** Wire used to write any information heading to decode. */
     typename TimeBuffer<FetchStruct>::wire toDecode;
 
-    MemObject *mem;
-
     /** Icache interface. */
     IcachePort *icachePort;
 

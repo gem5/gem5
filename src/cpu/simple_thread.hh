@@ -117,8 +117,7 @@ class SimpleThread : public ThreadState
                  TheISA::ITB *_itb, TheISA::DTB *_dtb,
                  bool use_kernel_stats = true);
 #else
-    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
-                 MemObject *memobj);
+    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
 #endif
 
     SimpleThread();
@@ -172,6 +171,9 @@ class SimpleThread : public ThreadState
 
     bool simPalCheck(int palFunc);
 #else
+    // Override this function.
+    TranslatingPort *getMemPort();
+
     Fault translateInstReq(RequestPtr &req)
     {
         return process->pTable->translate(req);
