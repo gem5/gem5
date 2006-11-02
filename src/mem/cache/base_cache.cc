@@ -357,9 +357,7 @@ BaseCache::getPort(const std::string &if_name, int idx)
     }
     else if (if_name == "functional")
     {
-        if(cpuSidePort == NULL)
-            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
-        return cpuSidePort;
+        return new CachePort(name() + "-cpu_side_port", this, true);
     }
     else if (if_name == "cpu_side")
     {
