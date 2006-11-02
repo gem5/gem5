@@ -173,8 +173,6 @@ class SimpleThread : public ThreadState
 
     bool simPalCheck(int palFunc);
 #else
-    // Override this function.
-    TranslatingPort *getMemPort();
 
     Fault translateInstReq(RequestPtr &req)
     {

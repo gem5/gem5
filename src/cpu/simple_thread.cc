@@ -323,25 +323,5 @@ SimpleThread::delVirtPort(VirtualPort *vp)
     }
 }
 
-#else
-TranslatingPort *
-SimpleThread::getMemPort()
-{
-    if (port != NULL)
-        return port;
-
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *dcache_port;
-    port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        cpu->name(), tid),
-                               process->pTable, false);
-    dcache_port = cpu->getPort("dcache_port");
-    assert(dcache_port != NULL);
-    dcache_port = dcache_port->getPeer();
-//    mem_port->setPeer(port);
-    port->setPeer(dcache_port);
-    return port;
-}
-
 #endif
 
