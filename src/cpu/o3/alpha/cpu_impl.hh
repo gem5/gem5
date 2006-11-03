@@ -270,7 +270,6 @@ template <class Impl>
 void
 AlphaO3CPU<Impl>::processInterrupts()
 {
-    using namespace TheISA;
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
     // is the one that handles the interrupts.
@@ -279,52 +278,11 @@ AlphaO3CPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    int ipl = 0;
-    int summary = 0;
-
     this->checkInterrupts = false;
+    Fault interrupt = this->interrupts.getInterrupt(this->tcBase(0));
 
-    if (this->readMiscReg(IPR_ASTRR, 0))
-        panic("asynchronous traps not implemented\n");
-
-    if (this->readMiscReg(IPR_SIRR, 0)) {
-        for (int i = INTLEVEL_SOFTWARE_MIN;
-             i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (this->readMiscReg(IPR_SIRR, 0) & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    uint64_t interrupts = this->intr_status();
-
-    if (interrupts) {
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-             i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    if (ipl && ipl > this->readMiscReg(IPR_IPLR, 0)) {
-        this->setMiscReg(IPR_ISR, summary, 0);
-        this->setMiscReg(IPR_INTID, ipl, 0);
-        // Checker needs to know these two registers were updated.
-#if USE_CHECKER
-        if (this->checker) {
-            this->checker->threadBase()->setMiscReg(IPR_ISR, summary);
-            this->checker->threadBase()->setMiscReg(IPR_INTID, ipl);
-        }
-#endif
-        this->trap(Fault(new InterruptFault), 0);
-        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                this->readMiscReg(IPR_IPLR, 0), ipl, summary);
-    }
+    if (interrupt != NoFault)
+        this->trap(interrupt, 0);
 }
 
 #endif // FULL_SYSTEM

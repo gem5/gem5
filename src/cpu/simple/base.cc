@@ -312,42 +312,11 @@ BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
     if (checkInterrupts && check_interrupts() && !thread->inPalMode()) {
-        int ipl = 0;
-        int summary = 0;
         checkInterrupts = false;
+        Fault interrupt = interrupts.getInterrupt(tc);
 
-        if (thread->readMiscReg(IPR_SIRR)) {
-            for (int i = INTLEVEL_SOFTWARE_MIN;
-                 i < INTLEVEL_SOFTWARE_MAX; i++) {
-                if (thread->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
-                    // See table 4-19 of 21164 hardware reference
-                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                    summary |= (ULL(1) << i);
-                }
-            }
-        }
-
-        uint64_t interrupts = thread->cpu->intr_status();
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-            i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-
-        if (thread->readMiscReg(IPR_ASTRR))
-            panic("asynchronous traps not implemented\n");
-
-        if (ipl && ipl > thread->readMiscReg(IPR_IPLR)) {
-            thread->setMiscReg(IPR_ISR, summary);
-            thread->setMiscReg(IPR_INTID, ipl);
-
-            Fault(new InterruptFault)->invoke(tc);
-
-            DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    thread->readMiscReg(IPR_IPLR), ipl, summary);
+        if (interrupt != NoFault) {
+            interrupt->invoke(tc);
         }
     }
 #endif

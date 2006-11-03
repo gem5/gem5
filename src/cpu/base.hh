@@ -40,6 +40,10 @@
 #include "mem/mem_object.hh"
 #include "arch/isa_traits.hh"
 
+#if FULL_SYSTEM
+#include "arch/interrupts.hh"
+#endif
+
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
@@ -75,8 +79,9 @@ class BaseCPU : public MemObject
 
 #if FULL_SYSTEM
   protected:
-    uint64_t interrupts[TheISA::NumInterruptLevels];
-    uint64_t intstatus;
+//    uint64_t interrupts[TheISA::NumInterruptLevels];
+//    uint64_t intstatus;
+    TheISA::Interrupts interrupts;
 
   public:
     virtual void post_interrupt(int int_num, int index);
@@ -85,14 +90,11 @@ class BaseCPU : public MemObject
     bool checkInterrupts;
 
     bool check_interrupt(int int_num) const {
-        if (int_num > TheISA::NumInterruptLevels)
-            panic("int_num out of bounds\n");
-
-        return interrupts[int_num] != 0;
+        return interrupts.check_interrupt(int_num);
     }
 
-    bool check_interrupts() const { return intstatus != 0; }
-    uint64_t intr_status() const { return intstatus; }
+    bool check_interrupts() const { return interrupts.check_interrupts(); }
+    //uint64_t intr_status() const { return interrupts.intr_status(); }
 
     class ProfileEvent : public Event
     {

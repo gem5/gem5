@@ -49,6 +49,7 @@ sources = []
 isa_switch_hdrs = Split('''
 	arguments.hh
 	faults.hh
+	interrupts.hh
 	isa_traits.hh
         locked_mem.hh
 	process.hh
