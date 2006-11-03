@@ -32,135 +32,47 @@
 
 #include <string>
 
-#include "arch/alpha/ev5.hh"
-#include "arch/alpha/vtophys.hh"
+#include "arch/sparc/vtophys.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 
 using namespace std;
-using namespace AlphaISA;
 
-AlphaISA::PageTableEntry
-AlphaISA::kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, AlphaISA::VAddr vaddr)
+namespace SparcISA
 {
-    Addr level1_pte = ptbr + vaddr.level1();
-    AlphaISA::PageTableEntry level1 = mem->read<uint64_t>(level1_pte);
-    if (!level1.valid()) {
-        DPRINTF(VtoPhys, "level 1 PTE not valid, va = %#\n", vaddr);
-        return 0;
-    }
-
-    Addr level2_pte = level1.paddr() + vaddr.level2();
-    AlphaISA::PageTableEntry level2 = mem->read<uint64_t>(level2_pte);
-    if (!level2.valid()) {
-        DPRINTF(VtoPhys, "level 2 PTE not valid, va = %#x\n", vaddr);
-        return 0;
-    }
-
-    Addr level3_pte = level2.paddr() + vaddr.level3();
-    AlphaISA::PageTableEntry level3 = mem->read<uint64_t>(level3_pte);
-    if (!level3.valid()) {
-        DPRINTF(VtoPhys, "level 3 PTE not valid, va = %#x\n", vaddr);
-        return 0;
-    }
-    return level3;
-}
-
-Addr
-AlphaISA::vtophys(Addr vaddr)
-{
-    Addr paddr = 0;
-    if (AlphaISA::IsUSeg(vaddr))
-        DPRINTF(VtoPhys, "vtophys: invalid vaddr %#x", vaddr);
-    else if (AlphaISA::IsK0Seg(vaddr))
-        paddr = AlphaISA::K0Seg2Phys(vaddr);
-    else
-        panic("vtophys: ptbr is not set on virtual lookup");
-
-    DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
-
-    return paddr;
-}
-
-Addr
-AlphaISA::vtophys(ThreadContext *tc, Addr addr)
-{
-    AlphaISA::VAddr vaddr = addr;
-    Addr ptbr = tc->readMiscReg(AlphaISA::IPR_PALtemp20);
-    Addr paddr = 0;
-    //@todo Andrew couldn't remember why he commented some of this code
-    //so I put it back in. Perhaps something to do with gdb debugging?
-    if (AlphaISA::PcPAL(vaddr) && (vaddr < EV5::PalMax)) {
-        paddr = vaddr & ~ULL(1);
-    } else {
-        if (AlphaISA::IsK0Seg(vaddr)) {
-            paddr = AlphaISA::K0Seg2Phys(vaddr);
-        } else if (!ptbr) {
-            paddr = vaddr;
-        } else {
-            AlphaISA::PageTableEntry pte =
-                kernel_pte_lookup(tc->getPhysPort(), ptbr, vaddr);
-            if (pte.valid())
-                paddr = pte.paddr() | vaddr.offset();
-        }
-    }
-
-
-    DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
-
-    return paddr;
-}
-
-
-void
-AlphaISA::CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
-{
-    uint8_t *dst = (uint8_t *)dest;
-    VirtualPort *vp = tc->getVirtPort(tc);
-
-    vp->readBlob(src, dst, cplen);
-
-    tc->delVirtPort(vp);
-
-}
-
-void
-AlphaISA::CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
-{
-    uint8_t *src = (uint8_t *)source;
-    VirtualPort *vp = tc->getVirtPort(tc);
-
-    vp->writeBlob(dest, src, cplen);
-
-    tc->delVirtPort(vp);
-}
-
-void
-AlphaISA::CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
-{
-    int len = 0;
-    VirtualPort *vp = tc->getVirtPort(tc);
-
-    do {
-        vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
-        len++;
-    } while (len < maxlen && dst[len] != 0 );
-
-    tc->delVirtPort(vp);
-    dst[len] = 0;
-}
-
-void
-AlphaISA::CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
-{
-    VirtualPort *vp = tc->getVirtPort(tc);
-    for (ChunkGenerator gen(vaddr, strlen(src), AlphaISA::PageBytes); !gen.done();
-            gen.next())
+    PageTableEntry kernel_pte_lookup(FunctionalPort *mem,
+            Addr ptbr, VAddr vaddr)
     {
-        vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
-        src += gen.size();
+        PageTableEntry pte(4);
+        return pte;
     }
-    tc->delVirtPort(vp);
+
+    Addr vtophys(Addr vaddr)
+    {
+        return vaddr;
+    }
+
+    Addr vtophys(ThreadContext *tc, Addr addr)
+    {
+        return addr;
+    }
+
+
+    void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
+    {
+    }
+
+    void CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
+    {
+    }
+
+    void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
+    {
+    }
+
+    void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
+    {
+    }
 }
