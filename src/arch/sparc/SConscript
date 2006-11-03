@@ -54,8 +54,8 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	ua2005.cc
 	vtophys.cc
+	system.cc
 	''')
 
 # Syscall emulation (non-full-system) sources
