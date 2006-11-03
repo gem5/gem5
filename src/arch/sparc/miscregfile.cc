@@ -322,8 +322,8 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     const uint64_t Bit64 = (1ULL << 63);
-    uint64_t time;
 #if FULL_SYSTEM
+    uint64_t time;
     SparcSystem *sys;
 #endif
     switch (miscReg) {
@@ -364,6 +364,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         case MISCREG_SOFTINT_SET:
           //Do whatever this is supposed to do...
           break;
+#if FULL_SYSTEM
         case MISCREG_TICK_CMPR:
           if (tickCompare == NULL)
               tickCompare = new TickCompareEvent(this, tc);
@@ -374,6 +375,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
           if (!tick_cmprFields.int_dis && time > 0)
               tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
           break;
+#endif
         case MISCREG_PIL:
           //We need to inject interrupts, and or notify the interrupt
           //object that it needs to use a different interrupt level.
@@ -482,6 +484,7 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     implicitDataAsi = (ASI)temp;
 }
 
+#if FULL_SYSTEM
 void
 MiscRegFile::processTickCompare(ThreadContext *tc)
 {
@@ -499,3 +502,4 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
     panic("tick compare not implemented\n");
 }
+#endif
