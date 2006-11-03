@@ -399,11 +399,6 @@ void PowerOnReset::invoke(ThreadContext * tc)
 
 #if !FULL_SYSTEM
 
-void TrapInstruction::invoke(ThreadContext * tc)
-{
-    // Should be handled in ISA.
-}
-
 void SpillNNormal::invoke(ThreadContext *tc)
 {
     doNormalFault(tc, trapType());

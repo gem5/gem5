@@ -604,17 +604,12 @@ class TrapInstruction : public EnumeratedFault
     static TrapType _baseTrapType;
     static FaultPriority _priority;
     static FaultStat _count;
-    uint64_t syscall_num;
     TrapType baseTrapType() {return _baseTrapType;}
   public:
-    TrapInstruction(uint32_t n, uint64_t syscall) :
-        EnumeratedFault(n), syscall_num(syscall) {;}
+    TrapInstruction(int32_t n) : EnumeratedFault(n) {;}
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
-#if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
 };
 
 

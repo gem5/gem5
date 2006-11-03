@@ -726,7 +726,7 @@ decode OP default Unknown::unknown()
 #if FULL_SYSTEM
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
-                        fault = new TrapInstruction(lTrapNum, R1);
+                        fault = new TrapInstruction(lTrapNum);
 #else
                         DPRINTF(Sparc, "The syscall number is %d\n", R1);
                         xc->syscall(R1);
@@ -739,7 +739,7 @@ decode OP default Unknown::unknown()
 #if FULL_SYSTEM
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
-                        fault = new TrapInstruction(lTrapNum, R1);
+                        fault = new TrapInstruction(lTrapNum);
 #else
                         DPRINTF(Sparc, "The syscall number is %d\n", R1);
                         xc->syscall(R1);
