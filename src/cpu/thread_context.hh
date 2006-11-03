@@ -236,10 +236,6 @@ class ThreadContext
 
     virtual void setStCondFailures(unsigned sc_failures) = 0;
 
-#if FULL_SYSTEM
-    virtual bool inPalMode() = 0;
-#endif
-
     // Only really makes sense for old CPU model.  Still could be useful though.
     virtual bool misspeculating() = 0;
 
@@ -424,9 +420,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setStCondFailures(unsigned sc_failures)
     { actualTC->setStCondFailures(sc_failures); }
-#if FULL_SYSTEM
-    bool inPalMode() { return actualTC->inPalMode(); }
-#endif
 
     // @todo: Fix this!
     bool misspeculating() { return actualTC->misspeculating(); }

@@ -278,11 +278,12 @@ AlphaO3CPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    this->checkInterrupts = false;
     Fault interrupt = this->interrupts.getInterrupt(this->tcBase(0));
 
-    if (interrupt != NoFault)
+    if (interrupt != NoFault) {
+        this->checkInterrupts = false;
         this->trap(interrupt, 0);
+    }
 }
 
 #endif // FULL_SYSTEM

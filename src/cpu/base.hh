@@ -89,12 +89,8 @@ class BaseCPU : public MemObject
     virtual void clear_interrupts();
     bool checkInterrupts;
 
-    bool check_interrupt(int int_num) const {
-        return interrupts.check_interrupt(int_num);
-    }
-
-    bool check_interrupts() const { return interrupts.check_interrupts(); }
-    //uint64_t intr_status() const { return interrupts.intr_status(); }
+    bool check_interrupts(ThreadContext * tc) const
+    { return interrupts.check_interrupts(tc); }
 
     class ProfileEvent : public Event
     {

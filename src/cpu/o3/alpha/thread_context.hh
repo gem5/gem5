@@ -47,11 +47,6 @@ class AlphaTC : public O3ThreadContext<Impl>
     {
         return this->thread->quiesceEvent;
     }
-
-    /** Returns if the thread is currently in PAL mode, based on
-     * the PC's value. */
-    virtual bool inPalMode()
-    { return TheISA::PcPAL(this->cpu->readPC(this->thread->readTid())); }
 #endif
 
     virtual uint64_t readNextNPC()

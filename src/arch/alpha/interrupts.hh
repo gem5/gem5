@@ -88,15 +88,6 @@ namespace AlphaISA
             intstatus = 0;
         }
 
-        bool check_interrupt(int int_num) const {
-            if (int_num > NumInterruptLevels)
-                panic("int_num out of bounds\n");
-
-            return interrupts[int_num] != 0;
-        }
-
-        bool check_interrupts() const { return intstatus != 0; }
-
         void serialize(std::ostream &os)
         {
             SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
@@ -107,6 +98,11 @@ namespace AlphaISA
         {
             UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
             UNSERIALIZE_SCALAR(intstatus);
+        }
+
+        bool check_interrupts(ThreadContext * tc) const
+        {
+            return (intstatus != 0) && !(tc->readPC() & 0x3);
         }
 
         Fault getInterrupt(ThreadContext * tc)
@@ -163,7 +159,6 @@ namespace AlphaISA
         }
 
       private:
-        uint64_t intr_status() const { return intstatus; }
     };
 }
 

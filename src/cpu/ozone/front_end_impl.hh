@@ -462,15 +462,10 @@ Fault
 FrontEnd<Impl>::fetchCacheLine()
 {
     // Read a cache line, based on the current PC.
-#if FULL_SYSTEM
-    // Flag to say whether or not address is physical addr.
-    unsigned flags = cpu->inPalMode(PC) ? PHYSICAL : 0;
-#else
-    unsigned flags = 0;
-#endif // FULL_SYSTEM
     Fault fault = NoFault;
 
-    if (interruptPending && flags == 0) {
+    //AlphaDep
+    if (interruptPending && (PC & 0x3)) {
         return fault;
     }
 

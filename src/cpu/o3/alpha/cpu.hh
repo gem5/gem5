@@ -153,9 +153,6 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     void post_interrupt(int int_num, int index);
     /** HW return from error interrupt. */
     Fault hwrei(unsigned tid);
-    /** Returns if a specific PC is a PAL mode PC. */
-    bool inPalMode(uint64_t PC)
-    { return AlphaISA::PcPAL(PC); }
 
     bool simPalCheck(int palFunc, unsigned tid);
 

@@ -638,8 +638,7 @@ DefaultCommit<Impl>::commit()
     // and no other traps or external squashes are currently pending.
     // @todo: Allow other threads to handle interrupts.
     if (cpu->checkInterrupts &&
-        cpu->check_interrupts() &&
-        !cpu->inPalMode(readPC()) &&
+        cpu->check_interrupts(cpu->tcBase(0)) &&
         !trapSquash[0] &&
         !tcSquash[0]) {
         // Tell fetch that there is an interrupt pending.  This will

@@ -249,7 +249,7 @@ template <class Impl>
 Fault
 OzoneDynInst<Impl>::hwrei()
 {
-    if (!this->cpu->inPalMode(this->readPC()))
+    if (!(this->readPC() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
 
     this->setNextPC(this->thread->readMiscReg(AlphaISA::IPR_EXC_ADDR));
@@ -258,13 +258,6 @@ OzoneDynInst<Impl>::hwrei()
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
-}
-
-template <class Impl>
-bool
-OzoneDynInst<Impl>::inPalMode()
-{
-    return this->cpu->inPalMode();
 }
 
 template <class Impl>

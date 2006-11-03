@@ -271,9 +271,6 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setStCondFailures(sc_failures);
         actualTC->setStCondFailures(sc_failures);
     }
-#if FULL_SYSTEM
-    bool inPalMode() { return actualTC->inPalMode(); }
-#endif
 
     // @todo: Fix this!
     bool misspeculating() { return actualTC->misspeculating(); }

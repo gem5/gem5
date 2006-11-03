@@ -152,11 +152,11 @@ InorderBackEnd<Impl>::tick()
 #if FULL_SYSTEM
     if (interruptBlocked ||
         (cpu->checkInterrupts &&
-        cpu->check_interrupts() &&
-        !cpu->inPalMode())) {
+        cpu->check_interrupts(tc))) {
         if (!robEmpty()) {
             interruptBlocked = true;
-        } else if (robEmpty() && cpu->inPalMode()) {
+        //AlphaDep
+        } else if (robEmpty() && (PC & 0x3)) {
             // Will need to let the front end continue a bit until
             // we're out of pal mode.  Hopefully we never get into an
             // infinite loop...

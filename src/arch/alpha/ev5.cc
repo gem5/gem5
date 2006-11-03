@@ -147,7 +147,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
 Fault
 SimpleThread::hwrei()
 {
-    if (!inPalMode())
+    if (!(readPC() & 0x3))
         return new UnimplementedOpcodeFault;
 
     setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));

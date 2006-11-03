@@ -327,7 +327,6 @@ class CheckerCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
-    bool inPalMode() { return thread->inPalMode(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else

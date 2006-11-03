@@ -113,7 +113,7 @@ Fault
 AlphaDynInst<Impl>::hwrei()
 {
     // Can only do a hwrei when in pal mode.
-    if (!this->cpu->inPalMode(this->readPC()))
+    if (!(this->readPC() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
 
     // Set the next PC based on the value of the EXC_ADDR IPR.
@@ -125,13 +125,6 @@ AlphaDynInst<Impl>::hwrei()
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
-}
-
-template <class Impl>
-bool
-AlphaDynInst<Impl>::inPalMode()
-{
-    return this->cpu->inPalMode(this->PC);
 }
 
 template <class Impl>

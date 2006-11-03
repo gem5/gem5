@@ -440,10 +440,6 @@ class SimpleThread : public ThreadState
     void setStCondFailures(unsigned sc_failures)
     { storeCondFailures = sc_failures; }
 
-#if FULL_SYSTEM
-    bool inPalMode() { return AlphaISA::PcPAL(regs.readPC()); }
-#endif
-
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)
     {

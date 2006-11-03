@@ -311,11 +311,11 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts() && !thread->inPalMode()) {
-        checkInterrupts = false;
+    if (checkInterrupts && check_interrupts(tc)) {
         Fault interrupt = interrupts.getInterrupt(tc);
 
         if (interrupt != NoFault) {
+            checkInterrupts = false;
             interrupt->invoke(tc);
         }
     }
@@ -371,6 +371,10 @@ BaseSimpleCPU::preExecute()
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->readPC()));
 #elif THE_ISA == SPARC_ISA
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+#elif THE_ISA == MIPS_ISA
+        //Mips doesn't do anything in it's MakeExtMI function right now,
+        //so it won't be called.
+        StaticInstPtr instPtr = StaticInst::decode(inst);
 #endif
         if (instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;

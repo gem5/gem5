@@ -238,7 +238,6 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
 #if FULL_SYSTEM
     Fault hwrei();
-    bool inPalMode();
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
 #else

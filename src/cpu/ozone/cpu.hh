@@ -239,10 +239,6 @@ class OzoneCPU : public BaseCPU
         void setStCondFailures(unsigned sc_failures)
         { thread->storeCondFailures = sc_failures; }
 
-#if FULL_SYSTEM
-        bool inPalMode() { return cpu->inPalMode(); }
-#endif
-
         bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
@@ -584,8 +580,6 @@ class OzoneCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei();
-    bool inPalMode() { return AlphaISA::PcPAL(thread.PC); }
-    bool inPalMode(Addr pc) { return AlphaISA::PcPAL(pc); }
     bool simPalCheck(int palFunc);
     void processInterrupts();
 #else
