@@ -99,6 +99,12 @@ namespace SparcISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
+    void initCPU(ThreadContext *tc, int cpuId)
+    {
+        //This would be a good place to stick a PowerOnReset fault into the
+        //cpu.
+    }
+
 } // namespace SparcISA
 
 #endif
