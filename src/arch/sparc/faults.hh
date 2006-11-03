@@ -130,6 +130,7 @@ class PowerOnReset : public SparcFault
     TrapType trapType() {return _trapType;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
 };
 
 class WatchDogReset : public SparcFault
