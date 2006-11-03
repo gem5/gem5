@@ -77,7 +77,7 @@ SparcSystem::SparcSystem(Params *p)
     hypervisor->loadSections(&functionalPort, SparcISA::LoadAddrMask);
 
     // load symbols
-    if (!reset->loadGlobalSymbols(reset))
+    if (!reset->loadGlobalSymbols(resetSymtab))
         panic("could not load reset symbols\n");
 
     if (!openboot->loadGlobalSymbols(openbootSymtab))
@@ -148,7 +148,10 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
     Param<std::string> hypervisor_bin;
     Param<std::string> openboot_bin;
 
+    Param<Tick> boot_cpu_frequency;
     Param<std::string> boot_osflags;
+    Param<uint64_t> system_type;
+    Param<uint64_t> system_rev;
     Param<std::string> readfile;
     Param<unsigned int> init_param;
 
@@ -156,7 +159,6 @@ END_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
-    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
             System::MemoryModeStrings),
@@ -164,12 +166,13 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
     INIT_PARAM(reset_bin, "file that contains the reset code"),
     INIT_PARAM(hypervisor_bin, "file that contains the hypervisor code"),
     INIT_PARAM(openboot_bin, "file that contains the openboot code"),
+    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
-    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
-    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
     INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
+    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10),
+    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
+    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0)
 
 END_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
