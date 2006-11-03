@@ -33,12 +33,13 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/process.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #if !FULL_SYSTEM
+#include "arch/sparc/process.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #endif
@@ -359,6 +360,39 @@ void SparcFault::invoke(ThreadContext * tc)
     countStat()++;
 
     //Use the SPARC trap state machine
+}
+
+void PowerOnReset::invoke(ThreadContext * tc)
+{
+    //For SPARC, when a system is first started, there is a power
+    //on reset Trap which sets the processor into the following state.
+    //Bits that aren't set aren't defined on startup.
+    /*
+    tl = MaxTL;
+    gl = MaxGL;
+
+    tickFields.counter = 0; //The TICK register is unreadable bya
+    tickFields.npt = 1; //The TICK register is unreadable by by !priv
+
+    softint = 0; // Clear all the soft interrupt bits
+    tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+    stickFields.npt = 1; //The TICK register is unreadable by by !priv
+    stick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
+    tt[tl] = _trapType;
+    pstate = 0; // fields 0 but pef
+    pstateFields.pef = 1;
+
+    hpstate = 0;
+    hpstateFields.red = 1;
+    hpstateFields.hpriv = 1;
+    hpstateFields.tlz = 0; // this is a guess
+    hintp = 0; // no interrupts pending
+    hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+    */
 }
 
 #endif

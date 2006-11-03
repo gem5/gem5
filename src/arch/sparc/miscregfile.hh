@@ -354,12 +354,6 @@ namespace SparcISA
         typedef CpuEventWrapper<MiscRegFile,
                 &MiscRegFile::processHSTickCompare> HSTickCompareEvent;
         HSTickCompareEvent *hSTickCompare;
-
-        /** Fullsystem only register version of ReadRegWithEffect() */
-        MiscReg readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
-        /** Fullsystem only register version of SetRegWithEffect() */
-        Fault setFSRegWithEffect(int miscReg, const MiscReg &val,
-                ThreadContext * tc);
 #endif
       public:
 
