@@ -36,6 +36,7 @@
 
 long getLong();
 double getDouble();
+double m5random(double r);
 uint64_t getUniformPos(uint64_t min, uint64_t max);
 int64_t getUniform(int64_t min, int64_t max);
 
