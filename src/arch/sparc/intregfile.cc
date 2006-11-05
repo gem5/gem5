@@ -33,6 +33,8 @@
 #include "base/trace.hh"
 #include "sim/serialize.hh"
 
+#include <string.h>
+
 using namespace SparcISA;
 using namespace std;
 
@@ -62,7 +64,7 @@ void IntRegFile::clear()
     for (x = 0; x < MaxGL; x++)
         memset(regGlobals[x], 0, sizeof(IntReg) * RegsPerFrame);
     for(int x = 0; x < 2 * NWindows; x++)
-        bzero(regSegments[x], sizeof(IntReg) * RegsPerFrame);
+        memset(regSegments[x], 0, sizeof(IntReg) * RegsPerFrame);
 }
 
 IntRegFile::IntRegFile()
