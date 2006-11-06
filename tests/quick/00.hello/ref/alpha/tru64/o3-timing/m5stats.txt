@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    221                       # Nu
 global.BPredUnit.condPredicted                    451                       # Number of conditional branches predicted
 global.BPredUnit.lookups                          891                       # Number of BP lookups
 global.BPredUnit.usedRAS                          172                       # Number of times the RAS was used to get a target.
-host_inst_rate                                   1447                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 180084                       # Number of bytes of host memory used
-host_seconds                                     1.65                       # Real time elapsed on the host
-host_tick_rate                                 455868                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  20134                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 179640                       # Number of bytes of host memory used
+host_seconds                                     0.12                       # Real time elapsed on the host
+host_tick_rate                                6326998                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 10                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores                 8                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                   784                       # Number of loads inserted to the mem dependence unit.
@@ -98,7 +98,7 @@ system.cpu.dcache.no_allocate_misses                0                       # Nu
 system.cpu.dcache.overall_accesses                856                       # number of overall (read+write) accesses
 system.cpu.dcache.overall_avg_miss_latency  6991.981481                       # average overall miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency  7086.141176                       # average overall mshr miss latency
-system.cpu.dcache.overall_avg_mshr_uncacheable_latency     no value                       # average overall mshr uncacheable latency
+system.cpu.dcache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
 system.cpu.dcache.overall_hits                    694                       # number of overall hits
 system.cpu.dcache.overall_miss_latency        1132701                       # number of overall miss cycles
 system.cpu.dcache.overall_miss_rate          0.189252                       # miss rate for overall accesses
@@ -195,7 +195,7 @@ system.cpu.icache.no_allocate_misses                0                       # Nu
 system.cpu.icache.overall_accesses                814                       # number of overall (read+write) accesses
 system.cpu.icache.overall_avg_miss_latency  4971.589641                       # average overall miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency  4152.244565                       # average overall mshr miss latency
-system.cpu.icache.overall_avg_mshr_uncacheable_latency     no value                       # average overall mshr uncacheable latency
+system.cpu.icache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
 system.cpu.icache.overall_hits                    563                       # number of overall hits
 system.cpu.icache.overall_miss_latency        1247869                       # number of overall miss cycles
 system.cpu.icache.overall_miss_rate          0.308354                       # miss rate for overall accesses
@@ -269,20 +269,20 @@ system.cpu.ipc                               0.003174                       # IP
 system.cpu.ipc_total                         0.003174                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                    3500                       # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.start_dist
-(null)                                              0      0.00%            # Type of FU issued
-IntAlu                                           2460     70.29%            # Type of FU issued
-IntMult                                             1      0.03%            # Type of FU issued
-IntDiv                                              0      0.00%            # Type of FU issued
-FloatAdd                                            0      0.00%            # Type of FU issued
-FloatCmp                                            0      0.00%            # Type of FU issued
-FloatCvt                                            0      0.00%            # Type of FU issued
-FloatMult                                           0      0.00%            # Type of FU issued
-FloatDiv                                            0      0.00%            # Type of FU issued
-FloatSqrt                                           0      0.00%            # Type of FU issued
-MemRead                                           695     19.86%            # Type of FU issued
-MemWrite                                          344      9.83%            # Type of FU issued
-IprAccess                                           0      0.00%            # Type of FU issued
-InstPrefetch                                        0      0.00%            # Type of FU issued
+                          (null)            0      0.00%            # Type of FU issued
+                          IntAlu         2460     70.29%            # Type of FU issued
+                         IntMult            1      0.03%            # Type of FU issued
+                          IntDiv            0      0.00%            # Type of FU issued
+                        FloatAdd            0      0.00%            # Type of FU issued
+                        FloatCmp            0      0.00%            # Type of FU issued
+                        FloatCvt            0      0.00%            # Type of FU issued
+                       FloatMult            0      0.00%            # Type of FU issued
+                        FloatDiv            0      0.00%            # Type of FU issued
+                       FloatSqrt            0      0.00%            # Type of FU issued
+                         MemRead          695     19.86%            # Type of FU issued
+                        MemWrite          344      9.83%            # Type of FU issued
+                       IprAccess            0      0.00%            # Type of FU issued
+                    InstPrefetch            0      0.00%            # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.end_dist
 system.cpu.iq.ISSUE:fu_busy_cnt                    35                       # FU busy when requested
 system.cpu.iq.ISSUE:fu_busy_rate             0.010000                       # FU busy rate (busy events/executed inst)
@@ -359,7 +359,7 @@ system.cpu.l2cache.no_allocate_misses               0                       # Nu
 system.cpu.l2cache.overall_accesses               269                       # number of overall (read+write) accesses
 system.cpu.l2cache.overall_avg_miss_latency  4622.063197                       # average overall miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency  2296.591078                       # average overall mshr miss latency
-system.cpu.l2cache.overall_avg_mshr_uncacheable_latency     no value                       # average overall mshr uncacheable latency
+system.cpu.l2cache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
 system.cpu.l2cache.overall_hits                     0                       # number of overall hits
 system.cpu.l2cache.overall_miss_latency       1243335                       # number of overall miss cycles
 system.cpu.l2cache.overall_miss_rate                1                       # miss rate for overall accesses
