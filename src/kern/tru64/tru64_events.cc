@@ -81,7 +81,7 @@ PrintfEvent::process(ThreadContext *tc)
     if (DTRACE(Printf)) {
         DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
 
-        AlphaArguments args(tc);
+        Arguments args(tc);
         tru64::Printf(args);
     }
 }
@@ -93,7 +93,7 @@ DebugPrintfEvent::process(ThreadContext *tc)
         if (!raw)
             DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
 
-        AlphaArguments args(tc);
+        Arguments args(tc);
         tru64::Printf(args);
     }
 }
@@ -102,7 +102,7 @@ void
 DumpMbufEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
-        AlphaArguments args(tc);
+        Arguments args(tc);
         tru64::DumpMbuf(args);
     }
 }

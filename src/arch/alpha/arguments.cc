@@ -35,7 +35,7 @@
 
 using namespace AlphaISA;
 
-AlphaArguments::Data::~Data()
+Arguments::Data::~Data()
 {
     while (!data.empty()) {
         delete [] data.front();
@@ -44,7 +44,7 @@ AlphaArguments::Data::~Data()
 }
 
 char *
-AlphaArguments::Data::alloc(size_t size)
+Arguments::Data::alloc(size_t size)
 {
     char *buf = new char[size];
     data.push_back(buf);
@@ -52,7 +52,7 @@ AlphaArguments::Data::alloc(size_t size)
 }
 
 uint64_t
-AlphaArguments::getArg(bool fp)
+Arguments::getArg(bool fp)
 {
     if (number < 6) {
         if (fp)

@@ -34,7 +34,7 @@
 #include "arch/arguments.hh"
 
 namespace tru64 {
-    void DumpMbuf(AlphaISA::AlphaArguments args);
+    void DumpMbuf(TheISA::Arguments args);
 }
 
 #endif // __DUMP_MBUF_HH__

@@ -49,7 +49,7 @@ DebugPrintkEvent::process(ThreadContext *tc)
             DPRINTFN("");
         }
 
-        AlphaISA::AlphaArguments args(tc);
+        TheISA::Arguments args(tc);
         Printk(args);
         SkipFuncEvent::process(tc);
     }

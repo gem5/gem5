@@ -34,7 +34,7 @@
 #include "arch/arguments.hh"
 
 namespace tru64 {
-    void Printf(AlphaISA::AlphaArguments args);
+    void Printf(TheISA::Arguments args);
 }
 
 #endif // __PRINTF_HH__
