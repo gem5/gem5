@@ -44,7 +44,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "dev/alpha_console.hh"
+#include "dev/alpha/console.hh"
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"

@@ -36,7 +36,7 @@
 #define __ALPHA_CONSOLE_HH__
 
 #include "base/range.hh"
-#include "dev/alpha_access.h"
+#include "dev/alpha/access.h"
 #include "dev/io_device.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"

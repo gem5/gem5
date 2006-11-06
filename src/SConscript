@@ -211,33 +211,6 @@ full_system_sources = Split('''
 	cpu/intr_control.cc
         cpu/profile.cc
 
-	dev/alpha_console.cc
-	dev/baddev.cc
-	dev/disk_image.cc
-	dev/etherbus.cc
-	dev/etherdump.cc
-	dev/etherint.cc
-	dev/etherlink.cc
-	dev/etherpkt.cc
-	dev/ethertap.cc	
-        dev/ide_ctrl.cc
-	dev/ide_disk.cc
-	dev/io_device.cc
-	dev/isa_fake.cc
-	dev/ns_gige.cc
-	dev/pciconfigall.cc
-	dev/pcidev.cc
-	dev/pcifake.cc
-	dev/pktfifo.cc
-	dev/platform.cc
-        dev/simconsole.cc
-	dev/simple_disk.cc
-	dev/tsunami.cc
-	dev/tsunami_cchip.cc
-	dev/tsunami_io.cc
-	dev/tsunami_fake.cc
-	dev/tsunami_pchip.cc
-
 	dev/uart.cc
 	dev/uart8250.cc
 
@@ -253,7 +226,6 @@ full_system_sources = Split('''
         ''')
 	#dev/sinic.cc
         #dev/i8254xGBe.cc
-
 
 if env['TARGET_ISA'] == 'alpha':
     full_system_sources += Split('''
@@ -318,9 +290,12 @@ env.Append(CPPPATH=Dir('.'))
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-arch_sources = SConscript('arch/SConscript', exports = 'env')
+arch_sources = SConscript(os.path.join('arch', 'SConscript'), exports = 'env')
 
-cpu_sources = SConscript('cpu/SConscript', exports = 'env')
+cpu_sources = SConscript(os.path.join('cpu', 'SConscript'), exports = 'env')
+
+dev_sources = SConscript(os.path.join('dev', 'SConscript'), exports = 'env')
+full_system_sources += dev_sources
 
 # This is outside of cpu/SConscript since the source directory isn't
 # underneath 'cpu'.
