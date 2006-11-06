@@ -227,7 +227,6 @@ full_system_sources = Split('''
 	dev/ns_gige.cc
 	dev/pciconfigall.cc
 	dev/pcidev.cc
-	dev/pcifake.cc
 	dev/pktfifo.cc
 	dev/platform.cc
         dev/simconsole.cc
@@ -235,7 +234,6 @@ full_system_sources = Split('''
 	dev/tsunami.cc
 	dev/tsunami_cchip.cc
 	dev/tsunami_io.cc
-	dev/tsunami_fake.cc
 	dev/tsunami_pchip.cc
 
 	dev/uart.cc
