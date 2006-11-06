@@ -45,7 +45,6 @@
 #if FULL_SYSTEM
 #include "arch/tlb.hh"
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
 

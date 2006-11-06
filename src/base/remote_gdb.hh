@@ -34,7 +34,6 @@
 #include <map>
 
 #include "arch/types.hh"
-#include "base/kgdb.h"
 #include "cpu/pc_event.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
@@ -44,22 +43,72 @@ class ThreadContext;
 class PhysicalMemory;
 
 class GDBListener;
-class RemoteGDB
+
+enum GDBCommands
 {
-  protected:
-    typedef TheISA::MachInst MachInst;
+    GDBSignal              = '?', // last signal
+    GDBSetBaud             = 'b', // set baud (depracated)
+    GDBSetBreak            = 'B', // set breakpoint (depracated)
+    GDBCont                = 'c', // resume
+    GDBAsyncCont           = 'C', // continue with signal
+    GDBDebug               = 'd', // toggle debug flags (deprecated)
+    GDBDetach              = 'D', // detach remote gdb
+    GDBRegR                = 'g', // read general registers
+    GDBRegW                = 'G', // write general registers
+    GDBSetThread           = 'H', // set thread
+    GDBCycleStep           = 'i', // step a single cycle
+    GDBSigCycleStep        = 'I', // signal then cycle step
+    GDBKill                = 'k', // kill program
+    GDBMemR                = 'm', // read memory
+    GDBMemW                = 'M', // write memory
+    GDBReadReg             = 'p', // read register
+    GDBSetReg              = 'P', // write register
+    GDBQueryVar            = 'q', // query variable
+    GDBSetVar              = 'Q', // set variable
+    GDBReset               = 'r', // reset system.  (Deprecated)
+    GDBStep                = 's', // step
+    GDBAsyncStep           = 'S', // signal and step
+    GDBThreadAlive         = 'T', // find out if the thread is alive
+    GDBTargetExit          = 'W', // target exited
+    GDBBinaryDload         = 'X', // write memory
+    GDBClrHwBkpt           = 'z', // remove breakpoint or watchpoint
+    GDBSetHwBkpt           = 'Z'  // insert breakpoint or watchpoint
+};
+
+const char GDBStart = '$';
+const char GDBEnd = '#';
+const char GDBGoodP = '+';
+const char GDBBadP = '-';
+
+const int GDBPacketBufLen = 1024;
+
+class BaseRemoteGDB
+{
   private:
     friend void debugger();
     friend class GDBListener;
+
+    //Helper functions
+  protected:
+    int digit2i(char);
+    char i2digit(int);
+    Addr hex2i(const char **);
+    //Address formats, break types, and gdb commands may change
+    //between architectures, so they're defined as virtual
+    //functions.
+    virtual void mem2hex(void *, const void *, int);
+    virtual const char * hex2mem(void *, const char *, int);
+    virtual const char * break_type(char c);
+    virtual const char * gdb_command(char cmd);
 
   protected:
     class Event : public PollEvent
     {
       protected:
-        RemoteGDB *gdb;
+        BaseRemoteGDB *gdb;
 
       public:
-        Event(RemoteGDB *g, int fd, int e);
+        Event(BaseRemoteGDB *g, int fd, int e);
         void process(int revent);
     };
 
@@ -69,8 +118,8 @@ class RemoteGDB
     int number;
 
   protected:
+    //The socket commands come in through
     int fd;
-    uint64_t gdbregs[KGDB_NUMREGS];
 
   protected:
 #ifdef notyet
@@ -84,6 +133,23 @@ class RemoteGDB
     ThreadContext *context;
 
   protected:
+    class GdbRegCache
+    {
+      public:
+        GdbRegCache(size_t newSize) : regs(new uint64_t[newSize]), size(newSize)
+        {}
+        ~GdbRegCache()
+        {
+            delete [] regs;
+        }
+
+        uint64_t * regs;
+        size_t size;
+    };
+
+    GdbRegCache gdbregs;
+
+  protected:
     uint8_t getbyte();
     void putbyte(uint8_t b);
 
@@ -92,15 +158,15 @@ class RemoteGDB
 
   protected:
     // Machine memory
-    bool read(Addr addr, size_t size, char *data);
-    bool write(Addr addr, size_t size, const char *data);
+    virtual bool read(Addr addr, size_t size, char *data);
+    virtual bool write(Addr addr, size_t size, const char *data);
 
     template <class T> T read(Addr addr);
     template <class T> void write(Addr addr, T data);
 
   public:
-    RemoteGDB(System *system, ThreadContext *context);
-    ~RemoteGDB();
+    BaseRemoteGDB(System *system, ThreadContext *context, size_t cacheSize);
+    virtual ~BaseRemoteGDB();
 
     void replaceThreadContext(ThreadContext *tc) { context = tc; }
 
@@ -108,16 +174,15 @@ class RemoteGDB
     void detach();
     bool isattached();
 
-    bool acc(Addr addr, size_t len);
-    static int signal(int type);
+    virtual bool acc(Addr addr, size_t len) = 0;
     bool trap(int type);
 
   protected:
-    void getregs();
-    void setregs();
+    virtual void getregs() = 0;
+    virtual void setregs() = 0;
 
-    void clearSingleStep();
-    void setSingleStep();
+    virtual void clearSingleStep() = 0;
+    virtual void setSingleStep() = 0;
 
     PCEventQueue *getPcEventQueue();
 
@@ -125,13 +190,13 @@ class RemoteGDB
     class HardBreakpoint : public PCEvent
     {
       private:
-        RemoteGDB *gdb;
+        BaseRemoteGDB *gdb;
 
       public:
         int refcount;
 
       public:
-        HardBreakpoint(RemoteGDB *_gdb, Addr addr);
+        HardBreakpoint(BaseRemoteGDB *_gdb, Addr addr);
         std::string name() { return gdb->name() + ".hwbkpt"; }
 
         virtual void process(ThreadContext *tc);
@@ -147,27 +212,13 @@ class RemoteGDB
     bool insertHardBreak(Addr addr, size_t len);
     bool removeHardBreak(Addr addr, size_t len);
 
-  protected:
-    struct TempBreakpoint {
-        Addr	address;		// set here
-        MachInst	bkpt_inst;		// saved instruction at bkpt
-        int		init_count;		// number of times to skip bkpt
-        int		count;			// current count
-    };
-
-    TempBreakpoint notTakenBkpt;
-    TempBreakpoint takenBkpt;
-
-    void clearTempBreakpoint(TempBreakpoint &bkpt);
-    void setTempBreakpoint(TempBreakpoint &bkpt, Addr addr);
-
   public:
     std::string name();
 };
 
 template <class T>
 inline T
-RemoteGDB::read(Addr addr)
+BaseRemoteGDB::read(Addr addr)
 {
     T temp;
     read(addr, sizeof(T), (char *)&temp);
@@ -176,7 +227,7 @@ RemoteGDB::read(Addr addr)
 
 template <class T>
 inline void
-RemoteGDB::write(Addr addr, T data)
+BaseRemoteGDB::write(Addr addr, T data)
 { write(addr, sizeof(T), (const char *)&data); }
 
 class GDBListener
@@ -197,11 +248,11 @@ class GDBListener
 
   protected:
     ListenSocket listener;
-    RemoteGDB *gdb;
+    BaseRemoteGDB *gdb;
     int port;
 
   public:
-    GDBListener(RemoteGDB *g, int p);
+    GDBListener(BaseRemoteGDB *g, int p);
     ~GDBListener();
 
     void accept();

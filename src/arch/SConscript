@@ -54,6 +54,7 @@ isa_switch_hdrs = Split('''
         locked_mem.hh
 	process.hh
 	regfile.hh
+	remote_gdb.hh
 	stacktrace.hh
 	syscallreturn.hh
 	tlb.hh

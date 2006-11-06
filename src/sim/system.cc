@@ -43,7 +43,7 @@
 #include "sim/system.hh"
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
+#include "arch/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
 #endif
 

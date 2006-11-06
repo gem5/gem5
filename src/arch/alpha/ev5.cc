@@ -33,7 +33,7 @@
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
-#include "base/kgdb.h"
+#include "arch/alpha/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
 #include "config/full_system.hh"
