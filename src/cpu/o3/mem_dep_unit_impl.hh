@@ -34,6 +34,13 @@
 #include "cpu/o3/mem_dep_unit.hh"
 
 template <class MemDepPred, class Impl>
+MemDepUnit<MemDepPred, Impl>::MemDepUnit()
+    : loadBarrier(false), loadBarrierSN(0), storeBarrier(false),
+      storeBarrierSN(0), iqPtr(NULL)
+{
+}
+
+template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit(Params *params)
     : depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
       loadBarrierSN(0), storeBarrier(false), storeBarrierSN(0), iqPtr(NULL)
@@ -160,8 +167,12 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     // producing memrefs/stores.
     InstSeqNum producing_store;
     if (inst->isLoad() && loadBarrier) {
+        DPRINTF(MemDepUnit, "Load barrier [sn:%lli] in flight\n",
+                loadBarrierSN);
         producing_store = loadBarrierSN;
     } else if (inst->isStore() && storeBarrier) {
+        DPRINTF(MemDepUnit, "Store barrier [sn:%lli] in flight\n",
+                storeBarrierSN);
         producing_store = storeBarrierSN;
     } else {
         producing_store = depPred.checkInst(inst->readPC());
@@ -171,10 +182,12 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 
     // If there is a producing store, try to find the entry.
     if (producing_store != 0) {
+        DPRINTF(MemDepUnit, "Searching for producer\n");
         MemDepHashIt hash_it = memDepHash.find(producing_store);
 
         if (hash_it != memDepHash.end()) {
             store_entry = (*hash_it).second;
+            DPRINTF(MemDepUnit, "Proucer found\n");
         }
     }
 

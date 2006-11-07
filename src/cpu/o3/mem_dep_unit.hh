@@ -69,7 +69,7 @@ class MemDepUnit {
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     /** Empty constructor. Must call init() prior to using in this case. */
-    MemDepUnit() {}
+    MemDepUnit();
 
     /** Constructs a MemDepUnit with given parameters. */
     MemDepUnit(Params *params);
