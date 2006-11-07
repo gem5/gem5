@@ -40,8 +40,6 @@ void quiesceNs(uint64_t ns);
 void quiesceCycle(uint64_t cycles);
 uint64_t quiesceTime(void);
 
-void m5_ivlb(uint64_t interval);
-void m5_ivle(uint64_t interval);
 void m5_exit(uint64_t ns_delay);
 uint64_t m5_initparam(void);
 void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
