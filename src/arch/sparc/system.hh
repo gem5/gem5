@@ -111,8 +111,11 @@ class SparcSystem : public System
         return addFuncEvent<T>(openbootSymtab, lbl);
     }
 
-    virtual Addr fixFuncEventAddr(Addr addr);
-
+    virtual Addr fixFuncEventAddr(Addr addr)
+    {
+        //XXX This may eventually have to do something useful.
+        return addr;
+    }
 };
 
 #endif
