@@ -54,8 +54,12 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	vtophys.cc
+	arguments.cc
+	remote_gdb.cc
+	stacktrace.cc
 	system.cc
+	tlb.cc
+	vtophys.cc
 	''')
 
 # Syscall emulation (non-full-system) sources
