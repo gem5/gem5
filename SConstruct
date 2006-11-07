@@ -461,6 +461,46 @@ env.SConscript('ext/libelf/SConscript',
 
 ###################################################
 #
+# This function is used to set up a directory with switching headers
+#
+###################################################
+
+def make_switching_dir(dirname, switch_headers, env):
+    # Generate the header.  target[0] is the full path of the output
+    # header to generate.  'source' is a dummy variable, since we get the
+    # list of ISAs from env['ALL_ISA_LIST'].
+    def gen_switch_hdr(target, source, env):
+	fname = str(target[0])
+	basename = os.path.basename(fname)
+	f = open(fname, 'w')
+	f.write('#include "arch/isa_specific.hh"\n')
+	cond = '#if'
+	for isa in env['ALL_ISA_LIST']:
+	    f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
+		    % (cond, isa.upper(), dirname, isa, basename))
+	    cond = '#elif'
+	f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+	f.close()
+	return 0
+
+    # String to print when generating header
+    def gen_switch_hdr_string(target, source, env):
+	return "Generating switch header " + str(target[0])
+
+    # Build SCons Action object. 'varlist' specifies env vars that this
+    # action depends on; when env['ALL_ISA_LIST'] changes these actions
+    # should get re-executed.
+    switch_hdr_action = Action(gen_switch_hdr, gen_switch_hdr_string,
+                               varlist=['ALL_ISA_LIST'])
+
+    # Instantiate actions for each header
+    for hdr in switch_headers:
+        env.Command(hdr, [], switch_hdr_action)
+
+env.make_switching_dir = make_switching_dir
+
+###################################################
+#
 # Define build environments for selected configurations.
 #
 ###################################################
@@ -565,6 +605,7 @@ for build_path in build_paths:
                    exports = { 'env' : e }, duplicate = False)
 
 Help(help_text)
+
 
 ###################################################
 #
