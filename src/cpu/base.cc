@@ -254,6 +254,26 @@ BaseCPU::regStats()
 #endif
 }
 
+Tick
+BaseCPU::nextCycle()
+{
+    Tick next_tick = curTick + clock - 1;
+    next_tick -= (next_tick % clock);
+    return next_tick;
+}
+
+Tick
+BaseCPU::nextCycle(Tick begin_tick)
+{
+    Tick next_tick = begin_tick;
+
+    while (next_tick < curTick)
+        next_tick += clock;
+
+    next_tick -= (next_tick % clock);
+    assert(next_tick >= curTick);
+    return next_tick;
+}
 
 void
 BaseCPU::registerThreadContexts()

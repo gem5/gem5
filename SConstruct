@@ -270,6 +270,12 @@ if not conf.CheckLib(py_version_name):
     print "Error: can't find Python library", py_version_name
     Exit(1)
 
+# On Solaris you need to use libsocket for socket ops
+if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+   if not conf.CheckLibWithHeader('socket', 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+       print "Can't find library with socket calls (e.g. accept())"
+       Exit(1)
+
 # Check for zlib.  If the check passes, libz will be automatically
 # added to the LIBS environment variable.
 if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++'):

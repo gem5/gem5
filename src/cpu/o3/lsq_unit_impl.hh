@@ -131,6 +131,7 @@ LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
     usedPorts = 0;
     cachePorts = params->cachePorts;
 
+    retryPkt = NULL;
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;

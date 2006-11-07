@@ -34,6 +34,8 @@
 #include "sim/byteswap.hh"
 #include "sim/serialize.hh"
 
+#include <string.h>
+
 using namespace SparcISA;
 using namespace std;
 
@@ -55,7 +57,7 @@ string SparcISA::getFloatRegName(RegIndex index)
 
 void FloatRegFile::clear()
 {
-    bzero(regSpace, sizeof(regSpace));
+    memset(regSpace, 0, sizeof(regSpace));
 }
 
 FloatReg FloatRegFile::readReg(int floatReg, int width)

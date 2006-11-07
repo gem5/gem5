@@ -36,7 +36,7 @@ namespace Stats {
  * Define the storage for format flags.
  * @todo Can probably shrink this.
  */
-typedef u_int32_t StatFlags;
+typedef uint32_t StatFlags;
 
 /** Nothing extra to print. */
 const StatFlags none =		0x00000000;

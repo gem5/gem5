@@ -532,14 +532,13 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
-        Tick time = pkt->req->getTime();
-        while (time < curTick)
-            time += lat;
+        Tick mem_time = pkt->req->getTime();
+        Tick next_tick = cpu->nextCycle(mem_time);
 
-        if (time == curTick)
+        if (next_tick == curTick)
             cpu->completeIfetch(pkt);
         else
-            tickEvent.schedule(pkt, time);
+            tickEvent.schedule(pkt, next_tick);
 
         return true;
     }
@@ -610,14 +609,13 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
-        Tick time = pkt->req->getTime();
-        while (time < curTick)
-            time += lat;
+        Tick mem_time = pkt->req->getTime();
+        Tick next_tick = cpu->nextCycle(mem_time);
 
-        if (time == curTick)
+        if (next_tick == curTick)
             cpu->completeDataAccess(pkt);
         else
-            tickEvent.schedule(pkt, time);
+            tickEvent.schedule(pkt, next_tick);
 
         return true;
     }

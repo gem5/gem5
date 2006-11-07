@@ -21,6 +21,7 @@ type=Bus
 bus_id=0
 clock=1000
 width=64
+responder_set=false
 
 [system.cpu.workload]
 type=LiveProcess
@@ -44,7 +45,6 @@ max_insts_all_threads=0
 max_loads_any_thread=0
 max_loads_all_threads=0
 progress_interval=0
-mem=system.physmem
 system=system
 cpu_id=0
 workload=system.cpu.workload

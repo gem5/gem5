@@ -17,8 +17,8 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 unix_boot_mem ends at FFFFFC0000078000 
 k_argc = 0 
 jumping to kernel at 0xFFFFFC0000310000, (PCBB 0xFFFFFC0000018180 pfn 1067)
-CallbackFixup 0 18000, t7=FFFFFC000070C000
 Entering slaveloop for cpu 1 my_rpb=FFFFFC0000018400
+CallbackFixup 0 18000, t7=FFFFFC000070C000
 Linux version 2.6.13 (hsul@zed.eecs.umich.edu) (gcc version 3.4.3) #1 SMP Sun Oct 8 19:52:07 EDT 2006
 Booting GENERIC on Tsunami variation DP264 using machine vector DP264 from SRM
 Major Options: SMP LEGACY_START VERBOSE_MCHECK 
