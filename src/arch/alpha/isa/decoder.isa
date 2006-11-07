@@ -795,12 +795,6 @@ decode OPCODE default Unknown::unknown() {
             0x04: quiesceTime({{
                 R0 = AlphaPseudo::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
-            0x10: ivlb({{
-                AlphaPseudo::ivlb(xc->tcBase());
-            }}, No_OpClass, IsNonSpeculative);
-            0x11: ivle({{
-                AlphaPseudo::ivle(xc->tcBase());
-            }}, No_OpClass, IsNonSpeculative);
             0x20: m5exit_old({{
                 AlphaPseudo::m5exit_old(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);

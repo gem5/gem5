@@ -134,18 +134,6 @@ namespace AlphaPseudo
     }
 
     void
-    ivlb(ThreadContext *tc)
-    {
-        if (tc->getKernelStats())
-            tc->getKernelStats()->ivlb();
-    }
-
-    void
-    ivle(ThreadContext *tc)
-    {
-    }
-
-    void
     m5exit_old(ThreadContext *tc)
     {
         exitSimLoop("m5_exit_old instruction encountered");
