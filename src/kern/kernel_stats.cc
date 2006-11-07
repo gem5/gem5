@@ -68,16 +68,6 @@ Statistics::regStats(const string &_name)
         .desc("number of quiesce instructions executed")
         ;
 
-    _ivlb
-        .name(name() + ".inst.ivlb")
-        .desc("number of ivlb instructions executed")
-        ;
-
-    _ivle
-        .name(name() + ".inst.ivle")
-        .desc("number of ivle instructions executed")
-        ;
-
     _hwrei
         .name(name() + ".inst.hwrei")
         .desc("number of hwrei instructions executed")

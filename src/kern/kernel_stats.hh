@@ -64,8 +64,6 @@ class Statistics : public Serializable
   private:
     Stats::Scalar<> _arm;
     Stats::Scalar<> _quiesce;
-    Stats::Scalar<> _ivlb;
-    Stats::Scalar<> _ivle;
     Stats::Scalar<> _hwrei;
 
     Stats::Vector<> _iplCount;
@@ -97,8 +95,6 @@ class Statistics : public Serializable
   public:
     void arm() { _arm++; }
     void quiesce() { _quiesce++; }
-    void ivlb() { _ivlb++; }
-    void ivle() { _ivle++; }
     void hwrei() { _hwrei++; }
     void swpipl(int ipl);
     void mode(cpu_mode newmode, ThreadContext *tc);
