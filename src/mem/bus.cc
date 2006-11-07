@@ -240,10 +240,10 @@ Bus::recvRetry(int id)
                 busIdle.reschedule(tickNextIdle);
             }
         }
-        //If we weren't able to drain before, we might be able to now.
-        if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle)
-            drainEvent->process();
     }
+    //If we weren't able to drain before, we might be able to now.
+    if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle)
+        drainEvent->process();
 }
 
 Port *
@@ -521,10 +521,10 @@ Bus::drain(Event * de)
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
     if (curTick >= tickNextIdle && retryList.size() == 0) {
+        return 0;
+    } else {
         drainEvent = de;
         return 1;
-    } else {
-        return 0;
     }
 }
 
