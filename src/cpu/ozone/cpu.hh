@@ -363,8 +363,8 @@ class OzoneCPU : public BaseCPU
 
     bool interval_stats;
 
-    AlphaITB *itb;
-    AlphaDTB *dtb;
+    TheISA::ITB *itb;
+    TheISA::DTB *dtb;
     System *system;
     PhysicalMemory *physmem;
 #endif

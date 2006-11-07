@@ -122,7 +122,7 @@ struct OzoneThreadState : public ThreadState {
 
     MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return miscRegFile.readRegWithEffect(misc_reg, fault, tc);
+        return miscRegFile.readRegWithEffect(misc_reg, tc);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
