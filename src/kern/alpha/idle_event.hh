@@ -30,18 +30,18 @@
  *          Ali Saidi
  */
 
-#ifndef __SYSTEM_EVENTS_HH__
-#define __SYSTEM_EVENTS_HH__
+#ifndef __KERN_ALPHA_IDLE_EVENT_HH__
+#define __KERN_ALPHA_IDLE_EVENT_HH__
 
 #include "cpu/pc_event.hh"
 
-class SkipFuncEvent : public PCEvent
+class IdleStartEvent : public PCEvent
 {
   public:
-    SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+    IdleStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
     virtual void process(ThreadContext *tc);
 };
 
-#endif // __SYSTEM_EVENTS_HH__
+#endif // __KERN_ALPHA_IDLE_EVENT_HH__

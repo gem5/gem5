@@ -25,23 +25,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Lisa Hsu
- *          Ali Saidi
+ * Authors: Lisa Hsu
+ *          Nathan Binkert
  */
 
-#ifndef __SYSTEM_EVENTS_HH__
-#define __SYSTEM_EVENTS_HH__
+#include "cpu/thread_context.hh"
+#include "kern/alpha/idle_event.hh"
+#include "kern/kernel_stats.hh"
 
-#include "cpu/pc_event.hh"
+using namespace TheISA;
 
-class SkipFuncEvent : public PCEvent
+void
+IdleStartEvent::process(ThreadContext *tc)
 {
-  public:
-    SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ThreadContext *tc);
-};
-
-#endif // __SYSTEM_EVENTS_HH__
+    if (tc->getKernelStats())
+        tc->getKernelStats()->setIdleProcess(
+            tc->readMiscReg(AlphaISA::IPR_PALtemp23), tc);
+    remove();
+}
