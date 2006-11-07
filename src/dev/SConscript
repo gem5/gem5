@@ -63,7 +63,6 @@ sources += Split('''
 	ns_gige.cc
 	pciconfigall.cc
 	pcidev.cc
-	pcifake.cc
 	pktfifo.cc
 	platform.cc
         simconsole.cc

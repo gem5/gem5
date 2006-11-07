@@ -39,7 +39,6 @@ sources = Split('''
 	tsunami.cc
 	tsunami_cchip.cc
 	tsunami_io.cc
-	tsunami_fake.cc
 	tsunami_pchip.cc
 	''')
 #	baddev.cc
@@ -57,7 +56,6 @@ sources = Split('''
 #	ns_gige.cc
 #	pciconfigall.cc
 #	pcidev.cc
-#	pcifake.cc
 #	pktfifo.cc
 #	platform.cc
 #       simconsole.cc
