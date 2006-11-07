@@ -212,6 +212,10 @@ class BaseRemoteGDB
     bool insertHardBreak(Addr addr, size_t len);
     bool removeHardBreak(Addr addr, size_t len);
 
+  protected:
+    void clearTempBreakpoint(Addr &bkpt);
+    void setTempBreakpoint(Addr bkpt);
+
   public:
     std::string name();
 };

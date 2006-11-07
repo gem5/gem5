@@ -571,6 +571,21 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
     return true;
 }
 
+void
+BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
+{
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
+    insertHardBreak(bkpt, sizeof(TheISA::MachInst));
+}
+
+void
+BaseRemoteGDB::clearTempBreakpoint(Addr &bkpt)
+{
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
+    removeHardBreak(bkpt, sizeof(TheISA::MachInst));
+    bkpt = 0;
+}
+
 const char *
 BaseRemoteGDB::break_type(char c)
 {

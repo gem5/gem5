@@ -46,34 +46,32 @@ namespace SparcISA
 {
     class RemoteGDB : public BaseRemoteGDB
     {
-      private:
-        friend void debugger();
-        friend class GDBListener;
-
       protected:
-        class Event : public PollEvent
+        enum RegisterConstants
         {
-          protected:
-            RemoteGDB *gdb;
-
-          public:
-            Event(RemoteGDB *g, int fd, int e);
-            void process(int revent);
+            RegG0, RegG1, RegG2, RegG3, RegG4, RegG5, RegG6, RegG7,
+            RegO0, RegO1, RegO2, RegO3, RegO4, RegO5, RegO6, RegO7,
+            RegL0, RegL1, RegL2, RegL3, RegL4, RegL5, RegL6, RegL7,
+            RegI0, RegI1, RegI2, RegI3, RegI4, RegI5, RegI6, RegI7,
+            RegF0, RegF1, RegF2, RegF3, RegF4, RegF5, RegF6, RegF7,
+            RegF8, RegF9, RegF10, RegF11, RegF12, RegF13, RegF14, RegF15,
+            RegF16, RegF17, RegF18, RegF19, RegF20, RegF21, RegF22, RegF23,
+            RegF24, RegF25, RegF26, RegF27, RegF28, RegF29, RegF30, RegF31,
+            RegY,
+            RegPsr,
+            RegWim,
+            RegTbr,
+            RegPc,
+            RegNpc,
+            RegFpsr,
+            RegCpsr,
+            NumGDBRegs
         };
-
-        friend class Event;
-        Event *event;
-
-      protected:
-        // Machine memory
-        bool write(Addr addr, size_t size, const char *data);
 
       public:
         RemoteGDB(System *system, ThreadContext *context);
-        ~RemoteGDB();
 
         bool acc(Addr addr, size_t len);
-        int signal(int type);
 
       protected:
         void getregs();
@@ -82,47 +80,7 @@ namespace SparcISA
         void clearSingleStep();
         void setSingleStep();
 
-        PCEventQueue *getPcEventQueue();
-
-      protected:
-        class HardBreakpoint : public PCEvent
-        {
-          private:
-            RemoteGDB *gdb;
-
-          public:
-            int refcount;
-
-          public:
-            HardBreakpoint(RemoteGDB *_gdb, Addr addr);
-            std::string name() { return gdb->name() + ".hwbkpt"; }
-
-            virtual void process(ThreadContext *tc);
-        };
-        friend class HardBreakpoint;
-
-        typedef std::map<Addr, HardBreakpoint *> break_map_t;
-        typedef break_map_t::iterator break_iter_t;
-        break_map_t hardBreakMap;
-
-        bool insertSoftBreak(Addr addr, size_t len);
-        bool removeSoftBreak(Addr addr, size_t len);
-        bool insertHardBreak(Addr addr, size_t len);
-        bool removeHardBreak(Addr addr, size_t len);
-
-      protected:
-        struct TempBreakpoint {
-            Addr	address;		// set here
-            MachInst	bkpt_inst;		// saved instruction at bkpt
-            int		init_count;		// number of times to skip bkpt
-            int		count;			// current count
-        };
-
-        TempBreakpoint notTakenBkpt;
-        TempBreakpoint takenBkpt;
-
-        void clearTempBreakpoint(TempBreakpoint &bkpt);
-        void setTempBreakpoint(TempBreakpoint &bkpt, Addr addr);
+        Addr singleStepBreaks[2];
     };
 }
 

@@ -121,8 +121,9 @@
 #include <string>
 #include <unistd.h>
 
-#include "arch/vtophys.hh"
+#include "arch/alpha/kgdb.h"
 #include "arch/alpha/remote_gdb.hh"
+#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
@@ -135,30 +136,12 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace AlphaISA;
-
-RemoteGDB::Event::Event(RemoteGDB *g, int fd, int e)
-    : PollEvent(fd, e), gdb(g)
-{}
-
-void
-RemoteGDB::Event::process(int revent)
-{
-    if (revent & POLLIN)
-        gdb->trap(ALPHA_KENTRY_IF);
-    else if (revent & POLLNVAL)
-        gdb->detach();
-}
+using namespace TheISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, KGDB_NUMREGS),
-      event(NULL)
-{}
-
-RemoteGDB::~RemoteGDB()
+    : BaseRemoteGDB(_system, c, KGDB_NUMREGS)
 {
-    if (event)
-        delete event;
+    memset(gdbregs.regs, 0, gdbregs.size);
 }
 
 ///////////////////////////////////////////////////////////
@@ -269,35 +252,15 @@ RemoteGDB::setregs()
 }
 
 void
-RemoteGDB::setTempBreakpoint(TempBreakpoint &bkpt, Addr addr)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", addr);
-
-    bkpt.address = addr;
-    insertHardBreak(addr, 4);
-}
-
-void
-RemoteGDB::clearTempBreakpoint(TempBreakpoint &bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n",
-            bkpt.address);
-
-
-    removeHardBreak(bkpt.address, 4);
-    bkpt.address = 0;
-}
-
-void
 RemoteGDB::clearSingleStep()
 {
     DPRINTF(GDBMisc, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
+            takenBkpt, notTakenBkpt);
 
-    if (takenBkpt.address != 0)
+    if (takenBkpt != 0)
         clearTempBreakpoint(takenBkpt);
 
-    if (notTakenBkpt.address != 0)
+    if (notTakenBkpt != 0)
         clearTempBreakpoint(notTakenBkpt);
 }
 
@@ -322,12 +285,12 @@ RemoteGDB::setSingleStep()
     }
 
     DPRINTF(GDBMisc, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
+            takenBkpt, notTakenBkpt);
 
-    setTempBreakpoint(notTakenBkpt, npc);
+    setTempBreakpoint(notTakenBkpt = npc);
 
     if (set_bt)
-        setTempBreakpoint(takenBkpt, bpc);
+        setTempBreakpoint(takenBkpt = bpc);
 }
 
 // Write bytes to kernel address space for debugger.
@@ -344,81 +307,3 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
     }
 }
 
-
-PCEventQueue *RemoteGDB::getPcEventQueue()
-{
-    return &system->pcEventQueue;
-}
-
-
-RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
-    : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
-      gdb(_gdb), refcount(0)
-{
-    DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
-}
-
-void
-RemoteGDB::HardBreakpoint::process(ThreadContext *tc)
-{
-    DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
-
-    if (tc == gdb->context)
-        gdb->trap(ALPHA_KENTRY_INT);
-}
-
-bool
-RemoteGDB::insertSoftBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    return insertHardBreak(addr, len);
-}
-
-bool
-RemoteGDB::removeSoftBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    return removeHardBreak(addr, len);
-}
-
-bool
-RemoteGDB::insertHardBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    DPRINTF(GDBMisc, "inserting hardware breakpoint at %#x\n", addr);
-
-    HardBreakpoint *&bkpt = hardBreakMap[addr];
-    if (bkpt == 0)
-        bkpt = new HardBreakpoint(this, addr);
-
-    bkpt->refcount++;
-
-    return true;
-}
-
-bool
-RemoteGDB::removeHardBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    DPRINTF(GDBMisc, "removing hardware breakpoint at %#x\n", addr);
-
-    break_iter_t i = hardBreakMap.find(addr);
-    if (i == hardBreakMap.end())
-        return false;
-
-    HardBreakpoint *hbp = (*i).second;
-    if (--hbp->refcount == 0) {
-        delete hbp;
-        hardBreakMap.erase(i);
-    }
-
-    return true;
-}

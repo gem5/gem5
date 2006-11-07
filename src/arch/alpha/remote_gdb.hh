@@ -48,31 +48,12 @@ namespace AlphaISA
 {
     class RemoteGDB : public BaseRemoteGDB
     {
-      private:
-        friend void debugger();
-        friend class GDBListener;
-
-      protected:
-        class Event : public PollEvent
-        {
-          protected:
-            RemoteGDB *gdb;
-
-          public:
-            Event(RemoteGDB *g, int fd, int e);
-            void process(int revent);
-        };
-
-        friend class Event;
-        Event *event;
-
       protected:
         // Machine memory
         bool write(Addr addr, size_t size, const char *data);
 
       public:
         RemoteGDB(System *system, ThreadContext *context);
-        ~RemoteGDB();
 
         bool acc(Addr addr, size_t len);
 
@@ -83,47 +64,10 @@ namespace AlphaISA
         void clearSingleStep();
         void setSingleStep();
 
-        PCEventQueue *getPcEventQueue();
-
       protected:
-        class HardBreakpoint : public PCEvent
-        {
-          private:
-            RemoteGDB *gdb;
 
-          public:
-            int refcount;
-
-          public:
-            HardBreakpoint(RemoteGDB *_gdb, Addr addr);
-            std::string name() { return gdb->name() + ".hwbkpt"; }
-
-            virtual void process(ThreadContext *tc);
-        };
-        friend class HardBreakpoint;
-
-        typedef std::map<Addr, HardBreakpoint *> break_map_t;
-        typedef break_map_t::iterator break_iter_t;
-        break_map_t hardBreakMap;
-
-        bool insertSoftBreak(Addr addr, size_t len);
-        bool removeSoftBreak(Addr addr, size_t len);
-        bool insertHardBreak(Addr addr, size_t len);
-        bool removeHardBreak(Addr addr, size_t len);
-
-      protected:
-        struct TempBreakpoint {
-            Addr	address;		// set here
-            MachInst	bkpt_inst;		// saved instruction at bkpt
-            int		init_count;		// number of times to skip bkpt
-            int		count;			// current count
-        };
-
-        TempBreakpoint notTakenBkpt;
-        TempBreakpoint takenBkpt;
-
-        void clearTempBreakpoint(TempBreakpoint &bkpt);
-        void setTempBreakpoint(TempBreakpoint &bkpt, Addr addr);
+        Addr notTakenBkpt;
+        Addr takenBkpt;
     };
 }
 

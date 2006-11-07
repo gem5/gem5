@@ -124,7 +124,6 @@
 #include "arch/vtophys.hh"
 #include "arch/sparc/remote_gdb.hh"
 #include "base/intmath.hh"
-#include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
@@ -138,29 +137,9 @@
 using namespace std;
 using namespace TheISA;
 
-RemoteGDB::Event::Event(RemoteGDB *g, int fd, int e)
-    : PollEvent(fd, e), gdb(g)
-{}
-
-void
-RemoteGDB::Event::process(int revent)
-{
-    if (revent & POLLIN)
-        gdb->trap(ALPHA_KENTRY_IF);
-    else if (revent & POLLNVAL)
-        gdb->detach();
-}
-
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, KGDB_NUMREGS),
-      event(NULL)
+    : BaseRemoteGDB(_system, c, NumGDBRegs)
 {}
-
-RemoteGDB::~RemoteGDB()
-{
-    if (event)
-        delete event;
-}
 
 ///////////////////////////////////////////////////////////
 // RemoteGDB::acc
@@ -170,6 +149,7 @@ RemoteGDB::~RemoteGDB()
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
+#if 0
     Addr last_va;
 
     va = TheISA::TruncPage(va);
@@ -208,38 +188,8 @@ RemoteGDB::acc(Addr va, size_t len)
     } while (va < last_va);
 
     DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
+#endif
     return true;
-}
-
-///////////////////////////////////////////////////////////
-// RemoteGDB::signal
-//
-//	Translate a trap number into a Unix-compatible signal number.
-//	(GDB only understands Unix signal numbers.)
-//
-int
-RemoteGDB::signal(int type)
-{
-    switch (type) {
-      case ALPHA_KENTRY_INT:
-        return (SIGTRAP);
-
-      case ALPHA_KENTRY_UNA:
-        return (SIGBUS);
-
-      case ALPHA_KENTRY_ARITH:
-        return (SIGFPE);
-
-      case ALPHA_KENTRY_IF:
-        return (SIGILL);
-
-      case ALPHA_KENTRY_MM:
-        return (SIGSEGV);
-
-      default:
-        panic("unknown signal type");
-        return 0;
-    }
 }
 
 ///////////////////////////////////////////////////////////
@@ -252,24 +202,14 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.size);
 
-    gdbregs.regs[KGDB_REG_PC] = context->readPC();
-
-    // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            gdbregs.regs[i] = context->readIntReg(AlphaISA::reg_redir[i]);
-        }
-    } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            gdbregs.regs[i] = context->readIntReg(i);
-        }
-    }
-
-#ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        gdbregs.regs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
-    }
-#endif
+    gdbregs.regs[RegPc] = context->readPC();
+    gdbregs.regs[RegNpc] = context->readNextPC();
+    for(int x = RegG0; x <= RegI7; x++)
+        gdbregs.regs[x] = context->readIntReg(x - RegG0);
+    for(int x = RegF0; x <= RegF31; x++)
+        gdbregs.regs[x] = context->readFloatRegBits(x - RegF0);
+    gdbregs.regs[RegY] = context->readMiscReg(MISCREG_Y);
+    //XXX need to also load up Psr, Wim, Tbr, Fpsr, and Cpsr
 }
 
 ///////////////////////////////////////////////////////////
@@ -281,48 +221,20 @@ RemoteGDB::getregs()
 void
 RemoteGDB::setregs()
 {
-    // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            context->setIntReg(AlphaISA::reg_redir[i], gdbregs.regs[i]);
-        }
-    } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            context->setIntReg(i, gdbregs.regs[i]);
-        }
-    }
-
-#ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        context->setFloatRegBits(i, gdbregs.regs[i + KGDB_REG_F0]);
-    }
-#endif
-    context->setPC(gdbregs.regs[KGDB_REG_PC]);
-}
-
-void
-RemoteGDB::setTempBreakpoint(TempBreakpoint &bkpt, Addr addr)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", addr);
-
-    bkpt.address = addr;
-    insertHardBreak(addr, 4);
-}
-
-void
-RemoteGDB::clearTempBreakpoint(TempBreakpoint &bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n",
-            bkpt.address);
-
-
-    removeHardBreak(bkpt.address, 4);
-    bkpt.address = 0;
+    context->setPC(gdbregs.regs[RegPc]);
+    context->setNextPC(gdbregs.regs[RegNpc]);
+    for(int x = RegG0; x <= RegI7; x++)
+        context->setIntReg(x - RegG0, gdbregs.regs[x]);
+    for(int x = RegF0; x <= RegF31; x++)
+        context->setFloatRegBits(x - RegF0, gdbregs.regs[x]);
+    context->setMiscRegWithEffect(MISCREG_Y, gdbregs.regs[RegY]);
+    //XXX need to also set Psr, Wim, Tbr, Fpsr, and Cpsr
 }
 
 void
 RemoteGDB::clearSingleStep()
 {
+#if 0
     DPRINTF(GDBMisc, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
             takenBkpt.address, notTakenBkpt.address);
 
@@ -331,11 +243,13 @@ RemoteGDB::clearSingleStep()
 
     if (notTakenBkpt.address != 0)
         clearTempBreakpoint(notTakenBkpt);
+#endif
 }
 
 void
 RemoteGDB::setSingleStep()
 {
+#if 0
     Addr pc = context->readPC();
     Addr npc, bpc;
     bool set_bt = false;
@@ -360,97 +274,5 @@ RemoteGDB::setSingleStep()
 
     if (set_bt)
         setTempBreakpoint(takenBkpt, bpc);
-}
-
-// Write bytes to kernel address space for debugger.
-bool
-RemoteGDB::write(Addr vaddr, size_t size, const char *data)
-{
-    if (BaseRemoteGDB::write(vaddr, size, data)) {
-#ifdef IMB
-        alpha_pal_imb();
 #endif
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-PCEventQueue *RemoteGDB::getPcEventQueue()
-{
-    return &system->pcEventQueue;
-}
-
-
-RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
-    : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
-      gdb(_gdb), refcount(0)
-{
-    DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
-}
-
-void
-RemoteGDB::HardBreakpoint::process(ThreadContext *tc)
-{
-    DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
-
-    if (tc == gdb->context)
-        gdb->trap(ALPHA_KENTRY_INT);
-}
-
-bool
-RemoteGDB::insertSoftBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    return insertHardBreak(addr, len);
-}
-
-bool
-RemoteGDB::removeSoftBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    return removeHardBreak(addr, len);
-}
-
-bool
-RemoteGDB::insertHardBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    DPRINTF(GDBMisc, "inserting hardware breakpoint at %#x\n", addr);
-
-    HardBreakpoint *&bkpt = hardBreakMap[addr];
-    if (bkpt == 0)
-        bkpt = new HardBreakpoint(this, addr);
-
-    bkpt->refcount++;
-
-    return true;
-}
-
-bool
-RemoteGDB::removeHardBreak(Addr addr, size_t len)
-{
-    if (len != sizeof(MachInst))
-        panic("invalid length\n");
-
-    DPRINTF(GDBMisc, "removing hardware breakpoint at %#x\n", addr);
-
-    break_iter_t i = hardBreakMap.find(addr);
-    if (i == hardBreakMap.end())
-        return false;
-
-    HardBreakpoint *hbp = (*i).second;
-    if (--hbp->refcount == 0) {
-        delete hbp;
-        hardBreakMap.erase(i);
-    }
-
-    return true;
 }
