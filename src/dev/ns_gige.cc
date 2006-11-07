@@ -36,7 +36,6 @@
 #include <deque>
 #include <string>
 
-#include "arch/alpha/ev5.hh"
 #include "base/inet.hh"
 #include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
