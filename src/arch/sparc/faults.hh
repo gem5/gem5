@@ -548,7 +548,10 @@ class SpillNNormal : public EnumeratedFault
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
+    //These need to be handled specially to enable spill traps in SE
+#if !FULL_SYSTEM
     void invoke(ThreadContext * tc);
+#endif
 };
 
 class SpillNOther : public EnumeratedFault
@@ -579,7 +582,10 @@ class FillNNormal : public EnumeratedFault
     FaultName name() {return _name;}
     FaultPriority priority() {return _priority;}
     FaultStat & countStat() {return _count;}
+    //These need to be handled specially to enable fill traps in SE
+#if !FULL_SYSTEM
     void invoke(ThreadContext * tc);
+#endif
 };
 
 class FillNOther : public EnumeratedFault
