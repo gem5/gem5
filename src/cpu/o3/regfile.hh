@@ -40,7 +40,6 @@
 
 #if FULL_SYSTEM
 #include "kern/kernel_stats.hh"
-
 #endif
 
 #include <vector>
