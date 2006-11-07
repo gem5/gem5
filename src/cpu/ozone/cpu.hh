@@ -62,8 +62,10 @@ class MemoryController;
 class RemoteGDB;
 class GDBListener;
 
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 #else
@@ -127,7 +129,7 @@ class OzoneCPU : public BaseCPU
 
         TheISA::DTB * getDTBPtr() { return cpu->dtb; }
 
-        Kernel::Statistics *getKernelStats()
+        TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }
 
         FunctionalPort *getPhysPort() { return thread->getPhysPort(); }

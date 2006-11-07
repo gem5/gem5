@@ -32,12 +32,10 @@
 #ifndef __KERNEL_STATS_HH__
 #define __KERNEL_STATS_HH__
 
-#include <map>
-#include <stack>
 #include <string>
-#include <vector>
 
 #include "cpu/static_inst.hh"
+#include "sim/serialize.hh"
 
 class BaseCPU;
 class ThreadContext;
@@ -47,21 +45,12 @@ class System;
 
 namespace Kernel {
 
-enum cpu_mode { kernel, user, idle, cpu_mode_num };
-extern const char *modestr[];
-
 class Statistics : public Serializable
 {
-  private:
+  protected:
     std::string myname;
 
-    Addr idleProcess;
-    cpu_mode themode;
-    Tick lastModeTick;
-
-    void changeMode(cpu_mode newmode, ThreadContext *tc);
-
-  private:
+  protected:
     Stats::Scalar<> _arm;
     Stats::Scalar<> _quiesce;
     Stats::Scalar<> _hwrei;
@@ -71,16 +60,8 @@ class Statistics : public Serializable
     Stats::Vector<> _iplTicks;
     Stats::Formula _iplUsed;
 
-    Stats::Vector<> _callpal;
     Stats::Vector<> _syscall;
 //    Stats::Vector<> _faults;
-
-    Stats::Vector<> _mode;
-    Stats::Vector<> _modeGood;
-    Stats::Formula _modeFraction;
-    Stats::Vector<> _modeTicks;
-
-    Stats::Scalar<> _swap_context;
 
   private:
     int iplLast;
@@ -88,6 +69,7 @@ class Statistics : public Serializable
 
   public:
     Statistics(System *system);
+    virtual ~Statistics() {}
 
     const std::string name() const { return myname; }
     void regStats(const std::string &name);
@@ -95,13 +77,7 @@ class Statistics : public Serializable
   public:
     void arm() { _arm++; }
     void quiesce() { _quiesce++; }
-    void hwrei() { _hwrei++; }
     void swpipl(int ipl);
-    void mode(cpu_mode newmode, ThreadContext *tc);
-    void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
-    void callpal(int code, ThreadContext *tc);
-
-    void setIdleProcess(Addr idle, ThreadContext *tc);
 
   public:
     virtual void serialize(std::ostream &os);

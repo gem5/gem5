@@ -55,8 +55,10 @@ class ProfileNode;
 class FunctionalPort;
 class PhysicalPort;
 
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 #else // !FULL_SYSTEM

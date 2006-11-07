@@ -891,7 +891,7 @@ void
 OzoneCPU<Impl>::OzoneTC::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
-    thread->kernelStats = new Kernel::Statistics(cpu->system);
+    thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
     thread->kernelStats->regStats(name + ".kern");
 #endif
 }

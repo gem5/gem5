@@ -83,7 +83,7 @@ class O3ThreadContext : public ThreadContext
     virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
 
     /** Returns a pointer to this thread's kernel statistics. */
-    virtual Kernel::Statistics *getKernelStats()
+    virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
     virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }

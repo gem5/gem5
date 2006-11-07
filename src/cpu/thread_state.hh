@@ -44,8 +44,10 @@
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 #endif
 
@@ -97,7 +99,7 @@ struct ThreadState {
 
     void profileSample();
 
-    Kernel::Statistics *getKernelStats() { return kernelStats; }
+    TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 
@@ -187,7 +189,7 @@ struct ThreadState {
     Addr profilePC;
     EndQuiesceEvent *quiesceEvent;
 
-    Kernel::Statistics *kernelStats;
+    TheISA::Kernel::Statistics *kernelStats;
   protected:
     /** A functional port outgoing only for functional accesses to physical
      * addresses.*/

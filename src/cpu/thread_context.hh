@@ -56,8 +56,10 @@ class FunctionalPort;
 class VirtualPort;
 class Process;
 class System;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 /**
@@ -124,7 +126,7 @@ class ThreadContext
 
     virtual TheISA::DTB *getDTBPtr() = 0;
 
-    virtual Kernel::Statistics *getKernelStats() = 0;
+    virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
     virtual FunctionalPort *getPhysPort() = 0;
 
@@ -295,7 +297,8 @@ class ProxyThreadContext : public ThreadContext
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
+    TheISA::Kernel::Statistics *getKernelStats()
+    { return actualTC->getKernelStats(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 

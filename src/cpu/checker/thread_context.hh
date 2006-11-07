@@ -37,8 +37,10 @@
 #include "cpu/thread_context.hh"
 
 class EndQuiesceEvent;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 /**
@@ -91,7 +93,8 @@ class CheckerThreadContext : public ThreadContext
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
+    TheISA::Kernel::Statistics *getKernelStats()
+    { return actualTC->getKernelStats(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 

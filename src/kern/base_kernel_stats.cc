@@ -29,14 +29,11 @@
  *          Nathan Binkert
  */
 
-#include <map>
-#include <stack>
 #include <string>
 
-#include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
+#include "kern/base_kernel_stats.hh"
 #include "kern/tru64/tru64_syscalls.hh"
 #include "sim/system.hh"
 
@@ -45,11 +42,8 @@ using namespace Stats;
 
 namespace Kernel {
 
-const char *modestr[] = { "kernel", "user", "idle" };
-
 Statistics::Statistics(System *system)
-    : idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
-      iplLast(0), iplLastTick(0)
+    : iplLast(0), iplLastTick(0)
 {
 }
 
@@ -66,11 +60,6 @@ Statistics::regStats(const string &_name)
     _quiesce
         .name(name() + ".inst.quiesce")
         .desc("number of quiesce instructions executed")
-        ;
-
-    _hwrei
-        .name(name() + ".inst.hwrei")
-        .desc("number of hwrei instructions executed")
         ;
 
     _iplCount
@@ -102,19 +91,6 @@ Statistics::regStats(const string &_name)
 
     _iplUsed = _iplGood / _iplCount;
 
-    _callpal
-        .init(256)
-        .name(name() + ".callpal")
-        .desc("number of callpals executed")
-        .flags(total | pdf | nozero | nonan)
-        ;
-
-    for (int i = 0; i < PAL::NumCodes; ++i) {
-        const char *str = PAL::name(i);
-        if (str)
-            _callpal.subname(i, str);
-    }
-
     _syscall
         .init(SystemCalls<Tru64>::Number)
         .name(name() + ".syscall")
@@ -123,80 +99,11 @@ Statistics::regStats(const string &_name)
         ;
 
     for (int i = 0; i < SystemCalls<Tru64>::Number; ++i) {
-        const char *str = SystemCalls<Tru64>::name(i);
+        const char *str = "Please fix me";//SystemCalls<Tru64>::name(i);
         if (str) {
             _syscall.subname(i, str);
         }
     }
-
-    _mode
-        .init(cpu_mode_num)
-        .name(name() + ".mode_switch")
-        .desc("number of protection mode switches")
-        ;
-
-    for (int i = 0; i < cpu_mode_num; ++i)
-        _mode.subname(i, modestr[i]);
-
-    _modeGood
-        .init(cpu_mode_num)
-        .name(name() + ".mode_good")
-        ;
-
-    for (int i = 0; i < cpu_mode_num; ++i)
-        _modeGood.subname(i, modestr[i]);
-
-    _modeFraction
-        .name(name() + ".mode_switch_good")
-        .desc("fraction of useful protection mode switches")
-        .flags(total)
-        ;
-
-    for (int i = 0; i < cpu_mode_num; ++i)
-        _modeFraction.subname(i, modestr[i]);
-
-    _modeFraction = _modeGood / _mode;
-
-    _modeTicks
-        .init(cpu_mode_num)
-        .name(name() + ".mode_ticks")
-        .desc("number of ticks spent at the given mode")
-        .flags(pdf)
-        ;
-    for (int i = 0; i < cpu_mode_num; ++i)
-        _modeTicks.subname(i, modestr[i]);
-
-    _swap_context
-        .name(name() + ".swap_context")
-        .desc("number of times the context was actually changed")
-        ;
-}
-
-void
-Statistics::setIdleProcess(Addr idlepcbb, ThreadContext *tc)
-{
-    assert(themode == kernel);
-    idleProcess = idlepcbb;
-    themode = idle;
-    changeMode(themode, tc);
-}
-
-void
-Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
-{
-    _mode[newmode]++;
-
-    if (newmode == themode)
-        return;
-
-    DPRINTF(Context, "old mode=%-8s new mode=%-8s\n",
-            modestr[themode], modestr[newmode]);
-
-    _modeGood[newmode]++;
-    _modeTicks[themode] += curTick - lastModeTick;
-
-    lastModeTick = curTick;
-    themode = newmode;
 }
 
 void
@@ -216,65 +123,17 @@ Statistics::swpipl(int ipl)
 }
 
 void
-Statistics::mode(cpu_mode newmode, ThreadContext *tc)
-{
-    Addr pcbb = tc->readMiscReg(AlphaISA::IPR_PALtemp23);
-
-    if (newmode == kernel && pcbb == idleProcess)
-        newmode = idle;
-
-    changeMode(newmode, tc);
-}
-
-void
-Statistics::context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc)
-{
-    assert(themode != user);
-
-    _swap_context++;
-    changeMode(newpcbb == idleProcess ? idle : kernel, tc);
-}
-
-void
-Statistics::callpal(int code, ThreadContext *tc)
-{
-    if (!PAL::name(code))
-        return;
-
-    _callpal[code]++;
-
-    switch (code) {
-      case PAL::callsys: {
-          int number = tc->readIntReg(0);
-          if (SystemCalls<Tru64>::validSyscallNumber(number)) {
-              int cvtnum = SystemCalls<Tru64>::convert(number);
-              _syscall[cvtnum]++;
-          }
-      } break;
-    }
-}
-
-void
 Statistics::serialize(ostream &os)
 {
-    int exemode = themode;
-    SERIALIZE_SCALAR(exemode);
-    SERIALIZE_SCALAR(idleProcess);
     SERIALIZE_SCALAR(iplLast);
     SERIALIZE_SCALAR(iplLastTick);
-    SERIALIZE_SCALAR(lastModeTick);
 }
 
 void
 Statistics::unserialize(Checkpoint *cp, const string &section)
 {
-    int exemode;
-    UNSERIALIZE_SCALAR(exemode);
-    UNSERIALIZE_SCALAR(idleProcess);
     UNSERIALIZE_SCALAR(iplLast);
     UNSERIALIZE_SCALAR(iplLastTick);
-    UNSERIALIZE_SCALAR(lastModeTick);
-    themode = (cpu_mode)exemode;
 }
 
 /* end namespace Kernel */ }

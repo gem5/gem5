@@ -40,7 +40,7 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
+#include "kern/alpha/kernel_stats.hh"
 #include "sim/debug.hh"
 #include "sim/sim_exit.hh"
 
@@ -379,10 +379,10 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
       case AlphaISA::IPR_DTB_CM:
         if (val & 0x18) {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::user, tc);
+                tc->getKernelStats()->mode(TheISA::Kernel::user, tc);
         } else {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::kernel, tc);
+                tc->getKernelStats()->mode(TheISA::Kernel::kernel, tc);
         }
 
       case AlphaISA::IPR_ICM:

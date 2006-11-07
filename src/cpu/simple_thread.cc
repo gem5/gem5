@@ -87,7 +87,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 
     if (use_kernel_stats) {
-        kernelStats = new Kernel::Statistics(system);
+        kernelStats = new TheISA::Kernel::Statistics(system);
     } else {
         kernelStats = NULL;
     }
@@ -158,7 +158,7 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
         quiesceEvent->tc = tc;
     }
 
-    Kernel::Statistics *stats = oldContext->getKernelStats();
+    TheISA::Kernel::Statistics *stats = oldContext->getKernelStats();
     if (stats) {
         kernelStats = stats;
     }
@@ -179,7 +179,7 @@ SimpleThread::copyTC(ThreadContext *context)
     if (quiesce) {
         quiesceEvent = quiesce;
     }
-    Kernel::Statistics *stats = context->getKernelStats();
+    TheISA::Kernel::Statistics *stats = context->getKernelStats();
     if (stats) {
         kernelStats = stats;
     }
