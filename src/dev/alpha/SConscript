@@ -36,32 +36,32 @@ Import('env')
 
 sources = Split('''
 	console.cc
+	tsunami.cc
+	tsunami_cchip.cc
+	tsunami_io.cc
+	tsunami_fake.cc
+	tsunami_pchip.cc
 	''')
-#	dev/baddev.cc
-#	dev/disk_image.cc
-#	dev/etherbus.cc
-#	dev/etherdump.cc
-#	dev/etherint.cc
-#	dev/etherlink.cc
-#	dev/etherpkt.cc
-#	dev/ethertap.cc	
-#       dev/ide_ctrl.cc
-#	dev/ide_disk.cc
-#	dev/io_device.cc
-#	dev/isa_fake.cc
-#	dev/ns_gige.cc
-#	dev/pciconfigall.cc
-#	dev/pcidev.cc
-#	dev/pcifake.cc
-#	dev/pktfifo.cc
-#	dev/platform.cc
-#       dev/simconsole.cc
-#	dev/simple_disk.cc
-#	dev/tsunami.cc
-#	dev/tsunami_cchip.cc
-#	dev/tsunami_io.cc
-#	dev/tsunami_fake.cc
-#	dev/tsunami_pchip.cc
+#	baddev.cc
+#	disk_image.cc
+#	etherbus.cc
+#	etherdump.cc
+#	etherint.cc
+#	etherlink.cc
+#	etherpkt.cc
+#	ethertap.cc	
+#       ide_ctrl.cc
+#	ide_disk.cc
+#	io_device.cc
+#	isa_fake.cc
+#	ns_gige.cc
+#	pciconfigall.cc
+#	pcidev.cc
+#	pcifake.cc
+#	pktfifo.cc
+#	platform.cc
+#       simconsole.cc
+#	simple_disk.cc
 
 # Convert file names to SCons File objects.  This takes care of the
 # path relative to the top of the directory tree.

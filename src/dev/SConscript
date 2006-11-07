@@ -68,11 +68,6 @@ sources += Split('''
 	platform.cc
         simconsole.cc
 	simple_disk.cc
-	tsunami.cc
-	tsunami_cchip.cc
-	tsunami_io.cc
-	tsunami_fake.cc
-	tsunami_pchip.cc
 	''')
 
 # Let the target architecture define what additional sources it needs

@@ -38,7 +38,7 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
-#include "dev/tsunami.hh"
+#include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"
 
 /**
