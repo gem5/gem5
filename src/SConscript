@@ -294,8 +294,9 @@ arch_sources = SConscript(os.path.join('arch', 'SConscript'), exports = 'env')
 
 cpu_sources = SConscript(os.path.join('cpu', 'SConscript'), exports = 'env')
 
-dev_sources = SConscript(os.path.join('dev', 'SConscript'), exports = 'env')
-full_system_sources += dev_sources
+if env['FULL_SYSTEM']:
+    dev_sources = SConscript(os.path.join('dev', 'SConscript'), exports = 'env')
+    full_system_sources += dev_sources
 
 # This is outside of cpu/SConscript since the source directory isn't
 # underneath 'cpu'.
