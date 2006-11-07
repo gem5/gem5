@@ -171,10 +171,10 @@ def switchCpus(cpuList):
 
     for cpu in old_cpus:
         if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU", cpu
+            raise TypeError, "%s is not of type BaseCPU" % cpu
     for cpu in new_cpus:
         if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU", cpu
+            raise TypeError, "%s is not of type BaseCPU" % cpu
 
     # Drain all of the individual CPUs
     drain_event = cc_main.createCountedDrain()
