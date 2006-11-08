@@ -50,118 +50,222 @@ namespace SparcISA
 {
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<InternalProcessorError>::vals = {"intprocerr", 0x029, 4};
+    SparcFault<PowerOnReset>::vals =
+    {"power_on_reset", 0x001, 0, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<MemAddressNotAligned>::vals = {"unalign", 0x034, 10};
+    SparcFault<WatchDogReset>::vals =
+    {"watch_dog_reset", 0x002, 120, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<PowerOnReset>::vals = {"pow_reset", 0x001, 0};
+    SparcFault<ExternallyInitiatedReset>::vals =
+    {"externally_initiated_reset", 0x003, 110, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<WatchDogReset>::vals = {"watch_dog_reset", 0x002, 1};
+    SparcFault<SoftwareInitiatedReset>::vals =
+    {"software_initiated_reset", 0x004, 130, {SH, SH, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<ExternallyInitiatedReset>::vals = {"extern_reset", 0x003, 1};
+    SparcFault<REDStateException>::vals =
+    {"RED_state_exception", 0x005, 1, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<SoftwareInitiatedReset>::vals = {"software_reset", 0x004, 1};
+    SparcFault<StoreError>::vals =
+    {"store_error", 0x007, 201, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<REDStateException>::vals = {"red_counte", 0x005, 1};
+    SparcFault<InstructionAccessException>::vals =
+    {"instruction_access_exception", 0x008, 300, {H, H, H}};
+
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessMMUMiss>::vals =
+    {"inst_mmu", 0x009, 2, {H, H, H}};*/
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionAccessException>::vals = {"inst_access", 0x008, 5};
+    SparcFault<InstructionAccessError>::vals =
+    {"instruction_access_error", 0x00A, 400, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionAccessMMUMiss>::vals = {"inst_mmu", 0x009, 2};
+    SparcFault<IllegalInstruction>::vals =
+    {"illegal_instruction", 0x010, 620, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionAccessError>::vals = {"inst_error", 0x00A, 3};
+    SparcFault<PrivilegedOpcode>::vals =
+    {"privileged_opcode", 0x011, 700, {P, SH, SH}};
+
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedLDD>::vals =
+    {"unimp_ldd", 0x012, 6, {H, H, H}};*/
+
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedSTD>::vals =
+    {"unimp_std", 0x013, 6, {H, H, H}};*/
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<IllegalInstruction>::vals = {"illegal_inst", 0x010, 7};
+    SparcFault<FpDisabled>::vals =
+    {"fp_disabled", 0x020, 800, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<PrivilegedOpcode>::vals = {"priv_opcode", 0x011, 6};
+    SparcFault<FpExceptionIEEE754>::vals =
+    {"fp_exception_ieee_754", 0x021, 1110, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<UnimplementedLDD>::vals = {"unimp_ldd", 0x012, 6};
+    SparcFault<FpExceptionOther>::vals =
+    {"fp_exception_other", 0x022, 1110, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<UnimplementedSTD>::vals = {"unimp_std", 0x013, 6};
+    SparcFault<TagOverflow>::vals =
+    {"tag_overflow", 0x023, 1400, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<FpDisabled>::vals = {"fp_disabled", 0x020, 8};
+    SparcFault<CleanWindow>::vals =
+    {"clean_window", 0x024, 1010, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<FpExceptionIEEE754>::vals = {"fp_754", 0x021, 11};
+    SparcFault<DivisionByZero>::vals =
+    {"division_by_zero", 0x028, 1500, {P, P, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<FpExceptionOther>::vals = {"fp_other", 0x022, 11};
+    SparcFault<InternalProcessorError>::vals =
+    {"internal_processor_error", 0x029, 4, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<TagOverflow>::vals = {"tag_overflow", 0x023, 14};
+    SparcFault<InstructionInvalidTSBEntry>::vals =
+    {"instruction_invalid_tsb_entry", 0x02A, 210, {H, H, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<DivisionByZero>::vals = {"div_by_zero", 0x028, 15};
+    SparcFault<DataInvalidTSBEntry>::vals =
+    {"data_invalid_tsb_entry", 0x02B, 1203, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessException>::vals = {"data_access", 0x030, 12};
+    SparcFault<DataAccessException>::vals =
+    {"data_access_exception", 0x030, 1201, {H, H, H}};
+
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessMMUMiss>::vals =
+    {"data_mmu", 0x031, 12, {H, H, H}};*/
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessMMUMiss>::vals = {"data_mmu", 0x031, 12};
+    SparcFault<DataAccessError>::vals =
+    {"data_access_error", 0x032, 1210, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessError>::vals = {"data_error", 0x032, 12};
+    SparcFault<DataAccessProtection>::vals =
+    {"data_access_protection", 0x033, 1207, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessProtection>::vals = {"data_protection", 0x033, 12};
+    SparcFault<MemAddressNotAligned>::vals =
+    {"mem_address_not_aligned", 0x034, 1020, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<LDDFMemAddressNotAligned>::vals = {"unalign_lddf", 0x035, 10};
+    SparcFault<LDDFMemAddressNotAligned>::vals =
+    {"LDDF_mem_address_not_aligned", 0x035, 1010, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<STDFMemAddressNotAligned>::vals = {"unalign_stdf", 0x036, 10};
+    SparcFault<STDFMemAddressNotAligned>::vals =
+    {"STDF_mem_address_not_aligned", 0x036, 1010, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<PrivilegedAction>::vals = {"priv_action", 0x037, 11};
+    SparcFault<PrivilegedAction>::vals =
+    {"privileged_action", 0x037, 1110, {H, H, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<LDQFMemAddressNotAligned>::vals = {"unalign_ldqf", 0x038, 10};
+    SparcFault<LDQFMemAddressNotAligned>::vals =
+    {"LDQF_mem_address_not_aligned", 0x038, 1010, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<STQFMemAddressNotAligned>::vals = {"unalign_stqf", 0x039, 10};
+    SparcFault<STQFMemAddressNotAligned>::vals =
+    {"STQF_mem_address_not_aligned", 0x039, 1010, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<AsyncDataError>::vals = {"async_data", 0x040, 2};
+    SparcFault<InstructionRealTranslationMiss>::vals =
+    {"instruction_real_translation_miss", 0x03E, 208, {H, H, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<CleanWindow>::vals = {"clean_win", 0x024, 10};
+    SparcFault<DataRealTranslationMiss>::vals =
+    {"data_real_translation_miss", 0x03F, 1203, {H, H, H}};
 
-//The enumerated faults
-
-template<> SparcFaultBase::FaultVals
-    SparcFault<InterruptLevelN>::vals = {"interrupt_n", 0x041, 0};
-
-template<> SparcFaultBase::FaultVals
-    SparcFault<SpillNNormal>::vals = {"spill_n_normal", 0x080, 9};
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<AsyncDataError>::vals =
+    {"async_data", 0x040, 2, {H, H, H}};*/
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<SpillNOther>::vals = {"spill_n_other", 0x0A0, 9};
+    SparcFault<InterruptLevelN>::vals =
+    {"interrupt_level_n", 0x041, 0, {P, P, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<FillNNormal>::vals = {"fill_n_normal", 0x0C0, 9};
+    SparcFault<HstickMatch>::vals =
+    {"hstick_match", 0x05E, 1601, {H, H, H}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<FillNOther>::vals = {"fill_n_other", 0x0E0, 9};
+    SparcFault<TrapLevelZero>::vals =
+    {"trap_level_zero", 0x05F, 202, {H, H, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<TrapInstruction>::vals = {"trap_inst_n", 0x100, 16};
+    SparcFault<PAWatchpoint>::vals =
+    {"PA_watchpoint", 0x061, 1209, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<VAWatchpoint>::vals =
+    {"VA_watchpoint", 0x062, 1120, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastInstructionAccessMMUMiss>::vals =
+    {"fast_instruction_access_MMU_miss", 0x064, 208, {H, H, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessMMUMiss>::vals =
+    {"fast_data_access_MMU_miss", 0x068, 1203, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessProtection>::vals =
+    {"fast_data_access_protection", 0x06C, 1207, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionBreakpoint>::vals =
+    {"instruction_break", 0x076, 610, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<CpuMondo>::vals =
+    {"cpu_mondo", 0x07C, 1608, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<DevMondo>::vals =
+    {"dev_mondo", 0x07D, 1611, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<ResumeableError>::vals =
+    {"resume_error", 0x07E, 3330, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNNormal>::vals =
+    {"spill_n_normal", 0x080, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNOther>::vals =
+    {"spill_n_other", 0x0A0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNNormal>::vals =
+    {"fill_n_normal", 0x0C0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNOther>::vals =
+    {"fill_n_other", 0x0E0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<TrapInstruction>::vals =
+    {"trap_instruction", 0x100, 1602, {P, P, H}};
 
 #if !FULL_SYSTEM
 template<> SparcFaultBase::FaultVals
-    SparcFault<PageTableFault>::vals = {"page_table_fault", 0x0000, 0};
+    SparcFault<PageTableFault>::vals =
+    {"page_table_fault", 0x0000, 0, {SH, SH, SH}};
 #endif
 
 /**
