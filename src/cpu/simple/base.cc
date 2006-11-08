@@ -46,7 +46,6 @@
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
 #include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
@@ -58,10 +57,11 @@
 #include "sim/system.hh"
 
 #if FULL_SYSTEM
-#include "base/remote_gdb.hh"
 #include "arch/tlb.hh"
 #include "arch/stacktrace.hh"
 #include "arch/vtophys.hh"
+#include "base/remote_gdb.hh"
+#include "kern/kernel_stats.hh"
 #else // !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
