@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,53 +25,55 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Andrew Schultz
  */
 
-#ifndef __ARCH_SPARC_TLB_HH__
-#define __ARCH_SPARC_TLB_HH__
-
-#include "mem/request.hh"
-#include "sim/faults.hh"
-#include "sim/sim_object.hh"
-
-class ThreadContext;
+#include "arch/sparc/tlb.hh"
+#include "sim/builder.hh"
 
 namespace SparcISA
 {
-    class TLB : public SimObject
+    DEFINE_SIM_OBJECT_CLASS_NAME("SparcTLB", TLB)
+
+    BEGIN_DECLARE_SIM_OBJECT_PARAMS(ITB)
+
+        Param<int> size;
+
+    END_DECLARE_SIM_OBJECT_PARAMS(ITB)
+
+    BEGIN_INIT_SIM_OBJECT_PARAMS(ITB)
+
+        INIT_PARAM_DFLT(size, "TLB size", 48)
+
+    END_INIT_SIM_OBJECT_PARAMS(ITB)
+
+
+    CREATE_SIM_OBJECT(ITB)
     {
-      public:
-        TLB(const std::string &name, int size) : SimObject(name)
-        {
-        }
-    };
+        return new ITB(getInstanceName(), size);
+    }
 
-    class ITB : public TLB
+    REGISTER_SIM_OBJECT("SparcITB", ITB)
+
+    BEGIN_DECLARE_SIM_OBJECT_PARAMS(DTB)
+
+        Param<int> size;
+
+    END_DECLARE_SIM_OBJECT_PARAMS(DTB)
+
+    BEGIN_INIT_SIM_OBJECT_PARAMS(DTB)
+
+        INIT_PARAM_DFLT(size, "TLB size", 64)
+
+    END_INIT_SIM_OBJECT_PARAMS(DTB)
+
+
+    CREATE_SIM_OBJECT(DTB)
     {
-      public:
-        ITB(const std::string &name, int size) : TLB(name, size)
-        {
-        }
+        return new DTB(getInstanceName(), size);
+    }
 
-        Fault translate(RequestPtr &req, ThreadContext *tc) const
-        {
-            return NoFault;
-        }
-    };
-
-    class DTB : public TLB
-    {
-      public:
-        DTB(const std::string &name, int size) : TLB(name, size)
-        {
-        }
-
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const
-        {
-            return NoFault;
-        }
-    };
+    REGISTER_SIM_OBJECT("SparcDTB", DTB)
 }
-
-#endif // __ARCH_SPARC_TLB_HH__
