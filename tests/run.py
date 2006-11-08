@@ -47,7 +47,8 @@ execfile(os.path.join(tests_root, 'configs', config + '.py'))
 
 # set default maxtick... script can override
 # -1 means run forever
-maxtick = -1
+from m5 import MaxTick
+maxtick = MaxTick
 
 # tweak configuration for specific test
 
