@@ -29,6 +29,8 @@
  *          Nathan Binkert
  */
 
+//For ISA_HAS_DELAY_SLOT
+#include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/system_events.hh"
@@ -45,4 +47,7 @@ SkipFuncEvent::process(ThreadContext *tc)
 
     tc->setPC(newpc);
     tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
+#if ISA_HAS_DELAY_SLOT
+    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+#endif
 }
