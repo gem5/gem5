@@ -98,12 +98,15 @@ Statistics::regStats(const string &_name)
         .flags(total | pdf | nozero | nonan)
         ;
 
+    //@todo This needs to get the names of syscalls from an appropriate place.
+#if 0
     for (int i = 0; i < SystemCalls<Tru64>::Number; ++i) {
-        const char *str = "Please fix me";//SystemCalls<Tru64>::name(i);
+        const char *str = SystemCalls<Tru64>::name(i);
         if (str) {
             _syscall.subname(i, str);
         }
     }
+#endif
 }
 
 void
