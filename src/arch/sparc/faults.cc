@@ -291,9 +291,9 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
 
     //Update the global register level
     if(1/*We're delivering the trap in priveleged mode*/)
-        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxGL));
+        tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxGL));
     else
-        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxPGL));
+        tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxPGL));
 
     //PSTATE.mm is unchanged
     //PSTATE.pef = whether or not an fpu is present
