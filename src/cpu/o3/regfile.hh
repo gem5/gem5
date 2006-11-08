@@ -39,7 +39,7 @@
 #include "cpu/o3/comm.hh"
 
 #if FULL_SYSTEM
-#include "kern/kernel_stats.hh"
+#include "arch/kernel_stats.hh"
 #endif
 
 #include <vector>

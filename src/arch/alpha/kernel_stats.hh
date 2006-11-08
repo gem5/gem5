@@ -25,33 +25,72 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Lisa Hsu
+ *          Nathan Binkert
  */
 
-#ifndef __ARCH_SPARC_KERNEL_STATS_HH__
-#define __ARCH_SPARC_KERNEL_STATS_HH__
+#ifndef __ARCH_ALPHA_KERNEL_STATS_HH__
+#define __ARCH_ALPHA_KERNEL_STATS_HH__
 
 #include <map>
 #include <stack>
 #include <string>
 #include <vector>
 
-#include "kern/base_kernel_stats.hh"
+#include "cpu/static_inst.hh"
+#include "kern/kernel_stats.hh"
 
-namespace SparcISA {
+class BaseCPU;
+class ThreadContext;
+class FnEvent;
+// What does kernel stats expect is included?
+class System;
+
+namespace AlphaISA {
 namespace Kernel {
 
-enum cpu_mode { hypervisor, kernel, user, idle, cpu_mode_num };
+enum cpu_mode { kernel, user, idle, cpu_mode_num };
 extern const char *modestr[];
 
 class Statistics : public ::Kernel::Statistics
 {
+  protected:
+    Addr idleProcess;
+    cpu_mode themode;
+    Tick lastModeTick;
+
+    void changeMode(cpu_mode newmode, ThreadContext *tc);
+
+  private:
+    Stats::Vector<> _callpal;
+//    Stats::Vector<> _faults;
+
+    Stats::Vector<> _mode;
+    Stats::Vector<> _modeGood;
+    Stats::Formula _modeFraction;
+    Stats::Vector<> _modeTicks;
+
+    Stats::Scalar<> _swap_context;
+
   public:
-    Statistics(System *system) : ::Kernel::Statistics(system)
-    {}
+    Statistics(System *system);
+
+    void regStats(const std::string &name);
+
+  public:
+    void mode(cpu_mode newmode, ThreadContext *tc);
+    void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
+    void callpal(int code, ThreadContext *tc);
+    void hwrei() { _hwrei++; }
+
+    void setIdleProcess(Addr idle, ThreadContext *tc);
+
+  public:
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 } /* end namespace AlphaISA::Kernel */
 } /* end namespace AlphaISA */
 
-#endif // __ARCH_SPARC_KERNEL_STATS_HH__
+#endif // __ARCH_ALPHA_KERNEL_STATS_HH__

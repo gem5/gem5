@@ -37,8 +37,8 @@
 #include "sim/serialize.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #endif
 
 #if FULL_SYSTEM

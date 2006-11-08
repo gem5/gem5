@@ -33,7 +33,7 @@
 
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/base_kernel_stats.hh"
+#include "kern/kernel_stats.hh"
 #include "kern/tru64/tru64_syscalls.hh"
 #include "sim/system.hh"
 

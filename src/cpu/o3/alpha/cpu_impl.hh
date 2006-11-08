@@ -48,8 +48,8 @@
 #if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/isa_traits.hh"
+#include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 #endif

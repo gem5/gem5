@@ -38,8 +38,8 @@ class ThreadContext;
 class BreakPCEvent;
 class IdleStartEvent;
 
+#include "arch/alpha/idle_event.hh"
 #include "arch/alpha/system.hh"
-#include "kern/alpha/idle_event.hh"
 #include "kern/linux/events.hh"
 
 using namespace AlphaISA;

@@ -31,6 +31,7 @@
 
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
 #include "arch/alpha/kgdb.h"
@@ -40,7 +41,6 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "kern/alpha/kernel_stats.hh"
 #include "sim/debug.hh"
 #include "sim/sim_exit.hh"
 

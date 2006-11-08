@@ -34,7 +34,7 @@ import os.path, sys
 Import('env')
 
 sources = Split('''
-	base_kernel_stats.cc
+	kernel_stats.cc
 	system_events.cc
 	linux/events.cc
 	linux/linux_syscalls.cc
@@ -44,26 +44,5 @@ sources = Split('''
 # Convert file names to SCons File objects.  This takes care of the
 # path relative to the top of the directory tree.
 sources = [File(s) for s in sources]
-
-#################################################################
-#
-# ISA "switch header" generation.
-#
-# Auto-generate arch headers that include the right ISA-specific
-# header based on the setting of THE_ISA preprocessor variable.
-#
-#################################################################
-
-# List of headers to generate
-kern_switch_hdrs = Split('''
-        kernel_stats.hh
-        ''')
-
-env.make_switching_dir('kern', kern_switch_hdrs, env)
-
-isa = env['TARGET_ISA'] # someday this may be a list of ISAs
-
-# Let the target architecture define what additional sources it needs
-sources += SConscript(os.path.join(isa, 'SConscript'), exports = 'env')
 
 Return('sources')

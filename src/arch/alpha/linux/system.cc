@@ -42,6 +42,7 @@
 
 #include "arch/arguments.hh"
 #include "arch/vtophys.hh"
+#include "arch/alpha/idle_event.hh"
 #include "arch/alpha/linux/system.hh"
 #include "arch/alpha/linux/threadinfo.hh"
 #include "arch/alpha/system.hh"
@@ -49,7 +50,6 @@
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "dev/platform.hh"
-#include "kern/alpha/idle_event.hh"
 #include "kern/linux/printk.hh"
 #include "kern/linux/events.hh"
 #include "mem/physical.hh"

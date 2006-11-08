@@ -39,13 +39,13 @@
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "arch/stacktrace.hh"

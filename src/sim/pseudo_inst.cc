@@ -34,14 +34,14 @@
 
 #include <string>
 
-#include "sim/pseudo_inst.hh"
 #include "arch/vtophys.hh"
 #include "base/annotate.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
+#include "arch/kernel_stats.hh"
 #include "sim/param.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"

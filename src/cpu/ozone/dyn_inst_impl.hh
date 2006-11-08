@@ -31,7 +31,10 @@
 #include "sim/faults.hh"
 #include "config/full_system.hh"
 #include "cpu/ozone/dyn_inst.hh"
+
+#if FULL_SYSTEM
 #include "kern/kernel_stats.hh"
+#endif
 
 template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)

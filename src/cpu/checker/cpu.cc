@@ -38,8 +38,8 @@
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
-#include "kern/kernel_stats.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;

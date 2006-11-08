@@ -29,9 +29,9 @@
  *          Nathan Binkert
  */
 
+#include "arch/alpha/idle_event.hh"
+#include "arch/alpha/kernel_stats.hh"
 #include "cpu/thread_context.hh"
-#include "kern/alpha/idle_event.hh"
-#include "kern/kernel_stats.hh"
 
 using namespace TheISA;
 

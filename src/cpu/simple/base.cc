@@ -57,11 +57,11 @@
 #include "sim/system.hh"
 
 #if FULL_SYSTEM
-#include "arch/tlb.hh"
+#include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
+#include "arch/tlb.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
-#include "kern/kernel_stats.hh"
 #else // !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
