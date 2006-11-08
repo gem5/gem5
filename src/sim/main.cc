@@ -309,18 +309,14 @@ finalInit()
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
 SimLoopExitEvent *
-simulate(Tick num_cycles = -1)
+simulate(Tick num_cycles = MaxTick)
 {
     warn("Entering event queue @ %d.  Starting simulation...\n", curTick);
 
-    // Fix up num_cycles.  Special default value -1 means simulate
-    // "forever"... schedule event at MaxTick just to be safe.
-    // Otherwise it's a delta for additional cycles to simulate past
-    // curTick, and thus must be non-negative.
-    if (num_cycles == -1)
-        num_cycles = MaxTick;
-    else if (num_cycles < 0)
+    if (num_cycles < 0)
         fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
+    else if (curTick + num_cycles < 0)  //Overflow
+        num_cycles = MaxTick;
     else
         num_cycles = curTick + num_cycles;
 

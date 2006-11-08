@@ -65,7 +65,7 @@ def run(options, root, testsys, cpu_class):
         print "simulating for: ", simtime
         maxtick = simtime
     else:
-        maxtick = -1
+        maxtick = m5.MaxTick
 
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
@@ -191,7 +191,7 @@ def run(options, root, testsys, cpu_class):
         sim_ticks = when
         exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
         while num_checkpoints < max_checkpoints:
-            if (sim_ticks + period) > maxtick and maxtick != -1:
+            if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
                 break
@@ -214,11 +214,7 @@ def run(options, root, testsys, cpu_class):
                 exit_cause =  "maximum %d checkpoints dropped" % max_checkpoints
                 break
 
-            if maxtick == -1:
-                exit_event = m5.simulate(maxtick)
-            else:
-                exit_event = m5.simulate(maxtick - m5.curTick())
-
+            exit_event = m5.simulate(maxtick - m5.curTick())
             exit_cause = exit_event.getCause()
 
     if exit_cause == '':

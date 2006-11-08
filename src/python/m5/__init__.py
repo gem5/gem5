@@ -39,6 +39,9 @@ from cc_main import simulate, SimLoopExitEvent
 # import the m5 compile options
 import defines
 
+# define a MaxTick parameter
+MaxTick = 2**63 - 1
+
 # define this here so we can use it right away if necessary
 def panic(string):
     print >>sys.stderr, 'panic:', string
