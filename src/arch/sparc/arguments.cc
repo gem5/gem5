@@ -54,16 +54,18 @@ Arguments::Data::alloc(size_t size)
 uint64_t
 Arguments::getArg(bool fp)
 {
-    //XXX This needs to be replaced with the sparc version
+    //The caller uses %o0-%05 for the first 6 arguments even if their floating
+    //point. Double precision floating point values take two registers/args.
+    //Quads, structs, and unions are passed as pointers. All arguments beyond
+    //the sixth are passed on the stack past the 16 word window save area,
+    //space for the struct/union return pointer, and space reserved for the
+    //first 6 arguments which the caller may use but doesn't have to.
     if (number < 6) {
-        if (fp)
-            return tc->readFloatRegBits(16 + number);
-        else
-            return tc->readIntReg(16 + number);
+        return tc->readIntReg(8 + number);
     } else {
-        Addr sp = tc->readIntReg(30);
+        Addr sp = tc->readIntReg(14);
         VirtualPort *vp = tc->getVirtPort(tc);
-        uint64_t arg = vp->read<uint64_t>(sp + (number-6) * sizeof(uint64_t));
+        uint64_t arg = vp->read<uint64_t>(sp + 92 + (number-6) * sizeof(uint64_t));
         tc->delVirtPort(vp);
         return arg;
     }

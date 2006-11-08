@@ -144,6 +144,6 @@ class Arguments
     }
 };
 
-}; // namespace AlphaISA
+}; // namespace SparcISA
 
-#endif // __ARCH_ALPHA_ARGUMENTS_HH__
+#endif // __ARCH_SPARC_ARGUMENTS_HH__
