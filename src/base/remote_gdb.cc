@@ -247,7 +247,7 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize
       system(_system), pmem(_system->physmem), context(c),
       gdbregs(cacheSize)
 {
-    memset(gdbregs.regs, 0, gdbregs.size);
+    memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -610,7 +610,7 @@ BaseRemoteGDB::trap(int type)
     uint64_t val;
     size_t datalen, len;
     char data[GDBPacketBufLen + 1];
-    char buffer[gdbregs.size * 2 + 256];
+    char buffer[gdbregs.bytes() * 2 + 256];
     const char *p;
     char command, subcmd;
     string var;
@@ -662,15 +662,15 @@ BaseRemoteGDB::trap(int type)
             continue;
 
           case GDBRegR:
-            if (2 * gdbregs.size > sizeof(buffer))
+            if (2 * gdbregs.bytes() > sizeof(buffer))
                 panic("buffer too small");
 
-            mem2hex(buffer, gdbregs.regs, gdbregs.size);
+            mem2hex(buffer, gdbregs.regs, gdbregs.bytes());
             send(buffer);
             continue;
 
           case GDBRegW:
-            p = hex2mem(gdbregs.regs, p, gdbregs.size);
+            p = hex2mem(gdbregs.regs, p, gdbregs.bytes());
             if (p == NULL || *p != '\0')
                 send("E01");
             else {

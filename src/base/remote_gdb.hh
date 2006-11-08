@@ -145,6 +145,7 @@ class BaseRemoteGDB
 
         uint64_t * regs;
         size_t size;
+        size_t bytes() { return size * sizeof(uint64_t); }
     };
 
     GdbRegCache gdbregs;

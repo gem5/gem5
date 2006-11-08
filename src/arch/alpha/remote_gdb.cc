@@ -141,7 +141,7 @@ using namespace TheISA;
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : BaseRemoteGDB(_system, c, KGDB_NUMREGS)
 {
-    memset(gdbregs.regs, 0, gdbregs.size);
+    memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
 ///////////////////////////////////////////////////////////
@@ -201,7 +201,7 @@ RemoteGDB::acc(Addr va, size_t len)
 void
 RemoteGDB::getregs()
 {
-    memset(gdbregs.regs, 0, gdbregs.size);
+    memset(gdbregs.regs, 0, gdbregs.bytes());
 
     gdbregs.regs[KGDB_REG_PC] = context->readPC();
 
