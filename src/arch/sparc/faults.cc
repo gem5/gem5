@@ -49,192 +49,119 @@ using namespace std;
 namespace SparcISA
 {
 
-FaultName     InternalProcessorError::_name = "intprocerr";
-TrapType      InternalProcessorError::_trapType = 0x029;
-FaultPriority InternalProcessorError::_priority = 4;
-FaultStat     InternalProcessorError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InternalProcessorError>::vals = {"intprocerr", 0x029, 4};
 
-FaultName     MemAddressNotAligned::_name = "unalign";
-TrapType      MemAddressNotAligned::_trapType = 0x034;
-FaultPriority MemAddressNotAligned::_priority = 10;
-FaultStat     MemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<MemAddressNotAligned>::vals = {"unalign", 0x034, 10};
 
-FaultName     PowerOnReset::_name = "pow_reset";
-TrapType      PowerOnReset::_trapType = 0x001;
-FaultPriority PowerOnReset::_priority = 0;
-FaultStat     PowerOnReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PowerOnReset>::vals = {"pow_reset", 0x001, 0};
 
-FaultName     WatchDogReset::_name = "watch_dog_reset";
-TrapType      WatchDogReset::_trapType = 0x002;
-FaultPriority WatchDogReset::_priority = 1;
-FaultStat     WatchDogReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<WatchDogReset>::vals = {"watch_dog_reset", 0x002, 1};
 
-FaultName     ExternallyInitiatedReset::_name = "extern_reset";
-TrapType      ExternallyInitiatedReset::_trapType = 0x003;
-FaultPriority ExternallyInitiatedReset::_priority = 1;
-FaultStat     ExternallyInitiatedReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<ExternallyInitiatedReset>::vals = {"extern_reset", 0x003, 1};
 
-FaultName     SoftwareInitiatedReset::_name = "software_reset";
-TrapType      SoftwareInitiatedReset::_trapType = 0x004;
-FaultPriority SoftwareInitiatedReset::_priority = 1;
-FaultStat     SoftwareInitiatedReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<SoftwareInitiatedReset>::vals = {"software_reset", 0x004, 1};
 
-FaultName     REDStateException::_name = "red_counte";
-TrapType      REDStateException::_trapType = 0x005;
-FaultPriority REDStateException::_priority = 1;
-FaultStat     REDStateException::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<REDStateException>::vals = {"red_counte", 0x005, 1};
 
-FaultName     InstructionAccessException::_name = "inst_access";
-TrapType      InstructionAccessException::_trapType = 0x008;
-FaultPriority InstructionAccessException::_priority = 5;
-FaultStat     InstructionAccessException::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessException>::vals = {"inst_access", 0x008, 5};
 
-FaultName     InstructionAccessMMUMiss::_name = "inst_mmu";
-TrapType      InstructionAccessMMUMiss::_trapType = 0x009;
-FaultPriority InstructionAccessMMUMiss::_priority = 2;
-FaultStat     InstructionAccessMMUMiss::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessMMUMiss>::vals = {"inst_mmu", 0x009, 2};
 
-FaultName     InstructionAccessError::_name = "inst_error";
-TrapType      InstructionAccessError::_trapType = 0x00A;
-FaultPriority InstructionAccessError::_priority = 3;
-FaultStat     InstructionAccessError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessError>::vals = {"inst_error", 0x00A, 3};
 
-FaultName     IllegalInstruction::_name = "illegal_inst";
-TrapType      IllegalInstruction::_trapType = 0x010;
-FaultPriority IllegalInstruction::_priority = 7;
-FaultStat     IllegalInstruction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<IllegalInstruction>::vals = {"illegal_inst", 0x010, 7};
 
-FaultName     PrivilegedOpcode::_name = "priv_opcode";
-TrapType      PrivilegedOpcode::_trapType = 0x011;
-FaultPriority PrivilegedOpcode::_priority = 6;
-FaultStat     PrivilegedOpcode::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PrivilegedOpcode>::vals = {"priv_opcode", 0x011, 6};
 
-FaultName     UnimplementedLDD::_name = "unimp_ldd";
-TrapType      UnimplementedLDD::_trapType = 0x012;
-FaultPriority UnimplementedLDD::_priority = 6;
-FaultStat     UnimplementedLDD::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedLDD>::vals = {"unimp_ldd", 0x012, 6};
 
-FaultName     UnimplementedSTD::_name = "unimp_std";
-TrapType      UnimplementedSTD::_trapType = 0x013;
-FaultPriority UnimplementedSTD::_priority = 6;
-FaultStat     UnimplementedSTD::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedSTD>::vals = {"unimp_std", 0x013, 6};
 
-FaultName     FpDisabled::_name = "fp_disabled";
-TrapType      FpDisabled::_trapType = 0x020;
-FaultPriority FpDisabled::_priority = 8;
-FaultStat     FpDisabled::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpDisabled>::vals = {"fp_disabled", 0x020, 8};
 
-FaultName     FpExceptionIEEE754::_name = "fp_754";
-TrapType      FpExceptionIEEE754::_trapType = 0x021;
-FaultPriority FpExceptionIEEE754::_priority = 11;
-FaultStat     FpExceptionIEEE754::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpExceptionIEEE754>::vals = {"fp_754", 0x021, 11};
 
-FaultName     FpExceptionOther::_name = "fp_other";
-TrapType      FpExceptionOther::_trapType = 0x022;
-FaultPriority FpExceptionOther::_priority = 11;
-FaultStat     FpExceptionOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpExceptionOther>::vals = {"fp_other", 0x022, 11};
 
-FaultName     TagOverflow::_name = "tag_overflow";
-TrapType      TagOverflow::_trapType = 0x023;
-FaultPriority TagOverflow::_priority = 14;
-FaultStat     TagOverflow::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<TagOverflow>::vals = {"tag_overflow", 0x023, 14};
 
-FaultName     DivisionByZero::_name = "div_by_zero";
-TrapType      DivisionByZero::_trapType = 0x028;
-FaultPriority DivisionByZero::_priority = 15;
-FaultStat     DivisionByZero::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DivisionByZero>::vals = {"div_by_zero", 0x028, 15};
 
-FaultName     DataAccessException::_name = "data_access";
-TrapType      DataAccessException::_trapType = 0x030;
-FaultPriority DataAccessException::_priority = 12;
-FaultStat     DataAccessException::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessException>::vals = {"data_access", 0x030, 12};
 
-FaultName     DataAccessMMUMiss::_name = "data_mmu";
-TrapType      DataAccessMMUMiss::_trapType = 0x031;
-FaultPriority DataAccessMMUMiss::_priority = 12;
-FaultStat     DataAccessMMUMiss::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessMMUMiss>::vals = {"data_mmu", 0x031, 12};
 
-FaultName     DataAccessError::_name = "data_error";
-TrapType      DataAccessError::_trapType = 0x032;
-FaultPriority DataAccessError::_priority = 12;
-FaultStat     DataAccessError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessError>::vals = {"data_error", 0x032, 12};
 
-FaultName     DataAccessProtection::_name = "data_protection";
-TrapType      DataAccessProtection::_trapType = 0x033;
-FaultPriority DataAccessProtection::_priority = 12;
-FaultStat     DataAccessProtection::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessProtection>::vals = {"data_protection", 0x033, 12};
 
-FaultName     LDDFMemAddressNotAligned::_name = "unalign_lddf";
-TrapType      LDDFMemAddressNotAligned::_trapType = 0x035;
-FaultPriority LDDFMemAddressNotAligned::_priority = 10;
-FaultStat     LDDFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDDFMemAddressNotAligned>::vals = {"unalign_lddf", 0x035, 10};
 
-FaultName     STDFMemAddressNotAligned::_name = "unalign_stdf";
-TrapType      STDFMemAddressNotAligned::_trapType = 0x036;
-FaultPriority STDFMemAddressNotAligned::_priority = 10;
-FaultStat     STDFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STDFMemAddressNotAligned>::vals = {"unalign_stdf", 0x036, 10};
 
-FaultName     PrivilegedAction::_name = "priv_action";
-TrapType      PrivilegedAction::_trapType = 0x037;
-FaultPriority PrivilegedAction::_priority = 11;
-FaultStat     PrivilegedAction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PrivilegedAction>::vals = {"priv_action", 0x037, 11};
 
-FaultName     LDQFMemAddressNotAligned::_name = "unalign_ldqf";
-TrapType      LDQFMemAddressNotAligned::_trapType = 0x038;
-FaultPriority LDQFMemAddressNotAligned::_priority = 10;
-FaultStat     LDQFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDQFMemAddressNotAligned>::vals = {"unalign_ldqf", 0x038, 10};
 
-FaultName     STQFMemAddressNotAligned::_name = "unalign_stqf";
-TrapType      STQFMemAddressNotAligned::_trapType = 0x039;
-FaultPriority STQFMemAddressNotAligned::_priority = 10;
-FaultStat     STQFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STQFMemAddressNotAligned>::vals = {"unalign_stqf", 0x039, 10};
 
-FaultName     AsyncDataError::_name = "async_data";
-TrapType      AsyncDataError::_trapType = 0x040;
-FaultPriority AsyncDataError::_priority = 2;
-FaultStat     AsyncDataError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<AsyncDataError>::vals = {"async_data", 0x040, 2};
 
-FaultName     CleanWindow::_name = "clean_win";
-TrapType      CleanWindow::_trapType = 0x024;
-FaultPriority CleanWindow::_priority = 10;
-FaultStat     CleanWindow::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<CleanWindow>::vals = {"clean_win", 0x024, 10};
 
 //The enumerated faults
 
-FaultName     InterruptLevelN::_name = "interrupt_n";
-TrapType      InterruptLevelN::_baseTrapType = 0x041;
-FaultStat     InterruptLevelN::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InterruptLevelN>::vals = {"interrupt_n", 0x041, 0};
 
-FaultName     SpillNNormal::_name = "spill_n_normal";
-TrapType      SpillNNormal::_baseTrapType = 0x080;
-FaultPriority SpillNNormal::_priority = 9;
-FaultStat     SpillNNormal::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNNormal>::vals = {"spill_n_normal", 0x080, 9};
 
-FaultName     SpillNOther::_name = "spill_n_other";
-TrapType      SpillNOther::_baseTrapType = 0x0A0;
-FaultPriority SpillNOther::_priority = 9;
-FaultStat     SpillNOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNOther>::vals = {"spill_n_other", 0x0A0, 9};
 
-FaultName     FillNNormal::_name = "fill_n_normal";
-TrapType      FillNNormal::_baseTrapType = 0x0C0;
-FaultPriority FillNNormal::_priority = 9;
-FaultStat     FillNNormal::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNNormal>::vals = {"fill_n_normal", 0x0C0, 9};
 
-FaultName     FillNOther::_name = "fill_n_other";
-TrapType      FillNOther::_baseTrapType = 0x0E0;
-FaultPriority FillNOther::_priority = 9;
-FaultStat     FillNOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNOther>::vals = {"fill_n_other", 0x0E0, 9};
 
-FaultName     TrapInstruction::_name = "trap_inst_n";
-TrapType      TrapInstruction::_baseTrapType = 0x100;
-FaultPriority TrapInstruction::_priority = 16;
-FaultStat     TrapInstruction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<TrapInstruction>::vals = {"trap_inst_n", 0x100, 16};
 
 #if !FULL_SYSTEM
-FaultName PageTableFault::_name = "page_table_fault";
-TrapType PageTableFault::_trapType = 0x0000;
-FaultPriority PageTableFault::_priority = 0;
-FaultStat PageTableFault::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PageTableFault>::vals = {"page_table_fault", 0x0000, 0};
 #endif
 
 /**
@@ -354,7 +281,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
 
 #if FULL_SYSTEM
 
-void SparcFault::invoke(ThreadContext * tc)
+void SparcFaultBase::invoke(ThreadContext * tc)
 {
     FaultBase::invoke(tc);
     countStat()++;
