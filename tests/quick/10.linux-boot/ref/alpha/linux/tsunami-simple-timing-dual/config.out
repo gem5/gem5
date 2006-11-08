@@ -70,9 +70,12 @@ system=system
 intrctrl=system.intrctrl
 
 [system.membus.responder]
-type=BadAddr
+type=IsaFake
 pio_addr=0
 pio_latency=0
+pio_size=8
+ret_bad_addr=true
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -161,6 +164,8 @@ type=IsaFake
 pio_addr=8804615848696
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -169,6 +174,8 @@ type=IsaFake
 pio_addr=8804615848936
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -177,6 +184,8 @@ type=IsaFake
 pio_addr=8804615848680
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -185,6 +194,8 @@ type=IsaFake
 pio_addr=8804615848944
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -193,6 +204,8 @@ type=IsaFake
 pio_addr=8804615848892
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -249,6 +262,8 @@ type=IsaFake
 pio_addr=8804615848304
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -257,6 +272,8 @@ type=IsaFake
 pio_addr=8804615848432
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -273,6 +290,8 @@ type=IsaFake
 pio_addr=8804615848643
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -281,6 +300,8 @@ type=IsaFake
 pio_addr=8804615848579
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -289,6 +310,8 @@ type=IsaFake
 pio_addr=8804615848515
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -297,6 +320,8 @@ type=IsaFake
 pio_addr=8804615848451
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -305,6 +330,8 @@ type=IsaFake
 pio_addr=8804615848899
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -313,6 +340,8 @@ type=IsaFake
 pio_addr=8804615848835
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -321,6 +350,8 @@ type=IsaFake
 pio_addr=8804615848771
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -329,6 +360,8 @@ type=IsaFake
 pio_addr=8804615848707
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -337,6 +370,8 @@ type=IsaFake
 pio_addr=8804615850617
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -422,6 +457,8 @@ type=IsaFake
 pio_addr=8796093677568
 pio_latency=2
 pio_size=393216
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -438,6 +475,8 @@ type=IsaFake
 pio_addr=8804615848816
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -446,6 +485,8 @@ type=IsaFake
 pio_addr=8804615848569
 pio_latency=2
 pio_size=8
+ret_bad_addr=false
+ret_data=255
 platform=system.tsunami
 system=system
 
@@ -502,13 +543,6 @@ bus_id=0
 clock=2
 width=64
 responder_set=true
-
-[system.iobus.responder]
-type=BadAddr
-pio_addr=0
-pio_latency=0
-platform=system.tsunami
-system=system
 
 [trace]
 flags=
