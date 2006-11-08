@@ -27,6 +27,7 @@
 # Authors: Lisa Hsu
 
 from os import getcwd
+from os.path import join as joinpath
 import m5
 from m5.objects import *
 m5.AddToPath('../common')
@@ -64,7 +65,7 @@ def run(options, root, testsys, cpu_class):
         print "simulating for: ", simtime
         maxtick = simtime
     else:
-        maxtick = -1
+        maxtick = m5.MaxTick
 
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
@@ -149,7 +150,7 @@ def run(options, root, testsys, cpu_class):
             m5.panic('Checkpoint %d not found' % cpt_num)
 
         m5.restoreCheckpoint(root,
-                             "/".join([cptdir, "cpt.%s" % cpts[cpt_num - 1]]))
+                             joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1]))
 
     if options.standard_switch or cpu_class:
         exit_event = m5.simulate(10000)
@@ -184,13 +185,13 @@ def run(options, root, testsys, cpu_class):
             exit_event = m5.simulate(when - m5.curTick())
 
         if exit_event.getCause() == "simulate() limit reached":
-            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+            m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
             num_checkpoints += 1
 
         sim_ticks = when
         exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
         while num_checkpoints < max_checkpoints:
-            if (sim_ticks + period) > maxtick and maxtick != -1:
+            if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
                 break
@@ -200,24 +201,20 @@ def run(options, root, testsys, cpu_class):
                 while exit_event.getCause() == "checkpoint":
                     exit_event = m5.simulate(sim_ticks - m5.curTick())
                 if exit_event.getCause() == "simulate() limit reached":
-                    m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+                    m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
                     num_checkpoints += 1
 
     else: #no checkpoints being taken via this script
         exit_event = m5.simulate(maxtick)
 
         while exit_event.getCause() == "checkpoint":
-            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+            m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
             num_checkpoints += 1
             if num_checkpoints == max_checkpoints:
                 exit_cause =  "maximum %d checkpoints dropped" % max_checkpoints
                 break
 
-            if maxtick == -1:
-                exit_event = m5.simulate(maxtick)
-            else:
-                exit_event = m5.simulate(maxtick - m5.curTick())
-
+            exit_event = m5.simulate(maxtick - m5.curTick())
             exit_cause = exit_event.getCause()
 
     if exit_cause == '':

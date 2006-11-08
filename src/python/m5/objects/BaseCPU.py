@@ -8,7 +8,6 @@ from Bus import Bus
 class BaseCPU(SimObject):
     type = 'BaseCPU'
     abstract = True
-    mem = Param.MemObject("memory")
 
     system = Param.System(Parent.any, "system object")
     cpu_id = Param.Int("CPU identifier")
@@ -47,7 +46,6 @@ class BaseCPU(SimObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
-#        self.mem = dc
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)

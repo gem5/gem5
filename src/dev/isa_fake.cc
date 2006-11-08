@@ -50,15 +50,6 @@ IsaFake::IsaFake(Params *p)
     memset(&retData, p->retData, sizeof(retData));
 }
 
-void
-IsaFake::init()
-{
-    // Only init this device if it's connected to anything.
-    if (pioPort)
-        PioDevice::init();
-}
-
-
 Tick
 IsaFake::read(PacketPtr pkt)
 {

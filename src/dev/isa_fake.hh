@@ -80,8 +80,6 @@ class IsaFake : public BasicPioDevice
      * @param data the data to not write.
      */
     virtual Tick write(PacketPtr pkt);
-
-    void init();
 };
 
 #endif // __ISA_FAKE_HH__

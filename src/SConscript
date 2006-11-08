@@ -374,8 +374,15 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     envList.append(newEnv)
 
 # Debug binary
+# Solaris seems to have some issue with DWARF2 debugging information, it's ok
+# with stabs though
+if sys.platform == 'sunos5':
+   debug_flag = '-gstabs+'
+else:
+   debug_flag = '-ggdb3'
+
 makeEnv('debug', '.do',
-        CCFLAGS = Split('-g3 -gdwarf-2 -O0'),
+        CCFLAGS = Split('%s -O0' % debug_flag),
         CPPDEFINES = 'DEBUG')
 
 # Optimized binary

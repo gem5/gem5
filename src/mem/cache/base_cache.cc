@@ -140,6 +140,9 @@ BaseCache::CachePort::recvRetry()
             }
             waitingOnRetry = false;
         }
+        // Check if we're done draining once this list is empty
+        if (drainList.empty())
+            cache->checkDrain();
     }
     else if (!isCpuSide)
     {
@@ -338,6 +341,10 @@ BaseCache::CacheEvent::process()
         cachePort->drainList.push_back(pkt);
         cachePort->waitingOnRetry = true;
     }
+
+    // Check if we're done draining once this list is empty
+    if (cachePort->drainList.empty())
+        cachePort->cache->checkDrain();
 }
 
 const char *
@@ -598,4 +605,19 @@ BaseCache::regStats()
         .desc("number of cache copies performed")
         ;
 
+}
+
+unsigned int
+BaseCache::drain(Event *de)
+{
+    // Set status
+    if (!canDrain()) {
+        drainEvent = de;
+
+        changeState(SimObject::Draining);
+        return 1;
+    }
+
+    changeState(SimObject::Drained);
+    return 0;
 }

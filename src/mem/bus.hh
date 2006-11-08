@@ -257,8 +257,8 @@ class Bus : public MemObject
     Bus(const std::string &n, int bus_id, int _clock, int _width,
         bool responder_set)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
-          tickNextIdle(0), busIdle(this), inRetry(false), defaultPort(NULL),
-          responderSet(responder_set)
+          tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
+          defaultPort(NULL), responderSet(responder_set)
     {
         //Both the width and clock period must be positive
         if (width <= 0)

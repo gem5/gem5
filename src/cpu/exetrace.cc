@@ -33,6 +33,8 @@
 
 #include <fstream>
 #include <iomanip>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "arch/regfile.hh"
 #include "base/loader/symtab.hh"
@@ -44,9 +46,14 @@
 
 //XXX This is temporary
 #include "arch/isa_specific.hh"
+#include "cpu/m5legion_interface.h"
 
 using namespace std;
 using namespace TheISA;
+
+namespace Trace {
+SharedData *shared_data = NULL;
+}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -60,6 +67,7 @@ Trace::InstRecord::dump(ostream &outs)
     if (flags[PRINT_REG_DELTA])
     {
 #if THE_ISA == SPARC_ISA
+#if 0
         //Don't print what happens for each micro-op, just print out
         //once at the last op, and for regular instructions.
         if(!staticInst->isMicroOp() || staticInst->isLastMicroOp())
@@ -120,6 +128,7 @@ Trace::InstRecord::dump(ostream &outs)
             }
             outs << endl;
         }
+#endif
 #endif
     }
     else if (flags[INTEL_FORMAT]) {
@@ -222,6 +231,65 @@ Trace::InstRecord::dump(ostream &outs)
         //
         outs << endl;
     }
+    // Compare
+    if (flags[LEGION_LOCKSTEP])
+    {
+        bool compared = false;
+        bool diffPC   = false;
+        bool diffInst = false;
+        bool diffRegs = false;
+
+        while (!compared) {
+            if (shared_data->flags == OWN_M5) {
+                if (shared_data->pc != PC)
+                   diffPC = true;
+                if (shared_data->instruction != staticInst->machInst)
+                    diffInst = true;
+                for (int i = 0; i < TheISA::NumIntRegs; i++) {
+                    if (thread->readIntReg(i) != shared_data->intregs[i])
+                        diffRegs = true;
+                }
+
+                if (diffPC || diffInst || diffRegs ) {
+                    outs << "Differences found between M5 and Legion:";
+                    if (diffPC)
+                        outs << " PC";
+                    if (diffInst)
+                        outs << " Instruction";
+                    if (diffRegs)
+                        outs << " IntRegs";
+                    outs << endl;
+
+                    outs << "M5 PC: " << setw(20) << "0x" << hex << PC;
+                    outs << "Legion PC: " << setw(20) << "0x" << hex <<
+                        shared_data->pc << endl;
+
+
+
+                    outs << "M5 Instruction: " << staticInst->machInst << "("
+                         << staticInst->disassemble(PC, debugSymbolTable)
+                         << ")" << "Legion Instruction: " <<
+                         shared_data->instruction << "("
+                         /*<< legionInst->disassemble(shared_data->pc,
+                                 debugSymbolTable)*/
+                         << ")" << endl;
+
+                    for (int i = 0; i < TheISA::NumIntRegs; i++) {
+                        outs << setw(16) << "0x" << hex << thread->readIntReg(i)
+                             << setw(16) << "0x" << hex << shared_data->intregs[i];
+
+                        if (thread->readIntReg(i) != shared_data->intregs[i])
+                            outs << "<--- Different";
+                        outs << endl;
+                    }
+                }
+
+                compared = true;
+                shared_data->flags = OWN_LEGION;
+            }
+        }
+
+    }
 }
 
 
@@ -271,6 +339,9 @@ Param<bool> exe_trace_pc_symbol(&exeTraceParams, "pc_symbol",
                                   "Use symbols for the PC if available", true);
 Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
                                    "print trace in intel compatible format", false);
+Param<bool> exe_trace_legion_lockstep(&exeTraceParams, "legion_lockstep",
+                                   "Compare sim state to legion state every cycle",
+                                   false);
 Param<string> exe_trace_system(&exeTraceParams, "trace_system",
                                    "print trace of which system (client or server)",
                                    "client");
@@ -296,7 +367,28 @@ Trace::InstRecord::setParams()
     flags[PRINT_REG_DELTA]   = exe_trace_print_reg_delta;
     flags[PC_SYMBOL]         = exe_trace_pc_symbol;
     flags[INTEL_FORMAT]      = exe_trace_intel_format;
+    flags[LEGION_LOCKSTEP]   = exe_trace_legion_lockstep;
     trace_system	     = exe_trace_system;
+
+    // If were going to be in lockstep with Legion
+    // Setup shared memory, and get otherwise ready
+    if (flags[LEGION_LOCKSTEP]) {
+        int shmfd = shmget(getuid(), sizeof(SharedData), 0777);
+        if (shmfd < 0)
+            fatal("Couldn't get shared memory fd. Is Legion running?");
+
+        shared_data = (SharedData*)shmat(shmfd, NULL, SHM_RND);
+        if (shared_data == (SharedData*)-1)
+            fatal("Couldn't allocate shared memory");
+
+        if (shared_data->flags != OWN_M5)
+            fatal("Shared memory has invalid owner");
+
+        if (shared_data->version != VERSION)
+            fatal("Shared Data is wrong version! M5: %d Legion: %d", VERSION,
+                    shared_data->version);
+
+    }
 }
 
 void

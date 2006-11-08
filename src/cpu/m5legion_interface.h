@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,47 +25,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
  */
 
-/**
- * @file
- * Defines host-dependent types:
- * Counter, Tick, and (indirectly) {int,uint}{8,16,32,64}_t.
- */
+#include <unistd.h>
 
-#ifndef __HOST_HH__
-#define __HOST_HH__
+#define VERSION         0xA1000001
+#define OWN_M5          0x000000AA
+#define OWN_LEGION      0x00000055
 
-#include <inttypes.h>
+/** !!!  VVV Increment VERSION on change VVV !!! **/
 
-/** uint64_t constant */
-#define ULL(N)		((uint64_t)N##ULL)
-/** int64_t constant */
-#define LL(N)		(((int64_t)N##LL)
+typedef struct {
+    uint32_t flags;
+    uint32_t version;
 
-/** Statistics counter type.  Not much excuse for not using a 64-bit
- * integer here, but if you're desperate and only run short
- * simulations you could make this 32 bits.
- */
-typedef int64_t Counter;
+    uint64_t pc;
+    uint64_t instruction;
+    uint64_t intregs[32];
 
-/**
- * Clock cycle count type.
- * @note using an unsigned breaks the cache.
- */
-typedef int64_t Tick;
+} SharedData;
 
-const Tick MaxTick = (1LL << 63) - 1;
+/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
 
-/**
- * Address type
- * This will probably be moved somewhere else in the near future.
- * This should be at least as big as the biggest address width in use
- * in the system, which will probably be 64 bits.
- */
-typedef uint64_t Addr;
-
-const Addr MaxAddr = (Addr)-1;
-
-#endif // __HOST_H__
