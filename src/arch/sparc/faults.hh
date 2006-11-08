@@ -42,63 +42,58 @@ namespace SparcISA
 typedef uint32_t TrapType;
 typedef uint32_t FaultPriority;
 
-class SparcFault : public FaultBase
+class SparcFaultBase : public FaultBase
 {
   public:
+    struct FaultVals
+    {
+        const FaultName name;
+        const TrapType trapType;
+        const FaultPriority priority;
+        FaultStat count;
+    };
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
+    virtual FaultName name() = 0;
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
     virtual FaultStat & countStat() = 0;
 };
 
-class InternalProcessorError : public SparcFault
+template<typename T>
+class SparcFault : public SparcFaultBase
 {
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
+  protected:
+    static FaultVals vals;
   public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    FaultName name() {return vals.name;}
+    TrapType trapType() {return vals.trapType;}
+    FaultPriority priority() {return vals.priority;}
+    FaultStat & countStat() {return vals.count;}
+};
+
+class InternalProcessorError :
+    public SparcFault<InternalProcessorError>
+{
+  public:
     bool isMachineCheckFault() {return true;}
 };
 
-class MemAddressNotAligned : public SparcFault
+class MemAddressNotAligned :
+    public SparcFault<MemAddressNotAligned>
 {
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
   public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
     bool isAlignmentFault() {return true;}
 };
 
 #if !FULL_SYSTEM
-class PageTableFault : public SparcFault
+class PageTableFault : public SparcFault<PageTableFault>
 {
   private:
     Addr vaddr;
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
   public:
-    PageTableFault(Addr va)
-        : vaddr(va) {}
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    PageTableFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext * tc);
 };
 
@@ -118,499 +113,117 @@ static inline Fault genAlignmentFault()
     return new MemAddressNotAligned;
 }
 
-class PowerOnReset : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class PowerOnReset : public SparcFault<PowerOnReset> {};
 
-class WatchDogReset : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class WatchDogReset : public SparcFault<WatchDogReset> {};
 
-class ExternallyInitiatedReset : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class ExternallyInitiatedReset : public SparcFault<ExternallyInitiatedReset> {};
 
-class SoftwareInitiatedReset : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class SoftwareInitiatedReset : public SparcFault<SoftwareInitiatedReset> {};
 
-class REDStateException : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class REDStateException : public SparcFault<REDStateException> {};
 
-class InstructionAccessException : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class InstructionAccessException : public SparcFault<InstructionAccessException> {};
 
-class InstructionAccessMMUMiss : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class InstructionAccessMMUMiss : public SparcFault<InstructionAccessMMUMiss> {};
 
-class InstructionAccessError : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class InstructionAccessError : public SparcFault<InstructionAccessError> {};
 
-class IllegalInstruction : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class IllegalInstruction : public SparcFault<IllegalInstruction> {};
 
-class PrivilegedOpcode : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class PrivilegedOpcode : public SparcFault<PrivilegedOpcode> {};
 
-class UnimplementedLDD : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class UnimplementedLDD : public SparcFault<UnimplementedLDD> {};
 
-class UnimplementedSTD : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
 
-class FpDisabled : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class FpDisabled : public SparcFault<FpDisabled> {};
 
-class FpExceptionIEEE754 : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class FpExceptionIEEE754 : public SparcFault<FpExceptionIEEE754> {};
 
-class FpExceptionOther : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class FpExceptionOther : public SparcFault<FpExceptionOther> {};
 
-class TagOverflow : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class TagOverflow : public SparcFault<TagOverflow> {};
 
-class DivisionByZero : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class DivisionByZero : public SparcFault<DivisionByZero> {};
 
-class DataAccessException : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class DataAccessException : public SparcFault<DataAccessException> {};
 
-class DataAccessMMUMiss : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class DataAccessMMUMiss : public SparcFault<DataAccessMMUMiss> {};
 
-class DataAccessError : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class DataAccessError : public SparcFault<DataAccessError> {};
 
-class DataAccessProtection : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class DataAccessProtection : public SparcFault<DataAccessProtection> {};
 
-class LDDFMemAddressNotAligned : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class LDDFMemAddressNotAligned : public SparcFault<LDDFMemAddressNotAligned> {};
 
-class STDFMemAddressNotAligned : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class STDFMemAddressNotAligned : public SparcFault<STDFMemAddressNotAligned> {};
 
-class PrivilegedAction : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class PrivilegedAction : public SparcFault<PrivilegedAction> {};
 
-class LDQFMemAddressNotAligned : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class LDQFMemAddressNotAligned : public SparcFault<LDQFMemAddressNotAligned> {};
 
-class STQFMemAddressNotAligned : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class STQFMemAddressNotAligned : public SparcFault<STQFMemAddressNotAligned> {};
 
-class AsyncDataError : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class AsyncDataError : public SparcFault<AsyncDataError> {};
 
-class CleanWindow : public SparcFault
-{
-  private:
-    static FaultName _name;
-    static TrapType _trapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    TrapType trapType() {return _trapType;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
-};
+class CleanWindow : public SparcFault<CleanWindow> {};
 
-class EnumeratedFault : public SparcFault
+template <class T>
+class EnumeratedFault : public SparcFault<T>
 {
   protected:
     uint32_t _n;
-    virtual TrapType baseTrapType() = 0;
   public:
-    EnumeratedFault(uint32_t n) : SparcFault() {_n = n;}
-    TrapType trapType() {return baseTrapType() + _n;}
+    EnumeratedFault(uint32_t n) : SparcFault<T>(), _n(n) {}
+    TrapType trapType() {return SparcFault<T>::trapType() + _n;}
 };
 
-class InterruptLevelN : public EnumeratedFault
+class InterruptLevelN : public EnumeratedFault<InterruptLevelN>
 {
-  private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultStat _count;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
-    InterruptLevelN(uint32_t n) : EnumeratedFault(n) {;}
-    FaultName name() {return _name;}
+    InterruptLevelN(uint32_t n) :
+        EnumeratedFault<InterruptLevelN>(n) {;}
     FaultPriority priority() {return 32 - _n;}
-    FaultStat & countStat() {return _count;}
 };
 
-class SpillNNormal : public EnumeratedFault
+class SpillNNormal : public EnumeratedFault<SpillNNormal>
 {
-  private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
-    SpillNNormal(uint32_t n) : EnumeratedFault(n) {;}
-    FaultName name() {return _name;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    SpillNNormal(uint32_t n) :
+        EnumeratedFault<SpillNNormal>(n) {;}
     void invoke(ThreadContext * tc);
 };
 
-class SpillNOther : public EnumeratedFault
+class SpillNOther : public EnumeratedFault<SpillNOther>
 {
-  private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
-    SpillNOther(uint32_t n) : EnumeratedFault(n) {;}
-    FaultName name() {return _name;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    SpillNOther(uint32_t n) :
+        EnumeratedFault<SpillNOther>(n) {;}
 };
 
-class FillNNormal : public EnumeratedFault
+class FillNNormal : public EnumeratedFault<FillNNormal>
 {
-  private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
-    FillNNormal(uint32_t n) : EnumeratedFault(n) {;}
-    FaultName name() {return _name;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    FillNNormal(uint32_t n) :
+        EnumeratedFault<FillNNormal>(n) {;}
     void invoke(ThreadContext * tc);
 };
 
-class FillNOther : public EnumeratedFault
+class FillNOther : public EnumeratedFault<FillNOther>
 {
-  private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
-    FillNOther(uint32_t n) : EnumeratedFault(n) {;}
-    FaultName name() {return _name;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+    FillNOther(uint32_t n) :
+        EnumeratedFault<FillNOther>(n) {;}
 };
 
-class TrapInstruction : public EnumeratedFault
+class TrapInstruction : public EnumeratedFault<TrapInstruction>
 {
   private:
-    static FaultName _name;
-    static TrapType _baseTrapType;
-    static FaultPriority _priority;
-    static FaultStat _count;
     uint64_t syscall_num;
-    TrapType baseTrapType() {return _baseTrapType;}
   public:
     TrapInstruction(uint32_t n, uint64_t syscall) :
-        EnumeratedFault(n), syscall_num(syscall) {;}
-    FaultName name() {return _name;}
-    FaultPriority priority() {return _priority;}
-    FaultStat & countStat() {return _count;}
+        EnumeratedFault<TrapInstruction>(n), syscall_num(syscall) {;}
 #if !FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
