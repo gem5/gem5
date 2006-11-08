@@ -407,8 +407,7 @@ BaseSimpleCPU::postExecute()
 {
 #if FULL_SYSTEM
     if (thread->profile) {
-        bool usermode =
-            (thread->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+        bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : thread->readPC();
         ProfileNode *node = thread->profile->consume(tc, inst);
         if (node)

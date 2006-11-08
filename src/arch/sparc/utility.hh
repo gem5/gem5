@@ -39,6 +39,14 @@
 
 namespace SparcISA
 {
+
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        return !(tc->readMiscReg(MISCREG_PSTATE & (1 << 2)) ||
+                tc->readMiscReg(MISCREG_HPSTATE & (1 << 2)));
+    }
+
     inline ExtMachInst
     makeExtMI(MachInst inst, ThreadContext * xc) {
         ExtMachInst emi = (unsigned MachInst) inst;
