@@ -228,9 +228,10 @@ class FillNOther : public EnumeratedFault<FillNOther>
 
 class TrapInstruction : public EnumeratedFault<TrapInstruction>
 {
+
   public:
-    TrapInstruction(uint32_t n, uint64_t syscall) :
-        EnumeratedFault<TrapInstruction>(n), syscall_num(syscall) {;}
+    TrapInstruction(uint32_t n) :
+        EnumeratedFault<TrapInstruction>(n) {;}
 };
 
 
