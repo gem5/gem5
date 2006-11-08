@@ -149,46 +149,9 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-#if 0
-    Addr last_va;
-
-    va = TheISA::TruncPage(va);
-    last_va = TheISA::RoundPage(va + len);
-
-    do  {
-        if (TheISA::IsK0Seg(va)) {
-            if (va < (TheISA::K0SegBase + pmem->size())) {
-                DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
-                        "%#x < K0SEG + size\n", va);
-                return true;
-            } else {
-                DPRINTF(GDBAcc, "acc:   Mapping invalid %#x > K0SEG + size\n",
-                        va);
-                return false;
-            }
-        }
-
-    /**
-     * This code says that all accesses to palcode (instruction and data)
-     * are valid since there isn't a va->pa mapping because palcode is
-     * accessed physically. At some point this should probably be cleaned up
-     * but there is no easy way to do it.
-     */
-
-        if (AlphaISA::PcPAL(va) || va < 0x10000)
-            return true;
-
-        Addr ptbr = context->readMiscReg(AlphaISA::IPR_PALtemp20);
-        TheISA::PageTableEntry pte = TheISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
-        if (!pte.valid()) {
-            DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
-            return false;
-        }
-        va += TheISA::PageBytes;
-    } while (va < last_va);
-
-    DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
-#endif
+    //@Todo In NetBSD, this function checks if all addresses
+    //from va to va + len have valid page mape entries. Not
+    //sure how this will work for other OSes or in general.
     return true;
 }
 
@@ -204,12 +167,11 @@ RemoteGDB::getregs()
 
     gdbregs.regs[RegPc] = context->readPC();
     gdbregs.regs[RegNpc] = context->readNextPC();
-    for(int x = RegG0; x <= RegI7; x++)
+    for(int x = RegG0; x <= RegI0 + 7; x++)
         gdbregs.regs[x] = context->readIntReg(x - RegG0);
-    for(int x = RegF0; x <= RegF31; x++)
-        gdbregs.regs[x] = context->readFloatRegBits(x - RegF0);
-    gdbregs.regs[RegY] = context->readMiscReg(MISCREG_Y);
-    //XXX need to also load up Psr, Wim, Tbr, Fpsr, and Cpsr
+    //Floating point registers are left at 0 in netbsd
+    //All registers other than the pc, npc and int regs
+    //are ignored as well.
 }
 
 ///////////////////////////////////////////////////////////
@@ -223,56 +185,19 @@ RemoteGDB::setregs()
 {
     context->setPC(gdbregs.regs[RegPc]);
     context->setNextPC(gdbregs.regs[RegNpc]);
-    for(int x = RegG0; x <= RegI7; x++)
+    for(int x = RegG0; x <= RegI0 + 7; x++)
         context->setIntReg(x - RegG0, gdbregs.regs[x]);
-    for(int x = RegF0; x <= RegF31; x++)
-        context->setFloatRegBits(x - RegF0, gdbregs.regs[x]);
-    context->setMiscRegWithEffect(MISCREG_Y, gdbregs.regs[RegY]);
-    //XXX need to also set Psr, Wim, Tbr, Fpsr, and Cpsr
+    //Only the integer registers, pc and npc are set in netbsd
 }
 
 void
 RemoteGDB::clearSingleStep()
 {
-#if 0
-    DPRINTF(GDBMisc, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
-
-    if (takenBkpt.address != 0)
-        clearTempBreakpoint(takenBkpt);
-
-    if (notTakenBkpt.address != 0)
-        clearTempBreakpoint(notTakenBkpt);
-#endif
+    panic("SPARC does not support hardware single stepping\n");
 }
 
 void
 RemoteGDB::setSingleStep()
 {
-#if 0
-    Addr pc = context->readPC();
-    Addr npc, bpc;
-    bool set_bt = false;
-
-    npc = pc + sizeof(MachInst);
-
-    // User was stopped at pc, e.g. the instruction at pc was not
-    // executed.
-    MachInst inst = read<MachInst>(pc);
-    StaticInstPtr si(inst);
-    if (si->hasBranchTarget(pc, context, bpc)) {
-        // Don't bother setting a breakpoint on the taken branch if it
-        // is the same as the next pc
-        if (bpc != npc)
-            set_bt = true;
-    }
-
-    DPRINTF(GDBMisc, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
-
-    setTempBreakpoint(notTakenBkpt, npc);
-
-    if (set_bt)
-        setTempBreakpoint(takenBkpt, bpc);
-#endif
+    panic("SPARC does not support hardware single stepping\n");
 }

@@ -49,22 +49,15 @@ namespace SparcISA
       protected:
         enum RegisterConstants
         {
-            RegG0, RegG1, RegG2, RegG3, RegG4, RegG5, RegG6, RegG7,
-            RegO0, RegO1, RegO2, RegO3, RegO4, RegO5, RegO6, RegO7,
-            RegL0, RegL1, RegL2, RegL3, RegL4, RegL5, RegL6, RegL7,
-            RegI0, RegI1, RegI2, RegI3, RegI4, RegI5, RegI6, RegI7,
-            RegF0, RegF1, RegF2, RegF3, RegF4, RegF5, RegF6, RegF7,
-            RegF8, RegF9, RegF10, RegF11, RegF12, RegF13, RegF14, RegF15,
-            RegF16, RegF17, RegF18, RegF19, RegF20, RegF21, RegF22, RegF23,
-            RegF24, RegF25, RegF26, RegF27, RegF28, RegF29, RegF30, RegF31,
-            RegY,
-            RegPsr,
-            RegWim,
-            RegTbr,
-            RegPc,
-            RegNpc,
-            RegFpsr,
-            RegCpsr,
+            RegG0 = 0, RegO0 = 8, RegL0 = 16, RegI0 = 24,
+            RegF0 = 32, RegF32 = 64,
+            RegPc = 80, RegNpc, RegCcr, RegFsr, RegFprs, RegY, RegAsi,
+            RegVer, RegTick, RegPil, RegPstate,
+            RegTstate, RegTba, RegTl, RegTt, RegTpc, RegTnpc, RegWstate,
+            RegCwp, RegCansave, RegCanrestore, RegCleanwin, RegOtherwin,
+            RegAsr16 = 103,
+            RegIcc = 119, RegXcc,
+            RegFcc0 = 121,
             NumGDBRegs
         };
 
@@ -79,8 +72,6 @@ namespace SparcISA
 
         void clearSingleStep();
         void setSingleStep();
-
-        Addr singleStepBreaks[2];
     };
 }
 
