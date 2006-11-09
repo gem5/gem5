@@ -95,7 +95,7 @@ test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 np = options.num_cpus
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 for i in xrange(np):
-    if options.caches and not options.standard_switch and not FutureClass:
+    if options.caches:
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                 L1Cache(size = '64kB'))
     test_sys.cpu[i].connectMemPorts(test_sys.membus)
