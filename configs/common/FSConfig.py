@@ -78,6 +78,27 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
 
     return self
 
+def makeSparcSystem(mem_mode, mdesc = None):
+    self = SparcSystem()
+    if not mdesc:
+        # generic system
+        mdesc = SysConfig()
+    self.readfile = mdesc.script()
+    self.membus = Bus(bus_id=1)
+    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self.physmem.port = self.membus.port
+    self.rom.port = self.membus.port
+    self.intrctrl = IntrControl()
+    self.mem_mode = mem_mode
+    self.kernel = binary('vmlinux')
+
+    self.reset_bin = binary('reset.bin')
+    self.hypervisor_bin = binary('q.bin')
+    self.openboot_bin = binary('openboot.bin')
+
+    return self
+
+
 def makeDualRoot(testSystem, driveSystem, dumpfile):
     self = Root()
     self.testsys = testSystem

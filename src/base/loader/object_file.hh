@@ -114,9 +114,11 @@ class ObjectFile
     size_t textSize() const { return text.size; }
     size_t dataSize() const { return data.size; }
     size_t bssSize() const { return bss.size; }
+
+    void setTextBase(Addr a) { text.baseAddr = a; }
 };
 
-ObjectFile *createObjectFile(const std::string &fname);
+ObjectFile *createObjectFile(const std::string &fname, bool raw = false);
 
 
 #endif // __OBJECT_FILE_HH__

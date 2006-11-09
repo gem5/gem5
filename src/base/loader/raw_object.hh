@@ -28,23 +28,26 @@
  * Authors: Ali Saidi
  */
 
-#include <unistd.h>
+#ifndef __BASE_LOADER_RAW_OBJECT_HH__
+#define __BASE_LOADER_RAW_OBJECT_HH__
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+#include "base/loader/object_file.hh"
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
+class RawObject: public ObjectFile
+{
+  protected:
+    RawObject(const std::string &_filename, int _fd, size_t _len,
+              uint8_t *_data, Arch _arch, OpSys _opSys);
+  public:
+    virtual ~RawObject() {}
 
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
+    virtual bool loadGlobalSymbols(SymbolTable *symtab);
+    virtual bool loadLocalSymbols(SymbolTable *symtab);
 
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
+    static ObjectFile *tryFile(const std::string &fname, int fd, size_t len,
+            uint8_t *data);
+};
 
-} SharedData;
 
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
 
+#endif // __BASE_LOADER_RAW_OBJECT_HH__

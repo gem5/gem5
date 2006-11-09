@@ -37,6 +37,7 @@
 #include <sys/shm.h>
 
 #include "arch/regfile.hh"
+#include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -231,6 +232,7 @@ Trace::InstRecord::dump(ostream &outs)
         //
         outs << endl;
     }
+#if THE_ISA == SPARC_ISA
     // Compare
     if (flags[LEGION_LOCKSTEP])
     {
@@ -239,57 +241,76 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffInst = false;
         bool diffRegs = false;
 
-        while (!compared) {
-            if (shared_data->flags == OWN_M5) {
-                if (shared_data->pc != PC)
-                   diffPC = true;
-                if (shared_data->instruction != staticInst->machInst)
-                    diffInst = true;
-                for (int i = 0; i < TheISA::NumIntRegs; i++) {
-                    if (thread->readIntReg(i) != shared_data->intregs[i])
-                        diffRegs = true;
-                }
-
-                if (diffPC || diffInst || diffRegs ) {
-                    outs << "Differences found between M5 and Legion:";
-                    if (diffPC)
-                        outs << " PC";
-                    if (diffInst)
-                        outs << " Instruction";
-                    if (diffRegs)
-                        outs << " IntRegs";
-                    outs << endl;
-
-                    outs << "M5 PC: " << setw(20) << "0x" << hex << PC;
-                    outs << "Legion PC: " << setw(20) << "0x" << hex <<
-                        shared_data->pc << endl;
-
-
-
-                    outs << "M5 Instruction: " << staticInst->machInst << "("
-                         << staticInst->disassemble(PC, debugSymbolTable)
-                         << ")" << "Legion Instruction: " <<
-                         shared_data->instruction << "("
-                         /*<< legionInst->disassemble(shared_data->pc,
-                                 debugSymbolTable)*/
-                         << ")" << endl;
-
+        if(!staticInst->isMicroOp() || staticInst->isLastMicroOp()) {
+            while (!compared) {
+                if (shared_data->flags == OWN_M5) {
+                    if (shared_data->pc != PC)
+                       diffPC = true;
+                    if (shared_data->instruction != staticInst->machInst)
+                        diffInst = true;
                     for (int i = 0; i < TheISA::NumIntRegs; i++) {
-                        outs << setw(16) << "0x" << hex << thread->readIntReg(i)
-                             << setw(16) << "0x" << hex << shared_data->intregs[i];
-
                         if (thread->readIntReg(i) != shared_data->intregs[i])
-                            outs << "<--- Different";
-                        outs << endl;
+                            diffRegs = true;
                     }
+
+                    if (diffPC || diffInst || diffRegs ) {
+                        outs << "Differences found between M5 and Legion:";
+                        if (diffPC)
+                            outs << " [PC]";
+                        if (diffInst)
+                            outs << " [Instruction]";
+                        if (diffRegs)
+                            outs << " [IntRegs]";
+                        outs << endl << endl;;
+
+                        outs << setfill(' ') << setw(15)
+                             << "M5 PC: " << "0x"<< setw(16) << setfill('0')
+                             << hex << PC << endl;
+                        outs << setfill(' ') << setw(15)
+                             << "Legion PC: " << "0x"<< setw(16) << setfill('0') << hex
+                             << shared_data->pc << endl << endl;
+
+                        outs << setfill(' ') << setw(15)
+                             << "M5 Inst: "  << "0x"<< setw(8)
+                             << setfill('0') << hex << staticInst->machInst
+                             << staticInst->disassemble(PC, debugSymbolTable)
+                             << endl;
+
+                        StaticInstPtr legionInst = StaticInst::decode(makeExtMI(shared_data->instruction, thread));
+                        outs << setfill(' ') << setw(15)
+                             << " Legion Inst: "
+                             << "0x" << setw(8) << setfill('0') << hex
+                             << shared_data->instruction
+                             << legionInst->disassemble(shared_data->pc, debugSymbolTable)
+                             << endl;
+
+                        outs << endl;
+
+                        static const char * regtypes[4] = {"%g", "%o", "%l", "%i"};
+                        for(int y = 0; y < 4; y++)
+                        {
+                            for(int x = 0; x < 8; x++)
+                            {
+                                outs << regtypes[y] << x << "         " ;
+                                outs <<  "0x" << hex << setw(16) << thread->readIntReg(y*8+x);
+                                if (thread->readIntReg(y*8 + x) != shared_data->intregs[y*8+x])
+                                    outs << "     X     ";
+                                else
+                                    outs << "     |     ";
+                                outs << "0x" << setw(16) << hex << shared_data->intregs[y*8+x]
+                                     << endl;
+                            }
+                        }
+                        fatal("Differences found between Legion and M5\n");
+                    }
+
+                    compared = true;
+                    shared_data->flags = OWN_LEGION;
                 }
-
-                compared = true;
-                shared_data->flags = OWN_LEGION;
-            }
-        }
-
+            } // while
+        } // if not microop
     }
+#endif
 }
 
 

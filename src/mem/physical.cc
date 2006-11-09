@@ -191,7 +191,9 @@ PhysicalMemory::checkLockedAddrList(Request *req)
 void
 PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 {
-    assert(pkt->getAddr() + pkt->getSize() <= params()->addrRange.size());
+    assert(pkt->getAddr() + pkt->getSize() > params()->addrRange.start &&
+           pkt->getAddr() + pkt->getSize() <= params()->addrRange.start +
+           params()->addrRange.size());
 
     if (pkt->isRead()) {
         if (pkt->req->isLocked()) {
