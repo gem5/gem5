@@ -370,6 +370,10 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+
+    // Assume one bus cycle in order to get through.  This may have
+    // some clock skew issues yet again...
+    pkt->finishTime = curTick + clock;
     Tick snoopTime = atomicSnoop(pkt);
     if (snoopTime)
         return snoopTime;  //Snoop satisfies it
