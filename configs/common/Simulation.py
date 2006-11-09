@@ -84,10 +84,6 @@ def run(options, root, testsys, cpu_class):
             if not m5.build_env['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
-            if options.caches:
-                switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                       L1Cache(size = '64kB'))
-                switch_cpus[i].connectMemPorts(testsys.membus)
 
         root.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
@@ -107,19 +103,15 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].clock = testsys.cpu[0].clock
             switch_cpus_1[i].clock = testsys.cpu[0].clock
 
-            if options.caches:
-                switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                       L1Cache(size = '64kB'))
-                switch_cpus[i].connectMemPorts(testsys.membus)
-            else:
+            if not options.caches:
                 # O3 CPU must have a cache to work.
                 switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                          L1Cache(size = '64kB'))
                 switch_cpus_1[i].connectMemPorts(testsys.membus)
 
 
-            root.switch_cpus = switch_cpus
-            root.switch_cpus_1 = switch_cpus_1
+            testsys.switch_cpus = switch_cpus
+            testsys.switch_cpus_1 = switch_cpus_1
             switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
             switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
 
@@ -222,5 +214,5 @@ def run(options, root, testsys, cpu_class):
 
     if exit_cause == '':
         exit_cause = exit_event.getCause()
-    print 'Exiting @ cycle', m5.curTick(), 'because ', exit_cause
+    print 'Exiting @ cycle %i because %s' % (m5.curTick(), exit_cause)
 
