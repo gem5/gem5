@@ -242,8 +242,11 @@ Bus::recvRetry(int id)
         }
     }
     //If we weren't able to drain before, we might be able to now.
-    if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle)
+    if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle) {
         drainEvent->process();
+        // Clear the drain event once we're done with it.
+        drainEvent = NULL;
+    }
 }
 
 Port *

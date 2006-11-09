@@ -819,6 +819,12 @@ unsigned int
 FullO3CPU<Impl>::drain(Event *drain_event)
 {
     DPRINTF(O3CPU, "Switching out\n");
+
+    // If the CPU isn't doing anything, then return immediately.
+    if (_status == Idle || _status == SwitchedOut) {
+        return 0;
+    }
+
     drainCount = 0;
     fetch.drain();
     decode.drain();
