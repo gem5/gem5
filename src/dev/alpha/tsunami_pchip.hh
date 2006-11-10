@@ -35,7 +35,7 @@
 #ifndef __TSUNAMI_PCHIP_HH__
 #define __TSUNAMI_PCHIP_HH__
 
-#include "dev/tsunami.hh"
+#include "dev/alpha/tsunami.hh"
 #include "base/range.hh"
 #include "dev/io_device.hh"
 

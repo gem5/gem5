@@ -44,7 +44,7 @@ class ThreadContext;
  * */
 class CpuEvent : public Event
 {
-  private:
+  protected:
     /** type of global list of cpu events. */
     typedef std::vector<CpuEvent *> CpuEventList;
 

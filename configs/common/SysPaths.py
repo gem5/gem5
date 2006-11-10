@@ -30,6 +30,9 @@ import os, sys
 from os.path import isdir, join as joinpath
 from os import environ as env
 
+config_path = os.path.dirname(os.path.abspath(__file__))
+config_root = os.path.dirname(config_path)
+
 def disk(file):
     system()
     return joinpath(disk.dir, file)
@@ -60,7 +63,7 @@ def system():
     if not disk.dir:
         disk.dir = joinpath(system.dir, 'disks')
     if not script.dir:
-        script.dir = joinpath(system.dir, 'boot')
+        script.dir = joinpath(config_root, 'boot')
 
 system.dir = None
 binary.dir = None

@@ -42,42 +42,49 @@
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)
-    : System(p), sysTick(0)
+    : System(p), sysTick(0),funcRomPort(p->name + "-fport")
 
 {
     resetSymtab = new SymbolTable;
     hypervisorSymtab = new SymbolTable;
     openbootSymtab = new SymbolTable;
 
+    Port *rom_port;
+    rom_port = params()->rom->getPort("functional");
+    funcRomPort.setPeer(rom_port);
+    rom_port->setPeer(&funcRomPort);
 
     /**
      * Load the boot code, and hypervisor into memory.
      */
     // Read the reset binary
-    reset = createObjectFile(params()->reset_bin);
+    reset = createObjectFile(params()->reset_bin, true);
     if (reset == NULL)
         fatal("Could not load reset binary %s", params()->reset_bin);
 
     // Read the openboot binary
-    openboot = createObjectFile(params()->openboot_bin);
+    openboot = createObjectFile(params()->openboot_bin, true);
     if (openboot == NULL)
         fatal("Could not load openboot bianry %s", params()->openboot_bin);
 
     // Read the hypervisor binary
-    hypervisor = createObjectFile(params()->hypervisor_bin);
+    hypervisor = createObjectFile(params()->hypervisor_bin, true);
     if (hypervisor == NULL)
         fatal("Could not load hypervisor binary %s", params()->hypervisor_bin);
 
 
     // Load reset binary into memory
-    reset->loadSections(&functionalPort, SparcISA::LoadAddrMask);
+    reset->setTextBase(params()->reset_addr);
+    reset->loadSections(&funcRomPort);
     // Load the openboot binary
-    openboot->loadSections(&functionalPort, SparcISA::LoadAddrMask);
+    openboot->setTextBase(params()->openboot_addr);
+    openboot->loadSections(&funcRomPort);
     // Load the hypervisor binary
-    hypervisor->loadSections(&functionalPort, SparcISA::LoadAddrMask);
+    hypervisor->setTextBase(params()->hypervisor_addr);
+    hypervisor->loadSections(&funcRomPort);
 
     // load symbols
-    if (!reset->loadGlobalSymbols(reset))
+    if (!reset->loadGlobalSymbols(resetSymtab))
         panic("could not load reset symbols\n");
 
     if (!openboot->loadGlobalSymbols(openbootSymtab))
@@ -141,13 +148,19 @@ SparcSystem::unserialize(Checkpoint *cp, const std::string &section)
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
 
     SimObjectParam<PhysicalMemory *> physmem;
+    SimObjectParam<PhysicalMemory *> rom;
     SimpleEnumParam<System::MemoryMode> mem_mode;
+
+    Param<Addr> reset_addr;
+    Param<Addr> hypervisor_addr;
+    Param<Addr> openboot_addr;
 
     Param<std::string> kernel;
     Param<std::string> reset_bin;
     Param<std::string> hypervisor_bin;
     Param<std::string> openboot_bin;
 
+    Param<Tick> boot_cpu_frequency;
     Param<std::string> boot_osflags;
     Param<std::string> readfile;
     Param<unsigned int> init_param;
@@ -156,20 +169,24 @@ END_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
-    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM(physmem, "phsyical memory"),
+    INIT_PARAM(rom, "ROM for boot code"),
     INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
             System::MemoryModeStrings),
+
+    INIT_PARAM(reset_addr, "Address that reset should be loaded at"),
+    INIT_PARAM(hypervisor_addr, "Address that hypervisor should be loaded at"),
+    INIT_PARAM(openboot_addr, "Address that openboot should be loaded at"),
+
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(reset_bin, "file that contains the reset code"),
     INIT_PARAM(hypervisor_bin, "file that contains the hypervisor code"),
     INIT_PARAM(openboot_bin, "file that contains the openboot code"),
+    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
     INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
-    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
-    INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
+    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0)
 
 END_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
@@ -179,16 +196,18 @@ CREATE_SIM_OBJECT(SparcSystem)
     p->name = getInstanceName();
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->physmem = physmem;
+    p->rom = rom;
     p->mem_mode = mem_mode;
     p->kernel_path = kernel;
+    p->reset_addr = reset_addr;
+    p->hypervisor_addr = hypervisor_addr;
+    p->openboot_addr = openboot_addr;
     p->reset_bin = reset_bin;
     p->hypervisor_bin = hypervisor_bin;
     p->openboot_bin = openboot_bin;
     p->boot_osflags = boot_osflags;
     p->init_param = init_param;
     p->readfile = readfile;
-    p->system_type = system_type;
-    p->system_rev = system_rev;
     return new SparcSystem(p);
 }
 

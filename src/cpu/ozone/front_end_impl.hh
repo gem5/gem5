@@ -91,7 +91,6 @@ template <class Impl>
 FrontEnd<Impl>::FrontEnd(Params *params)
     : branchPred(params),
       icachePort(this),
-      mem(params->mem),
       numInstsReady(params->frontEndLatency, 0),
       instBufferSize(0),
       maxInstBufferSize(params->maxInstBufferSize),
@@ -463,15 +462,10 @@ Fault
 FrontEnd<Impl>::fetchCacheLine()
 {
     // Read a cache line, based on the current PC.
-#if FULL_SYSTEM
-    // Flag to say whether or not address is physical addr.
-    unsigned flags = cpu->inPalMode(PC) ? PHYSICAL : 0;
-#else
-    unsigned flags = 0;
-#endif // FULL_SYSTEM
     Fault fault = NoFault;
 
-    if (interruptPending && flags == 0) {
+    //AlphaDep
+    if (interruptPending && (PC & 0x3)) {
         return fault;
     }
 
@@ -883,7 +877,11 @@ FrontEnd<Impl>::getInstFromCacheline()
     // Get the instruction from the array of the cache line.
     inst = htog(*reinterpret_cast<MachInst *>(&cacheData[offset]));
 
+#if THE_ISA == ALPHA_ISA
+    ExtMachInst decode_inst = TheISA::makeExtMI(inst, PC);
+#elif THE_ISA == SPARC_ISA
     ExtMachInst decode_inst = TheISA::makeExtMI(inst, tc);
+#endif
 
     // Create a new DynInst from the instruction fetched.
     DynInstPtr instruction = new DynInst(decode_inst, PC, PC+sizeof(MachInst),

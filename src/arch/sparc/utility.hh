@@ -31,6 +31,7 @@
 #ifndef __ARCH_SPARC_UTILITY_HH__
 #define __ARCH_SPARC_UTILITY_HH__
 
+#include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
@@ -38,6 +39,14 @@
 
 namespace SparcISA
 {
+
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        return !(tc->readMiscReg(MISCREG_PSTATE & (1 << 2)) ||
+                tc->readMiscReg(MISCREG_HPSTATE & (1 << 2)));
+    }
+
     inline ExtMachInst
     makeExtMI(MachInst inst, ThreadContext * xc) {
         ExtMachInst emi = (unsigned MachInst) inst;
@@ -98,6 +107,12 @@ namespace SparcISA
      */
     template <class TC>
     void zeroRegisters(TC *tc);
+
+    inline void initCPU(ThreadContext *tc, int cpuId)
+    {
+        static Fault por = new PowerOnReset();
+        por->invoke(tc);
+    }
 
 } // namespace SparcISA
 

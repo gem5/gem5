@@ -29,10 +29,12 @@
  *          Nathan Binkert
  */
 
+#include <sys/signal.h>
+
 #include "arch/alpha/ev5.hh"
 #include "arch/alpha/system.hh"
+#include "arch/alpha/remote_gdb.hh"
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
@@ -196,7 +198,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 bool
 AlphaSystem::breakpoint()
 {
-    return remoteGDB[0]->trap(ALPHA_KENTRY_INT);
+    return remoteGDB[0]->trap(SIGTRAP);
 }
 
 void

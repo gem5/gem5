@@ -45,12 +45,14 @@ class SparcSystem : public System
   public:
     struct Params : public System::Params
     {
+        PhysicalMemory *rom;
+        Addr reset_addr;
+        Addr hypervisor_addr;
+        Addr openboot_addr;
         std::string reset_bin;
-        std::string hypervison_bin;
+        std::string hypervisor_bin;
         std::string openboot_bin;
         std::string boot_osflags;
-        uint64_t system_type;
-        uint64_t system_rev;
     };
 
     SparcSystem(Params *p);
@@ -87,6 +89,9 @@ class SparcSystem : public System
     /** System Tick for syncronized tick across all cpus. */
     Tick sysTick;
 
+    /** functional port to ROM */
+    FunctionalPort funcRomPort;
+
   protected:
     const Params *params() const { return (const Params *)_params; }
 
@@ -111,8 +116,11 @@ class SparcSystem : public System
         return addFuncEvent<T>(openbootSymtab, lbl);
     }
 
-    virtual Addr fixFuncEventAddr(Addr addr);
-
+    virtual Addr fixFuncEventAddr(Addr addr)
+    {
+        //XXX This may eventually have to do something useful.
+        return addr;
+    }
 };
 
 #endif

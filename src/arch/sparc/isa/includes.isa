@@ -54,6 +54,7 @@ output decoder {{
 #if defined(linux)
 #include <fenv.h>
 #endif
+#include <algorithm>
 
 using namespace SparcISA;
 }};

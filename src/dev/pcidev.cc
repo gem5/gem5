@@ -45,7 +45,7 @@
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
-#include "dev/tsunamireg.h"
+#include "dev/alpha/tsunamireg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/builder.hh"

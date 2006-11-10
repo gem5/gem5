@@ -37,21 +37,16 @@ class AlphaTC : public O3ThreadContext<Impl>
   public:
 #if FULL_SYSTEM
     /** Returns a pointer to the ITB. */
-    virtual AlphaITB *getITBPtr() { return this->cpu->itb; }
+    virtual AlphaISA::ITB *getITBPtr() { return this->cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    virtual AlphaDTB *getDTBPtr() { return this->cpu->dtb; }
+    virtual AlphaISA::DTB *getDTBPtr() { return this->cpu->dtb; }
 
     /** Returns pointer to the quiesce event. */
     virtual EndQuiesceEvent *getQuiesceEvent()
     {
         return this->thread->quiesceEvent;
     }
-
-    /** Returns if the thread is currently in PAL mode, based on
-     * the PC's value. */
-    virtual bool inPalMode()
-    { return TheISA::PcPAL(this->cpu->readPC(this->thread->readTid())); }
 #endif
 
     virtual uint64_t readNextNPC()

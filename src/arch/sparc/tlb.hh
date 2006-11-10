@@ -31,5 +31,47 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "mem/request.hh"
+#include "sim/faults.hh"
+#include "sim/sim_object.hh"
+
+class ThreadContext;
+
+namespace SparcISA
+{
+    class TLB : public SimObject
+    {
+      public:
+        TLB(const std::string &name, int size) : SimObject(name)
+        {
+        }
+    };
+
+    class ITB : public TLB
+    {
+      public:
+        ITB(const std::string &name, int size) : TLB(name, size)
+        {
+        }
+
+        Fault translate(RequestPtr &req, ThreadContext *tc) const
+        {
+            return NoFault;
+        }
+    };
+
+    class DTB : public TLB
+    {
+      public:
+        DTB(const std::string &name, int size) : TLB(name, size)
+        {
+        }
+
+        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const
+        {
+            return NoFault;
+        }
+    };
+}
 
 #endif // __ARCH_SPARC_TLB_HH__

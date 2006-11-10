@@ -30,6 +30,9 @@
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#if defined(__sun__)
+#include <sys/file.h>
+#endif
 
 #include <fcntl.h>
 #include <signal.h>

@@ -123,7 +123,6 @@
 
 #include "arch/vtophys.hh"
 #include "base/intmath.hh"
-#include "base/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
@@ -138,18 +137,18 @@ using namespace std;
 using namespace TheISA;
 
 #ifndef NDEBUG
-vector<RemoteGDB *> debuggers;
-int current_debugger = -1;
+vector<BaseRemoteGDB *> debuggers;
 
 void
 debugger()
 {
+    static int current_debugger = -1;
     if (current_debugger >= 0 && current_debugger < debuggers.size()) {
-        RemoteGDB *gdb = debuggers[current_debugger];
+        BaseRemoteGDB *gdb = debuggers[current_debugger];
         if (!gdb->isattached())
             gdb->listener->accept();
         if (gdb->isattached())
-            gdb->trap(ALPHA_KENTRY_IF);
+            gdb->trap(SIGILL);
     }
 }
 #endif
@@ -169,7 +168,7 @@ GDBListener::Event::process(int revent)
     listener->accept();
 }
 
-GDBListener::GDBListener(RemoteGDB *g, int p)
+GDBListener::GDBListener(BaseRemoteGDB *g, int p)
     : event(NULL), gdb(g), port(p)
 {
     assert(!gdb->listener);
@@ -229,55 +228,46 @@ GDBListener::accept()
     }
 }
 
-///////////////////////////////////////////////////////////
-//
-//
-//
-int digit2i(char);
-char i2digit(int);
-void mem2hex(void *, const void *, int);
-const char *hex2mem(void *, const char *, int);
-Addr hex2i(const char **);
-
-RemoteGDB::Event::Event(RemoteGDB *g, int fd, int e)
+BaseRemoteGDB::Event::Event(BaseRemoteGDB *g, int fd, int e)
     : PollEvent(fd, e), gdb(g)
 {}
 
 void
-RemoteGDB::Event::process(int revent)
+BaseRemoteGDB::Event::process(int revent)
 {
     if (revent & POLLIN)
-        gdb->trap(ALPHA_KENTRY_IF);
+        gdb->trap(SIGILL);
     else if (revent & POLLNVAL)
         gdb->detach();
 }
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
+BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c, size_t cacheSize)
     : event(NULL), listener(NULL), number(-1), fd(-1),
       active(false), attached(false),
-      system(_system), pmem(_system->physmem), context(c)
+      system(_system), pmem(_system->physmem), context(c),
+      gdbregs(cacheSize)
 {
-    memset(gdbregs, 0, sizeof(gdbregs));
+    memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
-RemoteGDB::~RemoteGDB()
+BaseRemoteGDB::~BaseRemoteGDB()
 {
     if (event)
         delete event;
 }
 
 string
-RemoteGDB::name()
+BaseRemoteGDB::name()
 {
     return system->name() + ".remote_gdb";
 }
 
 bool
-RemoteGDB::isattached()
+BaseRemoteGDB::isattached()
 { return attached; }
 
 void
-RemoteGDB::attach(int f)
+BaseRemoteGDB::attach(int f)
 {
     fd = f;
 
@@ -289,7 +279,7 @@ RemoteGDB::attach(int f)
 }
 
 void
-RemoteGDB::detach()
+BaseRemoteGDB::detach()
 {
     attached = false;
     close(fd);
@@ -300,242 +290,42 @@ RemoteGDB::detach()
 }
 
 const char *
-gdb_command(char cmd)
+BaseRemoteGDB::gdb_command(char cmd)
 {
     switch (cmd) {
-      case KGDB_SIGNAL: return "KGDB_SIGNAL";
-      case KGDB_SET_BAUD: return "KGDB_SET_BAUD";
-      case KGDB_SET_BREAK: return "KGDB_SET_BREAK";
-      case KGDB_CONT: return "KGDB_CONT";
-      case KGDB_ASYNC_CONT: return "KGDB_ASYNC_CONT";
-      case KGDB_DEBUG: return "KGDB_DEBUG";
-      case KGDB_DETACH: return "KGDB_DETACH";
-      case KGDB_REG_R: return "KGDB_REG_R";
-      case KGDB_REG_W: return "KGDB_REG_W";
-      case KGDB_SET_THREAD: return "KGDB_SET_THREAD";
-      case KGDB_CYCLE_STEP: return "KGDB_CYCLE_STEP";
-      case KGDB_SIG_CYCLE_STEP: return "KGDB_SIG_CYCLE_STEP";
-      case KGDB_KILL: return "KGDB_KILL";
-      case KGDB_MEM_W: return "KGDB_MEM_W";
-      case KGDB_MEM_R: return "KGDB_MEM_R";
-      case KGDB_SET_REG: return "KGDB_SET_REG";
-      case KGDB_READ_REG: return "KGDB_READ_REG";
-      case KGDB_QUERY_VAR: return "KGDB_QUERY_VAR";
-      case KGDB_SET_VAR: return "KGDB_SET_VAR";
-      case KGDB_RESET: return "KGDB_RESET";
-      case KGDB_STEP: return "KGDB_STEP";
-      case KGDB_ASYNC_STEP: return "KGDB_ASYNC_STEP";
-      case KGDB_THREAD_ALIVE: return "KGDB_THREAD_ALIVE";
-      case KGDB_TARGET_EXIT: return "KGDB_TARGET_EXIT";
-      case KGDB_BINARY_DLOAD: return "KGDB_BINARY_DLOAD";
-      case KGDB_CLR_HW_BKPT: return "KGDB_CLR_HW_BKPT";
-      case KGDB_SET_HW_BKPT: return "KGDB_SET_HW_BKPT";
-      case KGDB_START: return "KGDB_START";
-      case KGDB_END: return "KGDB_END";
-      case KGDB_GOODP: return "KGDB_GOODP";
-      case KGDB_BADP: return "KGDB_BADP";
+      case GDBSignal: return "KGDB_SIGNAL";
+      case GDBSetBaud: return "KGDB_SET_BAUD";
+      case GDBSetBreak: return "KGDB_SET_BREAK";
+      case GDBCont: return "KGDB_CONT";
+      case GDBAsyncCont: return "KGDB_ASYNC_CONT";
+      case GDBDebug: return "KGDB_DEBUG";
+      case GDBDetach: return "KGDB_DETACH";
+      case GDBRegR: return "KGDB_REG_R";
+      case GDBRegW: return "KGDB_REG_W";
+      case GDBSetThread: return "KGDB_SET_THREAD";
+      case GDBCycleStep: return "KGDB_CYCLE_STEP";
+      case GDBSigCycleStep: return "KGDB_SIG_CYCLE_STEP";
+      case GDBKill: return "KGDB_KILL";
+      case GDBMemW: return "KGDB_MEM_W";
+      case GDBMemR: return "KGDB_MEM_R";
+      case GDBSetReg: return "KGDB_SET_REG";
+      case GDBReadReg: return "KGDB_READ_REG";
+      case GDBQueryVar: return "KGDB_QUERY_VAR";
+      case GDBSetVar: return "KGDB_SET_VAR";
+      case GDBReset: return "KGDB_RESET";
+      case GDBStep: return "KGDB_STEP";
+      case GDBAsyncStep: return "KGDB_ASYNC_STEP";
+      case GDBThreadAlive: return "KGDB_THREAD_ALIVE";
+      case GDBTargetExit: return "KGDB_TARGET_EXIT";
+      case GDBBinaryDload: return "KGDB_BINARY_DLOAD";
+      case GDBClrHwBkpt: return "KGDB_CLR_HW_BKPT";
+      case GDBSetHwBkpt: return "KGDB_SET_HW_BKPT";
+      case GDBStart: return "KGDB_START";
+      case GDBEnd: return "KGDB_END";
+      case GDBGoodP: return "KGDB_GOODP";
+      case GDBBadP: return "KGDB_BADP";
       default: return "KGDB_UNKNOWN";
     }
-}
-
-///////////////////////////////////////////////////////////
-// RemoteGDB::acc
-//
-//	Determine if the mapping at va..(va+len) is valid.
-//
-bool
-RemoteGDB::acc(Addr va, size_t len)
-{
-    Addr last_va;
-
-    va = TheISA::TruncPage(va);
-    last_va = TheISA::RoundPage(va + len);
-
-    do  {
-        if (TheISA::IsK0Seg(va)) {
-            if (va < (TheISA::K0SegBase + pmem->size())) {
-                DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
-                        "%#x < K0SEG + size\n", va);
-                return true;
-            } else {
-                DPRINTF(GDBAcc, "acc:   Mapping invalid %#x > K0SEG + size\n",
-                        va);
-                return false;
-            }
-        }
-
-    /**
-     * This code says that all accesses to palcode (instruction and data)
-     * are valid since there isn't a va->pa mapping because palcode is
-     * accessed physically. At some point this should probably be cleaned up
-     * but there is no easy way to do it.
-     */
-
-        if (AlphaISA::PcPAL(va) || va < 0x10000)
-            return true;
-
-        Addr ptbr = context->readMiscReg(AlphaISA::IPR_PALtemp20);
-        TheISA::PageTableEntry pte = TheISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
-        if (!pte.valid()) {
-            DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
-            return false;
-        }
-        va += TheISA::PageBytes;
-    } while (va < last_va);
-
-    DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
-    return true;
-}
-
-///////////////////////////////////////////////////////////
-// RemoteGDB::signal
-//
-//	Translate a trap number into a Unix-compatible signal number.
-//	(GDB only understands Unix signal numbers.)
-//
-int
-RemoteGDB::signal(int type)
-{
-    switch (type) {
-      case ALPHA_KENTRY_INT:
-        return (SIGTRAP);
-
-      case ALPHA_KENTRY_UNA:
-        return (SIGBUS);
-
-      case ALPHA_KENTRY_ARITH:
-        return (SIGFPE);
-
-      case ALPHA_KENTRY_IF:
-        return (SIGILL);
-
-      case ALPHA_KENTRY_MM:
-        return (SIGSEGV);
-
-      default:
-        panic("unknown signal type");
-        return 0;
-    }
-}
-
-///////////////////////////////////////////////////////////
-// RemoteGDB::getregs
-//
-//	Translate the kernel debugger register format into
-//	the GDB register format.
-void
-RemoteGDB::getregs()
-{
-    memset(gdbregs, 0, sizeof(gdbregs));
-
-    gdbregs[KGDB_REG_PC] = context->readPC();
-
-    // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            gdbregs[i] = context->readIntReg(AlphaISA::reg_redir[i]);
-        }
-    } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            gdbregs[i] = context->readIntReg(i);
-        }
-    }
-
-#ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        gdbregs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
-    }
-#endif
-}
-
-///////////////////////////////////////////////////////////
-// RemoteGDB::setregs
-//
-//	Translate the GDB register format into the kernel
-//	debugger register format.
-//
-void
-RemoteGDB::setregs()
-{
-    // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            context->setIntReg(AlphaISA::reg_redir[i], gdbregs[i]);
-        }
-    } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            context->setIntReg(i, gdbregs[i]);
-        }
-    }
-
-#ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
-        context->setFloatRegBits(i, gdbregs[i + KGDB_REG_F0]);
-    }
-#endif
-    context->setPC(gdbregs[KGDB_REG_PC]);
-}
-
-void
-RemoteGDB::setTempBreakpoint(TempBreakpoint &bkpt, Addr addr)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", addr);
-
-    bkpt.address = addr;
-    insertHardBreak(addr, 4);
-}
-
-void
-RemoteGDB::clearTempBreakpoint(TempBreakpoint &bkpt)
-{
-    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n",
-            bkpt.address);
-
-
-    removeHardBreak(bkpt.address, 4);
-    bkpt.address = 0;
-}
-
-void
-RemoteGDB::clearSingleStep()
-{
-    DPRINTF(GDBMisc, "clearSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
-
-    if (takenBkpt.address != 0)
-        clearTempBreakpoint(takenBkpt);
-
-    if (notTakenBkpt.address != 0)
-        clearTempBreakpoint(notTakenBkpt);
-}
-
-void
-RemoteGDB::setSingleStep()
-{
-    Addr pc = context->readPC();
-    Addr npc, bpc;
-    bool set_bt = false;
-
-    npc = pc + sizeof(MachInst);
-
-    // User was stopped at pc, e.g. the instruction at pc was not
-    // executed.
-    MachInst inst = read<MachInst>(pc);
-    StaticInstPtr si(inst);
-    if (si->hasBranchTarget(pc, context, bpc)) {
-        // Don't bother setting a breakpoint on the taken branch if it
-        // is the same as the next pc
-        if (bpc != npc)
-            set_bt = true;
-    }
-
-    DPRINTF(GDBMisc, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
-            takenBkpt.address, notTakenBkpt.address);
-
-    setTempBreakpoint(notTakenBkpt, npc);
-
-    if (set_bt)
-        setTempBreakpoint(takenBkpt, bpc);
 }
 
 /////////////////////////
@@ -543,7 +333,7 @@ RemoteGDB::setSingleStep()
 //
 
 uint8_t
-RemoteGDB::getbyte()
+BaseRemoteGDB::getbyte()
 {
     uint8_t b;
     ::read(fd, &b, 1);
@@ -551,14 +341,14 @@ RemoteGDB::getbyte()
 }
 
 void
-RemoteGDB::putbyte(uint8_t b)
+BaseRemoteGDB::putbyte(uint8_t b)
 {
     ::write(fd, &b, 1);
 }
 
 // Send a packet to gdb
 void
-RemoteGDB::send(const char *bp)
+BaseRemoteGDB::send(const char *bp)
 {
     const char *p;
     uint8_t csum, c;
@@ -567,20 +357,26 @@ RemoteGDB::send(const char *bp)
 
     do {
         p = bp;
-        putbyte(KGDB_START);
+        //Start sending a packet
+        putbyte(GDBStart);
+        //Send the contents, and also keep a check sum.
         for (csum = 0; (c = *p); p++) {
             putbyte(c);
             csum += c;
         }
-        putbyte(KGDB_END);
+        //Send the ending character.
+        putbyte(GDBEnd);
+        //Sent the checksum.
         putbyte(i2digit(csum >> 4));
         putbyte(i2digit(csum));
-    } while ((c = getbyte() & 0x7f) == KGDB_BADP);
+        //Try transmitting over and over again until the other end doesn't send an
+        //error back.
+    } while ((c = getbyte() & 0x7f) == GDBBadP);
 }
 
 // Receive a packet from gdb
 int
-RemoteGDB::recv(char *bp, int maxlen)
+BaseRemoteGDB::recv(char *bp, int maxlen)
 {
     char *p;
     int c, csum;
@@ -589,28 +385,37 @@ RemoteGDB::recv(char *bp, int maxlen)
     do {
         p = bp;
         csum = len = 0;
-        while ((c = getbyte()) != KGDB_START)
+        //Find the beginning of a packet
+        while ((c = getbyte()) != GDBStart)
             ;
 
-        while ((c = getbyte()) != KGDB_END && len < maxlen) {
+        //Read until you find the end of the data in the packet, and keep
+        //track of the check sum.
+        while ((c = getbyte()) != GDBEnd && len < maxlen) {
             c &= 0x7f;
             csum += c;
             *p++ = c;
             len++;
         }
+
+        //Mask the check sum, and terminate the command string.
         csum &= 0xff;
         *p = '\0';
 
+        //If the command was too long, report an error.
         if (len >= maxlen) {
-            putbyte(KGDB_BADP);
+            putbyte(GDBBadP);
             continue;
         }
 
+        //Bring in the checksum. If the check sum matches, csum will be 0.
         csum -= digit2i(getbyte()) * 16;
         csum -= digit2i(getbyte());
 
+        //If the check sum was correct
         if (csum == 0) {
-            putbyte(KGDB_GOODP);
+            //Report that the packet was received correctly
+            putbyte(GDBGoodP);
             // Sequence present?
             if (bp[2] == ':') {
                 putbyte(bp[0]);
@@ -620,7 +425,8 @@ RemoteGDB::recv(char *bp, int maxlen)
             }
             break;
         }
-        putbyte(KGDB_BADP);
+        //Otherwise, report that there was a mistake.
+        putbyte(GDBBadP);
     } while (1);
 
     DPRINTF(GDBRecv, "recv:  %s: %s\n", gdb_command(*bp), bp);
@@ -630,7 +436,7 @@ RemoteGDB::recv(char *bp, int maxlen)
 
 // Read bytes from kernel address space for debugger.
 bool
-RemoteGDB::read(Addr vaddr, size_t size, char *data)
+BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 {
     static Addr lastaddr = 0;
     static size_t lastsize = 0;
@@ -662,7 +468,7 @@ RemoteGDB::read(Addr vaddr, size_t size, char *data)
 
 // Write bytes to kernel address space for debugger.
 bool
-RemoteGDB::write(Addr vaddr, size_t size, const char *data)
+BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
 {
     static Addr lastaddr = 0;
     static size_t lastsize = 0;
@@ -685,21 +491,15 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
     vp->writeBlob(vaddr, (uint8_t*)data, size);
     context->delVirtPort(vp);
 
-#ifdef IMB
-    alpha_pal_imb();
-#endif
-
     return true;
 }
 
-
-PCEventQueue *RemoteGDB::getPcEventQueue()
+PCEventQueue *BaseRemoteGDB::getPcEventQueue()
 {
     return &system->pcEventQueue;
 }
 
-
-RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
+BaseRemoteGDB::HardBreakpoint::HardBreakpoint(BaseRemoteGDB *_gdb, Addr pc)
     : PCEvent(_gdb->getPcEventQueue(), "HardBreakpoint Event", pc),
       gdb(_gdb), refcount(0)
 {
@@ -707,25 +507,25 @@ RemoteGDB::HardBreakpoint::HardBreakpoint(RemoteGDB *_gdb, Addr pc)
 }
 
 void
-RemoteGDB::HardBreakpoint::process(ThreadContext *tc)
+BaseRemoteGDB::HardBreakpoint::process(ThreadContext *tc)
 {
     DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
     if (tc == gdb->context)
-        gdb->trap(ALPHA_KENTRY_INT);
+        gdb->trap(SIGTRAP);
 }
 
 bool
-RemoteGDB::insertSoftBreak(Addr addr, size_t len)
+BaseRemoteGDB::insertSoftBreak(Addr addr, size_t len)
 {
-    if (len != sizeof(MachInst))
+    if (len != sizeof(TheISA::MachInst))
         panic("invalid length\n");
 
     return insertHardBreak(addr, len);
 }
 
 bool
-RemoteGDB::removeSoftBreak(Addr addr, size_t len)
+BaseRemoteGDB::removeSoftBreak(Addr addr, size_t len)
 {
     if (len != sizeof(MachInst))
         panic("invalid length\n");
@@ -734,7 +534,7 @@ RemoteGDB::removeSoftBreak(Addr addr, size_t len)
 }
 
 bool
-RemoteGDB::insertHardBreak(Addr addr, size_t len)
+BaseRemoteGDB::insertHardBreak(Addr addr, size_t len)
 {
     if (len != sizeof(MachInst))
         panic("invalid length\n");
@@ -751,7 +551,7 @@ RemoteGDB::insertHardBreak(Addr addr, size_t len)
 }
 
 bool
-RemoteGDB::removeHardBreak(Addr addr, size_t len)
+BaseRemoteGDB::removeHardBreak(Addr addr, size_t len)
 {
     if (len != sizeof(MachInst))
         panic("invalid length\n");
@@ -771,8 +571,23 @@ RemoteGDB::removeHardBreak(Addr addr, size_t len)
     return true;
 }
 
+void
+BaseRemoteGDB::setTempBreakpoint(Addr bkpt)
+{
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
+    insertHardBreak(bkpt, sizeof(TheISA::MachInst));
+}
+
+void
+BaseRemoteGDB::clearTempBreakpoint(Addr &bkpt)
+{
+    DPRINTF(GDBMisc, "setTempBreakpoint: addr=%#x\n", bkpt);
+    removeHardBreak(bkpt, sizeof(TheISA::MachInst));
+    bkpt = 0;
+}
+
 const char *
-break_type(char c)
+BaseRemoteGDB::break_type(char c)
 {
     switch(c) {
       case '0': return "software breakpoint";
@@ -790,12 +605,12 @@ break_type(char c)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 bool
-RemoteGDB::trap(int type)
+BaseRemoteGDB::trap(int type)
 {
     uint64_t val;
     size_t datalen, len;
-    char data[KGDB_BUFLEN + 1];
-    char buffer[sizeof(gdbregs) * 2 + 256];
+    char data[GDBPacketBufLen + 1];
+    char buffer[gdbregs.bytes() * 2 + 256];
     const char *p;
     char command, subcmd;
     string var;
@@ -823,7 +638,7 @@ RemoteGDB::trap(int type)
         active = true;
     else
         // Tell remote host that an exception has occurred.
-        snprintf((char *)buffer, sizeof(buffer), "S%02x", signal(type));
+        snprintf((char *)buffer, sizeof(buffer), "S%02x", type);
         send(buffer);
 
     // Stick frame regs into our reg cache.
@@ -837,24 +652,25 @@ RemoteGDB::trap(int type)
         p = data + 1;
         switch (command) {
 
-          case KGDB_SIGNAL:
+          case GDBSignal:
             // if this command came from a running gdb, answer it --
             // the other guy has no way of knowing if we're in or out
             // of this loop when he issues a "remote-signal".
-            snprintf((char *)buffer, sizeof(buffer), "S%02x", signal(type));
+            snprintf((char *)buffer, sizeof(buffer),
+                    "S%02x", type);
             send(buffer);
             continue;
 
-          case KGDB_REG_R:
-            if (2 * sizeof(gdbregs) > sizeof(buffer))
+          case GDBRegR:
+            if (2 * gdbregs.bytes() > sizeof(buffer))
                 panic("buffer too small");
 
-            mem2hex(buffer, gdbregs, sizeof(gdbregs));
+            mem2hex(buffer, gdbregs.regs, gdbregs.bytes());
             send(buffer);
             continue;
 
-          case KGDB_REG_W:
-            p = hex2mem(gdbregs, p, sizeof(gdbregs));
+          case GDBRegW:
+            p = hex2mem(gdbregs.regs, p, gdbregs.bytes());
             if (p == NULL || *p != '\0')
                 send("E01");
             else {
@@ -864,7 +680,7 @@ RemoteGDB::trap(int type)
             continue;
 
 #if 0
-          case KGDB_SET_REG:
+          case GDBSetReg:
             val = hex2i(&p);
             if (*p++ != '=') {
                 send("E01");
@@ -875,14 +691,14 @@ RemoteGDB::trap(int type)
                 continue;
             }
 
-            gdbregs[val] = hex2i(&p);
+            gdbregs.regs[val] = hex2i(&p);
             setregs();
             send("OK");
 
             continue;
 #endif
 
-          case KGDB_MEM_R:
+          case GDBMemR:
             val = hex2i(&p);
             if (*p++ != ',') {
                 send("E02");
@@ -914,7 +730,7 @@ RemoteGDB::trap(int type)
             }
             continue;
 
-          case KGDB_MEM_W:
+          case GDBMemW:
             val = hex2i(&p);
             if (*p++ != ',') {
                 send("E06");
@@ -944,7 +760,7 @@ RemoteGDB::trap(int type)
               send("E0B");
             continue;
 
-          case KGDB_SET_THREAD:
+          case GDBSetThread:
             subcmd = *p++;
             val = hex2i(&p);
             if (val == 0)
@@ -953,14 +769,14 @@ RemoteGDB::trap(int type)
                 send("E01");
             continue;
 
-          case KGDB_DETACH:
-          case KGDB_KILL:
+          case GDBDetach:
+          case GDBKill:
             active = false;
             clearSingleStep();
             detach();
             goto out;
 
-          case KGDB_ASYNC_CONT:
+          case GDBAsyncCont:
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
@@ -970,7 +786,7 @@ RemoteGDB::trap(int type)
             clearSingleStep();
             goto out;
 
-          case KGDB_CONT:
+          case GDBCont:
             if (p - data < datalen) {
                 val = hex2i(&p);
                 context->setPC(val);
@@ -979,7 +795,7 @@ RemoteGDB::trap(int type)
             clearSingleStep();
             goto out;
 
-          case KGDB_ASYNC_STEP:
+          case GDBAsyncStep:
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
@@ -989,7 +805,7 @@ RemoteGDB::trap(int type)
             setSingleStep();
             goto out;
 
-          case KGDB_STEP:
+          case GDBStep:
             if (p - data < datalen) {
                 val = hex2i(&p);
                 context->setPC(val);
@@ -998,7 +814,7 @@ RemoteGDB::trap(int type)
             setSingleStep();
             goto out;
 
-          case KGDB_CLR_HW_BKPT:
+          case GDBClrHwBkpt:
             subcmd = *p++;
             if (*p++ != ',') send("E0D");
             val = hex2i(&p);
@@ -1030,7 +846,7 @@ RemoteGDB::trap(int type)
             send(ret ? "OK" : "E0C");
             continue;
 
-          case KGDB_SET_HW_BKPT:
+          case GDBSetHwBkpt:
             subcmd = *p++;
             if (*p++ != ',') send("E0D");
             val = hex2i(&p);
@@ -1062,7 +878,7 @@ RemoteGDB::trap(int type)
             send(ret ? "OK" : "E0C");
             continue;
 
-          case KGDB_QUERY_VAR:
+          case GDBQueryVar:
             var = string(p, datalen - 1);
             if (var == "C")
                 send("QC0");
@@ -1070,17 +886,17 @@ RemoteGDB::trap(int type)
                 send("");
             continue;
 
-          case KGDB_SET_BAUD:
-          case KGDB_SET_BREAK:
-          case KGDB_DEBUG:
-          case KGDB_CYCLE_STEP:
-          case KGDB_SIG_CYCLE_STEP:
-          case KGDB_READ_REG:
-          case KGDB_SET_VAR:
-          case KGDB_RESET:
-          case KGDB_THREAD_ALIVE:
-          case KGDB_TARGET_EXIT:
-          case KGDB_BINARY_DLOAD:
+          case GDBSetBaud:
+          case GDBSetBreak:
+          case GDBDebug:
+          case GDBCycleStep:
+          case GDBSigCycleStep:
+          case GDBReadReg:
+          case GDBSetVar:
+          case GDBReset:
+          case GDBThreadAlive:
+          case GDBTargetExit:
+          case GDBBinaryDload:
             // Unsupported command
             DPRINTF(GDBMisc, "Unsupported command: %s\n",
                     gdb_command(command));
@@ -1106,7 +922,7 @@ RemoteGDB::trap(int type)
 // Convert a hex digit into an integer.
 // This returns -1 if the argument passed is no valid hex digit.
 int
-digit2i(char c)
+BaseRemoteGDB::digit2i(char c)
 {
     if (c >= '0' && c <= '9')
         return (c - '0');
@@ -1121,14 +937,14 @@ digit2i(char c)
 
 // Convert the low 4 bits of an integer into an hex digit.
 char
-i2digit(int n)
+BaseRemoteGDB::i2digit(int n)
 {
     return ("0123456789abcdef"[n & 0x0f]);
 }
 
 // Convert a byte array into an hex string.
 void
-mem2hex(void *vdst, const void *vsrc, int len)
+BaseRemoteGDB::mem2hex(void *vdst, const void *vsrc, int len)
 {
     char *dst = (char *)vdst;
     const char *src = (const char *)vsrc;
@@ -1145,7 +961,7 @@ mem2hex(void *vdst, const void *vsrc, int len)
 // hex digit. If the string ends in the middle of a byte, NULL is
 // returned.
 const char *
-hex2mem(void *vdst, const char *src, int maxlen)
+BaseRemoteGDB::hex2mem(void *vdst, const char *src, int maxlen)
 {
     char *dst = (char *)vdst;
     int msb, lsb;
@@ -1166,7 +982,7 @@ hex2mem(void *vdst, const char *src, int maxlen)
 // This returns a pointer to the character following the last valid
 // hex digit.
 Addr
-hex2i(const char **srcp)
+BaseRemoteGDB::hex2i(const char **srcp)
 {
     const char *src = *srcp;
     Addr r = 0;

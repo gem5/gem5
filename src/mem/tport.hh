@@ -114,8 +114,8 @@ class SimpleTimingPort : public Port
 
   public:
 
-    SimpleTimingPort(std::string pname)
-        : Port(pname), sendEvent(this), drainEvent(NULL)
+    SimpleTimingPort(std::string pname, MemObject *_owner = NULL)
+        : Port(pname, _owner), sendEvent(this), drainEvent(NULL)
     {}
 
     /** Hook for draining timing accesses from the system.  The

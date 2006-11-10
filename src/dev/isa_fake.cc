@@ -25,17 +25,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Miguel Serrano
- *          Ali Saidi
+ * Authors: Ali Saidi
  */
 
 /** @file
  * Isa Fake Device implementation
  */
-
-#include <deque>
-#include <string>
-#include <vector>
 
 #include "base/trace.hh"
 #include "dev/isa_fake.hh"
@@ -49,42 +44,58 @@ using namespace std;
 IsaFake::IsaFake(Params *p)
     : BasicPioDevice(p)
 {
-    pioSize = p->pio_size;
+    if (!params()->retBadAddr)
+        pioSize = p->pio_size;
+
+    memset(&retData, p->retData, sizeof(retData));
 }
 
 Tick
 IsaFake::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
-    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
-    DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
-
-    switch (pkt->getSize()) {
-      case sizeof(uint64_t):
-         pkt->set(0xFFFFFFFFFFFFFFFFULL);
-         break;
-      case sizeof(uint32_t):
-         pkt->set((uint32_t)0xFFFFFFFF);
-         break;
-      case sizeof(uint16_t):
-         pkt->set((uint16_t)0xFFFF);
-         break;
-      case sizeof(uint8_t):
-         pkt->set((uint8_t)0xFF);
-         break;
-      default:
-        panic("invalid access size(?) for PCI configspace!\n");
+    if (params()->retBadAddr) {
+        DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
+                pkt->getAddr(), pkt->getSize());
+        pkt->result = Packet::BadAddress;
+    } else {
+        assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+        DPRINTF(Tsunami, "read  va=%#x size=%d\n",
+                pkt->getAddr(), pkt->getSize());
+        switch (pkt->getSize()) {
+          case sizeof(uint64_t):
+             pkt->set(retData);
+             break;
+          case sizeof(uint32_t):
+             pkt->set((uint32_t)retData);
+             break;
+          case sizeof(uint16_t):
+             pkt->set((uint16_t)retData);
+             break;
+          case sizeof(uint8_t):
+             pkt->set((uint8_t)retData);
+             break;
+          default:
+            panic("invalid access size!\n");
+        }
+        pkt->result = Packet::Success;
     }
-    pkt->result = Packet::Success;
     return pioDelay;
 }
 
 Tick
 IsaFake::write(PacketPtr pkt)
 {
-    DPRINTF(Tsunami, "write - va=%#x size=%d \n", pkt->getAddr(), pkt->getSize());
-    pkt->result = Packet::Success;
+    if (params()->retBadAddr) {
+        DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
+                pkt->getAddr(), pkt->getSize());
+        pkt->result = Packet::BadAddress;
+    } else {
+        DPRINTF(Tsunami, "write - va=%#x size=%d \n",
+                pkt->getAddr(), pkt->getSize());
+        pkt->result = Packet::Success;
+    }
     return pioDelay;
 }
 
@@ -93,6 +104,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
     Param<Addr> pio_addr;
     Param<Tick> pio_latency;
     Param<Addr> pio_size;
+    Param<bool> ret_bad_addr;
+    Param<uint8_t> ret_data;
     SimObjectParam<Platform *> platform;
     SimObjectParam<System *> system;
 
@@ -103,6 +116,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IsaFake)
     INIT_PARAM(pio_addr, "Device Address"),
     INIT_PARAM(pio_latency, "Programmed IO latency"),
     INIT_PARAM(pio_size, "Size of address range"),
+    INIT_PARAM(ret_bad_addr, "Return pkt status BadAddr"),
+    INIT_PARAM(ret_data, "Data to return if not bad addr"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object")
 
@@ -115,6 +130,8 @@ CREATE_SIM_OBJECT(IsaFake)
     p->pio_addr = pio_addr;
     p->pio_delay = pio_latency;
     p->pio_size = pio_size;
+    p->retBadAddr = ret_bad_addr;
+    p->retData = ret_data;
     p->platform = platform;
     p->system = system;
     return new IsaFake(p);

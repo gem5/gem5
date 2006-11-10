@@ -620,9 +620,6 @@ class FullO3CPU : public BaseO3CPU
     PhysicalMemory *physmem;
 #endif
 
-    /** Pointer to memory. */
-    MemObject *mem;
-
     /** Event to call process() on once draining has completed. */
     Event *drainEvent;
 

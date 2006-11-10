@@ -39,7 +39,7 @@
 
 #include "dev/io_device.hh"
 #include "base/range.hh"
-#include "dev/tsunami.hh"
+#include "dev/alpha/tsunami.hh"
 #include "sim/eventq.hh"
 
 /**

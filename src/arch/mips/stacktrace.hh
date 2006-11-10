@@ -37,6 +37,9 @@
 class ThreadContext;
 class StackTrace;
 
+namespace MipsISA
+{
+
 class ProcessInfo
 {
   private:
@@ -116,6 +119,8 @@ StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
 
     trace(tc, !inst->isReturn());
     return true;
+}
+
 }
 
 #endif // __ARCH_MIPS_STACKTRACE_HH__

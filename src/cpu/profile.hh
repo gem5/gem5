@@ -33,9 +33,9 @@
 
 #include <map>
 
+#include "arch/stacktrace.hh"
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
-#include "arch/stacktrace.hh"
 
 class ThreadContext;
 
@@ -66,7 +66,7 @@ class FunctionProfile
     const SymbolTable *symtab;
     ProfileNode top;
     std::map<Addr, Counter> pc_count;
-    StackTrace trace;
+    TheISA::StackTrace trace;
 
   public:
     FunctionProfile(const SymbolTable *symtab);

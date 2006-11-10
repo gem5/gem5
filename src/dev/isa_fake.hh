@@ -25,8 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Miguel Serrano
- *          Ali Saidi
+ * Authors: Ali Saidi
  */
 
 /** @file
@@ -38,14 +37,15 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
-#include "dev/tsunami.hh"
+#include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"
 
 /**
- * IsaFake is a device that returns -1 on all reads and
- * accepts all writes. It is meant to be placed at an address range
+ * IsaFake is a device that returns, BadAddr, 1 or 0 on all reads and
+ *  rites. It is meant to be placed at an address range
  * so that an mcheck doesn't occur when an os probes a piece of hw
- * that doesn't exist (e.g. UARTs1-3).
+ * that doesn't exist (e.g. UARTs1-3), or catch requests in the memory system
+ * that have no responders..
  */
 class IsaFake : public BasicPioDevice
 {
@@ -53,9 +53,12 @@ class IsaFake : public BasicPioDevice
     struct Params : public BasicPioDevice::Params
     {
         Addr pio_size;
+        bool retBadAddr;
+        uint8_t retData;
     };
   protected:
     const Params *params() const { return (const Params*)_params; }
+    uint64_t retData;
 
   public:
     /**
@@ -79,4 +82,4 @@ class IsaFake : public BasicPioDevice
     virtual Tick write(PacketPtr pkt);
 };
 
-#endif // __TSUNAMI_FAKE_HH__
+#endif // __ISA_FAKE_HH__

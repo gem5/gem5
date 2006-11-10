@@ -31,9 +31,9 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
-#include "arch/types.hh"
 #include "arch/regfile.hh"
 #include "arch/syscallreturn.hh"
+#include "arch/types.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
@@ -43,8 +43,11 @@
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
-class AlphaDTB;
-class AlphaITB;
+namespace TheISA
+{
+    class DTB;
+    class ITB;
+}
 class BaseCPU;
 class EndQuiesceEvent;
 class Event;
@@ -53,8 +56,10 @@ class FunctionalPort;
 class VirtualPort;
 class Process;
 class System;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 /**
@@ -117,11 +122,11 @@ class ThreadContext
 #if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
 
-    virtual AlphaITB *getITBPtr() = 0;
+    virtual TheISA::ITB *getITBPtr() = 0;
 
-    virtual AlphaDTB * getDTBPtr() = 0;
+    virtual TheISA::DTB *getDTBPtr() = 0;
 
-    virtual Kernel::Statistics *getKernelStats() = 0;
+    virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
     virtual FunctionalPort *getPhysPort() = 0;
 
@@ -221,21 +226,17 @@ class ThreadContext
 
     virtual MiscReg readMiscReg(int misc_reg) = 0;
 
-    virtual MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault) = 0;
+    virtual MiscReg readMiscRegWithEffect(int misc_reg) = 0;
 
-    virtual Fault setMiscReg(int misc_reg, const MiscReg &val) = 0;
+    virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
 
-    virtual Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val) = 0;
+    virtual void setMiscRegWithEffect(int misc_reg, const MiscReg &val) = 0;
 
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() = 0;
 
     virtual void setStCondFailures(unsigned sc_failures) = 0;
-
-#if FULL_SYSTEM
-    virtual bool inPalMode() = 0;
-#endif
 
     // Only really makes sense for old CPU model.  Still could be useful though.
     virtual bool misspeculating() = 0;
@@ -292,11 +293,12 @@ class ProxyThreadContext : public ThreadContext
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
-    AlphaITB *getITBPtr() { return actualTC->getITBPtr(); }
+    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
+    TheISA::Kernel::Statistics *getKernelStats()
+    { return actualTC->getKernelStats(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
@@ -407,13 +409,13 @@ class ProxyThreadContext : public ThreadContext
     MiscReg readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-    { return actualTC->readMiscRegWithEffect(misc_reg, fault); }
+    MiscReg readMiscRegWithEffect(int misc_reg)
+    { return actualTC->readMiscRegWithEffect(misc_reg); }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscReg(misc_reg, val); }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscRegWithEffect(misc_reg, val); }
 
     unsigned readStCondFailures()
@@ -421,9 +423,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setStCondFailures(unsigned sc_failures)
     { actualTC->setStCondFailures(sc_failures); }
-#if FULL_SYSTEM
-    bool inPalMode() { return actualTC->inPalMode(); }
-#endif
 
     // @todo: Fix this!
     bool misspeculating() { return actualTC->misspeculating(); }

@@ -119,18 +119,34 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-// Primary format for integer operate instructions:
 def format Priv(code, *opt_flags) {{
-        checkCode = "!(Pstate<2:2> || Hpstate<2:2>)"
+        checkCode = "!(Pstate<2:> || Hpstate<2:>)"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags + ('IprAccessOp',))
+             checkCode, name, Name, opt_flags)
+}};
+
+def format NoPriv(code, *opt_flags) {{
+        #Instructions which use this format don't really check for
+        #any particular mode, but the disassembly is performed
+        #using the control registers actual name
+        checkCode = "false"
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
+}};
+
+def format PrivCheck(code, extraCheckCode, *opt_flags) {{
+        checkCode = "(%s) && !(Pstate<2:> || Hpstate<2:>)" % extraCheckCode
+        (header_output, decoder_output,
+         exec_output, decode_block) = doPrivFormat(code,
+             checkCode, name, Name, opt_flags)
 }};
 
 def format HPriv(code, *opt_flags) {{
         checkCode = "!Hpstate<2:2>"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags + ('IprAccessOp',))
+             checkCode, name, Name, opt_flags)
 }};
 

@@ -71,6 +71,7 @@ output exec {{
 #if FULL_SYSTEM
 #include "sim/pseudo_inst.hh"
 #endif
+#include "arch/alpha/ipr.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"
@@ -183,8 +184,9 @@ def operands {{
     'Fc': ('FloatReg', 'df', 'FC', 'IsFloating', 3),
     'Mem': ('Mem', 'uq', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
     'NPC': ('NPC', 'uq', None, ( None, None, 'IsControl' ), 4),
-    'Runiq': ('ControlReg', 'uq', 'TheISA::Uniq_DepTag', None, 1),
-    'FPCR':  (' ControlReg', 'uq', 'TheISA::Fpcr_DepTag', None, 1),
+    'Runiq': ('ControlReg', 'uq', 'MISCREG_UNIQ', None, 1),
+    'FPCR':  ('ControlReg', 'uq', 'MISCREG_FPCR', None, 1),
+    'IntrFlag': ('ControlReg', 'uq', 'MISCREG_INTR', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
     'R0':  ('IntReg', 'uq', '0', None, 1),
     'R16': ('IntReg', 'uq', '16', None, 1),
@@ -214,11 +216,6 @@ output header {{
         /// live here and not in the AlphaISA namespace.
         enum DependenceTags {
             FP_Base_DepTag = AlphaISA::FP_Base_DepTag,
-            Fpcr_DepTag = AlphaISA::Fpcr_DepTag,
-            Uniq_DepTag = AlphaISA::Uniq_DepTag,
-            Lock_Flag_DepTag = AlphaISA::Lock_Flag_DepTag,
-            Lock_Addr_DepTag = AlphaISA::Lock_Addr_DepTag,
-            IPR_Base_DepTag = AlphaISA::IPR_Base_DepTag
         };
 
         /// Constructor.

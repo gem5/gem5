@@ -59,6 +59,8 @@ class Bus : public MemObject
     /** the next tick at which the bus will be idle */
     Tick tickNextIdle;
 
+    Event * drainEvent;
+
     static const int defaultId = -3; //Make it unique from Broadcast
 
     struct DevMap {
@@ -144,7 +146,7 @@ class Bus : public MemObject
 
         /** Constructor for the BusPort.*/
         BusPort(const std::string &_name, Bus *_bus, int _id)
-            : Port(_name), _onRetryList(false), bus(_bus), id(_id)
+            : Port(_name, _bus), _onRetryList(false), bus(_bus), id(_id)
         { }
 
         bool onRetryList()
@@ -240,6 +242,9 @@ class Bus : public MemObject
     /** Port that handles requests that don't match any of the interfaces.*/
     BusPort *defaultPort;
 
+    /** Has the user specified their own default responder? */
+    bool responderSet;
+
   public:
 
     /** A function used to return the port associated with this bus object. */
@@ -247,9 +252,13 @@ class Bus : public MemObject
 
     virtual void init();
 
-    Bus(const std::string &n, int bus_id, int _clock, int _width)
+    unsigned int drain(Event *de);
+
+    Bus(const std::string &n, int bus_id, int _clock, int _width,
+        bool responder_set)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
-        tickNextIdle(0), busIdle(this), inRetry(false), defaultPort(NULL)
+          tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
+          defaultPort(NULL), responderSet(responder_set)
     {
         //Both the width and clock period must be positive
         if (width <= 0)

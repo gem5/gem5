@@ -47,8 +47,11 @@
 // forward declarations
 #if FULL_SYSTEM
 class Processor;
-class AlphaITB;
-class AlphaDTB;
+namespace TheISA
+{
+    class ITB;
+    class DTB;
+}
 class MemObject;
 
 class RemoteGDB;
@@ -76,8 +79,6 @@ class BaseSimpleCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
 
-    MemObject *mem;
-
   protected:
     Trace::InstRecord *traceData;
 
@@ -95,10 +96,9 @@ class BaseSimpleCPU : public BaseCPU
   public:
     struct Params : public BaseCPU::Params
     {
-        MemObject *mem;
 #if FULL_SYSTEM
-        AlphaITB *itb;
-        AlphaDTB *dtb;
+        TheISA::ITB *itb;
+        TheISA::DTB *dtb;
 #else
         Process *process;
 #endif
@@ -285,26 +285,23 @@ class BaseSimpleCPU : public BaseCPU
         return thread->readMiscReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return thread->readMiscRegWithEffect(misc_reg, fault);
+        return thread->readMiscRegWithEffect(misc_reg);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         return thread->setMiscReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         return thread->setMiscRegWithEffect(misc_reg, val);
     }
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
-    int readIntrFlag() { return thread->readIntrFlag(); }
-    void setIntrFlag(int val) { thread->setIntrFlag(val); }
-    bool inPalMode() { return thread->inPalMode(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else

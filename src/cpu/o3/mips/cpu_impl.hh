@@ -58,23 +58,9 @@ MipsO3CPU<Impl>::MipsO3CPU(Params *params)
         if (i < params->workload.size()) {
             DPRINTF(O3CPU, "Workload[%i] process is %#x",
                     i, this->thread[i]);
-            this->thread[i] = new Thread(this, i, params->workload[i],
-                                         i, params->mem);
+            this->thread[i] = new Thread(this, i, params->workload[i], i);
 
             this->thread[i]->setStatus(ThreadContext::Suspended);
-
-
-            /* Use this port to for syscall emulation writes to memory. */
-            Port *mem_port;
-            TranslatingPort *trans_port;
-            trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                                      name(), i),
-                                             params->workload[i]->pTable,
-                                             false);
-            mem_port = params->mem->getPort("functional");
-            mem_port->setPeer(trans_port);
-            trans_port->setPeer(mem_port);
-            this->thread[i]->setMemPort(trans_port);
 
             //usedTids[i] = true;
             //threadMap[i] = i;
@@ -83,7 +69,7 @@ MipsO3CPU<Impl>::MipsO3CPU(Params *params)
             //when scheduling threads to CPU
             Process* dummy_proc = NULL;
 
-            this->thread[i] = new Thread(this, i, dummy_proc, i, params->mem);
+            this->thread[i] = new Thread(this, i, dummy_proc, i);
             //usedTids[i] = false;
         }
 
@@ -156,25 +142,24 @@ MipsO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 
 template <class Impl>
 MiscReg
-MipsO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault,
-                                        unsigned tid)
+MipsO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
 {
-    return this->regFile.readMiscRegWithEffect(misc_reg, fault, tid);
+    return this->regFile.readMiscRegWithEffect(misc_reg, tid);
 }
 
 template <class Impl>
-Fault
+void
 MipsO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
 {
-    return this->regFile.setMiscReg(misc_reg, val, tid);
+    this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
-Fault
+void
 MipsO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
                                        unsigned tid)
 {
-    return this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
+    this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
 
 template <class Impl>

@@ -38,8 +38,8 @@
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
-#include "kern/kernel_stats.hh"
 #endif // FULL_SYSTEM
 
 using namespace std;
@@ -72,6 +72,12 @@ CheckerCPU::CheckerCPU(Params *p)
     systemPtr = NULL;
 #else
     process = p->process;
+    thread = new SimpleThread(this, /* thread_num */ 0, process,
+                              /* asid */ 0);
+
+    thread->setStatus(ThreadContext::Suspended);
+    tc = thread->getTC();
+    threadContexts.push_back(tc);
 #endif
 
     result.integer = 0;
@@ -79,20 +85,6 @@ CheckerCPU::CheckerCPU(Params *p)
 
 CheckerCPU::~CheckerCPU()
 {
-}
-
-void
-CheckerCPU::setMemory(MemObject *mem)
-{
-#if !FULL_SYSTEM
-    memPtr = mem;
-    thread = new SimpleThread(this, /* thread_num */ 0, process,
-                              /* asid */ 0, mem);
-
-    thread->setStatus(ThreadContext::Suspended);
-    tc = thread->getTC();
-    threadContexts.push_back(tc);
-#endif
 }
 
 void

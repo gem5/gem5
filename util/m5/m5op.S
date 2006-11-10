@@ -36,8 +36,6 @@
 #define quiescens_func 0x02
 #define quiescecycle_func 0x03
 #define quiescetime_func 0x04
-#define ivlb_func 0x10
-#define ivle_func 0x11
 #define exit_old_func 0x20 // deprectated!
 #define exit_func 0x21
 #define initparam_func 0x30
@@ -74,8 +72,6 @@ func:
 #define QUIESCENS(r1) INST(m5_op, r1, 0, quiescens_func)
 #define QUIESCECYC(r1) INST(m5_op, r1, 0, quiescecycle_func)
 #define QUIESCETIME INST(m5_op, 0, 0, quiescetime_func)
-#define IVLB(reg) INST(m5_op, reg, 0, ivlb_func)
-#define IVLE(reg) INST(m5_op, reg, 0, ivle_func)
 #define M5EXIT(reg) INST(m5_op, reg, 0, exit_func)
 #define INITPARAM(reg) INST(m5_op, reg, 0, initparam_func)
 #define LOADSYMBOL(reg) INST(m5_op, reg, 0, loadsymbol_func)
@@ -122,19 +118,6 @@ LEAF(quiesceTime)
         QUIESCETIME
         RET
 END(quiesceTime)
-
-
-        .align 4
-LEAF(m5_ivlb)
-        IVLB(16)
-        RET
-END(m5_ivlb)
-
-        .align 4
-LEAF(m5_ivle)
-        IVLE(16)
-        RET
-END(m5_ivle)
 
         .align 4
 LEAF(m5_exit)

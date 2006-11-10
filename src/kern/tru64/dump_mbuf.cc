@@ -47,7 +47,7 @@ using namespace TheISA;
 namespace tru64 {
 
 void
-DumpMbuf(AlphaArguments args)
+DumpMbuf(Arguments args)
 {
     ThreadContext *tc = args.getThreadContext();
     Addr addr = (Addr)args;

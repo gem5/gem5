@@ -47,8 +47,6 @@ namespace AlphaPseudo
     void quiesceNs(ThreadContext *tc, uint64_t ns);
     void quiesceCycles(ThreadContext *tc, uint64_t cycles);
     uint64_t quiesceTime(ThreadContext *tc);
-    void ivlb(ThreadContext *tc);
-    void ivle(ThreadContext *tc);
     void m5exit(ThreadContext *tc, Tick delay);
     void m5exit_old(ThreadContext *tc);
     void loadsymbol(ThreadContext *xc);

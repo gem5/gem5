@@ -33,12 +33,14 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/process.hh"
+#include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #if !FULL_SYSTEM
+#include "arch/sparc/process.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #endif
@@ -48,214 +50,352 @@ using namespace std;
 namespace SparcISA
 {
 
-FaultName     InternalProcessorError::_name = "intprocerr";
-TrapType      InternalProcessorError::_trapType = 0x029;
-FaultPriority InternalProcessorError::_priority = 4;
-FaultStat     InternalProcessorError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PowerOnReset>::vals =
+    {"power_on_reset", 0x001, 0, {H, H, H}};
 
-FaultName     MemAddressNotAligned::_name = "unalign";
-TrapType      MemAddressNotAligned::_trapType = 0x034;
-FaultPriority MemAddressNotAligned::_priority = 10;
-FaultStat     MemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<WatchDogReset>::vals =
+    {"watch_dog_reset", 0x002, 120, {H, H, H}};
 
-FaultName     PowerOnReset::_name = "pow_reset";
-TrapType      PowerOnReset::_trapType = 0x001;
-FaultPriority PowerOnReset::_priority = 0;
-FaultStat     PowerOnReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<ExternallyInitiatedReset>::vals =
+    {"externally_initiated_reset", 0x003, 110, {H, H, H}};
 
-FaultName     WatchDogReset::_name = "watch_dog_reset";
-TrapType      WatchDogReset::_trapType = 0x002;
-FaultPriority WatchDogReset::_priority = 1;
-FaultStat     WatchDogReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<SoftwareInitiatedReset>::vals =
+    {"software_initiated_reset", 0x004, 130, {SH, SH, H}};
 
-FaultName     ExternallyInitiatedReset::_name = "extern_reset";
-TrapType      ExternallyInitiatedReset::_trapType = 0x003;
-FaultPriority ExternallyInitiatedReset::_priority = 1;
-FaultStat     ExternallyInitiatedReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<REDStateException>::vals =
+    {"RED_state_exception", 0x005, 1, {H, H, H}};
 
-FaultName     SoftwareInitiatedReset::_name = "software_reset";
-TrapType      SoftwareInitiatedReset::_trapType = 0x004;
-FaultPriority SoftwareInitiatedReset::_priority = 1;
-FaultStat     SoftwareInitiatedReset::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<StoreError>::vals =
+    {"store_error", 0x007, 201, {H, H, H}};
 
-FaultName     REDStateException::_name = "red_counte";
-TrapType      REDStateException::_trapType = 0x005;
-FaultPriority REDStateException::_priority = 1;
-FaultStat     REDStateException::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessException>::vals =
+    {"instruction_access_exception", 0x008, 300, {H, H, H}};
 
-FaultName     InstructionAccessException::_name = "inst_access";
-TrapType      InstructionAccessException::_trapType = 0x008;
-FaultPriority InstructionAccessException::_priority = 5;
-FaultStat     InstructionAccessException::_count;
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessMMUMiss>::vals =
+    {"inst_mmu", 0x009, 2, {H, H, H}};*/
 
-FaultName     InstructionAccessMMUMiss::_name = "inst_mmu";
-TrapType      InstructionAccessMMUMiss::_trapType = 0x009;
-FaultPriority InstructionAccessMMUMiss::_priority = 2;
-FaultStat     InstructionAccessMMUMiss::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessError>::vals =
+    {"instruction_access_error", 0x00A, 400, {H, H, H}};
 
-FaultName     InstructionAccessError::_name = "inst_error";
-TrapType      InstructionAccessError::_trapType = 0x00A;
-FaultPriority InstructionAccessError::_priority = 3;
-FaultStat     InstructionAccessError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<IllegalInstruction>::vals =
+    {"illegal_instruction", 0x010, 620, {H, H, H}};
 
-FaultName     IllegalInstruction::_name = "illegal_inst";
-TrapType      IllegalInstruction::_trapType = 0x010;
-FaultPriority IllegalInstruction::_priority = 7;
-FaultStat     IllegalInstruction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PrivilegedOpcode>::vals =
+    {"privileged_opcode", 0x011, 700, {P, SH, SH}};
 
-FaultName     PrivilegedOpcode::_name = "priv_opcode";
-TrapType      PrivilegedOpcode::_trapType = 0x011;
-FaultPriority PrivilegedOpcode::_priority = 6;
-FaultStat     PrivilegedOpcode::_count;
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedLDD>::vals =
+    {"unimp_ldd", 0x012, 6, {H, H, H}};*/
 
-FaultName     UnimplementedLDD::_name = "unimp_ldd";
-TrapType      UnimplementedLDD::_trapType = 0x012;
-FaultPriority UnimplementedLDD::_priority = 6;
-FaultStat     UnimplementedLDD::_count;
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<UnimplementedSTD>::vals =
+    {"unimp_std", 0x013, 6, {H, H, H}};*/
 
-FaultName     UnimplementedSTD::_name = "unimp_std";
-TrapType      UnimplementedSTD::_trapType = 0x013;
-FaultPriority UnimplementedSTD::_priority = 6;
-FaultStat     UnimplementedSTD::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpDisabled>::vals =
+    {"fp_disabled", 0x020, 800, {P, P, H}};
 
-FaultName     FpDisabled::_name = "fp_disabled";
-TrapType      FpDisabled::_trapType = 0x020;
-FaultPriority FpDisabled::_priority = 8;
-FaultStat     FpDisabled::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpExceptionIEEE754>::vals =
+    {"fp_exception_ieee_754", 0x021, 1110, {P, P, H}};
 
-FaultName     FpExceptionIEEE754::_name = "fp_754";
-TrapType      FpExceptionIEEE754::_trapType = 0x021;
-FaultPriority FpExceptionIEEE754::_priority = 11;
-FaultStat     FpExceptionIEEE754::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<FpExceptionOther>::vals =
+    {"fp_exception_other", 0x022, 1110, {P, P, H}};
 
-FaultName     FpExceptionOther::_name = "fp_other";
-TrapType      FpExceptionOther::_trapType = 0x022;
-FaultPriority FpExceptionOther::_priority = 11;
-FaultStat     FpExceptionOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<TagOverflow>::vals =
+    {"tag_overflow", 0x023, 1400, {P, P, H}};
 
-FaultName     TagOverflow::_name = "tag_overflow";
-TrapType      TagOverflow::_trapType = 0x023;
-FaultPriority TagOverflow::_priority = 14;
-FaultStat     TagOverflow::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<CleanWindow>::vals =
+    {"clean_window", 0x024, 1010, {P, P, H}};
 
-FaultName     DivisionByZero::_name = "div_by_zero";
-TrapType      DivisionByZero::_trapType = 0x028;
-FaultPriority DivisionByZero::_priority = 15;
-FaultStat     DivisionByZero::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DivisionByZero>::vals =
+    {"division_by_zero", 0x028, 1500, {P, P, H}};
 
-FaultName     DataAccessException::_name = "data_access";
-TrapType      DataAccessException::_trapType = 0x030;
-FaultPriority DataAccessException::_priority = 12;
-FaultStat     DataAccessException::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InternalProcessorError>::vals =
+    {"internal_processor_error", 0x029, 4, {H, H, H}};
 
-FaultName     DataAccessMMUMiss::_name = "data_mmu";
-TrapType      DataAccessMMUMiss::_trapType = 0x031;
-FaultPriority DataAccessMMUMiss::_priority = 12;
-FaultStat     DataAccessMMUMiss::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionInvalidTSBEntry>::vals =
+    {"instruction_invalid_tsb_entry", 0x02A, 210, {H, H, SH}};
 
-FaultName     DataAccessError::_name = "data_error";
-TrapType      DataAccessError::_trapType = 0x032;
-FaultPriority DataAccessError::_priority = 12;
-FaultStat     DataAccessError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataInvalidTSBEntry>::vals =
+    {"data_invalid_tsb_entry", 0x02B, 1203, {H, H, H}};
 
-FaultName     DataAccessProtection::_name = "data_protection";
-TrapType      DataAccessProtection::_trapType = 0x033;
-FaultPriority DataAccessProtection::_priority = 12;
-FaultStat     DataAccessProtection::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessException>::vals =
+    {"data_access_exception", 0x030, 1201, {H, H, H}};
 
-FaultName     LDDFMemAddressNotAligned::_name = "unalign_lddf";
-TrapType      LDDFMemAddressNotAligned::_trapType = 0x035;
-FaultPriority LDDFMemAddressNotAligned::_priority = 10;
-FaultStat     LDDFMemAddressNotAligned::_count;
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessMMUMiss>::vals =
+    {"data_mmu", 0x031, 12, {H, H, H}};*/
 
-FaultName     STDFMemAddressNotAligned::_name = "unalign_stdf";
-TrapType      STDFMemAddressNotAligned::_trapType = 0x036;
-FaultPriority STDFMemAddressNotAligned::_priority = 10;
-FaultStat     STDFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessError>::vals =
+    {"data_access_error", 0x032, 1210, {H, H, H}};
 
-FaultName     PrivilegedAction::_name = "priv_action";
-TrapType      PrivilegedAction::_trapType = 0x037;
-FaultPriority PrivilegedAction::_priority = 11;
-FaultStat     PrivilegedAction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataAccessProtection>::vals =
+    {"data_access_protection", 0x033, 1207, {H, H, H}};
 
-FaultName     LDQFMemAddressNotAligned::_name = "unalign_ldqf";
-TrapType      LDQFMemAddressNotAligned::_trapType = 0x038;
-FaultPriority LDQFMemAddressNotAligned::_priority = 10;
-FaultStat     LDQFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<MemAddressNotAligned>::vals =
+    {"mem_address_not_aligned", 0x034, 1020, {H, H, H}};
 
-FaultName     STQFMemAddressNotAligned::_name = "unalign_stqf";
-TrapType      STQFMemAddressNotAligned::_trapType = 0x039;
-FaultPriority STQFMemAddressNotAligned::_priority = 10;
-FaultStat     STQFMemAddressNotAligned::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDDFMemAddressNotAligned>::vals =
+    {"LDDF_mem_address_not_aligned", 0x035, 1010, {H, H, H}};
 
-FaultName     AsyncDataError::_name = "async_data";
-TrapType      AsyncDataError::_trapType = 0x040;
-FaultPriority AsyncDataError::_priority = 2;
-FaultStat     AsyncDataError::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STDFMemAddressNotAligned>::vals =
+    {"STDF_mem_address_not_aligned", 0x036, 1010, {H, H, H}};
 
-FaultName     CleanWindow::_name = "clean_win";
-TrapType      CleanWindow::_trapType = 0x024;
-FaultPriority CleanWindow::_priority = 10;
-FaultStat     CleanWindow::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PrivilegedAction>::vals =
+    {"privileged_action", 0x037, 1110, {H, H, SH}};
 
-//The enumerated faults
+template<> SparcFaultBase::FaultVals
+    SparcFault<LDQFMemAddressNotAligned>::vals =
+    {"LDQF_mem_address_not_aligned", 0x038, 1010, {H, H, H}};
 
-FaultName     InterruptLevelN::_name = "interrupt_n";
-TrapType      InterruptLevelN::_baseTrapType = 0x041;
-FaultStat     InterruptLevelN::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<STQFMemAddressNotAligned>::vals =
+    {"STQF_mem_address_not_aligned", 0x039, 1010, {H, H, H}};
 
-FaultName     SpillNNormal::_name = "spill_n_normal";
-TrapType      SpillNNormal::_baseTrapType = 0x080;
-FaultPriority SpillNNormal::_priority = 9;
-FaultStat     SpillNNormal::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionRealTranslationMiss>::vals =
+    {"instruction_real_translation_miss", 0x03E, 208, {H, H, SH}};
 
-FaultName     SpillNOther::_name = "spill_n_other";
-TrapType      SpillNOther::_baseTrapType = 0x0A0;
-FaultPriority SpillNOther::_priority = 9;
-FaultStat     SpillNOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<DataRealTranslationMiss>::vals =
+    {"data_real_translation_miss", 0x03F, 1203, {H, H, H}};
 
-FaultName     FillNNormal::_name = "fill_n_normal";
-TrapType      FillNNormal::_baseTrapType = 0x0C0;
-FaultPriority FillNNormal::_priority = 9;
-FaultStat     FillNNormal::_count;
+//XXX This trap is apparently dropped from ua2005
+/*template<> SparcFaultBase::FaultVals
+    SparcFault<AsyncDataError>::vals =
+    {"async_data", 0x040, 2, {H, H, H}};*/
 
-FaultName     FillNOther::_name = "fill_n_other";
-TrapType      FillNOther::_baseTrapType = 0x0E0;
-FaultPriority FillNOther::_priority = 9;
-FaultStat     FillNOther::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<InterruptLevelN>::vals =
+    {"interrupt_level_n", 0x041, 0, {P, P, SH}};
 
-FaultName     TrapInstruction::_name = "trap_inst_n";
-TrapType      TrapInstruction::_baseTrapType = 0x100;
-FaultPriority TrapInstruction::_priority = 16;
-FaultStat     TrapInstruction::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<HstickMatch>::vals =
+    {"hstick_match", 0x05E, 1601, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<TrapLevelZero>::vals =
+    {"trap_level_zero", 0x05F, 202, {H, H, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<PAWatchpoint>::vals =
+    {"PA_watchpoint", 0x061, 1209, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<VAWatchpoint>::vals =
+    {"VA_watchpoint", 0x062, 1120, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastInstructionAccessMMUMiss>::vals =
+    {"fast_instruction_access_MMU_miss", 0x064, 208, {H, H, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessMMUMiss>::vals =
+    {"fast_data_access_MMU_miss", 0x068, 1203, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessProtection>::vals =
+    {"fast_data_access_protection", 0x06C, 1207, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<InstructionBreakpoint>::vals =
+    {"instruction_break", 0x076, 610, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<CpuMondo>::vals =
+    {"cpu_mondo", 0x07C, 1608, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<DevMondo>::vals =
+    {"dev_mondo", 0x07D, 1611, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<ResumeableError>::vals =
+    {"resume_error", 0x07E, 3330, {P, P, SH}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNNormal>::vals =
+    {"spill_n_normal", 0x080, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<SpillNOther>::vals =
+    {"spill_n_other", 0x0A0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNNormal>::vals =
+    {"fill_n_normal", 0x0C0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<FillNOther>::vals =
+    {"fill_n_other", 0x0E0, 900, {P, P, H}};
+
+template<> SparcFaultBase::FaultVals
+    SparcFault<TrapInstruction>::vals =
+    {"trap_instruction", 0x100, 1602, {P, P, H}};
 
 #if !FULL_SYSTEM
-FaultName PageTableFault::_name = "page_table_fault";
-TrapType PageTableFault::_trapType = 0x0000;
-FaultPriority PageTableFault::_priority = 0;
-FaultStat PageTableFault::_count;
+template<> SparcFaultBase::FaultVals
+    SparcFault<PageTableFault>::vals =
+    {"page_table_fault", 0x0000, 0, {SH, SH, SH}};
 #endif
 
 /**
- * This sets everything up for a normal trap except for actually jumping to
- * the handler. It will need to be expanded to include the state machine in
- * the manual. Right now it assumes that traps will always be to the
- * privileged level.
+ * This causes the thread context to enter RED state. This causes the side
+ * effects which go with entering RED state because of a trap.
  */
 
-void doNormalFault(ThreadContext *tc, TrapType tt)
+void enterREDState(ThreadContext *tc)
 {
-    uint64_t TL = tc->readMiscReg(MISCREG_TL);
-    uint64_t TSTATE = tc->readMiscReg(MISCREG_TSTATE);
-    uint64_t PSTATE = tc->readMiscReg(MISCREG_PSTATE);
-    uint64_t HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
-    uint64_t CCR = tc->readMiscReg(MISCREG_CCR);
-    uint64_t ASI = tc->readMiscReg(MISCREG_ASI);
-    uint64_t CWP = tc->readMiscReg(MISCREG_CWP);
-    uint64_t CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
-    uint64_t GL = tc->readMiscReg(MISCREG_GL);
-    uint64_t PC = tc->readPC();
-    uint64_t NPC = tc->readNextPC();
+    //@todo Disable the mmu?
+    //@todo Disable watchpoints?
+    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    //HPSTATE.red = 1
+    HPSTATE |= (1 << 5);
+    //HPSTATE.hpriv = 1
+    HPSTATE |= (1 << 2);
+    tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+}
+
+/**
+ * This sets everything up for a RED state trap except for actually jumping to
+ * the handler.
+ */
+
+void doREDFault(ThreadContext *tc, TrapType tt)
+{
+    MiscReg TL = tc->readMiscReg(MISCREG_TL);
+    MiscReg TSTATE = tc->readMiscReg(MISCREG_TSTATE);
+    MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
+    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    MiscReg ASI = tc->readMiscReg(MISCREG_ASI);
+    MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
+    MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    MiscReg GL = tc->readMiscReg(MISCREG_GL);
+    MiscReg PC = tc->readPC();
+    MiscReg NPC = tc->readNextPC();
+
+    TL++;
+
+    //set TSTATE.gl to gl
+    replaceBits(TSTATE, 42, 40, GL);
+    //set TSTATE.ccr to ccr
+    replaceBits(TSTATE, 39, 32, CCR);
+    //set TSTATE.asi to asi
+    replaceBits(TSTATE, 31, 24, ASI);
+    //set TSTATE.pstate to pstate
+    replaceBits(TSTATE, 20, 8, PSTATE);
+    //set TSTATE.cwp to cwp
+    replaceBits(TSTATE, 4, 0, CWP);
+
+    //Write back TSTATE
+    tc->setMiscReg(MISCREG_TSTATE, TSTATE);
+
+    //set TPC to PC
+    tc->setMiscReg(MISCREG_TPC, PC);
+    //set TNPC to NPC
+    tc->setMiscReg(MISCREG_TNPC, NPC);
+
+    //set HTSTATE.hpstate to hpstate
+    tc->setMiscReg(MISCREG_HTSTATE, HPSTATE);
+
+    //TT = trap type;
+    tc->setMiscReg(MISCREG_TT, tt);
+
+    //Update GL
+    tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxGL));
+
+    //set PSTATE.mm to 00
+    //set PSTATE.pef to 1
+    PSTATE |= (1 << 4);
+    //set PSTATE.am to 0
+    PSTATE &= ~(1 << 3);
+    //set PSTATE.priv to 0
+    PSTATE &= ~(1 << 2);
+    //set PSTATE.ie to 0
+    PSTATE &= ~(1 << 1);
+    //set PSTATE.cle to 0
+    PSTATE &= ~(1 << 9);
+    //PSTATE.tle is unchanged
+    //XXX Where is the tct bit?
+    //set PSTATE.tct to 0
+    tc->setMiscReg(MISCREG_PSTATE, PSTATE);
+
+    //set HPSTATE.red to 1
+    HPSTATE |= (1 << 5);
+    //set HPSTATE.hpriv to 1
+    HPSTATE |= (1 << 2);
+    //set HPSTATE.ibe to 0
+    HPSTATE &= ~(1 << 10);
+    //set HPSTATE.tlz to 0
+    HPSTATE &= ~(1 << 0);
+    tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+
+    bool changedCWP = true;
+    if(tt == 0x24)
+        CWP++;
+    else if(0x80 <= tt && tt <= 0xbf)
+        CWP += (CANSAVE + 2);
+    else if(0xc0 <= tt && tt <= 0xff)
+        CWP--;
+    else
+        changedCWP = false;
+
+    if(changedCWP)
+    {
+        CWP = (CWP + NWindows) % NWindows;
+        tc->setMiscRegWithEffect(MISCREG_CWP, CWP);
+    }
+}
+
+/**
+ * This sets everything up for a normal trap except for actually jumping to
+ * the handler.
+ */
+
+void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
+{
+    MiscReg TL = tc->readMiscReg(MISCREG_TL);
+    MiscReg TSTATE = tc->readMiscReg(MISCREG_TSTATE);
+    MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
+    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    MiscReg ASI = tc->readMiscReg(MISCREG_ASI);
+    MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
+    MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    MiscReg GL = tc->readMiscReg(MISCREG_GL);
+    MiscReg PC = tc->readPC();
+    MiscReg NPC = tc->readNextPC();
 
     //Increment the trap level
     TL++;
@@ -289,10 +429,10 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
     tc->setMiscReg(MISCREG_TT, tt);
 
     //Update the global register level
-    if(1/*We're delivering the trap in priveleged mode*/)
-        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxGL));
+    if(!gotoHpriv)
+        tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxPGL));
     else
-        tc->setMiscReg(MISCREG_GL, max<int>(GL+1, MaxPGL));
+        tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxGL));
 
     //PSTATE.mm is unchanged
     //PSTATE.pef = whether or not an fpu is present
@@ -301,7 +441,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
     PSTATE |= (1 << 4);
     //PSTATE.am = 0
     PSTATE &= ~(1 << 3);
-    if(1/*We're delivering the trap in priveleged mode*/)
+    if(!gotoHpriv)
     {
         //PSTATE.priv = 1
         PSTATE |= (1 << 2);
@@ -322,7 +462,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
     //XXX Where exactly is this field?
     tc->setMiscReg(MISCREG_PSTATE, PSTATE);
 
-    if(0/*We're delivering the trap in hyperprivileged mode*/)
+    if(gotoHpriv)
     {
         //HPSTATE.red = 0
         HPSTATE &= ~(1 << 5);
@@ -351,47 +491,135 @@ void doNormalFault(ThreadContext *tc, TrapType tt)
     }
 }
 
+void getREDVector(Addr & PC, Addr & NPC)
+{
+    //XXX The following constant might belong in a header file.
+    const Addr RSTVAddr = 0xFFFFFFFFF0000000ULL;
+    PC = RSTVAddr | 0xA0;
+    NPC = PC + sizeof(MachInst);
+}
+
+void getHyperVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT)
+{
+    Addr HTBA = tc->readMiscReg(MISCREG_HTBA);
+    PC = (HTBA & ~mask(14)) | ((TT << 5) & mask(14));
+    NPC = PC + sizeof(MachInst);
+}
+
+void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscReg TL)
+{
+    Addr TBA = tc->readMiscReg(MISCREG_TBA);
+    PC = (TBA & ~mask(15)) |
+        (TL > 1 ? (1 << 14) : 0) |
+        ((TT << 5) & mask(14));
+    NPC = PC + sizeof(MachInst);
+}
+
 #if FULL_SYSTEM
 
-void SparcFault::invoke(ThreadContext * tc)
+void SparcFaultBase::invoke(ThreadContext * tc)
 {
     FaultBase::invoke(tc);
     countStat()++;
 
-    //Use the SPARC trap state machine
-    /*// exception restart address
-    if (setRestartAddress() || !tc->inPalMode())
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->regs.pc);
+    //We can refer to this to see what the trap level -was-, but something
+    //in the middle could change it in the regfile out from under us.
+    MiscReg TL = tc->readMiscReg(MISCREG_TL);
+    MiscReg TT = tc->readMiscReg(MISCREG_TT);
+    MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
+    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
 
-    if (skipFaultingInstruction()) {
-        // traps...  skip faulting instruction.
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+    Addr PC, NPC;
+
+    PrivilegeLevel current;
+    if(!(PSTATE & (1 << 2)))
+        current = User;
+    else if(!(HPSTATE & (1 << 2)))
+        current = Privileged;
+    else
+        current = Hyperprivileged;
+
+    PrivilegeLevel level = getNextLevel(current);
+
+    if(HPSTATE & (1 << 5) || TL == MaxTL - 1)
+    {
+        getREDVector(PC, NPC);
+        enterREDState(tc);
+        doREDFault(tc, TT);
+    }
+    else if(TL == MaxTL)
+    {
+        //Do error_state somehow?
+        //Probably inject a WDR fault using the interrupt mechanism.
+        //What should the PC and NPC be set to?
+    }
+    else if(TL > MaxPTL && level == Privileged)
+    {
+        //guest_watchdog fault
+        doNormalFault(tc, trapType(), true);
+        getHyperVector(tc, PC, NPC, 2);
+    }
+    else if(level == Hyperprivileged)
+    {
+        doNormalFault(tc, trapType(), true);
+        getHyperVector(tc, PC, NPC, trapType());
+    }
+    else
+    {
+        doNormalFault(tc, trapType(), false);
+        getPrivVector(tc, PC, NPC, trapType(), TL+1);
     }
 
-    if (!tc->inPalMode())
-        AlphaISA::swap_palshadow(&(tc->regs), true);
-
-    tc->regs.pc = tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect();
-    tc->regs.npc = tc->regs.pc + sizeof(MachInst);*/
+    tc->setPC(PC);
+    tc->setNextPC(NPC);
+    tc->setNextNPC(NPC + sizeof(MachInst));
 }
 
-#endif
-
-#if !FULL_SYSTEM
-
-void TrapInstruction::invoke(ThreadContext * tc)
+void PowerOnReset::invoke(ThreadContext * tc)
 {
-    // Should be handled in ISA.
+    //First, enter RED state.
+    enterREDState(tc);
+
+    //For SPARC, when a system is first started, there is a power
+    //on reset Trap which sets the processor into the following state.
+    //Bits that aren't set aren't defined on startup.
+    /*
+    tl = MaxTL;
+    gl = MaxGL;
+
+    tickFields.counter = 0; //The TICK register is unreadable bya
+    tickFields.npt = 1; //The TICK register is unreadable by by !priv
+
+    softint = 0; // Clear all the soft interrupt bits
+    tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+    stickFields.npt = 1; //The TICK register is unreadable by by !priv
+    stick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+
+    tt[tl] = _trapType;
+    pstate = 0; // fields 0 but pef
+    pstateFields.pef = 1;
+
+    hpstate = 0;
+    hpstateFields.red = 1;
+    hpstateFields.hpriv = 1;
+    hpstateFields.tlz = 0; // this is a guess
+    hintp = 0; // no interrupts pending
+    hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
+    */
 }
+
+#else // !FULL_SYSTEM
 
 void SpillNNormal::invoke(ThreadContext *tc)
 {
-    doNormalFault(tc, trapType());
+    doNormalFault(tc, trapType(), false);
 
     Process *p = tc->getProcessPtr();
 
-    //This will only work in faults from a SparcLiveProcess
+    //XXX This will only work in faults from a SparcLiveProcess
     SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
     assert(lp);
 
@@ -404,15 +632,15 @@ void SpillNNormal::invoke(ThreadContext *tc)
 
 void FillNNormal::invoke(ThreadContext *tc)
 {
-    doNormalFault(tc, trapType());
+    doNormalFault(tc, trapType(), false);
 
     Process * p = tc->getProcessPtr();
 
-    //This will only work in faults from a SparcLiveProcess
+    //XXX This will only work in faults from a SparcLiveProcess
     SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
     assert(lp);
 
-    //The adjust the PC and NPC
+    //Then adjust the PC and NPC
     Addr fillStart = lp->readFillStart();
     tc->setPC(fillStart);
     tc->setNextPC(fillStart + sizeof(MachInst));

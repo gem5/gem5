@@ -39,13 +39,13 @@
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "arch/stacktrace.hh"
@@ -60,9 +60,9 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           AlphaITB *_itb, AlphaDTB *_dtb,
+                           TheISA::ITB *_itb, TheISA::DTB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(-1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
+    : ThreadState(_cpu, -1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)
 
 {
@@ -87,7 +87,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 
     if (use_kernel_stats) {
-        kernelStats = new Kernel::Statistics(system);
+        kernelStats = new TheISA::Kernel::Statistics(system);
     } else {
         kernelStats = NULL;
     }
@@ -106,19 +106,10 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid, MemObject* memobj)
-    : ThreadState(-1, _thread_num, _process, _asid, memobj),
+                         Process *_process, int _asid)
+    : ThreadState(_cpu, -1, _thread_num, _process, _asid),
       cpu(_cpu)
 {
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *mem_port;
-    port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        cpu->name(), tid),
-                               process->pTable, false);
-    mem_port = memobj->getPort("functional");
-    mem_port->setPeer(port);
-    port->setPeer(mem_port);
-
     regs.clear();
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
@@ -127,9 +118,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
 
 SimpleThread::SimpleThread()
 #if FULL_SYSTEM
-    : ThreadState(-1, -1)
+    : ThreadState(NULL, -1, -1)
 #else
-    : ThreadState(-1, -1, NULL, -1, NULL)
+    : ThreadState(NULL, -1, -1, NULL, -1)
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -138,6 +129,10 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
+#if FULL_SYSTEM
+    delete physPort;
+    delete virtPort;
+#endif
     delete tc;
 }
 
@@ -163,7 +158,7 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
         quiesceEvent->tc = tc;
     }
 
-    Kernel::Statistics *stats = oldContext->getKernelStats();
+    TheISA::Kernel::Statistics *stats = oldContext->getKernelStats();
     if (stats) {
         kernelStats = stats;
     }
@@ -184,7 +179,7 @@ SimpleThread::copyTC(ThreadContext *context)
     if (quiesce) {
         quiesceEvent = quiesce;
     }
-    Kernel::Statistics *stats = context->getKernelStats();
+    TheISA::Kernel::Statistics *stats = context->getKernelStats();
     if (stats) {
         kernelStats = stats;
     }
@@ -313,11 +308,9 @@ SimpleThread::getVirtPort(ThreadContext *src_tc)
     if (!src_tc)
         return virtPort;
 
-    VirtualPort *vp;
-    Port *mem_port;
+    VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
+    Port *mem_port = getMemFuncPort();
 
-    vp = new VirtualPort("tc-vport", src_tc);
-    mem_port = system->physmem->getPort("functional");
     mem_port->setPeer(vp);
     vp->setPeer(mem_port);
     return vp;
@@ -331,7 +324,6 @@ SimpleThread::delVirtPort(VirtualPort *vp)
         delete vp;
     }
 }
-
 
 #endif
 

@@ -29,10 +29,17 @@
  *          Ali Saidi
  */
 
+#include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregfile.hh"
+#include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+
+#if FULL_SYSTEM
+#include "arch/sparc/system.hh"
+#endif
 
 using namespace SparcISA;
 using namespace std;
@@ -55,66 +62,41 @@ string SparcISA::getMiscRegName(RegIndex index)
     return miscRegName[index];
 }
 
-#if FULL_SYSTEM
-
-//XXX These need an implementation someplace
-/** Fullsystem only register version of ReadRegWithEffect() */
-MiscReg MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext *tc);
-/** Fullsystem only register version of SetRegWithEffect() */
-Fault MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
-        ThreadContext * tc);
-#endif
-
 void MiscRegFile::reset()
 {
-    pstateFields.pef = 0; //No FPU
-    //pstateFields.pef = 1; //FPU
-#if FULL_SYSTEM
-    //For SPARC, when a system is first started, there is a power
-    //on reset Trap which sets the processor into the following state.
-    //Bits that aren't set aren't defined on startup.
-    tl = MaxTL;
-    gl = MaxGL;
-
-    tickFields.counter = 0; //The TICK register is unreadable bya
-    tickFields.npt = 1; //The TICK register is unreadable by by !priv
-
-    softint = 0; // Clear all the soft interrupt bits
-    tick_cmprFields.int_dis = 1; // disable timer compare interrupts
-    tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-    stickFields.npt = 1; //The TICK register is unreadable by by !priv
-    stick_cmprFields.int_dis = 1; // disable timer compare interrupts
-    stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-
-
-    tt[tl] = power_on_reset;
-    pstate = 0; // fields 0 but pef
-    pstateFields.pef = 1;
-
+    y = 0;
+    ccr = 0;
+    asi = 0;
+    tick = 0;
+    fprs = 0;
+    gsr = 0;
+    softint = 0;
+    tick_cmpr = 0;
+    stick = 0;
+    stick_cmpr = 0;
+    memset(tpc, 0, sizeof(tpc));
+    memset(tnpc, 0, sizeof(tnpc));
+    memset(tstate, 0, sizeof(tstate));
+    memset(tt, 0, sizeof(tt));
+    pstate = 0;
+    tl = 0;
+    pil = 0;
+    cwp = 0;
+    cansave = 0;
+    canrestore = 0;
+    cleanwin = 0;
+    otherwin = 0;
+    wstate = 0;
+    gl = 0;
     hpstate = 0;
-    hpstateFields.red = 1;
-    hpstateFields.hpriv = 1;
-    hpstateFields.tlz = 0; // this is a guess
-    hintp = 0; // no interrupts pending
-    hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
-    hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-#else
-/*	    //This sets up the initial state of the processor for usermode processes
-    pstateFields.priv = 0; //Process runs in user mode
-    pstateFields.ie = 1; //Interrupts are enabled
-    fsrFields.rd = 0; //Round to nearest
-    fsrFields.tem = 0; //Floating point traps not enabled
-    fsrFields.ns = 0; //Non standard mode off
-    fsrFields.qne = 0; //Floating point queue is empty
-    fsrFields.aexc = 0; //No accrued exceptions
-    fsrFields.cexc = 0; //No current exceptions
-
-    //Register window management registers
-    otherwin = 0; //No windows contain info from other programs
-    canrestore = 0; //There are no windows to pop
-    cansave = MaxTL - 2; //All windows are available to save into
-    cleanwin = MaxTL;*/
-#endif
+    memset(htstate, 0, sizeof(htstate));
+    hintp = 0;
+    htba = 0;
+    hstick_cmpr = 0;
+    strandStatusReg = 0;
+    fsr = 0;
+    implicitInstAsi = ASI_PRIMARY;
+    implicitDataAsi = ASI_PRIMARY;
 }
 
 MiscReg MiscRegFile::readReg(int miscReg)
@@ -131,8 +113,9 @@ MiscReg MiscRegFile::readReg(int miscReg)
         case MISCREG_TICK:
            return tick;
         case MISCREG_PCR:
+          panic("PCR not implemented\n");
         case MISCREG_PIC:
-          panic("ASR number %d not implemented\n", miscReg - AsrStart);
+          panic("PIC not implemented\n");
         case MISCREG_GSR:
           return gsr;
         case MISCREG_SOFTINT:
@@ -207,17 +190,27 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
     switch (miscReg) {
         case MISCREG_TICK:
         case MISCREG_PRIVTICK:
-          return tc->getCpuPtr()->curCycle() - tickFields.counter |
-              tickFields.npt << 63;
+          return tc->getCpuPtr()->curCycle() - (tick & mask(63)) |
+              (tick & ~(mask(63))) << 63;
         case MISCREG_FPRS:
           panic("FPU not implemented\n");
         case MISCREG_PCR:
         case MISCREG_PIC:
           panic("Performance Instrumentation not impl\n");
-
         /** Floating Point Status Register */
         case MISCREG_FSR:
           panic("Floating Point not implemented\n");
+//We'll include this only in FS so we don't need the SparcSystem type around
+//in SE.
+#if FULL_SYSTEM
+        case MISCREG_STICK:
+          SparcSystem *sys;
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
+          assert(sys != NULL);
+          return curTick/Clock::Int::ns - sys->sysTick | (stick & ~(mask(63)));
+#endif
+        case MISCREG_HVER:
+          return NWindows | MaxTL << 8 | MaxGL << 16;
     }
     return readReg(miscReg);
 }
@@ -241,8 +234,9 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
           tick = val;
           break;
         case MISCREG_PCR:
+          panic("PCR not implemented\n");
         case MISCREG_PIC:
-          panic("ASR number %d not implemented\n", miscReg - AsrStart);
+          panic("PIC not implemented\n");
         case MISCREG_GSR:
           gsr = val;
           break;
@@ -337,14 +331,42 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
     }
 }
 
+inline void MiscRegFile::setImplicitAsis()
+{
+    //The spec seems to use trap level to indicate the privilege level of the
+    //processor. It's unclear whether the implicit ASIs should directly depend
+    //on the trap level, or if they should really be based on the privelege
+    //bits
+    if(tl == 0)
+    {
+        implicitInstAsi = implicitDataAsi =
+            (pstate & (1 << 9)) ? ASI_PRIMARY_LITTLE : ASI_PRIMARY;
+    }
+    else if(tl <= MaxPTL)
+    {
+        implicitInstAsi = ASI_NUCLEUS;
+        implicitDataAsi = (pstate & (1 << 9)) ? ASI_NUCLEUS_LITTLE : ASI_NUCLEUS;
+    }
+    else
+    {
+        //This is supposed to force physical addresses to match the spec.
+        //It might not because of context values and partition values.
+        implicitInstAsi = implicitDataAsi = ASI_REAL;
+    }
+}
+
 void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     const uint64_t Bit64 = (1ULL << 63);
+#if FULL_SYSTEM
+    uint64_t time;
+    SparcSystem *sys;
+#endif
     switch (miscReg) {
         case MISCREG_TICK:
-          tickFields.counter = tc->getCpuPtr()->curCycle() - val  & ~Bit64;
-          tickFields.npt = val & Bit64 ? 1 : 0;
+          tick = tc->getCpuPtr()->curCycle() - val  & ~Bit64;
+          tick |= val & Bit64;
           break;
         case MISCREG_FPRS:
           //Configure the fpu based on the fprs
@@ -352,12 +374,84 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         case MISCREG_PCR:
           //Set up performance counting based on pcr value
           break;
+        case MISCREG_PSTATE:
+          pstate = val;
+          setImplicitAsis();
+          return;
+        case MISCREG_TL:
+          tl = val;
+          setImplicitAsis();
+          return;
         case MISCREG_CWP:
           tc->changeRegFileContext(CONTEXT_CWP, val);
           break;
         case MISCREG_GL:
           tc->changeRegFileContext(CONTEXT_GLOBALS, val);
           break;
+        case MISCREG_SOFTINT:
+          //We need to inject interrupts, and or notify the interrupt
+          //object that it needs to use a different interrupt level.
+          //Any newly appropriate interrupts will happen when the cpu gets
+          //around to checking for them. This might not be quite what we
+          //want.
+          break;
+        case MISCREG_SOFTINT_CLR:
+          //Do whatever this is supposed to do...
+          break;
+        case MISCREG_SOFTINT_SET:
+          //Do whatever this is supposed to do...
+          break;
+#if FULL_SYSTEM
+        case MISCREG_TICK_CMPR:
+          if (tickCompare == NULL)
+              tickCompare = new TickCompareEvent(this, tc);
+          setReg(miscReg, val);
+          if ((tick_cmpr & mask(63)) && tickCompare->scheduled())
+                  tickCompare->deschedule();
+          time = (tick_cmpr & mask(63)) - (tick & mask(63));
+          if (!(tick_cmpr & ~mask(63)) && time > 0)
+              tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+          break;
+#endif
+        case MISCREG_PIL:
+          //We need to inject interrupts, and or notify the interrupt
+          //object that it needs to use a different interrupt level.
+          //Any newly appropriate interrupts will happen when the cpu gets
+          //around to checking for them. This might not be quite what we
+          //want.
+          break;
+//We'll include this only in FS so we don't need the SparcSystem type around
+//in SE.
+#if FULL_SYSTEM
+        case MISCREG_STICK:
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
+          assert(sys != NULL);
+          sys->sysTick = curTick/Clock::Int::ns - val & ~Bit64;
+          stick |= val & Bit64;
+          break;
+        case MISCREG_STICK_CMPR:
+          if (sTickCompare == NULL)
+              sTickCompare = new STickCompareEvent(this, tc);
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
+          assert(sys != NULL);
+          if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
+                  sTickCompare->deschedule();
+          time = (stick_cmpr & mask(63)) - sys->sysTick;
+          if (!(stick_cmpr & ~mask(63)) && time > 0)
+              sTickCompare->schedule(time * Clock::Int::ns);
+          break;
+        case MISCREG_HSTICK_CMPR:
+          if (hSTickCompare == NULL)
+              hSTickCompare = new HSTickCompareEvent(this, tc);
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
+          assert(sys != NULL);
+          if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
+                  hSTickCompare->deschedule();
+          int64_t time = (hstick_cmpr & mask(63)) - sys->sysTick;
+          if (!(hstick_cmpr & ~mask(63)) && time > 0)
+              hSTickCompare->schedule(time * Clock::Int::ns);
+          break;
+#endif
     }
     setReg(miscReg, val);
 }
@@ -389,6 +483,8 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_ARRAY(htstate, MaxTL);
     SERIALIZE_SCALAR(htba);
     SERIALIZE_SCALAR(hstick_cmpr);
+    SERIALIZE_SCALAR((int)implicitInstAsi);
+    SERIALIZE_SCALAR((int)implicitDataAsi);
 }
 
 void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
@@ -418,5 +514,29 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_ARRAY(htstate, MaxTL);
     UNSERIALIZE_SCALAR(htba);
     UNSERIALIZE_SCALAR(hstick_cmpr);
+    int temp;
+    UNSERIALIZE_SCALAR(temp);
+    implicitInstAsi = (ASI)temp;
+    UNSERIALIZE_SCALAR(temp);
+    implicitDataAsi = (ASI)temp;
 }
 
+#if FULL_SYSTEM
+void
+MiscRegFile::processTickCompare(ThreadContext *tc)
+{
+    panic("tick compare not implemented\n");
+}
+
+void
+MiscRegFile::processSTickCompare(ThreadContext *tc)
+{
+    panic("tick compare not implemented\n");
+}
+
+void
+MiscRegFile::processHSTickCompare(ThreadContext *tc)
+{
+    panic("tick compare not implemented\n");
+}
+#endif

@@ -369,6 +369,11 @@ class Addr(CheckedInt):
             except TypeError:
                 self.value = long(value)
         self._check()
+    def __add__(self, other):
+        if isinstance(other, Addr):
+            return self.value + other.value
+        else:
+            return self.value + other
 
 
 class MetaRange(type):

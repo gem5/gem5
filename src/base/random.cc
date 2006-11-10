@@ -32,6 +32,10 @@
 #include <cstdlib>
 #include <cmath>
 
+#if defined(__sun__)
+#include <ieeefp.h>
+#endif
+
 #include "sim/param.hh"
 #include "base/random.hh"
 #include "base/trace.hh"
@@ -65,12 +69,27 @@ getLong()
     return mrand48();
 }
 
+double
+m5round(double r)
+{
+#if defined(__sun__)
+    double val;
+    fp_rnd oldrnd = fpsetround(FP_RN);
+    val = rint(r);
+    fpsetround(oldrnd);
+    return val;
+#else
+    return round(r);
+#endif
+}
+
 int64_t
 getUniform(int64_t min, int64_t max)
 {
     double r;
     r = drand48() * (max-min) + min;
-    return (int64_t)round(r);
+
+    return (int64_t)m5round(r);
 }
 
 uint64_t
@@ -78,7 +97,8 @@ getUniformPos(uint64_t min, uint64_t max)
 {
     double r;
     r = drand48() * (max-min) + min;
-    return (uint64_t)round(r);
+
+    return (uint64_t)m5round(r);
 }
 
 

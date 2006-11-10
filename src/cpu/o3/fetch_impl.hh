@@ -45,7 +45,6 @@
 #if FULL_SYSTEM
 #include "arch/tlb.hh"
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
 
@@ -98,8 +97,7 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(Params *params)
-    : mem(params->mem),
-      branchPred(params),
+    : branchPred(params),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -562,14 +560,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 {
     Fault fault = NoFault;
 
-#if FULL_SYSTEM
-    // Flag to say whether or not address is physical addr.
-    unsigned flags = cpu->inPalMode(fetch_PC) ? PHYSICAL : 0;
-#else
-    unsigned flags = 0;
-#endif // FULL_SYSTEM
-
-    if (cacheBlocked || isSwitchedOut() || (interruptPending && flags == 0)) {
+    //AlphaDep
+    if (cacheBlocked || isSwitchedOut() ||
+            (interruptPending && (fetch_PC & 0x3))) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -588,7 +581,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
-    RequestPtr mem_req = new Request(tid, fetch_PC, cacheBlkSize, flags,
+    RequestPtr mem_req = new Request(tid, fetch_PC, cacheBlkSize, 0,
                                      fetch_PC, cpu->readCpuId(), tid);
 
     memReq[tid] = mem_req;
@@ -1120,7 +1113,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                         (&cacheData[tid][offset]));
 
-            ext_inst = TheISA::makeExtMI(inst, cpu->tcBase(tid));
+#if THE_ISA == ALPHA_ISA
+            ext_inst = TheISA::makeExtMI(inst, fetch_PC);
+#elif THE_ISA == SPARC_ISA
+            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
+#endif
 
             // Create a new DynInst from the instruction fetched.
             DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,

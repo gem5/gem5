@@ -33,8 +33,11 @@
 
 #include <fstream>
 #include <iomanip>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "arch/regfile.hh"
+#include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -44,9 +47,14 @@
 
 //XXX This is temporary
 #include "arch/isa_specific.hh"
+#include "cpu/m5legion_interface.h"
 
 using namespace std;
 using namespace TheISA;
+
+namespace Trace {
+SharedData *shared_data = NULL;
+}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -75,23 +83,19 @@ Trace::InstRecord::dump(ostream &outs)
             uint64_t newVal;
             static const char * prefixes[4] = {"G", "O", "L", "I"};
 
-            char buf[256];
-            sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
-            outs << buf;
-            sprintf(buf, " NPC = 0x%016llx", thread->readNextNPC());
-            outs << buf;
+            outs << hex;
+            outs << "PC = " << thread->readNextPC();
+            outs << " NPC = " << thread->readNextNPC();
             newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
             if(newVal != ccr)
             {
-                sprintf(buf, " CCR = 0x%016llx", newVal);
-                outs << buf;
+                outs << " CCR = " << newVal;
                 ccr = newVal;
             }
             newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
             if(newVal != y)
             {
-                sprintf(buf, " Y = 0x%016llx", newVal);
-                outs << buf;
+                outs << " Y = " << newVal;
                 y = newVal;
             }
             for(int y = 0; y < 4; y++)
@@ -102,8 +106,7 @@ Trace::InstRecord::dump(ostream &outs)
                     newVal = thread->readIntReg(index);
                     if(regs[index] != newVal)
                     {
-                        sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
-                        outs << buf;
+                        outs << " " << prefixes[y] << dec << x << " = " << hex << newVal;
                         regs[index] = newVal;
                     }
                 }
@@ -113,12 +116,11 @@ Trace::InstRecord::dump(ostream &outs)
                 newVal = thread->readFloatRegBits(2 * y, 64);
                 if(floats[y] != newVal)
                 {
-                    sprintf(buf, " F%d = 0x%016llx", 2 * y, newVal);
-                    outs << buf;
+                    outs << " F" << dec << (2 * y) << " = " << hex << newVal;
                     floats[y] = newVal;
                 }
             }
-            outs << endl;
+            outs << dec << endl;
         }
 #endif
     }
@@ -222,6 +224,85 @@ Trace::InstRecord::dump(ostream &outs)
         //
         outs << endl;
     }
+#if THE_ISA == SPARC_ISA
+    // Compare
+    if (flags[LEGION_LOCKSTEP])
+    {
+        bool compared = false;
+        bool diffPC   = false;
+        bool diffInst = false;
+        bool diffRegs = false;
+
+        if(!staticInst->isMicroOp() || staticInst->isLastMicroOp()) {
+            while (!compared) {
+                if (shared_data->flags == OWN_M5) {
+                    if (shared_data->pc != PC)
+                       diffPC = true;
+                    if (shared_data->instruction != staticInst->machInst)
+                        diffInst = true;
+                    for (int i = 0; i < TheISA::NumIntRegs; i++) {
+                        if (thread->readIntReg(i) != shared_data->intregs[i])
+                            diffRegs = true;
+                    }
+
+                    if (diffPC || diffInst || diffRegs ) {
+                        outs << "Differences found between M5 and Legion:";
+                        if (diffPC)
+                            outs << " [PC]";
+                        if (diffInst)
+                            outs << " [Instruction]";
+                        if (diffRegs)
+                            outs << " [IntRegs]";
+                        outs << endl << endl;;
+
+                        outs << setfill(' ') << setw(15)
+                             << "M5 PC: " << "0x"<< setw(16) << setfill('0')
+                             << hex << PC << endl;
+                        outs << setfill(' ') << setw(15)
+                             << "Legion PC: " << "0x"<< setw(16) << setfill('0') << hex
+                             << shared_data->pc << endl << endl;
+
+                        outs << setfill(' ') << setw(15)
+                             << "M5 Inst: "  << "0x"<< setw(8)
+                             << setfill('0') << hex << staticInst->machInst
+                             << staticInst->disassemble(PC, debugSymbolTable)
+                             << endl;
+
+                        StaticInstPtr legionInst = StaticInst::decode(makeExtMI(shared_data->instruction, thread));
+                        outs << setfill(' ') << setw(15)
+                             << " Legion Inst: "
+                             << "0x" << setw(8) << setfill('0') << hex
+                             << shared_data->instruction
+                             << legionInst->disassemble(shared_data->pc, debugSymbolTable)
+                             << endl;
+
+                        outs << endl;
+
+                        static const char * regtypes[4] = {"%g", "%o", "%l", "%i"};
+                        for(int y = 0; y < 4; y++)
+                        {
+                            for(int x = 0; x < 8; x++)
+                            {
+                                outs << regtypes[y] << x << "         " ;
+                                outs <<  "0x" << hex << setw(16) << thread->readIntReg(y*8+x);
+                                if (thread->readIntReg(y*8 + x) != shared_data->intregs[y*8+x])
+                                    outs << "     X     ";
+                                else
+                                    outs << "     |     ";
+                                outs << "0x" << setw(16) << hex << shared_data->intregs[y*8+x]
+                                     << endl;
+                            }
+                        }
+                        fatal("Differences found between Legion and M5\n");
+                    }
+
+                    compared = true;
+                    shared_data->flags = OWN_LEGION;
+                }
+            } // while
+        } // if not microop
+    }
+#endif
 }
 
 
@@ -271,6 +352,9 @@ Param<bool> exe_trace_pc_symbol(&exeTraceParams, "pc_symbol",
                                   "Use symbols for the PC if available", true);
 Param<bool> exe_trace_intel_format(&exeTraceParams, "intel_format",
                                    "print trace in intel compatible format", false);
+Param<bool> exe_trace_legion_lockstep(&exeTraceParams, "legion_lockstep",
+                                   "Compare sim state to legion state every cycle",
+                                   false);
 Param<string> exe_trace_system(&exeTraceParams, "trace_system",
                                    "print trace of which system (client or server)",
                                    "client");
@@ -296,7 +380,28 @@ Trace::InstRecord::setParams()
     flags[PRINT_REG_DELTA]   = exe_trace_print_reg_delta;
     flags[PC_SYMBOL]         = exe_trace_pc_symbol;
     flags[INTEL_FORMAT]      = exe_trace_intel_format;
+    flags[LEGION_LOCKSTEP]   = exe_trace_legion_lockstep;
     trace_system	     = exe_trace_system;
+
+    // If were going to be in lockstep with Legion
+    // Setup shared memory, and get otherwise ready
+    if (flags[LEGION_LOCKSTEP]) {
+        int shmfd = shmget(getuid(), sizeof(SharedData), 0777);
+        if (shmfd < 0)
+            fatal("Couldn't get shared memory fd. Is Legion running?");
+
+        shared_data = (SharedData*)shmat(shmfd, NULL, SHM_RND);
+        if (shared_data == (SharedData*)-1)
+            fatal("Couldn't allocate shared memory");
+
+        if (shared_data->flags != OWN_M5)
+            fatal("Shared memory has invalid owner");
+
+        if (shared_data->version != VERSION)
+            fatal("Shared Data is wrong version! M5: %d Legion: %d", VERSION,
+                    shared_data->version);
+
+    }
 }
 
 void

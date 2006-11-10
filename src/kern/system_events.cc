@@ -29,11 +29,11 @@
  *          Nathan Binkert
  */
 
-#include "cpu/base.hh"
+//For ISA_HAS_DELAY_SLOT
+#include "arch/isa_traits.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
 #include "kern/system_events.hh"
-#include "sim/system.hh"
 
 using namespace TheISA;
 
@@ -47,19 +47,7 @@ SkipFuncEvent::process(ThreadContext *tc)
 
     tc->setPC(newpc);
     tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
-/*
-    BranchPred *bp = tc->getCpuPtr()->getBranchPred();
-    if (bp != NULL) {
-        bp->popRAS(tc->getThreadNum());
-    }
-*/
-}
-
-void
-IdleStartEvent::process(ThreadContext *tc)
-{
-    if (tc->getKernelStats())
-        tc->getKernelStats()->setIdleProcess(
-            tc->readMiscReg(AlphaISA::IPR_PALtemp23), tc);
-    remove();
+#if ISA_HAS_DELAY_SLOT
+    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+#endif
 }

@@ -72,15 +72,6 @@ AtomicSimpleCPU::getPort(const std::string &if_name, int idx)
 void
 AtomicSimpleCPU::init()
 {
-    //Create Memory Ports (conect them up)
-//    Port *mem_dport = mem->getPort("");
-//    dcachePort.setPeer(mem_dport);
-//    mem_dport->setPeer(&dcachePort);
-
-//    Port *mem_iport = mem->getPort("");
-//    icachePort.setPeer(mem_iport);
-//    mem_iport->setPeer(&icachePort);
-
     BaseCPU::init();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
@@ -189,9 +180,7 @@ AtomicSimpleCPU::resume()
         changeState(SimObject::Running);
         if (thread->status() == ThreadContext::Active) {
             if (!tickEvent.scheduled()) {
-                Tick nextTick = curTick + cycles(1) - 1;
-                nextTick -= (nextTick % (cycles(1)));
-                tickEvent.schedule(nextTick);
+                tickEvent.schedule(nextCycle());
             }
         }
     }
@@ -220,9 +209,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            Tick nextTick = curTick + cycles(1) - 1;
-            nextTick -= (nextTick % (cycles(1)));
-            tickEvent.schedule(nextTick);
+            tickEvent.schedule(nextCycle());
             break;
         }
     }
@@ -240,9 +227,7 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
 
     notIdleFraction++;
     //Make sure ticks are still on multiples of cycles
-    Tick nextTick = curTick + cycles(delay + 1) - 1;
-    nextTick -= (nextTick % (cycles(1)));
-    tickEvent.schedule(nextTick);
+    tickEvent.schedule(nextCycle(curTick + cycles(delay)));
     _status = Running;
 }
 
@@ -508,13 +493,12 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     Param<Tick> progress_interval;
-    SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
 
 #if FULL_SYSTEM
-    SimObjectParam<AlphaITB *> itb;
-    SimObjectParam<AlphaDTB *> dtb;
+    SimObjectParam<TheISA::ITB *> itb;
+    SimObjectParam<TheISA::DTB *> dtb;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -541,7 +525,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(progress_interval, "Progress interval"),
-    INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
 
@@ -579,7 +562,6 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->functionTraceStart = function_trace_start;
     params->width = width;
     params->simulate_stalls = simulate_stalls;
-    params->mem = mem;
     params->system = system;
     params->cpu_id = cpu_id;
 

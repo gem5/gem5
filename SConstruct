@@ -270,6 +270,12 @@ if not conf.CheckLib(py_version_name):
     print "Error: can't find Python library", py_version_name
     Exit(1)
 
+# On Solaris you need to use libsocket for socket ops
+if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+   if not conf.CheckLibWithHeader('socket', 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+       print "Can't find library with socket calls (e.g. accept())"
+       Exit(1)
+
 # Check for zlib.  If the check passes, libz will be automatically
 # added to the LIBS environment variable.
 if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++'):
@@ -314,8 +320,10 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
-                       'FullCPU', 'O3CPU',
-                       'OzoneCPU']
+                       'O3CPU', 'OzoneCPU']
+
+if os.path.isdir(os.path.join(SRCDIR, 'src/encumbered/cpu/full')):
+    env['ALL_CPU_LIST'] += ['FullCPU']
 
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -362,7 +370,7 @@ nonsticky_opts.AddOptions(
 # These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                      'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
-                     'USE_CHECKER', 'PYTHONHOME']
+                     'USE_CHECKER', 'PYTHONHOME', 'TARGET_ISA']
 
 # Define a handy 'no-op' action
 def no_action(target, source, env):
@@ -452,6 +460,46 @@ Usage: scons [scons options] [build options] [target(s)]
 env.SConscript('ext/libelf/SConscript',
                build_dir = os.path.join(build_root, 'libelf'),
                exports = 'env')
+
+###################################################
+#
+# This function is used to set up a directory with switching headers
+#
+###################################################
+
+def make_switching_dir(dirname, switch_headers, env):
+    # Generate the header.  target[0] is the full path of the output
+    # header to generate.  'source' is a dummy variable, since we get the
+    # list of ISAs from env['ALL_ISA_LIST'].
+    def gen_switch_hdr(target, source, env):
+	fname = str(target[0])
+	basename = os.path.basename(fname)
+	f = open(fname, 'w')
+	f.write('#include "arch/isa_specific.hh"\n')
+	cond = '#if'
+	for isa in env['ALL_ISA_LIST']:
+	    f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
+		    % (cond, isa.upper(), dirname, isa, basename))
+	    cond = '#elif'
+	f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+	f.close()
+	return 0
+
+    # String to print when generating header
+    def gen_switch_hdr_string(target, source, env):
+	return "Generating switch header " + str(target[0])
+
+    # Build SCons Action object. 'varlist' specifies env vars that this
+    # action depends on; when env['ALL_ISA_LIST'] changes these actions
+    # should get re-executed.
+    switch_hdr_action = Action(gen_switch_hdr, gen_switch_hdr_string,
+                               varlist=['ALL_ISA_LIST'])
+
+    # Instantiate actions for each header
+    for hdr in switch_headers:
+        env.Command(hdr, [], switch_hdr_action)
+
+env.make_switching_dir = make_switching_dir
 
 ###################################################
 #
@@ -559,6 +607,7 @@ for build_path in build_paths:
                    exports = { 'env' : e }, duplicate = False)
 
 Help(help_text)
+
 
 ###################################################
 #

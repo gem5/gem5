@@ -219,4 +219,4 @@ namespace SparcISA
 
 };
 
-#endif // __ARCH_SPARC_TLB_HH__
+#endif // __ARCH_SPARC_ASI_HH__

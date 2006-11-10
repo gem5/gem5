@@ -35,7 +35,6 @@
 #include <string>
 #include <vector>
 
-#include "arch/alpha/ev5.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"        // for to_number
 #include "base/trace.hh"

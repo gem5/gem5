@@ -37,6 +37,12 @@
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
 
+namespace TheISA
+{
+    class ITB;
+    class DTB;
+}
+
 class EndQuiesceEvent;
 namespace Kernel {
     class Statistics;
@@ -73,9 +79,9 @@ class AlphaO3CPU : public FullO3CPU<Impl>
 
 #if FULL_SYSTEM
     /** ITB pointer. */
-    AlphaITB *itb;
+    AlphaISA::ITB *itb;
     /** DTB pointer. */
-    AlphaDTB *dtb;
+    AlphaISA::DTB *dtb;
 #endif
 
     /** Registers statistics. */
@@ -126,15 +132,15 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault, unsigned tid);
+    MiscReg readMiscRegWithEffect(int misc_reg, unsigned tid);
 
     /** Sets a miscellaneous register. */
-    Fault setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val, unsigned tid);
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
@@ -145,15 +151,8 @@ class AlphaO3CPU : public FullO3CPU<Impl>
 #if FULL_SYSTEM
     /** Posts an interrupt. */
     void post_interrupt(int int_num, int index);
-    /** Reads the interrupt flag. */
-    int readIntrFlag();
-    /** Sets the interrupt flags. */
-    void setIntrFlag(int val);
     /** HW return from error interrupt. */
     Fault hwrei(unsigned tid);
-    /** Returns if a specific PC is a PAL mode PC. */
-    bool inPalMode(uint64_t PC)
-    { return AlphaISA::PcPAL(PC); }
 
     bool simPalCheck(int palFunc, unsigned tid);
 

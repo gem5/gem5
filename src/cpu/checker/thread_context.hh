@@ -37,8 +37,10 @@
 #include "cpu/thread_context.hh"
 
 class EndQuiesceEvent;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 /**
@@ -87,11 +89,12 @@ class CheckerThreadContext : public ThreadContext
 
     PhysicalMemory *getPhysMemPtr() { return actualTC->getPhysMemPtr(); }
 
-    AlphaITB *getITBPtr() { return actualTC->getITBPtr(); }
+    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    AlphaDTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-    Kernel::Statistics *getKernelStats() { return actualTC->getKernelStats(); }
+    TheISA::Kernel::Statistics *getKernelStats()
+    { return actualTC->getKernelStats(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
@@ -248,19 +251,19 @@ class CheckerThreadContext : public ThreadContext
     MiscReg readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
-    { return actualTC->readMiscRegWithEffect(misc_reg, fault); }
+    MiscReg readMiscRegWithEffect(int misc_reg)
+    { return actualTC->readMiscRegWithEffect(misc_reg); }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         checkerTC->setMiscReg(misc_reg, val);
-        return actualTC->setMiscReg(misc_reg, val);
+        actualTC->setMiscReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         checkerTC->setMiscRegWithEffect(misc_reg, val);
-        return actualTC->setMiscRegWithEffect(misc_reg, val);
+        actualTC->setMiscRegWithEffect(misc_reg, val);
     }
 
     unsigned readStCondFailures()
@@ -271,9 +274,6 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setStCondFailures(sc_failures);
         actualTC->setStCondFailures(sc_failures);
     }
-#if FULL_SYSTEM
-    bool inPalMode() { return actualTC->inPalMode(); }
-#endif
 
     // @todo: Fix this!
     bool misspeculating() { return actualTC->misspeculating(); }

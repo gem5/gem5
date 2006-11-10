@@ -41,9 +41,7 @@ char *progname;
 void
 usage()
 {
-    printf("usage: m5 ivlb <interval>\n"
-           "       m5 ivle <interval>\n"
-           "       m5 initparam\n"
+    printf("usage: m5 initparam\n"
            "       m5 sw99param\n"
            "       m5 exit [delay]\n"
            "       m5 resetstats [delay [period]]\n"

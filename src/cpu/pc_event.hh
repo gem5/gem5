@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "base/misc.hh"
+#include "sim/host.hh"
 
 class ThreadContext;
 class PCEventQueue;

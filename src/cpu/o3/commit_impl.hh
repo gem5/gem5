@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <string>
 
+#include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"
@@ -638,8 +639,7 @@ DefaultCommit<Impl>::commit()
     // and no other traps or external squashes are currently pending.
     // @todo: Allow other threads to handle interrupts.
     if (cpu->checkInterrupts &&
-        cpu->check_interrupts() &&
-        !cpu->inPalMode(readPC()) &&
+        cpu->check_interrupts(cpu->tcBase(0)) &&
         !trapSquash[0] &&
         !tcSquash[0]) {
         // Tell fetch that there is an interrupt pending.  This will
@@ -1085,8 +1085,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
 #if FULL_SYSTEM
     if (thread[tid]->profile) {
-//        bool usermode =
-//            (cpu->readMiscReg(AlphaISA::IPR_DTB_CM, tid) & 0x18) != 0;
+//        bool usermode = TheISA::inUserMode(thread[tid]->getTC());
 //        thread[tid]->profilePC = usermode ? 1 : head_inst->readPC();
         thread[tid]->profilePC = head_inst->readPC();
         ProfileNode *node = thread[tid]->profile->consume(thread[tid]->getTC(),

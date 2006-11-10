@@ -160,15 +160,4 @@
 /* Too much?  Must be large enough for register transfer. */
 #define	KGDB_BUFLEN	1024
 
-/*
- * Kernel Entry Vectors.  [OSF/1 PALcode Specific]
- */
-
-#define ALPHA_KENTRY_INT        0
-#define ALPHA_KENTRY_ARITH      1
-#define ALPHA_KENTRY_MM         2
-#define ALPHA_KENTRY_IF         3
-#define ALPHA_KENTRY_UNA        4
-#define ALPHA_KENTRY_SYS        5
-
 #endif /* __KGDB_H__ */

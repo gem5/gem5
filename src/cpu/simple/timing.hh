@@ -79,7 +79,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         CpuPort(const std::string &_name, TimingSimpleCPU *_cpu, Tick _lat)
-            : Port(_name), cpu(_cpu), lat(_lat)
+            : Port(_name, _cpu), cpu(_cpu), lat(_lat)
         { }
 
       protected:
@@ -165,6 +165,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     PacketPtr ifetch_pkt;
     PacketPtr dcache_pkt;
+
+
 
     int cpu_id;
     Tick previousTick;

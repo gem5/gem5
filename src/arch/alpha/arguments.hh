@@ -41,7 +41,7 @@ class ThreadContext;
 
 namespace AlphaISA {
 
-class AlphaArguments
+class Arguments
 {
   protected:
     ThreadContext *tc;
@@ -65,62 +65,62 @@ class AlphaArguments
     RefCountingPtr<Data> data;
 
   public:
-    AlphaArguments(ThreadContext *ctx, int n = 0)
+    Arguments(ThreadContext *ctx, int n = 0)
         : tc(ctx), number(n), data(NULL)
         { assert(number >= 0); data = new Data;}
-    AlphaArguments(const AlphaArguments &args)
+    Arguments(const Arguments &args)
         : tc(args.tc), number(args.number), data(args.data) {}
-    ~AlphaArguments() {}
+    ~Arguments() {}
 
     ThreadContext *getThreadContext() const { return tc; }
 
-    const AlphaArguments &operator=(const AlphaArguments &args) {
+    const Arguments &operator=(const Arguments &args) {
         tc = args.tc;
         number = args.number;
         data = args.data;
         return *this;
     }
 
-    AlphaArguments &operator++() {
+    Arguments &operator++() {
         ++number;
         assert(number >= 0);
         return *this;
     }
 
-    AlphaArguments operator++(int) {
-        AlphaArguments args = *this;
+    Arguments operator++(int) {
+        Arguments args = *this;
         ++number;
         assert(number >= 0);
         return args;
     }
 
-    AlphaArguments &operator--() {
+    Arguments &operator--() {
         --number;
         assert(number >= 0);
         return *this;
     }
 
-    AlphaArguments operator--(int) {
-        AlphaArguments args = *this;
+    Arguments operator--(int) {
+        Arguments args = *this;
         --number;
         assert(number >= 0);
         return args;
     }
 
-    const AlphaArguments &operator+=(int index) {
+    const Arguments &operator+=(int index) {
         number += index;
         assert(number >= 0);
         return *this;
     }
 
-    const AlphaArguments &operator-=(int index) {
+    const Arguments &operator-=(int index) {
         number -= index;
         assert(number >= 0);
         return *this;
     }
 
-    AlphaArguments operator[](int index) {
-        return AlphaArguments(tc, index);
+    Arguments operator[](int index) {
+        return Arguments(tc, index);
     }
 
     template <class T>

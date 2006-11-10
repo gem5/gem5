@@ -47,9 +47,12 @@
 
 // forward declarations
 #if FULL_SYSTEM
+namespace TheISA
+{
+    class ITB;
+    class DTB;
+}
 class Processor;
-class AlphaITB;
-class AlphaDTB;
 class PhysicalMemory;
 
 class RemoteGDB;
@@ -96,8 +99,8 @@ class CheckerCPU : public BaseCPU
     struct Params : public BaseCPU::Params
     {
 #if FULL_SYSTEM
-        AlphaITB *itb;
-        AlphaDTB *dtb;
+        TheISA::ITB *itb;
+        TheISA::DTB *dtb;
 #else
         Process *process;
 #endif
@@ -111,10 +114,6 @@ class CheckerCPU : public BaseCPU
     virtual ~CheckerCPU();
 
     Process *process;
-
-    void setMemory(MemObject *mem);
-
-    MemObject *memPtr;
 
     void setSystem(System *system);
 
@@ -140,8 +139,8 @@ class CheckerCPU : public BaseCPU
 
     ThreadContext *tc;
 
-    AlphaITB *itb;
-    AlphaDTB *dtb;
+    TheISA::ITB *itb;
+    TheISA::DTB *dtb;
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
@@ -301,19 +300,19 @@ class CheckerCPU : public BaseCPU
         return thread->readMiscReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return thread->readMiscRegWithEffect(misc_reg, fault);
+        return thread->readMiscRegWithEffect(misc_reg);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         result.integer = val;
         miscRegIdxs.push(misc_reg);
         return thread->setMiscReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         miscRegIdxs.push(misc_reg);
         return thread->setMiscRegWithEffect(misc_reg, val);
@@ -328,9 +327,6 @@ class CheckerCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
-    int readIntrFlag() { return thread->readIntrFlag(); }
-    void setIntrFlag(int val) { thread->setIntrFlag(val); }
-    bool inPalMode() { return thread->inPalMode(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else

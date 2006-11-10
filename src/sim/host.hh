@@ -56,7 +56,7 @@ typedef int64_t Counter;
  */
 typedef int64_t Tick;
 
-const Tick MaxTick = (1LL << 62);
+const Tick MaxTick = (1LL << 63) - 1;
 
 /**
  * Address type

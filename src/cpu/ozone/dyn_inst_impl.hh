@@ -31,7 +31,10 @@
 #include "sim/faults.hh"
 #include "config/full_system.hh"
 #include "cpu/ozone/dyn_inst.hh"
+
+#if FULL_SYSTEM
 #include "kern/kernel_stats.hh"
+#endif
 
 template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)
@@ -223,24 +226,24 @@ OzoneDynInst<Impl>::readMiscReg(int misc_reg)
 
 template <class Impl>
 TheISA::MiscReg
-OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault)
+OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg)
 {
-    return this->thread->readMiscRegWithEffect(misc_reg, fault);
+    return this->thread->readMiscRegWithEffect(misc_reg);
 }
 
 template <class Impl>
-Fault
+void
 OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
     this->setIntResult(val);
-    return this->thread->setMiscReg(misc_reg, val);
+    this->thread->setMiscReg(misc_reg, val);
 }
 
 template <class Impl>
-Fault
+void
 OzoneDynInst<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
-    return this->thread->setMiscRegWithEffect(misc_reg, val);
+    this->thread->setMiscRegWithEffect(misc_reg, val);
 }
 
 #if FULL_SYSTEM
@@ -249,7 +252,7 @@ template <class Impl>
 Fault
 OzoneDynInst<Impl>::hwrei()
 {
-    if (!this->cpu->inPalMode(this->readPC()))
+    if (!(this->readPC() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
 
     this->setNextPC(this->thread->readMiscReg(AlphaISA::IPR_EXC_ADDR));
@@ -258,27 +261,6 @@ OzoneDynInst<Impl>::hwrei()
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
-}
-
-template <class Impl>
-int
-OzoneDynInst<Impl>::readIntrFlag()
-{
-return this->cpu->readIntrFlag();
-}
-
-template <class Impl>
-void
-OzoneDynInst<Impl>::setIntrFlag(int val)
-{
-    this->cpu->setIntrFlag(val);
-}
-
-template <class Impl>
-bool
-OzoneDynInst<Impl>::inPalMode()
-{
-    return this->cpu->inPalMode();
 }
 
 template <class Impl>

@@ -37,7 +37,6 @@
 
 #if !FULL_SYSTEM
 #include "mem/mem_object.hh"
-#include "mem/translating_port.hh"
 #include "sim/process.hh"
 #endif
 
@@ -45,12 +44,17 @@
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 #endif
 
+class BaseCPU;
 class Checkpoint;
+class Port;
+class TranslatingPort;
 
 /**
  *  Struct for holding general thread state that is needed across CPU
@@ -62,11 +66,13 @@ struct ThreadState {
     typedef ThreadContext::Status Status;
 
 #if FULL_SYSTEM
-    ThreadState(int _cpuId, int _tid);
+    ThreadState(BaseCPU *cpu, int _cpuId, int _tid);
 #else
-    ThreadState(int _cpuId, int _tid, Process *_process,
-                short _asid, MemObject *mem);
+    ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+                short _asid);
 #endif
+
+    ~ThreadState();
 
     void serialize(std::ostream &os);
 
@@ -93,7 +99,7 @@ struct ThreadState {
 
     void profileSample();
 
-    Kernel::Statistics *getKernelStats() { return kernelStats; }
+    TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 
@@ -105,7 +111,7 @@ struct ThreadState {
 #else
     Process *getProcessPtr() { return process; }
 
-    TranslatingPort *getMemPort() { return port; }
+    TranslatingPort *getMemPort();
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
 
@@ -135,6 +141,12 @@ struct ThreadState {
     /** Sets the status of this thread. */
     void setStatus(Status new_status) { _status = new_status; }
 
+  protected:
+    /** Gets a functional port from the memory object that's connected
+     * to the CPU. */
+    Port *getMemFuncPort();
+
+  public:
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */
@@ -152,6 +164,9 @@ struct ThreadState {
 
   protected:
     ThreadContext::Status _status;
+
+    // Pointer to the base CPU.
+    BaseCPU *baseCpu;
 
     // ID of this context w.r.t. the System or Process object to which
     // it belongs.  For full-system mode, this is the system CPU ID.
@@ -174,7 +189,7 @@ struct ThreadState {
     Addr profilePC;
     EndQuiesceEvent *quiesceEvent;
 
-    Kernel::Statistics *kernelStats;
+    TheISA::Kernel::Statistics *kernelStats;
   protected:
     /** A functional port outgoing only for functional accesses to physical
      * addresses.*/

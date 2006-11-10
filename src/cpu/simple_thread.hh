@@ -55,8 +55,10 @@ class ProfileNode;
 class FunctionalPort;
 class PhysicalPort;
 
-namespace Kernel {
-    class Statistics;
+namespace TheISA {
+    namespace Kernel {
+        class Statistics;
+    };
 };
 
 #else // !FULL_SYSTEM
@@ -107,18 +109,17 @@ class SimpleThread : public ThreadState
     System *system;
 
 #if FULL_SYSTEM
-    AlphaITB *itb;
-    AlphaDTB *dtb;
+    TheISA::ITB *itb;
+    TheISA::DTB *dtb;
 #endif
 
     // constructor: initialize SimpleThread from given process structure
 #if FULL_SYSTEM
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 AlphaITB *_itb, AlphaDTB *_dtb,
+                 TheISA::ITB *_itb, TheISA::DTB *_dtb,
                  bool use_kernel_stats = true);
 #else
-    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid,
-                 MemObject *memobj);
+    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
 #endif
 
     SimpleThread();
@@ -168,12 +169,11 @@ class SimpleThread : public ThreadState
 
     void dumpFuncProfile();
 
-    int readIntrFlag() { return regs.intrflag; }
-    void setIntrFlag(int val) { regs.intrflag = val; }
     Fault hwrei();
 
     bool simPalCheck(int palFunc);
 #else
+
     Fault translateInstReq(RequestPtr &req)
     {
         return process->pTable->translate(req);
@@ -201,9 +201,9 @@ class SimpleThread : public ThreadState
 #if FULL_SYSTEM
     System *getSystemPtr() { return system; }
 
-    AlphaITB *getITBPtr() { return itb; }
+    TheISA::ITB *getITBPtr() { return itb; }
 
-    AlphaDTB *getDTBPtr() { return dtb; }
+    TheISA::DTB *getDTBPtr() { return dtb; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 
@@ -422,17 +422,17 @@ class SimpleThread : public ThreadState
         return regs.readMiscReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return regs.readMiscRegWithEffect(misc_reg, fault, tc);
+        return regs.readMiscRegWithEffect(misc_reg, tc);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         return regs.setMiscReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         return regs.setMiscRegWithEffect(misc_reg, val, tc);
     }
@@ -441,10 +441,6 @@ class SimpleThread : public ThreadState
 
     void setStCondFailures(unsigned sc_failures)
     { storeCondFailures = sc_failures; }
-
-#if FULL_SYSTEM
-    bool inPalMode() { return AlphaISA::PcPAL(regs.readPC()); }
-#endif
 
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)

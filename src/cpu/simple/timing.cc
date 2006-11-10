@@ -532,14 +532,13 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
-        Tick time = pkt->req->getTime();
-        while (time < curTick)
-            time += lat;
+        Tick mem_time = pkt->req->getTime();
+        Tick next_tick = cpu->nextCycle(mem_time);
 
-        if (time == curTick)
+        if (next_tick == curTick)
             cpu->completeIfetch(pkt);
         else
-            tickEvent.schedule(pkt, time);
+            tickEvent.schedule(pkt, next_tick);
 
         return true;
     }
@@ -610,14 +609,13 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse()) {
         // delay processing of returned data until next CPU clock edge
-        Tick time = pkt->req->getTime();
-        while (time < curTick)
-            time += lat;
+        Tick mem_time = pkt->req->getTime();
+        Tick next_tick = cpu->nextCycle(mem_time);
 
-        if (time == curTick)
+        if (next_tick == curTick)
             cpu->completeDataAccess(pkt);
         else
-            tickEvent.schedule(pkt, time);
+            tickEvent.schedule(pkt, next_tick);
 
         return true;
     }
@@ -660,13 +658,12 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     Param<Counter> max_loads_any_thread;
     Param<Counter> max_loads_all_threads;
     Param<Tick> progress_interval;
-    SimObjectParam<MemObject *> mem;
     SimObjectParam<System *> system;
     Param<int> cpu_id;
 
 #if FULL_SYSTEM
-    SimObjectParam<AlphaITB *> itb;
-    SimObjectParam<AlphaDTB *> dtb;
+    SimObjectParam<TheISA::ITB *> itb;
+    SimObjectParam<TheISA::DTB *> dtb;
     Param<Tick> profile;
 #else
     SimObjectParam<Process *> workload;
@@ -693,7 +690,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
     INIT_PARAM(max_loads_all_threads,
                "terminate when all threads have reached this load count"),
     INIT_PARAM(progress_interval, "Progress interval"),
-    INIT_PARAM(mem, "memory"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(cpu_id, "processor ID"),
 
@@ -729,7 +725,6 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->clock = clock;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
-    params->mem = mem;
     params->system = system;
     params->cpu_id = cpu_id;
 

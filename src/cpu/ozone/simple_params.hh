@@ -34,8 +34,11 @@
 #include "cpu/ozone/cpu.hh"
 
 //Forward declarations
-class AlphaDTB;
-class AlphaITB;
+namespace TheISA
+{
+    class DTB;
+    class ITB;
+}
 class FUPool;
 class MemObject;
 class PageTable;
@@ -53,15 +56,13 @@ class SimpleParams : public BaseCPU::Params
   public:
 
 #if FULL_SYSTEM
-    AlphaITB *itb; AlphaDTB *dtb;
+    TheISA::ITB *itb; TheISA::DTB *dtb;
 #else
     std::vector<Process *> workload;
 #endif // FULL_SYSTEM
 
     //Page Table
     PageTable *pTable;
-
-    MemObject *mem;
 
     //
     // Caches

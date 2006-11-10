@@ -220,20 +220,20 @@ namespace MipsISA
             return miscRegFile[misc_reg];
         }
 
-        MiscReg readRegWithEffect(int misc_reg, Fault &fault, ThreadContext *tc)
+        MiscReg readRegWithEffect(int misc_reg, ThreadContext *tc)
         {
             return miscRegFile[misc_reg];
         }
 
-        Fault setReg(int misc_reg, const MiscReg &val)
+        void setReg(int misc_reg, const MiscReg &val)
         {
-            miscRegFile[misc_reg] = val; return NoFault;
+            miscRegFile[misc_reg] = val;
         }
 
-        Fault setRegWithEffect(int misc_reg, const MiscReg &val,
+        void setRegWithEffect(int misc_reg, const MiscReg &val,
                                ThreadContext *tc)
         {
-            miscRegFile[misc_reg] = val; return NoFault;
+            miscRegFile[misc_reg] = val;
         }
 
         friend class RegFile;

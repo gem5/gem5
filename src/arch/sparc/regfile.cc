@@ -79,24 +79,20 @@ MiscReg RegFile::readMiscReg(int miscReg)
     return miscRegFile.readReg(miscReg);
 }
 
-MiscReg RegFile::readMiscRegWithEffect(int miscReg,
-        Fault &fault, ThreadContext *tc)
+MiscReg RegFile::readMiscRegWithEffect(int miscReg, ThreadContext *tc)
 {
-    fault = NoFault;
     return miscRegFile.readRegWithEffect(miscReg, tc);
 }
 
-Fault RegFile::setMiscReg(int miscReg, const MiscReg &val)
+void RegFile::setMiscReg(int miscReg, const MiscReg &val)
 {
     miscRegFile.setReg(miscReg, val);
-    return NoFault;
 }
 
-Fault RegFile::setMiscRegWithEffect(int miscReg, const MiscReg &val,
+void RegFile::setMiscRegWithEffect(int miscReg, const MiscReg &val,
         ThreadContext * tc)
 {
     miscRegFile.setRegWithEffect(miscReg, val, tc);
-    return NoFault;
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
@@ -122,27 +118,26 @@ FloatRegBits RegFile::readFloatRegBits(int floatReg)
             FloatRegFile::SingleWidth);
 }
 
-Fault RegFile::setFloatReg(int floatReg, const FloatReg &val, int width)
+void RegFile::setFloatReg(int floatReg, const FloatReg &val, int width)
 {
-    return floatRegFile.setReg(floatReg, val, width);
+    floatRegFile.setReg(floatReg, val, width);
 }
 
-Fault RegFile::setFloatReg(int floatReg, const FloatReg &val)
+void RegFile::setFloatReg(int floatReg, const FloatReg &val)
 {
     //Use the "natural" width of a single float
-    return setFloatReg(floatReg, val, FloatRegFile::SingleWidth);
+    setFloatReg(floatReg, val, FloatRegFile::SingleWidth);
 }
 
-Fault RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+void RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
 {
-    return floatRegFile.setRegBits(floatReg, val, width);
+    floatRegFile.setRegBits(floatReg, val, width);
 }
 
-Fault RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
+void RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
 {
     //Use the "natural" width of a single float
-    return floatRegFile.setRegBits(floatReg, val,
-            FloatRegFile::SingleWidth);
+    floatRegFile.setRegBits(floatReg, val, FloatRegFile::SingleWidth);
 }
 
 IntReg RegFile::readIntReg(int intReg)
@@ -150,9 +145,9 @@ IntReg RegFile::readIntReg(int intReg)
     return intRegFile.readReg(intReg);
 }
 
-Fault RegFile::setIntReg(int intReg, const IntReg &val)
+void RegFile::setIntReg(int intReg, const IntReg &val)
 {
-    return intRegFile.setReg(intReg, val);
+    intRegFile.setReg(intReg, val);
 }
 
 void RegFile::serialize(std::ostream &os)

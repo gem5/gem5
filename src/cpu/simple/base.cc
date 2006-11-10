@@ -46,7 +46,6 @@
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
 #include "mem/packet.hh"
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
@@ -58,10 +57,11 @@
 #include "sim/system.hh"
 
 #if FULL_SYSTEM
-#include "base/remote_gdb.hh"
-#include "arch/tlb.hh"
+#include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
+#include "arch/tlb.hh"
 #include "arch/vtophys.hh"
+#include "base/remote_gdb.hh"
 #else // !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
@@ -70,13 +70,13 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(Params *p)
-    : BaseCPU(p), mem(p->mem), thread(NULL)
+    : BaseCPU(p), thread(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
     thread = new SimpleThread(this, /* thread_num */ 0, p->process,
-            /* asid */ 0, mem);
+            /* asid */ 0);
 #endif // !FULL_SYSTEM
 
     thread->setStatus(ThreadContext::Suspended);
@@ -311,43 +311,12 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts() && !thread->inPalMode()) {
-        int ipl = 0;
-        int summary = 0;
-        checkInterrupts = false;
+    if (checkInterrupts && check_interrupts(tc)) {
+        Fault interrupt = interrupts.getInterrupt(tc);
 
-        if (thread->readMiscReg(IPR_SIRR)) {
-            for (int i = INTLEVEL_SOFTWARE_MIN;
-                 i < INTLEVEL_SOFTWARE_MAX; i++) {
-                if (thread->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
-                    // See table 4-19 of 21164 hardware reference
-                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                    summary |= (ULL(1) << i);
-                }
-            }
-        }
-
-        uint64_t interrupts = thread->cpu->intr_status();
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-            i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-
-        if (thread->readMiscReg(IPR_ASTRR))
-            panic("asynchronous traps not implemented\n");
-
-        if (ipl && ipl > thread->readMiscReg(IPR_IPLR)) {
-            thread->setMiscReg(IPR_ISR, summary);
-            thread->setMiscReg(IPR_INTID, ipl);
-
-            Fault(new InterruptFault)->invoke(tc);
-
-            DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                    thread->readMiscReg(IPR_IPLR), ipl, summary);
+        if (interrupt != NoFault) {
+            checkInterrupts = false;
+            interrupt->invoke(tc);
         }
     }
 #endif
@@ -398,7 +367,15 @@ BaseSimpleCPU::preExecute()
     inst = gtoh(inst);
     //If we're not in the middle of a macro instruction
     if (!curMacroStaticInst) {
+#if THE_ISA == ALPHA_ISA
+        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->readPC()));
+#elif THE_ISA == SPARC_ISA
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+#elif THE_ISA == MIPS_ISA
+        //Mips doesn't do anything in it's MakeExtMI function right now,
+        //so it won't be called.
+        StaticInstPtr instPtr = StaticInst::decode(inst);
+#endif
         if (instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;
             curStaticInst = curMacroStaticInst->
@@ -430,8 +407,7 @@ BaseSimpleCPU::postExecute()
 {
 #if FULL_SYSTEM
     if (thread->profile) {
-        bool usermode =
-            (thread->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+        bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : thread->readPC();
         ProfileNode *node = thread->profile->consume(tc, inst);
         if (node)

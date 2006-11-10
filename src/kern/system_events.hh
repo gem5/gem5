@@ -35,21 +35,10 @@
 
 #include "cpu/pc_event.hh"
 
-class System;
-
 class SkipFuncEvent : public PCEvent
 {
   public:
     SkipFuncEvent(PCEventQueue *q, const std::string &desc, Addr addr)
-        : PCEvent(q, desc, addr)
-    {}
-    virtual void process(ThreadContext *tc);
-};
-
-class IdleStartEvent : public PCEvent
-{
-  public:
-    IdleStartEvent(PCEventQueue *q, const std::string &desc, Addr addr)
         : PCEvent(q, desc, addr)
     {}
     virtual void process(ThreadContext *tc);

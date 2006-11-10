@@ -28,6 +28,9 @@
  * Authors: Ali Saidi
  */
 
+//To get endianness
+#include "arch/isa_traits.hh"
+
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 
@@ -35,7 +38,7 @@ template <typename T>
 void
 FunctionalPort::writeHtoG(Addr addr, T d)
 {
-    d = htog(d);
+    d = TheISA::htog(d);
     writeBlob(addr, (uint8_t*)&d, sizeof(T));
 }
 
@@ -46,6 +49,6 @@ FunctionalPort::readGtoH(Addr addr)
 {
     T d;
     readBlob(addr, (uint8_t*)&d, sizeof(T));
-    return gtoh(d);
+    return TheISA::gtoh(d);
 }
 

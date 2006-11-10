@@ -31,16 +31,16 @@
 
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
-#include "base/kgdb.h"
+#include "arch/alpha/kgdb.h"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
 #include "sim/debug.hh"
 #include "sim/sim_exit.hh"
 
@@ -60,7 +60,7 @@ AlphaISA::initCPU(ThreadContext *tc, int cpuId)
     tc->setIntReg(16, cpuId);
     tc->setIntReg(0, cpuId);
 
-    AlphaFault *reset = new ResetFault;
+    AlphaISA::AlphaFault *reset = new AlphaISA::ResetFault;
 
     tc->setPC(tc->readMiscReg(IPR_PAL_BASE) + reset->vect());
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
@@ -147,7 +147,7 @@ AlphaISA::zeroRegisters(CPU *cpu)
 Fault
 SimpleThread::hwrei()
 {
-    if (!inPalMode())
+    if (!(readPC() & 0x3))
         return new UnimplementedOpcodeFault;
 
     setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
@@ -176,7 +176,7 @@ AlphaISA::MiscRegFile::getDataAsid()
 }
 
 AlphaISA::MiscReg
-AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ThreadContext *tc)
+AlphaISA::MiscRegFile::readIpr(int idx, ThreadContext *tc)
 {
     uint64_t retval = 0;	// return value, default 0
 
@@ -269,12 +269,12 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ThreadContext *tc)
       case AlphaISA::IPR_DTB_IAP:
       case AlphaISA::IPR_ITB_IA:
       case AlphaISA::IPR_ITB_IAP:
-        fault = new UnimplementedOpcodeFault;
+        panic("Tried to read write only register %d\n", idx);
         break;
 
       default:
         // invalid IPR
-        fault = new UnimplementedOpcodeFault;
+        panic("Tried to read from invalid ipr %d\n", idx);
         break;
     }
 
@@ -286,13 +286,13 @@ AlphaISA::MiscRegFile::readIpr(int idx, Fault &fault, ThreadContext *tc)
 int break_ipl = -1;
 #endif
 
-Fault
+void
 AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
 {
     uint64_t old;
 
     if (tc->misspeculating())
-        return NoFault;
+        return;
 
     switch (idx) {
       case AlphaISA::IPR_PALtemp0:
@@ -379,10 +379,10 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
       case AlphaISA::IPR_DTB_CM:
         if (val & 0x18) {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::user, tc);
+                tc->getKernelStats()->mode(TheISA::Kernel::user, tc);
         } else {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::kernel, tc);
+                tc->getKernelStats()->mode(TheISA::Kernel::kernel, tc);
         }
 
       case AlphaISA::IPR_ICM:
@@ -443,7 +443,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
       case AlphaISA::IPR_ITB_PTE_TEMP:
       case AlphaISA::IPR_DTB_PTE_TEMP:
         // read-only registers
-        return new UnimplementedOpcodeFault;
+        panic("Tried to write read only ipr %d\n", idx);
 
       case AlphaISA::IPR_HWINT_CLR:
       case AlphaISA::IPR_SL_XMIT:
@@ -547,18 +547,17 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
       default:
         // invalid IPR
-        return new UnimplementedOpcodeFault;
+        panic("Tried to write to invalid ipr %d\n", idx);
     }
 
     // no error...
-    return NoFault;
 }
 
 
 void
 AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
 {
-    for (int i = IPR_Base_DepTag; i < NumInternalProcRegs; ++i) {
+    for (int i = 0; i < NumInternalProcRegs; ++i) {
         dest->setMiscReg(i, src->readMiscReg(i));
     }
 }

@@ -45,6 +45,7 @@
 #include "base/loader/ecoff_object.hh"
 #include "base/loader/aout_object.hh"
 #include "base/loader/elf_object.hh"
+#include "base/loader/raw_object.hh"
 
 #include "mem/translating_port.hh"
 
@@ -107,7 +108,7 @@ ObjectFile::close()
 
 
 ObjectFile *
-createObjectFile(const string &fname)
+createObjectFile(const string &fname, bool raw)
 {
     // open the file
     int fd = open(fname.c_str(), O_RDONLY);
@@ -140,6 +141,9 @@ createObjectFile(const string &fname)
     if ((fileObj = ElfObject::tryFile(fname, fd, len, fileData)) != NULL) {
         return fileObj;
     }
+
+    if (raw)
+        return RawObject::tryFile(fname, fd, len, fileData);
 
     // don't know what it is
     close(fd);

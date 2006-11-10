@@ -42,13 +42,14 @@
 Port *
 Bus::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "default")
+    if (if_name == "default") {
         if (defaultPort == NULL) {
             defaultPort = new BusPort(csprintf("%s-default",name()), this,
-                    defaultId);
+                                      defaultId);
             return defaultPort;
         } else
             fatal("Default port already set\n");
+    }
 
     // if_name ignored?  forced to be empty?
     int id = interfaces.size();
@@ -240,6 +241,9 @@ Bus::recvRetry(int id)
             }
         }
     }
+    //If we weren't able to drain before, we might be able to now.
+    if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle)
+        drainEvent->process();
 }
 
 Port *
@@ -269,7 +273,16 @@ Bus::findPort(Addr addr, int id)
                 return defaultPort;
             }
         }
-        panic("Unable to find destination for addr: %#llx", addr);
+
+        if (responderSet) {
+            panic("Unable to find destination for addr (user set default "
+                  "responder): %#llx", addr);
+        } else {
+            DPRINTF(Bus, "Unable to find destination for addr: %#llx, will use "
+                    "default port", addr);
+
+            return defaultPort;
+        }
     }
 
 
@@ -392,12 +405,15 @@ Bus::recvStatusChange(Port::Status status, int id)
 
     if (id == defaultId) {
         defaultRange.clear();
-        defaultPort->getPeerAddressRanges(ranges, snoops);
-        assert(snoops.size() == 0);
-        for(iter = ranges.begin(); iter != ranges.end(); iter++) {
-            defaultRange.push_back(*iter);
-            DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
-                    iter->start, iter->end);
+        // Only try to update these ranges if the user set a default responder.
+        if (responderSet) {
+            defaultPort->getPeerAddressRanges(ranges, snoops);
+            assert(snoops.size() == 0);
+            for(iter = ranges.begin(); iter != ranges.end(); iter++) {
+                defaultRange.push_back(*iter);
+                DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
+                        iter->start, iter->end);
+            }
         }
     } else {
 
@@ -498,23 +514,39 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     }
 }
 
+unsigned int
+Bus::drain(Event * de)
+{
+    //We should check that we're not "doing" anything, and that noone is
+    //waiting. We might be idle but have someone waiting if the device we
+    //contacted for a retry didn't actually retry.
+    if (curTick >= tickNextIdle && retryList.size() == 0) {
+        return 0;
+    } else {
+        drainEvent = de;
+        return 1;
+    }
+}
+
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
     Param<int> bus_id;
     Param<int> clock;
     Param<int> width;
+    Param<bool> responder_set;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
     INIT_PARAM(bus_id, "a globally unique bus id"),
     INIT_PARAM(clock, "bus clock speed"),
-    INIT_PARAM(width, "width of the bus (bits)")
+    INIT_PARAM(width, "width of the bus (bits)"),
+    INIT_PARAM(responder_set, "Is a default responder set by the user")
 END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName(), bus_id, clock, width);
+    return new Bus(getInstanceName(), bus_id, clock, width, responder_set);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)

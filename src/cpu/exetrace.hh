@@ -150,6 +150,7 @@ class InstRecord : public Record
         PRINT_REG_DELTA,
         PC_SYMBOL,
         INTEL_FORMAT,
+        LEGION_LOCKSTEP,
         NUM_BITS
     };
 

@@ -696,7 +696,7 @@ class ScalarBase : public DataAccess
 
   protected:
     /** The storage of this stat. */
-    char storage[sizeof(Storage)];
+    char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
 
     /** The parameters for this stat. */
     Params params;
@@ -1637,7 +1637,7 @@ class DistBase : public DataAccess
 
   protected:
     /** The storage for this stat. */
-    char storage[sizeof(Storage)];
+    char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
 
     /** The parameters for this stat. */
     Params params;

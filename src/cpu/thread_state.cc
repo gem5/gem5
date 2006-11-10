@@ -29,30 +29,44 @@
  */
 
 #include "base/output.hh"
+#include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_state.hh"
+#include "mem/port.hh"
+#include "mem/translating_port.hh"
 #include "sim/serialize.hh"
 
 #if FULL_SYSTEM
+#include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #endif
 
 #if FULL_SYSTEM
-ThreadState::ThreadState(int _cpuId, int _tid)
-    : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid)
+    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
+      physPort(NULL), virtPort(NULL),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
-ThreadState::ThreadState(int _cpuId, int _tid, Process *_process,
-                         short _asid, MemObject *mem)
-    : cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
-      process(_process), asid(_asid),
+ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+                         short _asid)
+    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+      port(NULL), process(_process), asid(_asid),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif
 {
     numInst = 0;
     numLoad = 0;
+}
+
+ThreadState::~ThreadState()
+{
+#if !FULL_SYSTEM
+    if (port) {
+        delete port->getPeer();
+        delete port;
+    }
+#endif
 }
 
 void
@@ -112,4 +126,40 @@ ThreadState::profileSample()
         profile->sample(profileNode, profilePC);
 }
 
+#else
+TranslatingPort *
+ThreadState::getMemPort()
+{
+    if (port != NULL)
+        return port;
+
+    /* Use this port to for syscall emulation writes to memory. */
+    port = new TranslatingPort(csprintf("%s-%d-funcport",
+                                        baseCpu->name(), tid),
+                               process->pTable, false);
+
+    Port *func_port = getMemFuncPort();
+
+    func_port->setPeer(port);
+    port->setPeer(func_port);
+
+    return port;
+}
 #endif
+
+Port *
+ThreadState::getMemFuncPort()
+{
+    Port *dcache_port, *func_mem_port;
+
+    dcache_port = baseCpu->getPort("dcache_port");
+    assert(dcache_port != NULL);
+
+    MemObject *mem_object = dcache_port->getPeer()->getOwner();
+    assert(mem_object != NULL);
+
+    func_mem_port = mem_object->getPort("functional");
+    assert(func_mem_port != NULL);
+
+    return func_mem_port;
+}

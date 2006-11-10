@@ -125,7 +125,7 @@ void AlphaFault::invoke(ThreadContext * tc)
     countStat()++;
 
     // exception restart address
-    if (setRestartAddress() || !tc->inPalMode())
+    if (setRestartAddress() || !(tc->readPC() & 0x3))
         tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->readPC());
 
     if (skipFaultingInstruction()) {

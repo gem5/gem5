@@ -105,6 +105,8 @@ class BaseCache : public MemObject
 
         void clearBlocked();
 
+        bool canDrain() { return drainList.empty(); }
+
         bool blocked;
 
         bool mustSendRetry;
@@ -227,6 +229,9 @@ class BaseCache : public MemObject
     /** The number of misses to trigger an exit event. */
     Counter missCount;
 
+    /** The drain event. */
+    Event *drainEvent;
+
   public:
     // Statistics
     /**
@@ -340,7 +345,7 @@ class BaseCache : public MemObject
     BaseCache(const std::string &name, Params &params)
         : MemObject(name), blocked(0), blockedSnoop(0), masterRequests(0),
           slaveRequests(0), blkSize(params.blkSize),
-          missCount(params.maxMisses)
+          missCount(params.maxMisses), drainEvent(NULL)
     {
         //Start ports at null if more than one is created we should panic
         cpuSidePort = NULL;
@@ -477,6 +482,7 @@ class BaseCache : public MemObject
     {
         uint8_t flag = 1<<cause;
         masterRequests &= ~flag;
+        checkDrain();
     }
 
     /**
@@ -512,6 +518,7 @@ class BaseCache : public MemObject
     {
         uint8_t flag = 1<<cause;
         slaveRequests &= ~flag;
+        checkDrain();
     }
 
     /**
@@ -588,6 +595,30 @@ class BaseCache : public MemObject
             cpuSidePort->getPeerAddressRanges(dummy, snoop);
             return;
         }
+    }
+
+    virtual unsigned int drain(Event *de);
+
+    void checkDrain()
+    {
+        if (drainEvent && canDrain()) {
+            drainEvent->process();
+            changeState(SimObject::Drained);
+            // Clear the drain event
+            drainEvent = NULL;
+        }
+    }
+
+    bool canDrain()
+    {
+        if (doMasterRequest() || doSlaveRequest()) {
+            return false;
+        } else if (memSidePort && !memSidePort->canDrain()) {
+            return false;
+        } else if (cpuSidePort && !cpuSidePort->canDrain()) {
+            return false;
+        }
+        return true;
     }
 };
 

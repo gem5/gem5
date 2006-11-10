@@ -54,14 +54,12 @@ Param<int> activity;
 #if FULL_SYSTEM
 SimObjectParam<System *> system;
 Param<int> cpu_id;
-SimObjectParam<AlphaITB *> itb;
-SimObjectParam<AlphaDTB *> dtb;
+SimObjectParam<AlphaISA::ITB *> itb;
+SimObjectParam<AlphaISA::DTB *> dtb;
 Param<Tick> profile;
 #else
 SimObjectVectorParam<Process *> workload;
 #endif // FULL_SYSTEM
-
-SimObjectParam<MemObject *> mem;
 
 SimObjectParam<BaseCPU *> checker;
 
@@ -168,8 +166,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
 #else
     INIT_PARAM(workload, "Processes to run"),
 #endif // FULL_SYSTEM
-
-    INIT_PARAM(mem, "Memory"),
 
     INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
 
@@ -313,8 +309,6 @@ CREATE_SIM_OBJECT(DerivO3CPU)
 #else
     params->workload = workload;
 #endif // FULL_SYSTEM
-
-    params->mem = mem;
 
     params->checker = checker;
 

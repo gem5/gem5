@@ -54,7 +54,11 @@ base_sources = Split('''
 
 # Full-system sources
 full_system_sources = Split('''
-	ua2005.cc
+	arguments.cc
+	remote_gdb.cc
+	stacktrace.cc
+	system.cc
+	tlb.cc
 	vtophys.cc
 	''')
 

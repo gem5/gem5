@@ -48,8 +48,8 @@
 #if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/isa_traits.hh"
+#include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "kern/kernel_stats.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 #endif
@@ -77,24 +77,10 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
         if (i < params->workload.size()) {
             DPRINTF(O3CPU, "Workload[%i] process is %#x",
                     i, this->thread[i]);
-            this->thread[i] = new Thread(this, i, params->workload[i],
-                                         i, params->mem);
+            this->thread[i] = new Thread(this, i, params->workload[i], i);
 
             this->thread[i]->setStatus(ThreadContext::Suspended);
 
-#if !FULL_SYSTEM
-            /* Use this port to for syscall emulation writes to memory. */
-            Port *mem_port;
-            TranslatingPort *trans_port;
-            trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                                      name(), i),
-                                             params->workload[i]->pTable,
-                                             false);
-            mem_port = params->mem->getPort("functional");
-            mem_port->setPeer(trans_port);
-            trans_port->setPeer(mem_port);
-            this->thread[i]->setMemPort(trans_port);
-#endif
             //usedTids[i] = true;
             //threadMap[i] = i;
         } else {
@@ -102,7 +88,7 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
             //when scheduling threads to CPU
             Process* dummy_proc = NULL;
 
-            this->thread[i] = new Thread(this, i, dummy_proc, i, params->mem);
+            this->thread[i] = new Thread(this, i, dummy_proc, i);
             //usedTids[i] = false;
         }
 #endif // !FULL_SYSTEM
@@ -198,25 +184,24 @@ AlphaO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 
 template <class Impl>
 TheISA::MiscReg
-AlphaO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, Fault &fault,
-                                        unsigned tid)
+AlphaO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
 {
-    return this->regFile.readMiscRegWithEffect(misc_reg, fault, tid);
+    return this->regFile.readMiscRegWithEffect(misc_reg, tid);
 }
 
 template <class Impl>
-Fault
+void
 AlphaO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
 {
-    return this->regFile.setMiscReg(misc_reg, val, tid);
+    this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
-Fault
+void
 AlphaO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
                                        unsigned tid)
 {
-    return this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
+    this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
@@ -239,20 +224,6 @@ AlphaO3CPU<Impl>::post_interrupt(int int_num, int index)
         DPRINTF(IPI,"Suspended Processor awoke\n");
         this->threadContexts[0]->activate();
     }
-}
-
-template <class Impl>
-int
-AlphaO3CPU<Impl>::readIntrFlag()
-{
-    return this->regFile.readIntrFlag();
-}
-
-template <class Impl>
-void
-AlphaO3CPU<Impl>::setIntrFlag(int val)
-{
-    this->regFile.setIntrFlag(val);
 }
 
 template <class Impl>
@@ -299,7 +270,6 @@ template <class Impl>
 void
 AlphaO3CPU<Impl>::processInterrupts()
 {
-    using namespace TheISA;
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
     // is the one that handles the interrupts.
@@ -308,51 +278,11 @@ AlphaO3CPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    int ipl = 0;
-    int summary = 0;
+    Fault interrupt = this->interrupts.getInterrupt(this->tcBase(0));
 
-    this->checkInterrupts = false;
-
-    if (this->readMiscReg(IPR_ASTRR, 0))
-        panic("asynchronous traps not implemented\n");
-
-    if (this->readMiscReg(IPR_SIRR, 0)) {
-        for (int i = INTLEVEL_SOFTWARE_MIN;
-             i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (this->readMiscReg(IPR_SIRR, 0) & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    uint64_t interrupts = this->intr_status();
-
-    if (interrupts) {
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-             i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    if (ipl && ipl > this->readMiscReg(IPR_IPLR, 0)) {
-        this->setMiscReg(IPR_ISR, summary, 0);
-        this->setMiscReg(IPR_INTID, ipl, 0);
-        // Checker needs to know these two registers were updated.
-#if USE_CHECKER
-        if (this->checker) {
-            this->checker->threadBase()->setMiscReg(IPR_ISR, summary);
-            this->checker->threadBase()->setMiscReg(IPR_INTID, ipl);
-        }
-#endif
-        this->trap(Fault(new InterruptFault), 0);
-        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                this->readMiscReg(IPR_IPLR, 0), ipl, summary);
+    if (interrupt != NoFault) {
+        this->checkInterrupts = false;
+        this->trap(interrupt, 0);
     }
 }
 

@@ -47,12 +47,12 @@
 #if FULL_SYSTEM
 #include "arch/faults.hh"
 #include "arch/alpha/osfpal.hh"
-#include "arch/alpha/tlb.hh"
-#include "arch/alpha/types.hh"
+#include "arch/tlb.hh"
+#include "arch/types.hh"
+#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
 #include "cpu/profile.hh"
-#include "kern/kernel_stats.hh"
 #include "mem/physical.hh"
 #include "sim/faults.hh"
 #include "sim/sim_events.hh"
@@ -93,10 +93,10 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if FULL_SYSTEM
     : BaseCPU(p), thread(this, 0), tickEvent(this, p->width),
 #else
-    : BaseCPU(p), thread(this, 0, p->workload[0], 0, p->mem),
+    : BaseCPU(p), thread(this, 0, p->workload[0], 0),
       tickEvent(this, p->width),
 #endif
-      mem(p->mem), comm(5, 5)
+      comm(5, 5)
 {
     frontEnd = new FrontEnd(p);
     backEnd = new BackEnd(p);
@@ -107,7 +107,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if USE_CHECKER
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
-        checker->setMemory(mem);
 #if FULL_SYSTEM
         checker->setSystem(p->system);
 #endif
@@ -198,19 +197,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
-#if !FULL_SYSTEM
-    /* Use this port to for syscall emulation writes to memory. */
-    Port *mem_port;
-    TranslatingPort *trans_port;
-    trans_port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                              name(), 0),
-                                     p->workload[0]->pTable,
-                                     false);
-    mem_port = p->mem->getPort("functional");
-    mem_port->setPeer(trans_port);
-    trans_port->setPeer(mem_port);
-    thread.setMemPort(trans_port);
-#else
+#if FULL_SYSTEM
     Port *mem_port;
     FunctionalPort *phys_port;
     VirtualPort *virt_port;
@@ -904,7 +891,7 @@ void
 OzoneCPU<Impl>::OzoneTC::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
-    thread->kernelStats = new Kernel::Statistics(cpu->system);
+    thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
     thread->kernelStats->regStats(name + ".kern");
 #endif
 }
@@ -1156,37 +1143,31 @@ OzoneCPU<Impl>::OzoneTC::readMiscReg(int misc_reg)
 
 template <class Impl>
 TheISA::MiscReg
-OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg, Fault &fault)
+OzoneCPU<Impl>::OzoneTC::readMiscRegWithEffect(int misc_reg)
 {
-    return thread->miscRegFile.readRegWithEffect(misc_reg,
-                                                 fault, this);
+    return thread->miscRegFile.readRegWithEffect(misc_reg, this);
 }
 
 template <class Impl>
-Fault
+void
 OzoneCPU<Impl>::OzoneTC::setMiscReg(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->miscRegFile.setReg(misc_reg, val);
+    thread->miscRegFile.setReg(misc_reg, val);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();
     }
-
-    return ret_fault;
 }
 
 template <class Impl>
-Fault
+void
 OzoneCPU<Impl>::OzoneTC::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
 {
     // Needs to setup a squash event unless we're in syscall mode
-    Fault ret_fault = thread->miscRegFile.setRegWithEffect(misc_reg, val,
-                                                           this);
+    thread->miscRegFile.setRegWithEffect(misc_reg, val, this);
 
     if (!thread->inSyscall) {
         cpu->squashFromTC();
     }
-
-    return ret_fault;
 }

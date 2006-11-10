@@ -42,12 +42,18 @@
 namespace AlphaISA
 {
 
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        return (tc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+    }
+
     static inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
+    makeExtMI(MachInst inst, Addr pc) {
 #if FULL_SYSTEM
         ExtMachInst ext_inst = inst;
-        if (xc->readPC() && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
+        if (pc && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
         else
             return ext_inst;
 #else

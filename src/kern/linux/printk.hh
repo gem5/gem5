@@ -32,8 +32,10 @@
 #ifndef __PRINTK_HH__
 #define __PRINTK_HH__
 
-class AlphaISA::AlphaArguments;
+#include "arch/isa_specific.hh"
 
-void Printk(AlphaISA::AlphaArguments args);
+class TheISA::Arguments;
+
+void Printk(TheISA::Arguments args);
 
 #endif // __PRINTK_HH__

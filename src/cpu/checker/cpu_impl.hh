@@ -199,8 +199,13 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
             // Checks both the machine instruction and the PC.
             validateInst(inst);
 
+#if THE_ISA == ALPHA_ISA
+            curStaticInst = StaticInst::decode(makeExtMI(machInst,
+                                                         thread->readPC()));
+#elif THE_ISA == SPARC_ISA
             curStaticInst = StaticInst::decode(makeExtMI(machInst,
                                                          thread->getTC()));
+#endif
 
 #if FULL_SYSTEM
             thread->setInst(machInst);

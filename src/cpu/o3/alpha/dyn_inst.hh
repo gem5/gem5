@@ -102,14 +102,13 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return this->cpu->readMiscRegWithEffect(misc_reg, fault,
-                                                this->threadNumber);
+        return this->cpu->readMiscRegWithEffect(misc_reg, this->threadNumber);
     }
 
     /** Sets a misc. register. */
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
         this->instResult.integer = val;
         return this->cpu->setMiscReg(misc_reg, val, this->threadNumber);
@@ -118,7 +117,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
         return this->cpu->setMiscRegWithEffect(misc_reg, val,
                                                this->threadNumber);
@@ -127,12 +126,6 @@ class AlphaDynInst : public BaseDynInst<Impl>
 #if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
-    /** Reads interrupt flag. */
-    int readIntrFlag();
-    /** Sets interrupt flag. */
-    void setIntrFlag(int val);
-    /** Checks if system is in PAL mode. */
-    bool inPalMode();
     /** Traps to handle specified fault. */
     void trap(Fault fault);
     bool simPalCheck(int palFunc);

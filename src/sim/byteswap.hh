@@ -47,6 +47,8 @@
 // If one doesn't exist, we pretty much get what is listed below, so it all
 // works out
 #include <byteswap.h>
+#elif defined (__sun__)
+#include <sys/isa_defs.h>
 #else
 #include <machine/endian.h>
 #endif
@@ -128,12 +130,12 @@ template <typename T> static inline T letobe(T value) {return swap_byte(value);}
 
 //For conversions not involving the guest system, we can define the functions
 //conditionally based on the BYTE_ORDER macro and outside of the namespaces
-#if BYTE_ORDER == BIG_ENDIAN
+#if defined(_BIG_ENDIAN) || BYTE_ORDER == BIG_ENDIAN
 template <typename T> static inline T htole(T value) {return swap_byte(value);}
 template <typename T> static inline T letoh(T value) {return swap_byte(value);}
 template <typename T> static inline T htobe(T value) {return value;}
 template <typename T> static inline T betoh(T value) {return value;}
-#elif BYTE_ORDER == LITTLE_ENDIAN
+#elif defined(_LITTLE_ENDIAN) || BYTE_ORDER == LITTLE_ENDIAN
 template <typename T> static inline T htole(T value) {return value;}
 template <typename T> static inline T letoh(T value) {return value;}
 template <typename T> static inline T htobe(T value) {return swap_byte(value);}

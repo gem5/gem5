@@ -168,11 +168,6 @@ BaseCPU::BaseCPU(Params *p)
                 p->max_loads_all_threads, *counter);
     }
 
-#if FULL_SYSTEM
-    memset(interrupts, 0, sizeof(interrupts));
-    intstatus = 0;
-#endif
-
     functionTracingEnabled = false;
     if (p->functionTrace) {
         functionTraceStream = simout.find(csprintf("ftrace.%s", name()));
@@ -259,6 +254,26 @@ BaseCPU::regStats()
 #endif
 }
 
+Tick
+BaseCPU::nextCycle()
+{
+    Tick next_tick = curTick + clock - 1;
+    next_tick -= (next_tick % clock);
+    return next_tick;
+}
+
+Tick
+BaseCPU::nextCycle(Tick begin_tick)
+{
+    Tick next_tick = begin_tick;
+
+    while (next_tick < curTick)
+        next_tick += clock;
+
+    next_tick -= (next_tick % clock);
+    assert(next_tick >= curTick);
+    return next_tick;
+}
 
 void
 BaseCPU::registerThreadContexts()
@@ -314,9 +329,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     }
 
 #if FULL_SYSTEM
-    for (int i = 0; i < TheISA::NumInterruptLevels; ++i)
-        interrupts[i] = oldCPU->interrupts[i];
-    intstatus = oldCPU->intstatus;
+    interrupts = oldCPU->interrupts;
     checkInterrupts = oldCPU->checkInterrupts;
 
     for (int i = 0; i < threadContexts.size(); ++i)
@@ -348,57 +361,33 @@ BaseCPU::ProfileEvent::process()
 void
 BaseCPU::post_interrupt(int int_num, int index)
 {
-    DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
-
-    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
-        panic("int_num out of bounds\n");
-
-    if (index < 0 || index >= sizeof(uint64_t) * 8)
-        panic("int_num out of bounds\n");
-
     checkInterrupts = true;
-    interrupts[int_num] |= 1 << index;
-    intstatus |= (ULL(1) << int_num);
+    interrupts.post(int_num, index);
 }
 
 void
 BaseCPU::clear_interrupt(int int_num, int index)
 {
-    DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
-
-    if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
-        panic("int_num out of bounds\n");
-
-    if (index < 0 || index >= sizeof(uint64_t) * 8)
-        panic("int_num out of bounds\n");
-
-    interrupts[int_num] &= ~(1 << index);
-    if (interrupts[int_num] == 0)
-        intstatus &= ~(ULL(1) << int_num);
+    interrupts.clear(int_num, index);
 }
 
 void
 BaseCPU::clear_interrupts()
 {
-    DPRINTF(Interrupt, "Interrupts all cleared\n");
-
-    memset(interrupts, 0, sizeof(interrupts));
-    intstatus = 0;
+    interrupts.clear_all();
 }
 
 
 void
 BaseCPU::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
-    SERIALIZE_SCALAR(intstatus);
+    interrupts.serialize(os);
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(interrupts, TheISA::NumInterruptLevels);
-    UNSERIALIZE_SCALAR(intstatus);
+    interrupts.unserialize(cp, section);
 }
 
 #endif // FULL_SYSTEM

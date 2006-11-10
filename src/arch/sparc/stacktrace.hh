@@ -35,87 +35,90 @@
 #include "cpu/static_inst.hh"
 
 class ThreadContext;
-class StackTrace;
-
-class ProcessInfo
+namespace SparcISA
 {
-  private:
-    ThreadContext *tc;
+    class StackTrace;
 
-    int thread_info_size;
-    int task_struct_size;
-    int task_off;
-    int pid_off;
-    int name_off;
-
-  public:
-    ProcessInfo(ThreadContext *_tc);
-
-    Addr task(Addr ksp) const;
-    int pid(Addr ksp) const;
-    std::string name(Addr ksp) const;
-};
-
-class StackTrace
-{
-  protected:
-    typedef TheISA::MachInst MachInst;
-  private:
-    ThreadContext *tc;
-    std::vector<Addr> stack;
-
-  private:
-    bool isEntry(Addr addr);
-    bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
-    bool decodeSave(MachInst inst, int &reg, int &disp);
-    bool decodeStack(MachInst inst, int &disp);
-
-    void trace(ThreadContext *tc, bool is_call);
-
-  public:
-    StackTrace();
-    StackTrace(ThreadContext *tc, StaticInstPtr inst);
-    ~StackTrace();
-
-    void clear()
+    class ProcessInfo
     {
-        tc = 0;
-        stack.clear();
-    }
+      private:
+        ThreadContext *tc;
 
-    bool valid() const { return tc != NULL; }
-    bool trace(ThreadContext *tc, StaticInstPtr inst);
+        int thread_info_size;
+        int task_struct_size;
+        int task_off;
+        int pid_off;
+        int name_off;
 
-  public:
-    const std::vector<Addr> &getstack() const { return stack; }
+      public:
+        ProcessInfo(ThreadContext *_tc);
 
-    static const int user = 1;
-    static const int console = 2;
-    static const int unknown = 3;
+        Addr task(Addr ksp) const;
+        int pid(Addr ksp) const;
+        std::string name(Addr ksp) const;
+    };
+
+    class StackTrace
+    {
+      protected:
+        typedef TheISA::MachInst MachInst;
+      private:
+        ThreadContext *tc;
+        std::vector<Addr> stack;
+
+      private:
+        bool isEntry(Addr addr);
+        bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
+        bool decodeSave(MachInst inst, int &reg, int &disp);
+        bool decodeStack(MachInst inst, int &disp);
+
+        void trace(ThreadContext *tc, bool is_call);
+
+      public:
+        StackTrace();
+        StackTrace(ThreadContext *tc, StaticInstPtr inst);
+        ~StackTrace();
+
+        void clear()
+        {
+            tc = 0;
+            stack.clear();
+        }
+
+        bool valid() const { return tc != NULL; }
+        bool trace(ThreadContext *tc, StaticInstPtr inst);
+
+      public:
+        const std::vector<Addr> &getstack() const { return stack; }
+
+        static const int user = 1;
+        static const int console = 2;
+        static const int unknown = 3;
 
 #if TRACING_ON
-  private:
-    void dump();
+      private:
+        void dump();
 
-  public:
-    void dprintf() { if (DTRACE(Stack)) dump(); }
+      public:
+        void dprintf() { if (DTRACE(Stack)) dump(); }
 #else
-  public:
-    void dprintf() {}
+      public:
+        void dprintf() {}
 #endif
-};
+    };
 
-inline bool
-StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
-{
-    if (!inst->isCall() && !inst->isReturn())
-        return false;
+    inline bool
+    StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
+    {
+        if (!inst->isCall() && !inst->isReturn())
+            return false;
 
-    if (valid())
-        clear();
+        if (valid())
+            clear();
 
-    trace(tc, !inst->isReturn());
-    return true;
+        trace(tc, !inst->isReturn());
+        return true;
+    }
 }
 
 #endif // __ARCH_SPARC_STACKTRACE_HH__

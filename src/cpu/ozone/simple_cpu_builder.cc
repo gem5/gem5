@@ -64,8 +64,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleOzoneCPU)
 #if FULL_SYSTEM
 SimObjectParam<System *> system;
 Param<int> cpu_id;
-SimObjectParam<AlphaITB *> itb;
-SimObjectParam<AlphaDTB *> dtb;
+SimObjectParam<TheISA::ITB *> itb;
+SimObjectParam<TheISA::DTB *> dtb;
 #else
 SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;

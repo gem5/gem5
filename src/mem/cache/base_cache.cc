@@ -42,7 +42,7 @@ using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
                                 bool _isCpuSide)
-    : Port(_name), cache(_cache), isCpuSide(_isCpuSide)
+    : Port(_name, _cache), cache(_cache), isCpuSide(_isCpuSide)
 {
     blocked = false;
     waitingOnRetry = false;
@@ -140,6 +140,9 @@ BaseCache::CachePort::recvRetry()
             }
             waitingOnRetry = false;
         }
+        // Check if we're done draining once this list is empty
+        if (drainList.empty())
+            cache->checkDrain();
     }
     else if (!isCpuSide)
     {
@@ -338,6 +341,10 @@ BaseCache::CacheEvent::process()
         cachePort->drainList.push_back(pkt);
         cachePort->waitingOnRetry = true;
     }
+
+    // Check if we're done draining once this list is empty
+    if (cachePort->drainList.empty())
+        cachePort->cache->checkDrain();
 }
 
 const char *
@@ -357,9 +364,7 @@ BaseCache::getPort(const std::string &if_name, int idx)
     }
     else if (if_name == "functional")
     {
-        if(cpuSidePort == NULL)
-            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
-        return cpuSidePort;
+        return new CachePort(name() + "-cpu_side_port", this, true);
     }
     else if (if_name == "cpu_side")
     {
@@ -600,4 +605,19 @@ BaseCache::regStats()
         .desc("number of cache copies performed")
         ;
 
+}
+
+unsigned int
+BaseCache::drain(Event *de)
+{
+    // Set status
+    if (!canDrain()) {
+        drainEvent = de;
+
+        changeState(SimObject::Draining);
+        return 1;
+    }
+
+    changeState(SimObject::Drained);
+    return 0;
 }

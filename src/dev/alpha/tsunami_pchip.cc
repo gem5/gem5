@@ -38,9 +38,9 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "dev/tsunami_pchip.hh"
-#include "dev/tsunamireg.h"
-#include "dev/tsunami.hh"
+#include "dev/alpha/tsunami_pchip.hh"
+#include "dev/alpha/tsunamireg.h"
+#include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/builder.hh"

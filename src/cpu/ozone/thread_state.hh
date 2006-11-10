@@ -67,7 +67,7 @@ struct OzoneThreadState : public ThreadState {
 
 #if FULL_SYSTEM
     OzoneThreadState(CPUType *_cpu, int _thread_num)
-        : ThreadState(-1, _thread_num),
+        : ThreadState(_cpu, -1, _thread_num),
           intrflag(0), cpu(_cpu), inSyscall(0), trapPending(0)
     {
         if (cpu->params->profile) {
@@ -87,8 +87,8 @@ struct OzoneThreadState : public ThreadState {
     }
 #else
     OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process,
-                     int _asid, MemObject *mem)
-        : ThreadState(-1, _thread_num, _process, _asid, mem),
+                     int _asid)
+        : ThreadState(_cpu, -1, _thread_num, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         miscRegFile.clear();
@@ -120,19 +120,19 @@ struct OzoneThreadState : public ThreadState {
         return miscRegFile.readReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, Fault &fault)
+    MiscReg readMiscRegWithEffect(int misc_reg)
     {
-        return miscRegFile.readRegWithEffect(misc_reg, fault, tc);
+        return miscRegFile.readRegWithEffect(misc_reg, tc);
     }
 
-    Fault setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return miscRegFile.setReg(misc_reg, val);
+        miscRegFile.setReg(misc_reg, val);
     }
 
-    Fault setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
     {
-        return miscRegFile.setRegWithEffect(misc_reg, val, tc);
+        miscRegFile.setRegWithEffect(misc_reg, val, tc);
     }
 
     uint64_t readPC()

@@ -27,12 +27,37 @@
 # Authors: Lisa Hsu
 
 from os import getcwd
+from os.path import join as joinpath
 import m5
 from m5.objects import *
 m5.AddToPath('../common')
 from Caches import L1Cache
 
-def run(options, root, testsys):
+def setCPUClass(options):
+
+    atomic = False
+    if options.timing:
+        TmpClass = TimingSimpleCPU
+    elif options.detailed:
+        TmpClass = DerivO3CPU
+    else:
+        TmpClass = AtomicSimpleCPU
+        atomic = True
+
+    CPUClass = None
+    test_mem_mode = 'atomic'
+
+    if not atomic:
+        if options.checkpoint_restore:
+            CPUClass = TmpClass
+            TmpClass = AtomicSimpleCPU
+        else:
+            test_mem_mode = 'timing'
+
+    return (TmpClass, test_mem_mode, CPUClass)
+
+
+def run(options, root, testsys, cpu_class):
     if options.maxtick:
         maxtick = options.maxtick
     elif options.maxtime:
@@ -40,7 +65,7 @@ def run(options, root, testsys):
         print "simulating for: ", simtime
         maxtick = simtime
     else:
-        maxtick = -1
+        maxtick = m5.MaxTick
 
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
@@ -49,31 +74,55 @@ def run(options, root, testsys):
 
     np = options.num_cpus
     max_checkpoints = options.max_checkpoints
+    switch_cpus = None
+
+    if cpu_class:
+        switch_cpus = [cpu_class(defer_registration=True, cpu_id=(np+i))
+                       for i in xrange(np)]
+
+        for i in xrange(np):
+            switch_cpus[i].system =  testsys
+            if not m5.build_env['FULL_SYSTEM']:
+                switch_cpus[i].workload = testsys.cpu[i].workload
+            switch_cpus[i].clock = testsys.cpu[0].clock
+            if options.caches:
+                switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                       L1Cache(size = '64kB'))
+                switch_cpus[i].connectMemPorts(testsys.membus)
+
+        root.switch_cpus = switch_cpus
+        switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.standard_switch:
         switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]
-        switch_cpus1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
+        switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
                         for i in xrange(np)]
+
         for i in xrange(np):
             switch_cpus[i].system =  testsys
-            switch_cpus1[i].system =  testsys
+            switch_cpus_1[i].system =  testsys
             if not m5.build_env['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
-                switch_cpus1[i].workload = testsys.cpu[i].workload
+                switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
-            switch_cpus1[i].clock = testsys.cpu[0].clock
+            switch_cpus_1[i].clock = testsys.cpu[0].clock
+
             if options.caches:
                 switch_cpus[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                        L1Cache(size = '64kB'))
+                switch_cpus[i].connectMemPorts(testsys.membus)
+            else:
+                # O3 CPU must have a cache to work.
+                switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                         L1Cache(size = '64kB'))
+                switch_cpus_1[i].connectMemPorts(testsys.membus)
 
-            switch_cpus[i].mem = testsys.physmem
-            switch_cpus1[i].mem = testsys.physmem
-            switch_cpus[i].connectMemPorts(testsys.membus)
+
             root.switch_cpus = switch_cpus
-            root.switch_cpus1 = switch_cpus1
+            root.switch_cpus_1 = switch_cpus_1
             switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
-            switch_cpu_list1 = [(switch_cpus[i], switch_cpus1[i]) for i in xrange(np)]
+            switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
 
     m5.instantiate(root)
 
@@ -101,9 +150,9 @@ def run(options, root, testsys):
             m5.panic('Checkpoint %d not found' % cpt_num)
 
         m5.restoreCheckpoint(root,
-                             "/".join([cptdir, "cpt.%s" % cpts[cpt_num - 1]]))
+                             joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1]))
 
-    if options.standard_switch:
+    if options.standard_switch or cpu_class:
         exit_event = m5.simulate(10000)
 
         ## when you change to Timing (or Atomic), you halt the system given
@@ -116,8 +165,9 @@ def run(options, root, testsys):
         m5.switchCpus(switch_cpu_list)
         m5.resume(testsys)
 
-        exit_event = m5.simulate(options.warmup)
-        m5.switchCpus(switch_cpu_list1)
+        if options.standard_switch:
+            exit_event = m5.simulate(options.warmup)
+            m5.switchCpus(switch_cpu_list1)
 
     num_checkpoints = 0
     exit_cause = ''
@@ -135,13 +185,13 @@ def run(options, root, testsys):
             exit_event = m5.simulate(when - m5.curTick())
 
         if exit_event.getCause() == "simulate() limit reached":
-            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+            m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
             num_checkpoints += 1
 
         sim_ticks = when
         exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
         while num_checkpoints < max_checkpoints:
-            if (sim_ticks + period) > maxtick and maxtick != -1:
+            if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
                 break
@@ -151,24 +201,20 @@ def run(options, root, testsys):
                 while exit_event.getCause() == "checkpoint":
                     exit_event = m5.simulate(sim_ticks - m5.curTick())
                 if exit_event.getCause() == "simulate() limit reached":
-                    m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+                    m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
                     num_checkpoints += 1
 
     else: #no checkpoints being taken via this script
         exit_event = m5.simulate(maxtick)
 
         while exit_event.getCause() == "checkpoint":
-            m5.checkpoint(root, "/".join([cptdir,"cpt.%d"]))
+            m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
             num_checkpoints += 1
             if num_checkpoints == max_checkpoints:
                 exit_cause =  "maximum %d checkpoints dropped" % max_checkpoints
                 break
 
-            if maxtick == -1:
-                exit_event = m5.simulate(maxtick)
-            else:
-                exit_event = m5.simulate(maxtick - m5.curTick())
-
+            exit_event = m5.simulate(maxtick - m5.curTick())
             exit_cause = exit_event.getCause()
 
     if exit_cause == '':

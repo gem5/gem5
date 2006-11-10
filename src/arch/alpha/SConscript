@@ -48,21 +48,29 @@ Import('env')
 # Base sources used by all configurations.
 base_sources = Split('''
 	faults.cc
-	isa_traits.cc
+	floatregfile.cc
+	intregfile.cc
+	miscregfile.cc
+	regfile.cc
 	''')
 
 # Full-system sources
 full_system_sources = Split('''
-	tlb.cc
 	arguments.cc
 	ev5.cc
-	osfpal.cc
-	stacktrace.cc
-	vtophys.cc
-	system.cc
 	freebsd/system.cc
+	idle_event.cc
+	ipr.cc
+	kernel_stats.cc
 	linux/system.cc
+	osfpal.cc
+	pagetable.cc
+	stacktrace.cc
+	remote_gdb.cc
+	system.cc
+	tlb.cc
 	tru64/system.cc
+	vtophys.cc
 	''')
 
 

@@ -526,8 +526,7 @@ void
 LWBackEnd<Impl>::checkInterrupts()
 {
     if (cpu->checkInterrupts &&
-        cpu->check_interrupts() &&
-        !cpu->inPalMode(thread->readPC()) &&
+        cpu->check_interrupts(tc) &&
         !trapSquash &&
         !tcSquash) {
         frontEnd->interruptPending = true;
