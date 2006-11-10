@@ -114,7 +114,6 @@ namespace AlphaISA
         NumInterruptLevels = INTLEVEL_EXTERNAL_MAX
     };
 
-
     // EV5 modes
     enum mode_type
     {
@@ -180,9 +179,6 @@ namespace AlphaISA
     // return a no-op instruction... used for instruction fetch faults
     // Alpha UNOP (ldq_u r31,0(r0))
     const ExtMachInst NoopMachInst = 0x2ffe0000;
-
-    // redirected register map, really only used for the full system case.
-    extern const int reg_redir[NumIntRegs];
 
 };
 

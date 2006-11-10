@@ -32,7 +32,7 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/ipr.hh"
+#include "arch/alpha/intregfile.hh"
 #include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
 #include "sim/faults.hh"
@@ -61,32 +61,6 @@ namespace AlphaISA
     {
         return "";
     }
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-
-      public:
-
-        IntReg readReg(int intReg)
-        {
-            return regs[intReg];
-        }
-
-        Fault setReg(int intReg, const IntReg &val)
-        {
-            regs[intReg] = val;
-            return NoFault;
-        }
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        { bzero(regs, sizeof(regs)); }
-    };
 
     class FloatRegFile
     {
@@ -249,10 +223,6 @@ namespace AlphaISA
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
-
-#if FULL_SYSTEM
-    void copyIprs(ThreadContext *src, ThreadContext *dest);
-#endif
 } // namespace AlphaISA
 
 #endif

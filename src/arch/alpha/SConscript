@@ -50,6 +50,7 @@ base_sources = Split('''
 	faults.cc
 	isa_traits.cc
 	miscregfile.cc
+	intregfile.cc
 	''')
 
 # Full-system sources
