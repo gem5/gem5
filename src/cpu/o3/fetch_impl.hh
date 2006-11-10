@@ -63,7 +63,8 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
-    warn("DefaultFetch doesn't update its state from a functional call.");
+    DPRINTF(Fetch, "DefaultFetch doesn't update its state from a "
+            "functional call.");
 }
 
 template<class Impl>
@@ -80,6 +81,7 @@ template<class Impl>
 bool
 DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
+    DPRINTF(Fetch, "Received timing\n");
     if (pkt->isResponse()) {
         fetch->processCacheCompletion(pkt);
     }
@@ -1161,8 +1163,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             fetch_PC = next_PC;
 
             if (instruction->isQuiesce()) {
-//                warn("%lli: Quiesce instruction encountered, halting fetch!",
-//                     curTick);
+                DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
+                        curTick);
                 fetchStatus[tid] = QuiescePending;
                 ++numInst;
                 status_change = true;
@@ -1281,7 +1283,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         status_change = true;
 
 #endif // FULL_SYSTEM
-        DPRINTF(Fetch, "[tid:%i]: fault (%d) detected @ PC %08p", tid, fault, PC[tid]);
+        DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %08p",
+                tid, fault->name(), PC[tid]);
     }
 }
 
