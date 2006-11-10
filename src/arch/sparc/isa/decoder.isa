@@ -41,15 +41,16 @@ decode OP default Unknown::unknown()
         0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
         format BranchN
         {
+            //bpcc
             0x1: decode COND2
             {
                 //Branch Always
                 0x8: decode A
                 {
-                    0x0: b(19, {{
+                    0x0: bpa(19, {{
                         NNPC = xc->readPC() + disp;
                     }});
-                    0x1: b(19, {{
+                    0x1: bpa(19, {{
                         NPC = xc->readPC() + disp;
                         NNPC = NPC + 4;
                     }}, ',a');
@@ -57,10 +58,10 @@ decode OP default Unknown::unknown()
                 //Branch Never
                 0x0: decode A
                 {
-                    0x0: bn(19, {{
+                    0x0: bpn(19, {{
                         NNPC = NNPC;//Don't do anything
                     }});
-                    0x1: bn(19, {{
+                    0x1: bpn(19, {{
                         NPC = xc->readNextPC() + 4;
                         NNPC = NPC + 4;
                     }}, ',a');
@@ -81,12 +82,38 @@ decode OP default Unknown::unknown()
                     }});
                 }
             }
-            0x2: bicc(22, {{
-                if(passesCondition(Ccr<3:0>, COND2))
-                    NNPC = xc->readPC() + disp;
-                else
-                    handle_annul
-            }});
+            //bicc
+            0x2: decode COND2
+            {
+                //Branch Always
+                0x8: decode A
+                {
+                    0x0: ba(22, {{
+                        NNPC = xc->readPC() + disp;
+                    }});
+                    0x1: ba(22, {{
+                        NPC = xc->readPC() + disp;
+                        NNPC = NPC + 4;
+                    }}, ',a');
+                }
+                //Branch Never
+                0x0: decode A
+                {
+                    0x0: bn(22, {{
+                        NNPC = NNPC;//Don't do anything
+                    }});
+                    0x1: bn(22, {{
+                        NPC = xc->readNextPC() + 4;
+                        NNPC = NPC + 4;
+                    }}, ',a');
+                }
+                default: bicc(22, {{
+                    if(passesCondition(Ccr<3:0>, COND2))
+                        NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
+                }});
+            }
         }
         0x3: decode RCOND2
         {
@@ -380,7 +407,15 @@ decode OP default Unknown::unknown()
                 0x17: Priv::rdtick_cmpr({{Rd = TickCmpr;}});
                 0x18: PrivCheck::rdstick({{Rd = Stick}}, {{Stick<63:>}});
                 0x19: Priv::rdstick_cmpr({{Rd = StickCmpr;}});
-                //0x1A-0x1F should cause an illegal instruction exception
+                0x1A: Priv::rdstrand_sts_reg({{
+                    if(Pstate<2:> && !Hpstate<2:>)
+                        Rd = StrandStsReg<0:>;
+                    else
+                        Rd = StrandStsReg;
+                }});
+                //0x1A is supposed to be reserved, but it reads the strand
+                //status register.
+                //0x1B-0x1F should cause an illegal instruction exception
             }
             0x29: decode RS1 {
                 0x00: HPriv::rdhprhpstate({{Rd = Hpstate;}});
@@ -515,7 +550,16 @@ decode OP default Unknown::unknown()
                     Stick = Rs1 ^ Rs2_or_imm13;
                 }});
                 0x19: Priv::wrstick_cmpr({{StickCmpr = Rs1 ^ Rs2_or_imm13;}});
-                //0x1A-0x1F should cause an illegal instruction exception
+                0x1A: Priv::wrstrand_sts_reg({{
+                    if(Pstate<2:> && !Hpstate<2:>)
+                        StrandStsReg = StrandStsReg<63:1> |
+                                (Rs1 ^ Rs2_or_imm13)<0:>;
+                    else
+                        StrandStsReg = Rs1 ^ Rs2_or_imm13;
+                }});
+                //0x1A is supposed to be reserved, but it writes the strand
+                //status register.
+                //0x1B-0x1F should cause an illegal instruction exception
             }
             0x31: decode FCN {
                 0x0: Priv::saved({{
@@ -527,7 +571,7 @@ decode OP default Unknown::unknown()
                     else
                         Otherwin = Otherwin - 1;
                 }});
-                0x1: BasicOperate::restored({{
+                0x1: Priv::restored({{
                     assert(Cansave || Otherwin);
                     assert(Canrestore < NWindows - 2);
                     Canrestore = Canrestore + 1;
