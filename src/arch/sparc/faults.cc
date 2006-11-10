@@ -493,21 +493,22 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 
 void getREDVector(Addr & PC, Addr & NPC)
 {
+    //XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFFFFFFFF0000000ULL;
     PC = RSTVAddr | 0xA0;
     NPC = PC + sizeof(MachInst);
 }
 
-void getHyperVector(Addr & PC, Addr & NPC, MiscReg TT)
+void getHyperVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT)
 {
-    Addr HTBA ;
+    Addr HTBA = tc->readMiscReg(MISCREG_HTBA);
     PC = (HTBA & ~mask(14)) | ((TT << 5) & mask(14));
     NPC = PC + sizeof(MachInst);
 }
 
-void getPrivVector(Addr & PC, Addr & NPC, MiscReg TT, MiscReg TL)
+void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscReg TL)
 {
-    Addr TBA ;
+    Addr TBA = tc->readMiscReg(MISCREG_TBA);
     PC = (TBA & ~mask(15)) |
         (TL > 1 ? (1 << 14) : 0) |
         ((TT << 5) & mask(14));
@@ -556,17 +557,17 @@ void SparcFaultBase::invoke(ThreadContext * tc)
     {
         //guest_watchdog fault
         doNormalFault(tc, trapType(), true);
-        getHyperVector(PC, NPC, 2);
+        getHyperVector(tc, PC, NPC, 2);
     }
     else if(level == Hyperprivileged)
     {
         doNormalFault(tc, trapType(), true);
-        getHyperVector(PC, NPC, trapType());
+        getHyperVector(tc, PC, NPC, trapType());
     }
     else
     {
         doNormalFault(tc, trapType(), false);
-        getPrivVector(PC, NPC, trapType(), TL+1);
+        getPrivVector(tc, PC, NPC, trapType(), TL+1);
     }
 
     tc->setPC(PC);
