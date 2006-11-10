@@ -42,6 +42,13 @@ def binpath(app, file=None):
         file = app
     return os.path.join(test_progs, app, 'bin', isa, opsys, file)
 
+# generate path to input file
+def inputpath(app, file=None):
+    # input file has same name as app unless specified otherwise
+    if not file:
+        file = app
+    return os.path.join(test_progs, app, 'input', file)
+
 # build configuration
 execfile(os.path.join(tests_root, 'configs', config + '.py'))
 
