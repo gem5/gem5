@@ -283,7 +283,7 @@ void enterREDState(ThreadContext *tc)
     HPSTATE |= (1 << 5);
     //HPSTATE.hpriv = 1
     HPSTATE |= (1 << 2);
-    tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+    tc->setMiscRegWithEffect(MISCREG_HPSTATE, HPSTATE);
 }
 
 /**
@@ -491,11 +491,11 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     }
 }
 
-void getREDVector(Addr & PC, Addr & NPC)
+void getREDVector(MiscReg TT, Addr & PC, Addr & NPC)
 {
     //XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFFFFFFFF0000000ULL;
-    PC = RSTVAddr | 0xA0;
+    PC = RSTVAddr | ((TT << 5) & 0xFF);
     NPC = PC + sizeof(MachInst);
 }
 
@@ -519,6 +519,7 @@ void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscRe
 
 void SparcFaultBase::invoke(ThreadContext * tc)
 {
+    panic("Invoking a second fault!\n");
     FaultBase::invoke(tc);
     countStat()++;
 
@@ -543,7 +544,7 @@ void SparcFaultBase::invoke(ThreadContext * tc)
 
     if(HPSTATE & (1 << 5) || TL == MaxTL - 1)
     {
-        getREDVector(PC, NPC);
+        getREDVector(5, PC, NPC);
         enterREDState(tc);
         doREDFault(tc, TT);
     }
@@ -583,28 +584,41 @@ void PowerOnReset::invoke(ThreadContext * tc)
     //For SPARC, when a system is first started, there is a power
     //on reset Trap which sets the processor into the following state.
     //Bits that aren't set aren't defined on startup.
+
+    tc->setMiscReg(MISCREG_TL, MaxTL);
+    tc->setMiscReg(MISCREG_TT, trapType());
+    tc->setMiscRegWithEffect(MISCREG_GL, MaxGL);
+
+    //Turn on pef, set everything else to 0
+    tc->setMiscReg(MISCREG_PSTATE, 1 << 4);
+
+    //Turn on red and hpriv, set everything else to 0
+    tc->setMiscReg(MISCREG_HPSTATE, (1 << 5) | (1 << 2));
+
+    //The tick register is unreadable by nonprivileged software
+    tc->setMiscReg(MISCREG_TICK, 1ULL << 63);
+
+    Addr PC, NPC;
+    getREDVector(trapType(), PC, NPC);
+    tc->setPC(PC);
+    tc->setNextPC(NPC);
+    tc->setNextNPC(NPC + sizeof(MachInst));
+
+    //These registers are specified as "undefined" after a POR, and they
+    //should have reasonable values after the miscregfile is reset
     /*
-    tl = MaxTL;
-    gl = MaxGL;
-
-    tickFields.counter = 0; //The TICK register is unreadable bya
-    tickFields.npt = 1; //The TICK register is unreadable by by !priv
-
-    softint = 0; // Clear all the soft interrupt bits
-    tick_cmprFields.int_dis = 1; // disable timer compare interrupts
+    // Clear all the soft interrupt bits
+    softint = 0;
+    // disable timer compare interrupts, reset tick_cmpr
+    tc->setMiscReg(MISCREG_
+    tick_cmprFields.int_dis = 1;
     tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
     stickFields.npt = 1; //The TICK register is unreadable by by !priv
     stick_cmprFields.int_dis = 1; // disable timer compare interrupts
     stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
 
     tt[tl] = _trapType;
-    pstate = 0; // fields 0 but pef
-    pstateFields.pef = 1;
 
-    hpstate = 0;
-    hpstateFields.red = 1;
-    hpstateFields.hpriv = 1;
-    hpstateFields.tlz = 0; // this is a guess
     hintp = 0; // no interrupts pending
     hstick_cmprFields.int_dis = 1; // disable timer compare interrupts
     hstick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing

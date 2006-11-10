@@ -123,6 +123,7 @@ def operands {{
     'Htba':		('ControlReg', 'udw', 'MISCREG_HTBA', None, 72),
     'HstickCmpr':	('ControlReg', 'udw', 'MISCREG_HSTICK_CMPR', None, 73),
     'Hver':		('ControlReg', 'udw', 'MISCREG_HVER', None, 74),
+    'StrandStsReg':	('ControlReg', 'udw', 'MISCREG_STRAND_STS_REG', None, 75),
 
     'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 80),
     # Mem gets a large number so it's always last

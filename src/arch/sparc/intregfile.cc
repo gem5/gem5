@@ -83,7 +83,7 @@ IntReg IntRegFile::readReg(int intReg)
     else if((intReg -= NumRegularIntRegs) < NumMicroIntRegs)
         val = microRegs[intReg];
     else
-        panic("Tried to read non-existant integer register\n");
+        panic("Tried to read non-existant integer register %d, %d\n", NumRegularIntRegs + NumMicroIntRegs + intReg, intReg);
 
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
     return val;
@@ -123,7 +123,7 @@ void IntRegFile::setCWP(int cwp)
 
 void IntRegFile::setGlobals(int gl)
 {
-    DPRINTF(Sparc, "Now using %d globals", gl);
+    DPRINTF(Sparc, "Now using %d globals\n", gl);
 
     regView[Globals] = regGlobals[gl];
     offset[Globals] = RegGlobalOffset + gl * RegsPerFrame;

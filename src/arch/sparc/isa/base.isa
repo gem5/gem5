@@ -189,6 +189,7 @@ output decoder {{
             const int MaxOutput = 16;
             const int MaxLocal = 24;
             const int MaxInput = 32;
+            const int MaxMicroReg = 33;
             if (reg == FramePointerReg)
                 ccprintf(os, "%%fp");
             else if (reg == StackPointerReg)
@@ -201,6 +202,8 @@ output decoder {{
                 ccprintf(os, "%%l%d", reg - MaxOutput);
             else if(reg < MaxInput)
                 ccprintf(os, "%%i%d", reg - MaxLocal);
+            else if(reg < MaxMicroReg)
+                ccprintf(os, "%%u%d", reg - MaxInput);
             else {
                 ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
             }
