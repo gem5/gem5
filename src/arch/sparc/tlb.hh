@@ -31,6 +31,7 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
 #include "sim/sim_object.hh"
@@ -56,6 +57,9 @@ namespace SparcISA
 
         Fault translate(RequestPtr &req, ThreadContext *tc) const
         {
+            //For now, always assume the address is already physical.
+            //Also assume that there are 40 bits of physical address space.
+            req->setPaddr(req->getVaddr() & ((1ULL << 40) - 1));
             return NoFault;
         }
     };
@@ -69,6 +73,9 @@ namespace SparcISA
 
         Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const
         {
+            //For now, always assume the address is already physical.
+            //Also assume that there are 40 bits of physical address space.
+            req->setPaddr(req->getVaddr() & ((1ULL << 40) - 1));
             return NoFault;
         }
     };
