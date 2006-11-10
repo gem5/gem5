@@ -46,59 +46,54 @@ namespace SparcISA
     //These functions map register indices to names
     std::string getMiscRegName(RegIndex);
 
-    const int AsrStart = 0;
-    const int PrStart = 32;
-    const int HprStart = 64;
-    const int MiscStart = 96;
-
     enum MiscRegIndex
     {
         /** Ancillary State Registers */
-        MISCREG_Y  = AsrStart + 0,
-        MISCREG_CCR = AsrStart + 2,
-        MISCREG_ASI = AsrStart + 3,
-        MISCREG_TICK = AsrStart + 4,
-        MISCREG_FPRS = AsrStart + 6,
-        MISCREG_PCR = AsrStart + 16,
-        MISCREG_PIC = AsrStart + 17,
-        MISCREG_GSR = AsrStart + 19,
-        MISCREG_SOFTINT_SET = AsrStart + 20,
-        MISCREG_SOFTINT_CLR = AsrStart + 21,
-        MISCREG_SOFTINT = AsrStart + 22,
-        MISCREG_TICK_CMPR = AsrStart + 23,
-        MISCREG_STICK = AsrStart + 24,
-        MISCREG_STICK_CMPR = AsrStart + 25,
+        MISCREG_Y,
+        MISCREG_CCR,
+        MISCREG_ASI,
+        MISCREG_TICK,
+        MISCREG_FPRS,
+        MISCREG_PCR,
+        MISCREG_PIC,
+        MISCREG_GSR,
+        MISCREG_SOFTINT_SET,
+        MISCREG_SOFTINT_CLR,
+        MISCREG_SOFTINT,
+        MISCREG_TICK_CMPR,
+        MISCREG_STICK,
+        MISCREG_STICK_CMPR,
 
         /** Privilged Registers */
-        MISCREG_TPC = PrStart + 0,
-        MISCREG_TNPC = PrStart + 1,
-        MISCREG_TSTATE = PrStart + 2,
-        MISCREG_TT = PrStart + 3,
-        MISCREG_PRIVTICK = PrStart + 4,
-        MISCREG_TBA = PrStart + 5,
-        MISCREG_PSTATE = PrStart + 6,
-        MISCREG_TL = PrStart + 7,
-        MISCREG_PIL = PrStart + 8,
-        MISCREG_CWP = PrStart + 9,
-        MISCREG_CANSAVE = PrStart + 10,
-        MISCREG_CANRESTORE = PrStart + 11,
-        MISCREG_CLEANWIN = PrStart + 12,
-        MISCREG_OTHERWIN = PrStart + 13,
-        MISCREG_WSTATE = PrStart + 14,
-        MISCREG_GL = PrStart + 16,
+        MISCREG_TPC,
+        MISCREG_TNPC,
+        MISCREG_TSTATE,
+        MISCREG_TT,
+        MISCREG_PRIVTICK,
+        MISCREG_TBA,
+        MISCREG_PSTATE,
+        MISCREG_TL,
+        MISCREG_PIL,
+        MISCREG_CWP,
+        MISCREG_CANSAVE,
+        MISCREG_CANRESTORE,
+        MISCREG_CLEANWIN,
+        MISCREG_OTHERWIN,
+        MISCREG_WSTATE,
+        MISCREG_GL,
 
         /** Hyper privileged registers */
-        MISCREG_HPSTATE = HprStart + 0,
-        MISCREG_HTSTATE = HprStart + 1,
-        MISCREG_HINTP = HprStart + 3,
-        MISCREG_HTBA = HprStart + 5,
-        MISCREG_HVER = HprStart + 6,
-        MISCREG_STRAND_STS_REG = HprStart + 16,
-        MISCREG_HSTICK_CMPR = HprStart + 31,
+        MISCREG_HPSTATE,
+        MISCREG_HTSTATE,
+        MISCREG_HINTP,
+        MISCREG_HTBA,
+        MISCREG_HVER,
+        MISCREG_STRAND_STS_REG,
+        MISCREG_HSTICK_CMPR,
 
         /** Floating Point Status Register */
-        MISCREG_FSR = MiscStart + 0
-
+        MISCREG_FSR,
+        NumMiscRegs
     };
 
     // The control registers, broken out into fields

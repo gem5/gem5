@@ -50,13 +50,7 @@ namespace AlphaISA
         // 0..31 are the integer regs 0..31
         // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
         FP_Base_DepTag = 40,
-        Ctrl_Base_DepTag = 72,
-        Fpcr_DepTag = 72,		// floating point control register
-        Uniq_DepTag = 73,
-        Lock_Flag_DepTag = 74,
-        Lock_Addr_DepTag = 75,
-        Intr_Flag_DepTag = 76,
-        IPR_Base_DepTag = 77
+        Ctrl_Base_DepTag = 72
     };
 
     StaticInstPtr decodeInst(ExtMachInst);

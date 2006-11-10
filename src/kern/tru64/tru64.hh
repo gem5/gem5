@@ -511,7 +511,7 @@ class Tru64 : public OperatingSystem
             tc->setFloatRegBits(i, htog(sc->sc_fpregs[i]));
         }
 
-        tc->setMiscReg(TheISA::Fpcr_DepTag, htog(sc->sc_fpcr));
+        tc->setMiscReg(AlphaISA::MISCREG_FPCR, htog(sc->sc_fpcr));
 
         return 0;
     }
@@ -653,7 +653,7 @@ class Tru64 : public OperatingSystem
             ssp->nxm_sysevent = htog(0);
 
             if (i == 0) {
-                uint64_t uniq = tc->readMiscReg(TheISA::Uniq_DepTag);
+                uint64_t uniq = tc->readMiscReg(AlphaISA::MISCREG_UNIQ);
                 ssp->nxm_u.pth_id = htog(uniq + gtoh(attrp->nxm_uniq_offset));
                 ssp->nxm_u.nxm_active = htog(uniq | 1);
             }
@@ -693,7 +693,7 @@ class Tru64 : public OperatingSystem
         tc->setIntReg(TheISA::ArgumentReg0, gtoh(attrp->registers.a0));
         tc->setIntReg(27/*t12*/, gtoh(attrp->registers.pc));
         tc->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
-        tc->setMiscReg(TheISA::Uniq_DepTag, uniq_val);
+        tc->setMiscReg(AlphaISA::MISCREG_UNIQ, uniq_val);
 
         tc->setPC(gtoh(attrp->registers.pc));
         tc->setNextPC(gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst));

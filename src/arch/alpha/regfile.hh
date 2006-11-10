@@ -33,6 +33,7 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/ipr.hh"
+#include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
 #include "sim/faults.hh"
 
@@ -102,61 +103,6 @@ namespace AlphaISA
 
         void clear()
         { bzero(d, sizeof(d)); }
-    };
-
-    class MiscRegFile {
-      protected:
-        uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
-        bool		lock_flag;	// lock flag for LL/SC
-        Addr		lock_addr;	// lock address for LL/SC
-        int		intr_flag;
-
-      public:
-        MiscRegFile()
-        {
-#if FULL_SYSTEM
-            initializeIprTable();
-#endif
-        }
-
-        MiscReg readReg(int misc_reg);
-
-        MiscReg readRegWithEffect(int misc_reg, ThreadContext *tc);
-
-        //These functions should be removed once the simplescalar cpu model
-        //has been replaced.
-        int getInstAsid();
-        int getDataAsid();
-
-        void setReg(int misc_reg, const MiscReg &val);
-
-        void setRegWithEffect(int misc_reg, const MiscReg &val,
-                ThreadContext *tc);
-
-        void clear()
-        {
-            fpcr = uniq = 0;
-            lock_flag = 0;
-            lock_addr = 0;
-            intr_flag = 0;
-        }
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-#if FULL_SYSTEM
-      protected:
-        typedef uint64_t InternalProcReg;
-
-        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
-
-      private:
-        InternalProcReg readIpr(int idx, ThreadContext *tc);
-
-        void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
-#endif
-        friend class RegFile;
     };
 
     class RegFile {

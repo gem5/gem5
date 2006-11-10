@@ -49,6 +49,7 @@ Import('env')
 base_sources = Split('''
 	faults.cc
 	isa_traits.cc
+	miscregfile.cc
 	''')
 
 # Full-system sources
