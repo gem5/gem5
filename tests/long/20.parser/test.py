@@ -26,5 +26,7 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'parser 2.1.dict -batch < lgred.in',
-                                       executable = binpath('parser'))
+process = LiveProcess(executable = binpath('parser'))
+process.cmd = 'parser 2.1.dict -batch'
+process.input = inputpath('parser', 'lgred.in')
+root.system.cpu.workload = process

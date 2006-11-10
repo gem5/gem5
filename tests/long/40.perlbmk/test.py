@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'perlbmk -I./lib lgred.makerand.pl',
-                                       executable = binpath('perlbmk'))
+process = LiveProcess(executable = binpath('perlbmk'))
+process.cmd = 'perlbmk -I./lib' + inputpath('perlbmk', 'lgred.makerand.pl')
+root.system.cpu.workload = process

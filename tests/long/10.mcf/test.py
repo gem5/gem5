@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'mcf lgred.in',
-                                       executable = binpath('mcf'))
+process = LiveProcess(executable = binpath('mcf'))
+process.cmd = 'mcf' + inputpath('mcf', 'lgred.in')
+root.system.cpu.workload = process

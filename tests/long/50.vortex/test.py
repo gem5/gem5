@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'vortex smred.raw',
-                                       executable = binpath('vortex'))
+process = LiveProcess(executable = binpath('vortex'))
+process.cmd = 'vortex' + inputpath('smred.raw')
+root.system.cpu.workload = process

@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'bzip2 lgred.source',
-                                       executable = binpath('bzip2'))
+process = LiveProcess(executable = binpath('bzip2'))
+process.cmd = cmd = 'bzip2' + inputpath('bzip2', 'lgred.source')
+root.system.cpu.workload = process

@@ -26,4 +26,10 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'eon chair.control.cook chair.camera chair.surfaces chair.cook.ppm ppm pixels_out.cook',executable = binpath('eon'))
+process = LiveProcess(executable = binpath('eon'))
+process.cmd = 'eon' + inputpath('eon', 'chair.control.cook') + \
+              inputpath('eon', 'chair.camera') + \
+              inputpath('eon', 'chair.surfaces') + \
+              inputpath('eon', 'chair.cook.ppm') + 'ppm' \
+              + 'pixels_out.cook'
+root.system.cpu.workload = process

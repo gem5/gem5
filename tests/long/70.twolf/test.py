@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'twolf smred/smred',
-                                       executable = binpath('twolf'))
+process = LiveProcess(executable = binpath('twolf'))
+process.cmd = 'twolf' + inputpath('twolf', 'smred/smred')
+root.system.cpu.workload = process

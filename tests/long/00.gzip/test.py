@@ -26,5 +26,6 @@
 #
 # Authors: Korey Sewell
 
-root.system.cpu.workload = LiveProcess(cmd = 'gzip smred.log 1',
-                                       executable = binpath('gzip'))
+process = LiveProcess(executable = binpath('gzip'))
+process.cmd = 'gzip ' + inputpath('gzip', 'smred.log') + ' 1'
+root.system.cpu.workload = process
