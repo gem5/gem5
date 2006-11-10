@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Steve Reinhardt
+ *          Gabe Black
  */
 
-#include <unistd.h>
+#ifndef __ARCH_ALPHA_FLOATREGFILE_HH__
+#define __ARCH_ALPHA_FLOATREGFILE_HH__
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/types.hh"
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
+#include <string.h>
+#include <iostream>
 
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
+class Checkpoint;
 
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
+namespace AlphaISA
+{
+    static inline std::string getFloatRegName(RegIndex)
+    {
+        return "";
+    }
 
-} SharedData;
+    class FloatRegFile
+    {
+      public:
 
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
+        union {
+            uint64_t q[NumFloatRegs];	// integer qword view
+            double d[NumFloatRegs];	// double-precision floating point view
+        };
 
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+        void clear()
+        { bzero(d, sizeof(d)); }
+    };
+}
+
+#endif

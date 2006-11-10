@@ -25,26 +25,48 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Steve Reinhardt
  */
 
-#include <unistd.h>
+#include "base/loader/raw_object.hh"
+#include "base/trace.hh"
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+ObjectFile *
+RawObject::tryFile(const std::string &fname, int fd, size_t len, uint8_t *data)
+{
+    return new RawObject(fname, fd, len, data, ObjectFile::UnknownArch,
+            ObjectFile::UnknownOpSys);
+}
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
+RawObject::RawObject(const std::string &_filename, int _fd, size_t _len,
+        uint8_t *_data, Arch _arch, OpSys _opSys)
+    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
+{
+    text.baseAddr = 0;
+    text.size = len;
+    text.fileImage = fileData;
 
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
+    data.baseAddr = 0;
+    data.size = 0;
+    data.fileImage = NULL;
 
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
+    bss.baseAddr = 0;
+    bss.size = 0;
+    bss.fileImage = NULL;
 
-} SharedData;
+    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
+             text.baseAddr, text.size, data.baseAddr, data.size,
+             bss.baseAddr, bss.size);
+}
 
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
+bool
+RawObject::loadGlobalSymbols(SymbolTable *symtab)
+{
+    return true;
+}
 
+bool
+RawObject::loadLocalSymbols(SymbolTable *symtab)
+{
+    return true;
+}

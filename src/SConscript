@@ -74,6 +74,7 @@ base_sources = Split('''
 	base/loader/aout_object.cc
 	base/loader/ecoff_object.cc
 	base/loader/elf_object.cc
+	base/loader/raw_object.cc
 	base/loader/object_file.cc
 	base/loader/symtab.cc
 	base/stats/events.cc

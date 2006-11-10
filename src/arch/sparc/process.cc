@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include "arch/sparc/asi.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
 #include "base/loader/object_file.hh"
@@ -105,6 +106,8 @@ SparcLiveProcess::startup()
     threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
     //Set the trap level to 0
     threadContexts[0]->setMiscReg(MISCREG_TL, 0);
+    //Set the ASI register to something fixed
+    threadContexts[0]->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
 }
 
 m5_auxv_t buildAuxVect(int64_t type, int64_t val)

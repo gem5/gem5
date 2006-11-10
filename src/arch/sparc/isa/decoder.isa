@@ -346,22 +346,93 @@ decode OP default Unknown::unknown()
                 0x0: sra({{Rd = Rs1.sw >> (I ? SHCNT32 : Rs2<4:0>);}});
                 0x1: srax({{Rd = Rs1.sdw >> (I ? SHCNT64 : Rs2<5:0>);}});
             }
-            // XXX might want a format rdipr thing here
             0x28: decode RS1 {
-                0xF: decode I {
+                0x00: NoPriv::rdy({{Rd = Y;}});
+                //1 should cause an illegal instruction exception
+                0x02: NoPriv::rdccr({{Rd = Ccr;}});
+                0x03: NoPriv::rdasi({{Rd = Asi;}});
+                0x04: PrivCheck::rdtick({{Rd = Tick;}}, {{Tick<63:>}});
+                0x05: NoPriv::rdpc({{
+                    if(Pstate<3:>)
+                        Rd = (xc->readPC())<31:0>;
+                    else
+                        Rd = xc->readPC();}});
+                0x06: NoPriv::rdfprs({{
+                    //Wait for all fpops to finish.
+                    Rd = Fprs;
+                }});
+                //7-14 should cause an illegal instruction exception
+                0x0F: decode I {
                     0x0: Nop::stbar({{/*stuff*/}});
                     0x1: Nop::membar({{/*stuff*/}});
                 }
-                default: rdasr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + AsrStart);
+                0x10: Priv::rdpcr({{Rd = Pcr;}});
+                0x11: PrivCheck::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
+                //0x12 should cause an illegal instruction exception
+                0x13: NoPriv::rdgsr({{
+                    if(Fprs<2:> == 0 || Pstate<4:> == 0)
+                        Rd = Gsr;
+                    else
+                        fault = new FpDisabled;
                 }});
+                //0x14-0x15 should cause an illegal instruction exception
+                0x16: Priv::rdsoftint({{Rd = Softint;}});
+                0x17: Priv::rdtick_cmpr({{Rd = TickCmpr;}});
+                0x18: PrivCheck::rdstick({{Rd = Stick}}, {{Stick<63:>}});
+                0x19: Priv::rdstick_cmpr({{Rd = StickCmpr;}});
+                //0x1A-0x1F should cause an illegal instruction exception
             }
-            0x29: HPriv::rdhpr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + HprStart);
-            }});
-            0x2A: Priv::rdpr({{
-                Rd = xc->readMiscRegWithEffect(RS1 + PrStart);
-            }});
+            0x29: decode RS1 {
+                0x00: HPriv::rdhprhpstate({{Rd = Hpstate;}});
+                0x01: HPriv::rdhprhtstate({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Rd = Htstate;
+                }});
+                //0x02 should cause an illegal instruction exception
+                0x03: HPriv::rdhprhintp({{Rd = Hintp;}});
+                //0x04 should cause an illegal instruction exception
+                0x05: HPriv::rdhprhtba({{Rd = Htba;}});
+                0x06: HPriv::rdhprhver({{Rd = Hver;}});
+                //0x07-0x1E should cause an illegal instruction exception
+                0x1F: HPriv::rdhprhstick_cmpr({{Rd = HstickCmpr;}});
+            }
+            0x2A: decode RS1 {
+                0x00: Priv::rdprtpc({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Rd = Tpc;
+                }});
+                0x01: Priv::rdprtnpc({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Rd = Tnpc;
+                }});
+                0x02: Priv::rdprtstate({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Rd = Tstate;
+                }});
+                0x03: Priv::rdprtt({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Rd = Tt;
+                }});
+                0x04: Priv::rdprtick({{Rd = Tick;}});
+                0x05: Priv::rdprtba({{Rd = Tba;}});
+                0x06: Priv::rdprpstate({{Rd = Pstate;}});
+                0x07: Priv::rdprtl({{Rd = Tl;}});
+                0x08: Priv::rdprpil({{Rd = Pil;}});
+                0x09: Priv::rdprcwp({{Rd = Cwp;}});
+                0x0A: Priv::rdprcansave({{Rd = Cansave;}});
+                0x0B: Priv::rdprcanrestore({{Rd = Canrestore;}});
+                0x0C: Priv::rdprcleanwin({{Rd = Cleanwin;}});
+                0x0D: Priv::rdprotherwin({{Rd = Otherwin;}});
+                0x0E: Priv::rdprwstate({{Rd = Wstate;}});
+                //0x0F should cause an illegal instruction exception
+                0x10: Priv::rdprgl({{Rd = Gl;}});
+                //0x11-0x1F should cause an illegal instruction exception
+            }
             0x2B: BasicOperate::flushw({{
                 if(NWindows - 2 - Cansave == 0)
                 {
@@ -417,9 +488,35 @@ decode OP default Unknown::unknown()
                 0x6: movrg({{Rd = (Rs1.sdw > 0) ? Rs2_or_imm10 : Rd;}});
                 0x7: movrge({{Rd = (Rs1.sdw >= 0) ? Rs2_or_imm10 : Rd;}});
             }
-            0x30: wrasr({{
-                xc->setMiscRegWithEffect(RD + AsrStart, Rs1 ^ Rs2_or_imm13);
-            }});
+            0x30: decode RD {
+                0x00: NoPriv::wry({{Y = Rs1 ^ Rs2_or_imm13;}});
+                //0x01 should cause an illegal instruction exception
+                0x02: NoPriv::wrccr({{Ccr = Rs1 ^ Rs2_or_imm13;}});
+                0x03: NoPriv::wrasi({{Ccr = Rs1 ^ Rs2_or_imm13;}});
+                //0x04-0x05 should cause an illegal instruction exception
+                0x06: NoPriv::wrfprs({{Fprs = Rs1 ^ Rs2_or_imm13;}});
+                //0x07-0x0E should cause an illegal instruction exception
+                0x0F: Trap::softreset({{fault = new SoftwareInitiatedReset;}});
+                0x10: Priv::wrpcr({{Pcr = Rs1 ^ Rs2_or_imm13;}});
+                0x11: PrivCheck::wrpic({{Pic = Rs1 ^ Rs2_or_imm13;}}, {{Pcr<0:>}});
+                //0x12 should cause an illegal instruction exception
+                0x13: NoPriv::wrgsr({{
+                    if(Fprs<2:> == 0 || Pstate<4:> == 0)
+                        return new FpDisabled;
+                    Gsr = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x14: Priv::wrsoftint_set({{SoftintSet = Rs1 ^ Rs2_or_imm13;}});
+                0x15: Priv::wrsoftint_clr({{SoftintClr = Rs1 ^ Rs2_or_imm13;}});
+                0x16: Priv::wrsoftint({{Softint = Rs1 ^ Rs2_or_imm13;}});
+                0x17: Priv::wrtick_cmpr({{TickCmpr = Rs1 ^ Rs2_or_imm13;}});
+                0x18: NoPriv::wrstick({{
+                    if(!Hpstate<2:>)
+                        return new IllegalInstruction;
+                    Stick = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x19: Priv::wrstick_cmpr({{StickCmpr = Rs1 ^ Rs2_or_imm13;}});
+                //0x1A-0x1F should cause an illegal instruction exception
+            }
             0x31: decode FCN {
                 0x0: Priv::saved({{
                     assert(Cansave < NWindows - 2);
@@ -440,16 +537,70 @@ decode OP default Unknown::unknown()
                         Otherwin = Otherwin - 1;
                 }});
             }
-            0x32: Priv::wrpr({{
-                // XXX Need to protect with format that traps non-priv
-                // access
-                xc->setMiscRegWithEffect(RD + PrStart, Rs1 ^ Rs2_or_imm13);
-            }});
-            0x33: HPriv::wrhpr({{
-                // XXX Need to protect with format that traps non-priv/priv
-                // access
-                xc->setMiscRegWithEffect(RD + HprStart, Rs1 ^ Rs2_or_imm13);
-            }});
+            0x32: decode RD {
+                0x00: Priv::wrprtpc({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    else
+                        Tpc = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x01: Priv::wrprtnpc({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    else
+                        Tnpc = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x02: Priv::wrprtstate({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    else
+                        Tstate = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x03: Priv::wrprtt({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    else
+                        Tt = Rs1 ^ Rs2_or_imm13;
+                }});
+                0x04: HPriv::wrprtick({{Tick = Rs1 ^ Rs2_or_imm13;}});
+                0x05: Priv::wrprtba({{Tba = Rs1 ^ Rs2_or_imm13;}});
+                0x06: Priv::wrprpstate({{Pstate = Rs1 ^ Rs2_or_imm13;}});
+                0x07: Priv::wrprtl({{
+                    if(Pstate<2:> && !Hpstate<2:>)
+                        Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPTL);
+                    else
+                        Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxTL);
+                }});
+                0x08: Priv::wrprpil({{Pil = Rs1 ^ Rs2_or_imm13;}});
+                0x09: Priv::wrprcwp({{Cwp = Rs1 ^ Rs2_or_imm13;}});
+                0x0A: Priv::wrprcansave({{Cansave = Rs1 ^ Rs2_or_imm13;}});
+                0x0B: Priv::wrprcanrestore({{Canrestore = Rs1 ^ Rs2_or_imm13;}});
+                0x0C: Priv::wrprcleanwin({{Cleanwin = Rs1 ^ Rs2_or_imm13;}});
+                0x0D: Priv::wrprotherwin({{Otherwin = Rs1 ^ Rs2_or_imm13;}});
+                0x0E: Priv::wrprwstate({{Wstate = Rs1 ^ Rs2_or_imm13;}});
+                //0x0F should cause an illegal instruction exception
+                0x10: Priv::wrprgl({{
+                    if(Pstate<2:> && !Hpstate<2:>)
+                        Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPGL);
+                    else
+                        Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxGL);
+                }});
+                //0x11-0x1F should cause an illegal instruction exception
+            }
+            0x33: decode RD {
+                0x00: HPriv::wrhprhpstate({{Hpstate = Rs1 ^ Rs2_or_imm13;}});
+                0x01: HPriv::wrhprhtstate({{
+                    if(Tl == 0)
+                        return new IllegalInstruction;
+                    Htstate = Rs1 ^ Rs2_or_imm13;
+                }});
+                //0x02 should cause an illegal instruction exception
+                0x03: HPriv::wrhprhintp({{Hintp = Rs1 ^ Rs2_or_imm13;}});
+                //0x04 should cause an illegal instruction exception
+                0x05: HPriv::wrhprhtba({{Htba = Rs1 ^ Rs2_or_imm13;}});
+                //0x06-0x01D should cause an illegal instruction exception
+                0x1F: HPriv::wrhprhstick_cmpr({{HstickCmpr = Rs1 ^ Rs2_or_imm13;}});
+            }
             0x34: decode OPF{
                 format BasicOperate{
                     0x01: fmovs({{

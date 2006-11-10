@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Steve Reinhardt
+ *          Gabe Black
  */
 
-#include <unistd.h>
+#ifndef __ARCH_ALPHA_INTREGFILE_HH__
+#define __ARCH_ALPHA_INTREGFILE_HH__
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+#include "arch/alpha/types.hh"
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
+#include <iostream>
+#include <strings.h>
 
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
+class Checkpoint;
 
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
+namespace AlphaISA
+{
+    static inline std::string getIntRegName(RegIndex)
+    {
+        return "";
+    }
 
-} SharedData;
+    // redirected register map, really only used for the full system case.
+    extern const int reg_redir[NumIntRegs];
 
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
+    class IntRegFile
+    {
+      protected:
+        IntReg regs[NumIntRegs];
 
+      public:
+
+        IntReg readReg(int intReg)
+        {
+            return regs[intReg];
+        }
+
+        void setReg(int intReg, const IntReg &val)
+        {
+            regs[intReg] = val;
+        }
+
+        void serialize(std::ostream &os);
+
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+        void clear()
+        { bzero(regs, sizeof(regs)); }
+    };
+}
+
+#endif

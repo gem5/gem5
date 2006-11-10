@@ -37,7 +37,7 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
-#include "arch/isa_traits.hh"
+#include "arch/alpha/miscregfile.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 
@@ -48,8 +48,8 @@ template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
-    xc->setMiscReg(Lock_Addr_DepTag, req->getPaddr() & ~0xf);
-    xc->setMiscReg(Lock_Flag_DepTag, true);
+    xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr() & ~0xf);
+    xc->setMiscReg(MISCREG_LOCKFLAG, true);
 }
 
 
@@ -63,13 +63,13 @@ handleLockedWrite(XC *xc, Request *req)
         req->setScResult(2);
     } else {
         // standard store conditional
-        bool lock_flag = xc->readMiscReg(Lock_Flag_DepTag);
-        Addr lock_addr = xc->readMiscReg(Lock_Addr_DepTag);
+        bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
+        Addr lock_addr = xc->readMiscReg(MISCREG_LOCKADDR);
         if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
             // Lock flag not set or addr mismatch in CPU;
             // don't even bother sending to memory system
             req->setScResult(0);
-            xc->setMiscReg(Lock_Flag_DepTag, false);
+            xc->setMiscReg(MISCREG_LOCKFLAG, false);
             // the rest of this code is not architectural;
             // it's just a debugging aid to help detect
             // livelock by warning on long sequences of failed

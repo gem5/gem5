@@ -2,6 +2,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 from m5 import build_env
+from PhysicalMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
@@ -24,3 +25,21 @@ class AlphaSystem(System):
     pal = Param.String("file that contains palcode")
     system_type = Param.UInt64("Type of system we are emulating")
     system_rev = Param.UInt64("Revision of system we are emulating")
+
+class SparcSystem(System):
+    type = 'SparcSystem'
+    _rom_base = 0xfff0000000
+    # ROM for OBP/Reset/Hypervisor
+    rom = Param.PhysicalMemory(PhysicalMemory(range = AddrRange(_rom_base, size = '8MB')),
+            "Memory to hold the ROM data")
+
+    reset_addr = Param.Addr(_rom_base, "Address to load ROM at")
+    hypervisor_addr = Param.Addr(Addr('64kB') + _rom_base,
+                                 "Address to load hypervisor at")
+    openboot_addr = Param.Addr(Addr('512kB') + _rom_base,
+                               "Address to load openboot at")
+
+    reset_bin = Param.String("file that contains the reset code")
+    hypervisor_bin = Param.String("file that contains the hypervisor code")
+    openboot_bin = Param.String("file that contains the openboot code")
+

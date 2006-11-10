@@ -370,7 +370,7 @@ nonsticky_opts.AddOptions(
 # These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                      'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
-                     'USE_CHECKER', 'PYTHONHOME']
+                     'USE_CHECKER', 'PYTHONHOME', 'TARGET_ISA']
 
 # Define a handy 'no-op' action
 def no_action(target, source, env):

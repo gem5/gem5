@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Steve Reinhardt
+ *          Gabe Black
+ *          Kevin Lim
  */
 
-#include <unistd.h>
+#include "arch/alpha/floatregfile.hh"
+#include "sim/serialize.hh"
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+namespace AlphaISA
+{
+    void
+    FloatRegFile::serialize(std::ostream &os)
+    {
+        SERIALIZE_ARRAY(q, NumFloatRegs);
+    }
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
-
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
-
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
-
-} SharedData;
-
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
-
+    void
+    FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_ARRAY(q, NumFloatRegs);
+    }
+}

@@ -229,7 +229,7 @@ def template FloatingPointExecute {{
             %(code)s;
         } else {
             fesetround(getC99RoundingMode(
-                           xc->readMiscReg(AlphaISA::Fpcr_DepTag)));
+                           xc->readMiscReg(AlphaISA::MISCREG_FPCR)));
             %(code)s;
             fesetround(FE_TONEAREST);
         }

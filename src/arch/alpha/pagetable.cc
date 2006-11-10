@@ -25,26 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
  */
 
-#include <unistd.h>
+#include "arch/alpha/pagetable.hh"
+#include "sim/serialize.hh"
 
-#define VERSION         0xA1000002
-#define OWN_M5          0x000000AA
-#define OWN_LEGION      0x00000055
+namespace AlphaISA
+{
+    void
+    PTE::serialize(std::ostream &os)
+    {
+        SERIALIZE_SCALAR(tag);
+        SERIALIZE_SCALAR(ppn);
+        SERIALIZE_SCALAR(xre);
+        SERIALIZE_SCALAR(xwe);
+        SERIALIZE_SCALAR(asn);
+        SERIALIZE_SCALAR(asma);
+        SERIALIZE_SCALAR(fonr);
+        SERIALIZE_SCALAR(fonw);
+        SERIALIZE_SCALAR(valid);
+    }
 
-/** !!!  VVV Increment VERSION on change VVV !!! **/
-
-typedef struct {
-    uint32_t flags;
-    uint32_t version;
-
-    uint64_t pc;
-    uint32_t instruction;
-    uint64_t intregs[32];
-
-} SharedData;
-
-/** !!! ^^^  Increment VERSION on change ^^^ !!! **/
-
+    void
+    PTE::unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_SCALAR(tag);
+        UNSERIALIZE_SCALAR(ppn);
+        UNSERIALIZE_SCALAR(xre);
+        UNSERIALIZE_SCALAR(xwe);
+        UNSERIALIZE_SCALAR(asn);
+        UNSERIALIZE_SCALAR(asma);
+        UNSERIALIZE_SCALAR(fonr);
+        UNSERIALIZE_SCALAR(fonw);
+        UNSERIALIZE_SCALAR(valid);
+    }
+}

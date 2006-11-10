@@ -3,7 +3,9 @@ from m5.params import *
 from m5.proxy import *
 from m5 import build_env
 from AlphaTLB import AlphaDTB, AlphaITB
+from SparcTLB import SparcDTB, SparcITB
 from Bus import Bus
+import sys
 
 class BaseCPU(SimObject):
     type = 'BaseCPU'
@@ -13,8 +15,15 @@ class BaseCPU(SimObject):
     cpu_id = Param.Int("CPU identifier")
 
     if build_env['FULL_SYSTEM']:
-        dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
-        itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
+        if build_env['TARGET_ISA'] == 'sparc':
+            dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
+            itb = Param.SparcITB(SparcITB(), "Instruction TLB")
+        elif build_env['TARGET_ISA'] == 'alpha':
+            dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
+            itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
+        else:
+            print "Unknown architecture, can't pick TLBs"
+            sys.exit(1)
     else:
         workload = VectorParam.Process("processes to run")
 
