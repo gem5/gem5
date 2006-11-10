@@ -68,7 +68,6 @@ Trace::InstRecord::dump(ostream &outs)
     if (flags[PRINT_REG_DELTA])
     {
 #if THE_ISA == SPARC_ISA
-#if 0
         //Don't print what happens for each micro-op, just print out
         //once at the last op, and for regular instructions.
         if(!staticInst->isMicroOp() || staticInst->isLastMicroOp())
@@ -84,23 +83,19 @@ Trace::InstRecord::dump(ostream &outs)
             uint64_t newVal;
             static const char * prefixes[4] = {"G", "O", "L", "I"};
 
-            char buf[256];
-            sprintf(buf, "PC = 0x%016llx", thread->readNextPC());
-            outs << buf;
-            sprintf(buf, " NPC = 0x%016llx", thread->readNextNPC());
-            outs << buf;
+            outs << hex;
+            outs << "PC = " << thread->readNextPC();
+            outs << " NPC = " << thread->readNextNPC();
             newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
             if(newVal != ccr)
             {
-                sprintf(buf, " CCR = 0x%016llx", newVal);
-                outs << buf;
+                outs << " CCR = " << newVal;
                 ccr = newVal;
             }
             newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
             if(newVal != y)
             {
-                sprintf(buf, " Y = 0x%016llx", newVal);
-                outs << buf;
+                outs << " Y = " << newVal;
                 y = newVal;
             }
             for(int y = 0; y < 4; y++)
@@ -111,8 +106,7 @@ Trace::InstRecord::dump(ostream &outs)
                     newVal = thread->readIntReg(index);
                     if(regs[index] != newVal)
                     {
-                        sprintf(buf, " %s%d = 0x%016llx", prefixes[y], x, newVal);
-                        outs << buf;
+                        outs << " " << prefixes[y] << dec << x << " = " << hex << newVal;
                         regs[index] = newVal;
                     }
                 }
@@ -122,14 +116,12 @@ Trace::InstRecord::dump(ostream &outs)
                 newVal = thread->readFloatRegBits(2 * y, 64);
                 if(floats[y] != newVal)
                 {
-                    sprintf(buf, " F%d = 0x%016llx", 2 * y, newVal);
-                    outs << buf;
+                    outs << " F" << dec << (2 * y) << " = " << hex << newVal;
                     floats[y] = newVal;
                 }
             }
-            outs << endl;
+            outs << dec << endl;
         }
-#endif
 #endif
     }
     else if (flags[INTEL_FORMAT]) {
