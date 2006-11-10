@@ -32,6 +32,7 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/floatregfile.hh"
 #include "arch/alpha/intregfile.hh"
 #include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
@@ -46,38 +47,6 @@ class ThreadContext;
 
 namespace AlphaISA
 {
-
-    static inline std::string getIntRegName(RegIndex)
-    {
-        return "";
-    }
-
-    static inline std::string getFloatRegName(RegIndex)
-    {
-        return "";
-    }
-
-    static inline std::string getMiscRegName(RegIndex)
-    {
-        return "";
-    }
-
-    class FloatRegFile
-    {
-      public:
-
-        union {
-            uint64_t q[NumFloatRegs];	// integer qword view
-            double d[NumFloatRegs];	// double-precision floating point view
-        };
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        { bzero(d, sizeof(d)); }
-    };
 
     class RegFile {
 

@@ -54,6 +54,11 @@ namespace AlphaISA
         MISCREG_INTR
     };
 
+    static inline std::string getMiscRegName(RegIndex)
+    {
+        return "";
+    }
+
     class MiscRegFile {
       protected:
         uint64_t	fpcr;		// floating point condition codes

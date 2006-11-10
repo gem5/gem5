@@ -41,6 +41,11 @@ class Checkpoint;
 
 namespace AlphaISA
 {
+    static inline std::string getIntRegName(RegIndex)
+    {
+        return "";
+    }
+
     // redirected register map, really only used for the full system case.
     extern const int reg_redir[NumIntRegs];
 
