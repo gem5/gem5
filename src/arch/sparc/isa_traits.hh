@@ -76,10 +76,7 @@ namespace SparcISA
         // 0..31 are the integer regs 0..31
         // 32..95 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
         FP_Base_DepTag = NumIntRegs,
-        Ctrl_Base_DepTag = NumIntRegs + NumFloatRegs,
-        //XXX These are here solely to get compilation and won't work
-        Fpcr_DepTag = 0,
-        Uniq_DepTag = 0
+        Ctrl_Base_DepTag = NumIntRegs + NumMicroIntRegs + NumFloatRegs,
     };
 
 
