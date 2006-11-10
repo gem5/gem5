@@ -50,6 +50,42 @@ output header {{
                     const SymbolTable *symtab) const;
         };
 
+        //This class is for instructions that explicitly read control
+        //registers. It provides a special generateDisassembly function.
+        class RdPriv : public Priv
+        {
+          protected:
+            //Constructor
+            RdPriv(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, char const * _regName) :
+                Priv(mnem, _machInst, __opClass), regName(_regName)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+
+            char const * regName;
+        };
+
+        //This class is for instructions that explicitly write control
+        //registers. It provides a special generateDisassembly function.
+        class WrPriv : public Priv
+        {
+          protected:
+            //Constructor
+            WrPriv(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, char const * _regName) :
+                Priv(mnem, _machInst, __opClass), regName(_regName)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+
+            char const * regName;
+        };
+
         /**
          * Base class for privelege mode operations with immediates.
          */
@@ -66,6 +102,23 @@ output header {{
             int32_t imm;
         };
 
+        //This class is for instructions that explicitly write control
+        //registers. It provides a special generateDisassembly function.
+        class WrPrivImm : public PrivImm
+        {
+          protected:
+            //Constructor
+            WrPrivImm(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, char const * _regName) :
+                PrivImm(mnem, _machInst, __opClass), regName(_regName)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+
+            char const * regName;
+        };
 }};
 
 output decoder {{
@@ -77,6 +130,58 @@ output decoder {{
             printMnemonic(response, mnemonic);
 
             return response.str();
+        }
+
+        std::string RdPriv::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+
+            printMnemonic(response, mnemonic);
+
+            ccprintf(response, " %%%s, ", regName);
+            printDestReg(response, 0);
+
+            return response.str();
+        }
+
+        std::string WrPriv::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+
+            printMnemonic(response, mnemonic);
+
+            ccprintf(response, " ");
+            printSrcReg(response, 0);
+            ccprintf(response, ", ");
+            printSrcReg(response, 1);
+            ccprintf(response, ", %%%s", regName);
+
+            return response.str();
+        }
+
+        std::string WrPrivImm::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+
+            printMnemonic(response, mnemonic);
+
+            ccprintf(response, " ");
+            printSrcReg(response, 0);
+            ccprintf(response, ", 0x%x, %%%s", imm, regName);
+
+            return response.str();
+        }
+}};
+
+def template ControlRegConstructor {{
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst,
+                    %(op_class)s, "%(reg_name)s")
+        {
+                %(constructor)s;
         }
 }};
 
@@ -102,16 +207,39 @@ let {{
     def doPrivFormat(code, checkCode, name, Name, opt_flags):
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
-        iop = InstObjParams(name, Name, 'Priv', code,
-                opt_flags, {"check": checkCode})
+        #If these are rd, rdpr, rdhpr, wr, wrpr, or wrhpr instructions,
+        #cut any other info out of the mnemonic. Also pick a different
+        #base class.
+        regBase = 'Priv'
+        regName = ''
+        for mnem in ["rdhpr", "rdpr", "rd"]:
+            if name.startswith(mnem):
+                regName = name[len(mnem):]
+                name = mnem
+                regBase = 'RdPriv'
+                break
+        for mnem in ["wrhpr", "wrpr", "wr"]:
+            if name.startswith(mnem):
+                regName = name[len(mnem):]
+                name = mnem
+                regBase = 'WrPriv'
+                break
+        iop = InstObjParams(name, Name, regBase, code,
+                opt_flags, {"check": checkCode, "reg_name": regName})
         header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
+        if regName == '':
+            decoder_output = BasicConstructor.subst(iop)
+        else:
+            decoder_output = ControlRegConstructor.subst(iop)
         exec_output = PrivExecute.subst(iop)
         if usesImm:
-            imm_iop = InstObjParams(name, Name + 'Imm', 'PrivImm',
-                    immCode, opt_flags, {"check": checkCode})
+            imm_iop = InstObjParams(name, Name + 'Imm', regBase + 'Imm',
+                    immCode, opt_flags, {"check": checkCode, "reg_name": regName})
             header_output += BasicDeclare.subst(imm_iop)
-            decoder_output += BasicConstructor.subst(imm_iop)
+            if regName == '':
+                decoder_output += BasicConstructor.subst(imm_iop)
+            else:
+                decoder_output += ControlRegConstructor.subst(imm_iop)
             exec_output += PrivExecute.subst(imm_iop)
             decode_block = ROrImmDecode.subst(iop)
         else:
