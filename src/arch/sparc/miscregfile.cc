@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
@@ -63,6 +64,39 @@ string SparcISA::getMiscRegName(RegIndex index)
 
 void MiscRegFile::reset()
 {
+    y = 0;
+    ccr = 0;
+    asi = 0;
+    tick = 0;
+    fprs = 0;
+    gsr = 0;
+    softint = 0;
+    tick_cmpr = 0;
+    stick = 0;
+    stick_cmpr = 0;
+    memset(tpc, 0, sizeof(tpc));
+    memset(tnpc, 0, sizeof(tnpc));
+    memset(tstate, 0, sizeof(tstate));
+    memset(tt, 0, sizeof(tt));
+    pstate = 0;
+    tl = 0;
+    pil = 0;
+    cwp = 0;
+    cansave = 0;
+    canrestore = 0;
+    cleanwin = 0;
+    otherwin = 0;
+    wstate = 0;
+    gl = 0;
+    hpstate = 0;
+    memset(htstate, 0, sizeof(htstate));
+    hintp = 0;
+    htba = 0;
+    hstick_cmpr = 0;
+    strandStatusReg = 0;
+    fsr = 0;
+    implicitInstAsi = ASI_PRIMARY;
+    implicitDataAsi = ASI_PRIMARY;
 }
 
 MiscReg MiscRegFile::readReg(int miscReg)
