@@ -81,7 +81,7 @@ output decoder {{
             printMnemonic(response, mnemonic);
             if(save)
             {
-                printReg(response, _srcRegIdx[0]);
+                    printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
@@ -92,7 +92,7 @@ output decoder {{
             if(load)
             {
                 ccprintf(response, ", ");
-                printReg(response, _destRegIdx[0]);
+                    printReg(response, _destRegIdx[0]);
             }
 
             return response.str();
@@ -108,7 +108,7 @@ output decoder {{
             printMnemonic(response, mnemonic);
             if(save)
             {
-                printReg(response, _srcRegIdx[0]);
+                    printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
@@ -120,7 +120,7 @@ output decoder {{
             if(load)
             {
                 ccprintf(response, ", ");
-                printReg(response, _destRegIdx[0]);
+                    printReg(response, _destRegIdx[0]);
             }
 
             return response.str();
@@ -149,8 +149,8 @@ def template LoadExecute {{
             }
             if(fault == NoFault)
             {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
+                    //Write the resulting state to the execution context
+                    %(op_wb)s;
             }
 
             return fault;
@@ -215,8 +215,8 @@ def template StoreExecute {{
             }
             if(fault == NoFault)
             {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
+                    //Write the resulting state to the execution context
+                    %(op_wb)s;
             }
 
             return fault;
@@ -244,7 +244,7 @@ def template StoreExecute {{
             }
             if(fault == NoFault)
             {
-                //Write the resulting state to the execution context
+                    //Write the resulting state to the execution context
                 %(op_wb)s;
             }
             return fault;
@@ -293,7 +293,7 @@ let {{
 //instruction at a certain micropc
 let {{
     def makeMicroName(name, microPc):
-        return name + "::" + name + "_" + str(microPc)
+            return name + "::" + name + "_" + str(microPc)
 }};
 
 //This function properly generates the execute functions for one of the
@@ -302,13 +302,13 @@ let {{
 //and in the other they're distributed across two. Also note that for
 //execute functions, the name of the base class doesn't matter.
 let {{
-    def doSplitExecute(code, eaCode, execute,
-            faultCode, name, Name, opt_flags):
-        codeIop = InstObjParams(name, Name, '', code, opt_flags)
-        eaIop = InstObjParams(name, Name, '', eaCode,
-                opt_flags, {"fault_check": faultCode})
-        iop = InstObjParams(name, Name, '', code, opt_flags,
-                {"fault_check": faultCode, "ea_code" : eaCode})
+    def doSplitExecute(code, execute, name, Name, opt_flags, microParam):
+        codeParam = microParam.copy()
+        codeParam["ea_code"] = ''
+        codeIop = InstObjParams(name, Name, '', code, opt_flags, codeParam)
+        eaIop = InstObjParams(name, Name, '', microParam["ea_code"],
+                opt_flags, microParam)
+        iop = InstObjParams(name, Name, '', code, opt_flags, microParam)
         (iop.ea_decl,
          iop.ea_rd,
          iop.ea_wb) = (eaIop.op_decl, eaIop.op_rd, eaIop.op_wb)
@@ -324,7 +324,8 @@ let {{
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
-            executeCode += doSplitExecute(code, eaCode,
-                    execute, faultCode, name, Name, opt_flags)
+            microParams = {"ea_code" : eaCode, "fault_check": faultCode}
+            executeCode += doSplitExecute(code, execute, name, Name,
+                    opt_flags, microParams)
         return executeCode
 }};
