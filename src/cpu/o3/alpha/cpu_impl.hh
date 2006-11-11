@@ -231,7 +231,7 @@ Fault
 AlphaO3CPU<Impl>::hwrei(unsigned tid)
 {
     // Need to clear the lock flag upon returning from an interrupt.
-    this->setMiscReg(TheISA::Lock_Flag_DepTag, false, tid);
+    this->setMiscReg(AlphaISA::MISCREG_LOCKFLAG, false, tid);
 
     this->thread[tid]->kernelStats->hwrei();
 
