@@ -38,7 +38,6 @@
 
 namespace AlphaISA {
 
-#if FULL_SYSTEM
     struct VAddr
     {
         static const int ImplBits = 43;
@@ -106,7 +105,7 @@ namespace AlphaISA {
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
     };
-#endif
+
 };
 #endif // __ARCH_ALPHA_PAGETABLE_H__
 

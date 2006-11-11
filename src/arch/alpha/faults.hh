@@ -32,8 +32,12 @@
 #ifndef __ALPHA_FAULTS_HH__
 #define __ALPHA_FAULTS_HH__
 
-#include "arch/alpha/pagetable.hh"
+#include "config/full_system.hh"
 #include "sim/faults.hh"
+
+#if FULL_SYSTEM
+#include "arch/alpha/pagetable.hh"
+#endif
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 

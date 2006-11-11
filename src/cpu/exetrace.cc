@@ -38,13 +38,17 @@
 
 #include "arch/regfile.hh"
 #include "arch/utility.hh"
-#include "arch/tlb.hh"
 #include "base/loader/symtab.hh"
+#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 #include "sim/param.hh"
 #include "sim/system.hh"
+
+#if FULL_SYSTEM
+#include "arch/tlb.hh"
+#endif
 
 //XXX This is temporary
 #include "arch/isa_specific.hh"
