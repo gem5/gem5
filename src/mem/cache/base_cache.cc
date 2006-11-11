@@ -102,21 +102,51 @@ BaseCache::CachePort::recvAtomic(PacketPtr pkt)
     return cache->doAtomicAccess(pkt, isCpuSide);
 }
 
-void
-BaseCache::CachePort::recvFunctional(PacketPtr pkt)
+bool
+BaseCache::CachePort::checkFunctional(PacketPtr pkt)
 {
     //Check storage here first
     list<PacketPtr>::iterator i = drainList.begin();
-    list<PacketPtr>::iterator end = drainList.end();
-    for (; i != end; ++i) {
+    list<PacketPtr>::iterator iend = drainList.end();
+    bool notDone = true;
+    while (i != iend && notDone) {
         PacketPtr target = *i;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt)) {
-            fixPacket(pkt, target);
+            notDone = fixPacket(pkt, target);
         }
+        i++;
     }
-    cache->doFunctionalAccess(pkt, isCpuSide);
+    //Also check the response not yet ready to be on the list
+    std::list<std::pair<Tick,PacketPtr> >::iterator j = transmitList.begin();
+    std::list<std::pair<Tick,PacketPtr> >::iterator jend = transmitList.end();
+
+    while (j != jend && notDone) {
+        PacketPtr target = j->second;
+        // If the target contains data, and it overlaps the
+        // probed request, need to update data
+        if (target->intersect(pkt))
+            notDone = fixPacket(pkt, target);
+        j++;
+    }
+    return notDone;
+}
+
+void
+BaseCache::CachePort::recvFunctional(PacketPtr pkt)
+{
+    bool notDone = checkFunctional(pkt);
+    if (notDone)
+        cache->doFunctionalAccess(pkt, isCpuSide);
+}
+
+void
+BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
+{
+    bool notDone = checkFunctional(pkt);
+    if (notDone)
+        sendFunctional(pkt);
 }
 
 void
@@ -135,7 +165,7 @@ BaseCache::CachePort::recvRetry()
                 isCpuSide && cache->doSlaveRequest()) {
 
                 DPRINTF(CachePort, "%s has more responses/requests\n", name());
-                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
                 reqCpu->schedule(curTick + 1);
             }
             waitingOnRetry = false;
@@ -176,7 +206,7 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
             reqCpu->schedule(curTick + 1);
         }
     }
@@ -194,7 +224,7 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this);
+            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
             reqCpu->schedule(curTick + 1);
         }
     }
@@ -226,23 +256,19 @@ BaseCache::CachePort::clearBlocked()
     }
 }
 
-BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
+BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, bool _newResponse)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort),
+      newResponse(_newResponse)
 {
-    this->setFlags(AutoDelete);
+    if (!newResponse)
+        this->setFlags(AutoDelete);
     pkt = NULL;
-}
-
-BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, PacketPtr _pkt)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort), pkt(_pkt)
-{
-    this->setFlags(AutoDelete);
 }
 
 void
 BaseCache::CacheEvent::process()
 {
-    if (!pkt)
+    if (!newResponse)
     {
         if (cachePort->waitingOnRetry) return;
        //We have some responses to drain first
@@ -322,8 +348,16 @@ BaseCache::CacheEvent::process()
         }
         return;
     }
-    //Response
-    //Know the packet to send
+    //Else it's a response Response
+    assert(cachePort->transmitList.size());
+    assert(cachePort->transmitList.front().first <= curTick);
+    pkt = cachePort->transmitList.front().second;
+    cachePort->transmitList.pop_front();
+    if (!cachePort->transmitList.empty()) {
+        Tick time = cachePort->transmitList.front().first;
+        schedule(time <= curTick ? curTick+1 : time);
+    }
+
     if (pkt->flags & NACKED_LINE)
         pkt->result = Packet::Nacked;
     else
@@ -343,7 +377,7 @@ BaseCache::CacheEvent::process()
     }
 
     // Check if we're done draining once this list is empty
-    if (cachePort->drainList.empty())
+    if (cachePort->drainList.empty() && cachePort->transmitList.empty())
         cachePort->cache->checkDrain();
 }
 
@@ -358,8 +392,10 @@ BaseCache::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "")
     {
-        if(cpuSidePort == NULL)
+        if(cpuSidePort == NULL) {
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+            sendEvent = new CacheEvent(cpuSidePort, true);
+        }
         return cpuSidePort;
     }
     else if (if_name == "functional")
@@ -368,8 +404,10 @@ BaseCache::getPort(const std::string &if_name, int idx)
     }
     else if (if_name == "cpu_side")
     {
-        if(cpuSidePort == NULL)
+        if(cpuSidePort == NULL) {
             cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
+            sendEvent = new CacheEvent(cpuSidePort, true);
+        }
         return cpuSidePort;
     }
     else if (if_name == "mem_side")
@@ -377,6 +415,7 @@ BaseCache::getPort(const std::string &if_name, int idx)
         if (memSidePort != NULL)
             panic("Already have a mem side for this cache\n");
         memSidePort = new CachePort(name() + "-mem_side_port", this, false);
+        memSendEvent = new CacheEvent(memSidePort, true);
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);

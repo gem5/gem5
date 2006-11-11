@@ -536,7 +536,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
 
     if (!update && (pkt->isWrite() || (otherSidePort == cpuSidePort))) {
         // Still need to change data in all locations.
-        otherSidePort->sendFunctional(pkt);
+        otherSidePort->checkAndSendFunctional(pkt);
         if (pkt->isRead() && pkt->result == Packet::Success)
             return 0;
     }
@@ -560,30 +560,33 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
     missQueue->findWrites(blk_addr, writes);
 
     if (!update) {
+        bool notDone = !(pkt->flags & SATISFIED); //Hit in cache (was a block)
         // Check for data in MSHR and writebuffer.
         if (mshr) {
             MSHR::TargetList *targets = mshr->getTargetList();
             MSHR::TargetList::iterator i = targets->begin();
             MSHR::TargetList::iterator end = targets->end();
-            for (; i != end; ++i) {
+            for (; i != end && notDone; ++i) {
                 PacketPtr target = *i;
                 // If the target contains data, and it overlaps the
                 // probed request, need to update data
                 if (target->intersect(pkt)) {
-                    fixPacket(pkt, target);
+                    DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a MSHR\n",
+                            blk_addr);
+                    notDone = fixPacket(pkt, target);
                 }
             }
         }
-        for (int i = 0; i < writes.size(); ++i) {
+        for (int i = 0; i < writes.size() && notDone; ++i) {
             PacketPtr write = writes[i]->pkt;
             if (write->intersect(pkt)) {
-                fixPacket(pkt, write);
+                DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a writeback\n",
+                        pkt->cmdString(), blk_addr);
+                notDone = fixPacket(pkt, write);
             }
         }
-        if (pkt->isRead()
-            && pkt->result != Packet::Success
-            && otherSidePort == memSidePort) {
-            otherSidePort->sendFunctional(pkt);
+        if (notDone && otherSidePort == memSidePort) {
+            otherSidePort->checkAndSendFunctional(pkt);
             assert(pkt->result == Packet::Success);
         }
         return 0;
