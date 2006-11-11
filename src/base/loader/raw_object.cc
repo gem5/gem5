@@ -29,6 +29,7 @@
  */
 
 #include "base/loader/raw_object.hh"
+#include "base/loader/symtab.hh"
 #include "base/trace.hh"
 
 ObjectFile *
@@ -62,11 +63,19 @@ RawObject::RawObject(const std::string &_filename, int _fd, size_t _len,
 bool
 RawObject::loadGlobalSymbols(SymbolTable *symtab)
 {
+    int fnameStart = filename.rfind('/',filename.size()) + 1;
+    int extStart = filename.rfind('.',filename.size());
+    symtab->insert(text.baseAddr, filename.substr(fnameStart,
+                extStart-fnameStart) + "_start");
     return true;
 }
 
 bool
 RawObject::loadLocalSymbols(SymbolTable *symtab)
 {
+    int fnameStart = filename.rfind('/',filename.size()) + 1;
+    int extStart = filename.rfind('.',filename.size());
+    symtab->insert(text.baseAddr, filename.substr(fnameStart,
+                extStart-fnameStart) + "_start");
     return true;
 }

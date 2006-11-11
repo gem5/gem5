@@ -244,7 +244,12 @@ output decoder {{
         bool passesCondition(uint32_t codes, uint32_t condition)
         {
             CondCodes condCodes;
-            condCodes.bits = codes;
+            condCodes.bits =  0;
+            condCodes.c = codes & 0x1 ? 1 : 0;
+            condCodes.v = codes & 0x2 ? 1 : 0;
+            condCodes.z = codes & 0x4 ? 1 : 0;
+            condCodes.n = codes & 0x8 ? 1 : 0;
+
             switch(condition)
             {
               case Always:

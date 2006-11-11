@@ -421,7 +421,7 @@ BaseRemoteGDB::recv(char *bp, int maxlen)
                 putbyte(bp[0]);
                 putbyte(bp[1]);
                 len -= 3;
-                bcopy(bp + 3, bp, len);
+                memcpy(bp, bp+3, len);
             }
             break;
         }

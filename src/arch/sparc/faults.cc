@@ -494,7 +494,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 void getREDVector(MiscReg TT, Addr & PC, Addr & NPC)
 {
     //XXX The following constant might belong in a header file.
-    const Addr RSTVAddr = 0xFFFFFFFFF0000000ULL;
+    const Addr RSTVAddr = 0xFFF0000000ULL;
     PC = RSTVAddr | ((TT << 5) & 0xFF);
     NPC = PC + sizeof(MachInst);
 }

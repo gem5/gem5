@@ -40,6 +40,9 @@ class ThreadContext;
 
 namespace SparcISA
 {
+    const int PAddrImplBits = 40;
+    const Addr PAddrImplMask = (ULL(1) << PAddrImplBits) - 1;
+
     class TLB : public SimObject
     {
       public:
@@ -59,7 +62,7 @@ namespace SparcISA
         {
             //For now, always assume the address is already physical.
             //Also assume that there are 40 bits of physical address space.
-            req->setPaddr(req->getVaddr() & ((1ULL << 40) - 1));
+            req->setPaddr(req->getVaddr() & PAddrImplMask);
             return NoFault;
         }
     };

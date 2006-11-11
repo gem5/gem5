@@ -178,7 +178,7 @@ EtherTap::recvPacket(EthPacketPtr packet)
 
     DPRINTF(Ethernet, "EtherTap output len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
-    u_int32_t len = htonl(packet->length);
+    uint32_t len = htonl(packet->length);
     write(socket, &len, sizeof(len));
     write(socket, packet->data, packet->length);
 
@@ -199,11 +199,11 @@ EtherTap::process(int revent)
         return;
     }
 
-    char *data = buffer + sizeof(u_int32_t);
+    char *data = buffer + sizeof(uint32_t);
     if (!(revent & POLLIN))
         return;
 
-    if (buffer_offset < data_len + sizeof(u_int32_t)) {
+    if (buffer_offset < data_len + sizeof(uint32_t)) {
         int len = read(socket, buffer + buffer_offset, buflen - buffer_offset);
         if (len == 0) {
             detach();
@@ -213,23 +213,23 @@ EtherTap::process(int revent)
         buffer_offset += len;
 
         if (data_len == 0)
-            data_len = ntohl(*(u_int32_t *)buffer);
+            data_len = ntohl(*(uint32_t *)buffer);
 
         DPRINTF(Ethernet, "Received data from peer: len=%d buffer_offset=%d "
                 "data_len=%d\n", len, buffer_offset, data_len);
     }
 
-    while (data_len != 0 && buffer_offset >= data_len + sizeof(u_int32_t)) {
+    while (data_len != 0 && buffer_offset >= data_len + sizeof(uint32_t)) {
         EthPacketPtr packet;
         packet = new EthPacketData(data_len);
         packet->length = data_len;
         memcpy(packet->data, data, data_len);
 
-        buffer_offset -= data_len + sizeof(u_int32_t);
+        buffer_offset -= data_len + sizeof(uint32_t);
         assert(buffer_offset >= 0);
         if (buffer_offset > 0) {
             memmove(buffer, data + data_len, buffer_offset);
-            data_len = ntohl(*(u_int32_t *)buffer);
+            data_len = ntohl(*(uint32_t *)buffer);
         } else
             data_len = 0;
 

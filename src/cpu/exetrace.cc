@@ -38,6 +38,7 @@
 
 #include "arch/regfile.hh"
 #include "arch/utility.hh"
+#include "arch/tlb.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -232,17 +233,22 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffPC   = false;
         bool diffInst = false;
         bool diffRegs = false;
+        Addr m5Pc, lgnPc;
+
 
         if(!staticInst->isMicroOp() || staticInst->isLastMicroOp()) {
             while (!compared) {
+                m5Pc = PC & TheISA::PAddrImplMask;
+                lgnPc = shared_data->pc & TheISA::PAddrImplMask;
                 if (shared_data->flags == OWN_M5) {
-                    if (shared_data->pc != PC)
+                    if (lgnPc != m5Pc)
                        diffPC = true;
                     if (shared_data->instruction != staticInst->machInst)
                         diffInst = true;
-                    for (int i = 0; i < TheISA::NumIntRegs; i++) {
-                        if (thread->readIntReg(i) != shared_data->intregs[i])
+                    for (int i = 0; i < TheISA::NumRegularIntRegs; i++) {
+                        if (thread->readIntReg(i) != shared_data->intregs[i]) {
                             diffRegs = true;
+                        }
                     }
 
                     if (diffPC || diffInst || diffRegs ) {
@@ -253,19 +259,19 @@ Trace::InstRecord::dump(ostream &outs)
                             outs << " [Instruction]";
                         if (diffRegs)
                             outs << " [IntRegs]";
-                        outs << endl << endl;;
+                        outs << endl << endl;
 
-                        outs << setfill(' ') << setw(15)
+                        outs << right << setfill(' ') << setw(15)
                              << "M5 PC: " << "0x"<< setw(16) << setfill('0')
-                             << hex << PC << endl;
+                             << hex << m5Pc << endl;
                         outs << setfill(' ') << setw(15)
                              << "Legion PC: " << "0x"<< setw(16) << setfill('0') << hex
-                             << shared_data->pc << endl << endl;
+                             << lgnPc << endl << endl;
 
                         outs << setfill(' ') << setw(15)
                              << "M5 Inst: "  << "0x"<< setw(8)
                              << setfill('0') << hex << staticInst->machInst
-                             << staticInst->disassemble(PC, debugSymbolTable)
+                             << staticInst->disassemble(m5Pc, debugSymbolTable)
                              << endl;
 
                         StaticInstPtr legionInst = StaticInst::decode(makeExtMI(shared_data->instruction, thread));
@@ -273,7 +279,7 @@ Trace::InstRecord::dump(ostream &outs)
                              << " Legion Inst: "
                              << "0x" << setw(8) << setfill('0') << hex
                              << shared_data->instruction
-                             << legionInst->disassemble(shared_data->pc, debugSymbolTable)
+                             << legionInst->disassemble(lgnPc, debugSymbolTable)
                              << endl;
 
                         outs << endl;
@@ -386,7 +392,7 @@ Trace::InstRecord::setParams()
     // If were going to be in lockstep with Legion
     // Setup shared memory, and get otherwise ready
     if (flags[LEGION_LOCKSTEP]) {
-        int shmfd = shmget(getuid(), sizeof(SharedData), 0777);
+        int shmfd = shmget('M' << 24 | getuid(), sizeof(SharedData), 0777);
         if (shmfd < 0)
             fatal("Couldn't get shared memory fd. Is Legion running?");
 
@@ -401,6 +407,8 @@ Trace::InstRecord::setParams()
             fatal("Shared Data is wrong version! M5: %d Legion: %d", VERSION,
                     shared_data->version);
 
+        // step legion forward one cycle so we can get register values
+        shared_data->flags = OWN_LEGION;
     }
 }
 
