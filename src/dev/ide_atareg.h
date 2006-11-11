@@ -35,11 +35,25 @@
 
 #if defined(linux)
 #include <endian.h>
+#elif defined(__sun__)
+#include <sys/isa_defs.h>
 #else
 #include <machine/endian.h>
 #endif
 
+#ifdef LITTLE_ENDIAN
 #define ATA_BYTE_ORDER LITTLE_ENDIAN
+#elif defined(BIG_ENDIAN)
+#define ATA_BYTE_ORDER BIG_ENDIAN
+#elif defined(_LITTLE_ENDIAN)
+#define ATA_BYTE_ORDER 1
+#define LITTLE_ENDIAN 1
+#elif defined(_BIG_ENDIAN)
+#define ATA_BYTE_ORDER 0
+#define LITTLE_ENDIAN 1
+#else
+#error "No endianess defined"
+#endif
 
 /*
  * Drive parameter structure for ATA/ATAPI.

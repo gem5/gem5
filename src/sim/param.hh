@@ -242,6 +242,8 @@ class Param : public BaseParam
         return value;
     }
 
+    T returnValue() const { return value; }
+
     // display value to stream
     virtual void showValue(std::ostream &os) const;
 

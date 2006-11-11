@@ -33,6 +33,7 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/tlb.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
