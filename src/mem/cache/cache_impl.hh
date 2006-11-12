@@ -53,6 +53,8 @@
 
 #include "sim/sim_exit.hh" // for SimExitEvent
 
+bool SIGNAL_NACK_HACK;
+
 template<class TagStore, class Buffering, class Coherence>
 bool
 Cache<TagStore,Buffering,Coherence>::
@@ -242,6 +244,11 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
+    if (pkt->cmd == Packet::Writeback) {
+        //Need to clean up the packet on a writeback miss, but leave the request
+        delete pkt;
+    }
+
     return true;
 }
 
@@ -265,6 +272,7 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
 
     assert(!doMasterRequest() || missQueue->havePending());
     assert(!pkt || pkt->time <= curTick);
+    SIGNAL_NACK_HACK = false;
     return pkt;
 }
 
@@ -273,16 +281,15 @@ void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
                                                 bool success)
 {
-    if (success && !(pkt && (pkt->flags & NACKED_LINE))) {
-        if (!mshr->pkt->needsResponse()
-            && !(mshr->pkt->cmd == Packet::UpgradeReq)
-            && (pkt && (pkt->flags & SATISFIED))) {
-            //Writeback, clean up the non copy version of the packet
-            delete pkt;
-        }
+    if (success && !(SIGNAL_NACK_HACK)) {
+        //Remember if it was an upgrade because writeback MSHR's are removed
+        //in Mark in Service
+        bool upgrade = (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq);
+
         missQueue->markInService(mshr->pkt, mshr);
+
         //Temp Hack for UPGRADES
-        if (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq) {
+        if (upgrade) {
             assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
             BlkType *blk = tags->findBlock(pkt);
@@ -300,6 +307,7 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
         }
     } else if (pkt && !pkt->req->isUncacheable()) {
         pkt->flags &= ~NACKED_LINE;
+        SIGNAL_NACK_HACK = false;
         pkt->flags &= ~SATISFIED;
         pkt->flags &= ~SNOOP_COMMIT;
 
@@ -404,6 +412,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
                     assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
+                    SIGNAL_NACK_HACK = true;
                     ///@todo NACK's from other levels
                     //warn("NACKs from devices not connected to the same bus "
                     //"not implemented\n");
