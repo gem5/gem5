@@ -476,6 +476,13 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
     }
     CacheBlk::State new_state;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
+
+    if (blk && mshr && !mshr->inService && new_state == 0) {
+            //There was a outstanding write to a shared block, not need ReadEx
+            //not update, so change No Allocate param in MSHR
+            mshr->pkt->flags &= ~NO_ALLOCATE;
+    }
+
     if (satisfy) {
         DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
                 "now supplying data, new state is %i\n",
@@ -485,15 +492,10 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
-    if (blk) {
+    if (blk)
         DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
                 "new state is %i\n", pkt->cmdString(), blk_addr, new_state);
-        if (mshr && !mshr->inService && new_state == 0) {
-            //There was a outstanding write to a shared block, not need ReadEx
-            //not update, so change No Allocate param in MSHR
-            mshr->pkt->flags &= ~NO_ALLOCATE;
-        }
-    }
+
     tags->handleSnoop(blk, new_state);
 }
 
