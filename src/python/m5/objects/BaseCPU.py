@@ -15,6 +15,12 @@ class BaseCPU(SimObject):
     cpu_id = Param.Int("CPU identifier")
 
     if build_env['FULL_SYSTEM']:
+        do_qiesce = Param.Bool(True, "enable quiesce instructions")
+        do_checkpoint_insts = Param.Bool(True,
+            "enable checkpoint pseudo instructions")
+        do_statistics_insts = Param.Bool(True,
+            "enable statistics pseudo instructions")
+
         if build_env['TARGET_ISA'] == 'sparc':
             dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
             itb = Param.SparcITB(SparcITB(), "Instruction TLB")

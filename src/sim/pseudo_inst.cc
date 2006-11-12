@@ -40,7 +40,6 @@
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 #include "arch/kernel_stats.hh"
-#include "sim/param.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -57,10 +56,6 @@ using namespace TheISA;
 
 namespace AlphaPseudo
 {
-    bool doStatisticsInsts;
-    bool doCheckpointInsts;
-    bool doQuiesce;
-
     void
     arm(ThreadContext *tc)
     {
@@ -71,7 +66,7 @@ namespace AlphaPseudo
     void
     quiesce(ThreadContext *tc)
     {
-        if (!doQuiesce)
+        if (!tc->getCpuPtr()->params->do_quiesce)
             return;
 
         DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
@@ -84,7 +79,7 @@ namespace AlphaPseudo
     void
     quiesceNs(ThreadContext *tc, uint64_t ns)
     {
-        if (!doQuiesce || ns == 0)
+        if (!tc->getCpuPtr()->params->do_quiesce || ns == 0)
             return;
 
         EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
@@ -107,7 +102,7 @@ namespace AlphaPseudo
     void
     quiesceCycles(ThreadContext *tc, uint64_t cycles)
     {
-        if (!doQuiesce || cycles == 0)
+        if (!tc->getCpuPtr()->params->do_quiesce || cycles == 0)
             return;
 
         EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
@@ -197,7 +192,7 @@ namespace AlphaPseudo
     void
     resetstats(ThreadContext *tc, Tick delay, Tick period)
     {
-        if (!doStatisticsInsts)
+        if (!tc->getCpuPtr()->params->do_statistics_insts)
             return;
 
 
@@ -211,7 +206,7 @@ namespace AlphaPseudo
     void
     dumpstats(ThreadContext *tc, Tick delay, Tick period)
     {
-        if (!doStatisticsInsts)
+        if (!tc->getCpuPtr()->params->do_statistics_insts)
             return;
 
 
@@ -252,7 +247,7 @@ namespace AlphaPseudo
     void
     dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
     {
-        if (!doStatisticsInsts)
+        if (!tc->getCpuPtr()->params->do_statistics_insts)
             return;
 
 
@@ -266,7 +261,7 @@ namespace AlphaPseudo
     void
     m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     {
-        if (!doCheckpointInsts)
+        if (!tc->getCpuPtr()->params->do_checkpoint_insts)
             return;
 
         Tick when = curTick + delay * Clock::Int::ns;
@@ -278,7 +273,7 @@ namespace AlphaPseudo
     uint64_t
     readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     {
-        const string &file = tc->getCpuPtr()->system->params()->readfile;
+        const string &file = tc->getSystemPtr()->params()->readfile;
         if (file.empty()) {
             return ULL(0);
         }
@@ -308,33 +303,6 @@ namespace AlphaPseudo
         CopyIn(tc, vaddr, buf, result);
         delete [] buf;
         return result;
-    }
-
-    class Context : public ParamContext
-    {
-      public:
-        Context(const string &section) : ParamContext(section) {}
-        void checkParams();
-    };
-
-    Context context("pseudo_inst");
-
-    Param<bool> __quiesce(&context, "quiesce",
-                          "enable quiesce instructions",
-                          true);
-    Param<bool> __statistics(&context, "statistics",
-                             "enable statistics pseudo instructions",
-                             true);
-    Param<bool> __checkpoint(&context, "checkpoint",
-                             "enable checkpoint pseudo instructions",
-                             true);
-
-    void
-    Context::checkParams()
-    {
-        doQuiesce = __quiesce;
-        doStatisticsInsts = __statistics;
-        doCheckpointInsts = __checkpoint;
     }
 
     void debugbreak(ThreadContext *tc)

@@ -155,6 +155,10 @@ class BaseCPU : public MemObject
         int cpu_id;
 #if FULL_SYSTEM
         Tick profile;
+
+        bool do_statistics_insts;
+        bool do_checkpoint_insts;
+        bool do_quiesce;
 #endif
         Tick progress_interval;
         BaseCPU *checker;
