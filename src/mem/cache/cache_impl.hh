@@ -333,6 +333,8 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
         DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
 
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
+            DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
+                    pkt->getAddr());
             blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
@@ -483,9 +485,15 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
-    if (blk)
+    if (blk) {
         DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
                 "new state is %i\n", pkt->cmdString(), blk_addr, new_state);
+        if (mshr && !mshr->inService && new_state == 0) {
+            //There was a outstanding write to a shared block, not need ReadEx
+            //not update, so change No Allocate param in MSHR
+            mshr->pkt->flags &= ~NO_ALLOCATE;
+        }
+    }
     tags->handleSnoop(blk, new_state);
 }
 
@@ -534,7 +542,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
         }
     }
 
-    if (!update && (pkt->isWrite() || (otherSidePort == cpuSidePort))) {
+    if (!update && (otherSidePort == cpuSidePort)) {
         // Still need to change data in all locations.
         otherSidePort->checkAndSendFunctional(pkt);
         if (pkt->isRead() && pkt->result == Packet::Success)
@@ -572,7 +580,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
                 // probed request, need to update data
                 if (target->intersect(pkt)) {
                     DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a MSHR\n",
-                            blk_addr);
+                            pkt->cmdString(), blk_addr);
                     notDone = fixPacket(pkt, target);
                 }
             }
