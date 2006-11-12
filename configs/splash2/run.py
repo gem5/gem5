@@ -262,7 +262,7 @@ m5.instantiate(root)
 if options.maxtick:
     exit_event = m5.simulate(options.maxtick)
 else:
-    exit_event = m5.simulate()
+    exit_event = m5.simulate(1000000000000)
 
 print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
 
