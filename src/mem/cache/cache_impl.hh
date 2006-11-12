@@ -53,6 +53,8 @@
 
 #include "sim/sim_exit.hh" // for SimExitEvent
 
+bool SIGNAL_NACK_HACK;
+
 template<class TagStore, class Buffering, class Coherence>
 bool
 Cache<TagStore,Buffering,Coherence>::
@@ -242,6 +244,11 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
+    if (pkt->cmd == Packet::Writeback) {
+        //Need to clean up the packet on a writeback miss, but leave the request
+        delete pkt;
+    }
+
     return true;
 }
 
@@ -265,6 +272,7 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
 
     assert(!doMasterRequest() || missQueue->havePending());
     assert(!pkt || pkt->time <= curTick);
+    SIGNAL_NACK_HACK = false;
     return pkt;
 }
 
@@ -273,16 +281,15 @@ void
 Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
                                                 bool success)
 {
-    if (success && !(pkt && (pkt->flags & NACKED_LINE))) {
-        if (!mshr->pkt->needsResponse()
-            && !(mshr->pkt->cmd == Packet::UpgradeReq)
-            && (pkt && (pkt->flags & SATISFIED))) {
-            //Writeback, clean up the non copy version of the packet
-            delete pkt;
-        }
+    if (success && !(SIGNAL_NACK_HACK)) {
+        //Remember if it was an upgrade because writeback MSHR's are removed
+        //in Mark in Service
+        bool upgrade = (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq);
+
         missQueue->markInService(mshr->pkt, mshr);
+
         //Temp Hack for UPGRADES
-        if (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq) {
+        if (upgrade) {
             assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
             BlkType *blk = tags->findBlock(pkt);
@@ -300,6 +307,7 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
         }
     } else if (pkt && !pkt->req->isUncacheable()) {
         pkt->flags &= ~NACKED_LINE;
+        SIGNAL_NACK_HACK = false;
         pkt->flags &= ~SATISFIED;
         pkt->flags &= ~SNOOP_COMMIT;
 
@@ -333,6 +341,8 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
         DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
 
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
+            DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
+                    pkt->getAddr());
             blk = tags->findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
@@ -402,6 +412,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
                     assert(!(pkt->flags & SATISFIED));
                     pkt->flags |= SATISFIED;
                     pkt->flags |= NACKED_LINE;
+                    SIGNAL_NACK_HACK = true;
                     ///@todo NACK's from other levels
                     //warn("NACKs from devices not connected to the same bus "
                     //"not implemented\n");
@@ -474,6 +485,13 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
     }
     CacheBlk::State new_state;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
+
+    if (blk && mshr && !mshr->inService && new_state == 0) {
+            //There was a outstanding write to a shared block, not need ReadEx
+            //not update, so change No Allocate param in MSHR
+            mshr->pkt->flags &= ~NO_ALLOCATE;
+    }
+
     if (satisfy) {
         DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
                 "now supplying data, new state is %i\n",
@@ -486,6 +504,7 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
     if (blk)
         DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
                 "new state is %i\n", pkt->cmdString(), blk_addr, new_state);
+
     tags->handleSnoop(blk, new_state);
 }
 
@@ -534,9 +553,9 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
         }
     }
 
-    if (!update && (pkt->isWrite() || (otherSidePort == cpuSidePort))) {
+    if (!update && (otherSidePort == cpuSidePort)) {
         // Still need to change data in all locations.
-        otherSidePort->sendFunctional(pkt);
+        otherSidePort->checkAndSendFunctional(pkt);
         if (pkt->isRead() && pkt->result == Packet::Success)
             return 0;
     }
@@ -560,30 +579,33 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
     missQueue->findWrites(blk_addr, writes);
 
     if (!update) {
+        bool notDone = !(pkt->flags & SATISFIED); //Hit in cache (was a block)
         // Check for data in MSHR and writebuffer.
         if (mshr) {
             MSHR::TargetList *targets = mshr->getTargetList();
             MSHR::TargetList::iterator i = targets->begin();
             MSHR::TargetList::iterator end = targets->end();
-            for (; i != end; ++i) {
+            for (; i != end && notDone; ++i) {
                 PacketPtr target = *i;
                 // If the target contains data, and it overlaps the
                 // probed request, need to update data
                 if (target->intersect(pkt)) {
-                    fixPacket(pkt, target);
+                    DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a MSHR\n",
+                            pkt->cmdString(), blk_addr);
+                    notDone = fixPacket(pkt, target);
                 }
             }
         }
-        for (int i = 0; i < writes.size(); ++i) {
+        for (int i = 0; i < writes.size() && notDone; ++i) {
             PacketPtr write = writes[i]->pkt;
             if (write->intersect(pkt)) {
-                fixPacket(pkt, write);
+                DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a writeback\n",
+                        pkt->cmdString(), blk_addr);
+                notDone = fixPacket(pkt, write);
             }
         }
-        if (pkt->isRead()
-            && pkt->result != Packet::Success
-            && otherSidePort == memSidePort) {
-            otherSidePort->sendFunctional(pkt);
+        if (notDone && otherSidePort == memSidePort) {
+            otherSidePort->checkAndSendFunctional(pkt);
             assert(pkt->result == Packet::Success);
         }
         return 0;

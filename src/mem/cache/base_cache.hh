@@ -105,7 +105,11 @@ class BaseCache : public MemObject
 
         void clearBlocked();
 
-        bool canDrain() { return drainList.empty(); }
+        bool checkFunctional(PacketPtr pkt);
+
+        void checkAndSendFunctional(PacketPtr pkt);
+
+        bool canDrain() { return drainList.empty() && transmitList.empty(); }
 
         bool blocked;
 
@@ -117,21 +121,25 @@ class BaseCache : public MemObject
 
         std::list<PacketPtr> drainList;
 
+        std::list<std::pair<Tick,PacketPtr> > transmitList;
     };
 
     struct CacheEvent : public Event
     {
         CachePort *cachePort;
         PacketPtr pkt;
+        bool newResponse;
 
-        CacheEvent(CachePort *_cachePort);
-        CacheEvent(CachePort *_cachePort, PacketPtr _pkt);
+        CacheEvent(CachePort *_cachePort, bool response);
         void process();
         const char *description();
     };
 
   public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
+
+    CacheEvent *sendEvent;
+    CacheEvent *memSendEvent;
 
   protected:
     CachePort *memSidePort;
@@ -353,6 +361,12 @@ class BaseCache : public MemObject
         snoopRangesSent = false;
     }
 
+    ~BaseCache()
+    {
+        delete sendEvent;
+        delete memSendEvent;
+    }
+
     virtual void init();
 
     /**
@@ -467,7 +481,8 @@ class BaseCache : public MemObject
     {
         if (!doMasterRequest() && !memSidePort->waitingOnRetry)
         {
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(memSidePort);
+            BaseCache::CacheEvent * reqCpu =
+                new BaseCache::CacheEvent(memSidePort, false);
             reqCpu->schedule(time);
         }
         uint8_t flag = 1<<cause;
@@ -503,7 +518,8 @@ class BaseCache : public MemObject
     {
         if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
         {
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(cpuSidePort);
+            BaseCache::CacheEvent * reqCpu =
+                new BaseCache::CacheEvent(cpuSidePort, false);
             reqCpu->schedule(time);
         }
         uint8_t flag = 1<<cause;
@@ -528,9 +544,44 @@ class BaseCache : public MemObject
      */
     void respond(PacketPtr pkt, Tick time)
     {
+        assert(time >= curTick);
         if (pkt->needsResponse()) {
-            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
             reqCpu->schedule(time);
+*/
+            if (cpuSidePort->transmitList.empty()) {
+                assert(!sendEvent->scheduled());
+                sendEvent->schedule(time);
+                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                    (time,pkt));
+                return;
+            }
+
+            // something is on the list and this belongs at the end
+            if (time >= cpuSidePort->transmitList.back().first) {
+                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                    (time,pkt));
+                return;
+            }
+            // Something is on the list and this belongs somewhere else
+            std::list<std::pair<Tick,PacketPtr> >::iterator i =
+                cpuSidePort->transmitList.begin();
+            std::list<std::pair<Tick,PacketPtr> >::iterator end =
+                cpuSidePort->transmitList.end();
+            bool done = false;
+
+            while (i != end && !done) {
+                if (time < i->first) {
+                    if (i == cpuSidePort->transmitList.begin()) {
+                        //Inserting at begining, reschedule
+                        sendEvent->reschedule(time);
+                    }
+                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
+                                                     (time,pkt));
+                    done = true;
+                }
+                i++;
+            }
         }
         else {
             if (pkt->cmd != Packet::UpgradeReq)
@@ -548,12 +599,48 @@ class BaseCache : public MemObject
      */
     void respondToMiss(PacketPtr pkt, Tick time)
     {
+        assert(time >= curTick);
         if (!pkt->req->isUncacheable()) {
-            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] += time - pkt->time;
+            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                time - pkt->time;
         }
         if (pkt->needsResponse()) {
-            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
+/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
             reqCpu->schedule(time);
+*/
+            if (cpuSidePort->transmitList.empty()) {
+                assert(!sendEvent->scheduled());
+                sendEvent->schedule(time);
+                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                    (time,pkt));
+                return;
+            }
+
+            // something is on the list and this belongs at the end
+            if (time >= cpuSidePort->transmitList.back().first) {
+                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                    (time,pkt));
+                return;
+            }
+            // Something is on the list and this belongs somewhere else
+            std::list<std::pair<Tick,PacketPtr> >::iterator i =
+                cpuSidePort->transmitList.begin();
+            std::list<std::pair<Tick,PacketPtr> >::iterator end =
+                cpuSidePort->transmitList.end();
+            bool done = false;
+
+            while (i != end && !done) {
+                if (time < i->first) {
+                    if (i == cpuSidePort->transmitList.begin()) {
+                        //Inserting at begining, reschedule
+                        sendEvent->reschedule(time);
+                    }
+                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
+                                                     (time,pkt));
+                    done = true;
+                }
+                i++;
+            }
         }
         else {
             if (pkt->cmd != Packet::UpgradeReq)
@@ -570,9 +657,43 @@ class BaseCache : public MemObject
      */
     void respondToSnoop(PacketPtr pkt, Tick time)
     {
+        assert(time >= curTick);
         assert (pkt->needsResponse());
-        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
+/*        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
         reqMem->schedule(time);
+*/
+        if (memSidePort->transmitList.empty()) {
+            assert(!memSendEvent->scheduled());
+            memSendEvent->schedule(time);
+            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                (time,pkt));
+            return;
+        }
+
+        // something is on the list and this belongs at the end
+        if (time >= memSidePort->transmitList.back().first) {
+            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
+                                                (time,pkt));
+            return;
+        }
+        // Something is on the list and this belongs somewhere else
+        std::list<std::pair<Tick,PacketPtr> >::iterator i =
+            memSidePort->transmitList.begin();
+        std::list<std::pair<Tick,PacketPtr> >::iterator end =
+            memSidePort->transmitList.end();
+        bool done = false;
+
+        while (i != end && !done) {
+            if (time < i->first) {
+                if (i == memSidePort->transmitList.begin()) {
+                    //Inserting at begining, reschedule
+                    memSendEvent->reschedule(time);
+                }
+                memSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
+                done = true;
+            }
+            i++;
+        }
     }
 
     /**
