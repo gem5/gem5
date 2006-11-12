@@ -114,6 +114,8 @@ BaseCache::CachePort::checkFunctional(PacketPtr pkt)
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt)) {
+            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a drain\n",
+                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
             notDone = fixPacket(pkt, target);
         }
         i++;
@@ -126,8 +128,11 @@ BaseCache::CachePort::checkFunctional(PacketPtr pkt)
         PacketPtr target = j->second;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
-        if (target->intersect(pkt))
-            notDone = fixPacket(pkt, target);
+        if (target->intersect(pkt)) {
+            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a response\n",
+                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
+            notDone = fixDelayedResponsePacket(pkt, target);
+        }
         j++;
     }
     return notDone;
@@ -348,7 +353,7 @@ BaseCache::CacheEvent::process()
         }
         return;
     }
-    //Else it's a response Response
+    //Else it's a response
     assert(cachePort->transmitList.size());
     assert(cachePort->transmitList.front().first <= curTick);
     pkt = cachePort->transmitList.front().second;

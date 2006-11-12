@@ -144,6 +144,24 @@ Packet::intersect(PacketPtr p)
 }
 
 bool
+fixDelayedResponsePacket(PacketPtr func, PacketPtr timing)
+{
+    bool result;
+
+    if (timing->isRead() || timing->isWrite()) {
+        timing->toggleData();
+        result = fixPacket(func, timing);
+        timing->toggleData();
+    }
+    else {
+        //Don't toggle if it isn't a read/write response
+        result = fixPacket(func, timing);
+    }
+
+    return result;
+}
+
+bool
 fixPacket(PacketPtr func, PacketPtr timing)
 {
     Addr funcStart      = func->getAddr();
