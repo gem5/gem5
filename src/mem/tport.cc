@@ -118,8 +118,14 @@ SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
     bool done = false;
 
     while (i != end && !done) {
-        if (time+curTick < i->first)
+        if (time+curTick < i->first) {
+            if (i == transmitList.begin()) {
+                //Inserting at begining, reschedule
+                sendEvent.reschedule(time+curTick);
+            }
             transmitList.insert(i,std::pair<Tick,PacketPtr>(time+curTick,pkt));
+            done = true;
+        }
         i++;
     }
 }

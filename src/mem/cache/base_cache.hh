@@ -571,9 +571,15 @@ class BaseCache : public MemObject
             bool done = false;
 
             while (i != end && !done) {
-                if (time < i->first)
+                if (time < i->first) {
+                    if (i == cpuSidePort->transmitList.begin()) {
+                        //Inserting at begining, reschedule
+                        sendEvent->reschedule(time);
+                    }
                     cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
                                                      (time,pkt));
+                    done = true;
+                }
                 i++;
             }
         }
@@ -624,9 +630,15 @@ class BaseCache : public MemObject
             bool done = false;
 
             while (i != end && !done) {
-                if (time < i->first)
+                if (time < i->first) {
+                    if (i == cpuSidePort->transmitList.begin()) {
+                        //Inserting at begining, reschedule
+                        sendEvent->reschedule(time);
+                    }
                     cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
                                                      (time,pkt));
+                    done = true;
+                }
                 i++;
             }
         }
@@ -672,8 +684,14 @@ class BaseCache : public MemObject
         bool done = false;
 
         while (i != end && !done) {
-            if (time < i->first)
-                    memSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
+            if (time < i->first) {
+                if (i == memSidePort->transmitList.begin()) {
+                    //Inserting at begining, reschedule
+                    memSendEvent->reschedule(time);
+                }
+                memSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
+                done = true;
+            }
             i++;
         }
     }
