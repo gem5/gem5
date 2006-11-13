@@ -46,7 +46,7 @@ template <class Impl>
 void
 LSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
 {
-    warn("O3CPU doesn't update things on a recvFunctional.");
+    DPRINTF(LSQ, "LSQ doesn't update things on a recvFunctional.");
 }
 
 template <class Impl>
