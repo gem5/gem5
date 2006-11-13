@@ -476,8 +476,8 @@ FrontEnd<Impl>::fetchCacheLine()
 
     // Setup the memReq to do a read of the first isntruction's address.
     // Set the appropriate read size and flags as well.
-    memReq = new Request(0, fetch_PC, cacheBlkSize, flags,
-                         fetch_PC, cpu->readCpuId(), 0);
+    memReq = new Request(0, fetch_PC, cacheBlkSize, 0,
+                         PC, cpu->readCpuId(), 0);
 
     // Translate the instruction request.
     fault = cpu->translateInstReq(memReq, thread);

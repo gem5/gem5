@@ -292,7 +292,7 @@ namespace AlphaISA
     Fault
     ITB::translate(RequestPtr &req, ThreadContext *tc) const
     {
-        if (PcPAL(req->getVaddr())) {
+        if (PcPAL(req->getPC())) {
             // strip off PAL PC marker (lsb is 1)
             req->setPaddr((req->getVaddr() & ~3) & PAddrImplMask);
             hits++;

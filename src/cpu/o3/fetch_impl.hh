@@ -561,27 +561,36 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     Fault fault = NoFault;
 
     //AlphaDep
-    if (cacheBlocked || isSwitchedOut() ||
-            (interruptPending && (fetch_PC & 0x3))) {
+    if (cacheBlocked) {
+        DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
+                tid);
+        return false;
+    } else if (isSwitchedOut()) {
+        DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, switched out\n",
+                tid);
+        return false;
+    } else if (interruptPending && !(fetch_PC & 0x3)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
         // fetch is switched out.
+        DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, interrupt pending\n",
+                tid);
         return false;
     }
 
     // Align the fetch PC so it's at the start of a cache block.
-    fetch_PC = icacheBlockAlignPC(fetch_PC);
+    Addr block_PC = icacheBlockAlignPC(fetch_PC);
 
     // If we've already got the block, no need to try to fetch it again.
-    if (cacheDataValid[tid] && fetch_PC == cacheDataPC[tid]) {
+    if (cacheDataValid[tid] && block_PC == cacheDataPC[tid]) {
         return true;
     }
 
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
-    RequestPtr mem_req = new Request(tid, fetch_PC, cacheBlkSize, 0,
+    RequestPtr mem_req = new Request(tid, block_PC, cacheBlkSize, 0,
                                      fetch_PC, cpu->readCpuId(), tid);
 
     memReq[tid] = mem_req;
@@ -611,7 +620,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
                                         Packet::ReadReq, Packet::Broadcast);
         data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
 
-        cacheDataPC[tid] = fetch_PC;
+        cacheDataPC[tid] = block_PC;
         cacheDataValid[tid] = false;
 
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
@@ -1052,12 +1061,16 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     } else {
         if (fetchStatus[tid] == Idle) {
             ++fetchIdleCycles;
+            DPRINTF(Fetch, "[tid:%i]: Fetch is idle!\n", tid);
         } else if (fetchStatus[tid] == Blocked) {
             ++fetchBlockedCycles;
+            DPRINTF(Fetch, "[tid:%i]: Fetch is blocked!\n", tid);
         } else if (fetchStatus[tid] == Squashing) {
             ++fetchSquashCycles;
+            DPRINTF(Fetch, "[tid:%i]: Fetch is squashing!\n", tid);
         } else if (fetchStatus[tid] == IcacheWaitResponse) {
             ++icacheStallCycles;
+            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting cache response!\n", tid);
         }
 
         // Status is Idle, Squashing, Blocked, or IcacheWaitResponse, so

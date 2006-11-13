@@ -640,8 +640,18 @@ DefaultCommit<Impl>::commit()
     // @todo: Allow other threads to handle interrupts.
     if (cpu->checkInterrupts &&
         cpu->check_interrupts(cpu->tcBase(0)) &&
+        commitStatus[0] != TrapPending &&
         !trapSquash[0] &&
         !tcSquash[0]) {
+
+        // Get any interrupt that happened
+        Fault intr = cpu->getInterrupts();
+
+        // Exit this if block if there's no fault.
+        if (intr == NoFault) {
+            goto commit_insts;
+        }
+
         // Tell fetch that there is an interrupt pending.  This will
         // make fetch wait until it sees a non PAL-mode PC, at which
         // point it stops fetching instructions.
@@ -650,36 +660,37 @@ DefaultCommit<Impl>::commit()
         // Wait until the ROB is empty and all stores have drained in
         // order to enter the interrupt.
         if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
-            // Not sure which thread should be the one to interrupt.  For now
-            // always do thread 0.
+            // Squash or record that I need to squash this cycle if
+            // an interrupt needed to be handled.
+            DPRINTF(Commit, "Interrupt detected.\n");
+
             assert(!thread[0]->inSyscall);
             thread[0]->inSyscall = true;
 
-            // CPU will handle implementation of the interrupt.
-            cpu->processInterrupts();
+            // CPU will handle interrupt.
+            cpu->processInterrupts(intr);
 
-            // Now squash or record that I need to squash this cycle.
-            commitStatus[0] = TrapPending;
-
-            // Exit state update mode to avoid accidental updating.
             thread[0]->inSyscall = false;
+
+            commitStatus[0] = TrapPending;
 
             // Generate trap squash event.
             generateTrapEvent(0);
 
             toIEW->commitInfo[0].clearInterrupt = true;
-
-            DPRINTF(Commit, "Interrupt detected.\n");
         } else {
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
     }
+
+    // Label for goto.  Not pretty but more readable than really big
+    // if statement above.
+  commit_insts:
 #endif // FULL_SYSTEM
 
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-
     std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {

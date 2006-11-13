@@ -267,8 +267,16 @@ AlphaO3CPU<Impl>::simPalCheck(int palFunc, unsigned tid)
 }
 
 template <class Impl>
+Fault
+AlphaO3CPU<Impl>::getInterrupts()
+{
+    // Check if there are any outstanding interrupts
+    return this->interrupts.getInterrupt(this->threadContexts[0]);
+}
+
+template <class Impl>
 void
-AlphaO3CPU<Impl>::processInterrupts()
+AlphaO3CPU<Impl>::processInterrupts(Fault interrupt)
 {
     // Check for interrupts here.  For now can copy the code that
     // exists within isa_fullsys_traits.hh.  Also assume that thread 0
@@ -276,14 +284,12 @@ AlphaO3CPU<Impl>::processInterrupts()
     // @todo: Possibly consolidate the interrupt checking code.
     // @todo: Allow other threads to handle interrupts.
 
-    // Check if there are any outstanding interrupts
-    //Handle the interrupts
-    Fault interrupt = this->interrupts.getInterrupt(this->tcBase(0));
+    assert(interrupt != NoFault);
+    this->interrupts.updateIntrInfo(this->threadContexts[0]);
 
-    if (interrupt != NoFault) {
-        this->checkInterrupts = false;
-        this->trap(interrupt, 0);
-    }
+    DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
+    this->checkInterrupts = false;
+    this->trap(interrupt, 0);
 }
 
 #endif // FULL_SYSTEM
