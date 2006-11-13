@@ -81,8 +81,13 @@ MemTest::CpuPort::recvFunctional(PacketPtr pkt)
 void
 MemTest::CpuPort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("MemTest doesn't expect recvStatusChange callback!");
 }
@@ -144,6 +149,9 @@ MemTest::MemTest(const string &name,
     vector<string> null_vec;
     //  thread = new SimpleThread(NULL, 0, NULL, 0, mainMem);
     curTick = 0;
+
+    cachePort.snoopRangeSent = false;
+    funcPort.snoopRangeSent = true;
 
     // Needs to be masked off once we know the block size.
     traceBlockAddr = _traceAddr;

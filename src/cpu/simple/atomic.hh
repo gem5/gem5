@@ -90,6 +90,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
             : Port(_name, _cpu), cpu(_cpu)
         { }
 
+        bool snoopRangeSent;
+
       protected:
 
         virtual bool recvTiming(PacketPtr pkt);

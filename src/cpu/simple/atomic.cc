@@ -107,8 +107,13 @@ AtomicSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 void
 AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
 }
@@ -126,6 +131,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this)
 {
     _status = Idle;
+
+    icachePort.snoopRangeSent = false;
+    dcachePort.snoopRangeSent = false;
 
     ifetch_req = new Request();
     ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT

@@ -83,6 +83,8 @@ class DefaultFetch
             : Port(_fetch->name() + "-iport"), fetch(_fetch)
         { }
 
+        bool snoopRangeSent;
+
       protected:
         /** Atomic version of receive.  Panics. */
         virtual Tick recvAtomic(PacketPtr pkt);

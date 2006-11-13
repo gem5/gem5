@@ -82,8 +82,13 @@ TimingSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 void
 TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
 }
@@ -101,6 +106,10 @@ TimingSimpleCPU::TimingSimpleCPU(Params *p)
       cpu_id(p->cpu_id)
 {
     _status = Idle;
+
+    icachePort.snoopRangeSent = false;
+    dcachePort.snoopRangeSent = false;
+
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
     fetchEvent = NULL;
