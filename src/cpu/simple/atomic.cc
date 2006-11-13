@@ -500,6 +500,10 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     SimObjectParam<TheISA::ITB *> itb;
     SimObjectParam<TheISA::DTB *> dtb;
     Param<Tick> profile;
+
+    Param<bool> do_quiesce;
+    Param<bool> do_checkpoint_insts;
+    Param<bool> do_statistics_insts;
 #else
     SimObjectParam<Process *> workload;
 #endif // FULL_SYSTEM
@@ -532,6 +536,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
     INIT_PARAM(itb, "Instruction TLB"),
     INIT_PARAM(dtb, "Data TLB"),
     INIT_PARAM(profile, ""),
+    INIT_PARAM(do_quiesce, ""),
+    INIT_PARAM(do_checkpoint_insts, ""),
+    INIT_PARAM(do_statistics_insts, ""),
 #else
     INIT_PARAM(workload, "processes to run"),
 #endif // FULL_SYSTEM
@@ -569,6 +576,9 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->itb = itb;
     params->dtb = dtb;
     params->profile = profile;
+    params->do_quiesce = do_quiesce;
+    params->do_checkpoint_insts = do_checkpoint_insts;
+    params->do_statistics_insts = do_statistics_insts;
 #else
     params->process = workload;
 #endif

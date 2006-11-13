@@ -35,14 +35,14 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
     std::list<std::pair<Tick,PacketPtr> >::iterator i = transmitList.begin();
     std::list<std::pair<Tick,PacketPtr> >::iterator end = transmitList.end();
-    bool done = false;
+    bool notDone = true;
 
-    while (i != end && !done) {
+    while (i != end && notDone) {
         PacketPtr target = i->second;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (target->intersect(pkt))
-            done = fixPacket(pkt, target);
+            notDone = fixPacket(pkt, target);
 
         i++;
     }
@@ -118,8 +118,14 @@ SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
     bool done = false;
 
     while (i != end && !done) {
-        if (time+curTick < i->first)
+        if (time+curTick < i->first) {
+            if (i == transmitList.begin()) {
+                //Inserting at begining, reschedule
+                sendEvent.reschedule(time+curTick);
+            }
             transmitList.insert(i,std::pair<Tick,PacketPtr>(time+curTick,pkt));
+            done = true;
+        }
         i++;
     }
 }

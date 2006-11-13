@@ -64,6 +64,10 @@ Param<int> cpu_id;
 SimObjectParam<TheISA::ITB *> itb;
 SimObjectParam<TheISA::DTB *> dtb;
 Param<Tick> profile;
+
+Param<bool> do_quiesce;
+Param<bool> do_checkpoint_insts;
+Param<bool> do_statistics_insts
 #else
 SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;
@@ -184,6 +188,9 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivOzoneCPU)
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
     INIT_PARAM(profile, ""),
+    INIT_PARAM(do_quiesce, ""),
+    INIT_PARAM(do_checkpoint_insts, ""),
+    INIT_PARAM(do_statistics_insts, ""),
 #else
     INIT_PARAM(workload, "Processes to run"),
 //    INIT_PARAM(page_table, "Page table"),
@@ -341,6 +348,9 @@ CREATE_SIM_OBJECT(DerivOzoneCPU)
     params->itb = itb;
     params->dtb = dtb;
     params->profile = profile;
+    params->do_quiesce = do_quiesce;
+    params->do_checkpoint_insts = do_checkpoint_insts;
+    params->do_statistics_insts = do_statistics_insts;
 #else
     params->workload = workload;
 //    params->pTable = page_table;

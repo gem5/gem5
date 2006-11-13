@@ -39,14 +39,6 @@
 #include "sim/host.hh"
 #include "sim/root.hh"
 
-#ifndef TRACING_ON
-#ifndef NDEBUG
-#define TRACING_ON	1
-#else
-#define TRACING_ON	0
-#endif
-#endif
-
 #include "base/traceflags.hh"
 
 namespace Trace {

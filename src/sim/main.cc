@@ -117,7 +117,9 @@ abortHandler(int sigtype)
 #endif
 }
 
-extern "C" { void init_cc_main(); }
+extern "C" {
+void init_main();
+}
 
 int
 main(int argc, char **argv)
@@ -155,8 +157,8 @@ main(int argc, char **argv)
     Py_Initialize();
     PySys_SetArgv(argc, argv);
 
-    // initialize SWIG 'cc_main' module
-    init_cc_main();
+    // initialize SWIG 'm5.internal.main' module
+    init_main();
 
     PyRun_SimpleString("import m5.main");
     PyRun_SimpleString("m5.main.main()");

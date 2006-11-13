@@ -129,12 +129,13 @@ base_sources = Split('''
 
         mem/cache/cache_builder.cc
 
+        python/swig/main_wrap.cc
+
 	sim/builder.cc
 	sim/debug.cc
 	sim/eventq.cc
 	sim/faults.cc
 	sim/main.cc
-        python/swig/cc_main_wrap.cc
 	sim/param.cc
 	sim/root.cc
 	sim/serialize.cc
@@ -316,16 +317,17 @@ else:
 
 makeEnv('debug', '.do',
         CCFLAGS = Split('%s -O0' % debug_flag),
-        CPPDEFINES = 'DEBUG')
+        CPPDEFINES = ['DEBUG', 'TRACING_ON=1'])
 
 # Optimized binary
 makeEnv('opt', '.o',
-        CCFLAGS = Split('-g -O3'))
+        CCFLAGS = Split('-g -O3'),
+        CPPDEFINES = ['TRACING_ON=1'])
 
 # "Fast" binary
 makeEnv('fast', '.fo', strip = True,
         CCFLAGS = Split('-O3'),
-        CPPDEFINES = 'NDEBUG')
+        CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'])
 
 # Profiled binary
 makeEnv('prof', '.po',

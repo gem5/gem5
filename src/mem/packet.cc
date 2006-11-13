@@ -144,6 +144,24 @@ Packet::intersect(PacketPtr p)
 }
 
 bool
+fixDelayedResponsePacket(PacketPtr func, PacketPtr timing)
+{
+    bool result;
+
+    if (timing->isRead() || timing->isWrite()) {
+        timing->toggleData();
+        result = fixPacket(func, timing);
+        timing->toggleData();
+    }
+    else {
+        //Don't toggle if it isn't a read/write response
+        result = fixPacket(func, timing);
+    }
+
+    return result;
+}
+
+bool
 fixPacket(PacketPtr func, PacketPtr timing)
 {
     Addr funcStart      = func->getAddr();
@@ -168,6 +186,7 @@ fixPacket(PacketPtr func, PacketPtr timing)
             memcpy(func->getPtr<uint8_t>(), timing->getPtr<uint8_t>() +
                     funcStart - timingStart, func->getSize());
             func->result = Packet::Success;
+            func->flags |= SATISFIED;
             return false;
         } else {
             // In this case the timing packet only partially satisfies the
@@ -182,11 +201,11 @@ fixPacket(PacketPtr func, PacketPtr timing)
         if (funcStart >= timingStart) {
             memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
                    func->getPtr<uint8_t>(),
-                   std::min(funcEnd, timingEnd) - funcStart);
+                   (std::min(funcEnd, timingEnd) - funcStart) + 1);
         } else { // timingStart > funcStart
             memcpy(timing->getPtr<uint8_t>(),
                    func->getPtr<uint8_t>() + (timingStart - funcStart),
-                   std::min(funcEnd, timingEnd) - timingStart);
+                   (std::min(funcEnd, timingEnd) - timingStart) + 1);
         }
         // we always want to keep going with a write
         return true;

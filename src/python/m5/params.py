@@ -830,8 +830,9 @@ class PortRef(object):
         if self.ccConnected: # already done this
             return
         peer = self.peer
-        cc_main.connectPorts(self.simobj.getCCObject(), self.name, self.index,
-                             peer.simobj.getCCObject(), peer.name, peer.index)
+        internal.main.connectPorts(self.simobj.getCCObject(), self.name,
+                                   self.index, peer.simobj.getCCObject(),
+                                   peer.name, peer.index)
         self.ccConnected = True
         peer.ccConnected = True
 
@@ -970,4 +971,4 @@ __all__ = ['Param', 'VectorParam',
 from SimObject import isSimObject, isSimObjectSequence, isSimObjectClass
 import proxy
 import objects
-import cc_main
+import internal
