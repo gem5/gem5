@@ -132,7 +132,6 @@ namespace AlphaISA
     MiscRegFile::setRegWithEffect(int misc_reg, const MiscReg &val,
             ThreadContext *tc)
     {
-#if FULL_SYSTEM
         switch(misc_reg) {
           case MISCREG_FPCR:
             fpcr = val;
@@ -150,12 +149,13 @@ namespace AlphaISA
             intr_flag = val;
             return;
           default:
-            return setIpr(misc_reg, val, tc);
-        }
+#if FULL_SYSTEM
+            setIpr(misc_reg, val, tc);
 #else
-        //panic("No registers with side effects in SE mode!");
-        return;
+            panic("No registers with side effects in SE mode!");
 #endif
+            return;
+        }
     }
 
 }
