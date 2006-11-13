@@ -985,7 +985,9 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         }
     }
 
-    if (checkStall(tid) && fetchStatus[tid] != IcacheWaitResponse) {
+    if (checkStall(tid) &&
+        fetchStatus[tid] != IcacheWaitResponse &&
+        fetchStatus[tid] != IcacheWaitRetry) {
         DPRINTF(Fetch, "[tid:%i]: Setting to blocked\n",tid);
 
         fetchStatus[tid] = Blocked;
