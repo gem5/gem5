@@ -315,6 +315,7 @@ BaseSimpleCPU::checkForInterrupts()
         Fault interrupt = interrupts.getInterrupt(tc);
 
         if (interrupt != NoFault) {
+            interrupts.updateIntrInfo(tc);
             checkInterrupts = false;
             interrupt->invoke(tc);
         }

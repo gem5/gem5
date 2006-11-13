@@ -156,8 +156,11 @@ class AlphaO3CPU : public FullO3CPU<Impl>
 
     bool simPalCheck(int palFunc, unsigned tid);
 
-    /** Processes any interrupts. */
-    void processInterrupts();
+    /** Returns the Fault for any valid interrupt. */
+    Fault getInterrupts();
+
+    /** Processes any an interrupt fault. */
+    void processInterrupts(Fault interrupt);
 
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
