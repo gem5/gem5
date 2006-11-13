@@ -682,12 +682,15 @@ DefaultCommit<Impl>::commit()
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
     }
+
+    // Label for goto.  Not pretty but more readable than really big
+    // if statement above.
+  commit_insts:
 #endif // FULL_SYSTEM
 
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-  commit_insts:
     std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {
