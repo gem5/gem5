@@ -392,6 +392,9 @@ class DefaultCommit
      */
     Tick trapLatency;
 
+    /** The interrupt fault. */
+    Fault interrupt;
+
     /** The commit PC of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
