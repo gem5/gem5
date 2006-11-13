@@ -129,12 +129,13 @@ base_sources = Split('''
 
         mem/cache/cache_builder.cc
 
+        python/swig/main_wrap.cc
+
 	sim/builder.cc
 	sim/debug.cc
 	sim/eventq.cc
 	sim/faults.cc
 	sim/main.cc
-        python/swig/cc_main_wrap.cc
 	sim/param.cc
 	sim/root.cc
 	sim/serialize.cc

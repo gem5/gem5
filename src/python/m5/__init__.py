@@ -30,11 +30,11 @@
 import atexit, os, sys
 
 # import the SWIG-wrapped main C++ functions
-import cc_main
+import internal
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from cc_main import simulate, SimLoopExitEvent
+from internal.main import simulate, SimLoopExitEvent
 
 # import the m5 compile options
 import defines
@@ -85,10 +85,10 @@ def instantiate(root):
     root.print_ini()
     sys.stdout.close() # close config.ini
     sys.stdout = sys.__stdout__ # restore to original
-    cc_main.loadIniFile(resolveSimObject)  # load config.ini into C++
+    internal.main.loadIniFile(resolveSimObject)  # load config.ini into C++
     root.createCCObject()
     root.connectPorts()
-    cc_main.finalInit()
+    internal.main.finalInit()
     noDot = True # temporary until we fix dot
     if not noDot:
        dot = pydot.Dot()
@@ -102,10 +102,10 @@ def instantiate(root):
 
 # Export curTick to user script.
 def curTick():
-    return cc_main.cvar.curTick
+    return internal.main.cvar.curTick
 
 # register our C++ exit callback function with Python
-atexit.register(cc_main.doExitCleanup)
+atexit.register(internal.main.doExitCleanup)
 
 # This loops until all objects have been fully drained.
 def doDrain(root):
@@ -119,7 +119,7 @@ def doDrain(root):
 # be drained.
 def drain(root):
     all_drained = False
-    drain_event = cc_main.createCountedDrain()
+    drain_event = internal.main.createCountedDrain()
     unready_objects = root.startDrain(drain_event, True)
     # If we've got some objects that can't drain immediately, then simulate
     if unready_objects > 0:
@@ -127,7 +127,7 @@ def drain(root):
         simulate()
     else:
         all_drained = True
-    cc_main.cleanupCountedDrain(drain_event)
+    internal.main.cleanupCountedDrain(drain_event)
     return all_drained
 
 def resume(root):
@@ -138,12 +138,12 @@ def checkpoint(root, dir):
         raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
     doDrain(root)
     print "Writing checkpoint"
-    cc_main.serializeAll(dir)
+    internal.main.serializeAll(dir)
     resume(root)
 
 def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
-    cc_main.unserializeAll(dir)
+    internal.main.unserializeAll(dir)
     resume(root)
 
 def changeToAtomic(system):
@@ -152,7 +152,7 @@ def changeToAtomic(system):
         "called on a root object."
     doDrain(system)
     print "Changing memory mode to atomic"
-    system.changeTiming(cc_main.SimObject.Atomic)
+    system.changeTiming(internal.main.SimObject.Atomic)
 
 def changeToTiming(system):
     if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
@@ -160,7 +160,7 @@ def changeToTiming(system):
         "called on a root object."
     doDrain(system)
     print "Changing memory mode to timing"
-    system.changeTiming(cc_main.SimObject.Timing)
+    system.changeTiming(internal.main.SimObject.Timing)
 
 def switchCpus(cpuList):
     print "switching cpus"
@@ -180,7 +180,7 @@ def switchCpus(cpuList):
             raise TypeError, "%s is not of type BaseCPU" % cpu
 
     # Drain all of the individual CPUs
-    drain_event = cc_main.createCountedDrain()
+    drain_event = internal.main.createCountedDrain()
     unready_cpus = 0
     for old_cpu in old_cpus:
         unready_cpus += old_cpu.startDrain(drain_event, False)
@@ -188,7 +188,7 @@ def switchCpus(cpuList):
     if unready_cpus > 0:
         drain_event.setCount(unready_cpus)
         simulate()
-    cc_main.cleanupCountedDrain(drain_event)
+    internal.main.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
         old_cpu._ccObject.switchOut()
