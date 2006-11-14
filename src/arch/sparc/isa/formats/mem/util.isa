@@ -76,23 +76,26 @@ output decoder {{
         {
             std::stringstream response;
             bool load = flags[IsLoad];
-            bool save = flags[IsStore];
+            bool store = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(save)
+            if(store)
             {
-                    printReg(response, _srcRegIdx[0]);
+                printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
-            ccprintf(response, "[ ");
-            printReg(response, _srcRegIdx[!save ? 0 : 1]);
-            ccprintf(response, " + ");
-            printReg(response, _srcRegIdx[!save ? 1 : 2]);
-            ccprintf(response, " ]");
+            ccprintf(response, "[");
+            if(_srcRegIdx[!store ? 0 : 1] != 0)
+            {
+                printSrcReg(response, !store ? 0 : 1);
+                ccprintf(response, " + ");
+            }
+            printSrcReg(response, !store ? 1 : 2);
+            ccprintf(response, "]");
             if(load)
             {
                 ccprintf(response, ", ");
-                    printReg(response, _destRegIdx[0]);
+                printReg(response, _destRegIdx[0]);
             }
 
             return response.str();
@@ -108,19 +111,23 @@ output decoder {{
             printMnemonic(response, mnemonic);
             if(save)
             {
-                    printReg(response, _srcRegIdx[0]);
+                printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
-            ccprintf(response, "[ ");
-            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            ccprintf(response, "[");
+            if(_srcRegIdx[!save ? 0 : 1] != 0)
+            {
+                printReg(response, _srcRegIdx[!save ? 0 : 1]);
+                ccprintf(response, " + ");
+            }
             if(imm >= 0)
-                ccprintf(response, " + 0x%x ]", imm);
+                ccprintf(response, "0x%x]", imm);
             else
-                ccprintf(response, " + -0x%x ]", -imm);
+                ccprintf(response, "-0x%x]", -imm);
             if(load)
             {
                 ccprintf(response, ", ");
-                    printReg(response, _destRegIdx[0]);
+                printReg(response, _destRegIdx[0]);
             }
 
             return response.str();
