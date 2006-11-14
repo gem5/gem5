@@ -310,7 +310,18 @@ Bus::findSnoopPorts(Addr addr, int id)
         if (portSnoopList[i].range == addr && portSnoopList[i].portId != id) {
             //Careful  to not overlap ranges
             //or snoop will be called more than once on the port
-            ports.push_back(portSnoopList[i].portId);
+
+            //@todo Fix this hack because ranges are overlapping
+            //need to make sure we dont't create overlapping ranges
+            bool hack_overlap = false;
+            int size = ports.size();
+            for (int j=0; j < size; j++) {
+                if (ports[j] == portSnoopList[i].portId)
+                    hack_overlap = true;
+            }
+
+            if (!hack_overlap)
+                ports.push_back(portSnoopList[i].portId);
 //            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
 //                    portSnoopList[i].portId);
         }
@@ -342,10 +353,13 @@ Bus::functionalSnoop(PacketPtr pkt)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
+    //The packet may be changed by another bus on snoops, restore the id after each
+    int id = pkt->getSrc();
     while (!ports.empty() && pkt->result != Packet::Success)
     {
         interfaces[ports.back()]->sendFunctional(pkt);
         ports.pop_back();
+        pkt->setSrc(id);
     }
 }
 
@@ -457,6 +471,7 @@ Bus::recvStatusChange(Port::Status status, int id)
             dm.portId = id;
             dm.range = *iter;
 
+            //@todo, make sure we don't overlap ranges
             DPRINTF(BusAddrRanges, "Adding snoop range %#llx - %#llx for id %d\n",
                     dm.range.start, dm.range.end, id);
             portSnoopList.push_back(dm);
@@ -533,6 +548,8 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
             snoop.push_back(portIter->range);
             DPRINTF(BusAddrRanges, "  -- Snoop: %#llx : %#llx\n",
                     portIter->range.start, portIter->range.end);
+            //@todo We need to properly insert snoop ranges
+            //not overlapping the ranges (multiple)
         }
     }
 }
