@@ -94,7 +94,7 @@ Tick
 AtomicSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
 {
     //Snooping a coherence request, just return
-    return curTick;
+    return 0;
 }
 
 void
