@@ -160,11 +160,12 @@ Bus::recvTiming(PacketPtr pkt)
 
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        if (timingSnoop(pkt)) {
+        port = findPort(pkt->getAddr(), pkt->getSrc());
+        if (timingSnoop(pkt, port)) {
             bool success;
 
             pkt->flags |= SNOOP_COMMIT;
-            success = timingSnoop(pkt);
+            success = timingSnoop(pkt, port);
             assert(success);
 
             if (pkt->flags & SATISFIED) {
@@ -177,7 +178,6 @@ Bus::recvTiming(PacketPtr pkt)
                 occupyBus(pkt);
                 return true;
             }
-            port = findPort(pkt->getAddr(), pkt->getSrc());
         } else {
             //Snoop didn't succeed
             DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
@@ -364,14 +364,15 @@ Bus::functionalSnoop(PacketPtr pkt)
 }
 
 bool
-Bus::timingSnoop(PacketPtr pkt)
+Bus::timingSnoop(PacketPtr pkt, Port* responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     bool success = true;
 
     while (!ports.empty() && success)
     {
-        success = interfaces[ports.back()]->sendTiming(pkt);
+        if (interfaces[ports.back()] != responder) //Don't call if responder also, once will do
+            success = interfaces[ports.back()]->sendTiming(pkt);
         ports.pop_back();
     }
 
@@ -387,11 +388,14 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    pkt->flags |= SNOOP_COMMIT;
 
     // Assume one bus cycle in order to get through.  This may have
     // some clock skew issues yet again...
     pkt->finishTime = curTick + clock;
+
     Tick snoopTime = atomicSnoop(pkt);
+
     if (snoopTime)
         return snoopTime;  //Snoop satisfies it
     else
@@ -406,6 +410,8 @@ Bus::recvFunctional(PacketPtr pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    pkt->flags |= SNOOP_COMMIT;
+
     functionalSnoop(pkt);
 
     // If the snooping found what we were looking for, we're done.

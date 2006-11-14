@@ -118,7 +118,7 @@ class Bus : public MemObject
      * the snoop to happen
      * @return True if succeds.
      */
-    bool timingSnoop(PacketPtr pkt);
+    bool timingSnoop(PacketPtr pkt, Port *responder);
 
     /** Process address range request.
      * @param resp addresses that we can respond to
