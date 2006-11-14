@@ -153,8 +153,13 @@ output decoder {{
             printMnemonic(response, mnemonic);
 
             ccprintf(response, " ");
-            printSrcReg(response, 0);
-            ccprintf(response, ", ");
+            //If the first reg is %g0, don't print it.
+            //This improves readability
+            if(_srcRegIdx[0] != 0)
+            {
+                printSrcReg(response, 0);
+                ccprintf(response, ", ");
+            }
             printSrcReg(response, 1);
             ccprintf(response, ", %%%s", regName);
 
@@ -169,8 +174,14 @@ output decoder {{
             printMnemonic(response, mnemonic);
 
             ccprintf(response, " ");
-            printSrcReg(response, 0);
-            ccprintf(response, ", 0x%x, %%%s", imm, regName);
+            //If the first reg is %g0, don't print it.
+            //This improves readability
+            if(_srcRegIdx[0] != 0)
+            {
+                printSrcReg(response, 0);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "0x%x, %%%s", imm, regName);
 
             return response.str();
         }

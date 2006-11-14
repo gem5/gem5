@@ -593,7 +593,16 @@ void PowerOnReset::invoke(ThreadContext * tc)
     tc->setMiscReg(MISCREG_PSTATE, 1 << 4);
 
     //Turn on red and hpriv, set everything else to 0
-    tc->setMiscReg(MISCREG_HPSTATE, (1 << 5) | (1 << 2));
+    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    //HPSTATE.red = 1
+    HPSTATE |= (1 << 5);
+    //HPSTATE.hpriv = 1
+    HPSTATE |= (1 << 2);
+    //HPSTATE.ibe = 0
+    HPSTATE &= ~(1 << 10);
+    //HPSTATE.tlz = 0
+    HPSTATE &= ~(1 << 0);
+    tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
 
     //The tick register is unreadable by nonprivileged software
     tc->setMiscReg(MISCREG_TICK, 1ULL << 63);
