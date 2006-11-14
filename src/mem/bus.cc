@@ -290,7 +290,10 @@ Bus::findPort(Addr addr, int id)
 
 
     // we shouldn't be sending this back to where it came from
-    assert(dest_id != id);
+    // only on a functional access and then we should terminate
+    // the cyclical call.
+    if (dest_id == id)
+        return 0;
 
     return interfaces[dest_id];
 }
@@ -392,8 +395,11 @@ Bus::recvFunctional(PacketPtr pkt)
     functionalSnoop(pkt);
 
     // If the snooping found what we were looking for, we're done.
-    if (pkt->result != Packet::Success)
-        findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
+    if (pkt->result != Packet::Success) {
+        Port* port = findPort(pkt->getAddr(), pkt->getSrc());
+        if (port)
+            port->sendFunctional(pkt);
+    }
 }
 
 /** Function called by the port when the bus is receiving a status change.*/
@@ -493,7 +499,7 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
             dflt_iter++) {
         resp.push_back(*dflt_iter);
-        DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",dflt_iter->start,
+        DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
@@ -516,6 +522,16 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
         if (portIter->portId != id && !subset) {
             resp.push_back(portIter->range);
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
+                    portIter->range.start, portIter->range.end);
+        }
+    }
+
+    for (portIter = portSnoopList.begin();
+         portIter != portSnoopList.end(); portIter++)
+    {
+        if (portIter->portId != id) {
+            snoop.push_back(portIter->range);
+            DPRINTF(BusAddrRanges, "  -- Snoop: %#llx : %#llx\n",
                     portIter->range.start, portIter->range.end);
         }
     }
