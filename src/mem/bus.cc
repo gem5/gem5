@@ -331,17 +331,19 @@ Bus::findSnoopPorts(Addr addr, int id)
 }
 
 Tick
-Bus::atomicSnoop(PacketPtr pkt)
+Bus::atomicSnoop(PacketPtr pkt, Port *responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     Tick response_time = 0;
 
     while (!ports.empty())
     {
-        Tick response = interfaces[ports.back()]->sendAtomic(pkt);
-        if (response) {
-            assert(!response_time);  //Multiple responders
-            response_time = response;
+        if (interfaces[ports.back()] != responder) {
+            Tick response = interfaces[ports.back()]->sendAtomic(pkt);
+            if (response) {
+                assert(!response_time);  //Multiple responders
+                response_time = response;
+            }
         }
         ports.pop_back();
     }
@@ -349,7 +351,7 @@ Bus::atomicSnoop(PacketPtr pkt)
 }
 
 void
-Bus::functionalSnoop(PacketPtr pkt)
+Bus::functionalSnoop(PacketPtr pkt, Port *responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
@@ -357,7 +359,8 @@ Bus::functionalSnoop(PacketPtr pkt)
     int id = pkt->getSrc();
     while (!ports.empty() && pkt->result != Packet::Success)
     {
-        interfaces[ports.back()]->sendFunctional(pkt);
+        if (interfaces[ports.back()] != responder)
+            interfaces[ports.back()]->sendFunctional(pkt);
         ports.pop_back();
         pkt->setSrc(id);
     }
@@ -394,12 +397,13 @@ Bus::recvAtomic(PacketPtr pkt)
     // some clock skew issues yet again...
     pkt->finishTime = curTick + clock;
 
-    Tick snoopTime = atomicSnoop(pkt);
+    Port *port = findPort(pkt->getAddr(), pkt->getSrc());
+    Tick snoopTime = atomicSnoop(pkt, port);
 
     if (snoopTime)
         return snoopTime;  //Snoop satisfies it
     else
-        return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
+        return port->sendAtomic(pkt);
 }
 
 /** Function called by the port when the bus is receiving a Functional
@@ -412,13 +416,12 @@ Bus::recvFunctional(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
     pkt->flags |= SNOOP_COMMIT;
 
-    functionalSnoop(pkt);
+    Port* port = findPort(pkt->getAddr(), pkt->getSrc());
+    functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
     // If the snooping found what we were looking for, we're done.
-    if (pkt->result != Packet::Success) {
-        Port* port = findPort(pkt->getAddr(), pkt->getSrc());
-        if (port)
-            port->sendFunctional(pkt);
+    if (pkt->result != Packet::Success && port) {
+        port->sendFunctional(pkt);
     }
 }
 
