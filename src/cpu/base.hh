@@ -153,6 +153,7 @@ class BaseCPU : public MemObject
         Tick functionTraceStart;
         System *system;
         int cpu_id;
+        Tick phase;
 #if FULL_SYSTEM
         Tick profile;
 
@@ -208,6 +209,8 @@ class BaseCPU : public MemObject
     EventQueue **comLoadEventQueue;
 
     System *system;
+
+    Tick phase;
 
 #if FULL_SYSTEM
     /**

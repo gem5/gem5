@@ -48,6 +48,7 @@ class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
 
     Param<int> clock;
+    Param<int> phase;
     Param<int> numThreads;
 Param<int> activity;
 
@@ -158,6 +159,7 @@ END_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
 BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
 
     INIT_PARAM(clock, "clock speed"),
+    INIT_PARAM_DFLT(phase, "clock phase", 0),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
     INIT_PARAM_DFLT(activity, "Initial activity count", 0),
 
