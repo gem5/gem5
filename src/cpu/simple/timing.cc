@@ -281,6 +281,8 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
             // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
+    } else {
+        delete req;
     }
 
     // This will need a new way to tell if it has a dcache attached.
@@ -366,6 +368,8 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 dcache_pkt = NULL;
             }
         }
+    } else {
+        delete req;
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
@@ -448,6 +452,8 @@ TimingSimpleCPU::fetch()
             ifetch_pkt = NULL;
         }
     } else {
+        delete ifetch_req;
+        delete ifetch_pkt;
         // fetch fault: advance directly to next instruction (fault handler)
         advanceInst(fault);
     }
@@ -481,13 +487,13 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    delete pkt->req;
-    delete pkt;
-
     numCycles += curTick - previousTick;
     previousTick = curTick;
 
     if (getState() == SimObject::Draining) {
+        delete pkt->req;
+        delete pkt;
+
         completeDrain();
         return;
     }
@@ -519,6 +525,9 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         postExecute();
         advanceInst(fault);
     }
+
+    delete pkt->req;
+    delete pkt;
 }
 
 void
