@@ -88,7 +88,8 @@ void MiscRegFile::reset()
     otherwin = 0;
     wstate = 0;
     gl = 0;
-    hpstate = 0;
+    //In a T1, bit 11 is apparently always 1
+    hpstate = (1 << 11);
     memset(htstate, 0, sizeof(htstate));
     hintp = 0;
     htba = 0;
