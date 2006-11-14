@@ -122,6 +122,9 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
         tcSquash[i] = false;
         PC[i] = nextPC[i] = nextNPC[i] = 0;
     }
+#if FULL_SYSTEM
+    interrupt = NoFault;
+#endif
 }
 
 template <class Impl>
@@ -635,51 +638,59 @@ DefaultCommit<Impl>::commit()
     //////////////////////////////////////
 
 #if FULL_SYSTEM
-    // Process interrupts if interrupts are enabled, not in PAL mode,
-    // and no other traps or external squashes are currently pending.
-    // @todo: Allow other threads to handle interrupts.
-    if (cpu->checkInterrupts &&
-        cpu->check_interrupts(cpu->tcBase(0)) &&
-        !trapSquash[0] &&
-        !tcSquash[0]) {
-        // Tell fetch that there is an interrupt pending.  This will
-        // make fetch wait until it sees a non PAL-mode PC, at which
-        // point it stops fetching instructions.
-        toIEW->commitInfo[0].interruptPending = true;
-
+    if (interrupt != NoFault) {
         // Wait until the ROB is empty and all stores have drained in
         // order to enter the interrupt.
         if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
-            // Not sure which thread should be the one to interrupt.  For now
-            // always do thread 0.
+            // Squash or record that I need to squash this cycle if
+            // an interrupt needed to be handled.
+            DPRINTF(Commit, "Interrupt detected.\n");
+
             assert(!thread[0]->inSyscall);
             thread[0]->inSyscall = true;
 
-            // CPU will handle implementation of the interrupt.
-            cpu->processInterrupts();
+            // CPU will handle interrupt.
+            cpu->processInterrupts(interrupt);
 
-            // Now squash or record that I need to squash this cycle.
-            commitStatus[0] = TrapPending;
-
-            // Exit state update mode to avoid accidental updating.
             thread[0]->inSyscall = false;
+
+            commitStatus[0] = TrapPending;
 
             // Generate trap squash event.
             generateTrapEvent(0);
 
+            // Clear the interrupt now that it's been handled
             toIEW->commitInfo[0].clearInterrupt = true;
-
-            DPRINTF(Commit, "Interrupt detected.\n");
+            interrupt = NoFault;
         } else {
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
+    } else if (cpu->checkInterrupts &&
+        cpu->check_interrupts(cpu->tcBase(0)) &&
+        commitStatus[0] != TrapPending &&
+        !trapSquash[0] &&
+        !tcSquash[0]) {
+        // Process interrupts if interrupts are enabled, not in PAL
+        // mode, and no other traps or external squashes are currently
+        // pending.
+        // @todo: Allow other threads to handle interrupts.
+
+        // Get any interrupt that happened
+        interrupt = cpu->getInterrupts();
+
+        if (interrupt != NoFault) {
+            // Tell fetch that there is an interrupt pending.  This
+            // will make fetch wait until it sees a non PAL-mode PC,
+            // at which point it stops fetching instructions.
+            toIEW->commitInfo[0].interruptPending = true;
+        }
     }
+
 #endif // FULL_SYSTEM
 
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-
     std::list<unsigned>::iterator threads = (*activeThreads).begin();
 
     while (threads != (*activeThreads).end()) {

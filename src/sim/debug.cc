@@ -94,45 +94,17 @@ DebugBreakEvent::description()
 }
 
 //
-// Parameter context for global debug options
-//
-class DebugContext : public ParamContext
-{
-  public:
-    DebugContext(const string &_iniSection)
-        : ParamContext(_iniSection) {}
-    void checkParams();
-};
-
-DebugContext debugParams("debug");
-
-VectorParam<Tick> break_cycles(&debugParams, "break_cycles",
-                                 "cycle(s) to create breakpoint events");
-
-void
-DebugContext::checkParams()
-{
-    if (break_cycles.isValid()) {
-        vector<Tick> &cycles = break_cycles;
-
-        vector<Tick>::iterator i = cycles.begin();
-        vector<Tick>::iterator end = cycles.end();
-
-        for (; i < end; ++i)
-            new DebugBreakEvent(&mainEventQueue, *i);
-    }
-}
-
-//
 // handy function to schedule DebugBreakEvent on main event queue
 // (callable from debugger)
 //
-void sched_break_cycle(Tick when)
+void
+schedBreakCycle(Tick when)
 {
     new DebugBreakEvent(&mainEventQueue, when);
 }
 
-void eventq_dump()
+void
+eventqDump()
 {
     mainEventQueue.dump();
 }

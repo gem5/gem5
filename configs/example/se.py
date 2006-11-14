@@ -101,7 +101,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 system.physmem.port = system.membus.port
 
 for i in xrange(np):
-    if options.caches and not options.standard_switch and not FutureClass:
+    if options.caches:
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
     system.cpu[i].connectMemPorts(system.membus)

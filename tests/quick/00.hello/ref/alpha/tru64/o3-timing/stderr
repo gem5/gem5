@@ -1,21 +1,2 @@
 warn: Entering event queue @ 0.  Starting simulation...
-warn: cycle 0: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109049: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109050: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109051: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109052: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109053: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109054: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109055: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109056: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109057: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109062: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109063: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109064: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109065: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109066: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109067: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109068: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109069: fault (page_table_fault) detected @ PC 0x000000
-warn: cycle 109070: fault (page_table_fault) detected @ PC 0x000000
 warn: ignoring syscall sigprocmask(1, 18446744073709547831, ...)

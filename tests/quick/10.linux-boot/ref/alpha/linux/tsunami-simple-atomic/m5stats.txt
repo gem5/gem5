@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1313531                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 199136                       # Number of bytes of host memory used
-host_seconds                                    47.04                       # Real time elapsed on the host
-host_tick_rate                               77256650                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1254169                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 199988                       # Number of bytes of host memory used
+host_seconds                                    49.27                       # Real time elapsed on the host
+host_tick_rate                               73765213                       # Simulator tick rate (ticks/s)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
 sim_insts                                    61788439                       # Number of instructions simulated
 sim_seconds                                  1.817090                       # Number of seconds simulated
@@ -21,9 +21,9 @@ system.cpu.dtb.write_acv                          157                       # DT
 system.cpu.dtb.write_hits                     6513710                       # DTB write hits
 system.cpu.dtb.write_misses                      1145                       # DTB write misses
 system.cpu.idle_fraction                     0.982997                       # Percentage of idle cycles
-system.cpu.itb.accesses                       3281310                       # ITB accesses
+system.cpu.itb.accesses                       5655311                       # ITB accesses
 system.cpu.itb.acv                                184                       # ITB acv
-system.cpu.itb.hits                           3276320                       # ITB hits
+system.cpu.itb.hits                           5650321                       # ITB hits
 system.cpu.itb.misses                            4990                       # ITB misses
 system.cpu.kern.callpal                        193842                       # number of callpals executed
 system.cpu.kern.callpal_cserve                      1      0.00%      0.00% # number of callpals executed
@@ -44,8 +44,6 @@ system.cpu.kern.callpal_callsys                   531      0.27%     99.91% # nu
 system.cpu.kern.callpal_imb                       181      0.09%    100.00% # number of callpals executed
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.hwrei                     212908                       # number of hwrei instructions executed
-system.cpu.kern.inst.ivlb                           0                       # number of ivlb instructions executed
-system.cpu.kern.inst.ivle                           0                       # number of ivle instructions executed
 system.cpu.kern.inst.quiesce                     6207                       # number of quiesce instructions executed
 system.cpu.kern.ipl_count                      184061                       # number of times we switched to this ipl
 system.cpu.kern.ipl_count_0                     75348     40.94%     40.94% # number of times we switched to this ipl
@@ -82,36 +80,36 @@ system.cpu.kern.mode_ticks_user               3591244      0.10%      1.60% # nu
 system.cpu.kern.mode_ticks_idle            3575905080     98.40%    100.00% # number of ticks spent at the given mode
 system.cpu.kern.swap_context                     4204                       # number of times the context was actually changed
 system.cpu.kern.syscall                           329                       # number of syscalls executed
-system.cpu.kern.syscall_fork                        8      2.43%      2.43% # number of syscalls executed
-system.cpu.kern.syscall_read                       30      9.12%     11.55% # number of syscalls executed
-system.cpu.kern.syscall_write                       4      1.22%     12.77% # number of syscalls executed
-system.cpu.kern.syscall_close                      43     13.07%     25.84% # number of syscalls executed
-system.cpu.kern.syscall_chdir                       1      0.30%     26.14% # number of syscalls executed
-system.cpu.kern.syscall_chmod                       1      0.30%     26.44% # number of syscalls executed
-system.cpu.kern.syscall_obreak                     15      4.56%     31.00% # number of syscalls executed
-system.cpu.kern.syscall_lseek                      10      3.04%     34.04% # number of syscalls executed
-system.cpu.kern.syscall_getpid                      6      1.82%     35.87% # number of syscalls executed
-system.cpu.kern.syscall_setuid                      4      1.22%     37.08% # number of syscalls executed
-system.cpu.kern.syscall_getuid                      6      1.82%     38.91% # number of syscalls executed
-system.cpu.kern.syscall_access                     11      3.34%     42.25% # number of syscalls executed
-system.cpu.kern.syscall_dup                         2      0.61%     42.86% # number of syscalls executed
-system.cpu.kern.syscall_open                       55     16.72%     59.57% # number of syscalls executed
-system.cpu.kern.syscall_getgid                      6      1.82%     61.40% # number of syscalls executed
-system.cpu.kern.syscall_sigprocmask                10      3.04%     64.44% # number of syscalls executed
-system.cpu.kern.syscall_ioctl                      10      3.04%     67.48% # number of syscalls executed
-system.cpu.kern.syscall_readlink                    1      0.30%     67.78% # number of syscalls executed
-system.cpu.kern.syscall_execve                      7      2.13%     69.91% # number of syscalls executed
-system.cpu.kern.syscall_mmap                       54     16.41%     86.32% # number of syscalls executed
-system.cpu.kern.syscall_munmap                      3      0.91%     87.23% # number of syscalls executed
-system.cpu.kern.syscall_mprotect                   16      4.86%     92.10% # number of syscalls executed
-system.cpu.kern.syscall_gethostname                 1      0.30%     92.40% # number of syscalls executed
-system.cpu.kern.syscall_dup2                        3      0.91%     93.31% # number of syscalls executed
-system.cpu.kern.syscall_fcntl                      10      3.04%     96.35% # number of syscalls executed
-system.cpu.kern.syscall_socket                      2      0.61%     96.96% # number of syscalls executed
-system.cpu.kern.syscall_connect                     2      0.61%     97.57% # number of syscalls executed
-system.cpu.kern.syscall_setgid                      4      1.22%     98.78% # number of syscalls executed
-system.cpu.kern.syscall_getrlimit                   2      0.61%     99.39% # number of syscalls executed
-system.cpu.kern.syscall_setsid                      2      0.61%    100.00% # number of syscalls executed
+system.cpu.kern.syscall_2                           8      2.43%      2.43% # number of syscalls executed
+system.cpu.kern.syscall_3                          30      9.12%     11.55% # number of syscalls executed
+system.cpu.kern.syscall_4                           4      1.22%     12.77% # number of syscalls executed
+system.cpu.kern.syscall_6                          43     13.07%     25.84% # number of syscalls executed
+system.cpu.kern.syscall_12                          1      0.30%     26.14% # number of syscalls executed
+system.cpu.kern.syscall_15                          1      0.30%     26.44% # number of syscalls executed
+system.cpu.kern.syscall_17                         15      4.56%     31.00% # number of syscalls executed
+system.cpu.kern.syscall_19                         10      3.04%     34.04% # number of syscalls executed
+system.cpu.kern.syscall_20                          6      1.82%     35.87% # number of syscalls executed
+system.cpu.kern.syscall_23                          4      1.22%     37.08% # number of syscalls executed
+system.cpu.kern.syscall_24                          6      1.82%     38.91% # number of syscalls executed
+system.cpu.kern.syscall_33                         11      3.34%     42.25% # number of syscalls executed
+system.cpu.kern.syscall_41                          2      0.61%     42.86% # number of syscalls executed
+system.cpu.kern.syscall_45                         55     16.72%     59.57% # number of syscalls executed
+system.cpu.kern.syscall_47                          6      1.82%     61.40% # number of syscalls executed
+system.cpu.kern.syscall_48                         10      3.04%     64.44% # number of syscalls executed
+system.cpu.kern.syscall_54                         10      3.04%     67.48% # number of syscalls executed
+system.cpu.kern.syscall_58                          1      0.30%     67.78% # number of syscalls executed
+system.cpu.kern.syscall_59                          7      2.13%     69.91% # number of syscalls executed
+system.cpu.kern.syscall_71                         54     16.41%     86.32% # number of syscalls executed
+system.cpu.kern.syscall_73                          3      0.91%     87.23% # number of syscalls executed
+system.cpu.kern.syscall_74                         16      4.86%     92.10% # number of syscalls executed
+system.cpu.kern.syscall_87                          1      0.30%     92.40% # number of syscalls executed
+system.cpu.kern.syscall_90                          3      0.91%     93.31% # number of syscalls executed
+system.cpu.kern.syscall_92                         10      3.04%     96.35% # number of syscalls executed
+system.cpu.kern.syscall_97                          2      0.61%     96.96% # number of syscalls executed
+system.cpu.kern.syscall_98                          2      0.61%     97.57% # number of syscalls executed
+system.cpu.kern.syscall_132                         4      1.22%     98.78% # number of syscalls executed
+system.cpu.kern.syscall_144                         2      0.61%     99.39% # number of syscalls executed
+system.cpu.kern.syscall_147                         2      0.61%    100.00% # number of syscalls executed
 system.cpu.not_idle_fraction                 0.017003                       # Percentage of non-idle cycles
 system.cpu.numCycles                         61793613                       # number of cpu cycles simulated
 system.cpu.num_insts                         61788439                       # Number of instructions executed

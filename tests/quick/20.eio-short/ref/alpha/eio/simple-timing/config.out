@@ -210,6 +210,7 @@ print_cpseq=false
 print_reg_delta=false
 pc_symbol=true
 intel_format=false
+legion_lockstep=false
 trace_system=client
 
 [debug]

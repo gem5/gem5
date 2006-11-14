@@ -700,52 +700,12 @@ OzoneCPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    int ipl = 0;
-    int summary = 0;
+    Fault interrupt = this->interrupts.getInterrupt(thread.getTC());
 
-    checkInterrupts = false;
-
-    if (thread.readMiscReg(IPR_ASTRR))
-        panic("asynchronous traps not implemented\n");
-
-    if (thread.readMiscReg(IPR_SIRR)) {
-        for (int i = INTLEVEL_SOFTWARE_MIN;
-             i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (thread.readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    uint64_t interrupts = intr_status();
-
-    if (interrupts) {
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-             i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    if (ipl && ipl > thread.readMiscReg(IPR_IPLR)) {
-        thread.setMiscReg(IPR_ISR, summary);
-        thread.setMiscReg(IPR_INTID, ipl);
-#if USE_CHECKER
-        // @todo: Make this more transparent
-        if (checker) {
-            checker->threadBase()->setMiscReg(IPR_ISR, summary);
-            checker->threadBase()->setMiscReg(IPR_INTID, ipl);
-        }
-#endif
-        Fault fault = new InterruptFault;
-        fault->invoke(thread.getTC());
-        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                thread.readMiscReg(IPR_IPLR), ipl, summary);
+    if (interrupt != NoFault) {
+        this->interrupts.updateIntrInfo(thread.getTC());
+        this->checkInterrupts = false;
+        interrupt->invoke(thread.getTC());
     }
 }
 

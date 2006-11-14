@@ -49,6 +49,7 @@ namespace AlphaISA
         {
             memset(interrupts, 0, sizeof(interrupts));
             intstatus = 0;
+            newInfoSet = false;
         }
 
         void post(int int_num, int index)
@@ -137,18 +138,10 @@ namespace AlphaISA
             }
 
             if (ipl && ipl > tc->readMiscReg(IPR_IPLR)) {
-                tc->setMiscReg(IPR_ISR, summary);
-                tc->setMiscReg(IPR_INTID, ipl);
-
-        /* The following needs to be added back in somehow */
-        // Checker needs to know these two registers were updated.
-/*#if USE_CHECKER
-        if (this->checker) {
-            this->checker->threadBase()->setMiscReg(IPR_ISR, summary);
-            this->checker->threadBase()->setMiscReg(IPR_INTID, ipl);
-        }
-#endif*/
-
+//                assert(!newInfoSet);
+                newIpl = ipl;
+                newSummary = newSummary;
+                newInfoSet = true;
                 DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                         tc->readMiscReg(IPR_IPLR), ipl, summary);
 
@@ -158,7 +151,18 @@ namespace AlphaISA
             }
         }
 
+        void updateIntrInfo(ThreadContext *tc)
+        {
+            assert(newInfoSet);
+            tc->setMiscReg(IPR_ISR, newSummary);
+            tc->setMiscReg(IPR_INTID, newIpl);
+            newInfoSet = false;
+        }
+
       private:
+        bool newInfoSet;
+        int newIpl;
+        int newSummary;
     };
 }
 
