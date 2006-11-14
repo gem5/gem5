@@ -161,11 +161,11 @@ Bus::recvTiming(PacketPtr pkt)
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
         port = findPort(pkt->getAddr(), pkt->getSrc());
-        if (timingSnoop(pkt, port)) {
+        if (timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()])) {
             bool success;
 
             pkt->flags |= SNOOP_COMMIT;
-            success = timingSnoop(pkt, port);
+            success = timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
             assert(success);
 
             if (pkt->flags & SATISFIED) {
@@ -192,22 +192,28 @@ Bus::recvTiming(PacketPtr pkt)
 
     occupyBus(pkt);
 
-    if (port->sendTiming(pkt))  {
-        // Packet was successfully sent. Return true.
-        // Also take care of retries
-        if (inRetry) {
-            DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
-            retryList.front()->onRetryList(false);
-            retryList.pop_front();
-            inRetry = false;
+    if (port) {
+        if (port->sendTiming(pkt))  {
+            // Packet was successfully sent. Return true.
+            // Also take care of retries
+            if (inRetry) {
+                DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
+                retryList.front()->onRetryList(false);
+                retryList.pop_front();
+                inRetry = false;
+            }
+            return true;
         }
+
+        // Packet not successfully sent. Leave or put it on the retry list.
+        DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+        addToRetryList(pktPort);
+        return false;
+    }
+    else {
+        //Forwarding up from responder, just return true;
         return true;
     }
-
-    // Packet not successfully sent. Leave or put it on the retry list.
-    DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
-    addToRetryList(pktPort);
-    return false;
 }
 
 void
@@ -398,12 +404,14 @@ Bus::recvAtomic(PacketPtr pkt)
     pkt->finishTime = curTick + clock;
 
     Port *port = findPort(pkt->getAddr(), pkt->getSrc());
-    Tick snoopTime = atomicSnoop(pkt, port);
+    Tick snoopTime = atomicSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
     if (snoopTime)
         return snoopTime;  //Snoop satisfies it
-    else
+    else if (port)
         return port->sendAtomic(pkt);
+    else
+        return 0;
 }
 
 /** Function called by the port when the bus is receiving a Functional
