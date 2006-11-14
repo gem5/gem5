@@ -175,6 +175,14 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
 
+#Parse CC/CXX early so that we use the correct compiler for 
+# to test for dependencies/versions/libraries/includes
+if ARGUMENTS.get('CC', None):
+    env['CC'] = ARGUMENTS.get('CC')
+
+if ARGUMENTS.get('CXX', None):
+    env['CXX'] = ARGUMENTS.get('CXX')
+
 env.SConsignFile(os.path.join(build_root,"sconsign"))
 
 # Default duplicate option is to use hard links, but this messes up

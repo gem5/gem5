@@ -275,7 +275,8 @@ def main():
     objects.Statistics.text_file = options.stats_file
 
     # set debugging options
-    objects.Debug.break_cycles = options.debug_break
+    for when in options.debug_break:
+        internal.debug.schedBreakCycle(int(when))
 
     # set tracing options
     objects.Trace.flags = options.trace_flags

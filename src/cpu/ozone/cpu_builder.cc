@@ -67,7 +67,7 @@ Param<Tick> profile;
 
 Param<bool> do_quiesce;
 Param<bool> do_checkpoint_insts;
-Param<bool> do_statistics_insts
+Param<bool> do_statistics_insts;
 #else
 SimObjectVectorParam<Process *> workload;
 //SimObjectParam<PageTable *> page_table;

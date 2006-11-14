@@ -213,6 +213,9 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
             break;
         }
     }
+    if (_status != Running) {
+        _status = Idle;
+    }
 }
 
 

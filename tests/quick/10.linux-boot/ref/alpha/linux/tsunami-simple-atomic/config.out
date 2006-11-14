@@ -53,6 +53,9 @@ cpu_id=0
 itb=system.cpu.itb
 dtb=system.cpu.dtb
 profile=0
+do_quiesce=true
+do_checkpoint_insts=true
+do_statistics_insts=true
 clock=1
 defer_registration=false
 width=1
@@ -559,6 +562,7 @@ print_cpseq=false
 print_reg_delta=false
 pc_symbol=true
 intel_format=false
+legion_lockstep=false
 trace_system=client
 
 [debug]
@@ -566,9 +570,4 @@ break_cycles=
 
 [statsreset]
 reset_cycle=0
-
-[pseudo_inst]
-quiesce=true
-statistics=true
-checkpoint=true
 

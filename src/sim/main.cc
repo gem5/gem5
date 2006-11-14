@@ -119,6 +119,7 @@ abortHandler(int sigtype)
 
 extern "C" {
 void init_main();
+void init_debug();
 }
 
 int
@@ -157,8 +158,9 @@ main(int argc, char **argv)
     Py_Initialize();
     PySys_SetArgv(argc, argv);
 
-    // initialize SWIG 'm5.internal.main' module
+    // initialize SWIG modules
     init_main();
+    init_debug();
 
     PyRun_SimpleString("import m5.main");
     PyRun_SimpleString("m5.main.main()");
