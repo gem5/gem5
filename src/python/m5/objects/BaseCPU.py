@@ -47,6 +47,7 @@ class BaseCPU(SimObject):
         "defer registration with system (for sampling)")
 
     clock = Param.Clock(Parent.clock, "clock speed")
+    phase = Param.Latency("0ns", "clock phase")
 
     _mem_ports = []
 
