@@ -47,6 +47,7 @@ config_root = os.path.dirname(config_path)
 parser = optparse.OptionParser()
 
 # Benchmark options
+parser.add_option("--l2cache", action="store_true")
 parser.add_option("--dual", action="store_true",
                   help="Simulate two systems attached with an ethernet link")
 parser.add_option("-b", "--benchmark", action="store", type="string",
@@ -93,12 +94,23 @@ else:
 
 test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 np = options.num_cpus
+
+if options.l2cache:
+    test_sys.l2 = L2Cache(size = '2MB')
+    test_sys.tol2bus = Bus()
+    test_sys.l2.cpu_side = test_sys.tol2bus.port
+    test_sys.l2.mem_side = test_sys.membus.port
+
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 for i in xrange(np):
     if options.caches:
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                 L1Cache(size = '64kB'))
-    test_sys.cpu[i].connectMemPorts(test_sys.membus)
+
+    if options.l2cache:
+        test_sys.cpu[i].connectMemPorts(test_sys.tol2bus)
+    else:
+        test_sys.cpu[i].connectMemPorts(test_sys.membus)
 
 if len(bm) == 2:
     drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
