@@ -84,8 +84,14 @@ def makeSparcSystem(mem_mode, mdesc = None):
         # generic system
         mdesc = SysConfig()
     self.readfile = mdesc.script()
+    self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
+    self.bridge = Bridge()
+    self.t1000 = T1000()
+    self.t1000.attachIO(self.iobus)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self.bridge.side_a = self.iobus.port
+    self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port
     self.rom.port = self.membus.port
     self.intrctrl = IntrControl()

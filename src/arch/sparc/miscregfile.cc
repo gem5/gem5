@@ -94,7 +94,8 @@ void MiscRegFile::reset()
     hintp = 0;
     htba = 0;
     hstick_cmpr = 0;
-    strandStatusReg = 0;
+    //This is set this way in Legion for some reason
+    strandStatusReg = 0x50000;
     fsr = 0;
     implicitInstAsi = ASI_PRIMARY;
     implicitDataAsi = ASI_PRIMARY;

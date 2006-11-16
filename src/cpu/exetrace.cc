@@ -247,8 +247,10 @@ Trace::InstRecord::dump(ostream &outs)
                 if (shared_data->flags == OWN_M5) {
                     if (lgnPc != m5Pc)
                        diffPC = true;
-                    if (shared_data->instruction != staticInst->machInst)
+                    if (shared_data->instruction !=
+                            (SparcISA::MachInst)staticInst->machInst) {
                         diffInst = true;
+                    }
                     for (int i = 0; i < TheISA::NumRegularIntRegs; i++) {
                         if (thread->readIntReg(i) != shared_data->intregs[i]) {
                             diffRegs = true;
