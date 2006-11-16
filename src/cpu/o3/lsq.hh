@@ -298,6 +298,8 @@ class LSQ {
             : lsq(_lsq)
         { }
 
+        bool snoopRangeSent;
+
       protected:
         /** Atomic version of receive.  Panics. */
         virtual Tick recvAtomic(PacketPtr pkt);

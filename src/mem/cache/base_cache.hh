@@ -144,8 +144,6 @@ class BaseCache : public MemObject
   protected:
     CachePort *memSidePort;
 
-    bool snoopRangesSent;
-
   public:
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
@@ -171,10 +169,6 @@ class BaseCache : public MemObject
         if (status == Port::RangeChange){
             if (!isCpuSide) {
                 cpuSidePort->sendStatusChange(Port::RangeChange);
-                if (!snoopRangesSent) {
-                    snoopRangesSent = true;
-                    memSidePort->sendStatusChange(Port::RangeChange);
-                }
             }
             else {
                 memSidePort->sendStatusChange(Port::RangeChange);
@@ -358,7 +352,6 @@ class BaseCache : public MemObject
         //Start ports at null if more than one is created we should panic
         cpuSidePort = NULL;
         memSidePort = NULL;
-        snoopRangesSent = false;
     }
 
     ~BaseCache()

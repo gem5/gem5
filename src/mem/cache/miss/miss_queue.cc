@@ -612,6 +612,8 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
         if (mshr->hasTargets()) {
             // Didn't satisfy all the targets, need to resend
             Packet::Command cmd = mshr->getTarget()->cmd;
+            mshr->pkt->setDest(Packet::Broadcast);
+            mshr->pkt->result = Packet::Unknown;
             mq.markPending(mshr, cmd);
             mshr->order = order++;
             cache->setMasterRequest(Request_MSHR, time);

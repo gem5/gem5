@@ -70,8 +70,13 @@ template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("DefaultFetch doesn't expect recvStatusChange callback!");
 }
@@ -286,6 +291,8 @@ DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
 
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
+
+    icachePort->snoopRangeSent = false;
 
 #if USE_CHECKER
     if (cpu->checker) {

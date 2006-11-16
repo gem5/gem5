@@ -160,11 +160,12 @@ Bus::recvTiming(PacketPtr pkt)
 
     short dest = pkt->getDest();
     if (dest == Packet::Broadcast) {
-        if (timingSnoop(pkt)) {
+        port = findPort(pkt->getAddr(), pkt->getSrc());
+        if (timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()])) {
             bool success;
 
             pkt->flags |= SNOOP_COMMIT;
-            success = timingSnoop(pkt);
+            success = timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
             assert(success);
 
             if (pkt->flags & SATISFIED) {
@@ -177,7 +178,6 @@ Bus::recvTiming(PacketPtr pkt)
                 occupyBus(pkt);
                 return true;
             }
-            port = findPort(pkt->getAddr(), pkt->getSrc());
         } else {
             //Snoop didn't succeed
             DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
@@ -192,22 +192,28 @@ Bus::recvTiming(PacketPtr pkt)
 
     occupyBus(pkt);
 
-    if (port->sendTiming(pkt))  {
-        // Packet was successfully sent. Return true.
-        // Also take care of retries
-        if (inRetry) {
-            DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
-            retryList.front()->onRetryList(false);
-            retryList.pop_front();
-            inRetry = false;
+    if (port) {
+        if (port->sendTiming(pkt))  {
+            // Packet was successfully sent. Return true.
+            // Also take care of retries
+            if (inRetry) {
+                DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
+                retryList.front()->onRetryList(false);
+                retryList.pop_front();
+                inRetry = false;
+            }
+            return true;
         }
+
+        // Packet not successfully sent. Leave or put it on the retry list.
+        DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+        addToRetryList(pktPort);
+        return false;
+    }
+    else {
+        //Forwarding up from responder, just return true;
         return true;
     }
-
-    // Packet not successfully sent. Leave or put it on the retry list.
-    DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
-    addToRetryList(pktPort);
-    return false;
 }
 
 void
@@ -290,7 +296,10 @@ Bus::findPort(Addr addr, int id)
 
 
     // we shouldn't be sending this back to where it came from
-    assert(dest_id != id);
+    // only on a functional access and then we should terminate
+    // the cyclical call.
+    if (dest_id == id)
+        return 0;
 
     return interfaces[dest_id];
 }
@@ -307,7 +316,18 @@ Bus::findSnoopPorts(Addr addr, int id)
         if (portSnoopList[i].range == addr && portSnoopList[i].portId != id) {
             //Careful  to not overlap ranges
             //or snoop will be called more than once on the port
-            ports.push_back(portSnoopList[i].portId);
+
+            //@todo Fix this hack because ranges are overlapping
+            //need to make sure we dont't create overlapping ranges
+            bool hack_overlap = false;
+            int size = ports.size();
+            for (int j=0; j < size; j++) {
+                if (ports[j] == portSnoopList[i].portId)
+                    hack_overlap = true;
+            }
+
+            if (!hack_overlap)
+                ports.push_back(portSnoopList[i].portId);
 //            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
 //                    portSnoopList[i].portId);
         }
@@ -317,17 +337,19 @@ Bus::findSnoopPorts(Addr addr, int id)
 }
 
 Tick
-Bus::atomicSnoop(PacketPtr pkt)
+Bus::atomicSnoop(PacketPtr pkt, Port *responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     Tick response_time = 0;
 
     while (!ports.empty())
     {
-        Tick response = interfaces[ports.back()]->sendAtomic(pkt);
-        if (response) {
-            assert(!response_time);  //Multiple responders
-            response_time = response;
+        if (interfaces[ports.back()] != responder) {
+            Tick response = interfaces[ports.back()]->sendAtomic(pkt);
+            if (response) {
+                assert(!response_time);  //Multiple responders
+                response_time = response;
+            }
         }
         ports.pop_back();
     }
@@ -335,26 +357,31 @@ Bus::atomicSnoop(PacketPtr pkt)
 }
 
 void
-Bus::functionalSnoop(PacketPtr pkt)
+Bus::functionalSnoop(PacketPtr pkt, Port *responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
 
+    //The packet may be changed by another bus on snoops, restore the id after each
+    int id = pkt->getSrc();
     while (!ports.empty() && pkt->result != Packet::Success)
     {
-        interfaces[ports.back()]->sendFunctional(pkt);
+        if (interfaces[ports.back()] != responder)
+            interfaces[ports.back()]->sendFunctional(pkt);
         ports.pop_back();
+        pkt->setSrc(id);
     }
 }
 
 bool
-Bus::timingSnoop(PacketPtr pkt)
+Bus::timingSnoop(PacketPtr pkt, Port* responder)
 {
     std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     bool success = true;
 
     while (!ports.empty() && success)
     {
-        success = interfaces[ports.back()]->sendTiming(pkt);
+        if (interfaces[ports.back()] != responder) //Don't call if responder also, once will do
+            success = interfaces[ports.back()]->sendTiming(pkt);
         ports.pop_back();
     }
 
@@ -370,15 +397,21 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    pkt->flags |= SNOOP_COMMIT;
 
     // Assume one bus cycle in order to get through.  This may have
     // some clock skew issues yet again...
     pkt->finishTime = curTick + clock;
-    Tick snoopTime = atomicSnoop(pkt);
+
+    Port *port = findPort(pkt->getAddr(), pkt->getSrc());
+    Tick snoopTime = atomicSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
+
     if (snoopTime)
         return snoopTime;  //Snoop satisfies it
+    else if (port)
+        return port->sendAtomic(pkt);
     else
-        return findPort(pkt->getAddr(), pkt->getSrc())->sendAtomic(pkt);
+        return 0;
 }
 
 /** Function called by the port when the bus is receiving a Functional
@@ -389,11 +422,15 @@ Bus::recvFunctional(PacketPtr pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    functionalSnoop(pkt);
+    pkt->flags |= SNOOP_COMMIT;
+
+    Port* port = findPort(pkt->getAddr(), pkt->getSrc());
+    functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
     // If the snooping found what we were looking for, we're done.
-    if (pkt->result != Packet::Success)
-        findPort(pkt->getAddr(), pkt->getSrc())->sendFunctional(pkt);
+    if (pkt->result != Packet::Success && port) {
+        port->sendFunctional(pkt);
+    }
 }
 
 /** Function called by the port when the bus is receiving a status change.*/
@@ -451,6 +488,7 @@ Bus::recvStatusChange(Port::Status status, int id)
             dm.portId = id;
             dm.range = *iter;
 
+            //@todo, make sure we don't overlap ranges
             DPRINTF(BusAddrRanges, "Adding snoop range %#llx - %#llx for id %d\n",
                     dm.range.start, dm.range.end, id);
             portSnoopList.push_back(dm);
@@ -493,7 +531,7 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
             dflt_iter++) {
         resp.push_back(*dflt_iter);
-        DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",dflt_iter->start,
+        DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
     for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
@@ -517,6 +555,18 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
             resp.push_back(portIter->range);
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
                     portIter->range.start, portIter->range.end);
+        }
+    }
+
+    for (portIter = portSnoopList.begin();
+         portIter != portSnoopList.end(); portIter++)
+    {
+        if (portIter->portId != id) {
+            snoop.push_back(portIter->range);
+            DPRINTF(BusAddrRanges, "  -- Snoop: %#llx : %#llx\n",
+                    portIter->range.start, portIter->range.end);
+            //@todo We need to properly insert snoop ranges
+            //not overlapping the ranges (multiple)
         }
     }
 }

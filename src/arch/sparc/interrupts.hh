@@ -79,6 +79,11 @@ namespace SparcISA
             return NoFault;
         }
 
+        void updateIntrInfo(ThreadContext * tc)
+        {
+
+        }
+
         void serialize(std::ostream &os)
         {
         }

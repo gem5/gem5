@@ -82,6 +82,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
             : Port(_name, _cpu), cpu(_cpu), lat(_lat)
         { }
 
+        bool snoopRangeSent;
+
       protected:
 
         virtual Tick recvAtomic(PacketPtr pkt);
@@ -165,8 +167,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     PacketPtr ifetch_pkt;
     PacketPtr dcache_pkt;
-
-
 
     int cpu_id;
     Tick previousTick;

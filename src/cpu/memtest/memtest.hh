@@ -100,6 +100,8 @@ class MemTest : public MemObject
             : Port(_name, _memtest), memtest(_memtest)
         { }
 
+        bool snoopRangeSent;
+
       protected:
 
         virtual bool recvTiming(PacketPtr pkt);
@@ -119,6 +121,8 @@ class MemTest : public MemObject
 
     CpuPort cachePort;
     CpuPort funcPort;
+
+    bool snoopRangeSent;
 
     class MemTestSenderState : public Packet::SenderState
     {
