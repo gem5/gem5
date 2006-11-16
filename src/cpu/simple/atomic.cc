@@ -94,7 +94,7 @@ Tick
 AtomicSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
 {
     //Snooping a coherence request, just return
-    return curTick;
+    return 0;
 }
 
 void
@@ -107,8 +107,13 @@ AtomicSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 void
 AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
 }
@@ -126,6 +131,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this)
 {
     _status = Idle;
+
+    icachePort.snoopRangeSent = false;
+    dcachePort.snoopRangeSent = false;
 
     ifetch_req = new Request();
     ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
@@ -512,6 +520,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
 #endif // FULL_SYSTEM
 
     Param<int> clock;
+    Param<int> phase;
 
     Param<bool> defer_registration;
     Param<int> width;
@@ -547,6 +556,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(AtomicSimpleCPU)
 #endif // FULL_SYSTEM
 
     INIT_PARAM(clock, "clock speed"),
+    INIT_PARAM_DFLT(phase, "clock phase", 0),
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(width, "cpu width"),
     INIT_PARAM(function_trace, "Enable function trace"),
@@ -567,6 +577,7 @@ CREATE_SIM_OBJECT(AtomicSimpleCPU)
     params->max_loads_all_threads = max_loads_all_threads;
     params->progress_interval = progress_interval;
     params->deferRegistration = defer_registration;
+    params->phase = phase;
     params->clock = clock;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;

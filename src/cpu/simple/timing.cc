@@ -82,8 +82,13 @@ TimingSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
 void
 TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
 }
@@ -101,6 +106,10 @@ TimingSimpleCPU::TimingSimpleCPU(Params *p)
       cpu_id(p->cpu_id)
 {
     _status = Idle;
+
+    icachePort.snoopRangeSent = false;
+    dcachePort.snoopRangeSent = false;
+
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
     fetchEvent = NULL;
@@ -160,7 +169,7 @@ TimingSimpleCPU::resume()
 
         fetchEvent =
             new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
-        fetchEvent->schedule(curTick);
+        fetchEvent->schedule(nextCycle());
     }
 
     changeState(SimObject::Running);
@@ -232,7 +241,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     // kick things off by initiating the fetch of the next instruction
     fetchEvent =
         new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
-    fetchEvent->schedule(curTick + cycles(delay));
+    fetchEvent->schedule(nextCycle(curTick + cycles(delay)));
 }
 
 
@@ -281,6 +290,8 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
             // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
+    } else {
+        delete req;
     }
 
     // This will need a new way to tell if it has a dcache attached.
@@ -366,6 +377,8 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 dcache_pkt = NULL;
             }
         }
+    } else {
+        delete req;
     }
 
     // This will need a new way to tell if it's hooked up to a cache or not.
@@ -448,6 +461,8 @@ TimingSimpleCPU::fetch()
             ifetch_pkt = NULL;
         }
     } else {
+        delete ifetch_req;
+        delete ifetch_pkt;
         // fetch fault: advance directly to next instruction (fault handler)
         advanceInst(fault);
     }
@@ -481,13 +496,13 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    delete pkt->req;
-    delete pkt;
-
     numCycles += curTick - previousTick;
     previousTick = curTick;
 
     if (getState() == SimObject::Draining) {
+        delete pkt->req;
+        delete pkt;
+
         completeDrain();
         return;
     }
@@ -519,6 +534,9 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         postExecute();
         advanceInst(fault);
     }
+
+    delete pkt->req;
+    delete pkt;
 }
 
 void
@@ -674,6 +692,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
 #endif // FULL_SYSTEM
 
     Param<int> clock;
+    Param<int> phase;
 
     Param<bool> defer_registration;
     Param<int> width;
@@ -709,6 +728,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
 #endif // FULL_SYSTEM
 
     INIT_PARAM(clock, "clock speed"),
+    INIT_PARAM_DFLT(phase, "clock phase", 0),
     INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
     INIT_PARAM(width, "cpu width"),
     INIT_PARAM(function_trace, "Enable function trace"),
@@ -730,6 +750,7 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->progress_interval = progress_interval;
     params->deferRegistration = defer_registration;
     params->clock = clock;
+    params->phase = phase;
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->system = system;

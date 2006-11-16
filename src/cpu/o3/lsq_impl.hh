@@ -53,9 +53,13 @@ template <class Impl>
 void
 LSQ<Impl>::DcachePort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
-
+    }
     panic("O3CPU doesn't expect recvStatusChange callback!");
 }
 
@@ -96,6 +100,8 @@ LSQ<Impl>::LSQ(Params *params)
       retryTid(-1)
 {
     DPRINTF(LSQ, "Creating LSQ object.\n");
+
+    dcachePort.snoopRangeSent = false;
 
     //**********************************************/
     //************ Handle SMT Parameters ***********/

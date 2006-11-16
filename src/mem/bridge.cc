@@ -91,10 +91,16 @@ Bridge::init()
 bool
 Bridge::BridgePort::recvTiming(PacketPtr pkt)
 {
-    DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr());
+    if (pkt->flags & SNOOP_COMMIT) {
+        DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
+                pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
-    return otherPort->queueForSendTiming(pkt);
+        return otherPort->queueForSendTiming(pkt);
+    }
+    else {
+        // Else it's just a snoop, properly return if we are blocking
+        return !queueFull();
+    }
 }
 
 

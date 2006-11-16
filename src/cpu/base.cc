@@ -97,11 +97,13 @@ CPUProgressEvent::description()
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p->name), clock(p->clock), checkInterrupts(true),
-      params(p), number_of_threads(p->numberOfThreads), system(p->system)
+      params(p), number_of_threads(p->numberOfThreads), system(p->system),
+      phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p->name), clock(p->clock), params(p),
-      number_of_threads(p->numberOfThreads), system(p->system)
+      number_of_threads(p->numberOfThreads), system(p->system),
+      phase(p->phase)
 #endif
 {
 //    currentTick = curTick;
@@ -257,8 +259,9 @@ BaseCPU::regStats()
 Tick
 BaseCPU::nextCycle()
 {
-    Tick next_tick = curTick + clock - 1;
+    Tick next_tick = curTick - phase + clock - 1;
     next_tick -= (next_tick % clock);
+    next_tick += phase;
     return next_tick;
 }
 
@@ -266,11 +269,12 @@ Tick
 BaseCPU::nextCycle(Tick begin_tick)
 {
     Tick next_tick = begin_tick;
+    next_tick -= (next_tick % clock);
+    next_tick += phase;
 
     while (next_tick < curTick)
         next_tick += clock;
 
-    next_tick -= (next_tick % clock);
     assert(next_tick >= curTick);
     return next_tick;
 }

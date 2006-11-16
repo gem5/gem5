@@ -160,11 +160,14 @@ BaseCache::CachePort::recvRetry()
     PacketPtr pkt;
     assert(waitingOnRetry);
     if (!drainList.empty()) {
-        DPRINTF(CachePort, "%s attempting to send a retry for response\n", name());
+        DPRINTF(CachePort, "%s attempting to send a retry for response (%i waiting)\n"
+                , name(), drainList.size());
         //We have some responses to drain first
-        if (sendTiming(drainList.front())) {
-            DPRINTF(CachePort, "%s sucessful in sending a retry for response\n", name());
-            drainList.pop_front();
+        pkt = drainList.front();
+        drainList.pop_front();
+        if (sendTiming(pkt)) {
+            DPRINTF(CachePort, "%s sucessful in sending a retry for"
+                    "response (%i still waiting)\n", name(), drainList.size());
             if (!drainList.empty() ||
                 !isCpuSide && cache->doMasterRequest() ||
                 isCpuSide && cache->doSlaveRequest()) {
@@ -174,6 +177,9 @@ BaseCache::CachePort::recvRetry()
                 reqCpu->schedule(curTick + 1);
             }
             waitingOnRetry = false;
+        }
+        else {
+            drainList.push_front(pkt);
         }
         // Check if we're done draining once this list is empty
         if (drainList.empty())

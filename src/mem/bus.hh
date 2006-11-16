@@ -109,16 +109,16 @@ class Bus : public MemObject
     std::vector<int> findSnoopPorts(Addr addr, int id);
 
     /** Snoop all relevant ports atomicly. */
-    Tick atomicSnoop(PacketPtr pkt);
+    Tick atomicSnoop(PacketPtr pkt, Port* responder);
 
     /** Snoop all relevant ports functionally. */
-    void functionalSnoop(PacketPtr pkt);
+    void functionalSnoop(PacketPtr pkt, Port *responder);
 
     /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
      * the snoop to happen
      * @return True if succeds.
      */
-    bool timingSnoop(PacketPtr pkt);
+    bool timingSnoop(PacketPtr pkt, Port *responder);
 
     /** Process address range request.
      * @param resp addresses that we can respond to

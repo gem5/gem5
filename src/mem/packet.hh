@@ -301,7 +301,7 @@ class Packet
 
     /** Destructor. */
     ~Packet()
-    { deleteData(); }
+    { if (staticData || dynamicData) deleteData(); }
 
     /** Reinitialize packet address and size from the associated
      *   Request object, and reset other fields that may have been
