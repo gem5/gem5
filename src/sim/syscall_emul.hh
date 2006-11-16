@@ -934,17 +934,8 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int who = tc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(tc->getSyscallArg(1));
 
-    if (who != OS::TGT_RUSAGE_SELF) {
-        // don't really handle THREAD or CHILDREN, but just warn and
-        // plow ahead
-        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
-             who);
-    }
-
-    getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
-    rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
-    rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
-
+    rup->ru_utime.tv_sec = 0;
+    rup->ru_utime.tv_usec = 0;
     rup->ru_stime.tv_sec = 0;
     rup->ru_stime.tv_usec = 0;
     rup->ru_maxrss = 0;
@@ -961,6 +952,24 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     rup->ru_nsignals = 0;
     rup->ru_nvcsw = 0;
     rup->ru_nivcsw = 0;
+
+    switch (who) {
+      case OS::TGT_RUSAGE_SELF:
+        getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
+        rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
+        rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
+        break;
+
+      case OS::TGT_RUSAGE_CHILDREN:
+        // do nothing.  We have no child processes, so they take no time.
+        break;
+
+      default:
+        // don't really handle THREAD or CHILDREN, but just warn and
+        // plow ahead
+        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
+             who);
+    }
 
     rup.copyOut(tc->getMemPort());
 
