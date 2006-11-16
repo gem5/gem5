@@ -47,10 +47,11 @@ using namespace SparcISA;
 SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
         System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
         std::vector<std::string> &argv, std::vector<std::string> &envp,
+        const std::string &cwd,
         uint64_t _uid, uint64_t _euid, uint64_t _gid, uint64_t _egid,
         uint64_t _pid, uint64_t _ppid)
     : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
-        argv, envp, _uid, _euid, _gid, _egid, _pid, _ppid)
+        argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid)
 {
 
     // XXX all the below need to be updated for SPARC - Ali
