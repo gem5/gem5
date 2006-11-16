@@ -26,10 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('eon'))
-process.cmd = 'eon' + inputpath('eon', 'chair.control.cook') + \
-              inputpath('eon', 'chair.camera') + \
-              inputpath('eon', 'chair.surfaces') + \
-              inputpath('eon', 'chair.cook.ppm') + 'ppm' \
-              + 'pixels_out.cook'
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import eon_cook
+
+workload = eon_cook('alpha', 'tru64', 'mdred')
+root.system.cpu.workload = workload.makeLiveProcess()

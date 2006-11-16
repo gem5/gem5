@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('bzip2'))
-process.cmd = cmd = 'bzip2' + inputpath('bzip2', 'lgred.source')
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import bzip2_source
+
+workload = bzip2_source('alpha', 'tru64', 'lgred')
+root.system.cpu.workload = workload.makeLiveProcess()

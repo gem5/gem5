@@ -26,7 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('parser'))
-process.cmd = 'parser 2.1.dict -batch'
-process.input = inputpath('parser', 'lgred.in')
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import parser
+
+workload = parser('alpha', 'tru64', 'lgred')
+root.system.cpu.workload = workload.makeLiveProcess()

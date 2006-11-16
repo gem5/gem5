@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('twolf'))
-process.cmd = 'twolf' + inputpath('twolf', 'smred/smred')
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import twolf
+
+workload = twolf('alpha', 'tru64', 'smred')
+root.system.cpu.workload = workload.makeLiveProcess()

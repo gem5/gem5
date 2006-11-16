@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('gzip'))
-process.cmd = 'gzip ' + inputpath('gzip', 'smred.log') + ' 1'
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import gzip_log
+
+workload = gzip_log('alpha', 'tru64', 'smred')
+root.system.cpu.workload = workload.makeLiveProcess()
