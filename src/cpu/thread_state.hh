@@ -141,12 +141,11 @@ struct ThreadState {
     /** Sets the status of this thread. */
     void setStatus(Status new_status) { _status = new_status; }
 
-  protected:
+  public:
     /** Gets a functional port from the memory object that's connected
      * to the CPU. */
     Port *getMemFuncPort();
 
-  public:
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */

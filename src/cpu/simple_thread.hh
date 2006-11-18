@@ -118,6 +118,8 @@ class SimpleThread : public ThreadState
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
                  TheISA::ITB *_itb, TheISA::DTB *_dtb,
                  bool use_kernel_stats = true);
+
+    void init();
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
 #endif

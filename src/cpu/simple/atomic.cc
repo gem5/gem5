@@ -77,6 +77,9 @@ AtomicSimpleCPU::init()
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
+        // initialize the mem pointers
+        tc->init();
+
         // initialize CPU, including PC
         TheISA::initCPU(tc, tc->readCpuId());
     }
