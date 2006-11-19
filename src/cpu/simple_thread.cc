@@ -104,25 +104,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
 
 #endif
 
-#if FULL_SYSTEM
-void
-SimpleThread::init()
-{
-    Port *mem_port;
-    physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           cpu->name(), tid));
-    mem_port = getMemFuncPort();
-    mem_port->setPeer(physPort);
-    physPort->setPeer(mem_port);
-
-    virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        cpu->name(), tid));
-    mem_port = getMemFuncPort();
-    mem_port->setPeer(virtPort);
-    virtPort->setPeer(mem_port);
-}
-#endif
-
 SimpleThread::SimpleThread()
 #if FULL_SYSTEM
     : ThreadState(NULL, -1, -1)
@@ -316,10 +297,7 @@ SimpleThread::getVirtPort(ThreadContext *src_tc)
         return virtPort;
 
     VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
-    Port *mem_port = getMemFuncPort();
-
-    mem_port->setPeer(vp);
-    vp->setPeer(mem_port);
+    connectToMemFunc(vp);
     return vp;
 }
 

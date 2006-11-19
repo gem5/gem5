@@ -41,12 +41,9 @@ O3ThreadContext<Impl>::getVirtPort(ThreadContext *src_tc)
         return thread->getVirtPort();
 
     VirtualPort *vp;
-    Port *mem_port;
 
     vp = new VirtualPort("tc-vport", src_tc);
-    mem_port = cpu->system->physmem->getPort("functional");
-    mem_port->setPeer(vp);
-    vp->setPeer(mem_port);
+    thread->connectToMemFunc(vp);
     return vp;
 }
 

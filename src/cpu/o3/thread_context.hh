@@ -91,6 +91,8 @@ class O3ThreadContext : public ThreadContext
     virtual VirtualPort *getVirtPort(ThreadContext *src_tc = NULL);
 
     void delVirtPort(VirtualPort *vp);
+
+    virtual void init() { thread->init(); }
 #else
     virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
