@@ -94,6 +94,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port
     self.rom.port = self.membus.port
+    self.nvram.port = self.membus.port
+    self.hypervisor_desc.port = self.membus.port
+    self.partition_desc.port = self.membus.port
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
     self.kernel = binary('vmlinux')
@@ -101,6 +104,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.reset_bin = binary('reset.bin')
     self.hypervisor_bin = binary('q.bin')
     self.openboot_bin = binary('openboot.bin')
+    self.nvram_bin = binary('nvram1')
+    self.hypervisor_desc_bin = binary('1up-hv.bin')
+    self.partition_desc_bin = binary('1up-md.bin')
 
     return self
 

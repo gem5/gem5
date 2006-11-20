@@ -46,12 +46,21 @@ class SparcSystem : public System
     struct Params : public System::Params
     {
         PhysicalMemory *rom;
+        PhysicalMemory *nvram;
+        PhysicalMemory *hypervisor_desc;
+        PhysicalMemory *partition_desc;
         Addr reset_addr;
         Addr hypervisor_addr;
         Addr openboot_addr;
+        Addr nvram_addr;
+        Addr hypervisor_desc_addr;
+        Addr partition_desc_addr;
         std::string reset_bin;
         std::string hypervisor_bin;
         std::string openboot_bin;
+        std::string nvram_bin;
+        std::string hypervisor_desc_bin;
+        std::string partition_desc_bin;
         std::string boot_osflags;
     };
 
@@ -77,6 +86,15 @@ class SparcSystem : public System
     /** openboot symbol table */
     SymbolTable *openbootSymtab;
 
+    /** nvram symbol table? */
+    SymbolTable *nvramSymtab;
+
+    /** hypervisor desc symbol table? */
+    SymbolTable *hypervisorDescSymtab;
+
+    /** partition desc symbol table? */
+    SymbolTable *partitionDescSymtab;
+
     /** Object pointer for the reset binary */
     ObjectFile *reset;
 
@@ -86,11 +104,29 @@ class SparcSystem : public System
     /** Object pointer for the openboot code */
     ObjectFile *openboot;
 
+    /** Object pointer for the nvram image */
+    ObjectFile *nvram;
+
+    /** Object pointer for the hypervisor description image */
+    ObjectFile *hypervisor_desc;
+
+    /** Object pointer for the partition description image */
+    ObjectFile *partition_desc;
+
     /** System Tick for syncronized tick across all cpus. */
     Tick sysTick;
 
     /** functional port to ROM */
     FunctionalPort funcRomPort;
+
+    /** functional port to nvram */
+    FunctionalPort funcNvramPort;
+
+    /** functional port to hypervisor description */
+    FunctionalPort funcHypDescPort;
+
+    /** functional port to partition description */
+    FunctionalPort funcPartDescPort;
 
   protected:
     const Params *params() const { return (const Params *)_params; }

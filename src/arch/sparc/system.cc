@@ -42,17 +42,34 @@
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)
-    : System(p), sysTick(0),funcRomPort(p->name + "-fport")
-
+    : System(p), sysTick(0),funcRomPort(p->name + "-fromport"),
+    funcNvramPort(p->name + "-fnvramport"),
+    funcHypDescPort(p->name + "-fhypdescport"),
+    funcPartDescPort(p->name + "-fpartdescport")
 {
     resetSymtab = new SymbolTable;
     hypervisorSymtab = new SymbolTable;
     openbootSymtab = new SymbolTable;
+    nvramSymtab = new SymbolTable;
+    hypervisorDescSymtab = new SymbolTable;
+    partitionDescSymtab = new SymbolTable;
 
     Port *rom_port;
     rom_port = params()->rom->getPort("functional");
     funcRomPort.setPeer(rom_port);
     rom_port->setPeer(&funcRomPort);
+
+    rom_port = params()->nvram->getPort("functional");
+    funcNvramPort.setPeer(rom_port);
+    rom_port->setPeer(&funcNvramPort);
+
+    rom_port = params()->hypervisor_desc->getPort("functional");
+    funcHypDescPort.setPeer(rom_port);
+    rom_port->setPeer(&funcHypDescPort);
+
+    rom_port = params()->partition_desc->getPort("functional");
+    funcPartDescPort.setPeer(rom_port);
+    rom_port->setPeer(&funcPartDescPort);
 
     /**
      * Load the boot code, and hypervisor into memory.
@@ -72,6 +89,23 @@ SparcSystem::SparcSystem(Params *p)
     if (hypervisor == NULL)
         fatal("Could not load hypervisor binary %s", params()->hypervisor_bin);
 
+    // Read the nvram image
+    nvram = createObjectFile(params()->nvram_bin, true);
+    if (nvram == NULL)
+        fatal("Could not load nvram image %s", params()->nvram_bin);
+
+    // Read the hypervisor description image
+    hypervisor_desc = createObjectFile(params()->hypervisor_desc_bin, true);
+    if (hypervisor_desc == NULL)
+        fatal("Could not load hypervisor description image %s",
+                params()->hypervisor_desc_bin);
+
+    // Read the partition description image
+    partition_desc = createObjectFile(params()->partition_desc_bin, true);
+    if (partition_desc == NULL)
+        fatal("Could not load partition description image %s",
+                params()->partition_desc_bin);
+
 
     // Load reset binary into memory
     reset->setTextBase(params()->reset_addr);
@@ -82,6 +116,15 @@ SparcSystem::SparcSystem(Params *p)
     // Load the hypervisor binary
     hypervisor->setTextBase(params()->hypervisor_addr);
     hypervisor->loadSections(&funcRomPort);
+    // Load the nvram image
+    nvram->setTextBase(params()->nvram_addr);
+    nvram->loadSections(&funcNvramPort);
+    // Load the hypervisor description image
+    hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
+    hypervisor_desc->loadSections(&funcHypDescPort);
+    // Load the partition description image
+    partition_desc->setTextBase(params()->partition_desc_addr);
+    partition_desc->loadSections(&funcPartDescPort);
 
     // load symbols
     if (!reset->loadGlobalSymbols(resetSymtab))
@@ -93,6 +136,15 @@ SparcSystem::SparcSystem(Params *p)
     if (!hypervisor->loadLocalSymbols(hypervisorSymtab))
         panic("could not load hypervisor symbols\n");
 
+    if (!nvram->loadLocalSymbols(nvramSymtab))
+        panic("could not load nvram symbols\n");
+
+    if (!hypervisor_desc->loadLocalSymbols(hypervisorDescSymtab))
+        panic("could not load hypervisor description symbols\n");
+
+    if (!partition_desc->loadLocalSymbols(partitionDescSymtab))
+        panic("could not load partition description symbols\n");
+
     // load symbols into debug table
     if (!reset->loadGlobalSymbols(debugSymbolTable))
         panic("could not load reset symbols\n");
@@ -102,6 +154,15 @@ SparcSystem::SparcSystem(Params *p)
 
     if (!hypervisor->loadLocalSymbols(debugSymbolTable))
         panic("could not load hypervisor symbols\n");
+
+    if (!nvram->loadGlobalSymbols(debugSymbolTable))
+        panic("could not load reset symbols\n");
+
+    if (!hypervisor_desc->loadGlobalSymbols(debugSymbolTable))
+        panic("could not load hypervisor description symbols\n");
+
+    if (!partition_desc->loadLocalSymbols(debugSymbolTable))
+        panic("could not load partition description symbols\n");
 
 
     // @todo any fixup code over writing data in binaries on setting break
@@ -114,9 +175,15 @@ SparcSystem::~SparcSystem()
     delete resetSymtab;
     delete hypervisorSymtab;
     delete openbootSymtab;
+    delete nvramSymtab;
+    delete hypervisorDescSymtab;
+    delete partitionDescSymtab;
     delete reset;
     delete openboot;
     delete hypervisor;
+    delete nvram;
+    delete hypervisor_desc;
+    delete partition_desc;
 }
 
 bool
@@ -132,6 +199,9 @@ SparcSystem::serialize(std::ostream &os)
     resetSymtab->serialize("reset_symtab", os);
     hypervisorSymtab->serialize("hypervisor_symtab", os);
     openbootSymtab->serialize("openboot_symtab", os);
+    nvramSymtab->serialize("nvram_symtab", os);
+    hypervisorDescSymtab->serialize("hypervisor_desc_symtab", os);
+    partitionDescSymtab->serialize("partition_desc_symtab", os);
 }
 
 
@@ -142,6 +212,9 @@ SparcSystem::unserialize(Checkpoint *cp, const std::string &section)
     resetSymtab->unserialize("reset_symtab", cp, section);
     hypervisorSymtab->unserialize("hypervisor_symtab", cp, section);
     openbootSymtab->unserialize("openboot_symtab", cp, section);
+    nvramSymtab->unserialize("nvram_symtab", cp, section);
+    hypervisorDescSymtab->unserialize("hypervisor_desc_symtab", cp, section);
+    partitionDescSymtab->unserialize("partition_desc_symtab", cp, section);
 }
 
 
@@ -149,16 +222,25 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
 
     SimObjectParam<PhysicalMemory *> physmem;
     SimObjectParam<PhysicalMemory *> rom;
+    SimObjectParam<PhysicalMemory *> nvram;
+    SimObjectParam<PhysicalMemory *> hypervisor_desc;
+    SimObjectParam<PhysicalMemory *> partition_desc;
     SimpleEnumParam<System::MemoryMode> mem_mode;
 
     Param<Addr> reset_addr;
     Param<Addr> hypervisor_addr;
     Param<Addr> openboot_addr;
+    Param<Addr> nvram_addr;
+    Param<Addr> hypervisor_desc_addr;
+    Param<Addr> partition_desc_addr;
 
     Param<std::string> kernel;
     Param<std::string> reset_bin;
     Param<std::string> hypervisor_bin;
     Param<std::string> openboot_bin;
+    Param<std::string> nvram_bin;
+    Param<std::string> hypervisor_desc_bin;
+    Param<std::string> partition_desc_bin;
 
     Param<Tick> boot_cpu_frequency;
     Param<std::string> boot_osflags;
@@ -171,17 +253,30 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
 
     INIT_PARAM(physmem, "phsyical memory"),
     INIT_PARAM(rom, "ROM for boot code"),
+    INIT_PARAM(nvram, "Non-volatile RAM for the nvram"),
+    INIT_PARAM(hypervisor_desc, "ROM for the hypervisor description"),
+    INIT_PARAM(partition_desc, "ROM for the partition description"),
     INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
             System::MemoryModeStrings),
 
     INIT_PARAM(reset_addr, "Address that reset should be loaded at"),
     INIT_PARAM(hypervisor_addr, "Address that hypervisor should be loaded at"),
     INIT_PARAM(openboot_addr, "Address that openboot should be loaded at"),
+    INIT_PARAM(nvram_addr, "Address that nvram should be loaded at"),
+    INIT_PARAM(hypervisor_desc_addr,
+            "Address that hypervisor description should be loaded at"),
+    INIT_PARAM(partition_desc_addr,
+            "Address that partition description should be loaded at"),
 
     INIT_PARAM(kernel, "file that contains the kernel code"),
     INIT_PARAM(reset_bin, "file that contains the reset code"),
     INIT_PARAM(hypervisor_bin, "file that contains the hypervisor code"),
     INIT_PARAM(openboot_bin, "file that contains the openboot code"),
+    INIT_PARAM(nvram_bin, "file that contains the nvram image"),
+    INIT_PARAM(hypervisor_desc_bin,
+            "file that contains the hypervisor description image"),
+    INIT_PARAM(partition_desc_bin,
+            "file that contains the partition description image"),
     INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
     INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
                     "a"),
@@ -197,14 +292,23 @@ CREATE_SIM_OBJECT(SparcSystem)
     p->boot_cpu_frequency = boot_cpu_frequency;
     p->physmem = physmem;
     p->rom = rom;
+    p->nvram = nvram;
+    p->hypervisor_desc = hypervisor_desc;
+    p->partition_desc = partition_desc;
     p->mem_mode = mem_mode;
     p->kernel_path = kernel;
     p->reset_addr = reset_addr;
     p->hypervisor_addr = hypervisor_addr;
     p->openboot_addr = openboot_addr;
+    p->nvram_addr = nvram_addr;
+    p->hypervisor_desc_addr = hypervisor_desc_addr;
+    p->partition_desc_addr = partition_desc_addr;
     p->reset_bin = reset_bin;
     p->hypervisor_bin = hypervisor_bin;
     p->openboot_bin = openboot_bin;
+    p->nvram_bin = nvram_bin;
+    p->hypervisor_desc_bin = hypervisor_desc_bin;
+    p->partition_desc_bin = partition_desc_bin;
     p->boot_osflags = boot_osflags;
     p->init_param = init_param;
     p->readfile = readfile;
