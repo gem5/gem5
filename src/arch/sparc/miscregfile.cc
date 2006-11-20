@@ -62,6 +62,11 @@ string SparcISA::getMiscRegName(RegIndex index)
     return miscRegName[index];
 }
 
+enum RegMask
+{
+        PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
+};
+
 void MiscRegFile::reset()
 {
     y = 0;
@@ -275,7 +280,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
           tba = val & ULL(~0x7FFF);
           break;
         case MISCREG_PSTATE:
-          pstate = val;
+          pstate = (val & PSTATE_MASK);
           break;
         case MISCREG_TL:
           tl = val;
@@ -377,7 +382,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
           //Set up performance counting based on pcr value
           break;
         case MISCREG_PSTATE:
-          pstate = val;
+          pstate = val & PSTATE_MASK;
           setImplicitAsis();
           return;
         case MISCREG_TL:
