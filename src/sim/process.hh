@@ -177,11 +177,13 @@ class LiveProcess : public Process
     ObjectFile *objFile;
     std::vector<std::string> argv;
     std::vector<std::string> envp;
+    std::string cwd;
 
     LiveProcess(const std::string &nm, ObjectFile *objFile,
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
                 std::vector<std::string> &envp,
+                const std::string &cwd,
                 uint64_t _uid, uint64_t _euid,
                 uint64_t _gid, uint64_t _egid,
                 uint64_t _pid, uint64_t _ppid);
@@ -207,6 +209,20 @@ class LiveProcess : public Process
     inline uint64_t pid() {return __pid;}
     inline uint64_t ppid() {return __ppid;}
 
+    std::string
+    fullPath(const std::string &filename)
+    {
+        if (filename[0] == '/' || cwd.empty())
+            return filename;
+
+        std::string full = cwd;
+
+        if (cwd[cwd.size() - 1] != '/')
+            full += '/';
+
+        return full + filename;
+    }
+
     virtual void syscall(int64_t callnum, ThreadContext *tc);
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
@@ -220,6 +236,7 @@ class LiveProcess : public Process
                                std::string executable,
                                std::vector<std::string> &argv,
                                std::vector<std::string> &envp,
+                               const std::string &cwd,
                                uint64_t _uid, uint64_t _euid,
                                uint64_t _gid, uint64_t _egid,
                                uint64_t _pid, uint64_t _ppid);

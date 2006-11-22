@@ -91,6 +91,12 @@ struct ThreadState {
     Tick readLastSuspend() { return lastSuspend; }
 
 #if FULL_SYSTEM
+    void init();
+
+    void initPhysPort();
+
+    void initVirtPort();
+
     void dumpFuncProfile();
 
     EndQuiesceEvent *getQuiesceEvent() { return quiesceEvent; }
@@ -141,12 +147,11 @@ struct ThreadState {
     /** Sets the status of this thread. */
     void setStatus(Status new_status) { _status = new_status; }
 
-  protected:
-    /** Gets a functional port from the memory object that's connected
-     * to the CPU. */
-    Port *getMemFuncPort();
-
   public:
+    /** Connects port to the functional port of the memory object
+     * below the CPU. */
+    void connectToMemFunc(Port *port);
+
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */

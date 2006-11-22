@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('vortex'))
-process.cmd = 'vortex' + inputpath('smred.raw')
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import vortex
+
+workload = vortex('alpha', 'tru64', 'smred')
+root.system.cpu.workload = workload.makeLiveProcess()

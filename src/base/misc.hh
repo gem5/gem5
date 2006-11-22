@@ -76,6 +76,19 @@ void __warn(const std::string&, cp::ArgList &, const char*, const char*, int);
 #define warn(args...) \
     __warn__(args, cp::ArgListNull())
 
+// Only print the warning message the first time it is seen.  This
+// doesn't check the warning string itself, it just only lets one
+// warning come from the statement. So, even if the arguments change
+// and that would have resulted in a different warning message,
+// subsequent messages would still be supressed.
+#define warn_once(args...) do {                     \
+        static bool once = false;                   \
+        if (!once) {                                \
+            __warn__(args, cp::ArgListNull());      \
+            once = true;                            \
+        }                                           \
+    } while (0)
+
 //
 // assert() that prints out the current cycle
 //

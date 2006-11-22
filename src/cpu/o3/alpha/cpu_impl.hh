@@ -116,24 +116,6 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
 #if FULL_SYSTEM
         // Setup quiesce event.
         this->thread[i]->quiesceEvent = new EndQuiesceEvent(tc);
-
-        Port *mem_port;
-        FunctionalPort *phys_port;
-        VirtualPort *virt_port;
-        phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
-                                                name(), i));
-        mem_port = this->system->physmem->getPort("functional");
-        mem_port->setPeer(phys_port);
-        phys_port->setPeer(mem_port);
-
-        virt_port = new VirtualPort(csprintf("%s-%d-vport",
-                                             name(), i));
-        mem_port = this->system->physmem->getPort("functional");
-        mem_port->setPeer(virt_port);
-        virt_port->setPeer(mem_port);
-
-        this->thread[i]->setPhysPort(phys_port);
-        this->thread[i]->setVirtPort(virt_port);
 #endif
         // Give the thread the TC.
         this->thread[i]->tc = tc;

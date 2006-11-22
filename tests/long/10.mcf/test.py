@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process = LiveProcess(executable = binpath('mcf'))
-process.cmd = 'mcf' + inputpath('mcf', 'lgred.in')
-root.system.cpu.workload = process
+m5.AddToPath('../configs/common')
+from cpu2000 import mcf
+
+workload = mcf('alpha', 'tru64', 'lgred')
+root.system.cpu.workload = workload.makeLiveProcess()

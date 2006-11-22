@@ -39,6 +39,7 @@
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
+#include "mem/vport.hh"
 #endif
 
 #if FULL_SYSTEM
@@ -111,6 +112,28 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 #if FULL_SYSTEM
+void
+ThreadState::init()
+{
+    initPhysPort();
+    initVirtPort();
+}
+
+void
+ThreadState::initPhysPort()
+{
+    physPort = new FunctionalPort(csprintf("%s-%d-funcport",
+                                           baseCpu->name(), tid));
+    connectToMemFunc(physPort);
+}
+
+void
+ThreadState::initVirtPort()
+{
+    virtPort = new VirtualPort(csprintf("%s-%d-vport",
+                                        baseCpu->name(), tid));
+    connectToMemFunc(virtPort);
+}
 
 void
 ThreadState::profileClear()
@@ -138,17 +161,14 @@ ThreadState::getMemPort()
                                         baseCpu->name(), tid),
                                process->pTable, false);
 
-    Port *func_port = getMemFuncPort();
-
-    func_port->setPeer(port);
-    port->setPeer(func_port);
+    connectToMemFunc(port);
 
     return port;
 }
 #endif
 
-Port *
-ThreadState::getMemFuncPort()
+void
+ThreadState::connectToMemFunc(Port *port)
 {
     Port *dcache_port, *func_mem_port;
 
@@ -161,5 +181,6 @@ ThreadState::getMemFuncPort()
     func_mem_port = mem_object->getPort("functional");
     assert(func_mem_port != NULL);
 
-    return func_mem_port;
+    func_mem_port->setPeer(port);
+    port->setPeer(func_mem_port);
 }

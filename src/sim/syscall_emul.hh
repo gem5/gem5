@@ -500,6 +500,9 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     hostFlags |= O_BINARY;
 #endif
 
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
 
     // open the file
@@ -525,6 +528,9 @@ chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     // XXX translate mode flags via OS::something???
     hostMode = mode;
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
 
     // do the chmod
     int result = chmod(path.c_str(), hostMode);
@@ -572,6 +578,9 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
     return -EFAULT;
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
 
     struct stat hostBuf;
     int result = stat(path.c_str(), &hostBuf);
@@ -626,6 +635,9 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
       return -EFAULT;
 
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
     struct stat hostBuf;
     int result = lstat(path.c_str(), &hostBuf);
 
@@ -647,6 +659,9 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
       return -EFAULT;
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
 
 #if NO_STAT64
     struct stat hostBuf;
@@ -700,6 +715,9 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
       return -EFAULT;
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
 
     struct statfs hostBuf;
     int result = statfs(path.c_str(), &hostBuf);
@@ -896,6 +914,10 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         hostTimeval[i].tv_sec = gtoh((*tp)[i].tv_sec);
         hostTimeval[i].tv_usec = gtoh((*tp)[i].tv_usec);
     }
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
     int result = utimes(path.c_str(), hostTimeval);
 
     if (result < 0)
@@ -912,17 +934,8 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int who = tc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(tc->getSyscallArg(1));
 
-    if (who != OS::TGT_RUSAGE_SELF) {
-        // don't really handle THREAD or CHILDREN, but just warn and
-        // plow ahead
-        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
-             who);
-    }
-
-    getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
-    rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
-    rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
-
+    rup->ru_utime.tv_sec = 0;
+    rup->ru_utime.tv_usec = 0;
     rup->ru_stime.tv_sec = 0;
     rup->ru_stime.tv_usec = 0;
     rup->ru_maxrss = 0;
@@ -939,6 +952,24 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     rup->ru_nsignals = 0;
     rup->ru_nvcsw = 0;
     rup->ru_nivcsw = 0;
+
+    switch (who) {
+      case OS::TGT_RUSAGE_SELF:
+        getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
+        rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
+        rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
+        break;
+
+      case OS::TGT_RUSAGE_CHILDREN:
+        // do nothing.  We have no child processes, so they take no time.
+        break;
+
+      default:
+        // don't really handle THREAD or CHILDREN, but just warn and
+        // plow ahead
+        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
+             who);
+    }
 
     rup.copyOut(tc->getMemPort());
 

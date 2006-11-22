@@ -497,6 +497,8 @@ FullO3CPU<Impl>::init()
         }
 
 #if FULL_SYSTEM
+        src_tc->init();
+
         TheISA::initCPU(src_tc, src_tc->readCpuId());
 #endif
     }

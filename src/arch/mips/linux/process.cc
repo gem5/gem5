@@ -411,6 +411,7 @@ MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
                                      int stderr_fd,
                                      std::vector<std::string> &argv,
                                      std::vector<std::string> &envp,
+                                     const std::string &cwd,
                                      uint64_t _uid,
                                      uint64_t _euid,
                                      uint64_t _gid,
@@ -418,7 +419,7 @@ MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
                                      uint64_t _pid,
                                      uint64_t _ppid)
     : MipsLiveProcess(name, objFile, system, stdin_fd, stdout_fd, stderr_fd,
-                      argv, envp, _uid, _euid, _gid, _egid, _pid, _ppid),
+                      argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 { }
 

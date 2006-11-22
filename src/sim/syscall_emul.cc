@@ -214,6 +214,9 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
         return (TheISA::IntReg)-EFAULT;
 
+    // Adjust path for current working directory
+    path = p->fullPath(path);
+
     int result = unlink(path.c_str());
     return (result == -1) ? -errno : result;
 }
@@ -231,6 +234,10 @@ renameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     if (!tc->getMemPort()->tryReadString(new_name, tc->getSyscallArg(1)))
         return -EFAULT;
 
+    // Adjust path for current working directory
+    old_name = p->fullPath(old_name);
+    new_name = p->fullPath(new_name);
+
     int64_t result = rename(old_name.c_str(), new_name.c_str());
     return (result == -1) ? -errno : result;
 }
@@ -244,6 +251,9 @@ truncateFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         return -EFAULT;
 
     off_t length = tc->getSyscallArg(1);
+
+    // Adjust path for current working directory
+    path = p->fullPath(path);
 
     int result = truncate(path.c_str(), length);
     return (result == -1) ? -errno : result;
@@ -276,6 +286,9 @@ chownFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     uid_t hostOwner = owner;
     uint32_t group = tc->getSyscallArg(2);
     gid_t hostGroup = group;
+
+    // Adjust path for current working directory
+    path = p->fullPath(path);
 
     int result = chown(path.c_str(), hostOwner, hostGroup);
     return (result == -1) ? -errno : result;

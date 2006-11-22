@@ -314,11 +314,12 @@ LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
                          System *_system,
                          int stdin_fd, int stdout_fd, int stderr_fd,
                          vector<string> &_argv, vector<string> &_envp,
+                         const string &_cwd,
                          uint64_t _uid, uint64_t _euid,
                          uint64_t _gid, uint64_t _egid,
                          uint64_t _pid, uint64_t _ppid)
     : Process(nm, _system, stdin_fd, stdout_fd, stderr_fd),
-      objFile(_objFile), argv(_argv), envp(_envp)
+      objFile(_objFile), argv(_argv), envp(_envp), cwd(_cwd)
 {
     __uid = _uid;
     __euid = _euid;
@@ -427,6 +428,7 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
                     int stdout_fd, int stderr_fd, std::string executable,
                     std::vector<std::string> &argv,
                     std::vector<std::string> &envp,
+                    const std::string &cwd,
                     uint64_t _uid, uint64_t _euid,
                     uint64_t _gid, uint64_t _egid,
                     uint64_t _pid, uint64_t _ppid)
@@ -445,14 +447,14 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Tru64:
         process = new AlphaTru64Process(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp,
+                                        argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
       case ObjectFile::Linux:
         process = new AlphaLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp,
+                                        argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
@@ -466,7 +468,7 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Linux:
         process = new SparcLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp,
+                                        argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
@@ -474,7 +476,7 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Solaris:
         process = new SparcSolarisProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp,
+                                        argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
       default:
@@ -487,7 +489,7 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(nm, objFile, system,
                                         stdin_fd, stdout_fd, stderr_fd,
-                                        argv, envp,
+                                        argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
 
@@ -512,6 +514,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
     Param<string> input;
     Param<string> output;
     VectorParam<string> env;
+    Param<string> cwd;
     SimObjectParam<System *> system;
     Param<uint64_t> uid;
     Param<uint64_t> euid;
@@ -530,6 +533,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
     INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
     INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
     INIT_PARAM(env, "environment settings"),
+    INIT_PARAM(cwd, "current working directory"),
     INIT_PARAM(system, "system"),
     INIT_PARAM(uid, "user id"),
     INIT_PARAM(euid, "effective user id"),
@@ -566,7 +570,7 @@ CREATE_SIM_OBJECT(LiveProcess)
     return LiveProcess::create(getInstanceName(), system,
                                stdin_fd, stdout_fd, stderr_fd,
                                (string)executable == "" ? cmd[0] : executable,
-                               cmd, env,
+                               cmd, env, cwd,
                                uid, euid, gid, egid, pid, ppid);
 }
 
