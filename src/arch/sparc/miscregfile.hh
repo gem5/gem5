@@ -42,7 +42,6 @@
 
 namespace SparcISA
 {
-
     //These functions map register indices to names
     std::string getMiscRegName(RegIndex);
 
@@ -92,8 +91,13 @@ namespace SparcISA
         MISCREG_HSTICK_CMPR,
 
         /** Floating Point Status Register */
-        MISCREG_FSR
+        MISCREG_FSR,
+
+        MISCREG_NUMMISCREGS
     };
+
+    const int NumMiscArchRegs = MISCREG_NUMMISCREGS;
+    const int NumMiscRegs = MISCREG_NUMMISCREGS;
 
     // The control registers, broken out into fields
     class MiscRegFile

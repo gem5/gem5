@@ -42,7 +42,7 @@ class Checkpoint;
 
 string SparcISA::getIntRegName(RegIndex index)
 {
-    static std::string intRegName[NumIntRegs] =
+    static std::string intRegName[NumIntArchRegs] =
         {"g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",
          "o0", "o1", "o2", "o3", "o4", "o5", "o6", "o7",
          "l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7",
@@ -78,30 +78,29 @@ IntRegFile::IntRegFile()
 IntReg IntRegFile::readReg(int intReg)
 {
     IntReg val;
-    if(intReg < NumRegularIntRegs)
+    if(intReg < NumIntArchRegs)
         val = regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
-    else if((intReg -= NumRegularIntRegs) < NumMicroIntRegs)
+    else if((intReg -= NumIntArchRegs) < NumMicroIntRegs)
         val = microRegs[intReg];
     else
-        panic("Tried to read non-existant integer register %d, %d\n", NumRegularIntRegs + NumMicroIntRegs + intReg, intReg);
+        panic("Tried to read non-existant integer register %d, %d\n", NumIntArchRegs + NumMicroIntRegs + intReg, intReg);
 
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
     return val;
 }
 
-Fault IntRegFile::setReg(int intReg, const IntReg &val)
+void IntRegFile::setReg(int intReg, const IntReg &val)
 {
     if(intReg)
     {
         DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
-        if(intReg < NumRegularIntRegs)
+        if(intReg < NumIntArchRegs)
             regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
-        else if((intReg -= NumRegularIntRegs) < NumMicroIntRegs)
+        else if((intReg -= NumIntArchRegs) < NumMicroIntRegs)
             microRegs[intReg] = val;
         else
             panic("Tried to set non-existant integer register\n");
     }
-    return NoFault;
 }
 
 //This doesn't effect the actual CWP register.

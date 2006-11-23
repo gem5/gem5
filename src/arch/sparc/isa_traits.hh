@@ -32,16 +32,9 @@
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
 #include "arch/sparc/types.hh"
-#include "base/misc.hh"
+#include "arch/sparc/sparc_traits.hh"
 #include "config/full_system.hh"
-#include "sim/host.hh"
 
-class ThreadContext;
-class FastCPU;
-//class FullCPU;
-class Checkpoint;
-
-class StaticInst;
 class StaticInstPtr;
 
 namespace BigEndianGuest {}
@@ -63,31 +56,11 @@ namespace SparcISA
     // SPARC NOP (sethi %(hi(0), g0)
     const MachInst NoopMachInst = 0x01000000;
 
-    const int NumRegularIntRegs = 32;
-    const int NumMicroIntRegs = 1;
-    const int NumIntRegs =
-        NumRegularIntRegs +
-        NumMicroIntRegs;
-    const int NumFloatRegs = 64;
-    const int NumMiscRegs = 40;
-
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
-        // 0..31 are the integer regs 0..31
-        // 32..95 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-        FP_Base_DepTag = NumIntRegs,
-        Ctrl_Base_DepTag = NumIntRegs + NumMicroIntRegs + NumFloatRegs,
+        FP_Base_DepTag = 33,
+        Ctrl_Base_DepTag = 97,
     };
-
-
-    // MAXTL - maximum trap level
-    const int MaxPTL = 2;
-    const int MaxTL  = 6;
-    const int MaxGL  = 3;
-    const int MaxPGL = 2;
-
-    // NWINDOWS - number of register windows, can be 3 to 32
-    const int NWindows = 8;
 
     // semantically meaningful register indices
     const int ZeroReg = 0;	// architecturally meaningful
@@ -120,19 +93,7 @@ namespace SparcISA
 
     const int BranchPredAddrShiftAmt = 2;
 
-    const int MachineBytes = 8;
-    const int WordBytes = 4;
-    const int HalfwordBytes = 2;
-    const int ByteBytes = 1;
-
-    void serialize(std::ostream & os);
-
-    void unserialize(Checkpoint *cp, const std::string &section);
-
     StaticInstPtr decodeInst(ExtMachInst);
-
-    // return a no-op instruction... used for instruction fetch faults
-    extern const MachInst NoopMachInst;
 }
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

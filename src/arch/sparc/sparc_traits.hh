@@ -26,63 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
- *          Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_FLOATREGFILE_HH__
-#define __ARCH_SPARC_FLOATREGFILE_HH__
-
-#include "arch/sparc/faults.hh"
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/types.hh"
-
-#include <string>
-
-class Checkpoint;
+#ifndef __ARCH_SPARC_SPARC_TRAITS_HH__
+#define __ARCH_SPARC_SPARC_TRAITS_HH__
 
 namespace SparcISA
 {
-    std::string getFloatRegName(RegIndex);
+    // Max trap levels
+    const int MaxPTL = 2;
+    const int MaxTL  = 6;
+    const int MaxGL  = 3;
+    const int MaxPGL = 2;
 
-    const int NumFloatArchRegs = 64;
-    const int NumFloatRegs = 64;
+    // Number of register windows, can legally be 3 to 32
+    const int NWindows = 8;
+    const int NumMicroIntRegs = 1;
 
-    typedef float float32_t;
-    typedef double float64_t;
-    //FIXME long double refers to a 10 byte float, rather than a
-    //16 byte float as required. This data type may have to be emulated.
-    typedef double float128_t;
-
-    class FloatRegFile
-    {
-      public:
-        static const int SingleWidth = 32;
-        static const int DoubleWidth = 64;
-        static const int QuadWidth = 128;
-
-      protected:
-
-        //Since the floating point registers overlap each other,
-        //A generic storage space is used. The float to be returned is
-        //pulled from the appropriate section of this region.
-        char regSpace[(SingleWidth / 8) * NumFloatRegs];
-
-      public:
-
-        void clear();
-
-        FloatReg readReg(int floatReg, int width);
-
-        FloatRegBits readRegBits(int floatReg, int width);
-
-        Fault setReg(int floatReg, const FloatReg &val, int width);
-
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width);
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-    };
+//    const int NumRegularIntRegs = MaxGL * 8 + NWindows * 16;
+//    const int NumMicroIntRegs = 1;
+//    const int NumIntRegs =
+//	NumRegularIntRegs +
+//	NumMicroIntRegs;
+//    const int NumFloatRegs = 64;
+//    const int NumMiscRegs = 40;
 }
 
-#endif
+#endif // __ARCH_SPARC_ISA_TRAITS_HH__

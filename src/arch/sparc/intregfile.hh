@@ -32,11 +32,12 @@
 #ifndef __ARCH_SPARC_INTREGFILE_HH__
 #define __ARCH_SPARC_INTREGFILE_HH__
 
-#include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/types.hh"
 
 #include <string>
+
+class Checkpoint;
 
 namespace SparcISA
 {
@@ -44,6 +45,9 @@ namespace SparcISA
 
     //This function translates integer register file indices into names
     std::string getIntRegName(RegIndex);
+
+    const int NumIntArchRegs = 32;
+    const int NumIntRegs = MaxGL * 8 + NWindows * 16 + NumMicroIntRegs;
 
     class IntRegFile
     {
@@ -85,7 +89,7 @@ namespace SparcISA
 
         IntReg readReg(int intReg);
 
-        Fault setReg(int intReg, const IntReg &val);
+        void setReg(int intReg, const IntReg &val);
 
         void serialize(std::ostream &os);
 
