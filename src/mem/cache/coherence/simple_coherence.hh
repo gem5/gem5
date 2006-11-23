@@ -161,10 +161,10 @@ class SimpleCoherence
 
     bool hasProtocol() { return true; }
 
-    void propogateInvalidate(PacketPtr pkt, bool isTiming)
+    bool propogateInvalidate(PacketPtr pkt, bool isTiming)
     {
         //For now we do nothing, asssumes simple coherence is top level of cache
-        return;
+        return false;
     }
 };
 

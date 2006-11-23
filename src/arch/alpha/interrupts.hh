@@ -138,9 +138,8 @@ namespace AlphaISA
             }
 
             if (ipl && ipl > tc->readMiscReg(IPR_IPLR)) {
-//                assert(!newInfoSet);
                 newIpl = ipl;
-                newSummary = newSummary;
+                newSummary = summary;
                 newInfoSet = true;
                 DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
                         tc->readMiscReg(IPR_IPLR), ipl, summary);
