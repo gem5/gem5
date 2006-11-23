@@ -321,7 +321,7 @@ Trace::InstRecord::dump(ostream &outs)
                             (SparcISA::MachInst)staticInst->machInst) {
                         diffInst = true;
                     }
-                    for (int i = 0; i < TheISA::NumRegularIntRegs; i++) {
+                    for (int i = 0; i < TheISA::NumIntArchRegs; i++) {
                         if (thread->readIntReg(i) != shared_data->intregs[i]) {
                             diffRegs = true;
                         }
