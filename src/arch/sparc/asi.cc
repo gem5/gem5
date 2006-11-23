@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #include "arch/sparc/asi.hh"
@@ -37,8 +38,8 @@ namespace SparcISA
         return
             (asi == ASI_BLK_AIUP) ||
             (asi == ASI_BLK_AIUS) ||
-            (asi == ASI_BLK_AIUPL) ||
-            (asi == ASI_BLK_AIUSL) ||
+            (asi == ASI_BLK_AIUP_L) ||
+            (asi == ASI_BLK_AIUS_L) ||
             (asi == ASI_BLK_P) ||
             (asi == ASI_BLK_S) ||
             (asi == ASI_BLK_PL) ||
@@ -50,10 +51,10 @@ namespace SparcISA
         return
             (asi == ASI_AIUP) ||
             (asi == ASI_BLK_AIUP) ||
-            (asi == ASI_AIUPL) ||
-            (asi == ASI_BLK_AIUPL) ||
+            (asi == ASI_AIUP_L) ||
+            (asi == ASI_BLK_AIUP_L) ||
             (asi == ASI_LDTX_AIUP) ||
-            (asi == ASI_LDTX_AIUPL) ||
+            (asi == ASI_LDTX_AIUP_L) ||
             (asi == ASI_P) ||
             (asi == ASI_PNF) ||
             (asi == ASI_PL) ||
@@ -79,10 +80,10 @@ namespace SparcISA
         return
             (asi == ASI_AIUS) ||
             (asi == ASI_BLK_AIUS) ||
-            (asi == ASI_AIUSL) ||
-            (asi == ASI_BLK_AIUSL) ||
+            (asi == ASI_AIUS_L) ||
+            (asi == ASI_BLK_AIUS_L) ||
             (asi == ASI_LDTX_AIUS) ||
-            (asi == ASI_LDTX_AIUSL) ||
+            (asi == ASI_LDTX_AIUS_L) ||
             (asi == ASI_S) ||
             (asi == ASI_SNF) ||
             (asi == ASI_SL) ||
@@ -119,14 +120,14 @@ namespace SparcISA
             (asi == ASI_AIUS) ||
             (asi == ASI_BLK_AIUP) ||
             (asi == ASI_BLK_AIUS) ||
-            (asi == ASI_AIUPL) ||
-            (asi == ASI_AIUSL) ||
-            (asi == ASI_BLK_AIUPL) ||
-            (asi == ASI_BLK_AIUSL) ||
+            (asi == ASI_AIUP_L) ||
+            (asi == ASI_AIUS_L) ||
+            (asi == ASI_BLK_AIUP_L) ||
+            (asi == ASI_BLK_AIUS_L) ||
             (asi == ASI_LDTX_AIUP) ||
             (asi == ASI_LDTX_AIUS) ||
-            (asi == ASI_LDTX_AIUPL) ||
-            (asi == ASI_LDTX_AIUSL);
+            (asi == ASI_LDTX_AIUP_L) ||
+            (asi == ASI_LDTX_AIUS_L);
     }
 
     bool AsiIsIO(ASI asi)
@@ -144,22 +145,21 @@ namespace SparcISA
             (asi == ASI_REAL_L) ||
             (asi == ASI_REAL_IO_L) ||
             (asi == ASI_LDTX_REAL) ||
-            (asi == ASI_LDTX_REAL_L) ||
-            (asi == ASI_MMU_REAL);
+            (asi == ASI_LDTX_REAL_L);
     }
 
     bool AsiIsLittle(ASI asi)
     {
         return
             (asi == ASI_NL) ||
-            (asi == ASI_AIUPL) ||
-            (asi == ASI_AIUSL) ||
+            (asi == ASI_AIUP_L) ||
+            (asi == ASI_AIUS_L) ||
             (asi == ASI_REAL_L) ||
             (asi == ASI_REAL_IO_L) ||
-            (asi == ASI_BLK_AIUPL) ||
-            (asi == ASI_BLK_AIUSL) ||
-            (asi == ASI_LDTX_AIUPL) ||
-            (asi == ASI_LDTX_AIUSL) ||
+            (asi == ASI_BLK_AIUP_L) ||
+            (asi == ASI_BLK_AIUS_L) ||
+            (asi == ASI_LDTX_AIUP_L) ||
+            (asi == ASI_LDTX_AIUS_L) ||
             (asi == ASI_LDTX_REAL_L) ||
             (asi == ASI_LDTX_NL) ||
             (asi == ASI_PL) ||
@@ -189,8 +189,8 @@ namespace SparcISA
             (asi == ASI_LDTX_AIUS) ||
             (asi == ASI_LDTX_REAL) ||
             (asi == ASI_LDTX_N) ||
-            (asi == ASI_LDTX_AIUPL) ||
-            (asi == ASI_LDTX_AIUSL) ||
+            (asi == ASI_LDTX_AIUP_L) ||
+            (asi == ASI_LDTX_AIUS_L) ||
             (asi == ASI_LDTX_REAL_L) ||
             (asi == ASI_LDTX_NL) ||
             (asi == ASI_LDTX_P) ||
@@ -248,8 +248,7 @@ namespace SparcISA
     bool AsiIsCmt(ASI asi)
     {
         return
-            (asi == ASI_CMT_PER_STRAND) ||
-            (asi == ASI_CMT_SHARED);
+            (asi == ASI_CMT_PER_STRAND);
     }
 
     bool AsiIsQueue(ASI asi)
@@ -257,23 +256,38 @@ namespace SparcISA
         return asi == ASI_QUEUE;
     }
 
-    bool AsiIsDtlb(ASI asi)
-    {
-        return
-            (asi == ASI_DTLB_DATA_IN_REG) ||
-            (asi == ASI_DTLB_DATA_ACCESS_REG) ||
-            (asi == ASI_DTLB_TAG_READ_REG);
-    }
-
     bool AsiIsMmu(ASI asi)
     {
-        return
-            (asi == ASI_MMU_CONTEXTID) ||
-            (asi == ASI_IMMU) ||
-            (asi == ASI_MMU_REAL) ||
-            (asi == ASI_MMU) ||
-            (asi == ASI_DMMU) ||
-            (asi == ASI_UMMU) ||
-            (asi == ASI_DMMU_DEMAP);
+        return  asi == ASI_MMU ||
+               (asi >= ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0 &&
+                asi <= ASI_IMMU_CTXT_ZERO_CONFIG) ||
+               (asi >= ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0 &&
+                asi <= ASI_IMMU_CTXT_NONZERO_CONFIG) ||
+               (asi >= ASI_IMMU &&
+                asi <= ASI_IMMU_TSB_PS1_PTR_REG) ||
+               (asi >= ASI_ITLB_DATA_IN_REG  &&
+                asi <= ASI_TLB_INVALIDATE_ALL);
     }
+
+    bool AsiIsUnPriv(ASI asi)
+    {
+        return asi >= 0x80;
+    }
+
+    bool AsiIsPriv(ASI asi)
+    {
+        return asi <= 0x2f;
+    }
+
+
+    bool AsiIsHPriv(ASI asi)
+    {
+        return asi >= 0x30 && asi <= 0x7f;
+    }
+
+    bool AsiIsReg(ASI asi)
+    {
+        return AsiIsMmu(asi) || AsiIsScratchPad(asi);
+    }
+
 }
