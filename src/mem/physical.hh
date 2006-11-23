@@ -154,6 +154,7 @@ class PhysicalMemory : public MemObject
         std::string name;
         Range<Addr> addrRange;
         Tick latency;
+        bool zero;
     };
 
   protected:

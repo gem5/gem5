@@ -89,7 +89,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.bridge = Bridge()
     self.t1000 = T1000()
     self.t1000.attachIO(self.iobus)
-    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()), zero = True)
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port

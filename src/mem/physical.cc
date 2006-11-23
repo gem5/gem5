@@ -65,6 +65,10 @@ PhysicalMemory::PhysicalMemory(Params *p)
         fatal("Could not mmap!\n");
     }
 
+    //If requested, initialize all the memory to 0
+    if(params()->zero)
+        memset(pmemAddr, 0, params()->addrRange.size());
+
     pagePtr = 0;
 }
 
@@ -432,6 +436,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
     Param<string> file;
     Param<Range<Addr> > range;
     Param<Tick> latency;
+    Param<bool> zero;
 
 END_DECLARE_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -439,7 +444,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
     INIT_PARAM_DFLT(file, "memory mapped file", ""),
     INIT_PARAM(range, "Device Address Range"),
-    INIT_PARAM(latency, "Memory access latency")
+    INIT_PARAM(latency, "Memory access latency"),
+    INIT_PARAM(zero, "Zero initialize memory")
 
 END_INIT_SIM_OBJECT_PARAMS(PhysicalMemory)
 
@@ -449,6 +455,7 @@ CREATE_SIM_OBJECT(PhysicalMemory)
     p->name = getInstanceName();
     p->addrRange = range;
     p->latency = latency;
+    p->zero = zero;
     return new PhysicalMemory(p);
 }
 

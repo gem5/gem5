@@ -9,6 +9,7 @@ class PhysicalMemory(MemObject):
     range = Param.AddrRange(AddrRange('128MB'), "Device Address")
     file = Param.String('', "memory mapped file")
     latency = Param.Latency(Parent.clock, "latency of an access")
+    zero = Param.Bool(False, "zero initialize memory")
 
 class DRAMMemory(PhysicalMemory):
     type = 'DRAMMemory'
