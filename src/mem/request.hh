@@ -95,6 +95,11 @@ class Request
 
     /** The address space ID. */
     int asid;
+    /** The ASI is any -- SPARC ONLY */
+    int asi;
+    /** This request is to a memory mapped register. */
+    bool mmapedReg;
+
     /** The virtual address of the request. */
     Addr vaddr;
 
@@ -214,6 +219,16 @@ class Request
 
     /** Accessor function for asid.*/
     int getAsid() { assert(validAsidVaddr); return asid; }
+
+    /** Accessor function for asi.*/
+    int getAsi() { assert(validAsidVaddr); return asi; }
+    /** Accessor function for asi.*/
+    void setAsi(int a) { assert(validAsidVaddr); asi = a; }
+
+    /** Accessor function for asi.*/
+    bool getMmapedReg() { assert(validPaddr); return mmapedReg; }
+    /** Accessor function for asi.*/
+    void setMmapedReg(bool r) { assert(validPaddr); mmapedReg = r; }
 
     /** Accessor function to check if sc result is valid. */
     bool scResultValid() { return validScResult; }

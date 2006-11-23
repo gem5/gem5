@@ -31,6 +31,7 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "arch/sparc/tlb_map.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
@@ -40,48 +41,114 @@ class ThreadContext;
 
 namespace SparcISA
 {
-    const int PAddrImplBits = 40;
-    const Addr PAddrImplMask = (ULL(1) << PAddrImplBits) - 1;
 
-    class TLB : public SimObject
-    {
-      public:
-        TLB(const std::string &name, int size) : SimObject(name)
-        {
-        }
+class TLB : public SimObject
+{
+  protected:
+    TlbMap lookupTable;;
+    typedef TlbMap::iterator MapIter;
+
+    TlbEntry *tlb;
+
+    int size;
+    int usedEntries;
+
+    enum FaultTypes {
+        OtherFault = 0,
+        PrivViolation = 0x1,
+        SideEffect = 0x2,
+        AtomicToIo = 0x4,
+        IllegalAsi = 0x8,
+        LoadFromNfo = 0x10,
+        VaOutOfRange = 0x20,
+        VaOutOfRangeJmp = 0x40
     };
 
-    class ITB : public TLB
-    {
-      public:
-        ITB(const std::string &name, int size) : TLB(name, size)
-        {
-        }
-
-        Fault translate(RequestPtr &req, ThreadContext *tc) const
-        {
-            //For now, always assume the address is already physical.
-            //Also assume that there are 40 bits of physical address space.
-            req->setPaddr(req->getVaddr() & PAddrImplMask);
-            return NoFault;
-        }
+    enum ContextType {
+        Primary = 0,
+        Secondary = 1,
+        Nucleus = 2
     };
 
-    class DTB : public TLB
-    {
-      public:
-        DTB(const std::string &name, int size) : TLB(name, size)
-        {
-        }
 
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const
-        {
-            //For now, always assume the address is already physical.
-            //Also assume that there are 40 bits of physical address space.
-            req->setPaddr(req->getVaddr() & ((1ULL << 40) - 1));
-            return NoFault;
-        }
-    };
+    /** lookup an entry in the TLB based on the partition id, and real bit if
+     * real is true or the partition id, and context id if real is false.
+     * @param va the virtual address not shifted (e.g. bottom 13 bits are 0)
+     * @param paritition_id partition this entry is for
+     * @param real is this a real->phys or virt->phys translation
+     * @param context_id if this is virt->phys what context
+     * @return A pointer to a tlb entry
+     */
+    TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0);
+
+    /** Insert a PTE into the TLB. */
+    void insert(Addr vpn, int partition_id, int context_id, bool real,
+            const PageTableEntry& PTE);
+
+    /** Given an entry id, read that tlb entries' tag. */
+    uint64_t TagRead(int entry);
+
+    /** Give an entry id, read that tlb entries' tte */
+    uint64_t TteRead(int entry);
+
+    /** Remove all entries from the TLB */
+    void invalidateAll();
+
+    /** Remove all non-locked entries from the tlb that match partition id. */
+    void demapAll(int partition_id);
+
+    /** Remove all entries that match a given context/partition id. */
+    void demapContext(int partition_id, int context_id);
+
+    /** Remve all entries that match a certain partition id, (contextid), and
+     * va). */
+    void demapPage(Addr va, int partition_id, bool real, int context_id);
+
+    /** Checks if the virtual address provided is a valid one. */
+    bool validVirtualAddress(Addr va, bool am);
+
+    void writeSfsr(ThreadContext *tc, int reg, bool write, ContextType ct,
+            bool se, FaultTypes ft, int asi);
+
+    void TLB::clearUsedBits();
+
+
+  public:
+    TLB(const std::string &name, int size);
+
+    // Checkpointing
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+class ITB : public TLB
+{
+  public:
+    ITB(const std::string &name, int size) : TLB(name, size)
+    {
+    }
+
+    Fault translate(RequestPtr &req, ThreadContext *tc);
+  private:
+    void writeSfsr(ThreadContext *tc, bool write, ContextType ct,
+            bool se, FaultTypes ft, int asi);
+};
+
+class DTB : public TLB
+{
+  public:
+    DTB(const std::string &name, int size) : TLB(name, size)
+    {
+    }
+
+    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+
+  private:
+    void writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
+            bool se, FaultTypes ft, int asi);
+
+};
+
 }
 
 #endif // __ARCH_SPARC_TLB_HH__

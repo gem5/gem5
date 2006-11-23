@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #ifndef __ARCH_SPARC_ASI_HH__
@@ -53,64 +54,110 @@ namespace SparcISA
         ASI_BLOCK_AS_IF_USER_PRIMARY = ASI_BLK_AIUP,
         ASI_BLK_AIUS = 0x17,
         ASI_BLOCK_AS_IF_USER_SECONDARY = ASI_BLK_AIUS,
-        ASI_AIUPL = 0x18,
-        ASI_AS_IF_USER_PRIMARY_LITTLE = ASI_AIUPL,
-        ASI_AIUSL = 0x19,
-        ASI_AS_IF_USER_SECONDARY_LITTLE = ASI_AIUSL,
+        ASI_AIUP_L = 0x18,
+        ASI_AS_IF_USER_PRIMARY_LITTLE = ASI_AIUP_L,
+        ASI_AIUS_L = 0x19,
+        ASI_AS_IF_USER_SECONDARY_LITTLE = ASI_AIUS_L,
         //0x1A-0x1B implementation dependent
         ASI_REAL_L = 0x1C,
         ASI_REAL_LITTLE = ASI_REAL_L,
         ASI_REAL_IO_L = 0x1D,
         ASI_REAL_IO_LITTLE = ASI_REAL_IO_L,
-        ASI_BLK_AIUPL = 0x1E,
-        ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE = ASI_BLK_AIUPL,
-        ASI_BLK_AIUSL = 0x1F,
-        ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE = ASI_BLK_AIUSL,
+        ASI_BLK_AIUP_L = 0x1E,
+        ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE = ASI_BLK_AIUP_L,
+        ASI_BLK_AIUS_L = 0x1F,
+        ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE = ASI_BLK_AIUS_L,
         ASI_SCRATCHPAD = 0x20,
-        ASI_MMU_CONTEXTID = 0x21,
+        ASI_MMU = 0x21,
         ASI_LDTX_AIUP = 0x22,
         ASI_LD_TWINX_AS_IF_USER_PRIMARY = ASI_LDTX_AIUP,
         ASI_LDTX_AIUS = 0x23,
         ASI_LD_TWINX_AS_IF_USER_SECONDARY = ASI_LDTX_AIUS,
-        //0x24 implementation dependent
+        ASI_QUAD_LDD = 0x24,
         ASI_QUEUE = 0x25,
-        ASI_LDTX_REAL = 0x26,
-        ASI_LD_TWINX_REAL = ASI_LDTX_REAL,
+        ASI_QUAD_LDD_REAL = 0x26,
+        ASI_LDTX_REAL = ASI_QUAD_LDD_REAL,
         ASI_LDTX_N = 0x27,
         ASI_LD_TWINX_NUCLEUS = ASI_LDTX_N,
+        ASI_ST_BLKINIT_NUCLEUS = ASI_LDTX_N,
+        ASI_STBI_N = ASI_LDTX_N,
         //0x28-0x29 implementation dependent
-        ASI_LDTX_AIUPL = 0x2A,
-        ASI_LD_TWINX_AS_IF_USER_PRIMARY_LITTLE = ASI_LDTX_AIUPL,
-        ASI_LDTX_AIUSL = 0x2B,
-        ASI_LD_TWINX_AS_IF_USER_SECONDARY_LITTLE = ASI_LDTX_AIUSL,
-        //0x2C-0x2D implementation dependent
+        ASI_LDTX_AIUP_L = 0x2A,
+        ASI_TWINX_AS_IF_USER_PRIMARY_LITTLE = ASI_LDTX_AIUP_L,
+        ASI_ST_BLKINIT_AS_IF_USER_PRIMARY_LITTLE = ASI_LDTX_AIUP_L,
+        ASI_STBI_AIUP_L = ASI_LDTX_AIUP_L,
+        ASI_LDTX_AIUS_L = 0x2B,
+        ASI_LD_TWINX_AS_IF_USER_SECONDARY_LITTLE = ASI_LDTX_AIUS_L,
+        ASI_ST_BLKINIT_AS_IF_USER_SECONDARY_LITTLE = ASI_LDTX_AIUS_L,
+        ASI_STBI_AIUS_L = ASI_LDTX_AIUS_L,
+        ASI_LTX_L = 0x2C,
+        ASI_TWINX_LITTLE = ASI_LTX_L,
+        //0x2D implementation dependent
         ASI_LDTX_REAL_L = 0x2E,
         ASI_LD_TWINX_REAL_LITTLE = ASI_LDTX_REAL_L,
         ASI_LDTX_NL = 0x2F,
         ASI_LD_TWINX_NUCLEUS_LITTLE = ASI_LDTX_NL,
-        //0x30-0x40 implementation dependent
-        ASI_CMT_SHARED = 0x41,
-        //0x42-0x4F implementation dependent
+        //0x20 implementation dependent
+        ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0 = 0x31,
+        ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1 = 0x32,
+        ASI_DMMU_CTXT_ZERO_CONFIG = 0x33,
+        //0x34 implementation dependent
+        ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0 = 0x35,
+        ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1 = 0x36,
+        ASI_IMMU_CTXT_ZERO_CONFIG = 0x37,
+        //0x38 implementation dependent
+        ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0 = 0x39,
+        ASI_DMMU_CTXT_NONZERO_USB_BASE_PS1 = 0x3A,
+        ASI_DMMU_CTXT_NONZERO_CONFIG = 0x3B,
+        //0x3C implementation dependent
+        ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0 = 0x3D,
+        ASI_IMMU_CTXT_NONZERO_USB_BASE_PS1 = 0x3E,
+        ASI_IMMU_CTXT_NONZERO_CONFIG = 0x3F,
+        ASI_STREAM_MA = 0x40,
+        //0x41 implementation dependent
+        ASI_SPARC_BIST_CONTROL = 0x42,
+        ASI_INST_MASK_REG = 0x42,
+        ASI_LSU_DIAG_REG = 0x42,
+        //0x43 implementation dependent
+        ASI_STM_CTL_REG = 0x44,
+        ASI_LSU_CONTROL_REG = 0x45,
+        ASI_DCACHE_DATA = 0x46,
+        ASI_DCACHE_TAG = 0x47,
+        ASI_INTR_DISPATCH_STATUS = 0x48,
+        ASI_INTR_RECEIVE = 0x49,
+        ASI_UPA_CONFIG_REGISTER = 0x4A,
+        ASI_SPARC_ERROR_EN_REG = 0x4B,
+        ASI_SPARC_ERROR_STATUS_REG = 0x4C,
+        ASI_SPARC_ERROR_ADDRESS_REG = 0x4D,
+        ASI_ECACHE_TAG_DATA = 0x4E,
         ASI_HYP_SCRATCHPAD = 0x4F,
         ASI_IMMU = 0x50,
-        ASI_MMU_REAL = 0x52,
+        ASI_IMMU_TSB_PS0_PTR_REG = 0x51,
+        ASI_IMMU_TSB_PS1_PTR_REG = 0x52,
         //0x53 implementation dependent
-        ASI_MMU = 0x54,
+        ASI_ITLB_DATA_IN_REG = 0x54,
         ASI_ITLB_DATA_ACCESS_REG = 0x55,
         ASI_ITLB_TAG_READ_REG = 0x56,
         ASI_IMMU_DEMAP = 0x57,
         ASI_DMMU = 0x58,
-        ASI_UMMU = 0x58,
-        //0x59-0x5B reserved
+        ASI_DMMU_TSB_PS0_PTR_REG = 0x59,
+        ASI_DMMU_TSB_PS1_PTR_REG = 0x5A,
+        ASI_DMMU_TSB_DIRECT_PTR_REG = 0x5B,
         ASI_DTLB_DATA_IN_REG = 0x5C,
         ASI_DTLB_DATA_ACCESS_REG = 0x5D,
         ASI_DTLB_TAG_READ_REG = 0x5E,
         ASI_DMMU_DEMAP = 0x5F,
-        //0x60-62 implementation dependent
+        ASI_TLB_INVALIDATE_ALL = 0x60,
+        //0x61-0x62 implementation dependent
         ASI_CMT_PER_STRAND = 0x63,
-        //0x64-0x67 implementation dependent
-        //0x68-0x7F reserved
-
+        //0x64-0x65 implementation dependent
+        ASI_ICACHE_INSTR = 0x66,
+        ASI_ICACHE_TAG = 0x67,
+        //0x68-0x71 implementation dependent
+        ASI_SWVR_INTR_RECEIVE = 0x72,
+        ASI_SWVR_UDB_INTR_W = 0x73,
+        ASI_SWVR_UDB_INTR_R = 0x74,
+        //0x74-0x7F reserved
         /* Unpriveleged ASIs */
         ASI_P = 0x80,
         ASI_PRIMARY = ASI_P,
@@ -195,6 +242,7 @@ namespace SparcISA
         ASI_BLK_SL = 0xF9,
         ASI_BLOCK_SECONDARY_LITTLE = ASI_BLK_SL,
         //0xFA-0xFF implementation dependent
+        ASI_IMPLICIT = 0xFF,
         MAX_ASI = 0xFF
     };
 
@@ -216,6 +264,10 @@ namespace SparcISA
     bool AsiIsQueue(ASI);
     bool AsiIsDtlb(ASI);
     bool AsiIsMmu(ASI);
+    bool AsiIsUnPriv(ASI);
+    bool AsiIsPriv(ASI);
+    bool AsiIsHPriv(ASI);
+    bool AsiIsReg(ASI);
 
 };
 

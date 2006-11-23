@@ -92,7 +92,42 @@ namespace SparcISA
         MISCREG_HSTICK_CMPR,
 
         /** Floating Point Status Register */
-        MISCREG_FSR
+        MISCREG_FSR,
+
+        /** MMU Internal Registers */
+        MISCREG_MMU_P_CONTEXT,
+        MISCREG_MMU_S_CONTEXT,
+        MISCREG_MMU_PART_ID,
+        MISCREG_MMU_LSU_CTRL,
+
+        MISCREG_MMU_ITLB_C0_TSB_PS0,
+        MISCREG_MMU_ITLB_C0_TSB_PS1,
+        MISCREG_MMU_ITLB_C0_CONFIG,
+        MISCREG_MMU_ITLB_CX_TSB_PS0,
+        MISCREG_MMU_ITLB_CX_TSB_PS1,
+        MISCREG_MMU_ITLB_CX_CONFIG,
+        MISCREG_MMU_ITLB_SFSR,
+        MISCREG_MMU_ITLB_TAG_ACCESS,
+
+        MISCREG_MMU_DTLB_C0_TSB_PS0,
+        MISCREG_MMU_DTLB_C0_TSB_PS1,
+        MISCREG_MMU_DTLB_C0_CONFIG,
+        MISCREG_MMU_DTLB_CX_TSB_PS0,
+        MISCREG_MMU_DTLB_CX_TSB_PS1,
+        MISCREG_MMU_DTLB_CX_CONFIG,
+        MISCREG_MMU_DTLB_SFSR,
+        MISCREG_MMU_DTLB_SFAR,
+        MISCREG_MMU_DTLB_TAG_ACCESS,
+
+        /** Scratchpad regiscers **/
+        MISCREG_SCRATCHPAD_R0,
+        MISCREG_SCRATCHPAD_R1,
+        MISCREG_SCRATCHPAD_R2,
+        MISCREG_SCRATCHPAD_R3,
+        MISCREG_SCRATCHPAD_R4,
+        MISCREG_SCRATCHPAD_R5,
+        MISCREG_SCRATCHPAD_R6,
+        MISCREG_SCRATCHPAD_R7
     };
 
     // The control registers, broken out into fields
@@ -146,8 +181,32 @@ namespace SparcISA
         /** Floating point misc registers. */
         uint64_t fsr;		// Floating-Point State Register
 
-        ASI implicitInstAsi;
-        ASI implicitDataAsi;
+        /** MMU Internal Registers */
+        uint16_t priContext;
+        uint16_t secContext;
+        uint16_t partId;
+        uint64_t lsuCtrlReg;
+
+        uint64_t iTlbC0TsbPs0;
+        uint64_t iTlbC0TsbPs1;
+        uint64_t iTlbC0Config;
+        uint64_t iTlbCXTsbPs0;
+        uint64_t iTlbCXTsbPs1;
+        uint64_t iTlbCXConfig;
+        uint64_t iTlbSfsr;
+        uint64_t iTlbTagAccess;
+
+        uint64_t dTlbC0TsbPs0;
+        uint64_t dTlbC0TsbPs1;
+        uint64_t dTlbC0Config;
+        uint64_t dTlbCXTsbPs0;
+        uint64_t dTlbCXTsbPs1;
+        uint64_t dTlbCXConfig;
+        uint64_t dTlbSfsr;
+        uint64_t dTlbSfar;
+        uint64_t dTlbTagAccess;
+
+        uint64_t scratchPad[8];
 
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu
@@ -188,14 +247,14 @@ namespace SparcISA
         void setRegWithEffect(int miscReg,
                 const MiscReg &val, ThreadContext * tc);
 
-        ASI getInstAsid()
+        int getInstAsid()
         {
-            return implicitInstAsi;
+            return priContext | (uint32_t)partId << 13;
         }
 
-        ASI getDataAsid()
+        int getDataAsid()
         {
-            return implicitDataAsi;
+            return priContext | (uint32_t)partId << 13;
         }
 
         void serialize(std::ostream & os);
@@ -209,7 +268,6 @@ namespace SparcISA
         bool isHyperPriv() { return (hpstate & (1 << 2)); }
         bool isPriv() { return (hpstate & (1 << 2)) || (pstate & (1 << 2)); }
         bool isNonPriv() { return !isPriv(); }
-        inline void setImplicitAsis();
     };
 }
 
