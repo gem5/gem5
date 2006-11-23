@@ -61,7 +61,7 @@ def operands {{
     'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 3),
     'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 4),
     'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 5),
-    'uReg0':		('IntReg', 'udw', 'NumRegularIntRegs+0', 'IsInteger', 6),
+    'uReg0':		('IntReg', 'udw', 'NumIntArchRegs', 'IsInteger', 6),
     'Frds':		('FloatReg', 'sf', 'RD', 'IsFloating', 10),
     'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
     # Each Frd_N refers to the Nth double precision register from Frd.

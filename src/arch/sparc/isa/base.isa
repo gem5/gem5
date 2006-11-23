@@ -205,7 +205,7 @@ output decoder {{
             else if(reg < MaxMicroReg)
                 ccprintf(os, "%%u%d", reg - MaxInput);
             else {
-                ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
+                ccprintf(os, "%%f%d", reg - MaxMicroReg);
             }
         }
 

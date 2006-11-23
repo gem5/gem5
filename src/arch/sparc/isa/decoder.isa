@@ -307,7 +307,7 @@ decode OP default Unknown::unknown()
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
-                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
@@ -316,7 +316,7 @@ decode OP default Unknown::unknown()
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
-                {{(Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31}},
+                {{(Rs1<31:0> + val2<31:0>)<32:0>}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
@@ -327,7 +327,7 @@ decode OP default Unknown::unknown()
                 int32_t overflow = Rs1<1:0> || val2<1:0> ||
                         (Rs1<31:> == val2<31:> && val2<31:> != Rd<31:>);
                 if(overflow) fault = new TagOverflow;}},
-                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != Rd<63:>}}
@@ -337,7 +337,7 @@ decode OP default Unknown::unknown()
                 Rd = resTemp = Rs1 + val2;
                 int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
                 if(overflow) fault = new TagOverflow;}},
-                {{((Rs1 & 0xFFFFFFFF + val2 & 0xFFFFFFFF) >> 31)}},
+                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
                 {{overflow}},
                 {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
@@ -347,13 +347,12 @@ decode OP default Unknown::unknown()
                 int32_t multiplier = Rs1<31:0>;
                 int32_t savedLSB = Rs1<0:>;
                 multiplier = multiplier<31:1> |
-                    ((Ccr<3:3>
-                    ^ Ccr<1:1>) << 32);
+                    ((Ccr<3:3> ^ Ccr<1:1>) << 32);
                 if(!Y<0:>)
                     multiplicand = 0;
                 Rd = resTemp = multiplicand + multiplier;
                 Y = Y<31:1> | (savedLSB << 31);}},
-                {{((multiplicand & 0xFFFFFFFF + multiplier & 0xFFFFFFFF) >> 31)}},
+                {{((multiplicand<31:0> + multiplier<31:0>)<32:0>)}},
                 {{multiplicand<31:> == multiplier<31:> && multiplier<31:> != resTemp<31:>}},
                 {{((multiplicand >> 1) + (multiplier >> 1) + (multiplicand & multiplier & 0x1))<63:>}},
                 {{multiplicand<63:> == multiplier<63:> && multiplier<63:> != resTemp<63:>}}
