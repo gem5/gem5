@@ -31,6 +31,7 @@
 
 #include "arch/sparc/intregfile.hh"
 #include "base/trace.hh"
+#include "base/misc.hh"
 #include "sim/serialize.hh"
 
 #include <string.h>
@@ -83,7 +84,8 @@ IntReg IntRegFile::readReg(int intReg)
     else if((intReg -= NumIntArchRegs) < NumMicroIntRegs)
         val = microRegs[intReg];
     else
-        panic("Tried to read non-existant integer register %d, %d\n", NumIntArchRegs + NumMicroIntRegs + intReg, intReg);
+        panic("Tried to read non-existant integer register %d, %d\n",
+                NumIntArchRegs + NumMicroIntRegs + intReg, intReg);
 
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
     return val;
