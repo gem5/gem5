@@ -140,7 +140,7 @@ class UniCoherence
 
     bool hasProtocol() { return false; }
 
-    void propogateInvalidate(PacketPtr pkt, bool isTiming);
+    bool propogateInvalidate(PacketPtr pkt, bool isTiming);
 };
 
 #endif //__UNI_COHERENCE_HH__

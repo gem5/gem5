@@ -391,7 +391,13 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
     }
 
     //Send a timing (true) invalidate up if the protocol calls for it
-    coherence->propogateInvalidate(pkt, true);
+    if (coherence->propogateInvalidate(pkt, true)) {
+        //Temp hack, we had a functional read hit in the L1, mark as success
+        pkt->flags |= SATISFIED;
+        pkt->result = Packet::Success;
+        respondToSnoop(pkt, curTick + hitLatency);
+        return;
+    }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);
@@ -562,6 +568,7 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
 
     PacketList writebacks;
     int lat;
+
     BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
 
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(),
@@ -615,7 +622,8 @@ Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
             // Can't handle it, return request unsatisfied.
             panic("Atomic access ran into outstanding MSHR's or WB's!");
         }
-        if (!pkt->req->isUncacheable()) {
+        if (!pkt->req->isUncacheable() /*Uncacheables just go through*/
+            && (pkt->cmd != Packet::Writeback)/*Writebacks on miss fall through*/) {
                 // Fetch the cache block to fill
             BlkType *blk = tags->findBlock(pkt);
             Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
@@ -691,7 +699,12 @@ Tick
 Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
 {
     //Send a atomic (false) invalidate up if the protocol calls for it
-    coherence->propogateInvalidate(pkt, false);
+    if (coherence->propogateInvalidate(pkt, false)) {
+        //Temp hack, we had a functional read hit in the L1, mark as success
+        pkt->flags |= SATISFIED;
+        pkt->result = Packet::Success;
+        return hitLatency;
+    }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt);

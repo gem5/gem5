@@ -54,6 +54,7 @@ UniCoherence::sendResult(PacketPtr &pkt, MSHR* cshr, bool success)
     {
         bool unblock = cshrs.isFull();
 //        cshrs.markInService(cshr);
+        delete pkt->req;
         cshrs.deallocate(cshr);
         if (!cshrs.havePending()) {
             cache->clearSlaveRequest(Request_Coherence);
@@ -81,17 +82,28 @@ UniCoherence::handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
     }
     else if (blk) {
         new_state = blk->status;
+        if (pkt->isRead()) {
+            DPRINTF(Cache, "Uni-coherence snoops a read that hit in itself"
+                    ". Should satisfy the packet\n");
+            return true; //Satisfy Reads if we can
+        }
     }
     return false;
 }
 
-void
+bool
 UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
 {
+    //Make sure we don't snoop a write
+    //we are expecting writeInvalidates on the snoop port of a uni-coherent cache
+    assert(!(!pkt->isInvalidate() && pkt->isWrite()));
+
     if (pkt->isInvalidate()) {
+/*  Temp Fix for now, forward all invalidates up as functional accesses */
         if (isTiming) {
             // Forward to other caches
-            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            Request* req = new Request(pkt->req->getPaddr(), pkt->getSize(), 0);
+            PacketPtr tmp = new Packet(req, Packet::InvalidateReq, -1);
             cshrs.allocate(tmp);
             cache->setSlaveRequest(Request_Coherence, curTick);
             if (cshrs.isFull())
@@ -102,5 +114,26 @@ UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
             cache->cpuSidePort->sendAtomic(tmp);
             delete tmp;
         }
+/**/
+/*            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            cache->cpuSidePort->sendFunctional(tmp);
+            delete tmp;
+*/
     }
+    if (pkt->isRead()) {
+        /*For now we will see if someone above us has the data by
+          doing a functional access on reads.  Fix this later */
+            PacketPtr tmp = new Packet(pkt->req, Packet::ReadReq, -1);
+            tmp->allocate();
+            cache->cpuSidePort->sendFunctional(tmp);
+            bool hit = (tmp->result == Packet::Success);
+            if (hit) {
+                memcpy(pkt->getPtr<uint8_t>(), tmp->getPtr<uint8_t>(),
+                       pkt->getSize());
+                DPRINTF(Cache, "Uni-coherence snoops a read that hit in L1\n");
+            }
+            delete tmp;
+            return hit;
+    }
+    return false;
 }

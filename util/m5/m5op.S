@@ -36,7 +36,9 @@
 #define quiescens_func 0x02
 #define quiescecycle_func 0x03
 #define quiescetime_func 0x04
-#define exit_old_func 0x20 // deprectated!
+#define ivlb 0x10 // obsolete
+#define ivle 0x11 // obsolete
+#define exit_old_func 0x20 // deprecated!
 #define exit_func 0x21
 #define initparam_func 0x30
 #define loadsymbol_func 0x31
