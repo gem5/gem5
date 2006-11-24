@@ -296,7 +296,7 @@ Bus::findPort(Addr addr, int id)
 
 
     // we shouldn't be sending this back to where it came from
-    // only on a functional access and then we should terminate
+    // do the snoop access and then we should terminate
     // the cyclical call.
     if (dest_id == id)
         return 0;
