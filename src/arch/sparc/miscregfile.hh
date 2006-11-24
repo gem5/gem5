@@ -176,11 +176,11 @@ namespace SparcISA
 #endif
       public:
 
-        void reset();
+        void clear();
 
         MiscRegFile()
         {
-            reset();
+            clear();
         }
 
         MiscReg readReg(int miscReg);

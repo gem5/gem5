@@ -67,7 +67,7 @@ enum RegMask
         PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
 };
 
-void MiscRegFile::reset()
+void MiscRegFile::clear()
 {
     y = 0;
     ccr = 0;
