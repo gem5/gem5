@@ -89,7 +89,7 @@ namespace SparcISA
 
     //Why does both the previous set of constants and this one exist?
     const int PageShift = 13;
-    const int PageBytes = ULL(1) << PageShift;
+    const int PageBytes = 1ULL << PageShift;
 
     const int BranchPredAddrShiftAmt = 2;
 
