@@ -32,6 +32,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
+#include "arch/sparc/types.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/elf_object.hh"
 #include "base/misc.hh"
@@ -77,7 +78,7 @@ SparcLiveProcess::SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
 void
 SparcLiveProcess::startup()
 {
-    argsInit(MachineBytes, VMPageSize);
+    argsInit(sizeof(IntReg), VMPageSize);
 
     //From the SPARC ABI
 

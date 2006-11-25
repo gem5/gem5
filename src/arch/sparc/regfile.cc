@@ -70,8 +70,9 @@ void RegFile::setNextNPC(Addr val)
 
 void RegFile::clear()
 {
-    intRegFile.clear();
     floatRegFile.clear();
+    intRegFile.clear();
+    miscRegFile.clear();
 }
 
 MiscReg RegFile::readMiscReg(int miscReg)
