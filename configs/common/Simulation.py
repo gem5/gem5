@@ -39,6 +39,9 @@ def setCPUClass(options):
     if options.timing:
         TmpClass = TimingSimpleCPU
     elif options.detailed:
+        if not options.caches:
+            print "O3 CPU must be used with caches"
+            sys.exit(1)
         TmpClass = DerivO3CPU
     else:
         TmpClass = AtomicSimpleCPU
