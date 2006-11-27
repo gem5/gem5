@@ -333,6 +333,7 @@ makeEnv('fast', '.fo', strip = True,
 # Profiled binary
 makeEnv('prof', '.po',
         CCFLAGS = Split('-O3 -g -pg'),
+        CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
         LINKFLAGS = '-pg')
 
 Return('envList')
