@@ -59,9 +59,6 @@ TimingSimpleCPU::init()
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
-        // initialize the mem pointers
-        tc->init();
-
         // initialize CPU, including PC
         TheISA::initCPU(tc, tc->readCpuId());
     }
@@ -241,6 +238,13 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
 
     notIdleFraction++;
     _status = Running;
+
+#if FULL_SYSTEM
+    // Connect the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    tc->connectMemPorts();
+#endif
+
     // kick things off by initiating the fetch of the next instruction
     fetchEvent =
         new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);

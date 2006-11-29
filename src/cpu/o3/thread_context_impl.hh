@@ -101,8 +101,10 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::delVirtPort(VirtualPort *vp)
 {
-    delete vp->getPeer();
-    delete vp;
+    if (vp != thread->getVirtPort()) {
+        delete vp->getPeer();
+        delete vp;
+    }
 }
 #endif
 
