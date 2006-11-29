@@ -35,6 +35,7 @@
 #include "arch/sparc/types.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "config/full_system.hh"
+#include "sim/host.hh"
 
 class StaticInstPtr;
 
@@ -43,6 +44,8 @@ namespace BigEndianGuest {}
 namespace SparcISA
 {
     class RegFile;
+
+    const int MachineBytes = 8;
 
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;

@@ -32,7 +32,10 @@
 #define __ARCH_SPARC_PAGETABLE_HH__
 
 #include "arch/sparc/isa_traits.hh"
+#include "base/misc.hh"
 #include "config/full_system.hh"
+
+class Checkpoint;
 
 namespace SparcISA
 {
