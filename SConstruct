@@ -344,7 +344,7 @@ sticky_opts.AddOptions(
     # values (more than one value) not to be able to be restored from
     # a saved option file.  If this causes trouble then upgrade to
     # scons 0.96.90 or later.
-    ListOption('CPU_MODELS', 'CPU models', 'AtomicSimpleCPU,TimingSimpleCPU',
+    ListOption('CPU_MODELS', 'CPU models', 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU',
                env['ALL_CPU_LIST']),
     BoolOption('ALPHA_TLASER',
                'Model Alpha TurboLaser platform (vs. Tsunami)', False),
