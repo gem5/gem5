@@ -91,11 +91,11 @@ struct ThreadState {
     Tick readLastSuspend() { return lastSuspend; }
 
 #if FULL_SYSTEM
-    void init();
+    void connectMemPorts();
 
-    void initPhysPort();
+    void connectPhysPort();
 
-    void initVirtPort();
+    void connectVirtPort();
 
     void dumpFuncProfile();
 

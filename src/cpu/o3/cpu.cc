@@ -497,8 +497,6 @@ FullO3CPU<Impl>::init()
         }
 
 #if FULL_SYSTEM
-        src_tc->init();
-
         TheISA::initCPU(src_tc, src_tc->readCpuId());
 #endif
     }
@@ -554,6 +552,12 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateContext(int tid, int delay)
 {
+#if FULL_SYSTEM
+    // Connect the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    threadContexts[tid]->connectMemPorts();
+#endif
+
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
