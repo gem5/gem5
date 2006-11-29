@@ -508,12 +508,30 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     req->setPaddr(e->pte.paddr() & ~e->pte.size() |
                   req->getVaddr() & e->pte.size());
     return NoFault;
-    /*** End of normal Path ***/
+    /** Normal flow ends here. */
 
-handleMmuRegAccess:
 handleScratchRegAccess:
-    panic("How are we ever going to deal with this?\n");
+    if (vaddr > 0x38 || (vaddr >= 0x20 && vaddr < 0x30 && !hpriv)) {
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        return new DataAccessException;
+    }
+handleMmuRegAccess:
+    req->setMmapedIpr(true);
+    req->setPaddr(req->getVaddr());
+    return NoFault;
 };
+
+Tick
+DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
+{
+    panic("need to implement DTB::doMmuRegRead()\n");
+}
+
+Tick
+DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
+{
+    panic("need to implement DTB::doMmuRegWrite()\n");
+}
 
 void
 TLB::serialize(std::ostream &os)

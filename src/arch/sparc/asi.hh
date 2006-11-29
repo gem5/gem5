@@ -35,6 +35,7 @@
 namespace SparcISA
 {
     enum ASI {
+        ASI_IMPLICIT = 0x00,
         /* Priveleged ASIs */
         //0x00-0x03 implementation dependent
         ASI_NUCLEUS = 0x4,
@@ -242,7 +243,6 @@ namespace SparcISA
         ASI_BLK_SL = 0xF9,
         ASI_BLOCK_SECONDARY_LITTLE = ASI_BLK_SL,
         //0xFA-0xFF implementation dependent
-        ASI_IMPLICIT = 0xFF,
         MAX_ASI = 0xFF
     };
 

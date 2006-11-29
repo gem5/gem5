@@ -38,6 +38,7 @@
 #include "sim/sim_object.hh"
 
 class ThreadContext;
+class Packet;
 
 namespace SparcISA
 {
@@ -142,6 +143,8 @@ class DTB : public TLB
     }
 
     Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+    Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
+    Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
 
   private:
     void writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
