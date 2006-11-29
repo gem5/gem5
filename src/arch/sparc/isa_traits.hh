@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Ali Saidi
  */
 
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
@@ -38,10 +39,6 @@
 class StaticInstPtr;
 
 namespace BigEndianGuest {}
-
-#if FULL_SYSTEM
-#include "arch/sparc/isa_fullsys_traits.hh"
-#endif
 
 namespace SparcISA
 {
@@ -94,6 +91,30 @@ namespace SparcISA
     const int BranchPredAddrShiftAmt = 2;
 
     StaticInstPtr decodeInst(ExtMachInst);
+
+#if FULL_SYSTEM
+    ////////// Interrupt Stuff ///////////
+    enum InterruptLevels
+    {
+       INTLEVEL_MIN = 1,
+       INTLEVEL_MAX = 15,
+
+       NumInterruptLevels = INTLEVEL_MAX - INTLEVEL_MIN
+    };
+
+    // I don't know what it's for, so I don't
+    // know what SPARC's value should be
+    // For loading... XXX This maybe could be USegEnd?? --ali
+    const Addr LoadAddrMask = ULL(0xffffffffff);
+
+    /////////// TLB Stuff ////////////
+    const Addr StartVAddrHole = ULL(0x0000800000000000);
+    const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
+    const Addr VAddrAMask = ULL(0xFFFFFFFF);
+    const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
+    const Addr BytesInPageMask = ULL(0x1FFF);
+
+#endif
 }
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

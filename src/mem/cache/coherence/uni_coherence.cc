@@ -94,10 +94,6 @@ UniCoherence::handleBusRequest(PacketPtr &pkt, CacheBlk *blk, MSHR *mshr,
 bool
 UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
 {
-    //Make sure we don't snoop a write
-    //we are expecting writeInvalidates on the snoop port of a uni-coherent cache
-    assert(!(!pkt->isInvalidate() && pkt->isWrite()));
-
     if (pkt->isInvalidate()) {
 /*  Temp Fix for now, forward all invalidates up as functional accesses */
         if (isTiming) {

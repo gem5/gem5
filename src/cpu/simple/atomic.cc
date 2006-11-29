@@ -29,6 +29,7 @@
  */
 
 #include "arch/locked_mem.hh"
+#include "arch/mmaped_ipr.hh"
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/atomic.hh"
@@ -76,9 +77,6 @@ AtomicSimpleCPU::init()
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
-
-        // initialize the mem pointers
-        tc->init();
 
         // initialize CPU, including PC
         TheISA::initCPU(tc, tc->readCpuId());
@@ -240,6 +238,13 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
+
+#if FULL_SYSTEM
+    // Connect the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    tc->connectMemPorts();
+#endif
+
     //Make sure ticks are still on multiples of cycles
     tickEvent.schedule(nextCycle(curTick + cycles(delay)));
     _status = Running;
@@ -285,7 +290,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
     if (fault == NoFault) {
         pkt->reinitFromRequest();
 
-        dcache_latency = dcachePort.sendAtomic(pkt);
+        if (req->isMmapedIpr())
+            dcache_latency = TheISA::handleIprRead(thread->getTC(),pkt);
+        else
+            dcache_latency = dcachePort.sendAtomic(pkt);
         dcache_access = true;
 
         assert(pkt->result == Packet::Success);
@@ -372,11 +380,15 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         }
 
         if (do_access) {
-            data = htog(data);
             pkt->reinitFromRequest();
             pkt->dataStatic(&data);
 
-            dcache_latency = dcachePort.sendAtomic(pkt);
+            if (req->isMmapedIpr()) {
+                dcache_latency = TheISA::handleIprWrite(thread->getTC(), pkt);
+            } else {
+                data = htog(data);
+                dcache_latency = dcachePort.sendAtomic(pkt);
+            }
             dcache_access = true;
 
             assert(pkt->result == Packet::Success);

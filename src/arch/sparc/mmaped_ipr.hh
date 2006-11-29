@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_VTOPHYS_H__
-#define __ARCH_SPARC_VTOPHYS_H__
+#ifndef __ARCH_SPARC_MMAPED_IPR_HH__
+#define __ARCH_SPARC_MMAPED_IPR_HH__
 
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/pagetable.hh"
+/**
+ * @file
+ *
+ * ISA-specific helper functions for memory mapped IPR accesses.
+ */
 
-class ThreadContext;
-class FunctionalPort;
+#include "cpu/thread_context.hh"
+#include "mem/packet.hh"
+#include "arch/sparc/tlb.hh"
 
-namespace SparcISA {
 
-PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, SparcISA::VAddr vaddr);
+namespace SparcISA
+{
+inline Tick
+handleIprRead(ThreadContext *xc, Packet *pkt)
+{
+    return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
+}
 
-Addr vtophys(Addr vaddr);
-Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-void CopyOut(ThreadContext *tc, void *dst, Addr src, size_t len);
-void CopyIn(ThreadContext *tc, Addr dst, void *src, size_t len);
-void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
+inline Tick
+handleIprWrite(ThreadContext *xc, Packet *pkt)
+{
+    return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
+}
 
-};
-#endif // __ARCH_SPARC_VTOPHYS_H__
 
+} // namespace SparcISA
+
+#endif
