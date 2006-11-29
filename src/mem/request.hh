@@ -49,26 +49,28 @@ class Request;
 typedef Request* RequestPtr;
 
 
+/** ASI information for this request if it exsits. */
+const uint32_t ASI_BITS         = 0x000FF;
 /** The request is a Load locked/store conditional. */
-const unsigned LOCKED		= 0x001;
+const uint32_t LOCKED		= 0x00100;
 /** The virtual address is also the physical address. */
-const unsigned PHYSICAL		= 0x002;
+const uint32_t PHYSICAL		= 0x00200;
 /** The request is an ALPHA VPTE pal access (hw_ld). */
-const unsigned VPTE		= 0x004;
+const uint32_t VPTE		= 0x00400;
 /** Use the alternate mode bits in ALPHA. */
-const unsigned ALTMODE		= 0x008;
+const uint32_t ALTMODE		= 0x00800;
 /** The request is to an uncacheable address. */
-const unsigned UNCACHEABLE	= 0x010;
+const uint32_t UNCACHEABLE	= 0x01000;
 /** The request should not cause a page fault. */
-const unsigned NO_FAULT         = 0x020;
+const uint32_t NO_FAULT         = 0x02000;
 /** The request should be prefetched into the exclusive state. */
-const unsigned PF_EXCLUSIVE	= 0x100;
+const uint32_t PF_EXCLUSIVE	= 0x10000;
 /** The request should be marked as LRU. */
-const unsigned EVICT_NEXT	= 0x200;
+const uint32_t EVICT_NEXT	= 0x20000;
 /** The request should ignore unaligned access faults */
-const unsigned NO_ALIGN_FAULT   = 0x400;
+const uint32_t NO_ALIGN_FAULT   = 0x40000;
 /** The request was an instruction read. */
-const unsigned INST_READ        = 0x800;
+const uint32_t INST_READ        = 0x80000;
 
 class Request
 {
@@ -95,6 +97,10 @@ class Request
 
     /** The address space ID. */
     int asid;
+
+    /** This request is to a memory mapped register. */
+    bool mmapedIpr;
+
     /** The virtual address of the request. */
     Addr vaddr;
 
@@ -164,6 +170,7 @@ class Request
         validAsidVaddr = false;
         validPC = false;
         validScResult = false;
+        mmapedIpr = false;
     }
 
     /**
@@ -181,6 +188,7 @@ class Request
         validAsidVaddr = true;
         validPC = true;
         validScResult = false;
+        mmapedIpr = false;
     }
 
     /** Set just the physical address.  This should only be used to
@@ -214,6 +222,19 @@ class Request
 
     /** Accessor function for asid.*/
     int getAsid() { assert(validAsidVaddr); return asid; }
+
+    /** Accessor function for asi.*/
+    uint8_t getAsi() { assert(validAsidVaddr); return flags & ASI_BITS; }
+
+    /** Accessor function for asi.*/
+    void setAsi(uint8_t a)
+    { assert(validAsidVaddr); flags = (flags & ~ASI_BITS) | a; }
+
+    /** Accessor function for asi.*/
+    bool isMmapedIpr() { assert(validPaddr); return mmapedIpr; }
+
+    /** Accessor function for asi.*/
+    void setMmapedIpr(bool r) { assert(validPaddr); mmapedIpr = r; }
 
     /** Accessor function to check if sc result is valid. */
     bool scResultValid() { return validScResult; }

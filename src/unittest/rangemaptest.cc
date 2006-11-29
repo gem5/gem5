@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_VTOPHYS_H__
-#define __ARCH_SPARC_VTOPHYS_H__
+#include <iostream>
+#include <cassert>
+#include "sim/host.hh"
+#include "base/range_map.hh"
 
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/pagetable.hh"
+using namespace std;
 
-class ThreadContext;
-class FunctionalPort;
+int main()
+{
+    range_map<Addr,int> r;
 
-namespace SparcISA {
+    range_map<Addr,int>::iterator i;
 
-PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, SparcISA::VAddr vaddr);
+    i = r.insert(RangeIn<Addr>(0,40),5);
+    assert(i != r.end());
+    i = r.insert(RangeIn<Addr>(60,90),3);
+    assert(i != r.end());
 
-Addr vtophys(Addr vaddr);
-Addr vtophys(ThreadContext *tc, Addr vaddr);
+    i = r.find(RangeIn(20,30));
+    assert(i != r.end());
+    cout << i->first << " " << i->second << endl;
 
-void CopyOut(ThreadContext *tc, void *dst, Addr src, size_t len);
-void CopyIn(ThreadContext *tc, Addr dst, void *src, size_t len);
-void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
+    i = r.find(RangeIn(55,55));
+    assert(i == r.end());
+}
 
-};
-#endif // __ARCH_SPARC_VTOPHYS_H__
+
+
+
+
+
+
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_VTOPHYS_H__
-#define __ARCH_SPARC_VTOPHYS_H__
-
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/pagetable.hh"
+#include "sim/serialize.hh"
 
-class ThreadContext;
-class FunctionalPort;
+namespace SparcISA
+{
+void
+TlbEntry::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(range.va);
+    SERIALIZE_SCALAR(range.size);
+    SERIALIZE_SCALAR(range.contextId);
+    SERIALIZE_SCALAR(range.partitionId);
+    SERIALIZE_SCALAR(range.real);
+    uint64_t entry4u = pte();
+    SERIALIZE_SCALAR(entry4u);
+    SERIALIZE_SCALAR(used);
+}
 
-namespace SparcISA {
 
-PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, SparcISA::VAddr vaddr);
+void
+TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(range.va);
+    UNSERIALIZE_SCALAR(range.size);
+    UNSERIALIZE_SCALAR(range.contextId);
+    UNSERIALIZE_SCALAR(range.partitionId);
+    UNSERIALIZE_SCALAR(range.real);
+    uint64_t entry4u;
+    UNSERIALIZE_SCALAR(entry4u);
+    pte.populate(entry4u);
+    UNSERIALIZE_SCALAR(used);
+}
 
-Addr vtophys(Addr vaddr);
-Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-void CopyOut(ThreadContext *tc, void *dst, Addr src, size_t len);
-void CopyIn(ThreadContext *tc, Addr dst, void *src, size_t len);
-void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
+int PageTableEntry::pageSizes[] = {8*1024, 64*1024, 0, 4*1024*1024, 0,
+            256*1024*1024L};
 
-};
-#endif // __ARCH_SPARC_VTOPHYS_H__
 
+}

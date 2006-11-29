@@ -82,12 +82,12 @@ namespace SparcISA
         void setMiscRegWithEffect(int miscReg, const MiscReg &val,
                 ThreadContext * tc);
 
-        ASI instAsid()
+        int instAsid()
         {
             return miscRegFile.getInstAsid();
         }
 
-        ASI dataAsid()
+        int dataAsid()
         {
             return miscRegFile.getDataAsid();
         }

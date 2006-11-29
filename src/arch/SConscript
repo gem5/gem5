@@ -53,6 +53,7 @@ isa_switch_hdrs = Split('''
 	isa_traits.hh
 	kernel_stats.hh
         locked_mem.hh
+        mmaped_ipr.hh
 	process.hh
 	regfile.hh
 	remote_gdb.hh
