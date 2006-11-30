@@ -41,7 +41,6 @@ eval $SHORT
 
 echo "netperf benchmark"
 echo $LONG
-/sbin/m5 ivlb 1
 /sbin/m5 resetstats
 /sbin/m5 dumpresetstats 200000000 2000000000
 /sbin/m5 checkpoint 200000000 2000000000
