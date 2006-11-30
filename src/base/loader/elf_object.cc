@@ -330,13 +330,13 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
 }
 
 bool
-ElfObject::loadGlobalSymbols(SymbolTable *symtab)
+ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     return loadSomeSymbols(symtab, STB_GLOBAL);
 }
 
 bool
-ElfObject::loadLocalSymbols(SymbolTable *symtab)
+ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     return loadSomeSymbols(symtab, STB_LOCAL);
 }

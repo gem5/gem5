@@ -1,6 +1,6 @@
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
+from Device import BasicPioDevice, IsaFake, BadAddr
 from Platform import Platform
 from AlphaConsole import AlphaConsole
 from Uart import Uart8250
@@ -10,15 +10,6 @@ from BadDevice import BadDevice
 class TsunamiCChip(BasicPioDevice):
     type = 'TsunamiCChip'
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
-
-class IsaFake(BasicPioDevice):
-    type = 'IsaFake'
-    pio_size = Param.Addr(0x8, "Size of address range")
-    ret_data = Param.UInt8(0xFF, "Default data to return")
-    ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
-
-class BadAddr(IsaFake):
-    ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
 
 class TsunamiIO(BasicPioDevice):
     type = 'TsunamiIO'

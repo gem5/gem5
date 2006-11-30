@@ -86,7 +86,7 @@ EcoffObject::EcoffObject(const string &_filename, int _fd,
 
 
 bool
-EcoffObject::loadGlobalSymbols(SymbolTable *symtab)
+EcoffObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     if (!symtab)
         return false;
@@ -115,7 +115,7 @@ EcoffObject::loadGlobalSymbols(SymbolTable *symtab)
 }
 
 bool
-EcoffObject::loadLocalSymbols(SymbolTable *symtab)
+EcoffObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     if (!symtab)
         return false;

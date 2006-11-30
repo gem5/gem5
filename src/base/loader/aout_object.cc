@@ -82,14 +82,14 @@ AoutObject::AoutObject(const string &_filename, int _fd,
 
 
 bool
-AoutObject::loadGlobalSymbols(SymbolTable *symtab)
+AoutObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     // a.out symbols not supported yet
     return false;
 }
 
 bool
-AoutObject::loadLocalSymbols(SymbolTable *symtab)
+AoutObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     // a.out symbols not supported yet
     return false;

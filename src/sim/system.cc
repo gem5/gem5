@@ -89,36 +89,41 @@ System::System(Params *p)
     /**
      * Load the kernel code into memory
      */
-    // Load kernel code
-    kernel = createObjectFile(params()->kernel_path);
-    if (kernel == NULL)
-        fatal("Could not load kernel file %s", params()->kernel_path);
+    if (params()->kernel_path == "") {
+        warn("No kernel set for full system simulation. Assuming you know what"
+                " you're doing...\n");
+    } else {
+        // Load kernel code
+        kernel = createObjectFile(params()->kernel_path);
+        if (kernel == NULL)
+            fatal("Could not load kernel file %s", params()->kernel_path);
 
-    // Load program sections into memory
-    kernel->loadSections(&functionalPort, LoadAddrMask);
+        // Load program sections into memory
+        kernel->loadSections(&functionalPort, LoadAddrMask);
 
-    // setup entry points
-    kernelStart = kernel->textBase();
-    kernelEnd = kernel->bssBase() + kernel->bssSize();
-    kernelEntry = kernel->entryPoint();
+        // setup entry points
+        kernelStart = kernel->textBase();
+        kernelEnd = kernel->bssBase() + kernel->bssSize();
+        kernelEntry = kernel->entryPoint();
 
-    // load symbols
-    if (!kernel->loadGlobalSymbols(kernelSymtab))
-        panic("could not load kernel symbols\n");
+        // load symbols
+        if (!kernel->loadGlobalSymbols(kernelSymtab))
+            panic("could not load kernel symbols\n");
 
-    if (!kernel->loadLocalSymbols(kernelSymtab))
-        panic("could not load kernel local symbols\n");
+        if (!kernel->loadLocalSymbols(kernelSymtab))
+            panic("could not load kernel local symbols\n");
 
-    if (!kernel->loadGlobalSymbols(debugSymbolTable))
-        panic("could not load kernel symbols\n");
+        if (!kernel->loadGlobalSymbols(debugSymbolTable))
+            panic("could not load kernel symbols\n");
 
-    if (!kernel->loadLocalSymbols(debugSymbolTable))
-        panic("could not load kernel local symbols\n");
+        if (!kernel->loadLocalSymbols(debugSymbolTable))
+            panic("could not load kernel local symbols\n");
 
-    DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
-    DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
-    DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
-    DPRINTF(Loader, "Kernel loaded...\n");
+        DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
+        DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
+        DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
+        DPRINTF(Loader, "Kernel loaded...\n");
+    }
 #endif // FULL_SYSTEM
 
     // increment the number of running systms

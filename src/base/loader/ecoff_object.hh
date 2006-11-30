@@ -52,8 +52,10 @@ class EcoffObject : public ObjectFile
   public:
     virtual ~EcoffObject() {}
 
-    virtual bool loadGlobalSymbols(SymbolTable *symtab);
-    virtual bool loadLocalSymbols(SymbolTable *symtab);
+    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
+            std::numeric_limits<Addr>::max());
+    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
+            std::numeric_limits<Addr>::max());
 
     static ObjectFile *tryFile(const std::string &fname, int fd,
                                size_t len, uint8_t *data);

@@ -99,7 +99,6 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.partition_desc.port = self.membus.port
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.kernel = binary('vmlinux')
 
     self.reset_bin = binary('reset.bin')
     self.hypervisor_bin = binary('q.bin')

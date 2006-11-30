@@ -15,7 +15,7 @@ class System(SimObject):
                                              "boot processor frequency")
         init_param = Param.UInt64(0, "numerical value to pass into simulator")
         boot_osflags = Param.String("a", "boot flags to pass to the kernel")
-        kernel = Param.String("file that contains the kernel code")
+        kernel = Param.String("", "file that contains the kernel code")
         readfile = Param.String("", "file to read startup script from")
         symbolfile = Param.String("", "file to get the symbols from")
 

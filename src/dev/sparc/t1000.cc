@@ -56,50 +56,56 @@ T1000::T1000(const string &name, System *s, IntrControl *ic)
 Tick
 T1000::intrFrequency()
 {
-    return (Tick)0;
+    panic("Need implementation\n");
 }
 
 void
 T1000::postConsoleInt()
 {
+    panic("Need implementation\n");
 }
 
 void
 T1000::clearConsoleInt()
 {
+    panic("Need implementation\n");
 }
 
 void
 T1000::postPciInt(int line)
 {
+    panic("Need implementation\n");
 }
 
 void
 T1000::clearPciInt(int line)
 {
+    panic("Need implementation\n");
 }
 
 Addr
 T1000::pciToDma(Addr pciAddr) const
 {
-    return (Addr)0;
+    panic("Need implementation\n");
 }
 
 
 Addr
 T1000::calcConfigAddr(int bus, int dev, int func)
 {
-    return (Addr)0;
+    panic("Need implementation\n");
 }
 
 void
 T1000::serialize(std::ostream &os)
 {
+    panic("Need implementation\n");
 }
 
 void
 T1000::unserialize(Checkpoint *cp, const std::string &section)
 {
+    panic("Need implementation\n");
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(T1000)

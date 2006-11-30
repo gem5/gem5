@@ -1,18 +1,9 @@
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
+from Device import BasicPioDevice, IsaFake, BadAddr
 from Uart import Uart8250
 from Platform import Platform
 from SimConsole import SimConsole, ConsoleListener
-
-class IsaFake(BasicPioDevice):
-    type = 'IsaFake'
-    pio_size = Param.Addr(0x8, "Size of address range")
-    ret_data = Param.UInt8(0xFF, "Default data to return")
-    ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
-
-class BadAddr(IsaFake):
-    ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
 
 class T1000(Platform):
     type = 'T1000'

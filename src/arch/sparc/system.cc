@@ -155,6 +155,11 @@ SparcSystem::SparcSystem(Params *p)
     if (!hypervisor->loadLocalSymbols(debugSymbolTable))
         panic("could not load hypervisor symbols\n");
 
+    // Strip off the rom address so when the hypervisor is copied into memory we
+    // have symbols still
+    if (!hypervisor->loadLocalSymbols(debugSymbolTable, 0xFFFFFF))
+        panic("could not load hypervisor symbols\n");
+
     if (!nvram->loadGlobalSymbols(debugSymbolTable))
         panic("could not load reset symbols\n");
 

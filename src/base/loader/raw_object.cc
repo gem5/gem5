@@ -61,21 +61,21 @@ RawObject::RawObject(const std::string &_filename, int _fd, size_t _len,
 }
 
 bool
-RawObject::loadGlobalSymbols(SymbolTable *symtab)
+RawObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     int fnameStart = filename.rfind('/',filename.size()) + 1;
     int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr, filename.substr(fnameStart,
+    symtab->insert(text.baseAddr & addrMask, filename.substr(fnameStart,
                 extStart-fnameStart) + "_start");
     return true;
 }
 
 bool
-RawObject::loadLocalSymbols(SymbolTable *symtab)
+RawObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     int fnameStart = filename.rfind('/',filename.size()) + 1;
     int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr, filename.substr(fnameStart,
+    symtab->insert(text.baseAddr & addrMask, filename.substr(fnameStart,
                 extStart-fnameStart) + "_start");
     return true;
 }

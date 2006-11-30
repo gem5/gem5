@@ -30,7 +30,7 @@
 
 /**
  * @file
- * Declaration of top level class for the Tsunami chipset. This class just
+ * Declaration of top level class for the T1000 platform chips. This class just
  * retains pointers to all its children so the children can communicate.
  */
 
@@ -69,7 +69,7 @@ class T1000 : public Platform
     virtual void postConsoleInt();
 
     /**
-     * Clear a posted CPU interrupt (id=55)
+     * Clear a posted CPU interrupt
      */
     virtual void clearConsoleInt();
 

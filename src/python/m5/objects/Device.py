@@ -19,3 +19,14 @@ class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
     dma = Port(Self.pio.peerObj.port, "DMA port")
+
+class IsaFake(BasicPioDevice):
+    type = 'IsaFake'
+    pio_size = Param.Addr(0x8, "Size of address range")
+    ret_data = Param.UInt8(0xFF, "Default data to return")
+    ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
+
+class BadAddr(IsaFake):
+    ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
+
+
