@@ -29,10 +29,11 @@
  */
 
 #include "arch/sparc/asi.hh"
-#include "arch/sparc/tlb.hh"
-#include "sim/builder.hh"
 #include "arch/sparc/miscregfile.hh"
+#include "arch/sparc/tlb.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "sim/builder.hh"
 
 /* @todo remove some of the magic constants.  -- ali
  * */
@@ -72,6 +73,10 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
 
     MapIter i;
     TlbEntry *new_entry;
+
+    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x, pid=%d cid=%d r=%d\n",
+            va, partition_id, context_id, (int)real);
+
     int x = -1;
     for (x = 0; x < size; x++) {
         if (!tlb[x].valid || !tlb[x].used)  {
@@ -104,6 +109,7 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
             i->second->used = false;
             usedEntries--;
         }
+        DPRINTF(TLB, "TLB: Found conflicting entry, deleting it\n");
         lookupTable.erase(i);
     }
 
@@ -127,6 +133,8 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
     TlbRange tr;
     TlbEntry *t;
 
+    DPRINTF(TLB, "TLB: Looking up entry va=%#x pid=%d cid=%d r=%d\n",
+            va, partition_id, context_id, real);
     // Assemble full address structure
     tr.va = va;
     tr.size = va + MachineBytes;
@@ -137,8 +145,10 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
     // Try to find the entry
     i = lookupTable.find(tr);
     if (i == lookupTable.end()) {
+        DPRINTF(TLB, "TLB: No valid entry found\n");
         return NULL;
     }
+    DPRINTF(TLB, "TLB: Valid entry found\n");
 
     // Mark the entries used bit and clear other used bits in needed
     t = i->second;
@@ -279,6 +289,8 @@ void
 ITB::writeSfsr(ThreadContext *tc, bool write, ContextType ct,
         bool se, FaultTypes ft, int asi)
 {
+    DPRINTF(TLB, "TLB: ITB Fault:  w=%d ct=%d ft=%d asi=%d\n",
+             (int)write, ct, ft, asi);
     TLB::writeSfsr(tc, MISCREG_MMU_ITLB_SFSR, write, ct, se, ft, asi);
 }
 
@@ -286,6 +298,8 @@ void
 DTB::writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
         bool se, FaultTypes ft, int asi)
 {
+    DPRINTF(TLB, "TLB: DTB Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
+            a, (int)write, ct, ft, asi);
     TLB::writeSfsr(tc, MISCREG_MMU_DTLB_SFSR, write, ct, se, ft, asi);
     tc->setMiscReg(MISCREG_MMU_DTLB_SFAR, a);
 }
@@ -307,6 +321,9 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     int asi;
     bool real = false;
     TlbEntry *e;
+
+    DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
+            vaddr, req->getSize());
 
     assert(req->getAsi() == ASI_IMPLICIT);
 
@@ -385,14 +402,17 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     bool implicit = false;
     bool real = false;
     Addr vaddr = req->getVaddr();
+    Addr size = req->getSize();
     ContextType ct;
     int context;
     ASI asi;
 
     TlbEntry *e;
 
-
     asi = (ASI)req->getAsi();
+    DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
+            vaddr, size, asi);
+
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
@@ -432,7 +452,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
     // If the asi is unaligned trap
-    if (AsiIsBlock(asi) && vaddr & 0x3f || vaddr & 0x7) {
+    if (vaddr & size-1) {
         writeSfr(tc, vaddr, false, ct, false, OtherFault, asi);
         return new MemAddressNotAligned;
     }
@@ -478,6 +498,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     if (e == NULL || !e->valid) {
         tc->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS,
                 vaddr & ~BytesInPageMask | context);
+        DPRINTF(TLB, "TLB: DTB Failed to find matching TLB entry\n");
         if (real)
             return new DataRealTranslationMiss;
         else
@@ -516,6 +537,7 @@ handleScratchRegAccess:
         return new DataAccessException;
     }
 handleMmuRegAccess:
+    DPRINTF(TLB, "TLB: DTB Translating MM IPR access\n");
     req->setMmapedIpr(true);
     req->setPaddr(req->getVaddr());
     return NoFault;
