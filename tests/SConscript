@@ -205,7 +205,9 @@ if env['FULL_SYSTEM']:
             configs += ['tsunami-simple-atomic',
                         'tsunami-simple-timing',
                         'tsunami-simple-atomic-dual',
-                        'tsunami-simple-timing-dual']
+                        'tsunami-simple-timing-dual',
+			'twosys-tsunami-simple-atomic']
+
 else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing']
 
