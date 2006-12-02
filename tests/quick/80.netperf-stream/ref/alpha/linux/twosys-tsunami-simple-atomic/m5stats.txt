@@ -39,8 +39,8 @@ drivesys.cpu.kern.ipl_good_0                     1189     45.85%     45.85% # nu
 drivesys.cpu.kern.ipl_good_21                      10      0.39%     46.24% # number of times we switched to this ipl from a different ipl
 drivesys.cpu.kern.ipl_good_22                     205      7.91%     54.15% # number of times we switched to this ipl from a different ipl
 drivesys.cpu.kern.ipl_good_31                    1189     45.85%    100.00% # number of times we switched to this ipl from a different ipl
-drivesys.cpu.kern.ipl_ticks              199572064366                       # number of cycles we spent at this ipl
-drivesys.cpu.kern.ipl_ticks_0            199571744403    100.00%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks              199572064367                       # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks_0            199571744404    100.00%    100.00% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks_21                   1620      0.00%    100.00% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks_22                  17630      0.00%    100.00% # number of cycles we spent at this ipl
 drivesys.cpu.kern.ipl_ticks_31                 300713      0.00%    100.00% # number of cycles we spent at this ipl
@@ -61,7 +61,7 @@ drivesys.cpu.kern.mode_switch_good_user             1                       # fr
 drivesys.cpu.kern.mode_switch_good_idle      0.013761                       # fraction of useful protection mode switches
 drivesys.cpu.kern.mode_ticks_kernel            263475      0.24%      0.24% # number of ticks spent at the given mode
 drivesys.cpu.kern.mode_ticks_user             1278343      1.18%      1.43% # number of ticks spent at the given mode
-drivesys.cpu.kern.mode_ticks_idle           106483912     98.57%    100.00% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks_idle           106485234     98.57%    100.00% # number of ticks spent at the given mode
 drivesys.cpu.kern.swap_context                     70                       # number of times the context was actually changed
 drivesys.cpu.kern.syscall                          22                       # number of syscalls executed
 drivesys.cpu.kern.syscall_2                         1      4.55%      4.55% # number of syscalls executed
@@ -140,12 +140,12 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                               38374803                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 411180                       # Number of bytes of host memory used
-host_seconds                                     7.20                       # Real time elapsed on the host
-host_tick_rate                            27794359444                       # Simulator tick rate (ticks/s)
+host_inst_rate                               38710250                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 411152                       # Number of bytes of host memory used
+host_seconds                                     7.14                       # Real time elapsed on the host
+host_tick_rate                            28030590990                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   276122825                       # Number of instructions simulated
+sim_insts                                   276189231                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
 sim_ticks                                200000789468                       # Number of ticks simulated
 testsys.cpu.dtb.accesses                       335402                       # DTB accesses
@@ -188,8 +188,8 @@ testsys.cpu.kern.ipl_good_0                      5055     48.15%     48.15% # nu
 testsys.cpu.kern.ipl_good_21                      183      1.74%     49.90% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good_22                      205      1.95%     51.85% # number of times we switched to this ipl from a different ipl
 testsys.cpu.kern.ipl_good_31                     5055     48.15%    100.00% # number of times we switched to this ipl from a different ipl
-testsys.cpu.kern.ipl_ticks               199569923608                       # number of cycles we spent at this ipl
-testsys.cpu.kern.ipl_ticks_0             199569308038    100.00%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks               199569923603                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks_0             199569308033    100.00%    100.00% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks_21                   30857      0.00%    100.00% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks_22                   17630      0.00%    100.00% # number of cycles we spent at this ipl
 testsys.cpu.kern.ipl_ticks_31                  567083      0.00%    100.00% # number of cycles we spent at this ipl
@@ -210,7 +210,7 @@ testsys.cpu.kern.mode_switch_good_user              1                       # fr
 testsys.cpu.kern.mode_switch_good_idle       0.013123                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_ticks_kernel            1821232      2.16%      2.16% # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks_user              1065606      1.26%      3.42% # number of ticks spent at the given mode
-testsys.cpu.kern.mode_ticks_idle             81402474     96.58%    100.00% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks_idle             81403567     96.58%    100.00% # number of ticks spent at the given mode
 testsys.cpu.kern.swap_context                     440                       # number of times the context was actually changed
 testsys.cpu.kern.syscall                           83                       # number of syscalls executed
 testsys.cpu.kern.syscall_2                          3      3.61%      3.61% # number of syscalls executed
@@ -383,12 +383,12 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                            76361400719                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 411180                       # Number of bytes of host memory used
+host_inst_rate                            75502796884                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 411152                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              203621244                       # Simulator tick rate (ticks/s)
+host_tick_rate                              201377914                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   276122825                       # Number of instructions simulated
+sim_insts                                   276189231                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
 sim_ticks                                      785978                       # Number of ticks simulated
 testsys.cpu.dtb.accesses                            0                       # DTB accesses
@@ -417,10 +417,10 @@ testsys.cpu.kern.mode_good_idle                     0
 testsys.cpu.kern.mode_switch_kernel                 0                       # number of protection mode switches
 testsys.cpu.kern.mode_switch_user                   0                       # number of protection mode switches
 testsys.cpu.kern.mode_switch_idle                   0                       # number of protection mode switches
-testsys.cpu.kern.mode_switch_good        <err: div-0>                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good_kernel <err: div-0>                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good_user   <err: div-0>                       # fraction of useful protection mode switches
-testsys.cpu.kern.mode_switch_good_idle   <err: div-0>                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good            no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_kernel     no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_user       no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_idle       no value                       # fraction of useful protection mode switches
 testsys.cpu.kern.mode_ticks_kernel                  0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks_user                    0                       # number of ticks spent at the given mode
 testsys.cpu.kern.mode_ticks_idle                    0                       # number of ticks spent at the given mode
