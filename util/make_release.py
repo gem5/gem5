@@ -80,18 +80,31 @@ if len(sys.argv) != 3:
 
 destdir = sys.argv[1]
 releasename = sys.argv[2]
+release_dest = joinpath(destdir, 'release')
+encumbered_dest = joinpath(destdir, 'encumbered')
+release_dir = joinpath(release_dest, releasename)
+encumbered_dir = joinpath(encumbered_dest, releasename)
 
 if exists(destdir):
     if not isdir(destdir):
         raise AttributeError, '%s exists, but is not a directory' % destdir
-    rmtree(destdir)
+else:
+    mkdir(destdir)
 
-release_dir = joinpath(destdir, 'release', releasename)
-encumbered_dir = joinpath(destdir, 'encumbered', releasename)
+if exists(release_dest):
+    if not isdir(release_dest):
+        raise AttributeError, \
+              '%s exists, but is not a directory' % release_dest
+    rmtree(release_dest)
 
-mkdir(destdir)
-mkdir(destdir, 'release')
-mkdir(destdir, 'encumbered')
+if exists(encumbered_dest):
+    if not isdir(encumbered_dest):
+        raise AttributeError, \
+              '%s exists, but is not a directory' % encumbered_dest
+    rmtree(encumbered_dest)
+
+mkdir(release_dest)
+mkdir(encumbered_dest)
 mkdir(release_dir)
 mkdir(encumbered_dir)
 
