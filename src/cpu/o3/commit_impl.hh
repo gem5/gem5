@@ -748,6 +748,7 @@ DefaultCommit<Impl>::commit()
                 }
             } else {
                 bdelay_done_seq_num = squashed_inst;
+                squash_bdelay_slot = true;
             }
 #endif
 
