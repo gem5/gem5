@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,28 +25,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Steve Reinhardt
+ * Authors: Erik Hallnor
+ *          Nathan Binkert
  */
+
+#ifndef __BASE_COMPRESSION_BASE_HH__
+#define __BASE_COMPRESSION_BASE_HH__
 
 /**
  * @file
- * Stride Prefetcher template instantiations.
+ * This file defines a base (abstract virtual) compression algorithm object.
  */
 
-#include "mem/cache/tags/cache_tags.hh"
+#include <inttypes.h>
 
-#include "mem/cache/tags/lru.hh"
+/**
+ * Abstract virtual compression algorithm object.
+ */
+class CompressionAlgorithm
+{
+  public:
+    virtual ~CompressionAlgorithm() {}
 
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
+    /**
+     * Uncompress the data, causes a fatal since no data should be compressed.
+     * @param dest The output buffer.
+     * @param src  The compressed data.
+     * @param size The number of bytes in src.
+     *
+     * @retval The size of the uncompressed data.
+     */
+    virtual int uncompress(uint8_t * dest, uint8_t *src, int size) = 0;
 
-#include "mem/cache/prefetch/stride_prefetcher.hh"
+    /**
+     * Compress the data, just returns the source data.
+     * @param dest The output buffer.
+     * @param src  The data to be compressed.
+     * @param size The number of bytes in src.
+     *
+     * @retval The size of the compressed data.
+     */
+    virtual int compress(uint8_t *dest, uint8_t *src, int size) = 0;
+};
 
-// Template Instantiations
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template class StridePrefetcher<CacheTags<LRU>, MissQueue>;
-template class StridePrefetcher<CacheTags<LRU>, BlockingBuffer>;
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
+#endif //__BASE_COMPRESSION_BASE_HH__
