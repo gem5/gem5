@@ -38,8 +38,6 @@
 
 #include "mem/cache/tags/lru.hh"
 
-#include "base/compression/null_compression.hh"
-
 #include "mem/cache/miss/miss_queue.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
 
@@ -48,7 +46,7 @@
 // Template Instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-template class GHBPrefetcher<CacheTags<LRU,NullCompression>, MissQueue>;
-template class GHBPrefetcher<CacheTags<LRU,NullCompression>, BlockingBuffer>;
+template class GHBPrefetcher<CacheTags<LRU>, MissQueue>;
+template class GHBPrefetcher<CacheTags<LRU>, BlockingBuffer>;
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

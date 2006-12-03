@@ -237,6 +237,12 @@ class NumericParamValue(ParamValue):
     def __float__(self):
         return float(self.value)
 
+    def __long__(self):
+        return long(self.value)
+
+    def __int__(self):
+        return int(self.value)
+
     # hook for bounds checking
     def _check(self):
         return
@@ -308,8 +314,11 @@ class CheckedInt(NumericParamValue):
     def __init__(self, value):
         if isinstance(value, str):
             self.value = convert.toInteger(value)
-        elif isinstance(value, (int, long, float)):
+        elif isinstance(value, (int, long, float, NumericParamValue)):
             self.value = long(value)
+        else:
+            raise TypeError, "Can't convert object of type %s to CheckedInt" \
+                  % type(value).__name__
         self._check()
 
 class Int(CheckedInt):      cxx_type = 'int';      size = 32; unsigned = False

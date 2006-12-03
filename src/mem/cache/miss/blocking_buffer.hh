@@ -38,6 +38,7 @@
 
 #include <vector>
 
+#include "base/misc.hh" // for fatal()
 #include "mem/cache/miss/mshr.hh"
 #include "base/statistics.hh"
 
