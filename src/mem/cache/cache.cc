@@ -73,38 +73,28 @@
 
 
 #if defined(USE_CACHE_FALRU)
-template class Cache<CacheTags<FALRU>, BlockingBuffer, SimpleCoherence>;
-template class Cache<CacheTags<FALRU>, BlockingBuffer, UniCoherence>;
-template class Cache<CacheTags<FALRU>, MissQueue, SimpleCoherence>;
-template class Cache<CacheTags<FALRU>, MissQueue, UniCoherence>;
+template class Cache<CacheTags<FALRU>, SimpleCoherence>;
+template class Cache<CacheTags<FALRU>, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_IIC)
-template class Cache<CacheTags<IIC>, BlockingBuffer, SimpleCoherence>;
-template class Cache<CacheTags<IIC>, BlockingBuffer, UniCoherence>;
-template class Cache<CacheTags<IIC>, MissQueue, SimpleCoherence>;
-template class Cache<CacheTags<IIC>, MissQueue, UniCoherence>;
+template class Cache<CacheTags<IIC>, SimpleCoherence>;
+template class Cache<CacheTags<IIC>, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_LRU)
-template class Cache<CacheTags<LRU>, BlockingBuffer, SimpleCoherence>;
-template class Cache<CacheTags<LRU>, BlockingBuffer, UniCoherence>;
-template class Cache<CacheTags<LRU>, MissQueue, SimpleCoherence>;
-template class Cache<CacheTags<LRU>, MissQueue, UniCoherence>;
+template class Cache<CacheTags<LRU>, SimpleCoherence>;
+template class Cache<CacheTags<LRU>, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-template class Cache<CacheTags<Split>, BlockingBuffer, SimpleCoherence>;
-template class Cache<CacheTags<Split>, BlockingBuffer, UniCoherence>;
-template class Cache<CacheTags<Split>, MissQueue, SimpleCoherence>;
-template class Cache<CacheTags<Split>, MissQueue, UniCoherence>;
+template class Cache<CacheTags<Split>, SimpleCoherence>;
+template class Cache<CacheTags<Split>, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-template class Cache<CacheTags<SplitLIFO>, BlockingBuffer, SimpleCoherence>;
-template class Cache<CacheTags<SplitLIFO>, BlockingBuffer, UniCoherence>;
-template class Cache<CacheTags<SplitLIFO>, MissQueue, SimpleCoherence>;
-template class Cache<CacheTags<SplitLIFO>, MissQueue, UniCoherence>;
+template class Cache<CacheTags<SplitLIFO>, SimpleCoherence>;
+template class Cache<CacheTags<SplitLIFO>, UniCoherence>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

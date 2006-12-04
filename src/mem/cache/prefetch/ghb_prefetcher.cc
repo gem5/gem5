@@ -38,15 +38,11 @@
 
 #include "mem/cache/tags/lru.hh"
 
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
-
 #include "mem/cache/prefetch/ghb_prefetcher.hh"
 
 // Template Instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-template class GHBPrefetcher<CacheTags<LRU>, MissQueue>;
-template class GHBPrefetcher<CacheTags<LRU>, BlockingBuffer>;
+template class GHBPrefetcher<CacheTags<LRU> >;
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

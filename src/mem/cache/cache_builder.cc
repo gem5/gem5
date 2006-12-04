@@ -208,26 +208,26 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
 END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 
-#define BUILD_CACHE(t, b, c) do {					\
-        Prefetcher<CacheTags<t>, b> *pf; \
+#define BUILD_CACHE(t, c) do {					\
+        Prefetcher<CacheTags<t> > *pf; \
         if (pf_policy == "tagged") {      \
-             BUILD_TAGGED_PREFETCHER(t, b); \
+             BUILD_TAGGED_PREFETCHER(t); \
         }            \
         else if (pf_policy == "stride") {       \
-             BUILD_STRIDED_PREFETCHER(t, b); \
+             BUILD_STRIDED_PREFETCHER(t); \
         } \
         else if (pf_policy == "ghb") {       \
-             BUILD_GHB_PREFETCHER(t, b); \
+             BUILD_GHB_PREFETCHER(t); \
         } \
         else { \
-             BUILD_NULL_PREFETCHER(t, b); \
+             BUILD_NULL_PREFETCHER(t); \
         } \
-        Cache<CacheTags<t>, b, c>::Params params(tagStore, mq, coh, \
+        Cache<CacheTags<t>, c>::Params params(tagStore, mq, coh, \
                                                        base_params, \
                                                        pf,  \
                                                        prefetch_access, hit_latency); \
-        Cache<CacheTags<t>, b, c> *retval =			\
-            new Cache<CacheTags<t>, b, c>(getInstanceName(), params);		\
+        Cache<CacheTags<t>, c> *retval =			\
+            new Cache<CacheTags<t>, c>(getInstanceName(), params);		\
 return retval;                                                          \
     } while (0)
 
@@ -235,7 +235,7 @@ return retval;                                                          \
         panic("%s not compiled into M5", x);		\
     } while (0)
 
-#define BUILD_COMPRESSED_CACHE(TAGS, tags, b, c)			\
+#define BUILD_COMPRESSED_CACHE(TAGS, tags, c)			\
     do {								\
         CompressionAlgorithm *compAlg;					\
         if (compressed_bus || store_compressed) {			\
@@ -247,87 +247,87 @@ return retval;                                                          \
             new CacheTags<TAGS>(tags, compression_latency, true,	\
                                 store_compressed, adaptive_compression,	\
                                 compAlg, prefetch_miss);		\
-            BUILD_CACHE(TAGS, b, c);					\
+            BUILD_CACHE(TAGS, c);					\
     } while (0)
 
 #if defined(USE_CACHE_FALRU)
-#define BUILD_FALRU_CACHE(b,c) do {			    \
+#define BUILD_FALRU_CACHE(c) do {			    \
         FALRU *tags = new FALRU(block_size, size, latency); \
-        BUILD_COMPRESSED_CACHE(FALRU, tags, b, c);		\
+        BUILD_COMPRESSED_CACHE(FALRU, tags, c);		\
     } while (0)
 #else
-#define BUILD_FALRU_CACHE(b, c) BUILD_CACHE_PANIC("falru cache")
+#define BUILD_FALRU_CACHE(c) BUILD_CACHE_PANIC("falru cache")
 #endif
 
 #if defined(USE_CACHE_LRU)
-#define BUILD_LRU_CACHE(b, c) do {				\
+#define BUILD_LRU_CACHE(c) do {				\
         LRU *tags = new LRU(numSets, block_size, assoc, latency);	\
-        BUILD_COMPRESSED_CACHE(LRU, tags, b, c);			\
+        BUILD_COMPRESSED_CACHE(LRU, tags, c);			\
     } while (0)
 #else
-#define BUILD_LRU_CACHE(b, c) BUILD_CACHE_PANIC("lru cache")
+#define BUILD_LRU_CACHE(c) BUILD_CACHE_PANIC("lru cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-#define BUILD_SPLIT_CACHE(b, c) do {					\
+#define BUILD_SPLIT_CACHE(c) do {					\
         Split *tags = new Split(numSets, block_size, assoc, split_size, lifo, \
                                 two_queue, latency);		\
-        BUILD_COMPRESSED_CACHE(Split, tags, b, c);			\
+        BUILD_COMPRESSED_CACHE(Split, tags, c);			\
     } while (0)
 #else
-#define BUILD_SPLIT_CACHE(b, c) BUILD_CACHE_PANIC("split cache")
+#define BUILD_SPLIT_CACHE(c) BUILD_CACHE_PANIC("split cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-#define BUILD_SPLIT_LIFO_CACHE(b, c) do {				\
+#define BUILD_SPLIT_LIFO_CACHE(c) do {				\
         SplitLIFO *tags = new SplitLIFO(block_size, size, assoc,        \
                                         latency, two_queue, -1);	\
-        BUILD_COMPRESSED_CACHE(SplitLIFO, tags, b, c);			\
+        BUILD_COMPRESSED_CACHE(SplitLIFO, tags, c);			\
     } while (0)
 #else
-#define BUILD_SPLIT_LIFO_CACHE(b, c) BUILD_CACHE_PANIC("lifo cache")
+#define BUILD_SPLIT_LIFO_CACHE(c) BUILD_CACHE_PANIC("lifo cache")
 #endif
 
 #if defined(USE_CACHE_IIC)
-#define BUILD_IIC_CACHE(b ,c) do {			\
+#define BUILD_IIC_CACHE(c) do {			\
         IIC *tags = new IIC(iic_params);		\
-        BUILD_COMPRESSED_CACHE(IIC, tags, b, c);	\
+        BUILD_COMPRESSED_CACHE(IIC, tags, c);	\
     } while (0)
 #else
-#define BUILD_IIC_CACHE(b, c) BUILD_CACHE_PANIC("iic")
+#define BUILD_IIC_CACHE(c) BUILD_CACHE_PANIC("iic")
 #endif
 
-#define BUILD_CACHES(b, c) do {				\
+#define BUILD_CACHES(c) do {				\
         if (repl == NULL) {				\
             if (numSets == 1) {				\
-                BUILD_FALRU_CACHE(b, c);		\
+                BUILD_FALRU_CACHE(c);		\
             } else {					\
                 if (split == true) {			\
-                    BUILD_SPLIT_CACHE(b, c);		\
+                    BUILD_SPLIT_CACHE(c);		\
                 } else if (lifo == true) {		\
-                    BUILD_SPLIT_LIFO_CACHE(b, c);	\
+                    BUILD_SPLIT_LIFO_CACHE(c);	\
                 } else {				\
-                    BUILD_LRU_CACHE(b, c);		\
+                    BUILD_LRU_CACHE(c);		\
                 }					\
             }						\
         } else {					\
-            BUILD_IIC_CACHE(b, c);			\
+            BUILD_IIC_CACHE(c);			\
         }						\
     } while (0)
 
 #define BUILD_COHERENCE(b) do {						\
         if (protocol == NULL) {						\
             UniCoherence *coh = new UniCoherence();			\
-            BUILD_CACHES(b, UniCoherence);				\
+            BUILD_CACHES(UniCoherence);				\
         } else {							\
             SimpleCoherence *coh = new SimpleCoherence(protocol);	\
-            BUILD_CACHES(b, SimpleCoherence);				\
+            BUILD_CACHES(SimpleCoherence);				\
         }								\
     } while (0)
 
 #if defined(USE_TAGGED)
-#define BUILD_TAGGED_PREFETCHER(t, b) pf = new   \
-                TaggedPrefetcher<CacheTags<t>, b>(prefetcher_size, \
+#define BUILD_TAGGED_PREFETCHER(t) pf = new   \
+                TaggedPrefetcher<CacheTags<t> >(prefetcher_size, \
                                                         !prefetch_past_page, \
                                                         prefetch_serial_squash, \
                                                         prefetch_cache_check_push, \
@@ -335,12 +335,12 @@ return retval;                                                          \
                                                         prefetch_latency, \
                                                         prefetch_degree)
 #else
-#define BUILD_TAGGED_PREFETCHER(t, b) BUILD_CACHE_PANIC("Tagged Prefetcher")
+#define BUILD_TAGGED_PREFETCHER(t) BUILD_CACHE_PANIC("Tagged Prefetcher")
 #endif
 
 #if defined(USE_STRIDED)
-#define BUILD_STRIDED_PREFETCHER(t, b) pf = new  \
-                StridePrefetcher<CacheTags<t>, b>(prefetcher_size, \
+#define BUILD_STRIDED_PREFETCHER(t) pf = new  \
+                StridePrefetcher<CacheTags<t> >(prefetcher_size, \
                                                         !prefetch_past_page, \
                                                         prefetch_serial_squash, \
                                                         prefetch_cache_check_push, \
@@ -349,12 +349,12 @@ return retval;                                                          \
                                                         prefetch_degree, \
                                                         prefetch_use_cpu_id)
 #else
-#define BUILD_STRIDED_PREFETCHER(t, b) BUILD_CACHE_PANIC("Stride Prefetcher")
+#define BUILD_STRIDED_PREFETCHER(t) BUILD_CACHE_PANIC("Stride Prefetcher")
 #endif
 
 #if defined(USE_GHB)
-#define BUILD_GHB_PREFETCHER(t, b) pf = new  \
-                GHBPrefetcher<CacheTags<t>, b>(prefetcher_size, \
+#define BUILD_GHB_PREFETCHER(t) pf = new  \
+                GHBPrefetcher<CacheTags<t> >(prefetcher_size, \
                                                      !prefetch_past_page, \
                                                      prefetch_serial_squash, \
                                                      prefetch_cache_check_push, \
@@ -363,12 +363,12 @@ return retval;                                                          \
                                                      prefetch_degree, \
                                                      prefetch_use_cpu_id)
 #else
-#define BUILD_GHB_PREFETCHER(t, b) BUILD_CACHE_PANIC("GHB Prefetcher")
+#define BUILD_GHB_PREFETCHER(t) BUILD_CACHE_PANIC("GHB Prefetcher")
 #endif
 
 #if defined(USE_TAGGED)
-#define BUILD_NULL_PREFETCHER(t, b) pf = new  \
-                TaggedPrefetcher<CacheTags<t>, b>(prefetcher_size, \
+#define BUILD_NULL_PREFETCHER(t) pf = new  \
+                TaggedPrefetcher<CacheTags<t> >(prefetcher_size, \
                                                         !prefetch_past_page, \
                                                         prefetch_serial_squash, \
                                                         prefetch_cache_check_push, \
@@ -376,7 +376,7 @@ return retval;                                                          \
                                                         prefetch_latency, \
                                                         prefetch_degree)
 #else
-#define BUILD_NULL_PREFETCHER(t, b) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
+#define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
 #endif
 
 CREATE_SIM_OBJECT(BaseCache)

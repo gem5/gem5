@@ -38,19 +38,18 @@
 
 #include <vector>
 
+#include "mem/cache/miss/miss_buffer.hh"
 #include "mem/cache/miss/mshr.hh"
 #include "mem/cache/miss/mshr_queue.hh"
 #include "base/statistics.hh"
 
-class BaseCache;
-class BasePrefetcher;
 /**
  * Manages cache misses and writebacks. Contains MSHRs to store miss data
  * and the writebuffer for writes/writebacks.
  * @todo need to handle data on writes better (encapsulate).
  * @todo need to make replacements/writebacks happen in Cache::access
  */
-class MissQueue
+class MissQueue : public MissBuffer
 {
   protected:
     /** The MSHRs. */
@@ -66,16 +65,6 @@ class MissQueue
     const int numTarget;
     /** The number of write buffers. */
     const int writeBuffers;
-    /** True if the cache should allocate on a write miss. */
-    const bool writeAllocate;
-    /** Pointer to the parent cache. */
-    BaseCache* cache;
-
-    /** The Prefetcher */
-    BasePrefetcher *prefetcher;
-
-    /** The block size of the parent cache. */
-    int blkSize;
 
     /** Increasing order number assigned to each incoming request. */
     uint64_t order;
@@ -87,9 +76,6 @@ class MissQueue
      * @addtogroup CacheStatistics
      * @{
      */
-    /** Number of blocks written back per thread. */
-    Stats::Vector<> writebacks;
-
     /** Number of misses that hit in the MSHRs per command and thread. */
     Stats::Vector<> mshr_hits[NUM_MEM_CMDS];
     /** Demand misses that hit in the MSHRs. */
@@ -204,14 +190,6 @@ class MissQueue
     void regStats(const std::string &name);
 
     /**
-     * Called by the parent cache to set the back pointer.
-     * @param _cache A pointer to the parent cache.
-     */
-    void setCache(BaseCache *_cache);
-
-    void setPrefetcher(BasePrefetcher *_prefetcher);
-
-    /**
      * Handle a cache miss properly. Either allocate an MSHR for the request,
      * or forward it through the write buffer.
      * @param pkt The request that missed in the cache.
@@ -289,7 +267,7 @@ class MissQueue
      * @warning Currently only searches the miss queue. If non write allocate
      * might need to search the write buffer for coherence.
      */
-    MSHR* findMSHR(Addr addr) const;
+    MSHR* findMSHR(Addr addr);
 
     /**
      * Searches for the supplied address in the write buffer.
@@ -298,7 +276,7 @@ class MissQueue
      * @param writes The list of writes that match the address.
      * @return True if any writes are found
      */
-    bool findWrites(Addr addr, std::vector<MSHR*>& writes) const;
+    bool findWrites(Addr addr, std::vector<MSHR*>& writes);
 
     /**
      * Perform a writeback of dirty data to the given address.

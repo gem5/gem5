@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Steve Reinhardt
+ * Authors: Erik Hallnor
  */
+
+#include "cpu/smt.hh" //for maxThreadsPerCPU
+#include "mem/cache/base_cache.hh"
+#include "mem/cache/miss/miss_buffer.hh"
+#include "mem/cache/prefetch/base_prefetcher.hh"
 
 /**
- * @file
- * Stride Prefetcher template instantiations.
+ * @todo Move writebacks into shared BaseBuffer class.
  */
+void
+MissBuffer::regStats(const std::string &name)
+{
+    using namespace Stats;
+    writebacks
+        .init(maxThreadsPerCPU)
+        .name(name + ".writebacks")
+        .desc("number of writebacks")
+        .flags(total)
+        ;
+}
 
-#include "mem/cache/tags/cache_tags.hh"
+void
+MissBuffer::setCache(BaseCache *_cache)
+{
+    cache = _cache;
+    blkSize = cache->getBlockSize();
+}
 
-#include "mem/cache/tags/lru.hh"
-
-#include "mem/cache/prefetch/stride_prefetcher.hh"
-
-// Template Instantiations
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template class StridePrefetcher<CacheTags<LRU> >;
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
+void
+MissBuffer::setPrefetcher(BasePrefetcher *_prefetcher)
+{
+    prefetcher = _prefetcher;
+}
