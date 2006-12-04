@@ -106,13 +106,6 @@ sys.path.append(joinpath(ROOT, 'src/python'))
 # Find default configuration & binary.
 Default(os.environ.get('M5_DEFAULT_BINARY', 'build/ALPHA_SE/m5.debug'))
 
-# Ask SCons which directory it was invoked from.
-launch_dir = GetLaunchDir()
-
-# Make targets relative to invocation directory
-abs_targets = map(lambda x: os.path.normpath(joinpath(launch_dir, str(x))),
-                  BUILD_TARGETS)
-
 # helper function: find last occurrence of element in list
 def rfind(l, elt, offs = -1):
     for i in range(len(l)+offs, 0, -1):
@@ -141,6 +134,19 @@ def compare_versions(v1, v2):
 # example, for target 'foo/bar/build/ALPHA_SE/arch/alpha/blah.do' we
 # recognize that ALPHA_SE specifies the configuration because it
 # follow 'build' in the bulid path.
+
+# Generate absolute paths to targets so we can see where the build dir is
+if COMMAND_LINE_TARGETS:
+    # Ask SCons which directory it was invoked from
+    launch_dir = GetLaunchDir()
+    # Make targets relative to invocation directory
+    abs_targets = map(lambda x: os.path.normpath(joinpath(launch_dir, str(x))),
+                      COMMAND_LINE_TARGETS)
+else:
+    # Default targets are relative to root of tree
+    abs_targets = map(lambda x: os.path.normpath(joinpath(ROOT, str(x))),
+                      DEFAULT_TARGETS)
+
 
 # Generate a list of the unique build roots and configs that the
 # collected targets reference.
