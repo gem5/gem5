@@ -1,0 +1,276 @@
+
+TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
+Standard Cell Placement and Global Routing Program
+Authors: Carl Sechen, Bill Swartz
+          Yale University
+
+
+NOTE: Restart file .rs2 not used
+
+TimberWolf will perform a global route step
+rowSep: 1.000000
+feedThruWidth: 4
+
+******************
+BLOCK DATA
+block:1 desire:85
+block:2 desire:85
+Total Desired Length: 170
+total cell length: 168
+total block length: 168
+block x-span:84  block y-span:78
+implicit feed thru range: -84
+Using default value of bin.penalty.control:1.000000
+numBins automatically set to:5
+binWidth = average_cell_width + 0 sigma= 17
+average_cell_width is:16
+standard deviation of cell length is:23.6305
+TimberWolfSC starting from the beginning
+
+
+
+THIS IS THE ROUTE COST OF THE ORIGINAL PLACEMENT: 645
+The number of nets with 1 pin is 4
+The number of nets with 2 pin is 9
+The number of nets with 3 pin is 0
+The number of nets with 4 pin is 2
+The number of nets with 5 pin is 0
+The number of nets with 6 pin is 0
+The number of nets with 7 pin is 0
+The number of nets with 8 pin is 0
+The number of nets with 9 pin is 0
+The number of nets with 10 pin or more is 0
+
+New Cost Function: Initial Horizontal Cost:242
+New Cost Function: FEEDS:0   MISSING_ROWS:-46
+
+bdxlen:86  bdylen:78
+l:0  t:78  r:86  b:0
+
+
+
+THIS IS THE ROUTE COST OF THE CURRENT PLACEMENT: 645
+
+
+
+THIS IS THE PENALTY OF THE CURRENT PLACEMENT: 44
+
+The rand generator seed was at utemp() : 1
+
+
+  tempfile[0][0] = 0.982500    tempfile[0][1] = 90.000000
+  tempfile[1][0] = 0.915000    tempfile[1][1] = 20.000000
+  tempfile[2][0] = 0.700000    tempfile[2][1] = 10.000000
+  tempfile[3][0] = 0.100000    tempfile[3][1] = 0.000000
+
+  I   T  fds     Wire Penalty P_lim Epct binC rowC  acc  s/p early  FDs    MRs
+  1 500    0      929     592   160 30.0  1.0  3.0 84.2 34.7  0.0     0     40
+  2 491    0      876     106   726  0.0  0.8  2.5 80.0 18.5  0.0     0     46
+  3 482    0      822     273   372  0.0  0.5  1.5 80.8 21.2  0.0     0     46
+  4 474    0      826      53   247  0.0  0.5  0.9 65.0 21.9  0.0     0     48
+  5 465    8      987      73   190  0.0  0.5  0.5 50.0 38.3  0.0     0     46
+  6 457    8      851      67   226  0.0  0.5  0.5 53.8 42.9  0.0     0     52
+  7 449    8     1067     108   190  0.0  0.5  0.5 46.2 53.8  0.0     0     50
+  8 441    8      918     106   171  0.0  0.5  0.5 47.1 40.4  0.0     0     48
+  9 434    8      812     101   197  0.0  0.5  0.5 53.6 21.0  0.0     0     48
+ 10 426    8     1038     121   181  0.0  0.5  0.5 43.6 27.1  0.0     0     48
+ 11 419    8      898      93   187  0.0  0.5  0.5 45.3 47.8  0.0     0     50
+ 12 411    4      857      94   240  0.0  0.5  0.5 62.7 51.6  0.0     0     44
+ 13 404    8     1043      88   185  0.0  0.5  0.5 54.0 52.8  0.0     0     50
+ 14 397    8      767      94   154  0.0  0.5  0.5 33.8 35.0  0.0     0     50
+ 15 390    8      862      89   183  0.0  0.5  0.5 55.6 29.0  0.0     0     46
+ 16 383    4      798      79   173  0.0  0.5  0.5 57.5 35.3  0.0     0     52
+ 17 376    8      827     100   152  0.0  0.5  0.5 35.3 81.8  0.0     0     50
+ 18 370    8      878     101   208  0.0  0.5  0.5 44.7 46.2  0.0     0     48
+ 19 363    4      921      67   167  0.0  0.5  0.5 57.1 34.7  0.0     0     48
+ 20 357    8      933      93   154  0.0  0.5  0.5 46.5 43.6  0.0     0     52
+ 21 351    8      930      89   147  0.0  0.5  0.5 39.4 36.5  0.0     0     52
+ 22 345    8      951      79   142  0.0  0.5  0.5 32.8 51.3  0.0     0     50
+ 23 339    8     1046      87   207  0.0  0.5  0.5 52.8 61.0  0.0     0     48
+ 24 333    4      989      96   185  0.0  0.5  0.5 45.3 43.3  0.0     0     42
+ 25 327    4      577      86   157  0.0  0.5  0.5 31.1 55.3  0.0     0     52
+ 26 321    8      776      97   174  0.0  0.5  0.5 47.9 62.5  0.0     0     52
+ 27 315    8      850      81   188  0.0  0.5  0.5 45.0 55.2  0.0     0     50
+ 28 310    8      898      97   148  0.0  0.5  0.5 43.0 45.8  0.0     0     48
+ 29 304    8      889      65   173  0.0  0.5  0.5 32.5 41.3  0.0     0     50
+ 30 299    8      858      81   153  0.0  0.5  0.5 44.3 29.2  0.0     0     46
+ 31 294    8      871      82   187  0.0  0.5  0.5 45.7 47.7  0.0     0     48
+ 32 289    8      782     109   173  0.0  0.5  0.5 35.2 57.4  0.0     0     48
+ 33 284    8      743      98   189  0.0  0.6  0.5 41.8 64.3  0.0     0     52
+ 34 279    8      943      90   147  0.0  0.5  0.5 38.6 32.8  0.0     0     48
+ 35 274    8      907      57   166  0.0  0.5  0.5 33.6 51.0  0.0     0     48
+ 36 269    8      900      70   148  0.0  0.5  0.5 45.0 41.4  0.0     0     50
+ 37 264    4      875     106   133  0.0  0.5  0.5 31.7 55.3  0.0     0     52
+ 38 260    8     1023     145   149  0.0  0.6  0.5 28.7 65.0  0.0     0     52
+ 39 255    8      801     151   173  0.0  0.9  0.5 41.7 41.2  0.0     0     48
+ 40 251    8      741     104   159  0.0  0.8  0.5 36.2 47.5  0.0     0     48
+ 41 246    8      828     108   149  0.0  0.5  0.5 34.6 50.9  0.0     0     50
+ 42 242    8      947     128   132  0.0  0.7  0.5 34.2 39.0  0.0     0     50
+ 43 238    8      917     101   142  0.0  0.8  0.5 34.4 50.9  0.0     0     48
+ 44 234    8      761      86   129  0.0  0.5  0.5 42.0 36.4  0.0     0     52
+ 45 229    8      979     106   137  0.0  0.5  0.5 29.2 55.3  0.0     0     50
+ 46 225    8      806      74   130  0.0  0.7  0.5 33.1 65.4  0.0     0     52
+ 47 221    8      971     125   114  0.0  0.5  0.5 31.9 45.6  0.0     0     52
+ 48 218    8      869     125   104  0.0  0.9  0.5 30.0 56.0  0.0     0     48
+ 49 214    8      999     153   140  0.0  0.8  0.5 30.4 46.4  0.0     0     52
+ 50 210    8      798     192   139  0.0  1.0  0.5 28.9 50.0  0.0     0     52
+ 51 206    8      860     125   157  0.0  1.2  0.5 31.5 26.9  0.0     0     52
+ 52 203    8      893     186   127  5.9  0.9  0.5 26.4 42.3  0.0     0     46
+ 53 199    8      863     126   141  0.0  1.2  0.5 32.5 44.4  0.0     0     44
+ 54 196    8      788      97   133  0.0  0.9  0.5 37.5 40.0  0.0     0     50
+ 55 192    8      926     119   116  0.0  0.6  0.5 26.1 55.3  0.0     0     52
+ 56 189    8      789     162   107  0.0  0.8  0.5 25.2 40.4  0.0     0     48
+ 57 186    8      878     107   128  0.0  1.1  0.5 23.1 34.0  0.0     0     52
+ 58 182    8      775     105   122  0.0  0.8  0.5 25.5 57.4  0.0     0     50
+ 59 179    8      747      94   129  0.0  0.7  0.5 34.3 37.3  0.0     0     50
+ 60 176    8      845      96   138  0.0  0.6  0.5 28.3 41.7  0.0     0     52
+ 61 173    8      961     121   110  0.0  0.6  0.5 29.0 52.6  0.0     0     48
+ 62 170    4      911     110   109  0.0  0.9  0.5 33.5 33.3  0.0     0     48
+ 63 167    8      656     109   109  0.0  0.8  0.5 21.9 44.7  0.0     0     52
+ 64 164    8      934     117   105  0.0  0.8  0.5 15.5 50.0  0.0     0     52
+ 65 161    8      972     125    95  0.0  0.8  0.5 24.4 50.0  0.0     0     50
+ 66 158    8      894     125   101  0.0  0.9  0.5 27.2 35.9  0.0     0     52
+ 67 155    8      798     146   129  0.0  1.0  0.5 22.8 58.7  0.0     0     52
+ 68 153    8      901     183    92  0.0  1.1  0.5 23.6 34.5  0.0     0     52
+ 69 150    8      977     197   103  0.0  1.4  0.5 23.6 36.8  0.0     0     52
+ 70 147    8      905     262    93  0.0  1.5  0.5 20.3 63.4  0.0     0     52
+ 71 145    8      995     148   122  0.0  1.9  0.5 20.9 35.3  0.0     0     52
+ 72 142    8      934     230    99  0.0  1.6  0.5 20.0 65.9  0.0     0     52
+ 73 140    8      862     173   100  0.0  1.8  0.5 26.8 46.8  0.0     0     52
+ 74 137    8      924     139    90  0.0  1.7  0.5 16.8 42.5  0.0     0     52
+ 75 135    8      888     168   113  0.0  1.6  0.5 22.9 40.4  0.0     0     52
+ 76 133    8      712     212    84  0.0  1.6  0.5 13.4 46.9  0.0     0     52
+ 77 130    8      868     210    91  0.0  1.7  0.5 17.7 51.2  0.0     0     52
+ 78 128    8      952     307    92  0.0  1.9  0.5 19.7 44.9  0.0     0     50
+ 79 126    8      801     157   107  0.0  2.2  0.5 15.8 39.0  0.0     0     52
+ 80 123    8      849     147    93  0.0  2.1  0.5 15.6 51.4  0.0     0     52
+ 81 121    8      799     154    86  0.0  1.9  0.5 12.2 50.0  0.0     0     52
+ 82 119    8      941     213    82  0.0  1.8  0.5 19.5 41.2  0.0     0     50
+ 83 117    8      751     268    94  0.0  2.0  0.5 20.8 42.6  0.0     0     50
+ 84 115    8      828     198   102  0.0  2.2  0.5 15.5 59.5  0.0     0     52
+ 85 113    8      898     266   123  0.0  2.2  0.5 13.2 85.2  0.0     0     52
+ 86 111    8      943     190    93  0.0  2.4  0.5 19.5 45.1  0.0     0     52
+ 87 109    8      864     183    65  0.0  2.4  0.5 14.9 31.8  0.0     0     52
+ 88 107    8      793     203    93  0.0  2.4  0.5 11.8 35.3  0.0     0     52
+ 89 105    8      752     162    74  1.2  2.4  0.5 13.1 21.4  0.0     0     52
+ 90 103    8      801     149    77  0.0  2.3  0.5  9.7 58.3  0.0     0     52
+ 91 102    8      901     230    99  0.0  2.2  0.5 16.0 25.5  0.0     0     52
+ 92 100    8      826     201    87  0.0  2.4  0.5 12.8 45.7  0.0     0     52
+ 93  98    8      810     196    83  0.0  2.5  0.5 14.0 24.4  0.0     0     52
+ 94  96    8      857     209    68  1.0  2.5  0.5 11.5 27.0  5.1     0     52
+ 95  95    8      771     174    91  0.0  2.6  0.5 10.5 26.5  0.0     0     52
+ 96  93    8      955     210    59  0.0  2.6  0.5 10.0 36.7  0.7     0     52
+ 97  91    8      833     206    53  0.0  2.7  0.5 10.2 19.4  1.4     0     52
+ 98  90    8      888     229    86  0.0  2.8  0.5  8.1 36.0  0.0     0     52
+ 99  88    8      794     186    91  1.0  2.9  0.5  8.3 25.0  0.5     0     52
+100  81    8      756     170    72  1.0  2.9  0.5  6.0 23.8  7.0     0     52
+101  74    8      791     176    67  0.0  2.9  0.5  4.4 58.3  4.0     0     52
+102  67    8      813     213    43  0.0  3.0  0.5  7.0 150.0  4.2     0     52
+103  62    8      779     245    39  0.0  3.1  0.5  3.2 16.7 13.0     0     52
+104  56    8      767     303    63  0.0  3.2  0.5  4.1 20.0  0.7     0     52
+105  52    8      757     270    57  0.0  3.5  0.5  6.4  3.7  0.5     0     52
+106  47    8      763     283    41  0.0  3.7  0.5  4.5  0.0  0.0     0     52
+107  43    8      768     283    36  0.0  3.7  0.5  2.9 18.2  3.6     0     52
+108  39    8      804     283    25  0.0  3.7  0.5  3.1  0.0  6.2     0     52
+109  36    8      781     283    24  0.0  3.7  0.5  3.6  6.7  6.7     0     52
+110  33    8      738     298    42  0.0  3.7  0.5  3.3 15.4  3.5     0     52
+111  30    8      761     298    36  0.0  3.7  0.5  2.2  0.0  4.3     0     52
+112  27    8      769     298    37  0.0  3.7  0.5  0.9  0.0  2.2     0     52
+113  25    8      745     298    31  0.0  3.7  0.5  1.5  0.0  6.6     0     52
+114  23    8      753     298    16  0.0  3.7  0.5  1.3  0.0  2.8     0     52
+115  21    8      745     298    11  0.0  3.7  0.5  1.5  0.0 14.0     0     52
+116  19    8      747     298    21  0.0  3.7  0.5  2.1  0.0  5.8     0     52
+117  13    8      737     298    12  0.0  3.7  0.5  1.0  0.0 10.0     0     52
+118   9    8      736     298     4  0.0  3.7  0.5  1.5  0.0 18.5     0     52
+119   0    8      739     298     0  0.0  3.7  0.5  1.8  0.0 18.0     0     52
+120   0    8      732     298     0  0.0  3.7  0.5  1.2  0.0 21.8     0     52
+121   0    8      732      19    -1 0.0  0.0  0.5  0.0 100.0 54.8
+
+Initial Wiring Cost: 645   Final Wiring Cost: 732
+############## Percent Wire Cost Reduction: -13
+
+
+Initial Wire Length: 645   Final Wire Length: 732
+************** Percent Wire Length Reduction: -13
+
+
+Initial Horiz. Wire: 216   Final Horiz. Wire: 147
+$$$$$$$$$$$ Percent H-Wire Length Reduction: 32
+
+
+Initial Vert. Wire: 429   Final Vert. Wire: 585
+@@@@@@@@@@@ Percent V-Wire Length Reduction: -36
+
+Before Feeds are Added:
+BLOCK      TOTAL CELL LENGTHS      OVER/UNDER TARGET
+  1                 82                   -20
+  2                 86                   -16
+
+LONGEST Block is:2   Its length is:86
+BLOCK      TOTAL CELL LENGTHS      OVER/UNDER TARGET
+  1                 86                   -16
+  2                 86                   -16
+
+LONGEST Block is:1   Its length is:86
+Added: 1  feed-through cells
+
+Removed the cell overlaps --- Will do neighbor interchanges only now
+
+TOTAL INTERCONNECT LENGTH: 994
+OVERLAP PENALTY: 0
+
+initialRowControl:   1.650
+finalRowControl:   0.300
+iter      T      Wire accept
+ 122  0.001       976   16%
+ 123  0.001       971    0%
+ 124  0.001       971    0%
+Total Feed-Alignment Movement (Pass 1): 0
+Total Feed-Alignment Movement (Pass 2): 0
+Total Feed-Alignment Movement (Pass 3): 0
+Total Feed-Alignment Movement (Pass 4): 0
+Total Feed-Alignment Movement (Pass 5): 0
+Total Feed-Alignment Movement (Pass 6): 0
+Total Feed-Alignment Movement (Pass 7): 0
+Total Feed-Alignment Movement (Pass 8): 0
+
+The rand generator seed was at globroute() : 987654321
+
+
+Total Number of Net Segments: 9
+Number of Switchable Net Segments: 0
+
+Number of channels: 3
+
+
+
+THIS IS THE ORIGINAL NUMBER OF TRACKS: 5
+
+
+no. of accepted flips: 0
+no. of attempted flips: 0
+THIS IS THE NUMBER OF TRACKS: 5
+
+
+
+FINAL NUMBER OF ROUTING TRACKS: 5
+
+MAX OF CHANNEL:  1  is:   0
+MAX OF CHANNEL:  2  is:   4
+MAX OF CHANNEL:  3  is:   1
+FINAL TOTAL INTERCONNECT LENGTH: 978
+FINAL OVERLAP PENALTY: 0    FINAL VALUE OF TOTAL COST IS: 978
+MAX NUMBER OF ATTEMPTED FLIPS PER T:      55
+
+
+cost_scale_factor:3.90616
+
+Number of Feed Thrus: 0
+Number of Implicit Feed Thrus: 0
+
+Statistics:
+Number of Standard Cells: 10
+Number of Pads: 0 
+Number of Nets: 15 
+Number of Pins: 46 
+Usage statistics not available
