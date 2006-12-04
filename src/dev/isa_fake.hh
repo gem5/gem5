@@ -40,6 +40,8 @@
 #include "dev/alpha/tsunami.hh"
 #include "mem/packet.hh"
 
+#include <string>
+
 /**
  * IsaFake is a device that returns, BadAddr, 1 or 0 on all reads and
  *  rites. It is meant to be placed at an address range
@@ -54,11 +56,20 @@ class IsaFake : public BasicPioDevice
     {
         Addr pio_size;
         bool retBadAddr;
-        uint8_t retData;
+        bool updateData;
+        uint8_t retData8;
+        uint16_t retData16;
+        uint32_t retData32;
+        uint64_t retData64;
+        std::string warnAccess;
     };
   protected:
     const Params *params() const { return (const Params*)_params; }
-    uint64_t retData;
+    uint8_t retData8;
+    uint16_t retData16;
+    uint32_t retData32;
+    uint64_t retData64;
+
 
   public:
     /**

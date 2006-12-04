@@ -47,7 +47,10 @@ IsaFake::IsaFake(Params *p)
     if (!params()->retBadAddr)
         pioSize = p->pio_size;
 
-    memset(&retData, p->retData, sizeof(retData));
+    retData8 = params()->retData8;
+    retData16 = params()->retData16;
+    retData32 = params()->retData32;
+    retData64 = params()->retData64;
 }
 
 Tick
@@ -55,6 +58,9 @@ IsaFake::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
 
+    if (params()->warnAccess != "")
+        warn("Device %s accessed by read to address %#x size=%d\n",
+                name(), pkt->getAddr(), pkt->getSize());
     if (params()->retBadAddr) {
         DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
@@ -65,16 +71,16 @@ IsaFake::read(PacketPtr pkt)
                 pkt->getAddr(), pkt->getSize());
         switch (pkt->getSize()) {
           case sizeof(uint64_t):
-             pkt->set(retData);
+             pkt->set(retData64);
              break;
           case sizeof(uint32_t):
-             pkt->set((uint32_t)retData);
+             pkt->set(retData32);
              break;
           case sizeof(uint16_t):
-             pkt->set((uint16_t)retData);
+             pkt->set(retData16);
              break;
           case sizeof(uint8_t):
-             pkt->set((uint8_t)retData);
+             pkt->set(retData8);
              break;
           default:
             panic("invalid access size!\n");
@@ -87,6 +93,27 @@ IsaFake::read(PacketPtr pkt)
 Tick
 IsaFake::write(PacketPtr pkt)
 {
+    if (params()->warnAccess != "") {
+        uint64_t data;
+        switch (pkt->getSize()) {
+          case sizeof(uint64_t):
+            data = pkt->get<uint64_t>();
+            break;
+          case sizeof(uint32_t):
+            data = pkt->get<uint32_t>();
+            break;
+          case sizeof(uint16_t):
+            data = pkt->get<uint16_t>();
+            break;
+          case sizeof(uint8_t):
+            data = pkt->get<uint8_t>();
+            break;
+          default:
+            panic("invalid access size!\n");
+        }
+        warn("Device %s accessed by write to address %#x size=%d data=%#x\n",
+                name(), pkt->getAddr(), pkt->getSize(), data);
+    }
     if (params()->retBadAddr) {
         DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
@@ -94,6 +121,25 @@ IsaFake::write(PacketPtr pkt)
     } else {
         DPRINTF(Tsunami, "write - va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
+
+        if (params()->updateData) {
+            switch (pkt->getSize()) {
+              case sizeof(uint64_t):
+                retData64 = pkt->get<uint64_t>();
+                break;
+              case sizeof(uint32_t):
+                retData32 = pkt->get<uint32_t>();
+                break;
+              case sizeof(uint16_t):
+                retData16 = pkt->get<uint16_t>();
+                break;
+              case sizeof(uint8_t):
+                retData8 = pkt->get<uint8_t>();
+                break;
+              default:
+                panic("invalid access size!\n");
+            }
+        }
         pkt->result = Packet::Success;
     }
     return pioDelay;
@@ -105,7 +151,12 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
     Param<Tick> pio_latency;
     Param<Addr> pio_size;
     Param<bool> ret_bad_addr;
-    Param<uint8_t> ret_data;
+    Param<bool> update_data;
+    Param<std::string> warn_access;
+    Param<uint8_t> ret_data8;
+    Param<uint16_t> ret_data16;
+    Param<uint32_t> ret_data32;
+    Param<uint64_t> ret_data64;
     SimObjectParam<Platform *> platform;
     SimObjectParam<System *> system;
 
@@ -117,7 +168,12 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IsaFake)
     INIT_PARAM(pio_latency, "Programmed IO latency"),
     INIT_PARAM(pio_size, "Size of address range"),
     INIT_PARAM(ret_bad_addr, "Return pkt status BadAddr"),
-    INIT_PARAM(ret_data, "Data to return if not bad addr"),
+    INIT_PARAM(update_data, "Update returned data"),
+    INIT_PARAM(warn_access, "Warn if this device is touched"),
+    INIT_PARAM(ret_data8, "Data to return if not bad addr"),
+    INIT_PARAM(ret_data16, "Data to return if not bad addr"),
+    INIT_PARAM(ret_data32, "Data to return if not bad addr"),
+    INIT_PARAM(ret_data64, "Data to return if not bad addr"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object")
 
@@ -131,7 +187,12 @@ CREATE_SIM_OBJECT(IsaFake)
     p->pio_delay = pio_latency;
     p->pio_size = pio_size;
     p->retBadAddr = ret_bad_addr;
-    p->retData = ret_data;
+    p->updateData = update_data;
+    p->warnAccess = warn_access;
+    p->retData8= ret_data8;
+    p->retData16 = ret_data16;
+    p->retData32 = ret_data32;
+    p->retData64 = ret_data64;
     p->platform = platform;
     p->system = system;
     return new IsaFake(p);

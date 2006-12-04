@@ -30,7 +30,7 @@
 
 #include <unistd.h>
 
-#define VERSION         0xA1000005
+#define VERSION         0xA1000006
 #define OWN_M5          0x000000AA
 #define OWN_LEGION      0x00000055
 
@@ -42,6 +42,8 @@ typedef struct {
 
     uint64_t pc;
     uint64_t new_pc;
+    uint64_t cycle_count;
+    uint64_t new_cycle_count;
     uint32_t instruction;
     uint32_t new_instruction;
     uint64_t intregs[32];

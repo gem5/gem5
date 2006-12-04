@@ -285,6 +285,7 @@ Trace::InstRecord::dump(ostream &outs)
     {
         bool compared = false;
         bool diffPC   = false;
+        bool diffCC   = false;
         bool diffInst = false;
         bool diffRegs = false;
         bool diffTpc = false;
@@ -317,6 +318,11 @@ Trace::InstRecord::dump(ostream &outs)
                     lgnPc = shared_data->pc & TheISA::PAddrImplMask;
                     if (lgnPc != m5Pc)
                        diffPC = true;
+
+                    if (shared_data->cycle_count !=
+                            thread->getCpuPtr()->instCount())
+                        diffCC = true;
+
                     if (shared_data->instruction !=
                             (SparcISA::MachInst)staticInst->machInst) {
                         diffInst = true;
@@ -385,8 +391,8 @@ Trace::InstRecord::dump(ostream &outs)
                     if(shared_data->cleanwin != thread->readMiscReg(MISCREG_CLEANWIN))
                         diffCleanwin = true;
 
-                    if (diffPC || diffInst || diffRegs || diffTpc || diffTnpc ||
-                            diffTstate || diffTt || diffHpstate ||
+                    if (diffPC || diffCC || diffInst || diffRegs || diffTpc ||
+                            diffTnpc || diffTstate || diffTt || diffHpstate ||
                             diffHtstate || diffHtba || diffPstate || diffY ||
                             diffCcr || diffTl || diffGl || diffAsi || diffPil ||
                             diffCwp || diffCansave || diffCanrestore ||
@@ -394,6 +400,8 @@ Trace::InstRecord::dump(ostream &outs)
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
                             outs << " [PC]";
+                        if (diffCC)
+                            outs << " [CC]";
                         if (diffInst)
                             outs << " [Instruction]";
                         if (diffRegs)
@@ -444,6 +452,13 @@ Trace::InstRecord::dump(ostream &outs)
                         outs << setfill(' ') << setw(15)
                              << "Legion PC: " << "0x"<< setw(16) << setfill('0') << hex
                              << lgnPc << endl << endl;
+
+                        outs << right << setfill(' ') << setw(15)
+                             << "M5 CC: " << "0x"<< setw(16) << setfill('0')
+                             << hex << thread->getCpuPtr()->instCount() << endl;
+                        outs << setfill(' ') << setw(15)
+                             << "Legion CC: " << "0x"<< setw(16) << setfill('0') << hex
+                             << shared_data->cycle_count << endl << endl;
 
                         outs << setfill(' ') << setw(15)
                              << "M5 Inst: "  << "0x"<< setw(8)

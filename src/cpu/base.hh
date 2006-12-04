@@ -70,12 +70,16 @@ class BaseCPU : public MemObject
   protected:
     // CPU's clock period in terms of the number of ticks of curTime.
     Tick clock;
+    // @todo remove me after debugging with legion done
+    Tick instCnt;
 
   public:
 //    Tick currentTick;
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick cycles(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
+    // @todo remove me after debugging with legion done
+    Tick instCount() { return instCnt; }
 
     /** The next cycle the CPU should be scheduled, given a cache
      * access or quiesce event returning on this cycle.  This function
