@@ -72,7 +72,7 @@ void MiscRegFile::clear()
     y = 0;
     ccr = 0;
     asi = 0;
-    tick = 0;
+    tick = ULL(1) << 63;
     fprs = 0;
     gsr = 0;
     softint = 0;
@@ -282,10 +282,19 @@ MiscReg MiscRegFile::readReg(int miscReg)
 MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
+        // tick and stick are aliased to each other in niagra
+        case MISCREG_STICK:
         case MISCREG_TICK:
         case MISCREG_PRIVTICK:
-          return tc->getCpuPtr()->curCycle() - (tick & mask(63)) |
-              (tick & ~(mask(63))) << 63;
+          // I'm not sure why legion ignores the lowest two bits, but we'll go
+          // with it
+          // change from curCycle() to instCount() until we're done with legion
+          DPRINTFN("Instruction Count when STICK read: %#X\n",
+                  tc->getCpuPtr()->instCount());
+          uint64_t t1 =  mbits(tc->getCpuPtr()->instCount() - (tick &
+                      mask(63)),62,2);
+          uint64_t t2 = mbits(tick,63,63) ;
+          return t1 | t2;
         case MISCREG_FPRS:
           panic("FPU not implemented\n");
         case MISCREG_PCR:
@@ -296,13 +305,13 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
           panic("Floating Point not implemented\n");
 //We'll include this only in FS so we don't need the SparcSystem type around
 //in SE.
-#if FULL_SYSTEM
+/*#if FULL_SYSTEM
         case MISCREG_STICK:
           SparcSystem *sys;
           sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           return curTick/Clock::Int::ns - sys->sysTick | (stick & ~(mask(63)));
-#endif
+#endif*/
         case MISCREG_HVER:
           return NWindows | MaxTL << 8 | MaxGL << 16;
     }
@@ -518,8 +527,10 @@ void MiscRegFile::setRegWithEffect(int miscReg,
     SparcSystem *sys;
 #endif
     switch (miscReg) {
+        case MISCREG_STICK:
         case MISCREG_TICK:
-          tick = tc->getCpuPtr()->curCycle() - val  & ~Bit64;
+          // change from curCycle() to instCount() until we're done with legion
+          tick = tc->getCpuPtr()->instCount() - val  & ~Bit64;
           tick |= val & Bit64;
           break;
         case MISCREG_FPRS:
@@ -575,12 +586,14 @@ void MiscRegFile::setRegWithEffect(int miscReg,
 //We'll include this only in FS so we don't need the SparcSystem type around
 //in SE.
 #if FULL_SYSTEM
-        case MISCREG_STICK:
+        // @todo figure out how we're actualy going to do this. In niagra the
+        // registers are aliased to the same thing (see tick above)
+        /*case MISCREG_STICK:
           sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
           assert(sys != NULL);
           sys->sysTick = curTick/Clock::Int::ns - val & ~Bit64;
           stick |= val & Bit64;
-          break;
+          break;*/
         case MISCREG_STICK_CMPR:
           if (sTickCompare == NULL)
               sTickCompare = new STickCompareEvent(this, tc);

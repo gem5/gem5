@@ -58,6 +58,18 @@ bits(T val, int first, int last)
 }
 
 /**
+ * Mask off the given bits in place like bits() but without shifting.
+ * msb = 63, lsb = 0
+ */
+template <class T>
+inline
+T
+mbits(T val, int first, int last)
+{
+    return val & (mask(first+1) & ~mask(last));
+}
+
+/**
  * Sign-extend an N-bit value to 64 bits.
  */
 template <int N>
