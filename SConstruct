@@ -90,7 +90,7 @@ except:
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
 
-# Paths to the M5 and external source trees.
+# Path to the M5 source tree.
 SRCDIR = joinpath(ROOT, 'src')
 
 # tell python where to find m5 python code
@@ -331,7 +331,7 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
                        'O3CPU', 'OzoneCPU']
 
-if os.path.isdir(joinpath(SRCDIR, 'src/encumbered/cpu/full')):
+if os.path.isdir(joinpath(SRCDIR, 'encumbered/cpu/full')):
     env['ALL_CPU_LIST'] += ['FullCPU']
 
 # Sticky options get saved in the options file so they persist from
