@@ -202,7 +202,6 @@ def template StoreExecute {{
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            uint64_t write_result = 0;
             //This is to support the conditional store in cas instructions.
             //It should be optomized out in all the others
             bool storeCond = true;
@@ -218,7 +217,8 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem,
+                        EA, %(asi_val)s, 0);
             }
             if(fault == NoFault)
             {
@@ -233,7 +233,6 @@ def template StoreExecute {{
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
-            uint64_t write_result = 0;
             bool storeCond = true;
             Addr EA;
             %(op_decl)s;
@@ -247,7 +246,8 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem,
+                        EA, %(asi_val)s, 0);
             }
             if(fault == NoFault)
             {
@@ -309,7 +309,8 @@ let {{
 //and in the other they're distributed across two. Also note that for
 //execute functions, the name of the base class doesn't matter.
 let {{
-    def doSplitExecute(code, execute, name, Name, opt_flags, microParam):
+    def doSplitExecute(code, execute, name, Name, asi, opt_flags, microParam):
+        microParam["asi_val"] = asi;
         codeParam = microParam.copy()
         codeParam["ea_code"] = ''
         codeIop = InstObjParams(name, Name, '', code, opt_flags, codeParam)
@@ -326,13 +327,13 @@ let {{
 
 
     def doDualSplitExecute(code, eaRegCode, eaImmCode, execute,
-            faultCode, nameReg, nameImm, NameReg, NameImm, opt_flags):
+            faultCode, nameReg, nameImm, NameReg, NameImm, asi, opt_flags):
         executeCode = ''
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
             microParams = {"ea_code" : eaCode, "fault_check": faultCode}
             executeCode += doSplitExecute(code, execute, name, Name,
-                    opt_flags, microParams)
+                    asi, opt_flags, microParams)
         return executeCode
 }};
