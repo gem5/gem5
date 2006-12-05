@@ -114,11 +114,7 @@ def update_test(target, source, env):
     src_dir = str(source[1].get_dir())
     dest_files = os.listdir(dest_dir)
     src_files = os.listdir(src_dir)
-    # Exclude status & diff outputs
-    for f in ('outdiff', 'statsdiff', 'status'):
-        if f in src_files:
-            src_files.remove(f)
-    for f in src_files:
+    for f in ('stdout', 'stderr', 'm5stats.txt', 'config.ini', 'config.out'):
         if f in dest_files:
             print "  Replacing file", f
             dest_files.remove(f)
