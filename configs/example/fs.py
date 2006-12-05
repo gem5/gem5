@@ -92,7 +92,13 @@ else:
     else:
         bm = [SysConfig()]
 
-test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
+if m5.build_env['TARGET_ISA'] == "alpha":
+    test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
+elif m5.build_env['TARGET_ISA'] == "sparc":
+    test_sys = makeSparcSystem(test_mem_mode, bm[0])
+else:
+    m5.panic("incapable of building non-alpha or non-sparc full system!")
+
 np = options.num_cpus
 
 if options.l2cache:
@@ -113,7 +119,10 @@ for i in xrange(np):
         test_sys.cpu[i].connectMemPorts(test_sys.membus)
 
 if len(bm) == 2:
-    drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
+    if m5.build_env['TARGET_ISA'] == 'alpha':
+        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
+    elif m5.build_env['TARGET_ISA'] == 'sparc':
+        drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
     root = makeDualRoot(test_sys, drive_sys, options.etherdump)
