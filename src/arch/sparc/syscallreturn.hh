@@ -33,58 +33,30 @@
 
 #include <inttypes.h>
 
+#include "sim/syscallreturn.hh"
 #include "arch/sparc/regfile.hh"
-
-class SyscallReturn
-{
-  public:
-    template <class T>
-    SyscallReturn(T v, bool s)
-    {
-        retval = (uint64_t)v;
-        success = s;
-    }
-
-    template <class T>
-    SyscallReturn(T v)
-    {
-        success = (v >= 0);
-        retval = (uint64_t)v;
-    }
-
-    ~SyscallReturn() {}
-
-    SyscallReturn& operator=(const SyscallReturn& s)
-    {
-        retval = s.retval;
-        success = s.success;
-        return *this;
-    }
-
-    bool successful() { return success; }
-    uint64_t value() { return retval; }
-
-    private:
-    uint64_t retval;
-    bool success;
-};
+#include "cpu/thread_context.hh"
 
 namespace SparcISA
 {
     static inline void setSyscallReturn(SyscallReturn return_value,
-            RegFile *regs)
+            ThreadContext * tc)
     {
         // check for error condition.  SPARC syscall convention is to
         // indicate success/failure in reg the carry bit of the ccr
         // and put the return value itself in the standard return value reg ().
         if (return_value.successful()) {
             // no error, clear XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) & 0xEE);
-            regs->setIntReg(ReturnValueReg, return_value.value());
+            tc->setIntReg(NumIntArchRegs + 2,
+                    tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
+            //tc->setMiscReg(MISCREG_CCR, tc->readMiscReg(MISCREG_CCR) & 0xEE);
+            tc->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, set XCC.C
-            regs->setMiscReg(MISCREG_CCR, regs->readMiscReg(MISCREG_CCR) | 0x11);
-            regs->setIntReg(ReturnValueReg, return_value.value());
+            tc->setIntReg(NumIntArchRegs + 2,
+                    tc->readIntReg(NumIntArchRegs + 2) | 0x11);
+            //tc->setMiscReg(MISCREG_CCR, tc->readMiscReg(MISCREG_CCR) | 0x11);
+            tc->setIntReg(ReturnValueReg, return_value.value());
         }
     }
 };

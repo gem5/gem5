@@ -48,8 +48,8 @@ namespace SparcISA
     enum MiscRegIndex
     {
         /** Ancillary State Registers */
-        MISCREG_Y,
-        MISCREG_CCR,
+//        MISCREG_Y,
+//        MISCREG_CCR,
         MISCREG_ASI,
         MISCREG_TICK,
         MISCREG_FPRS,
@@ -74,11 +74,11 @@ namespace SparcISA
         MISCREG_TL,
         MISCREG_PIL,
         MISCREG_CWP,
-        MISCREG_CANSAVE,
-        MISCREG_CANRESTORE,
-        MISCREG_CLEANWIN,
-        MISCREG_OTHERWIN,
-        MISCREG_WSTATE,
+//        MISCREG_CANSAVE,
+//        MISCREG_CANRESTORE,
+//        MISCREG_CLEANWIN,
+//        MISCREG_OTHERWIN,
+//        MISCREG_WSTATE,
         MISCREG_GL,
 
         /** Hyper privileged registers */

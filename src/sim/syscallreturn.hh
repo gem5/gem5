@@ -26,28 +26,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
- *          Korey Sewell
  */
 
-#ifndef __ARCH_MIPS_SYSCALLRETURN_HH__
-#define __ARCH_MIPS_SYSCALLRETURN_HH__
+#ifndef __SIM_SYSCALLRETURN_HH__
+#define __SIM_SYSCALLRETURN_HH__
 
-#include "sim/syscallreturn.hh"
+#include <inttypes.h>
 
-namespace MipsISA
+class SyscallReturn
 {
-    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+  public:
+    template <class T>
+    SyscallReturn(T v, bool s)
     {
-        if (return_value.successful()) {
-            // no error
-            regs->setIntReg(SyscallSuccessReg, 0);
-            regs->setIntReg(ReturnValueReg1, return_value.value());
-        } else {
-            // got an error, return details
-            regs->setIntReg(SyscallSuccessReg, (IntReg) -1);
-            regs->setIntReg(ReturnValueReg1, -return_value.value());
-        }
+        retval = (uint64_t)v;
+        success = s;
     }
-}
+
+    template <class T>
+    SyscallReturn(T v)
+    {
+        success = (v >= 0);
+        retval = (uint64_t)v;
+    }
+
+    ~SyscallReturn() {}
+
+    SyscallReturn& operator=(const SyscallReturn& s)
+    {
+        retval = s.retval;
+        success = s.success;
+        return *this;
+    }
+
+    bool successful() { return success; }
+    uint64_t value() { return retval; }
+
+    private:
+    uint64_t retval;
+    bool success;
+};
 
 #endif

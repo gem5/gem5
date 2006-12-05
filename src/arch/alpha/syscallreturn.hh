@@ -32,38 +32,7 @@
 #ifndef __ARCH_ALPHA_SYSCALLRETURN_HH__
 #define __ARCH_ALPHA_SYSCALLRETURN_HH__
 
-class SyscallReturn {
-    public:
-       template <class T>
-       SyscallReturn(T v, bool s)
-       {
-           retval = (uint64_t)v;
-           success = s;
-       }
-
-       template <class T>
-       SyscallReturn(T v)
-       {
-           success = (v >= 0);
-           retval = (uint64_t)v;
-       }
-
-       ~SyscallReturn() {}
-
-       SyscallReturn& operator=(const SyscallReturn& s) {
-           retval = s.retval;
-           success = s.success;
-           return *this;
-       }
-
-       bool successful() { return success; }
-       uint64_t value() { return retval; }
-
-
-   private:
-       uint64_t retval;
-       bool success;
-};
+#include "sim/syscallreturn.hh"
 
 namespace AlphaISA
 {

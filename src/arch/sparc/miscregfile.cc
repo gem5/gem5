@@ -50,12 +50,12 @@ class Checkpoint;
 string SparcISA::getMiscRegName(RegIndex index)
 {
     static::string miscRegName[NumMiscRegs] =
-        {"y", "ccr", "asi", "tick", "fprs", "pcr", "pic",
+        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
          "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
          "stick", "stick_cmpr",
          "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
-         "pil", "cwp", "cansave", "canrestore", "cleanwin", "otherwin",
-         "wstate", "gl",
+         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
+         "wstate",*/ "gl",
          "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
          "hstick_cmpr",
          "fsr"};
@@ -109,10 +109,10 @@ void MiscRegFile::clear()
 MiscReg MiscRegFile::readReg(int miscReg)
 {
     switch (miscReg) {
-        case MISCREG_Y:
-          return y;
-        case MISCREG_CCR:
-          return ccr;
+//        case MISCREG_Y:
+//          return y;
+//        case MISCREG_CCR:
+//          return ccr;
         case MISCREG_ASI:
           return asi;
         case MISCREG_FPRS:
@@ -155,16 +155,16 @@ MiscReg MiscRegFile::readReg(int miscReg)
           return pil;
         case MISCREG_CWP:
           return cwp;
-        case MISCREG_CANSAVE:
-          return cansave;
-        case MISCREG_CANRESTORE:
-          return canrestore;
-        case MISCREG_CLEANWIN:
-          return cleanwin;
-        case MISCREG_OTHERWIN:
-          return otherwin;
-        case MISCREG_WSTATE:
-          return wstate;
+//        case MISCREG_CANSAVE:
+//          return cansave;
+//        case MISCREG_CANRESTORE:
+//          return canrestore;
+//        case MISCREG_CLEANWIN:
+//          return cleanwin;
+//        case MISCREG_OTHERWIN:
+//          return otherwin;
+//        case MISCREG_WSTATE:
+//          return wstate;
         case MISCREG_GL:
           return gl;
 
@@ -225,12 +225,12 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
 void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 {
     switch (miscReg) {
-        case MISCREG_Y:
-          y = val;
-          break;
-        case MISCREG_CCR:
-          ccr = val;
-          break;
+//        case MISCREG_Y:
+//          y = val;
+//	  break;
+//        case MISCREG_CCR:
+//          ccr = val;
+//	  break;
         case MISCREG_ASI:
           asi = val;
           break;
@@ -291,21 +291,21 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         case MISCREG_CWP:
           cwp = val;
           break;
-        case MISCREG_CANSAVE:
-          cansave = val;
-          break;
-        case MISCREG_CANRESTORE:
-          canrestore = val;
-          break;
-        case MISCREG_CLEANWIN:
-          cleanwin = val;
-          break;
-        case MISCREG_OTHERWIN:
-          otherwin = val;
-          break;
-        case MISCREG_WSTATE:
-          wstate = val;
-          break;
+//        case MISCREG_CANSAVE:
+//          cansave = val;
+//	  break;
+//        case MISCREG_CANRESTORE:
+//          canrestore = val;
+//	  break;
+//        case MISCREG_CLEANWIN:
+//          cleanwin = val;
+//	  break;
+//        case MISCREG_OTHERWIN:
+//          otherwin = val;
+//	  break;
+//        case MISCREG_WSTATE:
+//          wstate = val;
+//	  break;
         case MISCREG_GL:
           gl = val;
           break;

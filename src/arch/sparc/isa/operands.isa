@@ -56,12 +56,23 @@ def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
     # explicitly specify '.uq'.
+
     'Rd': 		('IntReg', 'udw', 'RD', 'IsInteger', 1),
-    'RdLow': 		('IntReg', 'udw', 'RD & (~1)', 'IsInteger', 2),
-    'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 3),
-    'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 4),
-    'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 5),
-    'uReg0':		('IntReg', 'udw', 'NumIntArchRegs', 'IsInteger', 6),
+    # The Rd from the previous window
+    'Rd_prev':		('IntReg', 'udw', 'RD + NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 2),
+    # The Rd from the next window
+    'Rd_next':		('IntReg', 'udw', 'RD + 2 * NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 3),
+    # The low (even) register of a two register pair
+    'RdLow': 		('IntReg', 'udw', 'RD & (~1)', 'IsInteger', 4),
+    # The high (odd) register of a two register pair
+    'RdHigh':		('IntReg', 'udw', 'RD | 1', 'IsInteger', 5),
+    'Rs1': 		('IntReg', 'udw', 'RS1', 'IsInteger', 6),
+    'Rs2': 		('IntReg', 'udw', 'RS2', 'IsInteger', 7),
+    # A microcode register. Right now, this is the only one.
+    'uReg0':		('IntReg', 'udw', 'NumIntArchRegs', 'IsInteger', 8),
+    # Because double and quad precision register numbers are decoded
+    # differently, they get different operands. The single precision versions
+    # have an s post pended to their name.
     'Frds':		('FloatReg', 'sf', 'RD', 'IsFloating', 10),
     'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
     # Each Frd_N refers to the Nth double precision register from Frd.
@@ -80,14 +91,17 @@ def operands {{
     'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
     'NPC': 		('NPC', 'udw', None, ( None, None, 'IsControl' ), 31),
     'NNPC':		('NNPC', 'udw', None, (None, None, 'IsControl' ), 32),
+    # Registers which are used explicitly in instructions
     'R0':  		('IntReg', 'udw', '0', None, 6),
     'R1':  		('IntReg', 'udw', '1', None, 7),
     'R15': 		('IntReg', 'udw', '15', 'IsInteger', 8),
     'R16': 		('IntReg', 'udw', '16', None, 9),
 
     # Control registers
-    'Y':		('ControlReg', 'udw', 'MISCREG_Y', None, 40),
-    'Ccr':		('ControlReg', 'udw', 'MISCREG_CCR', None, 41),
+#   'Y':		('ControlReg', 'udw', 'MISCREG_Y', None, 40),
+#   'Ccr':		('ControlReg', 'udw', 'MISCREG_CCR', None, 41),
+    'Y':		('IntReg', 'udw', 'NumIntArchRegs + 1', None, 40),
+    'Ccr':		('IntReg', 'udw', 'NumIntArchRegs + 2', None, 41),
     'Asi':		('ControlReg', 'udw', 'MISCREG_ASI', None, 42),
     'Fprs':		('ControlReg', 'udw', 'MISCREG_FPRS', None, 43),
     'Pcr':		('ControlReg', 'udw', 'MISCREG_PCR', None, 44),
@@ -109,12 +123,17 @@ def operands {{
     'Pstate':		('ControlReg', 'udw', 'MISCREG_PSTATE', None, 59),
     'Tl':		('ControlReg', 'udw', 'MISCREG_TL', None, 60),
     'Pil':		('ControlReg', 'udw', 'MISCREG_PIL', None, 61),
-    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', None, 62),
-    'Cansave':		('ControlReg', 'udw', 'MISCREG_CANSAVE', None, 63),
-    'Canrestore':	('ControlReg', 'udw', 'MISCREG_CANRESTORE', None, 64),
-    'Cleanwin':		('ControlReg', 'udw', 'MISCREG_CLEANWIN', None, 65),
-    'Otherwin':		('ControlReg', 'udw', 'MISCREG_OTHERWIN', None, 66),
-    'Wstate':		('ControlReg', 'udw', 'MISCREG_WSTATE', None, 67),
+    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', (None, None, ['IsSerializeAfter','IsSerializing']), 62),
+#   'Cansave':		('ControlReg', 'udw', 'MISCREG_CANSAVE', None, 63),
+#   'Canrestore':	('ControlReg', 'udw', 'MISCREG_CANRESTORE', None, 64),
+#   'Cleanwin':		('ControlReg', 'udw', 'MISCREG_CLEANWIN', None, 65),
+#   'Otherwin':		('ControlReg', 'udw', 'MISCREG_OTHERWIN', None, 66),
+#   'Wstate':		('ControlReg', 'udw', 'MISCREG_WSTATE', None, 67),
+    'Cansave':		('IntReg', 'udw', 'NumIntArchRegs + 3', None, 63),
+    'Canrestore':	('IntReg', 'udw', 'NumIntArchRegs + 4', None, 64),
+    'Cleanwin':		('IntReg', 'udw', 'NumIntArchRegs + 5', None, 65),
+    'Otherwin':		('IntReg', 'udw', 'NumIntArchRegs + 6', None, 66),
+    'Wstate':		('IntReg', 'udw', 'NumIntArchRegs + 7', None, 67),
     'Gl':               ('ControlReg', 'udw', 'MISCREG_GL', None, 68),
 
     'Hpstate':		('ControlReg', 'udw', 'MISCREG_HPSTATE', None, 69),
