@@ -246,6 +246,7 @@ return retval;                                                          \
         CacheTags<TAGS> *tagStore =					\
             new CacheTags<TAGS>(tags, compression_latency, true,	\
                                 store_compressed, adaptive_compression,	\
+                                compressed_bus,				\
                                 compAlg, prefetch_miss);		\
             BUILD_CACHE(TAGS, c);					\
     } while (0)
