@@ -213,6 +213,10 @@ namespace SparcISA
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu
 #if FULL_SYSTEM
+        void  setFSRegWithEffect(int miscReg, const MiscReg &val,
+                ThreadContext *tc);
+        MiscReg readFSRegWithEffect(int miscReg, ThreadContext * tc);
+
         /** Process a tick compare event and generate an interrupt on the cpu if
          * appropriate. */
         void processTickCompare(ThreadContext *tc);

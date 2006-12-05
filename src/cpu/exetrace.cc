@@ -279,7 +279,7 @@ Trace::InstRecord::dump(ostream &outs)
         //
         outs << endl;
     }
-#if THE_ISA == SPARC_ISA
+#if THE_ISA == SPARC_ISA && FULL_SYSTEM
     // Compare
     if (flags[LEGION_LOCKSTEP])
     {
@@ -338,19 +338,19 @@ Trace::InstRecord::dump(ostream &outs)
                     for (int i = 1; i <= MaxTL; i++) {
                         thread->setMiscReg(MISCREG_TL, i);
                         if (thread->readMiscReg(MISCREG_TPC) !=
-                                shared_data->tpc[i])
+                                shared_data->tpc[i-1])
                             diffTpc = true;
                         if (thread->readMiscReg(MISCREG_TNPC) !=
-                                shared_data->tnpc[i])
+                                shared_data->tnpc[i-1])
                             diffTnpc = true;
                         if (thread->readMiscReg(MISCREG_TSTATE) !=
-                                shared_data->tstate[i])
+                                shared_data->tstate[i-1])
                             diffTstate = true;
                         if (thread->readMiscReg(MISCREG_TT) !=
-                                shared_data->tt[i])
+                                shared_data->tt[i-1])
                             diffTt = true;
                         if (thread->readMiscReg(MISCREG_HTSTATE) !=
-                                shared_data->htstate[i])
+                                shared_data->htstate[i-1])
                             diffHtstate = true;
                     }
                     thread->setMiscReg(MISCREG_TL, oldTl);
@@ -527,19 +527,19 @@ Trace::InstRecord::dump(ostream &outs)
                             thread->setMiscReg(MISCREG_TL, i);
                             printRegPair(outs, "Tpc",
                                     thread->readMiscReg(MISCREG_TPC),
-                                    shared_data->tpc[i]);
+                                    shared_data->tpc[i-1]);
                             printRegPair(outs, "Tnpc",
                                     thread->readMiscReg(MISCREG_TNPC),
-                                    shared_data->tnpc[i]);
+                                    shared_data->tnpc[i-1]);
                             printRegPair(outs, "Tstate",
                                     thread->readMiscReg(MISCREG_TSTATE),
-                                    shared_data->tstate[i]);
+                                    shared_data->tstate[i-1]);
                             printRegPair(outs, "Tt",
                                     thread->readMiscReg(MISCREG_TT),
-                                    shared_data->tt[i]);
+                                    shared_data->tt[i-1]);
                             printRegPair(outs, "Htstate",
                                     thread->readMiscReg(MISCREG_HTSTATE),
-                                    shared_data->htstate[i]);
+                                    shared_data->htstate[i-1]);
                         }
                         thread->setMiscReg(MISCREG_TL, oldTl);
                         outs << endl;

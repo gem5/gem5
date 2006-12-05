@@ -60,6 +60,7 @@ full_system_sources = Split('''
 	stacktrace.cc
 	system.cc
 	tlb.cc
+        ua2005.cc
 	vtophys.cc
 	''')
 
