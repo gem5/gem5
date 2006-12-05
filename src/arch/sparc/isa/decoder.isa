@@ -1074,36 +1074,36 @@ decode OP default Unknown::unknown()
             {{uReg0 = Rd.uw;
             Rd.uw = Mem.uw;}},
             {{Mem.uw = uReg0;}});
-        format Load {
-            0x10: lduwa({{Rd = Mem.uw;}});
-            0x11: lduba({{Rd = Mem.ub;}});
-            0x12: lduha({{Rd = Mem.uhw;}});
+        format LoadAlt {
+            0x10: lduwa({{Rd = Mem.uw;}}, {{EXT_ASI}});
+            0x11: lduba({{Rd = Mem.ub;}}, {{EXT_ASI}});
+            0x12: lduha({{Rd = Mem.uhw;}}, {{EXT_ASI}});
             0x13: ldda({{
                 uint64_t val = Mem.udw;
                 RdLow = val<31:0>;
                 RdHigh = val<63:32>;
-            }});
+            }}, {{EXT_ASI}});
         }
-        format Store {
-            0x14: stwa({{Mem.uw = Rd;}});
-            0x15: stba({{Mem.ub = Rd;}});
-            0x16: stha({{Mem.uhw = Rd;}});
-            0x17: stda({{Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;}});
+        format StoreAlt {
+            0x14: stwa({{Mem.uw = Rd;}}, {{EXT_ASI}});
+            0x15: stba({{Mem.ub = Rd;}}, {{EXT_ASI}});
+            0x16: stha({{Mem.uhw = Rd;}}, {{EXT_ASI}});
+            0x17: stda({{Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;}}, {{EXT_ASI}});
         }
-        format Load {
-            0x18: ldswa({{Rd = (int32_t)Mem.sw;}});
-            0x19: ldsba({{Rd = (int8_t)Mem.sb;}});
-            0x1A: ldsha({{Rd = (int16_t)Mem.shw;}});
-            0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}});
+        format LoadAlt {
+            0x18: ldswa({{Rd = (int32_t)Mem.sw;}}, {{EXT_ASI}});
+            0x19: ldsba({{Rd = (int8_t)Mem.sb;}}, {{EXT_ASI}});
+            0x1A: ldsha({{Rd = (int16_t)Mem.shw;}}, {{EXT_ASI}});
+            0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}}, {{EXT_ASI}});
         }
-        0x1D: LoadStore::ldstuba(
+        0x1D: LoadStoreAlt::ldstuba(
                 {{Rd = Mem.ub;}},
-                {{Mem.ub = 0xFF}});
-        0x1E: Store::stxa({{Mem.udw = Rd}});
-        0x1F: LoadStore::swapa(
+                {{Mem.ub = 0xFF}}, {{EXT_ASI}});
+        0x1E: StoreAlt::stxa({{Mem.udw = Rd}}, {{EXT_ASI}});
+        0x1F: LoadStoreAlt::swapa(
             {{uReg0 = Rd.uw;
             Rd.uw = Mem.uw;}},
-            {{Mem.uw = uReg0;}});
+            {{Mem.uw = uReg0;}}, {{EXT_ASI}});
         format Trap {
             0x20: Load::ldf({{Frd.uw = Mem.uw;}});
             0x21: decode X {
@@ -1120,7 +1120,7 @@ decode OP default Unknown::unknown()
             0x26: stqf({{fault = new FpDisabled;}});
             0x27: Store::stdf({{Mem.udw = Frd.udw;}});
             0x2D: Nop::prefetch({{ }});
-            0x30: Load::ldfa({{Frd.uw = Mem.uw;}});
+            0x30: LoadAlt::ldfa({{Frd.uw = Mem.uw;}}, {{EXT_ASI}});
             0x32: ldqfa({{fault = new FpDisabled;}});
             format LoadAlt {
                 0x33: decode EXT_ASI {
@@ -1172,7 +1172,7 @@ decode OP default Unknown::unknown()
                         //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::ldblockf_aiusl();
                         //ASI_BLOCK_PRIMARY
-                        0xF0: ldblockf_p({{Frd_N.udw = Mem.udw;}});
+                        0xF0: ldblockf_p({{Frd_N.udw = Mem.udw;}}, {{EXT_ASI}});
                         //ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::ldblockf_s();
                         //ASI_BLOCK_PRIMARY_LITTLE
@@ -1255,7 +1255,7 @@ decode OP default Unknown::unknown()
                         //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::stblockf_aiusl();
                         //ASI_BLOCK_PRIMARY
-                        0xF0: stblockf_p({{Mem.udw = Frd_N.udw;}});
+                        0xF0: stblockf_p({{Mem.udw = Frd_N.udw;}}, {{EXT_ASI}});
                         //ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::stblockf_s();
                         //ASI_BLOCK_PRIMARY_LITTLE
@@ -1292,7 +1292,7 @@ decode OP default Unknown::unknown()
                         Mem.uw = Rd.uw;
                 else
                         storeCond = false;
-                Rd.uw = uReg0;}});
+                Rd.uw = uReg0;}}, {{EXT_ASI}});
             0x3D: Nop::prefetcha({{ }});
             0x3E: Cas::casxa(
                 {{uReg0 = Mem.udw;}},
@@ -1300,7 +1300,7 @@ decode OP default Unknown::unknown()
                         Mem.udw = Rd;
                 else
                         storeCond = false;
-                Rd = uReg0;}});
+                Rd = uReg0;}}, {{EXT_ASI}});
         }
     }
 }
