@@ -28,27 +28,32 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/sparc/regfile.hh"
+#include "arch/sparc/miscregfile.hh"
+#include "base/bitfield.hh"
+#include "base/trace.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 
-Fault
-SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
+using namespace SparcISA;
+
+void
+MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         ThreadContext *tc)
 {
     int64_t time;
-    SparcSystem *sys;
+    int oldLevel, newLevel;
     switch (miscReg) {
         /* Full system only ASRs */
         case MISCREG_SOFTINT:
-          if (isNonPriv())
-              return new PrivilegedOpcode;
           // Check if we are going to interrupt because of something
-          int oldLevel = InterruptLevel(softint);
-          int newLevel = InterruptLevel(val);
+          oldLevel = InterruptLevel(softint);
+          newLevel = InterruptLevel(val);
           setReg(miscReg, val);
           if (newLevel > oldLevel)
               ; // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
               //tc->getCpuPtr()->checkInterrupts = true;
-          return NoFault;
+          panic("SOFTINT not implemented\n");
+          break;
 
         case MISCREG_SOFTINT_CLR:
           return setRegWithEffect(miscReg, ~val & softint, tc);
@@ -56,152 +61,100 @@ SparcISA::MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           return setRegWithEffect(miscReg, val | softint, tc);
 
         case MISCREG_TICK_CMPR:
-          if (isNonPriv())
-              return new PrivilegedOpcode;
           if (tickCompare == NULL)
               tickCompare = new TickCompareEvent(this, tc);
           setReg(miscReg, val);
-          if (tick_cmprFields.int_dis && tickCompare.scheduled())
-                  tickCompare.deschedule();
-          time = tick_cmprFields.tick_cmpr - tickFields.counter;
-          if (!tick_cmprFields.int_dis && time > 0)
-              tickCompare.schedule(time * tc->getCpuPtr()->cycles(1));
-          return NoFault;
-
-        case MISCREG_STICK:
-          if (isNonPriv())
-              return new PrivilegedOpcode;
-          if (isPriv())
-              return new PrivilegedAction;
-          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-          assert(sys != NULL);
-          sys->sysTick = curTick/Clock::Int::ns - val & ~Bit64;
-          stickFields.npt = val & Bit64 ? 1 : 0;
-          return NoFault;
+          if ((tick_cmpr & mask(63)) && tickCompare->scheduled())
+                  tickCompare->deschedule();
+          time = (tick_cmpr & mask(63)) - (tick & mask(63));
+          if (!(tick_cmpr & ~mask(63)) && time > 0)
+              tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+          break;
 
         case MISCREG_STICK_CMPR:
-          if (isNonPriv())
-              return new PrivilegedOpcode;
           if (sTickCompare == NULL)
               sTickCompare = new STickCompareEvent(this, tc);
-          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-          assert(sys != NULL);
           setReg(miscReg, val);
-          if (stick_cmprFields.int_dis && sTickCompare.scheduled())
-                  sTickCompare.deschedule();
-          time = stick_cmprFields.tick_cmpr - sys->sysTick;
-          if (!stick_cmprFields.int_dis && time > 0)
-              sTickCompare.schedule(time * Clock::Int::ns);
-          return NoFault;
+          if ((stick_cmpr & mask(63)) && sTickCompare->scheduled())
+                  sTickCompare->deschedule();
+          time = (stick_cmpr & mask(63)) - (stick & mask(63));
+          if (!(stick_cmpr & ~mask(63)) && time > 0)
+              sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+          break;
 
-        /* Fullsystem only Priv registers. */
         case MISCREG_PIL:
-          if (FULL_SYSTEM) {
-              setReg(miscReg, val);
-              //tc->getCpuPtr()->checkInterrupts;
-               // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-              return NoFault;
-          } else
-              panic("PIL not implemented for syscall emulation\n");
+          setReg(miscReg, val);
+          //tc->getCpuPtr()->checkInterrupts;
+          // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
+          panic("PIL not implemented\n");
+          break;
 
-        /* Hyper privileged registers */
-        case MISCREG_HPSTATE:
-        case MISCREG_HINTP:
-          setReg(miscReg, val);
-          return NoFault;
-        case MISCREG_HTSTATE:
-          if (tl == 0)
-              return new IllegalInstruction;
-          setReg(miscReg, val);
-          return NoFault;
+        case MISCREG_HVER:
+          panic("Shouldn't be writing HVER\n");
 
         case MISCREG_HTBA:
           // clear lower 7 bits on writes.
           setReg(miscReg, val & ULL(~0x7FFF));
-          return NoFault;
+          break;
 
-        case MISCREG_STRAND_STS_REG:
-          setReg(miscReg, strandStatusReg);
-          return NoFault;
         case MISCREG_HSTICK_CMPR:
-          if (isNonPriv())
-              return new PrivilegedOpcode;
           if (hSTickCompare == NULL)
               hSTickCompare = new HSTickCompareEvent(this, tc);
-          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-          assert(sys != NULL);
           setReg(miscReg, val);
-          if (hstick_cmprFields.int_dis && hSTickCompare.scheduled())
-                  hSTickCompare.deschedule();
-          int64_t time = hstick_cmprFields.tick_cmpr - sys->sysTick;
-          if (!hstick_cmprFields.int_dis && time > 0)
-              hSTickCompare.schedule(time * Clock::Int::ns);
-          return NoFault;
+          if ((hstick_cmpr & mask(63)) && hSTickCompare->scheduled())
+                  hSTickCompare->deschedule();
+          time = (hstick_cmpr & mask(63)) - (stick & mask(63));
+          if (!(hstick_cmpr & ~mask(63)) && time > 0)
+              hSTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+          break;
+
+        case MISCREG_HPSTATE:
+        case MISCREG_HTSTATE:
+        case MISCREG_STRAND_STS_REG:
+          setReg(miscReg, val);
+          break;
+
         default:
-          return new IllegalInstruction;
+          panic("Invalid write to FS misc register\n");
     }
 }
 
 MiscReg
-MiscRegFile::readFSRegWithEffect(int miscReg, Fault &fault, ThreadContext * tc)
+MiscRegFile::readFSRegWithEffect(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
 
         /* Privileged registers. */
         case MISCREG_SOFTINT:
-           if (isNonPriv()) {
-               fault = new PrivilegedOpcode;
-               return 0;
-           }
-           return readReg(miscReg);
         case MISCREG_TICK_CMPR:
-           if (isNonPriv()) {
-               fault =  new PrivilegedOpcode;
-               return 0;
-           }
-           return readReg(miscReg);
-        case MISCREG_STICK:
-          SparcSystem *sys;
-          if (stickFields.npt && !isNonPriv()) {
-              fault = new PrivilegedAction;
-              return 0;
-          }
-          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-          assert(sys != NULL);
-          return curTick/Clock::Int::ns - sys->sysTick | stickFields.npt << 63;
         case MISCREG_STICK_CMPR:
-           if (isNonPriv()) {
-               fault =  new PrivilegedOpcode;
-               return 0;
-           }
-           return readReg(miscReg);
-
-
-        /* Hyper privileged registers */
+        case MISCREG_PIL:
         case MISCREG_HPSTATE:
         case MISCREG_HINTP:
-          return readReg(miscReg);
         case MISCREG_HTSTATE:
-          if (tl == 0) {
-              fault = new IllegalInstruction;
-              return 0;
-          }
-          return readReg(miscReg);
+        case MISCREG_STRAND_STS_REG:
+        case MISCREG_HSTICK_CMPR:
+           return readReg(miscReg) ;
 
         case MISCREG_HTBA:
           return readReg(miscReg) & ULL(~0x7FFF);
         case MISCREG_HVER:
           return NWindows | MaxTL << 8 | MaxGL << 16;
-        case MISCREG_STRAND_STS_REG:
-          return strandStatusReg;
-        case MISCREG_HSTICK_CMPR:
-          return hstick_cmpr;
 
         default:
-          fault = new IllegalInstruction;
-          return 0;
+          panic("Invalid read to FS misc register\n");
     }
 }
+/*
+        In Niagra STICK==TICK so this isn't needed
+        case MISCREG_STICK:
+          SparcSystem *sys;
+          sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
+          assert(sys != NULL);
+          return curTick/Clock::Int::ns - sys->sysTick | (stick & ~(mask(63)));
+*/
+
+
 
 void
 MiscRegFile::processTickCompare(ThreadContext *tc)
@@ -221,4 +174,3 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
     panic("tick compare not implemented\n");
 }
 
-}; // namespace SparcISA

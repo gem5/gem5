@@ -279,7 +279,7 @@ Trace::InstRecord::dump(ostream &outs)
         //
         outs << endl;
     }
-#if THE_ISA == SPARC_ISA
+#if THE_ISA == SPARC_ISA && FULL_SYSTEM
     // Compare
     if (flags[LEGION_LOCKSTEP])
     {
