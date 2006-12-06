@@ -56,7 +56,7 @@ namespace SparcISA
             tc->setIntReg(NumIntArchRegs + 2,
                     tc->readIntReg(NumIntArchRegs + 2) | 0x11);
             //tc->setMiscReg(MISCREG_CCR, tc->readMiscReg(MISCREG_CCR) | 0x11);
-            tc->setIntReg(ReturnValueReg, return_value.value());
+            tc->setIntReg(ReturnValueReg, -return_value.value());
         }
     }
 };
