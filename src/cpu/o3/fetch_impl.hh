@@ -1155,6 +1155,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     "[sn:%lli]\n",
                     tid, instruction->readPC(), inst_seq);
 
+            DPRINTF(Fetch, "[tid:%i]: MachInst is %#x\n", tid, ext_inst);
+
             DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n",
                     tid, instruction->staticInst->disassemble(fetch_PC));
 
