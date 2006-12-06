@@ -139,23 +139,23 @@ class SparcDynInst : public BaseDynInst<Impl>
 
     TheISA::FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
-        return this->cpu->readFloatReg(this->_flatSrcRegIdx[idx], width);
+        return this->cpu->readFloatReg(this->_srcRegIdx[idx], width);
     }
 
     TheISA::FloatReg readFloatReg(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatReg(this->_flatSrcRegIdx[idx]);
+        return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
     TheISA::FloatRegBits readFloatRegBits(const StaticInst *si,
             int idx, int width)
     {
-        return this->cpu->readFloatRegBits(this->_flatSrcRegIdx[idx], width);
+        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx], width);
     }
 
     TheISA::FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatRegBits(this->_flatSrcRegIdx[idx]);
+        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
 
     /** @todo: Make results into arrays so they can handle multiple dest
@@ -171,27 +171,27 @@ class SparcDynInst : public BaseDynInst<Impl>
     void setFloatReg(const StaticInst *si, int idx,
             TheISA::FloatReg val, int width)
     {
-        this->cpu->setFloatReg(this->_flatDestRegIdx[idx], val, width);
+        this->cpu->setFloatReg(this->_destRegIdx[idx], val, width);
         BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
     }
 
     void setFloatReg(const StaticInst *si, int idx, TheISA::FloatReg val)
     {
-        this->cpu->setFloatReg(this->_flatDestRegIdx[idx], val);
+        this->cpu->setFloatReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatReg(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx,
             TheISA::FloatRegBits val, int width)
     {
-        this->cpu->setFloatRegBits(this->_flatDestRegIdx[idx], val, width);
+        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val, width);
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si,
             int idx, TheISA::FloatRegBits val)
     {
-        this->cpu->setFloatRegBits(this->_flatDestRegIdx[idx], val);
+        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
