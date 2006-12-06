@@ -285,35 +285,24 @@ template <class Impl>
 TheISA::IntReg
 SparcO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
-    return this->readArchIntReg(SparcISA::ArgumentReg0 + i, tid);
+    IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
+            SparcISA::ArgumentReg0 + i);
+    return this->readArchIntReg(idx, tid);
 }
 
 template <class Impl>
 void
 SparcO3CPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
 {
-    this->setArchIntReg(SparcISA::ArgumentReg0 + i, val, tid);
+    IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
+            SparcISA::ArgumentReg0 + i);
+    this->setArchIntReg(idx, val, tid);
 }
 
 template <class Impl>
 void
 SparcO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 {
-    // check for error condition.  SPARC syscall convention is to
-    // indicate success/failure in reg the carry bit of the ccr
-    // and put the return value itself in the standard return value reg ().
-    if (return_value.successful()) {
-        // no error, clear XCC.C
-        this->setMiscReg(SparcISA::MISCREG_CCR,
-                this->readMiscReg(SparcISA::MISCREG_CCR, tid) & 0xEE, tid);
-        this->setArchIntReg(SparcISA::ReturnValueReg,
-                return_value.value(), tid);
-    } else {
-        // got an error, set XCC.C
-        this->setMiscReg(SparcISA::MISCREG_CCR,
-                this->readMiscReg(SparcISA::MISCREG_CCR, tid) | 0x11, tid);
-        this->setArchIntReg(SparcISA::ReturnValueReg,
-                return_value.value(), tid);
-    }
+    TheISA::setSyscallReturn(return_value, this->tcBase(tid));
 }
 #endif
