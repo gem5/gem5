@@ -32,13 +32,13 @@
 #define __CPU_THREAD_CONTEXT_HH__
 
 #include "arch/regfile.hh"
-#include "arch/syscallreturn.hh"
 #include "arch/types.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
+#include "sim/syscallreturn.hh"
 #include "sim/byteswap.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and

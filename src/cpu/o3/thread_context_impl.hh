@@ -29,6 +29,7 @@
  *          Korey Sewell
  */
 
+#include "arch/regfile.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 
@@ -303,6 +304,7 @@ template <class Impl>
 uint64_t
 O3ThreadContext<Impl>::readIntReg(int reg_idx)
 {
+    reg_idx = TheISA::flattenIntIndex(this, reg_idx);
     return cpu->readArchIntReg(reg_idx, thread->readTid());
 }
 
@@ -347,6 +349,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
+    reg_idx = TheISA::flattenIntIndex(this, reg_idx);
     cpu->setArchIntReg(reg_idx, val, thread->readTid());
 
     // Squash if we're not already in a state update mode.

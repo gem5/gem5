@@ -33,6 +33,8 @@
 #define __CPU_SIMPLE_THREAD_HH__
 
 #include "arch/isa_traits.hh"
+#include "arch/regfile.hh"
+#include "arch/syscallreturn.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
@@ -319,7 +321,7 @@ class SimpleThread : public ThreadState
     //
     uint64_t readIntReg(int reg_idx)
     {
-        return regs.readIntReg(reg_idx);
+        return regs.readIntReg(TheISA::flattenIntIndex(getTC(), reg_idx));
     }
 
     FloatReg readFloatReg(int reg_idx, int width)
@@ -344,7 +346,7 @@ class SimpleThread : public ThreadState
 
     void setIntReg(int reg_idx, uint64_t val)
     {
-        regs.setIntReg(reg_idx, val);
+        regs.setIntReg(TheISA::flattenIntIndex(getTC(), reg_idx), val);
     }
 
     void setFloatReg(int reg_idx, FloatReg val, int width)
@@ -445,18 +447,20 @@ class SimpleThread : public ThreadState
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)
     {
-        return regs.readIntReg(TheISA::ArgumentReg0 + i);
+        return regs.readIntReg(TheISA::flattenIntIndex(getTC(),
+                    TheISA::ArgumentReg0 + i));
     }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, TheISA::IntReg val)
     {
-        regs.setIntReg(TheISA::ArgumentReg0 + i, val);
+        regs.setIntReg(TheISA::flattenIntIndex(getTC(),
+                    TheISA::ArgumentReg0 + i), val);
     }
 
     void setSyscallReturn(SyscallReturn return_value)
     {
-        TheISA::setSyscallReturn(return_value, &regs);
+        TheISA::setSyscallReturn(return_value, getTC());
     }
 
     void syscall(int64_t callnum)
