@@ -32,23 +32,25 @@
 #ifndef __ARCH_ALPHA_SYSCALLRETURN_HH__
 #define __ARCH_ALPHA_SYSCALLRETURN_HH__
 
+#include "cpu/thread_context.hh"
 #include "sim/syscallreturn.hh"
 
 namespace AlphaISA
 {
-    static inline void setSyscallReturn(SyscallReturn return_value, RegFile *regs)
+    static inline void setSyscallReturn(SyscallReturn return_value,
+            ThreadContext * tc)
     {
         // check for error condition.  Alpha syscall convention is to
         // indicate success/failure in reg a3 (r19) and put the
         // return value itself in the standard return value reg (v0).
         if (return_value.successful()) {
             // no error
-            regs->setIntReg(SyscallSuccessReg, 0);
-            regs->setIntReg(ReturnValueReg, return_value.value());
+            tc->setIntReg(SyscallSuccessReg, 0);
+            tc->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, return details
-            regs->setIntReg(SyscallSuccessReg, (IntReg)-1);
-            regs->setIntReg(ReturnValueReg, -return_value.value());
+            tc->setIntReg(SyscallSuccessReg, (IntReg)-1);
+            tc->setIntReg(ReturnValueReg, -return_value.value());
         }
     }
 }
