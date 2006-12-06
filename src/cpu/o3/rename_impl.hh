@@ -31,6 +31,8 @@
 
 #include <list>
 
+#include "arch/isa_traits.hh"
+#include "arch/regfile.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
 
@@ -960,13 +962,19 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
     // Will need to mark dependencies though.
     for (int src_idx = 0; src_idx < num_src_regs; src_idx++) {
         RegIndex src_reg = inst->srcRegIdx(src_idx);
+        RegIndex flat_src_reg = src_reg;
+        if (src_reg < TheISA::FP_Base_DepTag) {
+            flat_src_reg = TheISA::flattenIntIndex(inst->tcBase(), src_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
+        }
+        inst->flattenSrcReg(src_idx, flat_src_reg);
 
         // Look up the source registers to get the phys. register they've
         // been renamed to, and set the sources to those registers.
-        PhysRegIndex renamed_reg = renameMap[tid]->lookup(src_reg);
+        PhysRegIndex renamed_reg = renameMap[tid]->lookup(flat_src_reg);
 
         DPRINTF(Rename, "[tid:%u]: Looking up arch reg %i, got "
-                "physical reg %i.\n", tid, (int)src_reg,
+                "physical reg %i.\n", tid, (int)flat_src_reg,
                 (int)renamed_reg);
 
         inst->renameSrcReg(src_idx, renamed_reg);
@@ -993,20 +1001,27 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
     // Rename the destination registers.
     for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++) {
         RegIndex dest_reg = inst->destRegIdx(dest_idx);
+        RegIndex flat_dest_reg = dest_reg;
+        if (dest_reg < TheISA::FP_Base_DepTag) {
+            flat_dest_reg = TheISA::flattenIntIndex(inst->tcBase(), dest_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
+        }
+
+        inst->flattenDestReg(dest_idx, flat_dest_reg);
 
         // Get the physical register that the destination will be
         // renamed to.
-        rename_result = renameMap[tid]->rename(dest_reg);
+        rename_result = renameMap[tid]->rename(flat_dest_reg);
 
         //Mark Scoreboard entry as not ready
         scoreboard->unsetReg(rename_result.first);
 
         DPRINTF(Rename, "[tid:%u]: Renaming arch reg %i to physical "
-                "reg %i.\n", tid, (int)dest_reg,
+                "reg %i.\n", tid, (int)flat_dest_reg,
                 (int)rename_result.first);
 
         // Record the rename information so that a history can be kept.
-        RenameHistory hb_entry(inst->seqNum, dest_reg,
+        RenameHistory hb_entry(inst->seqNum, flat_dest_reg,
                                rename_result.first,
                                rename_result.second);
 
