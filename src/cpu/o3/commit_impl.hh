@@ -1197,16 +1197,16 @@ DefaultCommit<Impl>::getInsts()
              rename_idx < fromRename->size;
              rename_idx++) {
             DynInstPtr inst = fromRename->insts[rename_idx];
-            int tid = inst->threadNumber;
 
             if (!inst->isSquashed()) {
                 DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
-                        "skidBuffer.\n", inst->readPC(), inst->seqNum, tid);
+                        "skidBuffer.\n", inst->readPC(), inst->seqNum,
+                        inst->threadNumber);
                 skidBuffer.push(inst);
             } else {
                 DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
                         "squashed, skipping.\n",
-                        inst->readPC(), inst->seqNum, tid);
+                        inst->readPC(), inst->seqNum, inst->threadNumber);
             }
         }
     }
