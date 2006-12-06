@@ -54,10 +54,6 @@ class MipsDynInst : public BaseDynInst<Impl>
     /** Typedef for the CPU. */
     typedef typename Impl::O3CPU O3CPU;
 
-    /** Binary machine instruction type. */
-    typedef TheISA::MachInst MachInst;
-    /** Extended machine instruction type. */
-    typedef TheISA::ExtMachInst ExtMachInst;
     /** Logical register index type. */
     typedef TheISA::RegIndex RegIndex;
     /** Integer register index type. */
@@ -127,22 +123,6 @@ class MipsDynInst : public BaseDynInst<Impl>
     /** Calls a syscall. */
     void syscall(int64_t callnum);
 
-  private:
-    /** Physical register index of the destination registers of this
-     *  instruction.
-     */
-    PhysRegIndex _destRegIdx[MaxInstDestRegs];
-
-    /** Physical register index of the source registers of this
-     *  instruction.
-     */
-    PhysRegIndex _srcRegIdx[MaxInstSrcRegs];
-
-    /** Physical register index of the previous producers of the
-     *  architected destinations.
-     */
-    PhysRegIndex _prevDestRegIdx[MaxInstDestRegs];
-
   public:
 
     // The register accessor methods provide the index of the
@@ -158,27 +138,27 @@ class MipsDynInst : public BaseDynInst<Impl>
 
     uint64_t readIntReg(const StaticInst *si, int idx)
     {
-        return this->cpu->readIntReg(_srcRegIdx[idx]);
+        return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx, int width)
     {
-        return this->cpu->readFloatReg(_srcRegIdx[idx], width);
+        return this->cpu->readFloatReg(this->_srcRegIdx[idx], width);
     }
 
     FloatReg readFloatReg(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatReg(_srcRegIdx[idx]);
+        return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
     {
-        return this->cpu->readFloatRegBits(_srcRegIdx[idx], width);
+        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx], width);
     }
 
     FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatRegBits(_srcRegIdx[idx]);
+        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
 
     /** @todo: Make results into arrays so they can handle multiple dest
@@ -186,75 +166,33 @@ class MipsDynInst : public BaseDynInst<Impl>
      */
     void setIntReg(const StaticInst *si, int idx, uint64_t val)
     {
-        this->cpu->setIntReg(_destRegIdx[idx], val);
+        this->cpu->setIntReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setIntReg(si, idx, val);
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
     {
-        this->cpu->setFloatReg(_destRegIdx[idx], val, width);
+        this->cpu->setFloatReg(this->_destRegIdx[idx], val, width);
         BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
     }
 
     void setFloatReg(const StaticInst *si, int idx, FloatReg val)
     {
-        this->cpu->setFloatReg(_destRegIdx[idx], val);
+        this->cpu->setFloatReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatReg(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx,
             FloatRegBits val, int width)
     {
-        this->cpu->setFloatRegBits(_destRegIdx[idx], val, width);
+        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val, width);
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
     {
-        this->cpu->setFloatRegBits(_destRegIdx[idx], val);
+        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
-    }
-
-    /** Returns the physical register index of the i'th destination
-     *  register.
-     */
-    PhysRegIndex renamedDestRegIdx(int idx) const
-    {
-        return _destRegIdx[idx];
-    }
-
-    /** Returns the physical register index of the i'th source register. */
-    PhysRegIndex renamedSrcRegIdx(int idx) const
-    {
-        return _srcRegIdx[idx];
-    }
-
-    /** Returns the physical register index of the previous physical register
-     *  that remapped to the same logical register index.
-     */
-    PhysRegIndex prevDestRegIdx(int idx) const
-    {
-        return _prevDestRegIdx[idx];
-    }
-
-    /** Renames a destination register to a physical register.  Also records
-     *  the previous physical register that the logical register mapped to.
-     */
-    void renameDestReg(int idx,
-                       PhysRegIndex renamed_dest,
-                       PhysRegIndex previous_rename)
-    {
-        _destRegIdx[idx] = renamed_dest;
-        _prevDestRegIdx[idx] = previous_rename;
-    }
-
-    /** Renames a source logical register to the physical register which
-     *  has/will produce that logical register's result.
-     *  @todo: add in whether or not the source register is ready.
-     */
-    void renameSrcReg(int idx, PhysRegIndex renamed_src)
-    {
-        _srcRegIdx[idx] = renamed_src;
     }
 
   public:
