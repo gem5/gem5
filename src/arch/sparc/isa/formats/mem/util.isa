@@ -144,7 +144,7 @@ def template LoadExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -172,6 +172,7 @@ def template LoadExecute {{
             %(ea_decl)s;
             %(ea_rd)s;
             %(ea_code)s;
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -202,7 +203,6 @@ def template StoreExecute {{
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            uint64_t write_result = 0;
             //This is to support the conditional store in cas instructions.
             //It should be optomized out in all the others
             bool storeCond = true;
@@ -210,7 +210,7 @@ def template StoreExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -218,7 +218,7 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, 0);
             }
             if(fault == NoFault)
             {
@@ -233,13 +233,12 @@ def template StoreExecute {{
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
-            uint64_t write_result = 0;
             bool storeCond = true;
             Addr EA;
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -247,7 +246,7 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, &write_result);
+                fault = xc->write((uint%(mem_acc_size)s_t)Mem, EA, 0, 0);
             }
             if(fault == NoFault)
             {
