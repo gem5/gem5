@@ -596,7 +596,11 @@ LSQUnit<Impl>::writebackStores()
 
         assert(!inst->memData);
         inst->memData = new uint8_t[64];
-        memcpy(inst->memData, (uint8_t *)&storeQueue[storeWBIdx].data,
+
+        TheISA::IntReg convertedData =
+            TheISA::htog(storeQueue[storeWBIdx].data);
+
+        memcpy(inst->memData, (uint8_t *)&convertedData,
                req->getSize());
 
         PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
