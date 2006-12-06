@@ -104,7 +104,7 @@ namespace SparcISA
             (asi == ASI_BLK_SL);
     }
 
-    bool AsiNucleus(ASI asi)
+    bool AsiIsNucleus(ASI asi)
     {
         return
             (asi == ASI_N) ||
@@ -259,6 +259,7 @@ namespace SparcISA
     bool AsiIsMmu(ASI asi)
     {
         return  asi == ASI_MMU ||
+                asi == ASI_LSU_CONTROL_REG  ||
                (asi >= ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0 &&
                 asi <= ASI_IMMU_CTXT_ZERO_CONFIG) ||
                (asi >= ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0 &&

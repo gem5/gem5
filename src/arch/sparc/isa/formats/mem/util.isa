@@ -148,7 +148,7 @@ def template LoadExecute {{
             %(fault_check)s;
             if(fault == NoFault)
             {
-                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             if(fault == NoFault)
             {
@@ -175,7 +175,7 @@ def template LoadExecute {{
             %(fault_check)s;
             if(fault == NoFault)
             {
-                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, 0);
+                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             return fault;
         }
@@ -288,8 +288,9 @@ let {{
     # are split into ones that are available in priv and hpriv, and
     # those that are only available in hpriv
     AlternateASIPrivFaultCheck = '''
-        if(bits(Pstate,2,2) == 0 && (EXT_ASI & 0x80) == 0)
-            fault = new PrivilegedAction;
+        if(!bits(Pstate,2,2) && !bits(Hpstate,2,2) && !AsiIsUnPriv((ASI)EXT_ASI) ||
+                             !bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI))
+                fault = new PrivilegedAction;
         else if(AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
             fault = new PrivilegedAction;
     '''

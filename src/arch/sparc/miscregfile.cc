@@ -280,6 +280,7 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
     switch (miscReg) {
         // tick and stick are aliased to each other in niagra
       case MISCREG_TICK:
+      case MISCREG_STICK:
       case MISCREG_PRIVTICK:
         // I'm not sure why legion ignores the lowest two bits, but we'll go
         // with it
@@ -296,10 +297,10 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
         /** Floating Point Status Register */
       case MISCREG_FSR:
         panic("Floating Point not implemented\n");
-      case MISCREG_STICK:
-      case MISCREG_SOFTINT:
       case MISCREG_SOFTINT_CLR:
       case MISCREG_SOFTINT_SET:
+        panic("Can read from softint clr/set\n");
+      case MISCREG_SOFTINT:
       case MISCREG_TICK_CMPR:
       case MISCREG_STICK_CMPR:
       case MISCREG_HPSTATE:
@@ -499,20 +500,28 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 
       case MISCREG_SCRATCHPAD_R0:
         scratchPad[0] = val;
+        break;
       case MISCREG_SCRATCHPAD_R1:
         scratchPad[1] = val;
+        break;
       case MISCREG_SCRATCHPAD_R2:
         scratchPad[2] = val;
+        break;
       case MISCREG_SCRATCHPAD_R3:
         scratchPad[3] = val;
+        break;
       case MISCREG_SCRATCHPAD_R4:
         scratchPad[4] = val;
+        break;
       case MISCREG_SCRATCHPAD_R5:
         scratchPad[5] = val;
+        break;
       case MISCREG_SCRATCHPAD_R6:
         scratchPad[6] = val;
+        break;
       case MISCREG_SCRATCHPAD_R7:
         scratchPad[7] = val;
+        break;
 
       default:
         panic("Miscellaneous register %d not implemented\n", miscReg);

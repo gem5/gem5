@@ -33,6 +33,9 @@
 #include "arch/sparc/tlb.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "cpu/base.hh"
+#include "mem/packet_access.hh"
+#include "mem/request.hh"
 #include "sim/builder.hh"
 
 /* @todo remove some of the magic constants.  -- ali
@@ -427,7 +430,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
         }
     } else if (!hpriv && !red) {
-        if (tl > 0) {
+        if (tl > 0 || AsiIsNucleus(asi)) {
             ct = Nucleus;
             context = 0;
         } else if (AsiIsSecondary(asi)) {
@@ -476,11 +479,14 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
+
         if (AsiIsMmu(asi))
             goto handleMmuRegAccess;
-
         if (AsiIsScratchPad(asi))
             goto handleScratchRegAccess;
+
+        if (!AsiIsReal(asi) && !AsiIsNucleus(asi))
+            panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
     if ((!lsuDm && !hpriv) || AsiIsReal(asi)) {
@@ -546,13 +552,194 @@ handleMmuRegAccess:
 Tick
 DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
-    panic("need to implement DTB::doMmuRegRead()\n");
+    Addr va = pkt->getAddr();
+    ASI asi = (ASI)pkt->req->getAsi();
+
+    DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
+         (uint32_t)pkt->req->getAsi(), pkt->getAddr());
+
+    switch (asi) {
+      case ASI_LSU_CONTROL_REG:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_LSU_CTRL));
+        break;
+      case ASI_MMU:
+        switch (va) {
+          case 0x8:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT));
+            break;
+          case 0x10:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_S_CONTEXT));
+            break;
+          default:
+            goto doMmuReadError;
+        }
+        break;
+      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0));
+        break;
+      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1));
+        break;
+      case ASI_DMMU_CTXT_ZERO_CONFIG:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG));
+        break;
+      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0));
+        break;
+      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1));
+        break;
+      case ASI_IMMU_CTXT_ZERO_CONFIG:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG));
+        break;
+      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0));
+        break;
+      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1));
+        break;
+      case ASI_DMMU_CTXT_NONZERO_CONFIG:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+        break;
+      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0));
+        break;
+      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1));
+        break;
+      case ASI_IMMU_CTXT_NONZERO_CONFIG:
+        assert(va == 0);
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+        break;
+      case ASI_HYP_SCRATCHPAD:
+      case ASI_SCRATCHPAD:
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
+        break;
+      case ASI_DMMU:
+        switch (va) {
+          case 0x80:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID));
+            break;
+          default:
+                goto doMmuReadError;
+        }
+        break;
+      default:
+doMmuReadError:
+        panic("need to impl DTB::doMmuRegRead() got asi=%#x, va=%#x\n",
+            (uint32_t)asi, va);
+    }
+    pkt->result = Packet::Success;
+    return tc->getCpuPtr()->cycles(1);
 }
 
 Tick
 DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
-    panic("need to implement DTB::doMmuRegWrite()\n");
+    uint64_t data = gtoh(pkt->get<uint64_t>());
+    Addr va = pkt->getAddr();
+    ASI asi = (ASI)pkt->req->getAsi();
+
+    DPRINTF(IPR, "Memory Mapped IPR Write: asi=#%X a=%#x d=%#X\n",
+         (uint32_t)asi, va, data);
+
+    switch (asi) {
+      case ASI_LSU_CONTROL_REG:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_LSU_CTRL, data);
+        break;
+      case ASI_MMU:
+        switch (va) {
+          case 0x8:
+            tc->setMiscRegWithEffect(MISCREG_MMU_P_CONTEXT, data);
+            break;
+          case 0x10:
+            tc->setMiscRegWithEffect(MISCREG_MMU_S_CONTEXT, data);
+            break;
+          default:
+            goto doMmuWriteError;
+        }
+        break;
+      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0, data);
+        break;
+      case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1, data);
+        break;
+      case ASI_DMMU_CTXT_ZERO_CONFIG:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG, data);
+        break;
+      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0, data);
+        break;
+      case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1, data);
+        break;
+      case ASI_IMMU_CTXT_ZERO_CONFIG:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG, data);
+        break;
+      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0, data);
+        break;
+      case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1, data);
+        break;
+      case ASI_DMMU_CTXT_NONZERO_CONFIG:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG, data);
+        break;
+      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0, data);
+        break;
+      case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1, data);
+        break;
+      case ASI_IMMU_CTXT_NONZERO_CONFIG:
+        assert(va == 0);
+        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG, data);
+        break;
+      case ASI_HYP_SCRATCHPAD:
+      case ASI_SCRATCHPAD:
+        tc->setMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3), data);
+        break;
+      case ASI_DMMU:
+        switch (va) {
+          case 0x80:
+            tc->setMiscRegWithEffect(MISCREG_MMU_PART_ID, data);
+            break;
+          default:
+            goto doMmuWriteError;
+        }
+        break;
+      default:
+doMmuWriteError:
+        panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
+            (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
+    }
+    pkt->result = Packet::Success;
+    return tc->getCpuPtr()->cycles(1);
 }
 
 void

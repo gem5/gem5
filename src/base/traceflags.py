@@ -109,6 +109,7 @@ baseFlags = [
     'IIC',
     'IICMore',
     'IPI',
+    'IPR',
     'IQ',
     'ISP',
     'IdeCtrl',

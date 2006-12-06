@@ -234,7 +234,7 @@ class Request
     bool isMmapedIpr() { assert(validPaddr); return mmapedIpr; }
 
     /** Accessor function for asi.*/
-    void setMmapedIpr(bool r) { assert(validPaddr); mmapedIpr = r; }
+    void setMmapedIpr(bool r) { assert(validAsidVaddr); mmapedIpr = r; }
 
     /** Accessor function to check if sc result is valid. */
     bool scResultValid() { return validScResult; }

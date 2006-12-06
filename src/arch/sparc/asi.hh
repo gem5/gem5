@@ -108,11 +108,11 @@ namespace SparcISA
         ASI_IMMU_CTXT_ZERO_CONFIG = 0x37,
         //0x38 implementation dependent
         ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0 = 0x39,
-        ASI_DMMU_CTXT_NONZERO_USB_BASE_PS1 = 0x3A,
+        ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1 = 0x3A,
         ASI_DMMU_CTXT_NONZERO_CONFIG = 0x3B,
         //0x3C implementation dependent
         ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0 = 0x3D,
-        ASI_IMMU_CTXT_NONZERO_USB_BASE_PS1 = 0x3E,
+        ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1 = 0x3E,
         ASI_IMMU_CTXT_NONZERO_CONFIG = 0x3F,
         ASI_STREAM_MA = 0x40,
         //0x41 implementation dependent

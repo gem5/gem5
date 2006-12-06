@@ -377,9 +377,7 @@ decode OP default Unknown::unknown()
                 //1 should cause an illegal instruction exception
                 0x02: NoPriv::rdccr({{Rd = Ccr;}});
                 0x03: NoPriv::rdasi({{Rd = Asi;}});
-                0x04: PrivCheck::rdtick(
-                  {{ Rd = xc->readMiscRegWithEffect(MISCREG_TICK);}},
-                  {{Tick<63:>}});
+                0x04: PrivCheck::rdtick({{Rd = Tick;}}, {{Tick<63:>}});
                 0x05: NoPriv::rdpc({{
                     if(Pstate<3:>)
                         Rd = (xc->readPC())<31:0>;
@@ -405,15 +403,9 @@ decode OP default Unknown::unknown()
                 }});
                 //0x14-0x15 should cause an illegal instruction exception
                 0x16: Priv::rdsoftint({{Rd = Softint;}});
-                0x17: Priv::rdtick_cmpr({{
-                    Rd = xc->readMiscRegWithEffect(MISCREG_TICK_CMPR);
-                }});
-                0x18: PrivCheck::rdstick({{
-                   Rd = xc->readMiscRegWithEffect(MISCREG_STICK);
-                }}, {{Stick<63:>}});
-                0x19: Priv::rdstick_cmpr({{
-                    Rd = xc->readMiscRegWithEffect(MISCREG_STICK_CMPR);
-                }});
+                0x17: Priv::rdtick_cmpr({{Rd = TickCmpr;}});
+                0x18: PrivCheck::rdstick({{Rd = Stick}}, {{Stick<63:>}});
+                0x19: Priv::rdstick_cmpr({{Rd = StickCmpr;}});
                 0x1A: Priv::rdstrand_sts_reg({{
                     if(Pstate<2:> && !Hpstate<2:>)
                         Rd = StrandStsReg<0:>;
@@ -437,9 +429,7 @@ decode OP default Unknown::unknown()
                 0x05: HPriv::rdhprhtba({{Rd = Htba;}});
                 0x06: HPriv::rdhprhver({{Rd = Hver;}});
                 //0x07-0x1E should cause an illegal instruction exception
-                0x1F: HPriv::rdhprhstick_cmpr({{
-                    Rd = xc->readMiscRegWithEffect(MISCREG_HSTICK_CMPR);
-                }});
+                0x1F: HPriv::rdhprhstick_cmpr({{Rd = HstickCmpr;}});
             }
             0x2A: decode RS1 {
                 0x00: Priv::rdprtpc({{
@@ -462,9 +452,7 @@ decode OP default Unknown::unknown()
                         return new IllegalInstruction;
                     Rd = Tt;
                 }});
-                0x04: Priv::rdprtick({{
-                    Rd = xc->readMiscRegWithEffect(MISCREG_TICK);
-                }});
+                0x04: Priv::rdprtick({{Rd = Tick;}});
                 0x05: Priv::rdprtba({{Rd = Tba;}});
                 0x06: Priv::rdprpstate({{Rd = Pstate;}});
                 0x07: Priv::rdprtl({{Rd = Tl;}});
@@ -554,17 +542,13 @@ decode OP default Unknown::unknown()
                 0x14: Priv::wrsoftint_set({{SoftintSet = Rs1 ^ Rs2_or_imm13;}});
                 0x15: Priv::wrsoftint_clr({{SoftintClr = Rs1 ^ Rs2_or_imm13;}});
                 0x16: Priv::wrsoftint({{Softint = Rs1 ^ Rs2_or_imm13;}});
-                0x17: Priv::wrtick_cmpr({{
-                      xc->setMiscRegWithEffect(MISCREG_TICK_CMPR, Rs1 ^ Rs2_or_imm13);
-                }});
+                0x17: Priv::wrtick_cmpr({{TickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x18: NoPriv::wrstick({{
                     if(!Hpstate<2:>)
                         return new IllegalInstruction;
-                    xc->setMiscRegWithEffect(MISCREG_STICK, Rs1 ^ Rs2_or_imm13);
+                    Stick = Rs1 ^ Rs2_or_imm13;
                 }});
-                0x19: Priv::wrstick_cmpr({{
-                    xc->setMiscRegWithEffect(MISCREG_STICK_CMPR, Rs1 ^ Rs2_or_imm13);
-                }});
+                0x19: Priv::wrstick_cmpr({{StickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x1A: Priv::wrstrand_sts_reg({{
                     if(Pstate<2:> && !Hpstate<2:>)
                         StrandStsReg = StrandStsReg<63:1> |
@@ -621,9 +605,7 @@ decode OP default Unknown::unknown()
                     else
                         Tt = Rs1 ^ Rs2_or_imm13;
                 }});
-                0x04: HPriv::wrprtick({{
-                    xc->setMiscRegWithEffect(MISCREG_TICK, Rs1 ^ Rs2_or_imm13);
-                }});
+                0x04: HPriv::wrprtick({{Tick = Rs1 ^ Rs2_or_imm13;}});
                 0x05: Priv::wrprtba({{Tba = Rs1 ^ Rs2_or_imm13;}});
                 0x06: Priv::wrprpstate({{Pstate = Rs1 ^ Rs2_or_imm13;}});
                 0x07: Priv::wrprtl({{
@@ -660,9 +642,7 @@ decode OP default Unknown::unknown()
                 //0x04 should cause an illegal instruction exception
                 0x05: HPriv::wrhprhtba({{Htba = Rs1 ^ Rs2_or_imm13;}});
                 //0x06-0x01D should cause an illegal instruction exception
-                0x1F: HPriv::wrhprhstick_cmpr({{
-                    xc->setMiscRegWithEffect(MISCREG_HSTICK_CMPR, Rs1 ^ Rs2_or_imm13);
-                }});
+                0x1F: HPriv::wrhprhstick_cmpr({{HstickCmpr = Rs1 ^ Rs2_or_imm13;}});
             }
             0x34: decode OPF{
                 format BasicOperate{

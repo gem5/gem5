@@ -47,7 +47,7 @@ namespace SparcISA
     enum MiscRegIndex
     {
         /** Ancillary State Registers */
-        MISCREG_Y,
+        MISCREG_Y, /* 0 */
         MISCREG_CCR,
         MISCREG_ASI,
         MISCREG_TICK,
@@ -57,7 +57,7 @@ namespace SparcISA
         MISCREG_GSR,
         MISCREG_SOFTINT_SET,
         MISCREG_SOFTINT_CLR,
-        MISCREG_SOFTINT,
+        MISCREG_SOFTINT, /* 10 */
         MISCREG_TICK_CMPR,
         MISCREG_STICK,
         MISCREG_STICK_CMPR,
@@ -69,7 +69,7 @@ namespace SparcISA
         MISCREG_TT,
         MISCREG_PRIVTICK,
         MISCREG_TBA,
-        MISCREG_PSTATE,
+        MISCREG_PSTATE, /* 20 */
         MISCREG_TL,
         MISCREG_PIL,
         MISCREG_CWP,
@@ -81,7 +81,7 @@ namespace SparcISA
         MISCREG_GL,
 
         /** Hyper privileged registers */
-        MISCREG_HPSTATE,
+        MISCREG_HPSTATE, /* 30 */
         MISCREG_HTSTATE,
         MISCREG_HINTP,
         MISCREG_HTBA,
@@ -94,7 +94,7 @@ namespace SparcISA
 
         /** MMU Internal Registers */
         MISCREG_MMU_P_CONTEXT,
-        MISCREG_MMU_S_CONTEXT,
+        MISCREG_MMU_S_CONTEXT, /* 40 */
         MISCREG_MMU_PART_ID,
         MISCREG_MMU_LSU_CTRL,
 
@@ -105,7 +105,7 @@ namespace SparcISA
         MISCREG_MMU_ITLB_CX_TSB_PS1,
         MISCREG_MMU_ITLB_CX_CONFIG,
         MISCREG_MMU_ITLB_SFSR,
-        MISCREG_MMU_ITLB_TAG_ACCESS,
+        MISCREG_MMU_ITLB_TAG_ACCESS, /* 50 */
 
         MISCREG_MMU_DTLB_C0_TSB_PS0,
         MISCREG_MMU_DTLB_C0_TSB_PS1,
@@ -118,7 +118,7 @@ namespace SparcISA
         MISCREG_MMU_DTLB_TAG_ACCESS,
 
         /** Scratchpad regiscers **/
-        MISCREG_SCRATCHPAD_R0,
+        MISCREG_SCRATCHPAD_R0, /* 60 */
         MISCREG_SCRATCHPAD_R1,
         MISCREG_SCRATCHPAD_R2,
         MISCREG_SCRATCHPAD_R3,
