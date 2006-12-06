@@ -481,18 +481,26 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     toCommit->branchMispredict[tid] = true;
 
 #if ISA_HAS_DELAY_SLOT
-    bool branch_taken = inst->readNextNPC() !=
-        (inst->readNextPC() + sizeof(TheISA::MachInst));
+    bool branch_taken =
+        (inst->readNextNPC() != (inst->readPC() + 2 * sizeof(TheISA::MachInst)) &&
+         inst->readNextNPC() != (inst->readPC() + 3 * sizeof(TheISA::MachInst)));
+    DPRINTF(Sparc, "Branch taken = %s [sn:%i]\n",
+            branch_taken ? "true": "false", inst->seqNum);
 
     toCommit->branchTaken[tid] = branch_taken;
 
-    toCommit->condDelaySlotBranch[tid] = inst->isCondDelaySlot();
-
-    if (inst->isCondDelaySlot() && branch_taken) {
+    bool squashDelaySlot =
+        (inst->readNextPC() != inst->readPC() + sizeof(TheISA::MachInst));
+    DPRINTF(Sparc, "Squash delay slot = %s [sn:%i]\n",
+            squashDelaySlot ? "true": "false", inst->seqNum);
+    toCommit->squashDelaySlot[tid] = squashDelaySlot;
+    //If we're squashing the delay slot, we need to pick back up at NextPC.
+    //Otherwise, NextPC isn't being squashed, so we should pick back up at
+    //NextNPC.
+    if (squashDelaySlot)
         toCommit->nextPC[tid] = inst->readNextPC();
-    } else {
+    else
         toCommit->nextPC[tid] = inst->readNextNPC();
-    }
 #else
     toCommit->branchTaken[tid] = inst->readNextPC() !=
         (inst->readPC() + sizeof(TheISA::MachInst));

@@ -87,7 +87,7 @@ struct DefaultIEWDefaultCommit {
     bool squash[Impl::MaxThreads];
     bool branchMispredict[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
-    bool condDelaySlotBranch[Impl::MaxThreads];
+    bool squashDelaySlot[Impl::MaxThreads];
     uint64_t mispredPC[Impl::MaxThreads];
     uint64_t nextPC[Impl::MaxThreads];
     InstSeqNum squashedSeqNum[Impl::MaxThreads];
