@@ -76,9 +76,15 @@ decode OP default Unknown::unknown()
                     }});
                     0x2: bpccx(19, {{
                         if(passesCondition(Ccr<7:4>, COND2))
+                        {
+                            //warn("Took branch!\n");
                             NNPC = xc->readPC() + disp;
+                        }
                         else
+                        {
+                            //warn("Didn't take branch!\n");
                             handle_annul
+                        }
                     }});
                 }
             }
@@ -247,16 +253,14 @@ decode OP default Unknown::unknown()
                     ((Rs1 & val2) | (carryin & (Rs1 | val2)))<0:>)<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );
-            0x1A: umulcc({{
+            0x1A: IntOpCcRes::umulcc({{
                 uint64_t resTemp;
                 Rd = resTemp = Rs1.udw<31:0> * Rs2_or_imm13.udw<31:0>;
-                Y = resTemp<63:32>;}},
-                {{0}},{{0}},{{0}},{{0}});
-            0x1B: smulcc({{
+                Y = resTemp<63:32>;}});
+            0x1B: IntOpCcRes::smulcc({{
                 int64_t resTemp;
                 Rd = resTemp = Rs1.sdw<31:0> * Rs2_or_imm13.sdw<31:0>;
-                Y = resTemp<63:32>;}},
-                {{0}},{{0}},{{0}},{{0}});
+                Y = resTemp<63:32>;}});
             0x1C: subccc({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = Ccr<0:0>;
@@ -266,10 +270,9 @@ decode OP default Unknown::unknown()
                 {{(~((Rs1<63:1> + (~(val2 + carryin))<63:1>) + (Rs1<0:> + (~(val2+carryin))<0:> + 1)<63:1>))<63:>}},
                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
             );
-            0x1D: udivxcc({{
+            0x1D: IntOpCcRes::udivxcc({{
                 if(Rs2_or_imm13.udw == 0) fault = new DivisionByZero;
-                else Rd = Rs1.udw / Rs2_or_imm13.udw;}}
-                ,{{0}},{{0}},{{0}},{{0}});
+                else Rd = Rs1.udw / Rs2_or_imm13.udw;}});
             0x1E: udivcc({{
                 uint32_t resTemp, val2 = Rs2_or_imm13.udw;
                 int32_t overflow = 0;
@@ -880,16 +883,11 @@ decode OP default Unknown::unknown()
                 }
             }});
             0x39: Branch::return({{
-                //If both MemAddressNotAligned and
-                //a fill trap happen, it's not clear
-                //which one should be returned.
                 Addr target = Rs1 + Rs2_or_imm13;
-                if(target & 0x3)
-                    fault = new MemAddressNotAligned;
-                else
-                    NNPC = target;
                 if(fault == NoFault)
                 {
+                    //Check for fills which are higher priority than alignment
+                    //faults.
                     if(Canrestore == 0)
                     {
                         if(Otherwin)
@@ -897,18 +895,15 @@ decode OP default Unknown::unknown()
                         else
                             fault = new FillNNormal(Wstate<2:0>);
                     }
+                    //Check for alignment faults
+                    else if(target & 0x3)
+                        fault = new MemAddressNotAligned;
                     else
                     {
-                        //CWP should be set directly so that it always happens
-                        //Also, this will allow writing to the new window and
-                        //reading from the old one
+                        NNPC = target;
                         Cwp = (Cwp - 1 + NWindows) % NWindows;
                         Cansave = Cansave + 1;
                         Canrestore = Canrestore - 1;
-                        //This is here to make sure the CWP is written
-                        //no matter what. This ensures that the results
-                        //are written in the new window as well.
-                        xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                     }
                 }
             }});
@@ -926,7 +921,7 @@ decode OP default Unknown::unknown()
                         xc->syscall(R1);
 #endif
                     }
-                }});
+                }}, IsSerializeAfter, IsNonSpeculative);
                 0x2: Trap::tccx({{
                     if(passesCondition(Ccr<7:4>, COND2))
                     {
@@ -939,36 +934,27 @@ decode OP default Unknown::unknown()
                         xc->syscall(R1);
 #endif
                     }
-                }});
+                }}, IsSerializeAfter, IsNonSpeculative);
             }
             0x3B: Nop::flush({{/*Instruction memory flush*/}});
             0x3C: save({{
-                //CWP should be set directly so that it always happens
-                //Also, this will allow writing to the new window and
-                //reading from the old one
                 if(Cansave == 0)
                 {
                     if(Otherwin)
                         fault = new SpillNOther(Wstate<5:3>);
                     else
                         fault = new SpillNNormal(Wstate<2:0>);
-                    //Cwp = (Cwp + 2) % NWindows;
                 }
                 else if(Cleanwin - Canrestore == 0)
                 {
-                    //Cwp = (Cwp + 1) % NWindows;
                     fault = new CleanWindow;
                 }
                 else
                 {
                     Cwp = (Cwp + 1) % NWindows;
-                    Rd = Rs1 + Rs2_or_imm13;
+                    Rd_next = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave - 1;
                     Canrestore = Canrestore + 1;
-                    //This is here to make sure the CWP is written
-                    //no matter what. This ensures that the results
-                    //are written in the new window as well.
-                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                 }
             }});
             0x3D: restore({{
@@ -981,17 +967,10 @@ decode OP default Unknown::unknown()
                 }
                 else
                 {
-                    //CWP should be set directly so that it always happens
-                    //Also, this will allow writing to the new window and
-                    //reading from the old one
                     Cwp = (Cwp - 1 + NWindows) % NWindows;
-                    Rd = Rs1 + Rs2_or_imm13;
+                    Rd_prev = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave + 1;
                     Canrestore = Canrestore - 1;
-                    //This is here to make sure the CWP is written
-                    //no matter what. This ensures that the results
-                    //are written in the new window as well.
-                    xc->setMiscRegWithEffect(MISCREG_CWP, Cwp);
                 }
             }});
             0x3E: decode FCN {
