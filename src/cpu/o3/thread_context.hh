@@ -92,7 +92,7 @@ class O3ThreadContext : public ThreadContext
 
     void delVirtPort(VirtualPort *vp);
 
-    virtual void init() { thread->init(); }
+    virtual void connectMemPorts() { thread->connectMemPorts(); }
 #else
     virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 

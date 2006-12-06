@@ -1,3 +1,19 @@
+Nov. 28, 2006: m5_2.0_beta2
+--------------------
+Bug fixes since beta 1:
+1. Many cache issues resolved
+2. Uni-coherence fixes in full-system
+3. LL/SC Support
+4. Draining/Switchover
+5. Functional Accesses
+6. Bus now has real timing
+7. Single config file fro all SpecCPU2000 benchmarks
+8. Several other minor bug fixes and enhancements
+
+Outstading issues for 2.0 release:
+1. Simulator performance fixes for memory system/caches
+2. Multiprocessor linux boot using the detailed O3 CPU model
+
 Aug. 25, 2006: m5_2.0_beta patch 1
 --------------------
 Handful of minor bug fixes for m5_2.0_beta,

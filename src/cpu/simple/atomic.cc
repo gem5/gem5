@@ -77,9 +77,6 @@ AtomicSimpleCPU::init()
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
-        // initialize the mem pointers
-        tc->init();
-
         // initialize CPU, including PC
         TheISA::initCPU(tc, tc->readCpuId());
     }
@@ -240,6 +237,13 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
+
+#if FULL_SYSTEM
+    // Connect the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    tc->connectMemPorts();
+#endif
+
     //Make sure ticks are still on multiples of cycles
     tickEvent.schedule(nextCycle(curTick + cycles(delay)));
     _status = Running;

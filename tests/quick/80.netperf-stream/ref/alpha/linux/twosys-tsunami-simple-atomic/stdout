@@ -1,0 +1,14 @@
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Nov 29 2006 16:48:25
+M5 started Sat Dec  2 11:01:31 2006
+M5 executing on zed.eecs.umich.edu
+command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic tests/run.py quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+Resetting stats at cycle 4093398828306!
+Resetting stats at cycle 4293399617774!
+Exiting @ tick 4293400403752 because checkpoint

@@ -1,0 +1,476 @@
+
+---------- Begin Simulation Statistics ----------
+drivesys.cpu.dtb.accesses                      401302                       # DTB accesses
+drivesys.cpu.dtb.acv                               40                       # DTB access violations
+drivesys.cpu.dtb.hits                          624298                       # DTB hits
+drivesys.cpu.dtb.misses                           569                       # DTB misses
+drivesys.cpu.dtb.read_accesses                 268057                       # DTB read accesses
+drivesys.cpu.dtb.read_acv                          30                       # DTB read access violations
+drivesys.cpu.dtb.read_hits                     393538                       # DTB read hits
+drivesys.cpu.dtb.read_misses                      487                       # DTB read misses
+drivesys.cpu.dtb.write_accesses                133245                       # DTB write accesses
+drivesys.cpu.dtb.write_acv                         10                       # DTB write access violations
+drivesys.cpu.dtb.write_hits                    230760                       # DTB write hits
+drivesys.cpu.dtb.write_misses                      82                       # DTB write misses
+drivesys.cpu.idle_fraction                   1.000000                       # Percentage of idle cycles
+drivesys.cpu.itb.accesses                     1337980                       # ITB accesses
+drivesys.cpu.itb.acv                               22                       # ITB acv
+drivesys.cpu.itb.hits                         1337786                       # ITB hits
+drivesys.cpu.itb.misses                           194                       # ITB misses
+drivesys.cpu.kern.callpal                        4443                       # number of callpals executed
+drivesys.cpu.kern.callpal_swpctx                   70      1.58%      1.58% # number of callpals executed
+drivesys.cpu.kern.callpal_tbi                       5      0.11%      1.69% # number of callpals executed
+drivesys.cpu.kern.callpal_swpipl                 3654     82.24%     83.93% # number of callpals executed
+drivesys.cpu.kern.callpal_rdps                    359      8.08%     92.01% # number of callpals executed
+drivesys.cpu.kern.callpal_rdusp                     1      0.02%     92.03% # number of callpals executed
+drivesys.cpu.kern.callpal_rti                     322      7.25%     99.28% # number of callpals executed
+drivesys.cpu.kern.callpal_callsys                  25      0.56%     99.84% # number of callpals executed
+drivesys.cpu.kern.callpal_imb                       7      0.16%    100.00% # number of callpals executed
+drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
+drivesys.cpu.kern.inst.hwrei                     5483                       # number of hwrei instructions executed
+drivesys.cpu.kern.inst.quiesce                    215                       # number of quiesce instructions executed
+drivesys.cpu.kern.ipl_count                      4191                       # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count_0                    1189     28.37%     28.37% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count_21                     10      0.24%     28.61% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count_22                    205      4.89%     33.50% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_count_31                   2787     66.50%    100.00% # number of times we switched to this ipl
+drivesys.cpu.kern.ipl_good                       2593                       # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good_0                     1189     45.85%     45.85% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good_21                      10      0.39%     46.24% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good_22                     205      7.91%     54.15% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_good_31                    1189     45.85%    100.00% # number of times we switched to this ipl from a different ipl
+drivesys.cpu.kern.ipl_ticks              199572064367                       # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks_0            199571744404    100.00%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks_21                   1620      0.00%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks_22                  17630      0.00%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_ticks_31                 300713      0.00%    100.00% # number of cycles we spent at this ipl
+drivesys.cpu.kern.ipl_used                   0.618707                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used_0                        1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used_21                       1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used_22                       1                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.ipl_used_31                0.426624                       # fraction of swpipl calls that actually changed the ipl
+drivesys.cpu.kern.mode_good_kernel                110                      
+drivesys.cpu.kern.mode_good_user                  107                      
+drivesys.cpu.kern.mode_good_idle                    3                      
+drivesys.cpu.kern.mode_switch_kernel              174                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_user                107                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_idle                218                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_good           0.440882                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_kernel     0.632184                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_user             1                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_idle      0.013761                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_ticks_kernel            263475      0.24%      0.24% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks_user             1278343      1.18%      1.43% # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks_idle           106485234     98.57%    100.00% # number of ticks spent at the given mode
+drivesys.cpu.kern.swap_context                     70                       # number of times the context was actually changed
+drivesys.cpu.kern.syscall                          22                       # number of syscalls executed
+drivesys.cpu.kern.syscall_2                         1      4.55%      4.55% # number of syscalls executed
+drivesys.cpu.kern.syscall_6                         3     13.64%     18.18% # number of syscalls executed
+drivesys.cpu.kern.syscall_17                        2      9.09%     27.27% # number of syscalls executed
+drivesys.cpu.kern.syscall_97                        1      4.55%     31.82% # number of syscalls executed
+drivesys.cpu.kern.syscall_99                        2      9.09%     40.91% # number of syscalls executed
+drivesys.cpu.kern.syscall_101                       2      9.09%     50.00% # number of syscalls executed
+drivesys.cpu.kern.syscall_102                       3     13.64%     63.64% # number of syscalls executed
+drivesys.cpu.kern.syscall_104                       1      4.55%     68.18% # number of syscalls executed
+drivesys.cpu.kern.syscall_105                       3     13.64%     81.82% # number of syscalls executed
+drivesys.cpu.kern.syscall_106                       1      4.55%     86.36% # number of syscalls executed
+drivesys.cpu.kern.syscall_118                       2      9.09%     95.45% # number of syscalls executed
+drivesys.cpu.kern.syscall_150                       1      4.55%    100.00% # number of syscalls executed
+drivesys.cpu.not_idle_fraction               0.000000                       # Percentage of non-idle cycles
+drivesys.cpu.numCycles                        1959293                       # number of cpu cycles simulated
+drivesys.cpu.num_insts                        1959077                       # Number of instructions executed
+drivesys.cpu.num_refs                          626286                       # Number of memory references
+drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
+drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
+drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
+drivesys.disk0.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
+drivesys.disk0.dma_write_full_pages                 0                       # Number of full page size DMA writes.
+drivesys.disk0.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.disk2.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
+drivesys.disk2.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
+drivesys.disk2.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
+drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
+drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
+drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.tsunami.ethernet.coalescedRxDesc            1                       # average number of RxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxIdle            0                       # average number of RxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOk             0                       # average number of RxOk's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOrn            0                       # average number of RxOrn's coalesced into each post
+drivesys.tsunami.ethernet.coalescedSwi              0                       # average number of Swi's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTotal            1                       # average number of interrupts coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxIdle            0                       # average number of TxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxOk             0                       # average number of TxOk's coalesced into each post
+drivesys.tsunami.ethernet.descDMAReads              5                       # Number of descriptors the device read w/ DMA
+drivesys.tsunami.ethernet.descDMAWrites            13                       # Number of descriptors the device wrote w/ DMA
+drivesys.tsunami.ethernet.descDmaReadBytes          120                       # number of descriptor bytes read w/ DMA
+drivesys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
+drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
+drivesys.tsunami.ethernet.postedInterrupts           10                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedRxDesc              6                       # number of RxDesc interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxIdle              0                       # number of rxIdle interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxOk                0                       # number of RxOk interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxOrn               0                       # number of RxOrn posted to CPU
+drivesys.tsunami.ethernet.postedSwi                 0                       # number of software interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxIdle              4                       # number of TxIdle interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxOk                0                       # number of TxOk interrupts posted to CPU
+drivesys.tsunami.ethernet.rxBandwidth           38400                       # Receive Bandwidth (bits/s)
+drivesys.tsunami.ethernet.rxBytes                 960                       # Bytes Received
+drivesys.tsunami.ethernet.rxIpChecksums             8                       # Number of rx IP Checksums done by device
+drivesys.tsunami.ethernet.rxPPS                    40                       # Packet Reception Rate (packets/s)
+drivesys.tsunami.ethernet.rxPackets                 8                       # Number of Packets Received
+drivesys.tsunami.ethernet.rxTcpChecksums            8                       # Number of rx TCP Checksums done by device
+drivesys.tsunami.ethernet.rxUdpChecksums            0                       # Number of rx UDP Checksums done by device
+drivesys.tsunami.ethernet.totBandwidth          70320                       # Total Bandwidth (bits/s)
+drivesys.tsunami.ethernet.totBytes               1758                       # Total Bytes
+drivesys.tsunami.ethernet.totPackets               13                       # Total Packets
+drivesys.tsunami.ethernet.totalRxDesc               8                       # total number of RxDesc written to ISR
+drivesys.tsunami.ethernet.totalRxIdle               0                       # total number of RxIdle written to ISR
+drivesys.tsunami.ethernet.totalRxOk                 0                       # total number of RxOk written to ISR
+drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
+drivesys.tsunami.ethernet.totalSwi                  0                       # total number of Swi written to ISR
+drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
+drivesys.tsunami.ethernet.totalTxIdle               5                       # total number of TxIdle written to ISR
+drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
+drivesys.tsunami.ethernet.txBandwidth           31920                       # Transmit Bandwidth (bits/s)
+drivesys.tsunami.ethernet.txBytes                 798                       # Bytes Transmitted
+drivesys.tsunami.ethernet.txIpChecksums             2                       # Number of tx IP Checksums done by device
+drivesys.tsunami.ethernet.txPPS                    25                       # Packet Tranmission Rate (packets/s)
+drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
+drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
+drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
+host_inst_rate                               38710250                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 411152                       # Number of bytes of host memory used
+host_seconds                                     7.14                       # Real time elapsed on the host
+host_tick_rate                            28030590990                       # Simulator tick rate (ticks/s)
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+sim_insts                                   276189231                       # Number of instructions simulated
+sim_seconds                                  0.200001                       # Number of seconds simulated
+sim_ticks                                200000789468                       # Number of ticks simulated
+testsys.cpu.dtb.accesses                       335402                       # DTB accesses
+testsys.cpu.dtb.acv                               161                       # DTB access violations
+testsys.cpu.dtb.hits                          1163399                       # DTB hits
+testsys.cpu.dtb.misses                           3815                       # DTB misses
+testsys.cpu.dtb.read_accesses                  225414                       # DTB read accesses
+testsys.cpu.dtb.read_acv                           80                       # DTB read access violations
+testsys.cpu.dtb.read_hits                      658556                       # DTB read hits
+testsys.cpu.dtb.read_misses                      3287                       # DTB read misses
+testsys.cpu.dtb.write_accesses                 109988                       # DTB write accesses
+testsys.cpu.dtb.write_acv                          81                       # DTB write access violations
+testsys.cpu.dtb.write_hits                     504843                       # DTB write hits
+testsys.cpu.dtb.write_misses                      528                       # DTB write misses
+testsys.cpu.idle_fraction                    0.999999                       # Percentage of idle cycles
+testsys.cpu.itb.accesses                      1249804                       # ITB accesses
+testsys.cpu.itb.acv                                69                       # ITB acv
+testsys.cpu.itb.hits                          1248307                       # ITB hits
+testsys.cpu.itb.misses                           1497                       # ITB misses
+testsys.cpu.kern.callpal                        13124                       # number of callpals executed
+testsys.cpu.kern.callpal_swpctx                   440      3.35%      3.35% # number of callpals executed
+testsys.cpu.kern.callpal_tbi                       20      0.15%      3.51% # number of callpals executed
+testsys.cpu.kern.callpal_swpipl                 11075     84.39%     87.89% # number of callpals executed
+testsys.cpu.kern.callpal_rdps                     359      2.74%     90.63% # number of callpals executed
+testsys.cpu.kern.callpal_wrusp                      3      0.02%     90.65% # number of callpals executed
+testsys.cpu.kern.callpal_rdusp                      3      0.02%     90.67% # number of callpals executed
+testsys.cpu.kern.callpal_rti                     1040      7.92%     98.60% # number of callpals executed
+testsys.cpu.kern.callpal_callsys                  140      1.07%     99.66% # number of callpals executed
+testsys.cpu.kern.callpal_imb                       44      0.34%    100.00% # number of callpals executed
+testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
+testsys.cpu.kern.inst.hwrei                     19054                       # number of hwrei instructions executed
+testsys.cpu.kern.inst.quiesce                     377                       # number of quiesce instructions executed
+testsys.cpu.kern.ipl_count                      12503                       # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count_0                     5061     40.48%     40.48% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count_21                     183      1.46%     41.94% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count_22                     205      1.64%     43.58% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_count_31                    7054     56.42%    100.00% # number of times we switched to this ipl
+testsys.cpu.kern.ipl_good                       10498                       # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good_0                      5055     48.15%     48.15% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good_21                      183      1.74%     49.90% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good_22                      205      1.95%     51.85% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_good_31                     5055     48.15%    100.00% # number of times we switched to this ipl from a different ipl
+testsys.cpu.kern.ipl_ticks               199569923603                       # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks_0             199569308033    100.00%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks_21                   30857      0.00%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks_22                   17630      0.00%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_ticks_31                  567083      0.00%    100.00% # number of cycles we spent at this ipl
+testsys.cpu.kern.ipl_used                    0.839638                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used_0                  0.998814                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used_21                        1                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used_22                        1                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.ipl_used_31                 0.716615                       # fraction of swpipl calls that actually changed the ipl
+testsys.cpu.kern.mode_good_kernel                 654                      
+testsys.cpu.kern.mode_good_user                   649                      
+testsys.cpu.kern.mode_good_idle                     5                      
+testsys.cpu.kern.mode_switch_kernel              1100                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_user                 649                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_idle                 381                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_good            0.614085                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_kernel     0.594545                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_user              1                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_idle       0.013123                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_ticks_kernel            1821232      2.16%      2.16% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks_user              1065606      1.26%      3.42% # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks_idle             81403567     96.58%    100.00% # number of ticks spent at the given mode
+testsys.cpu.kern.swap_context                     440                       # number of times the context was actually changed
+testsys.cpu.kern.syscall                           83                       # number of syscalls executed
+testsys.cpu.kern.syscall_2                          3      3.61%      3.61% # number of syscalls executed
+testsys.cpu.kern.syscall_3                          7      8.43%     12.05% # number of syscalls executed
+testsys.cpu.kern.syscall_4                          1      1.20%     13.25% # number of syscalls executed
+testsys.cpu.kern.syscall_6                          7      8.43%     21.69% # number of syscalls executed
+testsys.cpu.kern.syscall_17                         7      8.43%     30.12% # number of syscalls executed
+testsys.cpu.kern.syscall_19                         2      2.41%     32.53% # number of syscalls executed
+testsys.cpu.kern.syscall_20                         1      1.20%     33.73% # number of syscalls executed
+testsys.cpu.kern.syscall_33                         3      3.61%     37.35% # number of syscalls executed
+testsys.cpu.kern.syscall_45                        10     12.05%     49.40% # number of syscalls executed
+testsys.cpu.kern.syscall_48                         5      6.02%     55.42% # number of syscalls executed
+testsys.cpu.kern.syscall_54                         1      1.20%     56.63% # number of syscalls executed
+testsys.cpu.kern.syscall_59                         3      3.61%     60.24% # number of syscalls executed
+testsys.cpu.kern.syscall_71                        15     18.07%     78.31% # number of syscalls executed
+testsys.cpu.kern.syscall_74                         4      4.82%     83.13% # number of syscalls executed
+testsys.cpu.kern.syscall_97                         2      2.41%     85.54% # number of syscalls executed
+testsys.cpu.kern.syscall_98                         2      2.41%     87.95% # number of syscalls executed
+testsys.cpu.kern.syscall_101                        2      2.41%     90.36% # number of syscalls executed
+testsys.cpu.kern.syscall_102                        2      2.41%     92.77% # number of syscalls executed
+testsys.cpu.kern.syscall_104                        1      1.20%     93.98% # number of syscalls executed
+testsys.cpu.kern.syscall_105                        3      3.61%     97.59% # number of syscalls executed
+testsys.cpu.kern.syscall_118                        2      2.41%    100.00% # number of syscalls executed
+testsys.cpu.not_idle_fraction                0.000001                       # Percentage of non-idle cycles
+testsys.cpu.numCycles                         3566237                       # number of cpu cycles simulated
+testsys.cpu.num_insts                         3564671                       # Number of instructions executed
+testsys.cpu.num_refs                          1173698                       # Number of memory references
+testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
+testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
+testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
+testsys.disk0.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
+testsys.disk0.dma_write_full_pages                  0                       # Number of full page size DMA writes.
+testsys.disk0.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.disk2.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
+testsys.disk2.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
+testsys.disk2.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
+testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
+testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
+testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.tsunami.ethernet.coalescedRxDesc            0                       # average number of RxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxIdle            0                       # average number of RxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOk              0                       # average number of RxOk's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOrn             0                       # average number of RxOrn's coalesced into each post
+testsys.tsunami.ethernet.coalescedSwi               0                       # average number of Swi's coalesced into each post
+testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
+testsys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxOk              0                       # average number of TxOk's coalesced into each post
+testsys.tsunami.ethernet.descDMAReads               8                       # Number of descriptors the device read w/ DMA
+testsys.tsunami.ethernet.descDMAWrites             13                       # Number of descriptors the device wrote w/ DMA
+testsys.tsunami.ethernet.descDmaReadBytes          192                       # number of descriptor bytes read w/ DMA
+testsys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
+testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
+testsys.tsunami.ethernet.postedInterrupts           10                       # number of posts to CPU
+testsys.tsunami.ethernet.postedRxDesc               4                       # number of RxDesc interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxIdle               0                       # number of rxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxOk                 0                       # number of RxOk interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxOrn                0                       # number of RxOrn posted to CPU
+testsys.tsunami.ethernet.postedSwi                  0                       # number of software interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxDesc               0                       # number of TxDesc interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxIdle               6                       # number of TxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxOk                 0                       # number of TxOk interrupts posted to CPU
+testsys.tsunami.ethernet.rxBandwidth            31920                       # Receive Bandwidth (bits/s)
+testsys.tsunami.ethernet.rxBytes                  798                       # Bytes Received
+testsys.tsunami.ethernet.rxIpChecksums              5                       # Number of rx IP Checksums done by device
+testsys.tsunami.ethernet.rxPPS                     25                       # Packet Reception Rate (packets/s)
+testsys.tsunami.ethernet.rxPackets                  5                       # Number of Packets Received
+testsys.tsunami.ethernet.rxTcpChecksums             5                       # Number of rx TCP Checksums done by device
+testsys.tsunami.ethernet.rxUdpChecksums             0                       # Number of rx UDP Checksums done by device
+testsys.tsunami.ethernet.totBandwidth           70320                       # Total Bandwidth (bits/s)
+testsys.tsunami.ethernet.totBytes                1758                       # Total Bytes
+testsys.tsunami.ethernet.totPackets                13                       # Total Packets
+testsys.tsunami.ethernet.totalRxDesc                5                       # total number of RxDesc written to ISR
+testsys.tsunami.ethernet.totalRxIdle                0                       # total number of RxIdle written to ISR
+testsys.tsunami.ethernet.totalRxOk                  0                       # total number of RxOk written to ISR
+testsys.tsunami.ethernet.totalRxOrn                 0                       # total number of RxOrn written to ISR
+testsys.tsunami.ethernet.totalSwi                   0                       # total number of Swi written to ISR
+testsys.tsunami.ethernet.totalTxDesc                0                       # total number of TxDesc written to ISR
+testsys.tsunami.ethernet.totalTxIdle                8                       # total number of TxIdle written to ISR
+testsys.tsunami.ethernet.totalTxOk                  0                       # total number of TxOk written to ISR
+testsys.tsunami.ethernet.txBandwidth            38400                       # Transmit Bandwidth (bits/s)
+testsys.tsunami.ethernet.txBytes                  960                       # Bytes Transmitted
+testsys.tsunami.ethernet.txIpChecksums              2                       # Number of tx IP Checksums done by device
+testsys.tsunami.ethernet.txPPS                     40                       # Packet Tranmission Rate (packets/s)
+testsys.tsunami.ethernet.txPackets                  8                       # Number of Packets Transmitted
+testsys.tsunami.ethernet.txTcpChecksums             2                       # Number of tx TCP Checksums done by device
+testsys.tsunami.ethernet.txUdpChecksums             0                       # Number of tx UDP Checksums done by device
+
+---------- End Simulation Statistics   ----------
+
+---------- Begin Simulation Statistics ----------
+drivesys.cpu.dtb.accesses                           0                       # DTB accesses
+drivesys.cpu.dtb.acv                                0                       # DTB access violations
+drivesys.cpu.dtb.hits                               0                       # DTB hits
+drivesys.cpu.dtb.misses                             0                       # DTB misses
+drivesys.cpu.dtb.read_accesses                      0                       # DTB read accesses
+drivesys.cpu.dtb.read_acv                           0                       # DTB read access violations
+drivesys.cpu.dtb.read_hits                          0                       # DTB read hits
+drivesys.cpu.dtb.read_misses                        0                       # DTB read misses
+drivesys.cpu.dtb.write_accesses                     0                       # DTB write accesses
+drivesys.cpu.dtb.write_acv                          0                       # DTB write access violations
+drivesys.cpu.dtb.write_hits                         0                       # DTB write hits
+drivesys.cpu.dtb.write_misses                       0                       # DTB write misses
+drivesys.cpu.idle_fraction                          1                       # Percentage of idle cycles
+drivesys.cpu.itb.accesses                           0                       # ITB accesses
+drivesys.cpu.itb.acv                                0                       # ITB acv
+drivesys.cpu.itb.hits                               0                       # ITB hits
+drivesys.cpu.itb.misses                             0                       # ITB misses
+drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
+drivesys.cpu.kern.inst.hwrei                        0                       # number of hwrei instructions executed
+drivesys.cpu.kern.inst.quiesce                      0                       # number of quiesce instructions executed
+drivesys.cpu.kern.mode_good_kernel                  0                      
+drivesys.cpu.kern.mode_good_user                    0                      
+drivesys.cpu.kern.mode_good_idle                    0                      
+drivesys.cpu.kern.mode_switch_kernel                0                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_user                  0                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_idle                  0                       # number of protection mode switches
+drivesys.cpu.kern.mode_switch_good       <err: div-0>                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_kernel <err: div-0>                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_user  <err: div-0>                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_switch_good_idle  <err: div-0>                       # fraction of useful protection mode switches
+drivesys.cpu.kern.mode_ticks_kernel                 0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks_user                   0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.mode_ticks_idle                   0                       # number of ticks spent at the given mode
+drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
+drivesys.cpu.not_idle_fraction                      0                       # Percentage of non-idle cycles
+drivesys.cpu.numCycles                              0                       # number of cpu cycles simulated
+drivesys.cpu.num_insts                              0                       # Number of instructions executed
+drivesys.cpu.num_refs                               0                       # Number of memory references
+drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
+drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
+drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
+drivesys.disk0.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
+drivesys.disk0.dma_write_full_pages                 0                       # Number of full page size DMA writes.
+drivesys.disk0.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.disk2.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
+drivesys.disk2.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
+drivesys.disk2.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
+drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
+drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
+drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
+drivesys.tsunami.ethernet.coalescedRxDesc <err: div-0>                       # average number of RxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxIdle <err: div-0>                       # average number of RxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOk  <err: div-0>                       # average number of RxOk's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxOrn <err: div-0>                       # average number of RxOrn's coalesced into each post
+drivesys.tsunami.ethernet.coalescedSwi   <err: div-0>                       # average number of Swi's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTotal <err: div-0>                       # average number of interrupts coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxDesc <err: div-0>                       # average number of TxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxIdle <err: div-0>                       # average number of TxIdle's coalesced into each post
+drivesys.tsunami.ethernet.coalescedTxOk  <err: div-0>                       # average number of TxOk's coalesced into each post
+drivesys.tsunami.ethernet.descDMAReads              0                       # Number of descriptors the device read w/ DMA
+drivesys.tsunami.ethernet.descDMAWrites             0                       # Number of descriptors the device wrote w/ DMA
+drivesys.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
+drivesys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
+drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
+drivesys.tsunami.ethernet.postedInterrupts            0                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedRxDesc              0                       # number of RxDesc interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxIdle              0                       # number of rxIdle interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxOk                0                       # number of RxOk interrupts posted to CPU
+drivesys.tsunami.ethernet.postedRxOrn               0                       # number of RxOrn posted to CPU
+drivesys.tsunami.ethernet.postedSwi                 0                       # number of software interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxDesc              0                       # number of TxDesc interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxIdle              0                       # number of TxIdle interrupts posted to CPU
+drivesys.tsunami.ethernet.postedTxOk                0                       # number of TxOk interrupts posted to CPU
+drivesys.tsunami.ethernet.totalRxDesc               0                       # total number of RxDesc written to ISR
+drivesys.tsunami.ethernet.totalRxIdle               0                       # total number of RxIdle written to ISR
+drivesys.tsunami.ethernet.totalRxOk                 0                       # total number of RxOk written to ISR
+drivesys.tsunami.ethernet.totalRxOrn                0                       # total number of RxOrn written to ISR
+drivesys.tsunami.ethernet.totalSwi                  0                       # total number of Swi written to ISR
+drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
+drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
+drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
+host_inst_rate                            75502796884                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 411152                       # Number of bytes of host memory used
+host_seconds                                     0.00                       # Real time elapsed on the host
+host_tick_rate                              201377914                       # Simulator tick rate (ticks/s)
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+sim_insts                                   276189231                       # Number of instructions simulated
+sim_seconds                                  0.000001                       # Number of seconds simulated
+sim_ticks                                      785978                       # Number of ticks simulated
+testsys.cpu.dtb.accesses                            0                       # DTB accesses
+testsys.cpu.dtb.acv                                 0                       # DTB access violations
+testsys.cpu.dtb.hits                                0                       # DTB hits
+testsys.cpu.dtb.misses                              0                       # DTB misses
+testsys.cpu.dtb.read_accesses                       0                       # DTB read accesses
+testsys.cpu.dtb.read_acv                            0                       # DTB read access violations
+testsys.cpu.dtb.read_hits                           0                       # DTB read hits
+testsys.cpu.dtb.read_misses                         0                       # DTB read misses
+testsys.cpu.dtb.write_accesses                      0                       # DTB write accesses
+testsys.cpu.dtb.write_acv                           0                       # DTB write access violations
+testsys.cpu.dtb.write_hits                          0                       # DTB write hits
+testsys.cpu.dtb.write_misses                        0                       # DTB write misses
+testsys.cpu.idle_fraction                           1                       # Percentage of idle cycles
+testsys.cpu.itb.accesses                            0                       # ITB accesses
+testsys.cpu.itb.acv                                 0                       # ITB acv
+testsys.cpu.itb.hits                                0                       # ITB hits
+testsys.cpu.itb.misses                              0                       # ITB misses
+testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
+testsys.cpu.kern.inst.hwrei                         0                       # number of hwrei instructions executed
+testsys.cpu.kern.inst.quiesce                       0                       # number of quiesce instructions executed
+testsys.cpu.kern.mode_good_kernel                   0                      
+testsys.cpu.kern.mode_good_user                     0                      
+testsys.cpu.kern.mode_good_idle                     0                      
+testsys.cpu.kern.mode_switch_kernel                 0                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_user                   0                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_idle                   0                       # number of protection mode switches
+testsys.cpu.kern.mode_switch_good            no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_kernel     no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_user       no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_switch_good_idle       no value                       # fraction of useful protection mode switches
+testsys.cpu.kern.mode_ticks_kernel                  0                       # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks_user                    0                       # number of ticks spent at the given mode
+testsys.cpu.kern.mode_ticks_idle                    0                       # number of ticks spent at the given mode
+testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
+testsys.cpu.not_idle_fraction                       0                       # Percentage of non-idle cycles
+testsys.cpu.numCycles                               0                       # number of cpu cycles simulated
+testsys.cpu.num_insts                               0                       # Number of instructions executed
+testsys.cpu.num_refs                                0                       # Number of memory references
+testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
+testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
+testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
+testsys.disk0.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
+testsys.disk0.dma_write_full_pages                  0                       # Number of full page size DMA writes.
+testsys.disk0.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.disk2.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
+testsys.disk2.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
+testsys.disk2.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
+testsys.disk2.dma_write_bytes                       0                       # Number of bytes transfered via DMA writes.
+testsys.disk2.dma_write_full_pages                  0                       # Number of full page size DMA writes.
+testsys.disk2.dma_write_txs                         0                       # Number of DMA write transactions.
+testsys.tsunami.ethernet.coalescedRxDesc <err: div-0>                       # average number of RxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxIdle <err: div-0>                       # average number of RxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOk   <err: div-0>                       # average number of RxOk's coalesced into each post
+testsys.tsunami.ethernet.coalescedRxOrn  <err: div-0>                       # average number of RxOrn's coalesced into each post
+testsys.tsunami.ethernet.coalescedSwi    <err: div-0>                       # average number of Swi's coalesced into each post
+testsys.tsunami.ethernet.coalescedTotal  <err: div-0>                       # average number of interrupts coalesced into each post
+testsys.tsunami.ethernet.coalescedTxDesc <err: div-0>                       # average number of TxDesc's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxIdle <err: div-0>                       # average number of TxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxOk   <err: div-0>                       # average number of TxOk's coalesced into each post
+testsys.tsunami.ethernet.descDMAReads               0                       # Number of descriptors the device read w/ DMA
+testsys.tsunami.ethernet.descDMAWrites              0                       # Number of descriptors the device wrote w/ DMA
+testsys.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA
+testsys.tsunami.ethernet.descDmaWriteBytes            0                       # number of descriptor bytes write w/ DMA
+testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
+testsys.tsunami.ethernet.postedInterrupts            0                       # number of posts to CPU
+testsys.tsunami.ethernet.postedRxDesc               0                       # number of RxDesc interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxIdle               0                       # number of rxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxOk                 0                       # number of RxOk interrupts posted to CPU
+testsys.tsunami.ethernet.postedRxOrn                0                       # number of RxOrn posted to CPU
+testsys.tsunami.ethernet.postedSwi                  0                       # number of software interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxDesc               0                       # number of TxDesc interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxIdle               0                       # number of TxIdle interrupts posted to CPU
+testsys.tsunami.ethernet.postedTxOk                 0                       # number of TxOk interrupts posted to CPU
+testsys.tsunami.ethernet.totalRxDesc                0                       # total number of RxDesc written to ISR
+testsys.tsunami.ethernet.totalRxIdle                0                       # total number of RxIdle written to ISR
+testsys.tsunami.ethernet.totalRxOk                  0                       # total number of RxOk written to ISR
+testsys.tsunami.ethernet.totalRxOrn                 0                       # total number of RxOrn written to ISR
+testsys.tsunami.ethernet.totalSwi                   0                       # total number of Swi written to ISR
+testsys.tsunami.ethernet.totalTxDesc                0                       # total number of TxDesc written to ISR
+testsys.tsunami.ethernet.totalTxIdle                0                       # total number of TxIdle written to ISR
+testsys.tsunami.ethernet.totalTxOk                  0                       # total number of TxOk written to ISR
+
+---------- End Simulation Statistics   ----------

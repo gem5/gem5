@@ -113,23 +113,29 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 
 #if FULL_SYSTEM
 void
-ThreadState::init()
+ThreadState::connectMemPorts()
 {
-    initPhysPort();
-    initVirtPort();
+    connectPhysPort();
+    connectVirtPort();
 }
 
 void
-ThreadState::initPhysPort()
+ThreadState::connectPhysPort()
 {
+    // @todo: For now this disregards any older port that may have
+    // already existed.  Fix this memory leak once the bus port IDs
+    // for functional ports is resolved.
     physPort = new FunctionalPort(csprintf("%s-%d-funcport",
                                            baseCpu->name(), tid));
     connectToMemFunc(physPort);
 }
 
 void
-ThreadState::initVirtPort()
+ThreadState::connectVirtPort()
 {
+    // @todo: For now this disregards any older port that may have
+    // already existed.  Fix this memory leak once the bus port IDs
+    // for functional ports is resolved.
     virtPort = new VirtualPort(csprintf("%s-%d-vport",
                                         baseCpu->name(), tid));
     connectToMemFunc(virtPort);

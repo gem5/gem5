@@ -733,7 +733,6 @@ DefaultCommit<Impl>::commit()
 
             if (!squash_bdelay_slot)
                 bdelay_done_seq_num++;
-
 #endif
 
             if (fromIEW->includeSquashInst[tid] == true) {

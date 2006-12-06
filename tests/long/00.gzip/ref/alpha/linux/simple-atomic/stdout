@@ -1,13 +1,31 @@
-Hello world!
-M5 Simulator System
-
-Copyright (c) 2001-2006
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Sep  5 2006 15:28:48
-M5 started Tue Sep  5 15:42:12 2006
-M5 executing on zizzer.eecs.umich.edu
-command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/00.hello/alpha/linux/o3-timing tests/run.py quick/00.hello/alpha/linux/o3-timing
-Exiting @ tick 6870 because target called exit()
+spec_init
+Loading Input Data
+Duplicating 262144 bytes
+Duplicating 524288 bytes
+Input data 1048576 bytes in length
+Compressing Input Data, level 1
+Compressed data 108074 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 3
+Compressed data 97831 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 5
+Compressed data 83382 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 7
+Compressed data 76606 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 73189 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!

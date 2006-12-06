@@ -1139,6 +1139,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             ext_inst = TheISA::makeExtMI(inst, fetch_PC);
 #elif THE_ISA == SPARC_ISA
             ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
+#elif THE_ISA == MIPS_ISA
+            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
 #endif
 
             // Create a new DynInst from the instruction fetched.

@@ -21,7 +21,7 @@ echo "100000" > /proc/sys/net/core/netdev_max_backlog
 echo -n "waiting for server..."
 /usr/bin/netcat -c -l -p 8000
 
-BINARY=/benchmarks/netperf/netperf
+BINARY=/benchmarks/netperf-bin/netperf
 TEST="TCP_MAERTS"
 SHORT_ARGS="-l -100k"
 LONG_ARGS="-k16384,0 -K16384,0 -- -m 65536 -M 65536 -s 262144 -S 262144"
