@@ -55,12 +55,7 @@
 #endif
 
 template <class Impl>
-SparcO3CPU<Impl>::SparcO3CPU(Params *params)
-#if FULL_SYSTEM
-    : FullO3CPU<Impl>(params), itb(params->itb), dtb(params->dtb)
-#else
-    : FullO3CPU<Impl>(params)
-#endif
+SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(params)
 {
     DPRINTF(O3CPU, "Creating SparcO3CPU object.\n");
 
@@ -172,15 +167,16 @@ SparcO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
 
 template <class Impl>
 void
-SparcO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
+SparcO3CPU<Impl>::setMiscReg(int misc_reg,
+        const SparcISA::MiscReg &val, unsigned tid)
 {
     this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
-SparcO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
-                                       unsigned tid)
+SparcO3CPU<Impl>::setMiscRegWithEffect(int misc_reg,
+        const SparcISA::MiscReg &val, unsigned tid)
 {
     this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
@@ -285,16 +281,16 @@ template <class Impl>
 TheISA::IntReg
 SparcO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
-    IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
+    TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
             SparcISA::ArgumentReg0 + i);
     return this->readArchIntReg(idx, tid);
 }
 
 template <class Impl>
 void
-SparcO3CPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
+SparcO3CPU<Impl>::setSyscallArg(int i, TheISA::IntReg val, int tid)
 {
-    IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
+    TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
             SparcISA::ArgumentReg0 + i);
     this->setArchIntReg(idx, val, tid);
 }

@@ -36,12 +36,6 @@ class SparcTC : public O3ThreadContext<Impl>
 {
   public:
 #if FULL_SYSTEM
-    /** Returns a pointer to the ITB. */
-    virtual SparcISA::ITB *getITBPtr() { return this->cpu->itb; }
-
-    /** Returns a pointer to the DTB. */
-    virtual SparcISA::DTB *getDTBPtr() { return this->cpu->dtb; }
-
     /** Returns pointer to the quiesce event. */
     virtual EndQuiesceEvent *getQuiesceEvent()
     {
