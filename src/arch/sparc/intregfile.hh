@@ -34,6 +34,7 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/types.hh"
+#include "base/bitfield.hh"
 
 #include <string>
 
@@ -54,15 +55,19 @@ namespace SparcISA
       private:
         friend class RegFile;
       protected:
+        //The number of bits needed to index into each 8 register frame
         static const int FrameOffsetBits = 3;
+        //The number of bits to choose between the 4 sets of 8 registers
         static const int FrameNumBits = 2;
 
+        //The number of registers per "frame" (8)
         static const int RegsPerFrame = 1 << FrameOffsetBits;
-        static const int FrameNumMask =
+        //A mask to get the frame number
+        static const uint64_t FrameNumMask =
                 (FrameNumBits == sizeof(int)) ?
                 (unsigned int)(-1) :
                 (1 << FrameNumBits) - 1;
-        static const int FrameOffsetMask =
+        static const uint64_t FrameOffsetMask =
                 (FrameOffsetBits == sizeof(int)) ?
                 (unsigned int)(-1) :
                 (1 << FrameOffsetBits) - 1;
@@ -70,6 +75,7 @@ namespace SparcISA
         IntReg regGlobals[MaxGL][RegsPerFrame];
         IntReg regSegments[2 * NWindows][RegsPerFrame];
         IntReg microRegs[NumMicroIntRegs];
+        IntReg regs[NumIntRegs];
 
         enum regFrame {Globals, Outputs, Locals, Inputs, NumFrames};
 
