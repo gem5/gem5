@@ -55,12 +55,7 @@
 #endif
 
 template <class Impl>
-AlphaO3CPU<Impl>::AlphaO3CPU(Params *params)
-#if FULL_SYSTEM
-    : FullO3CPU<Impl>(params), itb(params->itb), dtb(params->dtb)
-#else
-    : FullO3CPU<Impl>(params)
-#endif
+AlphaO3CPU<Impl>::AlphaO3CPU(Params *params) : FullO3CPU<Impl>(params)
 {
     DPRINTF(O3CPU, "Creating AlphaO3CPU object.\n");
 
@@ -173,15 +168,16 @@ AlphaO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
 
 template <class Impl>
 void
-AlphaO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
+AlphaO3CPU<Impl>::setMiscReg(int misc_reg, const TheISA::MiscReg &val,
+        unsigned tid)
 {
     this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
-AlphaO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
-                                       unsigned tid)
+AlphaO3CPU<Impl>::setMiscRegWithEffect(int misc_reg,
+        const TheISA::MiscReg &val, unsigned tid)
 {
     this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
@@ -315,7 +311,7 @@ AlphaO3CPU<Impl>::getSyscallArg(int i, int tid)
 
 template <class Impl>
 void
-AlphaO3CPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
+AlphaO3CPU<Impl>::setSyscallArg(int i, TheISA::IntReg val, int tid)
 {
     this->setArchIntReg(AlphaISA::ArgumentReg0 + i, val, tid);
 }
@@ -324,17 +320,6 @@ template <class Impl>
 void
 AlphaO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 {
-    // check for error condition.  Alpha syscall convention is to
-    // indicate success/failure in reg a3 (r19) and put the
-    // return value itself in the standard return value reg (v0).
-    if (return_value.successful()) {
-        // no error
-        this->setArchIntReg(TheISA::SyscallSuccessReg, 0, tid);
-        this->setArchIntReg(TheISA::ReturnValueReg, return_value.value(), tid);
-    } else {
-        // got an error, return details
-        this->setArchIntReg(TheISA::SyscallSuccessReg, (IntReg) -1, tid);
-        this->setArchIntReg(TheISA::ReturnValueReg, -return_value.value(), tid);
-    }
+    TheISA::setSyscallReturn(return_value, this->tcBase(tid));
 }
 #endif

@@ -37,12 +37,6 @@
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
 
-namespace TheISA
-{
-    class ITB;
-    class DTB;
-}
-
 class EndQuiesceEvent;
 namespace Kernel {
     class Statistics;
@@ -61,14 +55,6 @@ class TranslatingPort;
 template <class Impl>
 class AlphaO3CPU : public FullO3CPU<Impl>
 {
-  protected:
-    typedef TheISA::IntReg IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscReg MiscReg;
-    typedef TheISA::RegFile RegFile;
-    typedef TheISA::MiscRegFile MiscRegFile;
-
   public:
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
@@ -77,13 +63,6 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     /** Constructs an AlphaO3CPU with the given parameters. */
     AlphaO3CPU(Params *params);
 
-#if FULL_SYSTEM
-    /** ITB pointer. */
-    AlphaISA::ITB *itb;
-    /** DTB pointer. */
-    AlphaISA::DTB *dtb;
-#endif
-
     /** Registers statistics. */
     void regStats();
 
@@ -91,19 +70,19 @@ class AlphaO3CPU : public FullO3CPU<Impl>
     /** Translates instruction requestion. */
     Fault translateInstReq(RequestPtr &req, Thread *thread)
     {
-        return itb->translate(req, thread->getTC());
+        return this->itb->translate(req, thread->getTC());
     }
 
     /** Translates data read request. */
     Fault translateDataReadReq(RequestPtr &req, Thread *thread)
     {
-        return dtb->translate(req, thread->getTC(), false);
+        return this->dtb->translate(req, thread->getTC(), false);
     }
 
     /** Translates data write request. */
     Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
     {
-        return dtb->translate(req, thread->getTC(), true);
+        return this->dtb->translate(req, thread->getTC(), true);
     }
 
 #else
@@ -127,20 +106,22 @@ class AlphaO3CPU : public FullO3CPU<Impl>
 
 #endif
     /** Reads a miscellaneous register. */
-    MiscReg readMiscReg(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscRegWithEffect(int misc_reg, unsigned tid);
 
     /** Sets a miscellaneous register. */
-    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscReg(int misc_reg, const TheISA::MiscReg &val,
+            unsigned tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscRegWithEffect(int misc_reg, const TheISA::MiscReg &val,
+            unsigned tid);
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
@@ -175,10 +156,10 @@ class AlphaO3CPU : public FullO3CPU<Impl>
      */
     void syscall(int64_t callnum, int tid);
     /** Gets a syscall argument. */
-    IntReg getSyscallArg(int i, int tid);
+    TheISA::IntReg getSyscallArg(int i, int tid);
 
     /** Used to shift args for indirect syscall. */
-    void setSyscallArg(int i, IntReg val, int tid);
+    void setSyscallArg(int i, TheISA::IntReg val, int tid);
 
     /** Sets the return value of a syscall. */
     void setSyscallReturn(SyscallReturn return_value, int tid);

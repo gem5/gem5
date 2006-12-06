@@ -91,9 +91,6 @@ template <class Impl>
 class FullO3CPU : public BaseO3CPU
 {
   public:
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
-
     // Typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
@@ -113,6 +110,11 @@ class FullO3CPU : public BaseO3CPU
         Blocked,
         SwitchedOut
     };
+
+#if FULL_SYSTEM
+    TheISA::ITB * itb;
+    TheISA::DTB * dtb;
+#endif
 
     /** Overall CPU status. */
     Status _status;
@@ -382,23 +384,23 @@ class FullO3CPU : public BaseO3CPU
     /** Register accessors.  Index refers to the physical register index. */
     uint64_t readIntReg(int reg_idx);
 
-    FloatReg readFloatReg(int reg_idx);
+    TheISA::FloatReg readFloatReg(int reg_idx);
 
-    FloatReg readFloatReg(int reg_idx, int width);
+    TheISA::FloatReg readFloatReg(int reg_idx, int width);
 
-    FloatRegBits readFloatRegBits(int reg_idx);
+    TheISA::FloatRegBits readFloatRegBits(int reg_idx);
 
-    FloatRegBits readFloatRegBits(int reg_idx, int width);
+    TheISA::FloatRegBits readFloatRegBits(int reg_idx, int width);
 
     void setIntReg(int reg_idx, uint64_t val);
 
-    void setFloatReg(int reg_idx, FloatReg val);
+    void setFloatReg(int reg_idx, TheISA::FloatReg val);
 
-    void setFloatReg(int reg_idx, FloatReg val, int width);
+    void setFloatReg(int reg_idx, TheISA::FloatReg val, int width);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val);
+    void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
+    void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val, int width);
 
     uint64_t readArchIntReg(int reg_idx, unsigned tid);
 
