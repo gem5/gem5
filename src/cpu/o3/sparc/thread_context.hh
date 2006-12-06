@@ -62,7 +62,7 @@ class SparcTC : public O3ThreadContext<Impl>
     virtual void changeRegFileContext(TheISA::RegContextParam param,
                                       TheISA::RegContextVal val)
     {
-        panic("This doesn't make sense!\n");
+        //XXX Ignore this for now. This -really- needs to get fixed.
     }
 
 
