@@ -268,6 +268,7 @@ namespace SparcISA
     bool AsiIsPriv(ASI);
     bool AsiIsHPriv(ASI);
     bool AsiIsReg(ASI);
+    bool AsiIsInterrupt(ASI);
 
 };
 

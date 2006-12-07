@@ -126,6 +126,17 @@ namespace SparcISA
         MISCREG_SCRATCHPAD_R5,
         MISCREG_SCRATCHPAD_R6,
         MISCREG_SCRATCHPAD_R7,
+
+        /* CPU Queue Registers */
+        MISCREG_QUEUE_CPU_MONDO_HEAD,
+        MISCREG_QUEUE_CPU_MONDO_TAIL,
+        MISCREG_QUEUE_DEV_MONDO_HEAD, /* 70 */
+        MISCREG_QUEUE_DEV_MONDO_TAIL,
+        MISCREG_QUEUE_RES_ERROR_HEAD,
+        MISCREG_QUEUE_RES_ERROR_TAIL,
+        MISCREG_QUEUE_NRES_ERROR_HEAD,
+        MISCREG_QUEUE_NRES_ERROR_TAIL,
+
         MISCREG_NUMMISCREGS
     };
 
@@ -209,6 +220,15 @@ namespace SparcISA
         uint64_t dTlbTagAccess;
 
         uint64_t scratchPad[8];
+
+        uint64_t cpu_mondo_head;
+        uint64_t cpu_mondo_tail;
+        uint64_t dev_mondo_head;
+        uint64_t dev_mondo_tail;
+        uint64_t res_error_head;
+        uint64_t res_error_tail;
+        uint64_t nres_error_head;
+        uint64_t nres_error_tail;
 
         // These need to check the int_dis field and if 0 then
         // set appropriate bit in softint and checkinterrutps on the cpu

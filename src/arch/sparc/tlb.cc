@@ -31,6 +31,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/tlb.hh"
+#include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
@@ -479,11 +480,15 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
+        if (AsiIsInterrupt(asi))
+            panic("Interrupt ASIs not supported\n");
 
         if (AsiIsMmu(asi))
             goto handleMmuRegAccess;
         if (AsiIsScratchPad(asi))
             goto handleScratchRegAccess;
+        if (AsiIsQueue(asi))
+            goto handleQueueRegAccess;
 
         if (!AsiIsReal(asi) && !AsiIsNucleus(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
@@ -542,6 +547,20 @@ handleScratchRegAccess:
         writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }
+    goto regAccessOk;
+
+handleQueueRegAccess:
+    if (!priv  && !hpriv) {
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        return new PrivilegedAction;
+    }
+    if (priv && vaddr & 0xF || vaddr > 0x3f8 || vaddr < 0x3c0) {
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        return new DataAccessException;
+    }
+    goto regAccessOk;
+
+regAccessOk:
 handleMmuRegAccess:
     DPRINTF(TLB, "TLB: DTB Translating MM IPR access\n");
     req->setMmapedIpr(true);
@@ -574,6 +593,10 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
           default:
             goto doMmuReadError;
         }
+        break;
+      case ASI_QUEUE:
+        pkt->set(tc->readMiscRegWithEffect(MISCREG_QUEUE_CPU_MONDO_HEAD +
+                    (va >> 4) - 0x3c));
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
@@ -671,6 +694,11 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
           default:
             goto doMmuWriteError;
         }
+        break;
+      case ASI_QUEUE:
+        assert(mbits(va,13,6) == va);
+        tc->setMiscRegWithEffect(MISCREG_QUEUE_CPU_MONDO_HEAD +
+                    (va >> 4) - 0x3c, data);
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);

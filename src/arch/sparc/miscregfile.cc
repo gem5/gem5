@@ -269,7 +269,22 @@ MiscReg MiscRegFile::readReg(int miscReg)
         return scratchPad[6];
       case MISCREG_SCRATCHPAD_R7:
         return scratchPad[7];
-
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+        return cpu_mondo_head;
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+        return cpu_mondo_tail;
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+        return dev_mondo_head;
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+        return dev_mondo_tail;
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+        return res_error_head;
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+        return res_error_tail;
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+        return nres_error_head;
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
+        return nres_error_tail;
       default:
         panic("Miscellaneous register %d not implemented\n", miscReg);
     }
@@ -310,6 +325,14 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
       case MISCREG_HVER:
       case MISCREG_STRAND_STS_REG:
       case MISCREG_HSTICK_CMPR:
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
         return readFSRegWithEffect(miscReg, tc);
 #else
@@ -522,6 +545,30 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
       case MISCREG_SCRATCHPAD_R7:
         scratchPad[7] = val;
         break;
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+        cpu_mondo_head = val;
+        break;
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+        cpu_mondo_tail = val;
+        break;
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+        dev_mondo_head = val;
+        break;
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+        dev_mondo_tail = val;
+        break;
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+        res_error_head = val;
+        break;
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+        res_error_tail = val;
+        break;
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+        nres_error_head = val;
+        break;
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
+        nres_error_tail = val;
+        break;
 
       default:
         panic("Miscellaneous register %d not implemented\n", miscReg);
@@ -568,6 +615,14 @@ void MiscRegFile::setRegWithEffect(int miscReg,
       case MISCREG_HVER:
       case MISCREG_STRAND_STS_REG:
       case MISCREG_HSTICK_CMPR:
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
         setFSRegWithEffect(miscReg, val, tc);
         return;
@@ -627,6 +682,14 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_SCALAR(dTlbSfar);
     SERIALIZE_SCALAR(dTlbTagAccess);
     SERIALIZE_ARRAY(scratchPad,8);
+    SERIALIZE_SCALAR(cpu_mondo_head);
+    SERIALIZE_SCALAR(cpu_mondo_tail);
+    SERIALIZE_SCALAR(dev_mondo_head);
+    SERIALIZE_SCALAR(dev_mondo_tail);
+    SERIALIZE_SCALAR(res_error_head);
+    SERIALIZE_SCALAR(res_error_tail);
+    SERIALIZE_SCALAR(nres_error_head);
+    SERIALIZE_SCALAR(nres_error_tail);
 }
 
 void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
@@ -678,4 +741,11 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_SCALAR(dTlbSfar);
     UNSERIALIZE_SCALAR(dTlbTagAccess);
     UNSERIALIZE_ARRAY(scratchPad,8);
-}
+    UNSERIALIZE_SCALAR(cpu_mondo_head);
+    UNSERIALIZE_SCALAR(cpu_mondo_tail);
+    UNSERIALIZE_SCALAR(dev_mondo_head);
+    UNSERIALIZE_SCALAR(dev_mondo_tail);
+    UNSERIALIZE_SCALAR(res_error_head);
+    UNSERIALIZE_SCALAR(res_error_tail);
+    UNSERIALIZE_SCALAR(nres_error_head);
+    UNSERIALIZE_SCALAR(nres_error_tail);}

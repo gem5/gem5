@@ -256,6 +256,13 @@ namespace SparcISA
         return asi == ASI_QUEUE;
     }
 
+    bool AsiIsInterrupt(ASI asi)
+    {
+        return asi == ASI_SWVR_INTR_RECEIVE  ||
+               asi == ASI_SWVR_UDB_INTR_W  ||
+               asi == ASI_SWVR_UDB_INTR_R ;
+    }
+
     bool AsiIsMmu(ASI asi)
     {
         return  asi == ASI_MMU ||

@@ -254,6 +254,92 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
     // FSR
     dest->setMiscReg(MISCREG_FSR, src->readMiscReg(MISCREG_FSR));
+
+    //Strand Status Register
+    dest->setMiscReg(MISCREG_STRAND_STS_REG,
+            src->readMiscReg(MISCREG_STRAND_STS_REG));
+
+    // MMU Registers
+    dest->setMiscReg(MISCREG_MMU_P_CONTEXT,
+            src->readMiscReg(MISCREG_MMU_P_CONTEXT));
+    dest->setMiscReg(MISCREG_MMU_S_CONTEXT,
+            src->readMiscReg(MISCREG_MMU_S_CONTEXT));
+    dest->setMiscReg(MISCREG_MMU_PART_ID,
+            src->readMiscReg(MISCREG_MMU_PART_ID));
+    dest->setMiscReg(MISCREG_MMU_LSU_CTRL,
+            src->readMiscReg(MISCREG_MMU_LSU_CTRL));
+
+    dest->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0,
+            src->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0));
+    dest->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1,
+            src->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1));
+    dest->setMiscReg(MISCREG_MMU_ITLB_C0_CONFIG,
+            src->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG));
+    dest->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0,
+            src->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0));
+    dest->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1,
+            src->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1));
+    dest->setMiscReg(MISCREG_MMU_ITLB_CX_CONFIG,
+            src->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG));
+    dest->setMiscReg(MISCREG_MMU_ITLB_SFSR,
+            src->readMiscReg(MISCREG_MMU_ITLB_SFSR));
+    dest->setMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS,
+            src->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS));
+
+    dest->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0,
+            src->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0));
+    dest->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1,
+            src->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1));
+    dest->setMiscReg(MISCREG_MMU_DTLB_C0_CONFIG,
+            src->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG));
+    dest->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0,
+            src->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0));
+    dest->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1,
+            src->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1));
+    dest->setMiscReg(MISCREG_MMU_DTLB_CX_CONFIG,
+            src->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG));
+    dest->setMiscReg(MISCREG_MMU_DTLB_SFSR,
+            src->readMiscReg(MISCREG_MMU_DTLB_SFSR));
+    dest->setMiscReg(MISCREG_MMU_DTLB_SFAR,
+            src->readMiscReg(MISCREG_MMU_DTLB_SFAR));
+    dest->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS,
+            src->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS));
+
+    // Scratchpad Registers
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R0,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R0));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R1,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R1));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R2,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R2));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R3,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R3));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R4,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R4));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R5,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R5));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R6,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R6));
+    dest->setMiscReg(MISCREG_SCRATCHPAD_R7,
+            src->readMiscReg(MISCREG_SCRATCHPAD_R7));
+
+    // Queue Registers
+    dest->setMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD,
+            src->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD));
+    dest->setMiscReg(MISCREG_QUEUE_CPU_MONDO_TAIL,
+            src->readMiscReg(MISCREG_QUEUE_CPU_MONDO_TAIL));
+    dest->setMiscReg(MISCREG_QUEUE_DEV_MONDO_HEAD,
+            src->readMiscReg(MISCREG_QUEUE_DEV_MONDO_HEAD));
+    dest->setMiscReg(MISCREG_QUEUE_DEV_MONDO_TAIL,
+            src->readMiscReg(MISCREG_QUEUE_DEV_MONDO_TAIL));
+    dest->setMiscReg(MISCREG_QUEUE_RES_ERROR_HEAD,
+            src->readMiscReg(MISCREG_QUEUE_RES_ERROR_HEAD));
+    dest->setMiscReg(MISCREG_QUEUE_RES_ERROR_TAIL,
+            src->readMiscReg(MISCREG_QUEUE_RES_ERROR_TAIL));
+    dest->setMiscReg(MISCREG_QUEUE_NRES_ERROR_HEAD,
+            src->readMiscReg(MISCREG_QUEUE_NRES_ERROR_HEAD));
+    dest->setMiscReg(MISCREG_QUEUE_NRES_ERROR_TAIL,
+            src->readMiscReg(MISCREG_QUEUE_NRES_ERROR_TAIL));
 }
 
 void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
