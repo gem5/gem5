@@ -170,13 +170,17 @@ output decoder {{
             printMnemonic(response, mnemonic);
             ccprintf(response, "0x%x", target);
 
-            if(symtab->findNearestSymbol(target, symbol, symbolAddr))
+            if(symtab && symtab->findNearestSymbol(target, symbol, symbolAddr))
             {
                 ccprintf(response, " <%s", symbol);
                 if(symbolAddr != target)
                     ccprintf(response, "+%d>", target - symbolAddr);
                 else
                     ccprintf(response, ">");
+            }
+            else
+            {
+                ccprintf(response, "<%d>", target);
             }
 
             return response.str();
