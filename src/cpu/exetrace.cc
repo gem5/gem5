@@ -57,6 +57,8 @@
 using namespace std;
 using namespace TheISA;
 
+static int diffcount = 0;
+
 namespace Trace {
 SharedData *shared_data = NULL;
 }
@@ -568,7 +570,9 @@ Trace::InstRecord::dump(ostream &outs)
                                     << endl;*/
                             }
                         }
-                        fatal("Differences found between Legion and M5\n");
+                        diffcount++;
+                        if (diffcount > 3)
+                            fatal("Differences found between Legion and M5\n");
                     }
 
                     compared = true;

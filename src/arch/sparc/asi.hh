@@ -269,7 +269,7 @@ namespace SparcISA
     bool AsiIsHPriv(ASI);
     bool AsiIsReg(ASI);
     bool AsiIsInterrupt(ASI);
-
+    bool AsiIsSparcError(ASI);
 };
 
 #endif // __ARCH_SPARC_ASI_HH__

@@ -38,6 +38,22 @@ class T1000(Platform):
             ret_data64=0x0000000000000001, update_data=True,
             warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
+    fake_l2esr_1 = IsaFake(pio_addr=0xAB00000000, pio_size=0x8,
+            ret_data64=0x0000000000000000, update_data=True,
+            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+
+    fake_l2esr_2 = IsaFake(pio_addr=0xAB00000040, pio_size=0x8,
+            ret_data64=0x0000000000000000, update_data=True,
+            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+
+    fake_l2esr_3 = IsaFake(pio_addr=0xAB00000080, pio_size=0x8,
+            ret_data64=0x0000000000000000, update_data=True,
+            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+
+    fake_l2esr_4 = IsaFake(pio_addr=0xAB000000C0, pio_size=0x8,
+            ret_data64=0x0000000000000000, update_data=True,
+            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+
     fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000,
             warn_access="Accessing SSI -- Unimplemented!")
 
@@ -57,6 +73,10 @@ class T1000(Platform):
         self.fake_l2_2.pio = bus.port
         self.fake_l2_3.pio = bus.port
         self.fake_l2_4.pio = bus.port
+        self.fake_l2esr_1.pio = bus.port
+        self.fake_l2esr_2.pio = bus.port
+        self.fake_l2esr_3.pio = bus.port
+        self.fake_l2esr_4.pio = bus.port
         self.fake_ssi.pio = bus.port
         self.puart0.pio = bus.port
         self.hvuart.pio = bus.port

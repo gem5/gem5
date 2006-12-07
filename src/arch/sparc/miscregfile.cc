@@ -305,13 +305,15 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
         return mbits(tc->getCpuPtr()->instCount() - (tick &
                     mask(63)),62,2) | mbits(tick,63,63) ;
       case MISCREG_FPRS:
-        panic("FPU not implemented\n");
+        warn("FPRS register read and FPU stuff not really implemented\n");
+        return fprs;
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
         /** Floating Point Status Register */
       case MISCREG_FSR:
-        panic("Floating Point not implemented\n");
+        warn("Reading FSR Floating Point not implemented\n");
+        break;
       case MISCREG_SOFTINT_CLR:
       case MISCREG_SOFTINT_SET:
         panic("Can read from softint clr/set\n");
@@ -356,6 +358,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         asi = val;
         break;
       case MISCREG_FPRS:
+        warn("FPU not really implemented writing %#X to FPRS\n", val);
         fprs = val;
         break;
       case MISCREG_TICK:

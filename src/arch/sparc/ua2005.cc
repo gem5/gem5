@@ -43,79 +43,99 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
     int64_t time;
     int oldLevel, newLevel;
     switch (miscReg) {
-        /* Full system only ASRs */
-        case MISCREG_SOFTINT:
-          // Check if we are going to interrupt because of something
-          oldLevel = InterruptLevel(softint);
-          newLevel = InterruptLevel(val);
-          setReg(miscReg, val);
-          if (newLevel > oldLevel)
-              ; // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-              //tc->getCpuPtr()->checkInterrupts = true;
-          panic("SOFTINT not implemented\n");
-          break;
+      /* Full system only ASRs */
+      case MISCREG_SOFTINT:
+        // Check if we are going to interrupt because of something
+        oldLevel = InterruptLevel(softint);
+        newLevel = InterruptLevel(val);
+        setReg(miscReg, val);
+        //if (newLevel > oldLevel)
+            ; // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
+            //tc->getCpuPtr()->checkInterrupts = true;
+        //panic("SOFTINT not implemented\n");
+        warn("Writing to softint not really supported, writing: %#x\n", val);
+        break;
 
-        case MISCREG_SOFTINT_CLR:
-          return setRegWithEffect(miscReg, ~val & softint, tc);
-        case MISCREG_SOFTINT_SET:
-          return setRegWithEffect(miscReg, val | softint, tc);
+      case MISCREG_SOFTINT_CLR:
+        return setRegWithEffect(miscReg, ~val & softint, tc);
+      case MISCREG_SOFTINT_SET:
+        return setRegWithEffect(miscReg, val | softint, tc);
 
-        case MISCREG_TICK_CMPR:
-          if (tickCompare == NULL)
-              tickCompare = new TickCompareEvent(this, tc);
-          setReg(miscReg, val);
-          if ((tick_cmpr & mask(63)) && tickCompare->scheduled())
+      case MISCREG_TICK_CMPR:
+        if (tickCompare == NULL)
+            tickCompare = new TickCompareEvent(this, tc);
+        setReg(miscReg, val);
+        if ((tick_cmpr & mask(63)) && tickCompare->scheduled())
                   tickCompare->deschedule();
-          time = (tick_cmpr & mask(63)) - (tick & mask(63));
-          if (!(tick_cmpr & ~mask(63)) && time > 0)
-              tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
-          break;
+        time = (tick_cmpr & mask(63)) - (tick & mask(63));
+        if (!(tick_cmpr & ~mask(63)) && time > 0)
+            tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+        warn ("writing to TICK compare register %#X\n", val);
+        break;
 
-        case MISCREG_STICK_CMPR:
-          if (sTickCompare == NULL)
-              sTickCompare = new STickCompareEvent(this, tc);
-          setReg(miscReg, val);
-          if ((stick_cmpr & mask(63)) && sTickCompare->scheduled())
-                  sTickCompare->deschedule();
-          time = (stick_cmpr & mask(63)) - (stick & mask(63));
-          if (!(stick_cmpr & ~mask(63)) && time > 0)
-              sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
-          break;
+      case MISCREG_STICK_CMPR:
+        if (sTickCompare == NULL)
+            sTickCompare = new STickCompareEvent(this, tc);
+        setReg(miscReg, val);
+        if ((stick_cmpr & mask(63)) && sTickCompare->scheduled())
+                sTickCompare->deschedule();
+        time = (stick_cmpr & mask(63)) - (stick & mask(63));
+        if (!(stick_cmpr & ~mask(63)) && time > 0)
+            sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+        warn ("writing to sTICK compare register value %#X\n", val);
+        break;
 
-        case MISCREG_PIL:
-          setReg(miscReg, val);
-          //tc->getCpuPtr()->checkInterrupts;
-          // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-          panic("PIL not implemented\n");
-          break;
+      case MISCREG_PIL:
+        setReg(miscReg, val);
+        //tc->getCpuPtr()->checkInterrupts;
+        // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
+        //  panic("PIL not implemented\n");
+        warn ("PIL not implemented writing %#X\n", val);
+        break;
 
-        case MISCREG_HVER:
-          panic("Shouldn't be writing HVER\n");
+      case MISCREG_HVER:
+        panic("Shouldn't be writing HVER\n");
 
-        case MISCREG_HTBA:
-          // clear lower 7 bits on writes.
-          setReg(miscReg, val & ULL(~0x7FFF));
-          break;
+      case MISCREG_HTBA:
+        // clear lower 7 bits on writes.
+        setReg(miscReg, val & ULL(~0x7FFF));
+        break;
 
-        case MISCREG_HSTICK_CMPR:
-          if (hSTickCompare == NULL)
-              hSTickCompare = new HSTickCompareEvent(this, tc);
-          setReg(miscReg, val);
-          if ((hstick_cmpr & mask(63)) && hSTickCompare->scheduled())
-                  hSTickCompare->deschedule();
-          time = (hstick_cmpr & mask(63)) - (stick & mask(63));
-          if (!(hstick_cmpr & ~mask(63)) && time > 0)
-              hSTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
-          break;
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
+        setReg(miscReg, val);
+        tc->getCpuPtr()->checkInterrupts = true;
+        break;
 
-        case MISCREG_HPSTATE:
-        case MISCREG_HTSTATE:
-        case MISCREG_STRAND_STS_REG:
-          setReg(miscReg, val);
-          break;
+      case MISCREG_HSTICK_CMPR:
+        if (hSTickCompare == NULL)
+            hSTickCompare = new HSTickCompareEvent(this, tc);
+        setReg(miscReg, val);
+        if ((hstick_cmpr & mask(63)) && hSTickCompare->scheduled())
+                hSTickCompare->deschedule();
+        time = (hstick_cmpr & mask(63)) - (stick & mask(63));
+        if (!(hstick_cmpr & ~mask(63)) && time > 0)
+            hSTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+        warn ("writing to hsTICK compare register value %#X\n", val);
+        break;
 
-        default:
-          panic("Invalid write to FS misc register\n");
+      case MISCREG_HPSTATE:
+        // i.d. is always set on any hpstate write
+        setReg(miscReg, val | 1 << 11);
+        break;
+      case MISCREG_HTSTATE:
+      case MISCREG_STRAND_STS_REG:
+        setReg(miscReg, val);
+        break;
+
+      default:
+        panic("Invalid write to FS misc register\n");
     }
 }
 
@@ -123,26 +143,33 @@ MiscReg
 MiscRegFile::readFSRegWithEffect(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
+      /* Privileged registers. */
+      case MISCREG_QUEUE_CPU_MONDO_HEAD:
+      case MISCREG_QUEUE_CPU_MONDO_TAIL:
+      case MISCREG_QUEUE_DEV_MONDO_HEAD:
+      case MISCREG_QUEUE_DEV_MONDO_TAIL:
+      case MISCREG_QUEUE_RES_ERROR_HEAD:
+      case MISCREG_QUEUE_RES_ERROR_TAIL:
+      case MISCREG_QUEUE_NRES_ERROR_HEAD:
+      case MISCREG_QUEUE_NRES_ERROR_TAIL:
+      case MISCREG_SOFTINT:
+      case MISCREG_TICK_CMPR:
+      case MISCREG_STICK_CMPR:
+      case MISCREG_PIL:
+      case MISCREG_HPSTATE:
+      case MISCREG_HINTP:
+      case MISCREG_HTSTATE:
+      case MISCREG_STRAND_STS_REG:
+      case MISCREG_HSTICK_CMPR:
+        return readReg(miscReg) ;
 
-        /* Privileged registers. */
-        case MISCREG_SOFTINT:
-        case MISCREG_TICK_CMPR:
-        case MISCREG_STICK_CMPR:
-        case MISCREG_PIL:
-        case MISCREG_HPSTATE:
-        case MISCREG_HINTP:
-        case MISCREG_HTSTATE:
-        case MISCREG_STRAND_STS_REG:
-        case MISCREG_HSTICK_CMPR:
-           return readReg(miscReg) ;
+      case MISCREG_HTBA:
+        return readReg(miscReg) & ULL(~0x7FFF);
+      case MISCREG_HVER:
+        return NWindows | MaxTL << 8 | MaxGL << 16;
 
-        case MISCREG_HTBA:
-          return readReg(miscReg) & ULL(~0x7FFF);
-        case MISCREG_HVER:
-          return NWindows | MaxTL << 8 | MaxGL << 16;
-
-        default:
-          panic("Invalid read to FS misc register\n");
+      default:
+        panic("Invalid read to FS misc register\n");
     }
 }
 /*

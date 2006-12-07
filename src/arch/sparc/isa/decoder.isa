@@ -1004,6 +1004,7 @@ decode OP default Unknown::unknown()
                     Asi = Tstate<31:24>;
                     Ccr = Tstate<39:32>;
                     Gl = Tstate<42:40>;
+                    Hpstate = Htstate;
                     NPC = Tnpc;
                     NNPC = Tnpc + 4;
                     Tl = Tl - 1;

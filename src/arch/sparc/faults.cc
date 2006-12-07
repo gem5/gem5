@@ -528,7 +528,7 @@ void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscRe
 
 void SparcFaultBase::invoke(ThreadContext * tc)
 {
-    panic("Invoking a second fault!\n");
+    //panic("Invoking a second fault!\n");
     FaultBase::invoke(tc);
     countStat()++;
 
@@ -561,6 +561,7 @@ void SparcFaultBase::invoke(ThreadContext * tc)
     }
     else if(TL == MaxTL)
     {
+        panic("Should go to error state here.. crap\n");
         //Do error_state somehow?
         //Probably inject a WDR fault using the interrupt mechanism.
         //What should the PC and NPC be set to?

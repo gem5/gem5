@@ -328,6 +328,8 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 
     DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
             vaddr, req->getSize());
+    DPRINTF(TLB, "TLB: pstate: %#X hpstate: %#X lsudm: %#X part_id: %#X\n",
+           pstate, hpstate, lsuIm, part_id);
 
     assert(req->getAsi() == ASI_IMPLICIT);
 
@@ -360,7 +362,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return new InstructionAccessException;
     }
 
-    if (lsuIm) {
+    if (!lsuIm) {
         e = lookup(req->getVaddr(), part_id, true);
         real = true;
         context = 0;
@@ -416,7 +418,8 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     asi = (ASI)req->getAsi();
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
-
+    DPRINTF(TLB, "TLB: pstate: %#X hpstate: %#X lsudm: %#X part_id: %#X\n",
+           pstate, hpstate, lsuDm, part_id);
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
@@ -489,6 +492,8 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             goto handleScratchRegAccess;
         if (AsiIsQueue(asi))
             goto handleQueueRegAccess;
+        if (AsiIsSparcError(asi))
+            goto handleSparcErrorRegAccess;
 
         if (!AsiIsReal(asi) && !AsiIsNucleus(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
@@ -559,6 +564,19 @@ handleQueueRegAccess:
         return new DataAccessException;
     }
     goto regAccessOk;
+
+handleSparcErrorRegAccess:
+    if (!hpriv) {
+        if (priv) {
+            writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+            return new DataAccessException;
+        } else {
+            writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+            return new PrivilegedAction;
+        }
+    }
+    goto regAccessOk;
+
 
 regAccessOk:
 handleMmuRegAccess:
@@ -675,7 +693,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
 
-    DPRINTF(IPR, "Memory Mapped IPR Write: asi=#%X a=%#x d=%#X\n",
+    DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
          (uint32_t)asi, va, data);
 
     switch (asi) {
@@ -696,7 +714,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         }
         break;
       case ASI_QUEUE:
-        assert(mbits(va,13,6) == va);
+        assert(mbits(data,13,6) == data);
         tc->setMiscRegWithEffect(MISCREG_QUEUE_CPU_MONDO_HEAD +
                     (va >> 4) - 0x3c, data);
         break;
@@ -747,6 +765,10 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
         tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG, data);
+        break;
+      case ASI_SPARC_ERROR_EN_REG:
+      case ASI_SPARC_ERROR_STATUS_REG:
+        warn("Ignoring write to SPARC ERROR regsiter\n");
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
