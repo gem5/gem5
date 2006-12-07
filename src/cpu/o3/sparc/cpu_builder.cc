@@ -55,8 +55,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
 #if FULL_SYSTEM
     SimObjectParam<System *> system;
     Param<int> cpu_id;
-    SimObjectParam<AlphaISA::ITB *> itb;
-    SimObjectParam<AlphaISA::DTB *> dtb;
+    SimObjectParam<SparcISA::ITB *> itb;
+    SimObjectParam<SparcISA::DTB *> dtb;
     Param<Tick> profile;
 
     Param<bool> do_quiesce;

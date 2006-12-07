@@ -128,6 +128,24 @@ class SparcO3CPU : public FullO3CPU<Impl>
      */
     void squashFromTC(unsigned tid);
 
+#if FULL_SYSTEM
+    /** Posts an interrupt. */
+    void post_interrupt(int int_num, int index);
+    /** HW return from error interrupt. */
+    Fault hwrei(unsigned tid);
+
+    bool simPalCheck(int palFunc, unsigned tid);
+
+    /** Returns the Fault for any valid interrupt. */
+    Fault getInterrupts();
+
+    /** Processes any an interrupt fault. */
+    void processInterrupts(Fault interrupt);
+
+    /** Halts the CPU. */
+    void halt() { panic("Halt not implemented!\n"); }
+#endif
+
     /** Traps to handle given fault. */
     void trap(Fault fault, unsigned tid);
 

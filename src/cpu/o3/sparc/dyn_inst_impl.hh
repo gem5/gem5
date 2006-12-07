@@ -126,7 +126,8 @@ template <class Impl>
 bool
 SparcDynInst<Impl>::simPalCheck(int palFunc)
 {
-    return this->cpu->simPalCheck(palFunc, this->threadNumber);
+    panic("simPalCheck called, but there's no PAL in SPARC!\n");
+    return false;
 }
 #else
 template <class Impl>

@@ -68,10 +68,10 @@ class O3ThreadContext : public ThreadContext
 
 #if FULL_SYSTEM
     /** Returns a pointer to the ITB. */
-    virtual AlphaISA::ITB *getITBPtr() { return cpu->itb; }
+    TheISA::ITB *getITBPtr() { return cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    virtual AlphaISA::DTB *getDTBPtr() { return cpu->dtb; }
+    TheISA::DTB *getDTBPtr() { return cpu->dtb; }
 #endif
 
     /** Returns a pointer to this CPU. */
