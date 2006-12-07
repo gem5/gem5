@@ -690,19 +690,21 @@ void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
 
-    // address is higher than the stack region or in the current stack region
-    if (vaddr > p->stack_base || vaddr > p->stack_min)
-        FaultBase::invoke(tc);
-
-    // We've accessed the next page
-    if (vaddr > p->stack_min - PageBytes) {
+    // We've accessed the next page of the stack, so extend the stack
+    // to cover it.
+    if(vaddr < p->stack_min && vaddr >= p->stack_min - PageBytes)
+    {
         p->stack_min -= PageBytes;
-        if (p->stack_base - p->stack_min > 8*1024*1024)
+        if(p->stack_base - p->stack_min > 8*1024*1024)
             fatal("Over max stack size for one thread\n");
         p->pTable->allocate(p->stack_min, PageBytes);
         warn("Increasing stack size by one page.");
-    } else {
-        FaultBase::invoke(tc);
+    }
+    // Otherwise, we have an unexpected page fault. Report that fact,
+    // and what address was accessed to cause the fault.
+    else
+    {
+        panic("Page table fault when accessing virtual address %#x\n", vaddr);
     }
 }
 
