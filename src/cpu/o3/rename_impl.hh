@@ -43,6 +43,7 @@ DefaultRename<Impl>::DefaultRename(Params *params)
       commitToRenameDelay(params->commitToRenameDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
+      resumeSerialize(false),
       numThreads(params->numberOfThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
 {
@@ -334,12 +335,22 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
     // If it still needs to block, the blocking should happen the next
     // cycle and there should be space to hold everything due to the squash.
     if (renameStatus[tid] == Blocked ||
-        renameStatus[tid] == Unblocking ||
-        renameStatus[tid] == SerializeStall) {
-
+        renameStatus[tid] == Unblocking) {
         toDecode->renameUnblock[tid] = 1;
 
+        resumeSerialize = false;
         serializeInst[tid] = NULL;
+    } else if (renameStatus[tid] == SerializeStall) {
+        if (serializeInst[tid]->seqNum <= squash_seq_num) {
+            DPRINTF(Rename, "Rename will resume serializing after squash\n");
+            resumeSerialize = true;
+            assert(serializeInst[tid]);
+        } else {
+            resumeSerialize = false;
+            toDecode->renameUnblock[tid] = 1;
+
+            serializeInst[tid] = NULL;
+        }
     }
 
     // Set the status to Squashing.
@@ -477,6 +488,14 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
         ++renameSquashCycles;
     } else if (renameStatus[tid] == SerializeStall) {
         ++renameSerializeStallCycles;
+        // If we are currently in SerializeStall and resumeSerialize
+        // was set, then that means that we are resuming serializing
+        // this cycle.  Tell the previous stages to block.
+        if (resumeSerialize) {
+            resumeSerialize = false;
+            block(tid);
+            toDecode->renameUnblock[tid] = false;
+        }
     }
 
     if (renameStatus[tid] == Running ||
@@ -1245,12 +1264,19 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
     if (renameStatus[tid] == Squashing) {
         // Switch status to running if rename isn't being told to block or
         // squash this cycle.
-        DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
-                tid);
+        if (!resumeSerialize) {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
+                    tid);
 
-        renameStatus[tid] = Running;
+            renameStatus[tid] = Running;
+            return false;
+        } else {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to serialize.\n",
+                    tid);
 
-        return false;
+            renameStatus[tid] = SerializeStall;
+            return true;
+        }
     }
 
     if (renameStatus[tid] == SerializeStall) {
