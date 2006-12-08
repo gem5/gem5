@@ -369,7 +369,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         gsr = val;
         break;
       case MISCREG_SOFTINT:
-        softint = val;
+        softint |= val;
         break;
       case MISCREG_TICK_CMPR:
         tick_cmpr = val;

@@ -140,6 +140,24 @@ namespace SparcISA
         MISCREG_NUMMISCREGS
     };
 
+    enum HPStateFields {
+        id = 0x800,   // this impl. dependent (id) field must always be '1' for T1000
+        ibe = 0x400,
+        red = 0x20,
+        hpriv = 0x4,
+        tlz = 0x1
+    };
+
+    enum PStateFields {
+        cle = 0x200,
+        tle = 0x100,
+        mm = 0xC0,
+        pef = 0x10,
+        am = 0x8,
+        priv = 0x4,
+        ie = 0x2
+    };
+
     const int NumMiscArchRegs = MISCREG_NUMMISCREGS;
     const int NumMiscRegs = MISCREG_NUMMISCREGS;
 

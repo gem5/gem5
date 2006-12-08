@@ -41,18 +41,12 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         ThreadContext *tc)
 {
     int64_t time;
-    int oldLevel, newLevel;
     switch (miscReg) {
         /* Full system only ASRs */
         case MISCREG_SOFTINT:
           // Check if we are going to interrupt because of something
-          oldLevel = InterruptLevel(softint);
-          newLevel = InterruptLevel(val);
           setReg(miscReg, val);
-          if (newLevel > oldLevel)
-              ; // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-              //tc->getCpuPtr()->checkInterrupts = true;
-          panic("SOFTINT not implemented\n");
+          tc->getCpuPtr()->checkInterrupts = true;
           break;
 
         case MISCREG_SOFTINT_CLR:
@@ -82,11 +76,17 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
               sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
           break;
 
-        case MISCREG_PIL:
+        case MISCREG_PSTATE:
+          if (val & ie && !(pstate & ie)) {
+              tc->getCpuPtr()->checkInterrupts = true;
+          }
           setReg(miscReg, val);
-          //tc->getCpuPtr()->checkInterrupts;
-          // MUST DO SOMETHING HERE TO TELL CPU TO LOOK FOR INTERRUPTS XXX
-          panic("PIL not implemented\n");
+
+        case MISCREG_PIL:
+          if (val < pil) {
+              tc->getCpuPtr()->checkInterrupts = true;
+          }
+          setReg(miscReg, val);
           break;
 
         case MISCREG_HVER:
@@ -109,13 +109,16 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           break;
 
         case MISCREG_HPSTATE:
+          // T1000 spec says impl. dependent val must always be 1
+          setReg(miscReg, val | id);
+
         case MISCREG_HTSTATE:
         case MISCREG_STRAND_STS_REG:
           setReg(miscReg, val);
           break;
 
         default:
-          panic("Invalid write to FS misc register\n");
+          panic("Invalid write to FS misc register %s\n", getMiscRegName(miscReg));
     }
 }
 
