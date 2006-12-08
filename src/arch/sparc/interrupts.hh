@@ -32,51 +32,62 @@
 #define __ARCH_SPARC_INTERRUPT_HH__
 
 #include "arch/sparc/faults.hh"
+#include "cpu/thread_context.hh"
+
 
 namespace SparcISA
 {
     class Interrupts
     {
       protected:
-        Fault interrupts[NumInterruptLevels];
-        bool requested[NumInterruptLevels];
+
 
       public:
         Interrupts()
         {
-            for(int x = 0; x < NumInterruptLevels; x++)
-            {
-                interrupts[x] = new InterruptLevelN(x);
-                requested[x] = false;
-            }
+
         }
         void post(int int_num, int index)
         {
-            if(int_num < 0 || int_num >= NumInterruptLevels)
-                panic("int_num out of bounds\n");
 
-            requested[int_num] = true;
         }
 
         void clear(int int_num, int index)
         {
-            requested[int_num] = false;
+
         }
 
         void clear_all()
         {
-            for(int x = 0; x < NumInterruptLevels; x++)
-                requested[x] = false;
+
         }
 
         bool check_interrupts(ThreadContext * tc) const
         {
-            return true;
+            // so far only handle softint interrupts
+            int int_level = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
+            if (int_level)
+                return true;
+            else
+                return false;
         }
 
         Fault getInterrupt(ThreadContext * tc)
         {
-            return NoFault;
+            // conditioning the softint interrups
+            if (tc->readMiscReg(MISCREG_HPSTATE) & hpriv) {
+                // if running in privileged mode, then pend the interrupt
+                return NoFault;
+            } else {
+                int int_level = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
+                if ((int_level <= tc->readMiscReg(MISCREG_PIL)) ||
+                    !(tc->readMiscReg(MISCREG_PSTATE) & ie)) {
+                    // if PIL or no interrupt enabled, then pend the interrupt
+                    return NoFault;
+                } else {
+                    return new InterruptLevelN(int_level);
+                }
+            }
         }
 
         void updateIntrInfo(ThreadContext * tc)
