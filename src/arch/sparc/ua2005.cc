@@ -127,7 +127,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         case MISCREG_HPSTATE:
           // T1000 spec says impl. dependent val must always be 1
           setReg(miscReg, val | id);
-
+          break;
         case MISCREG_HTSTATE:
         case MISCREG_STRAND_STS_REG:
           setReg(miscReg, val);
