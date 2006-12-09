@@ -67,7 +67,7 @@ namespace SparcISA
                 (unsigned int)(-1) :
                 (1 << FrameOffsetBits) - 1;
 
-        IntReg regGlobals[MaxGL][RegsPerFrame];
+        IntReg regGlobals[MaxGL+1][RegsPerFrame];
         IntReg regSegments[2 * NWindows][RegsPerFrame];
         IntReg microRegs[NumMicroIntRegs];
 

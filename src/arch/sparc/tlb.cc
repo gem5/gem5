@@ -71,27 +71,32 @@ TLB::clearUsedBits()
 
 void
 TLB::insert(Addr va, int partition_id, int context_id, bool real,
-        const PageTableEntry& PTE)
+        const PageTableEntry& PTE, int entry)
 {
 
 
     MapIter i;
-    TlbEntry *new_entry;
+    TlbEntry *new_entry = NULL;
+    int x;
 
-    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x, pid=%d cid=%d r=%d\n",
-            va, partition_id, context_id, (int)real);
+    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d\n",
+            va, PTE.paddr(), partition_id, context_id, (int)real);
 
-    int x = -1;
-    for (x = 0; x < size; x++) {
-        if (!tlb[x].valid || !tlb[x].used)  {
-            new_entry = &tlb[x];
-            break;
+    if (entry != -1) {
+        assert(entry < size && entry >= 0);
+        new_entry = &tlb[entry];
+    } else {
+        for (x = 0; x < size; x++) {
+            if (!tlb[x].valid || !tlb[x].used)  {
+                new_entry = &tlb[x];
+                break;
+            }
         }
     }
 
     // Update the last ently if their all locked
-    if (x == -1)
-       x = size - 1;
+    if (!new_entry)
+        new_entry = &tlb[size-1];
 
     assert(PTE.valid());
     new_entry->range.va = va;
@@ -152,10 +157,11 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
         DPRINTF(TLB, "TLB: No valid entry found\n");
         return NULL;
     }
-    DPRINTF(TLB, "TLB: Valid entry found\n");
 
     // Mark the entries used bit and clear other used bits in needed
     t = i->second;
+    DPRINTF(TLB, "TLB: Valid entry found pa: %#x size: %#x\n", t->pte.paddr(),
+            t->pte.size());
     if (!t->used) {
         t->used = true;
         usedEntries++;
@@ -169,6 +175,18 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
     return t;
 }
 
+void
+TLB::dumpAll()
+{
+    for (int x = 0; x < size; x++) {
+        if (tlb[x].valid) {
+           DPRINTFN("%4d:  %#2x:%#2x %c %#4x %#8x %#8x %#16x\n",
+                   x, tlb[x].range.partitionId, tlb[x].range.contextId,
+                   tlb[x].range.real ? 'R' : ' ', tlb[x].range.size,
+                   tlb[x].range.va, tlb[x].pte.paddr(), tlb[x].pte());
+        }
+    }
+}
 
 void
 TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
@@ -285,9 +303,14 @@ TLB::writeSfsr(ThreadContext *tc, int reg,  bool write, ContextType ct,
         sfsr |= 1 << 6;
     sfsr |= ft << 7;
     sfsr |= asi << 16;
-    tc->setMiscReg(reg, sfsr);
+    tc->setMiscRegWithEffect(reg, sfsr);
 }
 
+void
+TLB::writeTagAccess(ThreadContext *tc, int reg, Addr va, int context)
+{
+    tc->setMiscRegWithEffect(reg, mbits(va, 63,13) | mbits(context,12,0));
+}
 
 void
 ITB::writeSfsr(ThreadContext *tc, bool write, ContextType ct,
@@ -299,14 +322,27 @@ ITB::writeSfsr(ThreadContext *tc, bool write, ContextType ct,
 }
 
 void
+ITB::writeTagAccess(ThreadContext *tc, Addr va, int context)
+{
+    TLB::writeTagAccess(tc, MISCREG_MMU_ITLB_TAG_ACCESS, va, context);
+}
+
+void
 DTB::writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
         bool se, FaultTypes ft, int asi)
 {
     DPRINTF(TLB, "TLB: DTB Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
             a, (int)write, ct, ft, asi);
     TLB::writeSfsr(tc, MISCREG_MMU_DTLB_SFSR, write, ct, se, ft, asi);
-    tc->setMiscReg(MISCREG_MMU_DTLB_SFAR, a);
+    tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR, a);
 }
+
+    void
+DTB::writeTagAccess(ThreadContext *tc, Addr va, int context)
+{
+    TLB::writeTagAccess(tc, MISCREG_MMU_DTLB_TAG_ACCESS, va, context);
+}
+
 
 
 Fault
@@ -349,7 +385,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     }
 
     // If the asi is unaligned trap
-    if (vaddr & 0x7) {
+    if (vaddr & req->getSize()-1) {
         writeSfsr(tc, false, ct, false, OtherFault, asi);
         return new MemAddressNotAligned;
     }
@@ -385,8 +421,9 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return new InstructionAccessException;
     }
 
-    req->setPaddr(e->pte.paddr() & ~e->pte.size() |
-                  req->getVaddr() & e->pte.size());
+    req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
+                  req->getVaddr() & e->pte.size()-1 );
+    DPRINTF(TLB, "TLB: %#X -> %#X\n", req->getVaddr(), req->getPaddr());
     return NoFault;
 }
 
@@ -456,20 +493,12 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             return new DataAccessException;
         }
 
-    }
-
-    // If the asi is unaligned trap
-    if (vaddr & size-1) {
-        writeSfr(tc, vaddr, false, ct, false, OtherFault, asi);
-        return new MemAddressNotAligned;
-    }
-
-    if (addr_mask)
-        vaddr = vaddr & VAddrAMask;
-
-    if (!validVirtualAddress(vaddr, addr_mask)) {
-        writeSfr(tc, vaddr, false, ct, true, VaOutOfRange, asi);
-        return new DataAccessException;
+    } else if (hpriv) {
+        if (asi == ASI_P) {
+            ct = Primary;
+            context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
+            goto continueDtbFlow;
+        }
     }
 
     if (!implicit) {
@@ -498,6 +527,22 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (!AsiIsReal(asi) && !AsiIsNucleus(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
+
+continueDtbFlow:
+    // If the asi is unaligned trap
+    if (vaddr & size-1) {
+        writeSfr(tc, vaddr, false, ct, false, OtherFault, asi);
+        return new MemAddressNotAligned;
+    }
+
+    if (addr_mask)
+        vaddr = vaddr & VAddrAMask;
+
+    if (!validVirtualAddress(vaddr, addr_mask)) {
+        writeSfr(tc, vaddr, false, ct, true, VaOutOfRange, asi);
+        return new DataAccessException;
+    }
+
 
     if ((!lsuDm && !hpriv) || AsiIsReal(asi)) {
         real = true;
@@ -542,8 +587,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         return new DataAccessException;
     }
 
-    req->setPaddr(e->pte.paddr() & ~e->pte.size() |
-                  req->getVaddr() & e->pte.size());
+    req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
+                  req->getVaddr() & e->pte.size()-1);
+    DPRINTF(TLB, "TLB: %#X -> %#X\n", req->getVaddr(), req->getPaddr());
     return NoFault;
     /** Normal flow ends here. */
 
@@ -664,12 +710,28 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         assert(va == 0);
         pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
         break;
+      case ASI_SPARC_ERROR_STATUS_REG:
+        warn("returning 0 for  SPARC ERROR regsiter read\n");
+        pkt->set(0);
+        break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
         pkt->set(tc->readMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
         break;
+      case ASI_IMMU:
+        switch (va) {
+          case 0x30:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
+            break;
+          default:
+            goto doMmuReadError;
+        }
+        break;
       case ASI_DMMU:
         switch (va) {
+          case 0x30:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
+            break;
           case 0x80:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID));
             break;
@@ -692,6 +754,14 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     uint64_t data = gtoh(pkt->get<uint64_t>());
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
+
+    Addr ta_insert;
+    Addr va_insert;
+    Addr ct_insert;
+    int part_insert;
+    int entry_insert = -1;
+    bool real_insert;
+    PageTableEntry pte;
 
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
          (uint32_t)asi, va, data);
@@ -774,8 +844,47 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       case ASI_SCRATCHPAD:
         tc->setMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3), data);
         break;
+      case ASI_IMMU:
+        switch (va) {
+          case 0x30:
+            tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS, data);
+            break;
+          default:
+            goto doMmuWriteError;
+        }
+        break;
+      case ASI_ITLB_DATA_ACCESS_REG:
+        entry_insert = bits(va, 8,3);
+      case ASI_ITLB_DATA_IN_REG:
+        assert(entry_insert != -1 || mbits(va,10,9) == va);
+        ta_insert = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+        va_insert = mbits(ta_insert, 63,13);
+        ct_insert = mbits(ta_insert, 12,0);
+        part_insert = tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        real_insert = bits(va, 9,9);
+        pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
+                PageTableEntry::sun4u);
+        tc->getITBPtr()->insert(va_insert, part_insert, ct_insert, real_insert,
+                pte, entry_insert);
+        break;
+      case ASI_DTLB_DATA_ACCESS_REG:
+        entry_insert = bits(va, 8,3);
+      case ASI_DTLB_DATA_IN_REG:
+        assert(entry_insert != -1 || mbits(va,10,9) == va);
+        ta_insert = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+        va_insert = mbits(ta_insert, 63,13);
+        ct_insert = mbits(ta_insert, 12,0);
+        part_insert = tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        real_insert = bits(va, 9,9);
+        pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
+                PageTableEntry::sun4u);
+        insert(va_insert, part_insert, ct_insert, real_insert, pte, entry_insert);
+        break;
       case ASI_DMMU:
         switch (va) {
+          case 0x30:
+            tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS, data);
+            break;
           case 0x80:
             tc->setMiscRegWithEffect(MISCREG_MMU_PART_ID, data);
             break;

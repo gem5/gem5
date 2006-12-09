@@ -393,12 +393,13 @@ Trace::InstRecord::dump(ostream &outs)
                     if(shared_data->cleanwin != thread->readMiscReg(MISCREG_CLEANWIN))
                         diffCleanwin = true;
 
-                    if (diffPC || diffCC || diffInst || diffRegs || diffTpc ||
+                    if ((diffPC || diffCC || diffInst || diffRegs || diffTpc ||
                             diffTnpc || diffTstate || diffTt || diffHpstate ||
                             diffHtstate || diffHtba || diffPstate || diffY ||
                             diffCcr || diffTl || diffGl || diffAsi || diffPil ||
                             diffCwp || diffCansave || diffCanrestore ||
-                            diffOtherwin || diffCleanwin) {
+                            diffOtherwin || diffCleanwin)
+                        && !((staticInst->machInst & 0xE1F80000) == 0xE1F80000)) {
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
                             outs << " [PC]";
@@ -570,6 +571,9 @@ Trace::InstRecord::dump(ostream &outs)
                                     << endl;*/
                             }
                         }
+                        thread->getITBPtr()->dumpAll();
+                        thread->getDTBPtr()->dumpAll();
+
                         diffcount++;
                         if (diffcount > 3)
                             fatal("Differences found between Legion and M5\n");
