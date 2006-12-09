@@ -526,7 +526,7 @@ decode OP default Unknown::unknown()
                 0x00: NoPriv::wry({{Y = Rs1 ^ Rs2_or_imm13;}});
                 //0x01 should cause an illegal instruction exception
                 0x02: NoPriv::wrccr({{Ccr = Rs1 ^ Rs2_or_imm13;}});
-                0x03: NoPriv::wrasi({{Ccr = Rs1 ^ Rs2_or_imm13;}});
+                0x03: NoPriv::wrasi({{Asi = Rs1 ^ Rs2_or_imm13;}});
                 //0x04-0x05 should cause an illegal instruction exception
                 0x06: NoPriv::wrfprs({{Fprs = Rs1 ^ Rs2_or_imm13;}});
                 //0x07-0x0E should cause an illegal instruction exception
@@ -1017,6 +1017,7 @@ decode OP default Unknown::unknown()
                     Asi = Tstate<31:24>;
                     Ccr = Tstate<39:32>;
                     Gl = Tstate<42:40>;
+                    Hpstate = Htstate;
                     NPC = Tpc;
                     NNPC = Tnpc;
                     Tl = Tl - 1;

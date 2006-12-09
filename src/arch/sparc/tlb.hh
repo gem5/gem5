@@ -84,7 +84,7 @@ class TLB : public SimObject
 
     /** Insert a PTE into the TLB. */
     void insert(Addr vpn, int partition_id, int context_id, bool real,
-            const PageTableEntry& PTE);
+            const PageTableEntry& PTE, int entry = -1);
 
     /** Given an entry id, read that tlb entries' tag. */
     uint64_t TagRead(int entry);
@@ -114,8 +114,12 @@ class TLB : public SimObject
     void TLB::clearUsedBits();
 
 
+    void writeTagAccess(ThreadContext *tc, int reg, Addr va, int context);
+
   public:
     TLB(const std::string &name, int size);
+
+    void dumpAll();
 
     // Checkpointing
     virtual void serialize(std::ostream &os);
@@ -133,6 +137,8 @@ class ITB : public TLB
   private:
     void writeSfsr(ThreadContext *tc, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
+    void writeTagAccess(ThreadContext *tc, Addr va, int context);
+    friend class DTB;
 };
 
 class DTB : public TLB
@@ -149,6 +155,8 @@ class DTB : public TLB
   private:
     void writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
+    void writeTagAccess(ThreadContext *tc, Addr va, int context);
+
 
 };
 

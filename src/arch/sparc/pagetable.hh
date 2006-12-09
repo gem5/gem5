@@ -32,6 +32,7 @@
 #define __ARCH_SPARC_PAGETABLE_HH__
 
 #include "arch/sparc/isa_traits.hh"
+#include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 
@@ -80,20 +81,19 @@ class PageTableEntry
         if (type == sun4u)
             entry4u = entry;
         else {
-            uint64_t entry4u = 0;
-            entry4u |= entry & ULL(0x8000000000000000);              //valid
-            entry4u |= (entry & 0x3) << 61;                     //size[1:0]
-            entry4u |= (entry & ULL(0x4000000000000000)) >> 2;       //nfo
-            entry4u |= (entry & 0x1000) << 47;                  //ie
-            //entry4u |= (entry & 0x3F00000000000000) >> 7;       //soft2
-            entry4u |= (entry & 0x4) << 48;                     //size[2]
-                                                                //diag?
-            entry4u |= (entry & ULL(0x0000FFFFFFFFE000));            //paddr
-            entry4u |= (entry & 0x400) >> 5;                    //cp
-            entry4u |= (entry & 0x200) >> 5;                    //cv
-            entry4u |= (entry & 0x800) >> 8;                    //e
-            entry4u |= (entry & 0x100) >> 6;                    //p
-            entry4u |= (entry & 0x40) >> 5;                     //w
+            entry4u = 0;
+            entry4u |= mbits(entry,63,63);         //valid
+            entry4u |= bits(entry,1,0) << 61;      //size[1:0]
+            entry4u |= bits(entry,62,62) << 60;    //nfo
+            entry4u |= bits(entry,12,12) << 59;    //ie
+            entry4u |= bits(entry,2,2) << 48;      //size[2]
+            entry4u |= mbits(entry,39,13);         //paddr
+            entry4u |= bits(entry,61,61) << 6;;    // locked
+            entry4u |= bits(entry,10,10) << 5;     //cp
+            entry4u |= bits(entry,9,9) << 4;       //cv
+            entry4u |= bits(entry,11,11) << 3;     //e
+            entry4u |= bits(entry,8,8) << 2;       //p
+            entry4u |= bits(entry,6,6) << 1;       //w
         }
     }
 
@@ -112,30 +112,21 @@ class PageTableEntry
     const PageTableEntry &operator=(const PageTableEntry &e)
     { populated = true; entry4u = e.entry4u; return *this; }
 
-    bool    valid()    const { return entry4u & ULL(0x8000000000000000) && populated; }
+    bool    valid()    const { return bits(entry4u,63,63) && populated; }
     uint8_t _size()     const { assert(populated);
-                               return ((entry4u & 0x6) >> 61) |
-                                      ((entry4u & ULL(0x000080000000000)) >> 46); }
-    Addr    size()     const { return pageSizes[_size()]; }
-    bool    ie()       const { return entry4u >> 59 & 0x1; }
-    Addr    pfn()      const { assert(populated);
-                               return entry4u >> 13 & ULL(0xFFFFFFFFFF); }
-    Addr    paddr()    const { assert(populated);
-                               return entry4u & ULL(0x0000FFFFFFFFE000); }
-    bool    locked()   const { assert(populated);
-                               return entry4u & 0x40; }
-    bool    cv()       const { assert(populated);
-                               return entry4u & 0x10; }
-    bool    cp()       const { assert(populated);
-                               return entry4u & 0x20; }
-    bool    priv()     const { assert(populated);
-                               return entry4u & 0x4; }
-    bool    writable() const { assert(populated);
-                               return entry4u & 0x2; }
-    bool    nofault()  const { assert(populated);
-                               return entry4u & ULL(0x1000000000000000); }
-    bool    sideffect() const { assert(populated);
-                                return entry4u & 0x8; }
+                               return bits(entry4u, 62,61) |
+                                      bits(entry4u, 48,48) << 2; }
+    Addr    size()     const { assert(_size() < 6); return pageSizes[_size()]; }
+    bool    ie()       const { return bits(entry4u, 59,59); }
+    Addr    pfn()      const { assert(populated); return bits(entry4u,39,13); }
+    Addr    paddr()    const { assert(populated); return mbits(entry4u, 39,13);}
+    bool    locked()   const { assert(populated); return bits(entry4u,6,6); }
+    bool    cv()       const { assert(populated); return bits(entry4u,4,4); }
+    bool    cp()       const { assert(populated); return bits(entry4u,5,5); }
+    bool    priv()     const { assert(populated); return bits(entry4u,2,2); }
+    bool    writable() const { assert(populated); return bits(entry4u,1,1); }
+    bool    nofault()  const { assert(populated); return bits(entry4u,60,60); }
+    bool    sideffect() const { assert(populated); return bits(entry4u,3,3); }
 };
 
 struct TlbRange {
