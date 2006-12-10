@@ -48,6 +48,8 @@ optparser.add_option('--variants', dest='variants',
                      " (default: '%default')" )
 optparser.add_option('--scons-opts', dest='scons_opts', default='',
                      help='scons options', metavar='OPTS')
+optparser.add_option('-j', '--jobs', type='int', default=1,
+                     help='number of parallel jobs to use')
 
 (options, tests) = optparser.parse_args()
 
@@ -88,7 +90,11 @@ try:
 		   for variant in variants
 		   for test in tests]
 
-    system('scons %s %s' % (options.scons_opts, ' '.join(targets)))
+    scons_opts = options.scons_opts
+    if options.jobs != 1:
+        scons_opts += ' -j %d' % options.jobs
+
+    system('scons %s %s' % (scons_opts, ' '.join(targets)))
 
     sys.exit(0)
 
