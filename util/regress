@@ -43,7 +43,7 @@ optparser.add_option('--builds', dest='builds',
                      help='comma-separated list of build targets to test  '
                      " (default: '%default')" )
 optparser.add_option('--variants', dest='variants',
-                     default='opt',
+                     default='fast',
                      help='comma-separated list of build variants to test '
                      " (default: '%default')" )
 optparser.add_option('--scons-opts', dest='scons_opts', default='',
