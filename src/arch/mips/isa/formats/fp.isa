@@ -99,7 +99,7 @@ output exec {{
             int size = sizeof(src_op) * 8;
 
             for (int i = 0; i < inst->numSrcRegs(); i++) {
-                uint64_t src_bits = xc->readFloatRegBits(inst, 0, size);
+                uint64_t src_bits = xc->readFloatRegOperandBits(inst, 0, size);
 
                 if (isNan(&src_bits, size) ) {
                     if (isSnan(&src_bits, size)) {
@@ -113,7 +113,7 @@ output exec {{
                         mips_nan = src_bits;
                     }
 
-                    xc->setFloatRegBits(inst, 0, mips_nan, size);
+                    xc->setFloatRegOperandBits(inst, 0, mips_nan, size);
                     if (traceData) { traceData->setData(mips_nan); }
                     return true;
                 }
@@ -139,7 +139,7 @@ output exec {{
                 }
 
                 //Set value to QNAN
-                cpu->setFloatRegBits(inst, 0, mips_nan, size);
+                cpu->setFloatRegOperandBits(inst, 0, mips_nan, size);
 
                 //Read FCSR from FloatRegFile
                 uint32_t fcsr_bits = cpu->tcBase()->readFloatRegBits(FCSR);

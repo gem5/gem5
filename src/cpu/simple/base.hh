@@ -213,60 +213,63 @@ class BaseSimpleCPU : public BaseCPU
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(const StaticInst *si, int idx)
+    uint64_t readIntRegOperand(const StaticInst *si, int idx)
     {
         return thread->readIntReg(si->srcRegIdx(idx));
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatReg(reg_idx, width);
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatReg(reg_idx);
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
+                                         int width)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatRegBits(reg_idx, width);
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatRegBits(reg_idx);
     }
 
-    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         thread->setIntReg(si->destRegIdx(idx), val);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
+                            int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val, width);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx,
-                         FloatRegBits val, int width)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val, int width)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatRegBits(reg_idx, val, width);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatRegBits(reg_idx, val);
