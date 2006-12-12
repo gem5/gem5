@@ -1180,15 +1180,16 @@ class IntRegOperand(Operand):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read integer register as FP')
         if (self.size == self.dflt_size):
-            return '%s = xc->readIntReg(this, %d);\n' % \
+            return '%s = xc->readIntRegOperand(this, %d);\n' % \
                    (self.base_name, self.src_reg_idx)
         elif (self.size > self.dflt_size):
-            int_reg_val = 'xc->readIntReg(this, %d)' % (self.src_reg_idx)
+            int_reg_val = 'xc->readIntRegOperand(this, %d)' % \
+                          (self.src_reg_idx)
             if (self.is_signed):
                 int_reg_val = 'sext<%d>(%s)' % (self.dflt_size, int_reg_val)
             return '%s = %s;\n' % (self.base_name, int_reg_val)
         else:
-            return '%s = bits(xc->readIntReg(this, %d), %d, 0);\n' % \
+            return '%s = bits(xc->readIntRegOperand(this, %d), %d, 0);\n' % \
                    (self.base_name, self.src_reg_idx, self.size-1)
 
     def makeWrite(self):
@@ -1201,7 +1202,7 @@ class IntRegOperand(Operand):
         wb = '''
         {
             %s final_val = %s;
-            xc->setIntReg(this, %d, final_val);\n
+            xc->setIntRegOperand(this, %d, final_val);\n
             if (traceData) { traceData->setData(final_val); }
         }''' % (self.dflt_ctype, final_val, self.dest_reg_idx)
         return wb
@@ -1227,13 +1228,13 @@ class FloatRegOperand(Operand):
         bit_select = 0
         width = 0;
         if (self.ctype == 'float'):
-            func = 'readFloatReg'
+            func = 'readFloatRegOperand'
             width = 32;
         elif (self.ctype == 'double'):
-            func = 'readFloatReg'
+            func = 'readFloatRegOperand'
             width = 64;
         else:
-            func = 'readFloatRegBits'
+            func = 'readFloatRegOperandBits'
             if (self.ctype == 'uint32_t'):
                 width = 32;
             elif (self.ctype == 'uint64_t'):
@@ -1259,18 +1260,18 @@ class FloatRegOperand(Operand):
         width = 0
         if (self.ctype == 'float'):
             width = 32
-            func = 'setFloatReg'
+            func = 'setFloatRegOperand'
         elif (self.ctype == 'double'):
             width = 64
-            func = 'setFloatReg'
+            func = 'setFloatRegOperand'
         elif (self.ctype == 'uint32_t'):
-            func = 'setFloatRegBits'
+            func = 'setFloatRegOperandBits'
             width = 32
         elif (self.ctype == 'uint64_t'):
-            func = 'setFloatRegBits'
+            func = 'setFloatRegOperandBits'
             width = 64
         else:
-            func = 'setFloatRegBits'
+            func = 'setFloatRegOperandBits'
             final_ctype = 'uint%d_t' % self.dflt_size
             if (self.size != self.dflt_size and self.is_signed):
                 final_val = 'sext<%d>(%s)' % (self.size, self.base_name)

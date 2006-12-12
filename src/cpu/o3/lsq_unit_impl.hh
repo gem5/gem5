@@ -418,7 +418,8 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
-        if (!(inst->req->isUncacheable()) || inst->isAtCommit()) {
+        if (!(inst->req && inst->req->isUncacheable()) ||
+            inst->isAtCommit()) {
             inst->setExecuted();
         }
         iewStage->instToCommit(inst);

@@ -42,6 +42,7 @@
 #include "cpu/smt.hh" // SMT_MAX_THREADS
 
 #include "mem/cache/base_cache.hh"
+#include "mem/cache/miss/miss_buffer.hh"
 #include "mem/cache/prefetch/prefetcher.hh"
 
 //Forward decleration
@@ -55,7 +56,7 @@ class MSHR;
  * @sa MissQueue. Coherence handles all coherence policy details @sa
  * UniCoherence, SimpleMultiCoherence.
  */
-template <class TagStore, class Buffering, class Coherence>
+template <class TagStore, class Coherence>
 class Cache : public BaseCache
 {
   public:
@@ -68,12 +69,12 @@ class Cache : public BaseCache
     /** Tag and data Storage */
     TagStore *tags;
     /** Miss and Writeback handler */
-    Buffering *missQueue;
+    MissBuffer *missQueue;
     /** Coherence protocol. */
     Coherence *coherence;
 
     /** Prefetcher */
-    Prefetcher<TagStore, Buffering> *prefetcher;
+    Prefetcher<TagStore> *prefetcher;
 
     /**
      * The clock ratio of the outgoing bus.
@@ -105,16 +106,16 @@ class Cache : public BaseCache
     {
       public:
         TagStore *tags;
-        Buffering *missQueue;
+        MissBuffer *missQueue;
         Coherence *coherence;
         BaseCache::Params baseParams;
-        Prefetcher<TagStore, Buffering> *prefetcher;
+        Prefetcher<TagStore> *prefetcher;
         bool prefetchAccess;
         int hitLatency;
 
-        Params(TagStore *_tags, Buffering *mq, Coherence *coh,
+        Params(TagStore *_tags, MissBuffer *mq, Coherence *coh,
                BaseCache::Params params,
-               Prefetcher<TagStore, Buffering> *_prefetcher,
+               Prefetcher<TagStore> *_prefetcher,
                bool prefetch_access, int hit_latency)
             : tags(_tags), missQueue(mq), coherence(coh),
               baseParams(params),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,81 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Steve Reinhardt
  */
 
 /**
  * @file
- * Declaration of a simple buffer for a blocking cache.
+ * MissBuffer declaration.
  */
 
-#ifndef __BLOCKING_BUFFER_HH__
-#define __BLOCKING_BUFFER_HH__
+#ifndef __MISS_BUFFER_HH__
+#define __MISS_BUFFER_HH__
 
-#include <vector>
-
-#include "base/misc.hh" // for fatal()
-#include "mem/cache/miss/miss_buffer.hh"
-#include "mem/cache/miss/mshr.hh"
+class BaseCache;
+class BasePrefetcher;
+class MSHR;
 
 /**
- * Miss and writeback storage for a blocking cache.
+ * Abstract base class for cache miss buffering.
  */
-class BlockingBuffer : public MissBuffer
+class MissBuffer
 {
-protected:
-    /** Miss storage. */
-    MSHR miss;
-    /** WB storage. */
-    MSHR wb;
+  protected:
+    /** True if the cache should allocate on a write miss. */
+    const bool writeAllocate;
 
-public:
+    /** Pointer to the parent cache. */
+    BaseCache *cache;
+
+    /** The Prefetcher */
+    BasePrefetcher *prefetcher;
+
+    /** Block size of the parent cache. */
+    int blkSize;
+
+    // Statistics
     /**
-     * Builds and initializes this buffer.
-     * @param write_allocate If true, treat write misses the same as reads.
+     * @addtogroup CacheStatistics
+     * @{
      */
-    BlockingBuffer(bool write_allocate)
-        : MissBuffer(write_allocate)
+    /** Number of blocks written back per thread. */
+    Stats::Vector<> writebacks;
+
+    /**
+     * @}
+     */
+
+  public:
+    MissBuffer(bool write_allocate)
+        : writeAllocate(write_allocate)
     {
     }
+
+    virtual ~MissBuffer() {}
+
+    /**
+     * Called by the parent cache to set the back pointer.
+     * @param _cache A pointer to the parent cache.
+     */
+    void setCache(BaseCache *_cache);
+
+    void setPrefetcher(BasePrefetcher *_prefetcher);
 
     /**
      * Register statistics for this object.
      * @param name The name of the parent cache.
      */
-    void regStats(const std::string &name);
+    virtual void regStats(const std::string &name);
 
     /**
-     * Handle a cache miss properly. Requests the bus and marks the cache as
-     * blocked.
+     * Handle a cache miss properly. Either allocate an MSHR for the request,
+     * or forward it through the write buffer.
      * @param pkt The request that missed in the cache.
      * @param blk_size The block size of the cache.
      * @param time The time the miss is detected.
      */
-    void handleMiss(PacketPtr &pkt, int blk_size, Tick time);
+    virtual void handleMiss(PacketPtr &pkt, int blk_size, Tick time) = 0;
 
     /**
      * Fetch the block for the given address and buffer the given target.
@@ -86,30 +109,27 @@ public:
      * @param time The time the miss is detected.
      * @param target The target for the fetch.
      */
-    MSHR* fetchBlock(Addr addr, int blk_size, Tick time,
-                     PacketPtr &target)
-    {
-        fatal("Unimplemented");
-    }
+    virtual MSHR *fetchBlock(Addr addr, int blk_size, Tick time,
+                             PacketPtr &target) = 0;
 
     /**
      * Selects a outstanding request to service.
      * @return The request to service, NULL if none found.
      */
-    PacketPtr getPacket();
+    virtual PacketPtr getPacket() = 0;
 
     /**
      * Set the command to the given bus command.
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    void setBusCmd(PacketPtr &pkt, Packet::Command cmd);
+    virtual void setBusCmd(PacketPtr &pkt, Packet::Command cmd) = 0;
 
     /**
      * Restore the original command in case of a bus transmission error.
      * @param pkt The request to reset.
      */
-    void restoreOrigCmd(PacketPtr &pkt);
+    virtual void restoreOrigCmd(PacketPtr &pkt) = 0;
 
     /**
      * Marks a request as in service (sent on the bus). This can have side
@@ -117,91 +137,87 @@ public:
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(PacketPtr &pkt, MSHR* mshr);
+    virtual void markInService(PacketPtr &pkt, MSHR* mshr) = 0;
 
     /**
-     * Frees the resources of the request and unblock the cache.
+     * Collect statistics and free resources of a satisfied request.
      * @param pkt The request that has been satisfied.
      * @param time The time when the request is satisfied.
      */
-    void handleResponse(PacketPtr &pkt, Tick time);
+    virtual void handleResponse(PacketPtr &pkt, Tick time) = 0;
 
     /**
      * Removes all outstanding requests for a given thread number. If a request
      * has been sent to the bus, this function removes all of its targets.
      * @param threadNum The thread number of the requests to squash.
      */
-    void squash(int threadNum);
+    virtual void squash(int threadNum) = 0;
 
     /**
      * Return the current number of outstanding misses.
      * @return the number of outstanding misses.
      */
-    int getMisses()
-    {
-        return miss.getNumTargets();
-    }
+    virtual int getMisses() = 0;
 
     /**
-     * Searches for the supplied address in the miss "queue".
+     * Searches for the supplied address in the miss queue.
      * @param addr The address to look for.
      * @param asid The address space id.
-     * @return A pointer to miss if it matches.
+     * @return The MSHR that contains the address, NULL if not found.
+     * @warning Currently only searches the miss queue. If non write allocate
+     * might need to search the write buffer for coherence.
      */
-    MSHR* findMSHR(Addr addr);
+    virtual MSHR* findMSHR(Addr addr) = 0;
 
     /**
      * Searches for the supplied address in the write buffer.
      * @param addr The address to look for.
      * @param asid The address space id.
-     * @param writes List of pointers to the matching writes.
-     * @return True if there is a matching write.
+     * @param writes The list of writes that match the address.
+     * @return True if any writes are found
      */
-    bool findWrites(Addr addr, std::vector<MSHR*>& writes);
+    virtual bool findWrites(Addr addr, std::vector<MSHR*>& writes) = 0;
 
     /**
      * Perform a writeback of dirty data to the given address.
      * @param addr The address to write to.
      * @param asid The address space id.
+     * @param xc The execution context of the address space.
      * @param size The number of bytes to write.
      * @param data The data to write, can be NULL.
      * @param compressed True if the data is compressed.
      */
-    void doWriteback(Addr addr,
-                     int size, uint8_t *data, bool compressed);
+    virtual void doWriteback(Addr addr, int size, uint8_t *data,
+                             bool compressed) = 0;
 
     /**
-     * Perform a writeback request.
+     * Perform the given writeback request.
      * @param pkt The writeback request.
      */
-    void doWriteback(PacketPtr &pkt);
+    virtual void doWriteback(PacketPtr &pkt) = 0;
 
     /**
      * Returns true if there are outstanding requests.
      * @return True if there are outstanding requests.
      */
-    bool havePending()
-    {
-        return !miss.inService || !wb.inService;
-    }
+    virtual bool havePending() = 0;
 
     /**
      * Add a target to the given MSHR. This assumes it is in the miss queue.
      * @param mshr The mshr to add a target to.
      * @param pkt The target to add.
      */
-    void addTarget(MSHR *mshr, PacketPtr &pkt)
-    {
-        fatal("Shouldn't call this on a blocking buffer.");
-    }
+    virtual void addTarget(MSHR *mshr, PacketPtr &pkt) = 0;
 
     /**
-     * Dummy implmentation.
+     * Allocate a MSHR to hold a list of targets to a block involved in a copy.
+     * If the block is marked done then the MSHR already holds the data to
+     * fill the block. Otherwise the block needs to be fetched.
+     * @param addr The address to buffer.
+     * @param asid The address space ID.
+     * @return A pointer to the allocated MSHR.
      */
-    MSHR* allocateTargetList(Addr addr)
-    {
-        fatal("Unimplemented");
-    }
+    virtual MSHR* allocateTargetList(Addr addr) = 0;
 };
 
-#endif // __BLOCKING_BUFFER_HH__
+#endif //__MISS_BUFFER_HH__

@@ -55,9 +55,9 @@
 
 bool SIGNAL_NACK_HACK;
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 bool
-Cache<TagStore,Buffering,Coherence>::
+Cache<TagStore,Coherence>::
 doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
 {
     if (isCpuSide)
@@ -81,9 +81,9 @@ doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
     return true;
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 Tick
-Cache<TagStore,Buffering,Coherence>::
+Cache<TagStore,Coherence>::
 doAtomicAccess(PacketPtr pkt, bool isCpuSide)
 {
     if (isCpuSide)
@@ -103,9 +103,9 @@ doAtomicAccess(PacketPtr pkt, bool isCpuSide)
     return hitLatency;
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::
+Cache<TagStore,Coherence>::
 doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
 {
     if (isCpuSide)
@@ -123,19 +123,19 @@ doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
     }
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::
+Cache<TagStore,Coherence>::
 recvStatusChange(Port::Status status, bool isCpuSide)
 {
 
 }
 
 
-template<class TagStore, class Buffering, class Coherence>
-Cache<TagStore,Buffering,Coherence>::
+template<class TagStore, class Coherence>
+Cache<TagStore,Coherence>::
 Cache(const std::string &_name,
-      Cache<TagStore,Buffering,Coherence>::Params &params)
+      Cache<TagStore,Coherence>::Params &params)
     : BaseCache(_name, params.baseParams),
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
@@ -154,9 +154,9 @@ Cache(const std::string &_name,
     invalidatePkt = new Packet(invalidateReq, Packet::InvalidateReq, 0);
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::regStats()
+Cache<TagStore,Coherence>::regStats()
 {
     BaseCache::regStats();
     tags->regStats(name());
@@ -165,9 +165,9 @@ Cache<TagStore,Buffering,Coherence>::regStats()
     prefetcher->regStats(name());
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 bool
-Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
+Cache<TagStore,Coherence>::access(PacketPtr &pkt)
 {
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
@@ -253,9 +253,9 @@ Cache<TagStore,Buffering,Coherence>::access(PacketPtr &pkt)
 }
 
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 PacketPtr
-Cache<TagStore,Buffering,Coherence>::getPacket()
+Cache<TagStore,Coherence>::getPacket()
 {
     assert(missQueue->havePending());
     PacketPtr pkt = missQueue->getPacket();
@@ -276,9 +276,9 @@ Cache<TagStore,Buffering,Coherence>::getPacket()
     return pkt;
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
+Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
                                                 bool success)
 {
     if (success && !(SIGNAL_NACK_HACK)) {
@@ -319,9 +319,9 @@ Cache<TagStore,Buffering,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
     }
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
+Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
 {
     BlkType *blk = NULL;
     if (pkt->senderState) {
@@ -363,16 +363,16 @@ Cache<TagStore,Buffering,Coherence>::handleResponse(PacketPtr &pkt)
     }
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 PacketPtr
-Cache<TagStore,Buffering,Coherence>::getCoherencePacket()
+Cache<TagStore,Coherence>::getCoherencePacket()
 {
     return coherence->getPacket();
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(PacketPtr &pkt,
+Cache<TagStore,Coherence>::sendCoherenceResult(PacketPtr &pkt,
                                                          MSHR *cshr,
                                                          bool success)
 {
@@ -380,9 +380,9 @@ Cache<TagStore,Buffering,Coherence>::sendCoherenceResult(PacketPtr &pkt,
 }
 
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
+Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
 {
     if (pkt->req->isUncacheable()) {
         //Can't get a hit on an uncacheable address
@@ -514,9 +514,9 @@ Cache<TagStore,Buffering,Coherence>::snoop(PacketPtr &pkt)
     tags->handleSnoop(blk, new_state);
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::snoopResponse(PacketPtr &pkt)
+Cache<TagStore,Coherence>::snoopResponse(PacketPtr &pkt)
 {
     //Need to handle the response, if NACKED
     if (pkt->flags & NACKED_LINE) {
@@ -533,9 +533,9 @@ Cache<TagStore,Buffering,Coherence>::snoopResponse(PacketPtr &pkt)
     }
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 void
-Cache<TagStore,Buffering,Coherence>::invalidateBlk(Addr addr)
+Cache<TagStore,Coherence>::invalidateBlk(Addr addr)
 {
     tags->invalidateBlk(addr);
 }
@@ -544,9 +544,9 @@ Cache<TagStore,Buffering,Coherence>::invalidateBlk(Addr addr)
 /**
  * @todo Fix to not assume write allocate
  */
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 Tick
-Cache<TagStore,Buffering,Coherence>::probe(PacketPtr &pkt, bool update,
+Cache<TagStore,Coherence>::probe(PacketPtr &pkt, bool update,
                                            CachePort* otherSidePort)
 {
 //    MemDebug::cacheProbe(pkt);
@@ -694,9 +694,9 @@ return 0;
     return 0;
 }
 
-template<class TagStore, class Buffering, class Coherence>
+template<class TagStore, class Coherence>
 Tick
-Cache<TagStore,Buffering,Coherence>::snoopProbe(PacketPtr &pkt)
+Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
 {
     //Send a atomic (false) invalidate up if the protocol calls for it
     if (coherence->propogateInvalidate(pkt, false)) {

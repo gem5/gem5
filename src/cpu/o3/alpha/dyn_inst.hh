@@ -147,27 +147,28 @@ class AlphaDynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(const StaticInst *si, int idx)
+    uint64_t readIntRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
     {
         return this->cpu->readFloatReg(this->_srcRegIdx[idx], width);
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
+                                         int width)
     {
         return this->cpu->readFloatRegBits(this->_srcRegIdx[idx], width);
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
@@ -175,35 +176,37 @@ class AlphaDynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         this->cpu->setIntReg(this->_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setIntReg(si, idx, val);
+        BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
+                            int width)
     {
         this->cpu->setFloatReg(this->_destRegIdx[idx], val, width);
-        BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
+        BaseDynInst<Impl>::setFloatRegOperand(si, idx, val, width);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         this->cpu->setFloatReg(this->_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setFloatReg(si, idx, val);
+        BaseDynInst<Impl>::setFloatRegOperand(si, idx, val);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx,
-            FloatRegBits val, int width)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val, int width)
     {
         this->cpu->setFloatRegBits(this->_destRegIdx[idx], val, width);
-        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
+        BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val)
     {
         this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
-        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
+        BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 
   public:

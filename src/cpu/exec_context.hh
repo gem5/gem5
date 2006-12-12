@@ -48,39 +48,42 @@ class ExecContext {
     // to do).
 
     /** Reads an integer register. */
-    uint64_t readIntReg(const StaticInst *si, int idx);
+    uint64_t readIntRegOperand(const StaticInst *si, int idx);
 
     /** Reads a floating point register of a specific width. */
-    FloatReg readFloatReg(const StaticInst *si, int idx, int width);
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width);
 
     /** Reads a floating point register of single register width. */
-    FloatReg readFloatReg(const StaticInst *si, int idx);
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx);
 
     /** Reads a floating point register of a specific width in its
      * binary format, instead of by value. */
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width);
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
+                                         int width);
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx);
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx);
 
     /** Sets an integer register to a value. */
-    void setIntReg(const StaticInst *si, int idx, uint64_t val);
+    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val);
 
     /** Sets a floating point register of a specific width to a value. */
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width);
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
+                            int width);
 
     /** Sets a floating point register of single width to a value. */
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val);
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
 
     /** Sets the bits of a floating point register of a specific width
      * to a binary value. */
-    void setFloatRegBits(const StaticInst *si, int idx,
-                         FloatRegBits val, int width);
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val, int width);
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */
-    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val);
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val);
 
     /** Reads the PC. */
     uint64_t readPC();

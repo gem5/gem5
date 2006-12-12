@@ -48,29 +48,31 @@ using namespace std;
  */
 MissQueue::MissQueue(int numMSHRs, int numTargets, int write_buffers,
                      bool write_allocate, bool prefetch_miss)
-    : mq(numMSHRs, 4), wb(write_buffers,numMSHRs+1000), numMSHR(numMSHRs),
+    : MissBuffer(write_allocate),
+      mq(numMSHRs, 4), wb(write_buffers,numMSHRs+1000), numMSHR(numMSHRs),
       numTarget(numTargets), writeBuffers(write_buffers),
-      writeAllocate(write_allocate), order(0), prefetchMiss(prefetch_miss)
+      order(0), prefetchMiss(prefetch_miss)
 {
     noTargetMSHR = NULL;
 }
 
+
+MissQueue::~MissQueue()
+{
+}
+
+
 void
 MissQueue::regStats(const string &name)
 {
+    MissBuffer::regStats(name);
+
     Request temp_req((Addr) NULL, 4, 0);
     Packet::Command temp_cmd = Packet::ReadReq;
     Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
     temp_pkt.allocate();
 
     using namespace Stats;
-
-    writebacks
-        .init(maxThreadsPerCPU)
-        .name(name + ".writebacks")
-        .desc("number of writebacks")
-        .flags(total)
-        ;
 
     // MSHR hit statistics
     for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
@@ -336,18 +338,6 @@ MissQueue::regStats(const string &name)
 
 }
 
-void
-MissQueue::setCache(BaseCache *_cache)
-{
-    cache = _cache;
-    blkSize = cache->getBlockSize();
-}
-
-void
-MissQueue::setPrefetcher(BasePrefetcher *_prefetcher)
-{
-    prefetcher = _prefetcher;
-}
 
 MSHR*
 MissQueue::allocateMiss(PacketPtr &pkt, int size, Tick time)
@@ -706,13 +696,13 @@ MissQueue::squash(int threadNum)
 }
 
 MSHR*
-MissQueue::findMSHR(Addr addr) const
+MissQueue::findMSHR(Addr addr)
 {
     return mq.findMatch(addr);
 }
 
 bool
-MissQueue::findWrites(Addr addr, vector<MSHR*> &writes) const
+MissQueue::findWrites(Addr addr, vector<MSHR*> &writes)
 {
     return wb.findMatches(addr,writes);
 }

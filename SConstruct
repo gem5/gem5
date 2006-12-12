@@ -66,6 +66,7 @@
 # Python library imports
 import sys
 import os
+from os.path import join as joinpath
 
 # Check for recent-enough Python and SCons versions.  If your system's
 # default installation of Python is not recent enough, you can use a
@@ -89,11 +90,11 @@ except:
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
 
-# Paths to the M5 and external source trees.
-SRCDIR = os.path.join(ROOT, 'src')
+# Path to the M5 source tree.
+SRCDIR = joinpath(ROOT, 'src')
 
 # tell python where to find m5 python code
-sys.path.append(os.path.join(ROOT, 'src/python'))
+sys.path.append(joinpath(ROOT, 'src/python'))
 
 ###################################################
 #
@@ -104,13 +105,6 @@ sys.path.append(os.path.join(ROOT, 'src/python'))
 
 # Find default configuration & binary.
 Default(os.environ.get('M5_DEFAULT_BINARY', 'build/ALPHA_SE/m5.debug'))
-
-# Ask SCons which directory it was invoked from.
-launch_dir = GetLaunchDir()
-
-# Make targets relative to invocation directory
-abs_targets = map(lambda x: os.path.normpath(os.path.join(launch_dir, str(x))),
-                  BUILD_TARGETS)
 
 # helper function: find last occurrence of element in list
 def rfind(l, elt, offs = -1):
@@ -141,6 +135,19 @@ def compare_versions(v1, v2):
 # recognize that ALPHA_SE specifies the configuration because it
 # follow 'build' in the bulid path.
 
+# Generate absolute paths to targets so we can see where the build dir is
+if COMMAND_LINE_TARGETS:
+    # Ask SCons which directory it was invoked from
+    launch_dir = GetLaunchDir()
+    # Make targets relative to invocation directory
+    abs_targets = map(lambda x: os.path.normpath(joinpath(launch_dir, str(x))),
+                      COMMAND_LINE_TARGETS)
+else:
+    # Default targets are relative to root of tree
+    abs_targets = map(lambda x: os.path.normpath(joinpath(ROOT, str(x))),
+                      DEFAULT_TARGETS)
+
+
 # Generate a list of the unique build roots and configs that the
 # collected targets reference.
 build_paths = []
@@ -152,7 +159,7 @@ for t in abs_targets:
     except:
         print "Error: no non-leaf 'build' dir found on target path", t
         Exit(1)
-    this_build_root = os.path.join('/',*path_dirs[:build_top+1])
+    this_build_root = joinpath('/',*path_dirs[:build_top+1])
     if not build_root:
         build_root = this_build_root
     else:
@@ -160,7 +167,7 @@ for t in abs_targets:
             print "Error: build targets not under same build root\n"\
                   "  %s\n  %s" % (build_root, this_build_root)
             Exit(1)
-    build_path = os.path.join('/',*path_dirs[:build_top+2])
+    build_path = joinpath('/',*path_dirs[:build_top+2])
     if build_path not in build_paths:
         build_paths.append(build_path)
 
@@ -183,7 +190,7 @@ if ARGUMENTS.get('CC', None):
 if ARGUMENTS.get('CXX', None):
     env['CXX'] = ARGUMENTS.get('CXX')
 
-env.SConsignFile(os.path.join(build_root,"sconsign"))
+env.SConsignFile(joinpath(build_root,"sconsign"))
 
 # Default duplicate option is to use hard links, but this messes up
 # when you use emacs to edit a file in the target dir, as emacs moves
@@ -243,8 +250,8 @@ env.Append(SCANNERS = swig_scanner)
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
 conf = Configure(env,
-                 conf_dir = os.path.join(build_root, '.scons_config'),
-                 log_file = os.path.join(build_root, 'scons_config.log'))
+                 conf_dir = joinpath(build_root, '.scons_config'),
+                 log_file = joinpath(build_root, 'scons_config.log'))
 
 # Find Python include and library directories for embedding the
 # interpreter.  For consistency, we will use the same Python
@@ -257,7 +264,7 @@ conf = Configure(env,
 py_version_name = 'python' + sys.version[:3]
 
 # include path, e.g. /usr/local/include/python2.4
-py_header_path = os.path.join(sys.exec_prefix, 'include', py_version_name)
+py_header_path = joinpath(sys.exec_prefix, 'include', py_version_name)
 env.Append(CPPPATH = py_header_path)
 # verify that it works
 if not conf.CheckHeader('Python.h', '<>'):
@@ -267,7 +274,7 @@ if not conf.CheckHeader('Python.h', '<>'):
 # add library path too if it's not in the default place
 py_lib_path = None
 if sys.exec_prefix != '/usr':
-    py_lib_path = os.path.join(sys.exec_prefix, 'lib')
+    py_lib_path = joinpath(sys.exec_prefix, 'lib')
 elif sys.platform == 'cygwin':
     # cygwin puts the .dll in /bin for some reason
     py_lib_path = '/bin'
@@ -330,7 +337,7 @@ env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
                        'O3CPU', 'OzoneCPU']
 
-if os.path.isdir(os.path.join(SRCDIR, 'src/encumbered/cpu/full')):
+if os.path.isdir(joinpath(SRCDIR, 'encumbered/cpu/full')):
     env['ALL_CPU_LIST'] += ['FullCPU']
 
 # Sticky options get saved in the options file so they persist from
@@ -417,7 +424,7 @@ def config_emitter(target, source, env):
     # extract option name from Builder arg
     option = str(target[0])
     # True target is config header file
-    target = os.path.join('config', option.lower() + '.hh')
+    target = joinpath('config', option.lower() + '.hh')
     val = env[option]
     if isinstance(val, bool):
         # Force value to 0/1
@@ -466,7 +473,7 @@ Usage: scons [scons options] [build options] [target(s)]
 
 # libelf build is shared across all configs in the build root.
 env.SConscript('ext/libelf/SConscript',
-               build_dir = os.path.join(build_root, 'libelf'),
+               build_dir = joinpath(build_root, 'libelf'),
                exports = 'env')
 
 ###################################################
@@ -531,7 +538,7 @@ for build_path in build_paths:
     # Options for $BUILD_ROOT/$BUILD_DIR are stored in
     # $BUILD_ROOT/options/$BUILD_DIR so you can nuke
     # $BUILD_ROOT/$BUILD_DIR without losing your options settings.
-    current_opts_file = os.path.join(build_root, 'options', build_dir)
+    current_opts_file = joinpath(build_root, 'options', build_dir)
     if os.path.isfile(current_opts_file):
         sticky_opts.files.append(current_opts_file)
         print "Using saved options file %s" % current_opts_file
@@ -546,8 +553,8 @@ for build_path in build_paths:
         # Get default build options from source tree.  Options are
         # normally determined by name of $BUILD_DIR, but can be
         # overriden by 'default=' arg on command line.
-        default_opts_file = os.path.join('build_opts',
-                                         ARGUMENTS.get('default', build_dir))
+        default_opts_file = joinpath('build_opts',
+                                     ARGUMENTS.get('default', build_dir))
         if os.path.isfile(default_opts_file):
             sticky_opts.files.append(default_opts_file)
             print "Options file %s not found,\n  using defaults in %s" \
@@ -611,7 +618,7 @@ for build_path in build_paths:
     # Set up the regression tests for each build.
     for e in envList:
         SConscript('tests/SConscript',
-                   build_dir = os.path.join(build_path, 'tests', e.Label),
+                   build_dir = joinpath(build_path, 'tests', e.Label),
                    exports = { 'env' : e }, duplicate = False)
 
 Help(help_text)

@@ -151,36 +151,6 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
               " RoundRobin,LSQcount,IQcount}\n");
     }
 
-    // Size of cache block.
-    cacheBlkSize = 64;
-
-    // Create mask to get rid of offset bits.
-    cacheBlkMask = (cacheBlkSize - 1);
-
-    for (int tid=0; tid < numThreads; tid++) {
-
-        fetchStatus[tid] = Running;
-
-        priorityList.push_back(tid);
-
-        memReq[tid] = NULL;
-
-        // Create space to store a cache line.
-        cacheData[tid] = new uint8_t[cacheBlkSize];
-        cacheDataPC[tid] = 0;
-        cacheDataValid[tid] = false;
-
-        delaySlotInfo[tid].branchSeqNum = -1;
-        delaySlotInfo[tid].numInsts = 0;
-        delaySlotInfo[tid].targetAddr = 0;
-        delaySlotInfo[tid].targetReady = false;
-
-        stalls[tid].decode = false;
-        stalls[tid].rename = false;
-        stalls[tid].iew = false;
-        stalls[tid].commit = false;
-    }
-
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
 }
@@ -352,6 +322,36 @@ DefaultFetch<Impl>::initStage()
 #if ISA_HAS_DELAY_SLOT
         nextNPC[tid] = cpu->readNextNPC(tid);
 #endif
+    }
+
+    // Size of cache block.
+    cacheBlkSize = icachePort->peerBlockSize();
+
+    // Create mask to get rid of offset bits.
+    cacheBlkMask = (cacheBlkSize - 1);
+
+    for (int tid=0; tid < numThreads; tid++) {
+
+        fetchStatus[tid] = Running;
+
+        priorityList.push_back(tid);
+
+        memReq[tid] = NULL;
+
+        // Create space to store a cache line.
+        cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
+
+        delaySlotInfo[tid].branchSeqNum = -1;
+        delaySlotInfo[tid].numInsts = 0;
+        delaySlotInfo[tid].targetAddr = 0;
+        delaySlotInfo[tid].targetReady = false;
+
+        stalls[tid].decode = false;
+        stalls[tid].rename = false;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
     }
 }
 
