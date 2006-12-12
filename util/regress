@@ -77,10 +77,11 @@ def shellquote(s):
 
 try:
     if not tests:
-        print "No tests specified."
-        sys.exit(1)
-
-    if 'all' in tests:
+        print "No tests specified, just building binaries."
+        targets = ['build/%s/m5.%s' % (build, variant)
+		   for build in builds
+		   for variant in variants]
+    elif 'all' in tests:
 	targets = ['build/%s/tests/%s' % (build, variant)
 		   for build in builds
 		   for variant in variants]
