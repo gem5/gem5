@@ -37,31 +37,35 @@ using namespace std;
 
 int main()
 {
-    range_map<Addr,int> r;
+    range_multimap<Addr,int> r;
 
-    range_map<Addr,int>::iterator i;
+    range_multimap<Addr,int>::iterator i;
+    std::pair<range_multimap<Addr,int>::iterator,range_multimap<Addr,int>::iterator>
+        jk;
 
     i = r.insert(RangeIn<Addr>(10,40),5);
+    assert(i != r.end());
+    i = r.insert(RangeIn<Addr>(10,40),6);
     assert(i != r.end());
     i = r.insert(RangeIn<Addr>(60,90),3);
     assert(i != r.end());
 
-    i = r.find(RangeIn(20,30));
-    assert(i != r.end());
-    cout << i->first << " " << i->second << endl;
+    jk = r.find(RangeIn(20,30));
+    assert(jk.first != r.end());
+    cout << jk.first->first << " " << jk.first->second << endl;
+    cout << jk.second->first << " " << jk.second->second << endl;
 
-    i = r.find(RangeIn(55,55));
-    assert(i == r.end());
-
-    i = r.insert(RangeIn<Addr>(0,12),1);
-    assert(i == r.end());
-
-    i = r.insert(RangeIn<Addr>(0,9),1);
+    i = r.insert(RangeIn<Addr>(0,3),5);
     assert(i != r.end());
 
-    i = r.find(RangeIn(20,30));
-    assert(i != r.end());
-    cout << i->first << " " << i->second << endl;
+    for( i = r.begin(); i != r.end(); i++)
+        cout << i->first << " " << i->second << endl;
+
+    jk = r.find(RangeIn(20,30));
+    assert(jk.first != r.end());
+    cout << jk.first->first << " " << jk.first->second << endl;
+    cout << jk.second->first << " " << jk.second->second << endl;
+
 
 }
 

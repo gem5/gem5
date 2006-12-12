@@ -52,9 +52,13 @@ class range_map
 
         i = tree.upper_bound(r);
 
-        if (i == tree.begin())
-            // Nothing could match, so return end()
-            return tree.end();
+        if (i == tree.begin()) {
+            if (i->first.start <= r.end && i->first.end >= r.start)
+                return i;
+            else
+                // Nothing could match, so return end()
+                return tree.end();
+        }
 
         i--;
 
@@ -125,5 +129,118 @@ class range_map
     }
 };
 
+
+template <class T,class V>
+class range_multimap
+{
+  private:
+    typedef std::multimap<Range<T>,V> RangeMap;
+    RangeMap tree;
+
+  public:
+    typedef typename RangeMap::iterator iterator;
+
+    template <class U>
+    std::pair<iterator,iterator> find(const Range<U> &r)
+    {
+        iterator i;
+        iterator j;
+
+        i = tree.lower_bound(r);
+
+        if (i == tree.begin()) {
+          if (i->first.start <= r.end && i->first.end >= r.start)
+                return std::make_pair<iterator, iterator>(i,i);
+          else
+            // Nothing could match, so return end()
+            return std::make_pair<iterator, iterator>(tree.end(), tree.end());
+        }
+        i--;
+
+        if (i->first.start <= r.end && i->first.end >= r.start) {
+            // we have at least one match
+            j = i;
+
+            i--;
+            while (i->first.start <= r.end && i->first.end >=
+                    r.start) {
+                if (i == tree.begin())
+                    break;
+                i--;
+            }
+            if (i == tree.begin() && i->first.start <= r.end && i->first.end >=
+                                        r.start)
+                return std::make_pair<iterator, iterator>(i,j);
+            i++;
+            return std::make_pair<iterator, iterator>(i,j);
+
+        }
+
+        return std::make_pair<iterator, iterator>(tree.end(), tree.end());
+    }
+
+    template <class U>
+    bool intersect(const Range<U> &r)
+    {
+        std::pair<iterator,iterator> p;
+        p = find(r);
+        if (p.first != tree.end())
+            return true;
+        return false;
+    }
+
+
+    template <class U,class W>
+    iterator insert(const Range<U> &r, const W d)
+    {
+        std::pair<iterator,iterator> p;
+        p = find(r);
+        if (p.first->first.start == r.start && p.first->first.end == r.end ||
+                p.first == tree.end())
+            return tree.insert(std::make_pair<Range<T>,V>(r, d));
+        else
+            return tree.end();
+    }
+
+    size_t erase(T k)
+    {
+        return tree.erase(k);
+    }
+
+    void erase(iterator p)
+    {
+        tree.erase(p);
+    }
+
+    void erase(iterator p, iterator q)
+    {
+        tree.erase(p,q);
+    }
+
+    void clear()
+    {
+        tree.erase(tree.begin(), tree.end());
+    }
+
+    iterator begin()
+    {
+        return tree.begin();
+    }
+
+    iterator end()
+    {
+        return tree.end();
+    }
+
+    size_t size()
+    {
+        return tree.size();
+    }
+
+    bool empty()
+    {
+        return tree.empty();
+    }
+};
 
 #endif //__BASE_RANGE_MAP_HH__

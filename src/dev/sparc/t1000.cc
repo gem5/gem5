@@ -62,13 +62,15 @@ T1000::intrFrequency()
 void
 T1000::postConsoleInt()
 {
-    panic("Need implementation\n");
+    warn_once("Don't know what interrupt to post for console.\n");
+    //panic("Need implementation\n");
 }
 
 void
 T1000::clearConsoleInt()
 {
-    panic("Need implementation\n");
+    warn_once("Don't know what interrupt to clear for console.\n");
+    //panic("Need implementation\n");
 }
 
 void

@@ -137,6 +137,8 @@ namespace SparcISA
         MISCREG_QUEUE_NRES_ERROR_HEAD,
         MISCREG_QUEUE_NRES_ERROR_TAIL,
 
+        /* All the data for the TLB packed up in one register. */
+        MISCREG_TLB_DATA,
         MISCREG_NUMMISCREGS
     };
 

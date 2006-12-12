@@ -53,8 +53,15 @@ class TlbMap
         i = tree.upper_bound(r);
 
         if (i == tree.begin())
-            // Nothing could match, so return end()
-            return tree.end();
+            if (r.real == i->first.real &&
+                r.partitionId == i->first.partitionId &&
+                i->first.va < r.va + r.size &&
+                i->first.va+i->first.size >= r.va &&
+                (r.real || r.contextId == i->first.contextId))
+                return i;
+            else
+                // Nothing could match, so return end()
+                return tree.end();
 
         i--;
 

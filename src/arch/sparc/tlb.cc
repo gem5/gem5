@@ -446,8 +446,8 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     bool real = false;
     Addr vaddr = req->getVaddr();
     Addr size = req->getSize();
-    ContextType ct;
-    int context;
+    ContextType ct = Primary;
+    int context = 0;
     ASI asi;
 
     TlbEntry *e;
@@ -508,6 +508,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
+        if (write && asi == ASI_LDTX_P)
+            // block init store (like write hint64)
+            goto continueDtbFlow;
         if (AsiIsTwin(asi))
             panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))

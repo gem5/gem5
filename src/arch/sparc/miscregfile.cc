@@ -129,6 +129,26 @@ void MiscRegFile::clear()
 MiscReg MiscRegFile::readReg(int miscReg)
 {
     switch (miscReg) {
+      case MISCREG_TLB_DATA:
+        /* Package up all the data for the tlb:
+         * 6666555555555544444444443333333333222222222211111111110000000000
+         * 3210987654321098765432109876543210987654321098765432109876543210
+         *   secContext   | priContext    |             |tl|partid|  |||||^hpriv
+         *                                                           ||||^red
+         *                                                           |||^priv
+         *                                                           ||^am
+         *                                                           |^lsuim
+         *                                                           ^lsudm
+         */
+        return bits((uint64_t)hpstate,2,2) |
+               bits((uint64_t)hpstate,5,5) << 1 |
+               bits((uint64_t)pstate,3,2) << 2 |
+               bits((uint64_t)lsuCtrlReg,3,2) << 4 |
+               bits((uint64_t)partId,7,0) << 8 |
+               bits((uint64_t)tl,2,0) << 16 |
+               (uint64_t)priContext << 32 |
+               (uint64_t)secContext << 48;
+
       case MISCREG_Y:
         return y;
       case MISCREG_CCR:

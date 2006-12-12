@@ -399,7 +399,7 @@ Trace::InstRecord::dump(ostream &outs)
                             diffCcr || diffTl || diffGl || diffAsi || diffPil ||
                             diffCwp || diffCansave || diffCanrestore ||
                             diffOtherwin || diffCleanwin)
-                        && !((staticInst->machInst & 0xE1F80000) == 0xE1F80000)) {
+                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)) {
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
                             outs << " [PC]";
@@ -575,7 +575,7 @@ Trace::InstRecord::dump(ostream &outs)
                         thread->getDTBPtr()->dumpAll();
 
                         diffcount++;
-                        if (diffcount > 3)
+                        if (diffcount > 2)
                             fatal("Differences found between Legion and M5\n");
                     }
 
