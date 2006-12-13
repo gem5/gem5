@@ -38,16 +38,14 @@
 
 #include <vector>
 
+#include "base/misc.hh" // for fatal()
+#include "mem/cache/miss/miss_buffer.hh"
 #include "mem/cache/miss/mshr.hh"
-#include "base/statistics.hh"
-
-class BaseCache;
-class BasePrefetcher;
 
 /**
  * Miss and writeback storage for a blocking cache.
  */
-class BlockingBuffer
+class BlockingBuffer : public MissBuffer
 {
 protected:
     /** Miss storage. */
@@ -55,38 +53,13 @@ protected:
     /** WB storage. */
     MSHR wb;
 
-    //Params
-
-    /** Allocate on write misses. */
-    const bool writeAllocate;
-
-    /** Pointer to the parent cache. */
-    BaseCache* cache;
-
-    BasePrefetcher* prefetcher;
-
-    /** Block size of the parent cache. */
-    int blkSize;
-
-    // Statistics
-    /**
-     * @addtogroup CacheStatistics
-     * @{
-     */
-    /** Number of blocks written back per thread. */
-    Stats::Vector<> writebacks;
-
-    /**
-     * @}
-     */
-
 public:
     /**
      * Builds and initializes this buffer.
      * @param write_allocate If true, treat write misses the same as reads.
      */
     BlockingBuffer(bool write_allocate)
-        : writeAllocate(write_allocate)
+        : MissBuffer(write_allocate)
     {
     }
 
@@ -95,14 +68,6 @@ public:
      * @param name The name of the parent cache.
      */
     void regStats(const std::string &name);
-
-    /**
-     * Called by the parent cache to set the back pointer.
-     * @param _cache A pointer to the parent cache.
-     */
-    void setCache(BaseCache *_cache);
-
-    void setPrefetcher(BasePrefetcher *_prefetcher);
 
     /**
      * Handle a cache miss properly. Requests the bus and marks the cache as
@@ -183,12 +148,7 @@ public:
      * @param asid The address space id.
      * @return A pointer to miss if it matches.
      */
-    MSHR* findMSHR(Addr addr)
-    {
-        if (miss.addr == addr && miss.pkt)
-            return &miss;
-        return NULL;
-    }
+    MSHR* findMSHR(Addr addr);
 
     /**
      * Searches for the supplied address in the write buffer.
@@ -197,16 +157,7 @@ public:
      * @param writes List of pointers to the matching writes.
      * @return True if there is a matching write.
      */
-    bool findWrites(Addr addr, std::vector<MSHR*>& writes)
-    {
-        if (wb.addr == addr && wb.pkt) {
-            writes.push_back(&wb);
-            return true;
-        }
-        return false;
-    }
-
-
+    bool findWrites(Addr addr, std::vector<MSHR*>& writes);
 
     /**
      * Perform a writeback of dirty data to the given address.

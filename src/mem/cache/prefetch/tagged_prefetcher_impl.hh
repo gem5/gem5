@@ -36,20 +36,20 @@
 #include "arch/isa_traits.hh"
 #include "mem/cache/prefetch/tagged_prefetcher.hh"
 
-template <class TagStore, class Buffering>
-TaggedPrefetcher<TagStore, Buffering>::
+template <class TagStore>
+TaggedPrefetcher<TagStore>::
 TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
                  bool cacheCheckPush, bool onlyData,
                  Tick latency, int degree)
-    :Prefetcher<TagStore, Buffering>(size, pageStop, serialSquash,
+    :Prefetcher<TagStore>(size, pageStop, serialSquash,
                                      cacheCheckPush, onlyData),
      latency(latency), degree(degree)
 {
 }
 
-template <class TagStore, class Buffering>
+template <class TagStore>
 void
-TaggedPrefetcher<TagStore, Buffering>::
+TaggedPrefetcher<TagStore>::
 calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                   std::list<Tick> &delays)
 {
