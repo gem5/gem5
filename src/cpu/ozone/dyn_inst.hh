@@ -146,12 +146,12 @@ class OzoneDynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    uint64_t readIntReg(const StaticInst *si, int idx)
+    uint64_t readIntRegOperand(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readIntResult();
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx, int width)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
     {
         switch(width) {
           case 32:
@@ -164,17 +164,18 @@ class OzoneDynInst : public BaseDynInst<Impl>
         }
     }
 
-    FloatReg readFloatReg(const StaticInst *si, int idx)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readFloatResult();
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx, int width)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
+                                         int width)
     {
         return srcInsts[idx]->readIntResult();
     }
 
-    FloatRegBits readFloatRegBits(const StaticInst *si, int idx)
+    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readIntResult();
     }
@@ -182,28 +183,30 @@ class OzoneDynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         BaseDynInst<Impl>::setIntReg(si, idx, val);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
+                            int width)
     {
         BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
     }
 
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         BaseDynInst<Impl>::setFloatReg(si, idx, val);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx,
-            FloatRegBits val, int width)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val, int width)
     {
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
-    void setFloatRegBits(const StaticInst *si, int idx, FloatRegBits val)
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+                                FloatRegBits val)
     {
         BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }

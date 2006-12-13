@@ -43,11 +43,13 @@ optparser.add_option('--builds', dest='builds',
                      help='comma-separated list of build targets to test  '
                      " (default: '%default')" )
 optparser.add_option('--variants', dest='variants',
-                     default='opt',
+                     default='fast',
                      help='comma-separated list of build variants to test '
                      " (default: '%default')" )
 optparser.add_option('--scons-opts', dest='scons_opts', default='',
                      help='scons options', metavar='OPTS')
+optparser.add_option('-j', '--jobs', type='int', default=1,
+                     help='number of parallel jobs to use')
 
 (options, tests) = optparser.parse_args()
 
@@ -75,10 +77,11 @@ def shellquote(s):
 
 try:
     if not tests:
-        print "No tests specified."
-        sys.exit(1)
-
-    if 'all' in tests:
+        print "No tests specified, just building binaries."
+        targets = ['build/%s/m5.%s' % (build, variant)
+		   for build in builds
+		   for variant in variants]
+    elif 'all' in tests:
 	targets = ['build/%s/tests/%s' % (build, variant)
 		   for build in builds
 		   for variant in variants]
@@ -88,7 +91,11 @@ try:
 		   for variant in variants
 		   for test in tests]
 
-    system('scons %s %s' % (options.scons_opts, ' '.join(targets)))
+    scons_opts = options.scons_opts
+    if options.jobs != 1:
+        scons_opts += ' -j %d' % options.jobs
+
+    system('scons %s %s' % (scons_opts, ' '.join(targets)))
 
     sys.exit(0)
 

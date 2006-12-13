@@ -108,6 +108,7 @@ base_sources = Split('''
         mem/cache/coherence/coherence_protocol.cc
         mem/cache/coherence/uni_coherence.cc
         mem/cache/miss/blocking_buffer.cc
+        mem/cache/miss/miss_buffer.cc
         mem/cache/miss/miss_queue.cc
         mem/cache/miss/mshr.cc
         mem/cache/miss/mshr_queue.cc

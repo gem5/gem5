@@ -72,7 +72,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 hdb: M5 IDE Disk, ATA DISK drive
 ide0 at 0x8410-0x8417,0x8422 on irq 31
 hda: max request size: 128KiB
-hda: 409248 sectors (209 MB), CHS=406/16/63, UDMA(33)
+hda: 511056 sectors (261 MB), CHS=507/16/63, UDMA(33)
 hda: cache flushes not supported
  hda: hda1
 hdb: max request size: 128KiB
@@ -99,7 +99,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 All bugs added by David S. Miller <davem@redhat.com>
 VFS: Mounted root (ext2 filesystem) readonly.
 Freeing unused kernel memory: 224k freed
-init started:  BusyBox v1.1.0 (2006.10.31-01:25+0000) multi-call binary
+init started:  BusyBox v1.1.0 (2006.08.17-02:54+0000) multi-call binary
 mounting filesystems...
 loading script...
 setting up network...

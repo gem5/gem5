@@ -236,25 +236,6 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
 */
     return fault;
 }
-#if 0
-template <class Impl>
-template <class T>
-Fault
-InorderBackEnd<Impl>::read(MemReqPtr &req, T &data)
-{
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
-    if (req->isLocked()) {
-        req->xc->setMiscReg(TheISA::Lock_Addr_DepTag, req->paddr);
-        req->xc->setMiscReg(TheISA::Lock_Flag_DepTag, true);
-    }
-#endif
-
-    Fault error;
-    error = thread->mem->read(req, data);
-    data = LittleEndianGuest::gtoh(data);
-    return error;
-}
-#endif
 
 template <class Impl>
 template <class T>
@@ -296,61 +277,6 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 */
     return fault;
 }
-#if 0
-template <class Impl>
-template <class T>
-Fault
-InorderBackEnd<Impl>::write(MemReqPtr &req, T &data)
-{
-#if FULL_SYSTEM && defined(TARGET_ALPHA)
-    ExecContext *xc;
-
-    // If this is a store conditional, act appropriately
-    if (req->isLocked()) {
-        xc = req->xc;
-
-        if (req->isUncacheable()) {
-            // Don't update result register (see stq_c in isa_desc)
-            req->result = 2;
-            xc->setStCondFailures(0);//Needed? [RGD]
-        } else {
-            bool lock_flag = xc->readMiscReg(TheISA::Lock_Flag_DepTag);
-            Addr lock_addr = xc->readMiscReg(TheISA::Lock_Addr_DepTag);
-            req->result = lock_flag;
-            if (!lock_flag ||
-                ((lock_addr & ~0xf) != (req->paddr & ~0xf))) {
-                xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
-                xc->setStCondFailures(xc->readStCondFailures() + 1);
-                if (((xc->readStCondFailures()) % 100000) == 0) {
-                    std::cerr << "Warning: "
-                              << xc->readStCondFailures()
-                              << " consecutive store conditional failures "
-                              << "on cpu " << req->xc->readCpuId()
-                              << std::endl;
-                }
-                return NoFault;
-            }
-            else xc->setStCondFailures(0);
-        }
-    }
-
-    // Need to clear any locked flags on other proccessors for
-    // this address.  Only do this for succsful Store Conditionals
-    // and all other stores (WH64?).  Unsuccessful Store
-    // Conditionals would have returned above, and wouldn't fall
-    // through.
-    for (int i = 0; i < cpu->system->execContexts.size(); i++){
-        xc = cpu->system->execContexts[i];
-        if ((xc->readMiscReg(TheISA::Lock_Addr_DepTag) & ~0xf) ==
-            (req->paddr & ~0xf)) {
-            xc->setMiscReg(TheISA::Lock_Flag_DepTag, false);
-        }
-    }
-
-#endif
-    return thread->mem->write(req, (T)LittleEndianGuest::htog(data));
-}
-#endif
 
 template <class Impl>
 template <class T>

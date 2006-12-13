@@ -41,16 +41,16 @@
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
  * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore. Buffering handles all misses and writes/writebacks
+ * storage @sa TagStore. MissBuffer handles all misses and writes/writebacks
  * @sa MissQueue. Coherence handles all coherence policy details @sa
  * UniCoherence, SimpleMultiCoherence.
  */
-template <class TagStore, class Buffering>
-class TaggedPrefetcher : public Prefetcher<TagStore, Buffering>
+template <class TagStore>
+class TaggedPrefetcher : public Prefetcher<TagStore>
 {
   protected:
 
-    Buffering* mq;
+    MissBuffer* mq;
     TagStore* tags;
 
     Tick latency;

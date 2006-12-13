@@ -33,11 +33,9 @@
  * Definitions of a simple buffer for a blocking cache.
  */
 
-#include "cpu/smt.hh" //for maxThreadsPerCPU
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
 #include "mem/cache/prefetch/base_prefetcher.hh"
-#include "sim/eventq.hh" // for Event declaration.
 #include "mem/request.hh"
 
 /**
@@ -46,27 +44,10 @@
 void
 BlockingBuffer::regStats(const std::string &name)
 {
-    using namespace Stats;
-    writebacks
-        .init(maxThreadsPerCPU)
-        .name(name + ".writebacks")
-        .desc("number of writebacks")
-        .flags(total)
-        ;
+    MissBuffer::regStats(name);
 }
 
-void
-BlockingBuffer::setCache(BaseCache *_cache)
-{
-    cache = _cache;
-    blkSize = cache->getBlockSize();
-}
 
-void
-BlockingBuffer::setPrefetcher(BasePrefetcher *_prefetcher)
-{
-    prefetcher = _prefetcher;
-}
 void
 BlockingBuffer::handleMiss(PacketPtr &pkt, int blk_size, Tick time)
 {
@@ -240,4 +221,24 @@ BlockingBuffer::doWriteback(PacketPtr &pkt)
 
     cache->setBlocked(Blocked_NoWBBuffers);
     cache->setMasterRequest(Request_WB, curTick);
+}
+
+
+MSHR *
+BlockingBuffer::findMSHR(Addr addr)
+{
+    if (miss.addr == addr && miss.pkt)
+        return &miss;
+    return NULL;
+}
+
+
+bool
+BlockingBuffer::findWrites(Addr addr, std::vector<MSHR*>& writes)
+{
+    if (wb.addr == addr && wb.pkt) {
+        writes.push_back(&wb);
+        return true;
+    }
+    return false;
 }

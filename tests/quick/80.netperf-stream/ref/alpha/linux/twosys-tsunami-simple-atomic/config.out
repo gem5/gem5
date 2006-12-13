@@ -305,7 +305,7 @@ write_ack=false
 
 [testsys.disk0.image.child]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/myimg.img
+image_file=/dist/m5/system/disks/linux-latest.img
 read_only=true
 
 [testsys.disk0.image]
@@ -341,7 +341,7 @@ delay=1000000
 
 [testsys.simple_disk.disk]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/myimg.img
+image_file=/dist/m5/system/disks/linux-latest.img
 read_only=true
 
 [testsys.simple_disk]
@@ -691,7 +691,7 @@ write_ack=false
 
 [drivesys.disk0.image.child]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/myimg.img
+image_file=/dist/m5/system/disks/linux-latest.img
 read_only=true
 
 [drivesys.disk0.image]
@@ -727,7 +727,7 @@ delay=1000000
 
 [drivesys.simple_disk.disk]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/myimg.img
+image_file=/dist/m5/system/disks/linux-latest.img
 read_only=true
 
 [drivesys.simple_disk]
