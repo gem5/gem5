@@ -89,12 +89,26 @@ namespace AlphaISA
     MiscReg
     MiscRegFile::readRegWithEffect(int misc_reg, ThreadContext *tc)
     {
+        switch(misc_reg) {
+          case MISCREG_FPCR:
+            return fpcr;
+          case MISCREG_UNIQ:
+            return uniq;
+          case MISCREG_LOCKFLAG:
+            return lock_flag;
+          case MISCREG_LOCKADDR:
+            return lock_addr;
+          case MISCREG_INTR:
+            return intr_flag;
 #if FULL_SYSTEM
-        return readIpr(misc_reg, tc);
+          default:
+            return readIpr(misc_reg, tc);
 #else
-        panic("No faulting misc regs in SE mode!");
-        return 0;
+          default:
+            panic("No faulting misc regs in SE mode!");
+            return 0;
 #endif
+        }
     }
 
     void
