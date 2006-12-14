@@ -82,15 +82,8 @@ class BaseCache : public MemObject
       public:
         BaseCache *cache;
 
-        CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
-
       protected:
-        virtual bool recvTiming(PacketPtr pkt);
-
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-
+        CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
         virtual void recvStatusChange(Status status);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
@@ -137,33 +130,12 @@ class BaseCache : public MemObject
 
   public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
+    CachePort *memSidePort;
 
     CacheEvent *sendEvent;
     CacheEvent *memSendEvent;
 
-  protected:
-    CachePort *memSidePort;
-
-  public:
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
-
   private:
-    //To be defined in cache_impl.hh not in base class
-    virtual bool doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
-    {
-        fatal("No implementation");
-    }
-
-    virtual Tick doAtomicAccess(PacketPtr pkt, bool isCpuSide)
-    {
-        fatal("No implementation");
-    }
-
-    virtual void doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
-    {
-        fatal("No implementation");
-    }
-
     void recvStatusChange(Port::Status status, bool isCpuSide)
     {
         if (status == Port::RangeChange){
@@ -176,27 +148,13 @@ class BaseCache : public MemObject
         }
     }
 
-    virtual PacketPtr getPacket()
-    {
-        fatal("No implementation");
-    }
+    virtual PacketPtr getPacket() = 0;
 
-    virtual PacketPtr getCoherencePacket()
-    {
-        fatal("No implementation");
-    }
+    virtual PacketPtr getCoherencePacket() = 0;
 
-    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success)
-    {
+    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
 
-        fatal("No implementation");
-    }
-
-    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* mshr, bool success)
-    {
-
-        fatal("No implementation");
-    }
+    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
 
     /**
      * Bit vector of the blocking reasons for the access path.

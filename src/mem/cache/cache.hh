@@ -64,7 +64,48 @@ class Cache : public BaseCache
     typedef typename TagStore::BlkType BlkType;
 
     bool prefetchAccess;
+
   protected:
+
+    class CpuSidePort : public CachePort
+    {
+      public:
+        CpuSidePort(const std::string &_name,
+                    Cache<TagStore,Coherence> *_cache);
+
+        // BaseCache::CachePort just has a BaseCache *; this function
+        // lets us get back the type info we lost when we stored the
+        // cache pointer there.
+        Cache<TagStore,Coherence> *myCache() {
+            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        }
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvFunctional(PacketPtr pkt);
+    };
+
+    class MemSidePort : public CachePort
+    {
+      public:
+        MemSidePort(const std::string &_name,
+                    Cache<TagStore,Coherence> *_cache);
+
+        // BaseCache::CachePort just has a BaseCache *; this function
+        // lets us get back the type info we lost when we stored the
+        // cache pointer there.
+        Cache<TagStore,Coherence> *myCache() {
+            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        }
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvFunctional(PacketPtr pkt);
+    };
 
     /** Tag and data Storage */
     TagStore *tags;
@@ -128,12 +169,7 @@ class Cache : public BaseCache
     /** Instantiates a basic cache object. */
     Cache(const std::string &_name, Params &params);
 
-    virtual bool doTimingAccess(PacketPtr pkt, CachePort *cachePort,
-                        bool isCpuSide);
-
-    virtual Tick doAtomicAccess(PacketPtr pkt, bool isCpuSide);
-
-    virtual void doFunctionalAccess(PacketPtr pkt, bool isCpuSide);
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void recvStatusChange(Port::Status status, bool isCpuSide);
 
