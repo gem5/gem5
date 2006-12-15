@@ -42,6 +42,7 @@
 #include <inttypes.h>
 
 #include "base/range.hh"
+#include "base/range_map.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -67,7 +68,7 @@ class Bus : public MemObject
         int portId;
         Range<Addr> range;
     };
-    std::vector<DevMap> portList;
+    range_map<Addr, int> portMap;
     AddrRangeList defaultRange;
     std::vector<DevMap> portSnoopList;
 

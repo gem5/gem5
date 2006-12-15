@@ -260,19 +260,12 @@ Bus::findPort(Addr addr, int id)
 {
     /* An interval tree would be a better way to do this. --ali. */
     int dest_id = -1;
-    int i = 0;
-    bool found = false;
     AddrRangeIter iter;
+    range_map<Addr,int>::iterator i;
 
-    while (i < portList.size() && !found)
-    {
-        if (portList[i].range == addr) {
-            dest_id = portList[i].portId;
-            found = true;
-            DPRINTF(Bus, "  found addr %#llx on device %d\n", addr, dest_id);
-        }
-        i++;
-    }
+    i = portMap.find(RangeSize(addr,1));
+    if (i != portMap.end())
+        dest_id = i->second;
 
     // Check if this matches the default range
     if (dest_id == -1) {
@@ -463,13 +456,13 @@ Bus::recvStatusChange(Port::Status status, int id)
 
         assert((id < interfaces.size() && id >= 0) || id == defaultId);
         Port *port = interfaces[id];
-        std::vector<DevMap>::iterator portIter;
+        range_map<Addr,int>::iterator portIter;
         std::vector<DevMap>::iterator snoopIter;
 
         // Clean out any previously existent ids
-        for (portIter = portList.begin(); portIter != portList.end(); ) {
-            if (portIter->portId == id)
-                portIter = portList.erase(portIter);
+        for (portIter = portMap.begin(); portIter != portMap.end(); ) {
+            if (portIter->second == id)
+                portMap.erase(portIter++);
             else
                 portIter++;
         }
@@ -495,16 +488,14 @@ Bus::recvStatusChange(Port::Status status, int id)
         }
 
         for(iter = ranges.begin(); iter != ranges.end(); iter++) {
-            DevMap dm;
-            dm.portId = id;
-            dm.range = *iter;
-
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
-                    dm.range.start, dm.range.end, id);
-            portList.push_back(dm);
+                    iter->start, iter->end, id);
+            if (portMap.insert(*iter, id) == portMap.end())
+                panic("Two devices with same range\n");
+
         }
     }
-    DPRINTF(MMU, "port list has %d entries\n", portList.size());
+    DPRINTF(MMU, "port list has %d entries\n", portMap.size());
 
     // tell all our peers that our address range has changed.
     // Don't tell the device that caused this change, it already knows
@@ -519,7 +510,8 @@ Bus::recvStatusChange(Port::Status status, int id)
 void
 Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
 {
-    std::vector<DevMap>::iterator portIter;
+    std::vector<DevMap>::iterator snoopIter;
+    range_map<Addr,int>::iterator portIter;
     AddrRangeIter dflt_iter;
     bool subset;
 
@@ -534,37 +526,37 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
         DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
-    for (portIter = portList.begin(); portIter != portList.end(); portIter++) {
+    for (portIter = portMap.begin(); portIter != portMap.end(); portIter++) {
         subset = false;
         for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
                 dflt_iter++) {
-            if ((portIter->range.start < dflt_iter->start &&
-                portIter->range.end >= dflt_iter->start) ||
-               (portIter->range.start < dflt_iter->end &&
-                portIter->range.end >= dflt_iter->end))
+            if ((portIter->first.start < dflt_iter->start &&
+                portIter->first.end >= dflt_iter->start) ||
+               (portIter->first.start < dflt_iter->end &&
+                portIter->first.end >= dflt_iter->end))
                 fatal("Devices can not set ranges that itersect the default set\
                         but are not a subset of the default set.\n");
-            if (portIter->range.start >= dflt_iter->start &&
-                portIter->range.end <= dflt_iter->end) {
+            if (portIter->first.start >= dflt_iter->start &&
+                portIter->first.end <= dflt_iter->end) {
                 subset = true;
                 DPRINTF(BusAddrRanges, "  -- %#llx : %#llx is a SUBSET\n",
-                    portIter->range.start, portIter->range.end);
+                    portIter->first.start, portIter->first.end);
             }
         }
-        if (portIter->portId != id && !subset) {
-            resp.push_back(portIter->range);
+        if (portIter->second != id && !subset) {
+            resp.push_back(portIter->first);
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
-                    portIter->range.start, portIter->range.end);
+                    portIter->first.start, portIter->first.end);
         }
     }
 
-    for (portIter = portSnoopList.begin();
-         portIter != portSnoopList.end(); portIter++)
+    for (snoopIter = portSnoopList.begin();
+         snoopIter != portSnoopList.end(); snoopIter++)
     {
-        if (portIter->portId != id) {
-            snoop.push_back(portIter->range);
+        if (snoopIter->portId != id) {
+            snoop.push_back(snoopIter->range);
             DPRINTF(BusAddrRanges, "  -- Snoop: %#llx : %#llx\n",
-                    portIter->range.start, portIter->range.end);
+                    snoopIter->range.start, snoopIter->range.end);
             //@todo We need to properly insert snoop ranges
             //not overlapping the ranges (multiple)
         }
