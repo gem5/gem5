@@ -53,7 +53,7 @@ using namespace TheISA;
 TsunamiPChip::TsunamiPChip(Params *p)
 : BasicPioDevice(p)
 {
-    pioSize = 0xfff;
+    pioSize = 0x1000;
 
     for (int i = 0; i < 4; i++) {
         wsba[i] = 0;

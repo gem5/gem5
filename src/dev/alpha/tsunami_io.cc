@@ -430,7 +430,7 @@ TsunamiIO::TsunamiIO(Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
       rtc(p->name + ".rtc", p->tsunami, p->frequency)
 {
-    pioSize = 0xff;
+    pioSize = 0x100;
 
     // set the back pointer from tsunami to myself
     tsunami->io = this;

@@ -92,7 +92,7 @@ class FrontEnd
         /** Returns the address ranges of this device. */
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,0)); }
 
         /** Timing version of receive.  Handles setting fetch to the
          * proper status to start fetching. */

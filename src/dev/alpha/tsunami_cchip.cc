@@ -57,7 +57,7 @@ using namespace TheISA;
 TsunamiCChip::TsunamiCChip(Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami)
 {
-    pioSize = 0xfffffff;
+    pioSize = 0x10000000;
 
     drir = 0;
     ipint = 0;

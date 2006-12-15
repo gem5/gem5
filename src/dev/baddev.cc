@@ -49,7 +49,7 @@ using namespace TheISA;
 BadDevice::BadDevice(Params *p)
     : BasicPioDevice(p), devname(p->device_name)
 {
-    pioSize = 0xf;
+    pioSize = 0x10;
 }
 
 Tick
