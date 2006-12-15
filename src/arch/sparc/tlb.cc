@@ -45,7 +45,7 @@ namespace SparcISA
 {
 
 TLB::TLB(const std::string &name, int s)
-    : SimObject(name), size(s)
+    : SimObject(name), size(s), usedEntries(0), cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
     if (size > 64)
@@ -78,6 +78,8 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
     MapIter i;
     TlbEntry *new_entry = NULL;
     int x;
+
+    cacheValid = false;
 
     DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d\n",
             va, PTE.paddr(), partition_id, context_id, (int)real);
@@ -194,6 +196,8 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     TlbRange tr;
     MapIter i;
 
+    cacheValid = false;
+
     // Assemble full address structure
     tr.va = va;
     tr.size = va + MachineBytes;
@@ -217,6 +221,7 @@ void
 TLB::demapContext(int partition_id, int context_id)
 {
     int x;
+    cacheValid = false;
     for (x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
             tlb[x].range.partitionId == partition_id) {
@@ -234,6 +239,7 @@ void
 TLB::demapAll(int partition_id)
 {
     int x;
+    cacheValid = false;
     for (x = 0; x < size; x++) {
         if (!tlb[x].pte.locked() && tlb[x].range.partitionId == partition_id) {
             tlb[x].valid = false;
@@ -250,6 +256,8 @@ void
 TLB::invalidateAll()
 {
     int x;
+    cacheValid = false;
+
     for (x = 0; x < size; x++) {
         tlb[x].valid = false;
     }
@@ -337,7 +345,7 @@ DTB::writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
     tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR, a);
 }
 
-    void
+void
 DTB::writeTagAccess(ThreadContext *tc, Addr va, int context)
 {
     TLB::writeTagAccess(tc, MISCREG_MMU_DTLB_TAG_ACCESS, va, context);
@@ -350,6 +358,29 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
 
+    Addr vaddr = req->getVaddr();
+    TlbEntry *e;
+
+    assert(req->getAsi() == ASI_IMPLICIT);
+
+    DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
+            vaddr, req->getSize());
+
+    // Be fast if we can!
+    if (cacheValid && cacheState == tlbdata) {
+        if (cacheEntry) {
+            if (cacheEntry->range.va < vaddr + sizeof(MachInst) &&
+                cacheEntry->range.va + cacheEntry->range.size >= vaddr) {
+                    req->setPaddr(cacheEntry->pte.paddr() & ~(cacheEntry->pte.size()-1) |
+                                  vaddr & cacheEntry->pte.size()-1 );
+                    return NoFault;
+            }
+        } else {
+            req->setPaddr(vaddr & PAddrImplMask);
+            return NoFault;
+        }
+    }
+
     bool hpriv = bits(tlbdata,0,0);
     bool red = bits(tlbdata,1,1);
     bool priv = bits(tlbdata,2,2);
@@ -359,20 +390,13 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     int part_id = bits(tlbdata,15,8);
     int tl = bits(tlbdata,18,16);
     int pri_context = bits(tlbdata,47,32);
-
-    Addr vaddr = req->getVaddr();
     int context;
     ContextType ct;
     int asi;
     bool real = false;
-    TlbEntry *e;
 
-    DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
-            vaddr, req->getSize());
     DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsuim:%d part_id: %#X\n",
            priv, hpriv, red, lsu_im, part_id);
-
-    assert(req->getAsi() == ASI_IMPLICIT);
 
     if (tl > 0) {
         asi = ASI_N;
@@ -385,12 +409,15 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     }
 
     if ( hpriv || red ) {
-        req->setPaddr(req->getVaddr() & PAddrImplMask);
+        cacheValid = true;
+        cacheState = tlbdata;
+        cacheEntry = NULL;
+        req->setPaddr(vaddr & PAddrImplMask);
         return NoFault;
     }
 
-    // If the asi is unaligned trap
-    if (vaddr & req->getSize()-1) {
+    // If the access is unaligned trap
+    if (vaddr & 0x3) {
         writeSfsr(tc, false, ct, false, OtherFault, asi);
         return new MemAddressNotAligned;
     }
@@ -404,7 +431,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     }
 
     if (!lsu_im) {
-        e = lookup(req->getVaddr(), part_id, true);
+        e = lookup(vaddr, part_id, true);
         real = true;
         context = 0;
     } else {
@@ -426,9 +453,14 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return new InstructionAccessException;
     }
 
+    // cache translation date for next translation
+    cacheValid = true;
+    cacheState = tlbdata;
+    cacheEntry = e;
+
     req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
-                  req->getVaddr() & e->pte.size()-1 );
-    DPRINTF(TLB, "TLB: %#X -> %#X\n", req->getVaddr(), req->getPaddr());
+                  vaddr & e->pte.size()-1 );
+    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
 }
 
@@ -439,8 +471,40 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
     /* @todo this could really use some profiling and fixing to make it faster! */
     uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
-
+    Addr vaddr = req->getVaddr();
+    Addr size = req->getSize();
+    ASI asi;
+    asi = (ASI)req->getAsi();
+    bool implicit = false;
     bool hpriv = bits(tlbdata,0,0);
+
+    DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
+            vaddr, size, asi);
+
+    if (asi == ASI_IMPLICIT)
+        implicit = true;
+
+    if (hpriv && implicit) {
+        req->setPaddr(vaddr & PAddrImplMask);
+        return NoFault;
+    }
+
+    // Be fast if we can!
+    if (cacheValid &&  cacheState == tlbdata) {
+        if (cacheEntry[0] && cacheAsi[0] == asi && cacheEntry[0]->range.va < vaddr + size &&
+            cacheEntry[0]->range.va + cacheEntry[0]->range.size >= vaddr) {
+                req->setPaddr(cacheEntry[0]->pte.paddr() & ~(cacheEntry[0]->pte.size()-1) |
+                              vaddr & cacheEntry[0]->pte.size()-1 );
+                return NoFault;
+        }
+        if (cacheEntry[1] && cacheAsi[1] == asi && cacheEntry[1]->range.va < vaddr + size &&
+            cacheEntry[1]->range.va + cacheEntry[1]->range.size >= vaddr) {
+                req->setPaddr(cacheEntry[1]->pte.paddr() & ~(cacheEntry[1]->pte.size()-1) |
+                              vaddr & cacheEntry[1]->pte.size()-1 );
+                return NoFault;
+        }
+    }
+
     bool red = bits(tlbdata,1,1);
     bool priv = bits(tlbdata,2,2);
     bool addr_mask = bits(tlbdata,3,3);
@@ -451,23 +515,14 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     int pri_context = bits(tlbdata,47,32);
     int sec_context = bits(tlbdata,47,32);
 
-    bool implicit = false;
     bool real = false;
-    Addr vaddr = req->getVaddr();
-    Addr size = req->getSize();
     ContextType ct = Primary;
     int context = 0;
-    ASI asi;
 
     TlbEntry *e;
 
-    asi = (ASI)req->getAsi();
-    DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
-            vaddr, size, asi);
     DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsudm:%d part_id: %#X\n",
            priv, hpriv, red, lsu_dm, part_id);
-    if (asi == ASI_IMPLICIT)
-        implicit = true;
 
     if (implicit) {
         if (tl > 0) {
@@ -562,11 +617,11 @@ continueDtbFlow:
     };
 
     if (hpriv && (implicit || (!AsiIsAsIfUser(asi) && !AsiIsReal(asi)))) {
-        req->setPaddr(req->getVaddr() & PAddrImplMask);
+        req->setPaddr(vaddr & PAddrImplMask);
         return NoFault;
     }
 
-    e = lookup(req->getVaddr(), part_id, real, context);
+    e = lookup(vaddr, part_id, real, context);
 
     if (e == NULL || !e->valid) {
         tc->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS,
@@ -599,9 +654,21 @@ continueDtbFlow:
         return new DataAccessException;
     }
 
+    // cache translation date for next translation
+    cacheValid = true;
+    cacheState = tlbdata;
+    if (cacheEntry[0] != e && cacheEntry[1] != e) {
+        cacheEntry[1] = cacheEntry[0];
+        cacheEntry[0] = e;
+        cacheAsi[1] = cacheAsi[0];
+        cacheAsi[0] = asi;
+        if (implicit)
+            cacheAsi[0] = (ASI)0;
+    }
+
     req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
-                  req->getVaddr() & e->pte.size()-1);
-    DPRINTF(TLB, "TLB: %#X -> %#X\n", req->getVaddr(), req->getPaddr());
+                  vaddr & e->pte.size()-1);
+    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
     /** Normal flow ends here. */
 
@@ -773,8 +840,6 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         data = mbits(tsbtemp,63,13);
         data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
             mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
-        warn("base addr: %#X tag access: %#X page size: %#X tsb size: %#X\n",
-                bits(tsbtemp,63,13), temp, bits(cnftemp,2,0), bits(tsbtemp,3,0));
         pkt->set(data);
         break;
       case ASI_DMMU_TSB_PS1_PTR_REG:

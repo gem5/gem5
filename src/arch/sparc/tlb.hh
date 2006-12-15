@@ -31,6 +31,7 @@
 #ifndef __ARCH_SPARC_TLB_HH__
 #define __ARCH_SPARC_TLB_HH__
 
+#include "arch/sparc/asi.hh"
 #include "arch/sparc/tlb_map.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
@@ -53,6 +54,9 @@ class TLB : public SimObject
 
     int size;
     int usedEntries;
+
+    uint64_t cacheState;
+    bool cacheValid;
 
     enum FaultTypes {
         OtherFault = 0,
@@ -131,6 +135,7 @@ class ITB : public TLB
   public:
     ITB(const std::string &name, int size) : TLB(name, size)
     {
+        cacheEntry = NULL;
     }
 
     Fault translate(RequestPtr &req, ThreadContext *tc);
@@ -138,6 +143,7 @@ class ITB : public TLB
     void writeSfsr(ThreadContext *tc, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
     void writeTagAccess(ThreadContext *tc, Addr va, int context);
+    TlbEntry *cacheEntry;
     friend class DTB;
 };
 
@@ -146,6 +152,8 @@ class DTB : public TLB
   public:
     DTB(const std::string &name, int size) : TLB(name, size)
     {
+        cacheEntry[0] = NULL;
+        cacheEntry[1] = NULL;
     }
 
     Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
@@ -157,7 +165,8 @@ class DTB : public TLB
             bool se, FaultTypes ft, int asi);
     void writeTagAccess(ThreadContext *tc, Addr va, int context);
 
-
+    TlbEntry *cacheEntry[2];
+    ASI cacheAsi[2];
 };
 
 }
