@@ -56,74 +56,6 @@
 bool SIGNAL_NACK_HACK;
 
 template<class TagStore, class Coherence>
-bool
-Cache<TagStore,Coherence>::
-doTimingAccess(PacketPtr pkt, CachePort *cachePort, bool isCpuSide)
-{
-    if (isCpuSide)
-    {
-        if (pkt->isWrite() && (pkt->req->isLocked())) {
-            pkt->req->setScResult(1);
-        }
-        access(pkt);
-
-    }
-    else
-    {
-        if (pkt->isResponse())
-            handleResponse(pkt);
-        else {
-            //Check if we should do the snoop
-            if (pkt->flags & SNOOP_COMMIT)
-                snoop(pkt);
-        }
-    }
-    return true;
-}
-
-template<class TagStore, class Coherence>
-Tick
-Cache<TagStore,Coherence>::
-doAtomicAccess(PacketPtr pkt, bool isCpuSide)
-{
-    if (isCpuSide)
-    {
-        probe(pkt, true, NULL);
-        //TEMP ALWAYS SUCCES FOR NOW
-        pkt->result = Packet::Success;
-    }
-    else
-    {
-        if (pkt->isResponse())
-            handleResponse(pkt);
-        else
-            return snoopProbe(pkt);
-    }
-    //Fix this timing info
-    return hitLatency;
-}
-
-template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::
-doFunctionalAccess(PacketPtr pkt, bool isCpuSide)
-{
-    if (isCpuSide)
-    {
-        //TEMP USE CPU?THREAD 0 0
-        pkt->req->setThreadContext(0,0);
-
-        probe(pkt, false, memSidePort);
-        //TEMP ALWAYS SUCCESFUL FOR NOW
-        pkt->result = Packet::Success;
-    }
-    else
-    {
-            probe(pkt, false, cpuSidePort);
-    }
-}
-
-template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::
 recvStatusChange(Port::Status status, bool isCpuSide)
@@ -725,5 +657,157 @@ Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
                     pkt->cmdString(), blk_addr, new_state);
     tags->handleSnoop(blk, new_state);
     return 0;
+}
+
+template<class TagStore, class Coherence>
+Port *
+Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "")
+    {
+        if (cpuSidePort == NULL) {
+            cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
+            sendEvent = new CacheEvent(cpuSidePort, true);
+        }
+        return cpuSidePort;
+    }
+    else if (if_name == "functional")
+    {
+        return new CpuSidePort(name() + "-cpu_side_port", this);
+    }
+    else if (if_name == "cpu_side")
+    {
+        if (cpuSidePort == NULL) {
+            cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
+            sendEvent = new CacheEvent(cpuSidePort, true);
+        }
+        return cpuSidePort;
+    }
+    else if (if_name == "mem_side")
+    {
+        if (memSidePort != NULL)
+            panic("Already have a mem side for this cache\n");
+        memSidePort = new MemSidePort(name() + "-mem_side_port", this);
+        memSendEvent = new CacheEvent(memSidePort, true);
+        return memSidePort;
+    }
+    else panic("Port name %s unrecognized\n", if_name);
+}
+
+
+template<class TagStore, class Coherence>
+bool
+Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
+{
+    if (!pkt->req->isUncacheable()
+        && pkt->isInvalidate()
+        && !pkt->isRead() && !pkt->isWrite()) {
+        //Upgrade or Invalidate
+        //Look into what happens if two slave caches on bus
+        DPRINTF(Cache, "%s %x ?\n", pkt->cmdString(), pkt->getAddr());
+
+        assert(!(pkt->flags & SATISFIED));
+        pkt->flags |= SATISFIED;
+        //Invalidates/Upgrades need no response if they get the bus
+        return true;
+    }
+
+    if (pkt->isRequest() && blocked)
+    {
+        DPRINTF(Cache,"Scheduling a retry while blocked\n");
+        mustSendRetry = true;
+        return false;
+    }
+
+    if (pkt->isWrite() && (pkt->req->isLocked())) {
+        pkt->req->setScResult(1);
+    }
+    myCache()->access(pkt);
+    return true;
+}
+
+template<class TagStore, class Coherence>
+Tick
+Cache<TagStore,Coherence>::CpuSidePort::recvAtomic(PacketPtr pkt)
+{
+    myCache()->probe(pkt, true, NULL);
+    //TEMP ALWAYS SUCCES FOR NOW
+    pkt->result = Packet::Success;
+    //Fix this timing info
+    return myCache()->hitLatency;
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::CpuSidePort::recvFunctional(PacketPtr pkt)
+{
+    if (checkFunctional(pkt)) {
+        //TEMP USE CPU?THREAD 0 0
+        pkt->req->setThreadContext(0,0);
+
+        myCache()->probe(pkt, false, cache->memSidePort);
+        //TEMP ALWAYS SUCCESFUL FOR NOW
+        pkt->result = Packet::Success;
+    }
+}
+
+
+template<class TagStore, class Coherence>
+bool
+Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
+{
+    if (pkt->isRequest() && blocked)
+    {
+        DPRINTF(Cache,"Scheduling a retry while blocked\n");
+        mustSendRetry = true;
+        return false;
+    }
+
+    if (pkt->isResponse())
+        myCache()->handleResponse(pkt);
+    else {
+        //Check if we should do the snoop
+        if (pkt->flags & SNOOP_COMMIT)
+            myCache()->snoop(pkt);
+    }
+    return true;
+}
+
+template<class TagStore, class Coherence>
+Tick
+Cache<TagStore,Coherence>::MemSidePort::recvAtomic(PacketPtr pkt)
+{
+    if (pkt->isResponse())
+        myCache()->handleResponse(pkt);
+    else
+        return myCache()->snoopProbe(pkt);
+    //Fix this timing info
+    return myCache()->hitLatency;
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::MemSidePort::recvFunctional(PacketPtr pkt)
+{
+    if (checkFunctional(pkt)) {
+        myCache()->probe(pkt, false, cache->cpuSidePort);
+    }
+}
+
+
+template<class TagStore, class Coherence>
+Cache<TagStore,Coherence>::
+CpuSidePort::CpuSidePort(const std::string &_name,
+                         Cache<TagStore,Coherence> *_cache)
+    : BaseCache::CachePort(_name, _cache, true)
+{
+}
+
+template<class TagStore, class Coherence>
+Cache<TagStore,Coherence>::
+MemSidePort::MemSidePort(const std::string &_name,
+                         Cache<TagStore,Coherence> *_cache)
+    : BaseCache::CachePort(_name, _cache, false)
+{
 }
 

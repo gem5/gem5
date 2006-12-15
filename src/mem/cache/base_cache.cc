@@ -51,6 +51,7 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
     //memSidePort = NULL;
 }
 
+
 void
 BaseCache::CachePort::recvStatusChange(Port::Status status)
 {
@@ -68,38 +69,6 @@ int
 BaseCache::CachePort::deviceBlockSize()
 {
     return cache->getBlockSize();
-}
-
-bool
-BaseCache::CachePort::recvTiming(PacketPtr pkt)
-{
-    if (isCpuSide
-        && !pkt->req->isUncacheable()
-        && pkt->isInvalidate()
-        && !pkt->isRead() && !pkt->isWrite()) {
-        //Upgrade or Invalidate
-        //Look into what happens if two slave caches on bus
-        DPRINTF(Cache, "%s %x ?\n", pkt->cmdString(), pkt->getAddr());
-
-        assert(!(pkt->flags & SATISFIED));
-        pkt->flags |= SATISFIED;
-        //Invalidates/Upgrades need no response if they get the bus
-        return true;
-    }
-
-    if (pkt->isRequest() && blocked)
-    {
-        DPRINTF(Cache,"Scheduling a retry while blocked\n");
-        mustSendRetry = true;
-        return false;
-    }
-    return cache->doTimingAccess(pkt, this, isCpuSide);
-}
-
-Tick
-BaseCache::CachePort::recvAtomic(PacketPtr pkt)
-{
-    return cache->doAtomicAccess(pkt, isCpuSide);
 }
 
 bool
@@ -136,14 +105,6 @@ BaseCache::CachePort::checkFunctional(PacketPtr pkt)
         j++;
     }
     return notDone;
-}
-
-void
-BaseCache::CachePort::recvFunctional(PacketPtr pkt)
-{
-    bool notDone = checkFunctional(pkt);
-    if (notDone)
-        cache->doFunctionalAccess(pkt, isCpuSide);
 }
 
 void
@@ -396,40 +357,6 @@ const char *
 BaseCache::CacheEvent::description()
 {
     return "timing event\n";
-}
-
-Port*
-BaseCache::getPort(const std::string &if_name, int idx)
-{
-    if (if_name == "")
-    {
-        if(cpuSidePort == NULL) {
-            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
-            sendEvent = new CacheEvent(cpuSidePort, true);
-        }
-        return cpuSidePort;
-    }
-    else if (if_name == "functional")
-    {
-        return new CachePort(name() + "-cpu_side_port", this, true);
-    }
-    else if (if_name == "cpu_side")
-    {
-        if(cpuSidePort == NULL) {
-            cpuSidePort = new CachePort(name() + "-cpu_side_port", this, true);
-            sendEvent = new CacheEvent(cpuSidePort, true);
-        }
-        return cpuSidePort;
-    }
-    else if (if_name == "mem_side")
-    {
-        if (memSidePort != NULL)
-            panic("Already have a mem side for this cache\n");
-        memSidePort = new CachePort(name() + "-mem_side_port", this, false);
-        memSendEvent = new CacheEvent(memSidePort, true);
-        return memSidePort;
-    }
-    else panic("Port name %s unrecognized\n", if_name);
 }
 
 void
