@@ -1,0 +1,6 @@
+I removed the reference outputs for this program because it's taking
+way too long... over an hour for simple-atomic and over 19 hrs for
+o3-timing.  We need to find a shorter input if we want to keep this
+in the regressions.
+
+Steve

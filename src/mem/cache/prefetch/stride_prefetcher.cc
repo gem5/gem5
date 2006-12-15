@@ -38,17 +38,11 @@
 
 #include "mem/cache/tags/lru.hh"
 
-#include "base/compression/null_compression.hh"
-
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
-
 #include "mem/cache/prefetch/stride_prefetcher.hh"
 
 // Template Instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-template class StridePrefetcher<CacheTags<LRU,NullCompression>, MissQueue>;
-template class StridePrefetcher<CacheTags<LRU,NullCompression>, BlockingBuffer>;
+template class StridePrefetcher<CacheTags<LRU> >;
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

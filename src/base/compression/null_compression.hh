@@ -38,41 +38,23 @@
  */
 
 #include "base/misc.hh" // for fatal()
-#include "sim/host.hh"
+#include "base/compression/base.hh"
 
 
 /**
  * A dummy compression class to use when no data compression is desired.
  */
-class NullCompression
+class NullCompression : public CompressionAlgorithm
 {
   public:
-    /**
-     * Uncompress the data, causes a fatal since no data should be compressed.
-     * @param dest The output buffer.
-     * @param src  The compressed data.
-     * @param size The number of bytes in src.
-     *
-     * @retval The size of the uncompressed data.
-     */
-    static int uncompress(uint8_t * dest, uint8_t *src, int size)
+    int uncompress(uint8_t * dest, uint8_t *src, int size)
     {
         fatal("Can't uncompress data");
     }
 
-    /**
-     * Compress the data, just returns the source data.
-     * @param dest The output buffer.
-     * @param src  The data to be compressed.
-     * @param size The number of bytes in src.
-     *
-     * @retval The size of the compressed data.
-     */
-
-    static int compress(uint8_t *dest, uint8_t *src, int size)
+    int compress(uint8_t *dest, uint8_t *src, int size)
     {
-        memcpy(dest,src,size);
-        return size;
+        fatal("Can't compress data");
     }
 };
 

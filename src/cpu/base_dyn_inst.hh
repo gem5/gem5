@@ -406,14 +406,15 @@ class BaseDynInst : public FastAlloc, public RefCounted
     double readDoubleResult() { return instResult.dbl; }
 
     /** Records an integer register being set to a value. */
-    void setIntReg(const StaticInst *si, int idx, uint64_t val)
+    void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         if (recordResult)
             instResult.integer = val;
     }
 
     /** Records an fp register being set to a value. */
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val, int width)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
+                            int width)
     {
         if (recordResult) {
             if (width == 32)
@@ -426,21 +427,22 @@ class BaseDynInst : public FastAlloc, public RefCounted
     }
 
     /** Records an fp register being set to a value. */
-    void setFloatReg(const StaticInst *si, int idx, FloatReg val)
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         if (recordResult)
             instResult.dbl = (double)val;
     }
 
     /** Records an fp register being set to an integer value. */
-    void setFloatRegBits(const StaticInst *si, int idx, uint64_t val, int width)
+    void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val,
+                                int width)
     {
         if (recordResult)
             instResult.integer = val;
     }
 
     /** Records an fp register being set to an integer value. */
-    void setFloatRegBits(const StaticInst *si, int idx, uint64_t val)
+    void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val)
     {
         if (recordResult)
             instResult.integer = val;
