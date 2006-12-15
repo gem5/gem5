@@ -348,13 +348,18 @@ DTB::writeTagAccess(ThreadContext *tc, Addr va, int context)
 Fault
 ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
-    uint64_t hpstate = tc->readMiscReg(MISCREG_HPSTATE);
-    uint64_t pstate = tc->readMiscReg(MISCREG_PSTATE);
-    bool lsuIm = tc->readMiscReg(MISCREG_MMU_LSU_CTRL) >> 2 & 0x1;
-    uint64_t tl = tc->readMiscReg(MISCREG_TL);
-    uint64_t part_id = tc->readMiscReg(MISCREG_MMU_PART_ID);
-    bool addr_mask = pstate >> 3 & 0x1;
-    bool priv = pstate >> 2 & 0x1;
+    uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
+
+    bool hpriv = bits(tlbdata,0,0);
+    bool red = bits(tlbdata,1,1);
+    bool priv = bits(tlbdata,2,2);
+    bool addr_mask = bits(tlbdata,3,3);
+    bool lsu_im = bits(tlbdata,4,4);
+
+    int part_id = bits(tlbdata,15,8);
+    int tl = bits(tlbdata,18,16);
+    int pri_context = bits(tlbdata,47,32);
+
     Addr vaddr = req->getVaddr();
     int context;
     ContextType ct;
@@ -364,8 +369,8 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 
     DPRINTF(TLB, "TLB: ITB Request to translate va=%#x size=%d\n",
             vaddr, req->getSize());
-    DPRINTF(TLB, "TLB: pstate: %#X hpstate: %#X lsudm: %#X part_id: %#X\n",
-           pstate, hpstate, lsuIm, part_id);
+    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsuim:%d part_id: %#X\n",
+           priv, hpriv, red, lsu_im, part_id);
 
     assert(req->getAsi() == ASI_IMPLICIT);
 
@@ -376,10 +381,10 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     } else {
         asi = ASI_P;
         ct = Primary;
-        context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
+        context = pri_context;
     }
 
-    if ( hpstate >> 2 & 0x1 || hpstate >> 5 & 0x1 ) {
+    if ( hpriv || red ) {
         req->setPaddr(req->getVaddr() & PAddrImplMask);
         return NoFault;
     }
@@ -398,7 +403,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return new InstructionAccessException;
     }
 
-    if (!lsuIm) {
+    if (!lsu_im) {
         e = lookup(req->getVaddr(), part_id, true);
         real = true;
         context = 0;
@@ -433,15 +438,19 @@ Fault
 DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
     /* @todo this could really use some profiling and fixing to make it faster! */
-    uint64_t hpstate = tc->readMiscReg(MISCREG_HPSTATE);
-    uint64_t pstate = tc->readMiscReg(MISCREG_PSTATE);
-    bool lsuDm = tc->readMiscReg(MISCREG_MMU_LSU_CTRL) >> 3 & 0x1;
-    uint64_t tl = tc->readMiscReg(MISCREG_TL);
-    uint64_t part_id = tc->readMiscReg(MISCREG_MMU_PART_ID);
-    bool hpriv = hpstate >> 2 & 0x1;
-    bool red = hpstate >> 5 >> 0x1;
-    bool addr_mask = pstate >> 3 & 0x1;
-    bool priv = pstate >> 2 & 0x1;
+    uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
+
+    bool hpriv = bits(tlbdata,0,0);
+    bool red = bits(tlbdata,1,1);
+    bool priv = bits(tlbdata,2,2);
+    bool addr_mask = bits(tlbdata,3,3);
+    bool lsu_dm = bits(tlbdata,5,5);
+
+    int part_id = bits(tlbdata,15,8);
+    int tl = bits(tlbdata,18,16);
+    int pri_context = bits(tlbdata,47,32);
+    int sec_context = bits(tlbdata,47,32);
+
     bool implicit = false;
     bool real = false;
     Addr vaddr = req->getVaddr();
@@ -455,8 +464,8 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     asi = (ASI)req->getAsi();
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
-    DPRINTF(TLB, "TLB: pstate: %#X hpstate: %#X lsudm: %#X part_id: %#X\n",
-           pstate, hpstate, lsuDm, part_id);
+    DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsudm:%d part_id: %#X\n",
+           priv, hpriv, red, lsu_dm, part_id);
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
@@ -468,7 +477,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         } else {
             asi = ASI_P;
             ct = Primary;
-            context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
+            context = pri_context;
         }
     } else if (!hpriv && !red) {
         if (tl > 0 || AsiIsNucleus(asi)) {
@@ -476,9 +485,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             context = 0;
         } else if (AsiIsSecondary(asi)) {
             ct = Secondary;
-            context = tc->readMiscReg(MISCREG_MMU_S_CONTEXT);
+            context = sec_context;
         } else {
-            context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
+            context = pri_context;
             ct = Primary; //???
         }
 
@@ -496,7 +505,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     } else if (hpriv) {
         if (asi == ASI_P) {
             ct = Primary;
-            context = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
+            context = pri_context;
             goto continueDtbFlow;
         }
     }
@@ -547,7 +556,7 @@ continueDtbFlow:
     }
 
 
-    if ((!lsuDm && !hpriv) || AsiIsReal(asi)) {
+    if ((!lsu_dm && !hpriv) || AsiIsReal(asi)) {
         real = true;
         context = 0;
     };
@@ -640,6 +649,8 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
+    uint64_t temp, data;
+    uint64_t tsbtemp, cnftemp;
 
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
          (uint32_t)pkt->req->getAsi(), pkt->getAddr());
@@ -723,6 +734,10 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_IMMU:
         switch (va) {
+          case 0x0:
+            temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+            pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
             break;
@@ -732,6 +747,10 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_DMMU:
         switch (va) {
+          case 0x0:
+            temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+            pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
             break;
@@ -742,6 +761,39 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 goto doMmuReadError;
         }
         break;
+      case ASI_DMMU_TSB_PS0_PTR_REG:
+        temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+        if (bits(temp,12,0) == 0) {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG);
+        } else {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG);
+        }
+        data = mbits(tsbtemp,63,13);
+        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
+        warn("base addr: %#X tag access: %#X page size: %#X tsb size: %#X\n",
+                bits(tsbtemp,63,13), temp, bits(cnftemp,2,0), bits(tsbtemp,3,0));
+        pkt->set(data);
+        break;
+      case ASI_DMMU_TSB_PS1_PTR_REG:
+        temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+        if (bits(temp,12,0) == 0) {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG);
+        } else {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG);
+        }
+        data = mbits(tsbtemp,63,13);
+        if (bits(tsbtemp,12,12))
+            data |= ULL(1) << (13+bits(tsbtemp,3,0));
+        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
+        pkt->set(data);
+        break;
+
       default:
 doMmuReadError:
         panic("need to impl DTB::doMmuRegRead() got asi=%#x, va=%#x\n",

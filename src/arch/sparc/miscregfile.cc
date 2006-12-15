@@ -314,16 +314,17 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
         // tick and stick are aliased to each other in niagra
-      case MISCREG_TICK:
+        // well store the tick data in stick and the interrupt bit in tick
       case MISCREG_STICK:
+      case MISCREG_TICK:
       case MISCREG_PRIVTICK:
         // I'm not sure why legion ignores the lowest two bits, but we'll go
         // with it
         // change from curCycle() to instCount() until we're done with legion
-        DPRINTFN("Instruction Count when STICK read: %#X\n",
-                tc->getCpuPtr()->instCount());
-        return mbits(tc->getCpuPtr()->instCount() - (tick &
-                    mask(63)),62,2) | mbits(tick,63,63) ;
+        DPRINTFN("Instruction Count when TICK read: %#X stick=%#X\n",
+                tc->getCpuPtr()->instCount(), stick);
+        return mbits(tc->getCpuPtr()->instCount() + (int32_t)stick,62,2) |
+               mbits(tick,63,63);
       case MISCREG_FPRS:
         warn("FPRS register read and FPU stuff not really implemented\n");
         return fprs;
@@ -601,13 +602,14 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
-    const uint64_t Bit64 = (1ULL << 63);
     switch (miscReg) {
       case MISCREG_STICK:
       case MISCREG_TICK:
-        // change from curCycle() to instCount() until we're done with legion
-        tick = tc->getCpuPtr()->instCount() - val  & ~Bit64;
-        tick |= val & Bit64;
+        // stick and tick are same thing on niagra
+        // use stick for offset and tick for holding intrrupt bit
+        stick = mbits(val,62,0) - tc->getCpuPtr()->instCount();
+        tick = mbits(val,63,63);
+        DPRINTFN("Writing TICK=%#X\n", val);
         break;
       case MISCREG_FPRS:
         //Configure the fpu based on the fprs

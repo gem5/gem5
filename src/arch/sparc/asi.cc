@@ -185,6 +185,7 @@ namespace SparcISA
     bool AsiIsTwin(ASI asi)
     {
         return
+            (asi == ASI_QUAD_LDD) ||
             (asi == ASI_LDTX_AIUP) ||
             (asi == ASI_LDTX_AIUS) ||
             (asi == ASI_LDTX_REAL) ||
@@ -196,7 +197,8 @@ namespace SparcISA
             (asi == ASI_LDTX_P) ||
             (asi == ASI_LDTX_S) ||
             (asi == ASI_LDTX_PL) ||
-            (asi == ASI_LDTX_SL);
+            (asi == ASI_LDTX_SL) ||
+            (asi == ASI_LTX_L);
     }
 
     bool AsiIsPartialStore(ASI asi)
