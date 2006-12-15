@@ -36,7 +36,7 @@ class Tsunami(Platform):
     fake_uart3 = IsaFake(pio_addr=0x801fc0002e8)
     fake_uart4 = IsaFake(pio_addr=0x801fc0003f0)
 
-    fake_ppc = IsaFake(pio_addr=0x801fc0003bc)
+    fake_ppc = IsaFake(pio_addr=0x801fc0003bb)
 
     fake_OROM = IsaFake(pio_addr=0x800000a0000, pio_size=0x60000)
 

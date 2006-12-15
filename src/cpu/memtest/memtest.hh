@@ -116,7 +116,7 @@ class MemTest : public MemObject
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
             AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,-1)); }
+        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,0)); }
     };
 
     CpuPort cachePort;
