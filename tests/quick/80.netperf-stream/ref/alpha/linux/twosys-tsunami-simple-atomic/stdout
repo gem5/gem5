@@ -6,12 +6,9 @@ All Rights Reserved
 
 
 M5 compiled Nov 29 2006 16:48:25
-M5 started Fri Dec  1 01:07:49 2006
+M5 started Sat Dec  2 11:01:31 2006
 M5 executing on zed.eecs.umich.edu
-command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/long/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic tests/run.py long/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
-WTF
-9685900: testsys.sim_console: attach console 0
-3327958029: drivesys.sim_console: attach console 0
-Resetting stats at cycle 4100234765800!
-Resetting stats at cycle 4300235555268!
-Exiting @ tick 4300236341246 because checkpoint
+command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic tests/run.py quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+Resetting stats at cycle 4093398828306!
+Resetting stats at cycle 4293399617774!
+Exiting @ tick 4293400403752 because checkpoint

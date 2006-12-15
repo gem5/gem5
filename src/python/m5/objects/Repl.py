@@ -6,6 +6,6 @@ class Repl(SimObject):
 
 class GenRepl(Repl):
     type = 'GenRepl'
-    fresh_res = Param.Int("associativity")
-    num_pools = Param.Int("capacity in bytes")
-    pool_res = Param.Int("block size in bytes")
+    fresh_res = Param.Int("Fresh pool residency time")
+    num_pools = Param.Int("Number of priority pools")
+    pool_res = Param.Int("Pool residency time")

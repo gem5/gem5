@@ -514,6 +514,7 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readNextPC();
+    toCommit->branchMispredict[tid] = false;
 
     toCommit->includeSquashInst[tid] = false;
 
@@ -530,6 +531,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readPC();
+    toCommit->branchMispredict[tid] = false;
 
     // Must include the broadcasted SN in the squash.
     toCommit->includeSquashInst[tid] = true;
@@ -1291,7 +1293,8 @@ DefaultIEW<Impl>::executeInsts()
                 } else if (fault != NoFault) {
                     // If the instruction faulted, then we need to send it along to commit
                     // without the instruction completing.
-                    DPRINTF(IEW, "Store has fault! [sn:%lli]\n", inst->seqNum);
+                    DPRINTF(IEW, "Store has fault %s! [sn:%lli]\n",
+                            fault->name(), inst->seqNum);
 
                     // Send this instruction to commit, also make sure iew stage
                     // realizes there is activity.
@@ -1328,7 +1331,8 @@ DefaultIEW<Impl>::executeInsts()
         // instruction first, so the branch resolution order will be correct.
         unsigned tid = inst->threadNumber;
 
-        if (!fetchRedirect[tid]) {
+        if (!fetchRedirect[tid] ||
+            toCommit->squashedSeqNum[tid] > inst->seqNum) {
 
             if (inst->mispredicted()) {
                 fetchRedirect[tid] = true;
@@ -1350,8 +1354,6 @@ DefaultIEW<Impl>::executeInsts()
                     predictedNotTakenIncorrect++;
                 }
             } else if (ldstQueue.violation(tid)) {
-                fetchRedirect[tid] = true;
-
                 // If there was an ordering violation, then get the
                 // DynInst that caused the violation.  Note that this
                 // clears the violation signal.
@@ -1361,6 +1363,14 @@ DefaultIEW<Impl>::executeInsts()
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
                         "%#x, inst PC: %#x.  Addr is: %#x.\n",
                         violator->readPC(), inst->readPC(), inst->physEffAddr);
+
+                // Ensure the violating instruction is older than
+                // current squash
+                if (fetchRedirect[tid] &&
+                    violator->seqNum >= toCommit->squashedSeqNum[tid])
+                    continue;
+
+                fetchRedirect[tid] = true;
 
                 // Tell the instruction queue that a violation has occured.
                 instQueue.violation(inst, violator);

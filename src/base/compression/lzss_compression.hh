@@ -35,12 +35,12 @@
  * LZSSCompression declarations.
  */
 
-#include "sim/host.hh" // for uint8_t
+#include "base/compression/base.hh"
 
 /**
  * Simple LZSS compression scheme.
  */
-class LZSSCompression
+class LZSSCompression : public CompressionAlgorithm
 {
     /**
      * Finds the longest substring for the given offset.
