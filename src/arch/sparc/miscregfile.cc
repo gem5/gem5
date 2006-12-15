@@ -341,7 +341,6 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
       case MISCREG_SOFTINT:
       case MISCREG_TICK_CMPR:
       case MISCREG_STICK_CMPR:
-      case MISCREG_HPSTATE:
       case MISCREG_HINTP:
       case MISCREG_HTSTATE:
       case MISCREG_HTBA:
@@ -357,9 +356,16 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
+      case MISCREG_HPSTATE:
         return readFSRegWithEffect(miscReg, tc);
 #else
-        panic("Accessing Fullsystem register is SE mode\n");
+      case MISCREG_HPSTATE:
+        //HPSTATE is special because because sometimes in privilege checks for instructions
+        //it will read HPSTATE to make sure the priv. level is ok
+        //So, we'll just have to tell it it isn't, instead of panicing.
+        return 0;
+
+      panic("Accessing Fullsystem register %s in SE mode\n",getMiscRegName(miscReg));
 #endif
 
     }
@@ -633,7 +639,6 @@ void MiscRegFile::setRegWithEffect(int miscReg,
       case MISCREG_SOFTINT:
       case MISCREG_TICK_CMPR:
       case MISCREG_STICK_CMPR:
-      case MISCREG_HPSTATE:
       case MISCREG_HINTP:
       case MISCREG_HTSTATE:
       case MISCREG_HTBA:
@@ -649,10 +654,15 @@ void MiscRegFile::setRegWithEffect(int miscReg,
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
+      case MISCREG_HPSTATE:
         setFSRegWithEffect(miscReg, val, tc);
         return;
 #else
-        panic("Accessing Fullsystem register is SE mode\n");
+      case MISCREG_HPSTATE:
+        //HPSTATE is special because normal trap processing saves HPSTATE when
+        //it goes into a trap, and restores it when it returns.
+        return;
+      panic("Accessing Fullsystem register %s to %#x in SE mode\n", getMiscRegName(miscReg), val);
 #endif
     }
     setReg(miscReg, val);

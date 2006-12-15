@@ -57,7 +57,9 @@
 using namespace std;
 using namespace TheISA;
 
+#if THE_ISA == SPARC_ISA && FULL_SYSTEM
 static int diffcount = 0;
+#endif
 
 namespace Trace {
 SharedData *shared_data = NULL;

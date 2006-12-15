@@ -37,8 +37,10 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "base/misc.hh"
 #include "mem/packet.hh"
 
+class ThreadContext;
 
 namespace MipsISA
 {
@@ -47,7 +49,6 @@ handleIprRead(ThreadContext *xc, Packet *pkt)
 {
     panic("No implementation for handleIprRead in MIPS\n");
 }
-
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)
