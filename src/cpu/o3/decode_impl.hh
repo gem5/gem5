@@ -741,7 +741,7 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
 
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
-        if (inst->predTaken() && !inst->isControl()) {
+        if (inst->readPredTaken() && !inst->isControl()) {
             DPRINTF(Decode, "PredPC : %#x != NextPC: %#x\n",inst->predPC,
                     inst->nextPC + 4);
 
@@ -760,26 +760,29 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
         if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
             ++decodeBranchResolved;
 
-            if (inst->branchTarget() != inst->readPredTarg()) {
+            if (inst->branchTarget() != inst->readPredPC()) {
                 ++decodeBranchMispred;
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
 #if !ISA_HAS_DELAY_SLOT
                 squash(inst, inst->threadNumber);
-                inst->setPredTarg(inst->branchTarget());
+                Addr target = inst->branchTarget();
+                inst->setPredTarg(target, target + sizeof(TheISA::MachInst));
                 break;
 #else
                 // If mispredicted as taken, then ignore delay slot
                 // instruction... else keep delay slot and squash
                 // after it is sent to rename
-                if (inst->predTaken() && inst->isCondDelaySlot()) {
+                if (inst->readPredTaken() && inst->isCondDelaySlot()) {
                     DPRINTF(Decode, "[tid:%i]: Conditional delay slot inst."
                             "[sn:%i] PC %#x mispredicted as taken.\n", tid,
                             inst->seqNum, inst->PC);
                     bdelayDoneSeqNum[tid] = inst->seqNum;
                     squash(inst, inst->threadNumber);
-                    inst->setPredTarg(inst->branchTarget());
+                    Addr target = inst->branchTarget();
+                    inst->setPredTarg(target,
+                            target + sizeof(TheISA::MachInst));
                     break;
                 } else {
                     DPRINTF(Decode, "[tid:%i]: Misprediction detected at "
@@ -798,7 +801,9 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
         if (squashAfterDelaySlot[tid]) {
             assert(!inst->isSquashed());
             squash(squashInst[tid], squashInst[tid]->threadNumber);
-            squashInst[tid]->setPredTarg(squashInst[tid]->branchTarget());
+            Addr target = squashInst[tid]->branchTarget();
+            squashInst[tid]->setPredTarg(target,
+                    target + sizeof(TheISA::MachInst));
             assert(!inst->isSquashed());
             break;
         }
