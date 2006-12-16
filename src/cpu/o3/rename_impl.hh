@@ -44,6 +44,7 @@ DefaultRename<Impl>::DefaultRename(Params *params)
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
       resumeSerialize(false),
+      resumeUnblocking(false),
       numThreads(params->numberOfThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
 {
@@ -405,6 +406,9 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
         }
         slist_it++;
     }
+    resumeUnblocking = (skidBuffer[tid].size() != 0);
+    DPRINTF(Rename, "Resume unblocking set to %s\n",
+            resumeUnblocking ? "true" : "false");
 #else
     skidBuffer[tid].clear();
 #endif
@@ -494,6 +498,12 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
         if (resumeSerialize) {
             resumeSerialize = false;
             block(tid);
+            toDecode->renameUnblock[tid] = false;
+        }
+    } else if (renameStatus[tid] == Unblocking) {
+        if (resumeUnblocking) {
+            block(tid);
+            resumeUnblocking = false;
             toDecode->renameUnblock[tid] = false;
         }
     }
@@ -761,7 +771,17 @@ DefaultRename<Impl>::skidInsert(unsigned tid)
     }
 
     if (skidBuffer[tid].size() > skidBufferMax)
+    {
+        typename InstQueue::iterator it;
+        warn("Skidbuffer contents:\n");
+        for(it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++)
+        {
+            warn("[tid:%u]: %s [sn:%i].\n", tid,
+                    (*it)->staticInst->disassemble(inst->readPC()),
+                    (*it)->seqNum);
+        }
         panic("Skidbuffer Exceeded Max Size");
+    }
 }
 
 template <class Impl>
@@ -848,7 +868,10 @@ DefaultRename<Impl>::block(unsigned tid)
     // Only signal backwards to block if the previous stages do not think
     // rename is already blocked.
     if (renameStatus[tid] != Blocked) {
-        if (renameStatus[tid] != Unblocking) {
+        // If resumeUnblocking is set, we unblocked during the squash,
+        // but now we're have unblocking status. We need to tell earlier
+        // stages to block.
+        if (resumeUnblocking || renameStatus[tid] != Unblocking) {
             toDecode->renameBlock[tid] = true;
             toDecode->renameUnblock[tid] = false;
             wroteToTimeBuffer = true;
@@ -1264,18 +1287,23 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
     if (renameStatus[tid] == Squashing) {
         // Switch status to running if rename isn't being told to block or
         // squash this cycle.
-        if (!resumeSerialize) {
-            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
-                    tid);
-
-            renameStatus[tid] = Running;
-            return false;
-        } else {
+        if (resumeSerialize) {
             DPRINTF(Rename, "[tid:%u]: Done squashing, switching to serialize.\n",
                     tid);
 
             renameStatus[tid] = SerializeStall;
             return true;
+        } else if (resumeUnblocking) {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to unblocking.\n",
+                    tid);
+            renameStatus[tid] = Unblocking;
+            return true;
+        } else {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
+                    tid);
+
+            renameStatus[tid] = Running;
+            return false;
         }
     }
 
