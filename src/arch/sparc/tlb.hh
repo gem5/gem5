@@ -111,7 +111,7 @@ class TLB : public SimObject
     void writeSfsr(ThreadContext *tc, int reg, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
 
-    void TLB::clearUsedBits();
+    void clearUsedBits();
 
 
     void writeTagAccess(ThreadContext *tc, int reg, Addr va, int context);
