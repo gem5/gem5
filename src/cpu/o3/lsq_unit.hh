@@ -561,6 +561,12 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // Cast this to type T?
             data = storeQueue[store_idx].data >> shift_amt;
 
+            // When the data comes from the store queue entry, it's in host
+            // order. When it gets sent to the load, it needs to be in guest
+            // order so when the load converts it again, it ends up back
+            // in host order like the inst expects.
+            data = TheISA::htog(data);
+
             assert(!load_inst->memData);
             load_inst->memData = new uint8_t[64];
 
