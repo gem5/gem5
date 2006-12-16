@@ -601,8 +601,17 @@ LSQUnit<Impl>::writebackStores()
         TheISA::IntReg convertedData =
             TheISA::htog(storeQueue[storeWBIdx].data);
 
-        memcpy(inst->memData, (uint8_t *)&convertedData,
-               req->getSize());
+        //FIXME This is a hack to get SPARC working. It, along with endianness
+        //in the memory system in general, need to be straightened out more
+        //formally. The problem is that the data's endianness is swapped when
+        //it's in the 64 bit data field in the store queue. The data that you
+        //want won't start at the beginning of the field anymore unless it was
+        //a 64 bit access.
+        memcpy(inst->memData,
+                (uint8_t *)&convertedData +
+                (TheISA::ByteOrderDiffers ?
+                 (sizeof(TheISA::IntReg) - req->getSize()) : 0),
+                req->getSize());
 
         PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
@@ -616,7 +625,7 @@ LSQUnit<Impl>::writebackStores()
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
                 storeWBIdx, inst->readPC(),
-                req->getPaddr(), *(inst->memData),
+                req->getPaddr(), (int)*(inst->memData),
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
