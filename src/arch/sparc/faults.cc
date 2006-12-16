@@ -302,10 +302,12 @@ void doREDFault(ThreadContext *tc, TrapType tt)
     MiscReg TSTATE = tc->readMiscReg(MISCREG_TSTATE);
     MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
     MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
-    MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    //MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscReg(MISCREG_ASI);
     MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
-    MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    //MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    MiscReg CANSAVE = tc->readMiscReg(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscReg(MISCREG_GL);
     MiscReg PC = tc->readPC();
     MiscReg NPC = tc->readNextPC();
@@ -396,10 +398,12 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     MiscReg TSTATE = tc->readMiscReg(MISCREG_TSTATE);
     MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
     MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
-    MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    //MiscReg CCR = tc->readMiscReg(MISCREG_CCR);
+    MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscReg(MISCREG_ASI);
     MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
-    MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    //MiscReg CANSAVE = tc->readMiscReg(MISCREG_CANSAVE);
+    MiscReg CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscReg(MISCREG_GL);
     MiscReg PC = tc->readPC();
     MiscReg NPC = tc->readNextPC();
@@ -679,19 +683,21 @@ void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
 
-    // address is higher than the stack region or in the current stack region
-    if (vaddr > p->stack_base || vaddr > p->stack_min)
-        FaultBase::invoke(tc);
-
-    // We've accessed the next page
-    if (vaddr > p->stack_min - PageBytes) {
+    // We've accessed the next page of the stack, so extend the stack
+    // to cover it.
+    if(vaddr < p->stack_min && vaddr >= p->stack_min - PageBytes)
+    {
         p->stack_min -= PageBytes;
-        if (p->stack_base - p->stack_min > 8*1024*1024)
+        if(p->stack_base - p->stack_min > 8*1024*1024)
             fatal("Over max stack size for one thread\n");
         p->pTable->allocate(p->stack_min, PageBytes);
         warn("Increasing stack size by one page.");
-    } else {
-        FaultBase::invoke(tc);
+    }
+    // Otherwise, we have an unexpected page fault. Report that fact,
+    // and what address was accessed to cause the fault.
+    else
+    {
+        panic("Page table fault when accessing virtual address %#x\n", vaddr);
     }
 }
 

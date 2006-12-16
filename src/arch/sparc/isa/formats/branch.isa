@@ -170,13 +170,17 @@ output decoder {{
             printMnemonic(response, mnemonic);
             ccprintf(response, "0x%x", target);
 
-            if(symtab->findNearestSymbol(target, symbol, symbolAddr))
+            if(symtab && symtab->findNearestSymbol(target, symbol, symbolAddr))
             {
                 ccprintf(response, " <%s", symbol);
                 if(symbolAddr != target)
                     ccprintf(response, "+%d>", target - symbolAddr);
                 else
                     ccprintf(response, ">");
+            }
+            else
+            {
+                ccprintf(response, "<%d>", target);
             }
 
             return response.str();
@@ -244,7 +248,6 @@ def format Branch(code, *opt_flags) {{
 // Primary format for branch instructions:
 def format BranchN(bits, code, *opt_flags) {{
         code = re.sub(r'handle_annul', handle_annul, code)
-        codeBlk = CodeBlock(code)
         new_opt_flags = []
         for flag in opt_flags:
             if flag == ',a':
@@ -252,7 +255,7 @@ def format BranchN(bits, code, *opt_flags) {{
                 Name += 'Annul'
             else:
                 new_opt_flags += flag
-        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, codeBlk, new_opt_flags)
+        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, code, new_opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = BranchExecute.subst(iop)
@@ -262,8 +265,7 @@ def format BranchN(bits, code, *opt_flags) {{
 // Primary format for branch instructions:
 def format BranchSplit(code, *opt_flags) {{
         code = re.sub(r'handle_annul', handle_annul, code)
-        codeBlk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'BranchSplit', codeBlk, opt_flags)
+        iop = InstObjParams(name, Name, 'BranchSplit', code, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = BranchExecute.subst(iop)

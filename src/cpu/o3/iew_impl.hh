@@ -481,18 +481,29 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     toCommit->branchMispredict[tid] = true;
 
 #if ISA_HAS_DELAY_SLOT
-    bool branch_taken = inst->readNextNPC() !=
-        (inst->readNextPC() + sizeof(TheISA::MachInst));
+    int instSize = sizeof(TheISA::MachInst);
+    bool branch_taken =
+        !(inst->readNextPC() + instSize == inst->readNextNPC() &&
+          (inst->readNextPC() == inst->readPC() + instSize ||
+           inst->readNextPC() == inst->readPC() + 2 * instSize));
+    DPRINTF(Sparc, "Branch taken = %s [sn:%i]\n",
+            branch_taken ? "true": "false", inst->seqNum);
 
     toCommit->branchTaken[tid] = branch_taken;
 
-    toCommit->condDelaySlotBranch[tid] = inst->isCondDelaySlot();
-
-    if (inst->isCondDelaySlot() && branch_taken) {
+    bool squashDelaySlot = true;
+//	(inst->readNextPC() != inst->readPC() + sizeof(TheISA::MachInst));
+    DPRINTF(Sparc, "Squash delay slot = %s [sn:%i]\n",
+            squashDelaySlot ? "true": "false", inst->seqNum);
+    toCommit->squashDelaySlot[tid] = squashDelaySlot;
+    //If we're squashing the delay slot, we need to pick back up at NextPC.
+    //Otherwise, NextPC isn't being squashed, so we should pick back up at
+    //NextNPC.
+    if (squashDelaySlot) {
         toCommit->nextPC[tid] = inst->readNextPC();
-    } else {
+        toCommit->nextNPC[tid] = inst->readNextNPC();
+    } else
         toCommit->nextPC[tid] = inst->readNextNPC();
-    }
 #else
     toCommit->branchTaken[tid] = inst->readNextPC() !=
         (inst->readPC() + sizeof(TheISA::MachInst));
@@ -514,6 +525,9 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readNextPC();
+#if ISA_HAS_DELAY_SLOT
+    toCommit->nextNPC[tid] = inst->readNextNPC();
+#endif
     toCommit->branchMispredict[tid] = false;
 
     toCommit->includeSquashInst[tid] = false;
@@ -531,6 +545,9 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readPC();
+#if ISA_HAS_DELAY_SLOT
+    toCommit->nextNPC[tid] = inst->readNextNPC();
+#endif
     toCommit->branchMispredict[tid] = false;
 
     // Must include the broadcasted SN in the squash.
@@ -1338,6 +1355,7 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
+                DPRINTF(IEW, "Predicted target was %#x.\n", inst->predPC);
 #if ISA_HAS_DELAY_SLOT
                 DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
                         inst->nextNPC);
@@ -1348,7 +1366,7 @@ DefaultIEW<Impl>::executeInsts()
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
 
-                if (inst->predTaken()) {
+                if (inst->readPredTaken()) {
                     predictedTakenIncorrect++;
                 } else {
                     predictedNotTakenIncorrect++;

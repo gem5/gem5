@@ -87,9 +87,10 @@ struct DefaultIEWDefaultCommit {
     bool squash[Impl::MaxThreads];
     bool branchMispredict[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
-    bool condDelaySlotBranch[Impl::MaxThreads];
+    bool squashDelaySlot[Impl::MaxThreads];
     uint64_t mispredPC[Impl::MaxThreads];
     uint64_t nextPC[Impl::MaxThreads];
+    uint64_t nextNPC[Impl::MaxThreads];
     InstSeqNum squashedSeqNum[Impl::MaxThreads];
 
     bool includeSquashInst[Impl::MaxThreads];
@@ -121,6 +122,7 @@ struct TimeBufStruct {
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
+        uint64_t nextNPC;
 
         unsigned branchCount;
     };
@@ -160,6 +162,7 @@ struct TimeBufStruct {
         bool branchTaken;
         uint64_t mispredPC;
         uint64_t nextPC;
+        uint64_t nextNPC;
 
         // Represents the instruction that has either been retired or
         // squashed.  Similar to having a single bus that broadcasts the

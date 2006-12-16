@@ -41,7 +41,8 @@ namespace SparcISA
 
     // Number of register windows, can legally be 3 to 32
     const int NWindows = 8;
-    const int NumMicroIntRegs = 1;
+    //const int NumMicroIntRegs = 1;
+    const int NumMicroIntRegs = 8;
 
 //    const int NumRegularIntRegs = MaxGL * 8 + NWindows * 16;
 //    const int NumMicroIntRegs = 1;

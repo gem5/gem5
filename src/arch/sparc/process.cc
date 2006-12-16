@@ -95,17 +95,22 @@ SparcLiveProcess::startup()
      */
 
     //No windows contain info from other programs
-    threadContexts[0]->setMiscReg(MISCREG_OTHERWIN, 0);
+    //threadContexts[0]->setMiscReg(MISCREG_OTHERWIN, 0);
+    threadContexts[0]->setIntReg(NumIntArchRegs + 6, 0);
     //There are no windows to pop
-    threadContexts[0]->setMiscReg(MISCREG_CANRESTORE, 0);
+    //threadContexts[0]->setMiscReg(MISCREG_CANRESTORE, 0);
+    threadContexts[0]->setIntReg(NumIntArchRegs + 4, 0);
     //All windows are available to save into
-    threadContexts[0]->setMiscReg(MISCREG_CANSAVE, NWindows - 2);
+    //threadContexts[0]->setMiscReg(MISCREG_CANSAVE, NWindows - 2);
+    threadContexts[0]->setIntReg(NumIntArchRegs + 3, NWindows - 2);
     //All windows are "clean"
-    threadContexts[0]->setMiscReg(MISCREG_CLEANWIN, NWindows);
+    //threadContexts[0]->setMiscReg(MISCREG_CLEANWIN, NWindows);
+    threadContexts[0]->setIntReg(NumIntArchRegs + 5, NWindows);
     //Start with register window 0
     threadContexts[0]->setMiscReg(MISCREG_CWP, 0);
     //Always use spill and fill traps 0
-    threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
+    //threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
+    threadContexts[0]->setIntReg(NumIntArchRegs + 7, 0);
     //Set the trap level to 0
     threadContexts[0]->setMiscReg(MISCREG_TL, 0);
     //Set the ASI register to something fixed

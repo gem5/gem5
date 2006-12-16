@@ -83,9 +83,7 @@ def template TrapExecute {{
 }};
 
 def format Trap(code, *opt_flags) {{
-        orig_code = code
-        cblk = CodeBlock(code)
-        iop = InstObjParams(name, Name, 'Trap', cblk, opt_flags)
+        iop = InstObjParams(name, Name, 'Trap', code, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)

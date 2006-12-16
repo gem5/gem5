@@ -46,15 +46,9 @@ class Checkpoint;
 string SparcISA::getMiscRegName(RegIndex index)
 {
     static::string miscRegName[NumMiscRegs] =
-       {"y", "ccr", "asi", "tick", "fprs", "pcr", "pic",
-        "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
-        "stick", "stick_cmpr",
-        "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
-        "pil", "cwp", "cansave", "canrestore", "cleanwin", "otherwin",
-        "wstate", "gl",
-        "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
-        "hstick_cmpr",
-        "fsr"};
+        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
+         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
+         "wstate",*/ "gl",
     return miscRegName[index];
 }
 

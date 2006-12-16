@@ -514,6 +514,7 @@ DefaultCommit<Impl>::squashAll(unsigned tid)
     toIEW->commitInfo[tid].branchMispredict = false;
 
     toIEW->commitInfo[tid].nextPC = PC[tid];
+    toIEW->commitInfo[tid].nextNPC = nextPC[tid];
 }
 
 template <class Impl>
@@ -728,28 +729,11 @@ DefaultCommit<Impl>::commit()
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
 #if ISA_HAS_DELAY_SLOT
-            InstSeqNum bdelay_done_seq_num;
-            bool squash_bdelay_slot;
+            InstSeqNum bdelay_done_seq_num = squashed_inst;
+            bool squash_bdelay_slot = fromIEW->squashDelaySlot[tid];
 
-            if (fromIEW->branchMispredict[tid]) {
-                if (fromIEW->branchTaken[tid] &&
-                    fromIEW->condDelaySlotBranch[tid]) {
-                    DPRINTF(Commit, "[tid:%i]: Cond. delay slot branch"
-                            "mispredicted as taken. Squashing after previous "
-                            "inst, [sn:%i]\n",
-                            tid, squashed_inst);
-                     bdelay_done_seq_num = squashed_inst;
-                     squash_bdelay_slot = true;
-                } else {
-                    DPRINTF(Commit, "[tid:%i]: Branch Mispredict. Squashing "
-                            "after delay slot [sn:%i]\n", tid, squashed_inst+1);
-                    bdelay_done_seq_num = squashed_inst + 1;
-                    squash_bdelay_slot = false;
-                }
-            } else {
-                bdelay_done_seq_num = squashed_inst;
-                squash_bdelay_slot = true;
-            }
+            if (!squash_bdelay_slot)
+                bdelay_done_seq_num++;
 #endif
 
             if (fromIEW->includeSquashInst[tid] == true) {
@@ -787,6 +771,7 @@ DefaultCommit<Impl>::commit()
                 fromIEW->branchTaken[tid];
 
             toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
+            toIEW->commitInfo[tid].nextNPC = fromIEW->nextNPC[tid];
 
             toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
@@ -1117,7 +1102,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     // Update the commit rename map
     for (int i = 0; i < head_inst->numDestRegs(); i++) {
-        renameMap[tid]->setEntry(head_inst->destRegIdx(i),
+        renameMap[tid]->setEntry(head_inst->flattenedDestRegIdx(i),
                                  head_inst->renamedDestRegIdx(i));
     }
 

@@ -55,16 +55,20 @@ let {{
     def doMemFormat(code, execute, faultCode, name, Name, asi, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2;'
         addrCalcImm = 'EA = Rs1 + imm;'
-        iop = InstObjParams(name, Name, 'Mem', code,
-                opt_flags, {"fault_check": faultCode, "ea_code": addrCalcReg})
-        iop_imm = InstObjParams(name, Name + "Imm", 'MemImm', code,
-                opt_flags, {"fault_check": faultCode, "ea_code": addrCalcImm})
+        iop = InstObjParams(name, Name, 'Mem',
+                {"code": code, "fault_check": faultCode,
+                 "ea_code": addrCalcReg},
+                opt_flags)
+        iop_imm = InstObjParams(name, Name + "Imm", 'MemImm',
+                {"code": code, "fault_check": faultCode,
+                 "ea_code": addrCalcImm},
+                opt_flags)
         header_output = MemDeclare.subst(iop) + MemDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)
         exec_output = doDualSplitExecute(code, addrCalcReg, addrCalcImm,
-                execute, faultCode, name, name + "Imm", Name, Name + "Imm",
-                asi, opt_flags)
+                execute, faultCode, name, name + "Imm",
+                Name, Name + "Imm", opt_flags)
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
@@ -72,7 +76,7 @@ def format LoadAlt(code, asi, *opt_flags) {{
         (header_output,
          decoder_output,
          exec_output,
-         decode_block) = doMemFormat(code, LoadExecute,
+         decode_block) = doMemFormat(code, LoadFuncs,
             AlternateASIPrivFaultCheck, name, Name, asi, opt_flags)
 }};
 
@@ -80,7 +84,7 @@ def format StoreAlt(code, asi, *opt_flags) {{
         (header_output,
          decoder_output,
          exec_output,
-         decode_block) = doMemFormat(code, StoreExecute,
+         decode_block) = doMemFormat(code, StoreFuncs,
             AlternateASIPrivFaultCheck, name, Name, asi, opt_flags)
 }};
 
@@ -89,7 +93,7 @@ def format Load(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             LoadExecute, '', name, Name, 0, opt_flags)
+             LoadFuncs, '', name, Name, 0, opt_flags)
 }};
 
 def format Store(code, *opt_flags) {{
@@ -97,5 +101,5 @@ def format Store(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             StoreExecute, '', name, Name, 0, opt_flags)
+             StoreFuncs, '', name, Name, 0, opt_flags)
 }};

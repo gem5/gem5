@@ -31,6 +31,8 @@
 
 #include <list>
 
+#include "arch/isa_traits.hh"
+#include "arch/regfile.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
 
@@ -41,6 +43,8 @@ DefaultRename<Impl>::DefaultRename(Params *params)
       commitToRenameDelay(params->commitToRenameDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
+      resumeSerialize(false),
+      resumeUnblocking(false),
       numThreads(params->numberOfThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
 {
@@ -332,12 +336,22 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
     // If it still needs to block, the blocking should happen the next
     // cycle and there should be space to hold everything due to the squash.
     if (renameStatus[tid] == Blocked ||
-        renameStatus[tid] == Unblocking ||
-        renameStatus[tid] == SerializeStall) {
-
+        renameStatus[tid] == Unblocking) {
         toDecode->renameUnblock[tid] = 1;
 
+        resumeSerialize = false;
         serializeInst[tid] = NULL;
+    } else if (renameStatus[tid] == SerializeStall) {
+        if (serializeInst[tid]->seqNum <= squash_seq_num) {
+            DPRINTF(Rename, "Rename will resume serializing after squash\n");
+            resumeSerialize = true;
+            assert(serializeInst[tid]);
+        } else {
+            resumeSerialize = false;
+            toDecode->renameUnblock[tid] = 1;
+
+            serializeInst[tid] = NULL;
+        }
     }
 
     // Set the status to Squashing.
@@ -392,6 +406,9 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
         }
         slist_it++;
     }
+    resumeUnblocking = (skidBuffer[tid].size() != 0);
+    DPRINTF(Rename, "Resume unblocking set to %s\n",
+            resumeUnblocking ? "true" : "false");
 #else
     skidBuffer[tid].clear();
 #endif
@@ -475,6 +492,20 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
         ++renameSquashCycles;
     } else if (renameStatus[tid] == SerializeStall) {
         ++renameSerializeStallCycles;
+        // If we are currently in SerializeStall and resumeSerialize
+        // was set, then that means that we are resuming serializing
+        // this cycle.  Tell the previous stages to block.
+        if (resumeSerialize) {
+            resumeSerialize = false;
+            block(tid);
+            toDecode->renameUnblock[tid] = false;
+        }
+    } else if (renameStatus[tid] == Unblocking) {
+        if (resumeUnblocking) {
+            block(tid);
+            resumeUnblocking = false;
+            toDecode->renameUnblock[tid] = false;
+        }
     }
 
     if (renameStatus[tid] == Running ||
@@ -740,7 +771,17 @@ DefaultRename<Impl>::skidInsert(unsigned tid)
     }
 
     if (skidBuffer[tid].size() > skidBufferMax)
+    {
+        typename InstQueue::iterator it;
+        warn("Skidbuffer contents:\n");
+        for(it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++)
+        {
+            warn("[tid:%u]: %s [sn:%i].\n", tid,
+                    (*it)->staticInst->disassemble(inst->readPC()),
+                    (*it)->seqNum);
+        }
         panic("Skidbuffer Exceeded Max Size");
+    }
 }
 
 template <class Impl>
@@ -827,7 +868,10 @@ DefaultRename<Impl>::block(unsigned tid)
     // Only signal backwards to block if the previous stages do not think
     // rename is already blocked.
     if (renameStatus[tid] != Blocked) {
-        if (renameStatus[tid] != Unblocking) {
+        // If resumeUnblocking is set, we unblocked during the squash,
+        // but now we're have unblocking status. We need to tell earlier
+        // stages to block.
+        if (resumeUnblocking || renameStatus[tid] != Unblocking) {
             toDecode->renameBlock[tid] = true;
             toDecode->renameUnblock[tid] = false;
             wroteToTimeBuffer = true;
@@ -960,13 +1004,19 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
     // Will need to mark dependencies though.
     for (int src_idx = 0; src_idx < num_src_regs; src_idx++) {
         RegIndex src_reg = inst->srcRegIdx(src_idx);
+        RegIndex flat_src_reg = src_reg;
+        if (src_reg < TheISA::FP_Base_DepTag) {
+            flat_src_reg = TheISA::flattenIntIndex(inst->tcBase(), src_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
+        }
+        inst->flattenSrcReg(src_idx, flat_src_reg);
 
         // Look up the source registers to get the phys. register they've
         // been renamed to, and set the sources to those registers.
-        PhysRegIndex renamed_reg = renameMap[tid]->lookup(src_reg);
+        PhysRegIndex renamed_reg = renameMap[tid]->lookup(flat_src_reg);
 
         DPRINTF(Rename, "[tid:%u]: Looking up arch reg %i, got "
-                "physical reg %i.\n", tid, (int)src_reg,
+                "physical reg %i.\n", tid, (int)flat_src_reg,
                 (int)renamed_reg);
 
         inst->renameSrcReg(src_idx, renamed_reg);
@@ -993,20 +1043,27 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
     // Rename the destination registers.
     for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++) {
         RegIndex dest_reg = inst->destRegIdx(dest_idx);
+        RegIndex flat_dest_reg = dest_reg;
+        if (dest_reg < TheISA::FP_Base_DepTag) {
+            flat_dest_reg = TheISA::flattenIntIndex(inst->tcBase(), dest_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
+        }
+
+        inst->flattenDestReg(dest_idx, flat_dest_reg);
 
         // Get the physical register that the destination will be
         // renamed to.
-        rename_result = renameMap[tid]->rename(dest_reg);
+        rename_result = renameMap[tid]->rename(flat_dest_reg);
 
         //Mark Scoreboard entry as not ready
         scoreboard->unsetReg(rename_result.first);
 
         DPRINTF(Rename, "[tid:%u]: Renaming arch reg %i to physical "
-                "reg %i.\n", tid, (int)dest_reg,
+                "reg %i.\n", tid, (int)flat_dest_reg,
                 (int)rename_result.first);
 
         // Record the rename information so that a history can be kept.
-        RenameHistory hb_entry(inst->seqNum, dest_reg,
+        RenameHistory hb_entry(inst->seqNum, flat_dest_reg,
                                rename_result.first,
                                rename_result.second);
 
@@ -1230,12 +1287,24 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
     if (renameStatus[tid] == Squashing) {
         // Switch status to running if rename isn't being told to block or
         // squash this cycle.
-        DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
-                tid);
+        if (resumeSerialize) {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to serialize.\n",
+                    tid);
 
-        renameStatus[tid] = Running;
+            renameStatus[tid] = SerializeStall;
+            return true;
+        } else if (resumeUnblocking) {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to unblocking.\n",
+                    tid);
+            renameStatus[tid] = Unblocking;
+            return true;
+        } else {
+            DPRINTF(Rename, "[tid:%u]: Done squashing, switching to running.\n",
+                    tid);
 
-        return false;
+            renameStatus[tid] = Running;
+            return false;
+        }
     }
 
     if (renameStatus[tid] == SerializeStall) {

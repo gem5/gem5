@@ -411,6 +411,14 @@ class DefaultRename
     /** Whether or not rename needs to block this cycle. */
     bool blockThisCycle;
 
+    /** Whether or not rename needs to resume a serialize instruction
+     * after squashing. */
+    bool resumeSerialize;
+
+    /** Whether or not rename needs to resume clearing out the skidbuffer
+     * after squashing. */
+    bool resumeUnblocking;
+
     /** The number of threads active in rename. */
     unsigned numThreads;
 

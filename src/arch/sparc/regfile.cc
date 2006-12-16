@@ -151,6 +151,72 @@ void RegFile::setIntReg(int intReg, const IntReg &val)
     intRegFile.setReg(intReg, val);
 }
 
+int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
+{
+    int gl = tc->readMiscReg(MISCREG_GL);
+    int cwp = tc->readMiscReg(MISCREG_CWP);
+    //DPRINTF(Sparc, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
+    int newReg;
+    if(reg < 8)
+    {
+        //Global register
+        //Put it in the appropriate set of globals
+        newReg = reg + gl * 8;
+    }
+    else if(reg < NumIntArchRegs)
+    {
+        //Regular windowed register
+        //Put it in the window pointed to by cwp
+        newReg = MaxGL * 8 +
+            ((reg - 8 - cwp * 16 + NWindows * 16) % (NWindows * 16));
+    }
+    else if(reg < NumIntArchRegs + NumMicroIntRegs)
+    {
+        //Microcode register
+        //Displace from the end of the regular registers
+        newReg = reg - NumIntArchRegs + MaxGL * 8 + NWindows * 16;
+    }
+    else if(reg < 2 * NumIntArchRegs + NumMicroIntRegs)
+    {
+        reg -= (NumIntArchRegs + NumMicroIntRegs);
+        if(reg < 8)
+        {
+            //Global register from the next window
+            //Put it in the appropriate set of globals
+            newReg = reg + gl * 8;
+        }
+        else
+        {
+            //Windowed register from the previous window
+            //Put it in the window before the one pointed to by cwp
+            newReg = MaxGL * 8 +
+                ((reg - 8 - (cwp - 1) * 16 + NWindows * 16) % (NWindows * 16));
+        }
+    }
+    else if(reg < 3 * NumIntArchRegs + NumMicroIntRegs)
+    {
+        reg -= (2 * NumIntArchRegs + NumMicroIntRegs);
+        if(reg < 8)
+        {
+            //Global register from the previous window
+            //Put it in the appropriate set of globals
+            newReg = reg + gl * 8;
+        }
+        else
+        {
+            //Windowed register from the next window
+            //Put it in the window after the one pointed to by cwp
+            newReg = MaxGL * 8 +
+                ((reg - 8 - (cwp + 1) * 16 + NWindows * 16) % (NWindows * 16));
+        }
+    }
+    else
+        panic("Tried to flatten invalid register index %d!\n", reg);
+    DPRINTF(Sparc, "Flattened register %d to %d.\n", reg, newReg);
+    return newReg;
+    //return intRegFile.flattenIndex(reg);
+}
+
 void RegFile::serialize(std::ostream &os)
 {
     intRegFile.serialize(os);
@@ -220,8 +286,8 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
 
     // ASRs
-    dest->setMiscReg(MISCREG_Y, src->readMiscReg(MISCREG_Y));
-    dest->setMiscReg(MISCREG_CCR, src->readMiscReg(MISCREG_CCR));
+//    dest->setMiscReg(MISCREG_Y, src->readMiscReg(MISCREG_Y));
+//    dest->setMiscReg(MISCREG_CCR, src->readMiscReg(MISCREG_CCR));
     dest->setMiscReg(MISCREG_ASI, src->readMiscReg(MISCREG_ASI));
     dest->setMiscReg(MISCREG_TICK, src->readMiscReg(MISCREG_TICK));
     dest->setMiscReg(MISCREG_FPRS, src->readMiscReg(MISCREG_FPRS));
@@ -236,11 +302,11 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     dest->setMiscReg(MISCREG_PSTATE, src->readMiscReg(MISCREG_PSTATE));
     dest->setMiscReg(MISCREG_PIL, src->readMiscReg(MISCREG_PIL));
     dest->setMiscReg(MISCREG_CWP, src->readMiscReg(MISCREG_CWP));
-    dest->setMiscReg(MISCREG_CANSAVE, src->readMiscReg(MISCREG_CANSAVE));
-    dest->setMiscReg(MISCREG_CANRESTORE, src->readMiscReg(MISCREG_CANRESTORE));
-    dest->setMiscReg(MISCREG_OTHERWIN, src->readMiscReg(MISCREG_OTHERWIN));
-    dest->setMiscReg(MISCREG_CLEANWIN, src->readMiscReg(MISCREG_CLEANWIN));
-    dest->setMiscReg(MISCREG_WSTATE, src->readMiscReg(MISCREG_WSTATE));
+//    dest->setMiscReg(MISCREG_CANSAVE, src->readMiscReg(MISCREG_CANSAVE));
+//    dest->setMiscReg(MISCREG_CANRESTORE, src->readMiscReg(MISCREG_CANRESTORE));
+//    dest->setMiscReg(MISCREG_OTHERWIN, src->readMiscReg(MISCREG_OTHERWIN));
+//    dest->setMiscReg(MISCREG_CLEANWIN, src->readMiscReg(MISCREG_CLEANWIN));
+//    dest->setMiscReg(MISCREG_WSTATE, src->readMiscReg(MISCREG_WSTATE));
     dest->setMiscReg(MISCREG_GL, src->readMiscReg(MISCREG_GL));
 
     // Hyperprivilged registers

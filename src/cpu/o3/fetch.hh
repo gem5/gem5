@@ -239,13 +239,13 @@ class DefaultFetch
     bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid);
 
     /** Squashes a specific thread and resets the PC. */
-    inline void doSquash(const Addr &new_PC, unsigned tid);
+    inline void doSquash(const Addr &new_PC, const Addr &new_NPC, unsigned tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode that should be sqaushed.
      */
-    void squashFromDecode(const Addr &new_PC, const InstSeqNum &seq_num,
-                          unsigned tid);
+    void squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
+                          const InstSeqNum &seq_num, unsigned tid);
 
     /** Checks if a thread is stalled. */
     bool checkStall(unsigned tid) const;
@@ -259,7 +259,8 @@ class DefaultFetch
      * remove any instructions that are not in the ROB. The source of this
      * squash should be the commit stage.
      */
-    void squash(const Addr &new_PC, const InstSeqNum &seq_num,
+    void squash(const Addr &new_PC, const Addr &new_NPC,
+                const InstSeqNum &seq_num,
                 bool squash_delay_slot, unsigned tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching

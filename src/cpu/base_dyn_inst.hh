@@ -39,6 +39,7 @@
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
@@ -62,10 +63,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     typedef typename Impl::CPUType ImplCPU;
     typedef typename ImplCPU::ImplState ImplState;
 
-    // Binary machine instruction type.
-    typedef TheISA::MachInst MachInst;
-    // Extended machine instruction type
-    typedef TheISA::ExtMachInst ExtMachInst;
     // Logical register index type.
     typedef TheISA::RegIndex RegIndex;
     // Integer register type.
@@ -224,6 +221,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Predicted next PC. */
     Addr predPC;
 
+    /** Predicted next NPC. */
+    Addr predNPC;
+
+    /** If this is a branch that was predicted taken */
+    bool predTaken;
+
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
@@ -236,16 +239,116 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     bool _readySrcRegIdx[MaxInstSrcRegs];
 
+  protected:
+    /** Flattened register index of the destination registers of this
+     *  instruction.
+     */
+    TheISA::RegIndex _flatDestRegIdx[TheISA::MaxInstDestRegs];
+
+    /** Flattened register index of the source registers of this
+     *  instruction.
+     */
+    TheISA::RegIndex _flatSrcRegIdx[TheISA::MaxInstSrcRegs];
+
+    /** Physical register index of the destination registers of this
+     *  instruction.
+     */
+    PhysRegIndex _destRegIdx[TheISA::MaxInstDestRegs];
+
+    /** Physical register index of the source registers of this
+     *  instruction.
+     */
+    PhysRegIndex _srcRegIdx[TheISA::MaxInstSrcRegs];
+
+    /** Physical register index of the previous producers of the
+     *  architected destinations.
+     */
+    PhysRegIndex _prevDestRegIdx[TheISA::MaxInstDestRegs];
+
   public:
+
+    /** Returns the physical register index of the i'th destination
+     *  register.
+     */
+    PhysRegIndex renamedDestRegIdx(int idx) const
+    {
+        return _destRegIdx[idx];
+    }
+
+    /** Returns the physical register index of the i'th source register. */
+    PhysRegIndex renamedSrcRegIdx(int idx) const
+    {
+        return _srcRegIdx[idx];
+    }
+
+    /** Returns the flattened register index of the i'th destination
+     *  register.
+     */
+    TheISA::RegIndex flattenedDestRegIdx(int idx) const
+    {
+        return _flatDestRegIdx[idx];
+    }
+
+    /** Returns the flattened register index of the i'th source register */
+    TheISA::RegIndex flattenedSrcRegIdx(int idx) const
+    {
+        return _flatSrcRegIdx[idx];
+    }
+
+    /** Returns the physical register index of the previous physical register
+     *  that remapped to the same logical register index.
+     */
+    PhysRegIndex prevDestRegIdx(int idx) const
+    {
+        return _prevDestRegIdx[idx];
+    }
+
+    /** Renames a destination register to a physical register.  Also records
+     *  the previous physical register that the logical register mapped to.
+     */
+    void renameDestReg(int idx,
+                       PhysRegIndex renamed_dest,
+                       PhysRegIndex previous_rename)
+    {
+        _destRegIdx[idx] = renamed_dest;
+        _prevDestRegIdx[idx] = previous_rename;
+    }
+
+    /** Renames a source logical register to the physical register which
+     *  has/will produce that logical register's result.
+     *  @todo: add in whether or not the source register is ready.
+     */
+    void renameSrcReg(int idx, PhysRegIndex renamed_src)
+    {
+        _srcRegIdx[idx] = renamed_src;
+    }
+
+    /** Flattens a source architectural register index into a logical index.
+     */
+    void flattenSrcReg(int idx, TheISA::RegIndex flattened_src)
+    {
+        _flatSrcRegIdx[idx] = flattened_src;
+    }
+
+    /** Flattens a destination architectural register index into a logical
+     * index.
+     */
+    void flattenDestReg(int idx, TheISA::RegIndex flattened_dest)
+    {
+        _flatDestRegIdx[idx] = flattened_dest;
+    }
+
     /** BaseDynInst constructor given a binary instruction.
      *  @param inst The binary instruction.
      *  @param PC The PC of the instruction.
      *  @param pred_PC The predicted next PC.
+     *  @param pred_NPC The predicted next NPC.
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(ExtMachInst inst, Addr PC, Addr pred_PC, InstSeqNum seq_num,
-                ImplCPU *cpu);
+    BaseDynInst(TheISA::ExtMachInst inst, Addr PC, Addr NPC,
+            Addr pred_PC, Addr pred_NPC,
+            InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.
@@ -290,26 +393,35 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr readNextNPC() { return nextNPC; }
 
     /** Set the predicted target of this current instruction. */
-    void setPredTarg(Addr predicted_PC) { predPC = predicted_PC; }
+    void setPredTarg(Addr predicted_PC, Addr predicted_NPC)
+    {
+        predPC = predicted_PC;
+        predNPC = predicted_NPC;
+    }
 
-    /** Returns the predicted target of the branch. */
-    Addr readPredTarg() { return predPC; }
+    /** Returns the predicted PC immediately after the branch. */
+    Addr readPredPC() { return predPC; }
+
+    /** Returns the predicted PC two instructions after the branch */
+    Addr readPredNPC() { return predNPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool predTaken()
-#if ISA_HAS_DELAY_SLOT
-    { return predPC != (nextPC + sizeof(MachInst)); }
-#else
-    { return predPC != (PC + sizeof(MachInst)); }
-#endif
+    bool readPredTaken()
+    {
+        return predTaken;
+    }
+
+    void setPredTaken(bool predicted_taken)
+    {
+        predTaken = predicted_taken;
+    }
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted()
-#if ISA_HAS_DELAY_SLOT
-    { return predPC != nextNPC; }
-#else
-    { return predPC != nextPC; }
-#endif
+    {
+        return predPC != nextPC || predNPC != nextNPC;
+    }
+
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //

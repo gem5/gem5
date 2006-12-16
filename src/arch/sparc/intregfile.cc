@@ -66,6 +66,7 @@ void IntRegFile::clear()
         memset(regGlobals[x], 0, sizeof(IntReg) * RegsPerFrame);
     for(int x = 0; x < 2 * NWindows; x++)
         memset(regSegments[x], 0, sizeof(IntReg) * RegsPerFrame);
+    memset(regs, 0, sizeof(IntReg) * NumIntRegs);
 }
 
 IntRegFile::IntRegFile()
@@ -78,6 +79,8 @@ IntRegFile::IntRegFile()
 
 IntReg IntRegFile::readReg(int intReg)
 {
+    DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, regs[intReg]);
+    return regs[intReg];
     IntReg val;
     if(intReg < NumIntArchRegs)
         val = regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
@@ -93,6 +96,12 @@ IntReg IntRegFile::readReg(int intReg)
 
 void IntRegFile::setReg(int intReg, const IntReg &val)
 {
+    if(intReg)
+    {
+        DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
+        regs[intReg] = val;
+    }
+    return;
     if(intReg)
     {
         DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);

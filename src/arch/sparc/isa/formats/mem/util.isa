@@ -144,7 +144,7 @@ def template LoadExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -162,16 +162,19 @@ def template LoadExecute {{
 
             return fault;
         }
+}};
 
+def template LoadInitiateAcc {{
         Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
             Addr EA;
             uint%(mem_acc_size)s_t Mem;
-            %(ea_decl)s;
-            %(ea_rd)s;
+            %(op_decl)s;
+            %(op_rd)s;
             %(ea_code)s;
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -179,18 +182,20 @@ def template LoadExecute {{
             }
             return fault;
         }
+}};
 
+def template LoadCompleteAcc {{
         Fault %(class_name)s::completeAcc(PacketPtr pkt, %(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
-            %(code_decl)s;
-            %(code_rd)s;
+            %(op_decl)s;
+            %(op_rd)s;
             Mem = pkt->get<typeof(Mem)>();
             %(code)s;
             if(fault == NoFault)
             {
-                %(code_wb)s;
+                %(op_wb)s;
             }
             return fault;
         }
@@ -209,7 +214,7 @@ def template StoreExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -228,7 +233,9 @@ def template StoreExecute {{
 
             return fault;
         }
+}};
 
+def template StoreInitiateAcc {{
         Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
@@ -238,7 +245,7 @@ def template StoreExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;
-            DPRINTF(Sparc, "The address is 0x%x\n", EA);
+            DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
             if(fault == NoFault)
             {
@@ -256,7 +263,9 @@ def template StoreExecute {{
             }
             return fault;
         }
+}};
 
+def template StoreCompleteAcc {{
         Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
@@ -276,6 +285,8 @@ def template CompleteAccDeclare {{
 
 //Here are some code snippets which check for various fault conditions
 let {{
+    LoadFuncs = [LoadExecute, LoadInitiateAcc, LoadCompleteAcc]
+    StoreFuncs = [StoreExecute, StoreInitiateAcc, StoreCompleteAcc]
     # The LSB can be zero, since it's really the MSB in doubles and quads
     # and we're dealing with doubles
     BlockAlignmentFaultCheck = '''
@@ -310,21 +321,11 @@ let {{
 //and in the other they're distributed across two. Also note that for
 //execute functions, the name of the base class doesn't matter.
 let {{
-    def doSplitExecute(code, execute, name, Name, asi, opt_flags, microParam):
+    def doSplitExecute(execute, name, Name, asi, opt_flags, microParam):
         microParam["asi_val"] = asi;
-        codeParam = microParam.copy()
-        codeParam["ea_code"] = ''
-        codeIop = InstObjParams(name, Name, '', code, opt_flags, codeParam)
-        eaIop = InstObjParams(name, Name, '', microParam["ea_code"],
-                opt_flags, microParam)
-        iop = InstObjParams(name, Name, '', code, opt_flags, microParam)
-        (iop.ea_decl,
-         iop.ea_rd,
-         iop.ea_wb) = (eaIop.op_decl, eaIop.op_rd, eaIop.op_wb)
-        (iop.code_decl,
-         iop.code_rd,
-         iop.code_wb) = (codeIop.op_decl, codeIop.op_rd, codeIop.op_wb)
-        return execute.subst(iop)
+        iop = InstObjParams(name, Name, '', microParam, opt_flags)
+        (execf, initf, compf) = execute
+        return execf.subst(iop) + initf.subst(iop) + compf.subst(iop)
 
 
     def doDualSplitExecute(code, eaRegCode, eaImmCode, execute,
@@ -333,8 +334,9 @@ let {{
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
-            microParams = {"ea_code" : eaCode, "fault_check": faultCode}
-            executeCode += doSplitExecute(code, execute, name, Name,
+            microParams = {"code": code, "ea_code": eaCode,
+                "fault_check": faultCode}
+            executeCode += doSplitExecute(execute, name, Name,
                     asi, opt_flags, microParams)
         return executeCode
 }};
