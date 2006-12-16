@@ -514,6 +514,7 @@ DefaultCommit<Impl>::squashAll(unsigned tid)
     toIEW->commitInfo[tid].branchMispredict = false;
 
     toIEW->commitInfo[tid].nextPC = PC[tid];
+    toIEW->commitInfo[tid].nextNPC = nextPC[tid];
 }
 
 template <class Impl>
@@ -770,6 +771,7 @@ DefaultCommit<Impl>::commit()
                 fromIEW->branchTaken[tid];
 
             toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
+            toIEW->commitInfo[tid].nextNPC = fromIEW->nextNPC[tid];
 
             toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 

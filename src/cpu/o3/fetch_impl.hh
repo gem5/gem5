@@ -319,9 +319,7 @@ DefaultFetch<Impl>::initStage()
     for (int tid = 0; tid < numThreads; tid++) {
         PC[tid] = cpu->readPC(tid);
         nextPC[tid] = cpu->readNextPC(tid);
-#if ISA_HAS_DELAY_SLOT
         nextNPC[tid] = cpu->readNextNPC(tid);
-#endif
     }
 
     // Size of cache block.
@@ -504,14 +502,14 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
 
     if (!inst->isControl()) {
 #if ISA_HAS_DELAY_SLOT
-        Addr cur_PC = next_PC;
-        next_PC  = cur_PC + instSize;      //next_NPC;
-        next_NPC = cur_PC + (2 * instSize);//next_NPC + instSize;
-        inst->setPredTarg(next_NPC);
+        next_PC  = next_NPC;
+        next_NPC = next_NPC + instSize;
+        inst->setPredTarg(next_PC, next_NPC);
 #else
         next_PC = next_PC + instSize;
-        inst->setPredTarg(next_PC);
+        inst->setPredTarg(next_PC, next_PC + sizeof(TheISA::MachInst));
 #endif
+        inst->setPredTaken(false);
         return false;
     }
 
@@ -521,36 +519,29 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
     predict_taken = branchPred.predict(inst, pred_PC, tid);
 
     if (predict_taken) {
-        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be true.\n", tid);
+        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be taken.\n", tid);
     } else {
-        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be false.\n", tid);
+        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be not taken.\n", tid);
     }
 
+    next_PC = next_NPC;
     if (predict_taken) {
-        next_PC = next_NPC;
         next_NPC = pred_PC;
-
         // Update delay slot info
         ++delaySlotInfo[tid].numInsts;
         delaySlotInfo[tid].targetAddr = pred_PC;
         DPRINTF(Fetch, "[tid:%i]: %i delay slot inst(s) to process.\n", tid,
                 delaySlotInfo[tid].numInsts);
-    } else { // !predict_taken
-        if (inst->isCondDelaySlot()) {
-            next_PC = pred_PC;
-            // The delay slot is skipped here if there is on
-            // prediction
-        } else {
-            next_PC = next_NPC;
-            // No need to declare a delay slot here since
-            // there is no for the pred. target to jump
-        }
-
+    } else {
         next_NPC = next_NPC + instSize;
     }
 #else
     predict_taken = branchPred.predict(inst, next_PC, tid);
 #endif
+    DPRINTF(Fetch, "[tid:%i]: Branch predicted to go to %#x and then %#x.\n",
+            tid, next_PC, next_NPC);
+    inst->setPredTarg(next_PC, next_NPC);
+    inst->setPredTaken(predict_taken);
 
     ++fetchedBranches;
 
@@ -671,14 +662,15 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
 template <class Impl>
 inline void
-DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
+DefaultFetch<Impl>::doSquash(const Addr &new_PC,
+        const Addr &new_NPC, unsigned tid)
 {
-    DPRINTF(Fetch, "[tid:%i]: Squashing, setting PC to: %#x.\n",
-            tid, new_PC);
+    DPRINTF(Fetch, "[tid:%i]: Squashing, setting PC to: %#x, NPC to: %#x.\n",
+            tid, new_PC, new_NPC);
 
     PC[tid] = new_PC;
-    nextPC[tid] = new_PC + instSize;
-    nextNPC[tid] = new_PC + (2 * instSize);
+    nextPC[tid] = new_NPC;
+    nextNPC[tid] = new_NPC + instSize;
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -704,13 +696,13 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC, unsigned tid)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC,
+DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
                                      const InstSeqNum &seq_num,
                                      unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing from decode.\n",tid);
 
-    doSquash(new_PC, tid);
+    doSquash(new_PC, new_NPC, tid);
 
 #if ISA_HAS_DELAY_SLOT
     if (seq_num <=  delaySlotInfo[tid].branchSeqNum) {
@@ -793,12 +785,13 @@ DefaultFetch<Impl>::updateFetchStatus()
 
 template <class Impl>
 void
-DefaultFetch<Impl>::squash(const Addr &new_PC, const InstSeqNum &seq_num,
+DefaultFetch<Impl>::squash(const Addr &new_PC, const Addr &new_NPC,
+                           const InstSeqNum &seq_num,
                            bool squash_delay_slot, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n",tid);
 
-    doSquash(new_PC, tid);
+    doSquash(new_PC, new_NPC, tid);
 
 #if ISA_HAS_DELAY_SLOT
     if (seq_num <=  delaySlotInfo[tid].branchSeqNum) {
@@ -928,6 +921,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 #endif
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].nextPC,
+               fromCommit->commitInfo[tid].nextNPC,
                doneSeqNum,
                fromCommit->commitInfo[tid].squashDelaySlot,
                tid);
@@ -985,6 +979,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 #endif
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
+                             fromDecode->decodeInfo[tid].nextNPC,
                              doneSeqNum,
                              tid);
 
@@ -1040,6 +1035,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     // The current PC.
     Addr &fetch_PC = PC[tid];
+
+    Addr &fetch_NPC = nextPC[tid];
 
     // Fault code for memory access.
     Fault fault = NoFault;
@@ -1097,7 +1094,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     }
 
     Addr next_PC = fetch_PC;
-    Addr next_NPC = next_PC + instSize;
+    Addr next_NPC = fetch_NPC;
+
     InstSeqNum inst_seq;
     MachInst inst;
     ExtMachInst ext_inst;
@@ -1144,8 +1142,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 #endif
 
             // Create a new DynInst from the instruction fetched.
-            DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,
-                                                 next_PC,
+            DynInstPtr instruction = new DynInst(ext_inst,
+                                                 fetch_PC, fetch_NPC,
+                                                 next_PC, next_NPC,
                                                  inst_seq, cpu);
             instruction->setTid(tid);
 
@@ -1243,9 +1242,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         if (delaySlotInfo[tid].targetReady &&
             delaySlotInfo[tid].numInsts == 0) {
             // Set PC to target
-            PC[tid] = delaySlotInfo[tid].targetAddr; //next_PC
-            nextPC[tid] = next_PC + instSize;        //next_NPC
-            nextNPC[tid] = next_PC + (2 * instSize);
+            PC[tid] = next_PC;
+            nextPC[tid] = next_NPC;
+            nextNPC[tid] = next_NPC + instSize;
 
             delaySlotInfo[tid].targetReady = false;
         } else {

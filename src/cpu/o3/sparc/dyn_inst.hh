@@ -56,8 +56,8 @@ class SparcDynInst : public BaseDynInst<Impl>
 
   public:
     /** BaseDynInst constructor given a binary instruction. */
-    SparcDynInst(TheISA::ExtMachInst inst, Addr PC,
-            Addr Pred_PC, InstSeqNum seq_num, O3CPU *cpu);
+    SparcDynInst(TheISA::ExtMachInst inst, Addr PC, Addr NPC,
+            Addr Pred_PC, Addr Pred_NPC, InstSeqNum seq_num, O3CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */
     SparcDynInst(StaticInstPtr &_staticInst);
