@@ -221,6 +221,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Predicted next PC. */
     Addr predPC;
 
+    /** Predicted next NPC. */
+    Addr predNPC;
+
+    /** If this is a branch that was predicted taken */
+    bool predTaken;
+
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
@@ -336,10 +342,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param inst The binary instruction.
      *  @param PC The PC of the instruction.
      *  @param pred_PC The predicted next PC.
+     *  @param pred_NPC The predicted next NPC.
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(TheISA::ExtMachInst inst, Addr PC, Addr pred_PC,
+    BaseDynInst(TheISA::ExtMachInst inst, Addr PC,
+            Addr pred_PC, Addr pred_NPC,
             InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
@@ -385,26 +393,35 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr readNextNPC() { return nextNPC; }
 
     /** Set the predicted target of this current instruction. */
-    void setPredTarg(Addr predicted_PC) { predPC = predicted_PC; }
+    void setPredTarg(Addr predicted_PC, Addr predicted_NPC)
+    {
+        predPC = predicted_PC;
+        predNPC = predicted_NPC;
+    }
 
-    /** Returns the predicted target of the branch. */
-    Addr readPredTarg() { return predPC; }
+    /** Returns the predicted PC immediately after the branch. */
+    Addr readPredPC() { return predPC; }
+
+    /** Returns the predicted PC two instructions after the branch */
+    Addr readPredNPC() { return predNPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool predTaken()
-#if ISA_HAS_DELAY_SLOT
-    { return predPC != (nextPC + sizeof(TheISA::MachInst)); }
-#else
-    { return predPC != (PC + sizeof(TheISA::MachInst)); }
-#endif
+    bool readPredTaken()
+    {
+        return predTaken;
+    }
+
+    void setPredTaken(bool predicted_taken)
+    {
+        predTaken = predicted_taken;
+    }
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted()
-#if ISA_HAS_DELAY_SLOT
-    { return predPC != nextNPC; }
-#else
-    { return predPC != nextPC; }
-#endif
+    {
+        return predPC != nextPC || predNPC != nextNPC;
+    }
+
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //

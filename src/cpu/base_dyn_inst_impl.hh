@@ -63,8 +63,8 @@ my_hash_t thishash;
 
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
-                               Addr pred_PC, InstSeqNum seq_num,
-                               ImplCPU *cpu)
+                               Addr pred_PC, Addr pred_NPC,
+                               InstSeqNum seq_num, ImplCPU *cpu)
   : staticInst(machInst), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
@@ -73,6 +73,8 @@ BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
     nextPC = PC + sizeof(TheISA::MachInst);
     nextNPC = nextPC + sizeof(TheISA::MachInst);
     predPC = pred_PC;
+    predNPC = pred_NPC;
+    predTaken = false;
 
     initVars();
 }
