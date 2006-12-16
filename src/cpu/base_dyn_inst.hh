@@ -346,7 +346,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(TheISA::ExtMachInst inst, Addr PC,
+    BaseDynInst(TheISA::ExtMachInst inst, Addr PC, Addr NPC,
             Addr pred_PC, Addr pred_NPC,
             InstSeqNum seq_num, ImplCPU *cpu);
 
