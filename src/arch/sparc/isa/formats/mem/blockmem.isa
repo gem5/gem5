@@ -91,6 +91,65 @@ output header {{
         };
 }};
 
+output header {{
+
+        class TwinMem : public SparcMacroInst
+        {
+          protected:
+
+            // Constructor
+            // We make the assumption that all block memory operations
+            // Will take 8 instructions to execute
+            TwinMem(const char *mnem, ExtMachInst _machInst) :
+                SparcMacroInst(mnem, _machInst, No_OpClass, 8)
+            {}
+        };
+
+        class TwinMemImm : public BlockMem
+        {
+          protected:
+
+            // Constructor
+            TwinMemImm(const char *mnem, ExtMachInst _machInst) :
+                BlockMem(mnem, _machInst)
+            {}
+        };
+
+        class TwinMemMicro : public SparcMicroInst
+        {
+          protected:
+
+            // Constructor
+            TwinMemMicro(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, int8_t _offset) :
+                SparcMicroInst(mnem, _machInst, __opClass),
+                offset(_offset)
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            const int8_t offset;
+        };
+
+        class TwinMemImmMicro : public BlockMemMicro
+        {
+          protected:
+
+            // Constructor
+            TwinMemImmMicro(const char *mnem, ExtMachInst _machInst,
+                    OpClass __opClass, int8_t _offset) :
+                BlockMemMicro(mnem, _machInst, __opClass, _offset),
+                imm(sext<13>(SIMM13))
+            {}
+
+            std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+
+            const int32_t imm;
+        };
+}};
+
 output decoder {{
         std::string BlockMemMicro::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
@@ -242,6 +301,39 @@ def template BlockMemDeclare {{
         };
 }};
 
+def template TwinMemDeclare {{
+        /**
+         * Static instruction class for a block memory operation
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+            //Constructor
+            %(class_name)s(ExtMachInst machInst);
+
+          protected:
+            class %(class_name)s_0 : public %(base_class)sMicro
+            {
+              public:
+                //Constructor
+                %(class_name)s_0(ExtMachInst machInst);
+                %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
+            };
+
+            class %(class_name)s_1 : public %(base_class)sMicro
+            {
+              public:
+                //Constructor
+                %(class_name)s_1(ExtMachInst machInst);
+                %(BasicExecDeclare)s
+                %(InitiateAccDeclare)s
+                %(CompleteAccDeclare)s
+            };
+        };
+}};
+
 // Basic instruction class constructor template.
 def template BlockMemConstructor {{
         inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
@@ -256,6 +348,17 @@ def template BlockMemConstructor {{
             microOps[5] = new %(class_name)s_5(machInst);
             microOps[6] = new %(class_name)s_6(machInst);
             microOps[7] = new %(class_name)s_7(machInst);
+        }
+}};
+
+// Basic instruction class constructor template.
+def template TwinMemConstructor {{
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+            : %(base_class)s("%(mnemonic)s", machInst)
+        {
+            %(constructor)s;
+            microOps[0] = new %(class_name)s_0(machInst);
+            microOps[1] = new %(class_name)s_1(machInst);
         }
 }};
 
@@ -312,6 +415,47 @@ let {{
                     asi, opt_flags);
             faultCode = ''
         return (header_output, decoder_output, exec_output, decode_block)
+
+
+    def doTwinLoadFormat(code, faultCode, name, Name, asi, opt_flags):
+        addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
+        addrCalcImm = 'EA = Rs1 + imm + offset;'
+        iop = InstObjParams(name, Name, 'TwinMem', code, opt_flags)
+        iop_imm = InstObjParams(name, Name + 'Imm', 'TwinMemImm', code, opt_flags)
+        header_output = TwinMemDeclare.subst(iop) + TwinMemDeclare.subst(iop_imm)
+        decoder_output = TwinMemConstructor.subst(iop) + TwinMemConstructor.subst(iop_imm)
+        decode_block = ROrImmDecode.subst(iop)
+        matcher = re.compile(r'RdTwin')
+        exec_output = ''
+        for microPc in range(2):
+            flag_code = ''
+            pcedCode = ''
+            if (microPc == 1):
+                flag_code = "flags[IsLastMicroOp] = true;"
+                pcedCode = matcher.sub("RdHigh", code)
+            else:
+                flag_code = "flags[IsDelayedCommit] = true;"
+                pcedCode = matcher.sub("RdLow", code)
+            iop = InstObjParams(name, Name, 'TwinMem', pcedCode,
+                    opt_flags, {"ea_code": addrCalcReg,
+                    "fault_check": faultCode, "micro_pc": microPc,
+                    "set_flags": flag_code})
+            iop_imm = InstObjParams(name, Name + 'Imm', 'TwinMemImm', pcedCode,
+                    opt_flags, {"ea_code": addrCalcImm,
+                    "fault_check": faultCode, "micro_pc": microPc,
+                    "set_flags": flag_code})
+            decoder_output += BlockMemMicroConstructor.subst(iop)
+            decoder_output += BlockMemMicroConstructor.subst(iop_imm)
+            exec_output += doDualSplitExecute(
+                    pcedCode, addrCalcReg, addrCalcImm, execute, faultCode,
+                    makeMicroName(name, microPc),
+                    makeMicroName(name + "Imm", microPc),
+                    makeMicroName(Name, microPc),
+                    makeMicroName(Name + "Imm", microPc),
+                    asi, opt_flags);
+            faultCode = ''
+        return (header_output, decoder_output, exec_output, decode_block)
+
 }};
 
 def format BlockLoad(code, asi, *opt_flags) {{
@@ -336,4 +480,12 @@ def format BlockStore(code, asi, *opt_flags) {{
          exec_output,
          decode_block) = doBlockMemFormat(code, faultCode,
              StoreExecute, name, Name, asi, opt_flags)
+}};
+
+def format TwinLoad(code, asi, *opt_flags) {{
+    faultCode = AlternateASIPrivFaultCheck + TwinAlignmentFaultCheck
+    (header_output,
+     decoder_output,
+     exec_output,
+     decode_block) = doTwinLoadFormat(code, faultCode, name, Name, asi, opt_flags)
 }};
