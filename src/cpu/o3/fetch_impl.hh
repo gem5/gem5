@@ -1114,14 +1114,16 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // ended this fetch block.
         bool predicted_branch = false;
 
-        // Need to keep track of whether or not a delay slot
-        // instruction has been fetched
-
         for (;
              offset < cacheBlkSize &&
                  numInst < fetchWidth &&
-                 (!predicted_branch || delaySlotInfo[tid].numInsts > 0);
+                 !predicted_branch;
              ++numInst) {
+
+            // If we're branching after this instruction, quite fetching
+            // from the same block then.
+            predicted_branch =
+                (fetch_PC + sizeof(TheISA::MachInst) != fetch_NPC);
 
             // Get a sequence number.
             inst_seq = cpu->getAndIncrementInstSeq();
@@ -1166,8 +1168,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                      instruction->staticInst,
                                      instruction->readPC());
 
-            predicted_branch = lookupAndUpdateNextPC(instruction, next_PC,
-                                                     next_NPC);
+            lookupAndUpdateNextPC(instruction, next_PC, next_NPC);
 
             // Add instruction to the CPU's list of instructions.
             instruction->setInstListIt(cpu->addInst(instruction));
@@ -1183,6 +1184,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             // Move to the next instruction, unless we have a branch.
             fetch_PC = next_PC;
+            fetch_NPC = next_NPC;
 
             if (instruction->isQuiesce()) {
                 DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
@@ -1194,29 +1196,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             }
 
             offset += instSize;
-
-#if ISA_HAS_DELAY_SLOT
-            if (predicted_branch) {
-                delaySlotInfo[tid].branchSeqNum = inst_seq;
-
-                DPRINTF(Fetch, "[tid:%i]: Delay slot branch set to [sn:%i]\n",
-                        tid, inst_seq);
-                continue;
-            } else if (delaySlotInfo[tid].numInsts > 0) {
-                --delaySlotInfo[tid].numInsts;
-
-                // It's OK to set PC to target of branch
-                if (delaySlotInfo[tid].numInsts == 0) {
-                    delaySlotInfo[tid].targetReady = true;
-
-                    // Break the looping condition
-                    predicted_branch = true;
-                }
-
-                DPRINTF(Fetch, "[tid:%i]: %i delay slot inst(s) left to"
-                        " process.\n", tid, delaySlotInfo[tid].numInsts);
-            }
-#endif
         }
 
         if (offset >= cacheBlkSize) {
@@ -1225,7 +1204,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         } else if (numInst >= fetchWidth) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
                     "for this cycle.\n", tid);
-        } else if (predicted_branch && delaySlotInfo[tid].numInsts <= 0) {
+        } else if (predicted_branch) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
                     "instruction encountered.\n", tid);
         }
