@@ -293,14 +293,14 @@ let {{
             else:
                 flag_code = "flags[IsDelayedCommit] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPc, code)
-            iop = InstObjParams(name, Name, 'BlockMem', pcedCode,
-                    opt_flags, {"ea_code": addrCalcReg,
+            iop = InstObjParams(name, Name, 'BlockMem',
+                    {"code": pcedCode, "ea_code": addrCalcReg,
                     "fault_check": faultCode, "micro_pc": microPc,
-                    "set_flags": flag_code})
-            iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm', pcedCode,
-                    opt_flags, {"ea_code": addrCalcImm,
+                    "set_flags": flag_code}, opt_flags)
+            iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm',
+                    {"code": pcedCode, "ea_code": addrCalcImm,
                     "fault_check": faultCode, "micro_pc": microPc,
-                    "set_flags": flag_code})
+                    "set_flags": flag_code}, opt_flags)
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
             exec_output += doDualSplitExecute(
@@ -315,25 +315,25 @@ let {{
 }};
 
 def format BlockLoad(code, *opt_flags) {{
-        # We need to make sure to check the highest priority fault last.
-        # That way, if other faults have been detected, they'll be overwritten
-        # rather than the other way around.
-        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
-        (header_output,
-         decoder_output,
-         exec_output,
-         decode_block) = doBlockMemFormat(code, faultCode,
-             LoadExecute, name, Name, opt_flags)
+    # We need to make sure to check the highest priority fault last.
+    # That way, if other faults have been detected, they'll be overwritten
+    # rather than the other way around.
+    faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
+    (header_output,
+     decoder_output,
+     exec_output,
+     decode_block) = doBlockMemFormat(code, faultCode,
+         LoadFuncs, name, Name, opt_flags)
 }};
 
 def format BlockStore(code, *opt_flags) {{
-        # We need to make sure to check the highest priority fault last.
-        # That way, if other faults have been detected, they'll be overwritten
-        # rather than the other way around.
-        faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
-        (header_output,
-         decoder_output,
-         exec_output,
-         decode_block) = doBlockMemFormat(code, faultCode,
-             StoreExecute, name, Name, opt_flags)
+    # We need to make sure to check the highest priority fault last.
+    # That way, if other faults have been detected, they'll be overwritten
+    # rather than the other way around.
+    faultCode = AlternateASIPrivFaultCheck + BlockAlignmentFaultCheck
+    (header_output,
+     decoder_output,
+     exec_output,
+     decode_block) = doBlockMemFormat(code, faultCode,
+         StoreFuncs, name, Name, opt_flags)
 }};

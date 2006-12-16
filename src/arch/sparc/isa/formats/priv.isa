@@ -235,8 +235,9 @@ let {{
                 name = mnem
                 regBase = 'WrPriv'
                 break
-        iop = InstObjParams(name, Name, regBase, code,
-                opt_flags, {"check": checkCode, "reg_name": regName})
+        iop = InstObjParams(name, Name, regBase,
+                {"code": code, "check": checkCode, "reg_name": regName},
+                opt_flags)
         header_output = BasicDeclare.subst(iop)
         if regName == '':
             decoder_output = BasicConstructor.subst(iop)
@@ -245,7 +246,8 @@ let {{
         exec_output = PrivExecute.subst(iop)
         if usesImm:
             imm_iop = InstObjParams(name, Name + 'Imm', regBase + 'Imm',
-                    immCode, opt_flags, {"check": checkCode, "reg_name": regName})
+                    {"code": immCode, "check": checkCode, "reg_name": regName},
+                    opt_flags)
             header_output += BasicDeclare.subst(imm_iop)
             if regName == '':
                 decoder_output += BasicConstructor.subst(imm_iop)

@@ -808,8 +808,7 @@ class GenCode:
 # a defineInst() method that generates the code for an instruction
 # definition.
 
-exportContextSymbols = ('InstObjParams', 'CodeBlock',
-                        'makeList', 're', 'string')
+exportContextSymbols = ('InstObjParams', 'makeList', 're', 'string')
 
 exportContext = {}
 
@@ -1003,27 +1002,83 @@ def substBitOps(code):
 # Template objects are format strings that allow substitution from
 # the attribute spaces of other objects (e.g. InstObjParams instances).
 
+labelRE = re.compile(r'[^%]%\(([^\)]+)\)[sd]')
+
 class Template:
     def __init__(self, t):
         self.template = t
 
     def subst(self, d):
-        # Start with the template namespace.  Make a copy since we're
-        # going to modify it.
-        myDict = templateMap.copy()
-        # if the argument is a dictionary, we just use it.
-        if isinstance(d, dict):
-            myDict.update(d)
-        # if the argument is an object, we use its attribute map.
-        elif hasattr(d, '__dict__'):
-            myDict.update(d.__dict__)
-        else:
-            raise TypeError, "Template.subst() arg must be or have dictionary"
+        myDict = None
+
         # Protect non-Python-dict substitutions (e.g. if there's a printf
         # in the templated C++ code)
         template = protect_non_subst_percents(self.template)
         # CPU-model-specific substitutions are handled later (in GenCode).
         template = protect_cpu_symbols(template)
+
+        # if we're dealing with an InstObjParams object, we need to be a
+        # little more sophisticated. Otherwise, just do what we've always
+        # done
+        if isinstance(d, InstObjParams):
+            # The instruction wide parameters are already formed, but the
+            # parameters which are only function wide still need to be
+            # generated.
+            perFuncNames = ['op_decl', 'op_src_decl', 'op_dest_decl', \
+                            'op_rd', 'op_wb', 'mem_acc_size', 'mem_acc_type']
+            compositeCode = ''
+
+            myDict = templateMap.copy()
+            myDict.update(d.__dict__)
+            # The "operands" and "snippets" attributes of the InstObjParams
+            # objects are for internal use and not substitution.
+            del myDict['operands']
+            del myDict['snippets']
+
+            for name in labelRE.findall(template):
+                # Don't try to find a snippet to go with things that will
+                # match against attributes of d, or that are other templates,
+                # or that we're going to generate later, or that we've already
+                # found.
+                if  not hasattr(d, name) and \
+                    not templateMap.has_key(name) and \
+                    not myDict.has_key(name) and \
+                    name not in perFuncNames:
+                    myDict[name] = d.snippets[name]
+                    if isinstance(myDict[name], str):
+                        myDict[name] = substMungedOpNames(substBitOps(myDict[name]))
+                        compositeCode += (" " + myDict[name])
+            operands = SubOperandList(compositeCode, d.operands)
+
+            myDict['op_decl'] = operands.concatAttrStrings('op_decl')
+
+            is_src = lambda op: op.is_src
+            is_dest = lambda op: op.is_dest
+
+            myDict['op_src_decl'] = \
+                      operands.concatSomeAttrStrings(is_src, 'op_src_decl')
+            myDict['op_dest_decl'] = \
+                      operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
+
+            myDict['op_rd'] = operands.concatAttrStrings('op_rd')
+            myDict['op_wb'] = operands.concatAttrStrings('op_wb')
+
+            if d.operands.memOperand:
+                myDict['mem_acc_size'] = d.operands.memOperand.mem_acc_size
+                myDict['mem_acc_type'] = d.operands.memOperand.mem_acc_type
+
+        else:
+            # Start with the template namespace.  Make a copy since we're
+            # going to modify it.
+            myDict = templateMap.copy()
+            # if the argument is a dictionary, we just use it.
+            if isinstance(d, dict):
+                myDict.update(d)
+            # if the argument is an object, we use its attribute map.
+            elif hasattr(d, '__dict__'):
+                myDict.update(d.__dict__)
+            else:
+                raise TypeError, "Template.subst() arg must be or have dictionary"
         return template % myDict
 
     # Convert to string.  This handles the case when a template with a
@@ -1296,10 +1351,10 @@ class ControlRegOperand(Operand):
     def makeConstructor(self):
         c = ''
         if self.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s;' % \
+            c += '\n\t_srcRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
                  (self.src_reg_idx, self.reg_spec)
         if self.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s;' % \
+            c += '\n\t_destRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
                  (self.dest_reg_idx, self.reg_spec)
         return c
 
@@ -1307,7 +1362,7 @@ class ControlRegOperand(Operand):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read control register as FP')
-        base = 'xc->readMiscReg(%s)' % self.reg_spec
+        base = 'xc->readMiscRegOperand(this, %s)' % self.src_reg_idx
         if self.size == self.dflt_size:
             return '%s = %s;\n' % (self.base_name, base)
         else:
@@ -1317,7 +1372,8 @@ class ControlRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
-        wb = 'xc->setMiscRegWithEffect(%s, %s);\n' % (self.reg_spec, self.base_name)
+        wb = 'xc->setMiscRegOperandWithEffect(this, %s, %s);\n' % \
+             (self.dest_reg_idx, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
               self.base_name
         return wb
@@ -1550,6 +1606,48 @@ class OperandList:
     def sort(self):
         self.items.sort(lambda a, b: a.sort_pri - b.sort_pri)
 
+class SubOperandList(OperandList):
+
+    # Find all the operands in the given code block.  Returns an operand
+    # descriptor list (instance of class OperandList).
+    def __init__(self, code, master_list):
+        self.items = []
+        self.bases = {}
+        # delete comments so we don't match on reg specifiers inside
+        code = commentRE.sub('', code)
+        # search for operands
+        next_pos = 0
+        while 1:
+            match = operandsRE.search(code, next_pos)
+            if not match:
+                # no more matches: we're done
+                break
+            op = match.groups()
+            # regexp groups are operand full name, base, and extension
+            (op_full, op_base, op_ext) = op
+            # find this op in the master list
+            op_desc = master_list.find_base(op_base)
+            if not op_desc:
+                error(0, 'Found operand %s which is not in the master list!' \
+                        ' This is an internal error' % \
+                          op_base)
+            else:
+                # See if we've already found this operand
+                op_desc = self.find_base(op_base)
+                if not op_desc:
+                    # if not, add a reference to it to this sub list
+                    self.append(master_list.bases[op_base])
+
+            # start next search after end of current match
+            next_pos = match.end()
+        self.sort()
+        self.memOperand = None
+        for op_desc in self.items:
+            if op_desc.isMem():
+                if self.memOperand:
+                    error(0, "Code block has more than one memory operand.")
+                self.memOperand = op_desc
+
 # Regular expression object to match C++ comments
 # (used in findOperands())
 commentRE = re.compile(r'//.*\n')
@@ -1583,11 +1681,28 @@ def makeFlagConstructor(flag_list):
     code = pre + string.join(flag_list, post + pre) + post
     return code
 
-class CodeBlock:
-    def __init__(self, code):
-        self.orig_code = code
-        self.operands = OperandList(code)
-        self.code = substMungedOpNames(substBitOps(code))
+# Assume all instruction flags are of the form 'IsFoo'
+instFlagRE = re.compile(r'Is.*')
+
+# OpClass constants end in 'Op' except No_OpClass
+opClassRE = re.compile(r'.*Op|No_OpClass')
+
+class InstObjParams:
+    def __init__(self, mnem, class_name, base_class = '',
+                 snippets = None, opt_args = []):
+        self.mnemonic = mnem
+        self.class_name = class_name
+        self.base_class = base_class
+        compositeCode = ''
+        if snippets:
+            if not isinstance(snippets, dict):
+                snippets = {'code' : snippets}
+            for snippet in snippets.values():
+                if isinstance(snippet, str):
+                    compositeCode += (" " + snippet)
+        self.snippets = snippets
+
+        self.operands = OperandList(compositeCode)
         self.constructor = self.operands.concatAttrStrings('constructor')
         self.constructor += \
                  '\n\t_numSrcRegs = %d;' % self.operands.numSrcRegs
@@ -1597,28 +1712,10 @@ class CodeBlock:
                  '\n\t_numFPDestRegs = %d;' % self.operands.numFPDestRegs
         self.constructor += \
                  '\n\t_numIntDestRegs = %d;' % self.operands.numIntDestRegs
-
-        self.op_decl = self.operands.concatAttrStrings('op_decl')
-
-        is_src = lambda op: op.is_src
-        is_dest = lambda op: op.is_dest
-
-        self.op_src_decl = \
-                  self.operands.concatSomeAttrStrings(is_src, 'op_src_decl')
-        self.op_dest_decl = \
-                  self.operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
-
-        self.op_rd = self.operands.concatAttrStrings('op_rd')
-        self.op_wb = self.operands.concatAttrStrings('op_wb')
-
         self.flags = self.operands.concatAttrLists('flags')
 
-        if self.operands.memOperand:
-            self.mem_acc_size = self.operands.memOperand.mem_acc_size
-            self.mem_acc_type = self.operands.memOperand.mem_acc_type
-
         # Make a basic guess on the operand class (function unit type).
-        # These are good enough for most cases, and will be overridden
+        # These are good enough for most cases, and can be overridden
         # later otherwise.
         if 'IsStore' in self.flags:
             self.op_class = 'MemWriteOp'
@@ -1629,48 +1726,6 @@ class CodeBlock:
         else:
             self.op_class = 'IntAluOp'
 
-# Assume all instruction flags are of the form 'IsFoo'
-instFlagRE = re.compile(r'Is.*')
-
-# OpClass constants end in 'Op' except No_OpClass
-opClassRE = re.compile(r'.*Op|No_OpClass')
-
-class InstObjParams:
-    def __init__(self, mnem, class_name, base_class = '',
-                 code = None, opt_args = [], extras = {}):
-        self.mnemonic = mnem
-        self.class_name = class_name
-        self.base_class = base_class
-        if code:
-            #If the user already made a CodeBlock, pick the parts from it
-            if isinstance(code, CodeBlock):
-                origCode = code.orig_code
-                codeBlock = code
-            else:
-                origCode = code
-                codeBlock = CodeBlock(code)
-            stringExtras = {}
-            otherExtras = {}
-            for (k, v) in extras.items():
-                if type(v) == str:
-                    stringExtras[k] = v
-                else:
-                    otherExtras[k] = v
-            compositeCode = "\n".join([origCode] + stringExtras.values())
-            # compositeCode = '\n'.join([origCode] +
-            #	    [pair[1] for pair in extras])
-            compositeBlock = CodeBlock(compositeCode)
-            for code_attr in compositeBlock.__dict__.keys():
-                setattr(self, code_attr, getattr(compositeBlock, code_attr))
-            for (key, snippet) in stringExtras.items():
-                setattr(self, key, CodeBlock(snippet).code)
-            for (key, item) in otherExtras.items():
-                setattr(self, key, item)
-            self.code = codeBlock.code
-            self.orig_code = origCode
-        else:
-            self.constructor = ''
-            self.flags = []
         # Optional arguments are assumed to be either StaticInst flags
         # or an OpClass value.  To avoid having to import a complete
         # list of these values to match against, we do it ad-hoc
