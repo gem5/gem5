@@ -123,7 +123,7 @@ def operands {{
     'Pstate':		('ControlReg', 'udw', 'MISCREG_PSTATE', None, 59),
     'Tl':		('ControlReg', 'udw', 'MISCREG_TL', None, 60),
     'Pil':		('ControlReg', 'udw', 'MISCREG_PIL', None, 61),
-    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', (None, None, ['IsSerializeAfter','IsSerializing']), 62),
+    'Cwp':		('ControlReg', 'udw', 'MISCREG_CWP', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 62),
 #   'Cansave':		('ControlReg', 'udw', 'MISCREG_CANSAVE', None, 63),
 #   'Canrestore':	('ControlReg', 'udw', 'MISCREG_CANRESTORE', None, 64),
 #   'Cleanwin':		('ControlReg', 'udw', 'MISCREG_CLEANWIN', None, 65),
