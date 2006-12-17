@@ -47,8 +47,15 @@ string SparcISA::getMiscRegName(RegIndex index)
 {
     static::string miscRegName[NumMiscRegs] =
         {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
+         "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
+         "stick", "stick_cmpr",
+         "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
          "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
          "wstate",*/ "gl",
+         "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
+         "hstick_cmpr",
+         "fsr"};
+
     return miscRegName[index];
 }
 
@@ -59,8 +66,8 @@ enum RegMask
 
 void MiscRegFile::clear()
 {
-    y = 0;
-    ccr = 0;
+    //y = 0;
+    //ccr = 0;
     asi = 0;
     tick = ULL(1) << 63;
     fprs = 0;
@@ -77,11 +84,11 @@ void MiscRegFile::clear()
     tl = 0;
     pil = 0;
     cwp = 0;
-    cansave = 0;
-    canrestore = 0;
-    cleanwin = 0;
-    otherwin = 0;
-    wstate = 0;
+    //cansave = 0;
+    //canrestore = 0;
+    //cleanwin = 0;
+    //otherwin = 0;
+    //wstate = 0;
     gl = 0;
     //In a T1, bit 11 is apparently always 1
     hpstate = (1 << 11);
@@ -143,10 +150,10 @@ MiscReg MiscRegFile::readReg(int miscReg)
                (uint64_t)priContext << 32 |
                (uint64_t)secContext << 48;
 
-      case MISCREG_Y:
-        return y;
-      case MISCREG_CCR:
-        return ccr;
+      //case MISCREG_Y:
+      //  return y;
+      //case MISCREG_CCR:
+      //  return ccr;
       case MISCREG_ASI:
         return asi;
       case MISCREG_FPRS:
@@ -189,16 +196,16 @@ MiscReg MiscRegFile::readReg(int miscReg)
         return pil;
       case MISCREG_CWP:
         return cwp;
-      case MISCREG_CANSAVE:
-        return cansave;
-      case MISCREG_CANRESTORE:
-        return canrestore;
-      case MISCREG_CLEANWIN:
-        return cleanwin;
-      case MISCREG_OTHERWIN:
-        return otherwin;
-      case MISCREG_WSTATE:
-        return wstate;
+      //case MISCREG_CANSAVE:
+      //  return cansave;
+      //case MISCREG_CANRESTORE:
+      //  return canrestore;
+      //case MISCREG_CLEANWIN:
+      //  return cleanwin;
+      //case MISCREG_OTHERWIN:
+      //  return otherwin;
+      //case MISCREG_WSTATE:
+      //  return wstate;
       case MISCREG_GL:
         return gl;
 
@@ -369,12 +376,12 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
 void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 {
     switch (miscReg) {
-      case MISCREG_Y:
-        y = val;
-        break;
-      case MISCREG_CCR:
-        ccr = val;
-        break;
+//      case MISCREG_Y:
+//        y = val;
+//        break;
+//      case MISCREG_CCR:
+//        ccr = val;
+//        break;
       case MISCREG_ASI:
         asi = val;
         break;
@@ -436,21 +443,21 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
       case MISCREG_CWP:
         cwp = val;
         break;
-      case MISCREG_CANSAVE:
-        cansave = val;
-        break;
-      case MISCREG_CANRESTORE:
-        canrestore = val;
-        break;
-      case MISCREG_CLEANWIN:
-        cleanwin = val;
-        break;
-      case MISCREG_OTHERWIN:
-        otherwin = val;
-        break;
-      case MISCREG_WSTATE:
-        wstate = val;
-        break;
+//      case MISCREG_CANSAVE:
+//        cansave = val;
+//        break;
+//      case MISCREG_CANRESTORE:
+//        canrestore = val;
+//        break;
+//      case MISCREG_CLEANWIN:
+//        cleanwin = val;
+//        break;
+//      case MISCREG_OTHERWIN:
+//        otherwin = val;
+//        break;
+//      case MISCREG_WSTATE:
+//        wstate = val;
+//        break;
       case MISCREG_GL:
         gl = val;
         break;
@@ -666,23 +673,23 @@ void MiscRegFile::serialize(std::ostream & os)
 {
     SERIALIZE_SCALAR(pstate);
     SERIALIZE_SCALAR(tba);
-    SERIALIZE_SCALAR(y);
+//    SERIALIZE_SCALAR(y);
     SERIALIZE_SCALAR(pil);
     SERIALIZE_SCALAR(gl);
     SERIALIZE_SCALAR(cwp);
     SERIALIZE_ARRAY(tt, MaxTL);
-    SERIALIZE_SCALAR(ccr);
+//    SERIALIZE_SCALAR(ccr);
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tl);
     SERIALIZE_ARRAY(tpc, MaxTL);
     SERIALIZE_ARRAY(tnpc, MaxTL);
     SERIALIZE_ARRAY(tstate, MaxTL);
     SERIALIZE_SCALAR(tick);
-    SERIALIZE_SCALAR(cansave);
-    SERIALIZE_SCALAR(canrestore);
-    SERIALIZE_SCALAR(otherwin);
-    SERIALIZE_SCALAR(cleanwin);
-    SERIALIZE_SCALAR(wstate);
+//    SERIALIZE_SCALAR(cansave);
+//    SERIALIZE_SCALAR(canrestore);
+//    SERIALIZE_SCALAR(otherwin);
+//    SERIALIZE_SCALAR(cleanwin);
+//    SERIALIZE_SCALAR(wstate);
     SERIALIZE_SCALAR(fsr);
     SERIALIZE_SCALAR(fprs);
     SERIALIZE_SCALAR(hpstate);
@@ -725,23 +732,23 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
 {
     UNSERIALIZE_SCALAR(pstate);
     UNSERIALIZE_SCALAR(tba);
-    UNSERIALIZE_SCALAR(y);
+//    UNSERIALIZE_SCALAR(y);
     UNSERIALIZE_SCALAR(pil);
     UNSERIALIZE_SCALAR(gl);
     UNSERIALIZE_SCALAR(cwp);
     UNSERIALIZE_ARRAY(tt, MaxTL);
-    UNSERIALIZE_SCALAR(ccr);
+//    UNSERIALIZE_SCALAR(ccr);
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tl);
     UNSERIALIZE_ARRAY(tpc, MaxTL);
     UNSERIALIZE_ARRAY(tnpc, MaxTL);
     UNSERIALIZE_ARRAY(tstate, MaxTL);
     UNSERIALIZE_SCALAR(tick);
-    UNSERIALIZE_SCALAR(cansave);
-    UNSERIALIZE_SCALAR(canrestore);
-    UNSERIALIZE_SCALAR(otherwin);
-    UNSERIALIZE_SCALAR(cleanwin);
-    UNSERIALIZE_SCALAR(wstate);
+//    UNSERIALIZE_SCALAR(cansave);
+//    UNSERIALIZE_SCALAR(canrestore);
+//    UNSERIALIZE_SCALAR(otherwin);
+//    UNSERIALIZE_SCALAR(cleanwin);
+//    UNSERIALIZE_SCALAR(wstate);
     UNSERIALIZE_SCALAR(fsr);
     UNSERIALIZE_SCALAR(fprs);
     UNSERIALIZE_SCALAR(hpstate);

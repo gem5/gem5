@@ -169,8 +169,8 @@ namespace SparcISA
       private:
 
         /* ASR Registers */
-        uint64_t y;		// Y (used in obsolete multiplication)
-        uint8_t	ccr;		// Condition Code Register
+        //uint64_t y;		// Y (used in obsolete multiplication)
+        //uint8_t ccr;		// Condition Code Register
         uint8_t asi;		// Address Space Identifier
         uint64_t tick;		// Hardware clock-tick counter
         uint8_t	fprs;		// Floating-Point Register State
@@ -195,11 +195,11 @@ namespace SparcISA
         uint8_t tl;		// Trap Level
         uint8_t pil;		// Process Interrupt Register
         uint8_t cwp;		// Current Window Pointer
-        uint8_t cansave;	// Savable windows
-        uint8_t canrestore;	// Restorable windows
-        uint8_t cleanwin;	// Clean windows
-        uint8_t otherwin;	// Other windows
-        uint8_t wstate;		// Window State
+        //uint8_t cansave;	// Savable windows
+        //uint8_t canrestore;	// Restorable windows
+        //uint8_t cleanwin;	// Clean windows
+        //uint8_t otherwin;	// Other windows
+        //uint8_t wstate;		// Window State
         uint8_t gl;             // Global level register
 
         /** Hyperprivileged Registers */

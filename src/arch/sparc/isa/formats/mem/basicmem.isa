@@ -68,7 +68,7 @@ let {{
         decode_block = ROrImmDecode.subst(iop)
         exec_output = doDualSplitExecute(code, addrCalcReg, addrCalcImm,
                 execute, faultCode, name, name + "Imm",
-                Name, Name + "Imm", opt_flags)
+                Name, Name + "Imm", asi, opt_flags)
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
