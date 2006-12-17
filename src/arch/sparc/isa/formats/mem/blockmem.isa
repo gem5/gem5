@@ -208,6 +208,64 @@ output decoder {{
 
 }};
 
+output decoder {{
+        std::string TwinMemMicro::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[0]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[!save ? 0 : 1]);
+            ccprintf(response, " + ");
+            printReg(response, _srcRegIdx[!save ? 1 : 2]);
+            ccprintf(response, " ]");
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+        std::string TwinMemImmMicro::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            bool load = flags[IsLoad];
+            bool save = flags[IsStore];
+
+            printMnemonic(response, mnemonic);
+            if(save)
+            {
+                printReg(response, _srcRegIdx[1]);
+                ccprintf(response, ", ");
+            }
+            ccprintf(response, "[ ");
+            printReg(response, _srcRegIdx[0]);
+            if(imm >= 0)
+                ccprintf(response, " + 0x%x ]", imm);
+            else
+                ccprintf(response, " + -0x%x ]", -imm);
+            if(load)
+            {
+                ccprintf(response, ", ");
+                printReg(response, _destRegIdx[0]);
+            }
+
+            return response.str();
+        }
+
+}};
+
 def template BlockMemDeclare {{
         /**
          * Static instruction class for a block memory operation
@@ -447,7 +505,7 @@ let {{
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
             exec_output += doDualSplitExecute(
-                    pcedCode, addrCalcReg, addrCalcImm, execute, faultCode,
+                    pcedCode, addrCalcReg, addrCalcImm, LoadExecute, faultCode,
                     makeMicroName(name, microPc),
                     makeMicroName(name + "Imm", microPc),
                     makeMicroName(Name, microPc),

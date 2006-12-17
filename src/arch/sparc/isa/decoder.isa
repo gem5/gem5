@@ -1126,6 +1126,18 @@ decode OP default Unknown::unknown()
                     0x15: FailUnimpl::lddfa_real_io();
                     //ASI_REAL_IO_LITTLE
                     0x1D: FailUnimpl::lddfa_real_io_l();
+                    //ASI_LDTX_REAL
+                    0x26: TwinLoad::ldtx_real(
+                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    //ASI_LDTX_N
+                    0x27: TwinLoad::ldtx_n(
+                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    //ASI_LDTX_REAL_L
+                    0x2E: TwinLoad::ldtx_real_l(
+                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    //ASI_LDTX_N_L
+                    0x2F: TwinLoad::ldtx_n_l(
+                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                     //ASI_PRIMARY
                     0x80: FailUnimpl::lddfa_p();
                     //ASI_PRIMARY_LITTLE
