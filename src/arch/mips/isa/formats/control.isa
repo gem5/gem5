@@ -130,7 +130,7 @@ output decoder {{
 }};
 
 def format System(code, *flags) {{
-        iop = InstObjParams(name, Name, 'Control', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'Control', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -138,7 +138,7 @@ def format System(code, *flags) {{
 }};
 
 def format CP0Control(code, *flags) {{
-        iop = InstObjParams(name, Name, 'CP0Control', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'CP0Control', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -146,7 +146,7 @@ def format CP0Control(code, *flags) {{
 }};
 
 def format CP1Control(code, *flags) {{
-        iop = InstObjParams(name, Name, 'CP1Control', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'CP1Control', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)

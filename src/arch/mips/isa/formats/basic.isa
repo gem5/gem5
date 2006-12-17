@@ -88,7 +88,7 @@ def template BasicDecodeWithMnemonic {{
 
 // The most basic instruction format...
 def format BasicOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)

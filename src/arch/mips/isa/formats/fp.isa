@@ -209,7 +209,7 @@ def template FloatingPointExecute {{
 
 // Primary format for float point operate instructions:
 def format FloatOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'FPOp', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -248,7 +248,7 @@ def format FloatCompareOp(cond_code, *flags) {{
     code +=  cond_code + '}'
     code += 'FCSR = genCCVector(FCSR, CC, cond);\n'
 
-    iop = InstObjParams(name, Name, 'FPCompareOp', CodeBlock(code))
+    iop = InstObjParams(name, Name, 'FPCompareOp', code)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -299,7 +299,7 @@ def format FloatConvertOp(code, *flags) {{
     else:
         code += 'val); '
 
-    iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code))
+    iop = InstObjParams(name, Name, 'FPOp', code)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -307,7 +307,7 @@ def format FloatConvertOp(code, *flags) {{
 }};
 
 def format FloatAccOp(code, *flags) {{
-        iop = InstObjParams(name, Name, 'FPOp', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'FPOp', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -316,7 +316,7 @@ def format FloatAccOp(code, *flags) {{
 
 // Primary format for float64 operate instructions:
 def format Float64Op(code, *flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', CodeBlock(code), flags)
+        iop = InstObjParams(name, Name, 'MipsStaticInst', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
@@ -364,7 +364,7 @@ def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
     code +=  cond_code2
     code += 'FCSR = genCCVector(FCSR, CC, cond2);}\n}'
 
-    iop = InstObjParams(name, Name, 'FPCompareOp', CodeBlock(code))
+    iop = InstObjParams(name, Name, 'FPCompareOp', code)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

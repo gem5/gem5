@@ -247,7 +247,7 @@ def format Branch(code,*opt_flags) {{
     code += '} else {\n'
     code += not_taken_code
 
-    iop = InstObjParams(name, Name, 'Branch', CodeBlock(code), inst_flags)
+    iop = InstObjParams(name, Name, 'Branch', code, inst_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -266,7 +266,7 @@ def format Jump(code, *opt_flags) {{
         else:
             inst_flags += (x, )
 
-    iop = InstObjParams(name, Name, 'Jump', CodeBlock(code), inst_flags)
+    iop = InstObjParams(name, Name, 'Jump', code, inst_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
