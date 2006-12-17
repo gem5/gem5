@@ -295,6 +295,12 @@ let {{
         else if(EA & 0x3f)
             fault = new MemAddressNotAligned;
     '''
+    TwinAlignmentFaultCheck = '''
+        if(RD & 0xe)
+            fault = new IllegalInstruction;
+        else if(EA & 0x1f)
+            fault = new MemAddressNotAligned;
+    '''
     # XXX Need to take care of pstate.hpriv as well. The lower ASIs
     # are split into ones that are available in priv and hpriv, and
     # those that are only available in hpriv

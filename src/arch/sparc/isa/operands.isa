@@ -62,6 +62,9 @@ def operands {{
     'Rd_prev':		('IntReg', 'udw', 'RD + NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 2),
     # The Rd from the next window
     'Rd_next':		('IntReg', 'udw', 'RD + 2 * NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 3),
+    # For microcoded twin load instructions, RdTwin appears in the "code"
+    # for the instruction is replaced by RdLow or RdHigh by the format
+    # before it's processed by the iop.
     # The low (even) register of a two register pair
     'RdLow': 		('IntReg', 'udw', 'RD & (~1)', 'IsInteger', 4),
     # The high (odd) register of a two register pair
