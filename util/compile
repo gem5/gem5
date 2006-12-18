@@ -1,0 +1,323 @@
+#!/usr/bin/env python
+# Copyright (c) 2006 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+import os, re, sys
+from os.path import isdir, isfile, join as joinpath
+
+homedir = os.environ['HOME']
+
+def do_compile():
+    #
+    # Find SCons
+    #
+    search_dirs = [ joinpath(homedir, 'local/lib'), '/opt/local/lib',
+                    '/usr/local/lib', '/usr/lib' ]
+
+    if os.environ.has_key("SCONS_LIB_DIR"):
+        search_dirs.append(os.environ["SCONS_LIB_DIR"])
+
+    local = re.compile(r'^scons-local-([0-9]*)\.([0-9]*)\.([0-9]*)$')
+    standard = re.compile(r'^scons-([0-9]*)\.([0-9]*)\.([0-9]*)$')
+
+    scons_dirs = []
+    for dir in search_dirs:
+        if not isdir(dir):
+            continue
+
+        entries = os.listdir(dir)
+        for entry in entries:
+            if not entry.startswith('scons'):
+                continue
+
+            version = (0,0,0)
+            path = joinpath(dir, entry)
+
+            match = local.search(entry)
+            if not match:
+                match = standard.search(entry)
+
+            if match:
+                version = match.group(1), match.group(2), match.group(3)
+
+            scons_dirs.append((version, path))
+
+    scons_dirs.sort()
+    scons_dirs.reverse()
+
+    if not scons_dirs:
+        print >>sys.stderr, \
+              "could not find scons in the following dirs: %s" % search_dirs
+        sys.exit(1)
+
+    sys.path = [ scons_dirs[0][1] ] + sys.path
+
+    # invoke SCons
+    import SCons.Script
+    SCons.Script.main()
+
+#
+# do argument parsing
+#
+progname = sys.argv[0]
+
+import optparse
+
+usage = '''%prog [compile options] <version> [SCons options]
+
+%prog assumes that the user has a directory called ~/m5/<version> where
+the source tree resides, and a directory called ~/build, where %prog
+will create ~/build/<version> if it does not exist and build the resulting
+simulators there.
+
+If ~/build is set up in such a way that it points to a local disk on
+each host, compiles will be very efficient.  For example:
+~/build -> /z/<username>/.build  (Assuming that /z is a local disk and
+not NFS mounted, whereas your home directory is NFS mounted).
+'''
+version = '%prog 0.1'
+parser = optparse.OptionParser(usage=usage, version=version,
+                               formatter=optparse.TitledHelpFormatter())
+parser.disable_interspersed_args()
+
+# current option group
+group = None
+
+def set_group(*args, **kwargs):
+    '''set the current option group'''
+    global group
+    if not args and not kwargs:
+        group = None
+    else:
+        group = parser.add_option_group(*args, **kwargs)
+
+def add_option(*args, **kwargs):
+    if group:
+        return group.add_option(*args, **kwargs)
+    else:
+        return parser.add_option(*args, **kwargs)
+
+def bool_option(name, default, help):
+    '''add a boolean option called --name and --no-name.
+    Display help depending on which is the default'''
+
+    tname = '--%s' % name
+    fname = '--no-%s' % name
+    dest = name.replace('-', '_')
+    if default:
+        thelp = optparse.SUPPRESS_HELP
+        fhelp = help
+    else:
+        thelp = help
+        fhelp = optparse.SUPPRESS_HELP
+
+    add_option(tname, action="store_true", default=default, help=thelp)
+    add_option(fname, action="store_false", dest=dest, help=fhelp)
+
+add_option('-n', '--no-compile', default=False, action='store_true',
+           help="don't actually compile, just echo SCons command line")
+add_option('--everything', default=False, action='store_true',
+           help="compile everything that can be compiled")
+add_option('-E', "--experimental", action='store_true', default=False,
+           help="enable experimental builds")
+add_option('-v', "--verbose", default=False, action='store_true',
+           help="be verbose")
+          
+set_group("Output binary types")
+bool_option("debug", default=False, help="compile debug binaries")
+bool_option("opt", default=False, help="compile opt binaries")
+bool_option("fast", default=False, help="compile fast binaries")
+bool_option("prof", default=False, help="compile profile binaries")
+add_option('-a', "--all-bin", default=False, action='store_true',
+           help="compile debug, opt, and fast binaries")
+
+set_group("ISA options")
+bool_option("alpha", default=False, help="compile Alpha")
+bool_option("mips", default=False, help="compile MIPS")
+bool_option("sparc", default=False, help="compile SPARC")
+add_option('-i', "--all-isa", default=False, action='store_true',
+           help="compile all ISAs")
+
+set_group("Emulation options")
+bool_option("syscall", default=True,
+            help="Do not compile System Call Emulation mode")
+bool_option("fullsys", default=True,
+            help="Do not compile Full System mode")
+
+def usage(exitcode=None):
+    parser.print_help()
+    if exitcode is not None:
+        sys.exit(exitcode)
+
+(options, args) = parser.parse_args()
+
+if options.everything:
+    options.all_bin = True
+    options.prof = True
+    options.all_isa = True
+
+if options.all_bin:
+    options.debug = True
+    options.opt = True
+    options.fast = True
+
+binaries = []
+if options.debug:
+    binaries.append('m5.debug')
+if options.opt:
+    binaries.append('m5.opt')
+if options.fast:
+    binaries.append('m5.fast')
+if options.prof:
+    binaries.append('m5.prof')
+
+if not binaries:
+    binaries.append('m5.debug')
+
+if options.all_isa:
+    options.alpha = True
+    options.mips = True
+    options.sparc = True
+
+isas = []
+if options.alpha:
+    isas.append('alpha')
+if options.mips:
+    isas.append('mips')
+if options.sparc:
+    isas.append('sparc')
+
+if not isas:
+    isas.append('alpha')
+
+modes = []
+if options.syscall:
+    modes.append('syscall')
+if options.fullsys:
+    modes.append('fullsys')
+
+if not modes:
+    sys.exit("must specify at least one mode")
+
+#
+# Convert options into SCons command line arguments
+#
+
+# valid combinations of ISA and emulation mode
+valid = { ('alpha', 'syscall') : 'ALPHA_SE',
+          ('alpha', 'fullsys') : 'ALPHA_FS',
+          ('mips',  'syscall') : 'MIPS_SE',
+          ('sparc', 'syscall') : 'SPARC_SE' }
+
+# experimental combinations of ISA and emulation mode
+experiment = { ('mips', 'fullsys') : 'MIPS_FS',
+               ('sparc', 'fullsys') : 'SPARC_FS' }
+
+if options.experimental:
+    valid.update(experiment)
+
+builds = []
+for isa in isas:
+    for mode in modes:
+        try:
+            build = valid[(isa, mode)]
+            builds.append(build)
+        except KeyError:
+            pass
+
+if not builds:
+    sys.exit("must specify at least one valid combination of ISA and mode")
+
+if not args:
+    usage(2)
+
+version = args[0]
+del args[0]
+
+for bin in binaries:
+    for build in builds:
+        args.append('%s/%s' % (build, bin))
+
+#
+# set up compile
+#
+build_base = joinpath(homedir, 'build')
+m5_base = joinpath(homedir, 'm5')
+
+if not isdir(build_base):
+    sys.exit('build directory %s not found' % build_base)
+
+if not isdir(m5_base):
+    sys.exit('m5 base directory %s not found' % m5_base)
+
+m5_dir = joinpath(m5_base, version)
+if not isdir(m5_dir):
+    sys.exit('source directory %s not found' % m5_dir)
+
+# support M5 1.x
+oldstyle = isfile(joinpath(m5_dir, 'SConscript'))
+if oldstyle:
+    ext_dir = joinpath(m5_base, 'ext')
+    test_dir = joinpath(m5_base, 'test.' + version)
+
+    if not isdir(ext_dir):
+        sys.exit('ext directory not found at %s' % ext_dir)
+
+    if not isdir(test_dir):
+        sys.exit('test directory not found at %s' % test_dir)
+
+build_dir = joinpath(build_base, version)
+if not isdir(build_dir):
+    os.mkdir(build_dir)
+    # need some symlinks for m5 1.x
+    if oldstyle:
+        os.symlink(m5_dir, joinpath(build_dir, 'm5'))
+        os.symlink(ext_dir, joinpath(build_dir, 'ext'))
+        os.symlink(test_dir, joinpath(build_dir, 'test'))
+        os.symlink(joinpath(m5_dir, 'build', 'SConstruct'),
+                   joinpath(build_dir, 'SConstruct'))
+        os.symlink(joinpath(m5_dir, 'build', 'default_options'),
+                   joinpath(build_dir, 'default_options'))
+
+sys.argv = [ progname ]
+if oldstyle:
+    os.chdir(build_dir)
+    sys.argv.extend(args)
+else:
+    os.chdir(m5_dir)
+    for arg in args:
+        if not arg.startswith('-') and '=' not in arg:
+            arg = joinpath(build_dir, 'build', arg)
+        sys.argv.append(arg)
+
+if options.no_compile or options.verbose:
+    for arg in sys.argv[1:]:
+        print arg
+
+if not options.no_compile:
+    do_compile()
