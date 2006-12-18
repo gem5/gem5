@@ -218,7 +218,7 @@ def template JumpOrBranchDecode {{
 
 def format CondBranch(code) {{
     code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
-    iop = InstObjParams(name, Name, 'Branch', CodeBlock(code),
+    iop = InstObjParams(name, Name, 'Branch', code,
                         ('IsDirectControl', 'IsCondControl'))
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
@@ -230,8 +230,7 @@ let {{
 def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     # Declare basic control transfer w/o link (i.e. link reg is R31)
     nolink_code = 'NPC = %s;\n' % npc_expr
-    nolink_iop = InstObjParams(name, Name, base_class,
-                               CodeBlock(nolink_code), flags)
+    nolink_iop = InstObjParams(name, Name, base_class, nolink_code, flags)
     header_output = BasicDeclare.subst(nolink_iop)
     decoder_output = BasicConstructor.subst(nolink_iop)
     exec_output = BasicExecute.subst(nolink_iop)
@@ -239,7 +238,7 @@ def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     # Generate declaration of '*AndLink' version, append to decls
     link_code = 'Ra = NPC & ~3;\n' + nolink_code
     link_iop = InstObjParams(name, Name + 'AndLink', base_class,
-                             CodeBlock(link_code), flags)
+                             link_code, flags)
     header_output += BasicDeclare.subst(link_iop)
     decoder_output += BasicConstructor.subst(link_iop)
     exec_output += BasicExecute.subst(link_iop)

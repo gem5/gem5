@@ -68,7 +68,7 @@ output decoder {{
 }};
 
 def format EmulatedCallPal(code, *flags) {{
-    iop = InstObjParams(name, Name, 'EmulatedCallPal', CodeBlock(code), flags)
+    iop = InstObjParams(name, Name, 'EmulatedCallPal', code, flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -131,7 +131,7 @@ output decoder {{
 }};
 
 def format CallPal(code, *flags) {{
-    iop = InstObjParams(name, Name, 'CallPalBase', CodeBlock(code), flags)
+    iop = InstObjParams(name, Name, 'CallPalBase', code, flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -269,8 +269,7 @@ output decoder {{
 def format HwMoveIPR(code, *flags) {{
     all_flags = ['IprAccessOp']
     all_flags += flags
-    iop = InstObjParams(name, Name, 'HwMoveIPR', CodeBlock(code),
-                        all_flags)
+    iop = InstObjParams(name, Name, 'HwMoveIPR', code, all_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

@@ -113,16 +113,14 @@ def format IntegerOperate(code, *opt_flags) {{
         imm_code = re.sub(r'Rb_or_imm(\.\w+)?', 'imm', orig_code)
 
     # generate declaration for register version
-    cblk = CodeBlock(code)
-    iop = InstObjParams(name, Name, 'AlphaStaticInst', cblk, opt_flags)
+    iop = InstObjParams(name, Name, 'AlphaStaticInst', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     exec_output = BasicExecute.subst(iop)
 
     if uses_imm:
         # append declaration for imm version
-        imm_cblk = CodeBlock(imm_code)
-        imm_iop = InstObjParams(name, Name + 'Imm', 'IntegerImm', imm_cblk,
+        imm_iop = InstObjParams(name, Name + 'Imm', 'IntegerImm', imm_code,
                                 opt_flags)
         header_output += BasicDeclare.subst(imm_iop)
         decoder_output += BasicConstructor.subst(imm_iop)

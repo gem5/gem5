@@ -1048,6 +1048,9 @@ class Template:
                     if isinstance(myDict[name], str):
                         myDict[name] = substMungedOpNames(substBitOps(myDict[name]))
                         compositeCode += (" " + myDict[name])
+
+            compositeCode += (" " + template)
+
             operands = SubOperandList(compositeCode, d.operands)
 
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')

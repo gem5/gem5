@@ -338,7 +338,7 @@ def template BasicDecodeWithMnemonic {{
 
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
-    iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code), flags)
+    iop = InstObjParams(name, Name, 'AlphaStaticInst', code, flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -424,8 +424,7 @@ def template OperateNopCheckDecode {{
 
 // Like BasicOperate format, but generates NOP if RC/FC == 31
 def format BasicOperateWithNopCheck(code, *opt_args) {{
-    iop = InstObjParams(name, Name, 'AlphaStaticInst', CodeBlock(code),
-                        opt_args)
+    iop = InstObjParams(name, Name, 'AlphaStaticInst', code, opt_args)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = OperateNopCheckDecode.subst(iop)
