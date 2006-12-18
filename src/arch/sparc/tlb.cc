@@ -575,6 +575,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (write && asi == ASI_LDTX_P)
             // block init store (like write hint64)
             goto continueDtbFlow;
+        if (!write && asi == ASI_QUAD_LDD)
+            goto continueDtbFlow;
+
         if (AsiIsTwin(asi))
             panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))
