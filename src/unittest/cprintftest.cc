@@ -43,6 +43,7 @@ main()
     char foo[9];
     cprintf("%s\n", foo);
 
+    cprintf("%d\n", 'A');
     cprintf("%shits%%s + %smisses%%s\n", "test", "test");
     cprintf("%%s%-10s %c he went home \'\"%d %#o %#x %1.5f %1.2E\n",
             "hello", 'A', 1, 0xff, 0xfffffffffffffULL, 3.141592653589, 1.1e10);
