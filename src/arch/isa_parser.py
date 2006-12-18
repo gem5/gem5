@@ -1017,37 +1017,38 @@ class Template:
         # CPU-model-specific substitutions are handled later (in GenCode).
         template = protect_cpu_symbols(template)
 
-        # if we're dealing with an InstObjParams object, we need to be a
-        # little more sophisticated. Otherwise, just do what we've always
-        # done
+        # Build a dict ('myDict') to use for the template substitution.
+        # Start with the template namespace.  Make a copy since we're
+        # going to modify it.
+        myDict = templateMap.copy()
+
         if isinstance(d, InstObjParams):
-            # The instruction wide parameters are already formed, but the
-            # parameters which are only function wide still need to be
-            # generated.
-            perFuncNames = ['op_decl', 'op_src_decl', 'op_dest_decl', \
-                            'op_rd', 'op_wb', 'mem_acc_size', 'mem_acc_type']
+            # If we're dealing with an InstObjParams object, we need
+            # to be a little more sophisticated.  The instruction-wide
+            # parameters are already formed, but the parameters which
+            # are only function wide still need to be generated.
             compositeCode = ''
 
-            myDict = templateMap.copy()
             myDict.update(d.__dict__)
             # The "operands" and "snippets" attributes of the InstObjParams
             # objects are for internal use and not substitution.
             del myDict['operands']
             del myDict['snippets']
 
-            for name in labelRE.findall(template):
-                # Don't try to find a snippet to go with things that will
-                # match against attributes of d, or that are other templates,
-                # or that we're going to generate later, or that we've already
-                # found.
-                if  not hasattr(d, name) and \
-                    not templateMap.has_key(name) and \
-                    not myDict.has_key(name) and \
-                    name not in perFuncNames:
-                    myDict[name] = d.snippets[name]
-                    if isinstance(myDict[name], str):
-                        myDict[name] = substMungedOpNames(substBitOps(myDict[name]))
-                        compositeCode += (" " + myDict[name])
+            snippetLabels = [l for l in labelRE.findall(template)
+                             if d.snippets.has_key(l)]
+
+            snippets = dict([(s, mungeSnippet(d.snippets[s]))
+                             for s in snippetLabels])
+
+            myDict.update(snippets)
+
+            compositeCode = ' '.join(map(str, snippets.values()))
+
+            # Add in template itself in case it references any
+            # operands explicitly (like Mem)
+            compositeCode += ' ' + template
+
             operands = SubOperandList(compositeCode, d.operands)
 
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')
@@ -1067,18 +1068,14 @@ class Template:
                 myDict['mem_acc_size'] = d.operands.memOperand.mem_acc_size
                 myDict['mem_acc_type'] = d.operands.memOperand.mem_acc_type
 
-        else:
-            # Start with the template namespace.  Make a copy since we're
-            # going to modify it.
-            myDict = templateMap.copy()
+        elif isinstance(d, dict):
             # if the argument is a dictionary, we just use it.
-            if isinstance(d, dict):
-                myDict.update(d)
+            myDict.update(d)
+        elif hasattr(d, '__dict__'):
             # if the argument is an object, we use its attribute map.
-            elif hasattr(d, '__dict__'):
-                myDict.update(d.__dict__)
-            else:
-                raise TypeError, "Template.subst() arg must be or have dictionary"
+            myDict.update(d.__dict__)
+        else:
+            raise TypeError, "Template.subst() arg must be or have dictionary"
         return template % myDict
 
     # Convert to string.  This handles the case when a template with a
@@ -1662,8 +1659,12 @@ assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
 def substMungedOpNames(code):
     return operandsWithExtRE.sub(r'\1', code)
 
-def joinLists(t):
-    return map(string.join, t)
+# Fix up code snippets for final substitution in templates.
+def mungeSnippet(s):
+    if isinstance(s, str):
+        return substMungedOpNames(substBitOps(s))
+    else:
+        return s
 
 def makeFlagConstructor(flag_list):
     if len(flag_list) == 0:
@@ -1689,17 +1690,13 @@ opClassRE = re.compile(r'.*Op|No_OpClass')
 
 class InstObjParams:
     def __init__(self, mnem, class_name, base_class = '',
-                 snippets = None, opt_args = []):
+                 snippets = {}, opt_args = []):
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class
-        compositeCode = ''
-        if snippets:
-            if not isinstance(snippets, dict):
-                snippets = {'code' : snippets}
-            for snippet in snippets.values():
-                if isinstance(snippet, str):
-                    compositeCode += (" " + snippet)
+        if not isinstance(snippets, dict):
+            snippets = {'code' : snippets}
+        compositeCode = ' '.join(map(str, snippets.values()))
         self.snippets = snippets
 
         self.operands = OperandList(compositeCode)

@@ -40,63 +40,24 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # add hook to get effective addresses into execution trace output.
     ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
 
-    # generate code block objects
-    ea_cblk = CodeBlock(ea_code)
-    memacc_cblk = CodeBlock(memacc_code)
-    postacc_cblk = CodeBlock(postacc_code)
-
     # Some CPU models execute the memory operation as an atomic unit,
     # while others want to separate them into an effective address
     # computation and a memory access operation.  As a result, we need
     # to generate three StaticInst objects.  Note that the latter two
     # are nested inside the larger "atomic" one.
 
-    # generate InstObjParams for EAComp object
-    ea_iop = InstObjParams(name, Name, base_class, ea_cblk, inst_flags)
-
-    # generate InstObjParams for MemAcc object
-    memacc_iop = InstObjParams(name, Name, base_class, memacc_cblk, inst_flags)
-    # in the split execution model, the MemAcc portion is responsible
-    # for the post-access code.
-    memacc_iop.postacc_code = postacc_cblk.code
-
-    # generate InstObjParams for InitiateAcc, CompleteAcc object
-    # The code used depends on the template being used
-    if (exec_template_base == 'Load'):
-        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
-        completeacc_cblk = CodeBlock(memacc_code + postacc_code)
-    elif (exec_template_base.startswith('Store')):
-        initiateacc_cblk = CodeBlock(ea_code + memacc_code)
-        completeacc_cblk = CodeBlock(postacc_code)
-    else:
-        initiateacc_cblk = ''
-        completeacc_cblk = ''
-
-    initiateacc_iop = InstObjParams(name, Name, base_class, initiateacc_cblk,
-                                    inst_flags)
-
-    completeacc_iop = InstObjParams(name, Name, base_class, completeacc_cblk,
-                                    inst_flags)
-
-    if (exec_template_base == 'Load'):
-        initiateacc_iop.ea_code = ea_cblk.code
-        initiateacc_iop.memacc_code = memacc_cblk.code
-        completeacc_iop.memacc_code = memacc_cblk.code
-        completeacc_iop.postacc_code = postacc_cblk.code
-    elif (exec_template_base.startswith('Store')):
-        initiateacc_iop.ea_code = ea_cblk.code
-        initiateacc_iop.memacc_code = memacc_cblk.code
-        completeacc_iop.postacc_code = postacc_cblk.code
-
-    # generate InstObjParams for unified execution
-    cblk = CodeBlock(ea_code + memacc_code + postacc_code)
-    iop = InstObjParams(name, Name, base_class, cblk, inst_flags)
-
-    iop.ea_constructor = ea_cblk.constructor
-    iop.ea_code = ea_cblk.code
-    iop.memacc_constructor = memacc_cblk.constructor
-    iop.memacc_code = memacc_cblk.code
-    iop.postacc_code = postacc_cblk.code
+    # Generate InstObjParams for each of the three objects.  Note that
+    # they differ only in the set of code objects contained (which in
+    # turn affects the object's overall operand list).
+    iop = InstObjParams(name, Name, base_class,
+                        { 'ea_code':ea_code, 'memacc_code':memacc_code, 'postacc_code':postacc_code },
+                        inst_flags)
+    ea_iop = InstObjParams(name, Name, base_class,
+                        { 'ea_code':ea_code },
+                        inst_flags)
+    memacc_iop = InstObjParams(name, Name, base_class,
+                        { 'memacc_code':memacc_code, 'postacc_code':postacc_code },
+                        inst_flags)
 
     if mem_flags:
         s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
@@ -117,14 +78,19 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
 
     # (header_output, decoder_output, decode_block, exec_output)
-    return (LoadStoreDeclare.subst(iop), LoadStoreConstructor.subst(iop),
+    return (LoadStoreDeclare.subst(iop),
+            EACompConstructor.subst(ea_iop)
+            + MemAccConstructor.subst(memacc_iop)
+            + LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
             EACompExecute.subst(ea_iop)
             + memAccExecTemplate.subst(memacc_iop)
             + fullExecTemplate.subst(iop)
-            + initiateAccTemplate.subst(initiateacc_iop)
-            + completeAccTemplate.subst(completeacc_iop))
+            + initiateAccTemplate.subst(iop)
+            + completeAccTemplate.subst(iop))
 }};
+
+
 output header {{
         std::string inst2string(MachInst machInst);
 }};

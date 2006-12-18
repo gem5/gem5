@@ -154,19 +154,20 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x3: decode FUNCTION_LO {
                 format HiLoOp {
-                    0x0: mult({{ val = Rs.sd * Rt.sd; }});
-                    0x1: multu({{ val = Rs.ud * Rt.ud; }});
-                }
-
-                format HiLoMiscOp {
-                    0x2: div({{ if (Rt.sd != 0) {
-                                    HI = Rs.sd % Rt.sd;
-                                    LO = Rs.sd / Rt.sd;
+                    0x0: mult({{ int64_t val = Rs.sd * Rt.sd; }});
+                    0x1: multu({{ uint64_t val = Rs.ud * Rt.ud; }});
+                    0x2: div({{ int64_t val;
+                                if (Rt.sd != 0) {
+                                    int64_t hi = Rs.sd % Rt.sd;
+                                    int64_t lo = Rs.sd / Rt.sd;
+                                    val = (hi << 32) | lo;
                                 }
                              }});
-                    0x3: divu({{ if (Rt.ud != 0) {
-                                     HI = Rs.ud % Rt.ud;
-                                     LO = Rs.ud / Rt.ud;
+                    0x3: divu({{ uint64_t val;
+                                 if (Rt.ud != 0) {
+                                     uint64_t hi = Rs.ud % Rt.ud;
+                                     uint64_t lo = Rs.ud / Rt.ud;
+                                     val = (hi << 32) | lo;
                                  }
                               }});
                 }
@@ -950,17 +951,17 @@ decode OPCODE_HI default Unknown::unknown() {
                                 }});
 
                 format HiLoOp {
-                    0x0: madd({{ val = ((int64_t) HI << 32 | LO) +
-                                       (Rs.sd * Rt.sd);
+                    0x0: madd({{ int64_t val = ((int64_t) HI << 32 | LO) +
+                                          (Rs.sd * Rt.sd);
                               }});
-                    0x1: maddu({{ val = ((uint64_t) HI << 32 | LO) +
-                                        (Rs.ud * Rt.ud);
+                    0x1: maddu({{ uint64_t val = ((uint64_t) HI << 32 | LO) +
+                                           (Rs.ud * Rt.ud);
                                }});
-                    0x4: msub({{ val = ((int64_t) HI << 32 | LO) -
-                                       (Rs.sd * Rt.sd);
+                    0x4: msub({{ int64_t val = ((int64_t) HI << 32 | LO) -
+                                          (Rs.sd * Rt.sd);
                               }});
-                    0x5: msubu({{ val = ((uint64_t) HI << 32 | LO) -
-                                        (Rs.ud * Rt.ud);
+                    0x5: msubu({{ uint64_t val = ((uint64_t) HI << 32 | LO) -
+                                           (Rs.ud * Rt.ud);
                                }});
                 }
             }

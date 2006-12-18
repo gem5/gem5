@@ -293,7 +293,7 @@ def template FloatingPointDecode {{
 //   currently unimplemented (will fail).
 // - Generates NOP if FC == 31.
 def format FloatingPointOperate(code, *opt_args) {{
-    iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
+    iop = InstObjParams(name, Name, 'AlphaFP', code, opt_args)
     decode_block = FloatingPointDecode.subst(iop)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
@@ -303,7 +303,7 @@ def format FloatingPointOperate(code, *opt_args) {{
 // Special format for cvttq where rounding mode is pre-decoded
 def format FPFixedRounding(code, class_suffix, *opt_args) {{
     Name += class_suffix
-    iop = InstObjParams(name, Name, 'AlphaFP', CodeBlock(code), opt_args)
+    iop = InstObjParams(name, Name, 'AlphaFP', code, opt_args)
     decode_block = FloatingPointDecode.subst(iop)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)

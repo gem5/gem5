@@ -123,6 +123,44 @@ class AlphaDynInst : public BaseDynInst<Impl>
                                                this->threadNumber);
     }
 
+    /** Reads a miscellaneous register. */
+    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    {
+        return this->cpu->readMiscReg(
+                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                this->threadNumber);
+    }
+
+    /** Reads a misc. register, including any side-effects the read
+     * might have as defined by the architecture.
+     */
+    TheISA::MiscReg readMiscRegOperandWithEffect(const StaticInst *si, int idx)
+    {
+        return this->cpu->readMiscRegWithEffect(
+                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                this->threadNumber);
+    }
+
+    /** Sets a misc. register. */
+    void setMiscRegOperand(const StaticInst * si, int idx, const MiscReg &val)
+    {
+        this->instResult.integer = val;
+        return this->cpu->setMiscReg(
+                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                val, this->threadNumber);
+    }
+
+    /** Sets a misc. register, including any side-effects the write
+     * might have as defined by the architecture.
+     */
+    void setMiscRegOperandWithEffect(const StaticInst *si, int idx,
+                                     const MiscReg &val)
+    {
+        return this->cpu->setMiscRegWithEffect(
+                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                val, this->threadNumber);
+    }
+
 #if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();

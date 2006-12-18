@@ -166,22 +166,28 @@ def template CompleteAccDeclare {{
 }};
 
 
-def template LoadStoreConstructor {{
+def template EACompConstructor {{
     /** TODO: change op_class to AddrGenOp or something (requires
      * creating new member of OpClass enum in op_class.hh, updating
      * config files, etc.). */
     inline %(class_name)s::EAComp::EAComp(MachInst machInst)
         : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
     {
-        %(ea_constructor)s;
+        %(constructor)s;
     }
+}};
 
+
+def template MemAccConstructor {{
     inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
         : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
     {
-        %(memacc_constructor)s;
+        %(constructor)s;
     }
+}};
 
+
+def template LoadStoreConstructor {{
     inline %(class_name)s::%(class_name)s(MachInst machInst)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           new EAComp(machInst), new MemAcc(machInst))
@@ -202,7 +208,7 @@ def template EACompExecute {{
         %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
-        %(code)s;
+        %(ea_code)s;
 
         if (fault == NoFault) {
             %(op_wb)s;
@@ -228,7 +234,7 @@ def template LoadMemAccExecute {{
 
         if (fault == NoFault) {
             fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
-            %(code)s;
+            %(memacc_code)s;
         }
 
         if (fault == NoFault) {
@@ -327,7 +333,7 @@ def template StoreMemAccExecute {{
         EA = xc->getEA();
 
         if (fault == NoFault) {
-            %(code)s;
+            %(memacc_code)s;
         }
 
         if (fault == NoFault) {
@@ -471,7 +477,7 @@ def template MiscMemAccExecute {{
         EA = xc->getEA();
 
         if (fault == NoFault) {
-            %(code)s;
+            %(memacc_code)s;
         }
 
         return NoFault;
