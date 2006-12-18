@@ -170,7 +170,6 @@ def template LoadInitiateAcc {{
         {
             Fault fault = NoFault;
             Addr EA;
-            uint%(mem_acc_size)s_t Mem;
             %(op_decl)s;
             %(op_rd)s;
             %(ea_code)s;

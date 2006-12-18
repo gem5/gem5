@@ -240,11 +240,6 @@ def format IntImmOp(code, *opt_flags) {{
 }};
 
 def format HiLoOp(code, *opt_flags) {{
-    if '.sd' in code:
-        code = 'int64_t ' + code
-    elif '.ud' in code:
-        code = 'uint64_t ' + code
-
     code += 'HI = val<63:32>;\n'
     code += 'LO = val<31:0>;\n'
 
@@ -260,7 +255,7 @@ def format HiLoMiscOp(code, *opt_flags) {{
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
-    exec_output = HiLoExecute.subst(iop)
+    exec_output = BasicExecute.subst(iop)
 }};
 
 
