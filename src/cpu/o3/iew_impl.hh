@@ -546,7 +546,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readPC();
 #if ISA_HAS_DELAY_SLOT
-    toCommit->nextNPC[tid] = inst->readNextNPC();
+    toCommit->nextNPC[tid] = inst->readNextPC();
 #endif
     toCommit->branchMispredict[tid] = false;
 
@@ -1436,7 +1436,7 @@ DefaultIEW<Impl>::writebackInsts()
     // mark scoreboard that this instruction is finally complete.
     // Either have IEW have direct access to scoreboard, or have this
     // as part of backwards communication.
-    for (int inst_num = 0; inst_num < issueWidth &&
+    for (int inst_num = 0; inst_num < wbWidth &&
              toCommit->insts[inst_num]; inst_num++) {
         DynInstPtr inst = toCommit->insts[inst_num];
         int tid = inst->threadNumber;
