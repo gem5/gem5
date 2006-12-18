@@ -731,9 +731,14 @@ DefaultCommit<Impl>::commit()
 #if ISA_HAS_DELAY_SLOT
             InstSeqNum bdelay_done_seq_num = squashed_inst;
             bool squash_bdelay_slot = fromIEW->squashDelaySlot[tid];
+            bool branchMispredict = fromIEW->branchMispredict[tid];
 
-            if (!squash_bdelay_slot)
+            // Squashing/not squashing the branch delay slot only makes
+            // sense when you're squashing from a branch, ie from a branch
+            // mispredict.
+            if (branchMispredict && !squash_bdelay_slot) {
                 bdelay_done_seq_num++;
+            }
 #endif
 
             if (fromIEW->includeSquashInst[tid] == true) {
