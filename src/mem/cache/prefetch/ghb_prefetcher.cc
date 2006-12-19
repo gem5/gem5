@@ -34,8 +34,6 @@
  * GHB Prefetcher template instantiations.
  */
 
-#include "mem/cache/tags/cache_tags.hh"
-
 #include "mem/cache/tags/lru.hh"
 
 #include "mem/cache/prefetch/ghb_prefetcher.hh"
@@ -43,6 +41,6 @@
 // Template Instantiations
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-template class GHBPrefetcher<CacheTags<LRU> >;
+template class GHBPrefetcher<LRU >;
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

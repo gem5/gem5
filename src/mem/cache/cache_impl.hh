@@ -72,10 +72,18 @@ Cache(const std::string &_name,
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
       coherence(params.coherence), prefetcher(params.prefetcher),
-      hitLatency(params.hitLatency)
+      hitLatency(params.hitLatency),
+      compressionAlg(params.compressionAlg),
+      blkSize(params.blkSize),
+      doFastWrites(params.doFastWrites),
+      prefetchMiss(params.prefetchMiss),
+      storeCompressed(params.storeCompressed),
+      compressOnWriteback(params.compressOnWriteback),
+      compLatency(params.compLatency),
+      adaptiveCompression(params.adaptiveCompression),
+      writebackCompressed(params.writebackCompressed)
 {
     tags->setCache(this);
-    tags->setPrefetcher(prefetcher);
     missQueue->setCache(this);
     missQueue->setPrefetcher(prefetcher);
     coherence->setCache(this);
@@ -98,6 +106,433 @@ Cache<TagStore,Coherence>::regStats()
 }
 
 template<class TagStore, class Coherence>
+typename Cache<TagStore,Coherence>::BlkType*
+Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
+                                        PacketList & writebacks, bool update)
+{
+    // Set the block offset here
+    int offset = tags->extractBlkOffset(pkt->getAddr());
+
+    BlkType *blk = NULL;
+    if (update) {
+        blk = tags->findBlock(pkt, lat);
+    } else {
+        blk = tags->findBlock(pkt->getAddr());
+        lat = 0;
+    }
+    if (blk != NULL) {
+
+        if (!update) {
+            if (pkt->isWrite()){
+                assert(offset < blkSize);
+                assert(pkt->getSize() <= blkSize);
+                assert(offset+pkt->getSize() <= blkSize);
+                memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
+                       pkt->getSize());
+            } else if (!(pkt->flags & SATISFIED)) {
+                pkt->flags |= SATISFIED;
+                pkt->result = Packet::Success;
+                assert(offset < blkSize);
+                assert(pkt->getSize() <= blkSize);
+                assert(offset + pkt->getSize() <=blkSize);
+                memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
+                       pkt->getSize());
+            }
+            return blk;
+        }
+
+        // Hit
+        if (blk->isPrefetch()) {
+            //Signal that this was a hit under prefetch (no need for
+            //use prefetch (only can get here if true)
+            DPRINTF(HWPrefetch, "Hit a block that was prefetched\n");
+            blk->status &= ~BlkHWPrefetched;
+            if (prefetchMiss) {
+                //If we are using the miss stream, signal the
+                //prefetcher otherwise the access stream would have
+                //already signaled this hit
+                prefetcher->handleMiss(pkt, curTick);
+            }
+        }
+
+        if ((pkt->isWrite() && blk->isWritable()) ||
+            (pkt->isRead() && blk->isValid())) {
+
+            // We are satisfying the request
+            pkt->flags |= SATISFIED;
+
+            if (blk->isCompressed()) {
+                // If the data is compressed, need to increase the latency
+                lat += (compLatency/4);
+            }
+
+            bool write_data = false;
+
+            assert(verifyData(blk));
+
+            assert(offset < blkSize);
+            assert(pkt->getSize() <= blkSize);
+            assert(offset+pkt->getSize() <= blkSize);
+
+            if (pkt->isWrite()) {
+                if (blk->checkWrite(pkt->req)) {
+                    write_data = true;
+                    blk->status |= BlkDirty;
+                    memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
+                           pkt->getSize());
+                }
+            } else {
+                assert(pkt->isRead());
+                if (pkt->req->isLocked()) {
+                    blk->trackLoadLocked(pkt->req);
+                }
+                memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
+                       pkt->getSize());
+            }
+
+            if (write_data ||
+                (adaptiveCompression && blk->isCompressed()))
+            {
+                // If we wrote data, need to update the internal block
+                // data.
+                updateData(blk, writebacks,
+                           !(adaptiveCompression &&
+                             blk->isReferenced()));
+            }
+        } else {
+            // permission violation, treat it as a miss
+            blk = NULL;
+        }
+    } else {
+        // complete miss (no matching block)
+        if (pkt->req->isLocked() && pkt->isWrite()) {
+            // miss on store conditional... just give up now
+            pkt->req->setScResult(0);
+            pkt->flags |= SATISFIED;
+        }
+    }
+
+    return blk;
+}
+
+template<class TagStore, class Coherence>
+typename Cache<TagStore,Coherence>::BlkType*
+Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
+                                      CacheBlk::State new_state,
+                                      PacketList & writebacks,
+                                      PacketPtr target)
+{
+#ifndef NDEBUG
+    BlkType *tmp_blk = findBlock(pkt->getAddr());
+    assert(tmp_blk == blk);
+#endif
+    blk = doReplacement(blk, pkt, new_state, writebacks);
+
+
+    if (pkt->isRead()) {
+        memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+    }
+
+        blk->whenReady = pkt->finishTime;
+
+    // Respond to target, if any
+    if (target) {
+
+        target->flags |= SATISFIED;
+
+        if (target->cmd == Packet::InvalidateReq) {
+            invalidateBlk(blk);
+            blk = NULL;
+        }
+
+        if (blk && (target->isWrite() ? blk->isWritable() : blk->isValid())) {
+            assert(target->isWrite() || target->isRead());
+            assert(target->getOffset(blkSize) + target->getSize() <= blkSize);
+            if (target->isWrite()) {
+                if (blk->checkWrite(pkt->req)) {
+                    blk->status |= BlkDirty;
+                    memcpy(blk->data + target->getOffset(blkSize),
+                           target->getPtr<uint8_t>(), target->getSize());
+                }
+            } else {
+                if (pkt->req->isLocked()) {
+                    blk->trackLoadLocked(pkt->req);
+                }
+                memcpy(target->getPtr<uint8_t>(),
+                       blk->data + target->getOffset(blkSize),
+                       target->getSize());
+            }
+        }
+    }
+
+    if (blk) {
+        // Need to write the data into the block
+        updateData(blk, writebacks, !adaptiveCompression || true);
+    }
+    return blk;
+}
+
+template<class TagStore, class Coherence>
+typename Cache<TagStore,Coherence>::BlkType*
+Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
+                                      CacheBlk::State new_state,
+                                      PacketList & writebacks, PacketPtr pkt)
+{
+/*
+#ifndef NDEBUG
+    BlkType *tmp_blk = findBlock(mshr->pkt->getAddr());
+    assert(tmp_blk == blk);
+#endif
+    PacketPtr pkt = mshr->pkt;*/
+    blk = doReplacement(blk, pkt, new_state, writebacks);
+
+    if (pkt->isRead()) {
+        memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+    }
+
+    blk->whenReady = pkt->finishTime;
+
+
+    // respond to MSHR targets, if any
+
+    // First offset for critical word first calculations
+    int initial_offset = 0;
+
+    if (mshr->hasTargets()) {
+        initial_offset = mshr->getTarget()->getOffset(blkSize);
+    }
+
+    while (mshr->hasTargets()) {
+        PacketPtr target = mshr->getTarget();
+
+        target->flags |= SATISFIED;
+
+        // How many bytes pass the first request is this one
+        int transfer_offset = target->getOffset(blkSize) - initial_offset;
+        if (transfer_offset < 0) {
+            transfer_offset += blkSize;
+        }
+
+        // If critical word (no offset) return first word time
+        Tick completion_time = tags->getHitLatency() +
+            transfer_offset ? pkt->finishTime : pkt->firstWordTime;
+
+        if (target->cmd == Packet::InvalidateReq) {
+            //Mark the blk as invalid now, if it hasn't been already
+            if (blk) {
+                invalidateBlk(blk);
+                blk = NULL;
+            }
+
+            //Also get rid of the invalidate
+            mshr->popTarget();
+
+            DPRINTF(Cache, "Popping off a Invalidate for addr %x\n",
+                    pkt->getAddr());
+
+            continue;
+        }
+
+        if (blk && (target->isWrite() ? blk->isWritable() : blk->isValid())) {
+            assert(target->isWrite() || target->isRead());
+            assert(target->getOffset(blkSize) + target->getSize() <= blkSize);
+            if (target->isWrite()) {
+                if (blk->checkWrite(pkt->req)) {
+                    blk->status |= BlkDirty;
+                    memcpy(blk->data + target->getOffset(blkSize),
+                           target->getPtr<uint8_t>(), target->getSize());
+                }
+            } else {
+                if (pkt->req->isLocked()) {
+                    blk->trackLoadLocked(pkt->req);
+                }
+                memcpy(target->getPtr<uint8_t>(),
+                       blk->data + target->getOffset(blkSize),
+                       target->getSize());
+            }
+        } else {
+            // Invalid access, need to do another request
+            // can occur if block is invalidated, or not correct
+            // permissions
+//            mshr->pkt = pkt;
+            break;
+        }
+        respondToMiss(target, completion_time);
+        mshr->popTarget();
+    }
+
+    if (blk) {
+        // Need to write the data into the block
+        updateData(blk, writebacks, !adaptiveCompression || true);
+    }
+
+    return blk;
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::handleSnoop(BlkType *blk,
+                                       CacheBlk::State new_state,
+                                       PacketPtr &pkt)
+{
+    //Must have the block to supply
+    assert(blk);
+    // Can only supply data, and if it hasn't already been supllied
+    assert(pkt->isRead());
+    assert(!(pkt->flags & SATISFIED));
+    pkt->flags |= SATISFIED;
+    Addr offset = pkt->getOffset(blkSize);
+    assert(offset < blkSize);
+    assert(pkt->getSize() <= blkSize);
+    assert(offset + pkt->getSize() <=blkSize);
+    memcpy(pkt->getPtr<uint8_t>(), blk->data + offset, pkt->getSize());
+
+    handleSnoop(blk, new_state);
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::handleSnoop(BlkType *blk,
+                                       CacheBlk::State new_state)
+{
+    if (blk && blk->status != new_state) {
+        if ((new_state && BlkValid) == 0) {
+            invalidateBlk(blk);
+        } else {
+            assert(new_state >= 0 && new_state < 128);
+            blk->status = new_state;
+        }
+    }
+}
+
+template<class TagStore, class Coherence>
+PacketPtr
+Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
+{
+    assert(blk && blk->isValid() && blk->isModified());
+    int data_size = blkSize;
+    data_size = blk->size;
+    if (compressOnWriteback) {
+        // not already compressed
+        // need to compress to ship it
+        assert(data_size == blkSize);
+        uint8_t *tmp_data = new uint8_t[blkSize];
+        data_size = compressionAlg->compress(tmp_data,blk->data,
+                                      data_size);
+        delete [] tmp_data;
+    }
+
+/*    PacketPtr writeback =
+        buildWritebackReq(tags->regenerateBlkAddr(blk->tag, blk->set),
+                          blk->asid, blkSize,
+                          blk->data, data_size);
+*/
+
+    Request *writebackReq =
+        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
+    PacketPtr writeback = new Packet(writebackReq, Packet::Writeback, -1);
+    writeback->allocate();
+    memcpy(writeback->getPtr<uint8_t>(),blk->data,blkSize);
+
+    blk->status &= ~BlkDirty;
+    return writeback;
+}
+
+
+template<class TagStore, class Coherence>
+bool
+Cache<TagStore,Coherence>::verifyData(BlkType *blk)
+{
+    bool retval;
+    // The data stored in the blk
+    uint8_t *blk_data = new uint8_t[blkSize];
+    tags->readData(blk, blk_data);
+    // Pointer for uncompressed data, assumed uncompressed
+    uint8_t *tmp_data = blk_data;
+    // The size of the data being stored, assumed uncompressed
+    int data_size = blkSize;
+
+    // If the block is compressed need to uncompress to access
+    if (blk->isCompressed()){
+        // Allocate new storage for the data
+        tmp_data = new uint8_t[blkSize];
+        data_size = compressionAlg->uncompress(tmp_data,blk_data, blk->size);
+        assert(data_size == blkSize);
+        // Don't need to keep blk_data around
+        delete [] blk_data;
+    } else {
+        assert(blkSize == blk->size);
+    }
+
+    retval = memcmp(tmp_data, blk->data, blkSize) == 0;
+    delete [] tmp_data;
+    return retval;
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::updateData(BlkType *blk, PacketList &writebacks,
+                                        bool compress_block)
+{
+    if (storeCompressed && compress_block) {
+        uint8_t *comp_data = new uint8_t[blkSize];
+        int new_size = compressionAlg->compress(comp_data, blk->data, blkSize);
+        if (new_size > (blkSize - tags->getSubBlockSize())){
+            // no benefit to storing it compressed
+            blk->status &= ~BlkCompressed;
+            tags->writeData(blk, blk->data, blkSize,
+                          writebacks);
+        } else {
+            // Store the data compressed
+            blk->status |= BlkCompressed;
+            tags->writeData(blk, comp_data, new_size,
+                          writebacks);
+        }
+        delete [] comp_data;
+    } else {
+        blk->status &= ~BlkCompressed;
+        tags->writeData(blk, blk->data, blkSize, writebacks);
+    }
+}
+
+template<class TagStore, class Coherence>
+typename Cache<TagStore,Coherence>::BlkType*
+Cache<TagStore,Coherence>::doReplacement(BlkType *blk, PacketPtr &pkt,
+                                         CacheBlk::State new_state,
+                                         PacketList &writebacks)
+{
+    if (blk == NULL) {
+        // need to do a replacement
+        BlkList compress_list;
+        blk = tags->findReplacement(pkt, writebacks, compress_list);
+        while (adaptiveCompression && !compress_list.empty()) {
+            updateData(compress_list.front(), writebacks, true);
+            compress_list.pop_front();
+        }
+        if (blk->isValid()) {
+            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
+                    tags->regenerateBlkAddr(blk->tag,blk->set), pkt->getAddr(),
+                    (blk->isModified()) ? "writeback" : "clean");
+
+            if (blk->isModified()) {
+                // Need to write the data back
+                writebacks.push_back(writebackBlk(blk));
+            }
+        }
+        blk->tag = tags->extractTag(pkt->getAddr(), blk);
+    } else {
+        // must be a status change
+        // assert(blk->status != new_state);
+        if (blk->status == new_state) warn("Changing state to same value\n");
+    }
+
+    blk->status = new_state;
+    return blk;
+}
+
+
+template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::access(PacketPtr &pkt)
 {
@@ -112,7 +547,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         prefetcher->handleMiss(pkt, curTick);
     }
     if (!pkt->req->isUncacheable()) {
-        blk = tags->handleAccess(pkt, lat, writebacks);
+        blk = handleAccess(pkt, lat, writebacks);
     } else {
         size = pkt->getSize();
     }
@@ -130,7 +565,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
                 warn("WriteInv doing a fastallocate"
                      "with an outstanding miss to the same address\n");
             }
-            blk = tags->handleFill(NULL, pkt, BlkValid | BlkWritable,
+            blk = handleFill(NULL, pkt, BlkValid | BlkWritable,
                                    writebacks);
             ++fastWrites;
         }
@@ -195,7 +630,7 @@ Cache<TagStore,Coherence>::getPacket()
         if (!pkt->req->isUncacheable()) {
             if (pkt->cmd == Packet::HardPFReq)
                 misses[Packet::HardPFReq][0/*pkt->req->getThreadNum()*/]++;
-            BlkType *blk = tags->findBlock(pkt);
+            BlkType *blk = findBlock(pkt);
             Packet::Command cmd = coherence->getBusCmd(pkt->cmd,
                                               (blk)? blk->status : 0);
             missQueue->setBusCmd(pkt, cmd);
@@ -224,7 +659,7 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
         if (upgrade) {
             assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
-            BlkType *blk = tags->findBlock(pkt);
+            BlkType *blk = findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
             if (old_state != new_state)
@@ -233,7 +668,7 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
             //Set the state on the upgrade
             memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
             PacketList writebacks;
-            tags->handleFill(blk, mshr, new_state, writebacks, pkt);
+            handleFill(blk, mshr, new_state, writebacks, pkt);
             assert(writebacks.empty());
             missQueue->handleResponse(pkt, curTick + hitLatency);
         }
@@ -275,7 +710,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
             DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                     pkt->getAddr());
-            blk = tags->findBlock(pkt);
+            blk = findBlock(pkt);
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
@@ -284,7 +719,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
                         "state %i to %i\n",
                         pkt->getAddr(),
                         old_state, new_state);
-            blk = tags->handleFill(blk, (MSHR*)pkt->senderState,
+            blk = handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
             while (!writebacks.empty()) {
                     missQueue->doWriteback(writebacks.front());
@@ -332,7 +767,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
     }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-    BlkType *blk = tags->findBlock(pkt);
+    BlkType *blk = findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
     if (coherence->hasProtocol() || pkt->isInvalidate()) {
         //@todo Move this into handle bus req
@@ -435,7 +870,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
                 "now supplying data, new state is %i\n",
                 pkt->cmdString(), blk_addr, new_state);
 
-        tags->handleSnoop(blk, new_state, pkt);
+        handleSnoop(blk, new_state, pkt);
         respondToSnoop(pkt, curTick + hitLatency);
         return;
     }
@@ -443,7 +878,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
         DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
                 "new state is %i\n", pkt->cmdString(), blk_addr, new_state);
 
-    tags->handleSnoop(blk, new_state);
+    handleSnoop(blk, new_state);
 }
 
 template<class TagStore, class Coherence>
@@ -501,7 +936,7 @@ Cache<TagStore,Coherence>::probe(PacketPtr &pkt, bool update,
     PacketList writebacks;
     int lat;
 
-    BlkType *blk = tags->handleAccess(pkt, lat, writebacks, update);
+    BlkType *blk = handleAccess(pkt, lat, writebacks, update);
 
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(),
             pkt->getAddr(), (blk) ? "hit" : "miss");
@@ -557,7 +992,7 @@ Cache<TagStore,Coherence>::probe(PacketPtr &pkt, bool update,
         if (!pkt->req->isUncacheable() /*Uncacheables just go through*/
             && (pkt->cmd != Packet::Writeback)/*Writebacks on miss fall through*/) {
                 // Fetch the cache block to fill
-            BlkType *blk = tags->findBlock(pkt);
+            BlkType *blk = findBlock(pkt);
             Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
                                                             (blk)? blk->status : 0);
 
@@ -593,7 +1028,7 @@ return 0;
                 DPRINTF(Cache, "Block for blk addr %x moving from state "
                         "%i to %i\n", busPkt->getAddr(), old_state, new_state);
 
-            tags->handleFill(blk, busPkt, new_state, writebacks, pkt);
+            handleFill(blk, busPkt, new_state, writebacks, pkt);
             //Free the packet
             delete busPkt;
 
@@ -639,7 +1074,7 @@ Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
     }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-    BlkType *blk = tags->findBlock(pkt);
+    BlkType *blk = findBlock(pkt);
     MSHR *mshr = missQueue->findMSHR(blk_addr);
     CacheBlk::State new_state = 0;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
@@ -648,14 +1083,14 @@ Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
                 "now supplying data, new state is %i\n",
                 pkt->cmdString(), blk_addr, new_state);
 
-            tags->handleSnoop(blk, new_state, pkt);
+            handleSnoop(blk, new_state, pkt);
             return hitLatency;
     }
     if (blk)
         DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
                 "new state is %i\n",
                     pkt->cmdString(), blk_addr, new_state);
-    tags->handleSnoop(blk, new_state);
+    handleSnoop(blk, new_state);
     return 0;
 }
 

@@ -38,10 +38,12 @@
 #ifndef __CACHE_HH__
 #define __CACHE_HH__
 
+#include "base/compression/base.hh"
 #include "base/misc.hh" // fatal, panic, and warn
 #include "cpu/smt.hh" // SMT_MAX_THREADS
 
 #include "mem/cache/base_cache.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/miss_buffer.hh"
 #include "mem/cache/prefetch/prefetcher.hh"
 
@@ -62,6 +64,8 @@ class Cache : public BaseCache
   public:
     /** Define the type of cache block to use. */
     typedef typename TagStore::BlkType BlkType;
+    /** A typedef for a list of BlkType pointers. */
+    typedef typename TagStore::BlkList BlkList;
 
     bool prefetchAccess;
 
@@ -141,6 +145,156 @@ class Cache : public BaseCache
     PacketPtr invalidatePkt;
     Request *invalidateReq;
 
+    /**
+     * Policy class for performing compression.
+     */
+    CompressionAlgorithm *compressionAlg;
+
+    /**
+     * The block size of this cache. Set to value in the Tags object.
+     */
+    const int16_t blkSize;
+
+    /**
+     * Can this cache should allocate a block on a line-sized write miss.
+     */
+    const bool doFastWrites;
+
+    const bool prefetchMiss;
+
+    /**
+     * Can the data can be stored in a compressed form.
+     */
+    const bool storeCompressed;
+
+    /**
+     * Do we need to compress blocks on writebacks (i.e. because
+     * writeback bus is compressed but storage is not)?
+     */
+    const bool compressOnWriteback;
+
+    /**
+     * The latency of a compression operation.
+     */
+    const int16_t compLatency;
+
+    /**
+     * Should we use an adaptive compression scheme.
+     */
+    const bool adaptiveCompression;
+
+    /**
+     * Do writebacks need to be compressed (i.e. because writeback bus
+     * is compressed), whether or not they're already compressed for
+     * storage.
+     */
+    const bool writebackCompressed;
+
+    /**
+     * Compare the internal block data to the fast access block data.
+     * @param blk The cache block to check.
+     * @return True if the data is the same.
+     */
+    bool verifyData(BlkType *blk);
+
+    /**
+     * Update the internal data of the block. The data to write is assumed to
+     * be in the fast access data.
+     * @param blk The block with the data to update.
+     * @param writebacks A list to store any generated writebacks.
+     * @param compress_block True if we should compress this block
+     */
+    void updateData(BlkType *blk, PacketList &writebacks, bool compress_block);
+
+    /**
+     * Handle a replacement for the given request.
+     * @param blk A pointer to the block, usually NULL
+     * @param pkt The memory request to satisfy.
+     * @param new_state The new state of the block.
+     * @param writebacks A list to store any generated writebacks.
+     */
+    BlkType* doReplacement(BlkType *blk, PacketPtr &pkt,
+                           CacheBlk::State new_state, PacketList &writebacks);
+
+    /**
+     * Does all the processing necessary to perform the provided request.
+     * @param pkt The memory request to perform.
+     * @param lat The latency of the access.
+     * @param writebacks List for any writebacks that need to be performed.
+     * @param update True if the replacement data should be updated.
+     * @return Pointer to the cache block touched by the request. NULL if it
+     * was a miss.
+     */
+    BlkType* handleAccess(PacketPtr &pkt, int & lat,
+                          PacketList & writebacks, bool update = true);
+
+    /**
+     * Populates a cache block and handles all outstanding requests for the
+     * satisfied fill request. This version takes an MSHR pointer and uses its
+     * request to fill the cache block, while repsonding to its targets.
+     * @param blk The cache block if it already exists.
+     * @param mshr The MSHR that contains the fill data and targets to satisfy.
+     * @param new_state The state of the new cache block.
+     * @param writebacks List for any writebacks that need to be performed.
+     * @return Pointer to the new cache block.
+     */
+    BlkType* handleFill(BlkType *blk, MSHR * mshr, CacheBlk::State new_state,
+                        PacketList & writebacks, PacketPtr pkt);
+
+    /**
+     * Populates a cache block and handles all outstanding requests for the
+     * satisfied fill request. This version takes two memory requests. One
+     * contains the fill data, the other is an optional target to satisfy.
+     * Used for Cache::probe.
+     * @param blk The cache block if it already exists.
+     * @param pkt The memory request with the fill data.
+     * @param new_state The state of the new cache block.
+     * @param writebacks List for any writebacks that need to be performed.
+     * @param target The memory request to perform after the fill.
+     * @return Pointer to the new cache block.
+     */
+    BlkType* handleFill(BlkType *blk, PacketPtr &pkt,
+                        CacheBlk::State new_state,
+                        PacketList & writebacks, PacketPtr target = NULL);
+
+    /**
+     * Sets the blk to the new state and handles the given request.
+     * @param blk The cache block being snooped.
+     * @param new_state The new coherence state for the block.
+     * @param pkt The request to satisfy
+     */
+    void handleSnoop(BlkType *blk, CacheBlk::State new_state,
+                     PacketPtr &pkt);
+
+    /**
+     * Sets the blk to the new state.
+     * @param blk The cache block being snooped.
+     * @param new_state The new coherence state for the block.
+     */
+    void handleSnoop(BlkType *blk, CacheBlk::State new_state);
+
+    /**
+     * Create a writeback request for the given block.
+     * @param blk The block to writeback.
+     * @return The writeback request for the block.
+     */
+    PacketPtr writebackBlk(BlkType *blk);
+
+    BlkType* findBlock(Addr addr)
+    {
+        return tags->findBlock(addr);
+    }
+
+    BlkType* findBlock(PacketPtr &pkt)
+    {
+        return tags->findBlock(pkt->getAddr());
+    }
+
+    void invalidateBlk(CacheBlk *blk)
+    {
+        tags->invalidateBlk(tags->regenerateBlkAddr(blk->tag, blk->set));
+    }
+
   public:
 
     class Params
@@ -153,15 +307,38 @@ class Cache : public BaseCache
         Prefetcher<TagStore> *prefetcher;
         bool prefetchAccess;
         int hitLatency;
+        CompressionAlgorithm *compressionAlg;
+        const int16_t blkSize;
+        const bool doFastWrites;
+        const bool prefetchMiss;
+        const bool storeCompressed;
+        const bool compressOnWriteback;
+        const int16_t compLatency;
+        const bool adaptiveCompression;
+        const bool writebackCompressed;
 
         Params(TagStore *_tags, MissBuffer *mq, Coherence *coh,
                BaseCache::Params params,
                Prefetcher<TagStore> *_prefetcher,
-               bool prefetch_access, int hit_latency)
+               bool prefetch_access, int hit_latency,
+               bool do_fast_writes,
+               bool store_compressed, bool adaptive_compression,
+               bool writeback_compressed,
+               CompressionAlgorithm *_compressionAlg, int comp_latency,
+               bool prefetch_miss)
             : tags(_tags), missQueue(mq), coherence(coh),
               baseParams(params),
               prefetcher(_prefetcher), prefetchAccess(prefetch_access),
-              hitLatency(hit_latency)
+              hitLatency(hit_latency),
+              compressionAlg(_compressionAlg),
+              blkSize(_tags->getBlockSize()),
+              doFastWrites(do_fast_writes),
+              prefetchMiss(prefetch_miss),
+              storeCompressed(store_compressed),
+              compressOnWriteback(!store_compressed && writeback_compressed),
+              compLatency(comp_latency),
+              adaptiveCompression(adaptive_compression),
+              writebackCompressed(writeback_compressed)
         {
         }
     };

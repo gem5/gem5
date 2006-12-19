@@ -38,8 +38,6 @@
 
 #include "mem/config/cache.hh"
 
-#include "mem/cache/tags/cache_tags.hh"
-
 #if defined(USE_CACHE_LRU)
 #include "mem/cache/tags/lru.hh"
 #endif
@@ -73,28 +71,28 @@
 
 
 #if defined(USE_CACHE_FALRU)
-template class Cache<CacheTags<FALRU>, SimpleCoherence>;
-template class Cache<CacheTags<FALRU>, UniCoherence>;
+template class Cache<FALRU, SimpleCoherence>;
+template class Cache<FALRU, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_IIC)
-template class Cache<CacheTags<IIC>, SimpleCoherence>;
-template class Cache<CacheTags<IIC>, UniCoherence>;
+template class Cache<IIC, SimpleCoherence>;
+template class Cache<IIC, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_LRU)
-template class Cache<CacheTags<LRU>, SimpleCoherence>;
-template class Cache<CacheTags<LRU>, UniCoherence>;
+template class Cache<LRU, SimpleCoherence>;
+template class Cache<LRU, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-template class Cache<CacheTags<Split>, SimpleCoherence>;
-template class Cache<CacheTags<Split>, UniCoherence>;
+template class Cache<Split, SimpleCoherence>;
+template class Cache<Split, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-template class Cache<CacheTags<SplitLIFO>, SimpleCoherence>;
-template class Cache<CacheTags<SplitLIFO>, UniCoherence>;
+template class Cache<SplitLIFO, SimpleCoherence>;
+template class Cache<SplitLIFO, UniCoherence>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
