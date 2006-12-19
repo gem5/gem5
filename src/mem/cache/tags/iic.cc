@@ -284,65 +284,6 @@ IIC::findBlock(Addr addr, int &lat)
     return tag_ptr;
 }
 
-IICTag*
-IIC::findBlock(PacketPtr &pkt, int &lat)
-{
-    Addr addr = pkt->getAddr();
-
-    Addr tag = extractTag(addr);
-    unsigned set = hash(addr);
-    int set_lat;
-
-    unsigned long chain_ptr;
-
-    if (PROFILE_IIC)
-        setAccess.sample(set);
-
-    IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
-    set_lat = 1;
-    if (tag_ptr == NULL && chain_ptr != tagNull) {
-        int secondary_depth;
-        tag_ptr = secondaryChain(tag, chain_ptr, &secondary_depth);
-        set_lat += secondary_depth;
-        // set depth for statistics fix this later!!! egh
-        sets[set].depth = set_lat;
-
-        if (tag_ptr != NULL) {
-            /* need to move tag into primary table */
-            // need to preserve chain: fix this egh
-            sets[set].tags[assoc-1]->chain_ptr = tag_ptr->chain_ptr;
-            tagSwap(tag_ptr - tagStore, sets[set].tags[assoc-1] - tagStore);
-            tag_ptr = sets[set].findTag(tag, chain_ptr);
-            assert(tag_ptr!=NULL);
-        }
-
-    }
-    set_lat = set_lat * hashDelay + hitLatency;
-    if (tag_ptr != NULL) {
-        // IIC replacement: if this is not the first element of
-        //   list, reorder
-        sets[set].moveToHead(tag_ptr);
-
-        hitHashDepth.sample(sets[set].depth);
-        hashHit++;
-        hitDepthTotal += sets[set].depth;
-        tag_ptr->status |= BlkReferenced;
-        lat = set_lat;
-        if (tag_ptr->whenReady > curTick && tag_ptr->whenReady - curTick > set_lat) {
-            lat = tag_ptr->whenReady - curTick;
-        }
-
-        tag_ptr->refCount += 1;
-    }
-    else {
-        // fall through: cache block not found, not a hit...
-        missHashDepth.sample(sets[set].depth);
-        hashMiss++;
-        missDepthTotal += sets[set].depth;
-        lat = set_lat;
-    }
-    return tag_ptr;
-}
 
 IICTag*
 IIC::findBlock(Addr addr) const
@@ -695,9 +636,8 @@ IIC::compressBlock(unsigned long index)
 }
 
 void
-IIC::invalidateBlk(Addr addr)
+IIC::invalidateBlk(IIC::BlkType *tag_ptr)
 {
-    IICTag* tag_ptr = findBlock(addr);
     if (tag_ptr) {
         for (int i = 0; i < tag_ptr->numData; ++i) {
             dataReferenceCount[tag_ptr->data_ptr[i]]--;

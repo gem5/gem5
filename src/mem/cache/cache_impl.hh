@@ -113,7 +113,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
 
     BlkType *blk = NULL;
     if (update) {
-        blk = tags->findBlock(pkt, lat);
+        blk = tags->findBlock(pkt->getAddr(), lat);
     } else {
         blk = tags->findBlock(pkt->getAddr());
         lat = 0;
@@ -221,7 +221,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
                                       PacketPtr target)
 {
 #ifndef NDEBUG
-    BlkType *tmp_blk = findBlock(pkt->getAddr());
+    BlkType *tmp_blk = tags->findBlock(pkt->getAddr());
     assert(tmp_blk == blk);
 #endif
     blk = doReplacement(blk, pkt, new_state, writebacks);
@@ -239,7 +239,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
         target->flags |= SATISFIED;
 
         if (target->cmd == Packet::InvalidateReq) {
-            invalidateBlk(blk);
+            tags->invalidateBlk(blk);
             blk = NULL;
         }
 
@@ -318,7 +318,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
         if (target->cmd == Packet::InvalidateReq) {
             //Mark the blk as invalid now, if it hasn't been already
             if (blk) {
-                invalidateBlk(blk);
+                tags->invalidateBlk(blk);
                 blk = NULL;
             }
 
@@ -396,7 +396,7 @@ Cache<TagStore,Coherence>::handleSnoop(BlkType *blk,
 {
     if (blk && blk->status != new_state) {
         if ((new_state && BlkValid) == 0) {
-            invalidateBlk(blk);
+            tags->invalidateBlk(blk);
         } else {
             assert(new_state >= 0 && new_state < 128);
             blk->status = new_state;
@@ -628,7 +628,7 @@ Cache<TagStore,Coherence>::getPacket()
         if (!pkt->req->isUncacheable()) {
             if (pkt->cmd == Packet::HardPFReq)
                 misses[Packet::HardPFReq][0/*pkt->req->getThreadNum()*/]++;
-            BlkType *blk = findBlock(pkt);
+            BlkType *blk = tags->findBlock(pkt->getAddr());
             Packet::Command cmd = coherence->getBusCmd(pkt->cmd,
                                               (blk)? blk->status : 0);
             missQueue->setBusCmd(pkt, cmd);
@@ -657,7 +657,7 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
         if (upgrade) {
             assert(pkt);  //Upgrades need to be fixed
             pkt->flags &= ~CACHE_LINE_FILL;
-            BlkType *blk = findBlock(pkt);
+            BlkType *blk = tags->findBlock(pkt->getAddr());
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
             if (old_state != new_state)
@@ -708,7 +708,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
             DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                     pkt->getAddr());
-            blk = findBlock(pkt);
+            blk = tags->findBlock(pkt->getAddr());
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
@@ -765,7 +765,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
     }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-    BlkType *blk = findBlock(pkt);
+    BlkType *blk = tags->findBlock(pkt->getAddr());
     MSHR *mshr = missQueue->findMSHR(blk_addr);
     if (coherence->hasProtocol() || pkt->isInvalidate()) {
         //@todo Move this into handle bus req
@@ -898,13 +898,6 @@ Cache<TagStore,Coherence>::snoopResponse(PacketPtr &pkt)
     }
 }
 
-template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::invalidateBlk(Addr addr)
-{
-    tags->invalidateBlk(addr);
-}
-
 
 /**
  * @todo Fix to not assume write allocate
@@ -990,7 +983,7 @@ Cache<TagStore,Coherence>::probe(PacketPtr &pkt, bool update,
         if (!pkt->req->isUncacheable() /*Uncacheables just go through*/
             && (pkt->cmd != Packet::Writeback)/*Writebacks on miss fall through*/) {
                 // Fetch the cache block to fill
-            BlkType *blk = findBlock(pkt);
+            BlkType *blk = tags->findBlock(pkt->getAddr());
             Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
                                                             (blk)? blk->status : 0);
 
@@ -1072,7 +1065,7 @@ Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
     }
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-    BlkType *blk = findBlock(pkt);
+    BlkType *blk = tags->findBlock(pkt->getAddr());
     MSHR *mshr = missQueue->findMSHR(blk_addr);
     CacheBlk::State new_state = 0;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);

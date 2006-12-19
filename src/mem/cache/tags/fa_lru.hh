@@ -173,11 +173,10 @@ public:
     bool probe(Addr addr) const;
 
     /**
-     * Invalidate the cache block that contains the given addr.
-     * @param asid The address space ID.
-     * @param addr The address to invalidate.
+     * Invalidate a cache block.
+     * @param blk The block to invalidate.
      */
-    void invalidateBlk(Addr addr);
+    void invalidateBlk(BlkType *blk);
 
     /**
      * Find the block in the cache and update the replacement data. Returns
@@ -189,16 +188,6 @@ public:
      * @return Pointer to the cache block.
      */
     FALRUBlk* findBlock(Addr addr, int &lat, int *inCache = 0);
-
-    /**
-     * Find the block in the cache and update the replacement data. Returns
-     * the access latency and the in cache flags as a side effect
-     * @param pkt The req whose block to find
-     * @param lat The latency of the access.
-     * @param inCache The FALRUBlk::inCache flags.
-     * @return Pointer to the cache block.
-     */
-    FALRUBlk* findBlock(PacketPtr &pkt, int &lat, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.

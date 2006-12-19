@@ -279,21 +279,6 @@ class Cache : public BaseCache
      */
     PacketPtr writebackBlk(BlkType *blk);
 
-    BlkType* findBlock(Addr addr)
-    {
-        return tags->findBlock(addr);
-    }
-
-    BlkType* findBlock(PacketPtr &pkt)
-    {
-        return tags->findBlock(pkt->getAddr());
-    }
-
-    void invalidateBlk(CacheBlk *blk)
-    {
-        tags->invalidateBlk(tags->regenerateBlkAddr(blk->tag, blk->set));
-    }
-
   public:
 
     class Params
@@ -397,14 +382,6 @@ class Cache : public BaseCache
     void snoop(PacketPtr &pkt);
 
     void snoopResponse(PacketPtr &pkt);
-
-    /**
-     * Invalidates the block containing address if found.
-     * @param addr The address to look for.
-     * @param asid The address space ID of the address.
-     * @todo Is this function necessary?
-     */
-    void invalidateBlk(Addr addr);
 
     /**
      * Squash all requests associated with specified thread.

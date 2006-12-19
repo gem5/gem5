@@ -161,20 +161,10 @@ public:
     bool probe(Addr addr) const;
 
     /**
-     * Invalidate the block containing the given address.
-     * @param asid The address space ID.
-     * @param addr The address to invalidate.
+     * Invalidate the given block.
+     * @param blk The block to invalidate.
      */
-    void invalidateBlk(Addr addr);
-
-    /**
-     * Finds the given address in the cache and update replacement data.
-     * Returns the access latency as a side effect.
-     * @param pkt The request whose block to find.
-     * @param lat The access latency.
-     * @return Pointer to the cache block if found.
-     */
-    LRUBlk* findBlock(PacketPtr &pkt, int &lat);
+    void invalidateBlk(BlkType *blk);
 
     /**
      * Finds the given address in the cache and update replacement data.

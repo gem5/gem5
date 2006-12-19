@@ -184,11 +184,10 @@ public:
     bool probe( Addr addr) const;
 
     /**
-     * Invalidate the block containing the given address.
-     * @param asid The address space ID.
-     * @param addr The address to invalidate.
+     * Invalidate the given block.
+     * @param blk The block to invalidate.
      */
-    void invalidateBlk(Addr addr);
+    void invalidateBlk(BlkType *blk);
 
     /**
      * Finds the given address in the cache and update replacement data.
@@ -199,15 +198,6 @@ public:
      * @return Pointer to the cache block if found.
      */
     SplitBlk* findBlock(Addr addr, int &lat);
-
-    /**
-     * Finds the given address in the cache and update replacement data.
-     * Returns the access latency as a side effect.
-     * @param pkt The req whose block to find
-     * @param lat The access latency.
-     * @return Pointer to the cache block if found.
-     */
-    SplitBlk* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.

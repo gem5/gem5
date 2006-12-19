@@ -435,11 +435,10 @@ class IIC : public BaseTags
     void compressBlock(unsigned long index);
 
     /**
-     * Invalidate the block containing the address.
-     * @param asid The address space ID.
-     * @param addr The address to invalidate.
+     * Invalidate a block.
+     * @param blk The block to invalidate.
      */
-    void invalidateBlk(Addr addr);
+    void invalidateBlk(BlkType *blk);
 
     /**
      * Find the block and update the replacement data. This call also returns
@@ -450,15 +449,6 @@ class IIC : public BaseTags
      * @return A pointer to the block found, if any.
      */
     IICTag* findBlock(Addr addr, int &lat);
-
-    /**
-     * Find the block and update the replacement data. This call also returns
-     * the access latency as a side effect.
-     * @param pkt The req whose block to find
-     * @param lat The access latency.
-     * @return A pointer to the block found, if any.
-     */
-    IICTag* findBlock(PacketPtr &pkt, int &lat);
 
     /**
      * Find the block, do not update the replacement data.

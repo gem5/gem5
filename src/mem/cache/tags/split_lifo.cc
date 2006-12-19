@@ -254,31 +254,6 @@ SplitLIFO::findBlock(Addr addr, int &lat)
     return blk;
 }
 
-SplitBlk*
-SplitLIFO::findBlock(PacketPtr &pkt, int &lat)
-{
-    Addr addr = pkt->getAddr();
-
-    Addr tag = extractTag(addr);
-    unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(tag);
-
-    if (blk) {
-        DPRINTF(Split, "Found LIFO blk %#x in set %d, with tag %#x\n",
-                addr, set, tag);
-        hits++;
-
-        if (twoQueue) {
-            blk->isUsed = true;
-            sets[set].moveToFirstIn(blk);
-        } else {
-            sets[set].moveToLastIn(blk);
-        }
-    }
-    lat = hitLatency;
-
-    return blk;
-}
 
 SplitBlk*
 SplitLIFO::findBlock(Addr addr) const
@@ -335,9 +310,8 @@ SplitLIFO::findReplacement(PacketPtr &pkt, PacketList &writebacks,
 }
 
 void
-SplitLIFO::invalidateBlk(Addr addr)
+SplitLIFO::invalidateBlk(SplitLIFO::BlkType *blk)
 {
-    SplitBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;
