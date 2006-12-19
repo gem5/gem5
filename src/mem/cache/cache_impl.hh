@@ -49,7 +49,7 @@
 #include "mem/cache/cache.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/mshr.hh"
-#include "mem/cache/prefetch/prefetcher.hh"
+#include "mem/cache/prefetch/base_prefetcher.hh"
 
 #include "sim/sim_exit.hh" // for SimExitEvent
 
@@ -88,8 +88,6 @@ Cache(const std::string &_name,
     missQueue->setPrefetcher(prefetcher);
     coherence->setCache(this);
     prefetcher->setCache(this);
-    prefetcher->setTags(tags);
-    prefetcher->setBuffer(missQueue);
     invalidateReq = new Request((Addr) NULL, blkSize, 0);
     invalidatePkt = new Packet(invalidateReq, Packet::InvalidateReq, 0);
 }

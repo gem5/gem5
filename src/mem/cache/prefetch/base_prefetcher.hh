@@ -36,10 +36,13 @@
 #ifndef __MEM_CACHE_PREFETCH_BASE_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_BASE_PREFETCHER_HH__
 
-#include "mem/packet.hh"
 #include <list>
 
+#include "base/statistics.hh"
+#include "mem/packet.hh"
+
 class BaseCache;
+
 class BasePrefetcher
 {
   protected:
@@ -95,6 +98,10 @@ class BasePrefetcher
 
     void handleMiss(PacketPtr &pkt, Tick time);
 
+    bool inCache(Addr addr);
+
+    bool inMissQueue(Addr addr);
+
     PacketPtr getPacket();
 
     bool havePending()
@@ -105,10 +112,6 @@ class BasePrefetcher
     virtual void calculatePrefetch(PacketPtr &pkt,
                                    std::list<Addr> &addresses,
                                    std::list<Tick> &delays) = 0;
-
-    virtual bool inCache(PacketPtr &pkt) = 0;
-
-    virtual bool inMissQueue(Addr address) = 0;
 
     std::list<PacketPtr>::iterator inPrefetch(Addr address);
 };

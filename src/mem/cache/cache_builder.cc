@@ -197,7 +197,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 #define BUILD_CACHE(TAGS, tags, c)                                      \
     do {                                                                \
-        Prefetcher<TAGS> *pf;                                           \
+        BasePrefetcher *pf;                                           \
         if (pf_policy == "tagged") {                                    \
             BUILD_TAGGED_PREFETCHER(TAGS);                              \
         }                                                               \
@@ -314,55 +314,55 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
     } while (0)
 
 #if defined(USE_TAGGED)
-#define BUILD_TAGGED_PREFETCHER(t) pf = new   \
-                TaggedPrefetcher<t >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree)
+#define BUILD_TAGGED_PREFETCHER(t)                              \
+    pf = new TaggedPrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree)
 #else
 #define BUILD_TAGGED_PREFETCHER(t) BUILD_CACHE_PANIC("Tagged Prefetcher")
 #endif
 
 #if defined(USE_STRIDED)
-#define BUILD_STRIDED_PREFETCHER(t) pf = new  \
-                StridePrefetcher<t >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree, \
-                                                        prefetch_use_cpu_id)
+#define BUILD_STRIDED_PREFETCHER(t)                             \
+    pf = new StridePrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree,                  \
+                              prefetch_use_cpu_id)
 #else
 #define BUILD_STRIDED_PREFETCHER(t) BUILD_CACHE_PANIC("Stride Prefetcher")
 #endif
 
 #if defined(USE_GHB)
-#define BUILD_GHB_PREFETCHER(t) pf = new  \
-                GHBPrefetcher<t >(prefetcher_size, \
-                                                     !prefetch_past_page, \
-                                                     prefetch_serial_squash, \
-                                                     prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                     prefetch_latency, \
-                                                     prefetch_degree, \
-                                                     prefetch_use_cpu_id)
+#define BUILD_GHB_PREFETCHER(t)                         \
+    pf = new GHBPrefetcher(prefetcher_size,             \
+                           !prefetch_past_page,         \
+                           prefetch_serial_squash,      \
+                           prefetch_cache_check_push,   \
+                           prefetch_data_accesses_only, \
+                           prefetch_latency,            \
+                           prefetch_degree,             \
+                           prefetch_use_cpu_id)
 #else
 #define BUILD_GHB_PREFETCHER(t) BUILD_CACHE_PANIC("GHB Prefetcher")
 #endif
 
 #if defined(USE_TAGGED)
-#define BUILD_NULL_PREFETCHER(t) pf = new  \
-                TaggedPrefetcher<t >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree)
+#define BUILD_NULL_PREFETCHER(t)                                \
+    pf = new TaggedPrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree)
 #else
 #define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
 #endif

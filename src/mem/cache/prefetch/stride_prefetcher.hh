@@ -30,30 +30,17 @@
 
 /**
  * @file
- * Describes a strided prefetcher based on template policies.
+ * Describes a strided prefetcher.
  */
 
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 
-#include "base/misc.hh" // fatal, panic, and warn
+#include "mem/cache/prefetch/base_prefetcher.hh"
 
-#include "mem/cache/prefetch/prefetcher.hh"
-
-/**
- * A template-policy based cache. The behavior of the cache can be altered by
- * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore. MissBuffer handles all misses and writes/writebacks
- * @sa MissQueue. Coherence handles all coherence policy details @sa
- * UniCoherence, SimpleMultiCoherence.
- */
-template <class TagStore>
-class StridePrefetcher : public Prefetcher<TagStore>
+class StridePrefetcher : public BasePrefetcher
 {
   protected:
-
-    MissBuffer* mq;
-    TagStore* tags;
 
     class strideEntry
     {
@@ -84,66 +71,16 @@ class StridePrefetcher : public Prefetcher<TagStore>
     StridePrefetcher(int size, bool pageStop, bool serialSquash,
                      bool cacheCheckPush, bool onlyData,
                      Tick latency, int degree, bool useCPUId)
-        :Prefetcher<TagStore>(size, pageStop, serialSquash,
-                                         cacheCheckPush, onlyData),
-         latency(latency), degree(degree), useCPUId(useCPUId)
+        : BasePrefetcher(size, pageStop, serialSquash,
+                         cacheCheckPush, onlyData),
+          latency(latency), degree(degree), useCPUId(useCPUId)
     {
     }
 
     ~StridePrefetcher() {}
 
     void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                           std::list<Tick> &delays)
-    {
-//	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-        int cpuID = pkt->req->getCpuNum();
-        if (!useCPUId) cpuID = 0;
-
-        /* Scan Table for IAddr Match */
-/*	std::list<strideEntry*>::iterator iter;
-        for (iter=table[cpuID].begin();
-             iter !=table[cpuID].end();
-             iter++) {
-            if ((*iter)->IAddr == pkt->pc) break;
-        }
-
-        if (iter != table[cpuID].end()) {
-            //Hit in table
-
-            int newStride = blkAddr - (*iter)->MAddr;
-            if (newStride == (*iter)->stride) {
-                (*iter)->confidence++;
-            }
-            else {
-                (*iter)->stride = newStride;
-                (*iter)->confidence--;
-            }
-
-            (*iter)->MAddr = blkAddr;
-
-            for (int d=1; d <= degree; d++) {
-                Addr newAddr = blkAddr + d * newStride;
-                if (this->pageStop &&
-                    (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-                    (newAddr & ~(TheISA::VMPageSize - 1)))
-                {
-                    //Spanned the page, so now stop
-                    this->pfSpanPage += degree - d + 1;
-                    return;
-                }
-                else
-                {
-                    addresses.push_back(newAddr);
-                    delays.push_back(latency);
-                }
-            }
-        }
-        else {
-            //Miss in table
-            //Find lowest confidence and replace
-
-        }
-*/    }
+                           std::list<Tick> &delays);
 };
 
 #endif // __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__

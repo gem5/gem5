@@ -34,13 +34,59 @@
  * Stride Prefetcher template instantiations.
  */
 
-#include "mem/cache/tags/lru.hh"
-
 #include "mem/cache/prefetch/stride_prefetcher.hh"
 
-// Template Instantiations
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+void
+StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
+                                    std::list<Tick> &delays)
+{
+//	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
+    int cpuID = pkt->req->getCpuNum();
+    if (!useCPUId) cpuID = 0;
 
-template class StridePrefetcher<LRU >;
+    /* Scan Table for IAddr Match */
+/*	std::list<strideEntry*>::iterator iter;
+  for (iter=table[cpuID].begin();
+  iter !=table[cpuID].end();
+  iter++) {
+  if ((*iter)->IAddr == pkt->pc) break;
+  }
 
-#endif //DOXYGEN_SHOULD_SKIP_THIS
+  if (iter != table[cpuID].end()) {
+  //Hit in table
+
+  int newStride = blkAddr - (*iter)->MAddr;
+  if (newStride == (*iter)->stride) {
+  (*iter)->confidence++;
+  }
+  else {
+  (*iter)->stride = newStride;
+  (*iter)->confidence--;
+  }
+
+  (*iter)->MAddr = blkAddr;
+
+  for (int d=1; d <= degree; d++) {
+  Addr newAddr = blkAddr + d * newStride;
+  if (this->pageStop &&
+  (blkAddr & ~(TheISA::VMPageSize - 1)) !=
+  (newAddr & ~(TheISA::VMPageSize - 1)))
+  {
+  //Spanned the page, so now stop
+  this->pfSpanPage += degree - d + 1;
+  return;
+  }
+  else
+  {
+  addresses.push_back(newAddr);
+  delays.push_back(latency);
+  }
+  }
+  }
+  else {
+  //Miss in table
+  //Find lowest confidence and replace
+
+  }
+*/
+}

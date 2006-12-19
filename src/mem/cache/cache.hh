@@ -45,11 +45,10 @@
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/miss_buffer.hh"
-#include "mem/cache/prefetch/prefetcher.hh"
 
 //Forward decleration
 class MSHR;
-
+class BasePrefetcher;
 
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
@@ -119,7 +118,7 @@ class Cache : public BaseCache
     Coherence *coherence;
 
     /** Prefetcher */
-    Prefetcher<TagStore> *prefetcher;
+    BasePrefetcher *prefetcher;
 
     /**
      * The clock ratio of the outgoing bus.
@@ -304,7 +303,7 @@ class Cache : public BaseCache
         MissBuffer *missQueue;
         Coherence *coherence;
         BaseCache::Params baseParams;
-        Prefetcher<TagStore> *prefetcher;
+        BasePrefetcher*prefetcher;
         bool prefetchAccess;
         int hitLatency;
         CompressionAlgorithm *compressionAlg;
@@ -319,7 +318,7 @@ class Cache : public BaseCache
 
         Params(TagStore *_tags, MissBuffer *mq, Coherence *coh,
                BaseCache::Params params,
-               Prefetcher<TagStore> *_prefetcher,
+               BasePrefetcher *_prefetcher,
                bool prefetch_access, int hit_latency,
                bool do_fast_writes,
                bool store_compressed, bool adaptive_compression,
@@ -450,6 +449,14 @@ class Cache : public BaseCache
      * @return The estimated completion time.
      */
     Tick snoopProbe(PacketPtr &pkt);
+
+    bool inCache(Addr addr) {
+        return (tags->findBlock(addr) != 0);
+    }
+
+    bool inMissQueue(Addr addr) {
+        return (missQueue->findMSHR(addr) != 0);
+    }
 };
 
 #endif // __CACHE_HH__

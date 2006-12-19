@@ -31,16 +31,44 @@
 
 /**
  * @file
- * GHB Prefetcher template instantiations.
+ * GHB Prefetcher implementation.
  */
 
-#include "mem/cache/tags/lru.hh"
-
 #include "mem/cache/prefetch/ghb_prefetcher.hh"
+#include "arch/isa_traits.hh"
 
-// Template Instantiations
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+void
+GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
+                                 std::list<Tick> &delays)
+{
+    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+    int cpuID = pkt->req->getCpuNum();
+    if (!useCPUId) cpuID = 0;
 
-template class GHBPrefetcher<LRU >;
 
-#endif //DOXYGEN_SHOULD_SKIP_THIS
+    int new_stride = blkAddr - last_miss_addr[cpuID];
+    int old_stride = last_miss_addr[cpuID] -
+        second_last_miss_addr[cpuID];
+
+    second_last_miss_addr[cpuID] = last_miss_addr[cpuID];
+    last_miss_addr[cpuID] = blkAddr;
+
+    if (new_stride == old_stride) {
+        for (int d=1; d <= degree; d++) {
+            Addr newAddr = blkAddr + d * new_stride;
+            if (this->pageStop &&
+                (blkAddr & ~(TheISA::VMPageSize - 1)) !=
+                (newAddr & ~(TheISA::VMPageSize - 1)))
+            {
+                //Spanned the page, so now stop
+                this->pfSpanPage += degree - d + 1;
+                return;
+            }
+            else
+            {
+                addresses.push_back(newAddr);
+                delays.push_back(latency);
+            }
+        }
+    }
+}
