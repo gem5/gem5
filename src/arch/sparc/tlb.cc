@@ -124,7 +124,8 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
         lookupTable.erase(i);
     }
 
-    lookupTable.insert(new_entry->range, new_entry);;
+    i = lookupTable.insert(new_entry->range, new_entry);
+    assert(i != lookupTable.end());
 
     // If all entries have there used bit set, clear it on them all, but the
     // one we just inserted
@@ -148,7 +149,7 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
             va, partition_id, context_id, real);
     // Assemble full address structure
     tr.va = va;
-    tr.size = va + MachineBytes;
+    tr.size = MachineBytes;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
@@ -180,6 +181,7 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
 void
 TLB::dumpAll()
 {
+    MapIter i;
     for (int x = 0; x < size; x++) {
         if (tlb[x].valid) {
            DPRINTFN("%4d:  %#2x:%#2x %c %#4x %#8x %#8x %#16x\n",
@@ -196,11 +198,14 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     TlbRange tr;
     MapIter i;
 
+    DPRINTF(IPR, "TLB: Demapping Page va=%#x pid=%#d cid=%d r=%d\n",
+            va, partition_id, context_id, real);
+
     cacheValid = false;
 
     // Assemble full address structure
     tr.va = va;
-    tr.size = va + MachineBytes;
+    tr.size = MachineBytes;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
@@ -208,6 +213,7 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     // Demap any entry that conflicts
     i = lookupTable.find(tr);
     if (i != lookupTable.end()) {
+        DPRINTF(IPR, "TLB: Demapped page\n");
         i->second->valid = false;
         if (i->second->used) {
             i->second->used = false;
@@ -221,6 +227,8 @@ void
 TLB::demapContext(int partition_id, int context_id)
 {
     int x;
+    DPRINTF(IPR, "TLB: Demapping Context pid=%#d cid=%d\n",
+            partition_id, context_id);
     cacheValid = false;
     for (x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
@@ -239,6 +247,7 @@ void
 TLB::demapAll(int partition_id)
 {
     int x;
+    DPRINTF(TLB, "TLB: Demapping All pid=%#d\n", partition_id);
     cacheValid = false;
     for (x = 0; x < size; x++) {
         if (!tlb[x].pte.locked() && tlb[x].range.partitionId == partition_id) {
@@ -884,6 +893,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     int part_insert;
     int entry_insert = -1;
     bool real_insert;
+    bool ignore;
+    int part_id;
+    int ctx_id;
     PageTableEntry pte;
 
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
@@ -1003,6 +1015,41 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
                 PageTableEntry::sun4u);
         insert(va_insert, part_insert, ct_insert, real_insert, pte, entry_insert);
         break;
+      case ASI_IMMU_DEMAP:
+        ignore = false;
+        ctx_id = -1;
+        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        switch (bits(va,5,4)) {
+          case 0:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            break;
+          case 1:
+            ignore = true;
+            break;
+          case 3:
+            ctx_id = 0;
+            break;
+          default:
+            ignore = true;
+        }
+
+        switch(bits(va,7,6)) {
+          case 0: // demap page
+            if (!ignore)
+                tc->getITBPtr()->demapPage(mbits(va,63,13), part_id,
+                        bits(va,9,9), ctx_id);
+            break;
+          case 1: //demap context
+            if (!ignore)
+                tc->getITBPtr()->demapContext(part_id, ctx_id);
+            break;
+          case 2:
+            tc->getITBPtr()->demapAll(part_id);
+            break;
+          default:
+            panic("Invalid type for IMMU demap\n");
+        }
+        break;
       case ASI_DMMU:
         switch (va) {
           case 0x30:
@@ -1013,6 +1060,40 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             break;
           default:
             goto doMmuWriteError;
+        }
+        break;
+      case ASI_DMMU_DEMAP:
+        ignore = false;
+        ctx_id = -1;
+        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        switch (bits(va,5,4)) {
+          case 0:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            break;
+          case 1:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_S_CONTEXT);
+            break;
+          case 3:
+            ctx_id = 0;
+            break;
+          default:
+            ignore = true;
+        }
+
+        switch(bits(va,7,6)) {
+          case 0: // demap page
+            if (!ignore)
+                demapPage(mbits(va,63,13), part_id, bits(va,9,9), ctx_id);
+            break;
+          case 1: //demap context
+            if (!ignore)
+                demapContext(part_id, ctx_id);
+            break;
+          case 2:
+            demapAll(part_id);
+            break;
+          default:
+            panic("Invalid type for IMMU demap\n");
         }
         break;
       default:
