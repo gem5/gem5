@@ -401,7 +401,11 @@ Trace::InstRecord::dump(ostream &outs)
                             diffCcr || diffTl || diffGl || diffAsi || diffPil ||
                             diffCwp || diffCansave || diffCanrestore ||
                             diffOtherwin || diffCleanwin)
-                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)) {
+                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)
+                        && !((staticInst->machInst & 0xC1F80000) == 0xC0580000)
+                        && !((staticInst->machInst & 0xC1F80000) == 0xC0000000)
+                        && !((staticInst->machInst & 0xC1F80000) == 0xC0700000)) {
+
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
                             outs << " [PC]";

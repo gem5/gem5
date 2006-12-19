@@ -101,7 +101,7 @@ output header {{
             // We make the assumption that all block memory operations
             // Will take 8 instructions to execute
             TwinMem(const char *mnem, ExtMachInst _machInst) :
-                SparcMacroInst(mnem, _machInst, No_OpClass, 8)
+                SparcMacroInst(mnem, _machInst, No_OpClass, 2)
             {}
         };
 
