@@ -432,5 +432,8 @@ SparcLiveProcess::argsInit(int intSize, int pageSize)
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
     threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 
+    //Align the "stack_min" to a page boundary.
+    stack_min = roundDown(stack_min, pageSize);
+
 //    num_processes++;
 }
