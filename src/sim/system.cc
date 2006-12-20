@@ -32,6 +32,7 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "arch/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
@@ -43,7 +44,6 @@
 #include "sim/system.hh"
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
-#include "arch/remote_gdb.hh"
 #include "kern/kernel_stats.hh"
 #endif
 
@@ -141,19 +141,18 @@ System::~System()
 #endif // FULL_SYSTEM}
 }
 
-#if FULL_SYSTEM
-
-
 int rgdb_wait = -1;
-
-#endif // FULL_SYSTEM
-
 
 void
 System::setMemoryMode(MemoryMode mode)
 {
     assert(getState() == Drained);
     memoryMode = mode;
+}
+
+bool System::breakpoint()
+{
+    return remoteGDB[0]->breakpoint();
 }
 
 int
@@ -175,7 +174,6 @@ System::registerThreadContext(ThreadContext *tc, int id)
     threadContexts[id] = tc;
     numcpus++;
 
-#if FULL_SYSTEM
     RemoteGDB *rgdb = new RemoteGDB(this, tc);
     GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
     gdbl->listen();
@@ -191,7 +189,6 @@ System::registerThreadContext(ThreadContext *tc, int id)
     }
 
     remoteGDB[id] = rgdb;
-#endif // FULL_SYSTEM
 
     return id;
 }
@@ -213,9 +210,7 @@ System::replaceThreadContext(ThreadContext *tc, int id)
     }
 
     threadContexts[id] = tc;
-#if FULL_SYSTEM
     remoteGDB[id]->replaceThreadContext(tc);
-#endif // FULL_SYSTEM
 }
 
 #if !FULL_SYSTEM

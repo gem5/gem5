@@ -62,6 +62,7 @@ base_sources = Split('''
 	base/pollevent.cc
 	base/range.cc
 	base/random.cc
+	base/remote_gdb.cc
 	base/sat_counter.cc
 	base/socket.cc
 	base/statistics.cc
@@ -171,7 +172,6 @@ mysql_sources = Split('''
 full_system_sources = Split('''
 	base/crc.cc
 	base/inet.cc
-	base/remote_gdb.cc
 
 	cpu/intr_control.cc
         cpu/profile.cc

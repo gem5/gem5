@@ -32,6 +32,7 @@
 #define __REMOTE_GDB_HH__
 
 #include <map>
+#include <sys/signal.h>
 
 #include "arch/types.hh"
 #include "cpu/pc_event.hh"
@@ -177,6 +178,10 @@ class BaseRemoteGDB
 
     virtual bool acc(Addr addr, size_t len) = 0;
     bool trap(int type);
+    virtual bool breakpoint()
+    {
+        return trap(SIGTRAP);
+    }
 
   protected:
     virtual void getregs() = 0;

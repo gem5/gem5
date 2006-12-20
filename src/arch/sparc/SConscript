@@ -50,12 +50,12 @@ base_sources = Split('''
 	intregfile.cc
 	miscregfile.cc
 	regfile.cc
+	remote_gdb.cc
 	''')
 
 # Full-system sources
 full_system_sources = Split('''
 	arguments.cc
-	remote_gdb.cc
         pagetable.cc
 	stacktrace.cc
 	system.cc

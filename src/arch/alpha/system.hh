@@ -56,8 +56,6 @@ class AlphaSystem : public System
 
     ~AlphaSystem();
 
-    virtual bool breakpoint();
-
 /**
  * Serialization stuff
  */

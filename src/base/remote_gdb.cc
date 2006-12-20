@@ -121,16 +121,21 @@
 #include <string>
 #include <unistd.h>
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
 #include "arch/vtophys.hh"
+#endif
+
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
-#include "mem/physical.hh"
+//#include "mem/physical.hh"
 #include "mem/port.hh"
+#include "mem/translating_port.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -448,9 +453,17 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    VirtualPort *vp = context->getVirtPort(context);
-    vp->readBlob(vaddr, (uint8_t*)data, size);
-    context->delVirtPort(vp);
+#if FULL_SYSTEM
+    VirtualPort *port = context->getVirtPort(context);
+#else
+    TranslatingPort *port = context->getMemPort();
+#endif
+    port->readBlob(vaddr, (uint8_t*)data, size);
+#if FULL_SYSTEM
+    context->delVirtPort(port);
+#else
+    delete port;
+#endif
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -487,9 +500,17 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    VirtualPort *vp = context->getVirtPort(context);
-    vp->writeBlob(vaddr, (uint8_t*)data, size);
-    context->delVirtPort(vp);
+#if FULL_SYSTEM
+    VirtualPort *port = context->getVirtPort(context);
+#else
+    TranslatingPort *port = context->getMemPort();
+#endif
+    port->writeBlob(vaddr, (uint8_t*)data, size);
+#if FULL_SYSTEM
+    context->delVirtPort(port);
+#else
+    delete port;
+#endif
 
     return true;
 }

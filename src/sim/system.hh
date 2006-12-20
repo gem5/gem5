@@ -55,12 +55,12 @@ class PhysicalMemory;
 
 #if FULL_SYSTEM
 class Platform;
+#endif
 class GDBListener;
 namespace TheISA
 {
     class RemoteGDB;
 }
-#endif
 
 class System : public SimObject
 {
@@ -159,11 +159,9 @@ class System : public SimObject
 
 #endif
   public:
-#if FULL_SYSTEM
     std::vector<TheISA::RemoteGDB *> remoteGDB;
     std::vector<GDBListener *> gdbListen;
-    virtual bool breakpoint() = 0;
-#endif // FULL_SYSTEM
+    bool breakpoint();
 
   public:
     struct Params

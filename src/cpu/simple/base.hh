@@ -54,14 +54,14 @@ namespace TheISA
 }
 class MemObject;
 
-class RemoteGDB;
-class GDBListener;
-
 #else
 
 class Process;
 
 #endif // FULL_SYSTEM
+
+class RemoteGDB;
+class GDBListener;
 
 class ThreadContext;
 class Checkpoint;

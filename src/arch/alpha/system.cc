@@ -195,12 +195,6 @@ AlphaSystem::setAlphaAccess(Addr access)
         panic("could not find m5AlphaAccess\n");
 }
 
-bool
-AlphaSystem::breakpoint()
-{
-    return remoteGDB[0]->trap(SIGTRAP);
-}
-
 void
 AlphaSystem::serialize(std::ostream &os)
 {

@@ -68,8 +68,6 @@ class SparcSystem : public System
 
     ~SparcSystem();
 
-    virtual bool breakpoint();
-
 /**
  * Serialization stuff
  */
