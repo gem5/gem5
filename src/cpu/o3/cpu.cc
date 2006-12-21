@@ -117,17 +117,18 @@ FullO3CPU<Impl>::ActivateThreadEvent::description()
 
 template <class Impl>
 FullO3CPU<Impl>::DeallocateContextEvent::DeallocateContextEvent()
-    : Event(&mainEventQueue, CPU_Tick_Pri)
+    : Event(&mainEventQueue, CPU_Tick_Pri), tid(0), remove(false), cpu(NULL)
 {
 }
 
 template <class Impl>
 void
 FullO3CPU<Impl>::DeallocateContextEvent::init(int thread_num,
-                                           FullO3CPU<Impl> *thread_cpu)
+                                              FullO3CPU<Impl> *thread_cpu)
 {
     tid = thread_num;
     cpu = thread_cpu;
+    remove = false;
 }
 
 template <class Impl>
@@ -606,7 +607,8 @@ FullO3CPU<Impl>::suspendContext(int tid)
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
     bool deallocated = deallocateContext(tid, false, 1);
     // If this was the last thread then unschedule the tick event.
-    if ((activeThreads.size() == 1 && !deallocated) || activeThreads.size() == 0)
+    if (activeThreads.size() == 1 && !deallocated ||
+        activeThreads.size() == 0)
         unscheduleTickEvent();
     _status = Idle;
 }
