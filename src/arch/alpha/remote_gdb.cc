@@ -121,14 +121,18 @@
 #include <string>
 #include <unistd.h>
 
+#include "config/full_system.hh"
+#if FULL_SYSTEM
+#include "arch/alpha/vtophys.hh"
+#endif
+
 #include "arch/alpha/kgdb.h"
+#include "arch/alpha/utility.hh"
 #include "arch/alpha/remote_gdb.hh"
-#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
 #include "mem/physical.hh"
@@ -152,6 +156,9 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
+#if !FULL_SYSTEM
+    panic("acc function needs to be rewritten for SE mode\n");
+#else
     Addr last_va;
 
     va = TheISA::TruncPage(va);
@@ -191,6 +198,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
     DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
     return true;
+#endif
 }
 
 ///////////////////////////////////////////////////////////

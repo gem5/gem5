@@ -31,9 +31,10 @@
 #include "cpu/o3/alpha/dyn_inst.hh"
 
 template <class Impl>
-AlphaDynInst<Impl>::AlphaDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,
+AlphaDynInst<Impl>::AlphaDynInst(ExtMachInst inst, Addr PC, Addr NPC,
+                                 Addr Pred_PC, Addr Pred_NPC,
                                  InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(inst, PC, Pred_PC, seq_num, cpu)
+    : BaseDynInst<Impl>(inst, PC, NPC, Pred_PC, Pred_NPC, seq_num, cpu)
 {
     initVars();
 }

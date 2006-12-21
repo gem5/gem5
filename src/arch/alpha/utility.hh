@@ -121,9 +121,9 @@ namespace AlphaISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-#if FULL_SYSTEM
     // Alpha IPR register accessors
-    inline bool PcPAL(Addr addr) { return addr & 0x1; }
+    inline bool PcPAL(Addr addr) { return addr & 0x3; }
+#if FULL_SYSTEM
 
     ////////////////////////////////////////////////////////////////////////
     //

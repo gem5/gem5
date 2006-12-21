@@ -1256,10 +1256,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         ext_inst = TheISA::NoopMachInst;
 
         // Create a new DynInst from the dummy nop.
-        DynInstPtr instruction = new DynInst(ext_inst, fetch_PC,
-                                             next_PC,
+        DynInstPtr instruction = new DynInst(ext_inst,
+                                             fetch_PC, fetch_NPC,
+                                             next_PC, next_NPC,
                                              inst_seq, cpu);
-        instruction->setPredTarg(next_PC + instSize);
+        instruction->setPredTarg(next_PC, next_NPC);
         instruction->setTid(tid);
 
         instruction->setASID(tid);
