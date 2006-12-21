@@ -98,18 +98,15 @@ pyzip_files.append('m5/defines.py')
 pyzip_files.append('m5/info.py')
 pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
 
-env.Command(['swig/debug_wrap.cc', 'm5/internal/debug.py'],
-            'swig/debug.i',
-            '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
-            '-o ${TARGETS[0]} $SOURCES')
+def swig_it(basename):
+    env.Command(['swig/%s_wrap.cc' % basename, 'm5/internal/%s.py' % basename],
+                'swig/%s.i' % basename,
+                '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
+                '-o ${TARGETS[0]} $SOURCES')
+    pyzip_dep_files.append('m5/internal/%s.py' % basename)
 
-env.Command(['swig/main_wrap.cc', 'm5/internal/main.py'],
-            'swig/main.i',
-            '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
-            '-o ${TARGETS[0]} $SOURCES')
-
-pyzip_dep_files.append('m5/internal/debug.py')
-pyzip_dep_files.append('m5/internal/main.py')
+swig_it('main')
+swig_it('debug')
 
 # Action function to build the zip archive.  Uses the PyZipFile module
 # included in the standard Python library.
