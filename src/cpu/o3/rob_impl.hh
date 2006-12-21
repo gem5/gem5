@@ -155,16 +155,18 @@ void
 ROB<Impl>::resetEntries()
 {
     if (robPolicy != Dynamic || numThreads > 1) {
-        int active_threads = (*activeThreads).size();
+        int active_threads = activeThreads->size();
 
-        std::list<unsigned>::iterator threads  = (*activeThreads).begin();
-        std::list<unsigned>::iterator list_end = (*activeThreads).end();
+        std::list<unsigned>::iterator threads = activeThreads->begin();
+        std::list<unsigned>::iterator end = activeThreads->end();
 
-        while (threads != list_end) {
+        while (threads != end) {
+            unsigned tid = *threads++;
+
             if (robPolicy == Partitioned) {
-                maxEntries[*threads++] = numEntries / active_threads;
+                maxEntries[tid] = numEntries / active_threads;
             } else if (robPolicy == Threshold && active_threads == 1) {
-                maxEntries[*threads++] = numEntries;
+                maxEntries[tid] = numEntries;
             }
         }
     }
@@ -318,9 +320,10 @@ bool
 ROB<Impl>::canCommit()
 {
     //@todo: set ActiveThreads through ROB or CPU
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (isHeadReady(tid)) {
@@ -432,22 +435,23 @@ ROB<Impl>::updateHead()
     bool first_valid = true;
 
     // @todo: set ActiveThreads through ROB or CPU
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-        unsigned thread_num = *threads++;
+    while (threads != end) {
+        unsigned tid = *threads++;
 
-        if (instList[thread_num].empty())
+        if (instList[tid].empty())
             continue;
 
         if (first_valid) {
-            head = instList[thread_num].begin();
+            head = instList[tid].begin();
             lowest_num = (*head)->seqNum;
             first_valid = false;
             continue;
         }
 
-        InstIt head_thread = instList[thread_num].begin();
+        InstIt head_thread = instList[tid].begin();
 
         DynInstPtr head_inst = (*head_thread);
 
@@ -472,9 +476,10 @@ ROB<Impl>::updateTail()
     tail = instList[0].end();
     bool first_valid = true;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (instList[tid].empty()) {
