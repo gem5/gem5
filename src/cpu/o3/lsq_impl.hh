@@ -464,7 +464,7 @@ template<class Impl>
 unsigned
 LSQ<Impl>::numFreeEntries(unsigned tid)
 {
-    //if( lsqPolicy == Dynamic )
+    //if (lsqPolicy == Dynamic)
     //return numFreeEntries();
     //else
         return thread[tid].numFreeEntries();
@@ -522,7 +522,7 @@ LSQ<Impl>::lqFull(unsigned tid)
 {
     //@todo: Change to Calculate All Entries for
     //Dynamic Policy
-    if( lsqPolicy == Dynamic )
+    if (lsqPolicy == Dynamic)
         return lqFull();
     else
         return thread[tid].lqFull();
@@ -551,7 +551,7 @@ LSQ<Impl>::sqFull(unsigned tid)
 {
      //@todo: Change to Calculate All Entries for
     //Dynamic Policy
-    if( lsqPolicy == Dynamic )
+    if (lsqPolicy == Dynamic)
         return sqFull();
     else
         return thread[tid].sqFull();
@@ -578,7 +578,7 @@ template<class Impl>
 bool
 LSQ<Impl>::isStalled(unsigned tid)
 {
-    if( lsqPolicy == Dynamic )
+    if (lsqPolicy == Dynamic)
         return isStalled();
     else
         return thread[tid].isStalled();
