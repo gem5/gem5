@@ -131,6 +131,8 @@ base_sources = Split('''
         python/swig/init.cc
         python/swig/debug_wrap.cc
         python/swig/main_wrap.cc
+        python/swig/event_wrap.cc
+        python/swig/pyevent.cc
 
 	sim/builder.cc
 	sim/debug.cc
