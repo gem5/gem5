@@ -46,6 +46,10 @@ config_root = os.path.dirname(config_path)
 
 parser = optparse.OptionParser()
 
+# System options
+parser.add_option("--kernel", action="store", type="string")
+parser.add_option("--script", action="store", type="string")
+
 # Benchmark options
 parser.add_option("--l2cache", action="store_true")
 parser.add_option("--dual", action="store_true",
@@ -98,6 +102,12 @@ elif m5.build_env['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 else:
     m5.panic("incapable of building non-alpha or non-sparc full system!")
+
+if options.kernel is not None:
+    test_sys.kernel = binary(options.kernel)
+
+if options.script is not None:
+    test_sys.readfile = options.script
 
 np = options.num_cpus
 
