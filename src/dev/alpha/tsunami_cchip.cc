@@ -88,6 +88,8 @@ TsunamiCChip::read(PacketPtr pkt)
     switch (pkt->getSize()) {
 
       case sizeof(uint64_t):
+          pkt->set<uint64_t>(0);
+
           if (daddr & TSDEV_CC_BDIMS)
           {
               pkt->set(dim[(daddr >> 4) & 0x3F]);
