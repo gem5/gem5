@@ -48,9 +48,6 @@ main()
     cprintf("%%s%-10s %c he went home \'\"%d %#o %#x %1.5f %1.2E\n",
             "hello", 'A', 1, 0xff, 0xfffffffffffffULL, 3.141592653589, 1.1e10);
 
-    cout << cformat("%s %#x %s\n") << "hello" << 0 << "foo 0\n";
-    cerr << cformat("%s %#x\n") << "hello" << 1 << "foo 1\n";
-
     cprintf("another test\n");
 
     stringstream buffer;

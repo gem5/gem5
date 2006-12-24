@@ -165,36 +165,6 @@ __csprintf(const std::string &format, ArgList &args)
 #define csprintf(args...) \
     __csprintf__(args, cp::ArgListNull())
 
-template<class T>
-inline ArgList &
-operator<<(ArgList &list, const T &data)
-{
-    list.append(data);
-    return list;
-}
-
-inline ArgList &
-operator<<(std::ostream &str, ArgList &list)
-{
-    list.stream = &str;
-    return list;
-}
-
-class ArgListTemp
-{
-  private:
-    std::string format;
-    ArgList *args;
-
-  public:
-    ArgListTemp(const std::string &f) : format(f) { args = new ArgList; }
-    ~ArgListTemp() { args->dump(format); delete args; }
-
-    operator ArgList *() { return args; }
-};
-
-#define cformat(format) \
-    (*((cp::ArgList *)cp::ArgListTemp(format)))
 }
 
 #endif // __CPRINTF_HH__
