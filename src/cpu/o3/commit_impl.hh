@@ -988,19 +988,18 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                     "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
                     head_inst->seqNum, head_inst->readPC());
 
-#if !FULL_SYSTEM
             // Hack to make sure syscalls/memory barriers/quiesces
             // aren't executed until all stores write back their data.
             // This direct communication shouldn't be used for
             // anything other than this.
-            if (inst_num > 0 || iewStage->hasStoresToWB())
-#else
             if ((head_inst->isMemBarrier() || head_inst->isWriteBarrier() ||
                     head_inst->isQuiesce()) &&
                 iewStage->hasStoresToWB())
-#endif
             {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
+                return false;
+            } else if (inst_num > 0) {
+                DPRINTF(Commit, "Waiting to become head of commit.\n");
                 return false;
             }
 

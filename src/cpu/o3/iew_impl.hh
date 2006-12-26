@@ -1124,13 +1124,11 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             }
 
             toRename->iewInfo[tid].dispatchedToLSQ++;
-#if FULL_SYSTEM
         } else if (inst->isMemBarrier() || inst->isWriteBarrier()) {
             // Same as non-speculative stores.
             inst->setCanCommit();
             instQueue.insertBarrier(inst);
             add_to_iq = false;
-#endif
         } else if (inst->isNonSpeculative()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
                     "encountered, skipping.\n", tid);
