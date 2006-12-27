@@ -11,4 +11,4 @@ class SparcDTB(SparcTLB):
 
 class SparcITB(SparcTLB):
     type = 'SparcITB'
-    size = 48
+    size = 64

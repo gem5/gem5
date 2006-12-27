@@ -54,9 +54,12 @@ class TLB : public SimObject
 
     int size;
     int usedEntries;
+    int lastReplaced;
 
     uint64_t cacheState;
     bool cacheValid;
+
+    std::list<TlbEntry*> freeList;
 
     enum FaultTypes {
         OtherFault = 0,
@@ -93,9 +96,6 @@ class TLB : public SimObject
     /** Given an entry id, read that tlb entries' tag. */
     uint64_t TagRead(int entry);
 
-    /** Give an entry id, read that tlb entries' tte */
-    uint64_t TteRead(int entry);
-
     /** Remove all entries from the TLB */
     void invalidateAll();
 
@@ -128,6 +128,10 @@ class TLB : public SimObject
     // Checkpointing
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    /** Give an entry id, read that tlb entries' tte */
+    uint64_t TteRead(int entry);
+
 };
 
 class ITB : public TLB
