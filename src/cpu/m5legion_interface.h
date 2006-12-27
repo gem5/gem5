@@ -30,7 +30,7 @@
 
 #include <unistd.h>
 
-#define VERSION         0xA1000006
+#define VERSION         0xA1000007
 #define OWN_M5          0x000000AA
 #define OWN_LEGION      0x00000055
 
@@ -71,6 +71,9 @@ typedef struct {
     uint8_t canrestore;
     uint8_t otherwin;
     uint8_t cleanwin;
+
+    uint64_t itb[64];
+    uint64_t dtb[64];
 
 } SharedData;
 
