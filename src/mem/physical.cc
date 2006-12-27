@@ -42,6 +42,7 @@
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/builder.hh"
 #include "sim/eventq.hh"
@@ -203,18 +204,60 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
         if (pkt->req->isLocked()) {
             trackLoadLocked(pkt->req);
         }
-        DPRINTF(MemoryAccess, "Performing Read of size %i on address 0x%x\n",
-                pkt->getSize(), pkt->getAddr());
         memcpy(pkt->getPtr<uint8_t>(),
                pmemAddr + pkt->getAddr() - params()->addrRange.start,
                pkt->getSize());
+#if TRACING_ON
+        switch (pkt->getSize()) {
+          case sizeof(uint64_t):
+            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
+                    pkt->getSize(), pkt->getAddr(),pkt->get<uint64_t>());
+            break;
+          case sizeof(uint32_t):
+            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
+                    pkt->getSize(), pkt->getAddr(),pkt->get<uint32_t>());
+            break;
+          case sizeof(uint16_t):
+            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
+                    pkt->getSize(), pkt->getAddr(),pkt->get<uint16_t>());
+            break;
+          case sizeof(uint8_t):
+            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
+                    pkt->getSize(), pkt->getAddr(),pkt->get<uint8_t>());
+            break;
+          default:
+            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x\n",
+                    pkt->getSize(), pkt->getAddr());
+        }
+#endif
     }
     else if (pkt->isWrite()) {
         if (writeOK(pkt->req)) {
-            DPRINTF(MemoryAccess, "Performing Write of size %i on address 0x%x\n",
-                    pkt->getSize(), pkt->getAddr());
             memcpy(pmemAddr + pkt->getAddr() - params()->addrRange.start,
                    pkt->getPtr<uint8_t>(), pkt->getSize());
+#if TRACING_ON
+            switch (pkt->getSize()) {
+              case sizeof(uint64_t):
+                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
+                        pkt->getSize(), pkt->getAddr(),pkt->get<uint64_t>());
+                break;
+              case sizeof(uint32_t):
+                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
+                        pkt->getSize(), pkt->getAddr(),pkt->get<uint32_t>());
+                break;
+              case sizeof(uint16_t):
+                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
+                        pkt->getSize(), pkt->getAddr(),pkt->get<uint16_t>());
+                break;
+              case sizeof(uint8_t):
+                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
+                        pkt->getSize(), pkt->getAddr(),pkt->get<uint8_t>());
+                break;
+              default:
+                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x\n",
+                        pkt->getSize(), pkt->getAddr());
+            }
+#endif
         }
     }
     else if (pkt->isInvalidate()) {
