@@ -28,10 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __REFCNT_HH__
-#define __REFCNT_HH__
-
-#include <stddef.h> //For the NULL macro definition
+#ifndef __BASE_REFCNT_HH__
+#define __BASE_REFCNT_HH__
 
 class RefCounted
 {
@@ -77,7 +75,7 @@ class RefCountingPtr
 
 
   public:
-    RefCountingPtr() : data(NULL) {}
+    RefCountingPtr() : data(0) {}
     RefCountingPtr(T *data) { copy(data); }
     RefCountingPtr(const RefCountingPtr &r) { copy(r.data); }
     ~RefCountingPtr() { del(); }
@@ -90,8 +88,8 @@ class RefCountingPtr
     const T &operator*() const { return *data; }
     const T *get() const { return data; }
 
-    RefCountingPtr &operator=(T *p) { set(p); return *this; }
-    RefCountingPtr &operator=(const RefCountingPtr &r)
+    const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+    const RefCountingPtr &operator=(const RefCountingPtr &r)
     { return operator=(r.data); }
 
     bool operator!() const { return data == 0; }
@@ -122,4 +120,4 @@ template<class T>
 bool operator!=(const T &l, const RefCountingPtr<T> &r)
 { return l != r.get(); }
 
-#endif // __REFCNT_HH__
+#endif // __BASE_REFCNT_HH__
