@@ -219,11 +219,19 @@ class OzoneCPU : public BaseCPU
 
         uint64_t readNextNPC()
         {
-            return 0;
+#if ISA_HAS_DELAY_SLOT
+            panic("Ozone needs to support nextNPC");
+#else
+            return thread->nextPC + sizeof(TheISA::MachInst);
+#endif
         }
 
         void setNextNPC(uint64_t val)
-        { }
+        {
+#if ISA_HAS_DELAY_SLOT
+            panic("Ozone needs to support nextNPC");
+#endif
+        }
 
       public:
         // ISA stuff:

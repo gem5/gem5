@@ -45,8 +45,7 @@ class AlphaTC : public O3ThreadContext<Impl>
 
     virtual uint64_t readNextNPC()
     {
-        panic("Alpha has no NextNPC!");
-        return 0;
+        return this->readNextPC() + sizeof(TheISA::MachInst);
     }
 
     virtual void setNextNPC(uint64_t val)

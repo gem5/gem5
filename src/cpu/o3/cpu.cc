@@ -659,9 +659,7 @@ FullO3CPU<Impl>::insertThread(unsigned tid)
     //Set PC/NPC/NNPC
     setPC(src_tc->readPC(), tid);
     setNextPC(src_tc->readNextPC(), tid);
-#if ISA_HAS_DELAY_SLOT
     setNextNPC(src_tc->readNextNPC(), tid);
-#endif
 
     src_tc->setStatus(ThreadContext::Active);
 

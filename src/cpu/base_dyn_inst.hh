@@ -209,6 +209,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** PC of this instruction. */
     Addr PC;
 
+  protected:
     /** Next non-speculative PC.  It is not filled in at fetch, but rather
      *  once the target of the branch is truly known (either decode or
      *  execute).
@@ -226,6 +227,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** If this is a branch that was predicted taken */
     bool predTaken;
+
+  public:
 
     /** Count of total number of dynamic instructions. */
     static int instcount;
@@ -390,7 +393,14 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the next NPC.  This could be the speculative next NPC if it is
      *  called prior to the actual branch target being calculated.
      */
-    Addr readNextNPC() { return nextNPC; }
+    Addr readNextNPC()
+    {
+#if ISA_HAS_DELAY_SLOT
+        return nextNPC;
+#else
+        return nextPC + sizeof(TheISA::MachInst);
+#endif
+    }
 
     /** Set the predicted target of this current instruction. */
     void setPredTarg(Addr predicted_PC, Addr predicted_NPC)
@@ -419,7 +429,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns whether the instruction mispredicted. */
     bool mispredicted()
     {
-        return predPC != nextPC || predNPC != nextNPC;
+        return readPredPC() != readNextPC() ||
+            readPredNPC() != readNextNPC();
     }
 
     //

@@ -78,13 +78,11 @@ namespace AlphaISA
 
         Addr readNextNPC()
         {
-            return nnpc;
+            return npc + sizeof(MachInst);
         }
 
         void setNextNPC(Addr val)
-        {
-            nnpc = val;
-        }
+        { }
 
       protected:
         IntRegFile intRegFile;		// (signed) integer register file
