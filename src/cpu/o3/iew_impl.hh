@@ -480,8 +480,8 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     toCommit->mispredPC[tid] = inst->readPC();
     toCommit->branchMispredict[tid] = true;
 
-#if ISA_HAS_DELAY_SLOT
     int instSize = sizeof(TheISA::MachInst);
+#if ISA_HAS_DELAY_SLOT
     bool branch_taken =
         !(inst->readNextPC() + instSize == inst->readNextNPC() &&
           (inst->readNextPC() == inst->readPC() + instSize ||
@@ -502,12 +502,15 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     if (squashDelaySlot) {
         toCommit->nextPC[tid] = inst->readNextPC();
         toCommit->nextNPC[tid] = inst->readNextNPC();
-    } else
+    } else {
         toCommit->nextPC[tid] = inst->readNextNPC();
+        toCommit->nextNPC[tid] = inst->readNextNPC() + instSize;
+    }
 #else
     toCommit->branchTaken[tid] = inst->readNextPC() !=
         (inst->readPC() + sizeof(TheISA::MachInst));
     toCommit->nextPC[tid] = inst->readNextPC();
+    toCommit->nextNPC[tid] = inst->readNextPC() + instSize;
 #endif
 
     toCommit->includeSquashInst[tid] = false;
@@ -527,6 +530,8 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
     toCommit->nextPC[tid] = inst->readNextPC();
 #if ISA_HAS_DELAY_SLOT
     toCommit->nextNPC[tid] = inst->readNextNPC();
+#else
+    toCommit->nextNPC[tid] = inst->readNextPC() + sizeof(TheISA::MachInst);
 #endif
     toCommit->branchMispredict[tid] = false;
 
@@ -547,6 +552,8 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->nextPC[tid] = inst->readPC();
 #if ISA_HAS_DELAY_SLOT
     toCommit->nextNPC[tid] = inst->readNextPC();
+#else
+    toCommit->nextNPC[tid] = inst->readPC() + sizeof(TheISA::MachInst);
 #endif
     toCommit->branchMispredict[tid] = false;
 
@@ -1355,14 +1362,11 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
-                DPRINTF(IEW, "Predicted target was %#x.\n", inst->predPC);
-#if ISA_HAS_DELAY_SLOT
-                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
-                        inst->nextNPC);
-#else
-                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x.\n",
-                        inst->nextPC);
-#endif
+                DPRINTF(IEW, "Predicted target was %#x, %#x.\n",
+                        inst->readPredPC(), inst->readPredNPC());
+                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x,"
+                        " NPC: %#x.\n", inst->readNextPC(),
+                        inst->readNextNPC());
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
 
