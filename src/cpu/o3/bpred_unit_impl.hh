@@ -149,7 +149,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
     using TheISA::MachInst;
 
     bool pred_taken = false;
-    Addr target;
+    Addr target = PC;
 
     ++lookups;
 
@@ -232,6 +232,8 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
 
         }
     }
+
+    PC = target;
 
     predHist[tid].push_front(predict_record);
 
