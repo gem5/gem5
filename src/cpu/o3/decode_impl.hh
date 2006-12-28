@@ -282,6 +282,10 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
+    ///FIXME There needs to be a way to set the nextPC and nextNPC
+    ///explicitly for ISAs with delay slots.
+    toFetch->decodeInfo[tid].nextNPC =
+        inst->branchTarget() + sizeof(TheISA::MachInst);
 #if ISA_HAS_DELAY_SLOT
     toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
         (inst->readNextPC() + sizeof(TheISA::MachInst));
@@ -742,8 +746,8 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
         if (inst->readPredTaken() && !inst->isControl()) {
-            DPRINTF(Decode, "PredPC : %#x != NextPC: %#x\n",inst->predPC,
-                    inst->nextPC + 4);
+            DPRINTF(Decode, "PredPC : %#x != NextPC: %#x\n",
+                    inst->readPredPC(), inst->readNextPC() + 4);
 
             panic("Instruction predicted as a branch!");
 
