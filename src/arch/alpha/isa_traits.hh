@@ -132,7 +132,7 @@ namespace AlphaISA
     const int NumPALShadowRegs = 8;
     const int NumFloatArchRegs = 32;
     // @todo: Figure out what this number really should be.
-    const int NumMiscArchRegs = 32;
+    const int NumMiscArchRegs = 77;
 
     const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
     const int NumFloatRegs = NumFloatArchRegs;
