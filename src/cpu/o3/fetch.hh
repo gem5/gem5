@@ -362,19 +362,6 @@ class DefaultFetch
     /** Tracks how many instructions has been fetched this cycle. */
     int numInst;
 
-    /** Tracks delay slot information for threads in ISAs which use
-     *	delay slots;
-     */
-    struct DelaySlotInfo {
-        InstSeqNum delaySlotSeqNum;
-        InstSeqNum branchSeqNum;
-        int numInsts;
-        Addr targetAddr;
-        bool targetReady;
-    };
-
-    DelaySlotInfo delaySlotInfo[Impl::MaxThreads];
-
     /** Source of possible stalls. */
     struct Stalls {
         bool decode;
