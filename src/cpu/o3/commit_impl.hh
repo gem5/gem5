@@ -998,7 +998,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
                 return false;
-            } else if (inst_num > 0) {
+            } else if (inst_num > 0 || iewStage->hasStoresToWB()) {
                 DPRINTF(Commit, "Waiting to become head of commit.\n");
                 return false;
             }
