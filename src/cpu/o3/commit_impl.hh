@@ -387,9 +387,12 @@ void
 DefaultCommit<Impl>::updateStatus()
 {
     // reset ROB changed variable
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
-    while (threads != (*activeThreads).end()) {
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
+
+    while (threads != end) {
         unsigned tid = *threads++;
+
         changedROBNumEntries[tid] = false;
 
         // Also check if any of the threads has a trap pending
@@ -416,9 +419,10 @@ DefaultCommit<Impl>::setNextStatus()
 {
     int squashes = 0;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (commitStatus[tid] == ROBSquashing) {
@@ -439,9 +443,10 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::changedROBEntries()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (changedROBNumEntries[tid]) {
@@ -564,14 +569,15 @@ DefaultCommit<Impl>::tick()
         return;
     }
 
-    if ((*activeThreads).size() <= 0)
+    if (activeThreads->empty())
         return;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (commitStatus[tid] == ROBSquashing) {
@@ -592,9 +598,9 @@ DefaultCommit<Impl>::tick()
 
     markCompletedInsts();
 
-    threads = (*activeThreads).begin();
+    threads = activeThreads->begin();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (!rob->isEmpty(tid) && rob->readHeadInst(tid)->readyToCommit()) {
@@ -692,9 +698,10 @@ DefaultCommit<Impl>::commit()
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         // Not sure which one takes priority.  I think if we have
@@ -802,9 +809,9 @@ DefaultCommit<Impl>::commit()
     }
 
     //Check for any activity
-    threads = (*activeThreads).begin();
+    threads = activeThreads->begin();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (changedROBNumEntries[tid]) {
@@ -971,19 +978,18 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                     "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
                     head_inst->seqNum, head_inst->readPC());
 
-#if !FULL_SYSTEM
             // Hack to make sure syscalls/memory barriers/quiesces
             // aren't executed until all stores write back their data.
             // This direct communication shouldn't be used for
             // anything other than this.
-            if (inst_num > 0 || iewStage->hasStoresToWB())
-#else
             if ((head_inst->isMemBarrier() || head_inst->isWriteBarrier() ||
                     head_inst->isQuiesce()) &&
                 iewStage->hasStoresToWB())
-#endif
             {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
+                return false;
+            } else if (inst_num > 0 || iewStage->hasStoresToWB()) {
+                DPRINTF(Commit, "Waiting to become head of commit.\n");
                 return false;
             }
 
@@ -1254,9 +1260,10 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::robDoneSquashing()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (!rob->isDoneSquashing(tid))
@@ -1335,7 +1342,8 @@ DefaultCommit<Impl>::getCommittingThread()
             return -1;
         }
     } else {
-        int tid = (*activeThreads).front();
+        assert(!activeThreads->empty());
+        int tid = activeThreads->front();
 
         if (commitStatus[tid] == Running ||
             commitStatus[tid] == Idle ||
@@ -1382,9 +1390,10 @@ DefaultCommit<Impl>::oldestReady()
     unsigned oldest = 0;
     bool first = true;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (!rob->isEmpty(tid) &&

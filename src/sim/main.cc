@@ -60,6 +60,7 @@
 #include "cpu/smt.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "python/swig/init.hh"
 #include "sim/async.hh"
 #include "sim/builder.hh"
 #include "sim/host.hh"
@@ -117,11 +118,6 @@ abortHandler(int sigtype)
 #endif
 }
 
-extern "C" {
-void init_main();
-void init_debug();
-}
-
 int
 main(int argc, char **argv)
 {
@@ -159,8 +155,7 @@ main(int argc, char **argv)
     PySys_SetArgv(argc, argv);
 
     // initialize SWIG modules
-    init_main();
-    init_debug();
+    init_swig();
 
     PyRun_SimpleString("import m5.main");
     PyRun_SimpleString("m5.main.main()");

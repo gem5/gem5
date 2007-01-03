@@ -153,12 +153,9 @@ FALRU::probe(Addr addr) const
 }
 
 void
-FALRU::invalidateBlk(Addr addr)
+FALRU::invalidateBlk(FALRU::BlkType *blk)
 {
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = (*tagHash.find(blkAddr)).second;
     if (blk) {
-        assert(blk->tag == blkAddr);
         blk->status = 0;
         blk->isTouched = false;
         tagsInUse--;
@@ -202,44 +199,6 @@ FALRU::findBlock(Addr addr, int &lat, int *inCache)
     return blk;
 }
 
-FALRUBlk*
-FALRU::findBlock(PacketPtr &pkt, int &lat, int *inCache)
-{
-    Addr addr = pkt->getAddr();
-
-    accesses++;
-    int tmp_in_cache = 0;
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = hashLookup(blkAddr);
-
-    if (blk && blk->isValid()) {
-        assert(blk->tag == blkAddr);
-        tmp_in_cache = blk->inCache;
-        for (int i = 0; i < numCaches; i++) {
-            if (1<<i & blk->inCache) {
-                hits[i]++;
-            } else {
-                misses[i]++;
-            }
-        }
-        hits[numCaches]++;
-        if (blk != head){
-            moveToHead(blk);
-        }
-    } else {
-        blk = NULL;
-        for (int i = 0; i < numCaches+1; ++i) {
-            misses[i]++;
-        }
-    }
-    if (inCache) {
-        *inCache = tmp_in_cache;
-    }
-
-    lat = hitLatency;
-    //assert(check());
-    return blk;
-}
 
 FALRUBlk*
 FALRU::findBlock(Addr addr) const

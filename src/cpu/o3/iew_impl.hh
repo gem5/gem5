@@ -695,10 +695,12 @@ DefaultIEW<Impl>::skidCount()
 {
     int max=0;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-        unsigned thread_count = skidBuffer[*threads++].size();
+    while (threads != end) {
+        unsigned tid = *threads++;
+        unsigned thread_count = skidBuffer[tid].size();
         if (max < thread_count)
             max = thread_count;
     }
@@ -710,10 +712,13 @@ template<class Impl>
 bool
 DefaultIEW<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-        if (!skidBuffer[*threads++].empty())
+    while (threads != end) {
+        unsigned tid = *threads++;
+
+        if (!skidBuffer[tid].empty())
             return false;
     }
 
@@ -726,11 +731,10 @@ DefaultIEW<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    threads = (*activeThreads).begin();
-
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (dispatchStatus[tid] == Unblocking) {
@@ -1144,13 +1148,11 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             }
 
             toRename->iewInfo[tid].dispatchedToLSQ++;
-#if FULL_SYSTEM
         } else if (inst->isMemBarrier() || inst->isWriteBarrier()) {
             // Same as non-speculative stores.
             inst->setCanCommit();
             instQueue.insertBarrier(inst);
             add_to_iq = false;
-#endif
         } else if (inst->isNonSpeculative()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
                     "encountered, skipping.\n", tid);
@@ -1250,9 +1252,10 @@ DefaultIEW<Impl>::executeInsts()
     wbNumInst = 0;
     wbCycle = 0;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
         fetchRedirect[tid] = false;
     }
@@ -1491,11 +1494,12 @@ DefaultIEW<Impl>::tick()
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
     // Check stall and squash signals, dispatch any instructions.
-    while (threads != (*activeThreads).end()) {
-           unsigned tid = *threads++;
+    while (threads != end) {
+        unsigned tid = *threads++;
 
         DPRINTF(IEW,"Issue: Processing [tid:%i]\n",tid);
 
@@ -1535,8 +1539,8 @@ DefaultIEW<Impl>::tick()
     // nonspeculative instruction.
     // This is pretty inefficient...
 
-    threads = (*activeThreads).begin();
-    while (threads != (*activeThreads).end()) {
+    threads = activeThreads->begin();
+    while (threads != end) {
         unsigned tid = (*threads++);
 
         DPRINTF(IEW,"Processing [tid:%i]\n",tid);

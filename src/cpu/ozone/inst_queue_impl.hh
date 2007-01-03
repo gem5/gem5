@@ -342,16 +342,18 @@ void
 InstQueue<Impl>::resetEntries()
 {
     if (iqPolicy != Dynamic || numThreads > 1) {
-        int active_threads = (*activeThreads).size();
+        int active_threads = activeThreads->size();
 
-        list<unsigned>::iterator threads  = (*activeThreads).begin();
-        list<unsigned>::iterator list_end = (*activeThreads).end();
+        std::list<unsigned>::iterator threads = activeThreads->begin();
+        std::list<unsigned>::iterator end = activeThreads->end();
 
-        while (threads != list_end) {
+        while (threads != end) {
+            unsigned tid = *threads++;
+
             if (iqPolicy == Partitioned) {
-                maxEntries[*threads++] = numEntries / active_threads;
-            } else if(iqPolicy == Threshold && active_threads == 1) {
-                maxEntries[*threads++] = numEntries;
+                maxEntries[tid] = numEntries / active_threads;
+            } else if (iqPolicy == Threshold && active_threads == 1) {
+                maxEntries[tid] = numEntries;
             }
         }
     }

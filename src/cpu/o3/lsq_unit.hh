@@ -509,7 +509,6 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             "storeHead: %i addr: %#x\n",
             load_idx, store_idx, storeHead, req->getPaddr());
 
-#if FULL_SYSTEM
     if (req->isLocked()) {
         // Disable recording the result temporarily.  Writing to misc
         // regs normally updates the result, but this is not the
@@ -518,7 +517,6 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
         TheISA::handleLockedRead(load_inst.get(), req);
         load_inst->recordResult = true;
     }
-#endif
 
     while (store_idx != -1) {
         // End once we've reached the top of the LSQ

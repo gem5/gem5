@@ -266,58 +266,6 @@ Split::probe(Addr addr) const
     return success;
 }
 
-SplitBlk*
-Split::findBlock(PacketPtr &pkt, int &lat)
-{
-
-    Addr aligned = blkAlign(pkt->getAddr());
-
-    if (memHash.count(aligned)) {
-        memHash[aligned]++;
-    } else if (pkt->nic_pkt()) {
-        memHash[aligned] = 1;
-    }
-
-    SplitBlk *blk = lru->findBlock(pkt->getAddr(), lat);
-    if (blk) {
-        if (pkt->nic_pkt()) {
-            NR_CP_hits++;
-        } else {
-            CR_CP_hits++;
-        }
-    } else {
-        if (lifo && lifo_net) {
-            blk = lifo_net->findBlock(pkt->getAddr(), lat);
-
-        } else if (lru_net) {
-            blk = lru_net->findBlock(pkt->getAddr(), lat);
-        }
-        if (blk) {
-            if (pkt->nic_pkt()) {
-                NR_NP_hits++;
-            } else {
-                CR_NP_hits++;
-            }
-        }
-    }
-
-    if (blk) {
-        Tick latency = curTick - blk->ts;
-        if (blk->isNIC) {
-            if (!blk->isUsed && !pkt->nic_pkt()) {
-                    useByCPUCycleDist.sample(latency);
-                    nicUseByCPUCycleTotal += latency;
-                    nicBlksUsedByCPU++;
-            }
-        }
-        blk->isUsed = true;
-
-        if (pkt->nic_pkt()) {
-            DPRINTF(Split, "found block in partition %d\n", blk->part);
-        }
-    }
-    return blk;
-}
 
 SplitBlk*
 Split::findBlock(Addr addr, int &lat)
@@ -403,14 +351,16 @@ Split::findReplacement(PacketPtr &pkt, PacketList &writebacks,
 }
 
 void
-Split::invalidateBlk(Addr addr)
+Split::invalidateBlk(Split::BlkType *blk)
 {
-    SplitBlk *blk = lru->findBlock(addr);
     if (!blk) {
+        fatal("FIXME!\n");
+#if 0
         if (lifo && lifo_net)
             blk = lifo_net->findBlock(addr);
         else if (lru_net)
             blk = lru_net->findBlock(addr);
+#endif
 
         if (!blk)
             return;

@@ -102,6 +102,26 @@ BasePrefetcher::regStats(const std::string &name)
         ;
 }
 
+inline bool
+BasePrefetcher::inCache(Addr addr)
+{
+    if (cache->inCache(addr)) {
+        pfCacheHit++;
+        return true;
+    }
+    return false;
+}
+
+inline bool
+BasePrefetcher::inMissQueue(Addr addr)
+{
+    if (cache->inMissQueue(addr)) {
+        pfMSHRHit++;
+        return true;
+    }
+    return false;
+}
+
 PacketPtr
 BasePrefetcher::getPacket()
 {
@@ -118,7 +138,7 @@ BasePrefetcher::getPacket()
         pkt = *pf.begin();
         pf.pop_front();
         if (!cacheCheckPush) {
-            keepTrying = inCache(pkt);
+            keepTrying = cache->inCache(pkt->getAddr());
         }
         if (pf.empty()) {
             cache->clearMasterRequest(Request_PF);
@@ -190,7 +210,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
 
             //Check if it is already in the cache
             if (cacheCheckPush) {
-                if (inCache(prefetch)) {
+                if (cache->inCache(prefetch->getAddr())) {
                     addr++;
                     delay++;
                     continue;
@@ -198,7 +218,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             }
 
             //Check if it is already in the miss_queue
-            if (inMissQueue(prefetch->getAddr())) {
+            if (cache->inMissQueue(prefetch->getAddr())) {
                 addr++;
                 delay++;
                 continue;

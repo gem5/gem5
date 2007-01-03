@@ -183,27 +183,6 @@ LRU::findBlock(Addr addr, int &lat)
     return blk;
 }
 
-LRUBlk*
-LRU::findBlock(PacketPtr &pkt, int &lat)
-{
-    Addr addr = pkt->getAddr();
-
-    Addr tag = extractTag(addr);
-    unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(tag);
-    lat = hitLatency;
-    if (blk != NULL) {
-        // move this block to head of the MRU list
-        sets[set].moveToHead(blk);
-        if (blk->whenReady > curTick
-            && blk->whenReady - curTick > hitLatency) {
-            lat = blk->whenReady - curTick;
-        }
-        blk->refCount += 1;
-    }
-
-    return blk;
-}
 
 LRUBlk*
 LRU::findBlock(Addr addr) const
@@ -240,9 +219,8 @@ LRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
 }
 
 void
-LRU::invalidateBlk(Addr addr)
+LRU::invalidateBlk(LRU::BlkType *blk)
 {
-    LRUBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;

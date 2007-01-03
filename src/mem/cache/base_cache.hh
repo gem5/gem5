@@ -692,6 +692,10 @@ class BaseCache : public MemObject
         }
         return true;
     }
+
+    virtual bool inCache(Addr addr) = 0;
+
+    virtual bool inMissQueue(Addr addr) = 0;
 };
 
 #endif //__BASE_CACHE_HH__

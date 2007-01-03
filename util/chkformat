@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+# Copyright (c) 2006 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+from getopt import getopt, GetoptError
+
+import re
+import sys
+
+tabsize = 8
+
+lead = re.compile(r'^([ \t])+')
+trail = re.compile(r'[ \t]+$')
+any_control = re.compile(r'\b(if|while|for)[ \t]*[(]')
+good_control = re.compile(r'\b(if|while|for) [(]')
+
+def linelen(line):
+    tabs = line.count('\t')
+    if not tabs:
+        return len(line)
+
+    count = 0
+    for c in line:
+        if c == '\t':
+            count += tabsize - count % tabsize
+        else:
+            count += 1
+
+    return count
+
+toolong = 0
+toolong80 = 0
+leadtabs = 0
+trailwhite = 0
+badcontrol = 0
+cret = 0
+
+def validate(filename, verbose, code):   
+    global toolong, toolong80, leadtabs, trailwhite, badcontrol, cret
+
+    def msg(lineno, line, message):
+        print '%s:%d>' % (filename, lineno + 1), message
+        if verbose > 2:
+            print line
+
+    def bad():
+        if code is not None:
+            sys.exit(code)
+
+    cpp = filename.endswith('.cc') or filename.endswith('.hh')
+    py = filename.endswith('.py')
+
+    if py + cpp != 1:
+        raise AttributeError, \
+              "I don't know how to deal with the file %s" % filename
+
+    try:
+        f = file(filename, 'r')
+    except OSError:
+        if verbose > 0:
+            print 'could not open file %s' % filename
+        bad()
+        return
+
+    for i,line in enumerate(f):
+        line = line.rstrip('\n')
+
+        # no carriage returns
+        if line.find('\r') != -1:
+            cret += 1
+            if verbose > 1:
+                msg(i, line, 'carriage return found')
+            bad()
+
+        # lines max out at 79 chars
+        llen = linelen(line)
+        if llen > 79:
+            toolong += 1
+            if llen == 80:
+                toolong80 += 1
+            if verbose > 1:
+                msg(i, line, 'line too long (%d chars)' % llen)
+            bad()
+
+        # no tabs used to indent
+        match = lead.search(line)
+        if match and match.group(1).find('\t') != -1:
+            leadtabs += 1
+            if verbose > 1:
+                msg(i, line, 'using tabs to indent')
+            bad()
+
+        # no trailing whitespace
+        if trail.search(line):
+            trailwhite +=1
+            if verbose > 1:
+                msg(i, line, 'trailing whitespace')
+            bad()
+
+        # for c++, exactly one space betwen if/while/for and (
+        if cpp:
+            match = any_control.search(line)
+            if match and not good_control.search(line):
+                badcontrol += 1
+                if verbose > 1:
+                    msg(i, line, 'improper spacing after %s' % match.group(1))
+                bad()
+
+if __name__ == '__main__':
+    progname = sys.argv[0]
+
+    def usage(code=None):
+        print >>sys.stderr, '''%s [-n] [-q] [-v] <filenames>''' % progname
+        if code is not None:
+            sys.exit(code)
+
+    try:
+        opts, args = getopt(sys.argv[1:], '-nv')
+    except GetoptError:
+        usage(2)
+
+    code = 1
+    verbose = 1
+    for opt,arg in opts:
+        if opt == '-n':
+            code = None
+        if opt == '-q':
+            verbose -= 1
+        if opt == '-v':
+            verbose += 1
+
+    for filename in args:
+        validate(filename, verbose=verbose, code=code)
+
+    if verbose > 0:
+        print '''\
+%d violations of lines over 79 chars. %d of which are 80 chars exactly.
+%d cases of whitespace at the end of a line.
+%d cases of tabs to indent.
+%d bad parens after if/while/for.
+%d carriage returns found.
+''' % (toolong, toolong80, trailwhite, leadtabs, badcontrol, cret)
+

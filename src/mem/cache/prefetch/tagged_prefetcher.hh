@@ -30,28 +30,17 @@
 
 /**
  * @file
- * Describes a tagged prefetcher based on template policies.
+ * Describes a tagged prefetcher.
  */
 
 #ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
 
-#include "mem/cache/prefetch/prefetcher.hh"
+#include "mem/cache/prefetch/base_prefetcher.hh"
 
-/**
- * A template-policy based cache. The behavior of the cache can be altered by
- * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore. MissBuffer handles all misses and writes/writebacks
- * @sa MissQueue. Coherence handles all coherence policy details @sa
- * UniCoherence, SimpleMultiCoherence.
- */
-template <class TagStore>
-class TaggedPrefetcher : public Prefetcher<TagStore>
+class TaggedPrefetcher : public BasePrefetcher
 {
   protected:
-
-    MissBuffer* mq;
-    TagStore* tags;
 
     Tick latency;
     int degree;

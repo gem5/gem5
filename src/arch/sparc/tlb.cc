@@ -45,7 +45,8 @@ namespace SparcISA
 {
 
 TLB::TLB(const std::string &name, int s)
-    : SimObject(name), size(s), usedEntries(0), cacheValid(false)
+    : SimObject(name), size(s), usedEntries(0), lastReplaced(0),
+      cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
     if (size > 64)
@@ -53,13 +54,16 @@ TLB::TLB(const std::string &name, int s)
 
     tlb = new TlbEntry[size];
     memset(tlb, 0, sizeof(TlbEntry) * size);
+
+    for (int x = 0; x < size; x++)
+        freeList.push_back(&tlb[x]);
 }
 
 void
 TLB::clearUsedBits()
 {
     MapIter i;
-    for (i = lookupTable.begin(); i != lookupTable.end();) {
+    for (i = lookupTable.begin(); i != lookupTable.end(); i++) {
         TlbEntry *t = i->second;
         if (!t->pte.locked()) {
             t->used = false;
@@ -77,32 +81,76 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
 
     MapIter i;
     TlbEntry *new_entry = NULL;
+    TlbRange tr;
     int x;
 
     cacheValid = false;
+    tr.va = va;
+    tr.size = PTE.size() - 1;
+    tr.contextId = context_id;
+    tr.partitionId = partition_id;
+    tr.real = real;
 
-    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d\n",
-            va, PTE.paddr(), partition_id, context_id, (int)real);
+
+    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
+            va, PTE.paddr(), partition_id, context_id, (int)real, entry);
+
+    // Demap any entry that conflicts
+    i = lookupTable.find(tr);
+    if (i != lookupTable.end()) {
+        i->second->valid = false;
+        if (i->second->used) {
+            i->second->used = false;
+            usedEntries--;
+        }
+        freeList.push_front(i->second);
+        DPRINTF(TLB, "TLB: Found conflicting entry %#X , deleting it\n",
+                i->second);
+        lookupTable.erase(i);
+    }
+
 
     if (entry != -1) {
         assert(entry < size && entry >= 0);
         new_entry = &tlb[entry];
     } else {
+        if (!freeList.empty()) {
+            new_entry = freeList.front();
+        } else {
+            x = lastReplaced;
+            do {
+                ++x;
+                if (x == size)
+                    x = 0;
+                if (x == lastReplaced)
+                    goto insertAllLocked;
+            } while (tlb[x].pte.locked());
+            lastReplaced = x;
+            new_entry = &tlb[x];
+            lookupTable.erase(new_entry->range);
+        }
+        /*
         for (x = 0; x < size; x++) {
             if (!tlb[x].valid || !tlb[x].used)  {
                 new_entry = &tlb[x];
                 break;
             }
-        }
+        }*/
     }
 
+insertAllLocked:
     // Update the last ently if their all locked
-    if (!new_entry)
+    if (!new_entry) {
         new_entry = &tlb[size-1];
+        lookupTable.erase(new_entry->range);
+    }
+
+    freeList.remove(new_entry);
+    DPRINTF(TLB, "Using entry: %#X\n", new_entry);
 
     assert(PTE.valid());
     new_entry->range.va = va;
-    new_entry->range.size = PTE.size();
+    new_entry->range.size = PTE.size() - 1;
     new_entry->range.partitionId = partition_id;
     new_entry->range.contextId = context_id;
     new_entry->range.real = real;
@@ -112,19 +160,9 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
     usedEntries++;
 
 
-    // Demap any entry that conflicts
-    i = lookupTable.find(new_entry->range);
-    if (i != lookupTable.end()) {
-        i->second->valid = false;
-        if (i->second->used) {
-            i->second->used = false;
-            usedEntries--;
-        }
-        DPRINTF(TLB, "TLB: Found conflicting entry, deleting it\n");
-        lookupTable.erase(i);
-    }
 
-    lookupTable.insert(new_entry->range, new_entry);;
+    i = lookupTable.insert(new_entry->range, new_entry);
+    assert(i != lookupTable.end());
 
     // If all entries have there used bit set, clear it on them all, but the
     // one we just inserted
@@ -148,7 +186,7 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
             va, partition_id, context_id, real);
     // Assemble full address structure
     tr.va = va;
-    tr.size = va + MachineBytes;
+    tr.size = MachineBytes;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
@@ -180,6 +218,7 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
 void
 TLB::dumpAll()
 {
+    MapIter i;
     for (int x = 0; x < size; x++) {
         if (tlb[x].valid) {
            DPRINTFN("%4d:  %#2x:%#2x %c %#4x %#8x %#8x %#16x\n",
@@ -196,11 +235,14 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     TlbRange tr;
     MapIter i;
 
+    DPRINTF(IPR, "TLB: Demapping Page va=%#x pid=%#d cid=%d r=%d\n",
+            va, partition_id, context_id, real);
+
     cacheValid = false;
 
     // Assemble full address structure
     tr.va = va;
-    tr.size = va + MachineBytes;
+    tr.size = MachineBytes;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
@@ -208,11 +250,14 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
     // Demap any entry that conflicts
     i = lookupTable.find(tr);
     if (i != lookupTable.end()) {
+        DPRINTF(IPR, "TLB: Demapped page\n");
         i->second->valid = false;
         if (i->second->used) {
             i->second->used = false;
             usedEntries--;
         }
+        freeList.push_front(i->second);
+        DPRINTF(TLB, "Freeing TLB entry : %#X\n", i->second);
         lookupTable.erase(i);
     }
 }
@@ -221,10 +266,16 @@ void
 TLB::demapContext(int partition_id, int context_id)
 {
     int x;
+    DPRINTF(IPR, "TLB: Demapping Context pid=%#d cid=%d\n",
+            partition_id, context_id);
     cacheValid = false;
     for (x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
             tlb[x].range.partitionId == partition_id) {
+            if (tlb[x].valid == true) {
+                freeList.push_front(&tlb[x]);
+                DPRINTF(TLB, "Freeing TLB entry : %#X\n", &tlb[x]);
+            }
             tlb[x].valid = false;
             if (tlb[x].used) {
                 tlb[x].used = false;
@@ -239,9 +290,14 @@ void
 TLB::demapAll(int partition_id)
 {
     int x;
+    DPRINTF(TLB, "TLB: Demapping All pid=%#d\n", partition_id);
     cacheValid = false;
     for (x = 0; x < size; x++) {
         if (!tlb[x].pte.locked() && tlb[x].range.partitionId == partition_id) {
+            if (tlb[x].valid == true){
+                freeList.push_front(&tlb[x]);
+                DPRINTF(TLB, "Freeing TLB entry : %#X\n", &tlb[x]);
+            }
             tlb[x].valid = false;
             if (tlb[x].used) {
                 tlb[x].used = false;
@@ -258,7 +314,10 @@ TLB::invalidateAll()
     int x;
     cacheValid = false;
 
+    freeList.clear();
     for (x = 0; x < size; x++) {
+        if (tlb[x].valid == true)
+            freeList.push_back(&tlb[x]);
         tlb[x].valid = false;
     }
     usedEntries = 0;
@@ -266,17 +325,26 @@ TLB::invalidateAll()
 
 uint64_t
 TLB::TteRead(int entry) {
+    if (entry >= size)
+        panic("entry: %d\n", entry);
+
     assert(entry < size);
-    return tlb[entry].pte();
+    if (tlb[entry].valid)
+        return tlb[entry].pte();
+    else
+        return (uint64_t)-1ll;
 }
 
 uint64_t
 TLB::TagRead(int entry) {
     assert(entry < size);
     uint64_t tag;
+    if (!tlb[entry].valid)
+        return (uint64_t)-1ll;
 
-    tag = tlb[entry].range.contextId | tlb[entry].range.va |
-          (uint64_t)tlb[entry].range.partitionId << 61;
+    tag = tlb[entry].range.contextId;
+    tag |= tlb[entry].range.va;
+    tag |= (uint64_t)tlb[entry].range.partitionId << 61;
     tag |= tlb[entry].range.real ? ULL(1) << 60 : 0;
     tag |= (uint64_t)~tlb[entry].pte._size() << 56;
     return tag;
@@ -492,13 +560,13 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     // Be fast if we can!
     if (cacheValid &&  cacheState == tlbdata) {
         if (cacheEntry[0] && cacheAsi[0] == asi && cacheEntry[0]->range.va < vaddr + size &&
-            cacheEntry[0]->range.va + cacheEntry[0]->range.size >= vaddr) {
+            cacheEntry[0]->range.va + cacheEntry[0]->range.size > vaddr) {
                 req->setPaddr(cacheEntry[0]->pte.paddr() & ~(cacheEntry[0]->pte.size()-1) |
                               vaddr & cacheEntry[0]->pte.size()-1 );
                 return NoFault;
         }
         if (cacheEntry[1] && cacheAsi[1] == asi && cacheEntry[1]->range.va < vaddr + size &&
-            cacheEntry[1]->range.va + cacheEntry[1]->range.size >= vaddr) {
+            cacheEntry[1]->range.va + cacheEntry[1]->range.size > vaddr) {
                 req->setPaddr(cacheEntry[1]->pte.paddr() & ~(cacheEntry[1]->pte.size()-1) |
                               vaddr & cacheEntry[1]->pte.size()-1 );
                 return NoFault;
@@ -575,6 +643,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (write && asi == ASI_LDTX_P)
             // block init store (like write hint64)
             goto continueDtbFlow;
+        if (!write && asi == ASI_QUAD_LDD)
+            goto continueDtbFlow;
+
         if (AsiIsTwin(asi))
             panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))
@@ -655,8 +726,12 @@ continueDtbFlow:
     }
 
     // cache translation date for next translation
-    cacheValid = true;
     cacheState = tlbdata;
+    if (!cacheValid) {
+        cacheEntry[1] = NULL;
+        cacheEntry[0] = NULL;
+    }
+
     if (cacheEntry[0] != e && cacheEntry[1] != e) {
         cacheEntry[1] = cacheEntry[0];
         cacheEntry[0] = e;
@@ -665,7 +740,7 @@ continueDtbFlow:
         if (implicit)
             cacheAsi[0] = (ASI)0;
     }
-
+    cacheValid = true;
     req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
                   vaddr & e->pte.size()-1);
     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
@@ -684,7 +759,7 @@ handleQueueRegAccess:
         writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
         return new PrivilegedAction;
     }
-    if (priv && vaddr & 0xF || vaddr > 0x3f8 || vaddr < 0x3c0) {
+    if (!hpriv && vaddr & 0xF || vaddr > 0x3f8 || vaddr < 0x3c0) {
         writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }
@@ -881,6 +956,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     int part_insert;
     int entry_insert = -1;
     bool real_insert;
+    bool ignore;
+    int part_id;
+    int ctx_id;
     PageTableEntry pte;
 
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
@@ -1000,6 +1078,41 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
                 PageTableEntry::sun4u);
         insert(va_insert, part_insert, ct_insert, real_insert, pte, entry_insert);
         break;
+      case ASI_IMMU_DEMAP:
+        ignore = false;
+        ctx_id = -1;
+        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        switch (bits(va,5,4)) {
+          case 0:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            break;
+          case 1:
+            ignore = true;
+            break;
+          case 3:
+            ctx_id = 0;
+            break;
+          default:
+            ignore = true;
+        }
+
+        switch(bits(va,7,6)) {
+          case 0: // demap page
+            if (!ignore)
+                tc->getITBPtr()->demapPage(mbits(va,63,13), part_id,
+                        bits(va,9,9), ctx_id);
+            break;
+          case 1: //demap context
+            if (!ignore)
+                tc->getITBPtr()->demapContext(part_id, ctx_id);
+            break;
+          case 2:
+            tc->getITBPtr()->demapAll(part_id);
+            break;
+          default:
+            panic("Invalid type for IMMU demap\n");
+        }
+        break;
       case ASI_DMMU:
         switch (va) {
           case 0x30:
@@ -1010,6 +1123,40 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             break;
           default:
             goto doMmuWriteError;
+        }
+        break;
+      case ASI_DMMU_DEMAP:
+        ignore = false;
+        ctx_id = -1;
+        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        switch (bits(va,5,4)) {
+          case 0:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            break;
+          case 1:
+            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_S_CONTEXT);
+            break;
+          case 3:
+            ctx_id = 0;
+            break;
+          default:
+            ignore = true;
+        }
+
+        switch(bits(va,7,6)) {
+          case 0: // demap page
+            if (!ignore)
+                demapPage(mbits(va,63,13), part_id, bits(va,9,9), ctx_id);
+            break;
+          case 1: //demap context
+            if (!ignore)
+                demapContext(part_id, ctx_id);
+            break;
+          case 2:
+            demapAll(part_id);
+            break;
+          default:
+            panic("Invalid type for IMMU demap\n");
         }
         break;
       default:

@@ -202,27 +202,6 @@ SplitLRU::findBlock(Addr addr, int &lat)
     return blk;
 }
 
-SplitBlk*
-SplitLRU::findBlock(PacketPtr &pkt, int &lat)
-{
-    Addr addr = pkt->getAddr();
-
-    Addr tag = extractTag(addr);
-    unsigned set = extractSet(addr);
-    SplitBlk *blk = sets[set].findBlk(tag);
-    lat = hitLatency;
-    if (blk != NULL) {
-        // move this block to head of the MRU list
-        sets[set].moveToHead(blk);
-        if (blk->whenReady > curTick && blk->whenReady - curTick > hitLatency){
-            lat = blk->whenReady - curTick;
-        }
-        blk->refCount += 1;
-        hits++;
-    }
-
-    return blk;
-}
 
 SplitBlk*
 SplitLRU::findBlock(Addr addr) const
@@ -261,9 +240,8 @@ SplitLRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
 }
 
 void
-SplitLRU::invalidateBlk(Addr addr)
+SplitLRU::invalidateBlk(SplitLRU::BlkType *blk)
 {
-    SplitBlk *blk = findBlock(addr);
     if (blk) {
         blk->status = 0;
         blk->isTouched = false;

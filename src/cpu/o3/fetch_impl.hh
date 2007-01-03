@@ -727,10 +727,10 @@ typename DefaultFetch<Impl>::FetchStatus
 DefaultFetch<Impl>::updateFetchStatus()
 {
     //Check Running
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (fetchStatus[tid] == Running ||
@@ -785,12 +785,13 @@ template <class Impl>
 void
 DefaultFetch<Impl>::tick()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
     bool status_change = false;
 
     wroteToTimeBuffer = false;
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         // Check the signals for each thread to determine the proper status
@@ -1313,7 +1314,9 @@ DefaultFetch<Impl>::getFetchingThread(FetchPriority &fetch_priority)
             return -1;
         }
     } else {
-        int tid = *((*activeThreads).begin());
+        std::list<unsigned>::iterator thread = activeThreads->begin();
+        assert(thread != activeThreads->end());
+        int tid = *thread;
 
         if (fetchStatus[tid] == Running ||
             fetchStatus[tid] == IcacheAccessComplete ||
@@ -1363,9 +1366,10 @@ DefaultFetch<Impl>::iqCount()
 {
     std::priority_queue<unsigned> PQ;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         PQ.push(fromIEW->iewInfo[tid].iqCount);
@@ -1393,10 +1397,10 @@ DefaultFetch<Impl>::lsqCount()
 {
     std::priority_queue<unsigned> PQ;
 
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
-
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         PQ.push(fromIEW->iewInfo[tid].ldstqCount);
@@ -1422,7 +1426,10 @@ template<class Impl>
 int
 DefaultFetch<Impl>::branchCount()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator thread = activeThreads->begin();
+    assert(thread != activeThreads->end());
+    unsigned tid = *thread;
+
     panic("Branch Count Fetch policy unimplemented\n");
-    return *threads;
+    return 0 * tid;
 }

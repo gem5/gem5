@@ -428,10 +428,12 @@ template<class Impl>
 bool
 DefaultDecode<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-        if (!skidBuffer[*threads++].empty())
+    while (threads != end) {
+        unsigned tid = *threads++;
+        if (!skidBuffer[tid].empty())
             return false;
     }
 
@@ -444,11 +446,10 @@ DefaultDecode<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    threads = (*activeThreads).begin();
-
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (decodeStatus[tid] == Unblocking) {
@@ -601,13 +602,14 @@ DefaultDecode<Impl>::tick()
 
     toRenameIndex = 0;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
     sortInsts();
 
     //Check stall and squash signals.
-    while (threads != (*activeThreads).end()) {
-    unsigned tid = *threads++;
+    while (threads != end) {
+        unsigned tid = *threads++;
 
         DPRINTF(Decode,"Processing [tid:%i]\n",tid);
         status_change =  checkSignalsAndUpdate(tid) || status_change;

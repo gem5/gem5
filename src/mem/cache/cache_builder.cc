@@ -70,9 +70,6 @@
 #include "base/compression/null_compression.hh"
 #include "base/compression/lzss_compression.hh"
 
-// CacheTags Templates
-#include "mem/cache/tags/cache_tags.hh"
-
 // MissQueue Templates
 #include "mem/cache/miss/miss_queue.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
@@ -108,8 +105,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<int> tgts_per_mshr;
     Param<int> write_buffers;
     Param<bool> prioritizeRequests;
-//    SimObjectParam<Bus *> in_bus;
-//    SimObjectParam<Bus *> out_bus;
     SimObjectParam<CoherenceProtocol *> protocol;
     Param<Addr> trace_addr;
     Param<int> hash_delay;
@@ -122,7 +117,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<int> compression_latency;
     Param<int> subblock_size;
     Param<Counter> max_miss_count;
-//    SimObjectParam<HierParams *> hier;
     VectorParam<Range<Addr> > addr_range;
 //    SimObjectParam<MemTraceWriter *> mem_trace;
     Param<bool> split;
@@ -156,9 +150,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(write_buffers, "number of write buffers", 8),
     INIT_PARAM_DFLT(prioritizeRequests, "always service demand misses first",
                     false),
-/*    INIT_PARAM_DFLT(in_bus, "incoming bus object", NULL),
-    INIT_PARAM(out_bus, "outgoing bus object"),
-*/
     INIT_PARAM_DFLT(protocol, "coherence protocol to use in the cache", NULL),
     INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
 
@@ -182,10 +173,6 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(max_miss_count,
                     "The number of misses to handle before calling exit",
                     0),
-/*    INIT_PARAM_DFLT(hier,
-                    "Hierarchy global variables",
-                    &defaultHierParams),
-*/
     INIT_PARAM_DFLT(addr_range, "The address range in bytes",
                     vector<Range<Addr> >(1,RangeIn((Addr)0, MaxAddr))),
 //    INIT_PARAM_DFLT(mem_trace, "Memory trace to write accesses to", NULL),
@@ -208,47 +195,47 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
 END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 
-#define BUILD_CACHE(t, c) do {					\
-        Prefetcher<CacheTags<t> > *pf; \
-        if (pf_policy == "tagged") {      \
-             BUILD_TAGGED_PREFETCHER(t); \
-        }            \
-        else if (pf_policy == "stride") {       \
-             BUILD_STRIDED_PREFETCHER(t); \
-        } \
-        else if (pf_policy == "ghb") {       \
-             BUILD_GHB_PREFETCHER(t); \
-        } \
-        else { \
-             BUILD_NULL_PREFETCHER(t); \
-        } \
-        Cache<CacheTags<t>, c>::Params params(tagStore, mq, coh, \
-                                                       base_params, \
-                                                       pf,  \
-                                                       prefetch_access, hit_latency); \
-        Cache<CacheTags<t>, c> *retval =			\
-            new Cache<CacheTags<t>, c>(getInstanceName(), params);		\
-return retval;                                                          \
+#define BUILD_CACHE(TAGS, tags, c)                                      \
+    do {                                                                \
+        BasePrefetcher *pf;                                           \
+        if (pf_policy == "tagged") {                                    \
+            BUILD_TAGGED_PREFETCHER(TAGS);                              \
+        }                                                               \
+        else if (pf_policy == "stride") {                               \
+            BUILD_STRIDED_PREFETCHER(TAGS);                             \
+        }                                                               \
+        else if (pf_policy == "ghb") {                                  \
+            BUILD_GHB_PREFETCHER(TAGS);                                 \
+        }                                                               \
+        else {                                                          \
+            BUILD_NULL_PREFETCHER(TAGS);                                \
+        }                                                               \
+        Cache<TAGS, c>::Params params(tags, mq, coh, base_params,       \
+                                      pf, prefetch_access, hit_latency, \
+                                      true,                             \
+                                      store_compressed,                 \
+                                      adaptive_compression,             \
+                                      compressed_bus,                   \
+                                      compAlg, compression_latency,     \
+                                      prefetch_miss);                   \
+        Cache<TAGS, c> *retval =                                        \
+            new Cache<TAGS, c>(getInstanceName(), params);              \
+        return retval;                                                  \
     } while (0)
 
 #define BUILD_CACHE_PANIC(x) do {			\
         panic("%s not compiled into M5", x);		\
     } while (0)
 
-#define BUILD_COMPRESSED_CACHE(TAGS, tags, c)			\
-    do {								\
-        CompressionAlgorithm *compAlg;					\
-        if (compressed_bus || store_compressed) {			\
-            compAlg = new LZSSCompression();				\
-        } else {							\
-            compAlg = new NullCompression();				\
-        }								\
-        CacheTags<TAGS> *tagStore =					\
-            new CacheTags<TAGS>(tags, compression_latency, true,	\
-                                store_compressed, adaptive_compression,	\
-                                compressed_bus,				\
-                                compAlg, prefetch_miss);		\
-            BUILD_CACHE(TAGS, c);					\
+#define BUILD_COMPRESSED_CACHE(TAGS, tags, c)           \
+    do {                                                \
+        CompressionAlgorithm *compAlg;                  \
+        if (compressed_bus || store_compressed) {       \
+            compAlg = new LZSSCompression();            \
+        } else {                                        \
+            compAlg = new NullCompression();            \
+        }                                               \
+        BUILD_CACHE(TAGS, tags, c);                     \
     } while (0)
 
 #if defined(USE_CACHE_FALRU)
@@ -327,55 +314,55 @@ return retval;                                                          \
     } while (0)
 
 #if defined(USE_TAGGED)
-#define BUILD_TAGGED_PREFETCHER(t) pf = new   \
-                TaggedPrefetcher<CacheTags<t> >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree)
+#define BUILD_TAGGED_PREFETCHER(t)                              \
+    pf = new TaggedPrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree)
 #else
 #define BUILD_TAGGED_PREFETCHER(t) BUILD_CACHE_PANIC("Tagged Prefetcher")
 #endif
 
 #if defined(USE_STRIDED)
-#define BUILD_STRIDED_PREFETCHER(t) pf = new  \
-                StridePrefetcher<CacheTags<t> >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree, \
-                                                        prefetch_use_cpu_id)
+#define BUILD_STRIDED_PREFETCHER(t)                             \
+    pf = new StridePrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree,                  \
+                              prefetch_use_cpu_id)
 #else
 #define BUILD_STRIDED_PREFETCHER(t) BUILD_CACHE_PANIC("Stride Prefetcher")
 #endif
 
 #if defined(USE_GHB)
-#define BUILD_GHB_PREFETCHER(t) pf = new  \
-                GHBPrefetcher<CacheTags<t> >(prefetcher_size, \
-                                                     !prefetch_past_page, \
-                                                     prefetch_serial_squash, \
-                                                     prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                     prefetch_latency, \
-                                                     prefetch_degree, \
-                                                     prefetch_use_cpu_id)
+#define BUILD_GHB_PREFETCHER(t)                         \
+    pf = new GHBPrefetcher(prefetcher_size,             \
+                           !prefetch_past_page,         \
+                           prefetch_serial_squash,      \
+                           prefetch_cache_check_push,   \
+                           prefetch_data_accesses_only, \
+                           prefetch_latency,            \
+                           prefetch_degree,             \
+                           prefetch_use_cpu_id)
 #else
 #define BUILD_GHB_PREFETCHER(t) BUILD_CACHE_PANIC("GHB Prefetcher")
 #endif
 
 #if defined(USE_TAGGED)
-#define BUILD_NULL_PREFETCHER(t) pf = new  \
-                TaggedPrefetcher<CacheTags<t> >(prefetcher_size, \
-                                                        !prefetch_past_page, \
-                                                        prefetch_serial_squash, \
-                                                        prefetch_cache_check_push, \
-                                                        prefetch_data_accesses_only, \
-                                                        prefetch_latency, \
-                                                        prefetch_degree)
+#define BUILD_NULL_PREFETCHER(t)                                \
+    pf = new TaggedPrefetcher(prefetcher_size,                  \
+                              !prefetch_past_page,              \
+                              prefetch_serial_squash,           \
+                              prefetch_cache_check_push,        \
+                              prefetch_data_accesses_only,      \
+                              prefetch_latency,                 \
+                              prefetch_degree)
 #else
 #define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
 #endif

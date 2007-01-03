@@ -180,6 +180,8 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         // Subtract off the base offset for miscellaneous registers.
         arch_reg = arch_reg - numLogicalRegs;
 
+        DPRINTF(Rename, "Renamed misc reg %d\n", arch_reg);
+
         // No renaming happens to the misc. registers.  They are
         // simply the registers that come after all the physical
         // registers; thus take the base architected register and add
@@ -193,6 +195,9 @@ SimpleRenameMap::rename(RegIndex arch_reg)
 
         assert(renamed_reg < numPhysicalRegs + numMiscRegs);
     }
+
+    DPRINTF(Rename, "Renamed reg %d to physical reg %d old mapping was %d\n",
+            arch_reg, renamed_reg, prev_reg);
 
     return RenameInfo(renamed_reg, prev_reg);
 }

@@ -314,6 +314,7 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffCanrestore = false;
         bool diffOtherwin = false;
         bool diffCleanwin = false;
+        bool diffTlb = false;
         Addr m5Pc, lgnPc;
 
 
@@ -409,13 +410,24 @@ Trace::InstRecord::dump(ostream &outs)
                             thread->readMiscReg(NumIntArchRegs + 6))
                         diffCleanwin = true;
 
+                    for (int i = 0; i < 64; i++) {
+                        if (shared_data->itb[i] !=  thread->getITBPtr()->TteRead(i))
+                                diffTlb = true;
+                        if (shared_data->dtb[i] !=  thread->getDTBPtr()->TteRead(i))
+                                diffTlb = true;
+                    }
+
                     if ((diffPC || diffCC || diffInst || diffRegs || diffTpc ||
                             diffTnpc || diffTstate || diffTt || diffHpstate ||
                             diffHtstate || diffHtba || diffPstate || diffY ||
                             diffCcr || diffTl || diffGl || diffAsi || diffPil ||
                             diffCwp || diffCansave || diffCanrestore ||
-                            diffOtherwin || diffCleanwin)
-                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)) {
+                            diffOtherwin || diffCleanwin || diffTlb)
+                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)
+                        && !(((staticInst->machInst & 0xC0000000) == 0xC0000000)
+                            && shared_data->tl == thread->readMiscReg(MISCREG_TL) + 1)
+                       ) {
+
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
                             outs << " [PC]";
@@ -463,6 +475,8 @@ Trace::InstRecord::dump(ostream &outs)
                             outs << " [Otherwin]";
                         if (diffCleanwin)
                             outs << " [Cleanwin]";
+                        if (diffTlb)
+                            outs << " [Tlb]";
                         outs << endl << endl;
 
                         outs << right << setfill(' ') << setw(15)
@@ -591,6 +605,22 @@ Trace::InstRecord::dump(ostream &outs)
                                 outs << "0x" << setw(16) << hex
                                     << shared_data->intregs[y*8+x]
                                     << endl;*/
+                            }
+                        }
+                        printColumnLabels(outs);
+                        char label[8];
+                        for (int x = 0; x < 64; x++) {
+                            if (shared_data->itb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
+                                thread->getITBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
+                                    sprintf(label, "I-TLB:%02d", x);
+                                    printRegPair(outs, label, thread->getITBPtr()->TteRead(x), shared_data->itb[x]);
+                            }
+                        }
+                        for (int x = 0; x < 64; x++) {
+                            if (shared_data->dtb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
+                                thread->getDTBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
+                                    sprintf(label, "D-TLB:%02d", x);
+                                    printRegPair(outs, label, thread->getDTBPtr()->TteRead(x), shared_data->dtb[x]);
                             }
                         }
                         thread->getITBPtr()->dumpAll();

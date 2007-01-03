@@ -429,10 +429,11 @@ DefaultRename<Impl>::tick()
 
     sortInsts();
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
     // Check stall and squash signals.
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         DPRINTF(Rename, "Processing [tid:%i]\n", tid);
@@ -451,9 +452,9 @@ DefaultRename<Impl>::tick()
         cpu->activityThisCycle();
     }
 
-    threads = (*activeThreads).begin();
+    threads = activeThreads->begin();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         // If we committed this cycle then doneSeqNum will be > 0
@@ -805,10 +806,13 @@ template<class Impl>
 bool
 DefaultRename<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    while (threads != (*activeThreads).end()) {
-        if (!skidBuffer[*threads++].empty())
+    while (threads != end) {
+        unsigned tid = *threads++;
+
+        if (!skidBuffer[tid].empty())
             return false;
     }
 
@@ -821,11 +825,10 @@ DefaultRename<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = (*activeThreads).begin();
+    std::list<unsigned>::iterator threads = activeThreads->begin();
+    std::list<unsigned>::iterator end = activeThreads->end();
 
-    threads = (*activeThreads).begin();
-
-    while (threads != (*activeThreads).end()) {
+    while (threads != end) {
         unsigned tid = *threads++;
 
         if (renameStatus[tid] == Unblocking) {

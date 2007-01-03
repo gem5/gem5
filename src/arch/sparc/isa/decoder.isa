@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1039,11 +1039,31 @@ decode OP default Unknown::unknown()
             0x10: lduwa({{Rd = Mem.uw;}}, {{EXT_ASI}});
             0x11: lduba({{Rd = Mem.ub;}}, {{EXT_ASI}});
             0x12: lduha({{Rd = Mem.uhw;}}, {{EXT_ASI}});
-            0x13: ldtwa({{
-                uint64_t val = Mem.udw;
-                RdLow = val<31:0>;
-                RdHigh = val<63:32>;
-            }}, {{EXT_ASI}});
+            0x13: decode EXT_ASI {
+                //ASI_QUAD_LDD
+                0x24: TwinLoad::ldtx_quad_ldd(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTX_REAL
+                0x26: TwinLoad::ldtx_real(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+               //ASI_LDTX_N
+               0x27: TwinLoad::ldtx_n(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+               //ASI_LDTX_L
+               0x2C: TwinLoad::ldtx_l(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTX_REAL_L
+                0x2E: TwinLoad::ldtx_real_l(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTX_N_L
+                0x2F: TwinLoad::ldtx_n_l(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                default: ldtwa({{
+                        uint64_t val = Mem.udw;
+                        RdLow = val<31:0>;
+                        RdHigh = val<63:32>;
+                        }}, {{EXT_ASI}});
+            }
         }
         format StoreAlt {
             0x14: stwa({{Mem.uw = Rd;}}, {{EXT_ASI}});
@@ -1105,18 +1125,6 @@ decode OP default Unknown::unknown()
                     0x15: FailUnimpl::lddfa_real_io();
                     //ASI_REAL_IO_LITTLE
                     0x1D: FailUnimpl::lddfa_real_io_l();
-                    //ASI_LDTX_REAL
-                    0x26: TwinLoad::ldtx_real(
-                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
-                    //ASI_LDTX_N
-                    0x27: TwinLoad::ldtx_n(
-                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
-                    //ASI_LDTX_REAL_L
-                    0x2E: TwinLoad::ldtx_real_l(
-                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
-                    //ASI_LDTX_N_L
-                    0x2F: TwinLoad::ldtx_n_l(
-                        {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                     //ASI_PRIMARY
                     0x80: FailUnimpl::lddfa_p();
                     //ASI_PRIMARY_LITTLE

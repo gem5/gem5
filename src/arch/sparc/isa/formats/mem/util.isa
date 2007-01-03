@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -295,9 +295,9 @@ let {{
             fault = new MemAddressNotAligned;
     '''
     TwinAlignmentFaultCheck = '''
-        if(RD & 0xe)
+        if(RD & 0x1)
             fault = new IllegalInstruction;
-        else if(EA & 0x1f)
+        else if(EA & 0xf)
             fault = new MemAddressNotAligned;
     '''
     # XXX Need to take care of pstate.hpriv as well. The lower ASIs
