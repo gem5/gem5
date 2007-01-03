@@ -304,7 +304,8 @@ def main():
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
 
-    scope = { '__file__' : sys.argv[0] }
+    scope = { '__file__' : sys.argv[0],
+              '__name__' : '__m5_main__' }
 
     # we want readline if we're doing anything interactive
     if options.interactive or options.pdb:
