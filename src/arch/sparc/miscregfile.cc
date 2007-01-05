@@ -321,9 +321,9 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
         // I'm not sure why legion ignores the lowest two bits, but we'll go
         // with it
         // change from curCycle() to instCount() until we're done with legion
-        DPRINTFN("Instruction Count when TICK read: %#X stick=%#X\n",
+        DPRINTF(Timer, "Instruction Count when TICK read: %#X stick=%#X\n",
                 tc->getCpuPtr()->instCount(), stick);
-        return mbits(tc->getCpuPtr()->instCount() + (int32_t)stick,62,2) |
+        return mbits(tc->getCpuPtr()->instCount() + (int64_t)stick,62,2) |
                mbits(tick,63,63);
       case MISCREG_FPRS:
         warn("FPRS register read and FPU stuff not really implemented\n");
@@ -615,7 +615,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         // use stick for offset and tick for holding intrrupt bit
         stick = mbits(val,62,0) - tc->getCpuPtr()->instCount();
         tick = mbits(val,63,63);
-        DPRINTFN("Writing TICK=%#X\n", val);
+        DPRINTF(Timer, "Writing TICK=%#X\n", val);
         break;
       case MISCREG_FPRS:
         //Configure the fpu based on the fprs
