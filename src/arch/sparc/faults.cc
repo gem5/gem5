@@ -197,7 +197,7 @@ template<> SparcFaultBase::FaultVals
 
 template<> SparcFaultBase::FaultVals
     SparcFault<InterruptLevelN>::vals =
-    {"interrupt_level_n", 0x041, 0, {P, P, SH}};
+    {"interrupt_level_n", 0x040, 0, {P, P, SH}};
 
 template<> SparcFaultBase::FaultVals
     SparcFault<HstickMatch>::vals =

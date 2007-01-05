@@ -29,8 +29,8 @@
  *          Kevin Lim
  */
 
-#ifndef __ALPHA_FAULTS_HH__
-#define __ALPHA_FAULTS_HH__
+#ifndef __SPARC_FAULTS_HH__
+#define __SPARC_FAULTS_HH__
 
 #include "sim/faults.hh"
 
@@ -280,4 +280,4 @@ static inline Fault genAlignmentFault()
 
 } // SparcISA namespace
 
-#endif // __FAULTS_HH__
+#endif // __SPARC_FAULTS_HH__

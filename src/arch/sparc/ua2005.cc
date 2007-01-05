@@ -73,7 +73,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           setReg(miscReg, val);
           if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
                   sTickCompare->deschedule();
-          time = ((int64_t)(stick_cmpr & mask(63)) + (int64_t)stick) -
+          time = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
              tc->getCpuPtr()->instCount();
           if (!(stick_cmpr & ~mask(63)) && time > 0)
               sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1) + curTick);
@@ -197,14 +197,15 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
-    ticks = (stick_cmpr & mask(63)) - tc->getCpuPtr()->instCount();
+    ticks = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
+            tc->getCpuPtr()->instCount();
     assert(ticks >= 0 && "stick compare missed interrupt cycle");
 
     if (ticks == 0) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         tc->getCpuPtr()->checkInterrupts = true;
-
+        softint |= ULL(1) << 16;
     } else
         sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
 }
