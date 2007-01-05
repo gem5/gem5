@@ -64,19 +64,20 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           time = (tick_cmpr & mask(63)) - (tick & mask(63));
           if (!(tick_cmpr & ~mask(63)) && time > 0)
               tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
-          warn ("writing to TICK compare register %#X\n", val);
+          panic("writing to TICK compare register %#X\n", val);
           break;
 
         case MISCREG_STICK_CMPR:
           if (sTickCompare == NULL)
               sTickCompare = new STickCompareEvent(this, tc);
           setReg(miscReg, val);
-          if ((stick_cmpr & mask(63)) && sTickCompare->scheduled())
+          if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
                   sTickCompare->deschedule();
-          time = (stick_cmpr & mask(63)) - (stick & mask(63));
+          time = ((int64_t)(stick_cmpr & mask(63)) + (int64_t)stick) -
+             tc->getCpuPtr()->instCount();
           if (!(stick_cmpr & ~mask(63)) && time > 0)
-              sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
-          warn ("writing to sTICK compare register value %#X\n", val);
+              sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1) + curTick);
+          DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
           break;
 
         case MISCREG_PSTATE:
@@ -116,11 +117,12 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           if (hSTickCompare == NULL)
               hSTickCompare = new HSTickCompareEvent(this, tc);
           setReg(miscReg, val);
-          if ((hstick_cmpr & mask(63)) && hSTickCompare->scheduled())
+          if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
                 hSTickCompare->deschedule();
-          time = (hstick_cmpr & mask(63)) - (stick & mask(63));
+          time = ((int64_t)(hstick_cmpr & mask(63)) + (int64_t)stick) -
+             tc->getCpuPtr()->instCount();
           if (!(hstick_cmpr & ~mask(63)) && time > 0)
-              hSTickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+              hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->cycles(1));
           warn ("writing to hsTICK compare register value %#X\n", val);
           break;
 
@@ -191,12 +193,25 @@ MiscRegFile::processTickCompare(ThreadContext *tc)
 void
 MiscRegFile::processSTickCompare(ThreadContext *tc)
 {
-    panic("tick compare not implemented\n");
+    // since our microcode instructions take two cycles we need to check if
+    // we're actually at the correct cycle or we need to wait a little while
+    // more
+    int ticks;
+    ticks = (stick_cmpr & mask(63)) - tc->getCpuPtr()->instCount();
+    assert(ticks >= 0 && "stick compare missed interrupt cycle");
+
+    if (ticks == 0) {
+        DPRINTF(Timer, "STick compare cycle reached at %#x\n",
+                (stick_cmpr & mask(63)));
+        tc->getCpuPtr()->checkInterrupts = true;
+
+    } else
+        sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
 }
 
 void
 MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
-    panic("tick compare not implemented\n");
+    panic("hstick compare not implemented\n");
 }
 
