@@ -34,19 +34,45 @@
 #include "arch/sparc/faults.hh"
 #include "cpu/thread_context.hh"
 
-
 namespace SparcISA
 {
+
+enum interrupts_t {
+    trap_level_zero,
+    hstick_match,
+    interrupt_vector,
+    cpu_mondo,
+    dev_mondo,
+    resumable_error,
+    soft_interrupt,
+    num_interrupt_types
+};
+
     class Interrupts
     {
-      protected:
 
+      private:
+
+        bool interrupts[num_interrupt_types];
+        int numPosted;
 
       public:
         Interrupts()
         {
-
+            for (int i = 0; i < num_interrupt_types; ++i) {
+                interrupts[i] = false;
+            }
+            numPosted = 0;
         }
+
+        void post(int int_type)
+        {
+            if (int_type < 0 || int_type >= num_interrupt_types)
+                panic("posting unknown interrupt!\n");
+            interrupts[int_type] = true;
+            ++numPosted;
+        }
+
         void post(int int_num, int index)
         {
 
@@ -64,9 +90,7 @@ namespace SparcISA
 
         bool check_interrupts(ThreadContext * tc) const
         {
-            // so far only handle softint interrupts
-            int int_level = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
-            if (int_level)
+            if (numPosted)
                 return true;
             else
                 return false;
@@ -74,14 +98,99 @@ namespace SparcISA
 
         Fault getInterrupt(ThreadContext * tc)
         {
+            int hpstate = tc->readMiscReg(MISCREG_HPSTATE);
+            int pstate = tc->readMiscReg(MISCREG_PSTATE);
+            bool ie = pstate & PSTATE::ie;
+
+            // THESE ARE IN ORDER OF PRIORITY
+            // since there are early returns, and the highest
+            // priority interrupts should get serviced,
+            // it is v. important that new interrupts are inserted
+            // in the right order of processing
+            if (hpstate & HPSTATE::hpriv) {
+                if (ie) {
+                    if (interrupts[hstick_match]) {
+                        interrupts[hstick_match] = false;
+                        --numPosted;
+                        return new HstickMatch;
+                    }
+                    if (interrupts[interrupt_vector]) {
+                        interrupts[interrupt_vector] = false;
+                        --numPosted;
+                        //HAVEN'T IMPLed THIS YET
+                        return NoFault;
+                    }
+                }
+            } else {
+
+                if (interrupts[trap_level_zero]) {
+                    //HAVEN'T IMPLed YET
+                    if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
+                        interrupts[trap_level_zero] = false;
+                        --numPosted;
+                        return NoFault;
+                    }
+                }
+                if (interrupts[hstick_match]) {
+                    interrupts[hstick_match] = false;
+                    --numPosted;
+                    return new HstickMatch;
+                }
+                if (ie) {
+                    if (interrupts[cpu_mondo]) {
+                        interrupts[cpu_mondo] = false;
+                        --numPosted;
+                        return new CpuMondo;
+                    }
+                    if (interrupts[dev_mondo]) {
+                        interrupts[dev_mondo] = false;
+                        --numPosted;
+                        return new DevMondo;
+                    }
+                    if (interrupts[soft_interrupt]) {
+                        int il = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
+                        // it seems that interrupt vectors are right in
+                        // the middle of interrupt levels with regard to
+                        // priority, so have to check
+                        if ((il < 6) &&
+                            interrupts[interrupt_vector]) {
+                                // may require more details here since there
+                                // may be lots of interrupts embedded in an
+                                // platform interrupt vector
+                                interrupts[interrupt_vector] = false;
+                                --numPosted;
+                                //HAVEN'T IMPLed YET
+                                return NoFault;
+                        } else {
+                            if (il > tc->readMiscReg(MISCREG_PIL)) {
+                                uint64_t si = tc->readMiscReg(MISCREG_SOFTINT);
+                                uint64_t more = si & ~(1 << (il + 1));
+                                if (!InterruptLevel(more)) {
+                                    interrupts[soft_interrupt] = false;
+                                    --numPosted;
+                                }
+                                return new InterruptLevelN(il);
+                            }
+                        }
+                    }
+                    if (interrupts[resumable_error]) {
+                        interrupts[resumable_error] = false;
+                        --numPosted;
+                        return new ResumableError;
+                    }
+                }
+            }
+            return NoFault;
+
+
             // conditioning the softint interrups
-            if (tc->readMiscReg(MISCREG_HPSTATE) & hpriv) {
+            if (tc->readMiscReg(MISCREG_HPSTATE) & HPSTATE::hpriv) {
                 // if running in privileged mode, then pend the interrupt
                 return NoFault;
             } else {
                 int int_level = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
                 if ((int_level <= tc->readMiscReg(MISCREG_PIL)) ||
-                    !(tc->readMiscReg(MISCREG_PSTATE) & ie)) {
+                    !(tc->readMiscReg(MISCREG_PSTATE) & PSTATE::ie)) {
                     // if PIL or no interrupt enabled, then pend the interrupt
                     return NoFault;
                 } else {
