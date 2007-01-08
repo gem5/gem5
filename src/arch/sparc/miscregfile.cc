@@ -327,7 +327,11 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
                mbits(tick,63,63);
       case MISCREG_FPRS:
         warn("FPRS register read and FPU stuff not really implemented\n");
-        return fprs;
+        // in legion if fp is enabled du and dl are set
+        if (fprs & 0x4)
+            return 0x7;
+        else
+            return 0;
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
@@ -399,7 +403,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         gsr = val;
         break;
       case MISCREG_SOFTINT:
-        softint |= val;
+        softint = val;
         break;
       case MISCREG_TICK_CMPR:
         tick_cmpr = val;
@@ -637,6 +641,8 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:
+      case MISCREG_SOFTINT_SET:
+      case MISCREG_SOFTINT_CLR:
       case MISCREG_TICK_CMPR:
       case MISCREG_STICK_CMPR:
       case MISCREG_HINTP:

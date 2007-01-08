@@ -51,9 +51,9 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           break;
 
         case MISCREG_SOFTINT_CLR:
-          return setRegWithEffect(miscReg, ~val & softint, tc);
+          return setRegWithEffect(MISCREG_SOFTINT, ~val & softint, tc);
         case MISCREG_SOFTINT_SET:
-          return setRegWithEffect(miscReg, val | softint, tc);
+          return setRegWithEffect(MISCREG_SOFTINT, val | softint, tc);
 
         case MISCREG_TICK_CMPR:
           if (tickCompare == NULL)
@@ -119,11 +119,11 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
           setReg(miscReg, val);
           if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
                 hSTickCompare->deschedule();
-          time = ((int64_t)(hstick_cmpr & mask(63)) + (int64_t)stick) -
+          time = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
              tc->getCpuPtr()->instCount();
           if (!(hstick_cmpr & ~mask(63)) && time > 0)
               hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->cycles(1));
-          warn ("writing to hsTICK compare register value %#X\n", val);
+          DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
           break;
 
         case MISCREG_HPSTATE:
@@ -213,6 +213,20 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
 void
 MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
-    panic("hstick compare not implemented\n");
+    // since our microcode instructions take two cycles we need to check if
+    // we're actually at the correct cycle or we need to wait a little while
+    // more
+    int ticks;
+    ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
+            tc->getCpuPtr()->instCount();
+    assert(ticks >= 0 && "hstick compare missed interrupt cycle");
+
+    if (ticks == 0) {
+        DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
+                (stick_cmpr & mask(63)));
+        tc->getCpuPtr()->checkInterrupts = true;
+        // Need to do something to cause interrupt to happen here !!! @todo
+    } else
+        sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
 }
 
