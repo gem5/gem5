@@ -210,7 +210,7 @@ class CpuMondo : public SparcFault<CpuMondo> {};
 
 class DevMondo : public SparcFault<DevMondo> {};
 
-class ResumeableError : public SparcFault<ResumeableError> {};
+class ResumableError : public SparcFault<ResumableError> {};
 
 class SpillNNormal : public EnumeratedFault<SpillNNormal>
 {

@@ -96,15 +96,6 @@ namespace SparcISA
     StaticInstPtr decodeInst(ExtMachInst);
 
 #if FULL_SYSTEM
-    ////////// Interrupt Stuff ///////////
-    enum InterruptLevels
-    {
-       INTLEVEL_MIN = 1,
-       INTLEVEL_MAX = 15,
-
-       NumInterruptLevels = INTLEVEL_MAX - INTLEVEL_MIN
-    };
-
     // I don't know what it's for, so I don't
     // know what SPARC's value should be
     // For loading... XXX This maybe could be USegEnd?? --ali

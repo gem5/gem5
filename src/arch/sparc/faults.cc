@@ -240,7 +240,7 @@ template<> SparcFaultBase::FaultVals
     {"dev_mondo", 0x07D, 1611, {P, P, SH}};
 
 template<> SparcFaultBase::FaultVals
-    SparcFault<ResumeableError>::vals =
+    SparcFault<ResumableError>::vals =
     {"resume_error", 0x07E, 3330, {P, P, SH}};
 
 template<> SparcFaultBase::FaultVals
@@ -436,7 +436,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     tc->setMiscReg(MISCREG_TT, tt);
 
     //Update the global register level
-    if(!gotoHpriv)
+    if (!gotoHpriv)
         tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxPGL));
     else
         tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxGL));
@@ -448,7 +448,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     PSTATE |= (1 << 4);
     //PSTATE.am = 0
     PSTATE &= ~(1 << 3);
-    if(!gotoHpriv)
+    if (!gotoHpriv)
     {
         //PSTATE.priv = 1
         PSTATE |= (1 << 2);
@@ -471,7 +471,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     //XXX Where exactly is this field?
     tc->setMiscReg(MISCREG_PSTATE, PSTATE);
 
-    if(gotoHpriv)
+    if (gotoHpriv)
     {
         //HPSTATE.red = 0
         HPSTATE &= ~(1 << 5);
@@ -484,16 +484,16 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     }
 
     bool changedCWP = true;
-    if(tt == 0x24)
+    if (tt == 0x24)
         CWP++;
-    else if(0x80 <= tt && tt <= 0xbf)
+    else if (0x80 <= tt && tt <= 0xbf)
         CWP += (CANSAVE + 2);
-    else if(0xc0 <= tt && tt <= 0xff)
+    else if (0xc0 <= tt && tt <= 0xff)
         CWP--;
     else
         changedCWP = false;
 
-    if(changedCWP)
+    if (changedCWP)
     {
         CWP = (CWP + NWindows) % NWindows;
         tc->setMiscRegWithEffect(MISCREG_CWP, CWP);
@@ -534,45 +534,45 @@ void SparcFaultBase::invoke(ThreadContext * tc)
 
     //We can refer to this to see what the trap level -was-, but something
     //in the middle could change it in the regfile out from under us.
-    MiscReg TL = tc->readMiscReg(MISCREG_TL);
-    MiscReg TT = tc->readMiscReg(MISCREG_TT);
-    MiscReg PSTATE = tc->readMiscReg(MISCREG_PSTATE);
-    MiscReg HPSTATE = tc->readMiscReg(MISCREG_HPSTATE);
+    MiscReg tl = tc->readMiscReg(MISCREG_TL);
+    MiscReg tt = tc->readMiscReg(MISCREG_TT);
+    MiscReg pstate = tc->readMiscReg(MISCREG_PSTATE);
+    MiscReg hpstate = tc->readMiscReg(MISCREG_HPSTATE);
 
     Addr PC, NPC;
 
     PrivilegeLevel current;
-    if(HPSTATE & (1 << 2))
+    if (hpstate & HPSTATE::hpriv)
         current = Hyperprivileged;
-    else if(PSTATE & (1 << 2))
+    else if (pstate & PSTATE::priv)
         current = Privileged;
     else
         current = User;
 
     PrivilegeLevel level = getNextLevel(current);
 
-    if(HPSTATE & (1 << 5) || TL == MaxTL - 1) {
+    if ((hpstate & HPSTATE::red) || (tl == MaxTL - 1)) {
         getREDVector(5, PC, NPC);
-        doREDFault(tc, TT);
+        doREDFault(tc, tt);
         //This changes the hpstate and pstate, so we need to make sure we
         //save the old version on the trap stack in doREDFault.
         enterREDState(tc);
-    } else if(TL == MaxTL) {
+    } else if (tl == MaxTL) {
         panic("Should go to error state here.. crap\n");
         //Do error_state somehow?
         //Probably inject a WDR fault using the interrupt mechanism.
         //What should the PC and NPC be set to?
-    } else if(TL > MaxPTL && level == Privileged) {
+    } else if (tl > MaxPTL && level == Privileged) {
         //guest_watchdog fault
         doNormalFault(tc, trapType(), true);
         getHyperVector(tc, PC, NPC, 2);
-    } else if(level == Hyperprivileged ||
+    } else if (level == Hyperprivileged ||
             level == Privileged && trapType() >= 384) {
         doNormalFault(tc, trapType(), true);
         getHyperVector(tc, PC, NPC, trapType());
     } else {
         doNormalFault(tc, trapType(), false);
-        getPrivVector(tc, PC, NPC, trapType(), TL+1);
+        getPrivVector(tc, PC, NPC, trapType(), tl+1);
     }
 
     tc->setPC(PC);
