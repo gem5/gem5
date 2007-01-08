@@ -609,7 +609,8 @@ Trace::InstRecord::dump(ostream &outs)
                         diffcount++;
                         if (diffcount > 2)
                             fatal("Differences found between Legion and M5\n");
-                    }
+                    } else
+                        diffcount = 0;
 
                     compared = true;
                     shared_data->flags = OWN_LEGION;
