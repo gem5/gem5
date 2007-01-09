@@ -80,7 +80,7 @@ namespace AlphaISA {
         bool _kre()  const { return (entry >>  8) & 0x1; }
         bool _nomb() const { return (entry >>  7) & 0x1; }
         int  _gh()   const { return (entry >>  5) & 0x3; }
-        bool _asm()  const { return (entry >>  4) & 0x1; }
+        bool _asm_()  const { return (entry >>  4) & 0x1; }
         bool _foe()  const { return (entry >>  3) & 0x1; }
         bool _fow()  const { return (entry >>  2) & 0x1; }
         bool _for()  const { return (entry >>  1) & 0x1; }

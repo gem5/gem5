@@ -52,6 +52,11 @@ namespace AlphaISA
             newInfoSet = false;
         }
 
+        void post(int int_type)
+        {
+            // sparc only
+        }
+
         void post(int int_num, int index)
         {
             DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
