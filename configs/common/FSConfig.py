@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,14 @@ class CowIdeDisk(IdeDisk):
 
     def childImage(self, ci):
         self.image.child.image_file = ci
+
+class CowMmDisk(MmDisk):
+    image = CowDiskImage(child=RawDiskImage(read_only=True),
+                         read_only=False)
+
+    def childImage(self, ci):
+        self.image.child.image_file = ci
+
 
 class BaseTsunami(Tsunami):
     ethernet = NSGigE(configdata=NSGigEPciData(),
@@ -100,8 +108,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.hypervisor_desc.port = self.membus.port
     self.partition_desc.port = self.membus.port
     self.intrctrl = IntrControl()
-    self.mem_mode = mem_mode
-
+    self.disk0 = CowMmDisk()
+    self.disk0.childImage(disk('disk.s10hw2'))
+    self.disk0.pio = self.iobus.port
     self.reset_bin = binary('reset.bin')
     self.hypervisor_bin = binary('q.bin')
     self.openboot_bin = binary('openboot.bin')
