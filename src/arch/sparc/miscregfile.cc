@@ -326,12 +326,8 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
         return mbits(tc->getCpuPtr()->instCount() + (int64_t)stick,62,2) |
                mbits(tick,63,63);
       case MISCREG_FPRS:
-        warn("FPRS register read and FPU stuff not really implemented\n");
         // in legion if fp is enabled du and dl are set
-        if (fprs & 0x4)
-            return 0x7;
-        else
-            return 0;
+        return fprs | 0x3;
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
@@ -389,7 +385,6 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         asi = val;
         break;
       case MISCREG_FPRS:
-        warn("FPU not really implemented writing %#X to FPRS\n", val);
         fprs = val;
         break;
       case MISCREG_TICK:
@@ -612,6 +607,8 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
+    MiscReg new_val = val;
+
     switch (miscReg) {
       case MISCREG_STICK:
       case MISCREG_TICK:
@@ -634,7 +631,8 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         tl = val;
         return;
       case MISCREG_CWP:
-        tc->changeRegFileContext(CONTEXT_CWP, val);
+        new_val = val > NWindows ? NWindows - 1 : val;
+        tc->changeRegFileContext(CONTEXT_CWP, new_val);
         break;
       case MISCREG_GL:
         tc->changeRegFileContext(CONTEXT_GLOBALS, val);
@@ -671,7 +669,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
       panic("Accessing Fullsystem register %s to %#x in SE mode\n", getMiscRegName(miscReg), val);
 #endif
     }
-    setReg(miscReg, val);
+    setReg(miscReg, new_val);
 }
 
 void MiscRegFile::serialize(std::ostream & os)

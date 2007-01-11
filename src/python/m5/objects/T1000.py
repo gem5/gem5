@@ -5,6 +5,12 @@ from Uart import Uart8250
 from Platform import Platform
 from SimConsole import SimConsole, ConsoleListener
 
+
+class MmDisk(BasicPioDevice):
+    type = 'MmDisk'
+    image = Param.DiskImage("Disk Image")
+    pio_addr = 0x1F40000000
+
 class T1000(Platform):
     type = 'T1000'
     system = Param.System(Parent.any, "system")

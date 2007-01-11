@@ -625,13 +625,13 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             return new DataAccessException;
         }
 
-    } else if (hpriv) {
+    } /*else if (hpriv) {*/
         if (asi == ASI_P) {
             ct = Primary;
             context = pri_context;
             goto continueDtbFlow;
         }
-    }
+    //}
 
     if (!implicit) {
         if (AsiIsLittle(asi))
@@ -925,6 +925,36 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         } else {
             tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1);
             cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG);
+        }
+        data = mbits(tsbtemp,63,13);
+        if (bits(tsbtemp,12,12))
+            data |= ULL(1) << (13+bits(tsbtemp,3,0));
+        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
+        pkt->set(data);
+        break;
+      case ASI_IMMU_TSB_PS0_PTR_REG:
+        temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+        if (bits(temp,12,0) == 0) {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG);
+        } else {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG);
+        }
+        data = mbits(tsbtemp,63,13);
+        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
+        pkt->set(data);
+        break;
+      case ASI_IMMU_TSB_PS1_PTR_REG:
+        temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+        if (bits(temp,12,0) == 0) {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG);
+        } else {
+            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1);
+            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG);
         }
         data = mbits(tsbtemp,63,13);
         if (bits(tsbtemp,12,12))

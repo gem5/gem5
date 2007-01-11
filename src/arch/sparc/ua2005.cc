@@ -44,8 +44,10 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
       case MISCREG_SOFTINT:
         // Check if we are going to interrupt because of something
         setReg(miscReg, val);
-        tc->getCpuPtr()->post_interrupt(soft_interrupt);
-        warn("Writing to softint not really supported, writing: %#x\n", val);
+        tc->getCpuPtr()->checkInterrupts = true;
+        tc->getCpuPtr()->post_interrupt(hstick_match);
+        if (val != 0x10000 && val != 0)
+            warn("Writing to softint not really supported, writing: %#x\n", val);
         break;
 
       case MISCREG_SOFTINT_CLR:
