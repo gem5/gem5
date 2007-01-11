@@ -24,8 +24,6 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Gabe Black
  */
 
 #ifndef __ARCH_SPARC_INTERRUPT_HH__
@@ -124,11 +122,10 @@ enum interrupts_t {
             } else {
 
                 if (interrupts[trap_level_zero]) {
-                    //HAVEN'T IMPLed YET
                     if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
                         interrupts[trap_level_zero] = false;
                         --numPosted;
-                        return NoFault;
+                        return new TrapLevelZero;
                     }
                 }
                 if (interrupts[hstick_match]) {
@@ -181,22 +178,6 @@ enum interrupts_t {
                 }
             }
             return NoFault;
-
-
-            // conditioning the softint interrups
-            if (tc->readMiscReg(MISCREG_HPSTATE) & HPSTATE::hpriv) {
-                // if running in privileged mode, then pend the interrupt
-                return NoFault;
-            } else {
-                int int_level = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
-                if ((int_level <= tc->readMiscReg(MISCREG_PIL)) ||
-                    !(tc->readMiscReg(MISCREG_PSTATE) & PSTATE::ie)) {
-                    // if PIL or no interrupt enabled, then pend the interrupt
-                    return NoFault;
-                } else {
-                    return new InterruptLevelN(int_level);
-                }
-            }
         }
 
         void updateIntrInfo(ThreadContext * tc)
