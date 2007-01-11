@@ -111,6 +111,8 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
 void IntRegFile::setCWP(int cwp)
 {
     int index = ((NWindows - cwp) % NWindows) * 2;
+    if (index < 0)
+        panic("Index less than 0. cwp=%d nwin=%d\n", cwp, NWindows);
     offset[Outputs] = FrameOffset + (index * RegsPerFrame);
     offset[Locals] = FrameOffset + ((index+1) * RegsPerFrame);
     offset[Inputs] = FrameOffset +
@@ -128,6 +130,11 @@ void IntRegFile::setGlobals(int gl)
 
     regView[Globals] = regGlobals[gl];
     offset[Globals] = RegGlobalOffset + gl * RegsPerFrame;
+
+    if (regView[Globals] == regView[Inputs] ||
+        regView[Globals] == regView[Locals] ||
+        regView[Globals] == regView[Outputs] )
+        panic("Two register arrays set to the same thing!\n");
 }
 
 void IntRegFile::serialize(std::ostream &os)

@@ -327,10 +327,7 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
                mbits(tick,63,63);
       case MISCREG_FPRS:
         // in legion if fp is enabled du and dl are set
-        if (fprs & 0x4)
-            return 0x7;
-        else
-            return 0;
+        return fprs | 0x3;
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
