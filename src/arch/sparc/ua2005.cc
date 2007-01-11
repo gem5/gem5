@@ -24,8 +24,6 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Ali Saidi
  */
 
 #include "arch/sparc/miscregfile.hh"
@@ -81,7 +79,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         break;
 
       case MISCREG_PSTATE:
-        if (val & ie && !(pstate & ie)) {
+        if (val & PSTATE::ie && !(pstate & PSTATE::ie)) {
             tc->getCpuPtr()->checkInterrupts = true;
         }
         setReg(miscReg, val);
@@ -128,7 +126,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 
       case MISCREG_HPSTATE:
         // T1000 spec says impl. dependent val must always be 1
-        setReg(miscReg, val | id);
+        setReg(miscReg, val | HPSTATE::id);
         break;
       case MISCREG_HTSTATE:
       case MISCREG_STRAND_STS_REG:
