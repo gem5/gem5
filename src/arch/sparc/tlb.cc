@@ -876,6 +876,9 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
             temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
+          case 0x18:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR));
+            break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
             break;
@@ -888,6 +891,12 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
           case 0x0:
             temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            break;
+          case 0x18:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR));
+            break;
+          case 0x20:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR));
             break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
@@ -1070,6 +1079,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_IMMU:
         switch (va) {
+          case 0x18:
+            tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR, data);
+            break;
           case 0x30:
             tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS, data);
             break;
@@ -1141,6 +1153,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_DMMU:
         switch (va) {
+          case 0x18:
+            tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR, data);
+            break;
           case 0x30:
             tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS, data);
             break;
