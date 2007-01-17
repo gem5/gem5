@@ -625,13 +625,12 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             return new DataAccessException;
         }
 
-    } /*else if (hpriv) {*/
-        if (asi == ASI_P) {
-            ct = Primary;
-            context = pri_context;
-            goto continueDtbFlow;
-        }
-    //}
+    }
+    if (asi == ASI_P || asi == ASI_LDTX_P) {
+        ct = Primary;
+        context = pri_context;
+        goto continueDtbFlow;
+    }
 
     if (!implicit) {
         if (AsiIsLittle(asi))
@@ -640,9 +639,6 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
-        if (write && asi == ASI_LDTX_P)
-            // block init store (like write hint64)
-            goto continueDtbFlow;
         if (!write && asi == ASI_QUAD_LDD)
             goto continueDtbFlow;
 
