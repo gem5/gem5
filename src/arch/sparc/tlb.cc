@@ -668,7 +668,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
-        if (!write && asi == ASI_QUAD_LDD)
+        if (!write && (asi == ASI_QUAD_LDD || asi == ASI_LDTX_REAL))
             goto continueDtbFlow;
 
         if (AsiIsTwin(asi))
