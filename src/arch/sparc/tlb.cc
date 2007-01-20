@@ -81,21 +81,44 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
 
     MapIter i;
     TlbEntry *new_entry = NULL;
-    TlbRange tr;
+//    TlbRange tr;
     int x;
 
     cacheValid = false;
-    tr.va = va;
+ /*   tr.va = va;
     tr.size = PTE.size() - 1;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
-
+*/
 
     DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
             va, PTE.paddr(), partition_id, context_id, (int)real, entry);
 
     // Demap any entry that conflicts
+    for (x = 0; x < size; x++) {
+        if (tlb[x].range.real == real &&
+            tlb[x].range.partitionId == partition_id &&
+            tlb[x].range.va < va + PTE.size() - 1 &&
+            tlb[x].range.va + tlb[x].range.size >= va &&
+            (real || tlb[x].range.contextId == context_id ))
+        {
+            if (tlb[x].valid) {
+                freeList.push_front(&tlb[x]);
+                DPRINTF(TLB, "TLB: Conflicting entry %#X , deleting it\n", x);
+
+                tlb[x].valid = false;
+                if (tlb[x].used) {
+                    tlb[x].used = false;
+                    usedEntries--;
+                }
+                lookupTable.erase(tlb[x].range);
+            }
+        }
+    }
+
+
+/*
     i = lookupTable.find(tr);
     if (i != lookupTable.end()) {
         i->second->valid = false;
@@ -108,7 +131,7 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
                 i->second);
         lookupTable.erase(i);
     }
-
+*/
 
     if (entry != -1) {
         assert(entry < size && entry >= 0);
@@ -127,7 +150,6 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
             } while (tlb[x].pte.locked());
             lastReplaced = x;
             new_entry = &tlb[x];
-            lookupTable.erase(new_entry->range);
         }
         /*
         for (x = 0; x < size; x++) {
@@ -142,10 +164,15 @@ insertAllLocked:
     // Update the last ently if their all locked
     if (!new_entry) {
         new_entry = &tlb[size-1];
-        lookupTable.erase(new_entry->range);
     }
 
     freeList.remove(new_entry);
+    if (new_entry->valid && new_entry->used)
+        usedEntries--;
+
+    lookupTable.erase(new_entry->range);
+
+
     DPRINTF(TLB, "Using entry: %#X\n", new_entry);
 
     assert(PTE.valid());
@@ -315,10 +342,12 @@ TLB::invalidateAll()
     cacheValid = false;
 
     freeList.clear();
+    lookupTable.clear();
     for (x = 0; x < size; x++) {
         if (tlb[x].valid == true)
             freeList.push_back(&tlb[x]);
         tlb[x].valid = false;
+        tlb[x].used = false;
     }
     usedEntries = 0;
 }
@@ -625,13 +654,12 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             return new DataAccessException;
         }
 
-    } /*else if (hpriv) {*/
-        if (asi == ASI_P) {
-            ct = Primary;
-            context = pri_context;
-            goto continueDtbFlow;
-        }
-    //}
+    }
+    if (asi == ASI_P || asi == ASI_LDTX_P) {
+        ct = Primary;
+        context = pri_context;
+        goto continueDtbFlow;
+    }
 
     if (!implicit) {
         if (AsiIsLittle(asi))
@@ -640,10 +668,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
-        if (write && asi == ASI_LDTX_P)
-            // block init store (like write hint64)
-            goto continueDtbFlow;
-        if (!write && asi == ASI_QUAD_LDD)
+        if (!write && (asi == ASI_QUAD_LDD || asi == ASI_LDTX_REAL))
             goto continueDtbFlow;
 
         if (AsiIsTwin(asi))
@@ -880,6 +905,9 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
             temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
+          case 0x18:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR));
+            break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
             break;
@@ -892,6 +920,12 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
           case 0x0:
             temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            break;
+          case 0x18:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR));
+            break;
+          case 0x20:
+            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR));
             break;
           case 0x30:
             pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
@@ -1074,6 +1108,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_IMMU:
         switch (va) {
+          case 0x18:
+            tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR, data);
+            break;
           case 0x30:
             tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS, data);
             break;
@@ -1145,6 +1182,9 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_DMMU:
         switch (va) {
+          case 0x18:
+            tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR, data);
+            break;
           case 0x30:
             tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS, data);
             break;

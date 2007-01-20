@@ -1079,6 +1079,9 @@ decode OP default Unknown::unknown()
                 //ASI_LDTX_N_L
                 0x2F: TwinLoad::ldtx_n_l(
                     {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTX_P
+                0xE2: TwinLoad::ldtx_p(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                 default: ldtwa({{
                         uint64_t val = Mem.udw;
                         RdLow = val<31:0>;
