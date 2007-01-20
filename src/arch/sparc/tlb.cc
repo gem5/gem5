@@ -631,34 +631,32 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             ct = Primary;
             context = pri_context;
         }
-    } else if (!hpriv && !red) {
-        if (tl > 0 || AsiIsNucleus(asi)) {
-            ct = Nucleus;
-            context = 0;
-        } else if (AsiIsSecondary(asi)) {
-            ct = Secondary;
-            context = sec_context;
-        } else {
-            context = pri_context;
-            ct = Primary; //???
-        }
-
+    } else {
         // We need to check for priv level/asi priv
-        if (!priv && !AsiIsUnPriv(asi)) {
+        if (!priv && !hpriv && !AsiIsUnPriv(asi)) {
             // It appears that context should be Nucleus in these cases?
             writeSfr(tc, vaddr, write, Nucleus, false, IllegalAsi, asi);
             return new PrivilegedAction;
         }
-        if (priv && AsiIsHPriv(asi)) {
+
+        if (!hpriv && AsiIsHPriv(asi)) {
             writeSfr(tc, vaddr, write, Nucleus, false, IllegalAsi, asi);
             return new DataAccessException;
         }
 
-    }
-    if (asi == ASI_P || asi == ASI_LDTX_P) {
-        ct = Primary;
-        context = pri_context;
-        goto continueDtbFlow;
+        if (AsiIsPrimary(asi)) {
+            context = pri_context;
+            ct = Primary;
+        } else if (AsiIsSecondary(asi)) {
+            context = sec_context;
+            ct = Secondary;
+        } else if (AsiIsNucleus(asi)) {
+            ct = Nucleus;
+            context = 0;
+        } else {  // ????
+            ct = Primary;
+            context = pri_context;
+        }
     }
 
     if (!implicit) {
@@ -668,6 +666,10 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
+
+        // These twin ASIs are OK
+        if (asi == ASI_P || asi == ASI_LDTX_P)
+            goto continueDtbFlow;
         if (!write && (asi == ASI_QUAD_LDD || asi == ASI_LDTX_REAL))
             goto continueDtbFlow;
 
@@ -687,7 +689,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (AsiIsSparcError(asi))
             goto handleSparcErrorRegAccess;
 
-        if (!AsiIsReal(asi) && !AsiIsNucleus(asi))
+        if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
@@ -707,7 +709,7 @@ continueDtbFlow:
     }
 
 
-    if ((!lsu_dm && !hpriv) || AsiIsReal(asi)) {
+    if ((!lsu_dm && !hpriv && !red) || AsiIsReal(asi)) {
         real = true;
         context = 0;
     };
@@ -893,7 +895,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_SPARC_ERROR_STATUS_REG:
         warn("returning 0 for  SPARC ERROR regsiter read\n");
-        pkt->set(0);
+        pkt->set(ULL(0));
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
@@ -963,7 +965,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         data = mbits(tsbtemp,63,13);
         if (bits(tsbtemp,12,12))
             data |= ULL(1) << (13+bits(tsbtemp,3,0));
-        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+        data |= temp >> (9 + bits(cnftemp,10,8) * 3) &
             mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
         pkt->set(data);
         break;
@@ -993,7 +995,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         data = mbits(tsbtemp,63,13);
         if (bits(tsbtemp,12,12))
             data |= ULL(1) << (13+bits(tsbtemp,3,0));
-        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
+        data |= temp >> (9 + bits(cnftemp,10,8) * 3) &
             mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
         pkt->set(data);
         break;
