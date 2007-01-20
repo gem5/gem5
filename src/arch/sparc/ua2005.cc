@@ -42,10 +42,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
     switch (miscReg) {
         /* Full system only ASRs */
       case MISCREG_SOFTINT:
-        // Check if we are going to interrupt because of something
-        setReg(miscReg, val);
-        tc->getCpuPtr()->checkInterrupts = true;
-        tc->getCpuPtr()->post_interrupt(hstick_match);
+        setReg(miscReg, val);;
         if (val != 0x10000 && val != 0)
             warn("Writing to softint not really supported, writing: %#x\n", val);
         break;
@@ -53,6 +50,8 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
       case MISCREG_SOFTINT_CLR:
         return setRegWithEffect(MISCREG_SOFTINT, ~val & softint, tc);
       case MISCREG_SOFTINT_SET:
+        tc->getCpuPtr()->checkInterrupts = true;
+        tc->getCpuPtr()->post_interrupt(soft_interrupt);
         return setRegWithEffect(MISCREG_SOFTINT, val | softint, tc);
 
       case MISCREG_TICK_CMPR:
@@ -95,6 +94,9 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 
       case MISCREG_HVER:
         panic("Shouldn't be writing HVER\n");
+
+      case MISCREG_HINTP:
+        setReg(miscReg, val);
 
       case MISCREG_HTBA:
         // clear lower 7 bits on writes.
@@ -204,9 +206,11 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
     if (ticks == 0) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
-        tc->getCpuPtr()->post_interrupt(soft_interrupt);
-        tc->getCpuPtr()->checkInterrupts = true;
-        softint |= ULL(1) << 16;
+        if (!(tc->readMiscReg(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
+            tc->getCpuPtr()->post_interrupt(soft_interrupt);
+            tc->getCpuPtr()->checkInterrupts = true;
+            setRegWithEffect(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
+        }
     } else
         sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
 }
@@ -225,8 +229,11 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
     if (ticks == 0) {
         DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
-        tc->getCpuPtr()->post_interrupt(hstick_match);
-        tc->getCpuPtr()->checkInterrupts = true;
+        if (!(tc->readMiscReg(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {
+            setRegWithEffect(MISCREG_HINTP, 1, tc);
+            tc->getCpuPtr()->post_interrupt(hstick_match);
+            tc->getCpuPtr()->checkInterrupts = true;
+        }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else
         sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);

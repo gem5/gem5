@@ -214,7 +214,7 @@ MiscReg MiscRegFile::readReg(int miscReg)
       case MISCREG_HTSTATE:
         return htstate[tl-1];
       case MISCREG_HINTP:
-        panic("HINTP not implemented\n");
+        return hintp;
       case MISCREG_HTBA:
         return htba;
       case MISCREG_HVER:
@@ -468,7 +468,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         htstate[tl-1] = val;
         break;
       case MISCREG_HINTP:
-        panic("HINTP not implemented\n");
+        hintp = val;
       case MISCREG_HTBA:
         htba = val;
         break;

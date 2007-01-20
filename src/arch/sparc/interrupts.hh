@@ -108,9 +108,11 @@ enum interrupts_t {
             if (hpstate & HPSTATE::hpriv) {
                 if (ie) {
                     if (interrupts[hstick_match]) {
-                        interrupts[hstick_match] = false;
-                        --numPosted;
-                        return new HstickMatch;
+                        if (tc->readMiscReg(MISCREG_HINTP) & 1) {
+                            interrupts[hstick_match] = false;
+                            --numPosted;
+                            return new HstickMatch;
+                        }
                     }
                     if (interrupts[interrupt_vector]) {
                         interrupts[interrupt_vector] = false;
@@ -118,9 +120,13 @@ enum interrupts_t {
                         //HAVEN'T IMPLed THIS YET
                         return NoFault;
                     }
+                } else {
+                    if (interrupts[hstick_match]) {
+                        return NoFault;
+                    }
+
                 }
             } else {
-
                 if (interrupts[trap_level_zero]) {
                     if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
                         interrupts[trap_level_zero] = false;
@@ -129,9 +135,11 @@ enum interrupts_t {
                     }
                 }
                 if (interrupts[hstick_match]) {
-                    interrupts[hstick_match] = false;
-                    --numPosted;
-                    return new HstickMatch;
+                    if (tc->readMiscReg(MISCREG_HINTP) & 1) {
+                        interrupts[hstick_match] = false;
+                        --numPosted;
+                        return new HstickMatch;
+                        }
                 }
                 if (ie) {
                     if (interrupts[cpu_mondo]) {
