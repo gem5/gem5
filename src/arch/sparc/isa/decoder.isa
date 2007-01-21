@@ -468,7 +468,7 @@ decode OP default Unknown::unknown()
                 //0x11-0x1F should cause an illegal instruction exception
             }
             0x2B: BasicOperate::flushw({{
-                if(NWindows - 2 - Cansave == 0)
+                if(NWindows - 2 - Cansave != 0)
                 {
                     if(Otherwin)
                         fault = new SpillNOther(4*Wstate<5:3>);
