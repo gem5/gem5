@@ -895,7 +895,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_SPARC_ERROR_STATUS_REG:
         warn("returning 0 for  SPARC ERROR regsiter read\n");
-        pkt->set(ULL(0));
+        pkt->set((uint64_t)0);
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
