@@ -37,6 +37,7 @@ Import('env')
 sources = []
 
 sources += Split('''
+	dtod.cc
 	t1000.cc
 	mm_disk.cc
 	''')
