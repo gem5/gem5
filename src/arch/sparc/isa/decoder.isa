@@ -468,12 +468,12 @@ decode OP default Unknown::unknown()
                 //0x11-0x1F should cause an illegal instruction exception
             }
             0x2B: BasicOperate::flushw({{
-                if(NWindows - 2 - Cansave == 0)
+                if(NWindows - 2 - Cansave != 0)
                 {
                     if(Otherwin)
-                        fault = new SpillNOther(Wstate<5:3>);
+                        fault = new SpillNOther(4*Wstate<5:3>);
                     else
-                        fault = new SpillNNormal(Wstate<2:0>);
+                        fault = new SpillNNormal(4*Wstate<2:0>);
                 }
             }});
             0x2C: decode MOVCC3
@@ -893,9 +893,9 @@ decode OP default Unknown::unknown()
                     if(Canrestore == 0)
                     {
                         if(Otherwin)
-                            fault = new FillNOther(Wstate<5:3>);
+                            fault = new FillNOther(4*Wstate<5:3>);
                         else
-                            fault = new FillNNormal(Wstate<2:0>);
+                            fault = new FillNNormal(4*Wstate<2:0>);
                     }
                     else
                     {
@@ -949,9 +949,9 @@ decode OP default Unknown::unknown()
                 if(Cansave == 0)
                 {
                     if(Otherwin)
-                        fault = new SpillNOther(Wstate<5:3>);
+                        fault = new SpillNOther(4*Wstate<5:3>);
                     else
-                        fault = new SpillNNormal(Wstate<2:0>);
+                        fault = new SpillNNormal(4*Wstate<2:0>);
                     //Cwp = (Cwp + 2) % NWindows;
                 }
                 else if(Cleanwin - Canrestore == 0)
@@ -975,9 +975,9 @@ decode OP default Unknown::unknown()
                 if(Canrestore == 0)
                 {
                     if(Otherwin)
-                        fault = new FillNOther(Wstate<5:3>);
+                        fault = new FillNOther(4*Wstate<5:3>);
                     else
-                        fault = new FillNNormal(Wstate<2:0>);
+                        fault = new FillNNormal(4*Wstate<2:0>);
                 }
                 else
                 {

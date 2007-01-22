@@ -440,6 +440,11 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
         fatal("Can't load object file %s", executable);
     }
 
+    if (objFile->isDynamic())
+       fatal("Object file is a dynamic executable however only static "
+             "executables are supported!\n        Please recompile your "
+             "executable as a static binary and try again.\n");
+
 #if THE_ISA == ALPHA_ISA
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
