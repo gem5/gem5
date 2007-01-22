@@ -150,3 +150,9 @@ createObjectFile(const string &fname, bool raw)
     munmap(fileData, len);
     return NULL;
 }
+
+bool
+ObjectFile::isDynamic()
+{
+    return false;
+}

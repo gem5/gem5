@@ -58,6 +58,8 @@ class ElfObject : public ObjectFile
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());
 
+    virtual bool isDynamic();
+
     static ObjectFile *tryFile(const std::string &fname, int fd,
                                size_t len, uint8_t *data);
     Addr programHeaderTable() {return _programHeaderTable;}
