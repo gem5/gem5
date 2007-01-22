@@ -415,6 +415,9 @@ TLB::writeSfsr(ThreadContext *tc, int reg,  bool write, ContextType ct,
 void
 TLB::writeTagAccess(ThreadContext *tc, int reg, Addr va, int context)
 {
+    DPRINTF(TLB, "TLB: Writing Tag Access: va: %#X ctx: %#X value: %#X\n",
+            va, context, mbits(va, 63,13) | mbits(context,12,0));
+
     tc->setMiscRegWithEffect(reg, mbits(va, 63,13) | mbits(context,12,0));
 }
 
@@ -537,8 +540,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     }
 
     if (e == NULL || !e->valid) {
-        tc->setMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS,
-                vaddr & ~BytesInPageMask | context);
+        writeTagAccess(tc, vaddr, context);
         if (real)
             return new InstructionRealTranslationMiss;
         else
@@ -611,7 +613,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     int part_id = bits(tlbdata,15,8);
     int tl = bits(tlbdata,18,16);
     int pri_context = bits(tlbdata,47,32);
-    int sec_context = bits(tlbdata,47,32);
+    int sec_context = bits(tlbdata,63,48);
 
     bool real = false;
     ContextType ct = Primary;
@@ -723,8 +725,7 @@ continueDtbFlow:
     e = lookup(vaddr, part_id, real, context);
 
     if (e == NULL || !e->valid) {
-        tc->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS,
-                vaddr & ~BytesInPageMask | context);
+        writeTagAccess(tc, vaddr, context);
         DPRINTF(TLB, "TLB: DTB Failed to find matching TLB entry\n");
         if (real)
             return new DataRealTranslationMiss;
@@ -1115,6 +1116,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR, data);
             break;
           case 0x30:
+            sext<59>(bits(data, 59,0));
             tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS, data);
             break;
           default:
@@ -1189,6 +1191,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR, data);
             break;
           case 0x30:
+            sext<59>(bits(data, 59,0));
             tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS, data);
             break;
           case 0x80:
