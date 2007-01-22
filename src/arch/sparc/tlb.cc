@@ -85,6 +85,7 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
     int x;
 
     cacheValid = false;
+    va &= ~(PTE.size()-1);
  /*   tr.va = va;
     tr.size = PTE.size() - 1;
     tr.contextId = context_id;
