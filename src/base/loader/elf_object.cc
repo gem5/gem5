@@ -370,7 +370,7 @@ ElfObject::isDynamic()
     // While there are no more sections
     while (section != NULL) {
         gelf_getshdr(section, &shdr);
-        if (!strcmp(".dynamic", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
+        if (!strcmp(".interp", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
             return true;
         section = elf_getscn(elf, ++sec_idx);
     } // while sections
