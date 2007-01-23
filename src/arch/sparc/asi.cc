@@ -179,26 +179,23 @@ namespace SparcISA
             (asi == ASI_LDTX_PL) ||
             (asi == ASI_LDTX_SL) ||
             (asi == ASI_BLK_PL) ||
-            (asi == ASI_BLK_SL);
+            (asi == ASI_BLK_SL) ||
+            (asi == ASI_LTX_L);
     }
 
     bool AsiIsTwin(ASI asi)
     {
         return
-            (asi == ASI_QUAD_LDD) ||
-            (asi == ASI_LDTX_AIUP) ||
-            (asi == ASI_LDTX_AIUS) ||
-            (asi == ASI_LDTX_REAL) ||
-            (asi == ASI_LDTX_N) ||
-            (asi == ASI_LDTX_AIUP_L) ||
-            (asi == ASI_LDTX_AIUS_L) ||
-            (asi == ASI_LDTX_REAL_L) ||
-            (asi == ASI_LDTX_NL) ||
-            (asi == ASI_LDTX_P) ||
-            (asi == ASI_LDTX_S) ||
-            (asi == ASI_LDTX_PL) ||
-            (asi == ASI_LDTX_SL) ||
-            (asi == ASI_LTX_L);
+            (asi >= ASI_LDTX_AIUP &&
+            asi <= ASI_LDTX_N &&
+            asi != ASI_QUEUE) ||
+            (asi >= ASI_LDTX_AIUP_L &&
+            asi <= ASI_LDTX_NL &&
+            asi != 0x2D) ||
+            asi == ASI_LDTX_P ||
+            asi == ASI_LDTX_S ||
+            asi == ASI_LDTX_PL ||
+            asi == ASI_LDTX_SL;
     }
 
     bool AsiIsPartialStore(ASI asi)

@@ -662,7 +662,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         }
     }
 
-    if (!implicit) {
+    if (!implicit && asi != ASI_P && asi != ASI_S) {
         if (AsiIsLittle(asi))
             panic("Little Endian ASIs not supported\n");
         if (AsiIsBlock(asi))
@@ -670,14 +670,6 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
 
-        // These twin ASIs are OK
-        if (asi == ASI_P || asi == ASI_LDTX_P)
-            goto continueDtbFlow;
-        if (!write && (asi == ASI_QUAD_LDD || asi == ASI_LDTX_REAL))
-            goto continueDtbFlow;
-
-        if (AsiIsTwin(asi))
-            panic("Twin ASIs not supported\n");
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
         if (AsiIsInterrupt(asi))
@@ -692,11 +684,11 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (AsiIsSparcError(asi))
             goto handleSparcErrorRegAccess;
 
-        if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi))
+        if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi) &&
+                !AsiIsTwin(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
-continueDtbFlow:
     // If the asi is unaligned trap
     if (vaddr & size-1) {
         writeSfr(tc, vaddr, false, ct, false, OtherFault, asi);

@@ -43,8 +43,6 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         /* Full system only ASRs */
       case MISCREG_SOFTINT:
         setReg(miscReg, val);;
-        if (val != 0x10000 && val != 0)
-            warn("Writing to softint not really supported, writing: %#x\n", val);
         break;
 
       case MISCREG_SOFTINT_CLR:

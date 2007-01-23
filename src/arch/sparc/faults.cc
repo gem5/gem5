@@ -340,22 +340,8 @@ void doREDFault(ThreadContext *tc, TrapType tt)
     //Update GL
     tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxGL));
 
-    //set PSTATE.mm to 00
-    //set PSTATE.pef to 1
-    PSTATE |= (1 << 4);
-    //set PSTATE.am to 0
-    PSTATE &= ~(1 << 3);
-/*    //set PSTATE.priv to 0
-    PSTATE &= ~(1 << 2);*/
-    //set PSTATE.ie to 0
-    //PSTATE.priv is set to 1 here. The manual says it should be 0, but
-    //Legion sets it to 1.
-    PSTATE |= (1 << 2);
-    //set PSTATE.cle to 0
-    PSTATE &= ~(1 << 9);
-    //PSTATE.tle is unchanged
-    //XXX Where is the tct bit?
-    //set PSTATE.tct to 0
+    PSTATE = mbits(PSTATE, 2, 2); // just save the priv bit
+    PSTATE |= (1 << 4); //set PSTATE.pef to 1
     tc->setMiscReg(MISCREG_PSTATE, PSTATE);
 
     //set HPSTATE.red to 1
@@ -442,46 +428,27 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
         tc->setMiscRegWithEffect(MISCREG_GL, min<int>(GL+1, MaxGL));
 
     //PSTATE.mm is unchanged
-    //PSTATE.pef = whether or not an fpu is present
-    //XXX We'll say there's one present, even though there aren't
-    //implementations for a decent number of the instructions
-    PSTATE |= (1 << 4);
-    //PSTATE.am = 0
-    PSTATE &= ~(1 << 3);
-    if (!gotoHpriv)
-    {
-        //PSTATE.priv = 1
-        PSTATE |= (1 << 2);
-        //PSTATE.cle = PSTATE.tle
-        replaceBits(PSTATE, 9, 9, PSTATE >> 8);
-    }
-    else
-    {
-        //PSTATE.priv = 0
-        //PSTATE.priv is set to 1 here. The manual says it should be 0, but
-        //Legion sets it to 1.
-        PSTATE |= (1 << 2);
-        //PSTATE.cle = 0
-        PSTATE &= ~(1 << 9);
-    }
-    //PSTATE.ie = 0
-    PSTATE &= ~(1 << 1);
+    PSTATE |= (1 << 4); //PSTATE.pef = whether or not an fpu is present
+    PSTATE &= ~(1 << 3); //PSTATE.am = 0
+    PSTATE &= ~(1 << 1); //PSTATE.ie = 0
     //PSTATE.tle is unchanged
     //PSTATE.tct = 0
-    //XXX Where exactly is this field?
-    tc->setMiscReg(MISCREG_PSTATE, PSTATE);
 
     if (gotoHpriv)
     {
-        //HPSTATE.red = 0
-        HPSTATE &= ~(1 << 5);
-        //HPSTATE.hpriv = 1
-        HPSTATE |= (1 << 2);
-        //HPSTATE.ibe = 0
-        HPSTATE &= ~(1 << 10);
+        PSTATE &= ~(1 << 9); // PSTATE.cle = 0
+        //The manual says PSTATE.priv should be 0, but Legion leaves it alone
+        HPSTATE &= ~(1 << 5); //HPSTATE.red = 0
+        HPSTATE |= (1 << 2); //HPSTATE.hpriv = 1
+        HPSTATE &= ~(1 << 10); //HPSTATE.ibe = 0
         //HPSTATE.tlz is unchanged
         tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+    } else { // we are going to priv
+        PSTATE |= (1 << 2); //PSTATE.priv = 1
+        replaceBits(PSTATE, 9, 9, PSTATE >> 8); //PSTATE.cle = PSTATE.tle
     }
+    tc->setMiscReg(MISCREG_PSTATE, PSTATE);
+
 
     bool changedCWP = true;
     if (tt == 0x24)

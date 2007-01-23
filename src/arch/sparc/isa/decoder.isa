@@ -1061,6 +1061,12 @@ decode OP default Unknown::unknown()
             0x11: lduba({{Rd = Mem.ub;}}, {{EXT_ASI}});
             0x12: lduha({{Rd = Mem.uhw;}}, {{EXT_ASI}});
             0x13: decode EXT_ASI {
+                //ASI_LDTD_AIUP
+                0x22: TwinLoad::ldtx_aiup(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTD_AIUS
+                0x23: TwinLoad::ldtx_aius(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                 //ASI_QUAD_LDD
                 0x24: TwinLoad::ldtx_quad_ldd(
                     {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
@@ -1081,6 +1087,9 @@ decode OP default Unknown::unknown()
                     {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                 //ASI_LDTX_P
                 0xE2: TwinLoad::ldtx_p(
+                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                //ASI_LDTX_S
+                0xE3: TwinLoad::ldtx_s(
                     {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
                 default: ldtwa({{
                         uint64_t val = Mem.udw;
