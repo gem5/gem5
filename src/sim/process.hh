@@ -51,6 +51,11 @@ class SyscallDesc;
 class PageTable;
 class TranslatingPort;
 class System;
+class GDBListener;
+namespace TheISA
+{
+    class RemoteGDB;
+}
 
 void
 copyStringArray(std::vector<std::string> &strings, Addr array_ptr,
@@ -71,6 +76,11 @@ class Process : public SimObject
 
     // thread contexts associated with this process
     std::vector<ThreadContext *> threadContexts;
+
+    // remote gdb objects
+    std::vector<TheISA::RemoteGDB *> remoteGDB;
+    std::vector<GDBListener *> gdbListen;
+    bool breakpoint();
 
     // number of CPUs (esxec contexts, really) assigned to this process.
     unsigned int numCpus() { return threadContexts.size(); }

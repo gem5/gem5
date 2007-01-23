@@ -35,6 +35,7 @@
 
 #include <string>
 
+#include "arch/remote_gdb.hh"
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -153,6 +154,13 @@ Process::registerThreadContext(ThreadContext *tc)
     // add to list
     int myIndex = threadContexts.size();
     threadContexts.push_back(tc);
+
+    RemoteGDB *rgdb = new RemoteGDB(system, tc);
+    GDBListener *gdbl = new GDBListener(rgdb, 7000 + myIndex);
+    gdbl->listen();
+    //gdbl->accept();
+
+    remoteGDB.push_back(rgdb);
 
     // return CPU number to caller
     return myIndex;
