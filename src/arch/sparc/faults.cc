@@ -312,6 +312,11 @@ void doREDFault(ThreadContext *tc, TrapType tt)
 
     TL++;
 
+    if (bits(PSTATE, 3,3)) {
+        PC &= mask(32);
+        NPC &= mask(32);
+    }
+
     //set TSTATE.gl to gl
     replaceBits(TSTATE, 42, 40, GL);
     //set TSTATE.ccr to ccr
@@ -389,6 +394,11 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     MiscReg GL = tc->readMiscReg(MISCREG_GL);
     MiscReg PC = tc->readPC();
     MiscReg NPC = tc->readNextPC();
+
+    if (bits(PSTATE, 3,3)) {
+        PC &= mask(32);
+        NPC &= mask(32);
+    }
 
     //Increment the trap level
     TL++;

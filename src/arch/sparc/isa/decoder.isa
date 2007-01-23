@@ -163,7 +163,10 @@ decode OP default Unknown::unknown()
         0x6: Trap::fbfcc({{fault = new FpDisabled;}});
     }
     0x1: BranchN::call(30, {{
-            R15 = xc->readPC();
+            if (Pstate<3:>)
+                R15 = (xc->readPC())<31:0>;
+            else
+                R15 = xc->readPC();
             NNPC = R15 + disp;
     }});
     0x2: decode OP3 {
@@ -578,6 +581,9 @@ decode OP default Unknown::unknown()
                         Cansave = Cansave - 1;
                     else
                         Otherwin = Otherwin - 1;
+
+                    if(Cleanwin < NWindows - 1)
+                        Cleanwin = Cleanwin + 1;
                 }});
             }
             0x32: decode RD {
@@ -875,7 +881,10 @@ decode OP default Unknown::unknown()
                     fault = new MemAddressNotAligned;
                 else
                 {
-                    Rd = xc->readPC();
+                    if (Pstate<3:>)
+                        (Rd = xc->readPC())<31:0>;
+                    else
+                        Rd = xc->readPC();
                     NNPC = target;
                 }
             }});

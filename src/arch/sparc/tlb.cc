@@ -549,6 +549,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 
     // were not priviledged accesing priv page
     if (!priv && e->pte.priv()) {
+        writeTagAccess(tc, vaddr, context);
         writeSfsr(tc, false, ct, false, PrivViolation, asi);
         return new InstructionAccessException;
     }
@@ -592,13 +593,15 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     // Be fast if we can!
     if (cacheValid &&  cacheState == tlbdata) {
         if (cacheEntry[0] && cacheAsi[0] == asi && cacheEntry[0]->range.va < vaddr + size &&
-            cacheEntry[0]->range.va + cacheEntry[0]->range.size > vaddr) {
+            cacheEntry[0]->range.va + cacheEntry[0]->range.size > vaddr &&
+            (!write || cacheEntry[0]->pte.writable())) {
                 req->setPaddr(cacheEntry[0]->pte.paddr() & ~(cacheEntry[0]->pte.size()-1) |
                               vaddr & cacheEntry[0]->pte.size()-1 );
                 return NoFault;
         }
         if (cacheEntry[1] && cacheAsi[1] == asi && cacheEntry[1]->range.va < vaddr + size &&
-            cacheEntry[1]->range.va + cacheEntry[1]->range.size > vaddr) {
+            cacheEntry[1]->range.va + cacheEntry[1]->range.size > vaddr &&
+            (!write || cacheEntry[1]->pte.writable())) {
                 req->setPaddr(cacheEntry[1]->pte.paddr() & ~(cacheEntry[1]->pte.size()-1) |
                               vaddr & cacheEntry[1]->pte.size()-1 );
                 return NoFault;
@@ -726,25 +729,33 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 
     }
 
+    if (!priv && e->pte.priv()) {
+        writeTagAccess(tc, vaddr, context);
+        writeSfr(tc, vaddr, write, ct, e->pte.sideffect(), PrivViolation, asi);
+        return new DataAccessException;
+    }
 
     if (write && !e->pte.writable()) {
+        writeTagAccess(tc, vaddr, context);
         writeSfr(tc, vaddr, write, ct, e->pte.sideffect(), OtherFault, asi);
         return new FastDataAccessProtection;
     }
 
     if (e->pte.nofault() && !AsiIsNoFault(asi)) {
+        writeTagAccess(tc, vaddr, context);
         writeSfr(tc, vaddr, write, ct, e->pte.sideffect(), LoadFromNfo, asi);
         return new DataAccessException;
     }
 
-    if (e->pte.sideffect())
-        req->setFlags(req->getFlags() | UNCACHEABLE);
-
-
-    if (!priv && e->pte.priv()) {
-        writeSfr(tc, vaddr, write, ct, e->pte.sideffect(), PrivViolation, asi);
+    if (e->pte.sideffect() && AsiIsNoFault(asi)) {
+        writeTagAccess(tc, vaddr, context);
+        writeSfr(tc, vaddr, write, ct, e->pte.sideffect(), SideEffect, asi);
         return new DataAccessException;
     }
+
+
+    if (e->pte.sideffect())
+        req->setFlags(req->getFlags() | UNCACHEABLE);
 
     // cache translation date for next translation
     cacheState = tlbdata;
