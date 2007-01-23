@@ -10,6 +10,7 @@ type=PhysicalMemory
 file=
 range=[0,134217727]
 latency=1
+zero=false
 
 [system]
 type=System
@@ -30,6 +31,7 @@ executable=tests/test-progs/hello/bin/alpha/linux/hello
 input=cin
 output=cout
 env=
+cwd=
 system=system
 uid=100
 euid=100
@@ -169,6 +171,7 @@ FUList=system.cpu.fuPool.FUList0 system.cpu.fuPool.FUList1 system.cpu.fuPool.FUL
 [system.cpu]
 type=DerivO3CPU
 clock=1
+phase=0
 numThreads=1
 activity=0
 workload=system.cpu.workload
@@ -408,9 +411,6 @@ pc_symbol=true
 intel_format=false
 legion_lockstep=false
 trace_system=client
-
-[debug]
-break_cycles=
 
 [statsreset]
 reset_cycle=0

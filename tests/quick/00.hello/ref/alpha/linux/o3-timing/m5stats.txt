@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    437                       # Nu
 global.BPredUnit.condPredicted                   1563                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         5229                       # Number of BP lookups
 global.BPredUnit.usedRAS                         2821                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  15743                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 180184                       # Number of bytes of host memory used
-host_seconds                                     0.36                       # Real time elapsed on the host
-host_tick_rate                                3916768                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  11609                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 177052                       # Number of bytes of host memory used
+host_seconds                                     0.48                       # Real time elapsed on the host
+host_tick_rate                                2887871                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 23                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores               117                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                  3775                       # Number of loads inserted to the mem dependence unit.
@@ -73,7 +73,7 @@ system.cpu.dcache.WriteReq_mshr_hits              181                       # nu
 system.cpu.dcache.WriteReq_mshr_miss_latency       375299                       # number of WriteReq MSHR miss cycles
 system.cpu.dcache.WriteReq_mshr_miss_rate     0.089901                       # mshr miss rate for WriteReq accesses
 system.cpu.dcache.WriteReq_mshr_misses             73                       # number of WriteReq MSHR misses
-system.cpu.dcache.avg_blocked_cycles_no_mshrs     no value                       # average number of cycles each access was blocked
+system.cpu.dcache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.dcache.avg_blocked_cycles_no_targets  3366.651163                       # average number of cycles each access was blocked
 system.cpu.dcache.avg_refs                  11.587209                       # Average number of references to valid blocks.
 system.cpu.dcache.blocked_no_mshrs                  0                       # number of cycles access was blocked
@@ -263,8 +263,8 @@ system.cpu.iew.lsq.thread.0.rescheduledLoads            1                       
 system.cpu.iew.lsq.thread.0.squashedLoads         2796                       # Number of loads squashed
 system.cpu.iew.lsq.thread.0.squashedStores         2922                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents             40                       # Number of memory order violations
-system.cpu.iew.predictedNotTakenIncorrect          281                       # Number of branches that were predicted not taken incorrectly
-system.cpu.iew.predictedTakenIncorrect            120                       # Number of branches that were predicted taken incorrectly
+system.cpu.iew.predictedNotTakenIncorrect          279                       # Number of branches that were predicted not taken incorrectly
+system.cpu.iew.predictedTakenIncorrect            122                       # Number of branches that were predicted taken incorrectly
 system.cpu.ipc                               0.004016                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.004016                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                   13840                       # Type of FU issued

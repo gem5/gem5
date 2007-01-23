@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    218                       # Nu
 global.BPredUnit.condPredicted                    459                       # Number of conditional branches predicted
 global.BPredUnit.lookups                          898                       # Number of BP lookups
 global.BPredUnit.usedRAS                          171                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  19676                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 179796                       # Number of bytes of host memory used
-host_seconds                                     0.12                       # Real time elapsed on the host
-host_tick_rate                                6183068                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  22132                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 176684                       # Number of bytes of host memory used
+host_seconds                                     0.11                       # Real time elapsed on the host
+host_tick_rate                                6945216                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 10                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores                 8                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                   783                       # Number of loads inserted to the mem dependence unit.
@@ -263,8 +263,8 @@ system.cpu.iew.lsq.thread.0.rescheduledLoads            0                       
 system.cpu.iew.lsq.thread.0.squashedLoads          368                       # Number of loads squashed
 system.cpu.iew.lsq.thread.0.squashedStores           87                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents             12                       # Number of memory order violations
-system.cpu.iew.predictedNotTakenIncorrect           96                       # Number of branches that were predicted not taken incorrectly
-system.cpu.iew.predictedTakenIncorrect             56                       # Number of branches that were predicted taken incorrectly
+system.cpu.iew.predictedNotTakenIncorrect           95                       # Number of branches that were predicted not taken incorrectly
+system.cpu.iew.predictedTakenIncorrect             57                       # Number of branches that were predicted taken incorrectly
 system.cpu.ipc                               0.003174                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.003174                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                    3491                       # Type of FU issued
