@@ -340,3 +340,41 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     return loadSomeSymbols(symtab, STB_LOCAL);
 }
+
+bool
+ElfObject::isDynamic()
+{
+    Elf *elf;
+    int sec_idx = 1; // there is a 0 but it is nothing, go figure
+    Elf_Scn *section;
+    GElf_Shdr shdr;
+
+    GElf_Ehdr ehdr;
+
+    // check that header matches library version
+    if (elf_version(EV_CURRENT) == EV_NONE)
+        panic("wrong elf version number!");
+
+    // get a pointer to elf structure
+    elf = elf_memory((char*)fileData,len);
+    assert(elf != NULL);
+
+    // Check that we actually have a elf file
+    if (gelf_getehdr(elf, &ehdr) ==0) {
+        panic("Not ELF, shouldn't be here");
+    }
+
+    // Get the first section
+    section = elf_getscn(elf, sec_idx);
+
+    // While there are no more sections
+    while (section != NULL) {
+        gelf_getshdr(section, &shdr);
+        if (!strcmp(".interp", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
+            return true;
+        section = elf_getscn(elf, ++sec_idx);
+    } // while sections
+    return false;
+}
+
+

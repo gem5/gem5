@@ -59,6 +59,7 @@ using namespace TheISA;
 
 #if THE_ISA == SPARC_ISA && FULL_SYSTEM
 static int diffcount = 0;
+static bool wasMicro = false;
 #endif
 
 namespace Trace {
@@ -124,6 +125,7 @@ inline void printLevelHeader(ostream & os, int level)
 void
 Trace::InstRecord::dump(ostream &outs)
 {
+    DPRINTF(Sparc, "Instruction: %#X\n", staticInst->machInst);
     if (flags[PRINT_REG_DELTA])
     {
 #if THE_ISA == SPARC_ISA
@@ -316,6 +318,24 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffCleanwin = false;
         bool diffTlb = false;
         Addr m5Pc, lgnPc;
+
+        // We took a trap on a micro-op...
+        if (wasMicro && !staticInst->isMicroOp())
+        {
+            // let's skip comparing this cycle
+            while (!compared)
+                if (shared_data->flags == OWN_M5) {
+                    shared_data->flags = OWN_LEGION;
+                    compared = true;
+                }
+            compared = false;
+            wasMicro = false;
+        }
+
+        if (staticInst->isLastMicroOp())
+            wasMicro = false;
+        else if (staticInst->isMicroOp())
+            wasMicro = true;
 
 
         if(!staticInst->isMicroOp() || staticInst->isLastMicroOp()) {
@@ -607,29 +627,34 @@ Trace::InstRecord::dump(ostream &outs)
                                     << endl;*/
                             }
                         }
-                        printColumnLabels(outs);
-                        char label[8];
-                        for (int x = 0; x < 64; x++) {
-                            if (shared_data->itb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
-                                thread->getITBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
-                                    sprintf(label, "I-TLB:%02d", x);
-                                    printRegPair(outs, label, thread->getITBPtr()->TteRead(x), shared_data->itb[x]);
+                        if (diffTlb) {
+                            printColumnLabels(outs);
+                            char label[8];
+                            for (int x = 0; x < 64; x++) {
+                                if (shared_data->itb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
+                                    thread->getITBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
+                                        sprintf(label, "I-TLB:%02d", x);
+                                        printRegPair(outs, label, thread->getITBPtr()->TteRead(x),
+                                                shared_data->itb[x]);
+                                }
                             }
-                        }
-                        for (int x = 0; x < 64; x++) {
-                            if (shared_data->dtb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
-                                thread->getDTBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
-                                    sprintf(label, "D-TLB:%02d", x);
-                                    printRegPair(outs, label, thread->getDTBPtr()->TteRead(x), shared_data->dtb[x]);
+                            for (int x = 0; x < 64; x++) {
+                                if (shared_data->dtb[x] !=  ULL(0xFFFFFFFFFFFFFFFF) ||
+                                    thread->getDTBPtr()->TteRead(x) != ULL(0xFFFFFFFFFFFFFFFF))  {
+                                        sprintf(label, "D-TLB:%02d", x);
+                                        printRegPair(outs, label, thread->getDTBPtr()->TteRead(x),
+                                                shared_data->dtb[x]);
+                                }
                             }
+                            thread->getITBPtr()->dumpAll();
+                            thread->getDTBPtr()->dumpAll();
                         }
-                        thread->getITBPtr()->dumpAll();
-                        thread->getDTBPtr()->dumpAll();
 
                         diffcount++;
                         if (diffcount > 2)
                             fatal("Differences found between Legion and M5\n");
-                    }
+                    } else
+                        diffcount = 0;
 
                     compared = true;
                     shared_data->flags = OWN_LEGION;

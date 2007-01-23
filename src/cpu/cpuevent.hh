@@ -36,12 +36,14 @@
 
 class ThreadContext;
 
-/** This class creates a global list of events that need a pointer to a
- * thread context. When a switchover takes place the events can be migrated
- * to the new thread context, otherwise you could have a wake timer interrupt
- * go off on a switched out cpu or other unfortunate events. This object MUST be
- * dynamically allocated to avoid it being deleted after a cpu switch happens.
- * */
+/**
+ * This class creates a global list of events that need a pointer to a
+ * thread context. When a switchover takes place the events can be
+ * migrated to the new thread context, otherwise you could have a wake
+ * timer interrupt go off on a switched out cpu or other unfortunate
+ * events. This object MUST be dynamically allocated to avoid it being
+ * deleted after a cpu switch happens.
+ */
 class CpuEvent : public Event
 {
   protected:
@@ -78,8 +80,8 @@ class CpuEventWrapper : public CpuEvent
     T *object;
 
   public:
-    CpuEventWrapper(T *obj, ThreadContext *_tc, EventQueue *q = &mainEventQueue,
-            Priority p = Default_Pri)
+    CpuEventWrapper(T *obj, ThreadContext *_tc,
+        EventQueue *q = &mainEventQueue, Priority p = Default_Pri)
         : CpuEvent(q, _tc, p), object(obj)
     { }
     void process() { (object->*F)(tc); }

@@ -44,7 +44,12 @@
 #
 #####################################################################
 
-import sys, inspect, copy
+import copy
+import datetime
+import inspect
+import sys
+import time
+
 import convert
 from util import *
 
@@ -513,6 +518,50 @@ class EthernetAddr(ParamValue):
         else:
             return self.value
 
+def parse_time(value):
+    strings = [ "%a %b %d %H:%M:%S %Z %Y",
+                "%a %b %d %H:%M:%S %Z %Y",
+                "%Y/%m/%d %H:%M:%S",
+                "%Y/%m/%d %H:%M",
+                "%Y/%m/%d",
+                "%m/%d/%Y %H:%M:%S",
+                "%m/%d/%Y %H:%M",
+                "%m/%d/%Y",
+                "%m/%d/%y %H:%M:%S",
+                "%m/%d/%y %H:%M",
+                "%m/%d/%y"]
+
+    for string in strings:
+        try:
+            return time.strptime(value, string)
+        except ValueError:
+            pass
+
+    raise ValueError, "Could not parse '%s' as a time" % value
+
+class Time(ParamValue):
+    cxx_type = 'time_t'
+    def __init__(self, value):
+        if isinstance(value, time.struct_time):
+            self.value = time.mktime(value)
+        elif isinstance(value, int):
+            self.value = value
+        elif isinstance(value, str):
+            if value in ('Now', 'Today'):
+                self.value = time.time()
+            else:
+                self.value = time.mktime(parse_time(value))
+        elif isinstance(value, (datetime.datetime, datetime.date)):
+            self.value = time.mktime(value.timetuple())
+        else:
+            raise ValueError, "Could not parse '%s' as a time" % value
+
+    def __str__(self):
+        return str(int(self.value))
+
+    def ini_str(self):
+        return str(int(self.value))
+
 # Enumerated types are a little more complex.  The user specifies the
 # type as Enum(foo) where foo is either a list or dictionary of
 # alternatives (typically strings, but not necessarily so).  (In the
@@ -973,6 +1022,7 @@ __all__ = ['Param', 'VectorParam',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'TickRange',
            'MaxAddr', 'MaxTick', 'AllMemory',
+           'Time',
            'NextEthernetAddr', 'NULL',
            'Port', 'VectorPort']
 

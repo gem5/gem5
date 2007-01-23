@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 206, 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,46 +25,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#ifndef __ELF_OBJECT_HH__
-#define __ELF_OBJECT_HH__
+/** @file
+ * This device acts as a simple time of date device. It's implemented as a
+ * simple device register read.
+ */
 
-#include "base/loader/object_file.hh"
+#ifndef __DEV_SPARC_DTOD_HH__
+#define __DEV_SPARC_DTOD_HH__
 
-class ElfObject : public ObjectFile
+#include "base/range.hh"
+#include "dev/io_device.hh"
+
+
+/**
+ * DumbTOD simply returns some idea of time when read.  Until we finish with
+ * legion it starts with the start time and increments itself by 1000 each time.
+ */
+class DumbTOD : public BasicPioDevice
 {
-  protected:
-
-    //These values are provided to a linux process by the kernel, so we
-    //need to keep them around.
-    Addr _programHeaderTable;
-    uint16_t _programHeaderSize;
-    uint16_t _programHeaderCount;
-
-    /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
-    bool loadSomeSymbols(SymbolTable *symtab, int binding);
-
-    ElfObject(const std::string &_filename, int _fd,
-              size_t _len, uint8_t *_data,
-              Arch _arch, OpSys _opSys);
+  private:
+    uint64_t todTime;
 
   public:
-    virtual ~ElfObject() {}
+    struct Params : public BasicPioDevice::Params
+    {
+        time_t init_time;
+    };
+  protected:
+    const Params *params() const { return (const Params *)_params; }
 
-    virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
-    virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
-            std::numeric_limits<Addr>::max());
+  public:
+    DumbTOD(Params *p);
 
-    virtual bool isDynamic();
-
-    static ObjectFile *tryFile(const std::string &fname, int fd,
-                               size_t len, uint8_t *data);
-    Addr programHeaderTable() {return _programHeaderTable;}
-    uint16_t programHeaderSize() {return _programHeaderSize;}
-    uint16_t programHeaderCount() {return _programHeaderCount;}
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
 };
 
-#endif // __ELF_OBJECT_HH__
+#endif // __DEV_BADDEV_HH__

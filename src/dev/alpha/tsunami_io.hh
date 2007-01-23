@@ -110,10 +110,7 @@ class TsunamiIO : public BasicPioDevice
         uint8_t stat_regB;
 
       public:
-        RTC(const std::string &name, Tsunami* t, Tick i);
-
-        /** Set the initial RTC time/date */
-        void set_time(time_t t);
+        RTC(const std::string &name, Tsunami* tsunami, time_t t, Tick i);
 
         /** RTC address port: write address of RTC RAM data to access */
         void writeAddr(const uint8_t data);

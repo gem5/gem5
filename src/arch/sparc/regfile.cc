@@ -255,10 +255,10 @@ int SparcISA::InterruptLevel(uint64_t softint)
     if (softint & 0x10000 || softint & 0x1)
         return 14;
 
-    int level = 14;
-    while (level >= 0 && !(1 << (level + 1) & softint))
+    int level = 15;
+    while (level > 0 && !(1 << level & softint))
         level--;
-    if (1 << (level + 1) & softint)
+    if (1 << level & softint)
         return level;
     return 0;
 }

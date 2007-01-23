@@ -215,7 +215,7 @@ MiscReg MiscRegFile::readReg(int miscReg)
       case MISCREG_HTSTATE:
         return htstate[tl-1];
       case MISCREG_HINTP:
-        panic("HINTP not implemented\n");
+        return hintp;
       case MISCREG_HTBA:
         return htba;
       case MISCREG_HVER:
@@ -322,13 +322,13 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
         // I'm not sure why legion ignores the lowest two bits, but we'll go
         // with it
         // change from curCycle() to instCount() until we're done with legion
-        DPRINTFN("Instruction Count when TICK read: %#X stick=%#X\n",
+        DPRINTF(Timer, "Instruction Count when TICK read: %#X stick=%#X\n",
                 tc->getCpuPtr()->instCount(), stick);
-        return mbits(tc->getCpuPtr()->instCount() + (int32_t)stick,62,2) |
+        return mbits(tc->getCpuPtr()->instCount() + (int64_t)stick,62,2) |
                mbits(tick,63,63);
       case MISCREG_FPRS:
-        warn("FPRS register read and FPU stuff not really implemented\n");
-        return fprs;
+        // in legion if fp is enabled du and dl are set
+        return fprs | 0x3;
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
@@ -386,7 +386,6 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         asi = val;
         break;
       case MISCREG_FPRS:
-        warn("FPU not really implemented writing %#X to FPRS\n", val);
         fprs = val;
         break;
       case MISCREG_TICK:
@@ -400,7 +399,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         gsr = val;
         break;
       case MISCREG_SOFTINT:
-        softint |= val;
+        softint = val;
         break;
       case MISCREG_TICK_CMPR:
         tick_cmpr = val;
@@ -470,7 +469,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         htstate[tl-1] = val;
         break;
       case MISCREG_HINTP:
-        panic("HINTP not implemented\n");
+        hintp = val;
       case MISCREG_HTBA:
         htba = val;
         break;
@@ -609,6 +608,8 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
 void MiscRegFile::setRegWithEffect(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
+    MiscReg new_val = val;
+
     switch (miscReg) {
       case MISCREG_STICK:
       case MISCREG_TICK:
@@ -616,7 +617,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         // use stick for offset and tick for holding intrrupt bit
         stick = mbits(val,62,0) - tc->getCpuPtr()->instCount();
         tick = mbits(val,63,63);
-        DPRINTFN("Writing TICK=%#X\n", val);
+        DPRINTF(Timer, "Writing TICK=%#X\n", val);
         break;
       case MISCREG_FPRS:
         //Configure the fpu based on the fprs
@@ -631,13 +632,16 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         tl = val;
         return;
       case MISCREG_CWP:
-        tc->changeRegFileContext(CONTEXT_CWP, val);
+        new_val = val > NWindows ? NWindows - 1 : val;
+        tc->changeRegFileContext(CONTEXT_CWP, new_val);
         break;
       case MISCREG_GL:
         tc->changeRegFileContext(CONTEXT_GLOBALS, val);
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:
+      case MISCREG_SOFTINT_SET:
+      case MISCREG_SOFTINT_CLR:
       case MISCREG_TICK_CMPR:
       case MISCREG_STICK_CMPR:
       case MISCREG_HINTP:
@@ -666,7 +670,7 @@ void MiscRegFile::setRegWithEffect(int miscReg,
       panic("Accessing Fullsystem register %s to %#x in SE mode\n", getMiscRegName(miscReg), val);
 #endif
     }
-    setReg(miscReg, val);
+    setReg(miscReg, new_val);
 }
 
 void MiscRegFile::serialize(std::ostream & os)

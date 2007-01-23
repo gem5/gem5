@@ -37,7 +37,9 @@ Import('env')
 sources = []
 
 sources += Split('''
+	dtod.cc
 	t1000.cc
+	mm_disk.cc
 	''')
 
 # Convert file names to SCons File objects.  This takes care of the

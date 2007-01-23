@@ -13,8 +13,8 @@ class TsunamiCChip(BasicPioDevice):
 
 class TsunamiIO(BasicPioDevice):
     type = 'TsunamiIO'
-    time = Param.UInt64(1136073600,
-        "System time to use (0 for actual time, default is 1/1/06)")
+    time = Param.Time('01/01/2009',
+        "System time to use ('Now' for actual time)")
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
     frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 

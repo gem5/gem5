@@ -29,8 +29,8 @@
  *          Kevin Lim
  */
 
-#ifndef __ALPHA_FAULTS_HH__
-#define __ALPHA_FAULTS_HH__
+#ifndef __SPARC_FAULTS_HH__
+#define __SPARC_FAULTS_HH__
 
 #include "sim/faults.hh"
 
@@ -210,7 +210,7 @@ class CpuMondo : public SparcFault<CpuMondo> {};
 
 class DevMondo : public SparcFault<DevMondo> {};
 
-class ResumeableError : public SparcFault<ResumeableError> {};
+class ResumableError : public SparcFault<ResumableError> {};
 
 class SpillNNormal : public EnumeratedFault<SpillNNormal>
 {
@@ -280,4 +280,4 @@ static inline Fault genAlignmentFault()
 
 } // SparcISA namespace
 
-#endif // __FAULTS_HH__
+#endif // __SPARC_FAULTS_HH__

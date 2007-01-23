@@ -146,6 +146,7 @@ class StaticInstBase : public RefCounted
         IsMicroOp,	///< Is a microop
         IsDelayedCommit,	///< This microop doesn't commit right away
         IsLastMicroOp,	///< This microop ends a microop sequence
+        IsFirstMicroOp,	///< This microop begins a microop sequence
         //This flag doesn't do anything yet
         IsMicroBranch,	///< This microop branches within the microcode for a macroop
 
@@ -244,6 +245,7 @@ class StaticInstBase : public RefCounted
     bool isMicroOp() const { return flags[IsMicroOp]; }
     bool isDelayedCommit() const { return flags[IsDelayedCommit]; }
     bool isLastMicroOp() const { return flags[IsLastMicroOp]; }
+    bool isFirstMicroOp() const { return flags[IsFirstMicroOp]; }
     //This flag doesn't do anything yet
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}

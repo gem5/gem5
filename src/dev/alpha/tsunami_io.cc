@@ -57,17 +57,13 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiIO::RTC::RTC(const string &name, Tsunami* t, Tick i)
-    : _name(name), event(t, i), addr(0)
+TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, time_t t, Tick i)
+    : _name(n), event(tsunami, i), addr(0)
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
     stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
-}
 
-void
-TsunamiIO::RTC::set_time(time_t t)
-{
     struct tm tm;
     gmtime_r(&t, &tm);
 
@@ -428,7 +424,7 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
 
 TsunamiIO::TsunamiIO(Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(p->name + ".rtc", p->tsunami, p->frequency)
+      rtc(p->name + ".rtc", p->tsunami, p->init_time, p->frequency)
 {
     pioSize = 0x100;
 
@@ -436,7 +432,6 @@ TsunamiIO::TsunamiIO(Params *p)
     tsunami->io = this;
 
     timerData = 0;
-    rtc.set_time(p->init_time == 0 ? time(NULL) : p->init_time);
     picr = 0;
     picInterrupting = false;
 }

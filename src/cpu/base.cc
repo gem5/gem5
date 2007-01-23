@@ -363,6 +363,12 @@ BaseCPU::ProfileEvent::process()
 }
 
 void
+BaseCPU::post_interrupt(int int_type)
+{
+    interrupts.post(int_type);
+}
+
+void
 BaseCPU::post_interrupt(int int_num, int index)
 {
     checkInterrupts = true;

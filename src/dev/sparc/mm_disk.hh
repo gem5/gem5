@@ -25,57 +25,46 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#include "base/loader/raw_object.hh"
-#include "base/loader/symtab.hh"
-#include "base/trace.hh"
+/** @file
+ * This device acts as a disk similar to the memory mapped disk device
+ * in legion. Any access is translated to an offset in the disk image.
+ */
 
-ObjectFile *
-RawObject::tryFile(const std::string &fname, int fd, size_t len, uint8_t *data)
+#ifndef __DEV_SPARC_MM_DISK_HH__
+#define __DEV_SPARC_MM_DISK_HH__
+
+#include "base/range.hh"
+#include "dev/io_device.hh"
+#include "dev/disk_image.hh"
+
+class MmDisk : public BasicPioDevice
 {
-    return new RawObject(fname, fd, len, data, ObjectFile::UnknownArch,
-            ObjectFile::UnknownOpSys);
-}
+  private:
+    DiskImage *image;
+    off_t curSector;
+    bool dirty;
+    union {
+        uint8_t bytes[SectorSize];
+        uint32_t words[SectorSize/4];
+    };
 
-RawObject::RawObject(const std::string &_filename, int _fd, size_t _len,
-        uint8_t *_data, Arch _arch, OpSys _opSys)
-    : ObjectFile(_filename, _fd, _len, _data, _arch, _opSys)
-{
-    text.baseAddr = 0;
-    text.size = len;
-    text.fileImage = fileData;
+  public:
+    struct Params : public BasicPioDevice::Params
+    {
+        DiskImage *image;
+    };
+  protected:
+    const Params *params() const { return (const Params*)_params; }
 
-    data.baseAddr = 0;
-    data.size = 0;
-    data.fileImage = NULL;
+  public:
+    MmDisk(Params *p);
 
-    bss.baseAddr = 0;
-    bss.size = 0;
-    bss.fileImage = NULL;
+    virtual Tick read(PacketPtr pkt);
+    virtual Tick write(PacketPtr pkt);
+};
 
-    DPRINTFR(Loader, "text: 0x%x %d\ndata: 0x%x %d\nbss: 0x%x %d\n",
-             text.baseAddr, text.size, data.baseAddr, data.size,
-             bss.baseAddr, bss.size);
-}
+#endif //__DEV_SPARC_MM_DISK_HH__
 
-bool
-RawObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
-{
-/*    int fnameStart = filename.rfind('/',filename.size()) + 1;
-    int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr & addrMask, filename.substr(fnameStart,
-                extStart-fnameStart) + "_start");*/
-    return true;
-}
-
-bool
-RawObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
-{
-/*    int fnameStart = filename.rfind('/',filename.size()) + 1;
-    int extStart = filename.rfind('.',filename.size());
-    symtab->insert(text.baseAddr & addrMask, filename.substr(fnameStart,
-                extStart-fnameStart) + "_start");*/
-    return true;
-}

@@ -5,6 +5,18 @@ from Uart import Uart8250
 from Platform import Platform
 from SimConsole import SimConsole, ConsoleListener
 
+
+class MmDisk(BasicPioDevice):
+    type = 'MmDisk'
+    image = Param.DiskImage("Disk Image")
+    pio_addr = 0x1F40000000
+
+class DumbTOD(BasicPioDevice):
+    type = 'DumbTOD'
+    time = Param.Time('01/01/2009', "System time to use ('Now' for real time)")
+    pio_addr = 0xfff0c1fff8
+
+
 class T1000(Platform):
     type = 'T1000'
     system = Param.System(Parent.any, "system")
@@ -58,6 +70,8 @@ class T1000(Platform):
             warn_access="Accessing SSI -- Unimplemented!")
 
     hvuart = Uart8250(pio_addr=0xfff0c2c000)
+    htod = DumbTOD()
+
     puart0 = Uart8250(pio_addr=0x1f10000000)
     console = SimConsole(listener = ConsoleListener())
 
@@ -80,3 +94,4 @@ class T1000(Platform):
         self.fake_ssi.pio = bus.port
         self.puart0.pio = bus.port
         self.hvuart.pio = bus.port
+        self.htod.pio = bus.port

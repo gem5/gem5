@@ -451,6 +451,8 @@ let {{
             flag_code = ''
             if (microPc == 7):
                 flag_code = "flags[IsLastMicroOp] = true;"
+            elif (microPc == 0):
+                flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroOp] = true;"
             else:
                 flag_code = "flags[IsDelayedCommit] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPc, code)
@@ -492,7 +494,7 @@ let {{
                 flag_code = "flags[IsLastMicroOp] = true;"
                 pcedCode = matcher.sub("RdHigh", code)
             else:
-                flag_code = "flags[IsDelayedCommit] = true;"
+                flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroOp] = true;"
                 pcedCode = matcher.sub("RdLow", code)
             iop = InstObjParams(name, Name, 'TwinMem',
                     {"code": pcedCode, "ea_code": addrCalcReg,
