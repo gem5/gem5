@@ -57,25 +57,77 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, time_t t, Tick i)
-    : _name(n), event(tsunami, i), addr(0)
+TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, const vector<int> &t,
+                    bool bcd, Tick i)
+    : _name(n), event(tsunami, i), addr(0), year_is_bcd(bcd)
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
     stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
 
+    if (year_is_bcd) {
+        // The RTC uses BCD for the last two digits in the year.
+        // They python year is a full year.
+        int _year = t[0] % 100;
+        int tens = _year / 10;
+        int ones = _year % 10;
+
+        year = (tens << 4) + ones;
+    } else {
+        // Even though the datasheet says that the year field should be
+        // interpreted as BCD, we just enter the number of years since
+        // 1900 since linux seems to be happy with that (and I believe
+        // that Tru64 was as well)
+        year = t[0] - 1900;
+    }
+
+    mon = t[1];
+    mday = t[2];
+    hour = t[3];
+    min = t[4];
+    sec = t[5];
+
+    // wday is defined to be in the range from 1 - 7 with 1 being Sunday.
+    // the value coming from python is in the range from 0 - 6 with 0 being
+    // Monday.  Fix that here.
+    wday = t[6]  + 2;
+    if (wday > 7)
+        wday -= 7;
+
+    DPRINTFN("Real-time clock set to %s", getDateString());
+}
+
+std::string
+TsunamiIO::RTC::getDateString()
+{
     struct tm tm;
-    gmtime_r(&t, &tm);
 
-    sec = tm.tm_sec;
-    min = tm.tm_min;
-    hour = tm.tm_hour;
-    wday = tm.tm_wday + 1;
-    mday = tm.tm_mday;
-    mon = tm.tm_mon + 1;
-    year = tm.tm_year;
+    memset(&tm, 0, sizeof(tm));
 
-    DPRINTFN("Real-time clock set to %s", asctime(&tm));
+    if (year_is_bcd) {
+        // undo the BCD and conver to years since 1900 guessing that
+        // anything before 1970 is actually after 2000
+        int _year = (year >> 4) * 10 + (year & 0xf);
+        if (_year < 70)
+            _year += 100;
+
+        tm.tm_year = _year;
+    } else {
+        // number of years since 1900
+        tm.tm_year = year;
+    }
+
+    // unix is 0-11 for month
+    tm.tm_mon = mon - 1;
+    tm.tm_mday = mday;
+    tm.tm_hour = hour;
+    tm.tm_min = min;
+    tm.tm_sec = sec;
+
+    // to add more annoyance unix is 0 - 6 with 0 as sunday
+    tm.tm_wday = wday - 1;
+
+    return asctime(&tm);
 }
 
 void
@@ -424,7 +476,8 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
 
 TsunamiIO::TsunamiIO(Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(p->name + ".rtc", p->tsunami, p->init_time, p->frequency)
+      rtc(p->name + ".rtc", p->tsunami, p->init_time, p->year_is_bcd,
+          p->frequency)
 {
     pioSize = 0x100;
 
@@ -649,7 +702,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
     Param<Tick> frequency;
     SimObjectParam<Platform *> platform;
     SimObjectParam<System *> system;
-    Param<time_t> time;
+    VectorParam<int> time;
+    Param<bool> year_is_bcd;
     SimObjectParam<Tsunami *> tsunami;
 
 END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
@@ -662,6 +716,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object"),
     INIT_PARAM(time, "System time to use (0 for actual time"),
+    INIT_PARAM(year_is_bcd, ""),
     INIT_PARAM(tsunami, "Tsunami")
 
 END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
@@ -676,6 +731,7 @@ CREATE_SIM_OBJECT(TsunamiIO)
     p->platform = platform;
     p->system = system;
     p->init_time = time;
+    p->year_is_bcd = year_is_bcd;
     p->tsunami = tsunami;
     return new TsunamiIO(p);
 }
