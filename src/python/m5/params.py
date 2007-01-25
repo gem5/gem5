@@ -518,49 +518,55 @@ class EthernetAddr(ParamValue):
         else:
             return self.value
 
-def parse_time(value):
-    strings = [ "%a %b %d %H:%M:%S %Z %Y",
-                "%a %b %d %H:%M:%S %Z %Y",
-                "%Y/%m/%d %H:%M:%S",
-                "%Y/%m/%d %H:%M",
-                "%Y/%m/%d",
-                "%m/%d/%Y %H:%M:%S",
-                "%m/%d/%Y %H:%M",
-                "%m/%d/%Y",
-                "%m/%d/%y %H:%M:%S",
-                "%m/%d/%y %H:%M",
-                "%m/%d/%y"]
+time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
+                 "%a %b %d %H:%M:%S %Z %Y",
+                 "%Y/%m/%d %H:%M:%S",
+                 "%Y/%m/%d %H:%M",
+                 "%Y/%m/%d",
+                 "%m/%d/%Y %H:%M:%S",
+                 "%m/%d/%Y %H:%M",
+                 "%m/%d/%Y",
+                 "%m/%d/%y %H:%M:%S",
+                 "%m/%d/%y %H:%M",
+                 "%m/%d/%y"]
 
-    for string in strings:
-        try:
-            return time.strptime(value, string)
-        except ValueError:
-            pass
+
+def parse_time(value):
+    from time import gmtime, strptime, struct_time, time
+    from datetime import datetime, date
+
+    if isinstance(value, struct_time):
+        return value
+
+    if isinstance(value, (int, long)):
+        return gmtime(value)
+
+    if isinstance(value, (datetime, date)):
+        return value.timetuple()
+
+    if isinstance(value, str):
+        if value in ('Now', 'Today'):
+            return time.gmtime(time.time())
+
+        for format in time_formats:
+            try:
+                return strptime(value, format)
+            except ValueError:
+                pass
 
     raise ValueError, "Could not parse '%s' as a time" % value
 
 class Time(ParamValue):
     cxx_type = 'time_t'
     def __init__(self, value):
-        if isinstance(value, time.struct_time):
-            self.value = time.mktime(value)
-        elif isinstance(value, int):
-            self.value = value
-        elif isinstance(value, str):
-            if value in ('Now', 'Today'):
-                self.value = time.time()
-            else:
-                self.value = time.mktime(parse_time(value))
-        elif isinstance(value, (datetime.datetime, datetime.date)):
-            self.value = time.mktime(value.timetuple())
-        else:
-            raise ValueError, "Could not parse '%s' as a time" % value
+        self.value = parse_time(value)
 
     def __str__(self):
-        return str(int(self.value))
+        tm = self.value
+        return ' '.join([ str(tm[i]) for i in xrange(8)])
 
     def ini_str(self):
-        return str(int(self.value))
+        return str(self)
 
 # Enumerated types are a little more complex.  The user specifies the
 # type as Enum(foo) where foo is either a list or dictionary of

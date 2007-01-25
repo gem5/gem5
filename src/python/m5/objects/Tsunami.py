@@ -13,8 +13,10 @@ class TsunamiCChip(BasicPioDevice):
 
 class TsunamiIO(BasicPioDevice):
     type = 'TsunamiIO'
-    time = Param.Time('01/01/2009',
+    time = Param.Time('01/01/2006',
         "System time to use ('Now' for actual time)")
+    year_is_bcd = Param.Bool(False,
+        "The RTC should interpret the year as a BCD value")
     tsunami = Param.Tsunami(Parent.any, "Tsunami")
     frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 
