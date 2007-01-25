@@ -156,14 +156,16 @@ decode OPCODE_HI default Unknown::unknown() {
                 format HiLoOp {
                     0x0: mult({{ int64_t val = Rs.sd * Rt.sd; }});
                     0x1: multu({{ uint64_t val = Rs.ud * Rt.ud; }});
-                    0x2: div({{ int64_t val;
+                    0x2: div({{ //Initialized to placate g++
+                                int64_t val = 0;
                                 if (Rt.sd != 0) {
                                     int64_t hi = Rs.sd % Rt.sd;
                                     int64_t lo = Rs.sd / Rt.sd;
                                     val = (hi << 32) | lo;
                                 }
                              }});
-                    0x3: divu({{ uint64_t val;
+                    0x3: divu({{ //Initialized to placate g++
+                                 uint64_t val = 0;
                                  if (Rt.ud != 0) {
                                      uint64_t hi = Rs.ud % Rt.ud;
                                      uint64_t lo = Rs.ud / Rt.ud;
