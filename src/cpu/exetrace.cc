@@ -342,6 +342,9 @@ Trace::InstRecord::dump(ostream &outs)
             while (!compared) {
                 if (shared_data->flags == OWN_M5) {
                     m5Pc = PC & TheISA::PAddrImplMask;
+                    if (bits(shared_data->pstate,3,3)) {
+                        m5Pc &= mask(32);
+                    }
                     lgnPc = shared_data->pc & TheISA::PAddrImplMask;
                     if (lgnPc != m5Pc)
                        diffPC = true;
