@@ -186,7 +186,7 @@ decode OP default Unknown::unknown()
                 Y = Rd<63:32>;
             }});
             0x0B: smul({{
-                Rd.sdw = Rs1.sdw<31:0> * Rs2_or_imm13<31:0>;
+                Rd.sdw = sext<32>(Rs1.sdw) * sext<32>(Rs2_or_imm13);
                 Y = Rd.sdw<63:32>;
             }});
             0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
@@ -209,10 +209,10 @@ decode OP default Unknown::unknown()
                 else
                 {
                     Rd.udw = ((int64_t)((Y << 32) | Rs1.sdw<31:0>)) / Rs2_or_imm13.sdw;
-                    if(Rd.udw<63:31> != 0)
+                    if((int64_t)Rd.udw >= std::numeric_limits<int32_t>::max())
                         Rd.udw = 0x7FFFFFFF;
-                    else if(Rd.udw<63:> && Rd.udw<62:31> != 0xFFFFFFFF)
-                        Rd.udw = 0xFFFFFFFF80000000ULL;
+                    else if((int64_t)Rd.udw <= std::numeric_limits<int32_t>::min())
+                        Rd.udw = ULL(0xFFFFFFFF80000000);
                 }
             }});
         }
@@ -257,7 +257,7 @@ decode OP default Unknown::unknown()
                 {{0}},{{0}},{{0}},{{0}});
             0x1B: smulcc({{
                 int64_t resTemp;
-                Rd = resTemp = Rs1.sdw<31:0> * Rs2_or_imm13.sdw<31:0>;
+                Rd = resTemp = sext<32>(Rs1.sdw) * sext<32>(Rs2_or_imm13);
                 Y = resTemp<63:32>;}},
                 {{0}},{{0}},{{0}},{{0}});
             0x1C: subccc({{
@@ -296,10 +296,10 @@ decode OP default Unknown::unknown()
                 else
                 {
                     Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
-                    overflow = (Rd<63:31> != 0);
-                    underflow = (Rd<63:> && Rd<62:31> != 0xFFFFFFFF);
+                    overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
+                    underflow = ((int64_t)Rd <= std::numeric_limits<int32_t>::min());
                     if(overflow) Rd = 0x7FFFFFFF;
-                    else if(underflow) Rd = 0xFFFFFFFF80000000ULL;
+                    else if(underflow) Rd = ULL(0xFFFFFFFF80000000);
                 } }},
                 {{0}},
                 {{overflow || underflow}},
@@ -376,7 +376,7 @@ decode OP default Unknown::unknown()
                 0x1: srax({{Rd = Rs1.sdw >> (I ? SHCNT64 : Rs2<5:0>);}});
             }
             0x28: decode RS1 {
-                0x00: NoPriv::rdy({{Rd = Y;}});
+                0x00: NoPriv::rdy({{Rd = Y<31:0>;}});
                 //1 should cause an illegal instruction exception
                 0x02: NoPriv::rdccr({{Rd = Ccr;}});
                 0x03: NoPriv::rdasi({{Rd = Asi;}});
@@ -526,7 +526,7 @@ decode OP default Unknown::unknown()
                 0x7: movrge({{Rd = (Rs1.sdw >= 0) ? Rs2_or_imm10 : Rd;}});
             }
             0x30: decode RD {
-                0x00: NoPriv::wry({{Y = Rs1 ^ Rs2_or_imm13;}});
+                0x00: NoPriv::wry({{Y = (Rs1 ^ Rs2_or_imm13)<31:0>;}});
                 //0x01 should cause an illegal instruction exception
                 0x02: NoPriv::wrccr({{Ccr = Rs1 ^ Rs2_or_imm13;}});
                 0x03: NoPriv::wrasi({{Asi = Rs1 ^ Rs2_or_imm13;}});
@@ -882,7 +882,7 @@ decode OP default Unknown::unknown()
                 else
                 {
                     if (Pstate<3:>)
-                        (Rd = xc->readPC())<31:0>;
+                        Rd = (xc->readPC())<31:0>;
                     else
                         Rd = xc->readPC();
                     NNPC = target;
@@ -1058,13 +1058,14 @@ decode OP default Unknown::unknown()
             0x0B: ldx({{Rd = (int64_t)Mem.sdw;}});
         }
         0x0D: LoadStore::ldstub(
-        {{Rd = Mem.ub;}},
-        {{Mem.ub = 0xFF;}});
+        {{uReg0 = Mem.ub;}},
+        {{Rd.ub = uReg0;
+          Mem.ub = 0xFF;}});
         0x0E: Store::stx({{Mem.udw = Rd}});
         0x0F: LoadStore::swap(
-            {{uReg0 = Rd.uw;
-            Rd.uw = Mem.uw;}},
-            {{Mem.uw = uReg0;}});
+            {{ uReg0 = Mem.uw}},
+            {{ Mem.uw = Rd.uw;
+               Rd.uw = uReg0;}});
         format LoadAlt {
             0x10: lduwa({{Rd = Mem.uw;}}, {{EXT_ASI}});
             0x11: lduba({{Rd = Mem.ub;}}, {{EXT_ASI}});
@@ -1072,34 +1073,34 @@ decode OP default Unknown::unknown()
             0x13: decode EXT_ASI {
                 //ASI_LDTD_AIUP
                 0x22: TwinLoad::ldtx_aiup(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTD_AIUS
                 0x23: TwinLoad::ldtx_aius(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_QUAD_LDD
                 0x24: TwinLoad::ldtx_quad_ldd(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTX_REAL
                 0x26: TwinLoad::ldtx_real(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                //ASI_LDTX_N
                0x27: TwinLoad::ldtx_n(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                //ASI_LDTX_L
                0x2C: TwinLoad::ldtx_l(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTX_REAL_L
                 0x2E: TwinLoad::ldtx_real_l(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTX_N_L
                 0x2F: TwinLoad::ldtx_n_l(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTX_P
                 0xE2: TwinLoad::ldtx_p(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 //ASI_LDTX_S
                 0xE3: TwinLoad::ldtx_s(
-                    {{RdTwin.udw = Mem.udw}}, {{EXT_ASI}});
+                    {{RdTwin.udw = Mem.udw;}}, {{EXT_ASI}});
                 default: ldtwa({{
                         uint64_t val = Mem.udw;
                         RdLow = val<31:0>;
@@ -1120,13 +1121,14 @@ decode OP default Unknown::unknown()
             0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}}, {{EXT_ASI}});
         }
         0x1D: LoadStoreAlt::ldstuba(
-                {{Rd = Mem.ub;}},
-                {{Mem.ub = 0xFF}}, {{EXT_ASI}});
+                {{uReg0 = Mem.ub;}},
+                {{Rd.ub = uReg0;
+                  Mem.ub = 0xFF;}}, {{EXT_ASI}});
         0x1E: StoreAlt::stxa({{Mem.udw = Rd}}, {{EXT_ASI}});
         0x1F: LoadStoreAlt::swapa(
-            {{uReg0 = Rd.uw;
-            Rd.uw = Mem.uw;}},
-            {{Mem.uw = uReg0;}}, {{EXT_ASI}});
+            {{ uReg0 = Mem.uw}},
+            {{ Mem.uw = Rd.uw;
+               Rd.uw = uReg0;}}, {{EXT_ASI}});
         format Trap {
             0x20: Load::ldf({{Frd.uw = Mem.uw;}});
             0x21: decode X {

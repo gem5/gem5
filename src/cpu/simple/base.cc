@@ -439,6 +439,8 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         fault->invoke(tc);
+        thread->setMicroPC(0);
+        thread->setNextMicroPC(1);
     } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst->isLastMicroOp()) {

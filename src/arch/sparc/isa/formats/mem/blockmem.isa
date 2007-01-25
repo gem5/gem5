@@ -476,7 +476,6 @@ let {{
             faultCode = ''
         return (header_output, decoder_output, exec_output, decode_block)
 
-
     def doTwinLoadFormat(code, faultCode, name, Name, asi, opt_flags):
         addrCalcReg = 'EA = Rs1 + Rs2 + offset;'
         addrCalcImm = 'EA = Rs1 + imm + offset;'
@@ -492,10 +491,11 @@ let {{
             pcedCode = ''
             if (microPc == 1):
                 flag_code = "flags[IsLastMicroOp] = true;"
-                pcedCode = matcher.sub("RdHigh", code)
+                pcedCode = "RdLow = uReg0;\n"
+                pcedCode += matcher.sub("RdHigh", code)
             else:
                 flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroOp] = true;"
-                pcedCode = matcher.sub("RdLow", code)
+                pcedCode = matcher.sub("uReg0", code)
             iop = InstObjParams(name, Name, 'TwinMem', pcedCode,
                     opt_flags, {"ea_code": addrCalcReg,
                     "fault_check": faultCode, "micro_pc": microPc,

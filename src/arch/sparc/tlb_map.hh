@@ -135,6 +135,19 @@ class TlbMap
     {
         return tree.empty();
     }
+
+    void print()
+    {
+        iterator i;
+        i = tree.begin();
+        while (i != tree.end()) {
+           std::cout << std::hex << i->first.va << " " << i->first.size << " " <<
+                i->first.contextId << " " << i->first.partitionId << " " <<
+                i->first.real << " " << i->second << std::endl;
+            i++;
+        }
+    }
+
 };
 
 };

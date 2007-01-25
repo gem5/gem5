@@ -170,8 +170,8 @@ insertAllLocked:
     freeList.remove(new_entry);
     if (new_entry->valid && new_entry->used)
         usedEntries--;
-
-    lookupTable.erase(new_entry->range);
+    if (new_entry->valid)
+        lookupTable.erase(new_entry->range);
 
 
     DPRINTF(TLB, "Using entry: %#X\n", new_entry);
@@ -582,6 +582,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
 
+    if (lookupTable.size() != 64 - freeList.size())
+       panic("Lookup table size: %d tlb size: %d\n", lookupTable.size(),
+               freeList.size());
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
