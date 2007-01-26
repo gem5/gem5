@@ -48,7 +48,7 @@ namespace SparcISA
     std::string getIntRegName(RegIndex);
 
     const int NumIntArchRegs = 32;
-    const int NumIntRegs = MaxGL * 8 + NWindows * 16 + NumMicroIntRegs;
+    const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
     class IntRegFile
     {

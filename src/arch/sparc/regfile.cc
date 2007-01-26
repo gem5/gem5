@@ -157,6 +157,8 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
     int cwp = tc->readMiscReg(MISCREG_CWP);
     //DPRINTF(Sparc, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
     int newReg;
+    //The total number of global registers
+    int numGlobals = (MaxGL + 1) * 8;
     if(reg < 8)
     {
         //Global register
@@ -167,14 +169,14 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
     {
         //Regular windowed register
         //Put it in the window pointed to by cwp
-        newReg = MaxGL * 8 +
+        newReg = numGlobals +
             ((reg - 8 - cwp * 16 + NWindows * 16) % (NWindows * 16));
     }
     else if(reg < NumIntArchRegs + NumMicroIntRegs)
     {
         //Microcode register
         //Displace from the end of the regular registers
-        newReg = reg - NumIntArchRegs + MaxGL * 8 + NWindows * 16;
+        newReg = reg - NumIntArchRegs + numGlobals + NWindows * 16;
     }
     else if(reg < 2 * NumIntArchRegs + NumMicroIntRegs)
     {
@@ -189,7 +191,7 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
         {
             //Windowed register from the previous window
             //Put it in the window before the one pointed to by cwp
-            newReg = MaxGL * 8 +
+            newReg = numGlobals +
                 ((reg - 8 - (cwp - 1) * 16 + NWindows * 16) % (NWindows * 16));
         }
     }
@@ -206,7 +208,7 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
         {
             //Windowed register from the next window
             //Put it in the window after the one pointed to by cwp
-            newReg = MaxGL * 8 +
+            newReg = numGlobals +
                 ((reg - 8 - (cwp + 1) * 16 + NWindows * 16) % (NWindows * 16));
         }
     }
