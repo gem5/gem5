@@ -186,7 +186,7 @@ decode OP default Unknown::unknown()
                 Y = Rd<63:32>;
             }});
             0x0B: smul({{
-                Rd.sdw = sext<32>(Rs1.sdw) * sext<32>(Rs2_or_imm13);
+                Rd.sdw = sext<32>(Rs1.sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
                 Y = Rd.sdw<63:32>;
             }});
             0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
@@ -246,8 +246,7 @@ decode OP default Unknown::unknown()
                 Rd = resTemp = Rs1 + val2 + carryin;}},
                 {{(Rs1<31:0> + val2<31:0> + carryin)<32:>}},
                 {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                {{(Rs1<63:1> + val2<63:1> +
-                    ((Rs1 & val2) | (carryin & (Rs1 | val2)))<0:>)<63:>}},
+                {{((Rs1 & val2) | (~resTemp & (Rs1 | val2)))<63:>}},
                 {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
             );
             0x1A: umulcc({{
@@ -257,16 +256,16 @@ decode OP default Unknown::unknown()
                 {{0}},{{0}},{{0}},{{0}});
             0x1B: smulcc({{
                 int64_t resTemp;
-                Rd = resTemp = sext<32>(Rs1.sdw) * sext<32>(Rs2_or_imm13);
+                Rd = resTemp = sext<32>(Rs1.sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
                 Y = resTemp<63:32>;}},
                 {{0}},{{0}},{{0}},{{0}});
             0x1C: subccc({{
                 int64_t resTemp, val2 = Rs2_or_imm13;
                 int64_t carryin = Ccr<0:0>;
                 Rd = resTemp = Rs1 + ~val2 + 1 - carryin;}},
-                {{(~((Rs1<31:0> + (~(val2 + carryin))<31:0> + 1))<32:>)}},
+                {{((~Rs1 & val2) | (resTemp & (~Rs1 | val2)))<31:>}},
                 {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{(~((Rs1<63:1> + (~(val2 + carryin))<63:1>) + (Rs1<0:> + (~(val2+carryin))<0:> + 1)<63:1>))<63:>}},
+                {{((~Rs1 & val2) | (resTemp & (~Rs1 | val2)))<63:>}},
                 {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
             );
             0x1D: udivxcc({{
@@ -664,7 +663,7 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x03: Trap::fmovq({{fault = new FpDisabled;}});
+                    0x03: Trap::fmovq({{fault = new FpExceptionOther;}});
                     0x05: fnegs({{
                         Frds.uw = Frs2s.uw ^ (1UL << 31);
                         //fsr.ftt = fsr.cexc = 0
@@ -860,11 +859,11 @@ decode OP default Unknown::unknown()
                 0x72: Trap::fxnor({{fault = new IllegalInstruction;}});
                 0x73: Trap::fxnors({{fault = new IllegalInstruction;}});
                 0x74: BasicOperate::fsrc1({{Frd.udw = Frs1.udw;}});
-                0x75: BasicOperate::fsrc1s({{Frd.uw = Frs1.uw;}});
+                0x75: BasicOperate::fsrc1s({{Frds.uw = Frs1s.uw;}});
                 0x76: Trap::fornot2({{fault = new IllegalInstruction;}});
                 0x77: Trap::fornot2s({{fault = new IllegalInstruction;}});
                 0x78: BasicOperate::fsrc2({{Frd.udw = Frs2.udw;}});
-                0x79: BasicOperate::fsrc2s({{Frd.uw = Frs2.uw;}});
+                0x79: BasicOperate::fsrc2s({{Frds.uw = Frs2s.uw;}});
                 0x7A: Trap::fornot1({{fault = new IllegalInstruction;}});
                 0x7B: Trap::fornot1s({{fault = new IllegalInstruction;}});
                 0x7C: Trap::for({{fault = new IllegalInstruction;}});
@@ -1130,14 +1129,14 @@ decode OP default Unknown::unknown()
             {{ Mem.uw = Rd.uw;
                Rd.uw = uReg0;}}, {{EXT_ASI}});
         format Trap {
-            0x20: Load::ldf({{Frd.uw = Mem.uw;}});
+            0x20: Load::ldf({{Frds.uw = Mem.uw;}});
             0x21: decode X {
                 0x0: Load::ldfsr({{Fsr = Mem.uw | Fsr<63:32>;}});
                 0x1: Load::ldxfsr({{Fsr = Mem.udw;}});
             }
             0x22: ldqf({{fault = new FpDisabled;}});
             0x23: Load::lddf({{Frd.udw = Mem.udw;}});
-            0x24: Store::stf({{Mem.uw = Frd.uw;}});
+            0x24: Store::stf({{Mem.uw = Frds.uw;}});
             0x25: decode X {
                 0x0: Store::stfsr({{Mem.uw = Fsr<31:0>;}});
                 0x1: Store::stxfsr({{Mem.udw = Fsr;}});
@@ -1145,7 +1144,7 @@ decode OP default Unknown::unknown()
             0x26: stqf({{fault = new FpDisabled;}});
             0x27: Store::stdf({{Mem.udw = Frd.udw;}});
             0x2D: Nop::prefetch({{ }});
-            0x30: LoadAlt::ldfa({{Frd.uw = Mem.uw;}}, {{EXT_ASI}});
+            0x30: LoadAlt::ldfa({{Frds.uw = Mem.uw;}}, {{EXT_ASI}});
             0x32: ldqfa({{fault = new FpDisabled;}});
             format LoadAlt {
                 0x33: decode EXT_ASI {
@@ -1228,7 +1227,7 @@ decode OP default Unknown::unknown()
                         {{fault = new DataAccessException;}});
                 }
             }
-            0x34: Store::stfa({{Mem.uw = Frd.uw;}});
+            0x34: Store::stfa({{Mem.uw = Frds.uw;}});
             0x36: stqfa({{fault = new FpDisabled;}});
             format StoreAlt {
                 0x37: decode EXT_ASI {

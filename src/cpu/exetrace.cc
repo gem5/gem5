@@ -293,7 +293,8 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffPC   = false;
         bool diffCC   = false;
         bool diffInst = false;
-        bool diffRegs = false;
+        bool diffIntRegs = false;
+        bool diffFpRegs = false;
         bool diffTpc = false;
         bool diffTnpc = false;
         bool diffTstate = false;
@@ -357,10 +358,15 @@ Trace::InstRecord::dump(ostream &outs)
                     }
                     for (int i = 0; i < TheISA::NumIntArchRegs; i++) {
                         if (thread->readIntReg(i) != shared_data->intregs[i]) {
-                            diffRegs = true;
+                            diffIntRegs = true;
                         }
                     }
-                    uint64_t oldTl = thread->readMiscReg(MISCREG_TL);
+                    for (int i = 0; i < TheISA::NumFloatRegs/2; i++) {
+                        if (thread->readFloatRegBits(i,FloatRegFile::DoubleWidth) != shared_data->fpregs[i]) {
+                            diffFpRegs = true;
+                        }
+                    }
+                            uint64_t oldTl = thread->readMiscReg(MISCREG_TL);
                     if (oldTl != shared_data->tl)
                         diffTl = true;
                     for (int i = 1; i <= MaxTL; i++) {
@@ -426,12 +432,12 @@ Trace::InstRecord::dump(ostream &outs)
                                 diffTlb = true;
                     }
 
-                    if ((diffPC || diffCC || diffInst || diffRegs || diffTpc ||
-                            diffTnpc || diffTstate || diffTt || diffHpstate ||
-                            diffHtstate || diffHtba || diffPstate || diffY ||
-                            diffCcr || diffTl || diffGl || diffAsi || diffPil ||
-                            diffCwp || diffCansave || diffCanrestore ||
-                            diffOtherwin || diffCleanwin || diffTlb)
+                    if ((diffPC || diffCC || diffInst || diffIntRegs ||
+                         diffFpRegs || diffTpc || diffTnpc || diffTstate ||
+                         diffTt || diffHpstate || diffHtstate || diffHtba ||
+                         diffPstate || diffY || diffCcr || diffTl || diffGl ||
+                         diffAsi || diffPil || diffCwp || diffCansave ||
+                         diffCanrestore || diffOtherwin || diffCleanwin || diffTlb)
                         && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)
                         && !(((staticInst->machInst & 0xC0000000) == 0xC0000000)
                             && shared_data->tl == thread->readMiscReg(MISCREG_TL) + 1)
@@ -444,8 +450,10 @@ Trace::InstRecord::dump(ostream &outs)
                             outs << " [CC]";
                         if (diffInst)
                             outs << " [Instruction]";
-                        if (diffRegs)
+                        if (diffIntRegs)
                             outs << " [IntRegs]";
+                        if (diffFpRegs)
+                            outs << " [FpRegs]";
                         if (diffTpc)
                             outs << " [Tpc]";
                         if (diffTnpc)
@@ -588,26 +596,22 @@ Trace::InstRecord::dump(ostream &outs)
 
                         printSectionHeader(outs, "General Purpose Registers");
                         static const char * regtypes[4] = {"%g", "%o", "%l", "%i"};
-                        for(int y = 0; y < 4; y++)
-                        {
-                            for(int x = 0; x < 8; x++)
-                            {
+                        for(int y = 0; y < 4; y++) {
+                            for(int x = 0; x < 8; x++) {
                                 char label[8];
                                 sprintf(label, "%s%d", regtypes[y], x);
                                 printRegPair(outs, label,
                                         thread->readIntReg(y*8+x),
                                         shared_data->intregs[y*8+x]);
-                                /*outs << regtypes[y] << x << "         " ;
-                                outs <<  "0x" << hex << setw(16)
-                                    << thread->readIntReg(y*8+x);
-                                if (thread->readIntReg(y*8 + x)
-                                        != shared_data->intregs[y*8+x])
-                                    outs << "     X     ";
-                                else
-                                    outs << "     |     ";
-                                outs << "0x" << setw(16) << hex
-                                    << shared_data->intregs[y*8+x]
-                                    << endl;*/
+                            }
+                        }
+                        if (diffFpRegs) {
+                            for (int x = 0; x < 32; x++) {
+                                char label[8];
+                                sprintf(label, "%%f%d", x);
+                                printRegPair(outs, label,
+                                 thread->readFloatRegBits(x,FloatRegFile::DoubleWidth),
+                                 shared_data->fpregs[x]);
                             }
                         }
                         if (diffTlb) {
