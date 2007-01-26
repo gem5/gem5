@@ -1,31 +1,31 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1254169                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 199988                       # Number of bytes of host memory used
-host_seconds                                    49.27                       # Real time elapsed on the host
-host_tick_rate                               73765213                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1452138                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 239532                       # Number of bytes of host memory used
+host_seconds                                    42.57                       # Real time elapsed on the host
+host_tick_rate                               85380734                       # Simulator tick rate (ticks/s)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-sim_insts                                    61788439                       # Number of instructions simulated
-sim_seconds                                  1.817090                       # Number of seconds simulated
-sim_ticks                                  3634179176                       # Number of ticks simulated
+sim_insts                                    61811715                       # Number of instructions simulated
+sim_seconds                                  1.817169                       # Number of seconds simulated
+sim_ticks                                  3634338452                       # Number of ticks simulated
 system.cpu.dtb.accesses                       1304494                       # DTB accesses
 system.cpu.dtb.acv                                367                       # DTB access violations
-system.cpu.dtb.hits                          16552094                       # DTB hits
+system.cpu.dtb.hits                          16556949                       # DTB hits
 system.cpu.dtb.misses                           11425                       # DTB misses
 system.cpu.dtb.read_accesses                   900425                       # DTB read accesses
 system.cpu.dtb.read_acv                           210                       # DTB read access violations
-system.cpu.dtb.read_hits                     10038384                       # DTB read hits
+system.cpu.dtb.read_hits                     10041919                       # DTB read hits
 system.cpu.dtb.read_misses                      10280                       # DTB read misses
 system.cpu.dtb.write_accesses                  404069                       # DTB write accesses
 system.cpu.dtb.write_acv                          157                       # DTB write access violations
-system.cpu.dtb.write_hits                     6513710                       # DTB write hits
+system.cpu.dtb.write_hits                     6515030                       # DTB write hits
 system.cpu.dtb.write_misses                      1145                       # DTB write misses
-system.cpu.idle_fraction                     0.982997                       # Percentage of idle cycles
-system.cpu.itb.accesses                       5655311                       # ITB accesses
+system.cpu.idle_fraction                     0.982991                       # Percentage of idle cycles
+system.cpu.itb.accesses                       5655354                       # ITB accesses
 system.cpu.itb.acv                                184                       # ITB acv
-system.cpu.itb.hits                           5650321                       # ITB hits
+system.cpu.itb.hits                           5650364                       # ITB hits
 system.cpu.itb.misses                            4990                       # ITB misses
-system.cpu.kern.callpal                        193842                       # number of callpals executed
+system.cpu.kern.callpal                        193847                       # number of callpals executed
 system.cpu.kern.callpal_cserve                      1      0.00%      0.00% # number of callpals executed
 system.cpu.kern.callpal_wrmces                      1      0.00%      0.00% # number of callpals executed
 system.cpu.kern.callpal_wrfen                       1      0.00%      0.00% # number of callpals executed
@@ -33,7 +33,7 @@ system.cpu.kern.callpal_wrvptptr                    1      0.00%      0.00% # nu
 system.cpu.kern.callpal_swpctx                   4203      2.17%      2.17% # number of callpals executed
 system.cpu.kern.callpal_tbi                        54      0.03%      2.20% # number of callpals executed
 system.cpu.kern.callpal_wrent                       7      0.00%      2.20% # number of callpals executed
-system.cpu.kern.callpal_swpipl                 176751     91.18%     93.38% # number of callpals executed
+system.cpu.kern.callpal_swpipl                 176756     91.18%     93.38% # number of callpals executed
 system.cpu.kern.callpal_rdps                     6881      3.55%     96.93% # number of callpals executed
 system.cpu.kern.callpal_wrkgp                       1      0.00%     96.94% # number of callpals executed
 system.cpu.kern.callpal_wrusp                       7      0.00%     96.94% # number of callpals executed
@@ -43,41 +43,41 @@ system.cpu.kern.callpal_rti                      5211      2.69%     99.63% # nu
 system.cpu.kern.callpal_callsys                   531      0.27%     99.91% # number of callpals executed
 system.cpu.kern.callpal_imb                       181      0.09%    100.00% # number of callpals executed
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
-system.cpu.kern.inst.hwrei                     212908                       # number of hwrei instructions executed
-system.cpu.kern.inst.quiesce                     6207                       # number of quiesce instructions executed
-system.cpu.kern.ipl_count                      184061                       # number of times we switched to this ipl
-system.cpu.kern.ipl_count_0                     75348     40.94%     40.94% # number of times we switched to this ipl
+system.cpu.kern.inst.hwrei                     212913                       # number of hwrei instructions executed
+system.cpu.kern.inst.quiesce                     6275                       # number of quiesce instructions executed
+system.cpu.kern.ipl_count                      184066                       # number of times we switched to this ipl
+system.cpu.kern.ipl_count_0                     75351     40.94%     40.94% # number of times we switched to this ipl
 system.cpu.kern.ipl_count_21                      245      0.13%     41.07% # number of times we switched to this ipl
 system.cpu.kern.ipl_count_22                     1853      1.01%     42.08% # number of times we switched to this ipl
-system.cpu.kern.ipl_count_31                   106615     57.92%    100.00% # number of times we switched to this ipl
-system.cpu.kern.ipl_good                       150060                       # number of times we switched to this ipl from a different ipl
-system.cpu.kern.ipl_good_0                      73981     49.30%     49.30% # number of times we switched to this ipl from a different ipl
+system.cpu.kern.ipl_count_31                   106617     57.92%    100.00% # number of times we switched to this ipl
+system.cpu.kern.ipl_good                       150066                       # number of times we switched to this ipl from a different ipl
+system.cpu.kern.ipl_good_0                      73984     49.30%     49.30% # number of times we switched to this ipl from a different ipl
 system.cpu.kern.ipl_good_21                       245      0.16%     49.46% # number of times we switched to this ipl from a different ipl
 system.cpu.kern.ipl_good_22                      1853      1.23%     50.70% # number of times we switched to this ipl from a different ipl
-system.cpu.kern.ipl_good_31                     73981     49.30%    100.00% # number of times we switched to this ipl from a different ipl
-system.cpu.kern.ipl_ticks                  3634178761                       # number of cycles we spent at this ipl
-system.cpu.kern.ipl_ticks_0                3599646819     99.05%     99.05% # number of cycles we spent at this ipl
+system.cpu.kern.ipl_good_31                     73984     49.30%    100.00% # number of times we switched to this ipl from a different ipl
+system.cpu.kern.ipl_ticks                  3634338037                       # number of cycles we spent at this ipl
+system.cpu.kern.ipl_ticks_0                3599646965     99.05%     99.05% # number of cycles we spent at this ipl
 system.cpu.kern.ipl_ticks_21                    40474      0.00%     99.05% # number of cycles we spent at this ipl
-system.cpu.kern.ipl_ticks_22                   159358      0.00%     99.06% # number of cycles we spent at this ipl
-system.cpu.kern.ipl_ticks_31                 34332110      0.94%    100.00% # number of cycles we spent at this ipl
-system.cpu.kern.ipl_used                     0.815273                       # fraction of swpipl calls that actually changed the ipl
+system.cpu.kern.ipl_ticks_22                   159358      0.00%     99.05% # number of cycles we spent at this ipl
+system.cpu.kern.ipl_ticks_31                 34491240      0.95%    100.00% # number of cycles we spent at this ipl
+system.cpu.kern.ipl_used                     0.815284                       # fraction of swpipl calls that actually changed the ipl
 system.cpu.kern.ipl_used_0                   0.981858                       # fraction of swpipl calls that actually changed the ipl
 system.cpu.kern.ipl_used_21                         1                       # fraction of swpipl calls that actually changed the ipl
 system.cpu.kern.ipl_used_22                         1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu.kern.ipl_used_31                  0.693908                       # fraction of swpipl calls that actually changed the ipl
-system.cpu.kern.mode_good_kernel                 1938                      
-system.cpu.kern.mode_good_user                   1758                      
+system.cpu.kern.ipl_used_31                  0.693923                       # fraction of swpipl calls that actually changed the ipl
+system.cpu.kern.mode_good_kernel                 1937                      
+system.cpu.kern.mode_good_user                   1757                      
 system.cpu.kern.mode_good_idle                    180                      
 system.cpu.kern.mode_switch_kernel               5978                       # number of protection mode switches
-system.cpu.kern.mode_switch_user                 1758                       # number of protection mode switches
+system.cpu.kern.mode_switch_user                 1757                       # number of protection mode switches
 system.cpu.kern.mode_switch_idle                 2102                       # number of protection mode switches
-system.cpu.kern.mode_switch_good             0.393983                       # fraction of useful protection mode switches
-system.cpu.kern.mode_switch_good_kernel      0.324189                       # fraction of useful protection mode switches
+system.cpu.kern.mode_switch_good             0.393819                       # fraction of useful protection mode switches
+system.cpu.kern.mode_switch_good_kernel      0.324021                       # fraction of useful protection mode switches
 system.cpu.kern.mode_switch_good_user               1                       # fraction of useful protection mode switches
 system.cpu.kern.mode_switch_good_idle        0.085633                       # fraction of useful protection mode switches
-system.cpu.kern.mode_ticks_kernel            54682435      1.50%      1.50% # number of ticks spent at the given mode
-system.cpu.kern.mode_ticks_user               3591244      0.10%      1.60% # number of ticks spent at the given mode
-system.cpu.kern.mode_ticks_idle            3575905080     98.40%    100.00% # number of ticks spent at the given mode
+system.cpu.kern.mode_ticks_kernel            54841721      1.51%      1.51% # number of ticks spent at the given mode
+system.cpu.kern.mode_ticks_user               3591234      0.10%      1.61% # number of ticks spent at the given mode
+system.cpu.kern.mode_ticks_idle            3575905080     98.39%    100.00% # number of ticks spent at the given mode
 system.cpu.kern.swap_context                     4204                       # number of times the context was actually changed
 system.cpu.kern.syscall                           329                       # number of syscalls executed
 system.cpu.kern.syscall_2                           8      2.43%      2.43% # number of syscalls executed
@@ -110,10 +110,10 @@ system.cpu.kern.syscall_98                          2      0.61%     97.57% # nu
 system.cpu.kern.syscall_132                         4      1.22%     98.78% # number of syscalls executed
 system.cpu.kern.syscall_144                         2      0.61%     99.39% # number of syscalls executed
 system.cpu.kern.syscall_147                         2      0.61%    100.00% # number of syscalls executed
-system.cpu.not_idle_fraction                 0.017003                       # Percentage of non-idle cycles
-system.cpu.numCycles                         61793613                       # number of cpu cycles simulated
-system.cpu.num_insts                         61788439                       # Number of instructions executed
-system.cpu.num_refs                          16800623                       # Number of memory references
+system.cpu.not_idle_fraction                 0.017009                       # Percentage of non-idle cycles
+system.cpu.numCycles                         61816889                       # number of cpu cycles simulated
+system.cpu.num_insts                         61811715                       # Number of instructions executed
+system.cpu.num_refs                          16805478                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).
 system.disk0.dma_read_full_pages                    0                       # Number of full page size DMA reads (not PRD).
 system.disk0.dma_read_txs                           1                       # Number of DMA read transactions (not PRD).
@@ -131,7 +131,7 @@ system.tsunami.ethernet.coalescedRxIdle  <err: div-0>                       # av
 system.tsunami.ethernet.coalescedRxOk    <err: div-0>                       # average number of RxOk's coalesced into each post
 system.tsunami.ethernet.coalescedRxOrn   <err: div-0>                       # average number of RxOrn's coalesced into each post
 system.tsunami.ethernet.coalescedSwi     <err: div-0>                       # average number of Swi's coalesced into each post
-system.tsunami.ethernet.coalescedTotal   <err: div-0>                       # average number of interrupts coalesced into each post
+system.tsunami.ethernet.coalescedTotal       no value                       # average number of interrupts coalesced into each post
 system.tsunami.ethernet.coalescedTxDesc  <err: div-0>                       # average number of TxDesc's coalesced into each post
 system.tsunami.ethernet.coalescedTxIdle  <err: div-0>                       # average number of TxIdle's coalesced into each post
 system.tsunami.ethernet.coalescedTxOk    <err: div-0>                       # average number of TxOk's coalesced into each post
