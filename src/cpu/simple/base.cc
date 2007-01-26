@@ -311,12 +311,11 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts(tc)) {
+    if (check_interrupts(tc)) {
         Fault interrupt = interrupts.getInterrupt(tc);
 
         if (interrupt != NoFault) {
             interrupts.updateIntrInfo(tc);
-            checkInterrupts = false;
             interrupt->invoke(tc);
         }
     }

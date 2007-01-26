@@ -50,7 +50,6 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
       case MISCREG_SOFTINT_CLR:
         return setRegWithEffect(MISCREG_SOFTINT, ~val & softint, tc);
       case MISCREG_SOFTINT_SET:
-        tc->getCpuPtr()->checkInterrupts = true;
         tc->getCpuPtr()->post_interrupt(soft_interrupt);
         return setRegWithEffect(MISCREG_SOFTINT, val | softint, tc);
 
@@ -80,15 +79,9 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         break;
 
       case MISCREG_PSTATE:
-        if (val & PSTATE::ie && !(pstate & PSTATE::ie)) {
-            tc->getCpuPtr()->checkInterrupts = true;
-        }
         setReg(miscReg, val);
 
       case MISCREG_PIL:
-        if (val < pil) {
-            tc->getCpuPtr()->checkInterrupts = true;
-        }
         setReg(miscReg, val);
         break;
 
@@ -112,7 +105,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
         setReg(miscReg, val);
-        tc->getCpuPtr()->checkInterrupts = true;
+        //do something to post mondo interrupt
         break;
 
       case MISCREG_HSTICK_CMPR:
@@ -208,7 +201,6 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscReg(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
             tc->getCpuPtr()->post_interrupt(soft_interrupt);
-            tc->getCpuPtr()->checkInterrupts = true;
             setRegWithEffect(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else
@@ -232,7 +224,6 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
         if (!(tc->readMiscReg(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {
             setRegWithEffect(MISCREG_HINTP, 1, tc);
             tc->getCpuPtr()->post_interrupt(hstick_match);
-            tc->getCpuPtr()->checkInterrupts = true;
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else

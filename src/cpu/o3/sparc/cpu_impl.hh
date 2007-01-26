@@ -245,7 +245,6 @@ SparcO3CPU<Impl>::processInterrupts(Fault interrupt)
     this->interrupts.updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
-    this->checkInterrupts = false;
     this->trap(interrupt, 0);
 }
 

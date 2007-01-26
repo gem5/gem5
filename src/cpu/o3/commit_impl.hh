@@ -671,8 +671,7 @@ DefaultCommit<Impl>::commit()
         } else {
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
-    } else if (cpu->checkInterrupts &&
-        cpu->check_interrupts(cpu->tcBase(0)) &&
+    } else if (cpu->check_interrupts(cpu->tcBase(0)) &&
         commitStatus[0] != TrapPending &&
         !trapSquash[0] &&
         !tcSquash[0]) {
