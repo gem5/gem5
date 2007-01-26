@@ -105,7 +105,11 @@ Time::date(string format) const
     char buf[256];
 
     if (format.empty()) {
+#ifdef __SUNPRO_CC
+        ctime_r(&sec, buf, 256);
+#else
         ctime_r(&sec, buf);
+#endif
         buf[24] = '\0';
         return buf;
     }

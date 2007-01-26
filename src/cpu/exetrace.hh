@@ -32,6 +32,7 @@
 #ifndef __EXETRACE_HH__
 #define __EXETRACE_HH__
 
+#include <cstring>
 #include <fstream>
 #include <vector>
 
@@ -169,7 +170,7 @@ InstRecord::setRegs(const IntRegFile &regs)
     if (!iregs)
       iregs = new iRegFile;
 
-    memcpy(&iregs->regs, &regs, sizeof(IntRegFile));
+    std::memcpy(&iregs->regs, &regs, sizeof(IntRegFile));
     regs_valid = true;
 }
 

@@ -136,10 +136,10 @@ operator,(ArgList &alist, ArgListNull)
 inline void
 __cprintf(const std::string &format, ArgList &args)
 { args.dump(format); delete &args; }
-#define __cprintf__(format, args...) \
-    cp::__cprintf(format, (*(new cp::ArgList), args))
-#define cprintf(args...) \
-    __cprintf__(args, cp::ArgListNull())
+#define __cprintf__(format, ...) \
+    cp::__cprintf(format, (*(new cp::ArgList), __VA_ARGS__))
+#define cprintf(...) \
+    __cprintf__(__VA_ARGS__, cp::ArgListNull())
 
 //
 // ccprintf(stream, format, args, ...) prints to the specified stream
@@ -148,10 +148,10 @@ __cprintf(const std::string &format, ArgList &args)
 inline void
 __ccprintf(std::ostream &stream, const std::string &format, ArgList &args)
 { args.dump(stream, format); delete &args; }
-#define __ccprintf__(stream, format, args...) \
-    cp::__ccprintf(stream, format, (*(new cp::ArgList), args))
-#define ccprintf(stream, args...) \
-    __ccprintf__(stream, args, cp::ArgListNull())
+#define __ccprintf__(stream, format, ...) \
+    cp::__ccprintf(stream, format, (*(new cp::ArgList), __VA_ARGS__))
+#define ccprintf(stream, ...) \
+    __ccprintf__(stream, __VA_ARGS__, cp::ArgListNull())
 
 //
 // csprintf(format, args, ...) returns a string
@@ -160,10 +160,10 @@ __ccprintf(std::ostream &stream, const std::string &format, ArgList &args)
 inline std::string
 __csprintf(const std::string &format, ArgList &args)
 { std::string s = args.dumpToString(format); delete &args; return s; }
-#define __csprintf__(format, args...) \
-    cp::__csprintf(format, (*(new cp::ArgList), args))
-#define csprintf(args...) \
-    __csprintf__(args, cp::ArgListNull())
+#define __csprintf__(format, ...) \
+    cp::__csprintf(format, (*(new cp::ArgList), __VA_ARGS__))
+#define csprintf(...) \
+    __csprintf__(__VA_ARGS__, cp::ArgListNull())
 
 }
 

@@ -28,6 +28,8 @@
  * Authors: Kevin Lim
  */
 
+#include <cstring>
+
 #include "base/timebuf.hh"
 #include "cpu/activity.hh"
 
@@ -37,7 +39,7 @@ ActivityRecorder::ActivityRecorder(int num_stages, int longest_latency,
       activityCount(activity), numStages(num_stages)
 {
     stageActive = new bool[numStages];
-    memset(stageActive, 0, numStages);
+    std::memset(stageActive, 0, numStages);
 }
 
 void
@@ -114,7 +116,7 @@ void
 ActivityRecorder::reset()
 {
     activityCount = 0;
-    memset(stageActive, 0, numStages);
+    std::memset(stageActive, 0, numStages);
     for (int i = 0; i < longestLatency + 1; ++i)
         activityBuffer.advance();
 }

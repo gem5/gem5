@@ -33,6 +33,7 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
+#include <cstring>
 #include <vector>
 
 template <class T>
@@ -143,7 +144,7 @@ class TimeBuffer
         char *ptr = data;
         for (int i = 0; i < size; i++) {
             index[i] = ptr;
-            memset(ptr, 0, sizeof(T));
+            std::memset(ptr, 0, sizeof(T));
             new (ptr) T;
             ptr += sizeof(T);
         }
@@ -171,7 +172,7 @@ class TimeBuffer
         if (ptr >= size)
             ptr -= size;
         (reinterpret_cast<T *>(index[ptr]))->~T();
-        memset(index[ptr], 0, sizeof(T));
+        std::memset(index[ptr], 0, sizeof(T));
         new (index[ptr]) T;
     }
 

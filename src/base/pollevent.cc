@@ -30,7 +30,7 @@
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#if defined(__sun__)
+#if defined(__sun__) || defined(__SUNPRO_CC)
 #include <sys/file.h>
 #endif
 

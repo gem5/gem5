@@ -59,7 +59,7 @@ namespace m5 {
 //
 
 namespace __hash_namespace {
-#if !defined(__LP64__) && !defined(__alpha__)
+#if !defined(__LP64__) && !defined(__alpha__) && !defined(__SUNPRO_CC)
     template<>
     struct hash<uint64_t> {
         size_t operator()(uint64_t r) const {

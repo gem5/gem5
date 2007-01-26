@@ -36,6 +36,7 @@
 #ifndef __SPLIT_HH__
 #define __SPLIT_HH__
 
+#include <cstring>
 #include <list>
 
 #include "mem/cache/cache_blk.hh" // base class
@@ -234,6 +235,7 @@ class Split : public BaseTags
     int extractSet(Addr addr) const
     {
         panic("should never call this!\n");
+        M5_DUMMY_RETURN
     }
 
     /**
@@ -281,7 +283,7 @@ class Split : public BaseTags
      */
     void readData(SplitBlk *blk, uint8_t *data)
     {
-        memcpy(data, blk->data, blk->size);
+        std::memcpy(data, blk->data, blk->size);
     }
 
     /**

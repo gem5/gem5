@@ -57,6 +57,7 @@ Tick
 T1000::intrFrequency()
 {
     panic("Need implementation\n");
+    M5_DUMMY_RETURN
 }
 
 void
@@ -89,6 +90,7 @@ Addr
 T1000::pciToDma(Addr pciAddr) const
 {
     panic("Need implementation\n");
+    M5_DUMMY_RETURN
 }
 
 
@@ -96,6 +98,7 @@ Addr
 T1000::calcConfigAddr(int bus, int dev, int func)
 {
     panic("Need implementation\n");
+    M5_DUMMY_RETURN
 }
 
 void
