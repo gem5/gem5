@@ -96,7 +96,7 @@ CPUProgressEvent::description()
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p->name), clock(p->clock), instCnt(0), checkInterrupts(true),
+    : MemObject(p->name), clock(p->clock), instCnt(0),
       params(p), number_of_threads(p->numberOfThreads), system(p->system),
       phase(p->phase)
 #else
@@ -334,7 +334,6 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 
 #if FULL_SYSTEM
     interrupts = oldCPU->interrupts;
-    checkInterrupts = oldCPU->checkInterrupts;
 
     for (int i = 0; i < threadContexts.size(); ++i)
         threadContexts[i]->profileClear();
@@ -371,7 +370,6 @@ BaseCPU::post_interrupt(int int_type)
 void
 BaseCPU::post_interrupt(int int_num, int index)
 {
-    checkInterrupts = true;
     interrupts.post(int_num, index);
 }
 

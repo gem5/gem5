@@ -88,7 +88,6 @@ InorderBackEnd<Impl>::checkInterrupts()
     int ipl = 0;
     int summary = 0;
 
-    cpu->checkInterrupts = false;
 
     if (thread->readMiscReg(IPR_ASTRR))
         panic("asynchronous traps not implemented\n");
@@ -151,8 +150,7 @@ InorderBackEnd<Impl>::tick()
     // I'm waiting for it to drain.  (for now just squash)
 #if FULL_SYSTEM
     if (interruptBlocked ||
-        (cpu->checkInterrupts &&
-        cpu->check_interrupts(tc))) {
+        cpu->check_interrupts(tc)) {
         if (!robEmpty()) {
             interruptBlocked = true;
         //AlphaDep
