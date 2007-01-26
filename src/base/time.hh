@@ -97,7 +97,7 @@ std::ostream &operator<<(std::ostream &out, const Time &time);
  *	@(#)time.h	8.2 (Berkeley) 7/10/94
  */
 
-#if defined(__sun__)
+#if defined(__sun)
 #define timersub(tvp, uvp, vvp)                                         \
     do {                                                            \
             (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec; \

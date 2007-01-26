@@ -66,6 +66,7 @@
 # Python library imports
 import sys
 import os
+import subprocess
 from os.path import join as joinpath
 
 # Check for recent-enough Python and SCons versions.  If your system's
@@ -206,11 +207,36 @@ if False:
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : Dir('ext/ply') })
+env['GCC'] = False
+env['SUNCC'] = False
+env['GCC'] = subprocess.Popen(env['CXX'] + ' --version', shell=True, 
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+        close_fds=True).communicate()[0].find('GCC') >= 0
+env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+        close_fds=True).communicate()[0].find('Sun C++') >= 0
+if (env['GCC'] and env['SUNCC']):
+    print 'Error: How can we have both g++ and Sun C++ at the same time?'
+    Exit(1)
+
 
 # Set up default C++ compiler flags
-env.Append(CCFLAGS='-pipe')
-env.Append(CCFLAGS='-fno-strict-aliasing')
-env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+if env['GCC']:
+    env.Append(CCFLAGS='-pipe')
+    env.Append(CCFLAGS='-fno-strict-aliasing')
+    env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+elif env['SUNCC']:
+    env.Append(CCFLAGS='-Qoption ccfe')
+    env.Append(CCFLAGS='-features=gcc')
+    env.Append(CCFLAGS='-features=extensions')
+    env.Append(CCFLAGS='-library=stlport4')
+    env.Append(CCFLAGS='-xar')
+#    env.Append(CCFLAGS='-instances=semiexplicit')
+else:
+    print 'Error: Don\'t know what compiler options to use for your compiler.'
+    print '       Please fix SConstruct and try again.'
+    Exit(1)
+
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
@@ -293,7 +319,7 @@ if not conf.CheckLibWithHeader(None, 'sys/socket.h', 'C++', 'accept(0,0,0);'):
 
 # Check for zlib.  If the check passes, libz will be automatically
 # added to the LIBS environment variable.
-if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++'):
+if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
     print 'Error: did not find needed zlib compression library '\
           'and/or zlib.h header file.'
     print '       Please install zlib and try again.'

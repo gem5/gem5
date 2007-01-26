@@ -59,7 +59,7 @@ namespace SparcISA
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
         FP_Base_DepTag = 33,
-        Ctrl_Base_DepTag = 97,
+        Ctrl_Base_DepTag = 97
     };
 
     // semantically meaningful register indices

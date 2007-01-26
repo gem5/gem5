@@ -195,6 +195,7 @@ bool
 SparcSystem::breakpoint()
 {
     panic("Need to implement");
+    M5_DUMMY_RETURN
 }
 
 void

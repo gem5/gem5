@@ -102,7 +102,7 @@ Kluwer Academic, pages 291-310, March, 2000.
 
 #include "mem/dram.hh"
 #include "sim/builder.hh"
-
+#include <stdlib.h>
 #include <string>
 
 extern int maxThreadsPerCPU;
@@ -203,7 +203,7 @@ DRAMMemory::DRAMMemory(Params *p)
         last_bank = num_banks+1;
         last_row  = num_rows;
         busy_until = new Tick[num_banks];
-        memset(busy_until,0,sizeof(Tick)*num_banks); /* initiliaze */
+        std::memset(busy_until,0,sizeof(Tick)*num_banks); /* initiliaze */
 
 }
 

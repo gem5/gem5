@@ -35,7 +35,7 @@
 
 #if defined(linux)
 #include <endian.h>
-#elif defined(__sun__)
+#elif defined(__sun)
 #include <sys/isa_defs.h>
 #else
 #include <machine/endian.h>

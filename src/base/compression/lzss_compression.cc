@@ -32,8 +32,8 @@
  * LZSSCompression definitions.
  */
 
-#include <assert.h>
-
+#include <cassert>
+#include <cstring>
 #include "base/compression/lzss_compression.hh"
 
 #include "base/misc.hh" //for fatal
@@ -134,7 +134,7 @@ LZSSCompression::compress(uint8_t *dest, uint8_t *src, int size)
 
     if (dest_index >= size) {
         // Have expansion instead of compression, just copy.
-        memcpy(dest,src,size);
+        std::memcpy(dest,src,size);
         return size;
     }
     return dest_index;

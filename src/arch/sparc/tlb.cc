@@ -28,6 +28,8 @@
  * Authors: Ali Saidi
  */
 
+#include <cstring>
+
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/tlb.hh"
@@ -53,7 +55,7 @@ TLB::TLB(const std::string &name, int s)
         fatal("SPARC T1 TLB registers don't support more than 64 TLB entries.");
 
     tlb = new TlbEntry[size];
-    memset(tlb, 0, sizeof(TlbEntry) * size);
+    std::memset(tlb, 0, sizeof(TlbEntry) * size);
 
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
