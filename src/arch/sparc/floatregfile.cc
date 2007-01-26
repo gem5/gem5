@@ -72,16 +72,19 @@ FloatReg FloatRegFile::readReg(int floatReg, int width)
         float32_t result32;
         memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
         result = htog(result32);
+        DPRINTF(Sparc, "Read FP32 register %d = 0x%x\n", floatReg, result);
         break;
       case DoubleWidth:
         float64_t result64;
         memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
         result = htog(result64);
+        DPRINTF(Sparc, "Read FP64 register %d = 0x%x\n", floatReg, result);
         break;
       case QuadWidth:
         float128_t result128;
         memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
         result = htog(result128);
+        DPRINTF(Sparc, "Read FP128 register %d = 0x%x\n", floatReg, result);
         break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);
@@ -101,16 +104,19 @@ FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
         uint32_t result32;
         memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
         result = htog(result32);
+        DPRINTF(Sparc, "Read FP32 bits register %d = 0x%x\n", floatReg, result);
         break;
       case DoubleWidth:
         uint64_t result64;
         memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
         result = htog(result64);
+        DPRINTF(Sparc, "Read FP64 bits register %d = 0x%x\n", floatReg, result);
         break;
       case QuadWidth:
         uint64_t result128;
         memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
         result = htog(result128);
+        DPRINTF(Sparc, "Read FP128 bits register %d = 0x%x\n", floatReg, result);
         break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);

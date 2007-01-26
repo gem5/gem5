@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 
 #include <unistd.h>
 
-#define VERSION         0xA1000007
+#define VERSION         0xA1000008
 #define OWN_M5          0x000000AA
 #define OWN_LEGION      0x00000055
 
@@ -47,6 +47,7 @@ typedef struct {
     uint32_t instruction;
     uint32_t new_instruction;
     uint64_t intregs[32];
+    uint64_t fpregs[32];
 
     uint64_t tpc[8];
     uint64_t tnpc[8];
