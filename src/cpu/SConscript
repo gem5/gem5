@@ -54,18 +54,18 @@ execfile(models_db.srcnode().abspath)
 exec_sig_template = '''
 virtual Fault execute(%s *xc, Trace::InstRecord *traceData) const = 0;
 virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const
-{ panic("initiateAcc not defined!"); };
+{ panic("initiateAcc not defined!"); M5_DUMMY_RETURN };
 virtual Fault completeAcc(Packet *pkt, %s *xc,
                           Trace::InstRecord *traceData) const
-{ panic("completeAcc not defined!"); };
+{ panic("completeAcc not defined!"); M5_DUMMY_RETURN };
 '''
 
 mem_ini_sig_template = '''
-virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); };
+virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); M5_DUMMY_RETURN };
 '''
 
 mem_comp_sig_template = '''
-virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; };
+virtual Fault completeAcc(uint8_t *data, %s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); return NoFault; M5_DUMMY_RETURN };
 '''
 
 # Generate a temporary CPU list, including the CheckerCPU if

@@ -37,6 +37,8 @@
 #ifndef __DEV_PCIDEV_HH__
 #define __DEV_PCIDEV_HH__
 
+#include <cstring>
+
 #include "dev/io_device.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
@@ -62,8 +64,8 @@ class PciConfigData : public SimObject
     PciConfigData(const std::string &name)
         : SimObject(name)
     {
-        memset(config.data, 0, sizeof(config.data));
-        memset(BARSize, 0, sizeof(BARSize));
+        std::memset(config.data, 0, sizeof(config.data));
+        std::memset(BARSize, 0, sizeof(BARSize));
     }
 
     /** The first 64 bytes */

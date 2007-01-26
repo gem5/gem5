@@ -610,7 +610,7 @@ BaseRemoteGDB::trap(int type)
     uint64_t val;
     size_t datalen, len;
     char data[GDBPacketBufLen + 1];
-    char buffer[gdbregs.bytes() * 2 + 256];
+    char *buffer;
     const char *p;
     char command, subcmd;
     string var;
@@ -618,6 +618,8 @@ BaseRemoteGDB::trap(int type)
 
     if (!attached)
         return false;
+
+    buffer = (char*)malloc(gdbregs.bytes() * 2 + 256);
 
     DPRINTF(GDBMisc, "trap: PC=%#x NPC=%#x\n",
             context->readPC(), context->readNextPC());
@@ -916,6 +918,7 @@ BaseRemoteGDB::trap(int type)
     }
 
   out:
+    free(buffer);
     return true;
 }
 

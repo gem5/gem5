@@ -50,11 +50,13 @@ class NullCompression : public CompressionAlgorithm
     int uncompress(uint8_t * dest, uint8_t *src, int size)
     {
         fatal("Can't uncompress data");
+        M5_DUMMY_RETURN
     }
 
     int compress(uint8_t *dest, uint8_t *src, int size)
     {
         fatal("Can't compress data");
+        M5_DUMMY_RETURN
     }
 };
 

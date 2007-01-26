@@ -33,6 +33,8 @@
  * in legion. Any access is translated to an offset in the disk image.
  */
 
+#include <cstring>
+
 #include "base/trace.hh"
 #include "dev/sparc/mm_disk.hh"
 #include "dev/platform.hh"
@@ -45,7 +47,7 @@
 MmDisk::MmDisk(Params *p)
     : BasicPioDevice(p), image(p->image), curSector((uint64_t)-1), dirty(false)
 {
-    memset(&bytes, 0, SectorSize);
+    std::memset(&bytes, 0, SectorSize);
     pioSize = image->size() * SectorSize;
 }
 
@@ -99,6 +101,7 @@ Tick
 MmDisk::write(PacketPtr pkt)
 {
    panic("need to implement\n");
+   M5_DUMMY_RETURN
 }
 
 

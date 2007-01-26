@@ -36,6 +36,7 @@
 #ifndef __SPLIT_LIFO_HH__
 #define __SPLIT_LIFO_HH__
 
+#include <cstring>
 #include <list>
 
 #include "mem/cache/cache_blk.hh" // base class
@@ -296,7 +297,7 @@ public:
      */
     void readData(SplitBlk *blk, uint8_t *data)
     {
-        memcpy(data, blk->data, blk->size);
+        std::memcpy(data, blk->data, blk->size);
     }
 
     /**

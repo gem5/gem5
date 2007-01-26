@@ -33,7 +33,12 @@
 #define __MISC_HH__
 
 #include <assert.h>
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
+
+#if defined(__SUNPRO_CC)
+#define __FUNCTION__ "how to fix me?"
+#endif
 
 //
 // This implements a cprintf based panic() function.  panic() should
@@ -43,12 +48,13 @@
 //
 //
 void __panic(const std::string&, cp::ArgList &, const char*, const char*, int)
-    __attribute__((noreturn));
-#define __panic__(format, args...) \
-    __panic(format, (*(new cp::ArgList), args), \
-        __FUNCTION__, __FILE__, __LINE__)
-#define panic(args...) \
-    __panic__(args, cp::ArgListNull())
+    M5_ATTR_NORETURN;
+#define __panic__(format, ...) \
+    __panic(format, (*(new cp::ArgList), __VA_ARGS__), \
+        __FUNCTION__ , __FILE__, __LINE__)
+#define panic(...) \
+    __panic__(__VA_ARGS__, cp::ArgListNull())
+M5_PRAGMA_NORETURN(__panic)
 
 //
 // This implements a cprintf based fatal() function.  fatal() should
@@ -59,32 +65,33 @@ void __panic(const std::string&, cp::ArgList &, const char*, const char*, int)
 // panic() does.
 //
 void __fatal(const std::string&, cp::ArgList &, const char*, const char*, int)
-    __attribute__((noreturn));
-#define __fatal__(format, args...) \
-    __fatal(format, (*(new cp::ArgList), args), \
-        __FUNCTION__, __FILE__, __LINE__)
-#define fatal(args...) \
-    __fatal__(args, cp::ArgListNull())
+    M5_ATTR_NORETURN;
+#define __fatal__(format, ...) \
+    __fatal(format, (*(new cp::ArgList), __VA_ARGS__), \
+        __FUNCTION__ , __FILE__, __LINE__)
+#define fatal(...) \
+    __fatal__(__VA_ARGS__, cp::ArgListNull())
+M5_PRAGMA_NORETURN(__fatal)
 
 //
 // This implements a cprintf based warn
 //
 void __warn(const std::string&, cp::ArgList &, const char*, const char*, int);
-#define __warn__(format, args...) \
-    __warn(format, (*(new cp::ArgList), args), \
-           __FUNCTION__, __FILE__, __LINE__)
-#define warn(args...) \
-    __warn__(args, cp::ArgListNull())
+#define __warn__(format, ...) \
+    __warn(format, (*(new cp::ArgList), __VA_ARGS__), \
+           __FUNCTION__ , __FILE__, __LINE__)
+#define warn(...) \
+    __warn__(__VA_ARGS__, cp::ArgListNull())
 
 // Only print the warning message the first time it is seen.  This
 // doesn't check the warning string itself, it just only lets one
 // warning come from the statement. So, even if the arguments change
 // and that would have resulted in a different warning message,
 // subsequent messages would still be supressed.
-#define warn_once(args...) do {                     \
+#define warn_once(...) do {                     \
         static bool once = false;                   \
         if (!once) {                                \
-            __warn__(args, cp::ArgListNull());      \
+            __warn__(__VA_ARGS__, cp::ArgListNull());      \
             once = true;                            \
         }                                           \
     } while (0)

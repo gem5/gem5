@@ -691,8 +691,8 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(0x1F);
                     }});
                     0x0B: Trap::fabsq({{fault = new FpDisabled;}});
-                    0x29: fsqrts({{Frds.sf = sqrt(Frs2s.sf);}});
-                    0x2A: fsqrtd({{Frd.df = sqrt(Frs2.df);}});
+                    0x29: fsqrts({{Frds.sf = std::sqrt(Frs2s.sf);}});
+                    0x2A: fsqrtd({{Frd.df = std::sqrt(Frs2.df);}});
                     0x2B: Trap::fsqrtq({{fault = new FpDisabled;}});
                     0x41: fadds({{Frds.sf = Frs1s.sf + Frs2s.sf;}});
                     0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});

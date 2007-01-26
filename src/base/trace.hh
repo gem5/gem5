@@ -186,39 +186,39 @@ do { \
         Trace::dataDump(curTick, name(), data, count);	\
 } while (0)
 
-#define __dprintf(cycle, name, format, args...) \
-    Trace::dprintf(format, (*(new cp::ArgList), args), cycle, name)
+#define __dprintf(cycle, name, format, ...) \
+    Trace::dprintf(format, (*(new cp::ArgList), __VA_ARGS__), cycle, name)
 
-#define DPRINTF(x, args...) \
+#define DPRINTF(x, ...) \
 do { \
     if (Trace::IsOn(Trace::x)) \
-        __dprintf(curTick, name(), args, cp::ArgListNull()); \
+        __dprintf(curTick, name(), __VA_ARGS__, cp::ArgListNull()); \
 } while (0)
 
-#define DPRINTFR(x, args...) \
+#define DPRINTFR(x, ...) \
 do { \
     if (Trace::IsOn(Trace::x)) \
-        __dprintf((Tick)-1, std::string(), args, cp::ArgListNull());	\
+        __dprintf((Tick)-1, std::string(), __VA_ARGS__, cp::ArgListNull());	\
 } while (0)
 
-#define DPRINTFN(args...) \
+#define DPRINTFN(...) \
 do { \
-    __dprintf(curTick, name(), args, cp::ArgListNull()); \
+    __dprintf(curTick, name(), __VA_ARGS__, cp::ArgListNull()); \
 } while (0)
 
-#define DPRINTFNR(args...) \
+#define DPRINTFNR(...) \
 do { \
-    __dprintf((Tick)-1, string(), args, cp::ArgListNull()); \
+    __dprintf((Tick)-1, string(), __VA_ARGS__, cp::ArgListNull()); \
 } while (0)
 
 #else // !TRACING_ON
 
 #define DTRACE(x) (false)
 #define DCOUT(x) if (0) DebugOut()
-#define DPRINTF(x, args...) do {} while (0)
-#define DPRINTFR(args...) do {} while (0)
-#define DPRINTFN(args...) do {} while (0)
-#define DPRINTFNR(args...) do {} while (0)
+#define DPRINTF(x, ...) do {} while (0)
+#define DPRINTFR(...) do {} while (0)
+#define DPRINTFN(...) do {} while (0)
+#define DPRINTFNR(...) do {} while (0)
 #define DDUMP(x, data, count) do {} while (0)
 
 #endif	// TRACING_ON

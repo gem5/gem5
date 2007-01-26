@@ -62,6 +62,7 @@ Addr
 Platform::pciToDma(Addr pciAddr) const
 {
    panic("No PCI dma support in platform.");
+   M5_DUMMY_RETURN
 }
 
 void

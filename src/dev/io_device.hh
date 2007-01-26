@@ -109,7 +109,7 @@ class DmaPort : public Port
 
     virtual bool recvTiming(PacketPtr pkt);
     virtual Tick recvAtomic(PacketPtr pkt)
-    { panic("dma port shouldn't be used for pio access."); }
+    { panic("dma port shouldn't be used for pio access."); M5_DUMMY_RETURN }
     virtual void recvFunctional(PacketPtr pkt)
     { panic("dma port shouldn't be used for pio access."); }
 

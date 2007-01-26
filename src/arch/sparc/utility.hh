@@ -50,7 +50,7 @@ namespace SparcISA
 
     inline ExtMachInst
     makeExtMI(MachInst inst, ThreadContext * xc) {
-        ExtMachInst emi = (unsigned MachInst) inst;
+        ExtMachInst emi = (MachInst) inst;
         //The I bit, bit 13, is used to figure out where the ASI
         //should come from. Use that in the ExtMachInst. This is
         //slightly redundant, but it removes the need to put a condition
