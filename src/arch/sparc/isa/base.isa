@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -189,23 +189,149 @@ output decoder {{
             const int MaxOutput = 16;
             const int MaxLocal = 24;
             const int MaxInput = 32;
-            const int MaxMicroReg = 33;
-            if (reg == FramePointerReg)
-                ccprintf(os, "%%fp");
-            else if (reg == StackPointerReg)
-                ccprintf(os, "%%sp");
-            else if(reg < MaxGlobal)
-                ccprintf(os, "%%g%d", reg);
-            else if(reg < MaxOutput)
-                ccprintf(os, "%%o%d", reg - MaxGlobal);
-            else if(reg < MaxLocal)
-                ccprintf(os, "%%l%d", reg - MaxOutput);
-            else if(reg < MaxInput)
-                ccprintf(os, "%%i%d", reg - MaxLocal);
-            else if(reg < MaxMicroReg)
-                ccprintf(os, "%%u%d", reg - MaxInput);
-            else {
-                ccprintf(os, "%%f%d", reg - MaxMicroReg);
+            const int MaxMicroReg = 40;
+            if (reg < FP_Base_DepTag) {
+                //If we used a register from the next or previous window,
+                //take out the offset.
+                while (reg >= MaxMicroReg)
+                    reg -= MaxMicroReg;
+                if (reg == FramePointerReg)
+                    ccprintf(os, "%%fp");
+                else if (reg == StackPointerReg)
+                    ccprintf(os, "%%sp");
+                else if(reg < MaxGlobal)
+                    ccprintf(os, "%%g%d", reg);
+                else if(reg < MaxOutput)
+                    ccprintf(os, "%%o%d", reg - MaxGlobal);
+                else if(reg < MaxLocal)
+                    ccprintf(os, "%%l%d", reg - MaxOutput);
+                else if(reg < MaxInput)
+                    ccprintf(os, "%%i%d", reg - MaxLocal);
+                else if(reg < MaxMicroReg)
+                    ccprintf(os, "%%u%d", reg - MaxInput);
+                //The fake int regs that are really control regs
+                else {
+                    switch (reg - MaxMicroReg) {
+                      case 1:
+                        ccprintf(os, "%%y");
+                        break;
+                      case 2:
+                        ccprintf(os, "%%ccr");
+                        break;
+                      case 3:
+                        ccprintf(os, "%%cansave");
+                        break;
+                      case 4:
+                        ccprintf(os, "%%canrestore");
+                        break;
+                      case 5:
+                        ccprintf(os, "%%cleanwin");
+                        break;
+                      case 6:
+                        ccprintf(os, "%%otherwin");
+                        break;
+                      case 7:
+                        ccprintf(os, "%%wstate");
+                        break;
+                    }
+                }
+            } else if (reg < Ctrl_Base_DepTag) {
+                ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
+            } else {
+                switch (reg - Ctrl_Base_DepTag) {
+                  case MISCREG_ASI:
+                    ccprintf(os, "%%asi");
+                    break;
+                  case MISCREG_FPRS:
+                    ccprintf(os, "%%fprs");
+                    break;
+                  case MISCREG_PCR:
+                    ccprintf(os, "%%pcr");
+                    break;
+                  case MISCREG_PIC:
+                    ccprintf(os, "%%pic");
+                    break;
+                  case MISCREG_GSR:
+                    ccprintf(os, "%%gsr");
+                    break;
+                  case MISCREG_SOFTINT:
+                    ccprintf(os, "%%softint");
+                    break;
+                  case MISCREG_SOFTINT_SET:
+                    ccprintf(os, "%%softint_set");
+                    break;
+                  case MISCREG_SOFTINT_CLR:
+                    ccprintf(os, "%%softint_clr");
+                    break;
+                  case MISCREG_TICK_CMPR:
+                    ccprintf(os, "%%tick_cmpr");
+                    break;
+                  case MISCREG_STICK:
+                    ccprintf(os, "%%stick");
+                    break;
+                  case MISCREG_STICK_CMPR:
+                    ccprintf(os, "%%stick_cmpr");
+                    break;
+                  case MISCREG_TPC:
+                    ccprintf(os, "%%tpc");
+                    break;
+                  case MISCREG_TNPC:
+                    ccprintf(os, "%%tnpc");
+                    break;
+                  case MISCREG_TSTATE:
+                    ccprintf(os, "%%tstate");
+                    break;
+                  case MISCREG_TT:
+                    ccprintf(os, "%%tt");
+                    break;
+                  case MISCREG_TICK:
+                    ccprintf(os, "%%tick");
+                    break;
+                  case MISCREG_TBA:
+                    ccprintf(os, "%%tba");
+                    break;
+                  case MISCREG_PSTATE:
+                    ccprintf(os, "%%pstate");
+                    break;
+                  case MISCREG_TL:
+                    ccprintf(os, "%%tl");
+                    break;
+                  case MISCREG_PIL:
+                    ccprintf(os, "%%pil");
+                    break;
+                  case MISCREG_CWP:
+                    ccprintf(os, "%%cwp");
+                    break;
+                  case MISCREG_GL:
+                    ccprintf(os, "%%gl");
+                    break;
+                  case MISCREG_HPSTATE:
+                    ccprintf(os, "%%hpstate");
+                    break;
+                  case MISCREG_HTSTATE:
+                    ccprintf(os, "%%htstate");
+                    break;
+                  case MISCREG_HINTP:
+                    ccprintf(os, "%%hintp");
+                    break;
+                  case MISCREG_HTBA:
+                    ccprintf(os, "%%htba");
+                    break;
+                  case MISCREG_HSTICK_CMPR:
+                    ccprintf(os, "%%hstick_cmpr");
+                    break;
+                  case MISCREG_HVER:
+                    ccprintf(os, "%%hver");
+                    break;
+                  case MISCREG_STRAND_STS_REG:
+                    ccprintf(os, "%%strand_sts_reg");
+                    break;
+                  case MISCREG_FSR:
+                    ccprintf(os, "%%fsr");
+                    break;
+                  default:
+                    ccprintf(os, "%%ctrl%d", reg - Ctrl_Base_DepTag);
+                }
             }
         }
 
