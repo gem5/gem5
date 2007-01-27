@@ -174,8 +174,6 @@ insertAllLocked:
     lookupTable.erase(new_entry->range);
 
 
-    DPRINTF(TLB, "Using entry: %#X\n", new_entry);
-
     assert(PTE.valid());
     new_entry->range.va = va;
     new_entry->range.size = PTE.size() - 1;
@@ -285,7 +283,6 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
             usedEntries--;
         }
         freeList.push_front(i->second);
-        DPRINTF(TLB, "Freeing TLB entry : %#X\n", i->second);
         lookupTable.erase(i);
     }
 }
@@ -302,7 +299,6 @@ TLB::demapContext(int partition_id, int context_id)
             tlb[x].range.partitionId == partition_id) {
             if (tlb[x].valid == true) {
                 freeList.push_front(&tlb[x]);
-                DPRINTF(TLB, "Freeing TLB entry : %#X\n", &tlb[x]);
             }
             tlb[x].valid = false;
             if (tlb[x].used) {
@@ -324,7 +320,6 @@ TLB::demapAll(int partition_id)
         if (!tlb[x].pte.locked() && tlb[x].range.partitionId == partition_id) {
             if (tlb[x].valid == true){
                 freeList.push_front(&tlb[x]);
-                DPRINTF(TLB, "Freeing TLB entry : %#X\n", &tlb[x]);
             }
             tlb[x].valid = false;
             if (tlb[x].used) {
