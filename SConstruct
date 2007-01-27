@@ -219,7 +219,7 @@ env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True,
 env['ICC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
         close_fds=True).communicate()[0].find('Intel') >= 0
-if env['GCC'] + env['SUNCC'] env['ICC'] > 1:
+if env['GCC'] + env['SUNCC'] + env['ICC'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
 
