@@ -90,6 +90,7 @@ public:
                      PacketPtr &target)
     {
         fatal("Unimplemented");
+        M5_DUMMY_RETURN
     }
 
     /**
@@ -201,6 +202,7 @@ public:
     MSHR* allocateTargetList(Addr addr)
     {
         fatal("Unimplemented");
+        M5_DUMMY_RETURN
     }
 };
 

@@ -32,6 +32,7 @@
  * @file
  * Port object definitions.
  */
+#include <cstring>
 
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
@@ -78,7 +79,7 @@ Port::memsetBlob(Addr addr, uint8_t val, int size)
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];
 
-    memset(buf, val, size);
+    std::memset(buf, val, size);
     blobHelper(addr, buf, size, Packet::WriteReq);
 
     delete [] buf;

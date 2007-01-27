@@ -59,7 +59,7 @@ PhysicalMemory::PhysicalMemory(Params *p)
 
     int map_flags = MAP_ANON | MAP_PRIVATE;
     pmemAddr = (uint8_t *)mmap(NULL, params()->addrRange.size(), PROT_READ | PROT_WRITE,
-                                map_flags, -1, 0);
+            map_flags, -1, 0);
 
     if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
@@ -84,7 +84,7 @@ PhysicalMemory::init()
 PhysicalMemory::~PhysicalMemory()
 {
     if (pmemAddr)
-        munmap(pmemAddr, params()->addrRange.size());
+        munmap((char*)pmemAddr, params()->addrRange.size());
     //Remove memPorts?
 }
 
@@ -430,7 +430,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
     // unmap file that was mmaped in the constructor
     // This is done here to make sure that gzip and open don't muck with our
     // nice large space of memory before we reallocate it
-    munmap(pmemAddr, params()->addrRange.size());
+    munmap((char*)pmemAddr, params()->addrRange.size());
 
     pmemAddr = (uint8_t *)mmap(NULL, params()->addrRange.size(), PROT_READ | PROT_WRITE,
                                 MAP_ANON | MAP_PRIVATE, -1, 0);

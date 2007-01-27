@@ -85,6 +85,9 @@ class TsunamiIO : public BasicPioDevice
         /** Current RTC register address/index */
         int addr;
 
+        /** should the year be interpreted as BCD? */
+        bool year_is_bcd;
+
         /** Data for real-time clock function */
         union {
             uint8_t clock_data[10];
@@ -110,7 +113,8 @@ class TsunamiIO : public BasicPioDevice
         uint8_t stat_regB;
 
       public:
-        RTC(const std::string &name, Tsunami* tsunami, time_t t, Tick i);
+        RTC(const std::string &name, Tsunami* tsunami,
+            const std::vector<int> &t, bool bcd, Tick i);
 
         /** RTC address port: write address of RTC RAM data to access */
         void writeAddr(const uint8_t data);
@@ -120,6 +124,9 @@ class TsunamiIO : public BasicPioDevice
 
         /** RTC read data */
         uint8_t readData();
+
+        /** RTC get the date */
+        std::string getDateString();
 
         /**
           * Serialize this object to the given output stream.
@@ -313,8 +320,10 @@ class TsunamiIO : public BasicPioDevice
     {
         Tick frequency;
         Tsunami *tsunami;
-        time_t init_time;
+        std::vector<int> init_time;
+        bool year_is_bcd;
     };
+
   protected:
     const Params *params() const { return (const Params*)_params; }
 

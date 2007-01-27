@@ -101,7 +101,7 @@ ObjectFile::close()
     }
 
     if (fileData) {
-        ::munmap(fileData, len);
+        ::munmap((char*)fileData, len);
         fileData = NULL;
     }
 }
@@ -147,7 +147,7 @@ createObjectFile(const string &fname, bool raw)
 
     // don't know what it is
     close(fd);
-    munmap(fileData, len);
+    munmap((char*)fileData, len);
     return NULL;
 }
 

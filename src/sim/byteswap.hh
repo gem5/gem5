@@ -47,7 +47,7 @@
 // If one doesn't exist, we pretty much get what is listed below, so it all
 // works out
 #include <byteswap.h>
-#elif defined (__sun__)
+#elif defined (__sun)
 #include <sys/isa_defs.h>
 #else
 #include <machine/endian.h>

@@ -186,7 +186,8 @@ class BaseSimpleCPU : public BaseCPU
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
     void setEA(Addr EA) { panic("BaseSimpleCPU::setEA() not implemented\n"); }
-    Addr getEA() 	{ panic("BaseSimpleCPU::getEA() not implemented\n"); }
+    Addr getEA() 	{ panic("BaseSimpleCPU::getEA() not implemented\n");
+        M5_DUMMY_RETURN}
 
     void prefetch(Addr addr, unsigned flags)
     {

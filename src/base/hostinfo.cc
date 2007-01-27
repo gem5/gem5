@@ -33,6 +33,7 @@
 #include <math.h>
 #include <unistd.h>
 
+#include <stdio.h>
 #include <cstdlib>
 #include <cstring>
 #include <string>

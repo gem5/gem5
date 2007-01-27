@@ -94,8 +94,6 @@ AlphaISA::processInterrupts(CPU *cpu)
     int ipl = 0;
     int summary = 0;
 
-    cpu->checkInterrupts = false;
-
     if (cpu->readMiscReg(IPR_ASTRR))
         panic("asynchronous traps not implemented\n");
 
@@ -155,8 +153,6 @@ SimpleThread::hwrei()
     if (!misspeculating()) {
         if (kernelStats)
             kernelStats->hwrei();
-
-        cpu->checkInterrupts = true;
     }
 
     // FIXME: XXX check for interrupts? XXX

@@ -159,7 +159,7 @@ class Port
         this function to be called, a DMA interface doesn't really have a
         block size, so it is defaulted to a panic.
     */
-    virtual int deviceBlockSize() { panic("??"); }
+    virtual int deviceBlockSize() { panic("??"); M5_DUMMY_RETURN }
 
     /** The peer port is requesting us to reply with a list of the ranges we
         are responsible for.
@@ -261,8 +261,10 @@ class FunctionalPort : public Port
     {}
 
   protected:
-    virtual bool recvTiming(PacketPtr pkt) { panic("FuncPort is UniDir"); }
-    virtual Tick recvAtomic(PacketPtr pkt) { panic("FuncPort is UniDir"); }
+    virtual bool recvTiming(PacketPtr pkt) { panic("FuncPort is UniDir");
+        M5_DUMMY_RETURN }
+    virtual Tick recvAtomic(PacketPtr pkt) { panic("FuncPort is UniDir");
+        M5_DUMMY_RETURN }
     virtual void recvFunctional(PacketPtr pkt) { panic("FuncPort is UniDir"); }
     virtual void recvStatusChange(Status status) {}
 

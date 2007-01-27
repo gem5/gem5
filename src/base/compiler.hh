@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,39 +25,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
- *          Nathan Binkert
+ * Authors: Ali Saidi
  */
 
-#ifndef __BASE_COMPRESSION_NULL_COMPRESSION_HH__
-#define __BASE_COMPRESSION_NULL_COMPRESSION_HH__
+#ifndef __BASE_COMPILER_HH__
+#define __BASE_COMPILER_HH__
 
-/**
- * @file
- * This file defines a doNothing compression algorithm.
- */
+//http://msdn2.microsoft.com/en-us/library/ms937669.aspx
+//http://msdn2.microsoft.com/en-us/library/aa448724.aspx
+//http://docs.sun.com/source/819-3688/sun.specific.html#marker-998278
+//http://gcc.gnu.org/onlinedocs/gcc-3.3.1/gcc/Function-Attributes.html#Function%20Attributes
 
-#include "base/misc.hh" // for fatal()
-#include "base/compression/base.hh"
+#if defined(__GNUC__)
+#define M5_ATTR_NORETURN  __attribute__((noreturn))
+#define M5_PRAGMA_NORETURN(x)
+#define M5_DUMMY_RETURN
+#elif defined(__SUNPRO_CC)
+// this doesn't do anything with sun cc, but why not
+#define M5_ATTR_NORETURN  __sun_attr__((__noreturn__))
+#define M5_DUMMY_RETURN return (0);
+#define M5_PRAGMA_NORETURN(x) _Pragma("does_not_return(x)")
+#else
+#error "Need to define compiler options in base/compiler.hh"
+#endif
 
-
-/**
- * A dummy compression class to use when no data compression is desired.
- */
-class NullCompression : public CompressionAlgorithm
-{
-  public:
-    int uncompress(uint8_t * dest, uint8_t *src, int size)
-    {
-        fatal("Can't uncompress data");
-        M5_DUMMY_RETURN
-    }
-
-    int compress(uint8_t *dest, uint8_t *src, int size)
-    {
-        fatal("Can't compress data");
-        M5_DUMMY_RETURN
-    }
-};
-
-#endif //__BASE_COMPRESSION_NULL_COMPRESSION_HH__
+#endif // __BASE_COMPILER_HH__

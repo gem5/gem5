@@ -213,8 +213,6 @@ AlphaO3CPU<Impl>::hwrei(unsigned tid)
 
     this->thread[tid]->kernelStats->hwrei();
 
-    this->checkInterrupts = true;
-
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
 }
@@ -266,7 +264,6 @@ AlphaO3CPU<Impl>::processInterrupts(Fault interrupt)
     this->interrupts.updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
-    this->checkInterrupts = false;
     this->trap(interrupt, 0);
 }
 

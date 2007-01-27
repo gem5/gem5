@@ -311,12 +311,11 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (checkInterrupts && check_interrupts(tc)) {
+    if (check_interrupts(tc)) {
         Fault interrupt = interrupts.getInterrupt(tc);
 
         if (interrupt != NoFault) {
             interrupts.updateIntrInfo(tc);
-            checkInterrupts = false;
             interrupt->invoke(tc);
         }
     }
@@ -439,6 +438,8 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         fault->invoke(tc);
+        thread->setMicroPC(0);
+        thread->setNextMicroPC(1);
     } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst->isLastMicroOp()) {

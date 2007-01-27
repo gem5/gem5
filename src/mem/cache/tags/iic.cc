@@ -527,7 +527,7 @@ IIC::hash(Addr addr) const {
     tag = extractTag(addr);
     mask = hashSets-1; /* assumes iic_hash_size is a power of 2 */
     x = tag & mask;
-    y = (tag >> (int)(::log(hashSets)/::log(2))) & mask;
+    y = (tag >> (int)(::log((double)hashSets)/::log((double)2))) & mask;
     assert (x < hashSets && y < hashSets);
     return x ^ y;
 #endif

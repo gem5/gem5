@@ -36,7 +36,7 @@
  */
 
 #include <iostream>
-
+#include <cstring>
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/packet.hh"
@@ -183,7 +183,7 @@ fixPacket(PacketPtr func, PacketPtr timing)
     if (func->isRead()) {
         if (funcStart >= timingStart && funcEnd <= timingEnd) {
             func->allocate();
-            memcpy(func->getPtr<uint8_t>(), timing->getPtr<uint8_t>() +
+            std::memcpy(func->getPtr<uint8_t>(), timing->getPtr<uint8_t>() +
                     funcStart - timingStart, func->getSize());
             func->result = Packet::Success;
             func->flags |= SATISFIED;
@@ -199,11 +199,11 @@ fixPacket(PacketPtr func, PacketPtr timing)
         }
     } else if (func->isWrite()) {
         if (funcStart >= timingStart) {
-            memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
+            std::memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
                    func->getPtr<uint8_t>(),
                    (std::min(funcEnd, timingEnd) - funcStart) + 1);
         } else { // timingStart > funcStart
-            memcpy(timing->getPtr<uint8_t>(),
+            std::memcpy(timing->getPtr<uint8_t>(),
                    func->getPtr<uint8_t>() + (timingStart - funcStart),
                    (std::min(funcEnd, timingEnd) - timingStart) + 1);
         }

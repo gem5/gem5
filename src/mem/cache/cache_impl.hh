@@ -40,6 +40,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <cstring>
 #include <string>
 
 #include "sim/host.hh"
@@ -125,7 +126,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
                 assert(offset < blkSize);
                 assert(pkt->getSize() <= blkSize);
                 assert(offset+pkt->getSize() <= blkSize);
-                memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
+                std::memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
                        pkt->getSize());
             } else if (!(pkt->flags & SATISFIED)) {
                 pkt->flags |= SATISFIED;
@@ -133,7 +134,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
                 assert(offset < blkSize);
                 assert(pkt->getSize() <= blkSize);
                 assert(offset + pkt->getSize() <=blkSize);
-                memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
+                std::memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
                        pkt->getSize());
             }
             return blk;
@@ -176,7 +177,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
                 if (blk->checkWrite(pkt->req)) {
                     write_data = true;
                     blk->status |= BlkDirty;
-                    memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
+                    std::memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
                            pkt->getSize());
                 }
             } else {
@@ -184,7 +185,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
                 }
-                memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
+                std::memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
                        pkt->getSize());
             }
 
@@ -228,7 +229,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
 
 
     if (pkt->isRead()) {
-        memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
     }
 
         blk->whenReady = pkt->finishTime;
@@ -249,14 +250,14 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
             if (target->isWrite()) {
                 if (blk->checkWrite(pkt->req)) {
                     blk->status |= BlkDirty;
-                    memcpy(blk->data + target->getOffset(blkSize),
+                    std::memcpy(blk->data + target->getOffset(blkSize),
                            target->getPtr<uint8_t>(), target->getSize());
                 }
             } else {
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
                 }
-                memcpy(target->getPtr<uint8_t>(),
+                std::memcpy(target->getPtr<uint8_t>(),
                        blk->data + target->getOffset(blkSize),
                        target->getSize());
             }
@@ -285,7 +286,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
     blk = doReplacement(blk, pkt, new_state, writebacks);
 
     if (pkt->isRead()) {
-        memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
     }
 
     blk->whenReady = pkt->finishTime;
@@ -337,14 +338,14 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
             if (target->isWrite()) {
                 if (blk->checkWrite(pkt->req)) {
                     blk->status |= BlkDirty;
-                    memcpy(blk->data + target->getOffset(blkSize),
+                    std::memcpy(blk->data + target->getOffset(blkSize),
                            target->getPtr<uint8_t>(), target->getSize());
                 }
             } else {
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
                 }
-                memcpy(target->getPtr<uint8_t>(),
+                std::memcpy(target->getPtr<uint8_t>(),
                        blk->data + target->getOffset(blkSize),
                        target->getSize());
             }
@@ -384,7 +385,7 @@ Cache<TagStore,Coherence>::handleSnoop(BlkType *blk,
     assert(offset < blkSize);
     assert(pkt->getSize() <= blkSize);
     assert(offset + pkt->getSize() <=blkSize);
-    memcpy(pkt->getPtr<uint8_t>(), blk->data + offset, pkt->getSize());
+    std::memcpy(pkt->getPtr<uint8_t>(), blk->data + offset, pkt->getSize());
 
     handleSnoop(blk, new_state);
 }
@@ -431,7 +432,7 @@ Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
     PacketPtr writeback = new Packet(writebackReq, Packet::Writeback, -1);
     writeback->allocate();
-    memcpy(writeback->getPtr<uint8_t>(),blk->data,blkSize);
+    std::memcpy(writeback->getPtr<uint8_t>(),blk->data,blkSize);
 
     blk->status &= ~BlkDirty;
     return writeback;
@@ -463,7 +464,7 @@ Cache<TagStore,Coherence>::verifyData(BlkType *blk)
         assert(blkSize == blk->size);
     }
 
-    retval = memcmp(tmp_data, blk->data, blkSize) == 0;
+    retval = std::memcmp(tmp_data, blk->data, blkSize) == 0;
     delete [] tmp_data;
     return retval;
 }
@@ -664,7 +665,7 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
                 DPRINTF(Cache, "Block for blk addr %x moving from state "
                         "%i to %i\n", pkt->getAddr(), old_state, new_state);
             //Set the state on the upgrade
-            memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+            std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
             PacketList writebacks;
             handleFill(blk, mshr, new_state, writebacks, pkt);
             assert(writebacks.empty());
@@ -839,7 +840,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
                         assert(offset < blkSize);
                         assert(pkt->getSize() <= blkSize);
                         assert(offset + pkt->getSize() <=blkSize);
-                        memcpy(pkt->getPtr<uint8_t>(), mshr->pkt->getPtr<uint8_t>() + offset, pkt->getSize());
+                        std::memcpy(pkt->getPtr<uint8_t>(), mshr->pkt->getPtr<uint8_t>() + offset, pkt->getSize());
 
                         respondToSnoop(pkt, curTick + hitLatency);
                     }

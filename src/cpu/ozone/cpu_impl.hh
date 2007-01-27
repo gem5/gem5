@@ -182,10 +182,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     globalSeqNum = 1;
 
-#if FULL_SYSTEM
-    checkInterrupts = false;
-#endif
-
     lockFlag = 0;
 
     // Setup rename table, initializing all values to ready.
@@ -684,8 +680,6 @@ OzoneCPU<Impl>::hwrei()
     lockAddrList.clear();
     thread.kernelStats->hwrei();
 
-    checkInterrupts = true;
-
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
 }
@@ -704,7 +698,6 @@ OzoneCPU<Impl>::processInterrupts()
 
     if (interrupt != NoFault) {
         this->interrupts.updateIntrInfo(thread.getTC());
-        this->checkInterrupts = false;
         interrupt->invoke(thread.getTC());
     }
 }

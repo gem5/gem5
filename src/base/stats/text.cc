@@ -32,6 +32,10 @@
 #define _GLIBCPP_USE_C99 1
 #endif
 
+#if defined(__sun)
+#include <math.h>
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <fstream>

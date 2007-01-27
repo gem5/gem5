@@ -29,12 +29,17 @@
  *          Ali Saidi
  */
 
+#if defined(__sun)
+#include <ieeefp.h>
+#endif
+#ifdef __SUNPRO_CC
+#include <stdlib.h>
+#include <math.h>
+#endif
+
 #include <cstdlib>
 #include <cmath>
 
-#if defined(__sun__)
-#include <ieeefp.h>
-#endif
 
 #include "sim/param.hh"
 #include "base/random.hh"
@@ -72,7 +77,7 @@ getLong()
 double
 m5round(double r)
 {
-#if defined(__sun__)
+#if defined(__sun)
     double val;
     fp_rnd oldrnd = fpsetround(FP_RN);
     val = rint(r);

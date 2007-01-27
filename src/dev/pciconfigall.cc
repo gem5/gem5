@@ -83,7 +83,9 @@ PciConfigAll::write(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
     panic("Attempting to write to config space on non-existant device\n");
+    M5_DUMMY_RETURN
 }
+
 
 void
 PciConfigAll::addressRanges(AddrRangeList &range_list)

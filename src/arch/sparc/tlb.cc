@@ -28,6 +28,8 @@
  * Authors: Ali Saidi
  */
 
+#include <cstring>
+
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/tlb.hh"
@@ -53,7 +55,7 @@ TLB::TLB(const std::string &name, int s)
         fatal("SPARC T1 TLB registers don't support more than 64 TLB entries.");
 
     tlb = new TlbEntry[size];
-    memset(tlb, 0, sizeof(TlbEntry) * size);
+    std::memset(tlb, 0, sizeof(TlbEntry) * size);
 
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
@@ -170,8 +172,8 @@ insertAllLocked:
     freeList.remove(new_entry);
     if (new_entry->valid && new_entry->used)
         usedEntries--;
-
-    lookupTable.erase(new_entry->range);
+    if (new_entry->valid)
+        lookupTable.erase(new_entry->range);
 
 
     assert(PTE.valid());
@@ -577,6 +579,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
 
+    if (lookupTable.size() != 64 - freeList.size())
+       panic("Lookup table size: %d tlb size: %d\n", lookupTable.size(),
+               freeList.size());
     if (asi == ASI_IMPLICIT)
         implicit = true;
 

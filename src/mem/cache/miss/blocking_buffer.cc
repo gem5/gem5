@@ -32,6 +32,7 @@
  * @file
  * Definitions of a simple buffer for a blocking cache.
  */
+#include <cstring>
 
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
@@ -60,7 +61,7 @@ BlockingBuffer::handleMiss(PacketPtr &pkt, int blk_size, Tick time)
             wb.allocate(pkt->cmd, blk_addr, blk_size, pkt);
         }
 
-        memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), blk_size);
+        std::memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), blk_size);
 
         cache->setBlocked(Blocked_NoWBBuffers);
         cache->setMasterRequest(Request_WB, time);
@@ -147,7 +148,7 @@ BlockingBuffer::handleResponse(PacketPtr &pkt, Tick time)
             PacketPtr target = ((MSHR*)(pkt->senderState))->getTarget();
             ((MSHR*)(pkt->senderState))->popTarget();
             if (pkt->isRead()) {
-                memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), target->getSize());
+                std::memcpy(target->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), target->getSize());
             }
             cache->respond(target, time);
             assert(!((MSHR*)(pkt->senderState))->hasTargets());
@@ -191,7 +192,7 @@ BlockingBuffer::doWriteback(Addr addr,
     PacketPtr pkt = new Packet(req, Packet::Writeback, -1);
     pkt->allocate();
     if (data) {
-        memcpy(pkt->getPtr<uint8_t>(), data, size);
+        std::memcpy(pkt->getPtr<uint8_t>(), data, size);
     }
 
     if (compressed) {
@@ -217,7 +218,7 @@ BlockingBuffer::doWriteback(PacketPtr &pkt)
 
     // Since allocate as buffer copies the request,
     // need to copy data here.
-        memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+    std::memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
     cache->setBlocked(Blocked_NoWBBuffers);
     cache->setMasterRequest(Request_WB, curTick);
