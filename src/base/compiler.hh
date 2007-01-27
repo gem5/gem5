@@ -44,7 +44,8 @@
 // this doesn't do anything with sun cc, but why not
 #define M5_ATTR_NORETURN  __sun_attr__((__noreturn__))
 #define M5_DUMMY_RETURN return (0);
-#define M5_PRAGMA_NORETURN(x) _Pragma("does_not_return(x)")
+#define DO_PRAGMA(x) _Pragma(#x)
+#define M5_PRAGMA_NORETURN(x) DO_PRAGMA(does_not_return(x))
 #else
 #error "Need to define compiler options in base/compiler.hh"
 #endif

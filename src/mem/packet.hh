@@ -41,9 +41,11 @@
 #include <cassert>
 #include <list>
 
+#include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/host.hh"
 #include "sim/root.hh"
+
 
 struct Packet;
 typedef Packet *PacketPtr;
@@ -238,7 +240,7 @@ class Packet
     bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }
     bool isCompressed() const   { return (flags & COMPRESSED) != 0; }
 
-    bool nic_pkt() { assert("Unimplemented\n" && 0); return false; }
+    bool nic_pkt() { panic("Unimplemented"); M5_DUMMY_RETURN }
 
     /** Possible results of a packet's request. */
     enum Result

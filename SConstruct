@@ -209,14 +209,18 @@ if False:
 env.Append(ENV = { 'M5_PLY' : Dir('ext/ply') })
 env['GCC'] = False
 env['SUNCC'] = False
+env['ICC'] = False
 env['GCC'] = subprocess.Popen(env['CXX'] + ' --version', shell=True, 
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
         close_fds=True).communicate()[0].find('GCC') >= 0
 env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
         close_fds=True).communicate()[0].find('Sun C++') >= 0
-if (env['GCC'] and env['SUNCC']):
-    print 'Error: How can we have both g++ and Sun C++ at the same time?'
+env['ICC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+        close_fds=True).communicate()[0].find('Intel') >= 0
+if env['GCC'] + env['SUNCC'] env['ICC'] > 1:
+    print 'Error: How can we have two at the same time?'
     Exit(1)
 
 
@@ -225,6 +229,8 @@ if env['GCC']:
     env.Append(CCFLAGS='-pipe')
     env.Append(CCFLAGS='-fno-strict-aliasing')
     env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+elif env['ICC']:
+    pass #Fix me... add warning flags once we clean up icc warnings
 elif env['SUNCC']:
     env.Append(CCFLAGS='-Qoption ccfe')
     env.Append(CCFLAGS='-features=gcc')
@@ -234,7 +240,7 @@ elif env['SUNCC']:
 #    env.Append(CCFLAGS='-instances=semiexplicit')
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
-    print '       Please fix SConstruct and try again.'
+    print '       Please fix SConstruct and src/SConscript and try again.'
     Exit(1)
 
 if sys.platform == 'cygwin':

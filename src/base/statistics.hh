@@ -398,7 +398,7 @@ class Wrap : public Child
   public:
     Wrap()
     {
-      map(new Data<Child>(*this));
+      this->map(new Data<Child>(*this));
     }
 
     /**
