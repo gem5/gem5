@@ -84,21 +84,21 @@ _format_integer(std::ostream &out, const T &data, Format &fmt)
 
     switch (fmt.base) {
       case Format::hex:
-        out.setf(ios::hex, ios::basefield);
+        out.setf(std::ios::hex, std::ios::basefield);
         break;
 
       case Format::oct:
-        out.setf(ios::oct, ios::basefield);
+        out.setf(std::ios::oct, std::ios::basefield);
         break;
 
       case Format::dec:
-        out.setf(ios::dec, ios::basefield);
+        out.setf(std::ios::dec, std::ios::basefield);
         break;
     }
 
     if (fmt.alternate_form) {
         if (!fmt.fill_zero)
-            out.setf(ios::showbase);
+            out.setf(std::ios::showbase);
         else {
             switch (fmt.base) {
               case Format::hex:
@@ -122,13 +122,13 @@ _format_integer(std::ostream &out, const T &data, Format &fmt)
         out.width(fmt.width);
 
     if (fmt.flush_left && !fmt.fill_zero)
-        out.setf(ios::left);
+        out.setf(std::ios::left);
 
     if (fmt.print_sign)
-        out.setf(ios::showpos);
+        out.setf(std::ios::showpos);
 
     if (fmt.uppercase)
-        out.setf(ios::uppercase);
+        out.setf(std::ios::uppercase);
 
     out << data;
 }
@@ -148,7 +148,7 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
             if (fmt.precision == 0)
                 fmt.precision = 1;
             else
-                out.setf(ios::scientific);
+                out.setf(std::ios::scientific);
 
             out.precision(fmt.precision);
         } else
@@ -156,7 +156,7 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
                 out.width(fmt.width);
 
         if (fmt.uppercase)
-            out.setf(ios::uppercase);
+            out.setf(std::ios::uppercase);
         break;
 
       case Format::fixed:
@@ -164,7 +164,7 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
             if (fmt.width > 0)
                 out.width(fmt.width);
 
-            out.setf(ios::fixed);
+            out.setf(std::ios::fixed);
             out.precision(fmt.precision);
         } else
             if (fmt.width > 0)
@@ -216,7 +216,7 @@ _format_string(std::ostream &out, const T &data, Format &fmt)
     if (fmt.width > 0)
         out.width(fmt.width);
     if (fmt.flush_left)
-        out.setf(ios::left);
+        out.setf(std::ios::left);
 
     out << data;
 #endif

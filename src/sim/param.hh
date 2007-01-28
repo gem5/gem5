@@ -781,4 +781,5 @@ SimObjectVectorParam<OBJ_CLASS *>::showType(std::ostream &os) const	\
 template <class T> bool parseParam(const std::string &str, T &data);
 template <class T> void showParam(std::ostream &os, const T &data);
 
+void parseTime(const std::vector<int> &time, struct tm *tm);
 #endif // _SIM_PARAM_HH_

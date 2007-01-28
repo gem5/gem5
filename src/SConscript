@@ -325,6 +325,11 @@ elif env['SUNCC']:
     ccflags['opt'] = '-g -O'
     ccflags['fast'] = '-fast'
     ccflags['prof'] = '-fast -g -pg'
+elif env['ICC']:
+    ccflags['debug'] = '-g -O0'
+    ccflags['opt'] = '-g -O'
+    ccflags['fast'] = '-fast'
+    ccflags['prof'] = '-fast -g -pg'
 else:
     print 'Unknown compiler, please fix compiler options'
     Exit(1)    

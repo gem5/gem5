@@ -379,6 +379,7 @@ class StaticInst : public StaticInstBase
     {
         panic("StaticInst::branchTarget() called on instruction "
               "that is not a PC-relative branch.");
+        M5_DUMMY_RETURN
     }
 
     /**
@@ -393,6 +394,7 @@ class StaticInst : public StaticInstBase
         panic("StaticInst::branchTarget() called on instruction "
               "that is not an indirect branch.");
     }
+        M5_DUMMY_RETURN
 
     /**
      * Return true if the instruction is a control transfer, and if so,

@@ -36,6 +36,8 @@
 #ifndef __DEV_SPARC_DTOD_HH__
 #define __DEV_SPARC_DTOD_HH__
 
+#include <vector>
+
 #include "base/range.hh"
 #include "dev/io_device.hh"
 
@@ -52,7 +54,7 @@ class DumbTOD : public BasicPioDevice
   public:
     struct Params : public BasicPioDevice::Params
     {
-        time_t init_time;
+        std::vector<int> init_time;
     };
   protected:
     const Params *params() const { return (const Params *)_params; }

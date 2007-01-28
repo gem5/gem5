@@ -65,69 +65,32 @@ TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, const vector<int> &t,
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
     stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
 
-    if (year_is_bcd) {
-        // The RTC uses BCD for the last two digits in the year.
-        // They python year is a full year.
-        int _year = t[0] % 100;
-        int tens = _year / 10;
-        int ones = _year % 10;
-
-        year = (tens << 4) + ones;
-    } else {
-        // Even though the datasheet says that the year field should be
-        // interpreted as BCD, we just enter the number of years since
-        // 1900 since linux seems to be happy with that (and I believe
-        // that Tru64 was as well)
-        year = t[0] - 1900;
-    }
-
-    mon = t[1];
-    mday = t[2];
-    hour = t[3];
-    min = t[4];
-    sec = t[5];
-
-    // wday is defined to be in the range from 1 - 7 with 1 being Sunday.
-    // the value coming from python is in the range from 0 - 6 with 0 being
-    // Monday.  Fix that here.
-    wday = t[6]  + 2;
-    if (wday > 7)
-        wday -= 7;
-
-    DPRINTFN("Real-time clock set to %s", getDateString());
-}
-
-std::string
-TsunamiIO::RTC::getDateString()
-{
     struct tm tm;
+    parseTime(t, &tm);
 
-    memset(&tm, 0, sizeof(tm));
+    year = tm.tm_year;
 
     if (year_is_bcd) {
-        // undo the BCD and conver to years since 1900 guessing that
-        // anything before 1970 is actually after 2000
-        int _year = (year >> 4) * 10 + (year & 0xf);
-        if (_year < 70)
-            _year += 100;
-
-        tm.tm_year = _year;
-    } else {
-        // number of years since 1900
-        tm.tm_year = year;
+        // The datasheet says that the year field can be either BCD or
+        // years since 1900.  Linux seems to be happy with years since
+        // 1900.
+        year = year % 100;
+        int tens = year / 10;
+        int ones = year % 10;
+        year = (tens << 4) + ones;
     }
 
-    // unix is 0-11 for month
-    tm.tm_mon = mon - 1;
-    tm.tm_mday = mday;
-    tm.tm_hour = hour;
-    tm.tm_min = min;
-    tm.tm_sec = sec;
+    // Unix is 0-11 for month, data seet says start at 1
+    mon = tm.tm_mon + 1;
+    mday = tm.tm_mday;
+    hour = tm.tm_hour;
+    min = tm.tm_min;
+    sec = tm.tm_sec;
 
-    // to add more annoyance unix is 0 - 6 with 0 as sunday
-    tm.tm_wday = wday - 1;
+    // Datasheet says 1 is sunday
+    wday = tm.tm_wday + 1;
 
-    return asctime(&tm);
+    DPRINTFN("Real-time clock set to %s", asctime(&tm));
 }
 
 void
