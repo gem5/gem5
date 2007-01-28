@@ -362,7 +362,7 @@ Trace::InstRecord::dump(ostream &outs)
                         }
                     }
                     for (int i = 0; i < TheISA::NumFloatRegs/2; i++) {
-                        if (thread->readFloatRegBits(i,FloatRegFile::DoubleWidth) != shared_data->fpregs[i]) {
+                        if (thread->readFloatRegBits(i*2,FloatRegFile::DoubleWidth) != shared_data->fpregs[i]) {
                             diffFpRegs = true;
                         }
                     }
