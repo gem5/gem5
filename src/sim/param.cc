@@ -777,3 +777,27 @@ ParamContext::describeAllContexts(ostream &os)
         os << endl;
     }
 }
+
+void
+parseTime(const std::vector<int> &time, struct tm *tm)
+{
+    memset(tm, 0, sizeof(struct tm));
+
+    // UNIX is years since 1900
+    tm->tm_year = time[0] - 1900;
+
+    // Python starts at 1, UNIX starts at 0
+    tm->tm_mon = time[1] - 1;
+    tm->tm_mday = time[2];
+    tm->tm_hour = time[3];
+    tm->tm_min = time[4];
+    tm->tm_sec = time[5];
+
+    // Python has 0 as Monday, UNIX is 0 as sunday
+    tm->tm_wday = time[6] + 1;
+    if (tm->tm_wday > 6)
+        tm->tm_wday -= 7;
+
+    // Python starts at 1, Unix starts at 0
+    tm->tm_yday = time[7] - 1;
+}

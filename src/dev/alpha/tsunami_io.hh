@@ -125,9 +125,6 @@ class TsunamiIO : public BasicPioDevice
         /** RTC read data */
         uint8_t readData();
 
-        /** RTC get the date */
-        std::string getDateString();
-
         /**
           * Serialize this object to the given output stream.
           * @param base The base name of the counter object.

@@ -49,12 +49,14 @@ using namespace std;
 using namespace TheISA;
 
 DumbTOD::DumbTOD(Params *p)
-    : BasicPioDevice(p), todTime(p->init_time)
+    : BasicPioDevice(p)
 {
     pioSize = 0x08;
 
     struct tm tm;
-    gmtime_r((time_t*)&todTime, &tm);
+    parseTime(p->init_time, &tm);
+    todTime = timegm(&tm);
+
     DPRINTFN("Real-time clock set to %s\n", asctime(&tm));
     DPRINTFN("Real-time clock set to %d\n", todTime);
 }
@@ -86,7 +88,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DumbTOD)
     Param<Tick> pio_latency;
     SimObjectParam<Platform *> platform;
     SimObjectParam<System *> system;
-    Param<time_t> time;
+    VectorParam<int> time;
 
 END_DECLARE_SIM_OBJECT_PARAMS(DumbTOD)
 
@@ -96,7 +98,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DumbTOD)
     INIT_PARAM(pio_latency, "Programmed IO latency"),
     INIT_PARAM(platform, "platform"),
     INIT_PARAM(system, "system object"),
-    INIT_PARAM(time, "System time to use (0 for actual time")
+    INIT_PARAM(time, "")
 
 END_INIT_SIM_OBJECT_PARAMS(DumbTOD)
 
