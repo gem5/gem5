@@ -165,8 +165,8 @@ decode OP default Unknown::unknown()
         }
         //SETHI (or NOP if rd == 0 and imm == 0)
         0x4: SetHi::sethi({{Rd.udw = imm;}});
-        0x5: Trap::fbpfcc({{fault = new FpDisabled;}});
-        0x6: Trap::fbfcc({{fault = new FpDisabled;}});
+        0x5: FailUnimpl::fbpfcc();
+        0x6: FailUnimpl::fbfcc();
     }
     0x1: BranchN::call(30, {{
             if (Pstate<3:>)
@@ -504,20 +504,7 @@ decode OP default Unknown::unknown()
                 if(Rs2_or_imm13.sdw == 0) fault = new DivisionByZero;
                 else Rd.sdw = Rs1.sdw / Rs2_or_imm13.sdw;
             }});
-            0x2E: decode RS1 {
-                0x0: IntOp::popc({{
-                    int64_t count = 0;
-                    uint64_t temp = Rs2_or_imm13;
-                    //Count the 1s in the front 4bits until none are left
-                    uint8_t oneBits[] = {0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4};
-                    while(temp)
-                    {
-                            count += oneBits[temp & 0xF];
-                            temp = temp >> 4;
-                    }
-                    Rd = count;
-                }});
-            }
+            0x2E: Trap::popc({{fault = new IllegalInstruction;}});
             0x2F: decode RCOND3
             {
                 0x1: movreq({{Rd = (Rs1.sdw == 0) ? Rs2_or_imm10 : Rd;}});
@@ -666,7 +653,7 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x03: Trap::fmovq({{fault = new FpExceptionOther;}});
+                    0x03: Trap::fmovq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x05: fnegs({{
                         Frds.uw = Frs2s.uw ^ (1UL << 31);
                         //fsr.ftt = fsr.cexc = 0
@@ -679,7 +666,7 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x07: Trap::fnegq({{fault = new FpDisabled;}});
+                    0x07: Trap::fnegq({{fault = new FpExceptionOther;}}); //fpop unimp
                     0x09: fabss({{
                         Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;
                         //fsr.ftt = fsr.cexc = 0
@@ -692,106 +679,106 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x0B: Trap::fabsq({{fault = new FpDisabled;}});
+                    0x0B: Trap::fabsq({{fault = new FpExceptionOther;}}); //fpop unimp
                     0x29: fsqrts({{Frds.sf = std::sqrt(Frs2s.sf);}});
                     0x2A: fsqrtd({{Frd.df = std::sqrt(Frs2.df);}});
-                    0x2B: Trap::fsqrtq({{fault = new FpDisabled;}});
+                    0x2B: Trap::fsqrtq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x41: fadds({{Frds.sf = Frs1s.sf + Frs2s.sf;}});
                     0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});
-                    0x43: Trap::faddq({{fault = new FpDisabled;}});
+                    0x43: Trap::faddq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x45: fsubs({{Frds.sf = Frs1s.sf - Frs2s.sf;}});
                     0x46: fsubd({{Frd.df = Frs1.df - Frs2.df;}});
-                    0x47: Trap::fsubq({{fault = new FpDisabled;}});
+                    0x47: Trap::fsubq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x49: fmuls({{Frds.sf = Frs1s.sf * Frs2s.sf;}});
                     0x4A: fmuld({{Frd.df = Frs1.df * Frs2.df;}});
-                    0x4B: Trap::fmulq({{fault = new FpDisabled;}});
+                    0x4B: Trap::fmulq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x4D: fdivs({{Frds.sf = Frs1s.sf / Frs2s.sf;}});
                     0x4E: fdivd({{Frd.df = Frs1.df / Frs2.df;}});
-                    0x4F: Trap::fdivq({{fault = new FpDisabled;}});
+                    0x4F: Trap::fdivq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
-                    0x6E: Trap::fdmulq({{fault = new FpDisabled;}});
+                    0x6E: Trap::fdmulq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x81: fstox({{
                             Frd.df = (double)static_cast<int64_t>(Frs2s.sf);
                     }});
                     0x82: fdtox({{
                             Frd.df = (double)static_cast<int64_t>(Frs2.df);
                     }});
-                    0x83: Trap::fqtox({{fault = new FpDisabled;}});
+                    0x83: Trap::fqtox({{fault = new FpExceptionOther;}}); //unimp fpop
                     0x84: fxtos({{
                             Frds.sf = static_cast<float>((int64_t)Frs2.df);
                     }});
                     0x88: fxtod({{
                             Frd.df = static_cast<double>((int64_t)Frs2.df);
                     }});
-                    0x8C: Trap::fxtoq({{fault = new FpDisabled;}});
+                    0x8C: Trap::fxtoq({{fault = new FpExceptionOther;}}); //unimp fpop
                     0xC4: fitos({{
                             Frds.sf = static_cast<float>((int32_t)Frs2s.sf);
                     }});
                     0xC6: fdtos({{Frds.sf = Frs2.df;}});
-                    0xC7: Trap::fqtos({{fault = new FpDisabled;}});
+                    0xC7: Trap::fqtos({{fault = new FpExceptionOther;}}); //unimp fpop
                     0xC8: fitod({{
                             Frd.df = static_cast<double>((int32_t)Frs2s.sf);
                     }});
                     0xC9: fstod({{Frd.df = Frs2s.sf;}});
-                    0xCB: Trap::fqtod({{fault = new FpDisabled;}});
-                    0xCC: Trap::fitoq({{fault = new FpDisabled;}});
-                    0xCD: Trap::fstoq({{fault = new FpDisabled;}});
-                    0xCE: Trap::fdtoq({{fault = new FpDisabled;}});
+                    0xCB: Trap::fqtod({{fault = new FpExceptionOther;}}); // unimp fpop
+                    0xCC: Trap::fitoq({{fault = new FpExceptionOther;}}); // unimp fpop
+                    0xCD: Trap::fstoq({{fault = new FpExceptionOther;}}); // unimp fpop
+                    0xCE: Trap::fdtoq({{fault = new FpExceptionOther;}}); // unimp fpop
                     0xD1: fstoi({{
                             Frds.sf = (float)static_cast<int32_t>(Frs2s.sf);
                     }});
                     0xD2: fdtoi({{
                             Frds.sf = (float)static_cast<int32_t>(Frs2.df);
                     }});
-                    0xD3: Trap::fqtoi({{fault = new FpDisabled;}});
-                    default: Trap::fpop1({{fault = new FpDisabled;}});
+                    0xD3: Trap::fqtoi({{fault = new FpExceptionOther;}}); // unimp fpop
+                    default: FailUnimpl::fpop1();
                 }
             }
             0x35: Trap::fpop2({{fault = new FpDisabled;}});
             //This used to be just impdep1, but now it's a whole bunch
             //of instructions
             0x36: decode OPF{
-                0x00: Trap::edge8({{fault = new IllegalInstruction;}});
-                0x01: Trap::edge8n({{fault = new IllegalInstruction;}});
-                0x02: Trap::edge8l({{fault = new IllegalInstruction;}});
-                0x03: Trap::edge8ln({{fault = new IllegalInstruction;}});
-                0x04: Trap::edge16({{fault = new IllegalInstruction;}});
-                0x05: Trap::edge16n({{fault = new IllegalInstruction;}});
-                0x06: Trap::edge16l({{fault = new IllegalInstruction;}});
-                0x07: Trap::edge16ln({{fault = new IllegalInstruction;}});
-                0x08: Trap::edge32({{fault = new IllegalInstruction;}});
-                0x09: Trap::edge32n({{fault = new IllegalInstruction;}});
-                0x0A: Trap::edge32l({{fault = new IllegalInstruction;}});
-                0x0B: Trap::edge32ln({{fault = new IllegalInstruction;}});
-                0x10: Trap::array8({{fault = new IllegalInstruction;}});
-                0x12: Trap::array16({{fault = new IllegalInstruction;}});
-                0x14: Trap::array32({{fault = new IllegalInstruction;}});
+                0x00: FailUnimpl::edge8();
+                0x01: FailUnimpl::edge8n();
+                0x02: FailUnimpl::edge8l();
+                0x03: FailUnimpl::edge8ln();
+                0x04: FailUnimpl::edge16();
+                0x05: FailUnimpl::edge16n();
+                0x06: FailUnimpl::edge16l();
+                0x07: FailUnimpl::edge16ln();
+                0x08: FailUnimpl::edge32();
+                0x09: FailUnimpl::edge32n();
+                0x0A: FailUnimpl::edge32l();
+                0x0B: FailUnimpl::edge32ln();
+                0x10: FailUnimpl::array8();
+                0x12: FailUnimpl::array16();
+                0x14: FailUnimpl::array32();
                 0x18: BasicOperate::alignaddr({{
                     uint64_t sum = Rs1 + Rs2;
                     Rd = sum & ~7;
                     Gsr = (Gsr & ~7) | (sum & 7);
                 }});
-                0x19: Trap::bmask({{fault = new IllegalInstruction;}});
+                0x19: FailUnimpl::bmask();
                 0x1A: BasicOperate::alignaddresslittle({{
                     uint64_t sum = Rs1 + Rs2;
                     Rd = sum & ~7;
                     Gsr = (Gsr & ~7) | ((~sum + 1) & 7);
                 }});
-                0x20: Trap::fcmple16({{fault = new IllegalInstruction;}});
-                0x22: Trap::fcmpne16({{fault = new IllegalInstruction;}});
-                0x24: Trap::fcmple32({{fault = new IllegalInstruction;}});
-                0x26: Trap::fcmpne32({{fault = new IllegalInstruction;}});
-                0x28: Trap::fcmpgt16({{fault = new IllegalInstruction;}});
-                0x2A: Trap::fcmpeq16({{fault = new IllegalInstruction;}});
-                0x2C: Trap::fcmpgt32({{fault = new IllegalInstruction;}});
-                0x2E: Trap::fcmpeq32({{fault = new IllegalInstruction;}});
-                0x31: Trap::fmul8x16({{fault = new IllegalInstruction;}});
-                0x33: Trap::fmul8x16au({{fault = new IllegalInstruction;}});
-                0x35: Trap::fmul8x16al({{fault = new IllegalInstruction;}});
-                0x36: Trap::fmul8sux16({{fault = new IllegalInstruction;}});
-                0x37: Trap::fmul8ulx16({{fault = new IllegalInstruction;}});
-                0x38: Trap::fmuld8sux16({{fault = new IllegalInstruction;}});
-                0x39: Trap::fmuld8ulx16({{fault = new IllegalInstruction;}});
+                0x20: FailUnimpl::fcmple16();
+                0x22: FailUnimpl::fcmpne16();
+                0x24: FailUnimpl::fcmple32();
+                0x26: FailUnimpl::fcmpne32();
+                0x28: FailUnimpl::fcmpgt16();
+                0x2A: FailUnimpl::fcmpeq16();
+                0x2C: FailUnimpl::fcmpgt32();
+                0x2E: FailUnimpl::fcmpeq32();
+                0x31: FailUnimpl::fmul8x16();
+                0x33: FailUnimpl::fmul8x16au();
+                0x35: FailUnimpl::fmul8x16al();
+                0x36: FailUnimpl::fmul8sux16();
+                0x37: FailUnimpl::fmul8ulx16();
+                0x38: FailUnimpl::fmuld8sux16();
+                0x39: FailUnimpl::fmuld8ulx16();
                 0x3A: Trap::fpack32({{fault = new IllegalInstruction;}});
                 0x3B: Trap::fpack16({{fault = new IllegalInstruction;}});
                 0x3D: Trap::fpackfix({{fault = new IllegalInstruction;}});
@@ -823,58 +810,58 @@ decode OP default Unknown::unknown()
                         }
                 }});
                 0x4B: Trap::fpmerge({{fault = new IllegalInstruction;}});
-                0x4C: Trap::bshuffle({{fault = new IllegalInstruction;}});
-                0x4D: Trap::fexpand({{fault = new IllegalInstruction;}});
-                0x50: Trap::fpadd16({{fault = new IllegalInstruction;}});
-                0x51: Trap::fpadd16s({{fault = new IllegalInstruction;}});
-                0x52: Trap::fpadd32({{fault = new IllegalInstruction;}});
-                0x53: Trap::fpadd32s({{fault = new IllegalInstruction;}});
-                0x54: Trap::fpsub16({{fault = new IllegalInstruction;}});
-                0x55: Trap::fpsub16s({{fault = new IllegalInstruction;}});
-                0x56: Trap::fpsub32({{fault = new IllegalInstruction;}});
-                0x57: Trap::fpsub32s({{fault = new IllegalInstruction;}});
+                0x4C: FailUnimpl::bshuffle();
+                0x4D: FailUnimpl::fexpand();
+                0x50: FailUnimpl::fpadd16();
+                0x51: FailUnimpl::fpadd16s();
+                0x52: FailUnimpl::fpadd32();
+                0x53: FailUnimpl::fpadd32s();
+                0x54: FailUnimpl::fpsub16();
+                0x55: FailUnimpl::fpsub16s();
+                0x56: FailUnimpl::fpsub32();
+                0x57: FailUnimpl::fpsub32s();
                 0x60: BasicOperate::fzero({{Frd.df = 0;}});
                 0x61: BasicOperate::fzeros({{Frds.sf = 0;}});
-                0x62: Trap::fnor({{fault = new IllegalInstruction;}});
-                0x63: Trap::fnors({{fault = new IllegalInstruction;}});
-                0x64: Trap::fandnot2({{fault = new IllegalInstruction;}});
-                0x65: Trap::fandnot2s({{fault = new IllegalInstruction;}});
+                0x62: FailUnimpl::fnor();
+                0x63: FailUnimpl::fnors();
+                0x64: FailUnimpl::fandnot2();
+                0x65: FailUnimpl::fandnot2s();
                 0x66: BasicOperate::fnot2({{
                         Frd.df = (double)(~((uint64_t)Frs2.df));
                 }});
                 0x67: BasicOperate::fnot2s({{
                         Frds.sf = (float)(~((uint32_t)Frs2s.sf));
                 }});
-                0x68: Trap::fandnot1({{fault = new IllegalInstruction;}});
-                0x69: Trap::fandnot1s({{fault = new IllegalInstruction;}});
+                0x68: FailUnimpl::fandnot1();
+                0x69: FailUnimpl::fandnot1s();
                 0x6A: BasicOperate::fnot1({{
                         Frd.df = (double)(~((uint64_t)Frs1.df));
                 }});
                 0x6B: BasicOperate::fnot1s({{
                         Frds.sf = (float)(~((uint32_t)Frs1s.sf));
                 }});
-                0x6C: Trap::fxor({{fault = new IllegalInstruction;}});
-                0x6D: Trap::fxors({{fault = new IllegalInstruction;}});
-                0x6E: Trap::fnand({{fault = new IllegalInstruction;}});
-                0x6F: Trap::fnands({{fault = new IllegalInstruction;}});
-                0x70: Trap::fand({{fault = new IllegalInstruction;}});
-                0x71: Trap::fands({{fault = new IllegalInstruction;}});
-                0x72: Trap::fxnor({{fault = new IllegalInstruction;}});
-                0x73: Trap::fxnors({{fault = new IllegalInstruction;}});
+                0x6C: FailUnimpl::fxor();
+                0x6D: FailUnimpl::fxors();
+                0x6E: FailUnimpl::fnand();
+                0x6F: FailUnimpl::fnands();
+                0x70: FailUnimpl::fand();
+                0x71: FailUnimpl::fands();
+                0x72: FailUnimpl::fxnor();
+                0x73: FailUnimpl::fxnors();
                 0x74: BasicOperate::fsrc1({{Frd.udw = Frs1.udw;}});
                 0x75: BasicOperate::fsrc1s({{Frds.uw = Frs1s.uw;}});
-                0x76: Trap::fornot2({{fault = new IllegalInstruction;}});
-                0x77: Trap::fornot2s({{fault = new IllegalInstruction;}});
+                0x76: FailUnimpl::fornot2();
+                0x77: FailUnimpl::fornot2s();
                 0x78: BasicOperate::fsrc2({{Frd.udw = Frs2.udw;}});
                 0x79: BasicOperate::fsrc2s({{Frds.uw = Frs2s.uw;}});
-                0x7A: Trap::fornot1({{fault = new IllegalInstruction;}});
-                0x7B: Trap::fornot1s({{fault = new IllegalInstruction;}});
-                0x7C: Trap::for({{fault = new IllegalInstruction;}});
-                0x7D: Trap::fors({{fault = new IllegalInstruction;}});
-                0x7E: Trap::fone({{fault = new IllegalInstruction;}});
-                0x7F: Trap::fones({{fault = new IllegalInstruction;}});
+                0x7A: FailUnimpl::fornot1();
+                0x7B: FailUnimpl::fornot1s();
+                0x7C: FailUnimpl::for();
+                0x7D: FailUnimpl::fors();
+                0x7E: BasicOperate::fone({{Frd.udw = std::numeric_limits<uint64_t>::max();}});
+                0x7F: BasicOperate::fones({{Frds.uw = std::numeric_limits<uint32_t>::max();}});
                 0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
-                0x81: Trap::siam({{fault = new IllegalInstruction;}});
+                0x81: FailUnimpl::siam();
             }
             0x37: Trap::impdep2({{fault = new IllegalInstruction;}});
             0x38: Branch::jmpl({{
