@@ -173,7 +173,7 @@ class SparcDynInst : public BaseDynInst<Impl>
     {
         uint64_t val = this->cpu->readIntReg(this->_srcRegIdx[idx]);
         DPRINTF(Sparc, "Reading int reg %d (%d, %d) as %x\n", (int)this->_flatSrcRegIdx[idx], (int)this->_srcRegIdx[idx], idx, val);
-        return this->cpu->readIntReg(this->_srcRegIdx[idx]);
+        return val;
     }
 
     TheISA::FloatReg readFloatRegOperand(const StaticInst *si,
