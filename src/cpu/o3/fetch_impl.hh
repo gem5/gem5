@@ -1150,6 +1150,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                      instruction->staticInst,
                                      instruction->readPC());
 
+            ///FIXME This needs to be more robust in dealing with delay slots
+#if !ISA_HAS_DELAY_SLOT
+            predicted_branch |=
+#endif
             lookupAndUpdateNextPC(instruction, next_PC, next_NPC);
             predicted_branch |= (next_PC != fetch_NPC);
 
