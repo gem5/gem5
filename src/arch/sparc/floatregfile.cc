@@ -137,10 +137,12 @@ Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
       case SingleWidth:
         result32 = gtoh((uint32_t)val);
         memcpy(regSpace + 4 * floatReg, &result32, sizeof(result32));
+        DPRINTF(Sparc, "Write FP64 register %d = 0x%x\n", floatReg, result32);
         break;
       case DoubleWidth:
         result64 = gtoh((uint64_t)val);
         memcpy(regSpace + 4 * floatReg, &result64, sizeof(result64));
+        DPRINTF(Sparc, "Write FP64 register %d = 0x%x\n", floatReg, result64);
         break;
       case QuadWidth:
         panic("Quad width FP not implemented.");
@@ -163,10 +165,12 @@ Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
       case SingleWidth:
         result32 = gtoh((uint32_t)val);
         memcpy(regSpace + 4 * floatReg, &result32, sizeof(result32));
+        DPRINTF(Sparc, "Write FP64 bits register %d = 0x%x\n", floatReg, result32);
         break;
       case DoubleWidth:
         result64 = gtoh((uint64_t)val);
         memcpy(regSpace + 4 * floatReg, &result64, sizeof(result64));
+        DPRINTF(Sparc, "Write FP64 bits register %d = 0x%x\n", floatReg, result64);
         break;
       case QuadWidth:
         panic("Quad width FP not implemented.");
