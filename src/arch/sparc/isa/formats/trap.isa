@@ -82,6 +82,19 @@ def template TrapExecute {{
         }
 }};
 
+def template FpUnimplExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s
+            %(op_wb)s;
+            return fault;
+        }
+}};
+
 def format Trap(code, *opt_flags) {{
         iop = InstObjParams(name, Name, 'Trap', code, opt_flags)
         header_output = BasicDeclare.subst(iop)
@@ -117,5 +130,5 @@ def format FpUnimpl(*flags) {{
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
-        exec_output = TrapExecute.subst(iop)
+        exec_output = FpUnimplExecute.subst(iop)
 }};
