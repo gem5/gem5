@@ -71,6 +71,7 @@ class CpuEvent : public Event
      */
     static void replaceThreadContext(ThreadContext *oldTc,
                                      ThreadContext *newTc);
+    ThreadContext* getTC() { return tc; }
 };
 
 template <class T, void (T::* F)(ThreadContext *tc)>

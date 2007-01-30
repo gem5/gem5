@@ -47,6 +47,7 @@
 class IniFile;
 class Serializable;
 class Checkpoint;
+class SimObject;
 
 template <class T>
 void paramOut(std::ostream &os, const std::string &name, const T &param);
@@ -65,7 +66,7 @@ void arrayParamIn(Checkpoint *cp, const std::string &section,
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,
-           const std::string &name, Serializable * &param);
+           const std::string &name, SimObject * &param);
 
 
 //
@@ -96,7 +97,7 @@ objParamIn(Checkpoint *cp, const std::string &section,
 
 #define UNSERIALIZE_OBJPTR(objptr)			\
   do {							\
-    Serializable *sptr;				\
+    SimObject *sptr;				\
     objParamIn(cp, section, #objptr, sptr);		\
     objptr = dynamic_cast<typeof(objptr)>(sptr);	\
   } while (0)
@@ -225,7 +226,7 @@ class Checkpoint
               std::string &value);
 
     bool findObj(const std::string &section, const std::string &entry,
-                 Serializable *&value);
+                 SimObject *&value);
 
     bool sectionExists(const std::string &section);
 

@@ -90,19 +90,6 @@ class T1000 : public Platform
      * Calculate the configuration address given a bus/dev/func.
      */
     virtual Addr calcConfigAddr(int bus, int dev, int func);
-
-    /**
-     * Serialize this object to the given output stream.
-     * @param os The stream to serialize to.
-     */
-    virtual void serialize(std::ostream &os);
-
-    /**
-     * Reconstruct the state of this object from a checkpoint.
-     * @param cp The checkpoint use.
-     * @param section The section name of this object
-     */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 #endif // __DEV_T1000_HH__

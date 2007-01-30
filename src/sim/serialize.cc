@@ -57,6 +57,8 @@
 
 using namespace std;
 
+extern SimObject *resolveSimObject(const string &);
+
 int Serializable::ckptMaxCount = 0;
 int Serializable::ckptCount = 0;
 int Serializable::ckptPrevCount = -1;
@@ -158,7 +160,7 @@ arrayParamIn(Checkpoint *cp, const std::string &section,
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,
-           const std::string &name, Serializable * &param)
+           const std::string &name, SimObject * &param)
 {
     if (!cp->findObj(section, name, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
@@ -388,17 +390,15 @@ Checkpoint::find(const std::string &section, const std::string &entry,
 
 bool
 Checkpoint::findObj(const std::string &section, const std::string &entry,
-                    Serializable *&value)
+                    SimObject *&value)
 {
     string path;
 
     if (!db->find(section, entry, path))
         return false;
 
-    if ((value = objMap[path]) != NULL)
-        return true;
-
-    return false;
+    value = resolveSimObject(path);
+    return true;
 }
 
 

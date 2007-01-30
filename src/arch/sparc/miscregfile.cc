@@ -125,6 +125,11 @@ void MiscRegFile::clear()
     dTlbTagAccess = 0;
 
     memset(scratchPad, 0, sizeof(scratchPad));
+#if FULL_SYSTEM
+    tickCompare = NULL;
+    sTickCompare = NULL;
+    hSTickCompare = NULL;
+#endif
 }
 
 MiscReg MiscRegFile::readReg(int miscReg)
@@ -675,32 +680,31 @@ void MiscRegFile::setRegWithEffect(int miscReg,
 
 void MiscRegFile::serialize(std::ostream & os)
 {
-    SERIALIZE_SCALAR(pstate);
-    SERIALIZE_SCALAR(tba);
-//    SERIALIZE_SCALAR(y);
-    SERIALIZE_SCALAR(pil);
-    SERIALIZE_SCALAR(gl);
-    SERIALIZE_SCALAR(cwp);
-    SERIALIZE_ARRAY(tt, MaxTL);
-//    SERIALIZE_SCALAR(ccr);
     SERIALIZE_SCALAR(asi);
-    SERIALIZE_SCALAR(tl);
-    SERIALIZE_ARRAY(tpc, MaxTL);
-    SERIALIZE_ARRAY(tnpc, MaxTL);
-    SERIALIZE_ARRAY(tstate, MaxTL);
     SERIALIZE_SCALAR(tick);
-//    SERIALIZE_SCALAR(cansave);
-//    SERIALIZE_SCALAR(canrestore);
-//    SERIALIZE_SCALAR(otherwin);
-//    SERIALIZE_SCALAR(cleanwin);
-//    SERIALIZE_SCALAR(wstate);
-    SERIALIZE_SCALAR(fsr);
     SERIALIZE_SCALAR(fprs);
+    SERIALIZE_SCALAR(gsr);
+    SERIALIZE_SCALAR(softint);
+    SERIALIZE_SCALAR(tick_cmpr);
+    SERIALIZE_SCALAR(stick);
+    SERIALIZE_SCALAR(stick_cmpr);
+    SERIALIZE_ARRAY(tpc,MaxTL);
+    SERIALIZE_ARRAY(tnpc,MaxTL);
+    SERIALIZE_ARRAY(tstate,MaxTL);
+    SERIALIZE_ARRAY(tt,MaxTL);
+    SERIALIZE_SCALAR(tba);
+    SERIALIZE_SCALAR(pstate);
+    SERIALIZE_SCALAR(tl);
+    SERIALIZE_SCALAR(pil);
+    SERIALIZE_SCALAR(cwp);
+    SERIALIZE_SCALAR(gl);
     SERIALIZE_SCALAR(hpstate);
-    SERIALIZE_ARRAY(htstate, MaxTL);
+    SERIALIZE_ARRAY(htstate,MaxTL);
+    SERIALIZE_SCALAR(hintp);
     SERIALIZE_SCALAR(htba);
     SERIALIZE_SCALAR(hstick_cmpr);
     SERIALIZE_SCALAR(strandStatusReg);
+    SERIALIZE_SCALAR(fsr);
     SERIALIZE_SCALAR(priContext);
     SERIALIZE_SCALAR(secContext);
     SERIALIZE_SCALAR(partId);
@@ -718,6 +722,7 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_SCALAR(dTlbC0Config);
     SERIALIZE_SCALAR(dTlbCXTsbPs0);
     SERIALIZE_SCALAR(dTlbCXTsbPs1);
+    SERIALIZE_SCALAR(dTlbCXConfig);
     SERIALIZE_SCALAR(dTlbSfsr);
     SERIALIZE_SCALAR(dTlbSfar);
     SERIALIZE_SCALAR(dTlbTagAccess);
@@ -730,36 +735,70 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_SCALAR(res_error_tail);
     SERIALIZE_SCALAR(nres_error_head);
     SERIALIZE_SCALAR(nres_error_tail);
+#if FULL_SYSTEM
+    Tick tick_cmp = 0, stick_cmp = 0, hstick_cmp = 0;
+    ThreadContext *tc = NULL;
+    BaseCPU *cpu = NULL;
+    int tc_num = 0;
+    bool tick_intr_sched = true;
+
+    if (tickCompare)
+        tc = tickCompare->getTC();
+    else if (sTickCompare)
+        tc = sTickCompare->getTC();
+    else if (hSTickCompare)
+        tc = hSTickCompare->getTC();
+    else
+        tick_intr_sched = false;
+
+    SERIALIZE_SCALAR(tick_intr_sched);
+
+    if (tc) {
+        cpu = tc->getCpuPtr();
+        tc_num = cpu->findContext(tc);
+        if (tickCompare && tickCompare->scheduled())
+            tick_cmp = tickCompare->when();
+        if (sTickCompare && sTickCompare->scheduled())
+            stick_cmp = sTickCompare->when();
+        if (hSTickCompare && hSTickCompare->scheduled())
+            hstick_cmp = hSTickCompare->when();
+
+        SERIALIZE_OBJPTR(cpu);
+        SERIALIZE_SCALAR(tc_num);
+        SERIALIZE_SCALAR(tick_cmp);
+        SERIALIZE_SCALAR(stick_cmp);
+        SERIALIZE_SCALAR(hstick_cmp);
+    }
+#endif
 }
 
 void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
 {
-    UNSERIALIZE_SCALAR(pstate);
-    UNSERIALIZE_SCALAR(tba);
-//    UNSERIALIZE_SCALAR(y);
-    UNSERIALIZE_SCALAR(pil);
-    UNSERIALIZE_SCALAR(gl);
-    UNSERIALIZE_SCALAR(cwp);
-    UNSERIALIZE_ARRAY(tt, MaxTL);
-//    UNSERIALIZE_SCALAR(ccr);
     UNSERIALIZE_SCALAR(asi);
-    UNSERIALIZE_SCALAR(tl);
-    UNSERIALIZE_ARRAY(tpc, MaxTL);
-    UNSERIALIZE_ARRAY(tnpc, MaxTL);
-    UNSERIALIZE_ARRAY(tstate, MaxTL);
     UNSERIALIZE_SCALAR(tick);
-//    UNSERIALIZE_SCALAR(cansave);
-//    UNSERIALIZE_SCALAR(canrestore);
-//    UNSERIALIZE_SCALAR(otherwin);
-//    UNSERIALIZE_SCALAR(cleanwin);
-//    UNSERIALIZE_SCALAR(wstate);
-    UNSERIALIZE_SCALAR(fsr);
     UNSERIALIZE_SCALAR(fprs);
+    UNSERIALIZE_SCALAR(gsr);
+    UNSERIALIZE_SCALAR(softint);
+    UNSERIALIZE_SCALAR(tick_cmpr);
+    UNSERIALIZE_SCALAR(stick);
+    UNSERIALIZE_SCALAR(stick_cmpr);
+    UNSERIALIZE_ARRAY(tpc,MaxTL);
+    UNSERIALIZE_ARRAY(tnpc,MaxTL);
+    UNSERIALIZE_ARRAY(tstate,MaxTL);
+    UNSERIALIZE_ARRAY(tt,MaxTL);
+    UNSERIALIZE_SCALAR(tba);
+    UNSERIALIZE_SCALAR(pstate);
+    UNSERIALIZE_SCALAR(tl);
+    UNSERIALIZE_SCALAR(pil);
+    UNSERIALIZE_SCALAR(cwp);
+    UNSERIALIZE_SCALAR(gl);
     UNSERIALIZE_SCALAR(hpstate);
-    UNSERIALIZE_ARRAY(htstate, MaxTL);
+    UNSERIALIZE_ARRAY(htstate,MaxTL);
+    UNSERIALIZE_SCALAR(hintp);
     UNSERIALIZE_SCALAR(htba);
     UNSERIALIZE_SCALAR(hstick_cmpr);
     UNSERIALIZE_SCALAR(strandStatusReg);
+    UNSERIALIZE_SCALAR(fsr);
     UNSERIALIZE_SCALAR(priContext);
     UNSERIALIZE_SCALAR(secContext);
     UNSERIALIZE_SCALAR(partId);
@@ -777,6 +816,7 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_SCALAR(dTlbC0Config);
     UNSERIALIZE_SCALAR(dTlbCXTsbPs0);
     UNSERIALIZE_SCALAR(dTlbCXTsbPs1);
+    UNSERIALIZE_SCALAR(dTlbCXConfig);
     UNSERIALIZE_SCALAR(dTlbSfsr);
     UNSERIALIZE_SCALAR(dTlbSfar);
     UNSERIALIZE_SCALAR(dTlbTagAccess);
@@ -788,4 +828,38 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_SCALAR(res_error_head);
     UNSERIALIZE_SCALAR(res_error_tail);
     UNSERIALIZE_SCALAR(nres_error_head);
-    UNSERIALIZE_SCALAR(nres_error_tail);}
+    UNSERIALIZE_SCALAR(nres_error_tail);
+
+#if FULL_SYSTEM
+    Tick tick_cmp = 0, stick_cmp = 0, hstick_cmp = 0;
+    ThreadContext *tc = NULL;
+    BaseCPU *cpu = NULL;
+    int tc_num;
+    bool tick_intr_sched;
+    UNSERIALIZE_SCALAR(tick_intr_sched);
+    if (tick_intr_sched) {
+        UNSERIALIZE_OBJPTR(cpu);
+        if (cpu) {
+            UNSERIALIZE_SCALAR(tc_num);
+            UNSERIALIZE_SCALAR(tick_cmp);
+            UNSERIALIZE_SCALAR(stick_cmp);
+            UNSERIALIZE_SCALAR(hstick_cmp);
+            tc = cpu->getContext(tc_num);
+
+            if (tick_cmp) {
+                tickCompare = new TickCompareEvent(this, tc);
+                tickCompare->schedule(tick_cmp);
+            }
+            if (stick_cmp)  {
+                sTickCompare = new STickCompareEvent(this, tc);
+                sTickCompare->schedule(stick_cmp);
+            }
+            if (hstick_cmp)  {
+                hSTickCompare = new HSTickCompareEvent(this, tc);
+                hSTickCompare->schedule(hstick_cmp);
+            }
+        }
+    }
+
+ #endif
+}

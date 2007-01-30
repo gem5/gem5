@@ -142,6 +142,12 @@ class BaseCPU : public MemObject
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(int thread_num) {}
 
+   /// Given a Thread Context pointer return the thread num
+   int findContext(ThreadContext *tc);
+
+   /// Given a thread num get tho thread context for it
+   ThreadContext *getContext(int tn) { return threadContexts[tn]; }
+
   public:
     struct Params
     {

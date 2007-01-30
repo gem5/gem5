@@ -1250,13 +1250,55 @@ doMmuWriteError:
 void
 TLB::serialize(std::ostream &os)
 {
-    panic("Need to implement serialize tlb for SPARC\n");
+    SERIALIZE_SCALAR(size);
+    SERIALIZE_SCALAR(usedEntries);
+    SERIALIZE_SCALAR(lastReplaced);
+
+    // convert the pointer based free list into an index based one
+    int *free_list = (int*)malloc(sizeof(int) * size);
+    int cntr = 0;
+    std::list<TlbEntry*>::iterator i;
+    i = freeList.begin();
+    while (i != freeList.end()) {
+        free_list[cntr++] = ((size_t)*i - (size_t)tlb)/ sizeof(TlbEntry);
+        i++;
+    }
+    SERIALIZE_SCALAR(cntr);
+    SERIALIZE_ARRAY(free_list,  cntr);
+
+    for (int x = 0; x < size; x++) {
+        nameOut(os, csprintf("%s.PTE%d", name(), x));
+        tlb[x].serialize(os);
+    }
 }
 
 void
 TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implement unserialize tlb for SPARC\n");
+    int oldSize;
+
+    paramIn(cp, section, "size", oldSize);
+    if (oldSize != size)
+        panic("Don't support unserializing different sized TLBs\n");
+    UNSERIALIZE_SCALAR(usedEntries);
+    UNSERIALIZE_SCALAR(lastReplaced);
+
+    int cntr;
+    UNSERIALIZE_SCALAR(cntr);
+
+    int *free_list = (int*)malloc(sizeof(int) * cntr);
+    freeList.clear();
+    UNSERIALIZE_ARRAY(free_list,  cntr);
+    for (int x = 0; x < cntr; x++)
+        freeList.push_back(&tlb[free_list[x]]);
+
+    lookupTable.clear();
+    for (int x = 0; x < size; x++) {
+        tlb[x].unserialize(cp, csprintf("%s.PTE%d", section, x));
+        if (tlb[x].valid)
+            lookupTable.insert(tlb[x].range, &tlb[x]);
+
+    }
 }
 
 
