@@ -41,9 +41,12 @@ TlbEntry::serialize(std::ostream &os)
     SERIALIZE_SCALAR(range.contextId);
     SERIALIZE_SCALAR(range.partitionId);
     SERIALIZE_SCALAR(range.real);
-    uint64_t entry4u = pte();
+    uint64_t entry4u = 0;
+    if (valid)
+        entry4u = pte();
     SERIALIZE_SCALAR(entry4u);
     SERIALIZE_SCALAR(used);
+    SERIALIZE_SCALAR(valid);
 }
 
 
@@ -57,8 +60,10 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(range.real);
     uint64_t entry4u;
     UNSERIALIZE_SCALAR(entry4u);
-    pte.populate(entry4u);
+    if (entry4u)
+        pte.populate(entry4u);
     UNSERIALIZE_SCALAR(used);
+    UNSERIALIZE_SCALAR(valid);
 }
 
 

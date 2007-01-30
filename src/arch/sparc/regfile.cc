@@ -226,6 +226,7 @@ void RegFile::serialize(std::ostream &os)
     miscRegFile.serialize(os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
+    SERIALIZE_SCALAR(nnpc);
 }
 
 void RegFile::unserialize(Checkpoint *cp, const std::string &section)
@@ -235,6 +236,7 @@ void RegFile::unserialize(Checkpoint *cp, const std::string &section)
     miscRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
+    UNSERIALIZE_SCALAR(nnpc);
 }
 
 void RegFile::changeContext(RegContextParam param, RegContextVal val)

@@ -81,6 +81,8 @@ IntReg IntRegFile::readReg(int intReg)
 {
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, regs[intReg]);
     return regs[intReg];
+    /* XXX Currently not used. When used again regView/offset need to be
+     * serialized!
     IntReg val;
     if(intReg < NumIntArchRegs)
         val = regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask];
@@ -92,6 +94,7 @@ IntReg IntRegFile::readReg(int intReg)
 
     DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
     return val;
+    */
 }
 
 void IntRegFile::setReg(int intReg, const IntReg &val)
@@ -102,6 +105,8 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
         regs[intReg] = val;
     }
     return;
+    /* XXX Currently not used. When used again regView/offset need to be
+     * serialized!
     if(intReg)
     {
         DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
@@ -111,7 +116,7 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
             microRegs[intReg] = val;
         else
             panic("Tried to set non-existant integer register\n");
-    }
+    } */
 }
 
 //This doesn't effect the actual CWP register.
@@ -148,20 +153,26 @@ void IntRegFile::setGlobals(int gl)
 
 void IntRegFile::serialize(std::ostream &os)
 {
+    SERIALIZE_ARRAY(regs, NumIntRegs);
+    SERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
+
+    /* the below doesn't seem needed unless gabe makes regview work*/
     unsigned int x;
     for(x = 0; x < MaxGL; x++)
         SERIALIZE_ARRAY(regGlobals[x], RegsPerFrame);
     for(x = 0; x < 2 * NWindows; x++)
         SERIALIZE_ARRAY(regSegments[x], RegsPerFrame);
-    SERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
 }
 
 void IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_ARRAY(regs, NumIntRegs);
+    UNSERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
+
+    /* the below doesn't seem needed unless gabe makes regview work*/
     unsigned int x;
     for(x = 0; x < MaxGL; x++)
         UNSERIALIZE_ARRAY(regGlobals[x], RegsPerFrame);
     for(unsigned int x = 0; x < 2 * NWindows; x++)
         UNSERIALIZE_ARRAY(regSegments[x], RegsPerFrame);
-    UNSERIALIZE_ARRAY(microRegs, NumMicroIntRegs);
 }

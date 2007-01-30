@@ -298,6 +298,16 @@ BaseCPU::registerThreadContexts()
 }
 
 
+int
+BaseCPU::findContext(ThreadContext *tc)
+{
+    for (int i = 0; i < threadContexts.size(); ++i) {
+        if (tc == threadContexts[i])
+            return i;
+    }
+    return 0;
+}
+
 void
 BaseCPU::switchOut()
 {
@@ -389,12 +399,14 @@ BaseCPU::clear_interrupts()
 void
 BaseCPU::serialize(std::ostream &os)
 {
+    SERIALIZE_SCALAR(instCnt);
     interrupts.serialize(os);
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_SCALAR(instCnt);
     interrupts.unserialize(cp, section);
 }
 

@@ -183,13 +183,15 @@ Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
 
 void FloatRegFile::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY((unsigned char *)regSpace,
+    uint8_t *float_reg = (uint8_t*)regSpace;
+    SERIALIZE_ARRAY(float_reg,
             SingleWidth / 8 * NumFloatRegs);
 }
 
 void FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY((unsigned char *)regSpace,
+    uint8_t *float_reg = (uint8_t*)regSpace;
+    UNSERIALIZE_ARRAY(float_reg,
             SingleWidth / 8 * NumFloatRegs);
 }
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -144,6 +144,10 @@ def run(options, root, testsys, cpu_class):
         if cpt_num > len(cpts):
             m5.panic('Checkpoint %d not found' % cpt_num)
 
+        ## Adjust max tick based on our starting tick
+        maxtick = maxtick - int(cpts[cpt_num - 1])
+
+        ## Restore the checkpoint
         m5.restoreCheckpoint(root,
                              joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1]))
 
@@ -185,7 +189,8 @@ def run(options, root, testsys, cpu_class):
 
         sim_ticks = when
         exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
-        while num_checkpoints < max_checkpoints:
+        while num_checkpoints < max_checkpoints and \
+                exit_event.getCause() != "user interrupt received":
             if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
@@ -198,6 +203,10 @@ def run(options, root, testsys, cpu_class):
                 if exit_event.getCause() == "simulate() limit reached":
                     m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
                     num_checkpoints += 1
+
+        if exit_event.getCause() == "user interrupt received":
+            exit_cause = exit_event.getCause();
+
 
     else: #no checkpoints being taken via this script
         exit_event = m5.simulate(maxtick)

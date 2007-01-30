@@ -101,18 +101,6 @@ T1000::calcConfigAddr(int bus, int dev, int func)
     M5_DUMMY_RETURN
 }
 
-void
-T1000::serialize(std::ostream &os)
-{
-    panic("Need implementation\n");
-}
-
-void
-T1000::unserialize(Checkpoint *cp, const std::string &section)
-{
-    panic("Need implementation\n");
-}
-
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(T1000)
 
     SimObjectParam<System *> system;
