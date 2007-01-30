@@ -76,5 +76,6 @@ output exec {{
 #include "mem/packet_access.hh"
 
 using namespace SparcISA;
+using namespace std;
 }};
 
