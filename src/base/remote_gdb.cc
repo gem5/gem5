@@ -632,6 +632,7 @@ BaseRemoteGDB::trap(int type)
     size_t datalen, len;
     char data[GDBPacketBufLen + 1];
     char *buffer;
+    int bufferSize;
     const char *p;
     char command, subcmd;
     string var;
@@ -640,7 +641,8 @@ BaseRemoteGDB::trap(int type)
     if (!attached)
         return false;
 
-    buffer = (char*)malloc(gdbregs.bytes() * 2 + 256);
+    bufferSize = gdbregs.bytes() * 2 + 256;
+    buffer = (char*)malloc(bufferSize);
 
     DPRINTF(GDBMisc, "trap: PC=%#x NPC=%#x\n",
             context->readPC(), context->readNextPC());
@@ -661,7 +663,7 @@ BaseRemoteGDB::trap(int type)
         active = true;
     else
         // Tell remote host that an exception has occurred.
-        snprintf((char *)buffer, sizeof(buffer), "S%02x", type);
+        snprintf((char *)buffer, bufferSize, "S%02x", type);
         send(buffer);
 
     // Stick frame regs into our reg cache.
@@ -679,13 +681,13 @@ BaseRemoteGDB::trap(int type)
             // if this command came from a running gdb, answer it --
             // the other guy has no way of knowing if we're in or out
             // of this loop when he issues a "remote-signal".
-            snprintf((char *)buffer, sizeof(buffer),
+            snprintf((char *)buffer, bufferSize,
                     "S%02x", type);
             send(buffer);
             continue;
 
           case GDBRegR:
-            if (2 * gdbregs.bytes() > sizeof(buffer))
+            if (2 * gdbregs.bytes() > bufferSize)
                 panic("buffer too small");
 
             mem2hex(buffer, gdbregs.regs, gdbregs.bytes());
@@ -732,7 +734,7 @@ BaseRemoteGDB::trap(int type)
                 send("E03");
                 continue;
             }
-            if (len > sizeof(buffer)) {
+            if (len > bufferSize) {
                 send("E04");
                 continue;
             }
@@ -768,7 +770,7 @@ BaseRemoteGDB::trap(int type)
                 send("E08");
                 continue;
             }
-            p = hex2mem(buffer, p, sizeof(buffer));
+            p = hex2mem(buffer, p, bufferSize);
             if (p == NULL) {
                 send("E09");
                 continue;
