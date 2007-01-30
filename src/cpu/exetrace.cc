@@ -358,7 +358,8 @@ Trace::InstRecord::dump(ostream &outs)
                             (SparcISA::MachInst)staticInst->machInst) {
                         diffInst = true;
                     }
-                    for (int i = 0; i < TheISA::NumIntArchRegs; i++) {
+                    // assume we have %g0 working correctly
+                    for (int i = 1; i < TheISA::NumIntArchRegs; i++) {
                         if (thread->readIntReg(i) != shared_data->intregs[i]) {
                             diffIntRegs = true;
                         }
@@ -428,15 +429,15 @@ Trace::InstRecord::dump(ostream &outs)
                     //if(shared_data->canrestore !=
                     //	    thread->readMiscReg(MISCREG_CANRESTORE))
                     if(shared_data->canrestore !=
-                            thread->readMiscReg(NumIntArchRegs + 4))
+                            thread->readIntReg(NumIntArchRegs + 4))
                         diffCanrestore = true;
                     //if(shared_data->otherwin != thread->readMiscReg(MISCREG_OTHERWIN))
                     if(shared_data->otherwin !=
-                            thread->readIntReg(NumIntArchRegs + 5))
+                            thread->readIntReg(NumIntArchRegs + 6))
                         diffOtherwin = true;
                     //if(shared_data->cleanwin != thread->readMiscReg(MISCREG_CLEANWIN))
                     if(shared_data->cleanwin !=
-                            thread->readMiscReg(NumIntArchRegs + 6))
+                            thread->readIntReg(NumIntArchRegs + 5))
                         diffCleanwin = true;
 
                     for (int i = 0; i < 64; i++) {
@@ -553,11 +554,11 @@ Trace::InstRecord::dump(ostream &outs)
                                 shared_data->pstate);
                         printRegPair(outs, "Y",
                                 //thread->readMiscReg(MISCREG_Y),
-                                thread->readMiscReg(NumIntArchRegs + 1),
+                                thread->readIntReg(NumIntArchRegs + 1),
                                 shared_data->y);
                         printRegPair(outs, "Ccr",
                                 //thread->readMiscReg(MISCREG_CCR),
-                                thread->readMiscReg(NumIntArchRegs + 2),
+                                thread->readIntReg(NumIntArchRegs + 2),
                                 shared_data->ccr);
                         printRegPair(outs, "Tl",
                                 thread->readMiscReg(MISCREG_TL),
@@ -584,11 +585,11 @@ Trace::InstRecord::dump(ostream &outs)
                                 shared_data->canrestore);
                         printRegPair(outs, "Otherwin",
                                 //thread->readMiscReg(MISCREG_OTHERWIN),
-                                thread->readIntReg(NumIntArchRegs + 5),
+                                thread->readIntReg(NumIntArchRegs + 6),
                                 shared_data->otherwin);
                         printRegPair(outs, "Cleanwin",
                                 //thread->readMiscReg(MISCREG_CLEANWIN),
-                                thread->readIntReg(NumIntArchRegs + 6),
+                                thread->readIntReg(NumIntArchRegs + 5),
                                 shared_data->cleanwin);
                         outs << endl;
                         for (int i = 1; i <= MaxTL; i++) {
