@@ -64,6 +64,21 @@ class DumbTOD : public BasicPioDevice
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
+
+    /**
+     * Serialize this object to the given output stream.
+     * @param os The stream to serialize to.
+     */
+    virtual void serialize(std::ostream &os);
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+
 };
 
 #endif // __DEV_BADDEV_HH__

@@ -51,11 +51,21 @@ using namespace TheISA;
 DumbTOD::DumbTOD(Params *p)
     : BasicPioDevice(p)
 {
+    struct tm tm;
+    char *tz;
+
     pioSize = 0x08;
 
-    struct tm tm;
     parseTime(p->init_time, &tm);
-    todTime = timegm(&tm);
+    tz = getenv("TZ");
+    setenv("TZ", "", 1);
+    tzset();
+    todTime = mktime(&tm);
+    if (tz)
+        setenv("TZ", tz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
 
     DPRINTFN("Real-time clock set to %s\n", asctime(&tm));
     DPRINTFN("Real-time clock set to %d\n", todTime);
@@ -81,6 +91,19 @@ DumbTOD::write(PacketPtr pkt)
 {
     panic("Dumb tod device doesn't support writes\n");
 }
+
+void
+DumbTOD::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(todTime);
+}
+
+void
+DumbTOD::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(todTime);
+}
+
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(DumbTOD)
 
