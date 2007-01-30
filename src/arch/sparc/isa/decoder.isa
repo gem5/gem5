@@ -62,8 +62,8 @@ decode OP default Unknown::unknown()
                         NNPC = NNPC;//Don't do anything
                     }});
                     0x1: bpn(19, {{
-                        NPC = xc->readNextPC() + 4;
-                        NNPC = NPC + 4;
+                        NNPC = NPC + 8;
+                        NPC = NPC + 4;
                     }}, ',a');
                 }
                 default: decode BPCC
@@ -76,15 +76,9 @@ decode OP default Unknown::unknown()
                     }});
                     0x2: bpccx(19, {{
                         if(passesCondition(Ccr<7:4>, COND2))
-                        {
-                            //warn("Took branch!\n");
                             NNPC = xc->readPC() + disp;
-                        }
                         else
-                        {
-                            //warn("Didn't take branch!\n");
                             handle_annul
-                        }
                     }});
                 }
             }
@@ -109,8 +103,8 @@ decode OP default Unknown::unknown()
                         NNPC = NNPC;//Don't do anything
                     }});
                     0x1: bn(22, {{
-                        NPC = xc->readNextPC() + 4;
-                        NNPC = NPC + 4;
+                        NNPC = NPC + 8;
+                        NPC = NPC + 4;
                     }}, ',a');
                 }
                 default: bicc(22, {{
@@ -165,8 +159,92 @@ decode OP default Unknown::unknown()
         }
         //SETHI (or NOP if rd == 0 and imm == 0)
         0x4: SetHi::sethi({{Rd.udw = imm;}});
-        0x5: FailUnimpl::fbpfcc();
-        0x6: FailUnimpl::fbfcc();
+        //fbpfcc
+        0x5: decode COND2 {
+            format BranchN {
+                //Branch Always
+                0x8: decode A
+                {
+                    0x0: fbpa(22, {{
+                        NNPC = xc->readPC() + disp;
+                    }});
+                    0x1: fbpa(22, {{
+                        NPC = xc->readPC() + disp;
+                        NNPC = NPC + 4;
+                    }}, ',a');
+                }
+                //Branch Never
+                0x0: decode A
+                {
+                    0x0: fbpn(22, {{
+                        NNPC = NNPC;//Don't do anything
+                    }});
+                    0x1: fbpn(22, {{
+                        NNPC = NPC + 8;
+                        NPC = NPC + 4;
+                    }}, ',a');
+                }
+                default: decode BPCC {
+                    0x0: fbpcc0(22, {{
+                        if(passesFpCondition(Fsr<11:10>, COND2))
+                            NNPC = xc->readPC() + disp;
+                        else
+                            handle_annul
+                    }});
+                    0x1: fbpcc1(22, {{
+                        if(passesFpCondition(Fsr<33:32>, COND2))
+                            NNPC = xc->readPC() + disp;
+                        else
+                            handle_annul
+                    }});
+                    0x2: fbpcc2(22, {{
+                        if(passesFpCondition(Fsr<35:34>, COND2))
+                            NNPC = xc->readPC() + disp;
+                        else
+                            handle_annul
+                    }});
+                    0x3: fbpcc3(22, {{
+                        if(passesFpCondition(Fsr<37:36>, COND2))
+                            NNPC = xc->readPC() + disp;
+                        else
+                            handle_annul
+                    }});
+                }
+            }
+        }
+        //fbfcc
+        0x6: decode COND2 {
+            format BranchN {
+                //Branch Always
+                0x8: decode A
+                {
+                    0x0: fba(22, {{
+                        NNPC = xc->readPC() + disp;
+                    }});
+                    0x1: fba(22, {{
+                        NPC = xc->readPC() + disp;
+                        NNPC = NPC + 4;
+                    }}, ',a');
+                }
+                //Branch Never
+                0x0: decode A
+                {
+                    0x0: fbn(22, {{
+                        NNPC = NNPC;//Don't do anything
+                    }});
+                    0x1: fbn(22, {{
+                        NNPC = NPC + 8;
+                        NPC = NPC + 4;
+                    }}, ',a');
+                }
+                default: fbfcc(22, {{
+                    if(passesFpCondition(Fsr<11:10>, COND2))
+                        NNPC = xc->readPC() + disp;
+                    else
+                        handle_annul
+                }});
+            }
+        }
     }
     0x1: BranchN::call(30, {{
             if (Pstate<3:>)

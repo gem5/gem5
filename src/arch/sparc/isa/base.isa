@@ -67,6 +67,26 @@ output header {{
             OverflowSet=0x7
         };
 
+        enum FpCondTest
+        {
+            FAlways=0x8,
+            FNever=0x0,
+            FUnordered=0x7,
+            FGreater=0x6,
+            FUnorderedOrGreater=0x5,
+            FLess=0x4,
+            FUnorderedOrLess=0x3,
+            FLessOrGreater=0x2,
+            FNotEqual=0x1,
+            FEqual=0x9,
+            FUnorderedOrEqual=0xA,
+            FGreaterOrEqual=0xB,
+            FUnorderedOrGreaterOrEqual=0xC,
+            FLessOrEqual=0xD,
+            FUnorderedOrLessOrEqual=0xE,
+            FOrdered=0xF
+        };
+
         extern char * CondTestAbbrev[];
 
         /**
@@ -92,6 +112,8 @@ output header {{
             void printRegArray(std::ostream &os,
                 const RegIndex indexArray[], int num) const;
         };
+
+        bool passesFpCondition(uint32_t fcc, uint32_t condition);
 
         bool passesCondition(uint32_t codes, uint32_t condition);
 
@@ -365,6 +387,51 @@ output decoder {{
             }
 
             return ss.str();
+        }
+
+        bool passesFpCondition(uint32_t fcc, uint32_t condition)
+        {
+            bool u = (fcc == 3);
+            bool g = (fcc == 2);
+            bool l = (fcc == 1);
+            bool e = (fcc == 0);
+            switch(condition)
+            {
+              case FAlways:
+                return 1;
+              case FNever:
+                return 0;
+              case FUnordered:
+                return u;
+              case FGreater:
+                return g;
+              case FUnorderedOrGreater:
+                return u || g;
+              case FLess:
+                return l;
+              case FUnorderedOrLess:
+                return u || l;
+              case FLessOrGreater:
+                return l || g;
+              case FNotEqual:
+                return l || g || u;
+              case FEqual:
+                return e;
+              case FUnorderedOrEqual:
+                return u || e;
+              case FGreaterOrEqual:
+                return g || e;
+              case FUnorderedOrGreaterOrEqual:
+                return u || g || e;
+              case FLessOrEqual:
+                return l || e;
+              case FUnorderedOrLessOrEqual:
+                return u || l || e;
+              case FOrdered:
+                return e || l || g;
+            }
+            panic("Tried testing condition nonexistant "
+                    "condition code %d", condition);
         }
 
         bool passesCondition(uint32_t codes, uint32_t condition)

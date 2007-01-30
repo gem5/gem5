@@ -211,13 +211,13 @@ let {{
     {
         if(A)
         {
-            NPC = xc->readNextNPC();
-            NNPC = NPC + 4;
+            NNPC = NPC + 8;
+            NPC = NPC + 4;
         }
         else
         {
-            NPC = xc->readNextPC();
-            NNPC = xc->readNextNPC();
+            NPC = NPC;
+            NNPC = NNPC;
         }
     }'''
 }};
