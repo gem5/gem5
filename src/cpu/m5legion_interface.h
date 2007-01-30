@@ -30,7 +30,7 @@
 
 #include <unistd.h>
 
-#define VERSION         0xA1000008
+#define VERSION         0xA1000009
 #define OWN_M5          0x000000AA
 #define OWN_LEGION      0x00000055
 
@@ -61,6 +61,7 @@ typedef struct {
     uint16_t pstate;
 
     uint64_t y;
+    uint64_t fsr;
     uint8_t ccr;
     uint8_t tl;
     uint8_t gl;

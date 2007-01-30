@@ -307,6 +307,7 @@ Trace::InstRecord::dump(ostream &outs)
         bool diffHtba = false;
         bool diffPstate = false;
         bool diffY = false;
+        bool diffFsr = false;
         bool diffCcr = false;
         bool diffTl = false;
         bool diffGl = false;
@@ -410,6 +411,8 @@ Trace::InstRecord::dump(ostream &outs)
                     if(shared_data->y !=
                             thread->readIntReg(NumIntArchRegs + 1))
                         diffY = true;
+                    if(shared_data->fsr != thread->readMiscReg(MISCREG_FSR))
+                        diffFsr = true;
                     //if(shared_data->ccr != thread->readMiscReg(MISCREG_CCR))
                     if(shared_data->ccr !=
                             thread->readIntReg(NumIntArchRegs + 2))
@@ -450,8 +453,8 @@ Trace::InstRecord::dump(ostream &outs)
                     if ((diffPC || diffCC || diffInst || diffIntRegs ||
                          diffFpRegs || diffTpc || diffTnpc || diffTstate ||
                          diffTt || diffHpstate || diffHtstate || diffHtba ||
-                         diffPstate || diffY || diffCcr || diffTl || diffGl ||
-                         diffAsi || diffPil || diffCwp || diffCansave ||
+                         diffPstate || diffY || diffCcr || diffTl || diffFsr ||
+                         diffGl || diffAsi || diffPil || diffCwp || diffCansave ||
                          diffCanrestore || diffOtherwin || diffCleanwin || diffTlb)
                         && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)
                         && !(((staticInst->machInst & 0xC0000000) == 0xC0000000)
@@ -487,6 +490,8 @@ Trace::InstRecord::dump(ostream &outs)
                             outs << " [Pstate]";
                         if (diffY)
                             outs << " [Y]";
+                        if (diffFsr)
+                            outs << " [FSR]";
                         if (diffCcr)
                             outs << " [Ccr]";
                         if (diffTl)
@@ -556,6 +561,9 @@ Trace::InstRecord::dump(ostream &outs)
                                 //thread->readMiscReg(MISCREG_Y),
                                 thread->readIntReg(NumIntArchRegs + 1),
                                 shared_data->y);
+                        printRegPair(outs, "FSR",
+                                thread->readMiscReg(MISCREG_FSR),
+                                shared_data->fsr);
                         printRegPair(outs, "Ccr",
                                 //thread->readMiscReg(MISCREG_CCR),
                                 thread->readIntReg(NumIntArchRegs + 2),
