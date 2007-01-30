@@ -653,7 +653,7 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x03: Trap::fmovq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x03: FpUnimpl::fmovq();
                     0x05: fnegs({{
                         Frds.uw = Frs2s.uw ^ (1UL << 31);
                         //fsr.ftt = fsr.cexc = 0
@@ -666,7 +666,7 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x07: Trap::fnegq({{fault = new FpExceptionOther;}}); //fpop unimp
+                    0x07: FpUnimpl::fnegq();
                     0x09: fabss({{
                         Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;
                         //fsr.ftt = fsr.cexc = 0
@@ -679,58 +679,58 @@ decode OP default Unknown::unknown()
                         Fsr &= ~(7 << 14);
                         Fsr &= ~(0x1F);
                     }});
-                    0x0B: Trap::fabsq({{fault = new FpExceptionOther;}}); //fpop unimp
+                    0x0B: FpUnimpl::fabsq();
                     0x29: fsqrts({{Frds.sf = std::sqrt(Frs2s.sf);}});
                     0x2A: fsqrtd({{Frd.df = std::sqrt(Frs2.df);}});
-                    0x2B: Trap::fsqrtq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x2B: FpUnimpl::fsqrtq();
                     0x41: fadds({{Frds.sf = Frs1s.sf + Frs2s.sf;}});
                     0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});
-                    0x43: Trap::faddq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x43: FpUnimpl::faddq();
                     0x45: fsubs({{Frds.sf = Frs1s.sf - Frs2s.sf;}});
                     0x46: fsubd({{Frd.df = Frs1.df - Frs2.df;}});
-                    0x47: Trap::fsubq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x47: FpUnimpl::fsubq();
                     0x49: fmuls({{Frds.sf = Frs1s.sf * Frs2s.sf;}});
                     0x4A: fmuld({{Frd.df = Frs1.df * Frs2.df;}});
-                    0x4B: Trap::fmulq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x4B: FpUnimpl::fmulq();
                     0x4D: fdivs({{Frds.sf = Frs1s.sf / Frs2s.sf;}});
                     0x4E: fdivd({{Frd.df = Frs1.df / Frs2.df;}});
-                    0x4F: Trap::fdivq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x4F: FpUnimpl::fdivq();
                     0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
-                    0x6E: Trap::fdmulq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x6E: FpUnimpl::fdmulq();
                     0x81: fstox({{
                             Frd.df = (double)static_cast<int64_t>(Frs2s.sf);
                     }});
                     0x82: fdtox({{
                             Frd.df = (double)static_cast<int64_t>(Frs2.df);
                     }});
-                    0x83: Trap::fqtox({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x83: FpUnimpl::fqtox();
                     0x84: fxtos({{
                             Frds.sf = static_cast<float>((int64_t)Frs2.df);
                     }});
                     0x88: fxtod({{
                             Frd.df = static_cast<double>((int64_t)Frs2.df);
                     }});
-                    0x8C: Trap::fxtoq({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0x8C: FpUnimpl::fxtoq();
                     0xC4: fitos({{
                             Frds.sf = static_cast<float>((int32_t)Frs2s.sf);
                     }});
                     0xC6: fdtos({{Frds.sf = Frs2.df;}});
-                    0xC7: Trap::fqtos({{fault = new FpExceptionOther;}}); //unimp fpop
+                    0xC7: FpUnimpl::fqtos();
                     0xC8: fitod({{
                             Frd.df = static_cast<double>((int32_t)Frs2s.sf);
                     }});
                     0xC9: fstod({{Frd.df = Frs2s.sf;}});
-                    0xCB: Trap::fqtod({{fault = new FpExceptionOther;}}); // unimp fpop
-                    0xCC: Trap::fitoq({{fault = new FpExceptionOther;}}); // unimp fpop
-                    0xCD: Trap::fstoq({{fault = new FpExceptionOther;}}); // unimp fpop
-                    0xCE: Trap::fdtoq({{fault = new FpExceptionOther;}}); // unimp fpop
+                    0xCB: FpUnimpl::fqtod();
+                    0xCC: FpUnimpl::fitoq();
+                    0xCD: FpUnimpl::fstoq();
+                    0xCE: FpUnimpl::fdtoq();
                     0xD1: fstoi({{
                             Frds.sf = (float)static_cast<int32_t>(Frs2s.sf);
                     }});
                     0xD2: fdtoi({{
                             Frds.sf = (float)static_cast<int32_t>(Frs2.df);
                     }});
-                    0xD3: Trap::fqtoi({{fault = new FpExceptionOther;}}); // unimp fpop
+                    0xD3: FpUnimpl::fqtoi();
                     default: FailUnimpl::fpop1();
                 }
             }
@@ -766,7 +766,7 @@ decode OP default Unknown::unknown()
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
-                    0x53: Trap::fcmpq({{fault = new FpExceptionOther;}});
+                    0x53: FpUnimpl::fcmpq();
                     0x54: fcmpes({{
                           uint8_t fcc = 0;
                           if(isnan(Frs1s) || isnan(Frs2s))
@@ -793,7 +793,7 @@ decode OP default Unknown::unknown()
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
-                    0x56: Trap::fcmpeq({{fault = new FpExceptionOther;}});
+                    0x56: FpUnimpl::fcmpeq();
                     default: FailUnimpl::fpop2();
                 }
             }

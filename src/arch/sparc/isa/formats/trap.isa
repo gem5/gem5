@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,36 @@ def template TrapExecute {{
 
 def format Trap(code, *opt_flags) {{
         iop = InstObjParams(name, Name, 'Trap', code, opt_flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = TrapExecute.subst(iop)
+}};
+
+output header {{
+        class FpUnimpl : public SparcStaticInst
+        {
+          protected:
+            FpUnimpl(const char *mnem,
+                    ExtMachInst _machInst, OpClass __opClass)
+                : SparcStaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const
+            {
+                return mnemonic;
+            }
+        };
+}};
+
+def format FpUnimpl(*flags) {{
+        fpunimpl_code = '''
+            Fsr = insertBits(Fsr, 16, 14, 3);
+            fault = new FpExceptionOther;
+            '''
+        iop = InstObjParams(name, Name, 'FpUnimpl', fpunimpl_code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
