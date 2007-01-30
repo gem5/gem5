@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -88,9 +88,9 @@ def operands {{
     'Frd_5':		('FloatReg', 'df', 'dfpr(RD) + 10', 'IsFloating', 10),
     'Frd_6':		('FloatReg', 'df', 'dfpr(RD) + 12', 'IsFloating', 10),
     'Frd_7':		('FloatReg', 'df', 'dfpr(RD) + 14', 'IsFloating', 10),
-    'Frs1s':		('FloatReg', 'df', 'RS1', 'IsFloating', 11),
+    'Frs1s':		('FloatReg', 'sf', 'RS1', 'IsFloating', 11),
     'Frs1':		('FloatReg', 'df', 'dfpr(RS1)', 'IsFloating', 11),
-    'Frs2s':		('FloatReg', 'df', 'RS2', 'IsFloating', 12),
+    'Frs2s':		('FloatReg', 'sf', 'RS2', 'IsFloating', 12),
     'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
     'NPC': 		('NPC', 'udw', None, ( None, None, 'IsControl' ), 31),
     'NNPC':		('NNPC', 'udw', None, (None, None, 'IsControl' ), 32),
