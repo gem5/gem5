@@ -193,11 +193,12 @@ RemoteGDB::setregs()
 void
 RemoteGDB::clearSingleStep()
 {
-    panic("SPARC does not support hardware single stepping\n");
+    warn("SPARC single stepping not implemented, "
+            "but clearSingleStep called\n");
 }
 
 void
 RemoteGDB::setSingleStep()
 {
-    panic("SPARC does not support hardware single stepping\n");
+    panic("SPARC single stepping not implemented.\n");
 }
