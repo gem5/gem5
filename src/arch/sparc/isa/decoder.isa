@@ -738,7 +738,7 @@ decode OP default Unknown::unknown()
                 format BasicOperate{
                     0x51: fcmps({{
                           uint8_t fcc;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(std::isnan(Frs1s) || std::isnan(Frs2s))
                               fcc = 3;
                           else if(Frs1s < Frs2s)
                               fcc = 1;
@@ -753,7 +753,7 @@ decode OP default Unknown::unknown()
                     }});
                     0x52: fcmpd({{
                           uint8_t fcc;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(std::isnan(Frs1s) || std::isnan(Frs2s))
                               fcc = 3;
                           else if(Frs1s < Frs2s)
                               fcc = 1;
@@ -767,9 +767,9 @@ decode OP default Unknown::unknown()
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x53: FpUnimpl::fcmpq();
-                    0x54: fcmpes({{
+                    0x55: fcmpes({{
                           uint8_t fcc = 0;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(std::isnan(Frs1s) || std::isnan(Frs2s))
                               fault = new FpExceptionIEEE754;
                           if(Frs1s < Frs2s)
                               fcc = 1;
@@ -780,9 +780,9 @@ decode OP default Unknown::unknown()
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
-                    0x55: fcmped({{
+                    0x56: fcmped({{
                           uint8_t fcc = 0;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(std::isnan(Frs1s) || std::isnan(Frs2s))
                               fault = new FpExceptionIEEE754;
                           if(Frs1s < Frs2s)
                               fcc = 1;
@@ -793,7 +793,7 @@ decode OP default Unknown::unknown()
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
-                    0x56: FpUnimpl::fcmpeq();
+                    0x57: FpUnimpl::fcmpeq();
                     default: FailUnimpl::fpop2();
                 }
             }
