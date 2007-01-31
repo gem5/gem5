@@ -21,53 +21,53 @@ class T1000(Platform):
     type = 'T1000'
     system = Param.System(Parent.any, "system")
 
-    fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000,
-            warn_access="Accessing Clock Unit -- Unimplemented!")
+    fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000)
+            #warn_access="Accessing Clock Unit -- Unimplemented!")
 
     fake_membnks = IsaFake(pio_addr=0x9700000000, pio_size=16384,
-            ret_data64=0x0000000000000000, update_data=False,
-            warn_access="Accessing Memory Banks -- Unimplemented!")
+            ret_data64=0x0000000000000000, update_data=False)
+            #warn_access="Accessing Memory Banks -- Unimplemented!")
 
-    fake_iob = IsaFake(pio_addr=0x9800000000, pio_size=0x100000000,
-            warn_access="Accessing IOB -- Unimplemented!")
+    fake_iob = IsaFake(pio_addr=0x9800000000, pio_size=0x100000000)
+            #warn_access="Accessing IOB -- Unimplemented!")
 
-    fake_jbi = IsaFake(pio_addr=0x8000000000, pio_size=0x100000000,
-            warn_access="Accessing JBI -- Unimplemented!")
+    fake_jbi = IsaFake(pio_addr=0x8000000000, pio_size=0x100000000)
+            #warn_access="Accessing JBI -- Unimplemented!")
 
     fake_l2_1 = IsaFake(pio_addr=0xA900000000, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True,
-            warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000001, update_data=True)
+            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
     fake_l2_2 = IsaFake(pio_addr=0xA900000040, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True,
-            warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000001, update_data=True)
+            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
     fake_l2_3 = IsaFake(pio_addr=0xA900000080, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True,
-            warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000001, update_data=True)
+            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
     fake_l2_4 = IsaFake(pio_addr=0xA9000000C0, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True,
-            warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000001, update_data=True)
+            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
     fake_l2esr_1 = IsaFake(pio_addr=0xAB00000000, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True,
-            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000000, update_data=True)
+            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
     fake_l2esr_2 = IsaFake(pio_addr=0xAB00000040, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True,
-            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000000, update_data=True)
+            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
     fake_l2esr_3 = IsaFake(pio_addr=0xAB00000080, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True,
-            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000000, update_data=True)
+            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
     fake_l2esr_4 = IsaFake(pio_addr=0xAB000000C0, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True,
-            warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+            ret_data64=0x0000000000000000, update_data=True)
+            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
-    fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000,
-            warn_access="Accessing SSI -- Unimplemented!")
+    fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000)
+            #warn_access="Accessing SSI -- Unimplemented!")
 
     hvuart = Uart8250(pio_addr=0xfff0c2c000)
     htod = DumbTOD()
