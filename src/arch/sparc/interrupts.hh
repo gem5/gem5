@@ -67,8 +67,11 @@ enum interrupts_t {
         {
             if (int_type < 0 || int_type >= num_interrupt_types)
                 panic("posting unknown interrupt!\n");
-            interrupts[int_type] = true;
-            ++numPosted;
+
+            if (interrupts[int_type] == false) {
+                interrupts[int_type] = true;
+                ++numPosted;
+            }
         }
 
         void post(int int_num, int index)
