@@ -450,16 +450,13 @@ Trace::InstRecord::dump(ostream &outs)
                                 diffTlb = true;
                     }
 
-                    if ((diffPC || diffCC || diffInst || diffIntRegs ||
+                    if (diffPC || diffCC || diffInst || diffIntRegs ||
                          diffFpRegs || diffTpc || diffTnpc || diffTstate ||
                          diffTt || diffHpstate || diffHtstate || diffHtba ||
                          diffPstate || diffY || diffCcr || diffTl || diffFsr ||
                          diffGl || diffAsi || diffPil || diffCwp || diffCansave ||
                          diffCanrestore || diffOtherwin || diffCleanwin || diffTlb)
-                        && !((staticInst->machInst & 0xC1F80000) == 0x81D00000)
-                        && !(((staticInst->machInst & 0xC0000000) == 0xC0000000)
-                            && shared_data->tl == thread->readMiscReg(MISCREG_TL) + 1)
-                       ) {
+                       {
 
                         outs << "Differences found between M5 and Legion:";
                         if (diffPC)
@@ -639,7 +636,7 @@ Trace::InstRecord::dump(ostream &outs)
                                 char label[8];
                                 sprintf(label, "%%f%d", x);
                                 printRegPair(outs, label,
-                                 thread->readFloatRegBits(x,FloatRegFile::DoubleWidth),
+                                 thread->readFloatRegBits(x*2,FloatRegFile::DoubleWidth),
                                  shared_data->fpregs[x]);
                             }
                         }
