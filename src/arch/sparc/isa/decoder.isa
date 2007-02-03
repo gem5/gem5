@@ -479,10 +479,10 @@ decode OP default Unknown::unknown()
                 0x11: PrivCheck::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
                 //0x12 should cause an illegal instruction exception
                 0x13: NoPriv::rdgsr({{
-                    if(Fprs<2:> == 0 || Pstate<4:> == 0)
-                        Rd = Gsr;
-                    else
-                        fault = new FpDisabled;
+                       fault = checkFpEnableFault(xc);
+                       if (fault)
+                            return fault;
+                       Rd = Gsr;
                 }});
                 //0x14-0x15 should cause an illegal instruction exception
                 0x16: Priv::rdsoftint({{Rd = Softint;}});
