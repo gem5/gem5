@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# Copyright (c) 2003-2006 The Regents of The University of Michigan
+# Copyright (c) 2003-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,8 @@
 # run only).
 #
 
+use FindBin;
+
 if (@ARGV < 2) {
     die "Usage: tracediff \"sim1|sim2\" [common-arg \"arg1|arg2\" ...]\n";
 }
@@ -101,9 +103,9 @@ mkdir($dir2) or die "Can't create dir $dir2\n";
 $cmd1 = "$sim1 -d $dir1 $args1 2>&1 |";
 $cmd2 = "$sim2 -d $dir2 $args2 2>&1 |";
 
-# This only works if you have rundiff in your path.  I just edit it
-# with an explicit path if necessary.
-$fullcmd = "rundiff '$cmd1' '$cmd2' 2>&1 > tracediff-$$.out";
+# Expect that rundiff is in the same dir as the tracediff script.
+# FindBin figures that out for us.
+$fullcmd = "$FindBin::Bin/rundiff '$cmd1' '$cmd2' 2>&1 > tracediff-$$.out";
 
 print "Executing $fullcmd\n";
 system($fullcmd);
