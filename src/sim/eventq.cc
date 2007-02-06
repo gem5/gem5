@@ -53,7 +53,9 @@ using namespace std;
 //
 EventQueue mainEventQueue("MainEventQueue");
 
+#ifndef NDEBUG
 Counter Event::instanceCounter = 0;
+#endif
 
 void
 EventQueue::insert(Event *event)
