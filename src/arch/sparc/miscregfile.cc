@@ -232,6 +232,7 @@ MiscReg MiscRegFile::readReg(int miscReg)
 
         /** Floating Point Status Register */
       case MISCREG_FSR:
+        DPRINTF(Sparc, "FSR read as: %#x\n", fsr);
         return fsr;
 
       case MISCREG_MMU_P_CONTEXT:
@@ -337,10 +338,6 @@ MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
       case MISCREG_PCR:
       case MISCREG_PIC:
         panic("Performance Instrumentation not impl\n");
-        /** Floating Point Status Register */
-      case MISCREG_FSR:
-        warn("Reading FSR Floating Point not implemented\n");
-        break;
       case MISCREG_SOFTINT_CLR:
       case MISCREG_SOFTINT_SET:
         panic("Can read from softint clr/set\n");
@@ -488,6 +485,7 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
         /** Floating Point Status Register */
       case MISCREG_FSR:
         fsr = val;
+        DPRINTF(Sparc, "FSR written with: %#x\n", fsr);
         break;
 
       case MISCREG_MMU_P_CONTEXT:

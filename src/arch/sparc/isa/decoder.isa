@@ -479,10 +479,10 @@ decode OP default Unknown::unknown()
                 0x11: PrivCheck::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
                 //0x12 should cause an illegal instruction exception
                 0x13: NoPriv::rdgsr({{
-                    if(Fprs<2:> == 0 || Pstate<4:> == 0)
-                        Rd = Gsr;
-                    else
-                        fault = new FpDisabled;
+                       fault = checkFpEnableFault(xc);
+                       if (fault)
+                            return fault;
+                       Rd = Gsr;
                 }});
                 //0x14-0x15 should cause an illegal instruction exception
                 0x16: Priv::rdsoftint({{Rd = Softint;}});
@@ -718,7 +718,7 @@ decode OP default Unknown::unknown()
                 0x1F: HPriv::wrhprhstick_cmpr({{HstickCmpr = Rs1 ^ Rs2_or_imm13;}});
             }
             0x34: decode OPF{
-                format BasicOperate{
+                format FpBasic{
                     0x01: fmovs({{
                         Frds.uw = Frs2s.uw;
                         //fsr.ftt = fsr.cexc = 0
@@ -765,7 +765,7 @@ decode OP default Unknown::unknown()
                     0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});
                     0x43: FpUnimpl::faddq();
                     0x45: fsubs({{Frds.sf = Frs1s.sf - Frs2s.sf;}});
-                    0x46: fsubd({{Frd.df = Frs1.df - Frs2.df;}});
+                    0x46: fsubd({{Frd.df = Frs1.df - Frs2.df; }});
                     0x47: FpUnimpl::fsubq();
                     0x49: fmuls({{Frds.sf = Frs1s.sf * Frs2s.sf;}});
                     0x4A: fmuld({{Frd.df = Frs1.df * Frs2.df;}});
@@ -776,26 +776,26 @@ decode OP default Unknown::unknown()
                     0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
                     0x6E: FpUnimpl::fdmulq();
                     0x81: fstox({{
-                            Frd.df = (double)static_cast<int64_t>(Frs2s.sf);
+                            Frd.sdw = static_cast<int64_t>(Frs2s.sf);
                     }});
                     0x82: fdtox({{
-                            Frd.df = (double)static_cast<int64_t>(Frs2.df);
+                            Frd.sdw = static_cast<int64_t>(Frs2.df);
                     }});
                     0x83: FpUnimpl::fqtox();
                     0x84: fxtos({{
-                            Frds.sf = static_cast<float>((int64_t)Frs2.df);
+                            Frds.sf = static_cast<float>(Frs2.sdw);
                     }});
                     0x88: fxtod({{
-                            Frd.df = static_cast<double>((int64_t)Frs2.df);
+                            Frd.df = static_cast<double>(Frs2.sdw);
                     }});
                     0x8C: FpUnimpl::fxtoq();
                     0xC4: fitos({{
-                            Frds.sf = static_cast<float>((int32_t)Frs2s.sf);
+                            Frds.sf = static_cast<float>(Frs2s.sw);
                     }});
                     0xC6: fdtos({{Frds.sf = Frs2.df;}});
                     0xC7: FpUnimpl::fqtos();
                     0xC8: fitod({{
-                            Frd.df = static_cast<double>((int32_t)Frs2s.sf);
+                            Frd.df = static_cast<double>(Frs2s.sw);
                     }});
                     0xC9: fstod({{Frd.df = Frs2s.sf;}});
                     0xCB: FpUnimpl::fqtod();
@@ -803,17 +803,23 @@ decode OP default Unknown::unknown()
                     0xCD: FpUnimpl::fstoq();
                     0xCE: FpUnimpl::fdtoq();
                     0xD1: fstoi({{
-                            Frds.sf = (float)static_cast<int32_t>(Frs2s.sf);
+                            Frds.sw = static_cast<int32_t>(Frs2s.sf);
+                            float t = Frds.sw;
+                            if (t != Frs2s.sf)
+                               Fsr = insertBits(Fsr, 4,0, 0x01);
                     }});
                     0xD2: fdtoi({{
-                            Frds.sf = (float)static_cast<int32_t>(Frs2.df);
+                            Frds.sw = static_cast<int32_t>(Frs2.df);
+                            double t = Frds.sw;
+                            if (t != Frs2.df)
+                               Fsr = insertBits(Fsr, 4,0, 0x01);
                     }});
                     0xD3: FpUnimpl::fqtoi();
                     default: FailUnimpl::fpop1();
                 }
             }
             0x35: decode OPF{
-                format BasicOperate{
+                format FpBasic{
                     0x51: fcmps({{
                           uint8_t fcc;
                           if(isnan(Frs1s) || isnan(Frs2s))
@@ -831,11 +837,11 @@ decode OP default Unknown::unknown()
                     }});
                     0x52: fcmpd({{
                           uint8_t fcc;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(isnan(Frs1) || isnan(Frs2))
                               fcc = 3;
-                          else if(Frs1s < Frs2s)
+                          else if(Frs1 < Frs2)
                               fcc = 1;
-                          else if(Frs1s > Frs2s)
+                          else if(Frs1 > Frs2)
                               fcc = 2;
                           else
                               fcc = 0;
@@ -860,11 +866,11 @@ decode OP default Unknown::unknown()
                     }});
                     0x56: fcmped({{
                           uint8_t fcc = 0;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if(isnan(Frs1) || isnan(Frs2))
                               fault = new FpExceptionIEEE754;
-                          if(Frs1s < Frs2s)
+                          if(Frs1 < Frs2)
                               fcc = 1;
-                          else if(Frs1s > Frs2s)
+                          else if(Frs1 > Frs2)
                               fcc = 2;
                           uint8_t firstbit = 10;
                           if(FCMPCC)
@@ -960,24 +966,24 @@ decode OP default Unknown::unknown()
                 0x55: FailUnimpl::fpsub16s();
                 0x56: FailUnimpl::fpsub32();
                 0x57: FailUnimpl::fpsub32s();
-                0x60: BasicOperate::fzero({{Frd.df = 0;}});
-                0x61: BasicOperate::fzeros({{Frds.sf = 0;}});
+                0x60: FpBasic::fzero({{Frd.df = 0;}});
+                0x61: FpBasic::fzeros({{Frds.sf = 0;}});
                 0x62: FailUnimpl::fnor();
                 0x63: FailUnimpl::fnors();
                 0x64: FailUnimpl::fandnot2();
                 0x65: FailUnimpl::fandnot2s();
-                0x66: BasicOperate::fnot2({{
+                0x66: FpBasic::fnot2({{
                         Frd.df = (double)(~((uint64_t)Frs2.df));
                 }});
-                0x67: BasicOperate::fnot2s({{
+                0x67: FpBasic::fnot2s({{
                         Frds.sf = (float)(~((uint32_t)Frs2s.sf));
                 }});
                 0x68: FailUnimpl::fandnot1();
                 0x69: FailUnimpl::fandnot1s();
-                0x6A: BasicOperate::fnot1({{
+                0x6A: FpBasic::fnot1({{
                         Frd.df = (double)(~((uint64_t)Frs1.df));
                 }});
-                0x6B: BasicOperate::fnot1s({{
+                0x6B: FpBasic::fnot1s({{
                         Frds.sf = (float)(~((uint32_t)Frs1s.sf));
                 }});
                 0x6C: FailUnimpl::fxor();
@@ -988,18 +994,18 @@ decode OP default Unknown::unknown()
                 0x71: FailUnimpl::fands();
                 0x72: FailUnimpl::fxnor();
                 0x73: FailUnimpl::fxnors();
-                0x74: BasicOperate::fsrc1({{Frd.udw = Frs1.udw;}});
-                0x75: BasicOperate::fsrc1s({{Frds.uw = Frs1s.uw;}});
+                0x74: FpBasic::fsrc1({{Frd.udw = Frs1.udw;}});
+                0x75: FpBasic::fsrc1s({{Frds.uw = Frs1s.uw;}});
                 0x76: FailUnimpl::fornot2();
                 0x77: FailUnimpl::fornot2s();
-                0x78: BasicOperate::fsrc2({{Frd.udw = Frs2.udw;}});
-                0x79: BasicOperate::fsrc2s({{Frds.uw = Frs2s.uw;}});
+                0x78: FpBasic::fsrc2({{Frd.udw = Frs2.udw;}});
+                0x79: FpBasic::fsrc2s({{Frds.uw = Frs2s.uw;}});
                 0x7A: FailUnimpl::fornot1();
                 0x7B: FailUnimpl::fornot1s();
                 0x7C: FailUnimpl::for();
                 0x7D: FailUnimpl::fors();
-                0x7E: BasicOperate::fone({{Frd.udw = std::numeric_limits<uint64_t>::max();}});
-                0x7F: BasicOperate::fones({{Frds.uw = std::numeric_limits<uint32_t>::max();}});
+                0x7E: FpBasic::fone({{Frd.udw = std::numeric_limits<uint64_t>::max();}});
+                0x7F: FpBasic::fones({{Frds.uw = std::numeric_limits<uint32_t>::max();}});
                 0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
                 0x81: FailUnimpl::siam();
             }
@@ -1236,16 +1242,32 @@ decode OP default Unknown::unknown()
                Rd.uw = uReg0;}}, {{EXT_ASI}});
         format Trap {
             0x20: Load::ldf({{Frds.uw = Mem.uw;}});
-            0x21: decode X {
-                0x0: Load::ldfsr({{Fsr = Mem.uw | Fsr<63:32>;}});
-                0x1: Load::ldxfsr({{Fsr = Mem.udw;}});
+            0x21: decode RD {
+                0x0: Load::ldfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                   Fsr = Mem.uw | Fsr<63:32>;}});
+                0x1: Load::ldxfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                    Fsr = Mem.udw;}});
+                default: FailUnimpl::ldfsrOther();
             }
             0x22: ldqf({{fault = new FpDisabled;}});
             0x23: Load::lddf({{Frd.udw = Mem.udw;}});
             0x24: Store::stf({{Mem.uw = Frds.uw;}});
-            0x25: decode X {
-                0x0: Store::stfsr({{Mem.uw = Fsr<31:0>;}});
-                0x1: Store::stxfsr({{Mem.udw = Fsr;}});
+            0x25: decode RD {
+                0x0: Store::stfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                    Mem.uw = Fsr<31:0>;
+                                    Fsr = insertBits(Fsr,16,14,0);}});
+                0x1: Store::stxfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                     Mem.udw = Fsr;
+                                     Fsr = insertBits(Fsr,16,14,0);}});
+                default: FailUnimpl::stfsrOther();
             }
             0x26: stqf({{fault = new FpDisabled;}});
             0x27: Store::stdf({{Mem.udw = Frd.udw;}});

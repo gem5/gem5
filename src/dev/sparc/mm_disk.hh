@@ -46,10 +46,7 @@ class MmDisk : public BasicPioDevice
     DiskImage *image;
     off_t curSector;
     bool dirty;
-    union {
-        uint8_t bytes[SectorSize];
-        uint32_t words[SectorSize/4];
-    };
+    uint8_t diskData[SectorSize];
 
   public:
     struct Params : public BasicPioDevice::Params
@@ -64,6 +61,8 @@ class MmDisk : public BasicPioDevice
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
+
+    virtual void serialize(std::ostream &os);
 };
 
 #endif //__DEV_SPARC_MM_DISK_HH__
