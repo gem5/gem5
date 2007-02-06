@@ -53,6 +53,8 @@ using namespace std;
 //
 EventQueue mainEventQueue("MainEventQueue");
 
+Counter Event::instanceCounter = 0;
+
 void
 EventQueue::insert(Event *event)
 {

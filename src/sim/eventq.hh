@@ -75,6 +75,18 @@ class Event : public Serializable, public FastAlloc
     friend class EventQueue;
 
   private:
+
+#ifndef NDEBUG
+    /// Global counter to generate unique IDs for Event instances
+    static Counter instanceCounter;
+
+    /// This event's unique ID.  We can also use pointer values for
+    /// this but they're not consistent across runs making debugging
+    /// more difficult.  Thus we use a global counter value when
+    /// debugging.
+    Counter instanceId;
+#endif // NDEBUG
+
     /// queue to which this event belongs (though it may or may not be
     /// scheduled on this queue yet)
     EventQueue *queue;
@@ -173,12 +185,19 @@ class Event : public Serializable, public FastAlloc
 #endif
           annotated_value(0)
     {
+#ifndef NDEBUG
+        instanceId = ++instanceCounter;
+#endif
     }
 
     ~Event() {}
 
     virtual const std::string name() const {
+#ifndef NDEBUG
+        return csprintf("Event_%d", instanceId);
+#else
         return csprintf("Event_%x", (uintptr_t)this);
+#endif
     }
 
     /// Determine if the current event is scheduled
