@@ -411,8 +411,14 @@ Trace::InstRecord::dump(ostream &outs)
                     if(shared_data->y !=
                             thread->readIntReg(NumIntArchRegs + 1))
                         diffY = true;
-                    if(shared_data->fsr != thread->readMiscReg(MISCREG_FSR))
+                    if(shared_data->fsr != thread->readMiscReg(MISCREG_FSR)) {
                         diffFsr = true;
+                        if (mbits(shared_data->fsr, 63,10) ==
+                                mbits(thread->readMiscReg(MISCREG_FSR), 63,10)) {
+                            thread->setMiscReg(MISCREG_FSR, shared_data->fsr);
+                            diffFsr = false;
+                        }
+                    }
                     //if(shared_data->ccr != thread->readMiscReg(MISCREG_CCR))
                     if(shared_data->ccr !=
                             thread->readIntReg(NumIntArchRegs + 2))
@@ -664,7 +670,7 @@ Trace::InstRecord::dump(ostream &outs)
                         }
 
                         diffcount++;
-                        if (diffcount > 2)
+                        if (diffcount > 3)
                             fatal("Differences found between Legion and M5\n");
                     } else
                         diffcount = 0;

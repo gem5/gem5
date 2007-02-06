@@ -807,14 +807,12 @@ decode OP default Unknown::unknown()
                             float t = Frds.sw;
                             if (t != Frs2s.sf)
                                Fsr = insertBits(Fsr, 4,0, 0x01);
-                            Fsr |= Fsr<4:0> << 5;
                     }});
                     0xD2: fdtoi({{
                             Frds.sw = static_cast<int32_t>(Frs2.df);
                             double t = Frds.sw;
                             if (t != Frs2.df)
                                Fsr = insertBits(Fsr, 4,0, 0x01);
-                            Fsr |= Fsr<4:0> << 5;
                     }});
                     0xD3: FpUnimpl::fqtoi();
                     default: FailUnimpl::fpop1();
@@ -1245,18 +1243,30 @@ decode OP default Unknown::unknown()
         format Trap {
             0x20: Load::ldf({{Frds.uw = Mem.uw;}});
             0x21: decode RD {
-                0x0: Load::ldfsr({{Fsr = Mem.uw | Fsr<63:32>;}});
-                0x1: Load::ldxfsr({{Fsr = Mem.udw;}});
+                0x0: Load::ldfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                   Fsr = Mem.uw | Fsr<63:32>;}});
+                0x1: Load::ldxfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                    Fsr = Mem.udw;}});
                 default: FailUnimpl::ldfsrOther();
             }
             0x22: ldqf({{fault = new FpDisabled;}});
             0x23: Load::lddf({{Frd.udw = Mem.udw;}});
             0x24: Store::stf({{Mem.uw = Frds.uw;}});
             0x25: decode RD {
-                0x0: Store::stfsr({{Mem.uw = Fsr<31:0>;
+                0x0: Store::stfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                    Mem.uw = Fsr<31:0>;
                                     Fsr = insertBits(Fsr,16,14,0);}});
-                0x1: Store::stxfsr({{Mem.udw = Fsr;
-                                    Fsr = insertBits(Fsr,16,14,0);}});
+                0x1: Store::stxfsr({{fault = checkFpEnableFault(xc);
+                                     if (fault)
+                                         return fault;
+                                     Mem.udw = Fsr;
+                                     Fsr = insertBits(Fsr,16,14,0);}});
                 default: FailUnimpl::stfsrOther();
             }
             0x26: stqf({{fault = new FpDisabled;}});

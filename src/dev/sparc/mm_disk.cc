@@ -47,7 +47,7 @@
 MmDisk::MmDisk(Params *p)
     : BasicPioDevice(p), image(p->image), curSector((uint64_t)-1), dirty(false)
 {
-    std::memset(&bytes, 0, SectorSize);
+    std::memset(&diskData, 0, SectorSize);
     pioSize = image->size() * SectorSize;
 }
 
@@ -57,9 +57,9 @@ MmDisk::read(PacketPtr pkt)
     Addr accessAddr;
     off_t sector;
     off_t bytes_read;
-    uint16_t *d16;
-    uint32_t *d32;
-    uint64_t *d64;
+    uint16_t d16;
+    uint32_t d32;
+    uint64_t d64;
 
     assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
@@ -68,26 +68,34 @@ MmDisk::read(PacketPtr pkt)
     sector = accessAddr / SectorSize;
 
     if (sector != curSector) {
-        if (dirty)
-            bytes_read = image->write(bytes, curSector);
-        bytes_read = image->read(bytes,  sector);
+        if (dirty) {
+            bytes_read = image->write(diskData, curSector);
+            assert(bytes_read == SectorSize);
+        }
+        bytes_read = image->read(diskData,  sector);
+        assert(bytes_read == SectorSize);
         curSector = sector;
     }
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
-        pkt->set(bytes[accessAddr % SectorSize]);
+        pkt->set(diskData[accessAddr % SectorSize]);
+        DPRINTF(IdeDisk, "reading byte %#x value= %#x\n", accessAddr, diskData[accessAddr %
+                SectorSize]);
         break;
       case sizeof(uint16_t):
-        d16 = (uint16_t*)bytes + (accessAddr % SectorSize)/2;
-        pkt->set(htobe(*d16));
+        memcpy(&d16, diskData + (accessAddr % SectorSize), 2);
+        pkt->set(htobe(d32));
+        DPRINTF(IdeDisk, "reading word %#x value= %#x\n", accessAddr, d16);
         break;
       case sizeof(uint32_t):
-        d32 = (uint32_t*)bytes + (accessAddr % SectorSize)/4;
-        pkt->set(htobe(*d32));
+        memcpy(&d32, diskData + (accessAddr % SectorSize), 4);
+        pkt->set(htobe(d32));
+        DPRINTF(IdeDisk, "reading dword %#x value= %#x\n", accessAddr, d32);
         break;
       case sizeof(uint64_t):
-        d64 = (uint64_t*)bytes + (accessAddr % SectorSize)/8;
-        pkt->set(htobe(*d64));
+        memcpy(&d64, diskData + (accessAddr % SectorSize), 8);
+        pkt->set(htobe(d64));
+        DPRINTF(IdeDisk, "reading qword %#x value= %#x\n", accessAddr, d64);
         break;
       default:
         panic("Invalid access size\n");
@@ -100,9 +108,72 @@ MmDisk::read(PacketPtr pkt)
 Tick
 MmDisk::write(PacketPtr pkt)
 {
-   panic("need to implement\n");
-   M5_DUMMY_RETURN
+    Addr accessAddr;
+    off_t sector;
+    off_t bytes_read;
+    uint16_t d16;
+    uint32_t d32;
+    uint64_t d64;
+
+    assert(pkt->result == Packet::Unknown);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+    accessAddr = pkt->getAddr() - pioAddr;
+
+    sector = accessAddr / SectorSize;
+
+    if (sector != curSector) {
+        if (dirty) {
+            bytes_read = image->write(diskData, curSector);
+            assert(bytes_read == SectorSize);
+        }
+        bytes_read = image->read(diskData,  sector);
+        assert(bytes_read == SectorSize);
+        curSector = sector;
+    }
+    dirty = true;
+
+    switch (pkt->getSize()) {
+      case sizeof(uint8_t):
+        diskData[accessAddr % SectorSize] = htobe(pkt->get<uint8_t>());
+        DPRINTF(IdeDisk, "writing byte %#x value= %#x\n", accessAddr, diskData[accessAddr %
+                SectorSize]);
+        break;
+      case sizeof(uint16_t):
+        d16 = htobe(pkt->get<uint16_t>());
+        memcpy(diskData + (accessAddr % SectorSize), &d16, 2);
+        DPRINTF(IdeDisk, "writing word %#x value= %#x\n", accessAddr, d16);
+        break;
+      case sizeof(uint32_t):
+        d32 = htobe(pkt->get<uint32_t>());
+        memcpy(diskData + (accessAddr % SectorSize), &d32, 4);
+        DPRINTF(IdeDisk, "writing dword %#x value= %#x\n", accessAddr, d32);
+        break;
+      case sizeof(uint64_t):
+        d64 = htobe(pkt->get<uint64_t>());
+        memcpy(diskData + (accessAddr % SectorSize), &d64, 8);
+        DPRINTF(IdeDisk, "writing qword %#x value= %#x\n", accessAddr, d64);
+        break;
+      default:
+        panic("Invalid access size\n");
+    }
+
+    pkt->result = Packet::Success;
+    return pioDelay;
 }
+
+void
+MmDisk::serialize(std::ostream &os)
+{
+    // just write any dirty changes to the cow layer it will take care of
+    // serialization
+    int bytes_read;
+    if (dirty) {
+        bytes_read = image->write(diskData, curSector);
+        assert(bytes_read == SectorSize);
+    }
+}
+
+
 
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(MmDisk)

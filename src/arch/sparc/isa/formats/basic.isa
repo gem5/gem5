@@ -106,6 +106,7 @@ def format BasicOperate(code, *flags) {{
 
 def format FpBasic(code, *flags) {{
         fp_code = """
+    Fsr |= bits(Fsr,4,0) << 5;
     Fsr = insertBits(Fsr,4,0,0);
 #if defined(__sun) || defined (__OpenBSD__)
     fp_rnd newrnd = FP_RN;
@@ -128,7 +129,10 @@ def format FpBasic(code, *flags) {{
     fesetround(newrnd);
 #endif
 """
+
         fp_code += code
+
+
         fp_code += """
 #if defined(__sun) || defined (__OpenBSD__)
     fpsetround(oldrnd);
