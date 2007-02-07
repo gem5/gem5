@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@ class L2(BaseCache):
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest(atomic=False, max_loads=1e12, percent_uncacheable=10, progress_interval=1000) for i in xrange(nb_cores) ]
+cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
