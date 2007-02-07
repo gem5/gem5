@@ -40,7 +40,7 @@ using namespace std;
 int
 main()
 {
-    char foo[9];
+    char foo[] = "foo";
     cprintf("%s\n", foo);
 
     cprintf("%d\n", 'A');
