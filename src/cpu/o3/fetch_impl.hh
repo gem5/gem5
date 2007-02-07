@@ -602,7 +602,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
-                                        Packet::ReadReq, Packet::Broadcast);
+                                        MemCmd::ReadReq, Packet::Broadcast);
         data_pkt->dataDynamicArray(new uint8_t[cacheBlkSize]);
 
         cacheDataPC[tid] = block_PC;

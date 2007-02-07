@@ -286,7 +286,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     // Now do the access.
     if (fault == NoFault) {
         PacketPtr pkt =
-            new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->dataDynamic<T>(new T);
 
         if (!dcachePort.sendTiming(pkt)) {
@@ -365,7 +365,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // Now do the access.
     if (fault == NoFault) {
         assert(dcache_pkt == NULL);
-        dcache_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
         dcache_pkt->allocate();
         dcache_pkt->set(data);
 
@@ -454,7 +454,7 @@ TimingSimpleCPU::fetch()
     ifetch_req->setThreadContext(cpu_id, /* thread ID */ 0);
     Fault fault = setupFetchRequest(ifetch_req);
 
-    ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
+    ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     if (fault == NoFault) {

@@ -80,8 +80,8 @@ class CoherenceProtocol : public SimObject
      * @param mshr The MSHR matching the request.
      * @return The proper bus command, as determined by the protocol.
      */
-    Packet::Command getBusCmd(Packet::Command cmd, CacheBlk::State status,
-                     MSHR *mshr = NULL);
+    MemCmd getBusCmd(MemCmd cmd, CacheBlk::State status,
+                         MSHR *mshr = NULL);
 
     /**
      * Return the proper state given the current state and the bus response.
@@ -235,7 +235,7 @@ class CoherenceProtocol : public SimObject
      * The table of all possible transitions, organized by starting state and
      * request command.
      */
-    StateTransition transitionTable[stateMax+1][NUM_MEM_CMDS];
+    StateTransition transitionTable[stateMax+1][MemCmd::NUM_MEM_CMDS];
 
     /**
      * @addtogroup CoherenceStatistics
@@ -244,11 +244,11 @@ class CoherenceProtocol : public SimObject
     /**
      * State accesses from parent cache.
      */
-    Stats::Scalar<> requestCount[stateMax+1][NUM_MEM_CMDS];
+    Stats::Scalar<> requestCount[stateMax+1][MemCmd::NUM_MEM_CMDS];
     /**
      * State accesses from snooped requests.
      */
-    Stats::Scalar<> snoopCount[stateMax+1][NUM_MEM_CMDS];
+    Stats::Scalar<> snoopCount[stateMax+1][MemCmd::NUM_MEM_CMDS];
     /**
      * @}
      */

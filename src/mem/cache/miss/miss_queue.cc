@@ -67,17 +67,12 @@ MissQueue::regStats(const string &name)
 {
     MissBuffer::regStats(name);
 
-    Request temp_req((Addr) NULL, 4, 0);
-    Packet::Command temp_cmd = Packet::ReadReq;
-    Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
-    temp_pkt.allocate();
-
     using namespace Stats;
 
     // MSHR hit statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshr_hits[access_idx]
             .init(maxThreadsPerCPU)
@@ -92,20 +87,20 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR hits")
         .flags(total)
         ;
-    demandMshrHits = mshr_hits[Packet::ReadReq] + mshr_hits[Packet::WriteReq];
+    demandMshrHits = mshr_hits[MemCmd::ReadReq] + mshr_hits[MemCmd::WriteReq];
 
     overallMshrHits
         .name(name + ".overall_mshr_hits")
         .desc("number of overall MSHR hits")
         .flags(total)
         ;
-    overallMshrHits = demandMshrHits + mshr_hits[Packet::SoftPFReq] +
-        mshr_hits[Packet::HardPFReq];
+    overallMshrHits = demandMshrHits + mshr_hits[MemCmd::SoftPFReq] +
+        mshr_hits[MemCmd::HardPFReq];
 
     // MSHR miss statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshr_misses[access_idx]
             .init(maxThreadsPerCPU)
@@ -120,20 +115,20 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR misses")
         .flags(total)
         ;
-    demandMshrMisses = mshr_misses[Packet::ReadReq] + mshr_misses[Packet::WriteReq];
+    demandMshrMisses = mshr_misses[MemCmd::ReadReq] + mshr_misses[MemCmd::WriteReq];
 
     overallMshrMisses
         .name(name + ".overall_mshr_misses")
         .desc("number of overall MSHR misses")
         .flags(total)
         ;
-    overallMshrMisses = demandMshrMisses + mshr_misses[Packet::SoftPFReq] +
-        mshr_misses[Packet::HardPFReq];
+    overallMshrMisses = demandMshrMisses + mshr_misses[MemCmd::SoftPFReq] +
+        mshr_misses[MemCmd::HardPFReq];
 
     // MSHR miss latency statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshr_miss_latency[access_idx]
             .init(maxThreadsPerCPU)
@@ -148,8 +143,8 @@ MissQueue::regStats(const string &name)
         .desc("number of demand (read+write) MSHR miss cycles")
         .flags(total)
         ;
-    demandMshrMissLatency = mshr_miss_latency[Packet::ReadReq]
-        + mshr_miss_latency[Packet::WriteReq];
+    demandMshrMissLatency = mshr_miss_latency[MemCmd::ReadReq]
+        + mshr_miss_latency[MemCmd::WriteReq];
 
     overallMshrMissLatency
         .name(name + ".overall_mshr_miss_latency")
@@ -157,12 +152,12 @@ MissQueue::regStats(const string &name)
         .flags(total)
         ;
     overallMshrMissLatency = demandMshrMissLatency +
-        mshr_miss_latency[Packet::SoftPFReq] + mshr_miss_latency[Packet::HardPFReq];
+        mshr_miss_latency[MemCmd::SoftPFReq] + mshr_miss_latency[MemCmd::HardPFReq];
 
     // MSHR uncacheable statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshr_uncacheable[access_idx]
             .init(maxThreadsPerCPU)
@@ -177,14 +172,14 @@ MissQueue::regStats(const string &name)
         .desc("number of overall MSHR uncacheable misses")
         .flags(total)
         ;
-    overallMshrUncacheable = mshr_uncacheable[Packet::ReadReq]
-        + mshr_uncacheable[Packet::WriteReq] + mshr_uncacheable[Packet::SoftPFReq]
-        + mshr_uncacheable[Packet::HardPFReq];
+    overallMshrUncacheable = mshr_uncacheable[MemCmd::ReadReq]
+        + mshr_uncacheable[MemCmd::WriteReq] + mshr_uncacheable[MemCmd::SoftPFReq]
+        + mshr_uncacheable[MemCmd::HardPFReq];
 
     // MSHR miss latency statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshr_uncacheable_lat[access_idx]
             .init(maxThreadsPerCPU)
@@ -199,16 +194,16 @@ MissQueue::regStats(const string &name)
         .desc("number of overall MSHR uncacheable cycles")
         .flags(total)
         ;
-    overallMshrUncacheableLatency = mshr_uncacheable_lat[Packet::ReadReq]
-        + mshr_uncacheable_lat[Packet::WriteReq]
-        + mshr_uncacheable_lat[Packet::SoftPFReq]
-        + mshr_uncacheable_lat[Packet::HardPFReq];
+    overallMshrUncacheableLatency = mshr_uncacheable_lat[MemCmd::ReadReq]
+        + mshr_uncacheable_lat[MemCmd::WriteReq]
+        + mshr_uncacheable_lat[MemCmd::SoftPFReq]
+        + mshr_uncacheable_lat[MemCmd::HardPFReq];
 
 #if 0
     // MSHR access formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshrAccesses[access_idx]
             .name(name + "." + cstr + "_mshr_accesses")
@@ -237,9 +232,9 @@ MissQueue::regStats(const string &name)
 #endif
 
     // MSHR miss rate formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         mshrMissRate[access_idx]
             .name(name + "." + cstr + "_mshr_miss_rate")
@@ -266,9 +261,9 @@ MissQueue::regStats(const string &name)
     overallMshrMissRate = overallMshrMisses / cache->overallAccesses;
 
     // mshrMiss latency formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         avgMshrMissLatency[access_idx]
             .name(name + "." + cstr + "_avg_mshr_miss_latency")
@@ -295,9 +290,9 @@ MissQueue::regStats(const string &name)
     overallAvgMshrMissLatency = overallMshrMissLatency / overallMshrMisses;
 
     // mshrUncacheable latency formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         avgMshrUncacheableLatency[access_idx]
             .name(name + "." + cstr + "_avg_mshr_uncacheable_latency")
@@ -351,7 +346,7 @@ MissQueue::allocateMiss(PacketPtr &pkt, int size, Tick time)
     if (mq.isFull()) {
         cache->setBlocked(Blocked_NoMSHRs);
     }
-    if (pkt->cmd != Packet::HardPFReq) {
+    if (pkt->cmd != MemCmd::HardPFReq) {
         //If we need to request the bus (not on HW prefetch), do so
         cache->setMasterRequest(Request_MSHR, time);
     }
@@ -500,17 +495,17 @@ MissQueue::getPacket()
 }
 
 void
-MissQueue::setBusCmd(PacketPtr &pkt, Packet::Command cmd)
+MissQueue::setBusCmd(PacketPtr &pkt, MemCmd cmd)
 {
     assert(pkt->senderState != 0);
     MSHR * mshr = (MSHR*)pkt->senderState;
     mshr->originalCmd = pkt->cmd;
-    if (cmd == Packet::UpgradeReq || cmd == Packet::InvalidateReq) {
+    if (cmd == MemCmd::UpgradeReq || cmd == MemCmd::InvalidateReq) {
         pkt->flags |= NO_ALLOCATE;
         pkt->flags &= ~CACHE_LINE_FILL;
     }
     else if (!pkt->req->isUncacheable() && !pkt->isNoAllocate() &&
-             (cmd & (1 << 6)/*NeedsResponse*/)) {
+             cmd.needsResponse()) {
         pkt->flags |= CACHE_LINE_FILL;
     }
     if (pkt->isCacheFill() || pkt->isNoAllocate())
@@ -552,7 +547,7 @@ MissQueue::markInService(PacketPtr &pkt, MSHR* mshr)
         if (!mq.havePending()){
             cache->clearMasterRequest(Request_MSHR);
         }
-        if (mshr->originalCmd == Packet::HardPFReq) {
+        if (mshr->originalCmd == MemCmd::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
                     cache->name());
             //Also clear pending if need be
@@ -576,7 +571,7 @@ void
 MissQueue::handleResponse(PacketPtr &pkt, Tick time)
 {
     MSHR* mshr = (MSHR*)pkt->senderState;
-    if (((MSHR*)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
+    if (((MSHR*)(pkt->senderState))->originalCmd == MemCmd::HardPFReq) {
         DPRINTF(HWPrefetch, "%s:Handling the response to a HW_PF\n",
                 cache->name());
     }
@@ -589,7 +584,7 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
     BlockedCause cause = NUM_BLOCKED_CAUSES;
 
     if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
-        mshr_miss_latency[mshr->originalCmd][0/*pkt->req->getThreadNum()*/] +=
+        mshr_miss_latency[mshr->originalCmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
             curTick - pkt->time;
         // targets were handled in the cache tags
         if (mshr == noTargetMSHR) {
@@ -601,7 +596,7 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
 
         if (mshr->hasTargets()) {
             // Didn't satisfy all the targets, need to resend
-            Packet::Command cmd = mshr->getTarget()->cmd;
+            MemCmd cmd = mshr->getTarget()->cmd;
             mshr->pkt->setDest(Packet::Broadcast);
             mshr->pkt->result = Packet::Unknown;
             mq.markPending(mshr, cmd);
@@ -618,7 +613,7 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
         }
     } else {
         if (pkt->req->isUncacheable()) {
-            mshr_uncacheable_lat[pkt->cmd][0/*pkt->req->getThreadNum()*/] +=
+            mshr_uncacheable_lat[pkt->cmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
                 curTick - pkt->time;
         }
         if (mshr->hasTargets() && pkt->req->isUncacheable()) {
@@ -713,7 +708,7 @@ MissQueue::doWriteback(Addr addr,
 {
     // Generate request
     Request * req = new Request(addr, size, 0);
-    PacketPtr pkt = new Packet(req, Packet::Writeback, -1);
+    PacketPtr pkt = new Packet(req, MemCmd::Writeback, -1);
     pkt->allocate();
     if (data) {
         memcpy(pkt->getPtr<uint8_t>(), data, size);

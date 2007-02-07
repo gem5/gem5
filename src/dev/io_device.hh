@@ -256,10 +256,13 @@ class DmaDevice : public PioDevice
     virtual ~DmaDevice();
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
-    { dmaPort->dmaAction(Packet::WriteInvalidateReq, addr, size, event, data) ; }
+    {
+        dmaPort->dmaAction(MemCmd::WriteInvalidateReq,
+                           addr, size, event, data);
+    }
 
     void dmaRead(Addr addr, int size, Event *event, uint8_t *data = NULL)
-    { dmaPort->dmaAction(Packet::ReadReq, addr, size, event, data); }
+    { dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data); }
 
     bool dmaPending() { return dmaPort->dmaPending(); }
 

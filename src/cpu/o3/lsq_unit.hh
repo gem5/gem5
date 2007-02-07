@@ -574,7 +574,8 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
                     "addr %#x, data %#x\n",
                     store_idx, req->getVaddr(), data);
 
-            PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            PacketPtr data_pkt = new Packet(req, MemCmd::ReadReq,
+                                            Packet::Broadcast);
             data_pkt->dataStatic(load_inst->memData);
 
             WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
@@ -638,7 +639,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // if we the cache is not blocked, do cache access
     if (!lsq->cacheBlocked()) {
         PacketPtr data_pkt =
-            new Packet(req, Packet::ReadReq, Packet::Broadcast);
+            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         data_pkt->dataStatic(load_inst->memData);
 
         LSQSenderState *state = new LSQSenderState;

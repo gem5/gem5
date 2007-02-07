@@ -77,59 +77,59 @@ class MissQueue : public MissBuffer
      * @{
      */
     /** Number of misses that hit in the MSHRs per command and thread. */
-    Stats::Vector<> mshr_hits[NUM_MEM_CMDS];
+    Stats::Vector<> mshr_hits[MemCmd::NUM_MEM_CMDS];
     /** Demand misses that hit in the MSHRs. */
     Stats::Formula demandMshrHits;
     /** Total number of misses that hit in the MSHRs. */
     Stats::Formula overallMshrHits;
 
     /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector<> mshr_misses[NUM_MEM_CMDS];
+    Stats::Vector<> mshr_misses[MemCmd::NUM_MEM_CMDS];
     /** Demand misses that miss in the MSHRs. */
     Stats::Formula demandMshrMisses;
     /** Total number of misses that miss in the MSHRs. */
     Stats::Formula overallMshrMisses;
 
     /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector<> mshr_uncacheable[NUM_MEM_CMDS];
+    Stats::Vector<> mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
     /** Total number of misses that miss in the MSHRs. */
     Stats::Formula overallMshrUncacheable;
 
     /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector<> mshr_miss_latency[NUM_MEM_CMDS];
+    Stats::Vector<> mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
     /** Total cycle latency of demand MSHR misses. */
     Stats::Formula demandMshrMissLatency;
     /** Total cycle latency of overall MSHR misses. */
     Stats::Formula overallMshrMissLatency;
 
     /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector<> mshr_uncacheable_lat[NUM_MEM_CMDS];
+    Stats::Vector<> mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
     /** Total cycle latency of overall MSHR misses. */
     Stats::Formula overallMshrUncacheableLatency;
 
     /** The total number of MSHR accesses per command and thread. */
-    Stats::Formula mshrAccesses[NUM_MEM_CMDS];
+    Stats::Formula mshrAccesses[MemCmd::NUM_MEM_CMDS];
     /** The total number of demand MSHR accesses. */
     Stats::Formula demandMshrAccesses;
     /** The total number of MSHR accesses. */
     Stats::Formula overallMshrAccesses;
 
     /** The miss rate in the MSHRs pre command and thread. */
-    Stats::Formula mshrMissRate[NUM_MEM_CMDS];
+    Stats::Formula mshrMissRate[MemCmd::NUM_MEM_CMDS];
     /** The demand miss rate in the MSHRs. */
     Stats::Formula demandMshrMissRate;
     /** The overall miss rate in the MSHRs. */
     Stats::Formula overallMshrMissRate;
 
     /** The average latency of an MSHR miss, per command and thread. */
-    Stats::Formula avgMshrMissLatency[NUM_MEM_CMDS];
+    Stats::Formula avgMshrMissLatency[MemCmd::NUM_MEM_CMDS];
     /** The average latency of a demand MSHR miss. */
     Stats::Formula demandAvgMshrMissLatency;
     /** The average overall latency of an MSHR miss. */
     Stats::Formula overallAvgMshrMissLatency;
 
     /** The average latency of an MSHR miss, per command and thread. */
-    Stats::Formula avgMshrUncacheableLatency[NUM_MEM_CMDS];
+    Stats::Formula avgMshrUncacheableLatency[MemCmd::NUM_MEM_CMDS];
     /** The average overall latency of an MSHR miss. */
     Stats::Formula overallAvgMshrUncacheableLatency;
 
@@ -220,7 +220,7 @@ class MissQueue : public MissBuffer
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    void setBusCmd(PacketPtr &pkt, Packet::Command cmd);
+    void setBusCmd(PacketPtr &pkt, MemCmd cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.

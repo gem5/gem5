@@ -104,7 +104,7 @@ public:
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    void setBusCmd(PacketPtr &pkt, Packet::Command cmd);
+    void setBusCmd(PacketPtr &pkt, MemCmd cmd);
 
     /**
      * Restore the original command in case of a bus transmission error.

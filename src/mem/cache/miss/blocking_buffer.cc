@@ -90,7 +90,7 @@ BlockingBuffer::getPacket()
 }
 
 void
-BlockingBuffer::setBusCmd(PacketPtr &pkt, Packet::Command cmd)
+BlockingBuffer::setBusCmd(PacketPtr &pkt, MemCmd cmd)
 {
     MSHR *mshr = (MSHR*) pkt->senderState;
     mshr->originalCmd = pkt->cmd;
@@ -189,7 +189,7 @@ BlockingBuffer::doWriteback(Addr addr,
 {
     // Generate request
     Request * req = new Request(addr, size, 0);
-    PacketPtr pkt = new Packet(req, Packet::Writeback, -1);
+    PacketPtr pkt = new Packet(req, MemCmd::Writeback, -1);
     pkt->allocate();
     if (data) {
         std::memcpy(pkt->getPtr<uint8_t>(), data, size);

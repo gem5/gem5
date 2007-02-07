@@ -123,7 +123,7 @@ class MissBuffer
      * @param pkt The request to update.
      * @param cmd The bus command to use.
      */
-    virtual void setBusCmd(PacketPtr &pkt, Packet::Command cmd) = 0;
+    virtual void setBusCmd(PacketPtr &pkt, MemCmd cmd) = 0;
 
     /**
      * Restore the original command in case of a bus transmission error.

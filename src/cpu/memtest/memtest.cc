@@ -226,8 +226,8 @@ MemTest::completeRequest(PacketPtr pkt)
     assert(removeAddr != outstandingAddrs.end());
     outstandingAddrs.erase(removeAddr);
 
-    switch (pkt->cmd) {
-      case Packet::ReadResp:
+    switch (pkt->cmd.toInt()) {
+      case MemCmd::ReadResp:
 
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
             cerr << name() << ": on read of 0x" << hex << req->getPaddr()
@@ -254,7 +254,7 @@ MemTest::completeRequest(PacketPtr pkt)
             exitSimLoop("Maximum number of loads reached!");
         break;
 
-      case Packet::WriteResp:
+      case MemCmd::WriteResp:
         numWritesStat++;
         break;
 /*
@@ -389,7 +389,7 @@ MemTest::tick()
                  << dec << curTick << endl;
         }
 
-        PacketPtr pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->dataDynamicArray(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
@@ -429,7 +429,7 @@ MemTest::tick()
                  << dec << curTick << endl;
         }
 */
-        PacketPtr pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
         pkt->dataDynamicArray(pkt_data);
         memcpy(pkt_data, &data, req->getSize());

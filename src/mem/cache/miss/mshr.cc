@@ -54,7 +54,7 @@ MSHR::MSHR()
 }
 
 void
-MSHR::allocate(Packet::Command cmd, Addr _addr, int size,
+MSHR::allocate(MemCmd cmd, Addr _addr, int size,
                PacketPtr &target)
 {
     addr = _addr;
@@ -148,7 +148,7 @@ MSHR::allocateTarget(PacketPtr &target)
      */
 
     if (!inService && target->isWrite()) {
-        pkt->cmd = Packet::WriteReq;
+        pkt->cmd = MemCmd::WriteReq;
     }
 }
 

@@ -41,68 +41,62 @@
 #include "base/trace.hh"
 #include "mem/packet.hh"
 
-static const std::string ReadReqString("ReadReq");
-static const std::string WriteReqString("WriteReq");
-static const std::string WriteReqNoAckString("WriteReqNoAck|Writeback");
-static const std::string ReadRespString("ReadResp");
-static const std::string WriteRespString("WriteResp");
-static const std::string SoftPFReqString("SoftPFReq");
-static const std::string SoftPFRespString("SoftPFResp");
-static const std::string HardPFReqString("HardPFReq");
-static const std::string HardPFRespString("HardPFResp");
-static const std::string InvalidateReqString("InvalidateReq");
-static const std::string WriteInvalidateReqString("WriteInvalidateReq");
-static const std::string WriteInvalidateRespString("WriteInvalidateResp");
-static const std::string UpgradeReqString("UpgradeReq");
-static const std::string ReadExReqString("ReadExReq");
-static const std::string ReadExRespString("ReadExResp");
-static const std::string OtherCmdString("<other>");
+// The one downside to bitsets is that static initializers can get ugly.
+#define SET1(a1)                     (1 << (a1))
+#define SET2(a1, a2)                 (SET1(a1) | SET1(a2))
+#define SET3(a1, a2, a3)             (SET2(a1, a2) | SET1(a3))
+#define SET4(a1, a2, a3, a4)         (SET3(a1, a2, a3) | SET1(a4))
+#define SET5(a1, a2, a3, a4, a5)     (SET4(a1, a2, a3, a4) | SET1(a5))
+#define SET6(a1, a2, a3, a4, a5, a6) (SET5(a1, a2, a3, a4, a5) | SET1(a6))
 
-const std::string &
-Packet::cmdString() const
+const MemCmd::CommandInfo
+MemCmd::commandInfo[] =
 {
-    switch (cmd) {
-      case ReadReq:         return ReadReqString;
-      case WriteReq:        return WriteReqString;
-      case WriteReqNoAck:   return WriteReqNoAckString;
-      case ReadResp:        return ReadRespString;
-      case WriteResp:       return WriteRespString;
-      case SoftPFReq:       return SoftPFReqString;
-      case SoftPFResp:      return SoftPFRespString;
-      case HardPFReq:       return HardPFReqString;
-      case HardPFResp:      return HardPFRespString;
-      case InvalidateReq:   return InvalidateReqString;
-      case WriteInvalidateReq:return WriteInvalidateReqString;
-      case WriteInvalidateResp:return WriteInvalidateRespString;
-      case UpgradeReq:      return UpgradeReqString;
-      case ReadExReq:       return ReadExReqString;
-      case ReadExResp:      return ReadExRespString;
-      default:              return OtherCmdString;
-    }
-}
+    /* InvalidCmd */
+    { 0, InvalidCmd, "InvalidCmd" },
+    /* ReadReq */
+    { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
+    /* WriteReq */
+    { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
+            WriteResp, "WriteReq" },
+    /* WriteReqNoAck */
+    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "WriteReqNoAck" },
+    /* ReadResp */
+    { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
+    /* WriteResp */
+    { SET2(IsWrite, IsResponse), InvalidCmd, "WriteResp" },
+    /* Writeback */
+    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "Writeback" },
+    /* SoftPFReq */
+    { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
+            SoftPFResp, "SoftPFReq" },
+    /* HardPFReq */
+    { SET4(IsRead, IsRequest, IsHWPrefetch, NeedsResponse),
+            HardPFResp, "HardPFReq" },
+    /* SoftPFResp */
+    { SET4(IsRead, IsResponse, IsSWPrefetch, HasData),
+            InvalidCmd, "SoftPFResp" },
+    /* HardPFResp */
+    { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
+            InvalidCmd, "HardPFResp" },
+    /* InvalidateReq */
+    { SET2(IsInvalidate, IsRequest), InvalidCmd, "InvalidateReq" },
+    /* WriteInvalidateReq */
+    { SET5(IsWrite, IsInvalidate, IsRequest, HasData, NeedsResponse),
+            WriteInvalidateResp, "WriteInvalidateReq" },
+    /* WriteInvalidateResp */
+    { SET5(IsWrite, IsInvalidate, IsRequest, NeedsResponse, IsResponse),
+            InvalidCmd, "WriteInvalidateResp" },
+    /* UpgradeReq */
+    { SET3(IsInvalidate, IsRequest, IsUpgrade), InvalidCmd, "UpgradeReq" },
+    /* ReadExReq */
+    { SET4(IsRead, IsInvalidate, IsRequest, NeedsResponse),
+            ReadExResp, "ReadExReq" },
+    /* ReadExResp */
+    { SET4(IsRead, IsInvalidate, IsResponse, HasData),
+            InvalidCmd, "ReadExResp" }
+};
 
-const std::string &
-Packet::cmdIdxToString(Packet::Command idx)
-{
-    switch (idx) {
-      case ReadReq:         return ReadReqString;
-      case WriteReq:        return WriteReqString;
-      case WriteReqNoAck:   return WriteReqNoAckString;
-      case ReadResp:        return ReadRespString;
-      case WriteResp:       return WriteRespString;
-      case SoftPFReq:       return SoftPFReqString;
-      case SoftPFResp:      return SoftPFRespString;
-      case HardPFReq:       return HardPFReqString;
-      case HardPFResp:      return HardPFRespString;
-      case InvalidateReq:   return InvalidateReqString;
-      case WriteInvalidateReq:return WriteInvalidateReqString;
-      case WriteInvalidateResp:return WriteInvalidateRespString;
-      case UpgradeReq:      return UpgradeReqString;
-      case ReadExReq:       return ReadExReqString;
-      case ReadExResp:      return ReadExRespString;
-      default:              return OtherCmdString;
-    }
-}
 
 /** delete the data pointed to in the data pointer. Ok to call to matter how
  * data was allocted. */
@@ -149,9 +143,17 @@ fixDelayedResponsePacket(PacketPtr func, PacketPtr timing)
     bool result;
 
     if (timing->isRead() || timing->isWrite()) {
-        timing->toggleData();
+        // Ugly hack to deal with the fact that we queue the requests
+        // and don't convert them to responses until we issue them on
+        // the bus.  I tried to avoid this by converting packets to
+        // responses right away, but this breaks during snoops where a
+        // responder may do the conversion before other caches have
+        // done the snoop.  Would work if we copied the packet instead
+        // of just hanging on to a pointer.
+        MemCmd oldCmd = timing->cmd;
+        timing->cmd = timing->cmd.responseCommand();
         result = fixPacket(func, timing);
-        timing->toggleData();
+        timing->cmd = oldCmd;
     }
     else {
         //Don't toggle if it isn't a read/write response

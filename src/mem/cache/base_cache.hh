@@ -200,14 +200,14 @@ class BaseCache : public MemObject
      */
 
     /** Number of hits per thread for each type of command. @sa Packet::Command */
-    Stats::Vector<> hits[NUM_MEM_CMDS];
+    Stats::Vector<> hits[MemCmd::NUM_MEM_CMDS];
     /** Number of hits for demand accesses. */
     Stats::Formula demandHits;
     /** Number of hit for all accesses. */
     Stats::Formula overallHits;
 
     /** Number of misses per thread for each type of command. @sa Packet::Command */
-    Stats::Vector<> misses[NUM_MEM_CMDS];
+    Stats::Vector<> misses[MemCmd::NUM_MEM_CMDS];
     /** Number of misses for demand accesses. */
     Stats::Formula demandMisses;
     /** Number of misses for all accesses. */
@@ -217,28 +217,28 @@ class BaseCache : public MemObject
      * Total number of cycles per thread/command spent waiting for a miss.
      * Used to calculate the average miss latency.
      */
-    Stats::Vector<> missLatency[NUM_MEM_CMDS];
+    Stats::Vector<> missLatency[MemCmd::NUM_MEM_CMDS];
     /** Total number of cycles spent waiting for demand misses. */
     Stats::Formula demandMissLatency;
     /** Total number of cycles spent waiting for all misses. */
     Stats::Formula overallMissLatency;
 
     /** The number of accesses per command and thread. */
-    Stats::Formula accesses[NUM_MEM_CMDS];
+    Stats::Formula accesses[MemCmd::NUM_MEM_CMDS];
     /** The number of demand accesses. */
     Stats::Formula demandAccesses;
     /** The number of overall accesses. */
     Stats::Formula overallAccesses;
 
     /** The miss rate per command and thread. */
-    Stats::Formula missRate[NUM_MEM_CMDS];
+    Stats::Formula missRate[MemCmd::NUM_MEM_CMDS];
     /** The miss rate of all demand accesses. */
     Stats::Formula demandMissRate;
     /** The miss rate for all accesses. */
     Stats::Formula overallMissRate;
 
     /** The average miss latency per command and thread. */
-    Stats::Formula avgMissLatency[NUM_MEM_CMDS];
+    Stats::Formula avgMissLatency[MemCmd::NUM_MEM_CMDS];
     /** The average miss latency for demand misses. */
     Stats::Formula demandAvgMissLatency;
     /** The average miss latency for all misses. */
@@ -535,7 +535,7 @@ class BaseCache : public MemObject
             }
         }
         else {
-            if (pkt->cmd != Packet::UpgradeReq)
+            if (pkt->cmd != MemCmd::UpgradeReq)
             {
                 delete pkt->req;
                 delete pkt;
@@ -594,7 +594,7 @@ class BaseCache : public MemObject
             }
         }
         else {
-            if (pkt->cmd != Packet::UpgradeReq)
+            if (pkt->cmd != MemCmd::UpgradeReq)
             {
                 delete pkt->req;
                 delete pkt;

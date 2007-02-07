@@ -40,6 +40,7 @@
 
 #include <cassert>
 #include <list>
+#include <bitset>
 
 #include "base/misc.hh"
 #include "mem/request.hh"
@@ -61,8 +62,114 @@ typedef std::list<PacketPtr> PacketList;
 #define NO_ALLOCATE     (1 << 5)
 #define SNOOP_COMMIT    (1 << 6)
 
-//for now.  @todo fix later
-#define NUM_MEM_CMDS    (1 << 11)
+
+class MemCmd
+{
+  public:
+
+    /** List of all commands associated with a packet. */
+    enum Command
+    {
+        InvalidCmd,
+        ReadReq,
+        WriteReq,
+        WriteReqNoAck,
+        ReadResp,
+        WriteResp,
+        Writeback,
+        SoftPFReq,
+        HardPFReq,
+        SoftPFResp,
+        HardPFResp,
+        InvalidateReq,
+        WriteInvalidateReq,
+        WriteInvalidateResp,
+        UpgradeReq,
+        ReadExReq,
+        ReadExResp,
+        NUM_MEM_CMDS
+    };
+
+  private:
+    /** List of command attributes. */
+    enum Attribute
+    {
+        IsRead,
+        IsWrite,
+        IsPrefetch,
+        IsInvalidate,
+        IsRequest,
+        IsResponse,
+        NeedsResponse,
+        IsSWPrefetch,
+        IsHWPrefetch,
+        IsUpgrade,
+        HasData,
+        NUM_COMMAND_ATTRIBUTES
+    };
+
+    /** Structure that defines attributes and other data associated
+     * with a Command. */
+    struct CommandInfo {
+        /** Set of attribute flags. */
+        const std::bitset<NUM_COMMAND_ATTRIBUTES> attributes;
+        /** Corresponding response for requests; InvalidCmd if no
+         * response is applicable. */
+        const Command response;
+        /** String representation (for printing) */
+        const std::string str;
+    };
+
+    /** Array to map Command enum to associated info. */
+    static const CommandInfo commandInfo[];
+
+  private:
+
+    Command cmd;
+
+    bool testCmdAttrib(MemCmd::Attribute attrib) const {
+        return commandInfo[cmd].attributes[attrib] != 0;
+    }
+
+  public:
+
+    bool isRead() const         { return testCmdAttrib(IsRead); }
+    bool isWrite()  const       { return testCmdAttrib(IsWrite); }
+    bool isRequest() const      { return testCmdAttrib(IsRequest); }
+    bool isResponse() const     { return testCmdAttrib(IsResponse); }
+    bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
+    bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
+    bool hasData() const        { return testCmdAttrib(HasData); }
+
+    const Command responseCommand() const {
+        return commandInfo[cmd].response;
+    }
+
+    /** Return the string to a cmd given by idx. */
+    const std::string &toString() const {
+        return commandInfo[cmd].str;
+    }
+
+    int toInt() const { return (int)cmd; }
+
+    MemCmd(Command _cmd)
+        : cmd(_cmd)
+    { }
+
+    MemCmd(int _cmd)
+        : cmd((Command)_cmd)
+    { }
+
+    MemCmd()
+        : cmd(InvalidCmd)
+    { }
+
+    bool operator==(MemCmd c2) { return (cmd == c2.cmd); }
+    bool operator!=(MemCmd c2) { return (cmd != c2.cmd); }
+
+    friend class Packet;
+};
+
 /**
  * A Packet is used to encapsulate a transfer between two objects in
  * the memory system (e.g., the L1 and L2 cache).  (In contrast, a
@@ -73,6 +180,9 @@ typedef std::list<PacketPtr> PacketList;
 class Packet
 {
   public:
+
+    typedef MemCmd::Command Command;
+
     /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
     uint64_t flags;
 
@@ -168,73 +278,27 @@ class Packet
      *   to cast to the state appropriate to the sender. */
     SenderState *senderState;
 
-  private:
-    /** List of command attributes. */
-    // If you add a new CommandAttribute, make sure to increase NUM_MEM_CMDS
-    // as well.
-    enum CommandAttribute
-    {
-        IsRead          = 1 << 0,
-        IsWrite         = 1 << 1,
-        IsPrefetch      = 1 << 2,
-        IsInvalidate    = 1 << 3,
-        IsRequest       = 1 << 4,
-        IsResponse      = 1 << 5,
-        NeedsResponse   = 1 << 6,
-        IsSWPrefetch    = 1 << 7,
-        IsHWPrefetch    = 1 << 8,
-        IsUpgrade       = 1 << 9,
-        HasData         = 1 << 10
-    };
-
   public:
-    /** List of all commands associated with a packet. */
-    enum Command
-    {
-        InvalidCmd      = 0,
-        ReadReq         = IsRead  | IsRequest | NeedsResponse,
-        WriteReq        = IsWrite | IsRequest | NeedsResponse | HasData,
-        WriteReqNoAck   = IsWrite | IsRequest | HasData,
-        ReadResp        = IsRead  | IsResponse | NeedsResponse | HasData,
-        WriteResp       = IsWrite | IsResponse | NeedsResponse,
-        Writeback       = IsWrite | IsRequest | HasData,
-        SoftPFReq       = IsRead  | IsRequest | IsSWPrefetch | NeedsResponse,
-        HardPFReq       = IsRead  | IsRequest | IsHWPrefetch | NeedsResponse,
-        SoftPFResp      = IsRead  | IsResponse | IsSWPrefetch
-                                  | NeedsResponse | HasData,
-        HardPFResp      = IsRead  | IsResponse | IsHWPrefetch
-                                  | NeedsResponse | HasData,
-        InvalidateReq   = IsInvalidate | IsRequest,
-        WriteInvalidateReq  = IsWrite | IsInvalidate | IsRequest
-                                      | HasData | NeedsResponse,
-        WriteInvalidateResp = IsWrite | IsInvalidate | IsRequest
-                                      | NeedsResponse | IsResponse,
-        UpgradeReq      = IsInvalidate | IsRequest | IsUpgrade,
-        ReadExReq       = IsRead | IsInvalidate | IsRequest | NeedsResponse,
-        ReadExResp      = IsRead | IsInvalidate | IsResponse
-                                 | NeedsResponse | HasData
-    };
+
+    /** The command field of the packet. */
+    MemCmd cmd;
 
     /** Return the string name of the cmd field (for debugging and
      *   tracing). */
-    const std::string &cmdString() const;
-
-    /** Reutrn the string to a cmd given by idx. */
-    const std::string &cmdIdxToString(Command idx);
+    const std::string &cmdString() const { return cmd.toString(); }
 
     /** Return the index of this command. */
-    inline int cmdToIndex() const { return (int) cmd; }
+    inline int cmdToIndex() const { return cmd.toInt(); }
 
-    /** The command field of the packet. */
-    Command cmd;
+  public:
 
-    bool isRead() const         { return (cmd & IsRead)  != 0; }
-    bool isWrite()  const       { return (cmd & IsWrite) != 0; }
-    bool isRequest() const      { return (cmd & IsRequest)  != 0; }
-    bool isResponse() const     { return (cmd & IsResponse) != 0; }
-    bool needsResponse() const  { return (cmd & NeedsResponse) != 0; }
-    bool isInvalidate() const   { return (cmd & IsInvalidate) != 0; }
-    bool hasData() const        { return (cmd & HasData) != 0; }
+    bool isRead() const         { return cmd.isRead(); }
+    bool isWrite()  const       { return cmd.isWrite(); }
+    bool isRequest() const      { return cmd.isRequest(); }
+    bool isResponse() const     { return cmd.isResponse(); }
+    bool needsResponse() const  { return cmd.needsResponse(); }
+    bool isInvalidate() const   { return cmd.isInvalidate(); }
+    bool hasData() const        { return cmd.hasData(); }
 
     bool isCacheFill() const    { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }
@@ -268,13 +332,13 @@ class Packet
     Addr getOffset(int blkSize) const { return addr & (Addr)(blkSize - 1); }
 
     void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
-    void cmdOverride(Command newCmd) { cmd = newCmd; }
+    void cmdOverride(MemCmd newCmd) { cmd = newCmd; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
      *   need not be valid. The command and destination addresses
      *   must be supplied.  */
-    Packet(Request *_req, Command _cmd, short _dest)
+    Packet(Request *_req, MemCmd _cmd, short _dest)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
            addrSizeValid(_req->validPaddr),
@@ -289,7 +353,7 @@ class Packet
     /** Alternate constructor if you are trying to create a packet with
      *  a request that is for a whole block, not the address from the req.
      *  this allows for overriding the size/addr of the req.*/
-    Packet(Request *_req, Command _cmd, short _dest, int _blkSize)
+    Packet(Request *_req, MemCmd _cmd, short _dest, int _blkSize)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
            dest(_dest),
@@ -334,23 +398,9 @@ class Packet
     void makeTimingResponse() {
         assert(needsResponse());
         assert(isRequest());
-        int icmd = (int)cmd;
-        icmd &= ~(IsRequest);
-        icmd |= IsResponse;
-        if (isRead())
-            icmd |= HasData;
-        if (isWrite())
-            icmd &= ~HasData;
-        cmd = (Command)icmd;
+        cmd = cmd.responseCommand();
         dest = src;
         srcValid = false;
-    }
-
-
-    void toggleData() {
-        int icmd = (int)cmd;
-        icmd ^= HasData;
-        cmd = (Command)icmd;
     }
 
     /**
@@ -361,14 +411,7 @@ class Packet
     {
         assert(needsResponse());
         assert(isRequest());
-        int icmd = (int)cmd;
-        icmd &= ~(IsRequest);
-        icmd |= IsResponse;
-        if (isRead())
-            icmd |= HasData;
-        if (isWrite())
-            icmd &= ~HasData;
-        cmd = (Command)icmd;
+        cmd = cmd.responseCommand();
     }
 
     /**

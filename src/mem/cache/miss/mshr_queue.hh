@@ -185,7 +185,7 @@ class MSHRQueue {
      * @param mshr The MSHR to resend.
      * @param cmd The command to resend.
      */
-    void markPending(MSHR* mshr, Packet::Command cmd);
+    void markPending(MSHR* mshr, MemCmd cmd);
 
     /**
      * Squash outstanding requests with the given thread number. If a request

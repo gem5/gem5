@@ -200,7 +200,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             //create a prefetch memreq
             Request * prefetchReq = new Request(*addr, blkSize, 0);
             PacketPtr prefetch;
-            prefetch = new Packet(prefetchReq, Packet::HardPFReq, -1);
+            prefetch = new Packet(prefetchReq, MemCmd::HardPFReq, -1);
             prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->getCpuNum(),
                                             pkt->req->getThreadNum());

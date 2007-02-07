@@ -90,7 +90,7 @@ Cache(const std::string &_name,
     coherence->setCache(this);
     prefetcher->setCache(this);
     invalidateReq = new Request((Addr) NULL, blkSize, 0);
-    invalidatePkt = new Packet(invalidateReq, Packet::InvalidateReq, 0);
+    invalidatePkt = new Packet(invalidateReq, MemCmd::InvalidateReq, 0);
 }
 
 template<class TagStore, class Coherence>
@@ -239,7 +239,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
 
         target->flags |= SATISFIED;
 
-        if (target->cmd == Packet::InvalidateReq) {
+        if (target->cmd == MemCmd::InvalidateReq) {
             tags->invalidateBlk(blk);
             blk = NULL;
         }
@@ -316,7 +316,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
         Tick completion_time = tags->getHitLatency() +
             transfer_offset ? pkt->finishTime : pkt->firstWordTime;
 
-        if (target->cmd == Packet::InvalidateReq) {
+        if (target->cmd == MemCmd::InvalidateReq) {
             //Mark the blk as invalid now, if it hasn't been already
             if (blk) {
                 tags->invalidateBlk(blk);
@@ -430,7 +430,7 @@ Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
 
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
-    PacketPtr writeback = new Packet(writebackReq, Packet::Writeback, -1);
+    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
     writeback->allocate();
     std::memcpy(writeback->getPtr<uint8_t>(),blk->data,blkSize);
 
@@ -555,11 +555,11 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
     /** @todo make the fast write alloc (wh64) work with coherence. */
     /** @todo Do we want to do fast writes for writebacks as well? */
     if (!blk && pkt->getSize() >= blkSize && coherence->allowFastWrites() &&
-        (pkt->cmd == Packet::WriteReq
-         || pkt->cmd == Packet::WriteInvalidateReq) ) {
+        (pkt->cmd == MemCmd::WriteReq
+         || pkt->cmd == MemCmd::WriteInvalidateReq) ) {
         // not outstanding misses, can do this
         MSHR* outstanding_miss = missQueue->findMSHR(pkt->getAddr());
-        if (pkt->cmd == Packet::WriteInvalidateReq || !outstanding_miss) {
+        if (pkt->cmd == MemCmd::WriteInvalidateReq || !outstanding_miss) {
             if (outstanding_miss) {
                 warn("WriteInv doing a fastallocate"
                      "with an outstanding miss to the same address\n");
@@ -583,7 +583,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         // clear dirty bit if write through
         if (pkt->needsResponse())
             respond(pkt, curTick+lat);
-        if (pkt->cmd == Packet::Writeback) {
+        if (pkt->cmd == MemCmd::Writeback) {
             //Signal that you can kill the pkt/req
             pkt->flags |= SATISFIED;
         }
@@ -610,7 +610,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
-    if (pkt->cmd == Packet::Writeback) {
+    if (pkt->cmd == MemCmd::Writeback) {
         //Need to clean up the packet on a writeback miss, but leave the request
         delete pkt;
     }
@@ -627,11 +627,11 @@ Cache<TagStore,Coherence>::getPacket()
     PacketPtr pkt = missQueue->getPacket();
     if (pkt) {
         if (!pkt->req->isUncacheable()) {
-            if (pkt->cmd == Packet::HardPFReq)
-                misses[Packet::HardPFReq][0/*pkt->req->getThreadNum()*/]++;
+            if (pkt->cmd == MemCmd::HardPFReq)
+                misses[MemCmd::HardPFReq][0/*pkt->req->getThreadNum()*/]++;
             BlkType *blk = tags->findBlock(pkt->getAddr());
-            Packet::Command cmd = coherence->getBusCmd(pkt->cmd,
-                                              (blk)? blk->status : 0);
+            MemCmd cmd =
+                coherence->getBusCmd(pkt->cmd, (blk) ? blk->status : 0);
             missQueue->setBusCmd(pkt, cmd);
         }
     }
@@ -650,7 +650,7 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
     if (success && !(SIGNAL_NACK_HACK)) {
         //Remember if it was an upgrade because writeback MSHR's are removed
         //in Mark in Service
-        bool upgrade = (mshr->pkt && mshr->pkt->cmd == Packet::UpgradeReq);
+        bool upgrade = (mshr->pkt && mshr->pkt->cmd == MemCmd::UpgradeReq);
 
         missQueue->markInService(mshr->pkt, mshr);
 
@@ -775,8 +775,8 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
         if (mshr) {
             if (mshr->inService) {
                 if ((mshr->pkt->isInvalidate() || !mshr->pkt->isCacheFill())
-                    && (pkt->cmd != Packet::InvalidateReq
-                        && pkt->cmd != Packet::WriteInvalidateReq)) {
+                    && (pkt->cmd != MemCmd::InvalidateReq
+                        && pkt->cmd != MemCmd::WriteInvalidateReq)) {
                     //If the outstanding request was an invalidate
                     //(upgrade,readex,..)  Then we need to ACK the request
                     //until we get the data Also NACK if the outstanding
@@ -982,11 +982,11 @@ Cache<TagStore,Coherence>::probe(PacketPtr &pkt, bool update,
             panic("Atomic access ran into outstanding MSHR's or WB's!");
         }
         if (!pkt->req->isUncacheable() /*Uncacheables just go through*/
-            && (pkt->cmd != Packet::Writeback)/*Writebacks on miss fall through*/) {
+            && (pkt->cmd != MemCmd::Writeback)/*Writebacks on miss fall through*/) {
                 // Fetch the cache block to fill
             BlkType *blk = tags->findBlock(pkt->getAddr());
-            Packet::Command temp_cmd = coherence->getBusCmd(pkt->cmd,
-                                                            (blk)? blk->status : 0);
+            MemCmd temp_cmd =
+                coherence->getBusCmd(pkt->cmd, (blk) ? blk->status : 0);
 
             PacketPtr busPkt = new Packet(pkt->req,temp_cmd, -1, blkSize);
 

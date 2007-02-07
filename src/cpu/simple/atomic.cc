@@ -138,18 +138,18 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
 
     ifetch_req = new Request();
     ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
-    ifetch_pkt = new Packet(ifetch_req, Packet::ReadReq, Packet::Broadcast);
+    ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
     ifetch_pkt->dataStatic(&inst);
 
     data_read_req = new Request();
     data_read_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
-    data_read_pkt = new Packet(data_read_req, Packet::ReadReq,
+    data_read_pkt = new Packet(data_read_req, MemCmd::ReadReq,
                                Packet::Broadcast);
     data_read_pkt->dataStatic(&dataReg);
 
     data_write_req = new Request();
     data_write_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
-    data_write_pkt = new Packet(data_write_req, Packet::WriteReq,
+    data_write_pkt = new Packet(data_write_req, MemCmd::WriteReq,
                                 Packet::Broadcast);
 }
 

@@ -245,7 +245,7 @@ class Port
 
     /** Internal helper function for read/writeBlob().
      */
-    void blobHelper(Addr addr, uint8_t *p, int size, Packet::Command cmd);
+    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd);
 };
 
 /** A simple functional port that is only meant for one way communication to

@@ -136,7 +136,7 @@ MSHRQueue::allocateFetch(Addr addr, int size, PacketPtr &target)
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
-    mshr->allocate(Packet::ReadReq, addr, size, target);
+    mshr->allocate(MemCmd::ReadReq, addr, size, target);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
 
@@ -151,7 +151,7 @@ MSHRQueue::allocateTargetList(Addr addr, int size)
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
     PacketPtr dummy;
-    mshr->allocate(Packet::ReadReq, addr, size, dummy);
+    mshr->allocate(MemCmd::ReadReq, addr, size, dummy);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->inService = true;
     ++inServiceMSHRs;
@@ -196,7 +196,7 @@ void
 MSHRQueue::markInService(MSHR* mshr)
 {
     //assert(mshr == pendingList.front());
-    if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == Packet::UpgradeReq)) {
+    if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == MemCmd::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
         deallocate(mshr);
         return;
@@ -209,7 +209,7 @@ MSHRQueue::markInService(MSHR* mshr)
 }
 
 void
-MSHRQueue::markPending(MSHR* mshr, Packet::Command cmd)
+MSHRQueue::markPending(MSHR* mshr, MemCmd cmd)
 {
     //assert(mshr->readyIter == NULL);
     mshr->pkt->cmd = cmd;

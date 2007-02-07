@@ -72,7 +72,7 @@ class MSHR {
     /** The number of currently allocated targets. */
     short ntargets;
     /** The original requesting command. */
-    Packet::Command originalCmd;
+    MemCmd originalCmd;
     /** Order number of assigned by the miss queue. */
     uint64_t order;
 
@@ -100,7 +100,7 @@ public:
      * @param size The number of bytes to request.
      * @param pkt  The original miss.
      */
-    void allocate(Packet::Command cmd, Addr addr, int size,
+    void allocate(MemCmd cmd, Addr addr, int size,
                   PacketPtr &pkt);
 
     /**

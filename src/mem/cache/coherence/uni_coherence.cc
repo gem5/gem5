@@ -99,19 +99,19 @@ UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
         if (isTiming) {
             // Forward to other caches
             Request* req = new Request(pkt->req->getPaddr(), pkt->getSize(), 0);
-            PacketPtr tmp = new Packet(req, Packet::InvalidateReq, -1);
+            PacketPtr tmp = new Packet(req, MemCmd::InvalidateReq, -1);
             cshrs.allocate(tmp);
             cache->setSlaveRequest(Request_Coherence, curTick);
             if (cshrs.isFull())
                 cache->setBlockedForSnoop(Blocked_Coherence);
         }
         else {
-            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+            PacketPtr tmp = new Packet(pkt->req, MemCmd::InvalidateReq, -1);
             cache->cpuSidePort->sendAtomic(tmp);
             delete tmp;
         }
 /**/
-/*            PacketPtr tmp = new Packet(pkt->req, Packet::InvalidateReq, -1);
+/*            PacketPtr tmp = new Packet(pkt->req, MemCmd::InvalidateReq, -1);
             cache->cpuSidePort->sendFunctional(tmp);
             delete tmp;
 */
@@ -119,7 +119,7 @@ UniCoherence::propogateInvalidate(PacketPtr pkt, bool isTiming)
     if (pkt->isRead()) {
         /*For now we will see if someone above us has the data by
           doing a functional access on reads.  Fix this later */
-            PacketPtr tmp = new Packet(pkt->req, Packet::ReadReq, -1);
+            PacketPtr tmp = new Packet(pkt->req, MemCmd::ReadReq, -1);
             tmp->allocate();
             cache->cpuSidePort->sendFunctional(tmp);
             bool hit = (tmp->result == Packet::Success);

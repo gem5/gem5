@@ -77,13 +77,13 @@ class UniCoherence
      * @return The proper bus command, as determined by the protocol.
      * @todo Make changes so writebacks don't get here.
      */
-    Packet::Command getBusCmd(Packet::Command &cmd, CacheBlk::State state)
+    MemCmd getBusCmd(MemCmd cmd, CacheBlk::State state)
     {
-        if (cmd == Packet::HardPFReq && state)
+        if (cmd == MemCmd::HardPFReq && state)
             warn("Trying to issue a prefetch to a block we already have\n");
-        if (cmd == Packet::Writeback)
-            return Packet::Writeback;
-        return Packet::ReadReq;
+        if (cmd == MemCmd::Writeback)
+            return MemCmd::Writeback;
+        return MemCmd::ReadReq;
     }
 
     /**
@@ -96,7 +96,7 @@ class UniCoherence
     {
         if (pkt->senderState) //Blocking Buffers don't get mshrs
         {
-            if (((MSHR *)(pkt->senderState))->originalCmd == Packet::HardPFReq) {
+            if (((MSHR *)(pkt->senderState))->originalCmd == MemCmd::HardPFReq) {
                 DPRINTF(HWPrefetch, "Marking a hardware prefetch as such in the state\n");
                 return BlkHWPrefetched | BlkValid | BlkWritable;
             }

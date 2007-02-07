@@ -613,7 +613,8 @@ LSQUnit<Impl>::writebackStores()
                  (sizeof(TheISA::IntReg) - req->getSize()) : 0),
                 req->getSize());
 
-        PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        PacketPtr data_pkt = new Packet(req, MemCmd::WriteReq,
+                                        Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
 
         LSQSenderState *state = new LSQSenderState;

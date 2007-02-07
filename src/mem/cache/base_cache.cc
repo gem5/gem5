@@ -370,17 +370,12 @@ BaseCache::init()
 void
 BaseCache::regStats()
 {
-    Request temp_req((Addr) NULL, 4, 0);
-    Packet::Command temp_cmd = Packet::ReadReq;
-    Packet temp_pkt(&temp_req, temp_cmd, 0);  //@todo FIx command strings so this isn't neccessary
-    temp_pkt.allocate(); //Temp allocate, all need data
-
     using namespace Stats;
 
     // Hit statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         hits[access_idx]
             .init(maxThreadsPerCPU)
@@ -395,20 +390,20 @@ BaseCache::regStats()
         .desc("number of demand (read+write) hits")
         .flags(total)
         ;
-    demandHits = hits[Packet::ReadReq] + hits[Packet::WriteReq];
+    demandHits = hits[MemCmd::ReadReq] + hits[MemCmd::WriteReq];
 
     overallHits
         .name(name() + ".overall_hits")
         .desc("number of overall hits")
         .flags(total)
         ;
-    overallHits = demandHits + hits[Packet::SoftPFReq] + hits[Packet::HardPFReq]
-        + hits[Packet::Writeback];
+    overallHits = demandHits + hits[MemCmd::SoftPFReq] + hits[MemCmd::HardPFReq]
+        + hits[MemCmd::Writeback];
 
     // Miss statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         misses[access_idx]
             .init(maxThreadsPerCPU)
@@ -423,20 +418,20 @@ BaseCache::regStats()
         .desc("number of demand (read+write) misses")
         .flags(total)
         ;
-    demandMisses = misses[Packet::ReadReq] + misses[Packet::WriteReq];
+    demandMisses = misses[MemCmd::ReadReq] + misses[MemCmd::WriteReq];
 
     overallMisses
         .name(name() + ".overall_misses")
         .desc("number of overall misses")
         .flags(total)
         ;
-    overallMisses = demandMisses + misses[Packet::SoftPFReq] +
-        misses[Packet::HardPFReq] + misses[Packet::Writeback];
+    overallMisses = demandMisses + misses[MemCmd::SoftPFReq] +
+        misses[MemCmd::HardPFReq] + misses[MemCmd::Writeback];
 
     // Miss latency statistics
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         missLatency[access_idx]
             .init(maxThreadsPerCPU)
@@ -451,20 +446,20 @@ BaseCache::regStats()
         .desc("number of demand (read+write) miss cycles")
         .flags(total)
         ;
-    demandMissLatency = missLatency[Packet::ReadReq] + missLatency[Packet::WriteReq];
+    demandMissLatency = missLatency[MemCmd::ReadReq] + missLatency[MemCmd::WriteReq];
 
     overallMissLatency
         .name(name() + ".overall_miss_latency")
         .desc("number of overall miss cycles")
         .flags(total)
         ;
-    overallMissLatency = demandMissLatency + missLatency[Packet::SoftPFReq] +
-        missLatency[Packet::HardPFReq];
+    overallMissLatency = demandMissLatency + missLatency[MemCmd::SoftPFReq] +
+        missLatency[MemCmd::HardPFReq];
 
     // access formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         accesses[access_idx]
             .name(name() + "." + cstr + "_accesses")
@@ -490,9 +485,9 @@ BaseCache::regStats()
     overallAccesses = overallHits + overallMisses;
 
     // miss rate formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         missRate[access_idx]
             .name(name() + "." + cstr + "_miss_rate")
@@ -518,9 +513,9 @@ BaseCache::regStats()
     overallMissRate = overallMisses / overallAccesses;
 
     // miss latency formulas
-    for (int access_idx = 0; access_idx < NUM_MEM_CMDS; ++access_idx) {
-        Packet::Command cmd = (Packet::Command)access_idx;
-        const string &cstr = temp_pkt.cmdIdxToString(cmd);
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
 
         avgMissLatency[access_idx]
             .name(name() + "." + cstr + "_avg_miss_latency")

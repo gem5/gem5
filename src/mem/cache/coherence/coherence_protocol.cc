@@ -47,7 +47,7 @@ using namespace std;
 
 
 CoherenceProtocol::StateTransition::StateTransition()
-    : busCmd(Packet::InvalidCmd), newState(-1), snoopFunc(invalidTransition)
+    : busCmd(MemCmd::InvalidCmd), newState(-1), snoopFunc(invalidTransition)
 {
 }
 
@@ -59,132 +59,132 @@ CoherenceProtocol::regStats()
     // requestCount and snoopCount arrays, most of these are invalid,
     // so we just select the interesting ones to print here.
 
-    requestCount[Invalid][Packet::ReadReq]
+    requestCount[Invalid][MemCmd::ReadReq]
         .name(name() + ".read_invalid")
         .desc("read misses to invalid blocks")
         ;
 
-    requestCount[Invalid][Packet::WriteReq]
+    requestCount[Invalid][MemCmd::WriteReq]
         .name(name() +".write_invalid")
         .desc("write misses to invalid blocks")
         ;
 
-    requestCount[Invalid][Packet::SoftPFReq]
+    requestCount[Invalid][MemCmd::SoftPFReq]
         .name(name() +".swpf_invalid")
         .desc("soft prefetch misses to invalid blocks")
         ;
 
-    requestCount[Invalid][Packet::HardPFReq]
+    requestCount[Invalid][MemCmd::HardPFReq]
         .name(name() +".hwpf_invalid")
         .desc("hard prefetch misses to invalid blocks")
         ;
 
-    requestCount[Shared][Packet::WriteReq]
+    requestCount[Shared][MemCmd::WriteReq]
         .name(name() + ".write_shared")
         .desc("write misses to shared blocks")
         ;
 
-    requestCount[Owned][Packet::WriteReq]
+    requestCount[Owned][MemCmd::WriteReq]
         .name(name() + ".write_owned")
         .desc("write misses to owned blocks")
         ;
 
-    snoopCount[Shared][Packet::ReadReq]
+    snoopCount[Shared][MemCmd::ReadReq]
         .name(name() + ".snoop_read_shared")
         .desc("read snoops on shared blocks")
         ;
 
-    snoopCount[Shared][Packet::ReadExReq]
+    snoopCount[Shared][MemCmd::ReadExReq]
         .name(name() + ".snoop_readex_shared")
         .desc("readEx snoops on shared blocks")
         ;
 
-    snoopCount[Shared][Packet::UpgradeReq]
+    snoopCount[Shared][MemCmd::UpgradeReq]
         .name(name() + ".snoop_upgrade_shared")
         .desc("upgradee snoops on shared blocks")
         ;
 
-    snoopCount[Modified][Packet::ReadReq]
+    snoopCount[Modified][MemCmd::ReadReq]
         .name(name() + ".snoop_read_modified")
         .desc("read snoops on modified blocks")
         ;
 
-    snoopCount[Modified][Packet::ReadExReq]
+    snoopCount[Modified][MemCmd::ReadExReq]
         .name(name() + ".snoop_readex_modified")
         .desc("readEx snoops on modified blocks")
         ;
 
-    snoopCount[Owned][Packet::ReadReq]
+    snoopCount[Owned][MemCmd::ReadReq]
         .name(name() + ".snoop_read_owned")
         .desc("read snoops on owned blocks")
         ;
 
-    snoopCount[Owned][Packet::ReadExReq]
+    snoopCount[Owned][MemCmd::ReadExReq]
         .name(name() + ".snoop_readex_owned")
         .desc("readEx snoops on owned blocks")
         ;
 
-    snoopCount[Owned][Packet::UpgradeReq]
+    snoopCount[Owned][MemCmd::UpgradeReq]
         .name(name() + ".snoop_upgrade_owned")
         .desc("upgrade snoops on owned blocks")
         ;
 
-    snoopCount[Exclusive][Packet::ReadReq]
+    snoopCount[Exclusive][MemCmd::ReadReq]
         .name(name() + ".snoop_read_exclusive")
         .desc("read snoops on exclusive blocks")
         ;
 
-    snoopCount[Exclusive][Packet::ReadExReq]
+    snoopCount[Exclusive][MemCmd::ReadExReq]
         .name(name() + ".snoop_readex_exclusive")
         .desc("readEx snoops on exclusive blocks")
         ;
 
-    snoopCount[Shared][Packet::InvalidateReq]
+    snoopCount[Shared][MemCmd::InvalidateReq]
         .name(name() + ".snoop_inv_shared")
         .desc("Invalidate snoops on shared blocks")
         ;
 
-    snoopCount[Owned][Packet::InvalidateReq]
+    snoopCount[Owned][MemCmd::InvalidateReq]
         .name(name() + ".snoop_inv_owned")
         .desc("Invalidate snoops on owned blocks")
         ;
 
-    snoopCount[Exclusive][Packet::InvalidateReq]
+    snoopCount[Exclusive][MemCmd::InvalidateReq]
         .name(name() + ".snoop_inv_exclusive")
         .desc("Invalidate snoops on exclusive blocks")
         ;
 
-    snoopCount[Modified][Packet::InvalidateReq]
+    snoopCount[Modified][MemCmd::InvalidateReq]
         .name(name() + ".snoop_inv_modified")
         .desc("Invalidate snoops on modified blocks")
         ;
 
-    snoopCount[Invalid][Packet::InvalidateReq]
+    snoopCount[Invalid][MemCmd::InvalidateReq]
         .name(name() + ".snoop_inv_invalid")
         .desc("Invalidate snoops on invalid blocks")
         ;
 
-    snoopCount[Shared][Packet::WriteInvalidateReq]
+    snoopCount[Shared][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_shared")
         .desc("WriteInvalidate snoops on shared blocks")
         ;
 
-    snoopCount[Owned][Packet::WriteInvalidateReq]
+    snoopCount[Owned][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_owned")
         .desc("WriteInvalidate snoops on owned blocks")
         ;
 
-    snoopCount[Exclusive][Packet::WriteInvalidateReq]
+    snoopCount[Exclusive][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_exclusive")
         .desc("WriteInvalidate snoops on exclusive blocks")
         ;
 
-    snoopCount[Modified][Packet::WriteInvalidateReq]
+    snoopCount[Modified][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_modified")
         .desc("WriteInvalidate snoops on modified blocks")
         ;
 
-    snoopCount[Invalid][Packet::WriteInvalidateReq]
+    snoopCount[Invalid][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_invalid")
         .desc("WriteInvalidate snoops on invalid blocks")
         ;
@@ -278,11 +278,13 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     }
 
     // set up a few shortcuts to save typing & visual clutter
-    typedef Packet P;
-    StateTransition (&tt)[stateMax+1][NUM_MEM_CMDS] = transitionTable;
+    typedef MemCmd MC;
+    StateTransition (&tt)[stateMax+1][MC::NUM_MEM_CMDS] = transitionTable;
 
-    P::Command writeToSharedCmd =  doUpgrades ? P::UpgradeReq : P::ReadExReq;
-    P::Command writeToSharedResp = doUpgrades ? P::UpgradeReq : P::ReadExResp;
+    MC::Command writeToSharedCmd =
+        doUpgrades ? MC::UpgradeReq : MC::ReadExReq;
+    MC::Command writeToSharedResp =
+        doUpgrades ? MC::UpgradeReq : MC::ReadExResp;
 
     // Note that all transitions by default cause a panic.
     // Override the valid transitions with the appropriate actions here.
@@ -290,34 +292,34 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     //
     // ----- incoming requests: specify outgoing bus request -----
     //
-    tt[Invalid][P::ReadReq].onRequest(P::ReadReq);
+    tt[Invalid][MC::ReadReq].onRequest(MC::ReadReq);
     // we only support write allocate right now
-    tt[Invalid][P::WriteReq].onRequest(P::ReadExReq);
-    tt[Shared][P::WriteReq].onRequest(writeToSharedCmd);
+    tt[Invalid][MC::WriteReq].onRequest(MC::ReadExReq);
+    tt[Shared][MC::WriteReq].onRequest(writeToSharedCmd);
     if (hasOwned) {
-        tt[Owned][P::WriteReq].onRequest(writeToSharedCmd);
+        tt[Owned][MC::WriteReq].onRequest(writeToSharedCmd);
     }
 
     // Prefetching causes a read
-    tt[Invalid][P::SoftPFReq].onRequest(P::ReadReq);
-    tt[Invalid][P::HardPFReq].onRequest(P::ReadReq);
+    tt[Invalid][MC::SoftPFReq].onRequest(MC::ReadReq);
+    tt[Invalid][MC::HardPFReq].onRequest(MC::ReadReq);
 
     //
     // ----- on response to given request: specify new state -----
     //
-    tt[Invalid][P::ReadExResp].onResponse(Modified);
+    tt[Invalid][MC::ReadExResp].onResponse(Modified);
     tt[Shared][writeToSharedResp].onResponse(Modified);
     // Go to Exclusive state on read response if we have one (will
     // move into shared if the shared line is asserted in the
     // getNewState function)
     //
     // originally had this as:
-    // tt[Invalid][P::ReadResp].onResponse(hasExclusive ? Exclusive: Shared);
+    // tt[Invalid][MC::ReadResp].onResponse(hasExclusive ? Exclusive: Shared);
     // ...but for some reason that caused a link error...
     if (hasExclusive) {
-        tt[Invalid][P::ReadResp].onResponse(Exclusive);
+        tt[Invalid][MC::ReadResp].onResponse(Exclusive);
     } else {
-        tt[Invalid][P::ReadResp].onResponse(Shared);
+        tt[Invalid][MC::ReadResp].onResponse(Shared);
     }
     if (hasOwned) {
         tt[Owned][writeToSharedResp].onResponse(Modified);
@@ -326,58 +328,58 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     //
     // ----- bus snoop transition functions -----
     //
-    tt[Invalid][P::ReadReq].onSnoop(nullTransition);
-    tt[Invalid][P::ReadExReq].onSnoop(nullTransition);
-    tt[Invalid][P::InvalidateReq].onSnoop(invalidateTrans);
-    tt[Invalid][P::WriteInvalidateReq].onSnoop(invalidateTrans);
-    tt[Shared][P::ReadReq].onSnoop(hasExclusive
+    tt[Invalid][MC::ReadReq].onSnoop(nullTransition);
+    tt[Invalid][MC::ReadExReq].onSnoop(nullTransition);
+    tt[Invalid][MC::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Invalid][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
+    tt[Shared][MC::ReadReq].onSnoop(hasExclusive
                                    ? assertShared : nullTransition);
-    tt[Shared][P::ReadExReq].onSnoop(invalidateTrans);
-    tt[Shared][P::InvalidateReq].onSnoop(invalidateTrans);
-    tt[Shared][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+    tt[Shared][MC::ReadExReq].onSnoop(invalidateTrans);
+    tt[Shared][MC::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Shared][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     if (doUpgrades) {
-        tt[Invalid][P::UpgradeReq].onSnoop(nullTransition);
-        tt[Shared][P::UpgradeReq].onSnoop(invalidateTrans);
+        tt[Invalid][MC::UpgradeReq].onSnoop(nullTransition);
+        tt[Shared][MC::UpgradeReq].onSnoop(invalidateTrans);
     }
-    tt[Modified][P::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-    tt[Modified][P::ReadReq].onSnoop(hasOwned
+    tt[Modified][MC::ReadExReq].onSnoop(supplyAndInvalidateTrans);
+    tt[Modified][MC::ReadReq].onSnoop(hasOwned
                                      ? supplyAndGotoOwnedTrans
                                      : supplyAndGotoSharedTrans);
-    tt[Modified][P::InvalidateReq].onSnoop(invalidateTrans);
-    tt[Modified][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+    tt[Modified][MC::InvalidateReq].onSnoop(invalidateTrans);
+    tt[Modified][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
 
     if (hasExclusive) {
-        tt[Exclusive][P::ReadReq].onSnoop(assertShared);
-        tt[Exclusive][P::ReadExReq].onSnoop(invalidateTrans);
-        tt[Exclusive][P::InvalidateReq].onSnoop(invalidateTrans);
-        tt[Exclusive][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+        tt[Exclusive][MC::ReadReq].onSnoop(assertShared);
+        tt[Exclusive][MC::ReadExReq].onSnoop(invalidateTrans);
+        tt[Exclusive][MC::InvalidateReq].onSnoop(invalidateTrans);
+        tt[Exclusive][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
 
     if (hasOwned) {
-        tt[Owned][P::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
-        tt[Owned][P::ReadExReq].onSnoop(supplyAndInvalidateTrans);
-        tt[Owned][P::UpgradeReq].onSnoop(invalidateTrans);
-        tt[Owned][P::InvalidateReq].onSnoop(invalidateTrans);
-        tt[Owned][P::WriteInvalidateReq].onSnoop(invalidateTrans);
+        tt[Owned][MC::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
+        tt[Owned][MC::ReadExReq].onSnoop(supplyAndInvalidateTrans);
+        tt[Owned][MC::UpgradeReq].onSnoop(invalidateTrans);
+        tt[Owned][MC::InvalidateReq].onSnoop(invalidateTrans);
+        tt[Owned][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
 
     // @todo add in hardware prefetch to this list
 }
 
 
-Packet::Command
-CoherenceProtocol::getBusCmd(Packet::Command cmdIn, CacheBlk::State state,
+MemCmd
+CoherenceProtocol::getBusCmd(MemCmd cmdIn, CacheBlk::State state,
                              MSHR *mshr)
 {
     state &= stateMask;
-    int cmd_idx = (int) cmdIn;
+    int cmd_idx = cmdIn.toInt();
 
     assert(0 <= state && state <= stateMax);
-    assert(0 <= cmd_idx && cmd_idx < NUM_MEM_CMDS);
+    assert(0 <= cmd_idx && cmd_idx < MemCmd::NUM_MEM_CMDS);
 
-    Packet::Command cmdOut = transitionTable[state][cmd_idx].busCmd;
+    MemCmd::Command cmdOut = transitionTable[state][cmd_idx].busCmd;
 
-    assert(cmdOut != Packet::InvalidCmd);
+    assert(cmdOut != MemCmd::InvalidCmd);
 
     ++requestCount[state][cmd_idx];
 
@@ -392,7 +394,7 @@ CoherenceProtocol::getNewState(PacketPtr &pkt, CacheBlk::State oldState)
     int cmd_idx = pkt->cmdToIndex();
 
     assert(0 <= state && state <= stateMax);
-    assert(0 <= cmd_idx && cmd_idx < NUM_MEM_CMDS);
+    assert(0 <= cmd_idx && cmd_idx < MemCmd::NUM_MEM_CMDS);
 
     CacheBlk::State newState = transitionTable[state][cmd_idx].newState;
 
@@ -425,7 +427,7 @@ CoherenceProtocol::handleBusRequest(BaseCache *cache, PacketPtr &pkt,
     int cmd_idx = pkt->cmdToIndex();
 
     assert(0 <= state && state <= stateMax);
-    assert(0 <= cmd_idx && cmd_idx < NUM_MEM_CMDS);
+    assert(0 <= cmd_idx && cmd_idx < MemCmd::NUM_MEM_CMDS);
 
 //    assert(mshr == NULL); // can't currently handle outstanding requests
     //Check first if MSHR, and also insure, if there is one, that it is not in service

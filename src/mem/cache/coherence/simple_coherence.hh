@@ -131,7 +131,7 @@ class SimpleCoherence
 //Got rid of, there could be an MSHR, but it can't be in service
         if (blk != NULL)
         {
-            if (pkt->cmd != Packet::Writeback) {
+            if (pkt->cmd != MemCmd::Writeback) {
                 return protocol->handleBusRequest(cache, pkt, blk, mshr,
                                               new_state);
             }
@@ -148,9 +148,10 @@ class SimpleCoherence
      * @param state The current state of the cache block.
      * @return The proper bus command, as determined by the protocol.
      */
-    Packet::Command getBusCmd(Packet::Command &cmd, CacheBlk::State state)
+    MemCmd getBusCmd(MemCmd cmd,
+                                  CacheBlk::State state)
     {
-        if (cmd == Packet::Writeback) return Packet::Writeback;
+        if (cmd == MemCmd::Writeback) return MemCmd::Writeback;
         return protocol->getBusCmd(cmd, state);
     }
 

@@ -68,7 +68,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         sendTiming(pkt, latency);
     }
     else {
-        if (pkt->cmd != Packet::UpgradeReq)
+        if (pkt->cmd != MemCmd::UpgradeReq)
         {
             delete pkt->req;
             delete pkt;
