@@ -342,8 +342,8 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
                            target->getPtr<uint8_t>(), target->getSize());
                 }
             } else {
-                if (pkt->req->isLocked()) {
-                    blk->trackLoadLocked(pkt->req);
+                if (target->req->isLocked()) {
+                    blk->trackLoadLocked(target->req);
                 }
                 std::memcpy(target->getPtr<uint8_t>(),
                        blk->data + target->getOffset(blkSize),

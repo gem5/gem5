@@ -42,6 +42,7 @@
 #include <list>
 #include <bitset>
 
+#include "base/compiler.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/host.hh"
