@@ -171,11 +171,6 @@ fixPacket(PacketPtr func, PacketPtr timing)
 
     assert(!(funcStart > timingEnd || timingStart > funcEnd));
 
-    if (DTRACE(FunctionalAccess)) {
-       DebugOut() << func;
-       DebugOut() << timing;
-    }
-
     // this packet can't solve our problem, continue on
     if (!timing->hasData())
         return true;

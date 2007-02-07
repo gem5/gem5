@@ -180,7 +180,8 @@ Bus::recvTiming(PacketPtr pkt)
             }
         } else {
             //Snoop didn't succeed
-            DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+            DPRINTF(Bus, "Adding a retry to RETRY list %d\n",
+                    pktPort->getId());
             addToRetryList(pktPort);
             return false;
         }
@@ -207,7 +208,8 @@ Bus::recvTiming(PacketPtr pkt)
         }
 
         // Packet not successfully sent. Leave or put it on the retry list.
-        DPRINTF(Bus, "Adding a retry to RETRY list %i\n", pktPort);
+        DPRINTF(Bus, "Adding a retry to RETRY list %d\n",
+                pktPort->getId());
         addToRetryList(pktPort);
         return false;
     }
