@@ -156,6 +156,8 @@ class Bus : public MemObject
         void onRetryList(bool newVal)
         { _onRetryList = newVal; }
 
+        int getId() { return id; }
+
       protected:
 
         /** When reciving a timing request from the peer port (at id),

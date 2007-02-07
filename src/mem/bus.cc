@@ -197,7 +197,8 @@ Bus::recvTiming(PacketPtr pkt)
             // Packet was successfully sent. Return true.
             // Also take care of retries
             if (inRetry) {
-                DPRINTF(Bus, "Remove retry from list %i\n", retryList.front());
+                DPRINTF(Bus, "Remove retry from list %d\n",
+                        retryList.front()->getId());
                 retryList.front()->onRetryList(false);
                 retryList.pop_front();
                 inRetry = false;

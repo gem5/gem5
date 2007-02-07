@@ -356,7 +356,7 @@ BaseCache::CacheEvent::process()
 const char *
 BaseCache::CacheEvent::description()
 {
-    return "timing event\n";
+    return "BaseCache timing event";
 }
 
 void
