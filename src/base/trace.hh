@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,14 +81,15 @@ namespace Trace {
     class PrintfRecord : public Record
     {
       private:
-        const char *format;
         const std::string &name;
-        cp::ArgList &args;
+        const char *format;
+        CPrintfArgsList args;
 
       public:
-        PrintfRecord(const char *_format, cp::ArgList &_args,
-                     Tick cycle, const std::string &_name)
-            : Record(cycle), format(_format), name(_name), args(_args)
+        PrintfRecord(Tick cycle, const std::string &_name, const char *_format,
+                     CPRINTF_DECLARATION)
+            : Record(cycle), name(_name), format(_format),
+              args(VARARGS_ALLARGS)
         {
         }
 
@@ -121,7 +122,6 @@ namespace Trace {
         Record **wrapRecPtr;	// &buffer[size], for quick wrap check
 
       public:
-
         Log();
         ~Log();
 
@@ -136,21 +136,27 @@ namespace Trace {
     extern ObjectMatch ignore;
 
     inline void
-    dprintf(const char *format, cp::ArgList &args, Tick cycle,
-            const std::string &name)
+    dprintf(Tick when, const std::string &name, const char *format,
+            CPRINTF_DECLARATION)
     {
-        if (name.empty() || !ignore.match(name))
-            theLog.append(new Trace::PrintfRecord(format, args, cycle, name));
+        if (!name.empty() && ignore.match(name))
+            return;
+
+        theLog.append(new Trace::PrintfRecord(when, name, format,
+                                              VARARGS_ALLARGS));
     }
 
     inline void
-    dataDump(Tick cycle, const std::string &name, const void *data, int len)
+    dataDump(Tick when, const std::string &name, const void *data, int len)
     {
-        theLog.append(new Trace::DataRecord(cycle, name, data, len));
+        theLog.append(new Trace::DataRecord(when, name, data, len));
     }
 
     extern const std::string DefaultName;
+
 };
+
+std::ostream &DebugOut();
 
 // This silly little class allows us to wrap a string in a functor
 // object so that we can give a name() that DPRINTF will like
@@ -162,7 +168,6 @@ struct StringWrap
 };
 
 inline const std::string &name() { return Trace::DefaultName; }
-std::ostream &DebugOut();
 
 //
 // DPRINTF is a debugging trace facility that allows one to
@@ -178,47 +183,36 @@ std::ostream &DebugOut();
 
 #define DTRACE(x) (Trace::IsOn(Trace::x))
 
-#define DCOUT(x) if (Trace::IsOn(Trace::x)) DebugOut()
-
-#define DDUMP(x, data, count) \
-do { \
-    if (Trace::IsOn(Trace::x)) \
-        Trace::dataDump(curTick, name(), data, count);	\
+#define DDUMP(x, data, count) do {                     \
+    if (DTRACE(x))                                     \
+        Trace::dataDump(curTick, name(), data, count); \
 } while (0)
 
-#define __dprintf(cycle, name, format, ...) \
-    Trace::dprintf(format, (*(new cp::ArgList), __VA_ARGS__), cycle, name)
-
-#define DPRINTF(x, ...) \
-do { \
-    if (Trace::IsOn(Trace::x)) \
-        __dprintf(curTick, name(), __VA_ARGS__, cp::ArgListNull()); \
+#define DPRINTF(x, args...) do {                       \
+    if (DTRACE(x))                                     \
+        Trace::dprintf(curTick, name(), args);         \
 } while (0)
 
-#define DPRINTFR(x, ...) \
-do { \
-    if (Trace::IsOn(Trace::x)) \
-        __dprintf((Tick)-1, std::string(), __VA_ARGS__, cp::ArgListNull());	\
+#define DPRINTFR(x, args...) do {                      \
+    if (DTRACE(x))                                     \
+        Trace::dprintf((Tick)-1, std::string(), args); \
 } while (0)
 
-#define DPRINTFN(...) \
-do { \
-    __dprintf(curTick, name(), __VA_ARGS__, cp::ArgListNull()); \
+#define DPRINTFN(args...) do {                         \
+    Trace::dprintf(curTick, name(), args);             \
 } while (0)
 
-#define DPRINTFNR(...) \
-do { \
-    __dprintf((Tick)-1, string(), __VA_ARGS__, cp::ArgListNull()); \
+#define DPRINTFNR(args...) do {                        \
+    Trace::dprintf((Tick)-1, string(), args);          \
 } while (0)
 
 #else // !TRACING_ON
 
 #define DTRACE(x) (false)
-#define DCOUT(x) if (0) DebugOut()
-#define DPRINTF(x, ...) do {} while (0)
-#define DPRINTFR(...) do {} while (0)
-#define DPRINTFN(...) do {} while (0)
-#define DPRINTFNR(...) do {} while (0)
+#define DPRINTF(x, args...) do {} while (0)
+#define DPRINTFR(args...) do {} while (0)
+#define DPRINTFN(args...) do {} while (0)
+#define DPRINTFNR(args...) do {} while (0)
 #define DDUMP(x, data, count) do {} while (0)
 
 #endif	// TRACING_ON

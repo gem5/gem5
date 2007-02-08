@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/str.hh"
+#include "base/varargs.hh"
 
 using namespace std;
 
@@ -153,9 +154,7 @@ Log::dump(ostream &os)
 }
 
 PrintfRecord::~PrintfRecord()
-{
-    delete &args;
-}
+{}
 
 void
 PrintfRecord::dump(ostream &os)
@@ -164,17 +163,17 @@ PrintfRecord::dump(ostream &os)
 
     if (!name.empty()) {
         fmt = "%s: " + fmt;
-        args.prepend(name);
+        args.push_front(name);
     }
 
     if (cycle != (Tick)-1) {
         fmt = "%7d: " + fmt;
-        args.prepend(cycle);
+        args.push_front(cycle);
     }
 
     fmt += format;
 
-    args.dump(os, fmt);
+    ccprintf(os, fmt.c_str(), args);
     os.flush();
 }
 

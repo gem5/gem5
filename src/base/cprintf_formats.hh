@@ -28,8 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __CPRINTF_FORMATS_HH__
-#define __CPRINTF_FORMATS_HH__
+#ifndef __BASE_CPRINTF_FORMATS_HH__
+#define __BASE_CPRINTF_FORMATS_HH__
 
 #include <sstream>
 #include <ostream>

@@ -36,91 +36,99 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "base/varargs.hh"
 #include "sim/host.hh"
 #include "sim/root.hh"
 
 using namespace std;
 
 void
-__panic(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
+__panic(const char *func, const char *file, int line, const char *fmt,
+    CPRINTF_DEFINITION)
 {
-    string fmt = "panic: " + format;
-    switch (fmt[fmt.size() - 1]) {
+    string format = "panic: ";
+    format += fmt;
+    switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
         break;
       default:
-        fmt += "\n";
+        format += "\n";
     }
 
-    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
+    format += " @ cycle %d\n[%s:%s, line %d]\n";
 
-    args.append(curTick);
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.dump(cerr, fmt);
+    CPrintfArgsList args(VARARGS_ALLARGS);
 
-    delete &args;
+    args.push_back(curTick);
+    args.push_back(func);
+    args.push_back(file);
+    args.push_back(line);
+
+    ccprintf(cerr, format.c_str(), args);
 
     abort();
 }
 
 void
-__fatal(const string &format, cp::ArgList &args, const char *func,
-        const char *file, int line)
+__fatal(const char *func, const char *file, int line, const char *fmt,
+    CPRINTF_DEFINITION)
 {
-    string fmt = "fatal: " + format;
+    CPrintfArgsList args(VARARGS_ALLARGS);
+    string format = "fatal: ";
+    format += fmt;
 
-    switch (fmt[fmt.size() - 1]) {
+    switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
         break;
       default:
-        fmt += "\n";
+        format += "\n";
     }
 
-    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
-    fmt += "Memory Usage: %ld KBytes\n";
+    format += " @ cycle %d\n[%s:%s, line %d]\n";
+    format += "Memory Usage: %ld KBytes\n";
 
-    args.append(curTick);
-    args.append(func);
-    args.append(file);
-    args.append(line);
-    args.append(memUsage());
-    args.dump(cerr, fmt);
+    args.push_back(curTick);
+    args.push_back(func);
+    args.push_back(file);
+    args.push_back(line);
+    args.push_back(memUsage());
 
-    delete &args;
+    ccprintf(cerr, format.c_str(), args);
 
     exit(1);
 }
 
 void
-__warn(const string &format, cp::ArgList &args, const char *func,
-       const char *file, int line)
+__warn(const char *func, const char *file, int line, const char *fmt,
+    CPRINTF_DEFINITION)
 {
-    string fmt = "warn: " + format;
+    string format = "warn: ";
+    format += fmt;
 
-    switch (fmt[fmt.size() - 1]) {
+    switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
         break;
       default:
-        fmt += "\n";
+        format += "\n";
     }
 
 #ifdef VERBOSE_WARN
-    fmt += " @ cycle %d\n[%s:%s, line %d]\n";
-    args.append(curTick);
-    args.append(func);
-    args.append(file);
-    args.append(line);
+    format += " @ cycle %d\n[%s:%s, line %d]\n";
 #endif
 
-    args.dump(cerr, fmt);
-    if (simout.isFile(*outputStream))
-        args.dump(*outputStream, fmt);
+    CPrintfArgsList args(VARARGS_ALLARGS);
 
-    delete &args;
+#ifdef VERBOSE_WARN
+    args.push_back(curTick);
+    args.push_back(func);
+    args.push_back(file);
+    args.push_back(line);
+#endif
+
+    ccprintf(cerr, format.c_str(), args);
+    if (simout.isFile(*outputStream))
+        ccprintf(*outputStream, format.c_str(), args);
 }
