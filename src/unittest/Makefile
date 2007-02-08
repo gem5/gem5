@@ -56,6 +56,9 @@ circletest: unittest/circletest.cc base/circlebuf.cc
 cprintftest: unittest/cprintftest.cc base/cprintf.cc
 	$(CXX) $(CCFLAGS) -o $@ $^
 
+cprintftime: unittest/cprintftime.cc base/cprintf.cc
+	$(CXX) $(CCFLAGS) -o $@ $^
+
 initest: unittest/initest.cc base/str.cc base/inifile.cc base/cprintf.cc
 	$(CXX) $(CCFLAGS) -o $@ $^
 
