@@ -69,22 +69,25 @@ FloatReg FloatRegFile::readReg(int floatReg, int width)
     switch(width)
     {
       case SingleWidth:
-        float32_t result32;
+        uint32_t result32;
+        float32_t fresult32;
         memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
-        result = htog(result32);
-        DPRINTF(Sparc, "Read FP32 register %d = 0x%x\n", floatReg, result);
+        result32 = htog(result32);
+        memcpy(&fresult32, &result32, sizeof(result32));
+        result = fresult32;
+        DPRINTF(Sparc, "Read FP32 register %d = [%f]0x%x\n", floatReg, result, result32);
         break;
       case DoubleWidth:
-        float64_t result64;
+        uint64_t result64;
+        float64_t fresult64;
         memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
-        result = htog(result64);
-        DPRINTF(Sparc, "Read FP64 register %d = 0x%x\n", floatReg, result);
+        result64 = htog(result64);
+        memcpy(&fresult64, &result64, sizeof(result64));
+        result = fresult64;
+        DPRINTF(Sparc, "Read FP64 register %d = [%f]0x%x\n", floatReg, result, result64);
         break;
       case QuadWidth:
-        float128_t result128;
-        memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
-        result = htog(result128);
-        DPRINTF(Sparc, "Read FP128 register %d = 0x%x\n", floatReg, result);
+        panic("Quad width FP not implemented.");
         break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);
@@ -113,10 +116,7 @@ FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
         DPRINTF(Sparc, "Read FP64 bits register %d = 0x%x\n", floatReg, result);
         break;
       case QuadWidth:
-        uint64_t result128;
-        memcpy(&result128, regSpace + 4 * floatReg, sizeof(result128));
-        result = htog(result128);
-        DPRINTF(Sparc, "Read FP128 bits register %d = 0x%x\n", floatReg, result);
+        panic("Quad width FP not implemented.");
         break;
       default:
         panic("Attempted to read a %d bit floating point register!", width);
@@ -132,15 +132,21 @@ Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
 
     uint32_t result32;
     uint64_t result64;
+    float32_t fresult32;
+    float64_t fresult64;
     switch(width)
     {
       case SingleWidth:
-        result32 = gtoh((uint32_t)val);
+        fresult32 = val;
+        memcpy(&result32, &fresult32, sizeof(result32));
+        result32 = gtoh(result32);
         memcpy(regSpace + 4 * floatReg, &result32, sizeof(result32));
         DPRINTF(Sparc, "Write FP64 register %d = 0x%x\n", floatReg, result32);
         break;
       case DoubleWidth:
-        result64 = gtoh((uint64_t)val);
+        fresult64 = val;
+        memcpy(&result64, &fresult64, sizeof(result64));
+        result64 = gtoh(result64);
         memcpy(regSpace + 4 * floatReg, &result64, sizeof(result64));
         DPRINTF(Sparc, "Write FP64 register %d = 0x%x\n", floatReg, result64);
         break;

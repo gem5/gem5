@@ -46,164 +46,167 @@ enum interrupts_t {
     num_interrupt_types
 };
 
-    class Interrupts
+class Interrupts
+{
+
+  private:
+
+    bool interrupts[num_interrupt_types];
+    int numPosted;
+
+  public:
+    Interrupts()
+    {
+        for (int i = 0; i < num_interrupt_types; ++i) {
+            interrupts[i] = false;
+        }
+        numPosted = 0;
+    }
+
+    void post(int int_type)
+    {
+        if (int_type < 0 || int_type >= num_interrupt_types)
+            panic("posting unknown interrupt!\n");
+        if (interrupts[int_type] == false) {
+            interrupts[int_type] = true;
+            ++numPosted;
+        }
+    }
+
+    void post(int int_num, int index)
     {
 
-      private:
+    }
 
-        bool interrupts[num_interrupt_types];
-        int numPosted;
+    void clear(int int_num, int index)
+    {
 
-      public:
-        Interrupts()
-        {
-            for (int i = 0; i < num_interrupt_types; ++i) {
-                interrupts[i] = false;
-            }
-            numPosted = 0;
-        }
+    }
 
-        void post(int int_type)
-        {
-            if (int_type < 0 || int_type >= num_interrupt_types)
-                panic("posting unknown interrupt!\n");
+    void clear_all()
+    {
 
-            if (interrupts[int_type] == false) {
-                interrupts[int_type] = true;
-                ++numPosted;
-            }
-        }
+    }
 
-        void post(int int_num, int index)
-        {
+    bool check_interrupts(ThreadContext * tc) const
+    {
+        if (numPosted)
+            return true;
+        else
+            return false;
+    }
 
-        }
+    Fault getInterrupt(ThreadContext * tc)
+    {
+        int hpstate = tc->readMiscReg(MISCREG_HPSTATE);
+        int pstate = tc->readMiscReg(MISCREG_PSTATE);
+        bool ie = pstate & PSTATE::ie;
 
-        void clear(int int_num, int index)
-        {
-
-        }
-
-        void clear_all()
-        {
-
-        }
-
-        bool check_interrupts(ThreadContext * tc) const
-        {
-            if (numPosted)
-                return true;
-            else
-                return false;
-        }
-
-        Fault getInterrupt(ThreadContext * tc)
-        {
-            int hpstate = tc->readMiscReg(MISCREG_HPSTATE);
-            int pstate = tc->readMiscReg(MISCREG_PSTATE);
-            bool ie = pstate & PSTATE::ie;
-
-            // THESE ARE IN ORDER OF PRIORITY
-            // since there are early returns, and the highest
-            // priority interrupts should get serviced,
-            // it is v. important that new interrupts are inserted
-            // in the right order of processing
-            if (hpstate & HPSTATE::hpriv) {
-                if (ie) {
-                    if (interrupts[hstick_match]) {
-                        if (tc->readMiscReg(MISCREG_HINTP) & 1) {
-                            interrupts[hstick_match] = false;
-                            --numPosted;
-                            return new HstickMatch;
-                        }
-                    }
-                    if (interrupts[interrupt_vector]) {
-                        interrupts[interrupt_vector] = false;
-                        --numPosted;
-                        //HAVEN'T IMPLed THIS YET
-                        return NoFault;
-                    }
-                } else {
-                    if (interrupts[hstick_match]) {
-                        return NoFault;
-                    }
-
-                }
-            } else {
-                if (interrupts[trap_level_zero]) {
-                    if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
-                        interrupts[trap_level_zero] = false;
-                        --numPosted;
-                        return new TrapLevelZero;
-                    }
-                }
+        // THESE ARE IN ORDER OF PRIORITY
+        // since there are early returns, and the highest
+        // priority interrupts should get serviced,
+        // it is v. important that new interrupts are inserted
+        // in the right order of processing
+        if (hpstate & HPSTATE::hpriv) {
+            if (ie) {
                 if (interrupts[hstick_match]) {
                     if (tc->readMiscReg(MISCREG_HINTP) & 1) {
                         interrupts[hstick_match] = false;
                         --numPosted;
                         return new HstickMatch;
-                        }
+                    }
                 }
-                if (ie) {
-                    if (interrupts[cpu_mondo]) {
-                        interrupts[cpu_mondo] = false;
-                        --numPosted;
-                        return new CpuMondo;
-                    }
-                    if (interrupts[dev_mondo]) {
-                        interrupts[dev_mondo] = false;
-                        --numPosted;
-                        return new DevMondo;
-                    }
-                    if (interrupts[soft_interrupt]) {
-                        int il = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
-                        // it seems that interrupt vectors are right in
-                        // the middle of interrupt levels with regard to
-                        // priority, so have to check
-                        if ((il < 6) &&
-                            interrupts[interrupt_vector]) {
-                                // may require more details here since there
-                                // may be lots of interrupts embedded in an
-                                // platform interrupt vector
-                                interrupts[interrupt_vector] = false;
-                                --numPosted;
-                                //HAVEN'T IMPLed YET
-                                return NoFault;
-                        } else {
-                            if (il > tc->readMiscReg(MISCREG_PIL)) {
-                                uint64_t si = tc->readMiscReg(MISCREG_SOFTINT);
-                                uint64_t more = si & ~(1 << (il + 1));
-                                if (!InterruptLevel(more)) {
-                                    interrupts[soft_interrupt] = false;
-                                    --numPosted;
-                                }
-                                return new InterruptLevelN(il);
-                            }
-                        }
-                    }
-                    if (interrupts[resumable_error]) {
-                        interrupts[resumable_error] = false;
-                        --numPosted;
-                        return new ResumableError;
-                    }
+                if (interrupts[interrupt_vector]) {
+                    interrupts[interrupt_vector] = false;
+                    --numPosted;
+                    //HAVEN'T IMPLed THIS YET
+                    return NoFault;
+                }
+            } else {
+                if (interrupts[hstick_match]) {
+                    return NoFault;
+                }
+
+            }
+        } else {
+            if (interrupts[trap_level_zero]) {
+                if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
+                    interrupts[trap_level_zero] = false;
+                    --numPosted;
+                    return new TrapLevelZero;
                 }
             }
-            return NoFault;
+            if (interrupts[hstick_match]) {
+                if (tc->readMiscReg(MISCREG_HINTP) & 1) {
+                    interrupts[hstick_match] = false;
+                    --numPosted;
+                    return new HstickMatch;
+                    }
+            }
+            if (ie) {
+                if (interrupts[cpu_mondo]) {
+                    interrupts[cpu_mondo] = false;
+                    --numPosted;
+                    return new CpuMondo;
+                }
+                if (interrupts[dev_mondo]) {
+                    interrupts[dev_mondo] = false;
+                    --numPosted;
+                    return new DevMondo;
+                }
+                if (interrupts[soft_interrupt]) {
+                    int il = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
+                    // it seems that interrupt vectors are right in
+                    // the middle of interrupt levels with regard to
+                    // priority, so have to check
+                    if ((il < 6) &&
+                        interrupts[interrupt_vector]) {
+                            // may require more details here since there
+                            // may be lots of interrupts embedded in an
+                            // platform interrupt vector
+                            interrupts[interrupt_vector] = false;
+                            --numPosted;
+                            //HAVEN'T IMPLed YET
+                            return NoFault;
+                    } else {
+                        if (il > tc->readMiscReg(MISCREG_PIL)) {
+                            uint64_t si = tc->readMiscReg(MISCREG_SOFTINT);
+                            uint64_t more = si & ~(1 << (il + 1));
+                            if (!InterruptLevel(more)) {
+                                interrupts[soft_interrupt] = false;
+                                --numPosted;
+                            }
+                            return new InterruptLevelN(il);
+                        }
+                    }
+                }
+                if (interrupts[resumable_error]) {
+                    interrupts[resumable_error] = false;
+                    --numPosted;
+                    return new ResumableError;
+                }
+            }
         }
+        return NoFault;
+    }
 
-        void updateIntrInfo(ThreadContext * tc)
-        {
+    void updateIntrInfo(ThreadContext * tc)
+    {
 
-        }
+    }
 
-        void serialize(std::ostream &os)
-        {
-        }
+    void serialize(std::ostream &os)
+    {
+        SERIALIZE_ARRAY(interrupts,num_interrupt_types);
+        SERIALIZE_SCALAR(numPosted);
+    }
 
-        void unserialize(Checkpoint *cp, const std::string &section)
-        {
-        }
-    };
-}
+    void unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_ARRAY(interrupts,num_interrupt_types);
+        UNSERIALIZE_SCALAR(numPosted);
+    }
+};
+} // namespace SPARC_ISA
 
 #endif // __ARCH_SPARC_INTERRUPT_HH__

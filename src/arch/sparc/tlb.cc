@@ -668,8 +668,6 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     if (!implicit && asi != ASI_P && asi != ASI_S) {
         if (AsiIsLittle(asi))
             panic("Little Endian ASIs not supported\n");
-        if (AsiIsBlock(asi))
-            panic("Block ASIs not supported\n");
         if (AsiIsNoFault(asi))
             panic("No Fault ASIs not supported\n");
 
@@ -688,7 +686,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             goto handleSparcErrorRegAccess;
 
         if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi) &&
-                !AsiIsTwin(asi))
+                !AsiIsTwin(asi) && !AsiIsBlock(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
