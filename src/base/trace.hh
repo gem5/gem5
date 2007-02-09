@@ -183,36 +183,36 @@ inline const std::string &name() { return Trace::DefaultName; }
 
 #define DTRACE(x) (Trace::IsOn(Trace::x))
 
-#define DDUMP(x, data, count) do {                     \
-    if (DTRACE(x))                                     \
-        Trace::dataDump(curTick, name(), data, count); \
+#define DDUMP(x, data, count) do {                              \
+    if (DTRACE(x))                                              \
+        Trace::dataDump(curTick, name(), data, count);          \
 } while (0)
 
-#define DPRINTF(x, args...) do {                       \
-    if (DTRACE(x))                                     \
-        Trace::dprintf(curTick, name(), args);         \
+#define DPRINTF(x, ...) do {                                    \
+    if (DTRACE(x))                                              \
+        Trace::dprintf(curTick, name(), __VA_ARGS__);           \
 } while (0)
 
-#define DPRINTFR(x, args...) do {                      \
-    if (DTRACE(x))                                     \
-        Trace::dprintf((Tick)-1, std::string(), args); \
+#define DPRINTFR(x, ...) do {                                   \
+    if (DTRACE(x))                                              \
+        Trace::dprintf((Tick)-1, std::string(), __VA_ARGS__);   \
 } while (0)
 
-#define DPRINTFN(args...) do {                         \
-    Trace::dprintf(curTick, name(), args);             \
+#define DPRINTFN(...) do {                                      \
+    Trace::dprintf(curTick, name(), __VA_ARGS__);               \
 } while (0)
 
-#define DPRINTFNR(args...) do {                        \
-    Trace::dprintf((Tick)-1, string(), args);          \
+#define DPRINTFNR(...) do {                                     \
+    Trace::dprintf((Tick)-1, string(), __VA_ARGS__);            \
 } while (0)
 
 #else // !TRACING_ON
 
 #define DTRACE(x) (false)
-#define DPRINTF(x, args...) do {} while (0)
-#define DPRINTFR(args...) do {} while (0)
-#define DPRINTFN(args...) do {} while (0)
-#define DPRINTFNR(args...) do {} while (0)
+#define DPRINTF(x, ...) do {} while (0)
+#define DPRINTFR(...) do {} while (0)
+#define DPRINTFN(...) do {} while (0)
+#define DPRINTFNR(...) do {} while (0)
 #define DDUMP(x, data, count) do {} while (0)
 
 #endif	// TRACING_ON
