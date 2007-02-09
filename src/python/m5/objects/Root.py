@@ -3,7 +3,6 @@ from m5.params import *
 from Serialize import Serialize
 from Serialize import Statreset
 from Statistics import Statistics
-from Trace import Trace
 from ExeTrace import ExecutionTrace
 
 class Root(SimObject):
@@ -15,9 +14,7 @@ class Root(SimObject):
     output_file = Param.String('cout', "file to dump simulator output to")
     checkpoint = Param.String('', "checkpoint file to load")
 #    stats = Param.Statistics(Statistics(), "statistics object")
-#    trace = Param.Trace(Trace(), "trace object")
 #    serialize = Param.Serialize(Serialize(), "checkpoint generation options")
     stats = Statistics()
-    trace = Trace()
     exetrace = ExecutionTrace()
     serialize = Serialize()

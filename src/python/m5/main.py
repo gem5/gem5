@@ -30,11 +30,6 @@ import code, optparse, os, socket, sys
 from datetime import datetime
 from attrdict import attrdict
 
-try:
-    import info
-except ImportError:
-    info = None
-
 __all__ = [ 'options', 'arguments', 'main' ]
 
 usage="%prog [m5 options] script.py [script options]"
@@ -144,8 +139,6 @@ add_option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
     help="Sets the flags for tracing")
 add_option("--trace-start", metavar="TIME", default='0s',
     help="Start tracing at TIME (must have units)")
-add_option("--trace-cycle", metavar="CYCLE", default='0',
-    help="Start tracing at CYCLE")
 add_option("--trace-file", metavar="FILE", default="cout",
     help="Sets the output file for tracing [Default: %default]")
 add_option("--trace-circlebuf", metavar="SIZE", type="int", default=0,
@@ -211,6 +204,8 @@ def parse_args():
     return opts,args
 
 def main():
+    import defines
+    import info
     import internal
 
     parse_args()
@@ -278,14 +273,26 @@ def main():
     for when in options.debug_break:
         internal.debug.schedBreakCycle(int(when))
 
-    # set tracing options
-    objects.Trace.flags = options.trace_flags
-    objects.Trace.start = options.trace_start
-    objects.Trace.cycle = options.trace_cycle
-    objects.Trace.file = options.trace_file
-    objects.Trace.bufsize = options.trace_circlebuf
-    objects.Trace.dump_on_exit = options.trace_dumponexit
-    objects.Trace.ignore = options.trace_ignore
+    for flag in options.trace_flags:
+        internal.trace.setFlag(flag)
+
+    if options.trace_start is not None:
+        internal.trace.enabled = False
+        def enable_trace():
+            internal.event.enabled = True
+        internal.event.create(enable_trace, options.trace_start)
+
+    if options.trace_file is not None:
+        internal.trace.file(options.trace_file)
+
+    if options.trace_bufsize is not None:
+        internal.trace.buffer_size(options.bufsize)
+
+    #if options.trace_dumponexit:
+    #    internal.trace.dumpOnExit = True
+
+    for ignore in options.trace_ignore:
+        internal.trace.ignore(ignore)
 
     # set execution trace options
     objects.ExecutionTrace.speculative = options.speculative
@@ -309,7 +316,7 @@ def main():
 
     # we want readline if we're doing anything interactive
     if options.interactive or options.pdb:
-        exec("import readline", scope)
+        exec "import readline" in scope
 
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally

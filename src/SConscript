@@ -133,6 +133,7 @@ base_sources = Split('''
         python/swig/debug_wrap.cc
         python/swig/main_wrap.cc
         python/swig/event_wrap.cc
+        python/swig/trace_wrap.cc
         python/swig/pyevent.cc
 
 	sim/builder.cc
@@ -149,7 +150,7 @@ base_sources = Split('''
 	sim/stat_context.cc
 	sim/stat_control.cc
 	sim/system.cc
-	sim/trace_context.cc
+        sim/trace_control.cc
         ''')
 
 trace_reader_sources = Split('''

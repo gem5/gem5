@@ -108,6 +108,7 @@ def swig_it(basename):
 swig_it('main')
 swig_it('debug')
 swig_it('event')
+swig_it('trace')
 
 # Action function to build the zip archive.  Uses the PyZipFile module
 # included in the standard Python library.

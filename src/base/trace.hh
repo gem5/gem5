@@ -47,18 +47,15 @@ namespace Trace {
 
     extern FlagVec flags;
 
-#if TRACING_ON
-    const bool On				= true;
-#else
-    const bool On				= false;
-#endif
+    extern std::ostream *dprintf_stream;
 
     inline bool
     IsOn(int t)
     {
         return flags[t];
-
     }
+
+    extern bool enabled;
 
     void dump(const uint8_t *data, int count);
 
@@ -156,7 +153,11 @@ namespace Trace {
 
 };
 
-std::ostream &DebugOut();
+inline std::ostream &
+DebugOut()
+{
+    return *Trace::dprintf_stream;
+}
 
 // This silly little class allows us to wrap a string in a functor
 // object so that we can give a name() that DPRINTF will like
@@ -181,7 +182,7 @@ inline const std::string &name() { return Trace::DefaultName; }
 
 #if TRACING_ON
 
-#define DTRACE(x) (Trace::IsOn(Trace::x))
+#define DTRACE(x) (Trace::IsOn(Trace::x) && Trace::enabled)
 
 #define DDUMP(x, data, count) do {                              \
     if (DTRACE(x))                                              \
