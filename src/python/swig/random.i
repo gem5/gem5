@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,64 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
- *          Ali Saidi
  */
 
-#if defined(__sun)
-#include <ieeefp.h>
-#endif
-#ifdef __SUNPRO_CC
-#include <stdlib.h>
-#include <math.h>
-#endif
+%module random
 
+%include "stdint.i"
+
+%{
 #include <cstdlib>
-#include <cmath>
 
-#include "base/random.hh"
+#include "sim/host.hh"
 
-using namespace std;
-
-uint32_t
-getInt32()
+inline void
+seed(uint64_t seed)
 {
-    return mrand48() & 0xffffffff;
+    ::srand48(seed & ULL(0xffffffffffff));
 }
+%}
 
-double
-getDouble()
-{
-    return drand48();
-}
+%inline %{
+extern void seed(uint64_t seed);
+%}
 
-double
-m5round(double r)
-{
-#if defined(__sun)
-    double val;
-    fp_rnd oldrnd = fpsetround(FP_RN);
-    val = rint(r);
-    fpsetround(oldrnd);
-    return val;
-#else
-    return round(r);
-#endif
-}
-
-int64_t
-getUniform(int64_t min, int64_t max)
-{
-    double r;
-    r = drand48() * (max-min) + min;
-
-    return (int64_t)m5round(r);
-}
-
-uint64_t
-getUniformPos(uint64_t min, uint64_t max)
-{
-    double r;
-    r = drand48() * (max-min) + min;
-
-    return (uint64_t)m5round(r);
-}
+%wrapper %{
+// fix up module name to reflect the fact that it's inside the m5 package
+#undef SWIG_name
+#define SWIG_name "m5.internal._random"
+%}

@@ -34,7 +34,7 @@
 
 #include "sim/host.hh"
 
-long getLong();
+uint32_t getUInt32();
 double getDouble();
 double m5random(double r);
 uint64_t getUniformPos(uint64_t min, uint64_t max);
@@ -46,7 +46,7 @@ struct Random;
 template<> struct Random<int8_t>
 {
     static int8_t get()
-    { return getLong() & (int8_t)-1; }
+    { return getUInt32() & (int8_t)-1; }
 
     static int8_t uniform(int8_t min, int8_t max)
     { return getUniform(min, max); }
@@ -55,7 +55,7 @@ template<> struct Random<int8_t>
 template<> struct Random<uint8_t>
 {
     static uint8_t get()
-    { return getLong() & (uint8_t)-1; }
+    { return getUInt32() & (uint8_t)-1; }
 
     static uint8_t uniform(uint8_t min, uint8_t max)
     { return getUniformPos(min, max); }
@@ -64,7 +64,7 @@ template<> struct Random<uint8_t>
 template<> struct Random<int16_t>
 {
     static int16_t get()
-    { return getLong() & (int16_t)-1; }
+    { return getUInt32() & (int16_t)-1; }
 
     static int16_t uniform(int16_t min, int16_t max)
     { return getUniform(min, max); }
@@ -73,7 +73,7 @@ template<> struct Random<int16_t>
 template<> struct Random<uint16_t>
 {
     static uint16_t get()
-    { return getLong() & (uint16_t)-1; }
+    { return getUInt32() & (uint16_t)-1; }
 
     static uint16_t uniform(uint16_t min, uint16_t max)
     { return getUniformPos(min, max); }
@@ -82,7 +82,7 @@ template<> struct Random<uint16_t>
 template<> struct Random<int32_t>
 {
     static int32_t get()
-    { return (int32_t)getLong(); }
+    { return (int32_t)getUInt32(); }
 
     static int32_t uniform(int32_t min, int32_t max)
     { return getUniform(min, max); }
@@ -91,7 +91,7 @@ template<> struct Random<int32_t>
 template<> struct Random<uint32_t>
 {
     static uint32_t get()
-    { return (uint32_t)getLong(); }
+    { return (uint32_t)getUInt32(); }
 
     static uint32_t uniform(uint32_t min, uint32_t max)
     { return getUniformPos(min, max); }
@@ -100,7 +100,7 @@ template<> struct Random<uint32_t>
 template<> struct Random<int64_t>
 {
     static int64_t get()
-    { return (int64_t)getLong() << 32 || (uint64_t)getLong(); }
+    { return (int64_t)getUInt32() << 32 || (uint64_t)getUInt32(); }
 
     static int64_t uniform(int64_t min, int64_t max)
     { return getUniform(min, max); }
@@ -109,7 +109,7 @@ template<> struct Random<int64_t>
 template<> struct Random<uint64_t>
 {
     static uint64_t get()
-    { return (uint64_t)getLong() << 32 || (uint64_t)getLong(); }
+    { return (uint64_t)getUInt32() << 32 || (uint64_t)getUInt32(); }
 
     static uint64_t uniform(uint64_t min, uint64_t max)
     { return getUniformPos(min, max); }

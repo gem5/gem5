@@ -133,6 +133,7 @@ base_sources = Split('''
         python/swig/debug_wrap.cc
         python/swig/main_wrap.cc
         python/swig/event_wrap.cc
+        python/swig/random_wrap.cc
         python/swig/trace_wrap.cc
         python/swig/pyevent.cc
 
