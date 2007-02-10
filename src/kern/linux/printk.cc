@@ -41,11 +41,12 @@ using namespace std;
 void
 Printk(TheISA::Arguments args)
 {
+    std::ostream &out = Trace::output();
     char *p = (char *)args++;
 
-    ios::fmtflags saved_flags = DebugOut().flags();
-    char old_fill = DebugOut().fill();
-    int old_precision = DebugOut().precision();
+    ios::fmtflags saved_flags = out.flags();
+    char old_fill = out.fill();
+    int old_precision = out.precision();
 
     while (*p) {
         switch (*p) {
@@ -118,53 +119,53 @@ Printk(TheISA::Arguments args)
                 case 'P':
                 case 'p': {
                   if (hexnum)
-                      DebugOut() << hex;
+                      out << hex;
 
                   if (octal)
-                      DebugOut() << oct;
+                      out << oct;
 
                   if (format) {
                       if (!zero)
-                          DebugOut().setf(ios::showbase);
+                          out.setf(ios::showbase);
                       else {
                           if (hexnum) {
-                              DebugOut() << "0x";
+                              out << "0x";
                               width -= 2;
                           } else if (octal) {
-                              DebugOut() << "0";
+                              out << "0";
                               width -= 1;
                           }
                       }
                   }
 
                   if (zero)
-                      DebugOut().fill('0');
+                      out.fill('0');
 
                   if (width > 0)
-                      DebugOut().width(width);
+                      out.width(width);
 
                   if (leftjustify && !zero)
-                      DebugOut().setf(ios::left);
+                      out.setf(ios::left);
 
                   if (sign) {
                       if (islong)
-                          DebugOut() << (int64_t)args;
+                          out << (int64_t)args;
                       else
-                          DebugOut() << (int32_t)args;
+                          out << (int32_t)args;
                   } else {
                       if (islong)
-                          DebugOut() << (uint64_t)args;
+                          out << (uint64_t)args;
                       else
-                          DebugOut() << (uint32_t)args;
+                          out << (uint32_t)args;
                   }
 
                   if (zero)
-                      DebugOut().fill(' ');
+                      out.fill(' ');
 
                   if (width > 0)
-                      DebugOut().width(0);
+                      out.width(0);
 
-                  DebugOut() << dec;
+                  out << dec;
 
                   ++args;
                 }
@@ -176,11 +177,11 @@ Printk(TheISA::Arguments args)
                         s = "<NULL>";
 
                     if (width > 0)
-                        DebugOut().width(width);
+                        out.width(width);
                     if (leftjustify)
-                        DebugOut().setf(ios::left);
+                        out.setf(ios::left);
 
-                    DebugOut() << s;
+                    out << s;
                     ++args;
                 }
                   break;
@@ -201,7 +202,7 @@ Printk(TheISA::Arguments args)
                     while (width-- > 0) {
                         char c = (char)(num & mask);
                         if (c)
-                            DebugOut() << c;
+                            out << c;
                         num >>= 8;
                     }
 
@@ -211,7 +212,7 @@ Printk(TheISA::Arguments args)
                 case 'b': {
                   uint64_t n = (uint64_t)args++;
                   char *s = (char *)args++;
-                  DebugOut() << s << ": " << n;
+                  out << s << ": " << n;
                 }
                   break;
                 case 'n':
@@ -233,32 +234,32 @@ Printk(TheISA::Arguments args)
                 }
                   break;
                 case '%':
-                  DebugOut() << '%';
+                  out << '%';
                   break;
               }
               ++p;
           }
             break;
           case '\n':
-            DebugOut() << endl;
+            out << endl;
             ++p;
             break;
           case '\r':
             ++p;
             if (*p != '\n')
-                DebugOut() << endl;
+                out << endl;
             break;
 
           default: {
               size_t len = strcspn(p, "%\n\r\0");
-              DebugOut().write(p, len);
+              out.write(p, len);
               p += len;
           }
         }
     }
 
-    DebugOut().flags(saved_flags);
-    DebugOut().fill(old_fill);
-    DebugOut().precision(old_precision);
+    out.flags(saved_flags);
+    out.fill(old_fill);
+    out.precision(old_precision);
 }
 

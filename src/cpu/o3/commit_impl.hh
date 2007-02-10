@@ -1106,7 +1106,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     if (head_inst->traceData) {
         head_inst->traceData->setFetchSeq(head_inst->seqNum);
         head_inst->traceData->setCPSeq(thread[tid]->numInst);
-        head_inst->traceData->finalize();
+        head_inst->traceData->dump();
+        delete head_inst->traceData;
         head_inst->traceData = NULL;
     }
 

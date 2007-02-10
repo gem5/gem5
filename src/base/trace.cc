@@ -37,8 +37,9 @@
 #include <vector>
 
 #include "base/misc.hh"
-#include "base/trace.hh"
+#include "base/output.hh"
 #include "base/str.hh"
+#include "base/trace.hh"
 #include "base/varargs.hh"
 
 using namespace std;
@@ -55,121 +56,40 @@ bool enabled = true;
 // output.
 //
 ostream *dprintf_stream = &cerr;
+ostream &
+output()
+{
+    return *dprintf_stream;
+}
+
+void
+setOutput(const string &filename)
+{
+    dprintf_stream = simout.find(filename);
+}
 
 ObjectMatch ignore;
 
-Log theLog;
-
-Log::Log()
-{
-    size = 0;
-    buffer = NULL;
-}
-
-
 void
-Log::init(int _size)
+dprintf(Tick when, const std::string &name, const char *format,
+        CPRINTF_DEFINITION)
 {
-    if (buffer != NULL) {
-        fatal("Trace::Log::init called twice!");
-    }
-
-    size = _size;
-
-    buffer = new Record *[size];
-
-    for (int i = 0; i < size; ++i) {
-        buffer[i] = NULL;
-    }
-
-    nextRecPtr = &buffer[0];
-    wrapRecPtr = &buffer[size];
-}
-
-
-Log::~Log()
-{
-    for (int i = 0; i < size; ++i) {
-        delete buffer[i];
-    }
-
-    delete [] buffer;
-}
-
-
-void
-Log::append(Record *rec)
-{
-    // dump record to output stream if there's one open
-    if (dprintf_stream != NULL) {
-        rec->dump(*dprintf_stream);
-    } else {
-        rec->dump(cout);
-    }
-
-    // no buffering: justget rid of it now
-    if (buffer == NULL) {
-        delete rec;
+    if (!name.empty() && ignore.match(name))
         return;
-    }
 
-    Record *oldRec = *nextRecPtr;
+    std::ostream &os = *dprintf_stream;
 
-    if (oldRec != NULL) {
-        // log has wrapped: overwrite
-        delete oldRec;
-    }
-
-    *nextRecPtr = rec;
-
-    if (++nextRecPtr == wrapRecPtr) {
-        nextRecPtr = &buffer[0];
-    }
-}
-
-
-void
-Log::dump(ostream &os)
-{
-    if (buffer == NULL) {
-        return;
-    }
-
-    Record **bufPtr = nextRecPtr;
-
-    if (*bufPtr == NULL) {
-        // next record slot is empty: log must not be full yet.
-        // start dumping from beginning of buffer
-        bufPtr = buffer;
-    }
-
-    do {
-        Record *rec = *bufPtr;
-
-        rec->dump(os);
-
-        if (++bufPtr == wrapRecPtr) {
-            bufPtr = &buffer[0];
-        }
-    } while (bufPtr != nextRecPtr);
-}
-
-PrintfRecord::~PrintfRecord()
-{}
-
-void
-PrintfRecord::dump(ostream &os)
-{
     string fmt = "";
+    CPrintfArgsList args(VARARGS_ALLARGS);
 
     if (!name.empty()) {
         fmt = "%s: " + fmt;
         args.push_front(name);
     }
 
-    if (cycle != (Tick)-1) {
+    if (when != (Tick)-1) {
         fmt = "%7d: " + fmt;
-        args.push_front(cycle);
+        args.push_front(when);
     }
 
     fmt += format;
@@ -178,26 +98,32 @@ PrintfRecord::dump(ostream &os)
     os.flush();
 }
 
-DataRecord::DataRecord(Tick _cycle, const string &_name,
-                       const void *_data, int _len)
-    : Record(_cycle), name(_name), len(_len)
-{
-    data = new uint8_t[len];
-    memcpy(data, _data, len);
-}
-
-DataRecord::~DataRecord()
-{
-    delete [] data;
-}
-
 void
-DataRecord::dump(ostream &os)
+dump(Tick when, const std::string &name, const void *d, int len)
 {
-    int c, i, j;
+    if (!name.empty() && ignore.match(name))
+        return;
 
+    std::ostream &os = *dprintf_stream;
+
+    string fmt = "";
+    CPrintfArgsList args;
+
+    if (!name.empty()) {
+        fmt = "%s: " + fmt;
+        args.push_front(name);
+    }
+
+    if (when != (Tick)-1) {
+        fmt = "%7d: " + fmt;
+        args.push_front(when);
+    }
+
+    const char *data = static_cast<const char *>(d);
+    int c, i, j;
     for (i = 0; i < len; i += 16) {
-        ccprintf(os, "%d: %s: %08x  ", cycle, name, i);
+        ccprintf(os, fmt, args);
+        ccprintf(os, "%08x  ", i);
         c = len - i;
         if (c > 16) c = 16;
 
@@ -213,8 +139,7 @@ DataRecord::dump(ostream &os)
 
         for (j = 0; j < c; j++) {
             int ch = data[i + j] & 0x7f;
-            ccprintf(os,
-                     "%c", (char)(isprint(ch) ? ch : ' '));
+            ccprintf(os, "%c", (char)(isprint(ch) ? ch : ' '));
         }
 
         ccprintf(os, "\n");
@@ -223,4 +148,66 @@ DataRecord::dump(ostream &os)
             break;
     }
 }
-} // namespace Trace
+
+bool
+changeFlag(const char *s, bool value)
+{
+    using namespace Trace;
+    std::string str(s);
+
+    for (int i = 0; i < numFlagStrings; ++i) {
+        if (str != flagStrings[i])
+            continue;
+
+        if (i < NumFlags) {
+            flags[i] = value;
+        } else {
+            i -= NumFlags;
+
+            const Flags *flagVec = compoundFlags[i];
+            for (int j = 0; flagVec[j] != -1; ++j) {
+                if (flagVec[j] < NumFlags)
+                    flags[flagVec[j]] = value;
+            }
+        }
+
+        return true;
+    }
+
+    // the flag was not found.
+    return false;
+}
+
+void
+dumpStatus()
+{
+    using namespace Trace;
+    for (int i = 0; i < numFlagStrings; ++i) {
+        if (flags[i])
+            cprintf("%s\n", flagStrings[i]);
+    }
+}
+
+/* namespace Trace */ }
+
+
+// add a set of functions that can easily be invoked from gdb
+extern "C" {
+    void
+    setTraceFlag(const char *string)
+    {
+        Trace::changeFlag(string, true);
+    }
+
+    void
+    clearTraceFlag(const char *string)
+    {
+        Trace::changeFlag(string, false);
+    }
+
+    void
+    dumpTraceStatus()
+    {
+        Trace::dumpStatus();
+    }
+/* extern "C" */ }

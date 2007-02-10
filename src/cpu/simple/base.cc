@@ -427,7 +427,9 @@ BaseSimpleCPU::postExecute()
     traceFunctions(thread->readPC());
 
     if (traceData) {
-        traceData->finalize();
+        traceData->dump();
+        delete traceData;
+        traceData = NULL;
     }
 }
 

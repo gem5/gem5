@@ -33,18 +33,23 @@
 %{
 #include "base/trace.hh"
 #include "sim/host.hh"
-#include "sim/trace_control.hh"
+
+inline void
+output(const char *filename)
+{
+    Trace::setOutput(filename);
+}
 
 inline void
 set(const char *flag)
 {
-    setTraceFlag(flag);
+    Trace::changeFlag(flag, true);
 }
 
 inline void
 clear(const char *flag)
 {
-    clearTraceFlag(flag);
+    Trace::changeFlag(flag, false);
 }
 
 inline void
@@ -57,9 +62,10 @@ using Trace::enabled;
 %}
 
 %inline %{
-extern void ignore(const char *expr);
+extern void output(const char *string);
 extern void set(const char *string);
 extern void clear(const char *string);
+extern void ignore(const char *expr);
 extern bool enabled;
 %}
 

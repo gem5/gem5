@@ -268,7 +268,7 @@ def main():
         internal.debug.schedBreakCycle(int(when))
 
     for flag in options.trace_flags:
-        internal.trace.setFlag(flag)
+        internal.trace.set(flag)
 
     if options.trace_start is not None:
         internal.trace.enabled = False
@@ -276,8 +276,7 @@ def main():
             internal.event.enabled = True
         internal.event.create(enable_trace, options.trace_start)
 
-    #if options.trace_file is not None:
-    #    internal.trace.file(options.trace_file)
+    internal.trace.output(options.trace_file)
 
     for ignore in options.trace_ignore:
         internal.trace.ignore(ignore)

@@ -50,6 +50,7 @@ void
 DumpMbuf(Arguments args)
 {
     ThreadContext *tc = args.getThreadContext();
+    StringWrap name(tc->getSystemPtr()->name());
     Addr addr = (Addr)args;
     struct mbuf m;
 
@@ -57,16 +58,14 @@ DumpMbuf(Arguments args)
 
     int count = m.m_pkthdr.len;
 
-    ccprintf(DebugOut(), "m=%#lx, m->m_pkthdr.len=%#d\n", addr,
-             m.m_pkthdr.len);
+    DPRINTFN("m=%#lx, m->m_pkthdr.len=%#d\n", addr, m.m_pkthdr.len);
 
     while (count > 0) {
-        ccprintf(DebugOut(), "m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
+        DPRINTFN("m=%#lx, m->m_data=%#lx, m->m_len=%d\n",
                  addr, m.m_data, m.m_len);
         char *buffer = new char[m.m_len];
         CopyOut(tc, buffer, m.m_data, m.m_len);
-        Trace::dataDump(curTick, tc->getSystemPtr()->name(), (uint8_t *)buffer,
-                        m.m_len);
+        DDUMPN((uint8_t *)buffer, m.m_len);
         delete [] buffer;
 
         count -= m.m_len;

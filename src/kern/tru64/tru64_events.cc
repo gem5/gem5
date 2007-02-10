@@ -79,7 +79,8 @@ void
 PrintfEvent::process(ThreadContext *tc)
 {
     if (DTRACE(Printf)) {
-        DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
+        StringWrap name(tc->getSystemPtr()->name());
+        DPRINTFN("");
 
         Arguments args(tc);
         tru64::Printf(args);
@@ -90,8 +91,10 @@ void
 DebugPrintfEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
-        if (!raw)
-            DebugOut() << curTick << ": " << tc->getCpuPtr()->name() << ": ";
+        if (!raw) {
+            StringWrap name(tc->getSystemPtr()->name());
+            DPRINTFN("");
+        }
 
         Arguments args(tc);
         tru64::Printf(args);

@@ -123,8 +123,10 @@ inline void printLevelHeader(ostream & os, int level)
 #endif
 
 void
-Trace::InstRecord::dump(ostream &outs)
+Trace::InstRecord::dump()
 {
+    ostream &outs = Trace::output();
+
     DPRINTF(Sparc, "Instruction: %#X\n", staticInst->machInst);
     if (flags[PRINT_REG_DELTA])
     {
@@ -194,7 +196,7 @@ Trace::InstRecord::dump(ostream &outs)
         bool is_trace_system = true;
 #endif
         if (is_trace_system) {
-            ccprintf(outs, "%7d ) ", cycle);
+            ccprintf(outs, "%7d ) ", when);
             outs << "0x" << hex << PC << ":\t";
             if (staticInst->isLoad()) {
                 outs << "<RD 0x" << hex << addr;
@@ -206,8 +208,8 @@ Trace::InstRecord::dump(ostream &outs)
             outs << endl;
         }
     } else {
-        if (flags[PRINT_CYCLE])
-            ccprintf(outs, "%7d: ", cycle);
+        if (flags[PRINT_TICKS])
+            ccprintf(outs, "%7d: ", when);
 
         outs << thread->getCpuPtr()->name() << " ";
 
@@ -324,7 +326,7 @@ Trace::InstRecord::dump(ostream &outs)
         // We took a trap on a micro-op...
         if (wasMicro && !staticInst->isMicroOp())
         {
-            // let's skip comparing this cycle
+            // let's skip comparing this tick
             while (!compared)
                 if (shared_data->flags == OWN_M5) {
                     shared_data->flags = OWN_LEGION;
@@ -748,7 +750,7 @@ Trace::InstRecord::setParams()
 {
     flags[TRACE_MISSPEC]     = exe_trace_spec;
 
-    flags[PRINT_CYCLE]       = exe_trace_print_cycle;
+    flags[PRINT_TICKS]       = exe_trace_print_cycle;
     flags[PRINT_OP_CLASS]    = exe_trace_print_opclass;
     flags[PRINT_THREAD_NUM]  = exe_trace_print_thread;
     flags[PRINT_RESULT_DATA] = exe_trace_print_effaddr;
