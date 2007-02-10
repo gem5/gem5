@@ -137,16 +137,10 @@ add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
 set_group("Trace Options")
 add_option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
     help="Sets the flags for tracing")
-add_option("--trace-start", metavar="TIME", default='0s',
-    help="Start tracing at TIME (must have units)")
+add_option("--trace-start", metavar="TIME", type='int',
+    help="Start tracing at TIME (must be in ticks)")
 add_option("--trace-file", metavar="FILE", default="cout",
     help="Sets the output file for tracing [Default: %default]")
-add_option("--trace-circlebuf", metavar="SIZE", type="int", default=0,
-    help="If SIZE is non-zero, turn on the circular buffer with SIZE lines")
-add_option("--no-trace-circlebuf", action="store_const", const=0,
-    dest='trace_circlebuf', help=optparse.SUPPRESS_HELP)
-bool_option("trace-dumponexit", default=False,
-    help="Dump trace buffer on exit")
 add_option("--trace-ignore", metavar="EXPR", action='append', split=':',
     help="Ignore EXPR sim objects")
 
@@ -282,14 +276,8 @@ def main():
             internal.event.enabled = True
         internal.event.create(enable_trace, options.trace_start)
 
-    if options.trace_file is not None:
-        internal.trace.file(options.trace_file)
-
-    if options.trace_bufsize is not None:
-        internal.trace.buffer_size(options.bufsize)
-
-    #if options.trace_dumponexit:
-    #    internal.trace.dumpOnExit = True
+    #if options.trace_file is not None:
+    #    internal.trace.file(options.trace_file)
 
     for ignore in options.trace_ignore:
         internal.trace.ignore(ignore)

@@ -53,19 +53,6 @@ ignore(const char *expr)
     Trace::ignore.setExpression(expr);
 }
 
-inline void
-buffer_size(int num_lines)
-{
-    if ((int)num_lines > 0)
-        Trace::theLog.init(num_lines);
-}
-
-inline void
-dump(const char *filename)
-{
-    dumpTrace(filename);
-}
-
 using Trace::enabled;
 %}
 
@@ -73,8 +60,6 @@ using Trace::enabled;
 extern void ignore(const char *expr);
 extern void set(const char *string);
 extern void clear(const char *string);
-extern void buffer_size(int num_lines);
-extern void dump(const char *filename);
 extern bool enabled;
 %}
 
