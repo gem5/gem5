@@ -178,15 +178,22 @@ baseFlags = [
 # following the existing examples.
 #
 compoundFlagMap = {
-    'GDBAll' : [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend', 'GDBRecv', 'GDBExtra' ],
-    'ScsiAll' : [ 'ScsiDisk', 'ScsiCtrl', 'ScsiNone' ],
-    'DiskImageAll' : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
-    'EthernetAll' : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA', 'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
-    'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc', 'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
-    'IdeAll' : [ 'IdeCtrl', 'IdeDisk' ],
-    'O3CPUAll' : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ', 'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU', 'O3CPU', 'Activity','Scoreboard','Writeback'],
-    'OzoneCPUAll' : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU'],
-    'All' : baseFlags
+    'All'            : baseFlags,
+    'DiskImageAll'   : [ 'DiskImage', 'DiskImageRead', 'DiskImageWrite' ],
+    'EthernetAll'    : [ 'Ethernet', 'EthernetPIO', 'EthernetDMA',
+                         'EthernetData' , 'EthernetDesc', 'EthernetIntr',
+                         'EthernetSM', 'EthernetCksum' ],
+    'EthernetNoData' : [ 'Ethernet', 'EthernetPIO', 'EthernetDesc',
+                         'EthernetIntr', 'EthernetSM', 'EthernetCksum' ],
+    'GDBAll'         : [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend',
+                         'GDBRecv', 'GDBExtra' ],
+    'IdeAll'         : [ 'IdeCtrl', 'IdeDisk' ],
+    'O3CPUAll'       : [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit', 'IQ',
+                         'ROB', 'FreeList', 'RenameMap', 'LSQ', 'LSQUnit',
+                         'StoreSet', 'MemDepUnit', 'DynInst', 'FullCPU',
+                         'O3CPU', 'Activity','Scoreboard','Writeback' ],
+    'OzoneCPUAll'    : [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU' ],
+    'ScsiAll'        : [ 'ScsiDisk', 'ScsiCtrl', 'ScsiNone' ]
 }
 
 #############################################################
