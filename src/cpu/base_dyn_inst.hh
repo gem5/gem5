@@ -868,7 +868,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (res) {
         // always return some result to keep misspeculated paths
         // (which will ignore faults) deterministic
-        *res = (fault == NoFault) ? req->getScResult() : 0;
+        *res = (fault == NoFault) ? req->getExtraData() : 0;
     }
 
     return fault;

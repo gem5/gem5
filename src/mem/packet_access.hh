@@ -30,6 +30,7 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "base/bigint.hh"
 #include "mem/packet.hh"
 #include "sim/byteswap.hh"
 
@@ -39,6 +40,19 @@
 // way to deal with it for now. At some point, we will have to remove
 // these functions and make the users do their own byte swapping since
 // the memory system does not in fact have an endianness.
+
+template<>
+inline Twin64_t
+Packet::get()
+{
+    Twin64_t d;
+    assert(staticData || dynamicData);
+    assert(sizeof(Twin64_t) <= size);
+    d.a = TheISA::gtoh(*(uint64_t*)data);
+    d.b = TheISA::gtoh(*((uint64_t*)data + 1));
+    return d;
+}
+
 
 /** return the value of what is pointed to in the packet. */
 template <typename T>

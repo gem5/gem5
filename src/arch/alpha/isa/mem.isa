@@ -475,7 +475,7 @@ def template StoreCondCompleteAcc {{
         %(fp_enable_check)s;
         %(op_dest_decl)s;
 
-        uint64_t write_result = pkt->req->getScResult();
+        uint64_t write_result = pkt->req->getExtraData();
 
         if (fault == NoFault) {
             %(postacc_code)s;

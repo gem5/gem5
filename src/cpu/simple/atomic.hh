@@ -118,6 +118,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     PacketPtr data_read_pkt;
     Request  *data_write_req;
     PacketPtr data_write_pkt;
+    PacketPtr data_swap_pkt;
 
     bool dcache_access;
     Tick dcache_latency;

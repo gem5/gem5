@@ -125,7 +125,7 @@ class BaseSimpleCPU : public BaseCPU
     MachInst inst;
 
     // Static data storage
-    TheISA::IntReg dataReg;
+    TheISA::LargestRead dataReg;
 
     StaticInstPtr curStaticInst;
     StaticInstPtr curMacroStaticInst;

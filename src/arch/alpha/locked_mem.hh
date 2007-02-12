@@ -60,7 +60,7 @@ handleLockedWrite(XC *xc, Request *req)
     if (req->isUncacheable()) {
         // Funky Turbolaser mailbox access...don't update
         // result register (see stq_c in decoder.isa)
-        req->setScResult(2);
+        req->setExtraData(2);
     } else {
         // standard store conditional
         bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
@@ -68,7 +68,7 @@ handleLockedWrite(XC *xc, Request *req)
         if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
             // Lock flag not set or addr mismatch in CPU;
             // don't even bother sending to memory system
-            req->setScResult(0);
+            req->setExtraData(0);
             xc->setMiscReg(MISCREG_LOCKFLAG, false);
             // the rest of this code is not architectural;
             // it's just a debugging aid to help detect

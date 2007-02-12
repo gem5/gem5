@@ -1124,6 +1124,9 @@ def buildOperandTypeMap(userDict, lineno):
                 ctype = 'float'
             elif size == 64:
                 ctype = 'double'
+        elif desc == 'twin int':
+            is_signed = 0
+            ctype = 'Twin64_t'
         if ctype == '':
             error(lineno, 'Unrecognized type description "%s" in userDict')
         operandTypeMap[ext] = (size, ctype, is_signed)
@@ -1156,7 +1159,10 @@ class Operand(object):
         # template must be careful not to use it if it doesn't apply.
         if self.isMem():
             self.mem_acc_size = self.makeAccSize()
-            self.mem_acc_type = self.ctype
+            if self.ctype == 'Twin64_t':
+                self.mem_acc_type = 'Twin'
+            else:
+                self.mem_acc_type = 'uint'
 
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
@@ -1386,6 +1392,9 @@ class MemOperand(Operand):
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
+        if self.ctype == 'Twin64_t':
+            return "%s %s; %s.a = 0; %s.b = 0;\n" % (self.ctype, self.base_name,
+                    self.base_name, self.base_name)
         c = '%s %s = 0;\n' % (self.ctype, self.base_name)
         return c
 

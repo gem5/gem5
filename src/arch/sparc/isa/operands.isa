@@ -37,6 +37,7 @@ def operand_types {{
     'uw' : ('unsigned int', 32),
     'sdw' : ('signed int', 64),
     'udw' : ('unsigned int', 64),
+    'tudw' : ('twin int', 64),
     'sf' : ('float', 32),
     'df' : ('float', 64),
     'qf' : ('float', 128)

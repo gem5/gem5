@@ -131,7 +131,7 @@ class PhysicalMemory : public MemObject
             // no locked addrs: nothing to check, store_conditional fails
             bool isLocked = req->isLocked();
             if (isLocked) {
-                req->setScResult(0);
+                req->setExtraData(0);
             }
             return !isLocked; // only do write if not an sc
         } else {
@@ -148,6 +148,7 @@ class PhysicalMemory : public MemObject
   public:
     Addr new_page();
     uint64_t size() { return params()->addrRange.size(); }
+    uint64_t start() { return params()->addrRange.start; }
 
     struct Params
     {
