@@ -422,7 +422,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             assert(res);
             *res = pkt->get<T>();
         } else if (res) {
-            *res = req->getScResult();
+            *res = req->getExtraData();
         }
     }
 

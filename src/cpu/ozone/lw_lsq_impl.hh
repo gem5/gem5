@@ -605,12 +605,12 @@ OzoneLWLSQ<Impl>::writebackStores()
         // @todo: Remove this SC hack once the memory system handles it.
         if (req->isLocked()) {
             if (req->isUncacheable()) {
-                req->setScResult(2);
+                req->setExtraData(2);
             } else {
                 if (cpu->lockFlag) {
-                    req->setScResult(1);
+                    req->setExtraData(1);
                 } else {
-                    req->setScResult(0);
+                    req->setExtraData(0);
                     // Hack: Instantly complete this store.
                     completeDataAccess(data_pkt);
                     --sq_it;

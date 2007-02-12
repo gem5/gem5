@@ -265,33 +265,31 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
         bool overwrite_mem;
         uint64_t condition_val64;
         uint32_t condition_val32;
-        uint64_t test_val64;
-        uint32_t test_val32;
 
         assert(sizeof(IntReg) >= pkt->getSize());
 
         overwrite_mem = true;
         // keep a copy of our possible write value, and copy what is at the
         // memory address into the packet
-        memcpy(&overwrite_val, pkt->getPtr<uint8_t>(), pkt->getSize());
-        memcpy(pkt->getPtr<uint8_t>(), pmemAddr + pkt->getAddr() - start(),
+        std::memcpy(&overwrite_val, pkt->getPtr<uint8_t>(), pkt->getSize());
+        std::memcpy(pkt->getPtr<uint8_t>(), pmemAddr + pkt->getAddr() - start(),
                pkt->getSize());
 
         if (pkt->req->isCondSwap()) {
             if (pkt->getSize() == sizeof(uint64_t)) {
-                condition_val64 = htog(pkt->req->getExtraData());
-                memcpy(&test_val64, pmemAddr + pkt->getAddr() - start(), sizeof(uint64_t));
-                overwrite_mem = test_val64 == condition_val64;
+                condition_val64 = pkt->req->getExtraData();
+                overwrite_mem = !std::memcmp(&condition_val64, pmemAddr +
+                        pkt->getAddr() - start(), sizeof(uint64_t));
             } else if (pkt->getSize() == sizeof(uint32_t)) {
-                condition_val32 = htog((uint32_t)pkt->req->getExtraData());
-                memcpy(&test_val32, pmemAddr + pkt->getAddr() - start(), sizeof(uint32_t));
-                overwrite_mem = test_val32 == condition_val32;
+                condition_val32 = (uint32_t)pkt->req->getExtraData();
+                overwrite_mem = !std::memcmp(&condition_val32, pmemAddr +
+                        pkt->getAddr() - start(), sizeof(uint32_t));
             } else
                 panic("Invalid size for conditional read/write\n");
         }
 
         if (overwrite_mem)
-            memcpy(pmemAddr + pkt->getAddr() - start(),
+            std::memcpy(pmemAddr + pkt->getAddr() - start(),
                &overwrite_val, pkt->getSize());
 
 #if TRACING_ON

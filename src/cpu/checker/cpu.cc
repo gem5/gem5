@@ -244,7 +244,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         !(unverifiedReq->isUncacheable()) &&
         (!(unverifiedReq->isLocked()) ||
          ((unverifiedReq->isLocked()) &&
-          unverifiedReq->getScResult() == 1))) {
+          unverifiedReq->getExtraData() == 1))) {
         T inst_data;
 /*
         // This code would work if the LSQ allowed for snooping.
@@ -269,7 +269,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // doesn't check if the SC should succeed or fail, it just checks the
     // value.
     if (res && unverifiedReq->scResultValid())
-        *res = unverifiedReq->getScResult();
+        *res = unverifiedReq->getExtraData();
 
     return NoFault;
 }
