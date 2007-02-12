@@ -30,6 +30,7 @@
 
 #include "arch/locked_mem.hh"
 #include "arch/utility.hh"
+#include "base/bigint.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/timing.hh"
 #include "mem/packet.hh"
@@ -312,6 +313,10 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
 template
 Fault
+TimingSimpleCPU::read(Addr addr, Twin64_t &data, unsigned flags);
+
+template
+Fault
 TimingSimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
@@ -359,13 +364,20 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
                     cpu_id, /* thread ID */ 0);
 
+    if (traceData) {
+        traceData->setAddr(req->getVaddr());
+    }
+
     // translate to physical address
     Fault fault = thread->translateDataWriteReq(req);
 
     // Now do the access.
     if (fault == NoFault) {
         assert(dcache_pkt == NULL);
-        dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
+        if (req->isSwap())
+            dcache_pkt = new Packet(req, MemCmd::SwapReq, Packet::Broadcast);
+        else
+            dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
         dcache_pkt->allocate();
         dcache_pkt->set(data);
 
@@ -373,6 +385,10 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
         if (req->isLocked()) {
             do_access = TheISA::handleLockedWrite(thread, req);
+        }
+        if (req->isCondSwap()) {
+             assert(res);
+             req->setExtraData(*res);
         }
 
         if (do_access) {

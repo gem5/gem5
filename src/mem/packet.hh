@@ -88,6 +88,8 @@ class MemCmd
         UpgradeReq,
         ReadExReq,
         ReadExResp,
+        SwapReq,
+        SwapResp,
         NUM_MEM_CMDS
     };
 
@@ -106,6 +108,7 @@ class MemCmd
         IsHWPrefetch,
         IsUpgrade,
         HasData,
+        IsReadWrite,
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -141,6 +144,7 @@ class MemCmd
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
+    bool isReadWrite() const    { return testCmdAttrib(IsReadWrite); }
 
     const Command responseCommand() const {
         return commandInfo[cmd].response;
@@ -300,6 +304,7 @@ class Packet
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
+    bool isReadWrite() const    { return cmd.isReadWrite(); }
 
     bool isCacheFill() const    { return (flags & CACHE_LINE_FILL) != 0; }
     bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }

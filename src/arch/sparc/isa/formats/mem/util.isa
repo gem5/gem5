@@ -149,7 +149,7 @@ def template LoadExecute {{
             %(fault_check)s;
             if(fault == NoFault)
             {
-                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, %(asi_val)s);
+                fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             if(fault == NoFault)
             {
@@ -179,7 +179,7 @@ def template LoadInitiateAcc {{
             %(fault_check)s;
             if(fault == NoFault)
             {
-                fault = xc->read(EA, (uint%(mem_acc_size)s_t&)Mem, %(asi_val)s);
+                fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             return fault;
         }
@@ -246,6 +246,7 @@ def template StoreInitiateAcc {{
             Addr EA;
             %(fp_enable_check)s;
             %(op_decl)s;
+
             %(op_rd)s;
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
@@ -290,6 +291,7 @@ def template CompleteAccDeclare {{
 let {{
     LoadFuncs = [LoadExecute, LoadInitiateAcc, LoadCompleteAcc]
     StoreFuncs = [StoreExecute, StoreInitiateAcc, StoreCompleteAcc]
+
     # The LSB can be zero, since it's really the MSB in doubles and quads
     # and we're dealing with doubles
     BlockAlignmentFaultCheck = '''
@@ -337,14 +339,14 @@ let {{
         return execf.subst(iop) + initf.subst(iop) + compf.subst(iop)
 
 
-    def doDualSplitExecute(code, eaRegCode, eaImmCode, execute,
+    def doDualSplitExecute(code, postacc_code, eaRegCode, eaImmCode, execute,
             faultCode, nameReg, nameImm, NameReg, NameImm, asi, opt_flags):
         executeCode = ''
         for (eaCode, name, Name) in (
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
-            microParams = {"code": code, "ea_code": eaCode,
-                "fault_check": faultCode}
+            microParams = {"code": code, "postacc_code" : postacc_code,
+                "ea_code": eaCode, "fault_check": faultCode}
             executeCode += doSplitExecute(execute, name, Name,
                     asi, opt_flags, microParams)
         return executeCode

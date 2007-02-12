@@ -94,7 +94,13 @@ MemCmd::commandInfo[] =
             ReadExResp, "ReadExReq" },
     /* ReadExResp */
     { SET4(IsRead, IsInvalidate, IsResponse, HasData),
-            InvalidCmd, "ReadExResp" }
+            InvalidCmd, "ReadExResp" },
+    /* SwapReq -- for Swap ldstub type operations */
+    { SET4(IsReadWrite, IsRequest, HasData, NeedsResponse),
+        SwapResp, "SwapReq" },
+    /* SwapResp -- for Swap ldstub type operations */
+    { SET3(IsReadWrite, IsResponse, HasData),
+        InvalidCmd, "SwapResp" }
 };
 
 
@@ -238,9 +244,11 @@ operator<<(std::ostream &o, const Packet &p)
     if (p.isRead())
         o << "Read ";
     if (p.isWrite())
-        o << "Read ";
+        o << "Write ";
+    if (p.isReadWrite())
+        o << "Read/Write ";
     if (p.isInvalidate())
-        o << "Read ";
+        o << "Invalidate ";
     if (p.isRequest())
         o << "Request ";
     if (p.isResponse())

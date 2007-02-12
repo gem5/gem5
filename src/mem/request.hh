@@ -71,6 +71,10 @@ const uint32_t EVICT_NEXT	= 0x20000;
 const uint32_t NO_ALIGN_FAULT   = 0x40000;
 /** The request was an instruction read. */
 const uint32_t INST_READ        = 0x80000;
+/** This request is for a memory swap. */
+const uint32_t MEM_SWAP         = 0x100000;
+const uint32_t MEM_SWAP_COND    = 0x200000;
+
 
 class Request
 {
@@ -104,8 +108,9 @@ class Request
     /** The virtual address of the request. */
     Addr vaddr;
 
-    /** The return value of store conditional. */
-    uint64_t scResult;
+    /** Extra data for the request, such as the return value of
+     * store conditional or the compare value for a CAS. */
+    uint64_t extraData;
 
     /** The cpu number (for statistics, typically). */
     int cpuNum;
@@ -120,7 +125,7 @@ class Request
     /** Whether or not the asid & vaddr are valid. */
     bool validAsidVaddr;
     /** Whether or not the sc result is valid. */
-    bool validScResult;
+    bool validExData;
     /** Whether or not the cpu number & thread ID are valid. */
     bool validCpuAndThreadNums;
     /** Whether or not the pc is valid. */
@@ -130,7 +135,7 @@ class Request
     /** Minimal constructor.  No fields are initialized. */
     Request()
         : validPaddr(false), validAsidVaddr(false),
-          validScResult(false), validCpuAndThreadNums(false), validPC(false)
+          validExData(false), validCpuAndThreadNums(false), validPC(false)
     {}
 
     /**
@@ -169,7 +174,7 @@ class Request
         validPaddr = true;
         validAsidVaddr = false;
         validPC = false;
-        validScResult = false;
+        validExData = false;
         mmapedIpr = false;
     }
 
@@ -187,7 +192,7 @@ class Request
         validPaddr = false;
         validAsidVaddr = true;
         validPC = true;
-        validScResult = false;
+        validExData = false;
         mmapedIpr = false;
     }
 
@@ -237,12 +242,12 @@ class Request
     void setMmapedIpr(bool r) { assert(validAsidVaddr); mmapedIpr = r; }
 
     /** Accessor function to check if sc result is valid. */
-    bool scResultValid() { return validScResult; }
+    bool extraDataValid() { return validExData; }
     /** Accessor function for store conditional return value.*/
-    uint64_t getScResult() { assert(validScResult); return scResult; }
+    uint64_t getExtraData() { assert(validExData); return extraData; }
     /** Accessor function for store conditional return value.*/
-    void setScResult(uint64_t _scResult)
-    { scResult = _scResult; validScResult = true; }
+    void setExtraData(uint64_t _extraData)
+    { extraData = _extraData; validExData = true; }
 
     /** Accessor function for cpu number.*/
     int getCpuNum() { assert(validCpuAndThreadNums); return cpuNum; }
@@ -258,6 +263,12 @@ class Request
     bool isInstRead() { return (getFlags() & INST_READ) != 0; }
 
     bool isLocked() { return (getFlags() & LOCKED) != 0; }
+
+    bool isSwap() { return (getFlags() & MEM_SWAP ||
+                            getFlags() & MEM_SWAP_COND); }
+
+    bool isCondSwap() { return (getFlags() & MEM_SWAP_COND) != 0; }
+
 
     friend class Packet;
 };

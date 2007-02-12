@@ -249,7 +249,7 @@ class CacheBlk
                 }
             }
 
-            req->setScResult(success ? 1 : 0);
+            req->setExtraData(success ? 1 : 0);
             clearLoadLocks();
             return success;
         } else {

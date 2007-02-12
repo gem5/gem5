@@ -40,6 +40,8 @@ namespace MipsISA
     typedef uint8_t  RegIndex;
 
     typedef uint32_t IntReg;
+    typedef uint64_t LargestRead;
+
 
     // floating point register file entry type
     typedef uint32_t FloatReg32;

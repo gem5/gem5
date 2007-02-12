@@ -206,7 +206,7 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
         // complete miss (no matching block)
         if (pkt->req->isLocked() && pkt->isWrite()) {
             // miss on store conditional... just give up now
-            pkt->req->setScResult(0);
+            pkt->req->setExtraData(0);
             pkt->flags |= SATISFIED;
         }
     }
@@ -1147,7 +1147,7 @@ Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
     }
 
     if (pkt->isWrite() && (pkt->req->isLocked())) {
-        pkt->req->setScResult(1);
+        pkt->req->setExtraData(1);
     }
     myCache()->access(pkt);
     return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,41 +25,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_TYPES_HH__
-#define __ARCH_SPARC_TYPES_HH__
-
-#include <inttypes.h>
-#include "base/bigint.hh"
-
-namespace SparcISA
-{
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
-
-    typedef uint64_t IntReg;
-    typedef Twin64_t LargestRead;
-    typedef uint64_t MiscReg;
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
-    typedef union
+#ifndef __BASE_BIGINT_HH__
+#define __BASE_BIGINT_HH__
+// Create a couple of large int types for atomic reads
+struct m5_twin64_t {
+    uint64_t a;
+    uint64_t b;
+    inline m5_twin64_t& operator=(const uint64_t x)
     {
-        IntReg intReg;
-        FloatReg fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
+        a = x;
+        b = x;
+        return *this;
+    }
+};
 
-    enum RegContextParam
-    {
-        CONTEXT_CWP,
-        CONTEXT_GLOBALS
-    };
+// This is for twin loads (two 64 bit values), not 1 128 bit value (as far as
+// endian conversion is concerned!
+typedef m5_twin64_t Twin64_t;
 
-    typedef int RegContextVal;
 
-    typedef uint8_t RegIndex;
-}
+#endif // __BASE_BIGINT_HH__
 
-#endif

@@ -31,6 +31,7 @@
 #include "arch/locked_mem.hh"
 #include "arch/mmaped_ipr.hh"
 #include "arch/utility.hh"
+#include "base/bigint.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/atomic.hh"
 #include "mem/packet.hh"
@@ -150,6 +151,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     data_write_req = new Request();
     data_write_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
     data_write_pkt = new Packet(data_write_req, MemCmd::WriteReq,
+                                Packet::Broadcast);
+    data_swap_pkt = new Packet(data_write_req, MemCmd::SwapReq,
                                 Packet::Broadcast);
 }
 
@@ -318,6 +321,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
 template
 Fault
+AtomicSimpleCPU::read(Addr addr, Twin64_t &data, unsigned flags);
+
+template
+Fault
 AtomicSimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
@@ -363,9 +370,14 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
     Request *req = data_write_req;
-    PacketPtr pkt = data_write_pkt;
+    PacketPtr pkt;
 
     req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
+
+    if (req->isSwap())
+        pkt = data_swap_pkt;
+    else
+        pkt = data_write_pkt;
 
     if (traceData) {
         traceData->setAddr(addr);
@@ -381,6 +393,11 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         if (req->isLocked()) {
             do_access = TheISA::handleLockedWrite(thread, req);
         }
+        if (req->isCondSwap()) {
+             assert(res);
+             req->setExtraData(*res);
+        }
+
 
         if (do_access) {
             pkt->reinitFromRequest();
@@ -401,7 +418,10 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 #endif
         }
 
-        if (res) {
+        if (req->isSwap()) {
+            assert(res);
+            *res = pkt->get<T>();
+        } else if (res) {
             *res = req->getScResult();
         }
     }

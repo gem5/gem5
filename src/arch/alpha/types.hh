@@ -42,6 +42,7 @@ namespace AlphaISA
     typedef uint8_t  RegIndex;
 
     typedef uint64_t IntReg;
+    typedef uint64_t LargestRead;
 
     // floating point register file entry type
     typedef double FloatReg;
