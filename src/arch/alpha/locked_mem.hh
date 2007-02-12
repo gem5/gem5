@@ -35,6 +35,14 @@
  * @file
  *
  * ISA-specific helper functions for locked memory accesses.
+ *
+ * Note that these functions are not embedded in the ISA description
+ * because they operate on the *physical* address rather than the
+ * virtual address.  In the current M5 design, the physical address is
+ * not accessible from the ISA description, only from the CPU model.
+ * Thus the CPU is responsible for calling back to the ISA (here)
+ * after the address translation has been performed to allow the ISA
+ * to do these manipulations based on the physical address.
  */
 
 #include "arch/alpha/miscregfile.hh"

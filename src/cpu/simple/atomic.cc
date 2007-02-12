@@ -401,15 +401,8 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 #endif
         }
 
-        if (req->isLocked()) {
-            uint64_t scResult = req->getScResult();
-            if (scResult != 0) {
-                // clear failure counter
-                thread->setStCondFailures(0);
-            }
-            if (res) {
-                *res = req->getScResult();
-            }
+        if (res) {
+            *res = req->getScResult();
         }
     }
 

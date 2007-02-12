@@ -329,6 +329,14 @@ class BaseSimpleCPU : public BaseCPU
         return thread->setMiscRegWithEffect(reg_idx, val);
     }
 
+    unsigned readStCondFailures() {
+        return thread->readStCondFailures();
+    }
+
+    void setStCondFailures(unsigned sc_failures) {
+        thread->setStCondFailures(sc_failures);
+    }
+
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
