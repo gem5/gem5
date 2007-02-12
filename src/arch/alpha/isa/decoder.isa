@@ -84,6 +84,9 @@ decode OPCODE default Unknown::unknown() {
                         uint64_t tmp = write_result;
                         // see stq_c
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
+                        if (tmp == 1) {
+                            xc->setStCondFailures(0);
+                        }
                     }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
@@ -96,6 +99,12 @@ decode OPCODE default Unknown::unknown() {
                         // mailbox access, and we don't update the
                         // result register at all.
                         Ra = (tmp == 0 || tmp == 1) ? tmp : Ra;
+                        if (tmp == 1) {
+                            // clear failure counter... this is
+                            // non-architectural and for debugging
+                            // only.
+                            xc->setStCondFailures(0);
+                        }
                     }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
     }
 
