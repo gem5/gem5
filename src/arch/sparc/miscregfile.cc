@@ -224,7 +224,13 @@ MiscReg MiscRegFile::readReg(int miscReg)
       case MISCREG_HTBA:
         return htba;
       case MISCREG_HVER:
-        return NWindows | MaxTL << 8 | MaxGL << 16;
+        // XXX set to match Legion
+        return ULL(0x3e) << 48 |
+               ULL(0x23) << 32 |
+               ULL(0x20) << 24 |
+                   //MaxGL << 16 | XXX For some reason legion doesn't set GL
+                   MaxTL << 8  |
+           (NWindows -1) << 0;
       case MISCREG_STRAND_STS_REG:
         return strandStatusReg;
       case MISCREG_HSTICK_CMPR:
