@@ -66,10 +66,8 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
 
     # select templates
 
-    # define aliases... most StoreCond templates are the same as the
-    # corresponding Store templates (only CompleteAcc is different).
-    StoreCondMemAccExecute = StoreMemAccExecute
-    StoreCondExecute = StoreExecute
+    # The InitiateAcc template is the same for StoreCond templates as the
+    # corresponding Store template..
     StoreCondInitiateAcc = StoreInitiateAcc
 
     memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
