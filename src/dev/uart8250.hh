@@ -35,7 +35,6 @@
 #ifndef __DEV_UART8250_HH__
 #define __DEV_UART8250_HH__
 
-#include "dev/alpha/tsunamireg.h"
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
@@ -53,6 +52,18 @@ const uint8_t IIR_MODEM = 0x00; /* Modem Status (lowest priority) */
 const uint8_t IIR_TXID  = 0x02; /* Tx Data */
 const uint8_t IIR_RXID  = 0x04; /* Rx Data */
 const uint8_t IIR_LINE  = 0x06; /* Rx Line Status (highest priority)*/
+
+const uint8_t UART_IER_RDI  = 0x01;
+const uint8_t UART_IER_THRI = 0x02;
+const uint8_t UART_IER_RLSI = 0x04;
+
+
+const uint8_t UART_LSR_TEMT = 0x40;
+const uint8_t UART_LSR_THRE = 0x20;
+const uint8_t UART_LSR_DR   = 0x01;
+
+const uint8_t UART_MCR_LOOP = 0x10;
+
 
 class SimConsole;
 class Platform;

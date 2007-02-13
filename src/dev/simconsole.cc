@@ -364,7 +364,12 @@ ConsoleListener::listen(int port)
         port++;
     }
 
-    ccprintf(cerr, "Listening for console connection on port %d\n", port);
+
+    int p1, p2;
+    p2 = name().rfind('.') - 1;
+    p1 = name().rfind('.', p2);
+    ccprintf(cerr, "Listening for %s connection on port %d\n",
+            name().substr(p1+1,p2-p1), port);
 
     event = new Event(this, listener.getfd(), POLLIN);
     pollQueue.schedule(event);

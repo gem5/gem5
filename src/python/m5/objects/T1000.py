@@ -69,16 +69,19 @@ class T1000(Platform):
     fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000)
             #warn_access="Accessing SSI -- Unimplemented!")
 
+    hconsole = SimConsole(listener = ConsoleListener())
     hvuart = Uart8250(pio_addr=0xfff0c2c000)
     htod = DumbTOD()
 
+    pconsole = SimConsole(listener = ConsoleListener())
     puart0 = Uart8250(pio_addr=0x1f10000000)
-    console = SimConsole(listener = ConsoleListener())
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
+        self.hvuart.sim_console = self.hconsole
+        self.puart0.sim_console = self.pconsole
         self.fake_clk.pio = bus.port
         self.fake_membnks.pio = bus.port
         self.fake_iob.pio = bus.port

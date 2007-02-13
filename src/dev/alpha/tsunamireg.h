@@ -136,15 +136,6 @@
 /* Added for keyboard accesses */
 #define TSDEV_KBD           0x64
 
-/* Added for ATA PCI DMA */
-#define ATA_PCI_DMA         0x00
-#define ATA_PCI_DMA2        0x02
-#define ATA_PCI_DMA3        0x16
-#define ATA_PCI_DMA4        0x17
-#define ATA_PCI_DMA5        0x1a
-#define ATA_PCI_DMA6        0x11
-#define ATA_PCI_DMA7        0x14
-
 #define TSDEV_RTC_ADDR      0x70
 #define TSDEV_RTC_DATA      0x71
 
@@ -154,18 +145,6 @@
 #define TSUNAMI_PCI0_MEMORY     TSUNAMI_UNCACHABLE_BIT + PCHIP_PCI0_MEMORY
 #define TSUNAMI_PCI0_IO         TSUNAMI_UNCACHABLE_BIT + PCHIP_PCI0_IO
 
-
-// UART Defines
-#define UART_IER_RDI            0x01
-#define UART_IER_THRI           0x02
-#define UART_IER_RLSI           0x04
-
-
-#define UART_LSR_TEMT   0x40
-#define UART_LSR_THRE   0x20
-#define UART_LSR_DR     0x01
-
-#define UART_MCR_LOOP   0x10
 
 // System Control PortB Status Bits
 #define PORTB_SPKR_HIGH 0x20

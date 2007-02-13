@@ -47,7 +47,6 @@ Uart::Uart(Params *p)
 
     // set back pointers
     cons->uart = this;
-    platform->uart = this;
 }
 
 DEFINE_SIM_OBJECT_CLASS_NAME("Uart", Uart)
