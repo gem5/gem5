@@ -160,33 +160,6 @@ add_option("--trace-file", metavar="FILE", default="cout",
 add_option("--trace-ignore", metavar="EXPR", action='append', split=':',
     help="Ignore EXPR sim objects")
 
-# Execution Trace options
-set_group("Execution Trace Options")
-bool_option("speculative", default=True,
-    help="Don't capture speculative instructions")
-bool_option("print-cycle", default=True,
-    help="Don't print cycle numbers in trace output")
-bool_option("print-symbol", default=True,
-    help="Disable PC symbols in trace output")
-bool_option("print-opclass", default=True,
-    help="Don't print op class type in trace output")
-bool_option("print-thread", default=True,
-    help="Don't print thread number in trace output")
-bool_option("print-effaddr", default=True,
-    help="Don't print effective address in trace output")
-bool_option("print-data", default=True,
-    help="Don't print result data in trace output")
-bool_option("print-iregs", default=False,
-    help="Print fetch sequence numbers in trace output")
-bool_option("print-fetch-seq", default=False,
-    help="Print fetch sequence numbers in trace output")
-bool_option("print-cpseq", default=False,
-    help="Print correct path sequence numbers in trace output")
-#bool_option("print-reg-delta", default=False,
-#    help="Print which registers changed to what in trace output")
-bool_option("legion-lock", default=False,
-    help="Compare simulator state with Legion simulator every cycle")
-
 options = attrdict()
 arguments = []
 
@@ -329,20 +302,6 @@ def main():
 
     for ignore in options.trace_ignore:
         internal.trace.ignore(ignore)
-
-    # set execution trace options
-    objects.ExecutionTrace.speculative = options.speculative
-    objects.ExecutionTrace.print_cycle = options.print_cycle
-    objects.ExecutionTrace.pc_symbol = options.print_symbol
-    objects.ExecutionTrace.print_opclass = options.print_opclass
-    objects.ExecutionTrace.print_thread = options.print_thread
-    objects.ExecutionTrace.print_effaddr = options.print_effaddr
-    objects.ExecutionTrace.print_data = options.print_data
-    objects.ExecutionTrace.print_iregs = options.print_iregs
-    objects.ExecutionTrace.print_fetchseq = options.print_fetch_seq
-    objects.ExecutionTrace.print_cpseq = options.print_cpseq
-    #objects.ExecutionTrace.print_reg_delta = options.print_reg_delta
-    objects.ExecutionTrace.legion_lockstep = options.legion_lock
 
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path

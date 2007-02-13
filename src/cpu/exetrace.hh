@@ -137,30 +137,6 @@ class InstRecord
     void setRegs(const IntRegFile &regs);
 
     void dump();
-
-    enum InstExecFlagBits {
-        TRACE_MISSPEC = 0,
-        PRINT_TICKS,
-        PRINT_OP_CLASS,
-        PRINT_THREAD_NUM,
-        PRINT_RESULT_DATA,
-        PRINT_EFF_ADDR,
-        PRINT_INT_REGS,
-        PRINT_FETCH_SEQ,
-        PRINT_CP_SEQ,
-        PRINT_REG_DELTA,
-        PC_SYMBOL,
-        INTEL_FORMAT,
-        LEGION_LOCKSTEP,
-        NUM_BITS
-    };
-
-    static std::vector<bool> flags;
-    static std::string trace_system;
-
-    static void setParams();
-
-    static bool traceMisspec() { return flags[TRACE_MISSPEC]; }
 };
 
 
@@ -174,22 +150,19 @@ InstRecord::setRegs(const IntRegFile &regs)
     regs_valid = true;
 }
 
-inline
-InstRecord *
-getInstRecord(Tick when, ThreadContext *tc,
-              const StaticInstPtr staticInst,
+inline InstRecord *
+getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
               Addr pc)
 {
-    if (DTRACE(InstExec) &&
-        (InstRecord::traceMisspec() || !tc->misspeculating())) {
-        return new InstRecord(when, tc, staticInst, pc,
-                              tc->misspeculating());
-    }
+    if (!IsOn(ExecEnable))
+        return NULL;
 
-    return NULL;
+    if (!IsOn(ExecSpeculative) && tc->misspeculating())
+        return NULL;
+
+    return new InstRecord(when, tc, staticInst, pc, tc->misspeculating());
 }
 
-
-}
+/* namespace Trace */ }
 
 #endif // __EXETRACE_HH__
