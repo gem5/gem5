@@ -29,6 +29,7 @@
 import code, optparse, os, socket, sys
 from datetime import datetime
 from attrdict import attrdict
+import traceflags
 
 __all__ = [ 'options', 'arguments', 'main' ]
 
@@ -39,6 +40,19 @@ Copyright (c) 2001-2006
 The Regents of The University of Michigan
 All Rights Reserved
 '''
+
+def print_list(items, indent=4):
+    line = ' ' * indent
+    for i,item in enumerate(items):
+        if len(line) + len(item) > 76:
+            print line
+            line = ' ' * indent
+
+        if i < len(items) - 1:
+            line += '%s, ' % item
+        else:
+            line += item
+            print line
 
 # there's only one option parsing done, so make it global and add some
 # helper functions to make it work well.
@@ -135,8 +149,10 @@ add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
 
 # Tracing options
 set_group("Trace Options")
+add_option("--trace-help", action='store_true',
+    help="Print help on trace flags")
 add_option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-    help="Sets the flags for tracing")
+    help="Sets the flags for tracing (-FLAG disables a flag)")
 add_option("--trace-start", metavar="TIME", type='int',
     help="Start tracing at TIME (must be in ticks)")
 add_option("--trace-file", metavar="FILE", default="cout",
@@ -231,6 +247,19 @@ def main():
         print info.RELEASE_NOTES
         print
 
+    if options.trace_help:
+        done = True
+        print "Base Flags:"
+        print_list(traceflags.baseFlags, indent=4)
+        print
+        print "Compound Flags:"
+        for flag in traceflags.compoundFlags:
+            if flag == 'All':
+                continue
+            print "    %s:" % flag
+            print_list(traceflags.compoundFlagMap[flag], indent=8)
+            print
+
     if done:
         sys.exit(0)
 
@@ -250,6 +279,7 @@ def main():
     if not arguments or not os.path.isfile(arguments[0]):
         if arguments and not os.path.isfile(arguments[0]):
             print "Script %s not found" % arguments[0]
+
         usage(2)
 
     # tell C++ about output directory
@@ -267,8 +297,27 @@ def main():
     for when in options.debug_break:
         internal.debug.schedBreakCycle(int(when))
 
+    on_flags = []
+    off_flags = []
     for flag in options.trace_flags:
+        off = False
+        if flag.startswith('-'):
+            flag = flag[1:]
+            off = True
+        if flag not in traceflags.allFlags:
+            print >>sys.stderr, "invalid trace flag '%s'" % flag
+            sys.exit(1)
+
+        if off:
+            off_flags.append(flag)
+        else:
+            on_flags.append(flag)
+
+    for flag in on_flags:
         internal.trace.set(flag)
+
+    for flag in off_flags:
+        internal.trace.clear(flag)
 
     if options.trace_start is not None:
         internal.trace.enabled = False

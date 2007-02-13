@@ -97,6 +97,7 @@ addPkg('m5')
 pyzip_files.append('m5/defines.py')
 pyzip_files.append('m5/info.py')
 pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
+pyzip_files.append(join(env['ROOT'], 'src/base/traceflags.py'))
 
 def swig_it(basename):
     env.Command(['swig/%s_wrap.cc' % basename, 'm5/internal/%s.py' % basename],
