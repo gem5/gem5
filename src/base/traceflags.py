@@ -278,7 +278,7 @@ def gen_hh(filename):
     /* namespace Trace */ }
 
     #endif // __BASE_TRACE_FLAGS_HH__
-    ''',
+    \n''',
 
     hhfile.close()
 
