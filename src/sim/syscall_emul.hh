@@ -377,7 +377,9 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_mtimeX = htog(tgt->st_mtimeX);
     tgt->st_ctimeX = host->st_ctime;
     tgt->st_ctimeX = htog(tgt->st_ctimeX);
-    tgt->st_blksize = host->st_blksize;
+    // Force the block size to be 8k. This helps to ensure buffered io works
+    // consistently across different hosts.
+    tgt->st_blksize = 0x2000;
     tgt->st_blksize = htog(tgt->st_blksize);
     tgt->st_blocks = host->st_blocks;
     tgt->st_blocks = htog(tgt->st_blocks);
