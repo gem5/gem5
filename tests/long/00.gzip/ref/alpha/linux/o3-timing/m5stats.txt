@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                4270829                       # Nu
 global.BPredUnit.condPredicted              101462576                       # Number of conditional branches predicted
 global.BPredUnit.lookups                    108029652                       # Number of BP lookups
 global.BPredUnit.usedRAS                      1765818                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  49266                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 315608                       # Number of bytes of host memory used
-host_seconds                                 11479.54                       # Real time elapsed on the host
-host_tick_rate                                 147031                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  64442                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 296420                       # Number of bytes of host memory used
+host_seconds                                  8776.17                       # Real time elapsed on the host
+host_tick_rate                                 192322                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads           20975706                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores          18042230                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads             207074480                       # Number of loads inserted to the mem dependence unit.
@@ -263,8 +263,8 @@ system.cpu.iew.lsq.thread.0.rescheduledLoads         5548                       
 system.cpu.iew.lsq.thread.0.squashedLoads     92024970                       # Number of loads squashed
 system.cpu.iew.lsq.thread.0.squashedStores     17250597                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents           1892                       # Number of memory order violations
-system.cpu.iew.predictedNotTakenIncorrect      2705247                       # Number of branches that were predicted not taken incorrectly
-system.cpu.iew.predictedTakenIncorrect        2033271                       # Number of branches that were predicted taken incorrectly
+system.cpu.iew.predictedNotTakenIncorrect       530187                       # Number of branches that were predicted not taken incorrectly
+system.cpu.iew.predictedTakenIncorrect        4208331                       # Number of branches that were predicted taken incorrectly
 system.cpu.ipc                               0.335073                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.335073                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0               752715877                       # Type of FU issued
@@ -335,8 +335,8 @@ system.cpu.l2cache.ReadReq_misses               26319                       # nu
 system.cpu.l2cache.ReadReq_mshr_miss_latency     58461984                       # number of ReadReq MSHR miss cycles
 system.cpu.l2cache.ReadReq_mshr_miss_rate     0.054654                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_misses          26319                       # number of ReadReq MSHR misses
-system.cpu.l2cache.WriteReqNoAck|Writeback_accesses       337990                       # number of WriteReqNoAck|Writeback accesses(hits+misses)
-system.cpu.l2cache.WriteReqNoAck|Writeback_hits       337990                       # number of WriteReqNoAck|Writeback hits
+system.cpu.l2cache.Writeback_accesses          337990                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.Writeback_hits              337990                       # number of Writeback hits
 system.cpu.l2cache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_refs                 30.138911                       # Average number of references to valid blocks.
@@ -362,7 +362,7 @@ system.cpu.l2cache.no_allocate_misses               0                       # Nu
 system.cpu.l2cache.overall_accesses            819545                       # number of overall (read+write) accesses
 system.cpu.l2cache.overall_avg_miss_latency  6806.870170                       # average overall miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency  2221.284395                       # average overall mshr miss latency
-system.cpu.l2cache.overall_avg_mshr_uncacheable_latency     no value                       # average overall mshr uncacheable latency
+system.cpu.l2cache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
 system.cpu.l2cache.overall_hits                793226                       # number of overall hits
 system.cpu.l2cache.overall_miss_latency     179150016                       # number of overall miss cycles
 system.cpu.l2cache.overall_miss_rate         0.032114                       # miss rate for overall accesses

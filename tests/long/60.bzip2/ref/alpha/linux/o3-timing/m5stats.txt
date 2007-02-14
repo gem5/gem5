@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect               20658855                       # Nu
 global.BPredUnit.condPredicted             1028649695                       # Number of conditional branches predicted
 global.BPredUnit.lookups                   1098978166                       # Number of BP lookups
 global.BPredUnit.usedRAS                     20738311                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  27542                       # Simulator instruction rate (inst/s)
-host_mem_usage                                1254844                       # Number of bytes of host memory used
-host_seconds                                 63032.08                       # Real time elapsed on the host
-host_tick_rate                                 395232                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  28281                       # Simulator instruction rate (inst/s)
+host_mem_usage                                1256892                       # Number of bytes of host memory used
+host_seconds                                 61385.49                       # Real time elapsed on the host
+host_tick_rate                                 405833                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads          114920109                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores          60881817                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads             938731548                       # Number of loads inserted to the mem dependence unit.
@@ -263,8 +263,8 @@ system.cpu.iew.lsq.thread.0.rescheduledLoads            8                       
 system.cpu.iew.lsq.thread.0.squashedLoads    493065187                       # Number of loads squashed
 system.cpu.iew.lsq.thread.0.squashedStores    228404712                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents          47985                       # Number of memory order violations
-system.cpu.iew.predictedNotTakenIncorrect     11190791                       # Number of branches that were predicted not taken incorrectly
-system.cpu.iew.predictedTakenIncorrect       10765863                       # Number of branches that were predicted taken incorrectly
+system.cpu.iew.predictedNotTakenIncorrect       726441                       # Number of branches that were predicted not taken incorrectly
+system.cpu.iew.predictedTakenIncorrect       21230213                       # Number of branches that were predicted taken incorrectly
 system.cpu.ipc                               0.069686                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.069686                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0              3011765231                       # Type of FU issued
@@ -335,12 +335,12 @@ system.cpu.l2cache.ReadReq_misses             2169165                       # nu
 system.cpu.l2cache.ReadReq_mshr_miss_latency   4503266483                       # number of ReadReq MSHR miss cycles
 system.cpu.l2cache.ReadReq_mshr_miss_rate     0.236340                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_misses        2169165                       # number of ReadReq MSHR misses
-system.cpu.l2cache.WriteReqNoAck|Writeback_accesses      2244715                       # number of WriteReqNoAck|Writeback accesses(hits+misses)
-system.cpu.l2cache.WriteReqNoAck|Writeback_hits      2215400                       # number of WriteReqNoAck|Writeback hits
-system.cpu.l2cache.WriteReqNoAck|Writeback_miss_rate     0.013060                       # miss rate for WriteReqNoAck|Writeback accesses
-system.cpu.l2cache.WriteReqNoAck|Writeback_misses        29315                       # number of WriteReqNoAck|Writeback misses
-system.cpu.l2cache.WriteReqNoAck|Writeback_mshr_miss_rate     0.013060                       # mshr miss rate for WriteReqNoAck|Writeback accesses
-system.cpu.l2cache.WriteReqNoAck|Writeback_mshr_misses        29315                       # number of WriteReqNoAck|Writeback MSHR misses
+system.cpu.l2cache.Writeback_accesses         2244715                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.Writeback_hits             2215400                       # number of Writeback hits
+system.cpu.l2cache.Writeback_miss_rate       0.013060                       # miss rate for Writeback accesses
+system.cpu.l2cache.Writeback_misses             29315                       # number of Writeback misses
+system.cpu.l2cache.Writeback_mshr_miss_rate     0.013060                       # mshr miss rate for Writeback accesses
+system.cpu.l2cache.Writeback_mshr_misses        29315                       # number of Writeback MSHR misses
 system.cpu.l2cache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_refs                  4.252507                       # Average number of references to valid blocks.
