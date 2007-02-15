@@ -50,14 +50,9 @@ namespace SparcISA
         enum RegisterConstants
         {
             RegG0 = 0, RegO0 = 8, RegL0 = 16, RegI0 = 24,
-            RegF0 = 32, RegF32 = 64,
-            RegPc = 80, RegNpc, RegCcr, RegFsr, RegFprs, RegY, RegAsi,
-            RegVer, RegTick, RegPil, RegPstate,
-            RegTstate, RegTba, RegTl, RegTt, RegTpc, RegTnpc, RegWstate,
-            RegCwp, RegCansave, RegCanrestore, RegCleanwin, RegOtherwin,
-            RegAsr16 = 103,
-            RegIcc = 119, RegXcc,
-            RegFcc0 = 121,
+            RegF0 = 32,
+            RegPc = 64, RegNpc, RegState, RegFsr, RegFprs, RegY,
+            /*RegState contains data in same format as tstate */
             NumGDBRegs
         };
 
@@ -72,6 +67,8 @@ namespace SparcISA
 
         void clearSingleStep();
         void setSingleStep();
+
+        Addr nextBkpt;
     };
 }
 

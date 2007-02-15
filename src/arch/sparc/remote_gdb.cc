@@ -138,7 +138,7 @@ using namespace std;
 using namespace TheISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, NumGDBRegs)
+    : BaseRemoteGDB(_system, c, NumGDBRegs), nextBkpt(0)
 {}
 
 ///////////////////////////////////////////////////////////
@@ -165,10 +165,27 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.size);
 
-    gdbregs.regs[RegPc] = context->readPC();
-    gdbregs.regs[RegNpc] = context->readNextPC();
+    if (context->readMiscRegWithEffect(MISCREG_PSTATE) &
+           PSTATE::am)
+        panic("In 32bit mode\n");
+
+    gdbregs.regs[RegPc] = htobe(context->readPC());
+    gdbregs.regs[RegNpc] = htobe(context->readNextPC());
     for(int x = RegG0; x <= RegI0 + 7; x++)
-        gdbregs.regs[x] = context->readIntReg(x - RegG0);
+        gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
+
+    gdbregs.regs[RegFsr] = htobe(context->readMiscRegWithEffect(MISCREG_FSR));
+    gdbregs.regs[RegFprs] = htobe(context->readMiscRegWithEffect(MISCREG_FPRS));
+    gdbregs.regs[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
+    gdbregs.regs[RegState] = htobe(
+        context->readMiscRegWithEffect(MISCREG_CWP) |
+        context->readMiscRegWithEffect(MISCREG_PSTATE) << 8 |
+        context->readMiscRegWithEffect(MISCREG_ASI) << 24 |
+        context->readIntReg(NumIntArchRegs + 2) << 32);
+
+
+    DPRINTF(GDBRead, "PC=%#x\n", gdbregs.regs[RegPc]);
+
     //Floating point registers are left at 0 in netbsd
     //All registers other than the pc, npc and int regs
     //are ignored as well.
@@ -193,12 +210,13 @@ RemoteGDB::setregs()
 void
 RemoteGDB::clearSingleStep()
 {
-    warn("SPARC single stepping not implemented, "
-            "but clearSingleStep called\n");
+   if (nextBkpt)
+       clearTempBreakpoint(nextBkpt);
 }
 
 void
 RemoteGDB::setSingleStep()
 {
-    panic("SPARC single stepping not implemented.\n");
+    nextBkpt = context->readNextPC();
+    setTempBreakpoint(nextBkpt);
 }
