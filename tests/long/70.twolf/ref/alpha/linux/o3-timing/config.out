@@ -10,6 +10,7 @@ type=PhysicalMemory
 file=
 range=[0,134217727]
 latency=1
+zero=false
 
 [system]
 type=System
@@ -30,7 +31,7 @@ executable=/dist/m5/cpu2000/binaries/alpha/tru64/twolf
 input=cin
 output=cout
 env=
-cwd=build/ALPHA_SE/tests/opt/long/70.twolf/alpha/linux/o3-timing
+cwd=build/ALPHA_SE/tests/fast/long/70.twolf/alpha/linux/o3-timing
 system=system
 uid=100
 euid=100
@@ -366,15 +367,6 @@ clock=1000
 width=64
 responder_set=false
 
-[trace]
-flags=
-start=0
-cycle=0
-bufsize=0
-file=cout
-dump_on_exit=false
-ignore=
-
 [stats]
 descriptions=true
 project_name=test
@@ -391,25 +383,6 @@ dump_reset=false
 dump_cycle=0
 dump_period=0
 ignore_events=
-
-[random]
-seed=1
-
-[exetrace]
-speculative=true
-print_cycle=true
-print_opclass=true
-print_thread=true
-print_effaddr=true
-print_data=true
-print_iregs=false
-print_fetchseq=false
-print_cpseq=false
-print_reg_delta=false
-pc_symbol=true
-intel_format=false
-legion_lockstep=false
-trace_system=client
 
 [statsreset]
 reset_cycle=0
