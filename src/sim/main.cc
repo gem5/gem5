@@ -53,6 +53,7 @@
 #include "base/output.hh"
 #include "base/pollevent.hh"
 #include "base/statistics.hh"
+#include "base/stats/output.hh"
 #include "base/str.hh"
 #include "base/time.hh"
 #include "config/pythonhome.hh"
@@ -220,7 +221,7 @@ loadIniFile(PyObject *_resolveFunc)
     inifile.load(simout.resolve("config.ini"));
 
     // Initialize statistics database
-    Stats::InitSimStats();
+    Stats::initSimStats();
 }
 
 
@@ -297,7 +298,6 @@ finalInit()
     SimStartup();
 }
 
-
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
  * (the default), do not limit simulation; some other event must
  * terminate the loop.  Exported to Python via SWIG.
@@ -350,16 +350,12 @@ simulate(Tick num_cycles = MaxTick)
             async_event = false;
             if (async_dump) {
                 async_dump = false;
-
-                using namespace Stats;
-                SetupEvent(Dump, curTick);
+                Stats::StatEvent(true, false);
             }
 
             if (async_dumpreset) {
                 async_dumpreset = false;
-
-                using namespace Stats;
-                SetupEvent(Dump | Reset, curTick);
+                Stats::StatEvent(true, true);
             }
 
             if (async_exit) {
@@ -469,5 +465,5 @@ doExitCleanup()
     ParamContext::cleanupAllContexts();
 
     // print simulation stats
-    Stats::DumpNow();
+    Stats::dump();
 }

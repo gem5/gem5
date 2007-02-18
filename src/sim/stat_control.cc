@@ -38,14 +38,9 @@
 #include "base/callback.hh"
 #include "base/hostinfo.hh"
 #include "base/statistics.hh"
-#include "base/str.hh"
 #include "base/time.hh"
-#include "base/stats/output.hh"
 #include "cpu/base.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_object.hh"
-#include "sim/stat_control.hh"
-#include "sim/root.hh"
 
 using namespace std;
 
@@ -63,11 +58,9 @@ namespace Stats {
 
 Time statTime(true);
 Tick startTick;
-Tick lastDump(0);
 
-class SimTicksReset : public Callback
+struct SimTicksReset : public Callback
 {
-  public:
     void process()
     {
         statTime.set();
@@ -92,7 +85,7 @@ statElapsedTicks()
 SimTicksReset simTicksReset;
 
 void
-InitSimStats()
+initSimStats()
 {
     simInsts
         .functor(BaseCPU::numSimulatedInstructions)
@@ -153,81 +146,40 @@ InitSimStats()
     registerResetCallback(&simTicksReset);
 }
 
-class StatEvent : public Event
+class _StatEvent : public Event
 {
-  protected:
-    int flags;
+  private:
+    bool dump;
+    bool reset;
     Tick repeat;
 
   public:
-    StatEvent(EventQueue *queue, int _flags, Tick _when, Tick _repeat);
-    virtual void process();
-    virtual const char *description();
+    _StatEvent(bool _dump, bool _reset, Tick _when, Tick _repeat)
+        : Event(&mainEventQueue, Stat_Event_Pri), dump(_dump), reset(_reset),
+          repeat(_repeat)
+    {
+        setFlags(AutoDelete);
+        schedule(_when);
+    }
+
+    virtual void
+    process()
+    {
+        if (dump)
+            Stats::dump();
+
+        if (reset)
+            Stats::reset();
+
+        if (repeat)
+            new _StatEvent(dump, reset, curTick + repeat, repeat);
+    }
 };
 
-StatEvent::StatEvent(EventQueue *queue, int _flags, Tick _when, Tick _repeat)
-    : Event(queue, Stat_Event_Pri),
-      flags(_flags), repeat(_repeat)
-{
-    setFlags(AutoDelete);
-    schedule(_when);
-}
-
-const char *
-StatEvent::description()
-{
-    return "Statistics dump and/or reset";
-}
-
 void
-StatEvent::process()
+StatEvent(bool dump, bool reset, Tick when, Tick repeat)
 {
-    if (flags & Stats::Dump)
-        DumpNow();
-
-    if (flags & Stats::Reset) {
-        cprintf("Resetting stats at cycle %d!\n", curTick);
-        reset();
-    }
-
-    if (repeat)
-        schedule(curTick + repeat);
-}
-
-list<Output *> OutputList;
-
-void
-DumpNow()
-{
-    assert(lastDump <= curTick);
-    if (lastDump == curTick)
-        return;
-    lastDump = curTick;
-
-    list<Output *>::iterator i = OutputList.begin();
-    list<Output *>::iterator end = OutputList.end();
-    for (; i != end; ++i) {
-        Output *output = *i;
-        if (!output->valid())
-            continue;
-
-        output->output();
-    }
-}
-
-void
-SetupEvent(int flags, Tick when, Tick repeat, EventQueue *queue)
-{
-    if (queue == NULL)
-        queue = &mainEventQueue;
-
-    new StatEvent(queue, flags, when, repeat);
+    new _StatEvent(dump, reset, when, repeat);
 }
 
 /* namespace Stats */ }
-
-void debugDumpStats()
-{
-    Stats::DumpNow();
-}
-

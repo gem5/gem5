@@ -407,36 +407,3 @@ Checkpoint::sectionExists(const std::string &section)
 {
     return db->sectionExists(section);
 }
-
-/** Hacked stat reset event */
-
-class StatresetParamContext : public ParamContext
-{
-  public:
-    StatresetParamContext(const string &section);
-    ~StatresetParamContext();
-    void startup();
-};
-
-StatresetParamContext statParams("statsreset");
-
-Param<Tick> reset_cycle(&statParams, "reset_cycle",
-                        "Cycle to reset stats on", 0);
-
-StatresetParamContext::StatresetParamContext(const string &section)
-    : ParamContext(section)
-{ }
-
-StatresetParamContext::~StatresetParamContext()
-{
-}
-
-void
-StatresetParamContext::startup()
-{
-    if (reset_cycle > 0) {
-        Stats::SetupEvent(Stats::Reset, curTick + reset_cycle, 0);
-        cprintf("Stats reset event scheduled for %lli\n",
-                curTick + reset_cycle);
-    }
-}

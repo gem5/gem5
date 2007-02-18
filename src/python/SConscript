@@ -110,6 +110,7 @@ swig_it('main')
 swig_it('debug')
 swig_it('event')
 swig_it('random')
+swig_it('stats')
 swig_it('trace')
 
 # Action function to build the zip archive.  Uses the PyZipFile module

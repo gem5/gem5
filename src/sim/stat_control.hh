@@ -31,25 +31,10 @@
 #ifndef __SIM_STAT_CONTROL_HH__
 #define __SIM_STAT_CONTROL_HH__
 
-#include <fstream>
-#include <list>
-
-class EventQueue;
-
 namespace Stats {
 
-enum {
-    Reset = 0x1,
-    Dump = 0x2
-};
-
-class Output;
-extern std::list<Output *> OutputList;
-
-void DumpNow();
-void SetupEvent(int flags, Tick when, Tick repeat = 0, EventQueue *queue = NULL);
-
-void InitSimStats();
+void initSimStats();
+void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
 
 /* namespace Stats */ }
 

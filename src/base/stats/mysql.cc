@@ -49,14 +49,6 @@ using namespace std;
 
 namespace Stats {
 
-MySqlRun MySqlDB;
-
-bool
-MySqlConnected()
-{
-    return MySqlDB.connected();
-}
-
 void
 MySqlRun::connect(const string &host, const string &user, const string &passwd,
                   const string &db, const string &name, const string &sample,
@@ -198,7 +190,7 @@ SetupStat::init()
 unsigned
 SetupStat::setup()
 {
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
 
     stringstream insert;
     ccprintf(insert,
@@ -317,7 +309,7 @@ void
 InsertData::flush()
 {
     if (size) {
-        MySQL::Connection &mysql = MySqlDB.conn();
+        MySQL::Connection &mysql = run->conn();
         assert(mysql.connected());
         mysql.query(query);
         if (mysql.error)
@@ -349,7 +341,7 @@ InsertData::insert()
     first = false;
 
     size += sprintf(query + size, "(%u,%d,%d,%u,%llu,\"%f\")",
-                    stat, x, y, MySqlDB.run(), (unsigned long long)tick,
+                    stat, x, y, run->run(), (unsigned long long)tick,
                     data);
 }
 
@@ -367,7 +359,7 @@ struct InsertSubData
 void
 InsertSubData::setup()
 {
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
     stringstream insert;
     ccprintf(insert,
@@ -386,7 +378,7 @@ InsertSubData::setup()
 void
 InsertFormula(uint16_t stat, const string &formula)
 {
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
     stringstream insert_formula;
     ccprintf(insert_formula,
@@ -400,7 +392,7 @@ InsertFormula(uint16_t stat, const string &formula)
     stringstream insert_ref;
     ccprintf(insert_ref,
              "INSERT INTO formula_ref(fr_stat,fr_run) values(%d, %d)",
-             stat, MySqlDB.run());
+             stat, run->run());
 
     mysql.query(insert_ref);
 //    if (mysql.error)
@@ -413,7 +405,7 @@ InsertFormula(uint16_t stat, const string &formula)
 void
 UpdatePrereq(uint16_t stat, uint16_t prereq)
 {
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
     stringstream update;
     ccprintf(update, "UPDATE stats SET st_prereq=%d WHERE st_id=%d",
@@ -426,6 +418,29 @@ UpdatePrereq(uint16_t stat, uint16_t prereq)
         panic("could not commit transaction\n%s\n", mysql.error);
 }
 
+MySql::MySql()
+    : run(new MySqlRun)
+{}
+
+MySql::~MySql()
+{
+    delete run;
+}
+
+void
+MySql::connect(const string &host, const string &user, const string &passwd,
+               const string &db, const string &name, const string &sample,
+               const string &project)
+{
+    run->connect(host, user, passwd, db, name, sample, project);
+}
+
+bool
+MySql::connected() const
+{
+    run->connected();
+}
+
 void
 MySql::configure()
 {
@@ -434,7 +449,7 @@ MySql::configure()
      */
     using namespace Database;
 
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
 
     stat_list_t::const_iterator i, end = stats().end();
     for (i = stats().begin(); i != end; ++i) {
@@ -605,7 +620,7 @@ MySql::configure(const FormulaData &data)
 bool
 MySql::valid() const
 {
-    return MySqlDB.connected();
+    return run->connected();
 }
 
 void
@@ -620,7 +635,7 @@ MySql::output()
     // store sample #
     newdata.tick = curTick;
 
-    MySQL::Connection &mysql = MySqlDB.conn();
+    MySQL::Connection &mysql = run->conn();
 
     Database::stat_list_t::const_iterator i, end = Database::stats().end();
     for (i = Database::stats().begin(); i != end; ++i) {
@@ -825,4 +840,21 @@ MySql::visit(const FormulaData &data)
         output(data);
 }
 
-/* namespace Stats */ }
+bool
+initMySQL(string host, string user, string password, string database,
+           string name, string sample, string project)
+{
+    extern list<Output *> OutputList;
+    static MySql mysql;
+
+    if (mysql.connected())
+        return false;
+
+    if (user.empty())
+        user = username();
+
+    mysql.connect(host, user, password, database, name, sample, project);
+    OutputList.push_back(&mysql);
+
+    return true;
+}

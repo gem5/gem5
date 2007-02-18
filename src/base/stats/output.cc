@@ -28,54 +28,43 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __BASE_STATS_TEXT_HH__
-#define __BASE_STATS_TEXT_HH__
+#include <list>
 
-#include <iosfwd>
-#include <string>
-
-#include "base/output.hh"
 #include "base/stats/output.hh"
+#include "sim/eventq.hh"
+#include "sim/host.hh"
+
+using namespace std;
 
 namespace Stats {
 
-class Text : public Output
+Tick lastDump(0);
+list<Output *> OutputList;
+
+void
+dump()
 {
-  protected:
-    bool mystream;
-    std::ostream *stream;
+    assert(lastDump <= curTick);
+    if (lastDump == curTick)
+        return;
+    lastDump = curTick;
 
-  protected:
-    bool noOutput(const StatData &data);
+    list<Output *>::iterator i = OutputList.begin();
+    list<Output *>::iterator end = OutputList.end();
+    for (; i != end; ++i) {
+        Output *output = *i;
+        if (!output->valid())
+            continue;
 
-  public:
-    bool compat;
-    bool descriptions;
-
-  public:
-    Text();
-    Text(std::ostream &stream);
-    Text(const std::string &file);
-    ~Text();
-
-    void open(std::ostream &stream);
-    void open(const std::string &file);
-
-    // Implement Visit
-    virtual void visit(const ScalarData &data);
-    virtual void visit(const VectorData &data);
-    virtual void visit(const DistData &data);
-    virtual void visit(const VectorDistData &data);
-    virtual void visit(const Vector2dData &data);
-    virtual void visit(const FormulaData &data);
-
-    // Implement Output
-    virtual bool valid() const;
-    virtual void output();
-};
-
-bool initText(const std::string &filename, bool desc=true, bool compat=true);
+        output->output();
+    }
+}
 
 /* namespace Stats */ }
 
-#endif // __BASE_STATS_TEXT_HH__
+void
+debugDumpStats()
+{
+    Stats::dump();
+}
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,54 +28,33 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __BASE_STATS_TEXT_HH__
-#define __BASE_STATS_TEXT_HH__
+%module stats
 
-#include <iosfwd>
-#include <string>
+%include "std_string.i"
 
-#include "base/output.hh"
-#include "base/stats/output.hh"
+%{
+#include "base/statistics.hh"
+#include "base/stats/mysql.hh"
+#include "base/stats/text.hh"
+#include "sim/stat_control.hh"
+%}
 
 namespace Stats {
+void initSimStats();
+void initText(const std::string &filename, bool desc=true, bool compat=true);
+void initMySQL(std::string host, std::string database, std::string user = "",
+    std::string passwd = "", std::string name = "test",
+    std::string sample = "0", std::string project = "test");
 
-class Text : public Output
-{
-  protected:
-    bool mystream;
-    std::ostream *stream;
+void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
 
-  protected:
-    bool noOutput(const StatData &data);
+void dump();
+void reset();
 
-  public:
-    bool compat;
-    bool descriptions;
+/* namespace Stat */ }
 
-  public:
-    Text();
-    Text(std::ostream &stream);
-    Text(const std::string &file);
-    ~Text();
-
-    void open(std::ostream &stream);
-    void open(const std::string &file);
-
-    // Implement Visit
-    virtual void visit(const ScalarData &data);
-    virtual void visit(const VectorData &data);
-    virtual void visit(const DistData &data);
-    virtual void visit(const VectorDistData &data);
-    virtual void visit(const Vector2dData &data);
-    virtual void visit(const FormulaData &data);
-
-    // Implement Output
-    virtual bool valid() const;
-    virtual void output();
-};
-
-bool initText(const std::string &filename, bool desc=true, bool compat=true);
-
-/* namespace Stats */ }
-
-#endif // __BASE_STATS_TEXT_HH__
+%wrapper %{
+// fix up module name to reflect the fact that it's inside the m5 package
+#undef SWIG_name
+#define SWIG_name "m5.internal._stats"
+%}

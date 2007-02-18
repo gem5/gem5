@@ -264,7 +264,7 @@ def main():
     import objects
 
     # set stats options
-    objects.Statistics.text_file = options.stats_file
+    internal.stats.initText(options.stats_file)
 
     # set debugging options
     for when in options.debug_break:

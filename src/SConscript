@@ -79,6 +79,7 @@ base_sources = Split('''
 	base/loader/object_file.cc
 	base/loader/symtab.cc
 	base/stats/events.cc
+        base/stats/output.cc
 	base/stats/statdb.cc
 	base/stats/visit.cc
 	base/stats/text.cc
@@ -134,6 +135,7 @@ base_sources = Split('''
         python/swig/main_wrap.cc
         python/swig/event_wrap.cc
         python/swig/random_wrap.cc
+        python/swig/stats_wrap.cc
         python/swig/trace_wrap.cc
         python/swig/pyevent.cc
 
@@ -148,7 +150,6 @@ base_sources = Split('''
 	sim/sim_events.cc
 	sim/sim_object.cc
 	sim/startup.cc
-	sim/stat_context.cc
 	sim/stat_control.cc
 	sim/system.cc
         ''')

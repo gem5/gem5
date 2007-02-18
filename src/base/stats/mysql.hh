@@ -35,14 +35,13 @@
 #include <string>
 
 #include "base/stats/output.hh"
+#include "config/use_mysql.hh"
 
 namespace MySQL { class Connection; }
 namespace Stats {
 
 class DistDataData;
 class MySqlRun;
-bool MySqlConnected();
-extern MySqlRun MySqlDB;
 
 struct SetupStat
 {
@@ -95,6 +94,9 @@ class InsertData
 class MySql : public Output
 {
   protected:
+    MySqlRun *run; /* Hide the implementation so we don't have a
+                      #include mess */
+
     SetupStat stat;
     InsertData newdata;
     std::list<FormulaData *> formulas;
@@ -116,6 +118,17 @@ class MySql : public Output
         assert(i != idmap.end());
         return (*i).second;
     }
+
+  public:
+    MySql(MySqlRun &_run){}
+    ~MySql();
+
+    void connect(const std::string &host, const std::string &user,
+                 const std::string &passwd, const std::string &db,
+                 const std::string &name, const std::string &sample,
+                 const std::string &project);
+    bool connected() const;
+
   public:
     // Implement Visit
     virtual void visit(const ScalarData &data);
@@ -148,6 +161,20 @@ class MySql : public Output
     void configure(const Vector2dData &data);
     void configure(const FormulaData &data);
 };
+
+bool initMySQL(std::string host, std::string database, std::string user = "",
+    std::string passwd = "", std::string name = "test",
+    std::string sample = "0", std::string project = "test");
+
+#if !USE_MYSQL
+inline bool
+initMySQL(std::string host, std::string user, std::string password,
+    std::string database, std::string name, std::string sample,
+    std::string project)
+{
+    return false;
+}
+#endif
 
 /* namespace Stats */ }
 

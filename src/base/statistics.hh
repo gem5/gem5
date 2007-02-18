@@ -2839,6 +2839,7 @@ class Temp
  */
 
 void check();
+void dump();
 void reset();
 void registerResetCallback(Callback *cb);
 

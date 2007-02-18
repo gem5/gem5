@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <fstream>
 #include <string>
 
 #include "arch/vtophys.hh"
@@ -199,8 +200,7 @@ namespace AlphaPseudo
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
 
-        using namespace Stats;
-        SetupEvent(Reset, when, repeat);
+        Stats::StatEvent(false, true, when, repeat);
     }
 
     void
@@ -213,8 +213,7 @@ namespace AlphaPseudo
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
 
-        using namespace Stats;
-        SetupEvent(Dump, when, repeat);
+        Stats::StatEvent(true, false, when, repeat);
     }
 
     void
@@ -254,8 +253,7 @@ namespace AlphaPseudo
         Tick when = curTick + delay * Clock::Int::ns;
         Tick repeat = period * Clock::Int::ns;
 
-        using namespace Stats;
-        SetupEvent(Dump|Reset, when, repeat);
+        Stats::StatEvent(true, true, when, repeat);
     }
 
     void
