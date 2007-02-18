@@ -701,11 +701,12 @@ ParamContext::printErrorProlog(ostream &os)
 void
 ParamContext::parseAllContexts(IniFile &iniFile)
 {
-    list<ParamContext *>::iterator iter;
+    if (!ctxList)
+        return;
 
+    list<ParamContext *>::iterator iter;
     for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
         ParamContext *pc = *iter;
-
         pc->parseParams(iniFile);
     }
 }
@@ -717,11 +718,12 @@ ParamContext::parseAllContexts(IniFile &iniFile)
 void
 ParamContext::checkAllContexts()
 {
-    list<ParamContext *>::iterator iter;
+    if (!ctxList)
+        return;
 
+    list<ParamContext *>::iterator iter;
     for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
         ParamContext *pc = *iter;
-
         pc->checkParams();
     }
 }
@@ -733,8 +735,10 @@ ParamContext::checkAllContexts()
 void
 ParamContext::showAllContexts(ostream &os)
 {
-    list<ParamContext *>::iterator iter;
+    if (!ctxList)
+        return;
 
+    list<ParamContext *>::iterator iter;
     for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
         ParamContext *pc = *iter;
 
@@ -751,8 +755,10 @@ ParamContext::showAllContexts(ostream &os)
 void
 ParamContext::cleanupAllContexts()
 {
-    list<ParamContext *>::iterator iter;
+    if (!ctxList)
+        return;
 
+    list<ParamContext *>::iterator iter;
     for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
         ParamContext *pc = *iter;
 
@@ -767,8 +773,10 @@ ParamContext::cleanupAllContexts()
 void
 ParamContext::describeAllContexts(ostream &os)
 {
-    list<ParamContext *>::iterator iter;
+    if (!ctxList)
+        return;
 
+    list<ParamContext *>::iterator iter;
     for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
         ParamContext *pc = *iter;
 
