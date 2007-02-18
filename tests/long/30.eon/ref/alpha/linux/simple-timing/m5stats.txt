@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 490401                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 178744                       # Number of bytes of host memory used
-host_seconds                                   812.94                       # Real time elapsed on the host
-host_tick_rate                                 734822                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 595543                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 157792                       # Number of bytes of host memory used
+host_seconds                                   669.41                       # Real time elapsed on the host
+host_tick_rate                                 892368                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   398664450                       # Number of instructions simulated
 sim_seconds                                  0.000597                       # Number of seconds simulated
@@ -153,8 +153,8 @@ system.cpu.l2cache.ReadReq_misses                7180                       # nu
 system.cpu.l2cache.ReadReq_mshr_miss_latency     13818764                       # number of ReadReq MSHR miss cycles
 system.cpu.l2cache.ReadReq_mshr_miss_rate     0.916869                       # mshr miss rate for ReadReq accesses
 system.cpu.l2cache.ReadReq_mshr_misses           7180                       # number of ReadReq MSHR misses
-system.cpu.l2cache.WriteReqNoAck|Writeback_accesses          625                       # number of WriteReqNoAck|Writeback accesses(hits+misses)
-system.cpu.l2cache.WriteReqNoAck|Writeback_hits          625                       # number of WriteReqNoAck|Writeback hits
+system.cpu.l2cache.Writeback_accesses             625                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.Writeback_hits                 625                       # number of Writeback hits
 system.cpu.l2cache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_refs                  0.177716                       # Average number of references to valid blocks.
