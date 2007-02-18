@@ -82,6 +82,7 @@ volatile bool async_dumpreset = false;
 volatile bool async_exit = false;
 volatile bool async_io = false;
 volatile bool async_alarm = false;
+volatile bool async_exception = false;
 
 /// Stats signal handler.
 void
@@ -370,6 +371,11 @@ simulate(Tick num_cycles = MaxTick)
                 async_io = false;
                 async_alarm = false;
                 pollQueue.service();
+            }
+
+            if (async_exception) {
+                async_exception = false;
+                return NULL;
             }
         }
     }

@@ -31,6 +31,7 @@
 #include <Python.h>
 
 #include "python/swig/pyevent.hh"
+#include "sim/async.hh"
 
 PythonEvent::PythonEvent(PyObject *obj, Tick when, Priority priority)
     : Event(&mainEventQueue, priority), object(obj)
@@ -52,9 +53,9 @@ PythonEvent::~PythonEvent()
 void
 PythonEvent::process()
 {
-    PyObject *result;
-
-    result = PyObject_CallMethod(object, "process", "");
+    PyObject *args = PyTuple_New(0);
+    PyObject *result = PyObject_Call(object, args, NULL);
+    Py_DECREF(args);
 
     if (result) {
         // Nothing to do just decrement the reference count
@@ -62,5 +63,7 @@ PythonEvent::process()
     } else {
         // Somethign should be done to signal back to the main interpreter
         // that there's been an exception.
+        async_event = true;
+        async_exception = true;
     }
 }

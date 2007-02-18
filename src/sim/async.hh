@@ -47,6 +47,7 @@ extern volatile bool async_dump;	///< Async request to dump stats.
 extern volatile bool async_exit;	///< Async request to exit simulator.
 extern volatile bool async_io;		///< Async I/O request (SIGIO).
 extern volatile bool async_alarm;	///< Async alarm event (SIGALRM).
+extern volatile bool async_exception;   ///< Python exception.
 //@}
 
 #endif // __ASYNC_HH__
