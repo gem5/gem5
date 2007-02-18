@@ -653,15 +653,13 @@ class SimObject(object):
 
         instanceDict[self.path()] = self
 
-        if hasattr(self, 'type') and not isinstance(self, ParamContext):
+        if hasattr(self, 'type'):
             print 'type=%s' % self.type
 
         child_names = self._children.keys()
         child_names.sort()
-        np_child_names = [c for c in child_names \
-                          if not isinstance(self._children[c], ParamContext)]
-        if len(np_child_names):
-            print 'children=%s' % ' '.join(np_child_names)
+        if len(child_names):
+            print 'children=%s' % ' '.join(child_names)
 
         param_names = self._params.keys()
         param_names.sort()
@@ -711,8 +709,7 @@ class SimObject(object):
 
     def startDrain(self, drain_event, recursive):
         count = 0
-        # ParamContexts don't serialize
-        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+        if isinstance(self, SimObject):
             count += self._ccObject.drain(drain_event)
         if recursive:
             for child in self._children.itervalues():
@@ -720,7 +717,7 @@ class SimObject(object):
         return count
 
     def resume(self):
-        if isinstance(self, SimObject) and not isinstance(self, ParamContext):
+        if isinstance(self, SimObject):
             self._ccObject.resume()
         for child in self._children.itervalues():
             child.resume()
@@ -782,9 +779,6 @@ class SimObject(object):
         for c in self.children:
             c.outputDot(dot)
 
-class ParamContext(SimObject):
-    pass
-
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
     obj = instanceDict[name]
@@ -793,7 +787,7 @@ def resolveSimObject(name):
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['SimObject', 'ParamContext']
+__all__ = ['SimObject']
 
 # see comment on imports at end of __init__.py.
 import proxy

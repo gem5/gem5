@@ -253,7 +253,7 @@ def gen_hh(filename):
     print >>hhfile, '''
         // The remaining enum values are *not* valid indices for Trace::flags.
         // They are "compound" flags, which correspond to sets of base
-        // flags, and are used only by TraceParamContext::setFlags().
+        // flags, and are used by changeFlag.
     ''',
 
     for flag in compoundFlags:

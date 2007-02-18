@@ -50,12 +50,6 @@ class SimObject;
 //
 class ParamContext : protected StartupCallback
 {
-  private:
-
-    // static list of all ParamContext objects, built as a side effect
-    // of the ParamContext constructor
-    static std::list<ParamContext *> *ctxList;
-
   protected:
 
     // .ini file (database) for parameter lookup... initialized on call
@@ -78,31 +72,10 @@ class ParamContext : protected StartupCallback
 
   public:
 
-    /// Initialization phases for ParamContext objects.
-    enum InitPhase {
-        NoAutoInit = -1,	///< Don't initialize at all... params
-                                /// will be parsed later (used by
-                                /// SimObjectBuilder, which parses
-                                /// params in SimObject::create().
-        OutputInitPhase = 0,	///< Output stream initialization
-        TraceInitPhase = 1,	///< Trace context initialization:
-                                /// depends on output streams, but
-                                /// needs to come before others so we
-                                /// can use tracing in other
-                                /// ParamContext init code
-        StatsInitPhase = 2,	///< Stats output initialization
-        DefaultInitPhase = 3	///< Everything else
-    };
-
-    /// Records the initialization phase for this ParamContext.
-    InitPhase initPhase;
-
     /// Constructor.
     /// @param _iniSection Name of .ini section corresponding to this context.
     /// @param _initPhase Initialization phase  (see InitPhase).
-    ParamContext(const std::string &_iniSection,
-                 InitPhase _initPhase = DefaultInitPhase);
-
+    ParamContext(const std::string &_iniSection);
     virtual ~ParamContext() {}
 
     // add a parameter to the context... called from the parameter
@@ -135,24 +108,6 @@ class ParamContext : protected StartupCallback
     // generate the name for this instance of this context (used as a
     // prefix to create unique names in resolveSimObject()
     virtual const std::string &getInstanceName() { return iniSection; }
-
-    // Parse all parameters registered with all ParamContext objects.
-    static void parseAllContexts(IniFile &iniFile);
-
-    // Check all parameters registered with all ParamContext objects.
-    // (calls checkParams() on each)
-    static void checkAllContexts();
-
-    // Print all parameter values on indicated ostream.
-    static void showAllContexts(std::ostream &os);
-
-    // Clean up all registered ParamContext objects.  (calls cleanup()
-    // on each)
-    static void cleanupAllContexts();
-
-    // print descriptions of all parameters registered with all
-    // ParamContext objects
-    static void describeAllContexts(std::ostream &os);
 };
 
 

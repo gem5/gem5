@@ -40,7 +40,7 @@
 using namespace std;
 
 SimObjectBuilder::SimObjectBuilder(const std::string &_iniSection)
-    : ParamContext(_iniSection, NoAutoInit)
+    : ParamContext(_iniSection)
 {
 }
 

@@ -272,13 +272,6 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
 void
 finalInit()
 {
-    // Parse and check all non-config-hierarchy parameters.
-    ParamContext::parseAllContexts(inifile);
-    ParamContext::checkAllContexts();
-
-    // Echo all parameter settings to stats file as well.
-    ParamContext::showAllContexts(*configStream);
-
     // Do a second pass to finish initializing the sim objects
     SimObject::initAll();
 
@@ -461,8 +454,6 @@ doExitCleanup()
     exitCallbacks().clear();
 
     cout.flush();
-
-    ParamContext::cleanupAllContexts();
 
     // print simulation stats
     Stats::dump();

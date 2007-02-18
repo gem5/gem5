@@ -583,30 +583,10 @@ SimObjectBaseParam::parse(const string &s, vector<SimObject *>&value)
 //
 ////////////////////////////////////////////////////////////////////////
 
-list<ParamContext *> *ParamContext::ctxList = NULL;
-
-ParamContext::ParamContext(const string &_iniSection, InitPhase _initPhase)
+ParamContext::ParamContext(const string &_iniSection)
     : iniFilePtr(NULL),	// initialized on call to parseParams()
-      iniSection(_iniSection), paramList(NULL),
-      initPhase(_initPhase)
+      iniSection(_iniSection), paramList(NULL)
 {
-    // Put this context on global list for initialization
-    if (initPhase != NoAutoInit) {
-        if (ctxList == NULL)
-            ctxList = new list<ParamContext *>();
-
-        // keep list sorted by ascending initPhase values
-        list<ParamContext *>::iterator i = ctxList->begin();
-        list<ParamContext *>::iterator end = ctxList->end();
-        for (; i != end; ++i) {
-            if (initPhase <= (*i)->initPhase) {
-                // found where we want to insert
-                break;
-            }
-        }
-        // (fall through case: insert at end)
-        ctxList->insert(i, this);
-    }
 }
 
 
@@ -693,97 +673,6 @@ void
 ParamContext::printErrorProlog(ostream &os)
 {
     os << "Parameter error in section [" << iniSection << "]: " << endl;
-}
-
-//
-// static method: call parseParams() on all registered contexts
-//
-void
-ParamContext::parseAllContexts(IniFile &iniFile)
-{
-    if (!ctxList)
-        return;
-
-    list<ParamContext *>::iterator iter;
-    for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
-        ParamContext *pc = *iter;
-        pc->parseParams(iniFile);
-    }
-}
-
-
-//
-// static method: call checkParams() on all registered contexts
-//
-void
-ParamContext::checkAllContexts()
-{
-    if (!ctxList)
-        return;
-
-    list<ParamContext *>::iterator iter;
-    for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
-        ParamContext *pc = *iter;
-        pc->checkParams();
-    }
-}
-
-
-//
-// static method: call showParams() on all registered contexts
-//
-void
-ParamContext::showAllContexts(ostream &os)
-{
-    if (!ctxList)
-        return;
-
-    list<ParamContext *>::iterator iter;
-    for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
-        ParamContext *pc = *iter;
-
-        os << "[" << pc->iniSection << "]" << endl;
-        pc->showParams(os);
-        os << endl;
-    }
-}
-
-
-//
-// static method: call cleanup() on all registered contexts
-//
-void
-ParamContext::cleanupAllContexts()
-{
-    if (!ctxList)
-        return;
-
-    list<ParamContext *>::iterator iter;
-    for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
-        ParamContext *pc = *iter;
-
-        pc->cleanup();
-    }
-}
-
-
-//
-// static method: call describeParams() on all registered contexts
-//
-void
-ParamContext::describeAllContexts(ostream &os)
-{
-    if (!ctxList)
-        return;
-
-    list<ParamContext *>::iterator iter;
-    for (iter = ctxList->begin(); iter != ctxList->end(); ++iter) {
-        ParamContext *pc = *iter;
-
-        os << "[" << pc->iniSection << "]\n";
-        pc->describeParams(os);
-        os << endl;
-    }
 }
 
 void
