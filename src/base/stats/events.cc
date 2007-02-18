@@ -52,8 +52,6 @@ namespace Stats {
 
 Tick EventStart = ULL(0x7fffffffffffffff);
 
-ObjectMatch event_ignore;
-
 #if USE_MYSQL
 class InsertEvent
 {

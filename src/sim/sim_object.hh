@@ -136,7 +136,6 @@ class SimObject : public Serializable, protected StartupCallback
 #endif
 
   public:
-    bool doRecordEvent;
     void recordEvent(const std::string &stat);
 };
 

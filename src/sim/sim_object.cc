@@ -56,10 +56,6 @@ using namespace std;
 //
 SimObject::SimObjectList SimObject::simObjectList;
 
-namespace Stats {
-    extern ObjectMatch event_ignore;
-}
-
 //
 // SimObject constructor: used to maintain static simObjectList
 //
@@ -70,7 +66,6 @@ SimObject::SimObject(Params *p)
     doDebugBreak = false;
 #endif
 
-    doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
     state = Running;
 }
@@ -86,7 +81,6 @@ SimObject::SimObject(const string &_name)
     doDebugBreak = false;
 #endif
 
-    doRecordEvent = !Stats::event_ignore.match(name());
     simObjectList.push_back(this);
     state = Running;
 }
@@ -245,8 +239,7 @@ debugObjectBreak(const char *objs)
 void
 SimObject::recordEvent(const std::string &stat)
 {
-    if (doRecordEvent)
-        Stats::recordEvent(stat);
+    Stats::recordEvent(stat);
 }
 
 unsigned int

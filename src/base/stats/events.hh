@@ -45,8 +45,6 @@ void __event(const std::string &stat);
 bool MySqlConnected();
 #endif
 
-bool ignoreEvent(const std::string &name);
-
 inline void
 recordEvent(const std::string &stat)
 {
