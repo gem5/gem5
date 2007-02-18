@@ -63,7 +63,7 @@ int maxThreadsPerCPU = 1;
 
 CPUProgressEvent::CPUProgressEvent(EventQueue *q, Tick ival,
                                    BaseCPU *_cpu)
-    : Event(q, Event::Stat_Event_Pri), interval(ival),
+    : Event(q, Event::Progress_Event_Pri), interval(ival),
       lastNumInst(0), cpu(_cpu)
 {
     if (interval)

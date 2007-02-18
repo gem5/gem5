@@ -169,6 +169,9 @@ class Event : public Serializable, public FastAlloc
         /// everything else, but before exit.
         Stat_Event_Pri		=   90,
 
+        /// Progress events come at the end.
+        Progress_Event_Pri      =   95,
+
         /// If we want to exit on this cycle, it's the very last thing
         /// we do.
         Sim_Exit_Pri		=  100
