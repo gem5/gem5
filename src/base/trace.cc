@@ -47,7 +47,7 @@ using namespace std;
 namespace Trace {
 const string DefaultName("global");
 FlagVec flags(NumFlags, false);
-bool enabled = true;
+bool enabled = false;
 
 //
 // This variable holds the output stream for debug information.  Other

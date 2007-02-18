@@ -292,11 +292,12 @@ def main():
     for flag in off_flags:
         internal.trace.clear(flag)
 
-    if options.trace_start is not None:
-        internal.trace.enabled = False
+    if options.trace_start:
         def enable_trace():
-            internal.event.enabled = True
-        internal.event.create(enable_trace, options.trace_start)
+            internal.trace.cvar.enabled = True
+        internal.event.create(enable_trace, int(options.trace_start))
+    else:
+        internal.trace.enabled = True
 
     internal.trace.output(options.trace_file)
 

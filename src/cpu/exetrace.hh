@@ -157,6 +157,9 @@ getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
     if (!IsOn(ExecEnable))
         return NULL;
 
+    if (!Trace::enabled)
+        return NULL;
+
     if (!IsOn(ExecSpeculative) && tc->misspeculating())
         return NULL;
 
