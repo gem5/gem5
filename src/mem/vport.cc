@@ -34,6 +34,7 @@
  */
 
 #include "base/chunk_generator.hh"
+#include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 
 void
@@ -70,3 +71,53 @@ VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
     }
 }
 
+void
+CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
+{
+    uint8_t *dst = (uint8_t *)dest;
+    VirtualPort *vp = tc->getVirtPort(tc);
+
+    vp->readBlob(src, dst, cplen);
+
+    tc->delVirtPort(vp);
+
+}
+
+void
+CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
+{
+    uint8_t *src = (uint8_t *)source;
+    VirtualPort *vp = tc->getVirtPort(tc);
+
+    vp->writeBlob(dest, src, cplen);
+
+    tc->delVirtPort(vp);
+}
+
+void
+CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
+{
+    int len = 0;
+    char *start = dst;
+    VirtualPort *vp = tc->getVirtPort(tc);
+
+    do {
+        vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
+    } while (len < maxlen && start[len++] != 0 );
+
+    tc->delVirtPort(vp);
+    dst[len] = 0;
+}
+
+void
+CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
+{
+    VirtualPort *vp = tc->getVirtPort(tc);
+    for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();
+            gen.next())
+    {
+        vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
+        src += gen.size();
+    }
+    tc->delVirtPort(vp);
+}

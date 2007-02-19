@@ -45,6 +45,22 @@ struct VAddr
     VAddr(Addr a) { panic("not implemented yet."); }
 };
 
+class TteTag
+{
+  private:
+    uint64_t entry;
+    bool populated;
+
+  public:
+    TteTag() : entry(0), populated(false) {}
+    TteTag(uint64_t e) : entry(e), populated(true) {}
+    const TteTag &operator=(uint64_t e) { populated = true;
+                                          entry = e; return *this; }
+    bool valid() const {assert(populated); return !bits(entry,62,62); }
+    Addr va()    const {assert(populated); return bits(entry,41,0); }
+};
+
+
 class PageTableEntry
 {
   public:
@@ -110,13 +126,14 @@ class PageTableEntry
                                                   entry4u = e; return *this; }
 
     const PageTableEntry &operator=(const PageTableEntry &e)
-    { populated = true; entry4u = e.entry4u; return *this; }
+    { populated = true; entry4u = e.entry4u; type = e.type; return *this; }
 
     bool    valid()    const { return bits(entry4u,63,63) && populated; }
     uint8_t _size()     const { assert(populated);
                                return bits(entry4u, 62,61) |
                                       bits(entry4u, 48,48) << 2; }
     Addr    size()     const { assert(_size() < 6); return pageSizes[_size()]; }
+    Addr    sizeMask() const { assert(_size() < 6); return pageSizes[_size()]-1;}
     bool    ie()       const { return bits(entry4u, 59,59); }
     Addr    pfn()      const { assert(populated); return bits(entry4u,39,13); }
     Addr    paddr()    const { assert(populated); return mbits(entry4u, 39,13);}
@@ -127,6 +144,8 @@ class PageTableEntry
     bool    writable() const { assert(populated); return bits(entry4u,1,1); }
     bool    nofault()  const { assert(populated); return bits(entry4u,60,60); }
     bool    sideffect() const { assert(populated); return bits(entry4u,3,3); }
+    Addr    paddrMask() const { assert(populated);
+                                return mbits(entry4u, 39,13) & ~sizeMask(); }
 };
 
 struct TlbRange {

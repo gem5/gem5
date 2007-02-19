@@ -49,6 +49,7 @@
  * simple address masking operation (such as alpha super page accesses).
  */
 
+
 class VirtualPort  : public FunctionalPort
 {
   private:
@@ -74,6 +75,12 @@ class VirtualPort  : public FunctionalPort
       * with page boundries. */
     virtual void writeBlob(Addr addr, uint8_t *p, int size);
 };
+
+
+void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen);
+void CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen);
+void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
+void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
 
 #endif //__MEM_VPORT_HH__
 

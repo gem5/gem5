@@ -44,6 +44,7 @@ mask(int nbits)
 }
 
 
+
 /**
  * Extract the bitfield from position 'first' to 'last' (inclusive)
  * from 'val' and right justify it.  MSB is numbered 63, LSB is 0.
@@ -67,6 +68,12 @@ T
 mbits(T val, int first, int last)
 {
     return val & (mask(first+1) & ~mask(last));
+}
+
+inline uint64_t
+mask(int first, int last)
+{
+    return mbits((uint64_t)-1LL, first, last);
 }
 
 /**

@@ -87,6 +87,11 @@ namespace SparcISA
     const int LogVMPageSize = 13;
     const int VMPageSize = (1 << LogVMPageSize);
 
+    // real address virtual mapping
+    // sort of like alpha super page, but less frequently used
+    const Addr SegKPMEnd  = ULL(0xfffffffc00000000);
+    const Addr SegKPMBase = ULL(0xfffffac000000000);
+
     //Why does both the previous set of constants and this one exist?
     const int PageShift = 13;
     const int PageBytes = 1ULL << PageShift;

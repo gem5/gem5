@@ -33,9 +33,9 @@
 
 #include <assert.h>
 
-#include "arch/sparc/vtophys.hh"
 #include "base/refcnt.hh"
 #include "sim/host.hh"
+#include "mem/vport.hh"
 
 class ThreadContext;
 

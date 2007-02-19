@@ -78,17 +78,25 @@ class TLB : public SimObject
         Nucleus = 2
     };
 
-
+    enum TsbPageSize {
+        Ps0,
+        Ps1
+    };
+  public:
     /** lookup an entry in the TLB based on the partition id, and real bit if
      * real is true or the partition id, and context id if real is false.
      * @param va the virtual address not shifted (e.g. bottom 13 bits are 0)
      * @param paritition_id partition this entry is for
      * @param real is this a real->phys or virt->phys translation
      * @param context_id if this is virt->phys what context
+     * @param update_used should ew update the used bits in the entries on not
+     * useful if we are trying to do a va->pa without mucking with any state for
+     * a debug read for example.
      * @return A pointer to a tlb entry
      */
-    TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0);
-
+    TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0,
+            bool update_used = true);
+  protected:
     /** Insert a PTE into the TLB. */
     void insert(Addr vpn, int partition_id, int context_id, bool real,
             const PageTableEntry& PTE, int entry = -1);
@@ -163,11 +171,16 @@ class DTB : public TLB
     Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
+    void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
 
   private:
     void writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
     void writeTagAccess(ThreadContext *tc, Addr va, int context);
+
+    uint64_t MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
+        uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config);
+
 
     TlbEntry *cacheEntry[2];
     ASI cacheAsi[2];
