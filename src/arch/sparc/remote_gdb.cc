@@ -152,7 +152,9 @@ RemoteGDB::acc(Addr va, size_t len)
     //@Todo In NetBSD, this function checks if all addresses
     //from va to va + len have valid page mape entries. Not
     //sure how this will work for other OSes or in general.
-    return true;
+    if (va)
+        return true;
+    return false;
 }
 
 ///////////////////////////////////////////////////////////
@@ -166,23 +168,33 @@ RemoteGDB::getregs()
     memset(gdbregs.regs, 0, gdbregs.size);
 
     if (context->readMiscRegWithEffect(MISCREG_PSTATE) &
-           PSTATE::am)
-        panic("In 32bit mode\n");
+           PSTATE::am) {
+        uint32_t *regs;
+        regs = (uint32_t*)gdbregs.regs;
+        regs[Reg32Pc] = htobe((uint32_t)context->readPC());
+        regs[Reg32Npc] = htobe((uint32_t)context->readNextPC());
+        for(int x = RegG0; x <= RegI0 + 7; x++)
+            regs[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
 
-    gdbregs.regs[RegPc] = htobe(context->readPC());
-    gdbregs.regs[RegNpc] = htobe(context->readNextPC());
-    for(int x = RegG0; x <= RegI0 + 7; x++)
-        gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
+        regs[Reg32Y] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
+        regs[Reg32Psr] = htobe((uint32_t)context->readMiscRegWithEffect(MISCREG_PSTATE));
+        regs[Reg32Fsr] = htobe((uint32_t)context->readMiscRegWithEffect(MISCREG_FSR));
+        regs[Reg32Csr] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
+    } else {
+        gdbregs.regs[RegPc] = htobe(context->readPC());
+        gdbregs.regs[RegNpc] = htobe(context->readNextPC());
+        for(int x = RegG0; x <= RegI0 + 7; x++)
+            gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
 
-    gdbregs.regs[RegFsr] = htobe(context->readMiscRegWithEffect(MISCREG_FSR));
-    gdbregs.regs[RegFprs] = htobe(context->readMiscRegWithEffect(MISCREG_FPRS));
-    gdbregs.regs[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
-    gdbregs.regs[RegState] = htobe(
-        context->readMiscRegWithEffect(MISCREG_CWP) |
-        context->readMiscRegWithEffect(MISCREG_PSTATE) << 8 |
-        context->readMiscRegWithEffect(MISCREG_ASI) << 24 |
-        context->readIntReg(NumIntArchRegs + 2) << 32);
-
+        gdbregs.regs[RegFsr] = htobe(context->readMiscRegWithEffect(MISCREG_FSR));
+        gdbregs.regs[RegFprs] = htobe(context->readMiscRegWithEffect(MISCREG_FPRS));
+        gdbregs.regs[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
+        gdbregs.regs[RegState] = htobe(
+            context->readMiscRegWithEffect(MISCREG_CWP) |
+            context->readMiscRegWithEffect(MISCREG_PSTATE) << 8 |
+            context->readMiscRegWithEffect(MISCREG_ASI) << 24 |
+            context->readIntReg(NumIntArchRegs + 2) << 32);
+    }
 
     DPRINTF(GDBRead, "PC=%#x\n", gdbregs.regs[RegPc]);
 

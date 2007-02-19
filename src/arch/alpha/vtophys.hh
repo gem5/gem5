@@ -47,11 +47,6 @@ namespace AlphaISA {
     Addr vtophys(Addr vaddr);
     Addr vtophys(ThreadContext *tc, Addr vaddr);
 
-    void CopyOut(ThreadContext *tc, void *dst, Addr src, size_t len);
-    void CopyIn(ThreadContext *tc, Addr dst, void *src, size_t len);
-    void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-    void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
-
 };
 #endif // __ARCH_ALPHA_VTOPHYS_H__
 

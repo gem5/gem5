@@ -204,7 +204,8 @@ insertAllLocked:
 
 
 TlbEntry*
-TLB::lookup(Addr va, int partition_id, bool real, int context_id)
+TLB::lookup(Addr va, int partition_id, bool real, int context_id, bool
+        update_used)
 {
     MapIter i;
     TlbRange tr;
@@ -230,7 +231,10 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id)
     t = i->second;
     DPRINTF(TLB, "TLB: Valid entry found pa: %#x size: %#x\n", t->pte.paddr(),
             t->pte.size());
-    if (!t->used) {
+
+    // Update the used bits only if this is a real access (not a fake one from
+    // virttophys()
+    if (!t->used && update_used) {
         t->used = true;
         usedEntries++;
         if (usedEntries == size) {
@@ -797,13 +801,11 @@ handleQueueRegAccess:
 
 handleSparcErrorRegAccess:
     if (!hpriv) {
-        if (priv) {
-            writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        if (priv)
             return new DataAccessException;
-        } else {
-            writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+         else
             return new PrivilegedAction;
-        }
     }
     goto regAccessOk;
 
@@ -821,8 +823,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
-    uint64_t temp, data;
-    uint64_t tsbtemp, cnftemp;
+    uint64_t temp;
 
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
          (uint32_t)pkt->req->getAsi(), pkt->getAddr());
@@ -942,64 +943,36 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         }
         break;
       case ASI_DMMU_TSB_PS0_PTR_REG:
-        temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
-        if (bits(temp,12,0) == 0) {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG);
-        } else {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG);
-        }
-        data = mbits(tsbtemp,63,13);
-        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
-            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
-        pkt->set(data);
+        pkt->set(MakeTsbPtr(Ps0,
+            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS),
+            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0),
+            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
+            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0),
+            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG)));
         break;
       case ASI_DMMU_TSB_PS1_PTR_REG:
-        temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
-        if (bits(temp,12,0) == 0) {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG);
-        } else {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG);
-        }
-        data = mbits(tsbtemp,63,13);
-        if (bits(tsbtemp,12,12))
-            data |= ULL(1) << (13+bits(tsbtemp,3,0));
-        data |= temp >> (9 + bits(cnftemp,10,8) * 3) &
-            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
-        pkt->set(data);
+        pkt->set(MakeTsbPtr(Ps1,
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG)));
         break;
       case ASI_IMMU_TSB_PS0_PTR_REG:
-        temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
-        if (bits(temp,12,0) == 0) {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG);
-        } else {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG);
-        }
-        data = mbits(tsbtemp,63,13);
-        data |= temp >> (9 + bits(cnftemp,2,0) * 3) &
-            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
-        pkt->set(data);
+          pkt->set(MakeTsbPtr(Ps0,
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG)));
         break;
       case ASI_IMMU_TSB_PS1_PTR_REG:
-        temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
-        if (bits(temp,12,0) == 0) {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG);
-        } else {
-            tsbtemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1);
-            cnftemp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG);
-        }
-        data = mbits(tsbtemp,63,13);
-        if (bits(tsbtemp,12,12))
-            data |= ULL(1) << (13+bits(tsbtemp,3,0));
-        data |= temp >> (9 + bits(cnftemp,10,8) * 3) &
-            mbits((uint64_t)-1ll,12+bits(tsbtemp,3,0), 4);
-        pkt->set(data);
+          pkt->set(MakeTsbPtr(Ps1,
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG)));
         break;
 
       default:
@@ -1243,6 +1216,64 @@ doMmuWriteError:
     pkt->result = Packet::Success;
     return tc->getCpuPtr()->cycles(1);
 }
+
+void
+DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
+{
+    uint64_t tag_access = mbits(addr,63,13) | mbits(ctx,12,0);
+    ptrs[0] = MakeTsbPtr(Ps0, tag_access,
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+    ptrs[1] = MakeTsbPtr(Ps1, tag_access,
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+    ptrs[2] = MakeTsbPtr(Ps0, tag_access,
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+    ptrs[3] = MakeTsbPtr(Ps1, tag_access,
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1),
+                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+}
+
+
+
+
+
+uint64_t
+DTB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
+        uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config)
+{
+    uint64_t tsb;
+    uint64_t config;
+
+    if (bits(tag_access, 12,0) == 0) {
+        tsb = c0_tsb;
+        config = c0_config;
+    } else {
+        tsb = cX_tsb;
+        config = cX_config;
+    }
+
+    uint64_t ptr = mbits(tsb,63,13);
+    bool split = bits(tsb,12,12);
+    int tsb_size = bits(tsb,3,0);
+    int page_size = (ps == Ps0) ? bits(config, 2,0) : bits(config,10,8);
+
+    if (ps == Ps1  && split)
+        ptr |= ULL(1) << (13 + tsb_size);
+    ptr |= (tag_access >> (9 + page_size * 3)) & mask(12+tsb_size, 4);
+
+    return ptr;
+}
+
 
 void
 TLB::serialize(std::ostream &os)
