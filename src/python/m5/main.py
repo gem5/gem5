@@ -297,7 +297,7 @@ def main():
             internal.trace.cvar.enabled = True
         internal.event.create(enable_trace, int(options.trace_start))
     else:
-        internal.trace.enabled = True
+        internal.trace.cvar.enabled = True
 
     internal.trace.output(options.trace_file)
 
