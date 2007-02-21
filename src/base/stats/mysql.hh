@@ -62,7 +62,7 @@ struct SetupStat
     uint16_t size;
 
     void init();
-    unsigned setup();
+    unsigned setup(MySqlRun *run);
 };
 
 class InsertData
@@ -84,11 +84,32 @@ class InsertData
     int16_t y;
 
   public:
-    InsertData();
+    InsertData(MySqlRun *_run);
     ~InsertData();
 
     void flush();
     void insert();
+};
+
+class InsertEvent
+{
+  private:
+    char *query;
+    int size;
+    bool first;
+    static const int maxsize = 1024*1024;
+
+    typedef std::map<std::string, uint32_t> event_map_t;
+    event_map_t events;
+
+    MySqlRun *run;
+
+  public:
+    InsertEvent(MySqlRun *_run);
+    ~InsertEvent();
+
+    void flush();
+    void insert(const std::string &stat);
 };
 
 class MySql : public Output
@@ -99,6 +120,7 @@ class MySql : public Output
 
     SetupStat stat;
     InsertData newdata;
+    InsertEvent newevent;
     std::list<FormulaData *> formulas;
     bool configured;
 
@@ -120,7 +142,7 @@ class MySql : public Output
     }
 
   public:
-    MySql(MySqlRun &_run){}
+    MySql();
     ~MySql();
 
     void connect(const std::string &host, const std::string &user,
@@ -141,6 +163,9 @@ class MySql : public Output
     // Implement Output
     virtual bool valid() const;
     virtual void output();
+
+    // Implement Event Output
+    virtual void event(const std::string &event);
 
   protected:
     // Output helper

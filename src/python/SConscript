@@ -99,12 +99,13 @@ pyzip_files.append('m5/info.py')
 pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
 pyzip_files.append(join(env['ROOT'], 'src/base/traceflags.py'))
 
-def swig_it(basename):
-    env.Command(['swig/%s_wrap.cc' % basename, 'm5/internal/%s.py' % basename],
-                'swig/%s.i' % basename,
+swig_modules = []
+def swig_it(module):
+    env.Command(['swig/%s_wrap.cc' % module, 'm5/internal/%s.py' % module],
+                'swig/%s.i' % module,
                 '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES')
-    pyzip_dep_files.append('m5/internal/%s.py' % basename)
+    swig_modules.append(module)
 
 swig_it('main')
 swig_it('debug')
@@ -112,6 +113,32 @@ swig_it('event')
 swig_it('random')
 swig_it('stats')
 swig_it('trace')
+
+# Automatically generate m5/internals/__init__.py
+def MakeInternalsInit(target, source, env):
+    f = file(str(target[0]), 'w')
+    for m in swig_modules:
+        print >>f, 'import %s' % m
+    f.close()
+
+swig_py_files = [ 'm5/internal/%s.py' % m for m in swig_modules ]
+env.Command('m5/internal/__init__.py', swig_py_files, MakeInternalsInit)
+pyzip_dep_files.append('m5/internal/__init__.py')
+
+def MakeSwigInit(target, source, env):
+    f = file(str(target[0]), 'w')
+    print >>f, 'extern "C" {'
+    for m in swig_modules:
+        print >>f, '    void init_%s();' % m
+    print >>f, '}'
+    print >>f, 'void init_swig() {'
+    for m in swig_modules:
+        print >>f, '    init_%s();' % m
+    print >>f, '}'
+    f.close()
+
+swig_cc_files = [ 'swig/%s_wrap.cc' % m for m in swig_modules ]
+env.Command('swig/init.cc', swig_cc_files, MakeSwigInit)
 
 # Action function to build the zip archive.  Uses the PyZipFile module
 # included in the standard Python library.
