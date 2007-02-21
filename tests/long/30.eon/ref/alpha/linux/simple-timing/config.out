@@ -27,7 +27,7 @@ responder_set=false
 [system.cpu.workload]
 type=LiveProcess
 cmd=eon chair.control.cook chair.camera chair.surfaces chair.cook.ppm ppm pixels_out.cook
-executable=/dist/m5/cpu2000/binaries/alpha/tru64/eon
+executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/eon
 input=cin
 output=cout
 env=

@@ -10,6 +10,7 @@ type=PhysicalMemory
 file=
 range=[0,134217727]
 latency=1
+zero=false
 
 [system]
 type=System
@@ -26,11 +27,11 @@ responder_set=false
 [system.cpu.workload]
 type=LiveProcess
 cmd=vortex lendian.raw
-executable=/dist/m5/cpu2000/binaries/alpha/tru64/vortex
+executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/vortex
 input=cin
 output=cout
 env=
-cwd=build/ALPHA_SE/tests/opt/long/50.vortex/alpha/linux/simple-timing
+cwd=build/ALPHA_SE/tests/fast/long/50.vortex/alpha/linux/simple-timing
 system=system
 uid=100
 euid=100
@@ -178,15 +179,6 @@ prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
 hit_latency=1
 
-[trace]
-flags=
-start=0
-cycle=0
-bufsize=0
-file=cout
-dump_on_exit=false
-ignore=
-
 [stats]
 descriptions=true
 project_name=test
@@ -203,25 +195,6 @@ dump_reset=false
 dump_cycle=0
 dump_period=0
 ignore_events=
-
-[random]
-seed=1
-
-[exetrace]
-speculative=true
-print_cycle=true
-print_opclass=true
-print_thread=true
-print_effaddr=true
-print_data=true
-print_iregs=false
-print_fetchseq=false
-print_cpseq=false
-print_reg_delta=false
-pc_symbol=true
-intel_format=false
-legion_lockstep=false
-trace_system=client
 
 [statsreset]
 reset_cycle=0
