@@ -43,6 +43,7 @@
 #include "base/stats/statdb.hh"
 #include "base/stats/types.hh"
 #include "base/str.hh"
+#include "base/userinfo.hh"
 #include "sim/host.hh"
 
 using namespace std;
@@ -188,7 +189,7 @@ SetupStat::init()
 }
 
 unsigned
-SetupStat::setup()
+SetupStat::setup(MySqlRun *run)
 {
     MySQL::Connection &mysql = run->conn();
 
@@ -293,7 +294,8 @@ SetupStat::setup()
     return statid;
 }
 
-InsertData::InsertData()
+InsertData::InsertData(MySqlRun *_run)
+    : run(_run)
 {
     query = new char[maxsize + 1];
     size = 0;
@@ -345,6 +347,93 @@ InsertData::insert()
                     data);
 }
 
+InsertEvent::InsertEvent(MySqlRun *_run)
+    : run(_run)
+{
+    query = new char[maxsize + 1];
+    size = 0;
+    first = true;
+    flush();
+}
+
+InsertEvent::~InsertEvent()
+{
+    flush();
+}
+
+void
+InsertEvent::insert(const string &stat)
+{
+    MySQL::Connection &mysql = run->conn();
+    assert(mysql.connected());
+
+    event_map_t::iterator i = events.find(stat);
+    uint32_t event;
+    if (i == events.end()) {
+        mysql.query(
+            csprintf("SELECT en_id "
+                     "from event_names "
+                     "where en_name=\"%s\"",
+                     stat));
+
+        MySQL::Result result = mysql.store_result();
+        if (!result)
+            panic("could not get a run\n%s\n", mysql.error);
+
+        assert(result.num_fields() == 1);
+        MySQL::Row row = result.fetch_row();
+        if (row) {
+            if (!to_number(row[0], event))
+                panic("invalid event id: %s\n", row[0]);
+        } else {
+            mysql.query(
+                csprintf("INSERT INTO "
+                         "event_names(en_name)"
+                         "values(\"%s\")",
+                         stat));
+
+            if (mysql.error)
+                panic("could not get a run\n%s\n", mysql.error);
+
+            event = mysql.insert_id();
+        }
+    } else {
+        event = (*i).second;
+    }
+
+    if (size + 1024 > maxsize)
+        flush();
+
+    if (!first) {
+        query[size++] = ',';
+        query[size] = '\0';
+    }
+
+    first = false;
+
+    size += sprintf(query + size, "(%u,%u,%llu)",
+                    event, run->run(), (unsigned long long)curTick);
+}
+
+void
+InsertEvent::flush()
+{
+    static const char query_header[] = "INSERT INTO "
+        "events(ev_event, ev_run, ev_tick)"
+        "values";
+
+    MySQL::Connection &mysql = run->conn();
+    assert(mysql.connected());
+
+    if (size)
+        mysql.query(query);
+
+    query[0] = '\0';
+    size = sizeof(query_header);
+    first = true;
+    memcpy(query, query_header, size);
+}
+
 struct InsertSubData
 {
     uint16_t stat;
@@ -353,11 +442,11 @@ struct InsertSubData
     string name;
     string descr;
 
-    void setup();
+    void setup(MySqlRun *run);
 };
 
 void
-InsertSubData::setup()
+InsertSubData::setup(MySqlRun *run)
 {
     MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
@@ -375,51 +464,8 @@ InsertSubData::setup()
         panic("could not commit transaction\n%s\n", mysql.error);
 }
 
-void
-InsertFormula(uint16_t stat, const string &formula)
-{
-    MySQL::Connection &mysql = run->conn();
-    assert(mysql.connected());
-    stringstream insert_formula;
-    ccprintf(insert_formula,
-             "INSERT INTO formulas(fm_stat,fm_formula) values(%d, \"%s\")",
-             stat, formula);
-
-    mysql.query(insert_formula);
-//    if (mysql.error)
-//	panic("could not insert formula\n%s\n", mysql.error);
-
-    stringstream insert_ref;
-    ccprintf(insert_ref,
-             "INSERT INTO formula_ref(fr_stat,fr_run) values(%d, %d)",
-             stat, run->run());
-
-    mysql.query(insert_ref);
-//    if (mysql.error)
-//	panic("could not insert formula reference\n%s\n", mysql.error);
-
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
-}
-
-void
-UpdatePrereq(uint16_t stat, uint16_t prereq)
-{
-    MySQL::Connection &mysql = run->conn();
-    assert(mysql.connected());
-    stringstream update;
-    ccprintf(update, "UPDATE stats SET st_prereq=%d WHERE st_id=%d",
-             prereq, stat);
-    mysql.query(update);
-    if (mysql.error)
-        panic("could not update prereq\n%s\n", mysql.error);
-
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
-}
-
 MySql::MySql()
-    : run(new MySqlRun)
+    : run(new MySqlRun), newdata(run), newevent(run)
 {}
 
 MySql::~MySql()
@@ -438,7 +484,7 @@ MySql::connect(const string &host, const string &user, const string &passwd,
 bool
 MySql::connected() const
 {
-    run->connected();
+    return run->connected();
 }
 
 void
@@ -459,11 +505,20 @@ MySql::configure()
     for (i = stats().begin(); i != end; ++i) {
         StatData *data = *i;
         if (data->prereq) {
+            // update the prerequisite
             uint16_t stat_id = find(data->id);
             uint16_t prereq_id = find(data->prereq->id);
             assert(stat_id && prereq_id);
 
-            UpdatePrereq(stat_id, prereq_id);
+            stringstream update;
+            ccprintf(update, "UPDATE stats SET st_prereq=%d WHERE st_id=%d",
+                     prereq_id, stat_id);
+            mysql.query(update);
+            if (mysql.error)
+                panic("could not update prereq\n%s\n", mysql.error);
+
+            if (mysql.commit())
+                panic("could not commit transaction\n%s\n", mysql.error);
         }
     }
 
@@ -498,7 +553,7 @@ MySql::configure(const ScalarData &data)
     if (!configure(data, "SCALAR"))
         return;
 
-    insert(data.id, stat.setup());
+    insert(data.id, stat.setup(run));
 }
 
 void
@@ -507,7 +562,7 @@ MySql::configure(const VectorData &data)
     if (!configure(data, "VECTOR"))
         return;
 
-    uint16_t statid = stat.setup();
+    uint16_t statid = stat.setup(run);
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -519,7 +574,7 @@ MySql::configure(const VectorData &data)
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
 
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata.setup();
+                subdata.setup(run);
         }
     }
 
@@ -538,7 +593,7 @@ MySql::configure(const DistData &data)
         stat.max = data.data.max;
         stat.bktsize = data.data.bucket_size;
     }
-    insert(data.id, stat.setup());
+    insert(data.id, stat.setup(run));
 }
 
 void
@@ -554,7 +609,7 @@ MySql::configure(const VectorDistData &data)
         stat.bktsize = data.data[0].bucket_size;
     }
 
-    uint16_t statid = stat.setup();
+    uint16_t statid = stat.setup(run);
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -565,7 +620,7 @@ MySql::configure(const VectorDistData &data)
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata.setup();
+                subdata.setup(run);
         }
     }
 
@@ -578,7 +633,7 @@ MySql::configure(const Vector2dData &data)
     if (!configure(data, "VECTOR2D"))
         return;
 
-    uint16_t statid = stat.setup();
+    uint16_t statid = stat.setup(run);
 
     if (!data.subnames.empty()) {
         InsertSubData subdata;
@@ -589,7 +644,7 @@ MySql::configure(const Vector2dData &data)
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
-                subdata.setup();
+                subdata.setup(run);
         }
     }
 
@@ -602,7 +657,7 @@ MySql::configure(const Vector2dData &data)
             subdata.y = i;
             subdata.name = data.y_subnames[i];
             if (!subdata.name.empty())
-                subdata.setup();
+                subdata.setup(run);
         }
     }
 
@@ -612,9 +667,35 @@ MySql::configure(const Vector2dData &data)
 void
 MySql::configure(const FormulaData &data)
 {
+    MySQL::Connection &mysql = run->conn();
+    assert(mysql.connected());
+
     configure(data, "FORMULA");
-    insert(data.id, stat.setup());
-    InsertFormula(find(data.id), data.str());
+    insert(data.id, stat.setup(run));
+
+    uint16_t stat = find(data.id);
+    string formula = data.str();
+
+    stringstream insert_formula;
+    ccprintf(insert_formula,
+             "INSERT INTO formulas(fm_stat,fm_formula) values(%d, \"%s\")",
+             stat, formula);
+
+    mysql.query(insert_formula);
+//    if (mysql.error)
+//	panic("could not insert formula\n%s\n", mysql.error);
+
+    stringstream insert_ref;
+    ccprintf(insert_ref,
+             "INSERT INTO formula_ref(fr_stat,fr_run) values(%d, %d)",
+             stat, run->run());
+
+    mysql.query(insert_ref);
+//    if (mysql.error)
+//	panic("could not insert formula reference\n%s\n", mysql.error);
+
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 bool
@@ -647,6 +728,13 @@ MySql::output()
 
     newdata.flush();
 }
+
+void
+MySql::event(const std::string &event)
+{
+    newevent.insert(event);
+}
+
 
 void
 MySql::output(const ScalarData &data)
@@ -842,7 +930,7 @@ MySql::visit(const FormulaData &data)
 
 bool
 initMySQL(string host, string user, string password, string database,
-           string name, string sample, string project)
+          string name, string sample, string project)
 {
     extern list<Output *> OutputList;
     static MySql mysql;
@@ -858,3 +946,5 @@ initMySQL(string host, string user, string password, string database,
 
     return true;
 }
+
+/* end namespace Stats */ }

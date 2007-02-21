@@ -42,6 +42,7 @@ struct Output : public Visit
     inline void operator()() { output(); }
     virtual void output() = 0;
     virtual bool valid() const = 0;
+    virtual void event(const std::string &event) = 0;
 };
 
 /* namespace Stats */ }
