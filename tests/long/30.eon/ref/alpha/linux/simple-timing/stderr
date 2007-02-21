@@ -1,3 +1,4 @@
+0: system.remote_gdb.listener: listening for remote gdb on port 7000
 warn: Entering event queue @ 0.  Starting simulation...
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook
