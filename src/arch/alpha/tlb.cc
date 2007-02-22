@@ -46,8 +46,7 @@
 using namespace std;
 using namespace EV5;
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 ///////////////////////////////////////////////////////////////////////
 //
 //  Alpha TLB
@@ -116,10 +115,11 @@ TLB::checkCacheability(RequestPtr &req)
 
 
 #if ALPHA_TLASER
-    if (req->getPaddr() & PAddrUncachedBit39) {
+    if (req->getPaddr() & PAddrUncachedBit39)
 #else
-    if (req->getPaddr() & PAddrUncachedBit43) {
+    if (req->getPaddr() & PAddrUncachedBit43)
 #endif
+    {
         // IPR memory space not implemented
         if (PAddrIprSpace(req->getPaddr())) {
             return new UnimpFault("IPR memory space not implemented!");
@@ -313,10 +313,11 @@ ITB::translate(RequestPtr &req, ThreadContext *tc) const
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
 #if ALPHA_TLASER
         if ((MCSR_SP(tc->readMiscReg(IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->getVaddr()) == 2) {
+            VAddrSpaceEV5(req->getVaddr()) == 2)
 #else
-        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e)
 #endif
+        {
             // only valid in kernel mode
             if (ICM_CM(tc->readMiscReg(IPR_ICM)) !=
                 mode_kernel) {
@@ -487,10 +488,11 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write) const
         // Check for "superpage" mapping
 #if ALPHA_TLASER
         if ((MCSR_SP(tc->readMiscReg(IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->getVaddr()) == 2) {
+            VAddrSpaceEV5(req->getVaddr()) == 2)
 #else
-        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e)
 #endif
+        {
 
             // only valid in kernel mode
             if (DTB_CM_CM(tc->readMiscReg(IPR_DTB_CM)) !=
@@ -592,6 +594,8 @@ TLB::index(bool advance)
     return *pte;
 }
 
+/* end namespace AlphaISA */ }
+
 DEFINE_SIM_OBJECT_CLASS_NAME("AlphaTLB", TLB)
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(ITB)
@@ -633,4 +637,3 @@ CREATE_SIM_OBJECT(DTB)
 }
 
 REGISTER_SIM_OBJECT("AlphaDTB", DTB)
-}

@@ -43,8 +43,7 @@
 
 /* @todo remove some of the magic constants.  -- ali
  * */
-namespace SparcISA
-{
+namespace SparcISA {
 
 TLB::TLB(const std::string &name, int s)
     : SimObject(name), size(s), usedEntries(0), lastReplaced(0),
@@ -1329,6 +1328,9 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
     }
 }
 
+/* end namespace SparcISA */ }
+
+using namespace SparcISA;
 
 DEFINE_SIM_OBJECT_CLASS_NAME("SparcTLB", TLB)
 
@@ -1371,4 +1373,3 @@ CREATE_SIM_OBJECT(DTB)
 }
 
 REGISTER_SIM_OBJECT("SparcDTB", DTB)
-}
