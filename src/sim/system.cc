@@ -142,6 +142,7 @@ System::~System()
 }
 
 int rgdb_wait = -1;
+int rgdb_enable = true;
 
 void
 System::setMemoryMode(MemoryMode mode)
@@ -152,7 +153,9 @@ System::setMemoryMode(MemoryMode mode)
 
 bool System::breakpoint()
 {
-    return remoteGDB[0]->breakpoint();
+    if (remoteGDB.size())
+        return remoteGDB[0]->breakpoint();
+    return false;
 }
 
 int
@@ -174,21 +177,23 @@ System::registerThreadContext(ThreadContext *tc, int id)
     threadContexts[id] = tc;
     numcpus++;
 
-    RemoteGDB *rgdb = new RemoteGDB(this, tc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
-    gdbl->listen();
-    /**
-     * Uncommenting this line waits for a remote debugger to connect
-     * to the simulator before continuing.
-     */
-    if (rgdb_wait != -1 && rgdb_wait == id)
-        gdbl->accept();
+    if (rgdb_enable) {
+        RemoteGDB *rgdb = new RemoteGDB(this, tc);
+        GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
+        gdbl->listen();
+        /**
+         * Uncommenting this line waits for a remote debugger to
+         * connect to the simulator before continuing.
+         */
+        if (rgdb_wait != -1 && rgdb_wait == id)
+            gdbl->accept();
 
-    if (remoteGDB.size() <= id) {
-        remoteGDB.resize(id + 1);
+        if (remoteGDB.size() <= id) {
+            remoteGDB.resize(id + 1);
+        }
+
+        remoteGDB[id] = rgdb;
     }
-
-    remoteGDB[id] = rgdb;
 
     return id;
 }
@@ -210,7 +215,8 @@ System::replaceThreadContext(ThreadContext *tc, int id)
     }
 
     threadContexts[id] = tc;
-    remoteGDB[id]->replaceThreadContext(tc);
+    if (id < remoteGDB.size())
+        remoteGDB[id]->replaceThreadContext(tc);
 }
 
 #if !FULL_SYSTEM
