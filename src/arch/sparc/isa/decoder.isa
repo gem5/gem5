@@ -1009,6 +1009,7 @@ decode OP default Unknown::unknown()
                 0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
                 0x81: FailUnimpl::siam();
             }
+#if FULL_SYSTEM
             // M5 special opcodes use the reserved IMPDEP2A opcode space
             0x37: decode M5FUNC {
                 // we have 7 bits of space here to play with...
@@ -1019,6 +1020,9 @@ decode OP default Unknown::unknown()
                               }}, No_OpClass, IsNonSpeculative);
 
             }
+#else
+            0x37: Trap::impdep2({{fault = new IllegalInstruction;}});
+#endif
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if(target & 0x3)
