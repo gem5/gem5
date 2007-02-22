@@ -92,28 +92,30 @@ NSGigE::NSGigE(Params *p)
     : PciDev(p), ioEnable(false),
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
-      txXferLen(0), rxXferLen(0), clock(p->clock),
-      txState(txIdle), txEnable(false), CTDD(false),
+      txXferLen(0), rxXferLen(0), rxDmaFree(false), txDmaFree(false),
+      clock(p->clock),
+      txState(txIdle), txEnable(false), CTDD(false), txHalt(false),
       txFragPtr(0), txDescCnt(0), txDmaState(dmaIdle), rxState(rxIdle),
-      rxEnable(false), CRDD(false), rxPktBytes(0),
+      rxEnable(false), CRDD(false), rxPktBytes(0), rxHalt(false),
       rxFragPtr(0), rxDescCnt(0), rxDmaState(dmaIdle), extstsEnable(false),
-      eepromState(eepromStart), rxDmaReadEvent(this), rxDmaWriteEvent(this),
+      eepromState(eepromStart), eepromClk(false), eepromBitsToRx(0),
+      eepromOpcode(0), eepromAddress(0), eepromData(0),
+      dmaReadDelay(p->dma_read_delay), dmaWriteDelay(p->dma_write_delay),
+      dmaReadFactor(p->dma_read_factor), dmaWriteFactor(p->dma_write_factor),
+      rxDmaData(NULL), rxDmaAddr(0), rxDmaLen(0),
+      txDmaData(NULL), txDmaAddr(0), txDmaLen(0),
+      rxDmaReadEvent(this), rxDmaWriteEvent(this),
       txDmaReadEvent(this), txDmaWriteEvent(this),
       dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
       txDelay(p->tx_delay), rxDelay(p->rx_delay),
       rxKickTick(0), rxKickEvent(this), txKickTick(0), txKickEvent(this),
-      txEvent(this), rxFilterEnable(p->rx_filter), acceptBroadcast(false),
-      acceptMulticast(false), acceptUnicast(false),
+      txEvent(this), rxFilterEnable(p->rx_filter),
+      acceptBroadcast(false), acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false), multicastHashEnable(false),
-      intrTick(0), cpuPendingIntr(false),
+      intrDelay(p->intr_delay), intrTick(0), cpuPendingIntr(false),
       intrEvent(0), interface(0)
 {
 
-    intrDelay = p->intr_delay;
-    dmaReadDelay = p->dma_read_delay;
-    dmaWriteDelay = p->dma_write_delay;
-    dmaReadFactor = p->dma_read_factor;
-    dmaWriteFactor = p->dma_write_factor;
 
     regsReset();
     memcpy(&rom.perfectMatch, p->eaddr.bytes(), ETH_ADDR_LEN);
