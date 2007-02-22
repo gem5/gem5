@@ -26,38 +26,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Ali Saidi
  */
 
-class ThreadContext;
+#define arm_func 0x00
+#define quiesce_func 0x01
+#define quiescens_func 0x02
+#define quiescecycle_func 0x03
+#define quiescetime_func 0x04
+#define ivlb 0x10 // obsolete
+#define ivle 0x11 // obsolete
+#define exit_old_func 0x20 // deprecated!
+#define exit_func 0x21
+#define initparam_func 0x30
+#define loadsymbol_func 0x31
+#define resetstats_func 0x40
+#define dumpstats_func 0x41
+#define dumprststats_func 0x42
+#define ckpt_func 0x43
+#define readfile_func 0x50
+#define debugbreak_func 0x51
+#define switchcpu_func 0x52
+#define addsymbol_func 0x53
+#define panic_func     0x54
+#define anbegin_func     0x55
+#define anwait_func     0x56
 
-//We need the "Tick" and "Addr" data types from here
-#include "sim/host.hh"
-
-namespace PseudoInst
-{
-    /**
-     * @todo these externs are only here for a hack in fullCPU::takeOver...
-     */
-    extern bool doStatisticsInsts;
-    extern bool doCheckpointInsts;
-    extern bool doQuiesce;
-
-    void arm(ThreadContext *tc);
-    void quiesce(ThreadContext *tc);
-    void quiesceNs(ThreadContext *tc, uint64_t ns);
-    void quiesceCycles(ThreadContext *tc, uint64_t cycles);
-    uint64_t quiesceTime(ThreadContext *tc);
-    void m5exit(ThreadContext *tc, Tick delay);
-    void m5exit_old(ThreadContext *tc);
-    void loadsymbol(ThreadContext *xc);
-    void resetstats(ThreadContext *tc, Tick delay, Tick period);
-    void dumpstats(ThreadContext *tc, Tick delay, Tick period);
-    void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
-    void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
-    uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset);
-    void debugbreak(ThreadContext *tc);
-    void switchcpu(ThreadContext *tc);
-    void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
-    void anBegin(ThreadContext *tc, uint64_t cur);
-    void anWait(ThreadContext *tc, uint64_t cur, uint64_t wait);
-}

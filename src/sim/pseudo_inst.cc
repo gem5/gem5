@@ -55,7 +55,7 @@ using namespace std;
 using namespace Stats;
 using namespace TheISA;
 
-namespace AlphaPseudo
+namespace PseudoInst
 {
     void
     arm(ThreadContext *tc)

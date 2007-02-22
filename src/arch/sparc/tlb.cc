@@ -595,21 +595,36 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 
     // Be fast if we can!
     if (cacheValid &&  cacheState == tlbdata) {
-        if (cacheEntry[0] && cacheAsi[0] == asi && cacheEntry[0]->range.va < vaddr + size &&
-            cacheEntry[0]->range.va + cacheEntry[0]->range.size > vaddr &&
-            (!write || cacheEntry[0]->pte.writable())) {
-                req->setPaddr(cacheEntry[0]->pte.paddr() & ~(cacheEntry[0]->pte.size()-1) |
-                              vaddr & cacheEntry[0]->pte.size()-1 );
-                return NoFault;
-        }
-        if (cacheEntry[1] && cacheAsi[1] == asi && cacheEntry[1]->range.va < vaddr + size &&
-            cacheEntry[1]->range.va + cacheEntry[1]->range.size > vaddr &&
-            (!write || cacheEntry[1]->pte.writable())) {
-                req->setPaddr(cacheEntry[1]->pte.paddr() & ~(cacheEntry[1]->pte.size()-1) |
-                              vaddr & cacheEntry[1]->pte.size()-1 );
-                return NoFault;
-        }
-    }
+
+
+
+  if (cacheEntry[0]) {
+            TlbEntry *ce = cacheEntry[0];
+           Addr ce_va = ce->range.va;
+            if (cacheAsi[0] == asi &&
+                ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                (!write || ce->pte.writable())) {
+                    req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                        req->setFlags(req->getFlags() | UNCACHEABLE);
+                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                    return NoFault;
+            } // if matched
+        } // if cache entry valid
+        if (cacheEntry[1]) {
+            TlbEntry *ce = cacheEntry[1];
+            Addr ce_va = ce->range.va;
+            if (cacheAsi[1] == asi &&
+                ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                (!write || ce->pte.writable())) {
+                    req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                        req->setFlags(req->getFlags() | UNCACHEABLE);
+                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                    return NoFault;
+            } // if matched
+        } // if cache entry valid
+     }
 
     bool red = bits(tlbdata,1,1);
     bool priv = bits(tlbdata,2,2);
@@ -755,7 +770,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
 
-    if (e->pte.sideffect())
+    if (e->pte.sideffect() || (e->pte.paddr() >> 39) & 1)
         req->setFlags(req->getFlags() | UNCACHEABLE);
 
     // cache translation date for next translation

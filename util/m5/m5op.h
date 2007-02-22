@@ -32,7 +32,7 @@
 #ifndef __M5OP_H__
 #define __M5OP_H__
 
-#include <asm/types.h>
+#include <stdint.h>
 
 void arm(uint64_t address);
 void quiesce(void);
