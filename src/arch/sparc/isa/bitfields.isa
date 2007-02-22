@@ -54,6 +54,7 @@ def bitfield FCN	<29:25>;
 def bitfield I		<13>;
 def bitfield IMM_ASI	<12:5>;
 def bitfield IMM22	<21:0>;
+def bitfield M5FUNC     <15:7>;
 def bitfield MMASK	<3:0>;
 def bitfield OP		<31:30>;
 def bitfield OP2	<24:22>;

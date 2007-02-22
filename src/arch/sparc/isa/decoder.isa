@@ -1009,7 +1009,16 @@ decode OP default Unknown::unknown()
                 0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
                 0x81: FailUnimpl::siam();
             }
-            0x37: Trap::impdep2({{fault = new IllegalInstruction;}});
+            // M5 special opcodes use the reserved IMPDEP2A opcode space
+            0x37: decode M5FUNC {
+                // we have 7 bits of space here to play with...
+                0x21: m5exit({{PseudoInst::m5exit(xc->tcBase(), O0);
+                              }}, No_OpClass, IsNonSpeculative);
+                0x54: m5panic({{
+                              panic("M5 panic instruction called at pc=%#x.", xc->readPC());
+                              }}, No_OpClass, IsNonSpeculative);
+
+            }
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if(target & 0x3)
@@ -1077,7 +1086,8 @@ decode OP default Unknown::unknown()
                     }
                 }}, IsSerializeAfter, IsNonSpeculative);
             }
-            0x3B: Nop::flush({{/*Instruction memory flush*/}});
+            0x3B: Nop::flush({{/*Instruction memory flush*/}}, IsWriteBarrier,
+                          MemWriteOp);
             0x3C: save({{
                 if(Cansave == 0)
                 {

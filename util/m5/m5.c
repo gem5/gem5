@@ -70,24 +70,6 @@ main(int argc, char *argv[])
 
     command = argv[1];
 
-    if (COMPARE("ivlb")) {
-        if (argc != 3)
-            usage();
-
-        arg1 = strtoul(argv[2], NULL, 0);
-        m5_ivlb(arg1);
-        return 0;
-    }
-
-    if (COMPARE("ivle")) {
-        if (argc != 3)
-            usage();
-
-        arg1 = strtoul(argv[2], NULL, 0);
-        m5_ivle(arg1);
-        return 0;
-    }
-
     if (COMPARE("initparam")) {
         if (argc != 2)
             usage();
@@ -203,6 +185,7 @@ main(int argc, char *argv[])
     if (COMPARE("loadsymbol")) {
         m5_loadsymbol(arg1);
         return 0;
+    }
     if (COMPARE("readfile")) {
             char buf[256*1024];
             int offset = 0;

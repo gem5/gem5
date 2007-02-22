@@ -70,6 +70,10 @@ output exec {{
 #include <ieeefp.h>
 #endif
 
+#if FULL_SYSTEM
+#include "sim/pseudo_inst.hh"
+#endif
+
 #include <limits>
 
 #include <cmath>
