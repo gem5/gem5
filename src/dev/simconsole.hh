@@ -53,28 +53,45 @@ class SimConsole : public SimObject
     Uart *uart;
 
   protected:
-    class Event : public PollEvent
+    class ListenEvent : public PollEvent
     {
       protected:
         SimConsole *cons;
 
       public:
-        Event(SimConsole *c, int fd, int e);
+        ListenEvent(SimConsole *c, int fd, int e);
         void process(int revent);
     };
 
-    friend class Event;
-    Event *event;
+    friend class ListenEvent;
+    ListenEvent *listenEvent;
+
+    class DataEvent : public PollEvent
+    {
+      protected:
+        SimConsole *cons;
+
+      public:
+        DataEvent(SimConsole *c, int fd, int e);
+        void process(int revent);
+    };
+
+    friend class DataEvent;
+    DataEvent *dataEvent;
 
   protected:
     int number;
-    int in_fd;
-    int out_fd;
-    ConsoleListener *listener;
+    int data_fd;
 
   public:
-    SimConsole(const std::string &name, std::ostream *os, int num);
+    SimConsole(const std::string &name, std::ostream *os, int num, int port);
     ~SimConsole();
+
+  protected:
+    ListenSocket listener;
+
+    void listen(int port);
+    void accept();
 
   protected:
     CircleBuf txbuf;
@@ -88,17 +105,13 @@ class SimConsole : public SimObject
     ///////////////////////
     // Terminal Interface
 
-    void attach(int fd, ConsoleListener *l = NULL) { attach(fd, fd, l); }
-    void attach(int in, int out, ConsoleListener *l = NULL);
-    void detach();
-
     void data();
 
-    void close();
     void read(uint8_t &c) { read(&c, 1); }
     size_t read(uint8_t *buf, size_t len);
     void write(uint8_t c) { write(&c, 1); }
     size_t write(const uint8_t *buf, size_t len);
+    void detach();
 
   public:
     /////////////////
@@ -126,43 +139,6 @@ class SimConsole : public SimObject
 
     //Ask the console if data is available
     bool dataAvailable() { return !rxbuf.empty(); }
-
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-};
-
-class ConsoleListener : public SimObject
-{
-  protected:
-    class Event : public PollEvent
-    {
-      protected:
-        ConsoleListener *listener;
-
-      public:
-        Event(ConsoleListener *l, int fd, int e)
-            : PollEvent(fd, e), listener(l) {}
-        void process(int revent);
-    };
-
-    friend class Event;
-    Event *event;
-
-    typedef std::list<SimConsole *> list_t;
-    typedef list_t::iterator iter_t;
-    list_t ConsoleList;
-
-  protected:
-    ListenSocket listener;
-
-  public:
-    ConsoleListener(const std::string &name);
-    ~ConsoleListener();
-
-    void add(SimConsole *cons);
-
-    void accept();
-    void listen(int port);
 };
 
 #endif // __CONSOLE_HH__

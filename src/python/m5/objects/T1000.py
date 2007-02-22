@@ -3,7 +3,7 @@ from m5.proxy import *
 from Device import BasicPioDevice, IsaFake, BadAddr
 from Uart import Uart8250
 from Platform import Platform
-from SimConsole import SimConsole, ConsoleListener
+from SimConsole import SimConsole
 
 
 class MmDisk(BasicPioDevice):
@@ -69,11 +69,11 @@ class T1000(Platform):
     fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000)
             #warn_access="Accessing SSI -- Unimplemented!")
 
-    hconsole = SimConsole(listener = ConsoleListener())
+    hconsole = SimConsole()
     hvuart = Uart8250(pio_addr=0xfff0c2c000)
     htod = DumbTOD()
 
-    pconsole = SimConsole(listener = ConsoleListener())
+    pconsole = SimConsole()
     puart0 = Uart8250(pio_addr=0x1f10000000)
 
     # Attach I/O devices to specified bus object.  Can't do this

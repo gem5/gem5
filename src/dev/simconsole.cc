@@ -56,17 +56,31 @@
 
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////
-//
-//
 
-SimConsole::Event::Event(SimConsole *c, int fd, int e)
+/*
+ * Poll event for the listen socket
+ */
+SimConsole::ListenEvent::ListenEvent(SimConsole *c, int fd, int e)
     : PollEvent(fd, e), cons(c)
 {
 }
 
 void
-SimConsole::Event::process(int revent)
+SimConsole::ListenEvent::process(int revent)
+{
+    cons->accept();
+}
+
+/*
+ * Poll event for the data socket
+ */
+SimConsole::DataEvent::DataEvent(SimConsole *c, int fd, int e)
+    : PollEvent(fd, e), cons(c)
+{
+}
+
+void
+SimConsole::DataEvent::process(int revent)
 {
     if (revent & POLLIN)
         cons->data();
@@ -74,41 +88,76 @@ SimConsole::Event::process(int revent)
         cons->detach();
 }
 
-SimConsole::SimConsole(const string &name, ostream *os, int num)
-    : SimObject(name), event(NULL), number(num), in_fd(-1), out_fd(-1),
-      listener(NULL), txbuf(16384), rxbuf(16384), outfile(os)
+/*
+ * SimConsole code
+ */
+SimConsole::SimConsole(const string &name, ostream *os, int num, int port)
+    : SimObject(name), listenEvent(NULL), dataEvent(NULL), number(num),
+      data_fd(-1), txbuf(16384), rxbuf(16384), outfile(os)
 #if TRACING_ON == 1
       , linebuf(16384)
 #endif
 {
     if (outfile)
         outfile->setf(ios::unitbuf);
+
+    if (port)
+        listen(port);
 }
 
 SimConsole::~SimConsole()
 {
-    close();
+    if (data_fd != -1)
+        ::close(data_fd);
+
+    if (listenEvent)
+        delete listenEvent;
+
+    if (dataEvent)
+        delete dataEvent;
+}
+
+///////////////////////////////////////////////////////////////////////
+// socket creation and console attach
+//
+
+void
+SimConsole::listen(int port)
+{
+    while (!listener.listen(port, true)) {
+        DPRINTF(Console,
+                ": can't bind address console port %d inuse PID %d\n",
+                port, getpid());
+        port++;
+    }
+
+    int p1, p2;
+    p2 = name().rfind('.') - 1;
+    p1 = name().rfind('.', p2);
+    ccprintf(cerr, "Listening for %s connection on port %d\n",
+            name().substr(p1+1,p2-p1), port);
+
+    listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
+    pollQueue.schedule(listenEvent);
 }
 
 void
-SimConsole::close()
+SimConsole::accept()
 {
-    if (in_fd != -1)
-        ::close(in_fd);
+    if (!listener.islistening())
+        panic("%s: cannot accept a connection if not listening!", name());
 
-    if (out_fd != in_fd && out_fd != -1)
-        ::close(out_fd);
-}
+    int fd = listener.accept(true);
+    if (data_fd != -1) {
+        char message[] = "console already attached!\n";
+        ::write(fd, message, sizeof(message));
+        ::close(fd);
+        return;
+    }
 
-void
-SimConsole::attach(int in, int out, ConsoleListener *l)
-{
-    in_fd = in;
-    out_fd = out;
-    listener = l;
-
-    event = new Event(this, in, POLLIN);
-    pollQueue.schedule(event);
+    data_fd = fd;
+    dataEvent = new DataEvent(this, data_fd, POLLIN);
+    pollQueue.schedule(dataEvent);
 
     stringstream stream;
     ccprintf(stream, "==== m5 slave console: Console %d ====", number);
@@ -119,25 +168,22 @@ SimConsole::attach(int in, int out, ConsoleListener *l)
 
     write((const uint8_t *)stream.str().c_str(), stream.str().size());
 
-
     DPRINTFN("attach console %d\n", number);
 
-    txbuf.readall(out);
+    txbuf.readall(data_fd);
 }
 
 void
 SimConsole::detach()
 {
-    close();
-    in_fd = -1;
-    out_fd = -1;
-
-    pollQueue.remove(event);
-
-    if (listener) {
-        listener->add(this);
-        listener = NULL;
+    if (data_fd != -1) {
+        ::close(data_fd);
+        data_fd = -1;
     }
+
+    pollQueue.remove(dataEvent);
+    delete dataEvent;
+    dataEvent = NULL;
 
     DPRINTFN("detach console %d\n", number);
 }
@@ -159,12 +205,12 @@ SimConsole::data()
 size_t
 SimConsole::read(uint8_t *buf, size_t len)
 {
-    if (in_fd < 0)
+    if (data_fd < 0)
         panic("Console not properly attached.\n");
 
     size_t ret;
     do {
-      ret = ::read(in_fd, buf, len);
+      ret = ::read(data_fd, buf, len);
     } while (ret == -1 && errno == EINTR);
 
 
@@ -183,12 +229,12 @@ SimConsole::read(uint8_t *buf, size_t len)
 size_t
 SimConsole::write(const uint8_t *buf, size_t len)
 {
-    if (out_fd < 0)
+    if (data_fd < 0)
         panic("Console not properly attached.\n");
 
     size_t ret;
     for (;;) {
-      ret = ::write(out_fd, buf, len);
+      ret = ::write(data_fd, buf, len);
 
       if (ret >= 0)
         break;
@@ -268,7 +314,7 @@ SimConsole::out(char c)
 
     txbuf.write(c);
 
-    if (out_fd >= 0)
+    if (data_fd >= 0)
         write(c);
 
     if (outfile)
@@ -279,23 +325,11 @@ SimConsole::out(char c)
 
 }
 
-
-void
-SimConsole::serialize(ostream &os)
-{
-}
-
-void
-SimConsole::unserialize(Checkpoint *cp, const std::string &section)
-{
-}
-
-
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
 
-    SimObjectParam<ConsoleListener *> listener;
     SimObjectParam<IntrControl *> intr_control;
     Param<string> output;
+    Param<int> port;
     Param<bool> append_name;
     Param<int> number;
 
@@ -303,9 +337,9 @@ END_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(SimConsole)
 
-    INIT_PARAM(listener, "console listener"),
     INIT_PARAM(intr_control, "interrupt controller"),
     INIT_PARAM(output, "file to dump output to"),
+    INIT_PARAM(port, ""),
     INIT_PARAM_DFLT(append_name, "append name() to filename", true),
     INIT_PARAM_DFLT(number, "console number", 0)
 
@@ -322,100 +356,7 @@ CREATE_SIM_OBJECT(SimConsole)
         stream = simout.find(filename);
     }
 
-    SimConsole *console = new SimConsole(getInstanceName(), stream, number);
-    ((ConsoleListener *)listener)->add(console);
-
-    return console;
+    return new SimConsole(getInstanceName(), stream, number, port);
 }
 
 REGISTER_SIM_OBJECT("SimConsole", SimConsole)
-
-////////////////////////////////////////////////////////////////////////
-//
-//
-
-ConsoleListener::ConsoleListener(const string &name)
-    : SimObject(name), event(NULL)
-{}
-
-ConsoleListener::~ConsoleListener()
-{
-    if (event)
-        delete event;
-}
-
-void
-ConsoleListener::Event::process(int revent)
-{
-    listener->accept();
-}
-
-///////////////////////////////////////////////////////////////////////
-// socket creation and console attach
-//
-
-void
-ConsoleListener::listen(int port)
-{
-    while (!listener.listen(port, true)) {
-        DPRINTF(Console,
-                ": can't bind address console port %d inuse PID %d\n",
-                port, getpid());
-        port++;
-    }
-
-
-    int p1, p2;
-    p2 = name().rfind('.') - 1;
-    p1 = name().rfind('.', p2);
-    ccprintf(cerr, "Listening for %s connection on port %d\n",
-            name().substr(p1+1,p2-p1), port);
-
-    event = new Event(this, listener.getfd(), POLLIN);
-    pollQueue.schedule(event);
-}
-
-void
-ConsoleListener::add(SimConsole *cons)
-{ ConsoleList.push_back(cons);}
-
-void
-ConsoleListener::accept()
-{
-    if (!listener.islistening())
-        panic("%s: cannot accept a connection if not listening!", name());
-
-    int sfd = listener.accept(true);
-    if (sfd != -1) {
-        iter_t i = ConsoleList.begin();
-        iter_t end = ConsoleList.end();
-        if (i == end) {
-            close(sfd);
-        } else {
-            (*i)->attach(sfd, this);
-            i = ConsoleList.erase(i);
-        }
-    }
-}
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(ConsoleListener)
-
-    Param<int> port;
-
-END_DECLARE_SIM_OBJECT_PARAMS(ConsoleListener)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(ConsoleListener)
-
-    INIT_PARAM_DFLT(port, "listen port", 3456)
-
-END_INIT_SIM_OBJECT_PARAMS(ConsoleListener)
-
-CREATE_SIM_OBJECT(ConsoleListener)
-{
-    ConsoleListener *listener = new ConsoleListener(getInstanceName());
-    listener->listen(port);
-
-    return listener;
-}
-
-REGISTER_SIM_OBJECT("ConsoleListener", ConsoleListener)
