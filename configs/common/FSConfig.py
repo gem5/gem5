@@ -78,7 +78,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.sim_console = SimConsole(listener=ConsoleListener(port=3456))
+    self.sim_console = SimConsole()
     self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')
     self.console = binary('console')

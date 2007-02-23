@@ -28,15 +28,15 @@
 #          Ali Saidi
 
 ### If we are not compiling on an alpha, we must use cross tools ###    
-ifneq ($(shell uname -m), alpha)
-CROSS_COMPILE?=alpha-unknown-linux-gnu-
+ifneq ($(shell uname -m), sun4v)
+CROSS_COMPILE?=sparc64-sun-solaris2.10-
 endif
 CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
 CFLAGS=-O2 
-OBJS=m5.o m5op.o
+OBJS=m5.o m5op_sparc.o
 
 all: m5
 

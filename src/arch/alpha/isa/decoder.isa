@@ -790,19 +790,19 @@ decode OPCODE default Unknown::unknown() {
         // M5 special opcodes use the reserved 0x01 opcode space
         0x01: decode M5FUNC {
             0x00: arm({{
-                AlphaPseudo::arm(xc->tcBase());
+                PseudoInst::arm(xc->tcBase());
             }}, IsNonSpeculative);
             0x01: quiesce({{
-                AlphaPseudo::quiesce(xc->tcBase());
+                PseudoInst::quiesce(xc->tcBase());
             }}, IsNonSpeculative, IsQuiesce);
             0x02: quiesceNs({{
-                AlphaPseudo::quiesceNs(xc->tcBase(), R16);
+                PseudoInst::quiesceNs(xc->tcBase(), R16);
             }}, IsNonSpeculative, IsQuiesce);
             0x03: quiesceCycles({{
-                AlphaPseudo::quiesceCycles(xc->tcBase(), R16);
+                PseudoInst::quiesceCycles(xc->tcBase(), R16);
             }}, IsNonSpeculative, IsQuiesce, IsUnverifiable);
             0x04: quiesceTime({{
-                R0 = AlphaPseudo::quiesceTime(xc->tcBase());
+                R0 = PseudoInst::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
             0x10: ivlb({{
                 warn_once("Obsolete M5 instruction ivlb encountered.\n");
@@ -811,47 +811,47 @@ decode OPCODE default Unknown::unknown() {
                 warn_once("Obsolete M5 instruction ivlb encountered.\n");
             }});
             0x20: m5exit_old({{
-                AlphaPseudo::m5exit_old(xc->tcBase());
+                PseudoInst::m5exit_old(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
-                AlphaPseudo::m5exit(xc->tcBase(), R16);
+                PseudoInst::m5exit(xc->tcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
             0x31: loadsymbol({{
-                AlphaPseudo::loadsymbol(xc->tcBase());
+                PseudoInst::loadsymbol(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{ Ra = xc->tcBase()->getCpuPtr()->system->init_param; }});
             0x40: resetstats({{
-                AlphaPseudo::resetstats(xc->tcBase(), R16, R17);
+                PseudoInst::resetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x41: dumpstats({{
-                AlphaPseudo::dumpstats(xc->tcBase(), R16, R17);
+                PseudoInst::dumpstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x42: dumpresetstats({{
-                AlphaPseudo::dumpresetstats(xc->tcBase(), R16, R17);
+                PseudoInst::dumpresetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x43: m5checkpoint({{
-                AlphaPseudo::m5checkpoint(xc->tcBase(), R16, R17);
+                PseudoInst::m5checkpoint(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x50: m5readfile({{
-                R0 = AlphaPseudo::readfile(xc->tcBase(), R16, R17, R18);
+                R0 = PseudoInst::readfile(xc->tcBase(), R16, R17, R18);
             }}, IsNonSpeculative);
             0x51: m5break({{
-                AlphaPseudo::debugbreak(xc->tcBase());
+                PseudoInst::debugbreak(xc->tcBase());
             }}, IsNonSpeculative);
             0x52: m5switchcpu({{
-                AlphaPseudo::switchcpu(xc->tcBase());
+                PseudoInst::switchcpu(xc->tcBase());
             }}, IsNonSpeculative);
             0x53: m5addsymbol({{
-                AlphaPseudo::addsymbol(xc->tcBase(), R16, R17);
+                PseudoInst::addsymbol(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());
             }}, IsNonSpeculative);
             0x55: m5anBegin({{
-                AlphaPseudo::anBegin(xc->tcBase(), R16);
+                PseudoInst::anBegin(xc->tcBase(), R16);
             }}, IsNonSpeculative);
             0x56: m5anWait({{
-                AlphaPseudo::anWait(xc->tcBase(), R16, R17);
+                PseudoInst::anWait(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
         }
     }

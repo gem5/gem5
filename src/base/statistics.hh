@@ -70,7 +70,7 @@
 
 class Callback;
 
-/** The current simulated cycle. */
+/** The current simulated tick. */
 extern Tick curTick;
 
 /* A namespace for all of the Statistics */
@@ -598,9 +598,9 @@ struct StatStor
 };
 
 /**
- * Templatized storage and interface to a per-cycle average stat. This keeps
- * a current count and updates a total (count * cycles) when this count
- * changes. This allows the quick calculation of a per cycle count of the item
+ * Templatized storage and interface to a per-tick average stat. This keeps
+ * a current count and updates a total (count * ticks) when this count
+ * changes. This allows the quick calculation of a per tick count of the item
  * being watched. This is good for keeping track of residencies in structures
  * among other things.
  */
@@ -613,9 +613,9 @@ struct AvgStor
   private:
     /** The current count. */
     Counter current;
-    /** The total count for all cycles. */
+    /** The total count for all tick. */
     mutable Result total;
-    /** The cycle that current last changed. */
+    /** The tick that current last changed. */
     mutable Tick last;
 
   public:
@@ -1563,7 +1563,7 @@ struct FancyStor
 };
 
 /**
- * Templatized storage for distribution that calculates per cycle mean and
+ * Templatized storage for distribution that calculates per tick mean and
  * variance.
  */
 struct AvgFancy
@@ -2280,7 +2280,7 @@ class Value : public Wrap<Value, ValueBase, ScalarStatData>
 };
 
 /**
- * A stat that calculates the per cycle average of a value.
+ * A stat that calculates the per tick average of a value.
  * @sa Stat, ScalarBase, AvgStor
  */
 template<int N = 0>
@@ -2417,7 +2417,7 @@ class StandardDeviation
 };
 
 /**
- * Calculates the per cycle mean and variance of the samples.
+ * Calculates the per tick mean and variance of the samples.
  * @sa Stat, DistBase, AvgFancy
  */
 template<int N = 0>
