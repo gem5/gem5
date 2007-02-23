@@ -1012,13 +1012,15 @@ decode OP default Unknown::unknown()
 #if FULL_SYSTEM
             // M5 special opcodes use the reserved IMPDEP2A opcode space
             0x37: decode M5FUNC {
+#if FULL_SYSTEM
                 // we have 7 bits of space here to play with...
                 0x21: m5exit({{PseudoInst::m5exit(xc->tcBase(), O0);
                               }}, No_OpClass, IsNonSpeculative);
                 0x54: m5panic({{
                               panic("M5 panic instruction called at pc=%#x.", xc->readPC());
                               }}, No_OpClass, IsNonSpeculative);
-
+#endif
+                default: Trap::impdep2({{fault = new IllegalInstruction;}});
             }
 #else
             0x37: Trap::impdep2({{fault = new IllegalInstruction;}});
