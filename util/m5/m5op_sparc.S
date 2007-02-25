@@ -49,8 +49,10 @@ func:
 #define END(func)         \
         .size    func, (.-func)
 
+#define DEBUGBREAK INST(debugbreak_func, 0, 0, 0)
 #define M5EXIT INST(exit_func, 0, 0, 0)
 #define PANIC INST(panic_func, 0, 0, 0)
+#define READFILE INST(readfile_func, 0, 0, 0)
 
 LEAF(m5_exit)
     retl
@@ -62,6 +64,15 @@ LEAF(m5_panic)
     PANIC
 END(m5_panic)
 
+LEAF(m5_readfile)
+    retl
+    READFILE
+END(m5_readfile)
+
+LEAF(m5_debugbreak)
+    retl
+    DEBUGBREAK
+END(m5_debugbreak)
 
 /* !!!!!! All code below here just panics !!!!!! */
 LEAF(arm)
@@ -118,16 +129,6 @@ LEAF(m5_checkpoint)
     retl
     PANIC
 END(m5_checkpoint)
-
-LEAF(m5_readfile)
-    retl
-    PANIC
-END(m5_readfile)
-
-LEAF(m5_debugbreak)
-    retl
-    PANIC
-END(m5_debugbreak)
 
 LEAF(m5_switchcpu)
     retl

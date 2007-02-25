@@ -35,7 +35,7 @@ CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
-CFLAGS=-O2 
+CFLAGS=-O2 -m64
 OBJS=m5.o m5op_sparc.o
 
 all: m5
@@ -47,7 +47,7 @@ all: m5
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
 m5: $(OBJS)
-	$(CC) -o $@ $(OBJS)
+	$(CC) -m64 -o $@ $(OBJS)
 
 clean:
 	rm -f *.o m5

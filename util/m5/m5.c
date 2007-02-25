@@ -186,21 +186,5 @@ main(int argc, char *argv[])
         m5_loadsymbol(arg1);
         return 0;
     }
-    if (COMPARE("readfile")) {
-            char buf[256*1024];
-            int offset = 0;
-            int len;
-
-            if (argc != 2)
-                    usage();
-
-            while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
-                    write(STDOUT_FILENO, buf, len);
-                    offset += len;
-            }
-
-            return 0;
-    }
-
     usage();
 }

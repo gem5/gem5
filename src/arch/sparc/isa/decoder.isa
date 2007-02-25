@@ -1014,6 +1014,11 @@ decode OP default Unknown::unknown()
                 // we have 7 bits of space here to play with...
                 0x21: m5exit({{PseudoInst::m5exit(xc->tcBase(), O0);
                               }}, No_OpClass, IsNonSpeculative);
+                0x50: m5readfile({{
+                                 O0 = PseudoInst::readfile(xc->tcBase(), O0, O1, O2);
+                                 }}, IsNonSpeculative);
+                0x51: m5break({{PseudoInst::debugbreak(xc->tcBase());
+                              }}, IsNonSpeculative);
                 0x54: m5panic({{
                               panic("M5 panic instruction called at pc=%#x.", xc->readPC());
                               }}, No_OpClass, IsNonSpeculative);

@@ -100,12 +100,12 @@ def operands {{
     'R1':  		('IntReg', 'udw', '1', None, 7),
     'R15': 		('IntReg', 'udw', '15', 'IsInteger', 8),
     'R16': 		('IntReg', 'udw', '16', None, 9),
-    'O0':               ('IntReg', 'udw', '24', 'IsInteger', 10),
-    'O1':               ('IntReg', 'udw', '25', 'IsInteger', 11),
-    'O2':               ('IntReg', 'udw', '26', 'IsInteger', 12),
-    'O3':               ('IntReg', 'udw', '27', 'IsInteger', 13),
-    'O4':               ('IntReg', 'udw', '28', 'IsInteger', 14),
-    'O5':               ('IntReg', 'udw', '29', 'IsInteger', 15),
+    'O0':               ('IntReg', 'udw', '8', 'IsInteger', 10),
+    'O1':               ('IntReg', 'udw', '9', 'IsInteger', 11),
+    'O2':               ('IntReg', 'udw', '10', 'IsInteger', 12),
+    'O3':               ('IntReg', 'udw', '11', 'IsInteger', 13),
+    'O4':               ('IntReg', 'udw', '12', 'IsInteger', 14),
+    'O5':               ('IntReg', 'udw', '13', 'IsInteger', 15),
 
     # Control registers
 #   'Y':		('ControlReg', 'udw', 'MISCREG_Y', None, 40),
