@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -104,6 +104,8 @@ class Benchmark(object):
         # dirs for input & output files for this input set
         inputs_dir = joinpath(data_dir, input_set, 'input')
         outputs_dir = joinpath(data_dir, input_set, 'output')
+        # keep around which input set was specified
+        self.input_set = input_set
 
         if not isdir(inputs_dir):
             raise AttributeError, '%s not found' % inputs_dir

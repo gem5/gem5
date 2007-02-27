@@ -27,7 +27,7 @@ responder_set=false
 [system.cpu.workload]
 type=LiveProcess
 cmd=twolf smred
-executable=/dist/m5/cpu2000/binaries/alpha/tru64/twolf
+executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/twolf
 input=cin
 output=cout
 env=
@@ -366,24 +366,4 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
-
-[stats]
-descriptions=true
-project_name=test
-simulation_name=test
-simulation_sample=0
-text_file=m5stats.txt
-text_compat=true
-mysql_db=
-mysql_user=
-mysql_password=
-mysql_host=
-events_start=-1
-dump_reset=false
-dump_cycle=0
-dump_period=0
-ignore_events=
-
-[statsreset]
-reset_cycle=0
 

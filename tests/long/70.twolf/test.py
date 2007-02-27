@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,14 @@
 
 m5.AddToPath('../configs/common')
 from cpu2000 import twolf
+import os
 
 workload = twolf('alpha', 'tru64', 'smred')
 root.system.cpu.workload = workload.makeLiveProcess()
+cwd = root.system.cpu.workload.cwd
+
+#Remove two files who's presence or absence affects execution
+sav_file = os.path.join(cwd, workload.input_set + '.sav')
+sv2_file = os.path.join(cwd, workload.input_set + '.sv2')
+os.unlink(sav_file)
+os.unlink(sv2_file)
