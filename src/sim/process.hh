@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "sim/host.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;
@@ -59,7 +60,7 @@ namespace TheISA
 
 void
 copyStringArray(std::vector<std::string> &strings, Addr array_ptr,
-        Addr data_ptr, TranslatingPort* memPort);
+        Addr data_ptr, TranslatingPort* memPort, int ptr_size = sizeof(Addr));
 
 class Process : public SimObject
 {

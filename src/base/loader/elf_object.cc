@@ -78,9 +78,14 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         //just assume if it wasn't something else and it's 64 bit, that's
         //what it must be.
         if (ehdr.e_machine == EM_SPARC64 ||
-                ehdr.e_machine == EM_SPARC ||
+                (ehdr.e_machine == EM_SPARC &&
+                 ehdr.e_ident[EI_CLASS] == ELFCLASS64)||
                 ehdr.e_machine == EM_SPARCV9) {
-            arch = ObjectFile::SPARC;
+            arch = ObjectFile::SPARC64;
+        } else if (ehdr.e_machine == EM_SPARC32PLUS ||
+                        (ehdr.e_machine == EM_SPARC &&
+                         ehdr.e_ident[EI_CLASS] == ELFCLASS32)) {
+            arch = ObjectFile::SPARC32;
         } else if (ehdr.e_machine == EM_MIPS
                 && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
             arch = ObjectFile::Mips;
