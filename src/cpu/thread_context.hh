@@ -254,6 +254,8 @@ class ThreadContext
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
 
+    virtual void syscall(int64_t callnum) = 0;
+
     // This function exits the thread context in the CPU and returns
     // 1 if the CPU has no more active threads (meaning it's OK to exit);
     // Used in syscall-emulation mode when a  thread calls the exit syscall.
@@ -440,6 +442,9 @@ class ProxyThreadContext : public ThreadContext
 
     void setSyscallReturn(SyscallReturn return_value)
     { actualTC->setSyscallReturn(return_value); }
+
+    void syscall(int64_t callnum)
+    { actualTC->syscall(callnum); }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif

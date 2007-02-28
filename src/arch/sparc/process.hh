@@ -39,26 +39,12 @@
 class ObjectFile;
 class System;
 
-typedef struct
-{
-    int64_t a_type;
-    union {
-        int64_t a_val;
-        Addr    a_ptr;
-        Addr    a_fcn;
-    };
-} m5_auxv_t;
-
 class SparcLiveProcess : public LiveProcess
 {
   protected:
 
-    static const Addr StackBias = 2047;
-
     //The locations of the fill and spill handlers
     Addr fillStart, spillStart;
-
-    std::vector<m5_auxv_t> auxv;
 
     SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
@@ -69,17 +55,119 @@ class SparcLiveProcess : public LiveProcess
                 uint64_t _gid, uint64_t _egid,
                 uint64_t _pid, uint64_t _ppid);
 
-    void startup();
-
   public:
 
-    void argsInit(int intSize, int pageSize);
+    //Handles traps which request services from the operating system
+    virtual void handleTrap(int trapNum, ThreadContext *tc);
 
     Addr readFillStart()
     { return fillStart; }
 
     Addr readSpillStart()
     { return spillStart; }
+
+};
+
+struct M5_32_auxv_t
+{
+    int32_t a_type;
+    union {
+        int32_t a_val;
+        int32_t a_ptr;
+        int32_t a_fcn;
+    };
+
+    M5_32_auxv_t()
+    {}
+
+    M5_32_auxv_t(int32_t type, int32_t val);
+};
+
+class Sparc32LiveProcess : public SparcLiveProcess
+{
+  protected:
+
+    std::vector<M5_32_auxv_t> auxv;
+
+    Sparc32LiveProcess(const std::string &nm, ObjectFile *objFile,
+                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
+                std::vector<std::string> &argv,
+                std::vector<std::string> &envp,
+                const std::string &cwd,
+                uint64_t _uid, uint64_t _euid,
+                uint64_t _gid, uint64_t _egid,
+                uint64_t _pid, uint64_t _ppid) :
+            SparcLiveProcess(nm, objFile, _system,
+                         stdin_fd, stdout_fd, stderr_fd,
+                         argv, envp, cwd,
+                         _uid, _euid, _gid, _egid, _pid, _ppid)
+    {
+        // Set up stack. On SPARC Linux, stack goes from the top of memory
+        // downward, less the hole for the kernel address space.
+        stack_base = (Addr)0xf0000000ULL;
+
+        // Set up region for mmaps.
+        mmap_start = mmap_end = 0x70000000;
+    }
+
+    void startup();
+
+  public:
+
+    void argsInit(int intSize, int pageSize);
+
+};
+
+struct M5_64_auxv_t
+{
+    int64_t a_type;
+    union {
+        int64_t a_val;
+        int64_t a_ptr;
+        int64_t a_fcn;
+    };
+
+    M5_64_auxv_t()
+    {}
+
+    M5_64_auxv_t(int64_t type, int64_t val);
+};
+
+class Sparc64LiveProcess : public SparcLiveProcess
+{
+  protected:
+
+    static const Addr StackBias = 2047;
+
+    std::vector<M5_64_auxv_t> auxv;
+
+    Sparc64LiveProcess(const std::string &nm, ObjectFile *objFile,
+                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
+                std::vector<std::string> &argv,
+                std::vector<std::string> &envp,
+                const std::string &cwd,
+                uint64_t _uid, uint64_t _euid,
+                uint64_t _gid, uint64_t _egid,
+                uint64_t _pid, uint64_t _ppid) :
+            SparcLiveProcess(nm, objFile, _system,
+                         stdin_fd, stdout_fd, stderr_fd,
+                         argv, envp, cwd,
+                         _uid, _euid, _gid, _egid, _pid, _ppid)
+    {
+        // Set up stack. On SPARC Linux, stack goes from the top of memory
+        // downward, less the hole for the kernel address space.
+        stack_base = (Addr)0x80000000000ULL;
+
+        // Set up region for mmaps.  Tru64 seems to start just above 0 and
+        // grow up from there.
+        mmap_start = mmap_end = 0xfffff80000000000ULL;
+    }
+
+    void startup();
+
+  public:
+
+    void argsInit(int intSize, int pageSize);
 
 };
 

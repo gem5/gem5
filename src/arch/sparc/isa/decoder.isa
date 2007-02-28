@@ -1064,27 +1064,17 @@ decode OP default Unknown::unknown()
                 0x0: Trap::tcci({{
                     if(passesCondition(Ccr<3:0>, COND2))
                     {
-#if FULL_SYSTEM
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
-#else
-                        DPRINTF(Sparc, "The syscall number is %d\n", R1);
-                        xc->syscall(R1);
-#endif
                     }
                 }}, IsSerializeAfter, IsNonSpeculative);
                 0x2: Trap::tccx({{
                     if(passesCondition(Ccr<7:4>, COND2))
                     {
-#if FULL_SYSTEM
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
-#else
-                        DPRINTF(Sparc, "The syscall number is %d\n", R1);
-                        xc->syscall(R1);
-#endif
                     }
                 }}, IsSerializeAfter, IsNonSpeculative);
             }

@@ -54,7 +54,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "2.4.20");
+    strcpy(name->release, "2.6.12");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "sparc");
 
@@ -141,7 +141,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
     /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
     /* 43 */ SyscallDesc("times", unimplementedFunc),
-    /* 44 */ SyscallDesc("getuid32", unimplementedFunc),
+    /* 44 */ SyscallDesc("getuid32", getuidFunc),
     /* 45 */ SyscallDesc("umount2", unimplementedFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidFunc),
@@ -150,7 +150,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 50 */ SyscallDesc("getegid", getegidFunc),
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("memory_ordering", unimplementedFunc),
-    /* 53 */ SyscallDesc("getgid32", unimplementedFunc),
+    /* 53 */ SyscallDesc("getgid32", getgidFunc),
     /* 54 */ SyscallDesc("ioctl", unimplementedFunc),
     /* 55 */ SyscallDesc("reboot", unimplementedFunc),
     /* 56 */ SyscallDesc("mmap2", unimplementedFunc),
@@ -160,14 +160,14 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 60 */ SyscallDesc("umask", unimplementedFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
     /* 62 */ SyscallDesc("fstat", fstatFunc<SparcLinux>),
-    /* 63 */ SyscallDesc("fstat64", unimplementedFunc),
+    /* 63 */ SyscallDesc("fstat64", fstatFunc<SparcLinux>),
     /* 64 */ SyscallDesc("getpagesize", unimplementedFunc),
     /* 65 */ SyscallDesc("msync", unimplementedFunc),
     /* 66 */ SyscallDesc("vfork", unimplementedFunc),
     /* 67 */ SyscallDesc("pread64", unimplementedFunc),
     /* 68 */ SyscallDesc("pwrite64", unimplementedFunc),
-    /* 69 */ SyscallDesc("geteuid32", unimplementedFunc),
-    /* 70 */ SyscallDesc("getdgid32", unimplementedFunc),
+    /* 69 */ SyscallDesc("geteuid32", geteuidFunc),
+    /* 70 */ SyscallDesc("getegid32", getegidFunc),
     /* 71 */ SyscallDesc("mmap", mmapFunc<SparcLinux>),
     /* 72 */ SyscallDesc("setreuid32", unimplementedFunc),
     /* 73 */ SyscallDesc("munmap", munmapFunc),
@@ -184,7 +184,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 84 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 85 */ SyscallDesc("swapon", unimplementedFunc),
     /* 86 */ SyscallDesc("getitimer", unimplementedFunc),
-    /* 87 */ SyscallDesc("setuid32", unimplementedFunc),
+    /* 87 */ SyscallDesc("setuid32", setuidFunc),
     /* 88 */ SyscallDesc("sethostname", unimplementedFunc),
     /* 89 */ SyscallDesc("setgid32", unimplementedFunc),
     /* 90 */ SyscallDesc("dup2", unimplementedFunc),
@@ -383,34 +383,79 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 283 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
-SparcLinuxProcess::SparcLinuxProcess(const std::string &name,
-                                     ObjectFile *objFile,
-                                     System * system,
-                                     int stdin_fd,
-                                     int stdout_fd,
-                                     int stderr_fd,
-                                     std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp,
-                                     const std::string &cwd,
-                                     uint64_t _uid, uint64_t _euid,
-                                     uint64_t _gid, uint64_t _egid,
-                                     uint64_t _pid, uint64_t _ppid)
-    : SparcLiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
-            _uid, _euid, _gid, _egid, _pid, _ppid),
-     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
-{
-    // The sparc syscall table must be <= 284 entries because that is all there
-    // is space for.
-    assert(Num_Syscall_Descs <= 284);
-}
-
-
-
 SyscallDesc*
 SparcLinuxProcess::getDesc(int callnum)
 {
     if (callnum < 0 || callnum > Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
+}
+
+
+
+SparcLinuxProcess::SparcLinuxProcess() :
+    Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
+{
+    // The sparc syscall table must be <= 284 entries because that is all there
+    // is space for.
+    assert(Num_Syscall_Descs <= 284);
+}
+
+Sparc32LinuxProcess::Sparc32LinuxProcess(const std::string &name,
+                                         ObjectFile *objFile,
+                                         System * system,
+                                         int stdin_fd,
+                                         int stdout_fd,
+                                         int stderr_fd,
+                                         std::vector<std::string> &argv,
+                                         std::vector<std::string> &envp,
+                                         const std::string &cwd,
+                                         uint64_t _uid, uint64_t _euid,
+                                         uint64_t _gid, uint64_t _egid,
+                                         uint64_t _pid, uint64_t _ppid)
+    : Sparc32LiveProcess(name, objFile, system,
+            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
+            _uid, _euid, _gid, _egid, _pid, _ppid)
+{}
+
+void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
+{
+    switch(trapNum)
+    {
+      case 0x10: //Linux 32 bit syscall trap
+        tc->syscall(tc->readIntReg(1));
+        break;
+      default:
+        SparcLiveProcess::handleTrap(trapNum, tc);
+    }
+}
+
+Sparc64LinuxProcess::Sparc64LinuxProcess(const std::string &name,
+                                         ObjectFile *objFile,
+                                         System * system,
+                                         int stdin_fd,
+                                         int stdout_fd,
+                                         int stderr_fd,
+                                         std::vector<std::string> &argv,
+                                         std::vector<std::string> &envp,
+                                         const std::string &cwd,
+                                         uint64_t _uid, uint64_t _euid,
+                                         uint64_t _gid, uint64_t _egid,
+                                         uint64_t _pid, uint64_t _ppid)
+    : Sparc64LiveProcess(name, objFile, system,
+            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
+            _uid, _euid, _gid, _egid, _pid, _ppid)
+{}
+
+void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
+{
+    switch(trapNum)
+    {
+      case 0x10: //Linux 32 bit syscall trap
+      case 0x6d: //Linux 64 bit syscall trap
+        tc->syscall(tc->readIntReg(1));
+        break;
+      default:
+        SparcLiveProcess::handleTrap(trapNum, tc);
+    }
 }

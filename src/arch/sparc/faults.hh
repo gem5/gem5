@@ -246,9 +246,12 @@ class FillNOther : public EnumeratedFault<FillNOther>
 
 class TrapInstruction : public EnumeratedFault<TrapInstruction>
 {
-
   public:
     TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n) {;}
+    //In SE, trap instructions are requesting services from the OS.
+#if !FULL_SYSTEM
+    void invoke(ThreadContext * tc);
+#endif
 };
 
 #if !FULL_SYSTEM
