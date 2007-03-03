@@ -58,10 +58,61 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
-#error X86 is not yet supported!
+namespace LittleEndianGuest {}
 
 namespace X86ISA
 {
+    //This makes sure the little endian version of certain functions
+    //are used.
+    using namespace LittleEndianGuest;
+
+    // X86 does not have a delay slot
+#define ISA_HAS_DELAY_SLOT 0
+
+    // X86 NOP (XCHG rAX, rAX)
+    //XXX This needs to be set to an intermediate instruction struct
+    //which encodes this instruction
+
+    // These enumerate all the registers for dependence tracking.
+    enum DependenceTags {
+        //The number of microcode registers needs to be added to this
+        FP_Base_DepTag = 16,
+        Ctrl_Base_DepTag =
+            FP_Base_DepTag +
+            //mmx/x87 registers
+            8 +
+            //xmm registers
+            16
+    };
+
+    // semantically meaningful register indices
+    //There is no such register in X86
+    const int ZeroReg = 0;
+    const int StackPointerReg = 4; //RSP
+    //X86 doesn't seem to have a link register
+    const int ReturnAddressReg = 0;
+    const int ReturnValueReg = 0; //RAX
+    const int FramePointerReg = 5; //RBP
+    const int ArgumentReg0 = 7; //RDI
+    const int ArgumentReg1 = 6; //RSI
+    const int ArgumentReg2 = 2; //RDX
+    const int ArgumentReg3 = 1; //RCX
+    const int ArgumentReg4 = 8; //R8W
+    const int ArgumentReg5 = 9; //R9W
+
+    // Some OS syscalls use a second register (rdx) to return a second
+    // value
+    const int SyscallPseudoReturnReg = 2; //RDX
+
+    //XXX These numbers are bogus
+    const int MaxInstSrcRegs = 10;
+    const int MaxInstDestRegs = 10;
+
+    //4k. This value is not constant on x86.
+    const int LogVmPageSize = 12;
+    const int VMPageSize = (1 << LogVmPageSize);
+
+    const int BranchPredAddrShiftAmt = 0;
 };
 
 #endif // __ARCH_X86_ISATRAITS_HH__
