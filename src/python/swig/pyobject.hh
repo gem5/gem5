@@ -28,56 +28,67 @@
  * Authors: Nathan Binkert
  */
 
-%module event
+#include <Python.h>
 
-%{
-#include "python/swig/pyevent.hh"
+#include "cpu/base.hh"
+#include "sim/host.hh"
+#include "sim/serialize.hh"
+#include "sim/sim_object.hh"
+#include "sim/system.hh"
 
-#include "sim/sim_events.hh"
-#include "sim/sim_exit.hh"
-#include "sim/simulate.hh"
-%}
+SimObject *createSimObject(const std::string &name);
+extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
+SimObject *resolveSimObject(const std::string &name);
+void loadIniFile(PyObject *_resolveFunc);
 
-%include "stdint.i"
-%include "std_string.i"
-%include "sim/host.hh"
 
-void create(PyObject *object, Tick when);
+/**
+ * Connect the described MemObject ports.  Called from Python via SWIG.
+ */
+int connectPorts(SimObject *o1, const std::string &name1, int i1,
+    SimObject *o2, const std::string &name2, int i2);
 
-class Event;
-class CountedDrainEvent : public Event {
-  public:
-    void setCount(int _count);
-};
+inline BaseCPU *
+convertToBaseCPUPtr(SimObject *obj)
+{
+    BaseCPU *ptr = dynamic_cast<BaseCPU *>(obj);
 
-CountedDrainEvent *createCountedDrain();
-void cleanupCountedDrain(Event *drain_event);
-
-%immutable curTick;
-Tick curTick;
-
-// minimal definition of SimExitEvent interface to wrap
-class SimLoopExitEvent {
-  public:
-    std::string getCause();
-    int getCode();
-    SimLoopExitEvent(EventQueue *q, Tick _when, Tick _repeat,
-                     const std::string &_cause, int c = 0);
-};
-
-%exception simulate {
-    $action
-    if (!result) {
-        return NULL;
-    }
+    if (ptr == NULL)
+        warn("Casting to BaseCPU pointer failed");
+    return ptr;
 }
-SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
-void exitSimLoop(const std::string &message, int exit_code);
 
-Tick curTick;
+inline System *
+convertToSystemPtr(SimObject *obj)
+{
+    System *ptr = dynamic_cast<System *>(obj);
 
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._event"
-%}
+    if (ptr == NULL)
+        warn("Casting to System pointer failed");
+    return ptr;
+}
+
+inline void
+initAll()
+{
+    SimObject::initAll();
+}
+
+inline void
+regAllStats()
+{
+    SimObject::regAllStats();
+}
+
+inline void
+serializeAll(const std::string &cpt_dir)
+{
+    Serializable::serializeAll(cpt_dir);
+}
+
+inline void
+unserializeAll(const std::string &cpt_dir)
+{
+    Serializable::unserializeAll(cpt_dir);
+}
+

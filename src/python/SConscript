@@ -107,10 +107,11 @@ def swig_it(module):
                 '-o ${TARGETS[0]} $SOURCES')
     swig_modules.append(module)
 
-swig_it('main')
+swig_it('core')
 swig_it('debug')
 swig_it('event')
 swig_it('random')
+swig_it('sim_object')
 swig_it('stats')
 swig_it('trace')
 

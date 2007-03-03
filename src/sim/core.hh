@@ -26,58 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
-%module event
+#include <Python.h>
+#include <string>
 
-%{
-#include "python/swig/pyevent.hh"
+#include "base/callback.hh"
 
-#include "sim/sim_events.hh"
-#include "sim/sim_exit.hh"
-#include "sim/simulate.hh"
-%}
+void setOutputDir(const std::string &dir);
 
-%include "stdint.i"
-%include "std_string.i"
-%include "sim/host.hh"
-
-void create(PyObject *object, Tick when);
-
-class Event;
-class CountedDrainEvent : public Event {
-  public:
-    void setCount(int _count);
-};
-
-CountedDrainEvent *createCountedDrain();
-void cleanupCountedDrain(Event *drain_event);
-
-%immutable curTick;
-Tick curTick;
-
-// minimal definition of SimExitEvent interface to wrap
-class SimLoopExitEvent {
-  public:
-    std::string getCause();
-    int getCode();
-    SimLoopExitEvent(EventQueue *q, Tick _when, Tick _repeat,
-                     const std::string &_cause, int c = 0);
-};
-
-%exception simulate {
-    $action
-    if (!result) {
-        return NULL;
-    }
-}
-SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
-void exitSimLoop(const std::string &message, int exit_code);
-
-Tick curTick;
-
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._event"
-%}
+void registerExitCallback(Callback *callback);
+void doExitCleanup();

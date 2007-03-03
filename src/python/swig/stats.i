@@ -48,6 +48,7 @@ void initMySQL(std::string host, std::string database, std::string user = "",
 
 void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
 
+void check();
 void dump();
 void reset();
 
