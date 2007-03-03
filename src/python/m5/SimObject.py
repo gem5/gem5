@@ -693,7 +693,7 @@ class SimObject(object):
     def getCCObject(self):
         if not self._ccObject:
             self._ccObject = -1 # flag to catch cycles in recursion
-            self._ccObject = internal.main.createSimObject(self.path())
+            self._ccObject = internal.sim_object.createSimObject(self.path())
         elif self._ccObject == -1:
             raise RuntimeError, "%s: recursive call to getCCObject()" \
                   % self.path()
@@ -727,13 +727,13 @@ class SimObject(object):
             # i don't know if there's a better way to do this - calling
             # setMemoryMode directly from self._ccObject results in calling
             # SimObject::setMemoryMode, not the System::setMemoryMode
-            system_ptr = internal.main.convertToSystemPtr(self._ccObject)
+            system_ptr = internal.sim_object.convertToSystemPtr(self._ccObject)
             system_ptr.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)
 
     def takeOverFrom(self, old_cpu):
-        cpu_ptr = internal.main.convertToBaseCPUPtr(old_cpu._ccObject)
+        cpu_ptr = internal.sim_object.convertToBaseCPUPtr(old_cpu._ccObject)
         self._ccObject.takeOverFrom(cpu_ptr)
 
     # generate output file for 'dot' to display as a pretty graph.

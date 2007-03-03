@@ -240,7 +240,7 @@ def main():
         print "M5 Simulator System"
         print brief_copyright
         print
-        print "M5 compiled %s" % internal.main.cvar.compileDate;
+        print "M5 compiled %s" % internal.core.cvar.compileDate;
         print "M5 started %s" % datetime.now().ctime()
         print "M5 executing on %s" % socket.gethostname()
         print "command line:",
@@ -256,7 +256,7 @@ def main():
         usage(2)
 
     # tell C++ about output directory
-    internal.main.setOutputDir(options.outdir)
+    internal.core.setOutputDir(options.outdir)
 
     # update the system path with elements from the -p option
     sys.path[0:0] = options.path

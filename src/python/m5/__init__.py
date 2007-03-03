@@ -27,14 +27,16 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
-import atexit, os, sys
+import atexit
+import os
+import sys
 
 # import the SWIG-wrapped main C++ functions
 import internal
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from internal.main import simulate, SimLoopExitEvent
+from internal.event import SimLoopExitEvent
 
 # import the m5 compile options
 import defines
@@ -85,27 +87,60 @@ def instantiate(root):
     root.print_ini()
     sys.stdout.close() # close config.ini
     sys.stdout = sys.__stdout__ # restore to original
-    internal.main.loadIniFile(resolveSimObject)  # load config.ini into C++
+
+    # load config.ini into C++
+    internal.core.loadIniFile(resolveSimObject)
+
+    # Initialize the global statistics
+    internal.stats.initSimStats()
+
     root.createCCObject()
     root.connectPorts()
-    internal.main.finalInit()
-    noDot = True # temporary until we fix dot
-    if not noDot:
-       dot = pydot.Dot()
-       instance.outputDot(dot)
-       dot.orientation = "portrait"
-       dot.size = "8.5,11"
-       dot.ranksep="equally"
-       dot.rank="samerank"
-       dot.write("config.dot")
-       dot.write_ps("config.ps")
+
+    # Do a second pass to finish initializing the sim objects
+    internal.sim_object.initAll()
+
+    # Do a third pass to initialize statistics
+    internal.sim_object.regAllStats()
+
+    # Check to make sure that the stats package is properly initialized
+    internal.stats.check()
+
+    # Reset to put the stats in a consistent state.
+    internal.stats.reset()
+
+def doDot(root):
+    dot = pydot.Dot()
+    instance.outputDot(dot)
+    dot.orientation = "portrait"
+    dot.size = "8.5,11"
+    dot.ranksep="equally"
+    dot.rank="samerank"
+    dot.write("config.dot")
+    dot.write_ps("config.ps")
+
+need_resume = []
+need_startup = True
+def simulate(*args, **kwargs):
+    global need_resume, need_startup
+
+    if need_startup:
+        internal.core.SimStartup()
+        need_startup = False
+
+    for root in need_resume:
+        resume(root)
+    need_resume = []
+
+    return internal.event.simulate(*args, **kwargs)
 
 # Export curTick to user script.
 def curTick():
-    return internal.main.cvar.curTick
+    return internal.event.cvar.curTick
 
 # register our C++ exit callback function with Python
-atexit.register(internal.main.doExitCleanup)
+atexit.register(internal.core.doExitCleanup)
+atexit.register(internal.stats.dump)
 
 # This loops until all objects have been fully drained.
 def doDrain(root):
@@ -119,7 +154,7 @@ def doDrain(root):
 # be drained.
 def drain(root):
     all_drained = False
-    drain_event = internal.main.createCountedDrain()
+    drain_event = internal.event.createCountedDrain()
     unready_objects = root.startDrain(drain_event, True)
     # If we've got some objects that can't drain immediately, then simulate
     if unready_objects > 0:
@@ -127,7 +162,7 @@ def drain(root):
         simulate()
     else:
         all_drained = True
-    internal.main.cleanupCountedDrain(drain_event)
+    internal.event.cleanupCountedDrain(drain_event)
     return all_drained
 
 def resume(root):
@@ -135,16 +170,16 @@ def resume(root):
 
 def checkpoint(root, dir):
     if not isinstance(root, objects.Root):
-        raise TypeError, "Object is not a root object. Checkpoint must be called on a root object."
+        raise TypeError, "Checkpoint must be called on a root object."
     doDrain(root)
     print "Writing checkpoint"
-    internal.main.serializeAll(dir)
+    internal.sim_object.serializeAll(dir)
     resume(root)
 
 def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
-    internal.main.unserializeAll(dir)
-    resume(root)
+    internal.sim_object.unserializeAll(dir)
+    need_resume.append(root)
 
 def changeToAtomic(system):
     if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
@@ -152,7 +187,7 @@ def changeToAtomic(system):
         "called on a root object."
     doDrain(system)
     print "Changing memory mode to atomic"
-    system.changeTiming(internal.main.SimObject.Atomic)
+    system.changeTiming(internal.sim_object.SimObject.Atomic)
 
 def changeToTiming(system):
     if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
@@ -160,7 +195,7 @@ def changeToTiming(system):
         "called on a root object."
     doDrain(system)
     print "Changing memory mode to timing"
-    system.changeTiming(internal.main.SimObject.Timing)
+    system.changeTiming(internal.sim_object.SimObject.Timing)
 
 def switchCpus(cpuList):
     print "switching cpus"
@@ -180,7 +215,7 @@ def switchCpus(cpuList):
             raise TypeError, "%s is not of type BaseCPU" % cpu
 
     # Drain all of the individual CPUs
-    drain_event = internal.main.createCountedDrain()
+    drain_event = internal.event.createCountedDrain()
     unready_cpus = 0
     for old_cpu in old_cpus:
         unready_cpus += old_cpu.startDrain(drain_event, False)
@@ -188,7 +223,7 @@ def switchCpus(cpuList):
     if unready_cpus > 0:
         drain_event.setCount(unready_cpus)
         simulate()
-    internal.main.cleanupCountedDrain(drain_event)
+    internal.event.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
     for old_cpu in old_cpus:
         old_cpu._ccObject.switchOut()
@@ -197,6 +232,14 @@ def switchCpus(cpuList):
         new_cpu.takeOverFrom(old_cpus[index])
         new_cpu._ccObject.resume()
         index += 1
+
+def dumpStats():
+    print 'Dumping stats'
+    internal.stats.dump()
+
+def resetStats():
+    print 'Resetting stats'
+    internal.stats.reset()
 
 # Since we have so many mutual imports in this package, we should:
 # 1. Put all intra-package imports at the *bottom* of the file, unless

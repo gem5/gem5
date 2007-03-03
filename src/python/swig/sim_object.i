@@ -28,56 +28,74 @@
  * Authors: Nathan Binkert
  */
 
-%module event
+%module sim_object
 
 %{
-#include "python/swig/pyevent.hh"
-
-#include "sim/sim_events.hh"
-#include "sim/sim_exit.hh"
-#include "sim/simulate.hh"
+#include "python/swig/pyobject.hh"
 %}
 
+// import these files for SWIG to wrap
 %include "stdint.i"
 %include "std_string.i"
 %include "sim/host.hh"
 
-void create(PyObject *object, Tick when);
+class BaseCPU;
 
-class Event;
-class CountedDrainEvent : public Event {
+class SimObject {
   public:
-    void setCount(int _count);
+    enum State {
+      Running,
+      Draining,
+      Drained
+    };
+
+    enum MemoryMode {
+      Invalid,
+      Atomic,
+      Timing
+    };
+
+    unsigned int drain(Event *drain_event);
+    void resume();
+    void switchOut();
+    void takeOverFrom(BaseCPU *cpu);
+    SimObject(const std::string &_name);
 };
 
-CountedDrainEvent *createCountedDrain();
-void cleanupCountedDrain(Event *drain_event);
-
-%immutable curTick;
-Tick curTick;
-
-// minimal definition of SimExitEvent interface to wrap
-class SimLoopExitEvent {
-  public:
-    std::string getCause();
-    int getCode();
-    SimLoopExitEvent(EventQueue *q, Tick _when, Tick _repeat,
-                     const std::string &_cause, int c = 0);
+class System {
+    private:
+      System();
+    public:
+      void setMemoryMode(SimObject::MemoryMode mode);
 };
 
-%exception simulate {
-    $action
-    if (!result) {
-        return NULL;
-    }
-}
-SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
-void exitSimLoop(const std::string &message, int exit_code);
+SimObject *createSimObject(const std::string &name);
 
-Tick curTick;
+int connectPorts(SimObject *o1, const std::string &name1, int i1,
+                 SimObject *o2, const std::string &name2, int i2);
+
+BaseCPU *convertToBaseCPUPtr(SimObject *obj);
+System *convertToSystemPtr(SimObject *obj);
+
+void serializeAll(const std::string &cpt_dir);
+void unserializeAll(const std::string &cpt_dir);
+
+void initAll();
+void regAllStats();
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package
 #undef SWIG_name
-#define SWIG_name "m5.internal._event"
+#define SWIG_name "m5.internal._sim_object"
+
+// Convert a pointer to the Python object that SWIG wraps around a
+// C++ SimObject pointer back to the actual C++ pointer.
+SimObject *
+convertSwigSimObjectPtr(PyObject *pyObj)
+{
+    SimObject *so;
+    if (SWIG_ConvertPtr(pyObj, (void **) &so, SWIGTYPE_p_SimObject, 0) == -1)
+        return NULL;
+    return so;
+}
 %}
