@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,43 +25,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Nathan Binkert
  */
 
-#ifndef __ARCH_ISA_SPECIFIC_HH__
-#define __ARCH_ISA_SPECIFIC_HH__
+#ifndef __ARCH_X86_STACKTRACE_HH__
+#define __ARCH_X86_STACKTRACE_HH__
 
-//This file provides a mechanism for other source code to bring in
-//files from the ISA being compiled in.
+#error X86 is not yet supported!
 
-//These are constants so you can selectively compile code based on the isa.
-//To use them, do something like:
-//
-//#if THE_ISA == YOUR_FAVORITE_ISA
-//	conditional_code
-//#endif
-//
-//Note that this is how this file sets up the TheISA macro.
+namespace X86ISA
+{
+};
 
-//These macros have numerical values because otherwise the preprocessor
-//would treat them as 0 in comparisons.
-#define ALPHA_ISA 21064
-#define SPARC_ISA 42
-#define MIPS_ISA 34000
-#define X86_ISA 8086
-
-//These tell the preprocessor where to find the files of a particular
-//ISA, and set the "TheISA" macro for use elsewhere.
-#if THE_ISA == ALPHA_ISA
-    #define TheISA AlphaISA
-#elif THE_ISA == SPARC_ISA
-    #define TheISA SparcISA
-#elif THE_ISA == MIPS_ISA
-    #define TheISA MipsISA
-#elif THE_ISA == X86_ISA
-    #define TheISA X86ISA
-#else
-    #error "THE_ISA not set"
-#endif
-
-#endif
+#endif // __ARCH_X86_STACKTRACE_HH__

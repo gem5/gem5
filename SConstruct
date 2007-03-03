@@ -363,7 +363,7 @@ if have_mysql:
 env = conf.Finish()
 
 # Define the universe of supported ISAs
-env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips']
+env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips', 'x86']
 
 # Define the universe of supported CPU models
 env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
