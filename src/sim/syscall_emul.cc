@@ -184,6 +184,39 @@ lseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
 
 SyscallReturn
+_llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    int fd = p->sim_fd(tc->getSyscallArg(0));
+    uint64_t offset_high = tc->getSyscallArg(1);
+    uint32_t offset_low = tc->getSyscallArg(2);
+    Addr result_ptr = tc->getSyscallArg(3);
+    int whence = tc->getSyscallArg(4);
+
+    uint64_t offset = (offset_high << 32) | offset_low;
+
+    uint64_t result = lseek(fd, offset, whence);
+    result = TheISA::htog(result);
+
+    if (result == (off_t)-1) {
+        //The seek failed.
+        return -errno;
+    } else {
+        //The seek succeeded.
+        //Copy "result" to "result_ptr"
+        //XXX We'll assume that the size of loff_t is 64 bits on the
+        //target platform
+        BufferArg result_buf(result_ptr, sizeof(result));
+        memcpy(result_buf.bufferPtr(), &result, sizeof(result));
+        result_buf.copyOut(tc->getMemPort());
+        return 0;
+    }
+
+
+    return (result == (off_t)-1) ? -errno : result;
+}
+
+
+SyscallReturn
 munmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     // given that we don't really implement mmap, munmap is really easy

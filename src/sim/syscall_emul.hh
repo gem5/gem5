@@ -211,6 +211,10 @@ SyscallReturn writeFunc(SyscallDesc *desc, int num,
 SyscallReturn lseekFunc(SyscallDesc *desc, int num,
                         LiveProcess *p, ThreadContext *tc);
 
+/// Target _llseek() handler.
+SyscallReturn _llseekFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
+
 /// Target munmap() handler.
 SyscallReturn munmapFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
