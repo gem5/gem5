@@ -193,6 +193,8 @@ class HstickMatch : public SparcFault<HstickMatch> {};
 
 class TrapLevelZero : public SparcFault<TrapLevelZero> {};
 
+class InterruptVector : public SparcFault<InterruptVector> {};
+
 class PAWatchpoint : public SparcFault<PAWatchpoint> {};
 
 class VAWatchpoint : public SparcFault<VAWatchpoint> {};

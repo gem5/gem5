@@ -38,6 +38,7 @@ sources = []
 
 sources += Split('''
 	dtod.cc
+        iob.cc
 	t1000.cc
 	mm_disk.cc
 	''')

@@ -208,6 +208,10 @@ template<> SparcFaultBase::FaultVals
     {"trap_level_zero", 0x05F, 202, {H, H, SH}};
 
 template<> SparcFaultBase::FaultVals
+    SparcFault<InterruptVector>::vals =
+    {"interrupt_vector", 0x060, 2630, {H, H, H}};
+
+template<> SparcFaultBase::FaultVals
     SparcFault<PAWatchpoint>::vals =
     {"PA_watchpoint", 0x061, 1209, {H, H, H}};
 

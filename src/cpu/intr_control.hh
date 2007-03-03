@@ -42,8 +42,8 @@
 class IntrControl : public SimObject
 {
   public:
-    BaseCPU *cpu;
-    IntrControl(const std::string &name, BaseCPU *c);
+    System *sys;
+    IntrControl(const std::string &name, System *s);
 
     void clear(int int_num, int index = 0);
     void post(int int_num, int index = 0);

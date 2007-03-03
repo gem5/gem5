@@ -40,6 +40,7 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 #include "sim/builder.hh"
+#include "sim/system.hh"
 
 /* @todo remove some of the magic constants.  -- ali
  * */
@@ -691,9 +692,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
-        if (AsiIsInterrupt(asi))
-            panic("Interrupt ASIs not supported\n");
 
+        if (AsiIsInterrupt(asi))
+            goto handleIntRegAccess;
         if (AsiIsMmu(asi))
             goto handleMmuRegAccess;
         if (AsiIsScratchPad(asi))
@@ -793,7 +794,25 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                   vaddr & e->pte.size()-1);
     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
+
     /** Normal flow ends here. */
+handleIntRegAccess:
+    if (!hpriv) {
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        if (priv)
+            return new DataAccessException;
+         else
+            return new PrivilegedAction;
+    }
+
+    if (asi == ASI_SWVR_UDB_INTR_W && !write ||
+                    asi == ASI_SWVR_UDB_INTR_R && write) {
+        writeSfr(tc, vaddr, write, Primary, true, IllegalAsi, asi);
+        return new DataAccessException;
+    }
+
+    goto regAccessOk;
+
 
 handleScratchRegAccess:
     if (vaddr > 0x38 || (vaddr >= 0x20 && vaddr < 0x30 && !hpriv)) {
@@ -988,7 +1007,14 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1),
                 tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG)));
         break;
-
+      case ASI_SWVR_INTR_RECEIVE:
+        pkt->set(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
+        break;
+      case ASI_SWVR_UDB_INTR_R:
+        temp = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
+        tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, temp);
+        pkt->set(temp);
+        break;
       default:
 doMmuReadError:
         panic("need to impl DTB::doMmuRegRead() got asi=%#x, va=%#x\n",
@@ -1222,7 +1248,19 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             panic("Invalid type for IMMU demap\n");
         }
         break;
-      default:
+       case ASI_SWVR_INTR_RECEIVE:
+        int msb;
+        // clear all the interrupts that aren't set in the write
+        while(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data) {
+            msb = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data);
+            tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, msb);
+        }
+        break;
+      case ASI_SWVR_UDB_INTR_W:
+            tc->getSystemPtr()->threadContexts[bits(data,12,8)]->getCpuPtr()->
+            post_interrupt(bits(data,5,0),0);
+        break;
+ default:
 doMmuWriteError:
         panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
             (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);

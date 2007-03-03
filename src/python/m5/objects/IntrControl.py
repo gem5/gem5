@@ -3,4 +3,4 @@ from m5.params import *
 from m5.proxy import *
 class IntrControl(SimObject):
     type = 'IntrControl'
-    cpu = Param.BaseCPU(Parent.cpu[0], "the cpu")
+    sys = Param.System(Parent.any, "the system we are part of")

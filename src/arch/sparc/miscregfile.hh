@@ -259,6 +259,9 @@ namespace SparcISA
                 ThreadContext *tc);
         MiscReg readFSRegWithEffect(int miscReg, ThreadContext * tc);
 
+        // Update interrupt state on softint or pil change
+        void checkSoftInt(ThreadContext *tc);
+
         /** Process a tick compare event and generate an interrupt on the cpu if
          * appropriate. */
         void processTickCompare(ThreadContext *tc);

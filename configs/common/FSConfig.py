@@ -111,9 +111,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.disk0 = CowMmDisk()
     self.disk0.childImage(disk('disk.s10hw2'))
     self.disk0.pio = self.iobus.port
-    self.reset_bin = binary('reset.bin')
-    self.hypervisor_bin = binary('q.bin')
-    self.openboot_bin = binary('openboot.bin')
+    self.reset_bin = binary('reset_new.bin')
+    self.hypervisor_bin = binary('q_new.bin')
+    self.openboot_bin = binary('openboot_new.bin')
     self.nvram_bin = binary('nvram1')
     self.hypervisor_desc_bin = binary('1up-hv.bin')
     self.partition_desc_bin = binary('1up-md.bin')

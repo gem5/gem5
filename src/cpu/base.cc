@@ -372,12 +372,6 @@ BaseCPU::ProfileEvent::process()
 }
 
 void
-BaseCPU::post_interrupt(int int_type)
-{
-    interrupts.post(int_type);
-}
-
-void
 BaseCPU::post_interrupt(int int_num, int index)
 {
     interrupts.post(int_num, index);
@@ -395,6 +389,11 @@ BaseCPU::clear_interrupts()
     interrupts.clear_all();
 }
 
+uint64_t
+BaseCPU::get_interrupts(int int_num)
+{
+    return interrupts.get_vec(int_num);
+}
 
 void
 BaseCPU::serialize(std::ostream &os)

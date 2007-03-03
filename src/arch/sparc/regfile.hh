@@ -126,8 +126,6 @@ namespace SparcISA
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
-    int InterruptLevel(uint64_t softint);
-
 } // namespace SparcISA
 
 #endif
