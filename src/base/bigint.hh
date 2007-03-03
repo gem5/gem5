@@ -42,9 +42,22 @@ struct m5_twin64_t {
     }
 };
 
+struct m5_twin32_t {
+    uint32_t a;
+    uint32_t b;
+    inline m5_twin32_t& operator=(const uint32_t x)
+    {
+        a = x;
+        b = x;
+        return *this;
+    }
+};
+
+
 // This is for twin loads (two 64 bit values), not 1 128 bit value (as far as
 // endian conversion is concerned!
 typedef m5_twin64_t Twin64_t;
+typedef m5_twin32_t Twin32_t;
 
 
 #endif // __BASE_BIGINT_HH__

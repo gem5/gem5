@@ -656,6 +656,26 @@ void FillNNormal::invoke(ThreadContext *tc)
     tc->setNextNPC(fillStart + 2*sizeof(MachInst));
 }
 
+void TrapInstruction::invoke(ThreadContext *tc)
+{
+    //In SE, this mechanism is how the process requests a service from the
+    //operating system. We'll get the process object from the thread context
+    //and let it service the request.
+
+    Process *p = tc->getProcessPtr();
+
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    lp->handleTrap(_n, tc);
+
+    //We need to explicitly advance the pc, since that's not done for us
+    //on a faulting instruction
+    tc->setPC(tc->readNextPC());
+    tc->setNextPC(tc->readNextNPC());
+    tc->setNextNPC(tc->readNextNPC() + sizeof(MachInst));
+}
+
 void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();

@@ -38,12 +38,28 @@
 
 namespace SparcISA {
 
+//This contains all of the common elements of a SPARC Linux process which
+//are not shared by other operating systems. The rest come from the common
+//SPARC process class.
+class SparcLinuxProcess
+{
+  public:
+    SparcLinuxProcess();
+
+     /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
+
+    SyscallDesc* getDesc(int callnum);
+
+    const int Num_Syscall_Descs;
+};
+
 /// A process with emulated SPARC/Linux syscalls.
-class SparcLinuxProcess : public SparcLiveProcess
+class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
 {
   public:
     /// Constructor.
-    SparcLinuxProcess(const std::string &name,
+    Sparc32LinuxProcess(const std::string &name,
                       ObjectFile *objFile,
                       System * system,
                       int stdin_fd, int stdout_fd, int stderr_fd,
@@ -54,19 +70,40 @@ class SparcLinuxProcess : public SparcLiveProcess
                       uint64_t _gid, uint64_t _egid,
                       uint64_t _pid, uint64_t _ppid);
 
-    virtual SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc(int callnum)
+    {
+        return SparcLinuxProcess::getDesc(callnum);
+    }
 
-    /// The target system's hostname.
-    static const char *hostname;
+    void handleTrap(int trapNum, ThreadContext *tc);
+};
 
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+/// A process with emulated 32 bit SPARC/Linux syscalls.
+class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64LiveProcess
+{
+  public:
+    /// Constructor.
+    Sparc64LinuxProcess(const std::string &name,
+                      ObjectFile *objFile,
+                      System * system,
+                      int stdin_fd, int stdout_fd, int stderr_fd,
+                      std::vector<std::string> &argv,
+                      std::vector<std::string> &envp,
+                      const std::string &cwd,
+                      uint64_t _uid, uint64_t _euid,
+                      uint64_t _gid, uint64_t _egid,
+                      uint64_t _pid, uint64_t _ppid);
 
-    const int Num_Syscall_Descs;
+    SyscallDesc* getDesc(int callnum)
+    {
+        return SparcLinuxProcess::getDesc(callnum);
+    }
+
+    void handleTrap(int trapNum, ThreadContext *tc);
 };
 
 SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
                                  LiveProcess *p, ThreadContext *tc);
 
 } // namespace SparcISA
-#endif // __ALPHA_LINUX_PROCESS_HH__
+#endif // __SPARC_LINUX_PROCESS_HH__

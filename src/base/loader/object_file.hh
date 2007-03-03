@@ -47,7 +47,8 @@ class ObjectFile
     enum Arch {
         UnknownArch,
         Alpha,
-        SPARC,
+        SPARC64,
+        SPARC32,
         Mips
     };
 

@@ -53,9 +53,6 @@ class AlphaLinuxProcess : public AlphaLiveProcess
 
     virtual SyscallDesc* getDesc(int callnum);
 
-    /// The target system's hostname.
-    static const char *hostname;
-
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 

@@ -53,6 +53,18 @@ Packet::get()
     return d;
 }
 
+template<>
+inline Twin32_t
+Packet::get()
+{
+    Twin32_t d;
+    assert(staticData || dynamicData);
+    assert(sizeof(Twin32_t) <= size);
+    d.a = TheISA::gtoh(*(uint32_t*)data);
+    d.b = TheISA::gtoh(*((uint32_t*)data + 1));
+    return d;
+}
+
 
 /** return the value of what is pointed to in the packet. */
 template <typename T>

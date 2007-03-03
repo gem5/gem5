@@ -321,6 +321,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
 template
 Fault
+AtomicSimpleCPU::read(Addr addr, Twin32_t &data, unsigned flags);
+
+template
+Fault
 AtomicSimpleCPU::read(Addr addr, Twin64_t &data, unsigned flags);
 
 template
