@@ -187,15 +187,15 @@ class MySql : public Output
     void configure(const FormulaData &data);
 };
 
-bool initMySQL(std::string host, std::string database, std::string user = "",
-    std::string passwd = "", std::string name = "test",
-    std::string sample = "0", std::string project = "test");
+bool initMySQL(std::string host, std::string database, std::string user,
+               std::string passwd, std::string project, std::string name,
+               std::string sample);
 
 #if !USE_MYSQL
 inline bool
 initMySQL(std::string host, std::string user, std::string password,
-    std::string database, std::string name, std::string sample,
-    std::string project)
+          std::string database, std::string project, std::string name,
+          std::string sample)
 {
     return false;
 }
