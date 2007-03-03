@@ -1160,9 +1160,8 @@ decode OP default Unknown::unknown()
             0x01: ldub({{Rd = Mem.ub;}});
             0x02: lduh({{Rd = Mem.uhw;}});
             0x03: ldtw({{
-                uint64_t val = Mem.udw;
-                RdLow = val<31:0>;
-                RdHigh = val<63:32>;
+                        RdLow = (Mem.tuw).a;
+                        RdHigh = (Mem.tuw).b;
             }});
         }
         format Store {
@@ -1250,9 +1249,8 @@ decode OP default Unknown::unknown()
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}}, {{EXT_ASI}});
                 default: ldtwa({{
-                        uint64_t val = Mem.udw;
-                        RdLow = val<31:0>;
-                        RdHigh = val<63:32>;
+                        RdLow = (Mem.tuw).a;
+                        RdHigh = (Mem.tuw).b;
                         }}, {{EXT_ASI}});
             }
         }

@@ -317,6 +317,10 @@ TimingSimpleCPU::read(Addr addr, Twin64_t &data, unsigned flags);
 
 template
 Fault
+TimingSimpleCPU::read(Addr addr, Twin32_t &data, unsigned flags);
+
+template
+Fault
 TimingSimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
