@@ -58,10 +58,39 @@
 #ifndef __ARCH_X86_TYPES_HH__
 #define __ARCH_X86_TYPES_HH__
 
-#error X86 is not yet supported!
-
 namespace X86ISA
 {
+    //XXX This won't work
+    typedef uint32_t MachInst;
+    //XXX This won't work either
+    typedef uint64_t ExtMachInst;
+
+    typedef uint64_t IntReg;
+    typedef uint64_t MiscReg;
+
+    //These floating point types are correct for mmx, but not
+    //technically for x87 (80 bits) or at all for xmm (128 bits)
+    typedef double FloatReg;
+    typedef uint64_t FloatRegBits;
+    typedef union
+    {
+        IntReg intReg;
+        FloatReg fpReg;
+        MiscReg ctrlReg;
+    } AnyReg;
+
+    //XXX This is very hypothetical. X87 instructions would need to
+    //change their "context" constantly. It's also not clear how
+    //this would be handled as far as out of order execution.
+    //Maybe x87 instructions are in order?
+    enum RegContextParam
+    {
+        CONTEXT_X87_TOP
+    };
+
+    typedef int RegContextVal;
+
+    typedef uint8_t RegIndex;
 };
 
 #endif // __ARCH_X86_TYPES_HH__
