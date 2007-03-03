@@ -41,9 +41,11 @@
 
 #if !FULL_SYSTEM
 
+#include <string>
 #include <vector>
 
 #include "base/statistics.hh"
+#include "mem/translating_port.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 
@@ -58,9 +60,27 @@ namespace TheISA
     class RemoteGDB;
 }
 
+//This needs to be templated for cases where 32 bit pointers are needed.
+template<class AddrType>
 void
-copyStringArray(std::vector<std::string> &strings, Addr array_ptr,
-        Addr data_ptr, TranslatingPort* memPort, int ptr_size = sizeof(Addr));
+copyStringArray(std::vector<std::string> &strings,
+        AddrType array_ptr, AddrType data_ptr,
+        TranslatingPort* memPort)
+{
+    AddrType data_ptr_swap;
+    for (int i = 0; i < strings.size(); ++i) {
+        data_ptr_swap = htog(data_ptr);
+        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
+                sizeof(AddrType));
+        memPort->writeString(data_ptr, strings[i].c_str());
+        array_ptr += sizeof(AddrType);
+        data_ptr += strings[i].size() + 1;
+    }
+    // add NULL terminator
+    data_ptr = 0;
+
+    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
+}
 
 class Process : public SimObject
 {
