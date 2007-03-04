@@ -263,10 +263,9 @@ Iob::generateIpi(Type type, int cpu_id, int vector)
 {
     // Only handle interrupts for the moment... Cpu Idle/reset/resume will be
     // later
-    if (type != 0) {
-        warn("Ignoring IntVecDis write\n");
+    if (type != 0)
         return;
-    }
+
     assert(type == 0);
     ic->post(cpu_id, SparcISA::IT_INT_VEC, vector);
 }

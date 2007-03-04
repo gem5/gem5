@@ -1,0 +1,12 @@
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar  3 2007 19:48:02
+M5 started Sat Mar  3 19:58:15 2007
+M5 executing on zeep
+command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
+Exiting @ tick 2221178828 because m5_exit instruction encountered
