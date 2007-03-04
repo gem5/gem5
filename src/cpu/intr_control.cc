@@ -40,18 +40,14 @@
 
 using namespace std;
 
-IntrControl::IntrControl(const string &name, BaseCPU *c)
-    : SimObject(name), cpu(c)
+IntrControl::IntrControl(const string &name, System *s)
+    : SimObject(name), sys(s)
 {}
 
-/* @todo
- *Fix the cpu sim object parameter to be a system pointer
- *instead, to avoid some extra dereferencing
- */
 void
 IntrControl::post(int int_num, int index)
 {
-    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *temp = tcvec[0]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
@@ -59,7 +55,7 @@ IntrControl::post(int int_num, int index)
 void
 IntrControl::post(int cpu_id, int int_num, int index)
 {
-    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *temp = tcvec[cpu_id]->getCpuPtr();
     temp->post_interrupt(int_num, index);
 }
@@ -67,7 +63,7 @@ IntrControl::post(int cpu_id, int int_num, int index)
 void
 IntrControl::clear(int int_num, int index)
 {
-    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *temp = tcvec[0]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
@@ -75,26 +71,26 @@ IntrControl::clear(int int_num, int index)
 void
 IntrControl::clear(int cpu_id, int int_num, int index)
 {
-    std::vector<ThreadContext *> &tcvec = cpu->system->threadContexts;
+    std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *temp = tcvec[cpu_id]->getCpuPtr();
     temp->clear_interrupt(int_num, index);
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
 
-    SimObjectParam<BaseCPU *> cpu;
+    SimObjectParam<System *> sys;
 
 END_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
 
 BEGIN_INIT_SIM_OBJECT_PARAMS(IntrControl)
 
-    INIT_PARAM(cpu, "the cpu")
+    INIT_PARAM(sys, "the system we are part of")
 
 END_INIT_SIM_OBJECT_PARAMS(IntrControl)
 
 CREATE_SIM_OBJECT(IntrControl)
 {
-    return new IntrControl(getInstanceName(), cpu);
+    return new IntrControl(getInstanceName(), sys);
 }
 
 REGISTER_SIM_OBJECT("IntrControl", IntrControl)

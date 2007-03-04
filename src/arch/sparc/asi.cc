@@ -294,7 +294,8 @@ namespace SparcISA
 
     bool AsiIsReg(ASI asi)
     {
-        return AsiIsMmu(asi) || AsiIsScratchPad(asi) | AsiIsSparcError(asi);
+        return AsiIsMmu(asi) || AsiIsScratchPad(asi) ||
+               AsiIsSparcError(asi) || AsiIsInterrupt(asi);
     }
 
     bool AsiIsSparcError(ASI asi)

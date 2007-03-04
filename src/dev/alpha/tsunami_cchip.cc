@@ -372,7 +372,7 @@ TsunamiCChip::write(PacketPtr pkt)
 void
 TsunamiCChip::clearIPI(uint64_t ipintr)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
+    int numcpus = sys->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (ipintr) {
@@ -398,7 +398,7 @@ TsunamiCChip::clearIPI(uint64_t ipintr)
 void
 TsunamiCChip::clearITI(uint64_t itintr)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
+    int numcpus = sys->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (itintr) {
@@ -418,7 +418,7 @@ TsunamiCChip::clearITI(uint64_t itintr)
 void
 TsunamiCChip::reqIPI(uint64_t ipreq)
 {
-    int numcpus = tsunami->intrctrl->cpu->system->threadContexts.size();
+    int numcpus = sys->threadContexts.size();
     assert(numcpus <= Tsunami::Max_CPUs);
 
     if (ipreq) {
@@ -445,7 +445,7 @@ TsunamiCChip::reqIPI(uint64_t ipreq)
 void
 TsunamiCChip::postRTC()
 {
-    int size = tsunami->intrctrl->cpu->system->threadContexts.size();
+    int size = sys->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
 
     for (int i = 0; i < size; i++) {
@@ -463,7 +463,7 @@ void
 TsunamiCChip::postDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = ULL(1) << interrupt;
-    uint64_t size = tsunami->intrctrl->cpu->system->threadContexts.size();
+    uint64_t size = sys->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
     drir |= bitvector;
 
@@ -481,7 +481,7 @@ void
 TsunamiCChip::clearDRIR(uint32_t interrupt)
 {
     uint64_t bitvector = ULL(1) << interrupt;
-    uint64_t size = tsunami->intrctrl->cpu->system->threadContexts.size();
+    uint64_t size = sys->threadContexts.size();
     assert(size <= Tsunami::Max_CPUs);
 
     if (drir & bitvector)

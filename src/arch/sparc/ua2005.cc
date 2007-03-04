@@ -34,6 +34,30 @@
 
 using namespace SparcISA;
 
+
+void
+MiscRegFile::checkSoftInt(ThreadContext *tc)
+{
+    // If PIL < 14, copy over the tm and sm bits
+    if (pil < 14 && softint & 0x10000)
+        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,16);
+    else
+        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,16);
+    if (pil < 14 && softint & 0x1)
+        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,0);
+    else
+        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,0);
+
+    // Copy over any of the other bits that are set
+    for (int bit = 15; bit > 0; --bit) {
+        if (1 << bit & softint && bit > pil)
+            tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,bit);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,bit);
+    }
+}
+
+
 void
 MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
                                 ThreadContext *tc)
@@ -43,23 +67,25 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
         /* Full system only ASRs */
       case MISCREG_SOFTINT:
         setReg(miscReg, val);;
+        checkSoftInt(tc);
         break;
-
       case MISCREG_SOFTINT_CLR:
         return setRegWithEffect(MISCREG_SOFTINT, ~val & softint, tc);
       case MISCREG_SOFTINT_SET:
-        tc->getCpuPtr()->post_interrupt(soft_interrupt);
         return setRegWithEffect(MISCREG_SOFTINT, val | softint, tc);
 
       case MISCREG_TICK_CMPR:
         if (tickCompare == NULL)
             tickCompare = new TickCompareEvent(this, tc);
         setReg(miscReg, val);
-        if ((tick_cmpr & mask(63)) && tickCompare->scheduled())
+        if ((tick_cmpr & ~mask(63)) && tickCompare->scheduled())
             tickCompare->deschedule();
         time = (tick_cmpr & mask(63)) - (tick & mask(63));
-        if (!(tick_cmpr & ~mask(63)) && time > 0)
+        if (!(tick_cmpr & ~mask(63)) && time > 0) {
+            if (tickCompare->scheduled())
+                tickCompare->deschedule();
             tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+        }
         panic("writing to TICK compare register %#X\n", val);
         break;
 
@@ -71,8 +97,11 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
             sTickCompare->deschedule();
         time = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
             tc->getCpuPtr()->instCount();
-        if (!(stick_cmpr & ~mask(63)) && time > 0)
+        if (!(stick_cmpr & ~mask(63)) && time > 0) {
+            if (sTickCompare->scheduled())
+                sTickCompare->deschedule();
             sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1) + curTick);
+        }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
 
@@ -81,6 +110,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 
       case MISCREG_PIL:
         setReg(miscReg, val);
+        checkSoftInt(tc);
         break;
 
       case MISCREG_HVER:
@@ -88,6 +118,11 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 
       case MISCREG_HINTP:
         setReg(miscReg, val);
+        if (hintp)
+            tc->getCpuPtr()->post_interrupt(IT_HINTP,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_HINTP,0);
+        break;
 
       case MISCREG_HTBA:
         // clear lower 7 bits on writes.
@@ -96,14 +131,32 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 
       case MISCREG_QUEUE_CPU_MONDO_HEAD:
       case MISCREG_QUEUE_CPU_MONDO_TAIL:
+        setReg(miscReg, val);
+        if (cpu_mondo_head != cpu_mondo_tail)
+            tc->getCpuPtr()->post_interrupt(IT_CPU_MONDO,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_CPU_MONDO,0);
+        break;
       case MISCREG_QUEUE_DEV_MONDO_HEAD:
       case MISCREG_QUEUE_DEV_MONDO_TAIL:
+        setReg(miscReg, val);
+        if (dev_mondo_head != dev_mondo_tail)
+            tc->getCpuPtr()->post_interrupt(IT_DEV_MONDO,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_DEV_MONDO,0);
+        break;
       case MISCREG_QUEUE_RES_ERROR_HEAD:
       case MISCREG_QUEUE_RES_ERROR_TAIL:
+        setReg(miscReg, val);
+        if (res_error_head != res_error_tail)
+            tc->getCpuPtr()->post_interrupt(IT_RES_ERROR,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_RES_ERROR,0);
+        break;
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
         setReg(miscReg, val);
-        //do something to post mondo interrupt
+        // This one doesn't have an interrupt to report to the guest OS
         break;
 
       case MISCREG_HSTICK_CMPR:
@@ -114,14 +167,23 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
             hSTickCompare->deschedule();
         time = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
             tc->getCpuPtr()->instCount();
-        if (!(hstick_cmpr & ~mask(63)) && time > 0)
+        if (!(hstick_cmpr & ~mask(63)) && time > 0) {
+            if (hSTickCompare->scheduled())
+                hSTickCompare->deschedule();
             hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->cycles(1));
+        }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
 
       case MISCREG_HPSTATE:
         // T1000 spec says impl. dependent val must always be 1
         setReg(miscReg, val | HPSTATE::id);
+#if FULL_SYSTEM
+        if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
+            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+#endif
         break;
       case MISCREG_HTSTATE:
       case MISCREG_STRAND_STS_REG:
@@ -198,7 +260,6 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscReg(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
-            tc->getCpuPtr()->post_interrupt(soft_interrupt);
             setRegWithEffect(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else
@@ -221,10 +282,9 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscReg(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {
             setRegWithEffect(MISCREG_HINTP, 1, tc);
-            tc->getCpuPtr()->post_interrupt(hstick_match);
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else
-        sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
+        hSTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
 }
 
