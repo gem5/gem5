@@ -96,6 +96,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.membus = Bus(bus_id=1)
     self.bridge = Bridge()
     self.t1000 = T1000()
+    self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)
     self.physmem = PhysicalMemory(range = AddrRange(Addr('1MB'), size = '64MB'), zero = True)
     self.physmem2 = PhysicalMemory(range = AddrRange(Addr('2GB'), size ='256MB'), zero = True)
