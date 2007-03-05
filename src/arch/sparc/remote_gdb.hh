@@ -28,12 +28,12 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __ARCH_ALPHA_REMOTE_GDB_HH__
-#define __ARCH_ALPHA_REMOTE_GDB_HH__
+#ifndef __ARCH_SPARC_REMOTE_GDB_HH__
+#define __ARCH_SPARC_REMOTE_GDB_HH__
 
 #include <map>
 
-#include "arch/types.hh"
+#include "arch/sparc/types.hh"
 #include "base/remote_gdb.hh"
 #include "cpu/pc_event.hh"
 #include "base/pollevent.hh"
@@ -74,4 +74,4 @@ namespace SparcISA
     };
 }
 
-#endif /* __ARCH_ALPHA_REMOTE_GDB_H__ */
+#endif /* __ARCH_SPARC_REMOTE_GDB_H__ */
