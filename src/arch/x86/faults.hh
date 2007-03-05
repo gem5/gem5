@@ -58,10 +58,17 @@
 #ifndef __ARCH_X86_FAULTS_HH__
 #define __ARCH_X86_FAULTS_HH__
 
-#error X86 is not yet supported!
+#include "sim/faults.hh"
 
 namespace X86ISA
 {
+    class X86Fault : public FaultBase
+    {
+        void invoke(ThreadContext * tc)
+        {
+            panic("X86 faults are not implemented!");
+        }
+    };
 };
 
 #endif // __ARCH_X86_FAULTS_HH__
