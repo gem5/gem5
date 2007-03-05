@@ -58,6 +58,8 @@
 #ifndef __ARCH_X86_TYPES_HH__
 #define __ARCH_X86_TYPES_HH__
 
+#include <inttypes.h>
+
 namespace X86ISA
 {
     //XXX This won't work
