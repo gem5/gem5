@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_FAULTS_HH__
 #define __ARCH_X86_FAULTS_HH__
 
+#include "base/misc.hh"
 #include "sim/faults.hh"
 
 namespace X86ISA
