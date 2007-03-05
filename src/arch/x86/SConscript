@@ -98,6 +98,11 @@ Import('env')
 
 # Base sources used by all configurations.
 base_sources = Split('''
+	floatregfile.cc
+	intregfile.cc
+	miscregfile.cc
+	regfile.cc
+	remote_gdb.cc
 	''')
 
 # Full-system sources
