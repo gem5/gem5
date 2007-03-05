@@ -45,6 +45,10 @@
     template <class Impl> class SparcDynInst;
     struct SparcSimpleImpl;
     typedef SparcDynInst<SparcSimpleImpl> O3DynInst;
+#elif THE_ISA == X86_ISA
+    template <class Impl> class X86DynInst;
+    struct X86SimpleImpl;
+    typedef X86DynInst<X86SimpleImpl> O3DynInst;
 #else
     #error "O3DynInst not defined for this ISA"
 #endif
