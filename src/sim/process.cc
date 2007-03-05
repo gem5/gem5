@@ -60,6 +60,8 @@
 #include "arch/sparc/solaris/process.hh"
 #elif THE_ISA == MIPS_ISA
 #include "arch/mips/linux/process.hh"
+#elif THE_ISA == X86_ISA
+//XXX There are no x86 processes yet
 #else
 #error "THE_ISA not set"
 #endif
@@ -483,6 +485,20 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
                                         argv, envp, cwd,
                                         _uid, _euid, _gid, _egid, _pid, _ppid);
         break;
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == X86_ISA
+    if (objFile->getArch() != ObjectFile::X86)
+        fatal("Object file architecture does not match compiled ISA (SPARC).");
+    panic("There are no implemented x86 processes!\n");
+    switch (objFile->getOpSys()) {
+      /*case ObjectFile::Linux:
+        process = new X86LinuxProcess(nm, objFile, system,
+                                          stdin_fd, stdout_fd, stderr_fd,
+                                          argv, envp, cwd,
+                                          _uid, _euid, _gid,
+                                          _egid, _pid, _ppid);*/
       default:
         fatal("Unknown/unsupported operating system.");
     }
