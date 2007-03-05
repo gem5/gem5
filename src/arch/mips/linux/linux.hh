@@ -91,15 +91,15 @@ class MipsLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x7408;
-    static const unsigned TIOCSETP   = 0x7409;
-    static const unsigned TIOCSETN   = 0x740a;
-    static const unsigned TIOCSETC   = 0x7411;
-    static const unsigned TIOCGETC   = 0x7412;
-    static const unsigned FIONREAD   = 0x467f;
-    static const unsigned TIOCISATTY = 0x5480;
-    static const unsigned TIOCGETS   = 0x7413;
-    static const unsigned TIOCGETA   = 0x7417;
+    static const unsigned TIOCGETP_   = 0x7408;
+    static const unsigned TIOCSETP_   = 0x7409;
+    static const unsigned TIOCSETN_   = 0x740a;
+    static const unsigned TIOCSETC_   = 0x7411;
+    static const unsigned TIOCGETC_   = 0x7412;
+    static const unsigned FIONREAD_   = 0x467f;
+    static const unsigned TIOCISATTY_ = 0x5480;
+    static const unsigned TIOCGETS_   = 0x7413;
+    static const unsigned TIOCGETA_   = 0x7417;
     //@}
 
     /// For table().

@@ -425,7 +425,9 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     else
         filename = argv[0];
 
-    Addr alignmentMask = ~(intSize - 1);
+    //Even though this is a 32 bit process, the ABI says we still need to
+    //maintain double word alignment of the stack pointer.
+    Addr alignmentMask = ~(8 - 1);
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);
@@ -525,21 +527,11 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
         arg_data_size += argv[i].size() + 1;
     }
 
-    //The info_block needs to be padded so it's size is a multiple of the
-    //alignment mask. Also, it appears that there needs to be at least some
-    //padding, so if the size is already a multiple, we need to increase it
-    //anyway.
+    //The info_block
     int info_block_size =
         (file_name_size +
         env_data_size +
-        arg_data_size +
-        intSize) & alignmentMask;
-
-    int info_block_padding =
-        info_block_size -
-        file_name_size -
-        env_data_size -
-        arg_data_size;
+        arg_data_size);
 
     //Each auxilliary vector is two 8 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
@@ -552,7 +544,6 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
 
     int space_needed =
         mysterious_size +
-        info_block_size +
         aux_array_size +
         envp_array_size +
         argv_array_size +
@@ -568,18 +559,17 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
                      roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr mysterious_base = stack_base - mysterious_size;
-    Addr file_name_base = mysterious_base - file_name_size;
-    Addr env_data_base = file_name_base - env_data_size;
-    Addr arg_data_base = env_data_base - arg_data_size;
-    Addr auxv_array_base = arg_data_base - aux_array_size - info_block_padding;
-    Addr envp_array_base = auxv_array_base - envp_array_size;
-    Addr argv_array_base = envp_array_base - argv_array_size;
-    Addr argc_base = argv_array_base - argc_size;
-#ifndef NDEBUG
-    // only used in DPRINTF
-    Addr window_save_base = argc_base - window_save_size;
-#endif
+    uint32_t window_save_base = stack_min;
+    uint32_t argc_base = window_save_base + window_save_size;
+    uint32_t argv_array_base = argc_base + argc_size;
+    uint32_t envp_array_base = argv_array_base + argv_array_size;
+    uint32_t auxv_array_base = envp_array_base + envp_array_size;
+    //The info block is pushed up against the top of the stack, while
+    //the rest of the initial stack frame is aligned to an 8 byte boudary.
+    uint32_t arg_data_base = stack_base - info_block_size;
+    uint32_t env_data_base = arg_data_base + arg_data_size;
+    uint32_t file_name_base = env_data_base + env_data_size;
+    uint32_t mysterious_base = file_name_base + file_name_size;
 
     DPRINTF(Sparc, "The addresses of items on the initial stack:\n");
     DPRINTF(Sparc, "0x%x - file name\n", file_name_base);
@@ -619,8 +609,8 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
             (uint8_t*)&zero, 2 * intSize);
 
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem, intSize);
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem, intSize);
+    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
@@ -639,7 +629,7 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
-    Addr prog_entry = objFile->entryPoint();
+    uint32_t prog_entry = objFile->entryPoint();
     threadContexts[0]->setPC(prog_entry);
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
     threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));

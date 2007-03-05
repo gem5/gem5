@@ -621,6 +621,8 @@ class vortex(Benchmark):
     def __init__(self, isa, os, input_set):
         if isa == 'alpha':
             self.endian = 'lendian'
+        elif (isa == 'sparc' or isa == 'sparc32'):
+            self.endian = 'bendian'
         else:
             raise AttributeError, "unknown ISA %s" % isa
 

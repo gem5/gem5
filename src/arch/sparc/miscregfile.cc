@@ -54,7 +54,15 @@ string SparcISA::getMiscRegName(RegIndex index)
          "wstate",*/ "gl",
          "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
          "hstick_cmpr",
-         "fsr"};
+         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg", "itbTsbC0Ps0",
+         "itbTsbC0Ps1", "iTlbC0Cnfg", "itbTsbCXPs0", "itbTsbCXPs1",
+         "iTlbCXCnfg","iTlbSfsr", "iTlbTagAcs", "dtbTsbC0Ps0",
+         "dtbTsbC0Ps1", "dTlbC0Cnfg", "dtbTsbCXPs0", "dtbTsbCXPs1",
+         "dTlbCXCnfg","dTlbSfsr", "dTlbSfar", "dTlbTagAcs",
+         "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
+         "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
+         "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
+         "nresErrorHead", "nresErrorTail", "TlbData" };
 
     return miscRegName[index];
 }
@@ -608,7 +616,6 @@ void MiscRegFile::setReg(int miscReg, const MiscReg &val)
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
         nres_error_tail = val;
         break;
-
       default:
         panic("Miscellaneous register %d not implemented\n", miscReg);
     }
@@ -639,6 +646,12 @@ void MiscRegFile::setRegWithEffect(int miscReg,
         return;
       case MISCREG_TL:
         tl = val;
+#if FULL_SYSTEM
+        if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
+            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+        else
+            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+#endif
         return;
       case MISCREG_CWP:
         new_val = val > NWindows ? NWindows - 1 : val;

@@ -91,15 +91,15 @@ class AlphaTru64 : public Tru64
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x40067408;
-    static const unsigned TIOCSETP   = 0x80067409;
-    static const unsigned TIOCSETN   = 0x8006740a;
-    static const unsigned TIOCSETC   = 0x80067411;
-    static const unsigned TIOCGETC   = 0x40067412;
-    static const unsigned FIONREAD   = 0x4004667f;
-    static const unsigned TIOCISATTY = 0x2000745e;
-    static const unsigned TIOCGETS   = 0x402c7413;
-    static const unsigned TIOCGETA   = 0x40127417;
+    static const unsigned TIOCGETP_   = 0x40067408;
+    static const unsigned TIOCSETP_   = 0x80067409;
+    static const unsigned TIOCSETN_   = 0x8006740a;
+    static const unsigned TIOCSETC_   = 0x80067411;
+    static const unsigned TIOCGETC_   = 0x40067412;
+    static const unsigned FIONREAD_   = 0x4004667f;
+    static const unsigned TIOCISATTY_ = 0x2000745e;
+    static const unsigned TIOCGETS_   = 0x402c7413;
+    static const unsigned TIOCGETA_   = 0x40127417;
     //@}
 
     //@{

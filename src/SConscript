@@ -131,15 +131,19 @@ base_sources = Split('''
         mem/cache/cache_builder.cc
 
         python/swig/init.cc
+        python/swig/core_wrap.cc
         python/swig/debug_wrap.cc
-        python/swig/main_wrap.cc
         python/swig/event_wrap.cc
         python/swig/random_wrap.cc
+        python/swig/sim_object_wrap.cc
         python/swig/stats_wrap.cc
         python/swig/trace_wrap.cc
         python/swig/pyevent.cc
+        python/swig/pyobject.cc
 
+        sim/async.cc
 	sim/builder.cc
+        sim/core.cc
 	sim/debug.cc
 	sim/eventq.cc
 	sim/faults.cc
@@ -149,6 +153,7 @@ base_sources = Split('''
 	sim/serialize.cc
 	sim/sim_events.cc
 	sim/sim_object.cc
+        sim/simulate.cc
 	sim/startup.cc
 	sim/stat_control.cc
 	sim/system.cc

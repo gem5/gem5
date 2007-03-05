@@ -24,76 +24,80 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Ali Saidi
+ *          Lisa Hsu
  */
 
 #ifndef __ARCH_SPARC_INTERRUPT_HH__
 #define __ARCH_SPARC_INTERRUPT_HH__
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/isa_traits.hh"
 #include "cpu/thread_context.hh"
 
 namespace SparcISA
 {
-
-enum interrupts_t {
-    trap_level_zero,
-    hstick_match,
-    interrupt_vector,
-    cpu_mondo,
-    dev_mondo,
-    resumable_error,
-    soft_interrupt,
-    num_interrupt_types
-};
 
 class Interrupts
 {
 
   private:
 
-    bool interrupts[num_interrupt_types];
-    int numPosted;
+    uint64_t interrupts[NumInterruptTypes];
+    uint64_t intStatus;
 
   public:
     Interrupts()
     {
-        for (int i = 0; i < num_interrupt_types; ++i) {
-            interrupts[i] = false;
-        }
-        numPosted = 0;
+        clear_all();
     }
 
-    void post(int int_type)
+    int InterruptLevel(uint64_t softint)
     {
-        if (int_type < 0 || int_type >= num_interrupt_types)
-            panic("posting unknown interrupt!\n");
-        if (interrupts[int_type] == false) {
-            interrupts[int_type] = true;
-            ++numPosted;
-        }
+        if (softint & 0x10000 || softint & 0x1)
+            return 14;
+
+        int level = 15;
+        while (level > 0 && !(1 << level & softint))
+            level--;
+        if (1 << level & softint)
+            return level;
+        return 0;
     }
 
     void post(int int_num, int index)
     {
+        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+        assert(int_num >= 0 && int_num < NumInterruptTypes);
+        assert(index >= 0 && index < 64);
 
+        interrupts[int_num] |= ULL(1) << index;
+        intStatus |= ULL(1) << int_num;
     }
 
     void clear(int int_num, int index)
     {
+        DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
+        assert(int_num >= 0 && int_num < NumInterruptTypes);
+        assert(index >= 0 && index < 64);
 
+        interrupts[int_num] &= ~(ULL(1) << index);
+        if (!interrupts[int_num])
+            intStatus &= ~(ULL(1) << int_num);
     }
 
     void clear_all()
     {
-
+        for (int i = 0; i < NumInterruptTypes; ++i) {
+            interrupts[i] = 0;
+        }
+        intStatus = 0;
     }
 
     bool check_interrupts(ThreadContext * tc) const
     {
-        if (numPosted)
-            return true;
-        else
-            return false;
+        return intStatus;
     }
 
     Fault getInterrupt(ThreadContext * tc)
@@ -109,84 +113,45 @@ class Interrupts
         // in the right order of processing
         if (hpstate & HPSTATE::hpriv) {
             if (ie) {
-                if (interrupts[hstick_match]) {
-                    if (tc->readMiscReg(MISCREG_HINTP) & 1) {
-                        interrupts[hstick_match] = false;
-                        --numPosted;
-                        return new HstickMatch;
-                    }
+                if (interrupts[IT_HINTP]) {
+                    // This will be cleaned by a HINTP write
+                    return new HstickMatch;
                 }
-                if (interrupts[interrupt_vector]) {
-                    interrupts[interrupt_vector] = false;
-                    --numPosted;
-                    //HAVEN'T IMPLed THIS YET
-                    return NoFault;
+                if (interrupts[IT_INT_VEC]) {
+                    // this will be cleared by an ASI read (or write)
+                    return new InterruptVector;
                 }
-            } else {
-                if (interrupts[hstick_match]) {
-                    return NoFault;
-                }
-
             }
         } else {
-            if (interrupts[trap_level_zero]) {
-                if ((pstate & HPSTATE::tlz) && (tc->readMiscReg(MISCREG_TL) == 0)) {
-                    interrupts[trap_level_zero] = false;
-                    --numPosted;
+            if (interrupts[IT_TRAP_LEVEL_ZERO]) {
+                    // this is cleared by deasserting HPSTATE::tlz
                     return new TrapLevelZero;
-                }
             }
-            if (interrupts[hstick_match]) {
-                if (tc->readMiscReg(MISCREG_HINTP) & 1) {
-                    interrupts[hstick_match] = false;
-                    --numPosted;
-                    return new HstickMatch;
-                    }
+            // HStick matches always happen in priv mode (ie doesn't matter)
+            if (interrupts[IT_HINTP]) {
+                return new HstickMatch;
+            }
+            if (interrupts[IT_INT_VEC]) {
+                // this will be cleared by an ASI read (or write)
+                return new InterruptVector;
             }
             if (ie) {
-                if (interrupts[cpu_mondo]) {
-                    interrupts[cpu_mondo] = false;
-                    --numPosted;
+                if (interrupts[IT_CPU_MONDO]) {
                     return new CpuMondo;
                 }
-                if (interrupts[dev_mondo]) {
-                    interrupts[dev_mondo] = false;
-                    --numPosted;
+                if (interrupts[IT_DEV_MONDO]) {
                     return new DevMondo;
                 }
-                if (interrupts[soft_interrupt]) {
-                    int il = InterruptLevel(tc->readMiscReg(MISCREG_SOFTINT));
-                    // it seems that interrupt vectors are right in
-                    // the middle of interrupt levels with regard to
-                    // priority, so have to check
-                    if ((il < 6) &&
-                        interrupts[interrupt_vector]) {
-                            // may require more details here since there
-                            // may be lots of interrupts embedded in an
-                            // platform interrupt vector
-                            interrupts[interrupt_vector] = false;
-                            --numPosted;
-                            //HAVEN'T IMPLed YET
-                            return NoFault;
-                    } else {
-                        if (il > tc->readMiscReg(MISCREG_PIL)) {
-                            uint64_t si = tc->readMiscReg(MISCREG_SOFTINT);
-                            uint64_t more = si & ~(1 << (il + 1));
-                            if (!InterruptLevel(more)) {
-                                interrupts[soft_interrupt] = false;
-                                --numPosted;
-                            }
-                            return new InterruptLevelN(il);
-                        }
-                    }
+                if (interrupts[IT_SOFT_INT]) {
+                    return new
+                        InterruptLevelN(InterruptLevel(interrupts[IT_SOFT_INT]));
                 }
-                if (interrupts[resumable_error]) {
-                    interrupts[resumable_error] = false;
-                    --numPosted;
+
+                if (interrupts[IT_RES_ERROR]) {
                     return new ResumableError;
                 }
-            }
-        }
+            } // !hpriv && ie
+        }  // !hpriv
         return NoFault;
     }
 
@@ -195,16 +160,22 @@ class Interrupts
 
     }
 
+    uint64_t get_vec(int int_num)
+    {
+        assert(int_num >= 0 && int_num < NumInterruptTypes);
+        return interrupts[int_num];
+    }
+
     void serialize(std::ostream &os)
     {
-        SERIALIZE_ARRAY(interrupts,num_interrupt_types);
-        SERIALIZE_SCALAR(numPosted);
+        SERIALIZE_ARRAY(interrupts,NumInterruptTypes);
+        SERIALIZE_SCALAR(intStatus);
     }
 
     void unserialize(Checkpoint *cp, const std::string &section)
     {
-        UNSERIALIZE_ARRAY(interrupts,num_interrupt_types);
-        UNSERIALIZE_SCALAR(numPosted);
+        UNSERIALIZE_ARRAY(interrupts,NumInterruptTypes);
+        UNSERIALIZE_SCALAR(intStatus);
     }
 };
 } // namespace SPARC_ISA

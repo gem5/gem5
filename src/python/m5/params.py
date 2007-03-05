@@ -894,9 +894,8 @@ class PortRef(object):
         if self.ccConnected: # already done this
             return
         peer = self.peer
-        internal.main.connectPorts(self.simobj.getCCObject(), self.name,
-                                   self.index, peer.simobj.getCCObject(),
-                                   peer.name, peer.index)
+        internal.sim_object.connectPorts(self.simobj.getCCObject(), self.name,
+            self.index, peer.simobj.getCCObject(), peer.name, peer.index)
         self.ccConnected = True
         peer.ccConnected = True
 

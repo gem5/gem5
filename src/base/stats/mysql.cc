@@ -930,16 +930,13 @@ MySql::visit(const FormulaData &data)
 
 bool
 initMySQL(string host, string user, string password, string database,
-          string name, string sample, string project)
+          string project, string name, string sample)
 {
     extern list<Output *> OutputList;
     static MySql mysql;
 
     if (mysql.connected())
         return false;
-
-    if (user.empty())
-        user = username();
 
     mysql.connect(host, user, password, database, name, sample, project);
     OutputList.push_back(&mysql);

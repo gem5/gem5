@@ -300,24 +300,6 @@ DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
 ////////////////////////////////////////////////////////////////////////
 
 
-void
-copyStringArray(vector<string> &strings, Addr array_ptr, Addr data_ptr,
-                TranslatingPort* memPort, int ptr_size)
-{
-    Addr data_ptr_swap;
-    for (int i = 0; i < strings.size(); ++i) {
-        data_ptr_swap = htog(data_ptr);
-        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap, ptr_size);
-        memPort->writeString(data_ptr, strings[i].c_str());
-        array_ptr += ptr_size;
-        data_ptr += strings[i].size() + 1;
-    }
-    // add NULL terminator
-    data_ptr = 0;
-
-    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, ptr_size);
-}
-
 LiveProcess::LiveProcess(const string &nm, ObjectFile *_objFile,
                          System *_system,
                          int stdin_fd, int stdout_fd, int stderr_fd,

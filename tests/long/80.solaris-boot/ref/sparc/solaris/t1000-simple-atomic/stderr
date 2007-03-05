@@ -1,0 +1,12 @@
+Warning: rounding error > tolerance
+    0.002000 rounded to 0
+Warning: rounding error > tolerance
+    0.002000 rounded to 0
+warn: No kernel set for full system simulation. Assuming you know what you're doing...
+Listening for t1000 connection on port 3456
+Listening for t1000 connection on port 3457
+0: system.remote_gdb.listener: listening for remote gdb on port 7000
+warn: Entering event queue @ 0.  Starting simulation...
+warn: Ignoring write to SPARC ERROR regsiter
+warn: Ignoring write to SPARC ERROR regsiter
+warn: Don't know what interrupt to clear for console.

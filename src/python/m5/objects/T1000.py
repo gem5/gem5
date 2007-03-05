@@ -1,6 +1,6 @@
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, IsaFake, BadAddr
+from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
 from Uart import Uart8250
 from Platform import Platform
 from SimConsole import SimConsole
@@ -16,6 +16,10 @@ class DumbTOD(BasicPioDevice):
     time = Param.Time('01/01/2009', "System time to use ('Now' for real time)")
     pio_addr = 0xfff0c1fff8
 
+class Iob(PioDevice):
+    type = 'Iob'
+    pio_latency = Param.Latency('1ns', "Programed IO latency in simticks")
+
 
 class T1000(Platform):
     type = 'T1000'
@@ -27,9 +31,6 @@ class T1000(Platform):
     fake_membnks = IsaFake(pio_addr=0x9700000000, pio_size=16384,
             ret_data64=0x0000000000000000, update_data=False)
             #warn_access="Accessing Memory Banks -- Unimplemented!")
-
-    fake_iob = IsaFake(pio_addr=0x9800000000, pio_size=0x100000000)
-            #warn_access="Accessing IOB -- Unimplemented!")
 
     fake_jbi = IsaFake(pio_addr=0x8000000000, pio_size=0x100000000)
             #warn_access="Accessing JBI -- Unimplemented!")
@@ -76,6 +77,13 @@ class T1000(Platform):
     pconsole = SimConsole()
     puart0 = Uart8250(pio_addr=0x1f10000000)
 
+    iob = Iob()
+    # Attach I/O devices that are on chip
+    def attachOnChipIO(self, bus):
+        self.iob.pio = bus.port
+        self.htod.pio = bus.port
+
+
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
     # System level.
@@ -84,8 +92,6 @@ class T1000(Platform):
         self.puart0.sim_console = self.pconsole
         self.fake_clk.pio = bus.port
         self.fake_membnks.pio = bus.port
-        self.fake_iob.pio = bus.port
-        self.fake_jbi.pio = bus.port
         self.fake_l2_1.pio = bus.port
         self.fake_l2_2.pio = bus.port
         self.fake_l2_3.pio = bus.port
@@ -95,6 +101,6 @@ class T1000(Platform):
         self.fake_l2esr_3.pio = bus.port
         self.fake_l2esr_4.pio = bus.port
         self.fake_ssi.pio = bus.port
+        self.fake_jbi.pio = bus.port
         self.puart0.pio = bus.port
         self.hvuart.pio = bus.port
-        self.htod.pio = bus.port

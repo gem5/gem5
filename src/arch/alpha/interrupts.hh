@@ -34,6 +34,7 @@
 
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
+#include "base/compiler.hh"
 #include "cpu/thread_context.hh"
 
 namespace AlphaISA
@@ -50,11 +51,6 @@ namespace AlphaISA
             memset(interrupts, 0, sizeof(interrupts));
             intstatus = 0;
             newInfoSet = false;
-        }
-
-        void post(int int_type)
-        {
-            // sparc only
         }
 
         void post(int int_num, int index)
@@ -161,6 +157,12 @@ namespace AlphaISA
             tc->setMiscReg(IPR_ISR, newSummary);
             tc->setMiscReg(IPR_INTID, newIpl);
             newInfoSet = false;
+        }
+
+        uint64_t get_vec(int int_num)
+        {
+            panic("Shouldn't be called for Alpha\n");
+            M5_DUMMY_RETURN
         }
 
       private:

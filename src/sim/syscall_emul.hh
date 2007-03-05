@@ -211,6 +211,10 @@ SyscallReturn writeFunc(SyscallDesc *desc, int num,
 SyscallReturn lseekFunc(SyscallDesc *desc, int num,
                         LiveProcess *p, ThreadContext *tc);
 
+/// Target _llseek() handler.
+SyscallReturn _llseekFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
+
 /// Target munmap() handler.
 SyscallReturn munmapFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
@@ -448,14 +452,14 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 
     switch (req) {
-      case OS::TIOCISATTY:
-      case OS::TIOCGETP:
-      case OS::TIOCSETP:
-      case OS::TIOCSETN:
-      case OS::TIOCSETC:
-      case OS::TIOCGETC:
-      case OS::TIOCGETS:
-      case OS::TIOCGETA:
+      case OS::TIOCISATTY_:
+      case OS::TIOCGETP_:
+      case OS::TIOCSETP_:
+      case OS::TIOCSETN_:
+      case OS::TIOCSETC_:
+      case OS::TIOCGETC_:
+      case OS::TIOCGETS_:
+      case OS::TIOCGETA_:
         return -ENOTTY;
 
       default:

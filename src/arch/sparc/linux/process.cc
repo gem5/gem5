@@ -333,7 +333,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 233 */ SyscallDesc("stime", unimplementedFunc),
     /* 234 */ SyscallDesc("statfs64", unimplementedFunc),
     /* 235 */ SyscallDesc("fstatfs64", unimplementedFunc),
-    /* 236 */ SyscallDesc("_llseek", unimplementedFunc),
+    /* 236 */ SyscallDesc("_llseek", _llseekFunc),
     /* 237 */ SyscallDesc("mlock", unimplementedFunc),
     /* 238 */ SyscallDesc("munlock", unimplementedFunc),
     /* 239 */ SyscallDesc("mlockall", unimplementedFunc),
