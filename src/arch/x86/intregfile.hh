@@ -1,4 +1,34 @@
 /*
+ * Copyright (c) 2003-2007 The Regents of The University of Michigan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Gabe Black
+ */
+
+/*
  * Copyright (c) 2007 The Hewlett-Packard Development Company
  * All rights reserved.
  *
@@ -55,15 +85,11 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_REGFILE_HH__
-#define __ARCH_X86_REGFILE_HH__
+#ifndef __ARCH_X86_INTREGFILE_HH__
+#define __ARCH_X86_INTREGFILE_HH__
 
-#include "arch/x86/floatregfile.hh"
-#include "arch/x86/intregfile.hh"
-#include "arch/x86/isa_traits.hh"
-#include "arch/x86/miscregfile.hh"
+#include "arch/x86/x86_traits.hh"
 #include "arch/x86/types.hh"
-#include "sim/host.hh"
 
 #include <string>
 
@@ -71,90 +97,33 @@ class Checkpoint;
 
 namespace X86ISA
 {
-    class RegFile
+    class Regfile;
+
+    //This function translates integer register file indices into names
+    std::string getIntRegName(RegIndex);
+
+    const int NumIntArchRegs = 16;
+    const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
+
+    class IntRegFile
     {
       protected:
-        Addr rip; //Program Counter
-        Addr nextRip; //Next Program Counter
+        IntReg regs[NumIntRegs];
 
       public:
-        Addr readPC();
-        void SetPC(Addr val);
 
-        Addr readNextPC();
-        void setNextPC(Addr val);
-
-        Addr readNextNPC();
-        void setNextNPC(Addr val);
-
-      protected:
-        IntRegFile intRegFile; // integer register file
-        FloatRegFile floatRegFile; // floating point register file
-        MiscRegFile miscRegFile; // control register file
-
-      public:
+        int flattenIndex(int reg);
 
         void clear();
 
-        int FlattenIntIndex(int reg);
+        IntReg readReg(int intReg);
 
-        MiscReg readMiscReg(int miscReg);
-
-        MiscReg readMiscRegWithEffect(int miscReg, ThreadContext *tc);
-
-        void setMiscReg(int miscReg, const MiscReg &val);
-
-        void setMiscRegWithEffect(int miscReg, const MiscReg &val,
-                ThreadContext * tc);
-
-        int instAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
-
-        int dataAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
-
-        FloatReg readFloatReg(int floatReg, int width);
-
-        FloatReg readFloatReg(int floatReg);
-
-        FloatRegBits readFloatRegBits(int floatReg, int width);
-
-        FloatRegBits readFloatRegBits(int floatReg);
-
-        void setFloatReg(int floatReg, const FloatReg &val, int width);
-
-        void setFloatReg(int floatReg, const FloatReg &val);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val);
-
-        IntReg readIntReg(int intReg);
-
-        void setIntReg(int intReg, const IntReg &val);
+        void setReg(int intReg, const IntReg &val);
 
         void serialize(std::ostream &os);
+
         void unserialize(Checkpoint *cp, const std::string &section);
-
-      public:
-
-        void changeContext(RegContextParam param, RegContextVal val);
     };
+}
 
-    int flattenIntIndex(ThreadContext * tc, int reg);
-
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
-
-    int InterruptLevel(uint64_t softint);
-
-}; // namespace X86ISA
-
-#endif // __ARCH_X86_REGFILE_HH__
+#endif //__ARCH_X86_INTREGFILE__
