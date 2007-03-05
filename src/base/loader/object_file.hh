@@ -49,7 +49,8 @@ class ObjectFile
         Alpha,
         SPARC64,
         SPARC32,
-        Mips
+        Mips,
+        X86
     };
 
     enum OpSys {
