@@ -79,7 +79,7 @@ namespace X86ISA
 
       public:
         Addr readPC();
-        void SetPC(Addr val);
+        void setPC(Addr val);
 
         Addr readNextPC();
         void setNextPC(Addr val);
