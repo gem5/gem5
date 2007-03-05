@@ -105,6 +105,7 @@ namespace X86ISA
 
     class MiscRegFile
     {
+      public:
         void clear();
 
         MiscRegFile()
