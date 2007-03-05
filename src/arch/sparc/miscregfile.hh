@@ -39,6 +39,8 @@
 
 #include <string>
 
+class Checkpoint;
+
 namespace SparcISA
 {
     //These functions map register indices to names
