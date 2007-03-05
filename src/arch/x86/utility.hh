@@ -58,10 +58,73 @@
 #ifndef __ARCH_X86_UTILITY_HH__
 #define __ARCH_X86_UTILITY_HH__
 
-#error X86 is not yet supported!
+#include "arch/x86/types.hh"
+#include "base/misc.hh"
+
+class ThreadContext;
 
 namespace X86ISA
 {
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        return false;
+    }
+
+    inline ExtMachInst
+    makeExtMI(MachInst inst, ThreadContext * xc) {
+        return inst;
+    }
+
+    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    inline bool isCallerSaveFloatRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
+        panic("register classification not implemented");
+        return false;
+    }
+
+    // Instruction address compression hooks
+    inline Addr realPCToFetchPC(const Addr &addr)
+    {
+        return addr;
+    }
+
+    inline Addr fetchPCToRealPC(const Addr &addr)
+    {
+        return addr;
+    }
+
+    // the size of "fetched" instructions (not necessarily the size
+    // of real instructions for PISA)
+    inline size_t fetchInstSize()
+    {
+        return sizeof(MachInst);
+    }
+
+    /**
+     * Function to insure ISA semantics about 0 registers.
+     * @param tc The thread context.
+     */
+    template <class TC>
+    void zeroRegisters(TC *tc);
+
+    inline void initCPU(ThreadContext *tc, int cpuId)
+    {
+        panic("initCPU not implemented!\n");
+    }
 };
 
 #endif // __ARCH_X86_UTILITY_HH__
