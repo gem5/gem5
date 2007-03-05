@@ -91,6 +91,7 @@
 #include <string>
 
 #include "arch/x86/faults.hh"
+#include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 
 class Checkpoint;
