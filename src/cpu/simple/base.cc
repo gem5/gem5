@@ -371,6 +371,8 @@ BaseSimpleCPU::preExecute()
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->readPC()));
 #elif THE_ISA == SPARC_ISA
         StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
+#elif THE_ISA == X86_ISA
+        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
 #elif THE_ISA == MIPS_ISA
         //Mips doesn't do anything in it's MakeExtMI function right now,
         //so it won't be called.
