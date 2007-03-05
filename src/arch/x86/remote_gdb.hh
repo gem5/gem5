@@ -58,10 +58,36 @@
 #ifndef __ARCH_X86_REMOTEGDB_HH__
 #define __ARCH_X86_REMOTEGDB_HH__
 
-#error X86 is not yet supported!
+#include "arch/x86/types.hh"
+#include "base/remote_gdb.hh"
+
+class System;
+class ThreadContext;
 
 namespace X86ISA
 {
-};
+    class RemoteGDB : public BaseRemoteGDB
+    {
+      protected:
+        enum RegisterContants
+        {
+            //XXX fill this in
+        };
+
+      public:
+        RemoteGDB(System *system, ThreadContext *context);
+
+        bool acc(Addr addr, size_t len);
+
+      protected:
+        void getregs();
+        void setregs();
+
+        void clearSingleStep();
+        void setSingleStep();
+
+        Addr nextBkpt;
+    };
+}
 
 #endif // __ARCH_X86_REMOTEGDB_HH__
