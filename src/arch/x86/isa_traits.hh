@@ -58,7 +58,10 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
+#include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
+
+class StaticInstPtr;
 
 namespace LittleEndianGuest {}
 
@@ -111,10 +114,15 @@ namespace X86ISA
     const int MaxInstDestRegs = 10;
 
     //4k. This value is not constant on x86.
-    const int LogVmPageSize = 12;
-    const int VMPageSize = (1 << LogVmPageSize);
+    const int LogVMPageSize = 12;
+    const int VMPageSize = (1 << LogVMPageSize);
+
+    const int PageShift = 13;
+    const int PageBytes = 1ULL << PageShift;
 
     const int BranchPredAddrShiftAmt = 0;
+
+    StaticInstPtr decodeInst(ExtMachInst);
 };
 
 #endif // __ARCH_X86_ISATRAITS_HH__
