@@ -58,10 +58,18 @@
 #ifndef __ARCH_X86_SYSCALLRETURN_HH__
 #define __ARCH_X86_SYSCALLRETURN_HH__
 
-#error X86 is not yet supported!
+#include "base/misc.hh"
+#include "sim/syscallreturn.hh"
+
+class ThreadContext;
 
 namespace X86ISA
 {
+    static inline void setSyscallReturn(SyscallReturn return_value,
+            ThreadContext * tc)
+    {
+        panic("setSyscallReturn not implemented!\n");
+    }
 };
 
 #endif // __ARCH_X86_SYSCALLRETURN_HH__
