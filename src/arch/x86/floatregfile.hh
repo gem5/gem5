@@ -105,8 +105,17 @@ namespace X86ISA
 
     class FloatRegFile
     {
+      public:
+        static const int SingleWidth = 32;
+        static const int DoubleWidth = 64;
+        static const int QuadWidth = 128;
+
       protected:
-        double regs[NumFloatRegs];
+        union
+        {
+            uint64_t q[NumFloatRegs];
+            double d[NumFloatRegs];
+        };
 
       public:
         void clear();
