@@ -58,10 +58,22 @@
 #ifndef __ARCH_X86_VTOPHYS_HH__
 #define __ARCH_X86_VTOPHYS_HH__
 
-#error X86 is not yet supported!
+#include "arch/x86/isa_traits.hh"
+#include "arch/x86/pagetable.hh"
+#include "sim/host.hh"
+
+class ThreadContext;
+class FunctionalPort;
 
 namespace X86ISA
 {
+
+PageTableEntry
+kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, X86ISA::VAddr vaddr);
+
+Addr vtophys(Addr vaddr);
+Addr vtophys(ThreadContext *tc, Addr vaddr);
+
 };
 
 #endif // __ARCH_X86_VTOPHYS_HH__
