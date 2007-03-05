@@ -58,6 +58,8 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
+#include "arch/x86/x86_traits.hh"
+
 namespace LittleEndianGuest {}
 
 namespace X86ISA
