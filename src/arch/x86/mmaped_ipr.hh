@@ -58,10 +58,33 @@
 #ifndef __ARCH_X86_MMAPEDIPR_HH__
 #define __ARCH_X86_MMAPEDIPR_HH__
 
-#error X86 is not yet supported!
+/**
+ * @file
+ *
+ * ISA-specific helper functions for memory mapped IPR accesses.
+ */
+
+#include "config/full_system.hh"
+#include "cpu/thread_context.hh"
+#include "mem/packet.hh"
 
 namespace X86ISA
 {
+    inline Tick
+    handleIprRead(ThreadContext *xc, Packet *pkt)
+    {
+#if !FULL_SYSTEM
+        panic("Shouldn't have a memory mapped register in SE\n");
+#endif
+    }
+
+    inline Tick
+    handleIprWrite(ThreadContext *xc, Packet *pkt)
+    {
+#if !FULL_SYSTEM
+        panic("Shouldn't have a memory mapped register in SE\n");
+#endif
+    }
 };
 
 #endif // __ARCH_X86_MMAPEDIPR_HH__
