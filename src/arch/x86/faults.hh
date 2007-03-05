@@ -70,6 +70,21 @@ namespace X86ISA
             panic("X86 faults are not implemented!");
         }
     };
+
+    static inline Fault genPageTableFault(Addr va)
+    {
+        panic("Page table fault not implemented in x86!\n");
+    }
+
+    static inline Fault genMachineCheckFault()
+    {
+        panic("Machine check fault not implemented in x86!\n");
+    }
+
+    static inline Fault genAlignmentFault()
+    {
+        panic("Alignment fault not implemented (or for the most part existant) in x86!\n");
+    }
 };
 
 #endif // __ARCH_X86_FAULTS_HH__
