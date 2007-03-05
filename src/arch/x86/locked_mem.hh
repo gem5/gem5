@@ -31,10 +31,28 @@
 #ifndef __ARCH_X86_LOCKEDMEM_HH__
 #define __ARCH_X86_LOCKEDMEM_HH__
 
-#error X86 is not yet supported!
+/**
+ * @file
+ *
+ * ISA-specific helper functions for locked memory accesses.
+ */
+
+#include "mem/request.hh"
 
 namespace X86ISA
 {
+    template <class XC>
+    inline void
+    handleLockedRead(XC *xc, Request *req)
+    {
+    }
+
+    template <class XC>
+    inline bool
+    handleLockedWrite(XC *xc, Request *req)
+    {
+        return true;
+    }
 };
 
 #endif // __ARCH_X86_LOCKEDMEM_HH__
