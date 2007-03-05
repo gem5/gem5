@@ -71,6 +71,7 @@ namespace X86ISA
       protected:
         enum RegisterContants
         {
+            NumGDBRegs
             //XXX fill this in
         };
 
