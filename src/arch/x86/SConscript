@@ -111,6 +111,10 @@ full_system_sources = Split('''
 
 # Syscall emulation (non-full-system) sources
 syscall_emulation_sources = Split('''
+	linux/linux.cc
+	linux/process.cc
+	linux/syscalls.cc
+	process.cc
 	''')
 
 sources = base_sources

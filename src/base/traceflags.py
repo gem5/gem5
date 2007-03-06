@@ -168,6 +168,7 @@ baseFlags = [
     'VtoPhys',
     'WriteBarrier',
     'Writeback',
+    'X86',
     ]
 
 #

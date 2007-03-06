@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
+#include "arch/x86/intregs.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 
@@ -93,21 +94,21 @@ namespace X86ISA
     // semantically meaningful register indices
     //There is no such register in X86
     const int ZeroReg = 0;
-    const int StackPointerReg = 4; //RSP
+    const int StackPointerReg = INTREG_RSP;
     //X86 doesn't seem to have a link register
     const int ReturnAddressReg = 0;
-    const int ReturnValueReg = 0; //RAX
-    const int FramePointerReg = 5; //RBP
-    const int ArgumentReg0 = 7; //RDI
-    const int ArgumentReg1 = 6; //RSI
-    const int ArgumentReg2 = 2; //RDX
-    const int ArgumentReg3 = 1; //RCX
-    const int ArgumentReg4 = 8; //R8W
-    const int ArgumentReg5 = 9; //R9W
+    const int ReturnValueReg = INTREG_RAX;
+    const int FramePointerReg = INTREG_RBP;
+    const int ArgumentReg0 = INTREG_RDI;
+    const int ArgumentReg1 = INTREG_RSI;
+    const int ArgumentReg2 = INTREG_RDX;
+    const int ArgumentReg3 = INTREG_RCX;
+    const int ArgumentReg4 = INTREG_R8W;
+    const int ArgumentReg5 = INTREG_R9W;
 
     // Some OS syscalls use a second register (rdx) to return a second
     // value
-    const int SyscallPseudoReturnReg = 2; //RDX
+    const int SyscallPseudoReturnReg = INTREG_RDX;
 
     //XXX These numbers are bogus
     const int MaxInstSrcRegs = 10;

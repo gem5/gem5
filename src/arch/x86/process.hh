@@ -58,10 +58,51 @@
 #ifndef __ARCH_X86_PROCESS_HH__
 #define __ARCH_X86_PROCESS_HH__
 
-#error X86 is not yet supported!
+#include <string>
+#include <vector>
+#include "sim/process.hh"
 
 namespace X86ISA
 {
-};
+    struct M5_64_auxv_t
+    {
+        int64_t a_type;
+        union {
+            int64_t a_val;
+            int64_t a_ptr;
+            int64_t a_fcn;
+        };
+
+        M5_64_auxv_t()
+        {}
+
+        M5_64_auxv_t(int64_t type, int64_t val);
+    };
+
+    class X86LiveProcess : public LiveProcess
+    {
+      protected:
+        std::vector<M5_64_auxv_t> auxv;
+
+        X86LiveProcess(const std::string &nm, ObjectFile *objFile,
+                    System *_system,
+                    int stdin_fd, int stdout_fd, int stderr_fd,
+                    std::vector<std::string> &argv,
+                    std::vector<std::string> &envp,
+                    const std::string &cwd,
+                    uint64_t _uid, uint64_t _euid,
+                    uint64_t _gid, uint64_t _egid,
+                    uint64_t _pid, uint64_t _ppid);
+
+        void startup();
+
+      public:
+
+        //Handles traps which request services from the operating system
+        virtual void handleTrap(int trapNum, ThreadContext *tc);
+
+        void argsInit(int intSize, int pageSize);
+    };
+}
 
 #endif // __ARCH_X86_PROCESS_HH__

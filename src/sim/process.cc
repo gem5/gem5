@@ -61,7 +61,7 @@
 #elif THE_ISA == MIPS_ISA
 #include "arch/mips/linux/process.hh"
 #elif THE_ISA == X86_ISA
-//XXX There are no x86 processes yet
+#include "arch/x86/linux/process.hh"
 #else
 #error "THE_ISA not set"
 #endif
@@ -490,15 +490,15 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
     }
 #elif THE_ISA == X86_ISA
     if (objFile->getArch() != ObjectFile::X86)
-        fatal("Object file architecture does not match compiled ISA (SPARC).");
-    panic("There are no implemented x86 processes!\n");
+        fatal("Object file architecture does not match compiled ISA (x86).");
     switch (objFile->getOpSys()) {
-      /*case ObjectFile::Linux:
+      case ObjectFile::Linux:
         process = new X86LinuxProcess(nm, objFile, system,
                                           stdin_fd, stdout_fd, stderr_fd,
                                           argv, envp, cwd,
                                           _uid, _euid, _gid,
-                                          _egid, _pid, _ppid);*/
+                                          _egid, _pid, _ppid);
+        break;
       default:
         fatal("Unknown/unsupported operating system.");
     }
