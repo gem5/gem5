@@ -138,9 +138,11 @@ def simulate(*args, **kwargs):
 def curTick():
     return internal.event.cvar.curTick
 
+# Python exit handlers happen in reverse order.  We want to dump stats last.
+atexit.register(internal.stats.dump)
+
 # register our C++ exit callback function with Python
 atexit.register(internal.core.doExitCleanup)
-atexit.register(internal.stats.dump)
 
 # This loops until all objects have been fully drained.
 def doDrain(root):
