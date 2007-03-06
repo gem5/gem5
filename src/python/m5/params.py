@@ -361,6 +361,7 @@ class MemorySize(CheckedInt):
         self._check()
 
 class MemorySize32(CheckedInt):
+    cxx_type = 'uint32_t'
     size = 32
     unsigned = True
     def __init__(self, value):
