@@ -1,0 +1,22 @@
+Begining test of difficult SPARC instructions...
+LDSTUB:		Passed
+SWAP:		Passed
+CAS FAIL:	Passed
+CAS WORK:	Passed
+CASX FAIL:	Passed
+CASX WORK:	Passed
+LDTX:		Passed
+LDTW:		Passed
+Done
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar  6 2007 15:43:35
+M5 started Tue Mar  6 15:52:39 2007
+M5 executing on zeep
+command line: build/SPARC_SE/m5.debug -d build/SPARC_SE/tests/debug/quick/02.insttest/sparc/linux/simple-atomic tests/run.py quick/02.insttest/sparc/linux/simple-atomic
+Exiting @ tick 10366 because target called exit()
