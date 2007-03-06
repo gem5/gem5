@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,9 +145,13 @@ int main(int argc, char * argv[], char * envp[])
                         return 1;
                 }
         }
-        for(unsigned int x = startProgramArgs; x < argc; x++)
-            args += argv[x];
-        if(!child->startTracing(argv[startProgramArgs], args.c_str()))
+        /*for(unsigned int x = startProgramArgs; x < argc; x++)
+        {
+            cout << "Adding argument " << argv[x];
+            args += string(" ") + argv[x];
+        }*/
+        if(!child->startTracing(argv[startProgramArgs],
+                    argv + startProgramArgs))
         {
                 cerr << "Couldn't start target program" << endl;
                 return 1;

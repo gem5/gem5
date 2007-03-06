@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,12 @@ private:
         int64_t inputs[8];
         int64_t oldInputs[8];
         bool regDiffSinceUpdate[numregs];
+
+        //This calculates where the pc might go after the current instruction.
+        //while this equals npc for most instructions, it doesn't for all of
+        //them. The return value is the number of actual potential targets.
+        int getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
+                uint64_t &target1, uint64_t &target2);
 
 protected:
         bool update(int pid);
