@@ -64,7 +64,7 @@ def run(options, root, testsys, cpu_class):
     if options.maxtick:
         maxtick = options.maxtick
     elif options.maxtime:
-        simtime = int(options.maxtime * root.clock.value)
+        simtime = m5.ticks.seconds(simtime)
         print "simulating for: ", simtime
         maxtick = simtime
     else:

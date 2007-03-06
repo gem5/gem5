@@ -45,7 +45,7 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/cpu.hh"
 
-#include "sim/root.hh"
+#include "sim/core.hh"
 #include "sim/stat_control.hh"
 
 #if USE_CHECKER

@@ -53,9 +53,6 @@ class CountedDrainEvent : public Event {
 CountedDrainEvent *createCountedDrain();
 void cleanupCountedDrain(Event *drain_event);
 
-%immutable curTick;
-Tick curTick;
-
 // minimal definition of SimExitEvent interface to wrap
 class SimLoopExitEvent {
   public:
@@ -73,8 +70,6 @@ class SimLoopExitEvent {
 }
 SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
 void exitSimLoop(const std::string &message, int exit_code);
-
-Tick curTick;
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package

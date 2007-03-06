@@ -40,7 +40,7 @@
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/host.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 #if FULL_SYSTEM
 #include "arch/tlb.hh"

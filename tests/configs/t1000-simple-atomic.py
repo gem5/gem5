@@ -36,4 +36,6 @@ system = FSConfig.makeSparcSystem('atomic')
 system.cpu = cpu
 cpu.connectMemPorts(system.membus)
 
-root = Root(clock = '2GHz', system = system)
+root = Root(system=system)
+
+m5.ticks.setGlobalFrequency('2GHz')

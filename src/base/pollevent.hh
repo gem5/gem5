@@ -33,7 +33,7 @@
 
 #include <vector>
 #include <poll.h>
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 class Checkpoint;
 class PollQueue;

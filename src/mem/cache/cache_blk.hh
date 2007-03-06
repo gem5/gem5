@@ -37,7 +37,7 @@
 
 #include <list>
 
-#include "sim/root.hh"		// for Tick
+#include "sim/core.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
 #include "mem/request.hh"
 

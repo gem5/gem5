@@ -36,7 +36,7 @@ import internal
 # import a few SWIG-wrapped items (those that are likely to be used
 # directly by user scripts) completely into this module for
 # convenience
-from internal.event import SimLoopExitEvent
+import event
 
 # import the m5 compile options
 import defines
@@ -80,7 +80,9 @@ env.update(os.environ)
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(root):
-    params.ticks_per_sec = float(root.clock.frequency)
+    # we need to fix the global frequency
+    ticks.fixGlobalFrequency()
+
     root.unproxy_all()
     # ugly temporary hack to get output to config.ini
     sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
@@ -94,6 +96,7 @@ def instantiate(root):
     # Initialize the global statistics
     internal.stats.initSimStats()
 
+    # Create the C++ sim objects and connect ports
     root.createCCObject()
     root.connectPorts()
 
@@ -136,7 +139,7 @@ def simulate(*args, **kwargs):
 
 # Export curTick to user script.
 def curTick():
-    return internal.event.cvar.curTick
+    return internal.core.cvar.curTick
 
 # Python exit handlers happen in reverse order.  We want to dump stats last.
 atexit.register(internal.stats.dump)

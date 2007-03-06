@@ -188,6 +188,7 @@ def parse_args():
 
 def main():
     import defines
+    import event
     import info
     import internal
 
@@ -295,7 +296,7 @@ def main():
     if options.trace_start:
         def enable_trace():
             internal.trace.cvar.enabled = True
-        internal.event.create(enable_trace, int(options.trace_start))
+        event.create(enable_trace, int(options.trace_start))
     else:
         internal.trace.cvar.enabled = True
 

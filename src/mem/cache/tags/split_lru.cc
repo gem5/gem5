@@ -38,7 +38,7 @@
 #include "mem/cache/base_cache.hh"
 #include "base/intmath.hh"
 #include "mem/cache/tags/split_lru.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

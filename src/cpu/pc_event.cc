@@ -40,7 +40,7 @@
 #include "cpu/thread_context.hh"
 #include "cpu/pc_event.hh"
 #include "sim/debug.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 using namespace std;

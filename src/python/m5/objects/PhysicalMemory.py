@@ -8,7 +8,7 @@ class PhysicalMemory(MemObject):
     functional = Port("Functional Access Port")
     range = Param.AddrRange(AddrRange('128MB'), "Device Address")
     file = Param.String('', "memory mapped file")
-    latency = Param.Latency(Parent.clock, "latency of an access")
+    latency = Param.Latency('1t', "latency of an access")
     zero = Param.Bool(False, "zero initialize memory")
 
 class DRAMMemory(PhysicalMemory):

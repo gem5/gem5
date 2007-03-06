@@ -137,7 +137,7 @@ if len(bm) == 2:
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
     root = makeDualRoot(test_sys, drive_sys, options.etherdump)
 elif len(bm) == 1:
-    root = Root(clock = '1THz', system = test_sys)
+    root = Root(system=test_sys)
 else:
     print "Error I don't know how to create more than 2 systems."
     sys.exit(1)

@@ -42,7 +42,7 @@
 #include "sim/host.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 #include "sim/serialize.hh"
 
 using namespace std;

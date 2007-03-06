@@ -158,21 +158,3 @@ CheckSwapEvent::description()
 {
     return "check swap";
 }
-
-//
-// handle progress event: print message and reschedule
-//
-void
-ProgressEvent::process()
-{
-    DPRINTFN("ProgressEvent\n");
-    // reschedule for next interval
-    schedule(curTick + interval);
-}
-
-
-const char *
-ProgressEvent::description()
-{
-    return "progress message";
-}

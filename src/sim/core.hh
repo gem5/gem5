@@ -29,12 +29,57 @@
  *          Steve Reinhardt
  */
 
-#include <Python.h>
+#ifndef __SIM_CORE_HH__
+#define __SIM_CORE_HH__
+
 #include <string>
 
-#include "base/callback.hh"
+#include "sim/host.hh"
 
+/// The universal simulation clock.
+extern Tick curTick;
+const Tick retryTime = 1000;
+
+namespace Clock {
+/// The simulated frequency of curTick.
+extern Tick Frequency;
+
+namespace Float {
+extern double s;
+extern double ms;
+extern double us;
+extern double ns;
+extern double ps;
+
+extern double Hz;
+extern double kHz;
+extern double MHz;
+extern double GHZ;
+/* namespace Float */ }
+
+namespace Int {
+extern Tick s;
+extern Tick ms;
+extern Tick us;
+extern Tick ns;
+extern Tick ps;
+/* namespace Int */ }
+/* namespace Clock */ }
+
+void setClockFrequency(Tick ticksPerSecond);
+
+/// Output stream for simulator messages (e.g., cprintf()).  Also used
+/// as default stream for tracing and DPRINTF() messages (unless
+/// overridden with trace:file option).
+extern std::ostream *outputStream;
+void setOutputFile(const std::string &file);
 void setOutputDir(const std::string &dir);
 
+/// Output stream for configuration dump.
+extern std::ostream *configStream;
+
+struct Callback;
 void registerExitCallback(Callback *callback);
 void doExitCleanup();
+
+#endif /* __SIM_CORE_HH__ */

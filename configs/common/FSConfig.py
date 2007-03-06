@@ -132,5 +132,4 @@ def makeDualRoot(testSystem, driveSystem, dumpfile):
         self.etherdump = EtherDump(file=dumpfile)
         self.etherlink.dump = Parent.etherdump
 
-    self.clock = '1THz'
     return self

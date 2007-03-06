@@ -40,7 +40,7 @@
 #define __MEM_REQUEST_HH__
 
 #include "sim/host.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 #include <cassert>
 

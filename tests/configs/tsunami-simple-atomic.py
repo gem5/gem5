@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,4 +36,5 @@ system = FSConfig.makeLinuxAlphaSystem('atomic')
 system.cpu = cpu
 cpu.connectMemPorts(system.membus)
 
-root = Root(clock = '2GHz', system = system)
+root = Root(system=system)
+m5.ticks.setGlobalFrequency('2GHz')

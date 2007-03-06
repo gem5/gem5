@@ -34,13 +34,76 @@
 
 #include "base/callback.hh"
 #include "base/output.hh"
+#include "sim/core.hh"
 
 using namespace std;
+
+Tick curTick = 0;
+
+namespace Clock {
+/// The simulated frequency of curTick. (In ticks per second)
+Tick Frequency;
+
+namespace Float {
+double s;
+double ms;
+double us;
+double ns;
+double ps;
+
+double Hz;
+double kHz;
+double MHz;
+double GHZ;
+/* namespace Float */ }
+
+namespace Int {
+Tick s;
+Tick ms;
+Tick us;
+Tick ns;
+Tick ps;
+/* namespace Float */ }
+
+/* namespace Clock */ }
+
+void
+setClockFrequency(Tick ticksPerSecond)
+{
+    using namespace Clock;
+    Frequency = ticksPerSecond;
+    Float::s = static_cast<double>(Frequency);
+    Float::ms = Float::s / 1.0e3;
+    Float::us = Float::s / 1.0e6;
+    Float::ns = Float::s / 1.0e9;
+    Float::ps = Float::s / 1.0e12;
+
+    Float::Hz  = 1.0 / Float::s;
+    Float::kHz = 1.0 / Float::ms;
+    Float::MHz = 1.0 / Float::us;
+    Float::GHZ = 1.0 / Float::ns;
+
+    Int::s  = Frequency;
+    Int::ms = Int::s / 1000;
+    Int::us = Int::ms / 1000;
+    Int::ns = Int::us / 1000;
+    Int::ps = Int::ns / 1000;
+
+}
 
 void
 setOutputDir(const string &dir)
 {
     simout.setDirectory(dir);
+}
+
+ostream *outputStream;
+ostream *configStream;
+
+void
+setOutputFile(const string &file)
+{
+    outputStream = simout.find(file);
 }
 
 /**
@@ -74,3 +137,4 @@ doExitCleanup()
 
     cout.flush();
 }
+

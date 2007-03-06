@@ -41,14 +41,22 @@
 extern const char *compileDate;
 %}
 
+%include "stdint.i"
 %include "std_string.i"
+%include "sim/host.hh"
 
 void setOutputDir(const std::string &dir);
+void setOutputFile(const std::string &file);
 void loadIniFile(PyObject *);
 void SimStartup();
 void doExitCleanup();
 
 char *compileDate;
+
+void setClockFrequency(Tick ticksPerSecond);
+
+%immutable curTick;
+Tick curTick;
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package

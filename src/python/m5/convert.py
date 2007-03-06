@@ -148,7 +148,7 @@ def toLatency(value):
 
     raise ValueError, "cannot convert '%s' to latency" % value
 
-def toClockPeriod(value):
+def anyToLatency(value):
     """result is a clock period"""
 
     if not isinstance(value, str):
@@ -170,6 +170,27 @@ def toClockPeriod(value):
 
     raise ValueError, "cannot convert '%s' to clock period" % value
 
+def anyToFrequency(value):
+    """result is a clock period"""
+
+    if not isinstance(value, str):
+        raise TypeError, "wrong type '%s' should be str" % type(value)
+
+    try:
+        val = toFrequency(value)
+        return val
+    except ValueError:
+        pass
+
+    try:
+        val = toLatency(value)
+        if val != 0:
+            val = 1 / val
+        return val
+    except ValueError:
+        pass
+
+    raise ValueError, "cannot convert '%s' to clock period" % value
 
 def toNetworkBandwidth(value):
     if not isinstance(value, str):
