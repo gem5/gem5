@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Ali Saidi
 
-import m5
-from m5.objects import *
-m5.AddToPath('../configs/common')
-import FSConfig
-
-cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
-system = FSConfig.makeLinuxAlphaSystem('timing')
-system.cpu = cpus
-for c in cpus:
-    c.connectMemPorts(system.membus)
-
-root = Root(system=system)
-m5.ticks.setGlobalFrequency('2GHz')
+root.system.cpu.workload = LiveProcess(cmd = 'insttest',
+                                       executable = binpath('insttest'))

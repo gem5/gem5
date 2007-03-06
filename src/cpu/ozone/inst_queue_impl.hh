@@ -38,7 +38,7 @@
 
 #include <vector>
 
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 #include "cpu/ozone/inst_queue.hh"
 #if 0

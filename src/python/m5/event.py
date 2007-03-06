@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
+# Authors: Nathan Binkert
 
-import m5
-from m5.objects import *
-m5.AddToPath('../configs/common')
-import FSConfig
+from internal.event import create
+from internal.event import SimLoopExitEvent as SimExit
 
-cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
-system = FSConfig.makeLinuxAlphaSystem('timing')
-system.cpu = cpus
-for c in cpus:
-    c.connectMemPorts(system.membus)
+class ProgressEvent(object):
+    def __init__(self, period):
+        self.period = int(period)
+        self.schedule()
 
-root = Root(system=system)
-m5.ticks.setGlobalFrequency('2GHz')
+    def schedule(self):
+        create(self, m5.curTick() + self.period)
+
+    def __call__(self):
+        print "Progress! Time now %fs" % (m5.curTick()/1e12)
+        self.schedule()

@@ -125,23 +125,4 @@ class CheckSwapEvent : public Event
     virtual const char *description();
 };
 
-//
-// Progress event: print out cycle every so often so we know we're
-// making forward progress.
-//
-class ProgressEvent : public Event
-{
-  protected:
-    Tick interval;
-
-  public:
-    ProgressEvent(EventQueue *q, Tick ival)
-        : Event(q), interval(ival)
-    { schedule(curTick + interval); }
-
-    void process();	// process event
-
-    virtual const char *description();
-};
-
 #endif  // __SIM_SIM_EVENTS_HH__

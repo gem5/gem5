@@ -43,7 +43,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "sim/builder.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

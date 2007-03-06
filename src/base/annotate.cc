@@ -32,7 +32,7 @@
 #include "base/callback.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
 

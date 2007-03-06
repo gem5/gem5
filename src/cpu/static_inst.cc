@@ -31,7 +31,7 @@
 
 #include <iostream>
 #include "cpu/static_inst.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 StaticInstPtr StaticInst::nullStaticInstPtr;
 

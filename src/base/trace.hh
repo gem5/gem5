@@ -39,7 +39,7 @@
 #include "base/match.hh"
 #include "base/traceflags.hh"
 #include "sim/host.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 namespace Trace {
 

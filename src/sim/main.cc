@@ -40,7 +40,7 @@
 #include "python/swig/init.hh"
 #include "sim/async.hh"
 #include "sim/host.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

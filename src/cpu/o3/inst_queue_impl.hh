@@ -32,7 +32,7 @@
 #include <limits>
 #include <vector>
 
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"

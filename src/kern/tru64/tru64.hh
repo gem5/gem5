@@ -56,7 +56,7 @@ class Tru64 {};
 #include <unistd.h>
 
 #include "cpu/base.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 #include "sim/syscall_emul.hh"
 
 typedef struct stat global_stat;

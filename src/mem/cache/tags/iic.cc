@@ -42,7 +42,7 @@
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/tags/iic.hh"
 #include "base/intmath.hh"
-#include "sim/root.hh" // for curTick
+#include "sim/core.hh" // for curTick
 
 #include "base/trace.hh" // for DPRINTF
 

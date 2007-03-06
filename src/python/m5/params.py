@@ -51,6 +51,7 @@ import sys
 import time
 
 import convert
+import ticks
 from util import *
 
 # Dummy base class to identify types that are legitimate for SimObject
@@ -360,6 +361,7 @@ class MemorySize(CheckedInt):
         self._check()
 
 class MemorySize32(CheckedInt):
+    cxx_type = 'uint32_t'
     size = 32
     unsigned = True
     def __init__(self, value):
@@ -632,47 +634,29 @@ class Enum(ParamValue):
     def __str__(self):
         return self.value
 
-ticks_per_sec = None
-
 # how big does a rounding error need to be before we warn about it?
 frequency_tolerance = 0.001  # 0.1%
 
-# convert a floting-point # of ticks to integer, and warn if rounding
-# discards too much precision
-def tick_check(float_ticks):
-    if float_ticks == 0:
-        return 0
-    int_ticks = int(round(float_ticks))
-    err = (float_ticks - int_ticks) / float_ticks
-    if err > frequency_tolerance:
-        print >> sys.stderr, "Warning: rounding error > tolerance"
-        print >> sys.stderr, "    %f rounded to %d" % (float_ticks, int_ticks)
-        #raise ValueError
-    return int_ticks
-
-def getLatency(value):
-    if isinstance(value, Latency) or isinstance(value, Clock):
-        return value.value
-    elif isinstance(value, Frequency) or isinstance(value, RootClock):
-        return 1 / value.value
-    elif isinstance(value, str):
-        try:
-            return convert.toLatency(value)
-        except ValueError:
-            try:
-                return 1 / convert.toFrequency(value)
-            except ValueError:
-                pass # fall through
-    raise ValueError, "Invalid Frequency/Latency value '%s'" % value
-
-
-class Latency(NumericParamValue):
+class TickParamValue(NumericParamValue):
     cxx_type = 'Tick'
     cxx_predecls = ['#include "sim/host.hh"']
     swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
                      '%import "sim/host.hh"']
+
+class Latency(TickParamValue):
     def __init__(self, value):
-        self.value = getLatency(value)
+        if isinstance(value, (Latency, Clock)):
+            self.ticks = value.ticks
+            self.value = value.value
+        elif isinstance(value, Frequency):
+            self.ticks = value.ticks
+            self.value = 1.0 / value.value
+        elif value.endswith('t'):
+            self.ticks = True
+            self.value = int(value[:-1])
+        else:
+            self.ticks = False
+            self.value = convert.toLatency(value)
 
     def __getattr__(self, attr):
         if attr in ('latency', 'period'):
@@ -683,15 +667,25 @@ class Latency(NumericParamValue):
 
     # convert latency to ticks
     def ini_str(self):
-        return str(tick_check(self.value * ticks_per_sec))
+        if self.ticks or self.value == 0:
+            return '%d' % self.value
+        else:
+            return '%d' % (ticks.fromSeconds(self.value))
 
-class Frequency(NumericParamValue):
-    cxx_type = 'Tick'
-    cxx_predecls = ['#include "sim/host.hh"']
-    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
-                     '%import "sim/host.hh"']
+class Frequency(TickParamValue):
     def __init__(self, value):
-        self.value = 1 / getLatency(value)
+        if isinstance(value, (Latency, Clock)):
+            if value.value == 0:
+                self.value = 0
+            else:
+                self.value = 1.0 / value.value
+            self.ticks = value.ticks
+        elif isinstance(value, Frequency):
+            self.value = value.value
+            self.ticks = value.ticks
+        else:
+            self.ticks = False
+            self.value = convert.toFrequency(value)
 
     def __getattr__(self, attr):
         if attr == 'frequency':
@@ -700,30 +694,12 @@ class Frequency(NumericParamValue):
             return Latency(self)
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
-    # convert frequency to ticks per period
+    # convert latency to ticks
     def ini_str(self):
-        return self.period.ini_str()
-
-# Just like Frequency, except ini_str() is absolute # of ticks per sec (Hz).
-# We can't inherit from Frequency because we don't want it to be directly
-# assignable to a regular Frequency parameter.
-class RootClock(ParamValue):
-    cxx_type = 'Tick'
-    cxx_predecls = ['#include "sim/host.hh"']
-    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
-                     '%import "sim/host.hh"']
-    def __init__(self, value):
-        self.value = 1 / getLatency(value)
-
-    def __getattr__(self, attr):
-        if attr == 'frequency':
-            return Frequency(self)
-        if attr in ('latency', 'period'):
-            return Latency(self)
-        raise AttributeError, "Frequency object has no attribute '%s'" % attr
-
-    def ini_str(self):
-        return str(tick_check(self.value))
+        if self.ticks or self.value == 0:
+            return '%d' % self.value
+        else:
+            return '%d' % (ticks.fromSeconds(1.0 / self.value))
 
 # A generic frequency and/or Latency value.  Value is stored as a latency,
 # but to avoid ambiguity this object does not support numeric ops (* or /).
@@ -734,7 +710,18 @@ class Clock(ParamValue):
     swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
                      '%import "sim/host.hh"']
     def __init__(self, value):
-        self.value = getLatency(value)
+        if isinstance(value, (Latency, Clock)):
+            self.ticks = value.ticks
+            self.value = value.value
+        elif isinstance(value, Frequency):
+            self.ticks = value.ticks
+            self.value = 1.0 / value.value
+        elif value.endswith('t'):
+            self.ticks = True
+            self.value = int(value[:-1])
+        else:
+            self.ticks = False
+            self.value = convert.anyToLatency(value)
 
     def __getattr__(self, attr):
         if attr == 'frequency':
@@ -749,18 +736,23 @@ class Clock(ParamValue):
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(cls, value):
-        val = convert.toNetworkBandwidth(value) / 8.0
+        # convert to bits per second
+        val = convert.toNetworkBandwidth(value)
         return super(cls, NetworkBandwidth).__new__(cls, val)
 
     def __str__(self):
         return str(self.val)
 
     def ini_str(self):
-        return '%f' % (ticks_per_sec / float(self))
+        # convert to seconds per byte
+        value = 8.0 / float(self)
+        # convert to ticks per byte
+        return '%f' % (ticks.fromSeconds(value))
 
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(self, value):
+        # we want the number of ticks per byte of data
         val = convert.toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
 
@@ -768,7 +760,10 @@ class MemoryBandwidth(float,ParamValue):
         return str(self.val)
 
     def ini_str(self):
-        return '%f' % (ticks_per_sec / float(self))
+        # convert to seconds per byte
+        value = 1.0 / float(self)
+        # convert to ticks per byte
+        return '%f' % (ticks.fromSeconds(value))
 
 #
 # "Constants"... handy aliases for various values.
@@ -1023,7 +1018,7 @@ __all__ = ['Param', 'VectorParam',
            'Counter', 'Addr', 'Tick', 'Percent',
            'TcpPort', 'UdpPort', 'EthernetAddr',
            'MemorySize', 'MemorySize32',
-           'Latency', 'Frequency', 'RootClock', 'Clock',
+           'Latency', 'Frequency', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
            'Range', 'AddrRange', 'TickRange',
            'MaxAddr', 'MaxTick', 'AllMemory',

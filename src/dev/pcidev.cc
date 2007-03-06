@@ -51,7 +51,7 @@
 #include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/param.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

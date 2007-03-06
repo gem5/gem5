@@ -46,7 +46,7 @@
 #include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/host.hh"
-#include "sim/root.hh"
+#include "sim/core.hh"
 
 
 struct Packet;
