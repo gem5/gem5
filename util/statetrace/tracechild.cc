@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,9 @@
 
 using namespace std;
 
-bool TraceChild::startTracing(const char * pathToFile, const char * arg)
+bool TraceChild::startTracing(const char * pathToFile, char * const argv[])
 {
+        instructions = 0;
         pid = fork();
         if(pid == -1)
         {
@@ -53,7 +54,7 @@ bool TraceChild::startTracing(const char * pathToFile, const char * arg)
                 ptrace(PTRACE_TRACEME, 0, 0, 0);
 
                 //Start the program to trace
-                execl(pathToFile, arg);
+                execv(pathToFile, argv);
 
                 //We should never get here, so this is an error!
                 return false;
@@ -121,6 +122,8 @@ bool TraceChild::doWait()
         {
                 cerr << "Program exited! Exit status is "
                         << WEXITSTATUS(wait_val) << endl;
+                cerr << "Executed " << instructions
+                        << " instructions." << endl;
                 tracing = false;
                 return false;
         }
@@ -132,6 +135,8 @@ bool TraceChild::doWait()
                 if(WCOREDUMP(wait_val))
                         cerr << "Program core dumped!" << endl;
                 tracing = false;
+                cerr << "Executed " << instructions
+                        << " instructions." << endl;
                 return false;
         }
         if(WIFSTOPPED(wait_val) && WSTOPSIG(wait_val) != SIGTRAP)
@@ -139,6 +144,8 @@ bool TraceChild::doWait()
                 cerr << "Program stopped by signal "
                         << WSTOPSIG(wait_val) << endl;
                 tracing = false;
+                cerr << "Executed " << instructions
+                        << " instructions." << endl;
                 return false;
         }
         return true;

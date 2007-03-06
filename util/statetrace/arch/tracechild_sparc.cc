@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -151,7 +151,6 @@ int64_t getRegs(regs & myregs, fpu & myfpu,
 
 bool SparcTraceChild::update(int pid)
 {
-    static const int stackBias = 2047;
     memcpy(&oldregs, &theregs, sizeof(regs));
     memcpy(&oldfpregs, &thefpregs, sizeof(fpu));
     memcpy(oldLocals, locals, 8 * sizeof(uint64_t));
@@ -161,7 +160,8 @@ bool SparcTraceChild::update(int pid)
         cerr << "Update failed" << endl;
         return false;
     }
-    uint64_t StackPointer = getRegVal(O6);
+    uint64_t StackPointer = getSP();
+    const int stackBias = (StackPointer % 1) ? 2047 : 0;
     for(unsigned int x = 0; x < 8; x++)
     {
         locals[x] = ptrace(PTRACE_PEEKTEXT, pid,
@@ -182,8 +182,76 @@ SparcTraceChild::SparcTraceChild()
         regDiffSinceUpdate[x] = false;
 }
 
+int SparcTraceChild::getTargets(uint32_t inst, uint64_t pc, uint64_t npc,
+        uint64_t &target1, uint64_t &target2)
+{
+    //We can identify the instruction categories we care about using the top
+    //10 bits of the instruction, excluding the annul bit in the 3rd most
+    //significant bit position and the condition field. We'll call these
+    //bits the "sig" for signature.
+    uint32_t sig = (inst >> 22) & 0x307;
+    uint32_t cond = (inst >> 25) & 0xf;
+    bool annul = (inst & (1 << 29));
+
+    //Check if it's a ba...
+    bool ba = (cond == 0x8) &&
+        (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
+    //or a bn...
+    bool bn = (cond == 0x0) &&
+        (sig == 0x1 || sig == 0x2 || sig == 0x5 || sig == 0x6);
+    //or a bcc
+    bool bcc = (cond & 0x7) &&
+        (sig == 0x1 || sig == 0x2 || sig == 0x3 || sig == 0x5 || sig == 0x6);
+
+    if(annul)
+    {
+        if(bcc)
+        {
+            target1 = npc;
+            target2 = npc + 4;
+            return 2;
+        }
+        else if(ba)
+        {
+            //This branches immediately to the effective address of the branch
+            //which we'll have to calculate.
+            uint64_t disp = 0;
+            int64_t extender = 0;
+            //Figure out how big the displacement field is, and grab the bits
+            if(sig == 0x1 || sig == 0x5)
+            {
+                disp = inst & ((1 << 19) - 1);
+                extender = 1 << 18;
+            }
+            else
+            {
+                disp = inst & ((1 << 22) - 1);
+                extender = 1 << 21;
+            }
+            //This does sign extension, believe it or not.
+            disp = (disp ^ extender) - extender;
+            //Multiply the displacement by 4. I'm assuming the compiler is
+            //smart enough to turn this into a shift.
+            disp *= 4;
+            target1 = pc + disp;
+        }
+        else if(bn)
+            target1 = npc + 4;
+        else
+            target1 = npc;
+        return 1;
+    }
+    else
+    {
+        target1 = npc;
+        return 1;
+    }
+}
+
 bool SparcTraceChild::step()
 {
+    //Increment the count of the number of instructions executed
+    instructions++;
     //Two important considerations are that the address of the instruction
     //being breakpointed should be word (64bit) aligned, and that both the
     //next instruction and the instruction after that need to be breakpointed
@@ -193,6 +261,8 @@ bool SparcTraceChild::step()
      * Useful constants
      */
     const static uint64_t breakInst = 0x91d02001;
+    const static uint64_t lowBreakInst = breakInst;
+    const static uint64_t highBreakInst = breakInst << 32;
     const static uint64_t breakWord = breakInst | (breakInst << 32);
     const static uint64_t lowMask = 0xFFFFFFFFULL;
     const static uint64_t highMask = lowMask << 32;
@@ -212,60 +282,39 @@ bool SparcTraceChild::step()
     bool unalignedNPC = nextPC & 7;
     uint64_t alignedNPC = nextPC & (~7);
 
-    /*
-     * Store the original contents of the child process's memory
-     */
-    originalInst = ptrace(PTRACE_PEEKTEXT, pid, alignedNPC, 0);
-    //Save a ptrace call if we can
-    if(unalignedNPC)
-    {
-        originalAnnulInst = ptrace(PTRACE_PEEKTEXT, pid, alignedNPC+8, 0);
-    }
+    //Get the current instruction
+    uint64_t curInst = ptrace(PTRACE_PEEKTEXT, pid, alignedPC);
+    curInst = unalignedPC ? (curInst & 0xffffffffULL) : (curInst >> 32);
+
+    uint64_t bp1, bp2;
+    int numTargets = getTargets(curInst, currentPC, nextPC, bp1, bp2);
+    assert(numTargets == 1 || numTargets == 2);
+
+    bool unalignedBp1 = bp1 & 7;
+    uint64_t alignedBp1 = bp1 & (~7);
+    bool unalignedBp2 = bp2 & 7;
+    uint64_t alignedBp2 = bp2 & (~7);
+    uint64_t origBp1, origBp2;
 
     /*
-     * Prepare breakpointed copies of child processes memory
+     * Set the first breakpoint
      */
-    uint64_t newInst, newAnnulInst;
-    //If the current instruction is in the same word as the npc
-    if(alignedPC == alignedNPC)
-    {
-        //Make sure we only replace the other part
-        if(unalignedPC)
-            newInst = (originalInst & lowMask) | (breakWord & highMask);
-        else
-            newInst = (originalInst & highMask) | (breakWord & lowMask);
-    }
-    else
-    {
-        //otherwise replace the whole thing
-        newInst = breakWord;
-    }
-    //If the current instruction is in the same word as the word after
-    //the npc
-    if(alignedPC == alignedNPC+8)
-    {
-        //Make sure we only replace the other part
-        if(unalignedPC)
-            newAnnulInst = (originalAnnulInst & lowMask) | (breakWord & highMask);
-        else
-            newAnnulInst = (originalAnnulInst & highMask) | (breakWord & lowMask);
-    }
-    else
-    {
-        //otherwise replace the whole thing
-        newAnnulInst = breakWord;
-    }
-
-    /*
-     * Stuff the breakpoint instructions into the child's address space.
-     */
-    //Replace the word at npc
-    if(ptrace(PTRACE_POKETEXT, pid, alignedNPC, newInst) != 0)
+    origBp1 = ptrace(PTRACE_PEEKTEXT, pid, alignedBp1, 0);
+    uint64_t newBp1 = origBp1;
+    newBp1 &= unalignedBp1 ? highMask : lowMask;
+    newBp1 |= unalignedBp1 ? lowBreakInst : highBreakInst;
+    if(ptrace(PTRACE_POKETEXT, pid, alignedBp1, newBp1) != 0)
         cerr << "Poke failed" << endl;
-    //Replace the next word, if necessary
-    if(unalignedNPC)
+    /*
+     * Set the second breakpoint if necessary
+     */
+    if(numTargets == 2)
     {
-        if(ptrace(PTRACE_POKETEXT, pid, alignedNPC+8, newAnnulInst) != 0)
+        origBp2 = ptrace(PTRACE_PEEKTEXT, pid, alignedBp2, 0);
+        uint64_t newBp2 = origBp2;
+        newBp2 &= unalignedBp2 ? highMask : lowMask;
+        newBp2 |= unalignedBp2 ? lowBreakInst : highBreakInst;
+        if(ptrace(PTRACE_POKETEXT, pid, alignedBp2, newBp2) != 0)
             cerr << "Poke failed" << endl;
     }
 
@@ -285,16 +334,16 @@ bool SparcTraceChild::step()
     update(pid);
 
     /*
-     * Put back the original contents of the childs address space
+     * Put back the original contents of the childs address space in the
+     * reverse order.
      */
-    if(ptrace(PTRACE_POKETEXT, pid, alignedNPC, originalInst) != 0)
-        cerr << "Repoke failed" << endl;
-    if(unalignedNPC)
+    if(numTargets == 2)
     {
-        if(ptrace(PTRACE_POKETEXT, pid, alignedNPC+8, originalAnnulInst) != 0)
-            cerr << "Repoke failed" << endl;
+        if(ptrace(PTRACE_POKETEXT, pid, alignedBp2, origBp2) != 0)
+            cerr << "Poke failed" << endl;
     }
-    return true;
+    if(ptrace(PTRACE_POKETEXT, pid, alignedBp1, origBp1) != 0)
+        cerr << "Poke failed" << endl;
 }
 
 int64_t SparcTraceChild::getRegVal(int num)
@@ -315,39 +364,56 @@ char * SparcTraceChild::printReg(int num)
 
 ostream & SparcTraceChild::outputStartState(ostream & os)
 {
+    bool v8 = false;
     uint64_t sp = getSP();
+    if(sp % 1)
+    {
+        os << "Detected a 64 bit executable.\n";
+        v8 = false;
+    }
+    else
+    {
+        os << "Detected a 32 bit executable.\n";
+        v8 = true;
+    }
     uint64_t pc = getPC();
     char obuf[1024];
     sprintf(obuf, "Initial stack pointer = 0x%016llx\n", sp);
     os << obuf;
     sprintf(obuf, "Initial program counter = 0x%016llx\n", pc);
     os << obuf;
-    //Take out the stack bias
-    sp += 2047;
+    if(!v8)
+    {
+        //Take out the stack bias
+        sp += 2047;
+    }
     //Output the window save area
     for(unsigned int x = 0; x < 16; x++)
     {
         uint64_t regspot = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
+        if(v8) regspot = regspot >> 32;
         sprintf(obuf, "0x%016llx: Window save %d = 0x%016llx\n",
                 sp, x+1, regspot);
         os << obuf;
-        sp += 8;
+        sp += v8 ? 4 : 8;
     }
     //Output the argument count
     uint64_t cargc = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
+    if(v8) cargc = cargc >> 32;
     sprintf(obuf, "0x%016llx: Argc = 0x%016llx\n", sp, cargc);
     os << obuf;
-    sp += 8;
+    sp += v8 ? 4 : 8;
     //Output argv pointers
     int argCount = 0;
     uint64_t cargv;
     do
     {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
+        if(v8) cargv = cargv >> 32;
         sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n",
                 sp, argCount++, cargv);
         os << obuf;
-        sp += 8;
+        sp += v8 ? 4 : 8;
     } while(cargv);
     //Output the envp pointers
     int envCount = 0;
@@ -355,20 +421,23 @@ ostream & SparcTraceChild::outputStartState(ostream & os)
     do
     {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
+        if(v8) cenvp = cenvp >> 32;
         sprintf(obuf, "0x%016llx: envp[%d] = 0x%016llx\n",
                 sp, envCount++, cenvp);
         os << obuf;
-        sp += 8;
+        sp += v8 ? 4 : 8;
     } while(cenvp);
     uint64_t auxType, auxVal;
     do
     {
         auxType = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sp += 8;
+        if(v8) auxType = auxType >> 32;
+        sp += (v8 ? 4 : 8);
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sp += 8;
+        if(v8) auxVal = auxVal >> 32;
+        sp += (v8 ? 4 : 8);
         sprintf(obuf, "0x%016llx: Auxiliary vector = {0x%016llx, 0x%016llx}\n",
-                sp - 16, auxType, auxVal);
+                sp - 8, auxType, auxVal);
         os << obuf;
     } while(auxType != 0 || auxVal != 0);
     //Print out the argument strings, environment strings, and file name.
@@ -380,7 +449,7 @@ ostream & SparcTraceChild::outputStartState(ostream & os)
     {
         buf = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         char * cbuf = (char *)&buf;
-        for(int x = 0; x < sizeof(uint64_t); x++)
+        for(int x = 0; x < sizeof(uint32_t); x++)
         {
             if(cbuf[x])
                 current += cbuf[x];
@@ -393,7 +462,7 @@ ostream & SparcTraceChild::outputStartState(ostream & os)
                 currentStart = sp + x + 1;
             }
         }
-        sp += 8;
+        sp += (v8 ? 4 : 8);
         clearedInitialPadding = clearedInitialPadding || buf != 0;
     } while(!clearedInitialPadding || buf != 0);
     return os;

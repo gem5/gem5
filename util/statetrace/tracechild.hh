@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,11 +37,13 @@ class TraceChild : public RegState
 {
 protected:
         int pid;
+        uint64_t instructions;
         bool tracing;
 public:
-        TraceChild() : tracing(false)
+        TraceChild() : tracing(false), instructions(0)
         {;}
-        virtual bool startTracing(const char * pathToFile, const char * arg);
+        virtual bool startTracing(const char * pathToFile,
+                char * const argv[]);
         virtual bool stopTracing();
         virtual bool step();
         virtual uint64_t getPC() = 0;
