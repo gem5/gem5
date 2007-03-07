@@ -187,17 +187,17 @@ def restoreCheckpoint(root, dir):
     need_resume.append(root)
 
 def changeToAtomic(system):
-    if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
-        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
-        "called on a root object."
+    if not isinstance(system, (objects.Root, objects.System)):
+        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
+              (type(system), objects.Root, objects.System)
     doDrain(system)
     print "Changing memory mode to atomic"
     system.changeTiming(internal.sim_object.SimObject.Atomic)
 
 def changeToTiming(system):
-    if not isinstance(system, objects.Root) and not isinstance(system, objects.System):
-        raise TypeError, "Object is not a root or system object.  Checkpoint must be "
-        "called on a root object."
+    if not isinstance(system, (objects.Root, objects.System)):
+        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
+              (type(system), objects.Root, objects.System)
     doDrain(system)
     print "Changing memory mode to timing"
     system.changeTiming(internal.sim_object.SimObject.Timing)
@@ -237,14 +237,6 @@ def switchCpus(cpuList):
         new_cpu.takeOverFrom(old_cpus[index])
         new_cpu._ccObject.resume()
         index += 1
-
-def dumpStats():
-    print 'Dumping stats'
-    internal.stats.dump()
-
-def resetStats():
-    print 'Resetting stats'
-    internal.stats.reset()
 
 # Since we have so many mutual imports in this package, we should:
 # 1. Put all intra-package imports at the *bottom* of the file, unless
