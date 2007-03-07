@@ -48,6 +48,7 @@ Import('env')
 
 base_sources = Split('''
 	base/annotate.cc
+	base/bigint.cc
 	base/circlebuf.cc
 	base/cprintf.cc
 	base/fast_alloc.cc

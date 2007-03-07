@@ -25,59 +25,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
  */
+
+#include "base/bigint.hh"
 
 #include <iostream>
 
-#ifndef __BASE_BIGINT_HH__
-#define __BASE_BIGINT_HH__
-// Create a couple of large int types for atomic reads
-struct m5_twin64_t {
-    uint64_t a;
-    uint64_t b;
-    m5_twin64_t()
-    {}
-    m5_twin64_t(const uint64_t x)
-    {
-        a = x;
-        b = x;
-    }
-    inline m5_twin64_t& operator=(const uint64_t x)
-    {
-        a = x;
-        b = x;
-        return *this;
-    }
-};
+using namespace std;
 
-struct m5_twin32_t {
-    uint32_t a;
-    uint32_t b;
-    m5_twin32_t()
-    {}
-    m5_twin32_t(const uint32_t x)
-    {
-        a = x;
-        b = x;
-    }
-    inline m5_twin32_t& operator=(const uint32_t x)
-    {
-        a = x;
-        b = x;
-        return *this;
-    }
-};
+ostream & operator << (ostream & os, const Twin64_t & t)
+{
+    os << t.a << ", " << t.b;
+    return os;
+}
 
-
-// This is for twin loads (two 64 bit values), not 1 128 bit value (as far as
-// endian conversion is concerned!
-typedef m5_twin64_t Twin64_t;
-typedef m5_twin32_t Twin32_t;
-
-// Output operator overloads
-std::ostream & operator << (std::ostream & os, const Twin64_t & t);
-std::ostream & operator << (std::ostream & os, const Twin32_t & t);
-
-#endif // __BASE_BIGINT_HH__
-
+ostream & operator << (ostream & os, const Twin32_t & t)
+{
+    os << t.a << ", " << t.b;
+    return os;
+}
