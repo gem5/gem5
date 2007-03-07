@@ -95,39 +95,39 @@ class AlphaDynInst : public BaseDynInst<Impl>
 
   public:
     /** Reads a miscellaneous register. */
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg)
     {
-        return this->cpu->readMiscReg(misc_reg, this->threadNumber);
+        return this->cpu->readMiscRegNoEffect(misc_reg, this->threadNumber);
     }
 
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg)
+    MiscReg readMiscReg(int misc_reg)
     {
-        return this->cpu->readMiscRegWithEffect(misc_reg, this->threadNumber);
+        return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
 
     /** Sets a misc. register. */
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
         this->instResult.integer = val;
-        return this->cpu->setMiscReg(misc_reg, val, this->threadNumber);
+        return this->cpu->setMiscRegNoEffect(misc_reg, val, this->threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return this->cpu->setMiscRegWithEffect(misc_reg, val,
+        return this->cpu->setMiscReg(misc_reg, val,
                                                this->threadNumber);
     }
 
     /** Reads a miscellaneous register. */
     TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
-        return this->cpu->readMiscReg(
+        return this->cpu->readMiscRegNoEffect(
                 si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
                 this->threadNumber);
     }
@@ -137,7 +137,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
      */
     TheISA::MiscReg readMiscRegOperandWithEffect(const StaticInst *si, int idx)
     {
-        return this->cpu->readMiscRegWithEffect(
+        return this->cpu->readMiscReg(
                 si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
                 this->threadNumber);
     }
@@ -146,7 +146,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     void setMiscRegOperand(const StaticInst * si, int idx, const MiscReg &val)
     {
         this->instResult.integer = val;
-        return this->cpu->setMiscReg(
+        return this->cpu->setMiscRegNoEffect(
                 si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
                 val, this->threadNumber);
     }
@@ -157,7 +157,7 @@ class AlphaDynInst : public BaseDynInst<Impl>
     void setMiscRegOperandWithEffect(const StaticInst *si, int idx,
                                      const MiscReg &val)
     {
-        return this->cpu->setMiscRegWithEffect(
+        return this->cpu->setMiscReg(
                 si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
                 val, this->threadNumber);
     }

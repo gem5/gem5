@@ -1193,7 +1193,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 #if FULL_SYSTEM
     if (thread->profile) {
 //        bool usermode =
-//            (xc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+//            (xc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
 //        thread->profilePC = usermode ? 1 : inst->readPC();
         thread->profilePC = inst->readPC();
         ProfileNode *node = thread->profile->consume(thread->getTC(),

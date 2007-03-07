@@ -146,7 +146,7 @@ namespace SparcISA
 #if 0
         tc = _tc;
 
-        bool usermode = (tc->readMiscReg(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+        bool usermode = (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
 
         Addr pc = tc->readNextPC();
         bool kernel = tc->getSystemPtr()->kernelStart <= pc &&
@@ -221,22 +221,22 @@ namespace SparcISA
     StackTrace::isEntry(Addr addr)
     {
 #if 0
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp12))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp12))
             return true;
 
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp7))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp7))
             return true;
 
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp11))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp11))
             return true;
 
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp21))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp21))
             return true;
 
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp9))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp9))
             return true;
 
-        if (addr == tc->readMiscReg(AlphaISA::IPR_PALtemp2))
+        if (addr == tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp2))
             return true;
 #endif
         return false;

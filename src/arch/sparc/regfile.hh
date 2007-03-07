@@ -73,13 +73,13 @@ namespace SparcISA
 
         int FlattenIntIndex(int reg);
 
-        MiscReg readMiscReg(int miscReg);
+        MiscReg readMiscRegNoEffect(int miscReg);
 
-        MiscReg readMiscRegWithEffect(int miscReg, ThreadContext *tc);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
 
-        void setMiscReg(int miscReg, const MiscReg &val);
+        void setMiscRegNoEffect(int miscReg, const MiscReg &val);
 
-        void setMiscRegWithEffect(int miscReg, const MiscReg &val,
+        void setMiscReg(int miscReg, const MiscReg &val,
                 ThreadContext * tc);
 
         int instAsid()

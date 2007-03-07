@@ -102,8 +102,8 @@ class Interrupts
 
     Fault getInterrupt(ThreadContext * tc)
     {
-        int hpstate = tc->readMiscReg(MISCREG_HPSTATE);
-        int pstate = tc->readMiscReg(MISCREG_PSTATE);
+        int hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+        int pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
         bool ie = pstate & PSTATE::ie;
 
         // THESE ARE IN ORDER OF PRIORITY

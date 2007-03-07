@@ -89,13 +89,13 @@ InorderBackEnd<Impl>::checkInterrupts()
     int summary = 0;
 
 
-    if (thread->readMiscReg(IPR_ASTRR))
+    if (thread->readMiscRegNoEffect(IPR_ASTRR))
         panic("asynchronous traps not implemented\n");
 
-    if (thread->readMiscReg(IPR_SIRR)) {
+    if (thread->readMiscRegNoEffect(IPR_SIRR)) {
         for (int i = INTLEVEL_SOFTWARE_MIN;
              i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (thread->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+            if (thread->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
                 // See table 4-19 of the 21164 hardware reference
                 ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                 summary |= (ULL(1) << i);
@@ -116,14 +116,14 @@ InorderBackEnd<Impl>::checkInterrupts()
         }
     }
 
-    if (ipl && ipl > thread->readMiscReg(IPR_IPLR)) {
+    if (ipl && ipl > thread->readMiscRegNoEffect(IPR_IPLR)) {
         thread->inSyscall = true;
 
-        thread->setMiscReg(IPR_ISR, summary);
-        thread->setMiscReg(IPR_INTID, ipl);
+        thread->setMiscRegNoEffect(IPR_ISR, summary);
+        thread->setMiscRegNoEffect(IPR_INTID, ipl);
         Fault(new InterruptFault)->invoke(xc);
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                thread->readMiscReg(IPR_IPLR), ipl, summary);
+                thread->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
 
         // May need to go 1 inst prior
         squashPending = true;

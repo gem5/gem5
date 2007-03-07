@@ -219,31 +219,31 @@ OzoneDynInst<Impl>::clearMemDependents()
 
 template <class Impl>
 TheISA::MiscReg
+OzoneDynInst<Impl>::readMiscRegNoEffect(int misc_reg)
+{
+    return this->thread->readMiscRegNoEffect(misc_reg);
+}
+
+template <class Impl>
+TheISA::MiscReg
 OzoneDynInst<Impl>::readMiscReg(int misc_reg)
 {
     return this->thread->readMiscReg(misc_reg);
 }
 
 template <class Impl>
-TheISA::MiscReg
-OzoneDynInst<Impl>::readMiscRegWithEffect(int misc_reg)
+void
+OzoneDynInst<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
-    return this->thread->readMiscRegWithEffect(misc_reg);
+    this->setIntResult(val);
+    this->thread->setMiscRegNoEffect(misc_reg, val);
 }
 
 template <class Impl>
 void
 OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
-    this->setIntResult(val);
     this->thread->setMiscReg(misc_reg, val);
-}
-
-template <class Impl>
-void
-OzoneDynInst<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-{
-    this->thread->setMiscRegWithEffect(misc_reg, val);
 }
 
 #if FULL_SYSTEM
@@ -255,7 +255,7 @@ OzoneDynInst<Impl>::hwrei()
     if (!(this->readPC() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
 
-    this->setNextPC(this->thread->readMiscReg(AlphaISA::IPR_EXC_ADDR));
+    this->setNextPC(this->thread->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR));
 
     this->cpu->hwrei();
 

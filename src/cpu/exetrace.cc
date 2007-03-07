@@ -171,14 +171,14 @@ Trace::InstRecord::dump()
             outs << "PC = " << thread->readNextPC();
             outs << " NPC = " << thread->readNextNPC();
             newVal = thread->readIntReg(SparcISA::NumIntArchRegs + 2);
-            //newVal = thread->readMiscReg(SparcISA::MISCREG_CCR);
+            //newVal = thread->readMiscRegNoEffect(SparcISA::MISCREG_CCR);
             if(newVal != ccr)
             {
                 outs << " CCR = " << newVal;
                 ccr = newVal;
             }
             newVal = thread->readIntReg(SparcISA::NumIntArchRegs + 1);
-            //newVal = thread->readMiscReg(SparcISA::MISCREG_Y);
+            //newVal = thread->readMiscRegNoEffect(SparcISA::MISCREG_Y);
             if(newVal != y)
             {
                 outs << " Y = " << newVal;
@@ -387,30 +387,30 @@ Trace::InstRecord::dump()
                             diffFpRegs = true;
                         }
                     }
-                            uint64_t oldTl = thread->readMiscReg(MISCREG_TL);
+                            uint64_t oldTl = thread->readMiscRegNoEffect(MISCREG_TL);
                     if (oldTl != shared_data->tl)
                         diffTl = true;
                     for (int i = 1; i <= MaxTL; i++) {
-                        thread->setMiscReg(MISCREG_TL, i);
-                        if (thread->readMiscReg(MISCREG_TPC) !=
+                        thread->setMiscRegNoEffect(MISCREG_TL, i);
+                        if (thread->readMiscRegNoEffect(MISCREG_TPC) !=
                                 shared_data->tpc[i-1])
                             diffTpc = true;
-                        if (thread->readMiscReg(MISCREG_TNPC) !=
+                        if (thread->readMiscRegNoEffect(MISCREG_TNPC) !=
                                 shared_data->tnpc[i-1])
                             diffTnpc = true;
-                        if (thread->readMiscReg(MISCREG_TSTATE) !=
+                        if (thread->readMiscRegNoEffect(MISCREG_TSTATE) !=
                                 shared_data->tstate[i-1])
                             diffTstate = true;
-                        if (thread->readMiscReg(MISCREG_TT) !=
+                        if (thread->readMiscRegNoEffect(MISCREG_TT) !=
                                 shared_data->tt[i-1])
                             diffTt = true;
-                        if (thread->readMiscReg(MISCREG_HTSTATE) !=
+                        if (thread->readMiscRegNoEffect(MISCREG_HTSTATE) !=
                                 shared_data->htstate[i-1])
                             diffHtstate = true;
                     }
-                    thread->setMiscReg(MISCREG_TL, oldTl);
+                    thread->setMiscRegNoEffect(MISCREG_TL, oldTl);
 
-                    if(shared_data->tba != thread->readMiscReg(MISCREG_TBA))
+                    if(shared_data->tba != thread->readMiscRegNoEffect(MISCREG_TBA))
                         diffTba = true;
                     //When the hpstate register is read by an instruction,
                     //legion has bit 11 set. When it's in storage, it doesn't.
@@ -418,50 +418,50 @@ Trace::InstRecord::dump()
                     //of the registers like that, the bit is always set to 1 and
                     //we just don't compare it. It's not supposed to matter
                     //anyway.
-                    if((shared_data->hpstate | (1 << 11)) != thread->readMiscReg(MISCREG_HPSTATE))
+                    if((shared_data->hpstate | (1 << 11)) != thread->readMiscRegNoEffect(MISCREG_HPSTATE))
                         diffHpstate = true;
-                    if(shared_data->htba != thread->readMiscReg(MISCREG_HTBA))
+                    if(shared_data->htba != thread->readMiscRegNoEffect(MISCREG_HTBA))
                         diffHtba = true;
-                    if(shared_data->pstate != thread->readMiscReg(MISCREG_PSTATE))
+                    if(shared_data->pstate != thread->readMiscRegNoEffect(MISCREG_PSTATE))
                         diffPstate = true;
-                    //if(shared_data->y != thread->readMiscReg(MISCREG_Y))
+                    //if(shared_data->y != thread->readMiscRegNoEffect(MISCREG_Y))
                     if(shared_data->y !=
                             thread->readIntReg(NumIntArchRegs + 1))
                         diffY = true;
-                    if(shared_data->fsr != thread->readMiscReg(MISCREG_FSR)) {
+                    if(shared_data->fsr != thread->readMiscRegNoEffect(MISCREG_FSR)) {
                         diffFsr = true;
                         if (mbits(shared_data->fsr, 63,10) ==
-                                mbits(thread->readMiscReg(MISCREG_FSR), 63,10)) {
-                            thread->setMiscReg(MISCREG_FSR, shared_data->fsr);
+                                mbits(thread->readMiscRegNoEffect(MISCREG_FSR), 63,10)) {
+                            thread->setMiscRegNoEffect(MISCREG_FSR, shared_data->fsr);
                             diffFsr = false;
                         }
                     }
-                    //if(shared_data->ccr != thread->readMiscReg(MISCREG_CCR))
+                    //if(shared_data->ccr != thread->readMiscRegNoEffect(MISCREG_CCR))
                     if(shared_data->ccr !=
                             thread->readIntReg(NumIntArchRegs + 2))
                         diffCcr = true;
-                    if(shared_data->gl != thread->readMiscReg(MISCREG_GL))
+                    if(shared_data->gl != thread->readMiscRegNoEffect(MISCREG_GL))
                         diffGl = true;
-                    if(shared_data->asi != thread->readMiscReg(MISCREG_ASI))
+                    if(shared_data->asi != thread->readMiscRegNoEffect(MISCREG_ASI))
                         diffAsi = true;
-                    if(shared_data->pil != thread->readMiscReg(MISCREG_PIL))
+                    if(shared_data->pil != thread->readMiscRegNoEffect(MISCREG_PIL))
                         diffPil = true;
-                    if(shared_data->cwp != thread->readMiscReg(MISCREG_CWP))
+                    if(shared_data->cwp != thread->readMiscRegNoEffect(MISCREG_CWP))
                         diffCwp = true;
-                    //if(shared_data->cansave != thread->readMiscReg(MISCREG_CANSAVE))
+                    //if(shared_data->cansave != thread->readMiscRegNoEffect(MISCREG_CANSAVE))
                     if(shared_data->cansave !=
                             thread->readIntReg(NumIntArchRegs + 3))
                         diffCansave = true;
                     //if(shared_data->canrestore !=
-                    //	    thread->readMiscReg(MISCREG_CANRESTORE))
+                    //	    thread->readMiscRegNoEffect(MISCREG_CANRESTORE))
                     if(shared_data->canrestore !=
                             thread->readIntReg(NumIntArchRegs + 4))
                         diffCanrestore = true;
-                    //if(shared_data->otherwin != thread->readMiscReg(MISCREG_OTHERWIN))
+                    //if(shared_data->otherwin != thread->readMiscRegNoEffect(MISCREG_OTHERWIN))
                     if(shared_data->otherwin !=
                             thread->readIntReg(NumIntArchRegs + 6))
                         diffOtherwin = true;
-                    //if(shared_data->cleanwin != thread->readMiscReg(MISCREG_CLEANWIN))
+                    //if(shared_data->cleanwin != thread->readMiscRegNoEffect(MISCREG_CLEANWIN))
                     if(shared_data->cleanwin !=
                             thread->readIntReg(NumIntArchRegs + 5))
                         diffCleanwin = true;
@@ -569,78 +569,78 @@ Trace::InstRecord::dump()
                         printSectionHeader(outs, "General State");
                         printColumnLabels(outs);
                         printRegPair(outs, "HPstate",
-                                thread->readMiscReg(MISCREG_HPSTATE),
+                                thread->readMiscRegNoEffect(MISCREG_HPSTATE),
                                 shared_data->hpstate | (1 << 11));
                         printRegPair(outs, "Htba",
-                                thread->readMiscReg(MISCREG_HTBA),
+                                thread->readMiscRegNoEffect(MISCREG_HTBA),
                                 shared_data->htba);
                         printRegPair(outs, "Pstate",
-                                thread->readMiscReg(MISCREG_PSTATE),
+                                thread->readMiscRegNoEffect(MISCREG_PSTATE),
                                 shared_data->pstate);
                         printRegPair(outs, "Y",
-                                //thread->readMiscReg(MISCREG_Y),
+                                //thread->readMiscRegNoEffect(MISCREG_Y),
                                 thread->readIntReg(NumIntArchRegs + 1),
                                 shared_data->y);
                         printRegPair(outs, "FSR",
-                                thread->readMiscReg(MISCREG_FSR),
+                                thread->readMiscRegNoEffect(MISCREG_FSR),
                                 shared_data->fsr);
                         printRegPair(outs, "Ccr",
-                                //thread->readMiscReg(MISCREG_CCR),
+                                //thread->readMiscRegNoEffect(MISCREG_CCR),
                                 thread->readIntReg(NumIntArchRegs + 2),
                                 shared_data->ccr);
                         printRegPair(outs, "Tl",
-                                thread->readMiscReg(MISCREG_TL),
+                                thread->readMiscRegNoEffect(MISCREG_TL),
                                 shared_data->tl);
                         printRegPair(outs, "Gl",
-                                thread->readMiscReg(MISCREG_GL),
+                                thread->readMiscRegNoEffect(MISCREG_GL),
                                 shared_data->gl);
                         printRegPair(outs, "Asi",
-                                thread->readMiscReg(MISCREG_ASI),
+                                thread->readMiscRegNoEffect(MISCREG_ASI),
                                 shared_data->asi);
                         printRegPair(outs, "Pil",
-                                thread->readMiscReg(MISCREG_PIL),
+                                thread->readMiscRegNoEffect(MISCREG_PIL),
                                 shared_data->pil);
                         printRegPair(outs, "Cwp",
-                                thread->readMiscReg(MISCREG_CWP),
+                                thread->readMiscRegNoEffect(MISCREG_CWP),
                                 shared_data->cwp);
                         printRegPair(outs, "Cansave",
-                                //thread->readMiscReg(MISCREG_CANSAVE),
+                                //thread->readMiscRegNoEffect(MISCREG_CANSAVE),
                                 thread->readIntReg(NumIntArchRegs + 3),
                                 shared_data->cansave);
                         printRegPair(outs, "Canrestore",
-                                //thread->readMiscReg(MISCREG_CANRESTORE),
+                                //thread->readMiscRegNoEffect(MISCREG_CANRESTORE),
                                 thread->readIntReg(NumIntArchRegs + 4),
                                 shared_data->canrestore);
                         printRegPair(outs, "Otherwin",
-                                //thread->readMiscReg(MISCREG_OTHERWIN),
+                                //thread->readMiscRegNoEffect(MISCREG_OTHERWIN),
                                 thread->readIntReg(NumIntArchRegs + 6),
                                 shared_data->otherwin);
                         printRegPair(outs, "Cleanwin",
-                                //thread->readMiscReg(MISCREG_CLEANWIN),
+                                //thread->readMiscRegNoEffect(MISCREG_CLEANWIN),
                                 thread->readIntReg(NumIntArchRegs + 5),
                                 shared_data->cleanwin);
                         outs << endl;
                         for (int i = 1; i <= MaxTL; i++) {
                             printLevelHeader(outs, i);
                             printColumnLabels(outs);
-                            thread->setMiscReg(MISCREG_TL, i);
+                            thread->setMiscRegNoEffect(MISCREG_TL, i);
                             printRegPair(outs, "Tpc",
-                                    thread->readMiscReg(MISCREG_TPC),
+                                    thread->readMiscRegNoEffect(MISCREG_TPC),
                                     shared_data->tpc[i-1]);
                             printRegPair(outs, "Tnpc",
-                                    thread->readMiscReg(MISCREG_TNPC),
+                                    thread->readMiscRegNoEffect(MISCREG_TNPC),
                                     shared_data->tnpc[i-1]);
                             printRegPair(outs, "Tstate",
-                                    thread->readMiscReg(MISCREG_TSTATE),
+                                    thread->readMiscRegNoEffect(MISCREG_TSTATE),
                                     shared_data->tstate[i-1]);
                             printRegPair(outs, "Tt",
-                                    thread->readMiscReg(MISCREG_TT),
+                                    thread->readMiscRegNoEffect(MISCREG_TT),
                                     shared_data->tt[i-1]);
                             printRegPair(outs, "Htstate",
-                                    thread->readMiscReg(MISCREG_HTSTATE),
+                                    thread->readMiscRegNoEffect(MISCREG_HTSTATE),
                                     shared_data->htstate[i-1]);
                         }
-                        thread->setMiscReg(MISCREG_TL, oldTl);
+                        thread->setMiscRegNoEffect(MISCREG_TL, oldTl);
                         outs << endl;
 
                         printSectionHeader(outs, "General Purpose Registers");

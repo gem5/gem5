@@ -66,7 +66,7 @@ namespace SparcISA
         // 4. We are not priv, use ctxN0* tsbs to find the page
         // For all accesses we check the tlbs first since it's possible that
         // long standing pages (e.g. locked kernel mappings) won't be in the tsb
-        uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
+        uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
         bool hpriv = bits(tlbdata,0,0);
         //bool priv = bits(tlbdata,2,2);

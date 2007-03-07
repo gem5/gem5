@@ -206,20 +206,20 @@ class O3ThreadContext : public ThreadContext
     virtual void setNextPC(uint64_t val);
 
     /** Reads a miscellaneous register. */
-    virtual MiscReg readMiscReg(int misc_reg)
-    { return cpu->readMiscReg(misc_reg, thread->readTid()); }
+    virtual MiscReg readMiscRegNoEffect(int misc_reg)
+    { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
-    virtual MiscReg readMiscRegWithEffect(int misc_reg)
-    { return cpu->readMiscRegWithEffect(misc_reg, thread->readTid()); }
+    virtual MiscReg readMiscReg(int misc_reg)
+    { return cpu->readMiscReg(misc_reg, thread->readTid()); }
 
     /** Sets a misc. register. */
-    virtual void setMiscReg(int misc_reg, const MiscReg &val);
+    virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
 
     /** Sets a misc. register, including any side-effects the
      * write might have as defined by the architecture. */
-    virtual void setMiscRegWithEffect(int misc_reg, const MiscReg &val);
+    virtual void setMiscReg(int misc_reg, const MiscReg &val);
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.

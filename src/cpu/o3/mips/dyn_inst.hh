@@ -93,32 +93,32 @@ class MipsDynInst : public BaseDynInst<Impl>
 
   public:
     /** Reads a miscellaneous register. */
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg)
     {
-        return this->cpu->readMiscReg(misc_reg, this->threadNumber);
+        return this->cpu->readMiscRegNoEffect(misc_reg, this->threadNumber);
     }
 
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscRegWithEffect(int misc_reg)
+    MiscReg readMiscReg(int misc_reg)
     {
-        return this->cpu->readMiscRegWithEffect(misc_reg, this->threadNumber);
+        return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
 
     /** Sets a misc. register. */
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
         this->instResult.integer = val;
-        this->cpu->setMiscReg(misc_reg, val, this->threadNumber);
+        this->cpu->setMiscRegNoEffect(misc_reg, val, this->threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return this->cpu->setMiscRegWithEffect(misc_reg, val,
+        return this->cpu->setMiscReg(misc_reg, val,
                                                this->threadNumber);
     }
 
