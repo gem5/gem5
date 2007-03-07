@@ -88,7 +88,7 @@ Addr
 AlphaISA::vtophys(ThreadContext *tc, Addr addr)
 {
     AlphaISA::VAddr vaddr = addr;
-    Addr ptbr = tc->readMiscReg(AlphaISA::IPR_PALtemp20);
+    Addr ptbr = tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp20);
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?

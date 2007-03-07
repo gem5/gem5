@@ -49,13 +49,13 @@ namespace SparcISA
             // no error, clear XCC.C
             tc->setIntReg(NumIntArchRegs + 2,
                     tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
-            //tc->setMiscReg(MISCREG_CCR, tc->readMiscReg(MISCREG_CCR) & 0xEE);
+            //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) & 0xEE);
             tc->setIntReg(ReturnValueReg, return_value.value());
         } else {
             // got an error, set XCC.C
             tc->setIntReg(NumIntArchRegs + 2,
                     tc->readIntReg(NumIntArchRegs + 2) | 0x11);
-            //tc->setMiscReg(MISCREG_CCR, tc->readMiscReg(MISCREG_CCR) | 0x11);
+            //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) | 0x11);
             tc->setIntReg(ReturnValueReg, -return_value.value());
         }
     }

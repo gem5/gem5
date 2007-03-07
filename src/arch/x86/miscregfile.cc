@@ -103,22 +103,22 @@ void MiscRegFile::clear()
     //When there are actually misc regs implemented, this will clear them
 }
 
-MiscReg MiscRegFile::readReg(int miscReg)
+MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 {
     panic("No misc registers in x86 yet!\n");
 }
 
-MiscReg MiscRegFile::readRegWithEffect(int miscReg, ThreadContext * tc)
+MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 {
     panic("No misc registers in x86 yet!\n");
 }
 
-void MiscRegFile::setReg(int miscReg, const MiscReg &val)
+void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
 {
     panic("No misc registers in x86 yet!\n");
 }
 
-void MiscRegFile::setRegWithEffect(int miscReg,
+void MiscRegFile::setReg(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     panic("No misc registers in x86 yet!\n");

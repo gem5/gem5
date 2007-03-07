@@ -126,15 +126,15 @@ void AlphaFault::invoke(ThreadContext * tc)
 
     // exception restart address
     if (setRestartAddress() || !(tc->readPC() & 0x3))
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR, tc->readPC());
+        tc->setMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR, tc->readPC());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
-        tc->setMiscReg(AlphaISA::IPR_EXC_ADDR,
-                   tc->readMiscReg(AlphaISA::IPR_EXC_ADDR) + 4);
+        tc->setMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
+                   tc->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR) + 4);
     }
 
-    tc->setPC(tc->readMiscReg(AlphaISA::IPR_PAL_BASE) + vect());
+    tc->setPC(tc->readMiscRegNoEffect(AlphaISA::IPR_PAL_BASE) + vect());
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 }
 
@@ -154,17 +154,17 @@ void DtbFault::invoke(ThreadContext * tc)
     if (!tc->misspeculating()
         && !(reqFlags & VPTE) && !(reqFlags & NO_FAULT)) {
         // set VA register with faulting address
-        tc->setMiscReg(AlphaISA::IPR_VA, vaddr);
+        tc->setMiscRegNoEffect(AlphaISA::IPR_VA, vaddr);
 
         // set MM_STAT register flags
-        tc->setMiscReg(AlphaISA::IPR_MM_STAT,
+        tc->setMiscRegNoEffect(AlphaISA::IPR_MM_STAT,
             (((EV5::Opcode(tc->getInst()) & 0x3f) << 11)
              | ((EV5::Ra(tc->getInst()) & 0x1f) << 6)
              | (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address
-        tc->setMiscReg(AlphaISA::IPR_VA_FORM,
-            tc->readMiscReg(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
+        tc->setMiscRegNoEffect(AlphaISA::IPR_VA_FORM,
+            tc->readMiscRegNoEffect(AlphaISA::IPR_MVPTBR) | (vaddr.vpn() << 3));
     }
 
     AlphaFault::invoke(tc);
@@ -173,9 +173,9 @@ void DtbFault::invoke(ThreadContext * tc)
 void ItbFault::invoke(ThreadContext * tc)
 {
     if (!tc->misspeculating()) {
-        tc->setMiscReg(AlphaISA::IPR_ITB_TAG, pc);
-        tc->setMiscReg(AlphaISA::IPR_IFAULT_VA_FORM,
-                       tc->readMiscReg(AlphaISA::IPR_IVPTBR) |
+        tc->setMiscRegNoEffect(AlphaISA::IPR_ITB_TAG, pc);
+        tc->setMiscRegNoEffect(AlphaISA::IPR_IFAULT_VA_FORM,
+                       tc->readMiscRegNoEffect(AlphaISA::IPR_IVPTBR) |
                        (AlphaISA::VAddr(pc).vpn() << 3));
     }
 

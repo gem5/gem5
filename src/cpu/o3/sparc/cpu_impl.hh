@@ -153,16 +153,24 @@ SparcO3CPU<Impl>::regStats()
 
 template <class Impl>
 TheISA::MiscReg
+SparcO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, unsigned tid)
+{
+    return this->regFile.readMiscRegNoEffect(misc_reg, tid);
+}
+
+template <class Impl>
+TheISA::MiscReg
 SparcO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 {
     return this->regFile.readMiscReg(misc_reg, tid);
 }
 
 template <class Impl>
-TheISA::MiscReg
-SparcO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
+void
+SparcO3CPU<Impl>::setMiscRegNoEffect(int misc_reg,
+        const SparcISA::MiscReg &val, unsigned tid)
 {
-    return this->regFile.readMiscRegWithEffect(misc_reg, tid);
+    this->regFile.setMiscRegNoEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
@@ -171,14 +179,6 @@ SparcO3CPU<Impl>::setMiscReg(int misc_reg,
         const SparcISA::MiscReg &val, unsigned tid)
 {
     this->regFile.setMiscReg(misc_reg, val, tid);
-}
-
-template <class Impl>
-void
-SparcO3CPU<Impl>::setMiscRegWithEffect(int misc_reg,
-        const SparcISA::MiscReg &val, unsigned tid)
-{
-    this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
 }
 
 template <class Impl>

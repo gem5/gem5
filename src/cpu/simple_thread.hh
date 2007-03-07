@@ -350,24 +350,24 @@ class SimpleThread : public ThreadState
         regs.setNextNPC(val);
     }
 
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg)
     {
-        return regs.readMiscReg(misc_reg);
+        return regs.readMiscRegNoEffect(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg)
+    MiscReg readMiscReg(int misc_reg)
     {
-        return regs.readMiscRegWithEffect(misc_reg, tc);
+        return regs.readMiscReg(misc_reg, tc);
+    }
+
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    {
+        return regs.setMiscRegNoEffect(misc_reg, val);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return regs.setMiscReg(misc_reg, val);
-    }
-
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-    {
-        return regs.setMiscRegWithEffect(misc_reg, val, tc);
+        return regs.setMiscReg(misc_reg, val, tc);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }

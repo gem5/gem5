@@ -75,25 +75,25 @@ void RegFile::clear()
     miscRegFile.clear();
 }
 
-MiscReg RegFile::readMiscReg(int miscReg)
+MiscReg RegFile::readMiscRegNoEffect(int miscReg)
 {
-    return miscRegFile.readReg(miscReg);
+    return miscRegFile.readRegNoEffect(miscReg);
 }
 
-MiscReg RegFile::readMiscRegWithEffect(int miscReg, ThreadContext *tc)
+MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc)
 {
-    return miscRegFile.readRegWithEffect(miscReg, tc);
+    return miscRegFile.readReg(miscReg, tc);
 }
 
-void RegFile::setMiscReg(int miscReg, const MiscReg &val)
+void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val)
 {
-    miscRegFile.setReg(miscReg, val);
+    miscRegFile.setRegNoEffect(miscReg, val);
 }
 
-void RegFile::setMiscRegWithEffect(int miscReg, const MiscReg &val,
+void RegFile::setMiscReg(int miscReg, const MiscReg &val,
         ThreadContext * tc)
 {
-    miscRegFile.setRegWithEffect(miscReg, val, tc);
+    miscRegFile.setReg(miscReg, val, tc);
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
@@ -153,8 +153,8 @@ void RegFile::setIntReg(int intReg, const IntReg &val)
 
 int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
 {
-    int gl = tc->readMiscReg(MISCREG_GL);
-    int cwp = tc->readMiscReg(MISCREG_CWP);
+    int gl = tc->readMiscRegNoEffect(MISCREG_GL);
+    int cwp = tc->readMiscRegNoEffect(MISCREG_CWP);
     //DPRINTF(Sparc, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
     int newReg;
     //The total number of global registers
@@ -257,146 +257,146 @@ void RegFile::changeContext(RegContextParam param, RegContextVal val)
 void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
 
-    uint8_t tl = src->readMiscReg(MISCREG_TL);
+    uint8_t tl = src->readMiscRegNoEffect(MISCREG_TL);
 
     // Read all the trap level dependent registers and save them off
     for(int i = 1; i <= MaxTL; i++)
     {
-        src->setMiscReg(MISCREG_TL, i);
-        dest->setMiscReg(MISCREG_TL, i);
+        src->setMiscRegNoEffect(MISCREG_TL, i);
+        dest->setMiscRegNoEffect(MISCREG_TL, i);
 
-        dest->setMiscReg(MISCREG_TT, src->readMiscReg(MISCREG_TT));
-        dest->setMiscReg(MISCREG_TPC, src->readMiscReg(MISCREG_TPC));
-        dest->setMiscReg(MISCREG_TNPC, src->readMiscReg(MISCREG_TNPC));
-        dest->setMiscReg(MISCREG_TSTATE, src->readMiscReg(MISCREG_TSTATE));
+        dest->setMiscRegNoEffect(MISCREG_TT, src->readMiscRegNoEffect(MISCREG_TT));
+        dest->setMiscRegNoEffect(MISCREG_TPC, src->readMiscRegNoEffect(MISCREG_TPC));
+        dest->setMiscRegNoEffect(MISCREG_TNPC, src->readMiscRegNoEffect(MISCREG_TNPC));
+        dest->setMiscRegNoEffect(MISCREG_TSTATE, src->readMiscRegNoEffect(MISCREG_TSTATE));
     }
 
     // Save off the traplevel
-    dest->setMiscReg(MISCREG_TL, tl);
-    src->setMiscReg(MISCREG_TL, tl);
+    dest->setMiscRegNoEffect(MISCREG_TL, tl);
+    src->setMiscRegNoEffect(MISCREG_TL, tl);
 
 
     // ASRs
-//    dest->setMiscReg(MISCREG_Y, src->readMiscReg(MISCREG_Y));
-//    dest->setMiscReg(MISCREG_CCR, src->readMiscReg(MISCREG_CCR));
-    dest->setMiscReg(MISCREG_ASI, src->readMiscReg(MISCREG_ASI));
-    dest->setMiscReg(MISCREG_TICK, src->readMiscReg(MISCREG_TICK));
-    dest->setMiscReg(MISCREG_FPRS, src->readMiscReg(MISCREG_FPRS));
-    dest->setMiscReg(MISCREG_SOFTINT, src->readMiscReg(MISCREG_SOFTINT));
-    dest->setMiscReg(MISCREG_TICK_CMPR, src->readMiscReg(MISCREG_TICK_CMPR));
-    dest->setMiscReg(MISCREG_STICK, src->readMiscReg(MISCREG_STICK));
-    dest->setMiscReg(MISCREG_STICK_CMPR, src->readMiscReg(MISCREG_STICK_CMPR));
+//    dest->setMiscRegNoEffect(MISCREG_Y, src->readMiscRegNoEffect(MISCREG_Y));
+//    dest->setMiscRegNoEffect(MISCREG_CCR, src->readMiscRegNoEffect(MISCREG_CCR));
+    dest->setMiscRegNoEffect(MISCREG_ASI, src->readMiscRegNoEffect(MISCREG_ASI));
+    dest->setMiscRegNoEffect(MISCREG_TICK, src->readMiscRegNoEffect(MISCREG_TICK));
+    dest->setMiscRegNoEffect(MISCREG_FPRS, src->readMiscRegNoEffect(MISCREG_FPRS));
+    dest->setMiscRegNoEffect(MISCREG_SOFTINT, src->readMiscRegNoEffect(MISCREG_SOFTINT));
+    dest->setMiscRegNoEffect(MISCREG_TICK_CMPR, src->readMiscRegNoEffect(MISCREG_TICK_CMPR));
+    dest->setMiscRegNoEffect(MISCREG_STICK, src->readMiscRegNoEffect(MISCREG_STICK));
+    dest->setMiscRegNoEffect(MISCREG_STICK_CMPR, src->readMiscRegNoEffect(MISCREG_STICK_CMPR));
 
     // Priv Registers
-    dest->setMiscReg(MISCREG_TICK, src->readMiscReg(MISCREG_TICK));
-    dest->setMiscReg(MISCREG_TBA, src->readMiscReg(MISCREG_TBA));
-    dest->setMiscReg(MISCREG_PSTATE, src->readMiscReg(MISCREG_PSTATE));
-    dest->setMiscReg(MISCREG_PIL, src->readMiscReg(MISCREG_PIL));
-    dest->setMiscReg(MISCREG_CWP, src->readMiscReg(MISCREG_CWP));
-//    dest->setMiscReg(MISCREG_CANSAVE, src->readMiscReg(MISCREG_CANSAVE));
-//    dest->setMiscReg(MISCREG_CANRESTORE, src->readMiscReg(MISCREG_CANRESTORE));
-//    dest->setMiscReg(MISCREG_OTHERWIN, src->readMiscReg(MISCREG_OTHERWIN));
-//    dest->setMiscReg(MISCREG_CLEANWIN, src->readMiscReg(MISCREG_CLEANWIN));
-//    dest->setMiscReg(MISCREG_WSTATE, src->readMiscReg(MISCREG_WSTATE));
-    dest->setMiscReg(MISCREG_GL, src->readMiscReg(MISCREG_GL));
+    dest->setMiscRegNoEffect(MISCREG_TICK, src->readMiscRegNoEffect(MISCREG_TICK));
+    dest->setMiscRegNoEffect(MISCREG_TBA, src->readMiscRegNoEffect(MISCREG_TBA));
+    dest->setMiscRegNoEffect(MISCREG_PSTATE, src->readMiscRegNoEffect(MISCREG_PSTATE));
+    dest->setMiscRegNoEffect(MISCREG_PIL, src->readMiscRegNoEffect(MISCREG_PIL));
+    dest->setMiscRegNoEffect(MISCREG_CWP, src->readMiscRegNoEffect(MISCREG_CWP));
+//    dest->setMiscRegNoEffect(MISCREG_CANSAVE, src->readMiscRegNoEffect(MISCREG_CANSAVE));
+//    dest->setMiscRegNoEffect(MISCREG_CANRESTORE, src->readMiscRegNoEffect(MISCREG_CANRESTORE));
+//    dest->setMiscRegNoEffect(MISCREG_OTHERWIN, src->readMiscRegNoEffect(MISCREG_OTHERWIN));
+//    dest->setMiscRegNoEffect(MISCREG_CLEANWIN, src->readMiscRegNoEffect(MISCREG_CLEANWIN));
+//    dest->setMiscRegNoEffect(MISCREG_WSTATE, src->readMiscRegNoEffect(MISCREG_WSTATE));
+    dest->setMiscRegNoEffect(MISCREG_GL, src->readMiscRegNoEffect(MISCREG_GL));
 
     // Hyperprivilged registers
-    dest->setMiscReg(MISCREG_HPSTATE, src->readMiscReg(MISCREG_HPSTATE));
-    dest->setMiscReg(MISCREG_HINTP, src->readMiscReg(MISCREG_HINTP));
-    dest->setMiscReg(MISCREG_HTBA, src->readMiscReg(MISCREG_HTBA));
-    dest->setMiscReg(MISCREG_STRAND_STS_REG,
-            src->readMiscReg(MISCREG_STRAND_STS_REG));
-    dest->setMiscReg(MISCREG_HSTICK_CMPR,
-            src->readMiscReg(MISCREG_HSTICK_CMPR));
+    dest->setMiscRegNoEffect(MISCREG_HPSTATE, src->readMiscRegNoEffect(MISCREG_HPSTATE));
+    dest->setMiscRegNoEffect(MISCREG_HINTP, src->readMiscRegNoEffect(MISCREG_HINTP));
+    dest->setMiscRegNoEffect(MISCREG_HTBA, src->readMiscRegNoEffect(MISCREG_HTBA));
+    dest->setMiscRegNoEffect(MISCREG_STRAND_STS_REG,
+            src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
+    dest->setMiscRegNoEffect(MISCREG_HSTICK_CMPR,
+            src->readMiscRegNoEffect(MISCREG_HSTICK_CMPR));
 
     // FSR
-    dest->setMiscReg(MISCREG_FSR, src->readMiscReg(MISCREG_FSR));
+    dest->setMiscRegNoEffect(MISCREG_FSR, src->readMiscRegNoEffect(MISCREG_FSR));
 
     //Strand Status Register
-    dest->setMiscReg(MISCREG_STRAND_STS_REG,
-            src->readMiscReg(MISCREG_STRAND_STS_REG));
+    dest->setMiscRegNoEffect(MISCREG_STRAND_STS_REG,
+            src->readMiscRegNoEffect(MISCREG_STRAND_STS_REG));
 
     // MMU Registers
-    dest->setMiscReg(MISCREG_MMU_P_CONTEXT,
-            src->readMiscReg(MISCREG_MMU_P_CONTEXT));
-    dest->setMiscReg(MISCREG_MMU_S_CONTEXT,
-            src->readMiscReg(MISCREG_MMU_S_CONTEXT));
-    dest->setMiscReg(MISCREG_MMU_PART_ID,
-            src->readMiscReg(MISCREG_MMU_PART_ID));
-    dest->setMiscReg(MISCREG_MMU_LSU_CTRL,
-            src->readMiscReg(MISCREG_MMU_LSU_CTRL));
+    dest->setMiscRegNoEffect(MISCREG_MMU_P_CONTEXT,
+            src->readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT));
+    dest->setMiscRegNoEffect(MISCREG_MMU_S_CONTEXT,
+            src->readMiscRegNoEffect(MISCREG_MMU_S_CONTEXT));
+    dest->setMiscRegNoEffect(MISCREG_MMU_PART_ID,
+            src->readMiscRegNoEffect(MISCREG_MMU_PART_ID));
+    dest->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL,
+            src->readMiscRegNoEffect(MISCREG_MMU_LSU_CTRL));
 
-    dest->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0,
-            src->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0));
-    dest->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1,
-            src->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1));
-    dest->setMiscReg(MISCREG_MMU_ITLB_C0_CONFIG,
-            src->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG));
-    dest->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0,
-            src->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0));
-    dest->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1,
-            src->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1));
-    dest->setMiscReg(MISCREG_MMU_ITLB_CX_CONFIG,
-            src->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG));
-    dest->setMiscReg(MISCREG_MMU_ITLB_SFSR,
-            src->readMiscReg(MISCREG_MMU_ITLB_SFSR));
-    dest->setMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS,
-            src->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS0,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS0));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS1,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS1));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_CONFIG,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_CONFIG));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS0,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS0));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS1,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS1));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_CONFIG,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_SFSR,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_SFSR));
+    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_TAG_ACCESS,
+            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
 
-    dest->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0,
-            src->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0));
-    dest->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1,
-            src->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1));
-    dest->setMiscReg(MISCREG_MMU_DTLB_C0_CONFIG,
-            src->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG));
-    dest->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0,
-            src->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0));
-    dest->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1,
-            src->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1));
-    dest->setMiscReg(MISCREG_MMU_DTLB_CX_CONFIG,
-            src->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG));
-    dest->setMiscReg(MISCREG_MMU_DTLB_SFSR,
-            src->readMiscReg(MISCREG_MMU_DTLB_SFSR));
-    dest->setMiscReg(MISCREG_MMU_DTLB_SFAR,
-            src->readMiscReg(MISCREG_MMU_DTLB_SFAR));
-    dest->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS,
-            src->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS0,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS0));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS1,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS1));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_CONFIG,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_CONFIG));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS0,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS0));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS1,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS1));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_CONFIG,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_SFSR,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_SFSR));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_SFAR,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_SFAR));
+    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_TAG_ACCESS,
+            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
 
     // Scratchpad Registers
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R0,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R0));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R1,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R1));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R2,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R2));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R3,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R3));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R4,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R4));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R5,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R5));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R6,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R6));
-    dest->setMiscReg(MISCREG_SCRATCHPAD_R7,
-            src->readMiscReg(MISCREG_SCRATCHPAD_R7));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R0,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R0));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R1,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R1));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R2,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R2));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R3,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R3));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R4,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R4));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R5,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R5));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R6,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R6));
+    dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R7,
+            src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R7));
 
     // Queue Registers
-    dest->setMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD,
-            src->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD));
-    dest->setMiscReg(MISCREG_QUEUE_CPU_MONDO_TAIL,
-            src->readMiscReg(MISCREG_QUEUE_CPU_MONDO_TAIL));
-    dest->setMiscReg(MISCREG_QUEUE_DEV_MONDO_HEAD,
-            src->readMiscReg(MISCREG_QUEUE_DEV_MONDO_HEAD));
-    dest->setMiscReg(MISCREG_QUEUE_DEV_MONDO_TAIL,
-            src->readMiscReg(MISCREG_QUEUE_DEV_MONDO_TAIL));
-    dest->setMiscReg(MISCREG_QUEUE_RES_ERROR_HEAD,
-            src->readMiscReg(MISCREG_QUEUE_RES_ERROR_HEAD));
-    dest->setMiscReg(MISCREG_QUEUE_RES_ERROR_TAIL,
-            src->readMiscReg(MISCREG_QUEUE_RES_ERROR_TAIL));
-    dest->setMiscReg(MISCREG_QUEUE_NRES_ERROR_HEAD,
-            src->readMiscReg(MISCREG_QUEUE_NRES_ERROR_HEAD));
-    dest->setMiscReg(MISCREG_QUEUE_NRES_ERROR_TAIL,
-            src->readMiscReg(MISCREG_QUEUE_NRES_ERROR_TAIL));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_HEAD,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_HEAD));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_TAIL,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_CPU_MONDO_TAIL));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_HEAD,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_HEAD));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_TAIL,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_DEV_MONDO_TAIL));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_HEAD,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_HEAD));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_TAIL,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_RES_ERROR_TAIL));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_HEAD,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_HEAD));
+    dest->setMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_TAIL,
+            src->readMiscRegNoEffect(MISCREG_QUEUE_NRES_ERROR_TAIL));
 }
 
 void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)

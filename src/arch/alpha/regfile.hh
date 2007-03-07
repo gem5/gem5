@@ -106,25 +106,25 @@ namespace AlphaISA
             miscRegFile.clear();
         }
 
-        MiscReg readMiscReg(int miscReg)
+        MiscReg readMiscRegNoEffect(int miscReg)
         {
-            return miscRegFile.readReg(miscReg);
+            return miscRegFile.readRegNoEffect(miscReg);
         }
 
-        MiscReg readMiscRegWithEffect(int miscReg, ThreadContext *tc)
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc)
         {
-            return miscRegFile.readRegWithEffect(miscReg, tc);
+            return miscRegFile.readReg(miscReg, tc);
         }
 
-        void setMiscReg(int miscReg, const MiscReg &val)
+        void setMiscRegNoEffect(int miscReg, const MiscReg &val)
         {
-            miscRegFile.setReg(miscReg, val);
+            miscRegFile.setRegNoEffect(miscReg, val);
         }
 
-        void setMiscRegWithEffect(int miscReg, const MiscReg &val,
+        void setMiscReg(int miscReg, const MiscReg &val,
                 ThreadContext * tc)
         {
-            miscRegFile.setRegWithEffect(miscReg, val, tc);
+            miscRegFile.setReg(miscReg, val, tc);
         }
 
         FloatReg readFloatReg(int floatReg)

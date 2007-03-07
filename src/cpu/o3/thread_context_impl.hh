@@ -442,9 +442,9 @@ O3ThreadContext<Impl>::setNextPC(uint64_t val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
+O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
-    cpu->setMiscReg(misc_reg, val, thread->readTid());
+    cpu->setMiscRegNoEffect(misc_reg, val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
@@ -454,10 +454,10 @@ O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscRegWithEffect(int misc_reg,
+O3ThreadContext<Impl>::setMiscReg(int misc_reg,
                                                 const MiscReg &val)
 {
-    cpu->setMiscRegWithEffect(misc_reg, val, thread->readTid());
+    cpu->setMiscReg(misc_reg, val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {

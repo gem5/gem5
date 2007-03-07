@@ -44,8 +44,8 @@ namespace SparcISA
     static inline bool
     inUserMode(ThreadContext *tc)
     {
-        return !(tc->readMiscReg(MISCREG_PSTATE & (1 << 2)) ||
-                tc->readMiscReg(MISCREG_HPSTATE & (1 << 2)));
+        return !(tc->readMiscRegNoEffect(MISCREG_PSTATE & (1 << 2)) ||
+                tc->readMiscRegNoEffect(MISCREG_HPSTATE & (1 << 2)));
     }
 
     inline ExtMachInst
@@ -56,7 +56,7 @@ namespace SparcISA
         //slightly redundant, but it removes the need to put a condition
         //into all the execute functions
         if(inst & (1 << 13))
-            emi |= (static_cast<ExtMachInst>(xc->readMiscReg(MISCREG_ASI))
+            emi |= (static_cast<ExtMachInst>(xc->readMiscRegNoEffect(MISCREG_ASI))
                     << (sizeof(MachInst) * 8));
         else
             emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))

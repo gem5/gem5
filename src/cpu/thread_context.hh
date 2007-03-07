@@ -226,13 +226,13 @@ class ThreadContext
 
     virtual void setNextNPC(uint64_t val) = 0;
 
+    virtual MiscReg readMiscRegNoEffect(int misc_reg) = 0;
+
     virtual MiscReg readMiscReg(int misc_reg) = 0;
 
-    virtual MiscReg readMiscRegWithEffect(int misc_reg) = 0;
+    virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val) = 0;
 
     virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
-
-    virtual void setMiscRegWithEffect(int misc_reg, const MiscReg &val) = 0;
 
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
@@ -412,17 +412,17 @@ class ProxyThreadContext : public ThreadContext
 
     void setNextNPC(uint64_t val) { actualTC->setNextNPC(val); }
 
+    MiscReg readMiscRegNoEffect(int misc_reg)
+    { return actualTC->readMiscRegNoEffect(misc_reg); }
+
     MiscReg readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    MiscReg readMiscRegWithEffect(int misc_reg)
-    { return actualTC->readMiscRegWithEffect(misc_reg); }
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    { return actualTC->setMiscRegNoEffect(misc_reg, val); }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscReg(misc_reg, val); }
-
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-    { return actualTC->setMiscRegWithEffect(misc_reg, val); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

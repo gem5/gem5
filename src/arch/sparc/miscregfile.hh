@@ -291,13 +291,13 @@ namespace SparcISA
             clear();
         }
 
-        MiscReg readReg(int miscReg);
+        MiscReg readRegNoEffect(int miscReg);
 
-        MiscReg readRegWithEffect(int miscReg, ThreadContext *tc);
+        MiscReg readReg(int miscReg, ThreadContext *tc);
 
-        void setReg(int miscReg, const MiscReg &val);
+        void setRegNoEffect(int miscReg, const MiscReg &val);
 
-        void setRegWithEffect(int miscReg,
+        void setReg(int miscReg,
                 const MiscReg &val, ThreadContext * tc);
 
         int getInstAsid()

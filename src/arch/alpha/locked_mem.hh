@@ -56,8 +56,8 @@ template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
-    xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr() & ~0xf);
-    xc->setMiscReg(MISCREG_LOCKFLAG, true);
+    xc->setMiscRegNoEffect(MISCREG_LOCKADDR, req->getPaddr() & ~0xf);
+    xc->setMiscRegNoEffect(MISCREG_LOCKFLAG, true);
 }
 
 
@@ -71,13 +71,13 @@ handleLockedWrite(XC *xc, Request *req)
         req->setExtraData(2);
     } else {
         // standard store conditional
-        bool lock_flag = xc->readMiscReg(MISCREG_LOCKFLAG);
-        Addr lock_addr = xc->readMiscReg(MISCREG_LOCKADDR);
+        bool lock_flag = xc->readMiscRegNoEffect(MISCREG_LOCKFLAG);
+        Addr lock_addr = xc->readMiscRegNoEffect(MISCREG_LOCKADDR);
         if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
             // Lock flag not set or addr mismatch in CPU;
             // don't even bother sending to memory system
             req->setExtraData(0);
-            xc->setMiscReg(MISCREG_LOCKFLAG, false);
+            xc->setMiscRegNoEffect(MISCREG_LOCKFLAG, false);
             // the rest of this code is not architectural;
             // it's just a debugging aid to help detect
             // livelock by warning on long sequences of failed

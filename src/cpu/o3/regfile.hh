@@ -225,26 +225,26 @@ class PhysRegFile
         floatRegFile[reg_idx].q = val;
     }
 
-    MiscReg readMiscReg(int misc_reg, unsigned thread_id)
+    MiscReg readMiscRegNoEffect(int misc_reg, unsigned thread_id)
     {
-        return miscRegs[thread_id].readReg(misc_reg);
+        return miscRegs[thread_id].readRegNoEffect(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg, unsigned thread_id)
+    MiscReg readMiscReg(int misc_reg, unsigned thread_id)
     {
-        return miscRegs[thread_id].readRegWithEffect(misc_reg,
+        return miscRegs[thread_id].readReg(misc_reg,
                                                      cpu->tcBase(thread_id));
     }
 
-    void setMiscReg(int misc_reg, const MiscReg &val, unsigned thread_id)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned thread_id)
     {
-        miscRegs[thread_id].setReg(misc_reg, val);
+        miscRegs[thread_id].setRegNoEffect(misc_reg, val);
     }
 
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val,
+    void setMiscReg(int misc_reg, const MiscReg &val,
                                unsigned thread_id)
     {
-        miscRegs[thread_id].setRegWithEffect(misc_reg, val,
+        miscRegs[thread_id].setReg(misc_reg, val,
                                                     cpu->tcBase(thread_id));
     }
 
