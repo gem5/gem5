@@ -116,6 +116,8 @@ class InstRecord
 
     void setAddr(Addr a) { addr = a; addr_valid = true; }
 
+    void setData(Twin64_t d) { data.as_int = d.a; data_status = DataInt64; }
+    void setData(Twin32_t d) { data.as_int = d.a; data_status = DataInt32; }
     void setData(uint64_t d) { data.as_int = d; data_status = DataInt64; }
     void setData(uint32_t d) { data.as_int = d; data_status = DataInt32; }
     void setData(uint16_t d) { data.as_int = d; data_status = DataInt16; }
