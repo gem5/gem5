@@ -37,6 +37,7 @@
 #ifndef __SIM_BYTE_SWAP_HH__
 #define __SIM_BYTE_SWAP_HH__
 
+#include "base/bigint.hh"
 #include "base/misc.hh"
 #include "sim/host.hh"
 
@@ -109,7 +110,7 @@ swap_byte16(uint16_t x)
 
 // This function lets the compiler figure out how to call the
 // swap_byte functions above for different data types.  Since the
-// sizeof() values are known at compiel time, it should inline to a
+// sizeof() values are known at compile time, it should inline to a
 // direct call to the right swap_byteNN() function.
 template <typename T>
 static inline T swap_byte(T x) {
@@ -123,6 +124,22 @@ static inline T swap_byte(T x) {
         return x;
     else
         panic("Can't byte-swap values larger than 64 bits");
+}
+
+template<>
+static inline Twin64_t swap_byte<Twin64_t>(Twin64_t x)
+{
+    x.a = swap_byte(x.a);
+    x.b = swap_byte(x.b);
+    return x;
+}
+
+template<>
+static inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
+{
+    x.a = swap_byte(x.a);
+    x.b = swap_byte(x.b);
+    return x;
 }
 
 //The conversion functions with fixed endianness on both ends don't need to
