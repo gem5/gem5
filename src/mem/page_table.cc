@@ -157,7 +157,7 @@ PageTable::translate(RequestPtr &req)
     assert(pageAlign(req->getVaddr() + req->getSize() - 1)
            == pageAlign(req->getVaddr()));
     if (!translate(req->getVaddr(), paddr)) {
-        return genPageTableFault(req->getVaddr());
+        return Fault(new PageTableFault(req->getVaddr()));
     }
     req->setPaddr(paddr);
     return page_check(req->getPaddr(), req->getSize());

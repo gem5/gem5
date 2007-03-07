@@ -80,30 +80,6 @@ class AlignmentFault : public MipsFault
     bool isAlignmentFault() {return true;}
 };
 
-#if !FULL_SYSTEM
-class PageTableFault : public MipsFault
-{
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    PageTableFault(Addr va)
-        : vaddr(va) {}
-    FaultName name() {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-static inline Fault genPageTableFault(Addr va)
-{
-    return new PageTableFault(va);
-}
-#endif
-
-
 static inline Fault genMachineCheckFault()
 {
     return new MachineCheckFault;

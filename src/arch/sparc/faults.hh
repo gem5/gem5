@@ -256,22 +256,6 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
 #endif
 };
 
-#if !FULL_SYSTEM
-class PageTableFault : public SparcFault<PageTableFault>
-{
-  private:
-    Addr vaddr;
-  public:
-    PageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc);
-};
-
-static inline Fault genPageTableFault(Addr va)
-{
-    return new PageTableFault(va);
-}
-#endif
-
 static inline Fault genMachineCheckFault()
 {
     return new InternalProcessorError;

@@ -76,4 +76,16 @@ class UnimpFault : public FaultBase
     void invoke(ThreadContext * tc);
 };
 
+#if !FULL_SYSTEM
+class PageTableFault : public FaultBase
+{
+  private:
+    Addr vaddr;
+  public:
+    FaultName name() {return "M5 page table fault";}
+    PageTableFault(Addr va) : vaddr(va) {}
+    void invoke(ThreadContext * tc);
+};
+#endif
+
 #endif // __FAULTS_HH__
