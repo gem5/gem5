@@ -86,6 +86,10 @@ try:
 		   for build in builds
 		   for variant in variants]
     else:
+        # Ugly! Since we don't have any quick SPARC_FS tests remove the SPARC_FS target
+        # If we ever get a quick SPARC_FS test, this code should be removed
+        if 'quick' in tests:
+            builds.remove('SPARC_FS')
 	targets = ['build/%s/tests/%s/%s' % (build, variant, test)
 		   for build in builds
 		   for variant in variants
