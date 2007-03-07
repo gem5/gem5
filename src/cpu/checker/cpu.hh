@@ -298,27 +298,27 @@ class CheckerCPU : public BaseCPU
         thread->setNextPC(val);
     }
 
+    MiscReg readMiscRegNoEffect(int misc_reg)
+    {
+        return thread->readMiscRegNoEffect(misc_reg);
+    }
+
     MiscReg readMiscReg(int misc_reg)
     {
         return thread->readMiscReg(misc_reg);
     }
 
-    MiscReg readMiscRegWithEffect(int misc_reg)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
-        return thread->readMiscRegWithEffect(misc_reg);
+        result.integer = val;
+        miscRegIdxs.push(misc_reg);
+        return thread->setMiscRegNoEffect(misc_reg, val);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        result.integer = val;
         miscRegIdxs.push(misc_reg);
         return thread->setMiscReg(misc_reg, val);
-    }
-
-    void setMiscRegWithEffect(int misc_reg, const MiscReg &val)
-    {
-        miscRegIdxs.push(misc_reg);
-        return thread->setMiscRegWithEffect(misc_reg, val);
     }
 
     void recordPCChange(uint64_t val) { changedPC = true; newPC = val; }

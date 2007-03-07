@@ -106,20 +106,20 @@ class SparcO3CPU : public FullO3CPU<Impl>
 
 #endif
     /** Reads a miscellaneous register. */
-    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    TheISA::MiscReg readMiscRegWithEffect(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
 
     /** Sets a miscellaneous register. */
-    void setMiscReg(int misc_reg, const TheISA::MiscReg &val, unsigned tid);
+    void setMiscRegNoEffect(int misc_reg, const TheISA::MiscReg &val, unsigned tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegWithEffect(int misc_reg, const TheISA::MiscReg &val,
+    void setMiscReg(int misc_reg, const TheISA::MiscReg &val,
             unsigned tid);
 
     /** Initiates a squash of all in-flight instructions for a given

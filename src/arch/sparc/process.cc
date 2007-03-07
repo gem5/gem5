@@ -88,38 +88,38 @@ Sparc32LiveProcess::startup()
     //From the SPARC ABI
 
     //The process runs in user mode
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
+    threadContexts[0]->setMiscReg(MISCREG_PSTATE, 0x02);
 
     //Setup default FP state
-    threadContexts[0]->setMiscReg(MISCREG_FSR, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_FSR, 0);
 
-    threadContexts[0]->setMiscReg(MISCREG_TICK, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_TICK, 0);
     //
     /*
      * Register window management registers
      */
 
     //No windows contain info from other programs
-    //threadContexts[0]->setMiscReg(MISCREG_OTHERWIN, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_OTHERWIN, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 6, 0);
     //There are no windows to pop
-    //threadContexts[0]->setMiscReg(MISCREG_CANRESTORE, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CANRESTORE, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 4, 0);
     //All windows are available to save into
-    //threadContexts[0]->setMiscReg(MISCREG_CANSAVE, NWindows - 2);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CANSAVE, NWindows - 2);
     threadContexts[0]->setIntReg(NumIntArchRegs + 3, NWindows - 2);
     //All windows are "clean"
-    //threadContexts[0]->setMiscReg(MISCREG_CLEANWIN, NWindows);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
     threadContexts[0]->setIntReg(NumIntArchRegs + 5, NWindows);
     //Start with register window 0
-    threadContexts[0]->setMiscReg(MISCREG_CWP, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_CWP, 0);
     //Always use spill and fill traps 0
-    //threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_WSTATE, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 7, 0);
     //Set the trap level to 0
-    threadContexts[0]->setMiscReg(MISCREG_TL, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_TL, 0);
     //Set the ASI register to something fixed
-    threadContexts[0]->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
 }
 
 void
@@ -130,38 +130,38 @@ Sparc64LiveProcess::startup()
     //From the SPARC ABI
 
     //The process runs in user mode
-    threadContexts[0]->setMiscRegWithEffect(MISCREG_PSTATE, 0x02);
+    threadContexts[0]->setMiscReg(MISCREG_PSTATE, 0x02);
 
     //Setup default FP state
-    threadContexts[0]->setMiscReg(MISCREG_FSR, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_FSR, 0);
 
-    threadContexts[0]->setMiscReg(MISCREG_TICK, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_TICK, 0);
     //
     /*
      * Register window management registers
      */
 
     //No windows contain info from other programs
-    //threadContexts[0]->setMiscReg(MISCREG_OTHERWIN, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_OTHERWIN, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 6, 0);
     //There are no windows to pop
-    //threadContexts[0]->setMiscReg(MISCREG_CANRESTORE, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CANRESTORE, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 4, 0);
     //All windows are available to save into
-    //threadContexts[0]->setMiscReg(MISCREG_CANSAVE, NWindows - 2);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CANSAVE, NWindows - 2);
     threadContexts[0]->setIntReg(NumIntArchRegs + 3, NWindows - 2);
     //All windows are "clean"
-    //threadContexts[0]->setMiscReg(MISCREG_CLEANWIN, NWindows);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
     threadContexts[0]->setIntReg(NumIntArchRegs + 5, NWindows);
     //Start with register window 0
-    threadContexts[0]->setMiscReg(MISCREG_CWP, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_CWP, 0);
     //Always use spill and fill traps 0
-    //threadContexts[0]->setMiscReg(MISCREG_WSTATE, 0);
+    //threadContexts[0]->setMiscRegNoEffect(MISCREG_WSTATE, 0);
     threadContexts[0]->setIntReg(NumIntArchRegs + 7, 0);
     //Set the trap level to 0
-    threadContexts[0]->setMiscReg(MISCREG_TL, 0);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_TL, 0);
     //Set the ASI register to something fixed
-    threadContexts[0]->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
 }
 
 M5_32_auxv_t::M5_32_auxv_t(int32_t type, int32_t val)

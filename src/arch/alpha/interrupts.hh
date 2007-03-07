@@ -112,13 +112,13 @@ namespace AlphaISA
             int ipl = 0;
             int summary = 0;
 
-            if (tc->readMiscReg(IPR_ASTRR))
+            if (tc->readMiscRegNoEffect(IPR_ASTRR))
                 panic("asynchronous traps not implemented\n");
 
-            if (tc->readMiscReg(IPR_SIRR)) {
+            if (tc->readMiscRegNoEffect(IPR_SIRR)) {
                 for (int i = INTLEVEL_SOFTWARE_MIN;
                      i < INTLEVEL_SOFTWARE_MAX; i++) {
-                    if (tc->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+                    if (tc->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
                         // See table 4-19 of 21164 hardware reference
                         ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                         summary |= (ULL(1) << i);
@@ -138,12 +138,12 @@ namespace AlphaISA
                 }
             }
 
-            if (ipl && ipl > tc->readMiscReg(IPR_IPLR)) {
+            if (ipl && ipl > tc->readMiscRegNoEffect(IPR_IPLR)) {
                 newIpl = ipl;
                 newSummary = summary;
                 newInfoSet = true;
                 DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                        tc->readMiscReg(IPR_IPLR), ipl, summary);
+                        tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
 
                 return new InterruptFault;
             } else {
@@ -154,8 +154,8 @@ namespace AlphaISA
         void updateIntrInfo(ThreadContext *tc)
         {
             assert(newInfoSet);
-            tc->setMiscReg(IPR_ISR, newSummary);
-            tc->setMiscReg(IPR_INTID, newIpl);
+            tc->setMiscRegNoEffect(IPR_ISR, newSummary);
+            tc->setMiscRegNoEffect(IPR_INTID, newIpl);
             newInfoSet = false;
         }
 

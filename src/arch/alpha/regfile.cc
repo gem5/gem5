@@ -85,14 +85,14 @@ namespace AlphaISA
     void
     copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     {
-        dest->setMiscReg(AlphaISA::MISCREG_FPCR,
-                src->readMiscReg(AlphaISA::MISCREG_FPCR));
-        dest->setMiscReg(AlphaISA::MISCREG_UNIQ,
-                src->readMiscReg(AlphaISA::MISCREG_UNIQ));
-        dest->setMiscReg(AlphaISA::MISCREG_LOCKFLAG,
-                src->readMiscReg(AlphaISA::MISCREG_LOCKFLAG));
-        dest->setMiscReg(AlphaISA::MISCREG_LOCKADDR,
-                src->readMiscReg(AlphaISA::MISCREG_LOCKADDR));
+        dest->setMiscRegNoEffect(AlphaISA::MISCREG_FPCR,
+                src->readMiscRegNoEffect(AlphaISA::MISCREG_FPCR));
+        dest->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ,
+                src->readMiscRegNoEffect(AlphaISA::MISCREG_UNIQ));
+        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG,
+                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG));
+        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR,
+                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR));
 
 #if FULL_SYSTEM
         copyIprs(src, dest);

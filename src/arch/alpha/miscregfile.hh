@@ -75,18 +75,18 @@ namespace AlphaISA
 #endif
         }
 
-        MiscReg readReg(int misc_reg);
+        MiscReg readRegNoEffect(int misc_reg);
 
-        MiscReg readRegWithEffect(int misc_reg, ThreadContext *tc);
+        MiscReg readReg(int misc_reg, ThreadContext *tc);
 
         //These functions should be removed once the simplescalar cpu model
         //has been replaced.
         int getInstAsid();
         int getDataAsid();
 
-        void setReg(int misc_reg, const MiscReg &val);
+        void setRegNoEffect(int misc_reg, const MiscReg &val);
 
-        void setRegWithEffect(int misc_reg, const MiscReg &val,
+        void setReg(int misc_reg, const MiscReg &val,
                 ThreadContext *tc);
 
         void clear()

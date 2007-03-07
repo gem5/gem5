@@ -154,32 +154,32 @@ AlphaO3CPU<Impl>::regStats()
 
 template <class Impl>
 TheISA::MiscReg
+AlphaO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, unsigned tid)
+{
+    return this->regFile.readMiscRegNoEffect(misc_reg, tid);
+}
+
+template <class Impl>
+TheISA::MiscReg
 AlphaO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 {
     return this->regFile.readMiscReg(misc_reg, tid);
 }
 
 template <class Impl>
-TheISA::MiscReg
-AlphaO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
-{
-    return this->regFile.readMiscRegWithEffect(misc_reg, tid);
-}
-
-template <class Impl>
 void
-AlphaO3CPU<Impl>::setMiscReg(int misc_reg, const TheISA::MiscReg &val,
+AlphaO3CPU<Impl>::setMiscRegNoEffect(int misc_reg, const TheISA::MiscReg &val,
         unsigned tid)
 {
-    this->regFile.setMiscReg(misc_reg, val, tid);
+    this->regFile.setMiscRegNoEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
-AlphaO3CPU<Impl>::setMiscRegWithEffect(int misc_reg,
+AlphaO3CPU<Impl>::setMiscReg(int misc_reg,
         const TheISA::MiscReg &val, unsigned tid)
 {
-    this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
+    this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>
@@ -209,7 +209,7 @@ Fault
 AlphaO3CPU<Impl>::hwrei(unsigned tid)
 {
     // Need to clear the lock flag upon returning from an interrupt.
-    this->setMiscReg(AlphaISA::MISCREG_LOCKFLAG, false, tid);
+    this->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG, false, tid);
 
     this->thread[tid]->kernelStats->hwrei();
 

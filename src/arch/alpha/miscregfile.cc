@@ -61,7 +61,7 @@ namespace AlphaISA
     }
 
     MiscReg
-    MiscRegFile::readReg(int misc_reg)
+    MiscRegFile::readRegNoEffect(int misc_reg)
     {
         switch(misc_reg) {
           case MISCREG_FPCR:
@@ -87,7 +87,7 @@ namespace AlphaISA
     }
 
     MiscReg
-    MiscRegFile::readRegWithEffect(int misc_reg, ThreadContext *tc)
+    MiscRegFile::readReg(int misc_reg, ThreadContext *tc)
     {
         switch(misc_reg) {
           case MISCREG_FPCR:
@@ -112,7 +112,7 @@ namespace AlphaISA
     }
 
     void
-    MiscRegFile::setReg(int misc_reg, const MiscReg &val)
+    MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val)
     {
         switch(misc_reg) {
           case MISCREG_FPCR:
@@ -143,7 +143,7 @@ namespace AlphaISA
     }
 
     void
-    MiscRegFile::setRegWithEffect(int misc_reg, const MiscReg &val,
+    MiscRegFile::setReg(int misc_reg, const MiscReg &val,
             ThreadContext *tc)
     {
         switch(misc_reg) {

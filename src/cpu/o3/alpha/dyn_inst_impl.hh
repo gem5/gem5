@@ -118,7 +118,7 @@ AlphaDynInst<Impl>::hwrei()
         return new AlphaISA::UnimplementedOpcodeFault;
 
     // Set the next PC based on the value of the EXC_ADDR IPR.
-    this->setNextPC(this->cpu->readMiscReg(AlphaISA::IPR_EXC_ADDR,
+    this->setNextPC(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
                                            this->threadNumber));
 
     // Tell CPU to clear any state it needs to if a hwrei is taken.

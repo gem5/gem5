@@ -396,7 +396,7 @@ TLB::writeSfsr(ThreadContext *tc, int reg,  bool write, ContextType ct,
         bool se, FaultTypes ft, int asi)
 {
     uint64_t sfsr;
-    sfsr = tc->readMiscReg(reg);
+    sfsr = tc->readMiscRegNoEffect(reg);
 
     if (sfsr & 0x1)
         sfsr = 0x3;
@@ -410,7 +410,7 @@ TLB::writeSfsr(ThreadContext *tc, int reg,  bool write, ContextType ct,
         sfsr |= 1 << 6;
     sfsr |= ft << 7;
     sfsr |= asi << 16;
-    tc->setMiscRegWithEffect(reg, sfsr);
+    tc->setMiscReg(reg, sfsr);
 }
 
 void
@@ -419,7 +419,7 @@ TLB::writeTagAccess(ThreadContext *tc, int reg, Addr va, int context)
     DPRINTF(TLB, "TLB: Writing Tag Access: va: %#X ctx: %#X value: %#X\n",
             va, context, mbits(va, 63,13) | mbits(context,12,0));
 
-    tc->setMiscRegWithEffect(reg, mbits(va, 63,13) | mbits(context,12,0));
+    tc->setMiscReg(reg, mbits(va, 63,13) | mbits(context,12,0));
 }
 
 void
@@ -444,7 +444,7 @@ DTB::writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
     DPRINTF(TLB, "TLB: DTB Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
             a, (int)write, ct, ft, asi);
     TLB::writeSfsr(tc, MISCREG_MMU_DTLB_SFSR, write, ct, se, ft, asi);
-    tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR, a);
+    tc->setMiscReg(MISCREG_MMU_DTLB_SFAR, a);
 }
 
 void
@@ -458,7 +458,7 @@ DTB::writeTagAccess(ThreadContext *tc, Addr va, int context)
 Fault
 ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
-    uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
+    uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
     Addr vaddr = req->getVaddr();
     TlbEntry *e;
@@ -572,7 +572,7 @@ Fault
 DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
     /* @todo this could really use some profiling and fixing to make it faster! */
-    uint64_t tlbdata = tc->readMiscReg(MISCREG_TLB_DATA);
+    uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
     Addr vaddr = req->getVaddr();
     Addr size = req->getSize();
     ASI asi;
@@ -864,90 +864,90 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_LSU_CTRL));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_LSU_CTRL));
         break;
       case ASI_MMU:
         switch (va) {
           case 0x8:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_P_CONTEXT));
             break;
           case 0x10:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_S_CONTEXT));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_S_CONTEXT));
             break;
           default:
             goto doMmuReadError;
         }
         break;
       case ASI_QUEUE:
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_QUEUE_CPU_MONDO_HEAD +
+        pkt->set(tc->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
                     (va >> 4) - 0x3c));
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0));
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1));
         break;
       case ASI_DMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG));
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0));
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1));
         break;
       case ASI_IMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG));
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0));
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1));
         break;
       case ASI_DMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG));
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0));
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1));
         break;
       case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+        pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG));
         break;
       case ASI_SPARC_ERROR_STATUS_REG:
         pkt->set((uint64_t)0);
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
-        pkt->set(tc->readMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
+        pkt->set(tc->readMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
         break;
       case ASI_IMMU:
         switch (va) {
           case 0x0:
-            temp = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+            temp = tc->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
           case 0x18:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_SFSR));
             break;
           case 0x30:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS));
             break;
           default:
             goto doMmuReadError;
@@ -956,20 +956,20 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
       case ASI_DMMU:
         switch (va) {
           case 0x0:
-            temp = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+            temp = tc->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS);
             pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
           case 0x18:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_SFSR));
             break;
           case 0x20:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_SFAR));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_SFAR));
             break;
           case 0x30:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS));
             break;
           case 0x80:
-            pkt->set(tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID));
+            pkt->set(tc->readMiscReg(MISCREG_MMU_PART_ID));
             break;
           default:
                 goto doMmuReadError;
@@ -977,35 +977,35 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_DMMU_TSB_PS0_PTR_REG:
         pkt->set(MakeTsbPtr(Ps0,
-            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS),
-            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0),
-            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
-            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0),
-            tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG)));
+            tc->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS),
+            tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0),
+            tc->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG),
+            tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0),
+            tc->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG)));
         break;
       case ASI_DMMU_TSB_PS1_PTR_REG:
         pkt->set(MakeTsbPtr(Ps1,
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG)));
+                tc->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS),
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG)));
         break;
       case ASI_IMMU_TSB_PS0_PTR_REG:
           pkt->set(MakeTsbPtr(Ps0,
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG)));
+                tc->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG)));
         break;
       case ASI_IMMU_TSB_PS1_PTR_REG:
           pkt->set(MakeTsbPtr(Ps1,
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG)));
+                tc->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG)));
         break;
       case ASI_SWVR_INTR_RECEIVE:
         pkt->set(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
@@ -1048,15 +1048,15 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_LSU_CTRL, data);
+        tc->setMiscReg(MISCREG_MMU_LSU_CTRL, data);
         break;
       case ASI_MMU:
         switch (va) {
           case 0x8:
-            tc->setMiscRegWithEffect(MISCREG_MMU_P_CONTEXT, data);
+            tc->setMiscReg(MISCREG_MMU_P_CONTEXT, data);
             break;
           case 0x10:
-            tc->setMiscRegWithEffect(MISCREG_MMU_S_CONTEXT, data);
+            tc->setMiscReg(MISCREG_MMU_S_CONTEXT, data);
             break;
           default:
             goto doMmuWriteError;
@@ -1064,56 +1064,56 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_QUEUE:
         assert(mbits(data,13,6) == data);
-        tc->setMiscRegWithEffect(MISCREG_QUEUE_CPU_MONDO_HEAD +
+        tc->setMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
                     (va >> 4) - 0x3c, data);
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0, data);
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1, data);
         break;
       case ASI_DMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_C0_CONFIG, data);
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0, data);
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1, data);
         break;
       case ASI_IMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_C0_CONFIG, data);
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0, data);
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1, data);
         break;
       case ASI_DMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG, data);
+        tc->setMiscReg(MISCREG_MMU_DTLB_CX_CONFIG, data);
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0, data);
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1, data);
         break;
       case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG, data);
+        tc->setMiscReg(MISCREG_MMU_ITLB_CX_CONFIG, data);
         break;
       case ASI_SPARC_ERROR_EN_REG:
       case ASI_SPARC_ERROR_STATUS_REG:
@@ -1121,16 +1121,16 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
-        tc->setMiscRegWithEffect(MISCREG_SCRATCHPAD_R0 + (va >> 3), data);
+        tc->setMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3), data);
         break;
       case ASI_IMMU:
         switch (va) {
           case 0x18:
-            tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_SFSR, data);
+            tc->setMiscReg(MISCREG_MMU_ITLB_SFSR, data);
             break;
           case 0x30:
             sext<59>(bits(data, 59,0));
-            tc->setMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS, data);
+            tc->setMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS, data);
             break;
           default:
             goto doMmuWriteError;
@@ -1140,10 +1140,10 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         entry_insert = bits(va, 8,3);
       case ASI_ITLB_DATA_IN_REG:
         assert(entry_insert != -1 || mbits(va,10,9) == va);
-        ta_insert = tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_TAG_ACCESS);
+        ta_insert = tc->readMiscReg(MISCREG_MMU_ITLB_TAG_ACCESS);
         va_insert = mbits(ta_insert, 63,13);
         ct_insert = mbits(ta_insert, 12,0);
-        part_insert = tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        part_insert = tc->readMiscReg(MISCREG_MMU_PART_ID);
         real_insert = bits(va, 9,9);
         pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
                 PageTableEntry::sun4u);
@@ -1154,10 +1154,10 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         entry_insert = bits(va, 8,3);
       case ASI_DTLB_DATA_IN_REG:
         assert(entry_insert != -1 || mbits(va,10,9) == va);
-        ta_insert = tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS);
+        ta_insert = tc->readMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS);
         va_insert = mbits(ta_insert, 63,13);
         ct_insert = mbits(ta_insert, 12,0);
-        part_insert = tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        part_insert = tc->readMiscReg(MISCREG_MMU_PART_ID);
         real_insert = bits(va, 9,9);
         pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
                 PageTableEntry::sun4u);
@@ -1166,10 +1166,10 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       case ASI_IMMU_DEMAP:
         ignore = false;
         ctx_id = -1;
-        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        part_id =  tc->readMiscReg(MISCREG_MMU_PART_ID);
         switch (bits(va,5,4)) {
           case 0:
-            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            ctx_id = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
             break;
           case 1:
             ignore = true;
@@ -1201,14 +1201,14 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       case ASI_DMMU:
         switch (va) {
           case 0x18:
-            tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_SFSR, data);
+            tc->setMiscReg(MISCREG_MMU_DTLB_SFSR, data);
             break;
           case 0x30:
             sext<59>(bits(data, 59,0));
-            tc->setMiscRegWithEffect(MISCREG_MMU_DTLB_TAG_ACCESS, data);
+            tc->setMiscReg(MISCREG_MMU_DTLB_TAG_ACCESS, data);
             break;
           case 0x80:
-            tc->setMiscRegWithEffect(MISCREG_MMU_PART_ID, data);
+            tc->setMiscReg(MISCREG_MMU_PART_ID, data);
             break;
           default:
             goto doMmuWriteError;
@@ -1217,13 +1217,13 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
       case ASI_DMMU_DEMAP:
         ignore = false;
         ctx_id = -1;
-        part_id =  tc->readMiscRegWithEffect(MISCREG_MMU_PART_ID);
+        part_id =  tc->readMiscReg(MISCREG_MMU_PART_ID);
         switch (bits(va,5,4)) {
           case 0:
-            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_P_CONTEXT);
+            ctx_id = tc->readMiscReg(MISCREG_MMU_P_CONTEXT);
             break;
           case 1:
-            ctx_id = tc->readMiscRegWithEffect(MISCREG_MMU_S_CONTEXT);
+            ctx_id = tc->readMiscReg(MISCREG_MMU_S_CONTEXT);
             break;
           case 3:
             ctx_id = 0;
@@ -1274,25 +1274,25 @@ DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
 {
     uint64_t tag_access = mbits(addr,63,13) | mbits(ctx,12,0);
     ptrs[0] = MakeTsbPtr(Ps0, tag_access,
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG));
     ptrs[1] = MakeTsbPtr(Ps1, tag_access,
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_DTLB_CX_CONFIG));
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_DTLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_DTLB_CX_CONFIG));
     ptrs[2] = MakeTsbPtr(Ps0, tag_access,
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS0),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS0),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG));
     ptrs[3] = MakeTsbPtr(Ps1, tag_access,
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_C0_CONFIG),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_TSB_PS1),
-                tc->readMiscRegWithEffect(MISCREG_MMU_ITLB_CX_CONFIG));
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_ITLB_C0_CONFIG),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_TSB_PS1),
+                tc->readMiscReg(MISCREG_MMU_ITLB_CX_CONFIG));
 }
 
 

@@ -235,13 +235,13 @@ class OzoneCPU : public BaseCPU
 
       public:
         // ISA stuff:
+        MiscReg readMiscRegNoEffect(int misc_reg);
+
         MiscReg readMiscReg(int misc_reg);
 
-        MiscReg readMiscRegWithEffect(int misc_reg);
+        void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
 
         void setMiscReg(int misc_reg, const MiscReg &val);
-
-        void setMiscRegWithEffect(int misc_reg, const MiscReg &val);
 
         unsigned readStCondFailures()
         { return thread->storeCondFailures; }

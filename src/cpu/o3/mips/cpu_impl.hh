@@ -135,31 +135,31 @@ MipsO3CPU<Impl>::regStats()
 
 template <class Impl>
 MiscReg
+MipsO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, unsigned tid)
+{
+    return this->regFile.readMiscRegNoEffect(misc_reg, tid);
+}
+
+template <class Impl>
+MiscReg
 MipsO3CPU<Impl>::readMiscReg(int misc_reg, unsigned tid)
 {
     return this->regFile.readMiscReg(misc_reg, tid);
 }
 
 template <class Impl>
-MiscReg
-MipsO3CPU<Impl>::readMiscRegWithEffect(int misc_reg, unsigned tid)
+void
+MipsO3CPU<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
 {
-    return this->regFile.readMiscRegWithEffect(misc_reg, tid);
+    this->regFile.setMiscRegNoEffect(misc_reg, val, tid);
 }
 
 template <class Impl>
 void
-MipsO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
-{
-    this->regFile.setMiscReg(misc_reg, val, tid);
-}
-
-template <class Impl>
-void
-MipsO3CPU<Impl>::setMiscRegWithEffect(int misc_reg, const MiscReg &val,
+MipsO3CPU<Impl>::setMiscReg(int misc_reg, const MiscReg &val,
                                        unsigned tid)
 {
-    this->regFile.setMiscRegWithEffect(misc_reg, val, tid);
+    this->regFile.setMiscReg(misc_reg, val, tid);
 }
 
 template <class Impl>

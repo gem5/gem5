@@ -167,7 +167,7 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.size);
 
-    if (context->readMiscRegWithEffect(MISCREG_PSTATE) &
+    if (context->readMiscReg(MISCREG_PSTATE) &
            PSTATE::am) {
         uint32_t *regs;
         regs = (uint32_t*)gdbregs.regs;
@@ -177,8 +177,8 @@ RemoteGDB::getregs()
             regs[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
 
         regs[Reg32Y] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
-        regs[Reg32Psr] = htobe((uint32_t)context->readMiscRegWithEffect(MISCREG_PSTATE));
-        regs[Reg32Fsr] = htobe((uint32_t)context->readMiscRegWithEffect(MISCREG_FSR));
+        regs[Reg32Psr] = htobe((uint32_t)context->readMiscReg(MISCREG_PSTATE));
+        regs[Reg32Fsr] = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
         regs[Reg32Csr] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
     } else {
         gdbregs.regs[RegPc] = htobe(context->readPC());
@@ -186,13 +186,13 @@ RemoteGDB::getregs()
         for(int x = RegG0; x <= RegI0 + 7; x++)
             gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
 
-        gdbregs.regs[RegFsr] = htobe(context->readMiscRegWithEffect(MISCREG_FSR));
-        gdbregs.regs[RegFprs] = htobe(context->readMiscRegWithEffect(MISCREG_FPRS));
+        gdbregs.regs[RegFsr] = htobe(context->readMiscReg(MISCREG_FSR));
+        gdbregs.regs[RegFprs] = htobe(context->readMiscReg(MISCREG_FPRS));
         gdbregs.regs[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
         gdbregs.regs[RegState] = htobe(
-            context->readMiscRegWithEffect(MISCREG_CWP) |
-            context->readMiscRegWithEffect(MISCREG_PSTATE) << 8 |
-            context->readMiscRegWithEffect(MISCREG_ASI) << 24 |
+            context->readMiscReg(MISCREG_CWP) |
+            context->readMiscReg(MISCREG_PSTATE) << 8 |
+            context->readMiscReg(MISCREG_ASI) << 24 |
             context->readIntReg(NumIntArchRegs + 2) << 32);
     }
 

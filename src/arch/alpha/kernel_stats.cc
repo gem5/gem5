@@ -150,7 +150,7 @@ Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
 void
 Statistics::mode(cpu_mode newmode, ThreadContext *tc)
 {
-    Addr pcbb = tc->readMiscReg(AlphaISA::IPR_PALtemp23);
+    Addr pcbb = tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp23);
 
     if (newmode == kernel && pcbb == idleProcess)
         newmode = idle;

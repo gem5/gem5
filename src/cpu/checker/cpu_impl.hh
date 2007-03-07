@@ -386,13 +386,13 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
         int misc_reg_idx = miscRegIdxs.front();
         miscRegIdxs.pop();
 
-        if (inst->tcBase()->readMiscReg(misc_reg_idx) !=
-            thread->readMiscReg(misc_reg_idx)) {
+        if (inst->tcBase()->readMiscRegNoEffect(misc_reg_idx) !=
+            thread->readMiscRegNoEffect(misc_reg_idx)) {
             warn("%lli: Misc reg idx %i (side effect) does not match! "
                  "Inst: %#x, checker: %#x",
                  curTick, misc_reg_idx,
-                 inst->tcBase()->readMiscReg(misc_reg_idx),
-                 thread->readMiscReg(misc_reg_idx));
+                 inst->tcBase()->readMiscRegNoEffect(misc_reg_idx),
+                 thread->readMiscRegNoEffect(misc_reg_idx));
             handleError(inst);
         }
     }
@@ -432,7 +432,7 @@ Checker<DynInstPtr>::copyResult(DynInstPtr &inst)
     } else if (idx < TheISA::Fpcr_DepTag) {
         thread->setFloatRegBits(idx, inst->readIntResult());
     } else {
-        thread->setMiscReg(idx, inst->readIntResult());
+        thread->setMiscRegNoEffect(idx, inst->readIntResult());
     }
 }
 

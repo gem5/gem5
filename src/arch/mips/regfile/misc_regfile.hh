@@ -215,22 +215,22 @@ namespace MipsISA
 
         void copyMiscRegs(ThreadContext *tc);
 
-        MiscReg readReg(int misc_reg)
+        MiscReg readRegNoEffect(int misc_reg)
         {
             return miscRegFile[misc_reg];
         }
 
-        MiscReg readRegWithEffect(int misc_reg, ThreadContext *tc)
+        MiscReg readReg(int misc_reg, ThreadContext *tc)
         {
             return miscRegFile[misc_reg];
         }
 
-        void setReg(int misc_reg, const MiscReg &val)
+        void setRegNoEffect(int misc_reg, const MiscReg &val)
         {
             miscRegFile[misc_reg] = val;
         }
 
-        void setRegWithEffect(int misc_reg, const MiscReg &val,
+        void setReg(int misc_reg, const MiscReg &val,
                                ThreadContext *tc)
         {
             miscRegFile[misc_reg] = val;

@@ -62,7 +62,7 @@ AlphaISA::initCPU(ThreadContext *tc, int cpuId)
 
     AlphaISA::AlphaFault *reset = new AlphaISA::ResetFault;
 
-    tc->setPC(tc->readMiscReg(IPR_PAL_BASE) + reset->vect());
+    tc->setPC(tc->readMiscRegNoEffect(IPR_PAL_BASE) + reset->vect());
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 
     delete reset;
@@ -76,12 +76,12 @@ void
 AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
 {
     for (int i = 0; i < NumInternalProcRegs; ++i) {
-        tc->setMiscReg(i, 0);
+        tc->setMiscRegNoEffect(i, 0);
     }
 
-    tc->setMiscReg(IPR_PAL_BASE, PalBase);
-    tc->setMiscReg(IPR_MCSR, 0x6);
-    tc->setMiscReg(IPR_PALtemp16, cpuId);
+    tc->setMiscRegNoEffect(IPR_PAL_BASE, PalBase);
+    tc->setMiscRegNoEffect(IPR_MCSR, 0x6);
+    tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
 }
 
 
@@ -94,13 +94,13 @@ AlphaISA::processInterrupts(CPU *cpu)
     int ipl = 0;
     int summary = 0;
 
-    if (cpu->readMiscReg(IPR_ASTRR))
+    if (cpu->readMiscRegNoEffect(IPR_ASTRR))
         panic("asynchronous traps not implemented\n");
 
-    if (cpu->readMiscReg(IPR_SIRR)) {
+    if (cpu->readMiscRegNoEffect(IPR_SIRR)) {
         for (int i = INTLEVEL_SOFTWARE_MIN;
              i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (cpu->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
+            if (cpu->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
                 // See table 4-19 of the 21164 hardware reference
                 ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
                 summary |= (ULL(1) << i);
@@ -121,12 +121,12 @@ AlphaISA::processInterrupts(CPU *cpu)
         }
     }
 
-    if (ipl && ipl > cpu->readMiscReg(IPR_IPLR)) {
-        cpu->setMiscReg(IPR_ISR, summary);
-        cpu->setMiscReg(IPR_INTID, ipl);
+    if (ipl && ipl > cpu->readMiscRegNoEffect(IPR_IPLR)) {
+        cpu->setMiscRegNoEffect(IPR_ISR, summary);
+        cpu->setMiscRegNoEffect(IPR_INTID, ipl);
         cpu->trap(new InterruptFault);
         DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                cpu->readMiscReg(IPR_IPLR), ipl, summary);
+                cpu->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
     }
 
 }
@@ -148,7 +148,7 @@ SimpleThread::hwrei()
     if (!(readPC() & 0x3))
         return new UnimplementedOpcodeFault;
 
-    setNextPC(readMiscReg(AlphaISA::IPR_EXC_ADDR));
+    setNextPC(readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR));
 
     if (!misspeculating()) {
         if (kernelStats)
@@ -554,7 +554,7 @@ void
 AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
 {
     for (int i = 0; i < NumInternalProcRegs; ++i) {
-        dest->setMiscReg(i, src->readMiscReg(i));
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
 }
 
