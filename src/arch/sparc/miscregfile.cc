@@ -374,7 +374,7 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
       case MISCREG_HPSTATE:
-        return readFSRegWithEffect(miscReg, tc);
+        return readFSReg(miscReg, tc);
 #else
       case MISCREG_HPSTATE:
         //HPSTATE is special because because sometimes in privilege checks for instructions
@@ -682,7 +682,7 @@ void MiscRegFile::setReg(int miscReg,
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
 #if FULL_SYSTEM
       case MISCREG_HPSTATE:
-        setFSRegWithEffect(miscReg, val, tc);
+        setFSReg(miscReg, val, tc);
         return;
 #else
       case MISCREG_HPSTATE:

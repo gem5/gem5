@@ -59,8 +59,7 @@ MiscRegFile::checkSoftInt(ThreadContext *tc)
 
 
 void
-MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
-                                ThreadContext *tc)
+MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 {
     int64_t time;
     switch (miscReg) {
@@ -196,7 +195,7 @@ MiscRegFile::setFSRegWithEffect(int miscReg, const MiscReg &val,
 }
 
 MiscReg
-MiscRegFile::readFSRegWithEffect(int miscReg, ThreadContext * tc)
+MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
         /* Privileged registers. */

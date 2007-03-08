@@ -107,7 +107,7 @@ class SparcDynInst : public BaseDynInst<Impl>
     }
 
     /** Reads a miscellaneous register. */
-    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    TheISA::MiscReg readMiscRegOperandNoEffect(const StaticInst *si, int idx)
     {
         return this->cpu->readMiscRegNoEffect(
                 si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
@@ -117,7 +117,7 @@ class SparcDynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    TheISA::MiscReg readMiscRegOperandWithEffect(const StaticInst *si, int idx)
+    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readMiscReg(
                 si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
@@ -125,7 +125,7 @@ class SparcDynInst : public BaseDynInst<Impl>
     }
 
     /** Sets a misc. register. */
-    void setMiscRegOperand(const StaticInst * si,
+    void setMiscRegOperandNoEffect(const StaticInst * si,
             int idx, const TheISA::MiscReg &val)
     {
         this->instResult.integer = val;
@@ -137,7 +137,7 @@ class SparcDynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegOperandWithEffect(
+    void setMiscRegOperand(
             const StaticInst *si, int idx, const TheISA::MiscReg &val)
     {
         return this->cpu->setMiscReg(

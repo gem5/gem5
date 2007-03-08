@@ -1368,7 +1368,7 @@ class ControlRegOperand(Operand):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read control register as FP')
-        base = 'xc->readMiscRegOperandWithEffect(this, %s)' % self.src_reg_idx
+        base = 'xc->readMiscRegOperand(this, %s)' % self.src_reg_idx
         if self.size == self.dflt_size:
             return '%s = %s;\n' % (self.base_name, base)
         else:
@@ -1378,7 +1378,7 @@ class ControlRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
-        wb = 'xc->setMiscRegOperandWithEffect(this, %s, %s);\n' % \
+        wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
              (self.dest_reg_idx, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
               self.base_name
