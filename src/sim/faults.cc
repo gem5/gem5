@@ -56,7 +56,7 @@ void UnimpFault::invoke(ThreadContext * tc)
 {
     panic("Unimpfault: %s\n", panicStr.c_str());
 }
-
+#if !FULL_SYSTEM
 void PageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
@@ -78,3 +78,4 @@ void PageTableFault::invoke(ThreadContext *tc)
         panic("Page table fault when accessing virtual address %#x\n", vaddr);
     }
 }
+#endif
