@@ -511,8 +511,8 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
 
     //Figure out how big the initial stack needs to be
 
-    // The unaccounted for 0 at the top of the stack
-    int mysterious_size = intSize;
+    // The unaccounted for 8 byte 0 at the top of the stack
+    int mysterious_size = 8;
 
     //This is the name of the file which is present on the initial stack
     //It's purpose is to let the user space linker examine the original file.
@@ -527,13 +527,14 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
         arg_data_size += argv[i].size() + 1;
     }
 
-    //The info_block
+    //The info_block - This seems to need an pad for some reason.
     int info_block_size =
-        (file_name_size +
+        (mysterious_size +
+        file_name_size +
         env_data_size +
-        arg_data_size);
+        arg_data_size + intSize);
 
-    //Each auxilliary vector is two 8 byte words
+    //Each auxilliary vector is two 4 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
 
     int envp_array_size = intSize * (envp.size() + 1);
@@ -543,7 +544,7 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     int window_save_size = intSize * 16;
 
     int space_needed =
-        mysterious_size +
+        info_block_size +
         aux_array_size +
         envp_array_size +
         argv_array_size +
@@ -566,7 +567,7 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     uint32_t auxv_array_base = envp_array_base + envp_array_size;
     //The info block is pushed up against the top of the stack, while
     //the rest of the initial stack frame is aligned to an 8 byte boudary.
-    uint32_t arg_data_base = stack_base - info_block_size;
+    uint32_t arg_data_base = stack_base - info_block_size + intSize;
     uint32_t env_data_base = arg_data_base + arg_data_size;
     uint32_t file_name_base = env_data_base + env_data_size;
     uint32_t mysterious_base = file_name_base + file_name_size;
@@ -625,8 +626,8 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(spillStart, (uint8_t*)spillHandler32, spillSize);
 
     //Set up the thread context to start running the process
-    threadContexts[0]->setIntReg(ArgumentReg0, argc);
-    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    //threadContexts[0]->setIntReg(ArgumentReg0, argc);
+    //threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     uint32_t prog_entry = objFile->entryPoint();
