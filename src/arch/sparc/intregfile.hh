@@ -82,7 +82,7 @@ namespace SparcISA
         IntReg * regView[NumFrames];
 
         static const int RegGlobalOffset = 0;
-        static const int FrameOffset = MaxGL * RegsPerFrame;
+        static const int FrameOffset = (MaxGL + 1) * RegsPerFrame;
         int offset[NumFrames];
 
       public:
