@@ -35,5 +35,10 @@ MemObject::MemObject(const std::string &name)
     : SimObject(name)
 {
 }
+void
+MemObject::deletePortRefs(Port *p)
+{
+    panic("This object does not support port deletion\n");
+}
 
 DEFINE_SIM_OBJECT_CLASS_NAME("MemObject", MemObject)

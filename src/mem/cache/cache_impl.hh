@@ -1100,7 +1100,7 @@ Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
     }
     else if (if_name == "functional")
     {
-        return new CpuSidePort(name() + "-cpu_side_port", this);
+        return new CpuSidePort(name() + "-cpu_side_funcport", this);
     }
     else if (if_name == "cpu_side")
     {
@@ -1119,6 +1119,15 @@ Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::deletePortRefs(Port *p)
+{
+    if (cpuSidePort == p || memSidePort == p)
+        panic("Can only delete functional ports\n");
+    // nothing else to do
 }
 
 

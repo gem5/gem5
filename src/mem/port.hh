@@ -131,6 +131,11 @@ class Port
     /** Function to return the owner of this port. */
     MemObject *getOwner() { return owner; }
 
+    /** Inform the peer port to delete itself and notify it's owner about it's
+     * demise. */
+    void removeConn();
+
+
   protected:
 
     /** These functions are protected because they should only be
