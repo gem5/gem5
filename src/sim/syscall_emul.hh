@@ -353,6 +353,8 @@ template <typename target_stat, typename host_stat>
 static void
 convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
 {
+    using namespace TheISA;
+
     if (fakeTTY)
         tgt->st_dev = 0xA;
     else
@@ -395,6 +397,8 @@ template <typename target_stat, typename host_stat64>
 static void
 convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 {
+    using namespace TheISA;
+
     convertStatBuf<target_stat, host_stat64>(tgt, host, fakeTTY);
 #if defined(STAT_HAVE_NSEC)
     tgt->st_atime_nsec = host->st_atime_nsec;
