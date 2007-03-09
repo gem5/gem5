@@ -620,10 +620,6 @@ decode OP default Unknown::unknown()
                 }});
                 0x19: Priv::wrstick_cmpr({{StickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x1A: Priv::wrstrand_sts_reg({{
-                    if(Pstate<2:> && !Hpstate<2:>)
-                        StrandStsReg = StrandStsReg<63:1> |
-                                (Rs1 ^ Rs2_or_imm13)<0:>;
-                    else
                         StrandStsReg = Rs1 ^ Rs2_or_imm13;
                 }});
                 //0x1A is supposed to be reserved, but it writes the strand

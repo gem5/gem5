@@ -126,6 +126,11 @@ namespace X86ISA
     {
         panic("initCPU not implemented!\n");
     }
+
+    inline void startupCPU(ThreadContext *tc, int cpuId)
+    {
+        tc->activate(0);
+    }
 };
 
 #endif // __ARCH_X86_UTILITY_HH__

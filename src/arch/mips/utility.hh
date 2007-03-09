@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
@@ -97,6 +99,11 @@ namespace MipsISA {
 #else
         return ExtMachInst(inst);
 #endif
+    }
+
+    inline void startupCPU(ThreadContext *tc, int cpuId)
+    {
+        tc->activate(0);
     }
 };
 

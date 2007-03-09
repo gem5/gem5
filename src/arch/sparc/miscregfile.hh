@@ -163,6 +163,23 @@ namespace SparcISA
         const static int ie = 0x2;
     };
 
+    struct STS {
+        const static int st_idle     = 0x00;
+        const static int st_wait     = 0x01;
+        const static int st_halt     = 0x02;
+        const static int st_run      = 0x05;
+        const static int st_spec_run = 0x07;
+        const static int st_spec_rdy = 0x13;
+        const static int st_ready    = 0x19;
+        const static int active      = 0x01;
+        const static int speculative = 0x04;
+        const static int shft_id     = 8;
+        const static int shft_fsm0   = 31;
+        const static int shft_fsm1   = 26;
+        const static int shft_fsm2   = 21;
+        const static int shft_fsm3   = 16;
+    };
+
 
     const int NumMiscArchRegs = MISCREG_NUMMISCREGS;
     const int NumMiscRegs = MISCREG_NUMMISCREGS;

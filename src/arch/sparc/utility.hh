@@ -112,7 +112,20 @@ namespace SparcISA
     inline void initCPU(ThreadContext *tc, int cpuId)
     {
         static Fault por = new PowerOnReset();
-        por->invoke(tc);
+        if (cpuId == 0)
+            por->invoke(tc);
+
+    }
+
+    inline void startupCPU(ThreadContext *tc, int cpuId)
+    {
+#if FULL_SYSTEM
+        // Other CPUs will get activated by IPIs
+        if (cpuId == 0)
+            tc->activate(0);
+#else
+        tc->activate(0);
+#endif
     }
 
 } // namespace SparcISA
