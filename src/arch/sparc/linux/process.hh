@@ -49,9 +49,15 @@ class SparcLinuxProcess
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 
+     /// Array of 32 bit compatibility syscall descriptors,
+     /// indexed by call number.
+    static SyscallDesc syscall32Descs[];
+
     SyscallDesc* getDesc(int callnum);
+    SyscallDesc* getDesc32(int callnum);
 
     const int Num_Syscall_Descs;
+    const int Num_Syscall32_Descs;
 };
 
 /// A process with emulated SPARC/Linux syscalls.
@@ -72,7 +78,7 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
 
     SyscallDesc* getDesc(int callnum)
     {
-        return SparcLinuxProcess::getDesc(callnum);
+        return SparcLinuxProcess::getDesc32(callnum);
     }
 
     void handleTrap(int trapNum, ThreadContext *tc);

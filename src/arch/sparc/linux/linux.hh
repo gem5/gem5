@@ -79,4 +79,32 @@ class SparcLinux : public Linux
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
 };
 
+class Sparc32Linux : public SparcLinux
+{
+  public:
+
+    typedef struct {
+        uint64_t st_dev;
+        uint64_t st_ino;
+        uint32_t st_mode;
+        uint32_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint64_t st_rdev;
+        uint8_t __pad3[8];
+        int64_t st_size;
+        int32_t st_blksize;
+        uint8_t __pad4[8];
+        int64_t st_blocks;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        uint32_t __unused4;
+        uint32_t __unused5;
+    } tgt_stat64;
+};
+
 #endif
