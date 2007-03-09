@@ -319,7 +319,7 @@ BaseCPU::switchOut()
 }
 
 void
-BaseCPU::takeOverFrom(BaseCPU *oldCPU)
+BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
 
@@ -352,6 +352,26 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 //    if (profileEvent)
 //        profileEvent->schedule(curTick);
 #endif
+
+    // Connect new CPU to old CPU's memory only if new CPU isn't
+    // connected to anything.  Also connect old CPU's memory to new
+    // CPU.
+    Port *peer;
+    if (ic->getPeer() == NULL) {
+        peer = oldCPU->getPort("icache_port")->getPeer();
+        ic->setPeer(peer);
+    } else {
+        peer = ic->getPeer();
+    }
+    peer->setPeer(ic);
+
+    if (dc->getPeer() == NULL) {
+        peer = oldCPU->getPort("dcache_port")->getPeer();
+        dc->setPeer(peer);
+    } else {
+        peer = dc->getPeer();
+    }
+    peer->setPeer(dc);
 }
 
 

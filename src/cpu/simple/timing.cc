@@ -194,7 +194,7 @@ TimingSimpleCPU::switchOut()
 void
 TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU);
+    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
 
     // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
@@ -209,23 +209,6 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     if (_status != Running) {
         _status = Idle;
     }
-
-    Port *peer;
-    if (icachePort.getPeer() == NULL) {
-        peer = oldCPU->getPort("icache_port")->getPeer();
-        icachePort.setPeer(peer);
-    } else {
-        peer = icachePort.getPeer();
-    }
-    peer->setPeer(&icachePort);
-
-    if (dcachePort.getPeer() == NULL) {
-        peer = oldCPU->getPort("dcache_port")->getPeer();
-        dcachePort.setPeer(peer);
-    } else {
-        peer = dcachePort.getPeer();
-    }
-    peer->setPeer(&dcachePort);
 }
 
 
@@ -239,12 +222,6 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
 
     notIdleFraction++;
     _status = Running;
-
-#if FULL_SYSTEM
-    // Connect the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    tc->connectMemPorts();
-#endif
 
     // kick things off by initiating the fetch of the next instruction
     fetchEvent =
@@ -647,6 +624,18 @@ TimingSimpleCPU::completeDrain()
     DPRINTF(Config, "Done draining\n");
     changeState(SimObject::Drained);
     drainEvent->process();
+}
+
+void
+TimingSimpleCPU::DcachePort::setPeer(Port *port)
+{
+    Port::setPeer(port);
+
+#if FULL_SYSTEM
+    // Update the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    cpu->tcBase()->connectMemPorts();
+#endif
 }
 
 bool

@@ -126,6 +126,17 @@ AtomicSimpleCPU::CpuPort::recvRetry()
     panic("AtomicSimpleCPU doesn't expect recvRetry callback!");
 }
 
+void
+AtomicSimpleCPU::DcachePort::setPeer(Port *port)
+{
+    Port::setPeer(port);
+
+#if FULL_SYSTEM
+    // Update the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    cpu->tcBase()->connectMemPorts();
+#endif
+}
 
 AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     : BaseSimpleCPU(p), tickEvent(this),
@@ -211,7 +222,7 @@ AtomicSimpleCPU::switchOut()
 void
 AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU);
+    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
 
     assert(!tickEvent.scheduled());
 
@@ -241,12 +252,6 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
-
-#if FULL_SYSTEM
-    // Connect the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    tc->connectMemPorts();
-#endif
 
     //Make sure ticks are still on multiples of cycles
     tickEvent.schedule(nextCycle(curTick + cycles(delay)));

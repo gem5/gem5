@@ -120,7 +120,7 @@ class Port
     { portName = name; }
 
     /** Function to set the pointer for the peer port. */
-    void setPeer(Port *port);
+    virtual void setPeer(Port *port);
 
     /** Function to get the pointer to the peer port. */
     Port *getPeer() { return peer; }
