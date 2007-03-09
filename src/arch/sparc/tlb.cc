@@ -693,6 +693,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
 
+        if (AsiIsCmt(asi))
+            panic("Cmt ASI registers not implmented\n");
+
         if (AsiIsInterrupt(asi))
             goto handleIntRegAccess;
         if (AsiIsMmu(asi))
