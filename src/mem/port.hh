@@ -120,7 +120,7 @@ class Port
     { portName = name; }
 
     /** Function to set the pointer for the peer port. */
-    void setPeer(Port *port);
+    virtual void setPeer(Port *port);
 
     /** Function to get the pointer to the peer port. */
     Port *getPeer() { return peer; }
@@ -130,6 +130,11 @@ class Port
 
     /** Function to return the owner of this port. */
     MemObject *getOwner() { return owner; }
+
+    /** Inform the peer port to delete itself and notify it's owner about it's
+     * demise. */
+    void removeConn();
+
 
   protected:
 

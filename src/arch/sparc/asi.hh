@@ -115,6 +115,7 @@ namespace SparcISA
         ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1 = 0x3E,
         ASI_IMMU_CTXT_NONZERO_CONFIG = 0x3F,
         ASI_STREAM_MA = 0x40,
+        ASI_CMT_SHARED = 0x41,
         //0x41 implementation dependent
         ASI_SPARC_BIST_CONTROL = 0x42,
         ASI_INST_MASK_REG = 0x42,

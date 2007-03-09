@@ -196,7 +196,7 @@ class BaseCPU : public MemObject
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.
-    virtual void takeOverFrom(BaseCPU *);
+    virtual void takeOverFrom(BaseCPU *, Port *ic, Port *dc);
 
     /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).

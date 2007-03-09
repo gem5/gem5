@@ -144,6 +144,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
             : CpuPort(_cpu->name() + "-dport", _cpu, _lat), tickEvent(_cpu)
         { }
 
+        virtual void setPeer(Port *port);
+
       protected:
 
         virtual bool recvTiming(PacketPtr pkt);

@@ -331,6 +331,7 @@ class Cache : public BaseCache
     Cache(const std::string &_name, Params &params);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual void deletePortRefs(Port *p);
 
     virtual void recvStatusChange(Port::Status status, bool isCpuSide);
 

@@ -81,9 +81,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     class CpuPort : public Port
     {
-
-        AtomicSimpleCPU *cpu;
-
       public:
 
         CpuPort(const std::string &_name, AtomicSimpleCPU *_cpu)
@@ -93,6 +90,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
         bool snoopRangeSent;
 
       protected:
+
+        AtomicSimpleCPU *cpu;
 
         virtual bool recvTiming(PacketPtr pkt);
 
@@ -110,7 +109,17 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     };
     CpuPort icachePort;
-    CpuPort dcachePort;
+
+    class DcachePort : public CpuPort
+    {
+      public:
+        DcachePort(const std::string &_name, AtomicSimpleCPU *_cpu)
+            : CpuPort(_name, _cpu)
+        { }
+
+        virtual void setPeer(Port *port);
+    };
+    DcachePort dcachePort;
 
     Request  *ifetch_req;
     PacketPtr ifetch_pkt;

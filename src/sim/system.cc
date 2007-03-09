@@ -33,6 +33,7 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/remote_gdb.hh"
+#include "arch/utility.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
@@ -203,7 +204,7 @@ System::startup()
 {
     int i;
     for (i = 0; i < threadContexts.size(); i++)
-        threadContexts[i]->activate(0);
+        TheISA::startupCPU(threadContexts[i], i);
 }
 
 void

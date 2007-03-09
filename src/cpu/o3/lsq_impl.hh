@@ -34,6 +34,19 @@
 
 #include "cpu/o3/lsq.hh"
 
+template<class Impl>
+void
+LSQ<Impl>::DcachePort::setPeer(Port *port)
+{
+    Port::setPeer(port);
+
+#if FULL_SYSTEM
+    // Update the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    lsq->updateMemPorts();
+#endif
+}
+
 template <class Impl>
 Tick
 LSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)

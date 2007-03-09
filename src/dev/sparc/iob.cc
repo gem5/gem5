@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/faults.hh"
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/sparc/iob.hh"
@@ -45,6 +46,7 @@
 #include "mem/port.hh"
 #include "mem/packet_access.hh"
 #include "sim/builder.hh"
+#include "sim/faults.hh"
 #include "sim/system.hh"
 
 Iob::Iob(Params *p)
@@ -261,13 +263,30 @@ Iob::receiveDeviceInterrupt(DeviceId devid)
 void
 Iob::generateIpi(Type type, int cpu_id, int vector)
 {
-    // Only handle interrupts for the moment... Cpu Idle/reset/resume will be
-    // later
-    if (type != 0)
+    SparcISA::SparcFault<SparcISA::PowerOnReset> *por = new SparcISA::PowerOnReset();
+    if (cpu_id >= sys->getNumCPUs())
         return;
 
-    assert(type == 0);
-    ic->post(cpu_id, SparcISA::IT_INT_VEC, vector);
+    switch (type) {
+      case 0: // interrupt
+        ic->post(cpu_id, SparcISA::IT_INT_VEC, vector);
+        break;
+      case 1: // reset
+        warn("Sending reset to CPU: %d\n", cpu_id);
+        if (vector != por->trapType())
+            panic("Don't know how to set non-POR reset to cpu\n");
+        por->invoke(sys->threadContexts[cpu_id]);
+        sys->threadContexts[cpu_id]->activate();
+        break;
+      case 2: // idle -- this means stop executing and don't wake on interrupts
+        sys->threadContexts[cpu_id]->halt();
+        break;
+      case 3: // resume
+        sys->threadContexts[cpu_id]->activate();
+        break;
+      default:
+        panic("Invalid type to generate ipi\n");
+    }
 }
 
 bool

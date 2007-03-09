@@ -557,12 +557,6 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateContext(int tid, int delay)
 {
-#if FULL_SYSTEM
-    // Connect the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    threadContexts[tid]->connectMemPorts();
-#endif
-
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
@@ -781,6 +775,18 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
     }
 }
 
+#if FULL_SYSTEM
+template <class Impl>
+void
+FullO3CPU<Impl>::updateMemPorts()
+{
+    // Update all ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    for (int i = 0; i < thread.size(); ++i)
+        thread[i]->connectMemPorts();
+}
+#endif
+
 template <class Impl>
 void
 FullO3CPU<Impl>::serialize(std::ostream &os)
@@ -941,7 +947,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     activityRec.reset();
 
-    BaseCPU::takeOverFrom(oldCPU);
+    BaseCPU::takeOverFrom(oldCPU, fetch.getIcachePort(), iew.getDcachePort());
 
     fetch.takeOverFrom();
     decode.takeOverFrom();
@@ -978,25 +984,6 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     }
     if (!tickEvent.scheduled())
         tickEvent.schedule(curTick);
-
-    Port *peer;
-    Port *icachePort = fetch.getIcachePort();
-    if (icachePort->getPeer() == NULL) {
-        peer = oldCPU->getPort("icache_port")->getPeer();
-        icachePort->setPeer(peer);
-    } else {
-        peer = icachePort->getPeer();
-    }
-    peer->setPeer(icachePort);
-
-    Port *dcachePort = iew.getDcachePort();
-    if (dcachePort->getPeer() == NULL) {
-        peer = oldCPU->getPort("dcache_port")->getPeer();
-        dcachePort->setPeer(peer);
-    } else {
-        peer = dcachePort->getPeer();
-    }
-    peer->setPeer(dcachePort);
 }
 
 template <class Impl>

@@ -36,6 +36,7 @@
 
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
+#include "mem/mem_object.hh"
 #include "mem/port.hh"
 
 void
@@ -43,6 +44,15 @@ Port::setPeer(Port *port)
 {
     DPRINTF(Config, "setting peer to %s\n", port->name());
     peer = port;
+}
+
+void
+Port::removeConn()
+{
+    if (peer->getOwner())
+        peer->getOwner()->deletePortRefs(peer);
+    delete peer;
+    peer = NULL;
 }
 
 void

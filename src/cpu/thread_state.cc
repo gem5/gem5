@@ -125,7 +125,10 @@ ThreadState::connectPhysPort()
     // @todo: For now this disregards any older port that may have
     // already existed.  Fix this memory leak once the bus port IDs
     // for functional ports is resolved.
-    physPort = new FunctionalPort(csprintf("%s-%d-funcport",
+    if (physPort)
+        physPort->removeConn();
+    else
+        physPort = new FunctionalPort(csprintf("%s-%d-funcport",
                                            baseCpu->name(), tid));
     connectToMemFunc(physPort);
 }
@@ -136,7 +139,10 @@ ThreadState::connectVirtPort()
     // @todo: For now this disregards any older port that may have
     // already existed.  Fix this memory leak once the bus port IDs
     // for functional ports is resolved.
-    virtPort = new VirtualPort(csprintf("%s-%d-vport",
+    if (virtPort)
+        virtPort->removeConn();
+    else
+        virtPort = new VirtualPort(csprintf("%s-%d-vport",
                                         baseCpu->name(), tid));
     connectToMemFunc(virtPort);
 }
