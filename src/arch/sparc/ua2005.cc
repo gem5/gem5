@@ -26,11 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/sparc/kernel_stats.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "sim/system.hh"
 
 using namespace SparcISA;
 
@@ -185,8 +187,19 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 #endif
         break;
       case MISCREG_HTSTATE:
-      case MISCREG_STRAND_STS_REG:
         setRegNoEffect(miscReg, val);
+        break;
+
+      case MISCREG_STRAND_STS_REG:
+        if (bits(val,2,2))
+            panic("No support for setting spec_en bit\n");
+        setRegNoEffect(miscReg, bits(val,0,0));
+        if (!bits(val,0,0)) {
+            // Time to go to sleep
+            tc->suspend();
+            if (tc->getKernelStats())
+                tc->getKernelStats()->quiesce();
+            }
         break;
 
       default:
@@ -197,6 +210,8 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 MiscReg
 MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
 {
+    uint64_t temp;
+
     switch (miscReg) {
         /* Privileged registers. */
       case MISCREG_QUEUE_CPU_MONDO_HEAD:
@@ -214,7 +229,6 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
       case MISCREG_HPSTATE:
       case MISCREG_HINTP:
       case MISCREG_HTSTATE:
-      case MISCREG_STRAND_STS_REG:
       case MISCREG_HSTICK_CMPR:
         return readRegNoEffect(miscReg) ;
 
@@ -223,6 +237,38 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
       case MISCREG_HVER:
         return NWindows | MaxTL << 8 | MaxGL << 16;
 
+      case MISCREG_STRAND_STS_REG:
+        System *sys;
+        int x;
+        sys = tc->getSystemPtr();
+
+        temp = readRegNoEffect(miscReg) & (STS::active | STS::speculative);
+        // Check that the CPU array is fully populated (by calling getNumCPus())
+        assert(sys->getNumCPUs() > tc->readCpuId());
+
+        temp |= tc->readCpuId()  << STS::shft_id;
+
+        for (x = tc->readCpuId() & ~3; x < sys->threadContexts.size(); x++) {
+            switch (sys->threadContexts[x]->status()) {
+              case ThreadContext::Active:
+                temp |= STS::st_run << (STS::shft_fsm0 -
+                        ((x & 0x3) * (STS::shft_fsm0-STS::shft_fsm1)));
+                break;
+              case ThreadContext::Suspended:
+                // should this be idle?
+                temp |= STS::st_idle << (STS::shft_fsm0 -
+                        ((x & 0x3) * (STS::shft_fsm0-STS::shft_fsm1)));
+                break;
+              case ThreadContext::Halted:
+                temp |= STS::st_halt << (STS::shft_fsm0 -
+                        ((x & 0x3) * (STS::shft_fsm0-STS::shft_fsm1)));
+                break;
+              default:
+                panic("What state are we in?!\n");
+            } // switch
+        } // for
+
+        return temp;
       default:
         panic("Invalid read to FS misc register\n");
     }
