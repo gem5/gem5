@@ -275,13 +275,13 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
             // memory system takes ownership of packet
             dcache_pkt = NULL;
         }
+
+        // This will need a new way to tell if it has a dcache attached.
+        if (req->isUncacheable())
+            recordEvent("Uncached Read");
     } else {
         delete req;
     }
-
-    // This will need a new way to tell if it has a dcache attached.
-    if (req->isUncacheable())
-        recordEvent("Uncached Read");
 
     return fault;
 }
@@ -381,13 +381,13 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 dcache_pkt = NULL;
             }
         }
+        // This will need a new way to tell if it's hooked up to a cache or not.
+        if (req->isUncacheable())
+            recordEvent("Uncached Write");
     } else {
         delete req;
     }
 
-    // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->isUncacheable())
-        recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
