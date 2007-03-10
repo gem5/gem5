@@ -45,7 +45,7 @@
 #include "sim/system.hh"
 
 MmDisk::MmDisk(Params *p)
-    : BasicPioDevice(p), image(p->image), curSector((uint64_t)-1), dirty(false)
+    : BasicPioDevice(p), image(p->image), curSector((off_t)-1), dirty(false)
 {
     std::memset(&diskData, 0, SectorSize);
     pioSize = image->size() * SectorSize;
