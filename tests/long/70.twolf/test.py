@@ -30,7 +30,7 @@ m5.AddToPath('../configs/common')
 from cpu2000 import twolf
 import os
 
-workload = twolf('alpha', 'tru64', 'smred')
+workload = twolf(isa, opsys, 'smred')
 root.system.cpu.workload = workload.makeLiveProcess()
 cwd = root.system.cpu.workload.cwd
 

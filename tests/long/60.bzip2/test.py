@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,5 +29,5 @@
 m5.AddToPath('../configs/common')
 from cpu2000 import bzip2_source
 
-workload = bzip2_source('alpha', 'tru64', 'lgred')
+workload = bzip2_source(isa, opsys, 'lgred')
 root.system.cpu.workload = workload.makeLiveProcess()
