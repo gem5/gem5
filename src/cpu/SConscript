@@ -28,11 +28,7 @@
 #
 # Authors: Steve Reinhardt
 
-import os
-import os.path
-
-# Import build environment variable from SConstruct.
-Import('env')
+Import('*')
 
 #################################################################
 #
@@ -107,89 +103,24 @@ env.Depends('static_inst_exec_sigs.hh', Value(env['CPU_MODELS']))
 # and one of these are not being used.
 CheckerSupportedCPUList = ['O3CPU', 'OzoneCPU']
 
-#################################################################
-#
-# Include CPU-model-specific files based on set of models
-# specified in CPU_MODELS build option.
-#
-#################################################################
+Source('activity.cc')
+Source('base.cc')
+Source('cpuevent.cc')
+Source('exetrace.cc')
+Source('func_unit.cc')
+Source('op_class.cc')
+Source('pc_event.cc')
+Source('quiesce_event.cc')
+Source('static_inst.cc')
+Source('simple_thread.cc')
+Source('thread_state.cc')
 
-# Keep a list of CPU models that support SMT
-env['SMT_CPU_MODELS'] = []
-
-sources = []
-
-need_simple_base = False
-if 'AtomicSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    sources += Split('simple/atomic.cc')
-
-if 'TimingSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    sources += Split('simple/timing.cc')
-
-if need_simple_base:
-    sources += Split('simple/base.cc')
-
-if 'FastCPU' in env['CPU_MODELS']:
-    sources += Split('fast/cpu.cc')
-
-need_bp_unit = False
-if 'O3CPU' in env['CPU_MODELS']:
-    need_bp_unit = True
-    sources += SConscript('o3/SConscript', exports = 'env')
-    sources += Split('''
-        o3/base_dyn_inst.cc
-        o3/bpred_unit.cc
-        o3/commit.cc
-        o3/decode.cc
-        o3/fetch.cc
-        o3/free_list.cc
-        o3/fu_pool.cc
-        o3/cpu.cc
-        o3/iew.cc
-        o3/inst_queue.cc
-        o3/lsq_unit.cc
-        o3/lsq.cc
-        o3/mem_dep_unit.cc
-        o3/rename.cc
-        o3/rename_map.cc
-        o3/rob.cc
-        o3/scoreboard.cc
-        o3/store_set.cc
-        ''')
-    sources += Split('memtest/memtest.cc')
-    if env['USE_CHECKER']:
-        sources += Split('o3/checker_builder.cc')
-    else:
-        env['SMT_CPU_MODELS'].append('O3CPU') # Checker doesn't support SMT right now
-
-if 'OzoneCPU' in env['CPU_MODELS']:
-    need_bp_unit = True
-    sources += Split('''
-        ozone/base_dyn_inst.cc
-        ozone/bpred_unit.cc
-        ozone/cpu.cc
-        ozone/cpu_builder.cc
-        ozone/dyn_inst.cc
-        ozone/front_end.cc
-        ozone/lw_back_end.cc
-        ozone/lw_lsq.cc
-        ozone/rename_table.cc
-        ''')
-    if env['USE_CHECKER']:
-        sources += Split('ozone/checker_builder.cc')
-
-if need_bp_unit:
-    sources += Split('''
-        o3/2bit_local_pred.cc
-        o3/btb.cc
-        o3/ras.cc
-        o3/tournament_pred.cc
-        ''')
+if env['FULL_SYSTEM']:
+    Source('intr_control.cc')
+    Source('profile.cc')
 
 if env['USE_CHECKER']:
-    sources += Split('checker/cpu.cc')
+    Source('checker/cpu.cc')
     checker_supports = False
     for i in CheckerSupportedCPUList:
         if i in env['CPU_MODELS']:
@@ -198,16 +129,5 @@ if env['USE_CHECKER']:
         print "Checker only supports CPU models",
         for i in CheckerSupportedCPUList:
             print i,
-        print ", please set USE_CHECKER=False or use one of those CPU models"              
+        print ", please set USE_CHECKER=False or use one of those CPU models"
         Exit(1)
-
-
-# FullCPU sources are included from src/SConscript since they're not
-# below this point in the file hierarchy.
-
-# Convert file names to SCons File objects.  This takes care of the
-# path relative to the top of the directory tree.
-sources = [File(s) for s in sources]
-
-Return('sources')
-

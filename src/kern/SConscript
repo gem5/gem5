@@ -28,21 +28,18 @@
 #
 # Authors: Steve Reinhardt
 
-import os.path, sys
+Import('*')
 
-# Import build environment variable from SConstruct.
-Import('env')
+if env['FULL_SYSTEM']:
+    Source('kernel_stats.cc')
+    Source('system_events.cc')
 
-sources = Split('''
-	kernel_stats.cc
-	system_events.cc
-	linux/events.cc
-	linux/linux_syscalls.cc
-	linux/printk.cc
-	''')
+    Source('linux/events.cc')
+    Source('linux/linux_syscalls.cc')
+    Source('linux/printk.cc')
 
-# Convert file names to SCons File objects.  This takes care of the
-# path relative to the top of the directory tree.
-sources = [File(s) for s in sources]
-
-Return('sources')
+    if env['TARGET_ISA'] == 'alpha':
+        Source('tru64/dump_mbuf.cc')
+        Source('tru64/printf.cc')
+        Source('tru64/tru64_events.cc')
+        Source('tru64/tru64_syscalls.cc')

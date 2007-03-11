@@ -63,10 +63,10 @@
 #
 ###################################################
 
-# Python library imports
 import sys
 import os
 import subprocess
+
 from os.path import join as joinpath
 
 # Check for recent-enough Python and SCons versions.  If your system's
@@ -182,6 +182,7 @@ for t in abs_targets:
 env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
+Export('env')
 
 #Parse CC/CXX early so that we use the correct compiler for 
 # to test for dependencies/versions/libraries/includes
@@ -363,30 +364,42 @@ if have_mysql:
 env = conf.Finish()
 
 # Define the universe of supported ISAs
-env['ALL_ISA_LIST'] = ['alpha', 'sparc', 'mips', 'x86']
+all_isa_list = [ ]
+Export('all_isa_list')
 
 # Define the universe of supported CPU models
-env['ALL_CPU_LIST'] = ['AtomicSimpleCPU', 'TimingSimpleCPU',
-                       'O3CPU', 'OzoneCPU']
-
-if os.path.isdir(joinpath(SRCDIR, 'encumbered/cpu/full')):
-    env['ALL_CPU_LIST'] += ['FullCPU']
+all_cpu_list = [ ]
+default_cpus = [ ]
+Export('all_cpu_list', 'default_cpus')
 
 # Sticky options get saved in the options file so they persist from
 # one invocation to the next (unless overridden, in which case the new
 # value becomes sticky).
 sticky_opts = Options(args=ARGUMENTS)
+Export('sticky_opts')
+
+# Non-sticky options only apply to the current build.
+nonsticky_opts = Options(args=ARGUMENTS)
+Export('nonsticky_opts')
+
+# Walk the tree and execute all SConsopts scripts that wil add to the
+# above options
+for root, dirs, files in os.walk('.'):
+    if 'SConsopts' in files:
+        SConscript(os.path.join(root, 'SConsopts'))
+
+all_isa_list.sort()
+all_cpu_list.sort()
+default_cpus.sort()
+
 sticky_opts.AddOptions(
-    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', env['ALL_ISA_LIST']),
+    EnumOption('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
     # There's a bug in scons 0.96.1 that causes ListOptions with list
     # values (more than one value) not to be able to be restored from
     # a saved option file.  If this causes trouble then upgrade to
     # scons 0.96.90 or later.
-    ListOption('CPU_MODELS', 'CPU models', 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU',
-               env['ALL_CPU_LIST']),
-    BoolOption('ALPHA_TLASER',
-               'Model Alpha TurboLaser platform (vs. Tsunami)', False),
+    ListOption('CPU_MODELS', 'CPU models', default_cpus, all_cpu_list),
     BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
     BoolOption('EFENCE', 'Link with Electric Fence malloc debugger',
                False),
@@ -408,8 +421,6 @@ sticky_opts.AddOptions(
      '%s:%s' % (sys.prefix, sys.exec_prefix))
     )
 
-# Non-sticky options only apply to the current build.
-nonsticky_opts = Options(args=ARGUMENTS)
 nonsticky_opts.AddOptions(
     BoolOption('update_ref', 'Update test reference outputs', False)
     )
@@ -514,6 +525,7 @@ env.SConscript('ext/libelf/SConscript',
 #
 ###################################################
 
+env['ALL_ISA_LIST'] = all_isa_list
 def make_switching_dir(dirname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
     # header to generate.  'source' is a dummy variable, since we get the
@@ -524,7 +536,7 @@ def make_switching_dir(dirname, switch_headers, env):
 	f = open(fname, 'w')
 	f.write('#include "arch/isa_specific.hh"\n')
 	cond = '#if'
-	for isa in env['ALL_ISA_LIST']:
+	for isa in all_isa_list:
 	    f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
 		    % (cond, isa.upper(), dirname, isa, basename))
 	    cond = '#elif'
@@ -545,8 +557,7 @@ def make_switching_dir(dirname, switch_headers, env):
     # Instantiate actions for each header
     for hdr in switch_headers:
         env.Command(hdr, [], switch_hdr_action)
-
-env.make_switching_dir = make_switching_dir
+Export('make_switching_dir')
 
 ###################################################
 #

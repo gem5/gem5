@@ -28,13 +28,9 @@
 #
 # Authors: Steve Reinhardt
 
-import os.path, sys
+import sys
 
-# Import build environment variable from SConstruct.
-Import('env')
-
-# Right now there are no source files immediately in this directory
-sources = []
+Import('*')
 
 #################################################################
 #
@@ -66,7 +62,7 @@ isa_switch_hdrs = Split('''
         ''')
 
 # Set up this directory to support switching headers
-env.make_switching_dir('arch', isa_switch_hdrs, env)
+make_switching_dir('arch', isa_switch_hdrs, env)
 
 #################################################################
 #
@@ -100,7 +96,7 @@ execfile(cpu_models_file.srcnode().abspath)
 
 # Several files are generated from the ISA description.
 # We always get the basic decoder and header file.
-isa_desc_gen_files = Split('decoder.cc decoder.hh')
+isa_desc_gen_files = [ 'decoder.cc', 'decoder.hh' ]
 # We also get an execute file for each selected CPU model.
 isa_desc_gen_files += [CpuModel.dict[cpu].filename
                        for cpu in env['CPU_MODELS']]
@@ -128,14 +124,3 @@ else:
                                emitter = isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
-
-#
-# Now include other ISA-specific sources from the ISA subdirectories.
-#
-
-isa = env['TARGET_ISA'] # someday this may be a list of ISAs
-
-# Let the target architecture define what additional sources it needs
-sources += SConscript(os.path.join(isa, 'SConscript'), exports = 'env')
-
-Return('sources')

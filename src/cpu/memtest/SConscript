@@ -26,32 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Nathan Binkert
 
 Import('*')
 
-if env['FULL_SYSTEM']:
-    Source('baddev.cc')
-    Source('disk_image.cc')
-    Source('etherbus.cc')
-    Source('etherdump.cc')
-    Source('etherint.cc')
-    Source('etherlink.cc')
-    Source('etherpkt.cc')
-    Source('ethertap.cc')	
-    #Source('i8254xGBe.cc')
-    Source('ide_ctrl.cc')
-    Source('ide_disk.cc')
-    Source('io_device.cc')
-    Source('isa_fake.cc')
-    Source('ns_gige.cc')
-    Source('pciconfigall.cc')
-    Source('pcidev.cc')
-    Source('pktfifo.cc')
-    Source('platform.cc')
-    Source('simconsole.cc')
-    Source('simple_disk.cc')
-    #Source('sinic.cc')
-    Source('uart.cc')
-    Source('uart8250.cc')
+if 'O3CPU' in env['CPU_MODELS']:
+    Source('memtest.cc')
