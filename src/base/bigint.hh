@@ -28,6 +28,8 @@
  * Authors: Ali Saidi
  */
 
+#include "base/misc.hh"
+
 #include <iostream>
 
 #ifndef __BASE_BIGINT_HH__
@@ -49,6 +51,12 @@ struct m5_twin64_t {
         b = x;
         return *this;
     }
+
+    operator uint64_t()
+    {
+        panic("Tried to cram a twin64_t into an integer!\n");
+        return a;
+    }
 };
 
 struct m5_twin32_t {
@@ -66,6 +74,12 @@ struct m5_twin32_t {
         a = x;
         b = x;
         return *this;
+    }
+
+    operator uint32_t()
+    {
+        panic("Tried to cram a twin32_t into an integer!\n");
+        return a;
     }
 };
 

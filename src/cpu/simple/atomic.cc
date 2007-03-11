@@ -446,6 +446,17 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+AtomicSimpleCPU::write(Twin32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+AtomicSimpleCPU::write(Twin64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
 template
 Fault
 AtomicSimpleCPU::write(uint64_t data, Addr addr,

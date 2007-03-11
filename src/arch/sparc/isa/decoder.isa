@@ -1320,7 +1320,10 @@ decode OP default Unknown::unknown()
             0x04: stw({{Mem.uw = Rd.sw;}});
             0x05: stb({{Mem.ub = Rd.sb;}});
             0x06: sth({{Mem.uhw = Rd.shw;}});
-            0x07: sttw({{Mem.udw = RdLow<31:0> | (RdHigh<31:0> << 32);}});
+            0x07: sttw({{
+                      (Mem.tuw).a = RdLow<31:0>;
+                      (Mem.tuw).b = RdHigh<31:0>;
+                  }});
         }
         format Load {
             0x08: ldsw({{Rd = (int32_t)Mem.sw;}});
@@ -1410,7 +1413,10 @@ decode OP default Unknown::unknown()
             0x14: stwa({{Mem.uw = Rd;}}, {{EXT_ASI}});
             0x15: stba({{Mem.ub = Rd;}}, {{EXT_ASI}});
             0x16: stha({{Mem.uhw = Rd;}}, {{EXT_ASI}});
-            0x17: sttwa({{Mem.udw = RdLow<31:0> | RdHigh<31:0> << 32;}}, {{EXT_ASI}});
+            0x17: sttwa({{
+                      (Mem.tuw).a = RdLow<31:0>;
+                      (Mem.tuw).b = RdHigh<31:0>;
+                  }}, {{EXT_ASI}});
         }
         format LoadAlt {
             0x18: ldswa({{Rd = (int32_t)Mem.sw;}}, {{EXT_ASI}});

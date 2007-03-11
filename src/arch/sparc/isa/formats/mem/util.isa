@@ -224,7 +224,7 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem,
+                fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
             if(fault == NoFault)
@@ -257,7 +257,7 @@ def template StoreInitiateAcc {{
             }
             if(storeCond && fault == NoFault)
             {
-                fault = xc->write((uint%(mem_acc_size)s_t)Mem,
+                fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
             if(fault == NoFault)
