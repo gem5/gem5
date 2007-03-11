@@ -26,52 +26,56 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Korey Sewell
+# Authors: Nathan Binkert
 
-import os
-import os.path
 import sys
 
-# Import build environment variable from SConstruct.
-Import('env')
+Import('*')
 
+if 'O3CPU' in env['CPU_MODELS']:
+    Source('base_dyn_inst.cc')
+    Source('bpred_unit.cc')
+    Source('commit.cc')
+    Source('cpu.cc')
+    Source('decode.cc')
+    Source('fetch.cc')
+    Source('free_list.cc')
+    Source('fu_pool.cc')
+    Source('iew.cc')
+    Source('inst_queue.cc')
+    Source('lsq.cc')
+    Source('lsq_unit.cc')
+    Source('mem_dep_unit.cc')
+    Source('rename.cc')
+    Source('rename_map.cc')
+    Source('rob.cc')
+    Source('scoreboard.cc')
+    Source('store_set.cc')
 
-#################################################################
-#
-# Include ISA-specific files for the O3 CPU-model
-#
-#################################################################
+    if env['TARGET_ISA'] == 'alpha':
+        Source('alpha/cpu.cc')
+        Source('alpha/cpu_builder.cc')
+        Source('alpha/dyn_inst.cc')
+        Source('alpha/thread_context.cc')
+    elif env['TARGET_ISA'] == 'mips':
+        Source('mips/cpu.cc')
+        Source('mips/cpu_builder.cc')
+        Source('mips/dyn_inst.cc')
+        Source('mips/thread_context.cc')
+    elif env['TARGET_ISA'] == 'sparc':
+        Source('sparc/cpu.cc')
+        Source('sparc/cpu_builder.cc')
+        Source('sparc/dyn_inst.cc')
+        Source('sparc/thread_context.cc')
+    else:
+        sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
 
-sources = []
+    if env['USE_CHECKER']:
+        Source('checker_builder.cc')
 
-if env['TARGET_ISA'] == 'alpha':
-    sources += Split('''
-        alpha/dyn_inst.cc
-        alpha/cpu.cc
-        alpha/thread_context.cc
-        alpha/cpu_builder.cc
-        ''')
-elif env['TARGET_ISA'] == 'mips':
-    sources += Split('''
-        mips/dyn_inst.cc
-        mips/cpu.cc
-        mips/thread_context.cc
-        mips/cpu_builder.cc
-        ''')
-elif env['TARGET_ISA'] == 'sparc':
-    sources += Split('''
-        sparc/dyn_inst.cc
-        sparc/cpu.cc
-        sparc/thread_context.cc
-        sparc/cpu_builder.cc
-        ''')
-else:
-    sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
-
-
-# Convert file names to SCons File objects.  This takes care of the
-# path relative to the top of the directory tree.
-sources = [File(s) for s in sources]
-
-Return('sources')
+if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:
+    Source('2bit_local_pred.cc')
+    Source('btb.cc')
+    Source('ras.cc')
+    Source('tournament_pred.cc')
 

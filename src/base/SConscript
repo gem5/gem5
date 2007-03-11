@@ -26,32 +26,58 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Nathan Binkert
 
 Import('*')
 
-if env['FULL_SYSTEM']:
-    Source('baddev.cc')
-    Source('disk_image.cc')
-    Source('etherbus.cc')
-    Source('etherdump.cc')
-    Source('etherint.cc')
-    Source('etherlink.cc')
-    Source('etherpkt.cc')
-    Source('ethertap.cc')	
-    #Source('i8254xGBe.cc')
-    Source('ide_ctrl.cc')
-    Source('ide_disk.cc')
-    Source('io_device.cc')
-    Source('isa_fake.cc')
-    Source('ns_gige.cc')
-    Source('pciconfigall.cc')
-    Source('pcidev.cc')
-    Source('pktfifo.cc')
-    Source('platform.cc')
-    Source('simconsole.cc')
-    Source('simple_disk.cc')
-    #Source('sinic.cc')
-    Source('uart.cc')
-    Source('uart8250.cc')
+# base/traceflags.{cc,hh} are generated from base/traceflags.py.
+# $TARGET.base will expand to "<build-dir>/base/traceflags".
+env.Command(['traceflags.hh', 'traceflags.cc'], 'traceflags.py',
+            'python $SOURCE $TARGET.base')
+
+Source('annotate.cc')
+Source('bigint.cc')
+Source('circlebuf.cc')
+Source('cprintf.cc')
+Source('crc.cc')
+Source('fast_alloc.cc')
+Source('fifo_buffer.cc')
+Source('hostinfo.cc')
+Source('hybrid_pred.cc')
+Source('inet.cc')
+Source('inifile.cc')
+Source('intmath.cc')
+Source('match.cc')
+Source('misc.cc')
+Source('output.cc')
+Source('pollevent.cc')
+Source('random.cc')
+Source('range.cc')
+Source('remote_gdb.cc')
+Source('sat_counter.cc')
+Source('socket.cc')
+Source('statistics.cc')
+Source('str.cc')
+Source('time.cc')
+Source('trace.cc')
+Source('traceflags.cc')
+Source('userinfo.cc')
+
+Source('compression/lzss_compression.cc')
+
+Source('loader/aout_object.cc')
+Source('loader/ecoff_object.cc')
+Source('loader/elf_object.cc')
+Source('loader/object_file.cc')
+Source('loader/raw_object.cc')
+Source('loader/symtab.cc')
+
+Source('stats/events.cc')
+Source('stats/output.cc')
+Source('stats/statdb.cc')
+Source('stats/text.cc')
+Source('stats/visit.cc')
+
+if env['USE_MYSQL']:
+    Source('mysql.cc')
+    Source('stats/mysql.cc')

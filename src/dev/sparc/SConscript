@@ -29,22 +29,10 @@
 # Authors: Steve Reinhardt
 #          Gabe Black
 
-import os.path, sys
+Import('*')
 
-# Import build environment variable from SConstruct.
-Import('env')
-
-sources = []
-
-sources += Split('''
-	dtod.cc
-        iob.cc
-	t1000.cc
-	mm_disk.cc
-	''')
-
-# Convert file names to SCons File objects.  This takes care of the
-# path relative to the top of the directory tree.
-sources = [File(s) for s in sources]
-
-Return('sources')
+if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'sparc':
+    Source('dtod.cc')
+    Source('iob.cc')
+    Source('t1000.cc')
+    Source('mm_disk.cc')

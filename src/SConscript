@@ -30,195 +30,27 @@
 
 import os
 import sys
-from os.path import isfile, join as joinpath
+
+from os.path import join as joinpath
 
 # This file defines how to build a particular configuration of M5
 # based on variable settings in the 'env' build environment.
 
-# Import build environment variable from SConstruct.
-Import('env')
+Import('*')
 
-###################################################
-#
-# Define needed sources.
-#
-###################################################
+sources = []
+def Source(*args):
+    for arg in args:
+        if isinstance(arg, (list, tuple)):
+            # Recurse to load a list
+            Source(*arg)
+        elif isinstance(arg, str):
+            sources.extend([ File(f) for f in Split(arg) ])
+        else:
+            sources.append(File(arg))
 
-# Base sources used by all configurations.
-
-base_sources = Split('''
-	base/annotate.cc
-	base/bigint.cc
-	base/circlebuf.cc
-	base/cprintf.cc
-	base/fast_alloc.cc
-	base/fifo_buffer.cc
-	base/hostinfo.cc
-	base/hybrid_pred.cc
-	base/inifile.cc
-	base/intmath.cc
-	base/match.cc
-	base/misc.cc
-	base/output.cc
-	base/pollevent.cc
-	base/range.cc
-	base/random.cc
-	base/remote_gdb.cc
-	base/sat_counter.cc
-	base/socket.cc
-	base/statistics.cc
-	base/str.cc
-	base/time.cc
-	base/trace.cc
-	base/traceflags.cc
-	base/userinfo.cc
-	base/compression/lzss_compression.cc
-	base/loader/aout_object.cc
-	base/loader/ecoff_object.cc
-	base/loader/elf_object.cc
-	base/loader/raw_object.cc
-	base/loader/object_file.cc
-	base/loader/symtab.cc
-	base/stats/events.cc
-        base/stats/output.cc
-	base/stats/statdb.cc
-	base/stats/visit.cc
-	base/stats/text.cc
-
-        cpu/activity.cc
-	cpu/base.cc
-	cpu/cpuevent.cc
-	cpu/exetrace.cc
-        cpu/func_unit.cc
-        cpu/op_class.cc
-	cpu/pc_event.cc
-        cpu/quiesce_event.cc
-	cpu/static_inst.cc
-        cpu/simple_thread.cc
-        cpu/thread_state.cc
-
-        mem/bridge.cc
-        mem/bus.cc
-        mem/dram.cc
-        mem/mem_object.cc
-        mem/packet.cc
-        mem/physical.cc
-        mem/port.cc
-        mem/tport.cc
-
-        mem/cache/base_cache.cc
-        mem/cache/cache.cc
-        mem/cache/coherence/coherence_protocol.cc
-        mem/cache/coherence/uni_coherence.cc
-        mem/cache/miss/blocking_buffer.cc
-        mem/cache/miss/miss_buffer.cc
-        mem/cache/miss/miss_queue.cc
-        mem/cache/miss/mshr.cc
-        mem/cache/miss/mshr_queue.cc
-        mem/cache/prefetch/base_prefetcher.cc
-        mem/cache/prefetch/ghb_prefetcher.cc
-        mem/cache/prefetch/stride_prefetcher.cc
-        mem/cache/prefetch/tagged_prefetcher.cc
-        mem/cache/tags/base_tags.cc
-        mem/cache/tags/fa_lru.cc
-        mem/cache/tags/iic.cc
-        mem/cache/tags/lru.cc
-        mem/cache/tags/repl/gen.cc
-        mem/cache/tags/repl/repl.cc
-        mem/cache/tags/split.cc
-        mem/cache/tags/split_lifo.cc
-        mem/cache/tags/split_lru.cc
-
-        mem/cache/cache_builder.cc
-
-        python/swig/init.cc
-        python/swig/core_wrap.cc
-        python/swig/debug_wrap.cc
-        python/swig/event_wrap.cc
-        python/swig/random_wrap.cc
-        python/swig/sim_object_wrap.cc
-        python/swig/stats_wrap.cc
-        python/swig/trace_wrap.cc
-        python/swig/pyevent.cc
-        python/swig/pyobject.cc
-
-        sim/async.cc
-	sim/builder.cc
-        sim/core.cc
-	sim/debug.cc
-	sim/eventq.cc
-	sim/faults.cc
-	sim/main.cc
-	sim/param.cc
-	sim/root.cc
-	sim/serialize.cc
-	sim/sim_events.cc
-	sim/sim_object.cc
-        sim/simulate.cc
-	sim/startup.cc
-	sim/stat_control.cc
-	sim/system.cc
-        ''')
-
-trace_reader_sources = Split('''
-        cpu/trace/reader/mem_trace_reader.cc
-        cpu/trace/reader/ibm_reader.cc
-        cpu/trace/reader/itx_reader.cc
-        cpu/trace/reader/m5_reader.cc
-        cpu/trace/opt_cpu.cc
-        cpu/trace/trace_cpu.cc
-        ''')
-
-
-
-# MySql sources
-mysql_sources = Split('''
-	base/mysql.cc
-	base/stats/mysql.cc
-        ''')
-
-# Full-system sources
-full_system_sources = Split('''
-	base/crc.cc
-	base/inet.cc
-
-	cpu/intr_control.cc
-        cpu/profile.cc
-
-	dev/uart.cc
-	dev/uart8250.cc
-
-        mem/vport.cc
-
-	sim/pseudo_inst.cc
-        ''')
-	#dev/sinic.cc
-        #dev/i8254xGBe.cc
-
-if env['TARGET_ISA'] == 'alpha':
-    full_system_sources += Split('''
-	kern/tru64/dump_mbuf.cc
-	kern/tru64/printf.cc
-	kern/tru64/tru64_events.cc
-	kern/tru64/tru64_syscalls.cc
-        ''')
-
-# Syscall emulation (non-full-system) sources
-syscall_emulation_sources = Split('''
-        mem/translating_port.cc
-        mem/page_table.cc
-	sim/process.cc
-	sim/syscall_emul.cc
-        ''')
-
-#if env['TARGET_ISA'] == 'alpha':
-#    syscall_emulation_sources += Split('''
-#        kern/tru64/tru64.cc
-#        ''')
-
-memtest_sources = Split('''
-	cpu/memtest/memtest.cc
-        ''')
+Export('env')
+Export('Source')
 
 # Include file paths are rooted in this directory.  SCons will
 # automatically expand '.' to refer to both the source directory and
@@ -229,51 +61,22 @@ env.Append(CPPPATH=Dir('.'))
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
-arch_sources = SConscript(os.path.join('arch', 'SConscript'), exports = 'env')
-
-cpu_sources = SConscript(os.path.join('cpu', 'SConscript'), exports = 'env')
-
-if env['FULL_SYSTEM']:
-    dev_sources = SConscript(os.path.join('dev', 'SConscript'),
-                             exports = 'env')
-    full_system_sources += dev_sources
-
-    kern_sources = SConscript(os.path.join('kern', 'SConscript'),
-                              exports = 'env')
-    full_system_sources += kern_sources
-
-# Set up complete list of sources based on configuration.
-sources = base_sources + arch_sources + cpu_sources
-
-# encumbered should be last because we're adding to some of the other groups
-if isfile(joinpath(env['SRCDIR'], 'encumbered/SConscript')):
-    sources += SConscript('encumbered/SConscript', exports = 'env')
-
-
-if env['FULL_SYSTEM']:
-    sources += full_system_sources
-else:
-    sources += syscall_emulation_sources
-
-if env['USE_MYSQL']:
-    sources += mysql_sources
+# Walk the tree and execute all SConscripts
+scripts = []
+srcdir = env['SRCDIR']
+for root, dirs, files in os.walk(srcdir, topdown=True):
+    if root == srcdir:
+        # we don't want to recurse back into this SConscript
+        continue
+    
+    if 'SConscript' in files:
+        # strip off the srcdir part since scons will try to find the
+        # script in the build directory
+        base = root[len(srcdir) + 1:]
+        SConscript(joinpath(base, 'SConscript'))
 
 for opt in env.ExportOptions:
     env.ConfigFile(opt)
-
-###################################################
-#
-# Special build rules.
-#
-###################################################
-
-# base/traceflags.{cc,hh} are generated from base/traceflags.py.
-# $TARGET.base will expand to "<build-dir>/base/traceflags".
-env.Command(Split('base/traceflags.hh base/traceflags.cc'),
-            'base/traceflags.py',
-            'python $SOURCE $TARGET.base')
-
-SConscript('python/SConscript', exports = ['env'])
 
 # This function adds the specified sources to the given build
 # environment, and returns a list of all the corresponding SCons

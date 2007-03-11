@@ -29,40 +29,11 @@
 # Authors: Steve Reinhardt
 #          Gabe Black
 
-import os.path, sys
+Import('*')
 
-# Import build environment variable from SConstruct.
-Import('env')
-
-sources = Split('''
-	console.cc
-	tsunami.cc
-	tsunami_cchip.cc
-	tsunami_io.cc
-	tsunami_pchip.cc
-	''')
-#	baddev.cc
-#	disk_image.cc
-#	etherbus.cc
-#	etherdump.cc
-#	etherint.cc
-#	etherlink.cc
-#	etherpkt.cc
-#	ethertap.cc	
-#       ide_ctrl.cc
-#	ide_disk.cc
-#	io_device.cc
-#	isa_fake.cc
-#	ns_gige.cc
-#	pciconfigall.cc
-#	pcidev.cc
-#	pktfifo.cc
-#	platform.cc
-#       simconsole.cc
-#	simple_disk.cc
-
-# Convert file names to SCons File objects.  This takes care of the
-# path relative to the top of the directory tree.
-sources = [File(s) for s in sources]
-
-Return('sources')
+if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
+    Source('console.cc')
+    Source('tsunami.cc')
+    Source('tsunami_cchip.cc')
+    Source('tsunami_io.cc')
+    Source('tsunami_pchip.cc')
