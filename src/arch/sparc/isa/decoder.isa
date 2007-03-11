@@ -816,6 +816,58 @@ decode OP default Unknown::unknown()
             }
             0x35: decode OPF{
                 format FpBasic{
+                    0x01: fmovs_fcc0({{
+                        if(passesFpCondition(Fsr<11:10>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x02: fmovd_fcc0({{
+                        if(passesFpCondition(Fsr<11:10>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x03: FpUnimpl::fmovq_fcc0();
+                    0x25: fmovrsz({{
+                        if(Rs1 == 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x26: fmovrdz({{
+                        if(Rs1 == 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x27: FpUnimpl::fmovrqz();
+                    0x41: fmovs_fcc1({{
+                        if(passesFpCondition(Fsr<33:32>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x42: fmovd_fcc1({{
+                        if(passesFpCondition(Fsr<33:32>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x43: FpUnimpl::fmovq_fcc1();
+                    0x45: fmovrslez({{
+                        if(Rs1 <= 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x46: fmovrdlez({{
+                        if(Rs1 <= 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x47: FpUnimpl::fmovrqlez();
                     0x51: fcmps({{
                           uint8_t fcc;
                           if(isnan(Frs1s) || isnan(Frs2s))
@@ -874,6 +926,110 @@ decode OP default Unknown::unknown()
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x57: FpUnimpl::fcmpeq();
+                    0x65: fmovrslz({{
+                        if(Rs1 < 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x66: fmovrdlz({{
+                        if(Rs1 < 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x67: FpUnimpl::fmovrqlz();
+                    0x81: fmovs_fcc2({{
+                        if(passesFpCondition(Fsr<35:34>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x82: fmovd_fcc2({{
+                        if(passesFpCondition(Fsr<35:34>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x83: FpUnimpl::fmovq_fcc2();
+                    0xA5: fmovrsnz({{
+                        if(Rs1 != 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0xA6: fmovrdnz({{
+                        if(Rs1 != 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0xA7: FpUnimpl::fmovrqnz();
+                    0xC1: fmovs_fcc3({{
+                        if(passesFpCondition(Fsr<37:36>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0xC2: fmovd_fcc3({{
+                        if(passesFpCondition(Fsr<37:36>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0xC3: FpUnimpl::fmovq_fcc3();
+                    0xC5: fmovrsgz({{
+                        if(Rs1 > 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0xC6: fmovrdgz({{
+                        if(Rs1 > 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0xC7: FpUnimpl::fmovrqgz();
+                    0xE5: fmovrsgez({{
+                        if(Rs1 >= 0)
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0xE6: fmovrdgez({{
+                        if(Rs1 >= 0)
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0xE7: FpUnimpl::fmovrqgez();
+                    0x101: fmovs_icc({{
+                        if(passesCondition(Ccr<3:0>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x102: fmovd_icc({{
+                        if(passesCondition(Ccr<3:0>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x103: FpUnimpl::fmovq_icc();
+                    0x181: fmovs_xcc({{
+                        if(passesCondition(Ccr<7:4>, COND4))
+                            Frds = Frs2s;
+                        else
+                            Frds = Frds;
+                    }});
+                    0x182: fmovd_xcc({{
+                        if(passesCondition(Ccr<7:4>, COND4))
+                            Frd = Frs2;
+                        else
+                            Frd = Frd;
+                    }});
+                    0x183: FpUnimpl::fmovq_xcc();
                     default: FailUnimpl::fpop2();
                 }
             }
