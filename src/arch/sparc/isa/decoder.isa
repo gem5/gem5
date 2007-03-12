@@ -185,25 +185,25 @@ decode OP default Unknown::unknown()
                     }}, ',a');
                 }
                 default: decode BPCC {
-                    0x0: fbpcc0(22, {{
+                    0x0: fbpfcc0(19, {{
                         if(passesFpCondition(Fsr<11:10>, COND2))
                             NNPC = xc->readPC() + disp;
                         else
                             handle_annul
                     }});
-                    0x1: fbpcc1(22, {{
+                    0x1: fbpfcc1(19, {{
                         if(passesFpCondition(Fsr<33:32>, COND2))
                             NNPC = xc->readPC() + disp;
                         else
                             handle_annul
                     }});
-                    0x2: fbpcc2(22, {{
+                    0x2: fbpfcc2(19, {{
                         if(passesFpCondition(Fsr<35:34>, COND2))
                             NNPC = xc->readPC() + disp;
                         else
                             handle_annul
                     }});
-                    0x3: fbpcc3(22, {{
+                    0x3: fbpfcc3(19, {{
                         if(passesFpCondition(Fsr<37:36>, COND2))
                             NNPC = xc->readPC() + disp;
                         else
