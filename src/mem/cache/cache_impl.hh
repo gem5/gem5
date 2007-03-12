@@ -583,12 +583,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         // Hit
         hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
         // clear dirty bit if write through
-        if (pkt->needsResponse())
-            respond(pkt, curTick+lat);
-        if (pkt->cmd == MemCmd::Writeback) {
-            //Signal that you can kill the pkt/req
-            pkt->flags |= SATISFIED;
-        }
+        respond(pkt, curTick+lat);
         return true;
     }
 
@@ -606,14 +601,14 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
     if (pkt->flags & SATISFIED) {
         // happens when a store conditional fails because it missed
         // the cache completely
-        if (pkt->needsResponse())
-            respond(pkt, curTick+lat);
+        respond(pkt, curTick+lat);
     } else {
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
-    if (pkt->cmd == MemCmd::Writeback) {
+    if (!pkt->needsResponse()) {
         //Need to clean up the packet on a writeback miss, but leave the request
+        //for the next level.
         delete pkt;
     }
 
