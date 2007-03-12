@@ -570,8 +570,10 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         }
     }
     while (!writebacks.empty()) {
-        missQueue->doWriteback(writebacks.front());
+        PacketPtr wbPkt = writebacks.front();
+        missQueue->doWriteback(wbPkt);
         writebacks.pop_front();
+        delete wbPkt;
     }
 
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
@@ -721,8 +723,10 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
             blk = handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
             while (!writebacks.empty()) {
-                    missQueue->doWriteback(writebacks.front());
-                    writebacks.pop_front();
+                PacketPtr wbPkt = writebacks.front();
+                missQueue->doWriteback(wbPkt);
+                writebacks.pop_front();
+                delete wbPkt;
             }
         }
         missQueue->handleResponse(pkt, curTick + hitLatency);
@@ -1040,8 +1044,10 @@ return 0;
             // There was a cache hit.
             // Handle writebacks if needed
             while (!writebacks.empty()){
-                memSidePort->sendAtomic(writebacks.front());
+                PacketPtr wbPkt = writebacks.front();
+                memSidePort->sendAtomic(wbPkt);
                 writebacks.pop_front();
+                delete wbPkt;
             }
 
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
