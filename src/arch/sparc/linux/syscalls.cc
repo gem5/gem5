@@ -217,7 +217,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 125 */ SyscallDesc("recvfrom", unimplementedFunc),
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc), //32 bit
     /* 127 */ SyscallDesc("setregid", unimplementedFunc), //32 bit
-    /* 128 */ SyscallDesc("rename", unimplementedFunc),
+    /* 128 */ SyscallDesc("rename", renameFunc),
     /* 129 */ SyscallDesc("truncate", unimplementedFunc),
     /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
@@ -520,7 +520,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 125 */ SyscallDesc("recvfrom", unimplementedFunc),
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
-    /* 128 */ SyscallDesc("rename", unimplementedFunc),
+    /* 128 */ SyscallDesc("rename", renameFunc),
     /* 129 */ SyscallDesc("truncate", unimplementedFunc),
     /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
