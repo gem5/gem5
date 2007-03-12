@@ -222,7 +222,6 @@ EventQueue::dump()
     cprintf("============================================================\n");
 }
 
-extern "C"
 void
 dumpMainQueue()
 {
