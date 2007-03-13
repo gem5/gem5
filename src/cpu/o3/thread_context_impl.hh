@@ -103,7 +103,7 @@ void
 O3ThreadContext<Impl>::delVirtPort(VirtualPort *vp)
 {
     if (vp != thread->getVirtPort()) {
-        delete vp->getPeer();
+        vp->removeConn();
         delete vp;
     }
 }

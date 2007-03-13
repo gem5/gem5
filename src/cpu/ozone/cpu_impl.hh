@@ -748,7 +748,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::delVirtPort(VirtualPort *vp)
 {
-    delete vp->getPeer();
+    vp->removeConn();
     delete vp;
 }
 #endif
