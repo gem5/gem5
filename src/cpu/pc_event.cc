@@ -138,14 +138,12 @@ BreakPCEvent::process(ThreadContext *tc)
 }
 
 #if FULL_SYSTEM
-extern "C"
 void
 sched_break_pc_sys(System *sys, Addr addr)
 {
     new BreakPCEvent(&sys->pcEventQueue, "debug break", addr, true);
 }
 
-extern "C"
 void
 sched_break_pc(Addr addr)
 {

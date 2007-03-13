@@ -192,22 +192,20 @@ dumpStatus()
 
 
 // add a set of functions that can easily be invoked from gdb
-extern "C" {
-    void
-    setTraceFlag(const char *string)
-    {
-        Trace::changeFlag(string, true);
-    }
+void
+setTraceFlag(const char *string)
+{
+    Trace::changeFlag(string, true);
+}
 
-    void
-    clearTraceFlag(const char *string)
-    {
-        Trace::changeFlag(string, false);
-    }
+void
+clearTraceFlag(const char *string)
+{
+    Trace::changeFlag(string, false);
+}
 
-    void
-    dumpTraceStatus()
-    {
-        Trace::dumpStatus();
-    }
-/* extern "C" */ }
+void
+dumpTraceStatus()
+{
+    Trace::dumpStatus();
+}

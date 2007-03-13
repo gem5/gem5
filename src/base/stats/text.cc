@@ -251,6 +251,7 @@ VectorPrint::operator()(std::ostream &stream) const
     ScalarPrint print;
     print.name = name;
     print.desc = desc;
+    print.compat = compat;
     print.precision = precision;
     print.descriptions = descriptions;
     print.flags = flags;

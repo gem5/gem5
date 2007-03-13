@@ -116,6 +116,7 @@ baseFlags = [
     'ISP',
     'IdeCtrl',
     'IdeDisk',
+    'Iob',
     'Interrupt',
     'LLSC',
     'LSQ',

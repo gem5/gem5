@@ -143,20 +143,20 @@ ccprintf(std::ostream &stream, const std::string &format,
 inline void
 ccprintf(std::ostream &stream, const std::string &format, CPRINTF_DECLARATION)
 {
-    ccprintf(stream, format, VARARGS_ALLARGS);
+    ccprintf(stream, format.c_str(), VARARGS_ALLARGS);
 }
 
 inline void
 cprintf(const std::string &format, CPRINTF_DECLARATION)
 {
-    ccprintf(std::cout, format, VARARGS_ALLARGS);
+    ccprintf(std::cout, format.c_str(), VARARGS_ALLARGS);
 }
 
 inline std::string
 csprintf(const std::string &format, CPRINTF_DECLARATION)
 {
     std::stringstream stream;
-    ccprintf(stream, format, VARARGS_ALLARGS);
+    ccprintf(stream, format.c_str(), VARARGS_ALLARGS);
     return stream.str();
 }
 

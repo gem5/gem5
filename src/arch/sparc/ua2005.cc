@@ -195,6 +195,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             panic("No support for setting spec_en bit\n");
         setRegNoEffect(miscReg, bits(val,0,0));
         if (!bits(val,0,0)) {
+            DPRINTF(Quiesce, "Cpu executed quiescing instruction\n");
             // Time to go to sleep
             tc->suspend();
             if (tc->getKernelStats())
@@ -235,7 +236,13 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
       case MISCREG_HTBA:
         return readRegNoEffect(miscReg) & ULL(~0x7FFF);
       case MISCREG_HVER:
-        return NWindows | MaxTL << 8 | MaxGL << 16;
+        // XXX set to match Legion
+        return ULL(0x3e) << 48 |
+               ULL(0x23) << 32 |
+               ULL(0x20) << 24 |
+                   //MaxGL << 16 | XXX For some reason legion doesn't set GL
+                   MaxTL << 8  |
+           (NWindows -1) << 0;
 
       case MISCREG_STRAND_STS_REG:
         System *sys;
@@ -301,7 +308,7 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
         tc->getCpuPtr()->instCount();
     assert(ticks >= 0 && "stick compare missed interrupt cycle");
 
-    if (ticks == 0) {
+    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
@@ -318,11 +325,15 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
+    if ( tc->status() == ThreadContext::Halted ||
+         tc->status() == ThreadContext::Unallocated)
+       return;
+
     ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
         tc->getCpuPtr()->instCount();
     assert(ticks >= 0 && "hstick compare missed interrupt cycle");
 
-    if (ticks == 0) {
+    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {

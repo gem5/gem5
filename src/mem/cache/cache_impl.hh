@@ -570,8 +570,10 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         }
     }
     while (!writebacks.empty()) {
-        missQueue->doWriteback(writebacks.front());
+        PacketPtr wbPkt = writebacks.front();
+        missQueue->doWriteback(wbPkt);
         writebacks.pop_front();
+        delete wbPkt;
     }
 
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
@@ -581,12 +583,7 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         // Hit
         hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
         // clear dirty bit if write through
-        if (pkt->needsResponse())
-            respond(pkt, curTick+lat);
-        if (pkt->cmd == MemCmd::Writeback) {
-            //Signal that you can kill the pkt/req
-            pkt->flags |= SATISFIED;
-        }
+        respond(pkt, curTick+lat);
         return true;
     }
 
@@ -604,14 +601,14 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
     if (pkt->flags & SATISFIED) {
         // happens when a store conditional fails because it missed
         // the cache completely
-        if (pkt->needsResponse())
-            respond(pkt, curTick+lat);
+        respond(pkt, curTick+lat);
     } else {
         missQueue->handleMiss(pkt, size, curTick + hitLatency);
     }
 
-    if (pkt->cmd == MemCmd::Writeback) {
+    if (!pkt->needsResponse()) {
         //Need to clean up the packet on a writeback miss, but leave the request
+        //for the next level.
         delete pkt;
     }
 
@@ -721,8 +718,10 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
             blk = handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
             while (!writebacks.empty()) {
-                    missQueue->doWriteback(writebacks.front());
-                    writebacks.pop_front();
+                PacketPtr wbPkt = writebacks.front();
+                missQueue->doWriteback(wbPkt);
+                writebacks.pop_front();
+                delete wbPkt;
             }
         }
         missQueue->handleResponse(pkt, curTick + hitLatency);
@@ -1040,8 +1039,10 @@ return 0;
             // There was a cache hit.
             // Handle writebacks if needed
             while (!writebacks.empty()){
-                memSidePort->sendAtomic(writebacks.front());
+                PacketPtr wbPkt = writebacks.front();
+                memSidePort->sendAtomic(wbPkt);
                 writebacks.pop_front();
+                delete wbPkt;
             }
 
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
