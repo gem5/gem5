@@ -195,6 +195,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             panic("No support for setting spec_en bit\n");
         setRegNoEffect(miscReg, bits(val,0,0));
         if (!bits(val,0,0)) {
+            DPRINTF(Quiesce, "Cpu executed quiescing instruction\n");
             // Time to go to sleep
             tc->suspend();
             if (tc->getKernelStats())
@@ -307,7 +308,7 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
         tc->getCpuPtr()->instCount();
     assert(ticks >= 0 && "stick compare missed interrupt cycle");
 
-    if (ticks == 0) {
+    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "STick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
@@ -324,11 +325,15 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
+    if ( tc->status() == ThreadContext::Halted ||
+         tc->status() == ThreadContext::Unallocated)
+       return;
+
     ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
         tc->getCpuPtr()->instCount();
     assert(ticks >= 0 && "hstick compare missed interrupt cycle");
 
-    if (ticks == 0) {
+    if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
         DPRINTF(Timer, "HSTick compare cycle reached at %#x\n",
                 (stick_cmpr & mask(63)));
         if (!(tc->readMiscRegNoEffect(MISCREG_HSTICK_CMPR) & (ULL(1) << 63))) {
