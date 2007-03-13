@@ -367,18 +367,18 @@ BaseSimpleCPU::preExecute()
     inst = gtoh(inst);
     //If we're not in the middle of a macro instruction
     if (!curMacroStaticInst) {
-#if THE_ISA == ALPHA_ISA
-        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->readPC()));
-#elif THE_ISA == SPARC_ISA
-        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
-#elif THE_ISA == X86_ISA
-        StaticInstPtr instPtr = StaticInst::decode(makeExtMI(inst, thread->getTC()));
-#elif THE_ISA == MIPS_ISA
-        //Mips doesn't do anything in it's MakeExtMI function right now,
-        //so it won't be called.
-        StaticInstPtr instPtr = StaticInst::decode(inst);
-#endif
-        if (instPtr->isMacroOp()) {
+        StaticInstPtr instPtr = NULL;
+
+        //Predecode, ie bundle up an ExtMachInst
+        unsigned int result =
+            predecode(extMachInst, thread->readPC(), inst, thread->getTC());
+        //If an instruction is ready, decode it
+        if (result & ExtMIReady)
+            instPtr = StaticInst::decode(extMachInst);
+
+        //If we decoded an instruction and it's microcoded, start pulling
+        //out micro ops
+        if (instPtr && instPtr->isMacroOp()) {
             curMacroStaticInst = instPtr;
             curStaticInst = curMacroStaticInst->
                 fetchMicroOp(thread->readMicroPC());
@@ -391,17 +391,19 @@ BaseSimpleCPU::preExecute()
             fetchMicroOp(thread->readMicroPC());
     }
 
+    //If we decoded an instruction this "tick", record information about it.
+    if(curStaticInst)
+    {
+        traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
+                                         thread->readPC());
 
-    traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
-                                     thread->readPC());
-
-    DPRINTF(Decode,"Decode: Decoded %s instruction (opcode: 0x%x): 0x%x\n",
-            curStaticInst->getName(), curStaticInst->getOpcode(),
-            curStaticInst->machInst);
+        DPRINTF(Decode,"Decode: Decoded %s instruction: 0x%x\n",
+                curStaticInst->getName(), curStaticInst->machInst);
 
 #if FULL_SYSTEM
-    thread->setInst(inst);
+        thread->setInst(inst);
 #endif // FULL_SYSTEM
+    }
 }
 
 void

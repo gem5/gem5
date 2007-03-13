@@ -48,17 +48,19 @@ namespace AlphaISA
         return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
     }
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, Addr pc) {
+    enum PredecodeResult {
+        MoreBytes = 1,
+        ExtMIReady = 2
+    };
+
+    static inline unsigned int
+    predecode(ExtMachInst & ext_inst, Addr pc, MachInst inst, ThreadContext *) {
+        ext_inst = inst;
 #if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
         if (pc && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
+            ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
 #endif
+        return MoreBytes | ExtMIReady;
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

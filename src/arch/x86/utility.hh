@@ -72,9 +72,16 @@ namespace X86ISA
         return false;
     }
 
-    inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-        return inst;
+    PredecodeResult {
+        MoreBytes = 1,
+        ExtMIReady = 2
+    };
+
+    unsigned int
+    predecode(ExtMachInst &extMachInst, Addr currPC, MachInst machInst,
+            ThreadContext * xc) {
+        //Do something to fill up extMachInst...
+        return MoreBytes | ExtMIReady;
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

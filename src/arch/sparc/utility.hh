@@ -48,9 +48,15 @@ namespace SparcISA
                 tc->readMiscRegNoEffect(MISCREG_HPSTATE & (1 << 2)));
     }
 
-    inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-        ExtMachInst emi = (MachInst) inst;
+    enum PredecodeResult {
+        MoreBytes = 1,
+        ExtMIReady = 2
+    };
+
+    inline unsigned int
+    predecode(ExtMachInst &emi, Addr currPC, MachInst inst,
+            ThreadContext * xc) {
+        emi = inst;
         //The I bit, bit 13, is used to figure out where the ASI
         //should come from. Use that in the ExtMachInst. This is
         //slightly redundant, but it removes the need to put a condition
@@ -61,7 +67,7 @@ namespace SparcISA
         else
             emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
                     << (sizeof(MachInst) * 8));
-        return emi;
+        return MoreBytes | ExtMIReady;
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

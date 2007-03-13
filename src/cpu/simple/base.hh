@@ -74,7 +74,6 @@ namespace Trace {
 class BaseSimpleCPU : public BaseCPU
 {
   protected:
-    typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
@@ -122,7 +121,10 @@ class BaseSimpleCPU : public BaseCPU
 #endif
 
     // current instruction
-    MachInst inst;
+    TheISA::MachInst inst;
+
+    // current extended machine instruction
+    TheISA::ExtMachInst extMachInst;
 
     // Static data storage
     TheISA::LargestRead dataReg;

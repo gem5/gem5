@@ -62,10 +62,19 @@
 
 namespace X86ISA
 {
-    //XXX This won't work
-    typedef uint32_t MachInst;
-    //XXX This won't work either
-    typedef uint64_t ExtMachInst;
+    //This really determines how many bytes are passed to the predecoder.
+    typedef uint64_t MachInst;
+    //The intermediate structure the x86 predecoder returns.
+    struct ExtMachInst
+    {
+        //Empty for now...
+    };
+
+    bool operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
+    {
+        //Since this is empty, it's always equal
+        return true;
+    }
 
     typedef uint64_t IntReg;
     //XXX Should this be a 128 bit structure for XMM memory ops?

@@ -1117,13 +1117,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                         (&cacheData[tid][offset]));
 
-#if THE_ISA == ALPHA_ISA
-            ext_inst = TheISA::makeExtMI(inst, fetch_PC);
-#elif THE_ISA == SPARC_ISA
-            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
-#elif THE_ISA == MIPS_ISA
-            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
-#endif
+            //unsigned int result =
+                TheISA::predecode(ext_inst, fetch_PC, inst,
+                        cpu->thread[tid]->getTC());
 
             // Create a new DynInst from the instruction fetched.
             DynInstPtr instruction = new DynInst(ext_inst,

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
@@ -86,17 +88,15 @@ namespace MipsISA {
         return 0;
     }
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-#if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
-        if (xc->readPC() && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
-#endif
+    enum PredecodeResult {
+        MoreBytes = 1,
+        ExtMIReady = 2
+    };
+
+    static inline unsigned int
+    predecode(ExtMachInst &emi, Addr, MachInst inst, ThreadContext *) {
+        emi = inst;
+        return MoreBytes | ExtMIReady;
     }
 };
 
