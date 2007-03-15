@@ -70,8 +70,11 @@ namespace X86ISA
     class Predecoder
     {
       private:
+        //These are defined and documented in predecoder_tables.cc
         static const uint8_t Prefixes[256];
         static const uint8_t UsesModRM[2][256];
+        static const uint8_t ImmediateType[2][256];
+        static const uint8_t ImmediateTypeToSize[3][10];
 
       protected:
         ThreadContext * tc;
@@ -193,10 +196,11 @@ namespace X86ISA
                         break;
                       case Rex:
                         warn("Found Rex prefix %#x!\n", nextByte);
+                        emi.rexPrefix = nextByte;
                         offset++;
                         break;
                       case 0:
-                        emi.twoByteOpcode = false;
+                        emi.numOpcodes = 0;
                         state = Opcode;
                         break;
                       default:
@@ -204,20 +208,30 @@ namespace X86ISA
                     }
                     break;
                   case Opcode:
+                    emi.numOpcodes++;
+                    assert(emi.numOpcodes < 2);
                     if(nextByte == 0xf0)
                     {
                         warn("Found two byte opcode!\n");
-                        emi.twoByteOpcode = true;
                     }
                     else
                     {
+                        immediateCollected = 0;
+                        displacementCollected = 0;
+                        emi.immediate = 0;
+                        emi.displacement = 0;
+                        int immType = ImmediateType[
+                            emi.numOpcodes - 1][nextByte];
+                        if(0) //16 bit mode
+                            immediateSize = ImmediateTypeToSize[0][immType];
+                        else if(!(emi.rexPrefix & 0x4)) //32 bit mode
+                            immediateSize = ImmediateTypeToSize[1][immType];
+                        else //64 bit mode
+                            immediateSize = ImmediateTypeToSize[2][immType];
                         warn("Found opcode %#x!\n", nextByte);
-                        if (UsesModRM[emi.twoByteOpcode ? 1 : 0][nextByte]) {
+                        if (UsesModRM[emi.numOpcodes - 1][nextByte]) {
                             state = ModRM;
-                        } else if(0 /* uses immediate */) {
-                            //Figure out how big the immediate should be
-                            immediateCollected = 0;
-                            emi.immediate = 0;
+                        } else if(immediateSize) {
                             state = Immediate;
                         } else {
                             emiIsReady = true;
@@ -231,21 +245,21 @@ namespace X86ISA
                     if (0) {//in 16 bit mode
                         //figure out 16 bit displacement size
                         if(nextByte & 0xC7 == 0x06 ||
-                                nextByte & 0xC0 == 0x40)
-                            displacementSize = 1;
-                        else if(nextByte & 0xC7 == 0x80)
+                                nextByte & 0xC0 == 0x80)
                             displacementSize = 2;
+                        else if(nextByte & 0xC0 == 0x40)
+                            displacementSize = 1;
                         else
                             displacementSize = 0;
                     } else {
                         //figure out 32/64 bit displacement size
-                        if(nextByte & 0xC7 == 0x06 ||
-                                nextByte & 0xC0 == 0x40)
+                        if(nextByte & 0xC7 == 0x05 ||
+                                nextByte & 0xC0 == 0x80)
                             displacementSize = 4;
-                        else if(nextByte & 0xC7 == 0x80)
+                        else if(nextByte & 0xC0 == 0x40)
                             displacementSize = 2;
                         else
-                            displacementSize = 4;
+                            displacementSize = 0;
                     }
                     //If there's an SIB, get that next.
                     //There is no SIB in 16 bit mode.
@@ -254,12 +268,8 @@ namespace X86ISA
                             // && in 32/64 bit mode)
                         state = SIB;
                     } else if(displacementSize) {
-                        displacementCollected = 0;
-                        emi.displacement = 0;
                         state = Displacement;
                     } else if(immediateSize) {
-                        immediateCollected = 0;
-                        emi.immediate = 0;
                         state = Immediate;
                     } else {
                         emiIsReady = true;
@@ -272,12 +282,8 @@ namespace X86ISA
                     warn("Found SIB byte %#x!\n", nextByte);
                     offset++;
                     if(displacementSize) {
-                        displacementCollected = 0;
-                        emi.displacement = 0;
                         state = Displacement;
                     } else if(immediateSize) {
-                        immediateCollected = 0;
-                        emi.immediate = 0;
                         state = Immediate;
                     } else {
                         emiIsReady = true;
@@ -306,6 +312,9 @@ namespace X86ISA
                     emi.displacement |= partialDisp;
                     //Update how many bytes we've collected.
                     displacementCollected += toGet;
+                    offset += toGet;
+                    warn("Collecting %d byte displacement, got %d bytes!\n",
+                            displacementSize, toGet);
 
                     if(displacementSize == displacementCollected) {
                         //Sign extend the displacement
@@ -324,8 +333,6 @@ namespace X86ISA
                             panic("Undefined displacement size!\n");
                         }
                         if(immediateSize) {
-                            immediateCollected = 0;
-                            emi.immediate = 0;
                             state = Immediate;
                         } else {
                             emiIsReady = true;
@@ -350,11 +357,15 @@ namespace X86ISA
                     //Mask off what we don't want
                     partialDisp &= mask(toGet * 8);
                     //Shift it over to overlay with our immediate.
-                    partialDisp <<= displacementCollected;
+                    partialDisp <<= immediateCollected;
                     //Put it into our immediate
-                    emi.displacement |= partialDisp;
+                    emi.immediate |= partialDisp;
                     //Update how many bytes we've collected.
-                    displacementCollected += toGet;
+                    immediateCollected += toGet;
+                    offset += toGet;
+                    warn("Collecting %d byte immediate, got %d bytes!\n",
+                            immediateSize, toGet);
+
                     if(immediateSize == immediateCollected)
                     {
                         emiIsReady = true;

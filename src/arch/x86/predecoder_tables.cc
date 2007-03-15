@@ -140,4 +140,83 @@ namespace X86ISA
 /*      F */ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 0
         }
     };
+
+    enum ImmediateTypes {
+        NoImm,
+        NI = NoImm,
+        ByteImm,
+        BY = ByteImm,
+        WordImm,
+        WO = WordImm,
+        DWordImm,
+        DW = DWordImm,
+        QWordImm,
+        QW = QWordImm,
+        OWordImm,
+        OW = OWordImm,
+        VWordImm,
+        VW = VWordImm,
+        ZWordImm,
+        ZW = ZWordImm,
+        Pointer,
+        PO = Pointer,
+        //The enter instruction takes -2- immediates for a total of 3 bytes
+        Enter,
+        EN = Enter
+    };
+
+    const uint8_t Predecoder::ImmediateTypeToSize[3][10] =
+    {
+//       noimm byte word dword qword oword vword zword enter
+        {0,    1,   2,   4,    8,    16,   2,    2,    3,    4}, //16 bit
+        {0,    1,   2,   4,    8,    16,   4,    4,    3,    6}, //32 bit
+        {0,    1,   2,   4,    8,    16,   4,    8,    3,    0}  //64 bit
+    };
+
+    //This table determines the immediate type. The first index is the
+    //number of bytes in the instruction, and the second is the meaningful
+    //byte of the opcode. I didn't use the NI constant here for the sake
+    //of clarity.
+    const uint8_t Predecoder::ImmediateType[2][256] =
+    {//For one byte instructions
+        {    //LSB
+//     MSB   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F
+/*      0 */ 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 ,
+/*      1 */ 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 ,
+/*      2 */ 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 ,
+/*      3 */ 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 ,
+/*      4 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      5 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      6 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , ZW, ZW, BY, BY, 0 , 0 , 0 , 0 ,
+/*      7 */ BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY,
+/*      8 */ BY, ZW, BY, BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      9 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      A */ BY, VW, BY, VW, 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      B */ BY, BY, BY, BY, BY, BY, BY, BY, VW, VW, VW, VW, VW, VW, VW, VW,
+/*      C */ BY, BY, WO, 0 , 0 , 0 , BY, ZW, EN, 0 , WO, 0 , 0 , BY, 0 , 0 ,
+/*      D */ 0 , 0 , 0 , 0 , BY, BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      E */ BY, BY, BY, BY, BY, BY, BY, BY, ZW, ZW, PO, BY, 0 , 0 , 0 , 0 ,
+/*      F */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        },
+    //For two byte instructions
+        {    //LSB
+//     MSB   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | A | B | C | D | E | F
+/*      0 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      0 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      2 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      3 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      4 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      5 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      6 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      7 */ BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      8 */ ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW, ZW,
+/*      9 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      A */ 0 , 0 , 0 , 0 , BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , BY, 0 , 0 , 0 ,
+/*      B */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , ZW, 0 , BY, 0 , 0 , 0 , 0 , 0 ,
+/*      C */ 0 , 0 , BY, 0 , BY, BY, BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      D */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      E */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      F */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        }
+    };
 }

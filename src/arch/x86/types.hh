@@ -94,7 +94,11 @@ namespace X86ISA
 
         uint8_t legacyPrefixes;
         uint8_t rexPrefix;
-        bool twoByteOpcode;
+        //Right now, we ignore that this can be 3 in
+        //some cases
+        uint8_t numOpcodes;
+        //This will need to be decoded specially later
+        bool is3dnow;
         uint8_t opcode;
         uint64_t immediate;
         uint64_t displacement;
