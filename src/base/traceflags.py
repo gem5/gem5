@@ -137,6 +137,7 @@ baseFlags = [
     'PciConfigAll',
     'Pipeline',
     'Printf',
+    'Predecoder',
     'Quiesce',
     'ROB',
     'Regs',

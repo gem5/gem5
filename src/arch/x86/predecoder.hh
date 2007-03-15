@@ -61,6 +61,7 @@
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
@@ -136,7 +137,6 @@ namespace X86ISA
 
         void process()
         {
-            warn("About to process some bytes\n");
             assert(!outOfBytes);
             assert(!emiIsReady);
             while(!emiIsReady && !outOfBytes)
@@ -146,58 +146,48 @@ namespace X86ISA
                 {
                   case Prefix:
                     uint8_t prefix = Prefixes[nextByte];
+                    if(prefix)
+                        offset++;
                     switch(prefix)
                     {
                         //Operand size override prefixes
                       case OperandSizeOverride:
-                        warn("Found operand size override prefix!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found operand size override prefix.\n");
                         break;
                       case AddressSizeOverride:
-                        warn("Found address size override prefix!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found address size override prefix.\n");
                         break;
                         //Segment override prefixes
                       case CSOverride:
-                        warn("Found cs segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found cs segment override.\n");
                         break;
                       case DSOverride:
-                        warn("Found ds segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found ds segment override.\n");
                         break;
                       case ESOverride:
-                        warn("Found es segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found es segment override.\n");
                         break;
                       case FSOverride:
-                        warn("Found fs segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found fs segment override.\n");
                         break;
                       case GSOverride:
-                        warn("Found gs segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found gs segment override.\n");
                         break;
                       case SSOverride:
-                        warn("Found ss segment override!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found ss segment override.\n");
                         break;
                       case Lock:
-                        warn("Found lock prefix!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found lock prefix.\n");
                         break;
                       case Rep:
-                        warn("Found rep prefix!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found rep prefix.\n");
                         break;
                       case Repne:
-                        warn("Found repne prefix!\n");
-                        offset++;
+                        DPRINTF(Predecoder, "Found repne prefix.\n");
                         break;
                       case Rex:
-                        warn("Found Rex prefix %#x!\n", nextByte);
+                        DPRINTF(Predecoder, "Found Rex prefix %#x.\n", nextByte);
                         emi.rexPrefix = nextByte;
-                        offset++;
                         break;
                       case 0:
                         emi.numOpcodes = 0;
@@ -212,7 +202,7 @@ namespace X86ISA
                     assert(emi.numOpcodes < 2);
                     if(nextByte == 0xf0)
                     {
-                        warn("Found two byte opcode!\n");
+                        DPRINTF(Predecoder, "Found two byte opcode.\n");
                     }
                     else
                     {
@@ -228,7 +218,7 @@ namespace X86ISA
                             immediateSize = ImmediateTypeToSize[1][immType];
                         else //64 bit mode
                             immediateSize = ImmediateTypeToSize[2][immType];
-                        warn("Found opcode %#x!\n", nextByte);
+                        DPRINTF(Predecoder, "Found opcode %#x.\n", nextByte);
                         if (UsesModRM[emi.numOpcodes - 1][nextByte]) {
                             state = ModRM;
                         } else if(immediateSize) {
@@ -241,7 +231,7 @@ namespace X86ISA
                     offset++;
                     break;
                   case ModRM:
-                    warn("Found modrm byte %#x!\n", nextByte);
+                    DPRINTF(Predecoder, "Found modrm byte %#x.\n", nextByte);
                     if (0) {//in 16 bit mode
                         //figure out 16 bit displacement size
                         if(nextByte & 0xC7 == 0x06 ||
@@ -279,7 +269,7 @@ namespace X86ISA
                     offset++;
                     break;
                   case SIB:
-                    warn("Found SIB byte %#x!\n", nextByte);
+                    DPRINTF(Predecoder, "Found SIB byte %#x.\n", nextByte);
                     offset++;
                     if(displacementSize) {
                         state = Displacement;
@@ -303,18 +293,18 @@ namespace X86ISA
                     toGet = toGet > remaining ? remaining : toGet;
 
                     //Shift the bytes we want to be all the way to the right
-                    partialDisp = fetchChunk >> offset;
+                    partialDisp = fetchChunk >> (offset * 8);
                     //Mask off what we don't want
                     partialDisp &= mask(toGet * 8);
                     //Shift it over to overlay with our displacement.
-                    partialDisp <<= displacementCollected;
+                    partialDisp <<= (displacementCollected * 8);
                     //Put it into our displacement
                     emi.displacement |= partialDisp;
                     //Update how many bytes we've collected.
                     displacementCollected += toGet;
                     offset += toGet;
-                    warn("Collecting %d byte displacement, got %d bytes!\n",
-                            displacementSize, toGet);
+                    DPRINTF(Predecoder, "Collecting %d byte displacement, got %d bytes.\n",
+                            displacementSize, displacementCollected);
 
                     if(displacementSize == displacementCollected) {
                         //Sign extend the displacement
@@ -332,6 +322,8 @@ namespace X86ISA
                           default:
                             panic("Undefined displacement size!\n");
                         }
+                        DPRINTF(Predecoder, "Collected displacement %#x.\n",
+                                emi.displacement);
                         if(immediateSize) {
                             state = Immediate;
                         } else {
@@ -353,21 +345,23 @@ namespace X86ISA
                     toGet = toGet > remaining ? remaining : toGet;
 
                     //Shift the bytes we want to be all the way to the right
-                    partialDisp = fetchChunk >> offset;
+                    partialDisp = fetchChunk >> (offset * 8);
                     //Mask off what we don't want
                     partialDisp &= mask(toGet * 8);
                     //Shift it over to overlay with our immediate.
-                    partialDisp <<= immediateCollected;
+                    partialDisp <<= (immediateCollected * 8);
                     //Put it into our immediate
                     emi.immediate |= partialDisp;
                     //Update how many bytes we've collected.
                     immediateCollected += toGet;
                     offset += toGet;
-                    warn("Collecting %d byte immediate, got %d bytes!\n",
-                            immediateSize, toGet);
+                    DPRINTF(Predecoder, "Collecting %d byte immediate, got %d bytes.\n",
+                            immediateSize, immediateCollected);
 
                     if(immediateSize == immediateCollected)
                     {
+                        DPRINTF(Predecoder, "Collected immediate %#x.\n",
+                                emi.immediate);
                         emiIsReady = true;
                         state = Prefix;
                     }
@@ -389,7 +383,6 @@ namespace X86ISA
             fetchChunk = data;
             assert(off < sizeof(MachInst));
             outOfBytes = false;
-            warn("About to call process.\n");
             process();
         }
 
