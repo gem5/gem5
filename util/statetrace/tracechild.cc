@@ -51,12 +51,23 @@ bool TraceChild::startTracing(const char * pathToFile, char * const argv[])
                 //program to trace.
 
                 //Let our parent trace us
-                ptrace(PTRACE_TRACEME, 0, 0, 0);
+                if(ptrace(PTRACE_TRACEME, 0, 0, 0) == -1)
+                {
+                        cout << "Failure calling TRACEME\n";
+                        cout << strerror(errno) << endl;
+                        return false;
+                }
+
+                //Set up an empty environment for the child...
+                //We would want to specify this somehow at some point
+                char * env[] = {NULL};
 
                 //Start the program to trace
-                execv(pathToFile, argv);
+                execve(pathToFile, argv, env);
 
                 //We should never get here, so this is an error!
+                cout << "Exec failed\n";
+                cout <<  strerror(errno) << endl;
                 return false;
         }
 

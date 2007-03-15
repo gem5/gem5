@@ -54,8 +54,45 @@ string SparcTraceChild::regNames[numregs] = {
     //Miscelaneous
     "fsr", "fprs", "pc", "npc", "y", "cwp", "pstate", "asi", "ccr"};
 
+bool SparcTraceChild::sendState(int socket)
+{
+    uint64_t regVal = 0;
+    for(int x = 0; x <= I7; x++)
+    {
+        regVal = getRegVal(x);
+        if(write(socket, &regVal, sizeof(regVal)) == -1)
+        {
+            cerr << "Write failed! " << strerror(errno) << endl;
+            tracing = false;
+            return false;
+        }
+    }
+    regVal = getRegVal(PC);
+    if(write(socket, &regVal, sizeof(regVal)) == -1)
+    {
+        cerr << "Write failed! " << strerror(errno) << endl;
+        tracing = false;
+        return false;
+    }
+    regVal = getRegVal(NPC);
+    if(write(socket, &regVal, sizeof(regVal)) == -1)
+    {
+        cerr << "Write failed! " << strerror(errno) << endl;
+        tracing = false;
+        return false;
+    }
+    regVal = getRegVal(CCR);
+    if(write(socket, &regVal, sizeof(regVal)) == -1)
+    {
+        cerr << "Write failed! " << strerror(errno) << endl;
+        tracing = false;
+        return false;
+    }
+    return true;
+}
+
 int64_t getRegs(regs & myregs, fpu & myfpu,
-        int64_t * locals, int64_t * inputs, int num)
+        uint64_t * locals, uint64_t * inputs, int num)
 {
     assert(num < SparcTraceChild::numregs && num >= 0);
     switch(num)
@@ -160,14 +197,19 @@ bool SparcTraceChild::update(int pid)
         cerr << "Update failed" << endl;
         return false;
     }
-    uint64_t StackPointer = getSP();
-    const int stackBias = (StackPointer % 1) ? 2047 : 0;
+    uint64_t stackPointer = getSP();
+    uint64_t stackBias = 2047;
+    bool v9 = stackPointer % 2;
     for(unsigned int x = 0; x < 8; x++)
     {
-        locals[x] = ptrace(PTRACE_PEEKTEXT, pid,
-            StackPointer + stackBias + x * 8, 0);
-        inputs[x] = ptrace(PTRACE_PEEKTEXT, pid,
-            StackPointer + stackBias + x * 8 + (8 * 8), 0);
+        uint64_t localAddr = stackPointer +
+            (v9 ? (stackBias + x * 8) : (x * 4));
+        locals[x] = ptrace(PTRACE_PEEKTEXT, pid, localAddr, 0);
+        if(!v9) locals[x] >>= 32;
+        uint64_t inputAddr = stackPointer +
+            (v9 ? (stackBias + x * 8 + (8 * 8)) : (x * 4 + 8 * 4));
+        inputs[x] = ptrace(PTRACE_PEEKTEXT, pid, inputAddr, 0);
+        if(!v9) inputs[x] >>= 32;
     }
     if(ptrace(PTRACE_GETFPREGS, pid, &thefpregs, 0) != 0)
         return false;
@@ -366,7 +408,7 @@ ostream & SparcTraceChild::outputStartState(ostream & os)
 {
     bool v8 = false;
     uint64_t sp = getSP();
-    if(sp % 1)
+    if(sp % 2)
     {
         os << "Detected a 64 bit executable.\n";
         v8 = false;

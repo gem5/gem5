@@ -72,10 +72,10 @@ private:
         regs oldregs;
         fpu thefpregs;
         fpu oldfpregs;
-        int64_t locals[8];
-        int64_t oldLocals[8];
-        int64_t inputs[8];
-        int64_t oldInputs[8];
+        uint64_t locals[8];
+        uint64_t oldLocals[8];
+        uint64_t inputs[8];
+        uint64_t oldInputs[8];
         bool regDiffSinceUpdate[numregs];
 
         //This calculates where the pc might go after the current instruction.
@@ -89,6 +89,8 @@ protected:
 
 public:
         SparcTraceChild();
+
+        bool sendState(int socket);
 
         int getNumRegs()
         {

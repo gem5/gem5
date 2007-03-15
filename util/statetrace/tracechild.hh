@@ -42,6 +42,7 @@ protected:
 public:
         TraceChild() : tracing(false), instructions(0)
         {;}
+        virtual bool sendState(int socket) = 0;
         virtual bool startTracing(const char * pathToFile,
                 char * const argv[]);
         virtual bool stopTracing();
