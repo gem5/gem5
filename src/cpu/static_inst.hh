@@ -35,6 +35,7 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
+#include "arch/utility.hh"
 #include "sim/faults.hh"
 #include "base/bitfield.hh"
 #include "base/hashmap.hh"
@@ -439,9 +440,6 @@ class StaticInst : public StaticInstBase
     //This is defined as inline below.
     static StaticInstPtr decode(ExtMachInst mach_inst);
 
-    /// Return opcode of machine instruction
-    uint32_t getOpcode() { return bits(machInst, 31, 26);}
-
     /// Return name of machine instruction
     std::string getName() { return mnemonic; }
 };
@@ -474,7 +472,7 @@ class StaticInstPtr : public RefCountingPtr<StaticInst>
 
     /// Construct directly from machine instruction.
     /// Calls StaticInst::decode().
-    StaticInstPtr(TheISA::ExtMachInst mach_inst)
+    explicit StaticInstPtr(TheISA::ExtMachInst mach_inst)
         : RefCountingPtr<StaticInst>(StaticInst::decode(mach_inst))
     {
     }

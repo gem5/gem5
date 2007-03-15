@@ -516,17 +516,28 @@ AtomicSimpleCPU::tick()
         Fault fault = setupFetchRequest(ifetch_req);
 
         if (fault == NoFault) {
-            ifetch_pkt->reinitFromRequest();
-
-            Tick icache_latency = icachePort.sendAtomic(ifetch_pkt);
-            // ifetch_req is initialized to read the instruction directly
-            // into the CPU object's inst field.
-
+            Tick icache_latency = 0;
+            bool icache_access = false;
             dcache_access = false; // assume no dcache access
+
+            //Fetch more instruction memory if necessary
+            if(predecoder.needMoreBytes())
+            {
+                icache_access = true;
+                ifetch_pkt->reinitFromRequest();
+
+                icache_latency = icachePort.sendAtomic(ifetch_pkt);
+                // ifetch_req is initialized to read the instruction directly
+                // into the CPU object's inst field.
+            }
+
             preExecute();
 
-            fault = curStaticInst->execute(this, traceData);
-            postExecute();
+            if(curStaticInst)
+            {
+                fault = curStaticInst->execute(this, traceData);
+                postExecute();
+            }
 
             // @todo remove me after debugging with legion done
             if (curStaticInst && (!curStaticInst->isMicroOp() ||
@@ -534,7 +545,8 @@ AtomicSimpleCPU::tick()
                 instCnt++;
 
             if (simulate_stalls) {
-                Tick icache_stall = icache_latency - cycles(1);
+                Tick icache_stall =
+                    icache_access ? icache_latency - cycles(1) : 0;
                 Tick dcache_stall =
                     dcache_access ? dcache_latency - cycles(1) : 0;
                 Tick stall_cycles = (icache_stall + dcache_stall) / cycles(1);
@@ -545,8 +557,8 @@ AtomicSimpleCPU::tick()
             }
 
         }
-
-        advancePC(fault);
+        if(predecoder.needMoreBytes())
+            advancePC(fault);
     }
 
     if (_status != Idle)

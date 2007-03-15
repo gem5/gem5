@@ -33,6 +33,7 @@
 #ifndef __CPU_SIMPLE_BASE_HH__
 #define __CPU_SIMPLE_BASE_HH__
 
+#include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
@@ -63,6 +64,10 @@ class Process;
 class RemoteGDB;
 class GDBListener;
 
+namespace TheISA
+{
+    class Predecoder;
+}
 class ThreadContext;
 class Checkpoint;
 
@@ -74,7 +79,6 @@ namespace Trace {
 class BaseSimpleCPU : public BaseCPU
 {
   protected:
-    typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
@@ -122,7 +126,10 @@ class BaseSimpleCPU : public BaseCPU
 #endif
 
     // current instruction
-    MachInst inst;
+    TheISA::MachInst inst;
+
+    // The predecoder
+    TheISA::Predecoder predecoder;
 
     // Static data storage
     TheISA::LargestRead dataReg;

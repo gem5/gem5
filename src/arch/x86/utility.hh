@@ -59,10 +59,21 @@
 #define __ARCH_X86_UTILITY_HH__
 
 #include "arch/x86/types.hh"
+#include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
+
+namespace __hash_namespace {
+    template<>
+    struct hash<X86ISA::ExtMachInst> {
+        size_t operator()(const X86ISA::ExtMachInst &emi) const {
+            //Because these are all the same, return 0
+            return 0;
+        };
+    };
+}
 
 namespace X86ISA
 {
@@ -70,11 +81,6 @@ namespace X86ISA
     inUserMode(ThreadContext *tc)
     {
         return false;
-    }
-
-    inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-        return inst;
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

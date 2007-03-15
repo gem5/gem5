@@ -59,13 +59,76 @@
 #define __ARCH_X86_TYPES_HH__
 
 #include <inttypes.h>
+#include <iostream>
 
 namespace X86ISA
 {
-    //XXX This won't work
-    typedef uint32_t MachInst;
-    //XXX This won't work either
-    typedef uint64_t ExtMachInst;
+    //This really determines how many bytes are passed to the predecoder.
+    typedef uint64_t MachInst;
+
+    enum Prefixes {
+        NoOverride = 0,
+        CSOverride = 1,
+        DSOverride = 2,
+        ESOverride = 3,
+        FSOverride = 4,
+        GSOverride = 5,
+        SSOverride = 6,
+        //The Rex prefix obviously doesn't fit in with the above, but putting
+        //it here lets us save double the space the enums take up.
+        Rex = 7,
+        //There can be only one segment override, so they share the
+        //first 3 bits in the legacyPrefixes bitfield.
+        SegmentOverride = 0x7,
+        OperandSizeOverride = 8,
+        AddressSizeOverride = 16,
+        Lock = 32,
+        Rep = 64,
+        Repne = 128
+    };
+
+    //The intermediate structure the x86 predecoder returns.
+    struct ExtMachInst
+    {
+      public: //XXX These should be hidden in the future
+
+        uint8_t legacyPrefixes;
+        uint8_t rexPrefix;
+        bool twoByteOpcode;
+        uint8_t opcode;
+        uint64_t immediate;
+        uint64_t displacement;
+
+      public:
+
+        //These are to pacify the decoder for now. This will go away once
+        //it can handle non integer inputs, and in the mean time allow me to
+        //excercise the predecoder a little.
+        operator unsigned int()
+        {
+            return 0;
+        }
+
+        ExtMachInst(unsigned int)
+        {;}
+
+        ExtMachInst()
+        {;}
+    };
+
+    inline static std::ostream &
+        operator << (std::ostream & os, const ExtMachInst & emi)
+    {
+        os << "{X86 ExtMachInst}";
+        return os;
+    }
+
+    inline static bool
+        operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
+    {
+        //Since this is empty, it's always equal
+        return true;
+    }
 
     typedef uint64_t IntReg;
     //XXX Should this be a 128 bit structure for XMM memory ops?

@@ -48,19 +48,6 @@ namespace AlphaISA
         return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
     }
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, Addr pc) {
-#if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
-        if (pc && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
-#endif
-    }
-
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);

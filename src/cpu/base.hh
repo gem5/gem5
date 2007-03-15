@@ -34,11 +34,11 @@
 
 #include <vector>
 
+#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "sim/eventq.hh"
 #include "mem/mem_object.hh"
-#include "arch/isa_traits.hh"
 
 #if FULL_SYSTEM
 #include "arch/interrupts.hh"
@@ -49,6 +49,11 @@ class CheckerCPU;
 class ThreadContext;
 class System;
 class Port;
+
+namespace TheISA
+{
+    class Predecoder;
+}
 
 class CPUProgressEvent : public Event
 {
@@ -125,6 +130,7 @@ class BaseCPU : public MemObject
 
   protected:
     std::vector<ThreadContext *> threadContexts;
+    std::vector<TheISA::Predecoder *> predecoders;
 
   public:
 

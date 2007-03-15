@@ -103,6 +103,7 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(Params *params)
     : branchPred(params),
+      predecoder(NULL),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -1117,13 +1118,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                         (&cacheData[tid][offset]));
 
-#if THE_ISA == ALPHA_ISA
-            ext_inst = TheISA::makeExtMI(inst, fetch_PC);
-#elif THE_ISA == SPARC_ISA
-            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
-#elif THE_ISA == MIPS_ISA
-            ext_inst = TheISA::makeExtMI(inst, cpu->thread[tid]->getTC());
-#endif
+            predecoder.setTC(cpu->thread[tid]->getTC());
+            predecoder.moreBytes(fetch_PC, 0, inst);
+
+            ext_inst = predecoder.getExtMachInst();
 
             // Create a new DynInst from the instruction fetched.
             DynInstPtr instruction = new DynInst(ext_inst,

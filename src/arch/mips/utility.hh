@@ -88,19 +88,6 @@ namespace MipsISA {
         return 0;
     }
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-#if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
-        if (xc->readPC() && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
-#endif
-    }
-
     inline void startupCPU(ThreadContext *tc, int cpuId)
     {
         tc->activate(0);

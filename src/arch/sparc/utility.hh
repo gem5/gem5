@@ -48,22 +48,6 @@ namespace SparcISA
                 tc->readMiscRegNoEffect(MISCREG_HPSTATE & (1 << 2)));
     }
 
-    inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-        ExtMachInst emi = (MachInst) inst;
-        //The I bit, bit 13, is used to figure out where the ASI
-        //should come from. Use that in the ExtMachInst. This is
-        //slightly redundant, but it removes the need to put a condition
-        //into all the execute functions
-        if(inst & (1 << 13))
-            emi |= (static_cast<ExtMachInst>(xc->readMiscRegNoEffect(MISCREG_ASI))
-                    << (sizeof(MachInst) * 8));
-        else
-            emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
-                    << (sizeof(MachInst) * 8));
-        return emi;
-    }
-
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return false;
