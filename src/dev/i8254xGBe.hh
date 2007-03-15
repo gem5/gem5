@@ -54,13 +54,15 @@ class IGbE : public PciDev
     int eeOpBits, eeAddrBits, eeDataBits;
     uint8_t eeOpcode, eeAddr;
 
+    bool useFlowControl;
+
     uint16_t flash[iGbReg::EEPROM_SIZE];
 
 
   public:
     struct Params : public PciDev::Params
     {
-        ;
+        bool use_flow_control;
     };
 
     IGbE(Params *params);
