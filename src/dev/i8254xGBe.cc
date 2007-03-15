@@ -46,29 +46,32 @@
 using namespace iGbReg;
 
 IGbE::IGbE(Params *p)
-    : PciDev(p), etherInt(NULL)
+    : PciDev(p), etherInt(NULL), useFlowControl(p->use_flow_control)
 {
     // Initialized internal registers per Intel documentation
-    regs.tctl.reg       = 0;
-    regs.rctl.reg       = 0;
-    regs.ctrl.reg       = 0;
-    regs.ctrl.fd        = 1;
-    regs.ctrl.lrst      = 1;
-    regs.ctrl.speed     = 2;
-    regs.ctrl.frcspd    = 1;
-    regs.sts.reg        = 0;
-    regs.eecd.reg       = 0;
-    regs.eecd.fwe       = 1;
-    regs.eecd.ee_type   = 1;
-    regs.eerd.reg       = 0;
-    regs.icd.reg        = 0;
-    regs.imc.reg        = 0;
-    regs.rctl.reg       = 0;
-    regs.tctl.reg       = 0;
-    regs.manc.reg       = 0;
+    regs.tctl(0);
+    regs.rctl(0);
+    regs.ctrl(0);
+    regs.ctrl.fd(1);
+    regs.ctrl.lrst(1);
+    regs.ctrl.speed(2);
+    regs.ctrl.frcspd(1);
+    regs.sts(0);
+    regs.sts.speed(3); // Say we're 1000Mbps
+    regs.sts.fd(1); // full duplex
+    regs.eecd(0);
+    regs.eecd.fwe(1);
+    regs.eecd.ee_type(1);
+    regs.eerd(0);
+    regs.icr(0);
+    regs.rctl(0);
+    regs.tctl(0);
+    regs.fcrtl(0);
+    regs.fcrth(1);
+    regs.manc(0);
 
-    regs.pba.rxa        = 0x30;
-    regs.pba.txa        = 0x10;
+    regs.pba.rxa(0x30);
+    regs.pba.txa(0x10);
 
     eeOpBits            = 0;
     eeAddrBits          = 0;
@@ -78,8 +81,17 @@ IGbE::IGbE(Params *p)
     // clear all 64 16 bit words of the eeprom
     memset(&flash, 0, EEPROM_SIZE*2);
 
+    //We'll need to instert the MAC address into the flash
+    flash[0] = 0xA4A4;
+    flash[1] = 0xB6B6;
+    flash[2] = 0xC8C8;
+
+    uint16_t csum = 0;
+    for (int x = 0; x < EEPROM_SIZE; x++)
+        csum += flash[x];
+
     // Magic happy checksum value
-    flash[0] = 0xBABA;
+    flash[EEPROM_SIZE-1] = htobe((uint16_t)(EEPROM_CSUM - csum));
 }
 
 
@@ -124,47 +136,112 @@ IGbE::read(PacketPtr pkt)
 
 
     switch (daddr) {
-      case CTRL:
-       pkt->set<uint32_t>(regs.ctrl.reg);
-       break;
-      case STATUS:
-       pkt->set<uint32_t>(regs.sts.reg);
-       break;
-      case EECD:
-       pkt->set<uint32_t>(regs.eecd.reg);
-       break;
-      case EERD:
-       pkt->set<uint32_t>(regs.eerd.reg);
-       break;
-      case ICR:
-       pkt->set<uint32_t>(regs.icd.reg);
-       break;
-      case IMC:
-       pkt->set<uint32_t>(regs.imc.reg);
-       break;
-      case RCTL:
-       pkt->set<uint32_t>(regs.rctl.reg);
-       break;
-      case TCTL:
-       pkt->set<uint32_t>(regs.tctl.reg);
-       break;
-      case PBA:
-       pkt->set<uint32_t>(regs.pba.reg);
-       break;
-      case WUC:
-      case LEDCTL:
-       pkt->set<uint32_t>(0); // We don't care, so just return 0
-       break;
-      case MANC:
-       pkt->set<uint32_t>(regs.manc.reg);
-       break;
+      case REG_CTRL:
+        pkt->set<uint32_t>(regs.ctrl());
+        break;
+      case REG_STATUS:
+        pkt->set<uint32_t>(regs.sts());
+        break;
+      case REG_EECD:
+        pkt->set<uint32_t>(regs.eecd());
+        break;
+      case REG_EERD:
+        pkt->set<uint32_t>(regs.eerd());
+        break;
+      case REG_CTRL_EXT:
+        pkt->set<uint32_t>(regs.ctrl_ext());
+        break;
+      case REG_MDIC:
+        pkt->set<uint32_t>(regs.mdic());
+        break;
+      case REG_ICR:
+        pkt->set<uint32_t>(regs.icr());
+        // handle auto setting mask from IAM
+        break;
+      case REG_ITR:
+        pkt->set<uint32_t>(regs.itr());
+        break;
+      case REG_RCTL:
+        pkt->set<uint32_t>(regs.rctl());
+        break;
+      case REG_FCTTV:
+        pkt->set<uint32_t>(regs.fcttv());
+        break;
+      case REG_TCTL:
+        pkt->set<uint32_t>(regs.tctl());
+        break;
+      case REG_PBA:
+        pkt->set<uint32_t>(regs.pba());
+        break;
+      case REG_WUC:
+      case REG_LEDCTL:
+        pkt->set<uint32_t>(0); // We don't care, so just return 0
+        break;
+      case REG_FCRTL:
+        pkt->set<uint32_t>(regs.fcrtl());
+        break;
+      case REG_FCRTH:
+        pkt->set<uint32_t>(regs.fcrth());
+        break;
+      case REG_RDBAL:
+        pkt->set<uint32_t>(regs.rdba.rdbal());
+        break;
+      case REG_RDBAH:
+        pkt->set<uint32_t>(regs.rdba.rdbah());
+        break;
+      case REG_RDLEN:
+        pkt->set<uint32_t>(regs.rdlen());
+        break;
+      case REG_RDH:
+        pkt->set<uint32_t>(regs.rdh());
+        break;
+      case REG_RDT:
+        pkt->set<uint32_t>(regs.rdt());
+        break;
+      case REG_RDTR:
+        pkt->set<uint32_t>(regs.rdtr());
+        break;
+      case REG_RADV:
+        pkt->set<uint32_t>(regs.radv());
+        break;
+      case REG_TDBAL:
+        pkt->set<uint32_t>(regs.tdba.tdbal());
+        break;
+      case REG_TDBAH:
+        pkt->set<uint32_t>(regs.tdba.tdbah());
+        break;
+      case REG_TDLEN:
+        pkt->set<uint32_t>(regs.tdlen());
+        break;
+      case REG_TDH:
+        pkt->set<uint32_t>(regs.tdh());
+        break;
+      case REG_TDT:
+        pkt->set<uint32_t>(regs.tdt());
+        break;
+      case REG_TIDV:
+        pkt->set<uint32_t>(regs.tidv());
+        break;
+      case REG_TXDCTL:
+        pkt->set<uint32_t>(regs.txdctl());
+        break;
+      case REG_TADV:
+        pkt->set<uint32_t>(regs.tadv());
+        break;
+      case REG_RXCSUM:
+        pkt->set<uint32_t>(regs.rxcsum());
+        break;
+      case REG_MANC:
+        pkt->set<uint32_t>(regs.manc());
+        break;
       default:
-       if (!(daddr >= VFTA && daddr < (VFTA + VLAN_FILTER_TABLE_SIZE)*4) &&
-           !(daddr >= RAL && daddr < (RAL + RCV_ADDRESS_TABLE_SIZE)*4) &&
-           !(daddr >= MTA && daddr < (MTA + MULTICAST_TABLE_SIZE)*4))
-           pkt->set<uint32_t>(0);
-       else
-           panic("Read request to unknown register number: %#x\n", daddr);
+        if (!(daddr >= REG_VFTA && daddr < (REG_VFTA + VLAN_FILTER_TABLE_SIZE*4)) &&
+            !(daddr >= REG_RAL && daddr < (REG_RAL + RCV_ADDRESS_TABLE_SIZE*8)) &&
+            !(daddr >= REG_MTA && daddr < (REG_MTA + MULTICAST_TABLE_SIZE*4)) &&
+            !(daddr >= REG_CRCERRS && daddr < (REG_CRCERRS + STATS_REGS_SIZE)))
+            panic("Read request to unknown register number: %#x\n", daddr);
+        else
+            pkt->set<uint32_t>(0);
     };
 
     pkt->result = Packet::Success;
@@ -195,92 +272,211 @@ IGbE::write(PacketPtr pkt)
     uint32_t val = pkt->get<uint32_t>();
 
     switch (daddr) {
-      case CTRL:
-       regs.ctrl.reg = val;
-       break;
-      case STATUS:
-       regs.sts.reg = val;
-       break;
-      case EECD:
-       int oldClk;
-       oldClk = regs.eecd.sk;
-       regs.eecd.reg = val;
-       // See if this is a eeprom access and emulate accordingly
-       if (!oldClk && regs.eecd.sk) {
-           if (eeOpBits < 8) {
-               eeOpcode = eeOpcode << 1 | regs.eecd.din;
-               eeOpBits++;
-           } else if (eeAddrBits < 8 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
-               eeAddr = eeAddr << 1 | regs.eecd.din;
-               eeAddrBits++;
-           } else if (eeDataBits < 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
-               assert(eeAddr>>1 < EEPROM_SIZE);
-               DPRINTF(EthernetEEPROM, "EEPROM bit read: %d word: %#X\n",
-                       flash[eeAddr>>1] >> eeDataBits & 0x1, flash[eeAddr>>1]);
-               regs.eecd.dout = (flash[eeAddr>>1] >> (15-eeDataBits)) & 0x1;
-               eeDataBits++;
-           } else if (eeDataBits < 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI) {
-               regs.eecd.dout = 0;
-               eeDataBits++;
-           } else
-               panic("What's going on with eeprom interface? opcode:"
-                      " %#x:%d addr: %#x:%d, data: %d\n", (uint32_t)eeOpcode,
-                      (uint32_t)eeOpBits, (uint32_t)eeAddr,
-                      (uint32_t)eeAddrBits, (uint32_t)eeDataBits);
+      case REG_CTRL:
+        regs.ctrl = val;
+        if (regs.ctrl.tfce())
+            warn("TX Flow control enabled, should implement\n");
+        if (regs.ctrl.rfce())
+            warn("RX Flow control enabled, should implement\n");
+        break;
+      case REG_CTRL_EXT:
+        regs.ctrl_ext = val;
+        break;
+      case REG_STATUS:
+        regs.sts = val;
+        break;
+      case REG_EECD:
+        int oldClk;
+        oldClk = regs.eecd.sk();
+        regs.eecd = val;
+        // See if this is a eeprom access and emulate accordingly
+        if (!oldClk && regs.eecd.sk()) {
+            if (eeOpBits < 8) {
+                eeOpcode = eeOpcode << 1 | regs.eecd.din();
+                eeOpBits++;
+            } else if (eeAddrBits < 8 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
+                eeAddr = eeAddr << 1 | regs.eecd.din();
+                eeAddrBits++;
+            } else if (eeDataBits < 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) {
+                assert(eeAddr>>1 < EEPROM_SIZE);
+                DPRINTF(EthernetEEPROM, "EEPROM bit read: %d word: %#X\n",
+                        flash[eeAddr>>1] >> eeDataBits & 0x1, flash[eeAddr>>1]);
+                regs.eecd.dout((flash[eeAddr>>1] >> (15-eeDataBits)) & 0x1);
+                eeDataBits++;
+            } else if (eeDataBits < 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI) {
+                regs.eecd.dout(0);
+                eeDataBits++;
+            } else
+                panic("What's going on with eeprom interface? opcode:"
+                       " %#x:%d addr: %#x:%d, data: %d\n", (uint32_t)eeOpcode,
+                       (uint32_t)eeOpBits, (uint32_t)eeAddr,
+                       (uint32_t)eeAddrBits, (uint32_t)eeDataBits);
 
-           // Reset everything for the next command
-           if ((eeDataBits == 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) ||
+            // Reset everything for the next command
+            if ((eeDataBits == 16 && eeOpcode == EEPROM_READ_OPCODE_SPI) ||
                (eeDataBits == 8 && eeOpcode == EEPROM_RDSR_OPCODE_SPI)) {
-               eeOpBits = 0;
-               eeAddrBits = 0;
-               eeDataBits = 0;
+                eeOpBits = 0;
+                eeAddrBits = 0;
+                eeDataBits = 0;
                eeOpcode = 0;
-               eeAddr = 0;
-           }
+                eeAddr = 0;
+            }
 
            DPRINTF(EthernetEEPROM, "EEPROM: opcode: %#X:%d addr: %#X:%d\n",
-                   (uint32_t)eeOpcode, (uint32_t) eeOpBits,
-                   (uint32_t)eeAddr>>1, (uint32_t)eeAddrBits);
+                    (uint32_t)eeOpcode, (uint32_t) eeOpBits,
+                    (uint32_t)eeAddr>>1, (uint32_t)eeAddrBits);
            if (eeOpBits == 8 && !(eeOpcode == EEPROM_READ_OPCODE_SPI ||
-                                  eeOpcode == EEPROM_RDSR_OPCODE_SPI ))
-               panic("Unknown eeprom opcode: %#X:%d\n", (uint32_t)eeOpcode,
-                       (uint32_t)eeOpBits);
+                                   eeOpcode == EEPROM_RDSR_OPCODE_SPI ))
+                panic("Unknown eeprom opcode: %#X:%d\n", (uint32_t)eeOpcode,
+                        (uint32_t)eeOpBits);
 
 
-       }
-       // If driver requests eeprom access, immediately give it to it
-       regs.eecd.ee_gnt = regs.eecd.ee_req;
-       break;
-      case EERD:
-       regs.eerd.reg = val;
-       break;
-      case ICR:
-       regs.icd.reg = val;
-       break;
-      case IMC:
-       regs.imc.reg = val;
-       break;
-      case RCTL:
-       regs.rctl.reg = val;
-       break;
-      case TCTL:
-       regs.tctl.reg = val;
-       break;
-      case PBA:
-       regs.pba.rxa = val;
-       regs.pba.txa = 64 - regs.pba.rxa;
-       break;
-      case WUC:
-      case LEDCTL:
-       ; // We don't care, so don't store anything
-       break;
-      case MANC:
-       regs.manc.reg = val;
-       break;
+        }
+        // If driver requests eeprom access, immediately give it to it
+        regs.eecd.ee_gnt(regs.eecd.ee_req());
+        break;
+      case REG_EERD:
+        regs.eerd = val;
+        break;
+      case REG_MDIC:
+        regs.mdic = val;
+        if (regs.mdic.i())
+            panic("No support for interrupt on mdic complete\n");
+        if (regs.mdic.phyadd() != 1)
+            panic("No support for reading anything but phy\n");
+        DPRINTF(Ethernet, "%s phy address %x\n", regs.mdic.op() == 1 ? "Writing"
+                : "Reading", regs.mdic.regadd());
+        switch (regs.mdic.regadd()) {
+            case PHY_PSTATUS:
+                regs.mdic.data(0x796D); // link up
+                break;
+            case PHY_PID:
+                regs.mdic.data(0x02A8);
+                break;
+            case PHY_EPID:
+                regs.mdic.data(0x0380);
+                break;
+            case PHY_GSTATUS:
+                regs.mdic.data(0x7C00);
+                break;
+            case PHY_EPSTATUS:
+                regs.mdic.data(0x3000);
+                break;
+            case PHY_AGC:
+                regs.mdic.data(0x180); // some random length
+                break;
+            default:
+                regs.mdic.data(0);
+                warn("Accessing unknown phy register %d\n", regs.mdic.regadd());
+        }
+        regs.mdic.r(1);
+        break;
+      case REG_ICR:
+        regs.icr = val;
+        // handle auto setting mask from IAM
+        break;
+      case REG_ITR:
+        regs.itr = val;
+        break;
+      case REG_ICS:
+        regs.icr = val | regs.icr();
+        // generate an interrupt if needed here
+        break;
+       case REG_IMS:
+        regs.imr |= val;
+        // handle interrupts if needed here
+        break;
+      case REG_IMC:
+        regs.imr |= ~val;
+        // handle interrupts if needed here
+        break;
+      case REG_IAM:
+        regs.iam = val;
+        break;
+      case REG_RCTL:
+        regs.rctl = val;
+        break;
+      case REG_FCTTV:
+        regs.fcttv = val;
+        break;
+      case REG_TCTL:
+        regs.tctl = val;
+        break;
+      case REG_PBA:
+        regs.pba.rxa(val);
+        regs.pba.txa(64 - regs.pba.rxa());
+        break;
+      case REG_WUC:
+      case REG_LEDCTL:
+      case REG_FCAL:
+      case REG_FCAH:
+      case REG_FCT:
+      case REG_VET:
+      case REG_AIFS:
+      case REG_TIPG:
+        ; // We don't care, so don't store anything
+        break;
+      case REG_FCRTL:
+        regs.fcrtl = val;
+        break;
+      case REG_FCRTH:
+        regs.fcrth = val;
+        break;
+      case REG_RDBAL:
+        regs.rdba.rdbal( val & ~mask(4));
+        break;
+      case REG_RDBAH:
+        regs.rdba.rdbah(val);
+        break;
+      case REG_RDLEN:
+        regs.rdlen = val & ~mask(7);
+        break;
+      case REG_RDH:
+        regs.rdh = val;
+        break;
+      case REG_RDT:
+        regs.rdt = val;
+        break;
+      case REG_RDTR:
+        regs.rdtr = val;
+        break;
+      case REG_RADV:
+        regs.radv = val;
+        break;
+      case REG_TDBAL:
+        regs.tdba.tdbal( val & ~mask(4));
+        break;
+      case REG_TDBAH:
+        regs.tdba.tdbah(val);
+        break;
+      case REG_TDLEN:
+        regs.tdlen = val & ~mask(7);
+        break;
+      case REG_TDH:
+        regs.tdh = val;
+        break;
+      case REG_TDT:
+        regs.tdt = val;
+        break;
+      case REG_TIDV:
+        regs.tidv = val;
+        break;
+      case REG_TXDCTL:
+        regs.txdctl = val;
+        break;
+      case REG_TADV:
+        regs.tadv = val;
+        break;
+      case REG_RXCSUM:
+        regs.rxcsum = val;
+        break;
+      case REG_MANC:
+        regs.manc = val;
+        break;
       default:
-       if (!(daddr >= VFTA && daddr < (VFTA + VLAN_FILTER_TABLE_SIZE)*4) &&
-           !(daddr >= RAL && daddr < (RAL + RCV_ADDRESS_TABLE_SIZE)*4) &&
-           !(daddr >= MTA && daddr < (MTA + MULTICAST_TABLE_SIZE)*4))
+       if (!(daddr >= REG_VFTA && daddr < (REG_VFTA + VLAN_FILTER_TABLE_SIZE*4)) &&
+           !(daddr >= REG_RAL && daddr < (REG_RAL + RCV_ADDRESS_TABLE_SIZE*8)) &&
+           !(daddr >= REG_MTA && daddr < (REG_MTA + MULTICAST_TABLE_SIZE*4)))
            panic("Write request to unknown register number: %#x\n", daddr);
     };
 
