@@ -59,6 +59,7 @@
 #define __ARCH_X86_PREDECODER_HH__
 
 #include "arch/x86/types.hh"
+#include "base/bitfield.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
@@ -85,6 +86,50 @@ namespace X86ISA
         //The extended machine instruction being generated
         ExtMachInst emi;
 
+        inline uint8_t getNextByte()
+        {
+            return (fetchChunk >> (offset * 8)) & 0xff;
+        }
+
+        void getImmediate(int &collected, uint64_t &current, int size)
+        {
+            //Figure out how many bytes we still need to get for the
+            //immediate.
+            int toGet = size - collected;
+            //Figure out how many bytes are left in our "buffer"
+            int remaining = sizeof(MachInst) - offset;
+            //Get as much as we need, up to the amount available.
+            toGet = toGet > remaining ? remaining : toGet;
+
+            //Shift the bytes we want to be all the way to the right
+            uint64_t partialDisp = fetchChunk >> (offset * 8);
+            //Mask off what we don't want
+            partialDisp &= mask(toGet * 8);
+            //Shift it over to overlay with our displacement.
+            partialDisp <<= (displacementCollected * 8);
+            //Put it into our displacement
+            current |= partialDisp;
+            //Update how many bytes we've collected.
+            collected += toGet;
+            consumeBytes(toGet);
+        }
+
+        inline void consumeByte()
+        {
+            offset++;
+            assert(offset <= sizeof(MachInst));
+            if(offset == sizeof(MachInst))
+                outOfBytes = true;
+        }
+
+        inline void consumeBytes(int numBytes)
+        {
+            offset += numBytes;
+            assert(offset <= sizeof(MachInst));
+            if(offset == sizeof(MachInst))
+                outOfBytes = true;
+        }
+
         //State machine state
       protected:
         //Whether or not we're out of bytes
@@ -98,22 +143,26 @@ namespace X86ISA
         int immediateSize;
         int immediateCollected;
 
-        //These are local to some of the states. I need to turn the states
-        //into inline functions to clean things up a bit.
-        int toGet;
-        int remaining;
-        MachInst partialDisp;
-
         enum State {
             Prefix,
             Opcode,
             ModRM,
             SIB,
             Displacement,
-            Immediate
+            Immediate,
+            //We should never get to this state. Getting here is an error.
+            ErrorState
         };
 
         State state;
+
+        //Functions to handle each of the states
+        State doPrefixState(uint8_t);
+        State doOpcodeState(uint8_t);
+        State doModRMState(uint8_t);
+        State doSIBState(uint8_t);
+        State doDisplacementState();
+        State doImmediateState();
 
       public:
         Predecoder(ThreadContext * _tc) :
