@@ -70,7 +70,7 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(Params *p)
-    : BaseCPU(p), thread(NULL)
+    : BaseCPU(p), thread(NULL), predecoder(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
@@ -370,11 +370,16 @@ BaseSimpleCPU::preExecute()
         StaticInstPtr instPtr = NULL;
 
         //Predecode, ie bundle up an ExtMachInst
-        unsigned int result =
-            predecode(extMachInst, thread->readPC(), inst, thread->getTC());
+        //This should go away once the constructor can be set up properly
+        predecoder.setTC(thread->getTC());
+        //If more fetch data is needed, pass it in.
+        if(predecoder.needMoreBytes())
+            predecoder.moreBytes(thread->readPC(), 0, inst);
+        else
+            predecoder.process();
         //If an instruction is ready, decode it
-        if (result & ExtMIReady)
-            instPtr = StaticInst::decode(extMachInst);
+        if (predecoder.extMachInstReady())
+            instPtr = StaticInst::decode(predecoder.getExtMachInst());
 
         //If we decoded an instruction and it's microcoded, start pulling
         //out micro ops
@@ -446,9 +451,9 @@ BaseSimpleCPU::advancePC(Fault fault)
         fault->invoke(tc);
         thread->setMicroPC(0);
         thread->setNextMicroPC(1);
-    } else {
+    } else if (predecoder.needMoreBytes()) {
         //If we're at the last micro op for this instruction
-        if (curStaticInst->isLastMicroOp()) {
+        if (curStaticInst && curStaticInst->isLastMicroOp()) {
             //We should be working with a macro op
             assert(curMacroStaticInst);
             //Close out this macro op, and clean up the
@@ -467,13 +472,9 @@ BaseSimpleCPU::advancePC(Fault fault)
         } else {
             // go to the next instruction
             thread->setPC(thread->readNextPC());
-#if ISA_HAS_DELAY_SLOT
             thread->setNextPC(thread->readNextNPC());
             thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
             assert(thread->readNextPC() != thread->readNextNPC());
-#else
-            thread->setNextPC(thread->readNextPC() + sizeof(MachInst));
-#endif
         }
     }
 

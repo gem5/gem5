@@ -48,21 +48,6 @@ namespace AlphaISA
         return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
     }
 
-    enum PredecodeResult {
-        MoreBytes = 1,
-        ExtMIReady = 2
-    };
-
-    static inline unsigned int
-    predecode(ExtMachInst & ext_inst, Addr pc, MachInst inst, ThreadContext *) {
-        ext_inst = inst;
-#if FULL_SYSTEM
-        if (pc && 0x1)
-            ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
-#endif
-        return MoreBytes | ExtMIReady;
-    }
-
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {
         panic("register classification not implemented");
         return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);

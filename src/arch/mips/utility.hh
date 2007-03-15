@@ -87,17 +87,6 @@ namespace MipsISA {
         panic("makeRegisterCopy not implemented");
         return 0;
     }
-
-    enum PredecodeResult {
-        MoreBytes = 1,
-        ExtMIReady = 2
-    };
-
-    static inline unsigned int
-    predecode(ExtMachInst &emi, Addr, MachInst inst, ThreadContext *) {
-        emi = inst;
-        return MoreBytes | ExtMIReady;
-    }
 };
 
 

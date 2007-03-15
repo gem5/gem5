@@ -33,6 +33,7 @@
 #ifndef __CPU_SIMPLE_BASE_HH__
 #define __CPU_SIMPLE_BASE_HH__
 
+#include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
@@ -63,6 +64,10 @@ class Process;
 class RemoteGDB;
 class GDBListener;
 
+namespace TheISA
+{
+    class Predecoder;
+}
 class ThreadContext;
 class Checkpoint;
 
@@ -123,8 +128,8 @@ class BaseSimpleCPU : public BaseCPU
     // current instruction
     TheISA::MachInst inst;
 
-    // current extended machine instruction
-    TheISA::ExtMachInst extMachInst;
+    // The predecoder
+    TheISA::Predecoder predecoder;
 
     // Static data storage
     TheISA::LargestRead dataReg;

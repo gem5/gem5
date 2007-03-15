@@ -33,6 +33,7 @@
 #define __CPU_O3_FETCH_HH__
 
 #include "arch/utility.hh"
+#include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/pc_event.hh"
@@ -337,6 +338,9 @@ class DefaultFetch
 
     /** BPredUnit. */
     BPredUnit branchPred;
+
+    /** Predecoder. */
+    TheISA::Predecoder predecoder;
 
     /** Per-thread fetch PC. */
     Addr PC[Impl::MaxThreads];

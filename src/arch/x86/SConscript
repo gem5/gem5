@@ -103,6 +103,7 @@ base_sources = Split('''
 	miscregfile.cc
 	regfile.cc
 	remote_gdb.cc
+	predecoder_tables.cc
 	''')
 
 # Full-system sources
