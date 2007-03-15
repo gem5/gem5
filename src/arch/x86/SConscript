@@ -88,6 +88,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('floatregfile.cc')
     Source('intregfile.cc')
     Source('miscregfile.cc')
+    Source('predecoder.cc')
     Source('predecoder_tables.cc')
     Source('regfile.cc')
     Source('remote_gdb.cc')
