@@ -40,7 +40,7 @@ output header {{
         {
           protected:
             // Constructor
-            Branch(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            Branch(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 SparcStaticInst(mnem, _machInst, __opClass)
             {
             }
@@ -56,7 +56,7 @@ output header {{
         {
           protected:
             // Constructor
-            BranchDisp(const char *mnem, MachInst _machInst,
+            BranchDisp(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass) :
                 Branch(mnem, _machInst, __opClass)
             {
@@ -76,7 +76,7 @@ output header {{
         {
           protected:
             // Constructor
-            BranchNBits(const char *mnem, MachInst _machInst,
+            BranchNBits(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass) :
                 BranchDisp(mnem, _machInst, __opClass)
             {
@@ -91,7 +91,7 @@ output header {{
         {
           protected:
             // Constructor
-            BranchSplit(const char *mnem, MachInst _machInst,
+            BranchSplit(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass) :
                 BranchDisp(mnem, _machInst, __opClass)
             {
@@ -107,7 +107,7 @@ output header {{
         {
           protected:
             // Constructor
-            BranchImm13(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            BranchImm13(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 Branch(mnem, _machInst, __opClass), imm(sext<13>(SIMM13))
             {
             }
