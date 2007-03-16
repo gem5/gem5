@@ -418,7 +418,8 @@ BaseSimpleCPU::postExecute()
     if (thread->profile) {
         bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : thread->readPC();
-        ProfileNode *node = thread->profile->consume(tc, inst);
+        StaticInstPtr si(inst);
+        ProfileNode *node = thread->profile->consume(tc, si);
         if (node)
             thread->profileNode = node;
     }
