@@ -121,17 +121,12 @@ findMsbSet(uint64_t val) {
     int msb = 0;
     if (!val)
         return 0;
-    if (bits(val, 63,32)) msb += 32;
-    val >>= 32;
-    if (bits(val, 31,16)) msb += 16;
-    val >>= 16;
-    if (bits(val, 15,8)) msb += 8;
-    val >>= 8;
-    if (bits(val, 7,4)) msb += 4;
-    val >>= 4;
-    if (bits(val, 3,2)) msb += 2;
-    val >>= 2;
-    if (bits(val, 1,1)) msb += 1;
+    if (bits(val, 63,32)) { msb += 32; val >>= 32; }
+    if (bits(val, 31,16)) { msb += 16; val >>= 16; }
+    if (bits(val, 15,8))  { msb += 8;  val >>= 8;  }
+    if (bits(val, 7,4))   { msb += 4;  val >>= 4;  }
+    if (bits(val, 3,2))   { msb += 2;  val >>= 2;  }
+    if (bits(val, 1,1))   { msb += 1; }
     return msb;
 }
 
