@@ -187,7 +187,7 @@ namespace BitfieldBackend
     class _BitfieldWO : public Base
     {
       public:
-        const Type operator = (const Type & _data)
+        const Type operator=(const Type & _data)
         {
             *((Base *)this) = _data;
             return _data;
@@ -206,7 +206,7 @@ namespace BitfieldBackend
         }
 
         const Data
-        operator = (const Data & _data)
+        operator=(const Data & _data)
         {
             this->setBits(first, last, _data);
             return _data;
@@ -229,19 +229,19 @@ namespace BitfieldBackend
         }
 
         const Type
-        operator = (const Type & _data)
+        operator=(const Type & _data)
         {
             Base::__data = _data;
         }
 
         bool
-        operator < (const Base & base)
+        operator<(const Base & base)
         {
             return Base::__data < base.__data;
         }
 
         bool
-        operator == (const Base & base)
+        operator==(const Base & base)
         {
             return Base::__data == base.__data;
         }
