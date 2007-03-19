@@ -171,10 +171,14 @@ namespace BitfieldBackend
 
     //A class which specializes a given base so that it can only be read
     //from. This is accomplished by only passing through the conversion
-    //operator.
+    //operator and explicitly making sure the assignment operator is blocked.
     template<class Type, class Base>
     class _BitfieldRO : public Base
     {
+      private:
+        const Type
+        operator=(const Type & _data);
+
       public:
         operator const Type ()
         {
@@ -186,6 +190,9 @@ namespace BitfieldBackend
     template<class Type, class Base>
     class _BitfieldWO : public Base
     {
+      private:
+        operator const Type ();
+
       public:
         const Type operator=(const Type & _data)
         {
