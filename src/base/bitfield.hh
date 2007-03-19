@@ -33,7 +33,6 @@
 #define __BASE_BITFIELD_HH__
 
 #include <inttypes.h>
-//#include "base/misc.hh"
 
 /**
  * Generate a 64-bit mask of 'nbits' 1s, right justified.
@@ -131,149 +130,100 @@ findMsbSet(uint64_t val) {
     return msb;
 }
 
-template<class Data, int first, int last=first>
-class BitfieldBase
+namespace BitfieldBackend
 {
-  protected:
-    uint8_t __data[sizeof(Data)];
-
-    //These are defined here so it can be specialized for Data, but can be
-    //hidden by RO and WO variants.
-    inline uint64_t getBits(int _first, int _last)
+    template<class Data>
+    class BitfieldBase
     {
-        //build up the right bits from the byte array "data"
-        //panic("Not yet implemented.\n");
-        return 0;
-    }
+      protected:
+        Data __data;
 
-    inline void setBits(int _first, int _last, uint64_t val)
+        inline uint64_t
+        getBits(int first, int last)
+        {
+            return bits(__data, first, last);
+        }
+
+        inline void
+        setBits(int first, int last, uint64_t val)
+        {
+            replaceBits(__data, first, last, val);
+        }
+    };
+
+    template<class Type, class Base>
+    class _BitfieldRO : public Base
     {
-        //Set the right bits from the byte array "data"
-        //panic("Not yet implemented.\n");
-    }
-};
+      public:
+        operator const Type ()
+        {
+            return *((Base *)this);
+        }
+    };
 
-template<class Data, int first, int last=first>
-class BitfieldNativeBase
-{
-  protected:
-    Data __data;
-
-    inline uint64_t getBits(int _first, int _last)
+    template<class Type, class Base>
+    class _BitfieldWO : public Base
     {
-        return bits(__data, first, last);
-    }
+      public:
+        const Type operator = (const Type & _data)
+        {
+            *((Base *)this) = _data;
+            return _data;
+        }
+    };
 
-    inline void setBits(int _first, int _last, uint64_t val)
+    template<class Data, int first, int last=first>
+    class _Bitfield : public BitfieldBase<Data>
     {
-        replaceBits(__data, first, last, val);
-    }
-};
+      public:
+        operator const Data ()
+        {
+            return this->getBits(first, last);
+        }
 
-template <int first>
-class BitfieldBase<uint64_t, first, first> :
-        public BitfieldNativeBase<uint64_t, first, first>
-{};
+        const Data
+        operator = (const Data & _data)
+        {
+            this->setBits(first, last, _data);
+            return _data;
+        }
+    };
 
-template <int first, int last>
-class BitfieldBase<uint64_t, first, last> :
-        public BitfieldNativeBase<uint64_t, first, last>
-{};
-
-template <int first>
-class BitfieldBase<uint32_t, first, first> :
-        public BitfieldNativeBase<uint32_t, first, first>
-{};
-
-template <int first, int last>
-class BitfieldBase<uint32_t, first, last> :
-        public BitfieldNativeBase<uint32_t, first, last>
-{};
-
-template <int first>
-class BitfieldBase<uint16_t, first, first> :
-        public BitfieldNativeBase<uint16_t, first, first>
-{};
-
-template <int first, int last>
-class BitfieldBase<uint16_t, first, last> :
-        public BitfieldNativeBase<uint16_t, first, last>
-{};
-
-template <int first>
-class BitfieldBase<uint8_t, first, first> :
-        public BitfieldNativeBase<uint8_t, first, first>
-{};
-
-template <int first, int last>
-class BitfieldBase<uint8_t, first, last> :
-        public BitfieldNativeBase<uint8_t, first, last>
-{};
-
-template<class Data, int first, int last=first>
-class _BitfieldRO : public BitfieldBase<Data, first, last>
-{
-  public:
-    operator const Data & ()
+    template <class Type, class Base>
+    class BitUnionOperators : public Base
     {
-        return this->getBits(first, last);
-    }
-};
+      public:
+        operator const Type ()
+        {
+            return Base::__data;
+        }
 
-template<class Data, int first, int last=first>
-class _BitfieldWO : public BitfieldBase<Data, first, last>
-{
-  public:
-    const Data & operator = (const Data & _data)
-    {
-        this->setBits(first, last, _data);
-        return *this;
-    }
-};
+        const Type
+        operator = (const Type & _data)
+        {
+            Base::__data = _data;
+        }
 
-template<class Data, int first, int last=first>
-class _BitfieldRW : public BitfieldBase<Data, first, last>
-{
-  public:
-    operator const Data ()
-    {
-        return this->getBits(first, last);
-    }
+        bool
+        operator < (const Base & base)
+        {
+            return Base::__data < base.__data;
+        }
 
-    const Data operator = (const Data & _data)
-    {
-        this->setBits(first, last, _data);
-        return *this;
-    }
-};
-
-template <class Type, class Base>
-class BitUnionOperators : public Base
-{
-  public:
-    operator const Type ()
-    {
-        return Base::__data;
-    }
-
-    const Type operator = (const Type & _data)
-    {
-        Base::__data = _data;
-    }
-
-    bool operator < (const Base & base)
-    {
-        return Base::__data < base.__data;
-    }
-
-    bool operator == (const Base & base)
-    {
-        return Base::__data == base.__data;
-    }
-};
+        bool
+        operator == (const Base & base)
+        {
+            return Base::__data == base.__data;
+        }
+    };
+}
 
 #define __BitUnion(type, name) \
-    class __##name { \
+    namespace BitfieldUnderlyingClasses \
+    { \
+        class name; \
+    } \
+    class BitfieldUnderlyingClasses::name { \
       public: \
         typedef type __DataType; \
         union { \
@@ -282,7 +232,9 @@ class BitUnionOperators : public Base
 #define EndBitUnion(name) \
         }; \
     }; \
-    typedef BitUnionOperators<__##name::__DataType, __##name> name;
+    typedef BitfieldBackend::BitUnionOperators< \
+        BitfieldUnderlyingClasses::name::__DataType, \
+        BitfieldUnderlyingClasses::name> name;
 
 #define __SubBitUnion(type, name) \
         union { \
@@ -295,22 +247,32 @@ class BitUnionOperators : public Base
 
 #define EndSubBitUnion(name) } name;
 
-//Regular read/write bitfields
-#define BitfieldRW(first, last) _BitfieldRW<__DataType, first, last>
-#define SubBitUnionRW(name, first, last) \
-        __SubBitUnion(BitfieldRW(first, last), name)
-#define Bitfield(first, last) BitfieldRW(first, last)
-#define SubBitUnion(name, first, last) SubBitUnionRW(name, first, last)
+//This is so we can send in parameters with commas
+#define wrap(guts) guts
 
 //Read only bitfields
-#define BitfieldRO(first, last) _BitfieldRO<__DataType, first, last>
-#define SubBitUnionRO(name, first, last) \
-        __SubBitUnion(BitfieldRO(first, last), name)
+#define __BitfieldRO(base) \
+    BitfieldBackend::_BitfieldRO<__DataType, base>
+#define __SubBitUnionRO(name, base) \
+    __SubBitUnion(wrap(_BitfieldRO<__DataType, base>), name)
 
 //Write only bitfields
-#define BitfieldWO(first, last) _BitfieldWO<__DataType, first, last>
+#define __BitfieldWO(base) \
+    BitfieldBackend::_BitfieldWO<__DataType, base>
+#define __SubBitUnionWO(name, base) \
+    __SubBitUnion(wrap(_BitfieldWO<__DataType, base>), name)
+
+//Regular bitfields
+#define Bitfield(first, last) \
+    BitfieldBackend::_Bitfield<__DataType, first, last>
+#define SubBitUnion(name, first, last) \
+    __SubBitUnion(Bitfield(first, last), name)
+#define BitfieldRO(first, last) __BitfieldRO(Bitfield(first, last))
+#define SubBitUnionRO(name, first, last) \
+    __SubBitUnionRO(Bitfield(first, last), name)
+#define BitfieldWO(first, last) __BitfieldWO(Bitfield(first, last))
 #define SubBitUnionWO(name, first, last) \
-        __SubBitUnion(BitfieldWO(first, last), name)
+    __SubBitUnionWO(Bitfield(first, last), name)
 
 #define BitUnion(type, name) __BitUnion(type, name)
 
