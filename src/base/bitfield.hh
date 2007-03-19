@@ -130,20 +130,38 @@ findMsbSet(uint64_t val) {
     return msb;
 }
 
+//	The following implements the BitUnion system of defining bitfields
+//on top of an underlying class. This is done through the extensive use of
+//both named and unnamed unions which all contain the same actual storage.
+//Since they're unioned with each other, all of these storage locations
+//overlap. This allows all of the bitfields to manipulate the same data
+//without having to know about each other. More details are provided with the
+//individual components.
+
+//This namespace is for classes which implement the backend of the BitUnion
+//stuff. Don't use any of this directly! Use the macros at the end instead.
 namespace BitfieldBackend
 {
+    //A base class for all bitfields. It instantiates the actual storage,
+    //and provides getBits and setBits functions for manipulating it. The
+    //Data template parameter is type of the underlying storage.
     template<class Data>
     class BitfieldBase
     {
       protected:
         Data __data;
 
+        //This function returns a range of bits from the underlying storage.
+        //It relies on the "bits" function above. It's the user's
+        //responsibility to make sure that there is a properly overloaded
+        //version of this function for whatever type they want to overlay.
         inline uint64_t
         getBits(int first, int last)
         {
             return bits(__data, first, last);
         }
 
+        //Similar to the above, but for settings bits with replaceBits.
         inline void
         setBits(int first, int last, uint64_t val)
         {
@@ -151,6 +169,9 @@ namespace BitfieldBackend
         }
     };
 
+    //A class which specializes a given base so that it can only be read
+    //from. This is accomplished by only passing through the conversion
+    //operator.
     template<class Type, class Base>
     class _BitfieldRO : public Base
     {
@@ -161,6 +182,7 @@ namespace BitfieldBackend
         }
     };
 
+    //Similar to the above, but only allows writing.
     template<class Type, class Base>
     class _BitfieldWO : public Base
     {
@@ -172,6 +194,8 @@ namespace BitfieldBackend
         }
     };
 
+    //This class implements ordinary bitfields, that is a span of bits
+    //who's msb is "first", and who's lsb is "last".
     template<class Data, int first, int last=first>
     class _Bitfield : public BitfieldBase<Data>
     {
@@ -189,6 +213,12 @@ namespace BitfieldBackend
         }
     };
 
+    //When a BitUnion is set up, an underlying class is created which holds
+    //the actual union. This class then inherits from it, and provids the
+    //implementations for various operators. Setting things up this way
+    //prevents having to redefine these functions in every different BitUnion
+    //type. More operators could be implemented in the future, as the need
+    //arises.
     template <class Type, class Base>
     class BitUnionOperators : public Base
     {
@@ -218,6 +248,21 @@ namespace BitfieldBackend
     };
 }
 
+//This macro is a backend for other macros that specialize it slightly.
+//First, it creates/extends a namespace "BitfieldUnderlyingClasses" and
+//sticks the class which has the actual union in it, which
+//BitfieldOperators above inherits from. Putting these classes in a special
+//namespace ensures that there will be no collisions with other names as long
+//as the BitUnion names themselves are all distinct and nothing else uses
+//the BitfieldUnderlyingClasses namespace, which is unlikely. The class itself
+//creates a typedef of the "type" parameter called __DataType. This allows
+//the type to propagate outside of the macro itself in a controlled way.
+//Finally, the base storage is defined which BitfieldOperators will refer to
+//in the operators it defines. This macro is intended to be followed by
+//bitfield definitions which will end up inside it's union. As explained
+//above, these is overlayed the __data member in its entirety by each of the
+//bitfields which are defined in the union, creating shared storage with no
+//overhead.
 #define __BitUnion(type, name) \
     namespace BitfieldUnderlyingClasses \
     { \
@@ -229,6 +274,10 @@ namespace BitfieldBackend
         union { \
             type __data;\
 
+//This closes off the class and union started by the above macro. It is
+//followed by a typedef which makes "name" refer to a BitfieldOperator
+//class inheriting from the class and union just defined, which completes
+//building up the type for the user.
 #define EndBitUnion(name) \
         }; \
     }; \
@@ -236,6 +285,13 @@ namespace BitfieldBackend
         BitfieldUnderlyingClasses::name::__DataType, \
         BitfieldUnderlyingClasses::name> name;
 
+//This sets up a bitfield which has other bitfields nested inside of it. The
+//__data member functions like the "underlying storage" of the top level
+//BitUnion. Like everything else, it overlays with the top level storage, so
+//making it a regular bitfield type makes the entire thing function as a
+//regular bitfield when referred to by itself. The operators are defined in
+//the macro itself instead of a class for technical reasons. If someone
+//determines a way to move them to one, please do so.
 #define __SubBitUnion(type, name) \
         union { \
             type __data; \
@@ -245,24 +301,36 @@ namespace BitfieldBackend
             inline const __DataType operator = (const __DataType & _data) \
             { __data = _data; }
 
+//This closes off the union created above and gives it a name. Unlike the top
+//level BitUnion, we're interested in creating an object instead of a type.
 #define EndSubBitUnion(name) } name;
 
-//This is so we can send in parameters with commas
+//The preprocessor will treat everything inside of parenthesis as a single
+//argument even if it has commas in it. This is used to pass in templated
+//classes which typically have commas to seperate their parameters.
 #define wrap(guts) guts
 
 //Read only bitfields
+//This wraps another bitfield class inside a _BitfieldRO class using
+//inheritance. As explained above, the _BitfieldRO class only passes through
+//the conversion operator, so the underlying bitfield can then only be read
+//from.
 #define __BitfieldRO(base) \
     BitfieldBackend::_BitfieldRO<__DataType, base>
 #define __SubBitUnionRO(name, base) \
     __SubBitUnion(wrap(_BitfieldRO<__DataType, base>), name)
 
 //Write only bitfields
+//Similar to above, but for making write only versions of bitfields with
+//_BitfieldWO.
 #define __BitfieldWO(base) \
     BitfieldBackend::_BitfieldWO<__DataType, base>
 #define __SubBitUnionWO(name, base) \
     __SubBitUnion(wrap(_BitfieldWO<__DataType, base>), name)
 
 //Regular bitfields
+//This uses all of the above to define macros for read/write, read only, and
+//write only versions of regular bitfields.
 #define Bitfield(first, last) \
     BitfieldBackend::_Bitfield<__DataType, first, last>
 #define SubBitUnion(name, first, last) \
@@ -274,8 +342,10 @@ namespace BitfieldBackend
 #define SubBitUnionWO(name, first, last) \
     __SubBitUnionWO(Bitfield(first, last), name)
 
+//Use this to define an arbitrary type overlayed with bitfields.
 #define BitUnion(type, name) __BitUnion(type, name)
 
+//Use this to define conveniently sized values overlayed with bitfields.
 #define BitUnion64(name) __BitUnion(uint64_t, name)
 #define BitUnion32(name) __BitUnion(uint32_t, name)
 #define BitUnion16(name) __BitUnion(uint16_t, name)
