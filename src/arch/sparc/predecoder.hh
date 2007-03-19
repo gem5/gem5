@@ -33,6 +33,7 @@
 
 #include "arch/sparc/types.hh"
 #include "base/misc.hh"
+#include "cpu/thread_context.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
