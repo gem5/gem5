@@ -33,6 +33,7 @@
 
 #include "arch/alpha/types.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 #include "sim/host.hh"
 
 class ThreadContext;

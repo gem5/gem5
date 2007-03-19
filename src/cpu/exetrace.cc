@@ -36,6 +36,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+#include "arch/predecoder.hh"
 #include "arch/regfile.hh"
 #include "arch/utility.hh"
 #include "base/loader/symtab.hh"
@@ -302,6 +303,7 @@ Trace::InstRecord::dump()
         outs << endl;
     }
 #if THE_ISA == SPARC_ISA && FULL_SYSTEM
+    static TheISA::Predecoder predecoder(NULL);
     // Compare
     if (IsOn(ExecLegion))
     {
@@ -556,9 +558,13 @@ Trace::InstRecord::dump()
                              << staticInst->disassemble(m5Pc, debugSymbolTable)
                              << endl;
 
+                        predecoder.setTC(thread);
+                        predecoder.moreBytes(m5Pc, 0, shared_data->instruction);
+
+                        assert(predecoder.extMachInstRead());
+
                         StaticInstPtr legionInst =
-                            StaticInst::decode(makeExtMI(shared_data->instruction,
-                                        thread));
+                            StaticInst::decode(predecoder.getExtMachInst());
                         outs << setfill(' ') << setw(15)
                              << " Legion Inst: "
                              << "0x" << setw(8) << setfill('0') << hex
