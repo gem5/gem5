@@ -363,6 +363,17 @@ def p_def_bitfield_1(t):
     hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
     t[0] = GenCode(header_output = hash_define)
 
+# alternate form for structure member: 'def bitfield <ID> <ID>'
+def p_def_bitfield_2(t):
+    'def_bitfield : DEF nothing BITFIELD ID ID SEMI'
+    expr = 'machInst.%s' % t[5]
+    hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
+    t[0] = GenCode(header_output = hash_define)
+
+def p_nothing(t):
+    'nothing : empty'
+    t[0] = ''
+
 def p_opt_signed_0(t):
     'opt_signed : SIGNED'
     t[0] = t[1]
