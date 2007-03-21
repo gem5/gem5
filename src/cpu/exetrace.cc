@@ -31,6 +31,7 @@
  *          Steve Raasch
  */
 
+#include <errno.h>
 #include <fstream>
 #include <iomanip>
 #include <sys/ipc.h>
@@ -39,6 +40,7 @@
 #include "arch/regfile.hh"
 #include "arch/utility.hh"
 #include "base/loader/symtab.hh"
+#include "base/socket.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -64,6 +66,7 @@ static bool wasMicro = false;
 
 namespace Trace {
 SharedData *shared_data = NULL;
+ListenSocket *cosim_listener = NULL;
 
 void
 setupSharedData()
@@ -149,9 +152,96 @@ Trace::InstRecord::dump()
     ostream &outs = Trace::output();
 
     DPRINTF(Sparc, "Instruction: %#X\n", staticInst->machInst);
+    bool diff = true;
     if (IsOn(ExecRegDelta))
     {
+        diff = false;
+#ifndef NDEBUG
 #if THE_ISA == SPARC_ISA
+        static int fd = 0;
+        //Don't print what happens for each micro-op, just print out
+        //once at the last op, and for regular instructions.
+        if(!staticInst->isMicroOp() || staticInst->isLastMicroOp())
+        {
+            if(!cosim_listener)
+            {
+                int port = 8000;
+                cosim_listener = new ListenSocket();
+                while(!cosim_listener->listen(port, true))
+                {
+                    DPRINTF(GDBMisc, "Can't bind port %d\n", port);
+                    port++;
+                }
+                ccprintf(cerr, "Listening for cosimulator on port %d\n", port);
+                fd = cosim_listener->accept();
+            }
+            char prefix[] = "goli";
+            for(int p = 0; p < 4; p++)
+            {
+                for(int i = 0; i < 8; i++)
+                {
+                    uint64_t regVal;
+                    int res = read(fd, &regVal, sizeof(regVal));
+                    if(res < 0)
+                        panic("First read call failed! %s\n", strerror(errno));
+                    regVal = TheISA::gtoh(regVal);
+                    uint64_t realRegVal = thread->readIntReg(p * 8 + i);
+                    if((regVal & 0xffffffffULL) != (realRegVal & 0xffffffffULL))
+                    {
+                        DPRINTF(ExecRegDelta, "Register %s%d should be %#x but is %#x.\n", prefix[p], i, regVal, realRegVal);
+                        diff = true;
+                    }
+                    //ccprintf(outs, "%s%d m5 = %#x statetrace = %#x\n", prefix[p], i, realRegVal, regVal);
+                }
+            }
+            /*for(int f = 0; f <= 62; f+=2)
+            {
+                uint64_t regVal;
+                int res = read(fd, &regVal, sizeof(regVal));
+                if(res < 0)
+                    panic("First read call failed! %s\n", strerror(errno));
+                regVal = TheISA::gtoh(regVal);
+                uint64_t realRegVal = thread->readFloatRegBits(f, 64);
+                if(regVal != realRegVal)
+                {
+                    DPRINTF(ExecRegDelta, "Register f%d should be %#x but is %#x.\n", f, regVal, realRegVal);
+                }
+            }*/
+            uint64_t regVal;
+            int res = read(fd, &regVal, sizeof(regVal));
+            if(res < 0)
+                panic("First read call failed! %s\n", strerror(errno));
+            regVal = TheISA::gtoh(regVal);
+            uint64_t realRegVal = thread->readNextPC();
+            if(regVal != realRegVal)
+            {
+                DPRINTF(ExecRegDelta, "Register pc should be %#x but is %#x.\n", regVal, realRegVal);
+                diff = true;
+            }
+            res = read(fd, &regVal, sizeof(regVal));
+            if(res < 0)
+                panic("First read call failed! %s\n", strerror(errno));
+            regVal = TheISA::gtoh(regVal);
+            realRegVal = thread->readNextNPC();
+            if(regVal != realRegVal)
+            {
+                DPRINTF(ExecRegDelta, "Register npc should be %#x but is %#x.\n", regVal, realRegVal);
+                diff = true;
+            }
+            res = read(fd, &regVal, sizeof(regVal));
+            if(res < 0)
+                panic("First read call failed! %s\n", strerror(errno));
+            regVal = TheISA::gtoh(regVal);
+            realRegVal = thread->readIntReg(SparcISA::NumIntArchRegs + 2);
+            if((regVal & 0xF) != (realRegVal & 0xF))
+            {
+                DPRINTF(ExecRegDelta, "Register ccr should be %#x but is %#x.\n", regVal, realRegVal);
+                diff = true;
+            }
+        }
+#endif
+#endif
+#if 0 //THE_ISA == SPARC_ISA
         //Don't print what happens for each micro-op, just print out
         //once at the last op, and for regular instructions.
         if(!staticInst->isMicroOp() || staticInst->isLastMicroOp())
@@ -210,7 +300,8 @@ Trace::InstRecord::dump()
         }
 #endif
     }
-    else if (IsOn(ExecIntel)) {
+    if(!diff) {
+    } else if (IsOn(ExecIntel)) {
         ccprintf(outs, "%7d ) ", when);
         outs << "0x" << hex << PC << ":\t";
         if (staticInst->isLoad()) {
