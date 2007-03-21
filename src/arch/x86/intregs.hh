@@ -77,7 +77,8 @@ namespace X86ISA
         INTREG_R12W,
         INTREG_R13W,
         INTREG_R14W,
-        INTREG_R15W
+        INTREG_R15W,
+        NUM_INTREGS
     };
 };
 

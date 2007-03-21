@@ -88,8 +88,9 @@
 #ifndef __ARCH_X86_INTREGFILE_HH__
 #define __ARCH_X86_INTREGFILE_HH__
 
-#include "arch/x86/x86_traits.hh"
+#include "arch/x86/intregs.hh"
 #include "arch/x86/types.hh"
+#include "arch/x86/x86_traits.hh"
 
 #include <string>
 
@@ -102,7 +103,7 @@ namespace X86ISA
     //This function translates integer register file indices into names
     std::string getIntRegName(RegIndex);
 
-    const int NumIntArchRegs = 16;
+    const int NumIntArchRegs = NUM_INTREGS;
     const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 
     class IntRegFile
