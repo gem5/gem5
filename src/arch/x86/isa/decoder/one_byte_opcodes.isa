@@ -61,14 +61,14 @@
 0x1: decode OPCODE_OP_TOP5 {
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
-            0x0: add_Eb_Gb();
-            0x1: add_Ev_Gv();
-            0x2: add_Gb_Eb();
-            0x3: add_Gv_Ev();
-            0x4: add_Al_Ib();
-            0x5: add_rAX_Iz();
             0x6: push_ES();
             0x7: pop_ES();
+            default: MultiOp::add(
+                {{out1 = in1 + in2}},
+                OPCODE_OP_BOTTOM3,
+                [[Eb,Gb],[Ev,Gv],
+                 [Gb,Eb],[Gv,Ev],
+                 [Al,Ib],[rAx,Iz]]);
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x0: or_Eb_Gb();
