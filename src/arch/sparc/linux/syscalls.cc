@@ -132,7 +132,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  40 */ SyscallDesc("lstat", unimplementedFunc),
     /*  41 */ SyscallDesc("dup", unimplementedFunc),
     /*  42 */ SyscallDesc("pipe", pipePseudoFunc),
-    /*  43 */ SyscallDesc("times", unimplementedFunc),
+    /*  43 */ SyscallDesc("times", ignoreFunc),
     /*  44 */ SyscallDesc("getuid32", unimplementedFunc),
     /*  45 */ SyscallDesc("umount2", unimplementedFunc), //32 bit
     /*  46 */ SyscallDesc("setgid", unimplementedFunc), //32 bit
@@ -320,7 +320,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 228 */ SyscallDesc("setfsuid", unimplementedFunc), //32 bit
     /* 229 */ SyscallDesc("setfsgid", unimplementedFunc), //32 bit
     /* 230 */ SyscallDesc("_newselect", unimplementedFunc), //32 bit
-    /* 231 */ SyscallDesc("time", unimplementedFunc),
+    /* 231 */ SyscallDesc("time", ignoreFunc),
     /* 232 */ SyscallDesc("oldstat", unimplementedFunc),
     /* 233 */ SyscallDesc("stime", unimplementedFunc),
     /* 234 */ SyscallDesc("statfs64", unimplementedFunc),
@@ -435,7 +435,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 40 */ SyscallDesc("lstat", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
     /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
-    /* 43 */ SyscallDesc("times", unimplementedFunc),
+    /* 43 */ SyscallDesc("times", ignoreFunc),
     /* 44 */ SyscallDesc("getuid32", unimplementedFunc),
     /* 45 */ SyscallDesc("umount2", unimplementedFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
@@ -623,7 +623,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 228 */ SyscallDesc("setfsuid", unimplementedFunc),
     /* 229 */ SyscallDesc("setfsgid", unimplementedFunc),
     /* 230 */ SyscallDesc("_newselect", unimplementedFunc),
-    /* 231 */ SyscallDesc("time", unimplementedFunc),
+    /* 231 */ SyscallDesc("time", ignoreFunc),
     /* 232 */ SyscallDesc("oldstat", unimplementedFunc),
     /* 233 */ SyscallDesc("stime", unimplementedFunc),
     /* 234 */ SyscallDesc("statfs64", unimplementedFunc),
