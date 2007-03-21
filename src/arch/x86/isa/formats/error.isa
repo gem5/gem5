@@ -57,32 +57,21 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-// X86 ISA description file.
-//
-////////////////////////////////////////////////////////////////////
-
-//Include the C++ include directives
-##include "includes.isa"
-
-////////////////////////////////////////////////////////////////////
-//
-// Namespace statement.  Everything below this line will be in the
-// SparcISAInst namespace.
+// "Format" which really indicates an internal error. This is a more
+// significant problem for x86 than for other ISAs because of it's complex
+// ExtMachInst type.
 //
 
-namespace X86ISA;
+def template ErrorDecode {{
+    {
+        panic("X86 decoder internal error: '%%s' %%s",
+                %(message)s, machInst);
+    }
+}};
 
-//Include the bitfield definitions
-##include "bitfields.isa"
+def format M5InternalError(error_message) {{
+    iop = InstObjParams(name, 'M5InternalError')
+    iop.message = error_message
+    decode_block = ErrorDecode.subst(iop)
+}};
 
-//Include the operand_types and operand definitions
-##include "operands.isa"
-
-//Include the base class for x86 instructions, and some support code
-##include "base.isa"
-
-//Include the definitions for the instruction formats
-##include "formats/formats.isa"
-
-//Include the decoder definition
-##include "decoder/decoder.isa"

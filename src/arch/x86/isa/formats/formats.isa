@@ -87,3 +87,10 @@
 
 //Include the "unknown" format
 ##include "unknown.isa"
+
+//Include the "unimp" format
+##include "unimp.isa"
+
+//Include a format to signal m5 internal errors. This is used to indicate a
+//malfunction of the decode mechanism.
+##include "error.isa"

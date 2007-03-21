@@ -1,0 +1,398 @@
+// Copyright (c) 2007 The Hewlett-Packard Development Company
+// All rights reserved.
+//
+// Redistribution and use of this software in source and binary forms,
+// with or without modification, are permitted provided that the
+// following conditions are met:
+//
+// The software must be used only for Non-Commercial Use which means any
+// use which is NOT directed to receiving any direct monetary
+// compensation for, or commercial advantage from such use.  Illustrative
+// examples of non-commercial use are academic research, personal study,
+// teaching, education and corporate research & development.
+// Illustrative examples of commercial use are distributing products for
+// commercial advantage and providing services using the software for
+// commercial advantage.
+//
+// If you wish to use this software or functionality therein that may be
+// covered by patents for commercial use, please contact:
+//     Director of Intellectual Property Licensing
+//     Office of Strategy and Technology
+//     Hewlett-Packard Company
+//     1501 Page Mill Road
+//     Palo Alto, California  94304
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.  Redistributions
+// in binary form must reproduce the above copyright notice, this list of
+// conditions and the following disclaimer in the documentation and/or
+// other materials provided with the distribution.  Neither the name of
+// the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.  No right of
+// sublicense is granted herewith.  Derivatives of the software and
+// output created using the software may be prepared, but only for
+// Non-Commercial Uses.  Derivatives of the software may be shared with
+// others provided: (i) the others agree to abide by the list of
+// conditions herein which includes the Non-Commercial Use restrictions;
+// and (ii) such Derivatives of the software include the above copyright
+// notice to acknowledge the contribution from this software where
+// applicable, this list of conditions and the disclaimer below.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+////////////////////////////////////////////////////////////////////
+//
+// Decode the one byte opcodes
+//
+
+0x1: decode OPCODE_OP_TOP5 {
+    format WarnUnimpl {
+        0x00: decode OPCODE_OP_BOTTOM3 {
+            0x0: add_Eb_Gb();
+            0x1: add_Ev_Gv();
+            0x2: add_Gb_Eb();
+            0x3: add_Gv_Ev();
+            0x4: add_Al_Ib();
+            0x5: add_rAX_Iz();
+            0x6: push_ES();
+            0x7: pop_ES();
+        }
+        0x01: decode OPCODE_OP_BOTTOM3 {
+            0x0: or_Eb_Gb();
+            0x1: or_Ev_Gv();
+            0x2: or_Gb_Eb();
+            0x3: or_Gv_Ev();
+            0x4: or_Al_Ib();
+            0x5: or_rAX_Iz();
+            0x6: push_CS();
+            //Any time this is seen, it should generate a two byte opcode
+            0x7: M5InternalError::error(
+                {{"Saw a one byte opcode whose value was 0x0F!"}});
+        }
+        0x02: decode OPCODE_OP_BOTTOM3 {
+            0x0: adc_Eb_Gb();
+            0x1: adc_Ev_Gv();
+            0x2: adc_Gb_Eb();
+            0x3: adc_Gv_Ev();
+            0x4: adc_Al_Ib();
+            0x5: adc_rAX_Iz();
+            0x6: push_SS();
+            0x7: pop_SS();
+        }
+        0x03: decode OPCODE_OP_BOTTOM3 {
+            0x0: sbb_Eb_Gb();
+            0x1: sbb_Ev_Gv();
+            0x2: sbb_Gb_Eb();
+            0x3: sbb_Gv_Ev();
+            0x4: sbb_Al_Ib();
+            0x5: sbb_rAX_Iz();
+            0x6: push_DS();
+            0x7: pop_DS();
+        }
+        0x04: decode OPCODE_OP_BOTTOM3 {
+            0x0: and_Eb_Gb();
+            0x1: and_Ev_Gv();
+            0x2: and_Gb_Eb();
+            0x3: and_Gv_Ev();
+            0x4: and_Al_Ib();
+            0x5: and_rAX_Iz();
+            0x6: M5InternalError::error(
+                {{"Tried to execute the ES segment override prefix!"}});
+            0x7: daa();
+        }
+        0x05: decode OPCODE_OP_BOTTOM3 {
+            0x0: sub_Eb_Gb();
+            0x1: sub_Ev_Gv();
+            0x2: sub_Gb_Eb();
+            0x3: sub_Gv_Ev();
+            0x4: sub_Al_Ib();
+            0x5: sub_rAX_Iz();
+            0x6: M5InternalError::error(
+                {{"Tried to execute the CS segment override prefix!"}});
+            0x7: das();
+        }
+        0x06: decode OPCODE_OP_BOTTOM3 {
+            0x0: xor_Eb_Gb();
+            0x1: xor_Ev_Gv();
+            0x2: xor_Gb_Eb();
+            0x3: xor_Gv_Ev();
+            0x4: xor_Al_Ib();
+            0x5: xor_rAX_Iz();
+            0x6: M5InternalError::error(
+                {{"Tried to execute the SS segment override prefix!"}});
+            0x7: aaa();
+        }
+        0x07: decode OPCODE_OP_BOTTOM3 {
+            0x0: cmp_Eb_Gb();
+            0x1: cmp_Ev_Gv();
+            0x2: cmp_Gb_Eb();
+            0x3: cmp_Gv_Ev();
+            0x4: cmp_Al_Ib();
+            0x5: cmp_rAX_Iz();
+            0x6: M5InternalError::error(
+                {{"Tried to execute the DS segment override prefix!"}});
+            0x7: aas();
+        }
+        0x08: decode OPCODE_OP_BOTTOM3 {
+            0x0: inc_eAX();
+            0x1: inc_eCX();
+            0x2: inc_eDX();
+            0x3: inc_eBX();
+            0x4: inc_eSP();
+            0x5: inc_eBP();
+            0x6: inc_eSI();
+            0x7: inc_eDI();
+        }
+        0x09: decode OPCODE_OP_BOTTOM3 {
+            0x0: dec_eAX();
+            0x1: dec_eCX();
+            0x2: dec_eDX();
+            0x3: dec_eBX();
+            0x4: dec_eSP();
+            0x5: dec_eBP();
+            0x6: dec_eSI();
+            0x7: dec_eDI();
+        }
+        0x0A: decode OPCODE_OP_BOTTOM3 {
+            0x0: push_rAX();
+            0x1: push_rCX();
+            0x2: push_rDX();
+            0x3: push_rBX();
+            0x4: push_rSP();
+            0x5: push_rBP();
+            0x6: push_rSI();
+            0x7: push_rDI();
+        }
+        0x0B: decode OPCODE_OP_BOTTOM3 {
+            0x0: pop_rAX();
+            0x1: pop_rCX();
+            0x2: pop_rDX();
+            0x3: pop_rBX();
+            0x4: pop_rSP();
+            0x5: pop_rBP();
+            0x6: pop_rSI();
+            0x7: pop_rDI();
+        }
+        0x0C: decode OPCODE_OP_BOTTOM3 {
+            0x0: pusha();
+            0x1: popa();
+            0x2: bound_Gv_Ma();
+            0x3: arpl_Ew_Gw();
+            0x4: M5InternalError::error(
+                {{"Tried to execute the FS segment override prefix!"}});
+            0x5: M5InternalError::error(
+                {{"Tried to execute the GS segment override prefix!"}});
+            0x6: M5InternalError::error(
+                {{"Tried to execute the operand size override prefix!"}});
+            0x7: M5InternalError::error(
+                {{"Tried to execute the DS address size override prefix!"}});
+        }
+        0x0D: decode OPCODE_OP_BOTTOM3 {
+            0x0: push_Iz();
+            0x1: imul_Gv_Ev_Iz();
+            0x2: push_Ib();
+            0x3: imul_Gv_Ev_Ib();
+            0x4: ins_Yb_Dx();
+            0x5: ins_Yz_Dx();
+            0x6: outs_Dx_Xb();
+            0x7: outs_Dx_Xz();
+        }
+        0x0E: decode OPCODE_OP_BOTTOM3 {
+            0x0: jo_Jb();
+            0x1: jno_Jb();
+            0x2: jb_Jb();
+            0x3: jnb_Jb();
+            0x4: jz_Jb();
+            0x5: jnz_Jb();
+            0x6: jbe_Jb();
+            0x7: jnbe_Jb();
+        }
+        0x0F: decode OPCODE_OP_BOTTOM3 {
+            0x0: js_Jb();
+            0x1: jns_Jb();
+            0x2: jp_Jb();
+            0x3: jnp_Jb();
+            0x4: jl_Jb();
+            0x5: jnl_Jb();
+            0x6: jle_Jb();
+            0x7: jnke_Jb();
+        }
+        0x10: decode OPCODE_OP_BOTTOM3 {
+            0x0: group1_Eb_Ib();
+            0x1: group1_Ev_Iz();
+            0x2: group1_Eb_Ib();
+            0x3: group1_Ev_Ib();
+            0x4: test_Eb_Gb();
+            0x5: test_Ev_Gv();
+            0x6: xchg_Eb_Gb();
+            0x7: xchg_Ev_Gv();
+        }
+        0x11: decode OPCODE_OP_BOTTOM3 {
+            0x0: mov_Eb_Gb();
+            0x1: mov_Ev_Gv();
+            0x2: mov_Gb_Eb();
+            0x3: mov_Gv_Ev();
+            0x4: mov_MwRv_Sw();
+            0x5: lea_Gv_M();
+            0x6: mov_Sw_MwRv();
+            0x7: group10_Ev(); //Make sure this is Ev
+        }
+        0x12: decode OPCODE_OP_BOTTOM3 {
+            0x0: nop_or_pause(); //Check for repe prefix
+            0x1: xchg_rCX_rAX();
+            0x2: xchg_rDX_rAX();
+            0x3: xchg_rVX_rAX();
+            0x4: xchg_rSP_rAX();
+            0x5: xchg_rBP_rAX();
+            0x6: xchg_rSI_rAX();
+            0x7: xchg_rDI_rAX();
+        }
+        0x13: decode OPCODE_OP_BOTTOM3 {
+            0x0: cbw_or_cwde_or_cdqe_rAX();
+            0x1: cwd_or_cdq_or_cqo_rAX_rDX();
+            0x2: call_Ap();
+            0x3: fwait(); //aka wait
+            0x4: pushf_Fv();
+            0x5: popf_Fv();
+            0x6: sahf();
+            0x7: lahf();
+        }
+        0x14: decode OPCODE_OP_BOTTOM3 {
+            0x0: mov_Al_Ob();
+            0x1: mov_rAX_Ov();
+            0x2: mov_Ob_Al();
+            0x3: mov_Ov_rAX();
+            0x4: movs_Yb_Xb();
+            0x5: movs_Yv_Xv();
+            0x6: cmps_Yb_Xb();
+            0x7: cmps_Yv_Xv();
+        }
+        0x15: decode OPCODE_OP_BOTTOM3 {
+            0x0: test_Al_Ib();
+            0x1: test_rAX_Iz();
+            0x2: stos_Yb_Al();
+            0x3: stos_Yv_rAX();
+            0x4: lods_Al_Xb();
+            0x5: lods_rAX_Xv();
+            0x6: scas_Yb_Al();
+            0x7: scas_Yv_rAX();
+        }
+        0x16: decode OPCODE_OP_BOTTOM3 {
+            0x0: mov_Al_Ib();
+            0x1: mov_Cl_Ib();
+            0x2: mov_Dl_Ib();
+            0x3: mov_Bl_Ib();
+            0x4: mov_Ah_Ib();
+            0x5: mov_Ch_Ib();
+            0x6: mov_Dh_Ib();
+            0x7: mov_Bh_Ib();
+        }
+        0x17: decode OPCODE_OP_BOTTOM3 {
+            0x0: mov_rAX_Iv();
+            0x1: mov_rCX_Iv();
+            0x2: mov_rDX_Iv();
+            0x3: mov_rBX_Iv();
+            0x4: mov_rSP_Iv();
+            0x5: mov_rBP_Iv();
+            0x6: mov_rSI_Iv();
+            0x7: mov_rDI_Iv();
+        }
+        0x18: decode OPCODE_OP_BOTTOM3 {
+            0x0: group2_Eb_Ib();
+            0x1: group2_Ev_Ib();
+            0x2: ret_near_Iw();
+            0x3: ret_near();
+            0x4: les_Gz_Mp();
+            0x5: lds_Gz_Mp();
+            0x6: group12_Eb_Ib();
+            0x7: group12_Ev_Iz();
+        }
+        0x19: decode OPCODE_OP_BOTTOM3 {
+            0x0: enter_Iw_Ib();
+            0x1: leave();
+            0x2: ret_far_Iw();
+            0x3: ret_far();
+            0x4: int3();
+            0x5: int_Ib();
+            0x6: into();
+            0x7: iret();
+        }
+        0x1A: decode OPCODE_OP_BOTTOM3 {
+            0x0: group2_Eb_1();
+            0x1: group2_Ev_1();
+            0x2: group2_Eb_Cl();
+            0x3: group2_Ev_Cl();
+            0x4: aam_Ib();
+            0x5: aad_Ib();
+            0x6: salc();
+            0x7: xlat();
+        }
+        0x1B: decode OPCODE_OP_BOTTOM3 {
+            0x0: esc0();
+            0x1: esc1();
+            0x2: esc2();
+            0x3: esc3();
+            0x4: esc4();
+            0x5: esc5();
+            0x6: esc6();
+            0x7: esc7();
+        }
+        0x1C: decode OPCODE_OP_BOTTOM3 {
+            0x0: loopne_Jb();
+            0x1: loope_Jb();
+            0x2: loop_Jb();
+            0x3: jcxz_or_jecx_or_jrcx();
+            0x4: in_Al_Ib();
+            0x5: in_eAX_Ib();
+            0x6: out_Ib_Al();
+            0x7: out_Ib_eAX();
+        }
+        0x1D: decode OPCODE_OP_BOTTOM3 {
+            0x0: call_Jz();
+            0x1: jmp_Jz();
+            0x2: jmp_Ap();
+            0x3: jmp_Jb();
+            0x4: in_Al_Dx();
+            0x5: in_eAX_Dx();
+            0x6: out_Dx_Al();
+            0x7: out_Dx_eAX();
+        }
+        0x1E: decode OPCODE_OP_BOTTOM3 {
+            0x0: M5InternalError::error(
+                {{"Tried to execute the lock prefix!"}});
+            0x1: int1();
+            0x2: M5InternalError::error(
+                {{"Tried to execute the repne prefix!"}});
+            0x3: M5InternalError::error(
+                {{"Tried to execute the rep/repe prefix!"}});
+            0x4: hlt();
+            0x5: cmc();
+            0x6: group3_Eb();
+            0x7: group3_Ev();
+        }
+        0x1F: decode OPCODE_OP_BOTTOM3 {
+            0x0: clc();
+            0x1: stc();
+            0x2: cli();
+            0x3: sti();
+            0x4: cld();
+            0x5: std();
+            0x6: group4();
+            0x7: group5();
+        }
+    }
+    default: FailUnimpl::oneByteOps();
+}

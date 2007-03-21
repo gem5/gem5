@@ -78,22 +78,22 @@ namespace X86ISA
             uint8_t nextByte = getNextByte();
             switch(state)
             {
-              case Prefix:
+              case PrefixState:
                 state = doPrefixState(nextByte);
                 break;
-              case Opcode:
+              case OpcodeState:
                 state = doOpcodeState(nextByte);
                 break;
-              case ModRM:
+              case ModRMState:
                 state = doModRMState(nextByte);
                 break;
-              case SIB:
+              case SIBState:
                 state = doSIBState(nextByte);
                 break;
-              case Displacement:
+              case DisplacementState:
                 state = doDisplacementState();
                 break;
-              case Immediate:
+              case ImmediateState:
                 state = doImmediateState();
                 break;
               case ErrorState:
@@ -109,7 +109,7 @@ namespace X86ISA
     Predecoder::State Predecoder::doPrefixState(uint8_t nextByte)
     {
         uint8_t prefix = Prefixes[nextByte];
-        State nextState = Prefix;
+        State nextState = PrefixState;
         if(prefix)
             consumeByte();
         switch(prefix)
@@ -149,13 +149,13 @@ namespace X86ISA
           case Repne:
             DPRINTF(Predecoder, "Found repne prefix.\n");
             break;
-          case Rex:
+          case RexPrefix:
             DPRINTF(Predecoder, "Found Rex prefix %#x.\n", nextByte);
-            emi.rexPrefix = nextByte;
+            emi.rex = nextByte;
             break;
           case 0:
-            emi.numOpcodes = 0;
-            nextState = Opcode;
+            emi.opcode.num = 0;
+            nextState = OpcodeState;
             break;
           default:
             panic("Unrecognized prefix %#x\n", nextByte);
@@ -168,18 +168,29 @@ namespace X86ISA
     Predecoder::State Predecoder::doOpcodeState(uint8_t nextByte)
     {
         State nextState = ErrorState;
-        emi.numOpcodes++;
+        emi.opcode.num++;
         //We can't handle 3+ byte opcodes right now
-        assert(emi.numOpcodes < 2);
+        assert(emi.opcode.num < 3);
         consumeByte();
-        if(nextByte == 0xf0)
+        if(emi.opcode.num == 1 && nextByte == 0x0f)
         {
-            nextState = Opcode;
+            nextState = OpcodeState;
             DPRINTF(Predecoder, "Found two byte opcode.\n");
+            emi.opcode.prefixA = nextByte;
+        }
+        else if(emi.opcode.num == 2 &&
+                (nextByte == 0x0f ||
+                 (nextByte & 0xf8) == 0x38))
+        {
+            panic("Three byte opcodes aren't yet supported!\n");
+            nextState = OpcodeState;
+            DPRINTF(Predecoder, "Found three byte opcode.\n");
+            emi.opcode.prefixB = nextByte;
         }
         else
         {
             DPRINTF(Predecoder, "Found opcode %#x.\n", nextByte);
+            emi.opcode.op = nextByte;
 
             //Prepare for any immediate/displacement we might need
             immediateCollected = 0;
@@ -190,22 +201,22 @@ namespace X86ISA
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
             int immType = ImmediateType[
-                emi.numOpcodes - 1][nextByte];
+                emi.opcode.num - 1][nextByte];
             if(0) //16 bit mode
                 immediateSize = ImmediateTypeToSize[0][immType];
-            else if(!(emi.rexPrefix & 0x4)) //32 bit mode
+            else if(!(emi.rex & 0x4)) //32 bit mode
                 immediateSize = ImmediateTypeToSize[1][immType];
             else //64 bit mode
                 immediateSize = ImmediateTypeToSize[2][immType];
 
             //Determine what to expect next
-            if (UsesModRM[emi.numOpcodes - 1][nextByte]) {
-                nextState = ModRM;
+            if (UsesModRM[emi.opcode.num - 1][nextByte]) {
+                nextState = ModRMState;
             } else if(immediateSize) {
-                nextState = Immediate;
+                nextState = ImmediateState;
             } else {
                 emiIsReady = true;
-                nextState = Prefix;
+                nextState = PrefixState;
             }
         }
         return nextState;
@@ -217,6 +228,7 @@ namespace X86ISA
     Predecoder::State Predecoder::doModRMState(uint8_t nextByte)
     {
         State nextState = ErrorState;
+        emi.modRM = nextByte;
         DPRINTF(Predecoder, "Found modrm byte %#x.\n", nextByte);
         if (0) {//FIXME in 16 bit mode
             //figure out 16 bit displacement size
@@ -242,14 +254,14 @@ namespace X86ISA
         if(nextByte & 0x7 == 4 &&
                 nextByte & 0xC0 != 0xC0) {
                 // && in 32/64 bit mode)
-            nextState = SIB;
+            nextState = SIBState;
         } else if(displacementSize) {
-            nextState = Displacement;
+            nextState = DisplacementState;
         } else if(immediateSize) {
-            nextState = Immediate;
+            nextState = ImmediateState;
         } else {
             emiIsReady = true;
-            nextState = Prefix;
+            nextState = PrefixState;
         }
         //The ModRM byte is consumed no matter what
         consumeByte();
@@ -262,15 +274,16 @@ namespace X86ISA
     Predecoder::State Predecoder::doSIBState(uint8_t nextByte)
     {
         State nextState = ErrorState;
+        emi.sib = nextByte;
         DPRINTF(Predecoder, "Found SIB byte %#x.\n", nextByte);
         consumeByte();
         if(displacementSize) {
-            nextState = Displacement;
+            nextState = DisplacementState;
         } else if(immediateSize) {
-            nextState = Immediate;
+            nextState = ImmediateState;
         } else {
             emiIsReady = true;
-            nextState = Prefix;
+            nextState = PrefixState;
         }
         return nextState;
     }
@@ -307,14 +320,14 @@ namespace X86ISA
             DPRINTF(Predecoder, "Collected displacement %#x.\n",
                     emi.displacement);
             if(immediateSize) {
-                nextState = Immediate;
+                nextState = ImmediateState;
             } else {
                 emiIsReady = true;
-                nextState = Prefix;
+                nextState = PrefixState;
             }
         }
         else
-            nextState = Displacement;
+            nextState = DisplacementState;
         return nextState;
     }
 
@@ -336,10 +349,10 @@ namespace X86ISA
             DPRINTF(Predecoder, "Collected immediate %#x.\n",
                     emi.immediate);
             emiIsReady = true;
-            nextState = Prefix;
+            nextState = PrefixState;
         }
         else
-            nextState = Immediate;
+            nextState = ImmediateState;
         return nextState;
     }
 }

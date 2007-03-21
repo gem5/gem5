@@ -144,12 +144,12 @@ namespace X86ISA
         int immediateCollected;
 
         enum State {
-            Prefix,
-            Opcode,
-            ModRM,
-            SIB,
-            Displacement,
-            Immediate,
+            PrefixState,
+            OpcodeState,
+            ModRMState,
+            SIBState,
+            DisplacementState,
+            ImmediateState,
             //We should never get to this state. Getting here is an error.
             ErrorState
         };
@@ -168,7 +168,7 @@ namespace X86ISA
         Predecoder(ThreadContext * _tc) :
             tc(_tc), basePC(0), offset(0),
             outOfBytes(true), emiIsReady(false),
-            state(Prefix)
+            state(PrefixState)
         {}
 
         ThreadContext * getTC()

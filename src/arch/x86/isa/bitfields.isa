@@ -58,5 +58,30 @@
 // Bitfield definitions.
 //
 
-def bitfield EXAMPLE	<24>;
+//Prefixes
+def bitfield REX rex;
+def bitfield LEGACY legacy;
 
+// Pieces of the opcode
+def bitfield OPCODE_NUM opcode.num;
+def bitfield OPCODE_PREFIXA opcode.prefixA;
+def bitfield OPCODE_PREFIXB opcode.prefixB;
+def bitfield OPCODE_OP opcode.op;
+//The top 5 bits of the opcode tend to split the instructions into groups
+def bitfield OPCODE_OP_TOP5 opcode.op.top5;
+def bitfield OPCODE_OP_BOTTOM3 opcode.op.bottom3;
+
+// Immediate fields
+def bitfield IMMEDIATE immediate;
+def bitfield DISPLACEMENT displacement;
+
+//Modifier bytes
+def bitfield MODRM modRM;
+def bitfield MODRM_MOD modRM.mod;
+def bitfield MODRM_REG modRM.reg;
+def bitfield MODRM_RM modRM.rm;
+
+def bitfield SIB sib;
+def bitfield SIB_SCALE sib.scale;
+def bitfield SIB_INDEX sib.index;
+def bitfield SIB_BASE sib.base;

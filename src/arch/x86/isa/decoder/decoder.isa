@@ -58,7 +58,32 @@
 // The actual decoder specification
 //
 
-decode EXAMPLE default Unknown::unknown()
+decode OPCODE_NUM default Unknown::unknown()
 {
-    0x0: Unknown::unknown2();
+    0x0: M5InternalError::error(
+        {{"Saw an ExtMachInst with zero opcode bytes!"}});
+    //1 byte opcodes
+    ##include "one_byte_opcodes.isa"
+    //2 byte opcodes
+    ##include "two_byte_opcodes.isa"
+    //3 byte opcodes
+    0x3: decode OPCODE_PREFIXA {
+        0xF0: decode OPCODE_PREFIXB {
+            //We don't handle these properly in the predecoder yet, so there's
+            //no reason to implement them for now.
+            0x38: decode OPCODE_OP {
+                default: FailUnimpl::sseThreeEight();
+            }
+            0x3A: decode OPCODE_OP {
+                default: FailUnimpl::sseThreeA();
+            }
+            0xF0: decode OPCODE_OP {
+                default: FailUnimpl::threednow();
+            }
+            default: M5InternalError::error(
+                {{"Unexpected second opcode byte in three byte opcode!"}});
+        }
+        default: M5InternalError::error(
+            {{"Unexpected first opcode byte in three byte opcode!"}});
+    }
 }

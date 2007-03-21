@@ -72,7 +72,7 @@ namespace X86ISA
     const uint8_t LO = Lock;
     const uint8_t RE = Rep;
     const uint8_t RN = Repne;
-    const uint8_t RX = Rex;
+    const uint8_t RX = RexPrefix;
 
     //This table identifies whether a byte is a prefix, and if it is,
     //which prefix it is.
