@@ -157,7 +157,7 @@ namespace BitfieldBackend
         //responsibility to make sure that there is a properly overloaded
         //version of this function for whatever type they want to overlay.
         inline uint64_t
-        getBits(int first, int last)
+        getBits(int first, int last) const
         {
             return bits(__data, first, last);
         }
