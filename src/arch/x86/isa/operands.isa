@@ -96,4 +96,7 @@ def operand_types {{
 }};
 
 def operands {{
+        # This is just copied from SPARC, because having no operands confuses
+        # the parser.
+        'Rd':               ('IntReg', 'udw', 'RD', 'IsInteger', 1)
 }};
