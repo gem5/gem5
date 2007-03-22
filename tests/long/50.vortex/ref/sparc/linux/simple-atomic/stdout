@@ -1,0 +1,13 @@
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar 21 2007 00:48:18
+M5 started Wed Mar 21 00:48:40 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/50.vortex/sparc/linux/simple-atomic tests/run.py long/50.vortex/sparc/linux/simple-atomic
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 136246935 because target called exit()
