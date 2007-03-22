@@ -35,59 +35,58 @@
 
 namespace iGbReg {
 
-const uint32_t REG_CTRL     = 0x00000; //*
-const uint32_t REG_STATUS   = 0x00008; //*
-const uint32_t REG_EECD     = 0x00010; //*
-const uint32_t REG_EERD     = 0x00014; //*
-const uint32_t REG_CTRL_EXT = 0x00018; //*-
-const uint32_t REG_MDIC     = 0x00020; //*
-const uint32_t REG_FCAL     = 0x00028; //*
-const uint32_t REG_FCAH     = 0x0002C; //*
-const uint32_t REG_FCT      = 0x00030; //*
-const uint32_t REG_VET      = 0x00038; //*
-const uint32_t REG_PBA      = 0x01000; //*
-const uint32_t REG_ICR      = 0x000C0; //*
-const uint32_t REG_ITR      = 0x000C4; //*
-const uint32_t REG_ICS      = 0x000C8; //*
-const uint32_t REG_IMS      = 0x000D0; //*
-const uint32_t REG_IMC      = 0x000D8; //*
-const uint32_t REG_IAM      = 0x000E0; //*
-const uint32_t REG_RCTL     = 0x00100; //*
-const uint32_t REG_FCTTV    = 0x00170; //*
-const uint32_t REG_TIPG     = 0x00410; //*
-const uint32_t REG_AIFS     = 0x00458; //*
-const uint32_t REG_LEDCTL   = 0x00e00; //*
-const uint32_t REG_FCRTL    = 0x02160; //*
-const uint32_t REG_FCRTH    = 0x02168; //*
-const uint32_t REG_RDBAL    = 0x02800; //*-
-const uint32_t REG_RDBAH    = 0x02804; //*-
-const uint32_t REG_RDLEN    = 0x02808; //*-
-const uint32_t REG_RDH      = 0x02810; //*-
-const uint32_t REG_RDT      = 0x02818; //*-
-const uint32_t REG_RDTR     = 0x02820; //*-
-const uint32_t REG_RXDCTL   = 0x02828; //*
-const uint32_t REG_RADV     = 0x0282C; //*-
-const uint32_t REG_RSRPD    = 0x02C00;
-const uint32_t REG_TCTL     = 0x00400; //*
-const uint32_t REG_TDBAL    = 0x03800; //*
-const uint32_t REG_TDBAH    = 0x03804; //*
-const uint32_t REG_TDLEN    = 0x03808; //*
-const uint32_t REG_TDH      = 0x03810; //*
-const uint32_t REG_TDT      = 0x03818; //*
-const uint32_t REG_TIDV     = 0x03820; //*
-const uint32_t REG_TXDMAC   = 0x03000;
-const uint32_t REG_TXDCTL   = 0x03828; //*
-const uint32_t REG_TADV     = 0x0382C; //*
-const uint32_t REG_TSPMT    = 0x03830;
+
+// Registers used by the Intel GbE NIC
+const uint32_t REG_CTRL     = 0x00000;
+const uint32_t REG_STATUS   = 0x00008;
+const uint32_t REG_EECD     = 0x00010;
+const uint32_t REG_EERD     = 0x00014;
+const uint32_t REG_CTRL_EXT = 0x00018;
+const uint32_t REG_MDIC     = 0x00020;
+const uint32_t REG_FCAL     = 0x00028;
+const uint32_t REG_FCAH     = 0x0002C;
+const uint32_t REG_FCT      = 0x00030;
+const uint32_t REG_VET      = 0x00038;
+const uint32_t REG_PBA      = 0x01000;
+const uint32_t REG_ICR      = 0x000C0;
+const uint32_t REG_ITR      = 0x000C4;
+const uint32_t REG_ICS      = 0x000C8;
+const uint32_t REG_IMS      = 0x000D0;
+const uint32_t REG_IMC      = 0x000D8;
+const uint32_t REG_IAM      = 0x000E0;
+const uint32_t REG_RCTL     = 0x00100;
+const uint32_t REG_FCTTV    = 0x00170;
+const uint32_t REG_TIPG     = 0x00410;
+const uint32_t REG_AIFS     = 0x00458;
+const uint32_t REG_LEDCTL   = 0x00e00;
+const uint32_t REG_FCRTL    = 0x02160;
+const uint32_t REG_FCRTH    = 0x02168;
+const uint32_t REG_RDBAL    = 0x02800;
+const uint32_t REG_RDBAH    = 0x02804;
+const uint32_t REG_RDLEN    = 0x02808;
+const uint32_t REG_RDH      = 0x02810;
+const uint32_t REG_RDT      = 0x02818;
+const uint32_t REG_RDTR     = 0x02820;
+const uint32_t REG_RXDCTL   = 0x02828;
+const uint32_t REG_RADV     = 0x0282C;
+const uint32_t REG_TCTL     = 0x00400;
+const uint32_t REG_TDBAL    = 0x03800;
+const uint32_t REG_TDBAH    = 0x03804;
+const uint32_t REG_TDLEN    = 0x03808;
+const uint32_t REG_TDH      = 0x03810;
+const uint32_t REG_TDT      = 0x03818;
+const uint32_t REG_TIDV     = 0x03820;
+const uint32_t REG_TXDCTL   = 0x03828;
+const uint32_t REG_TADV     = 0x0382C;
 const uint32_t REG_CRCERRS  = 0x04000;
-const uint32_t REG_RXCSUM   = 0x05000; //*-
+const uint32_t REG_RXCSUM   = 0x05000;
 const uint32_t REG_MTA      = 0x05200;
 const uint32_t REG_RAL      = 0x05400;
 const uint32_t REG_RAH      = 0x05404;
 const uint32_t REG_VFTA     = 0x05600;
 
-const uint32_t REG_WUC      = 0x05800;//*
-const uint32_t REG_MANC     = 0x05820;//*
+const uint32_t REG_WUC      = 0x05800;
+const uint32_t REG_MANC     = 0x05820;
 
 const uint8_t EEPROM_READ_OPCODE_SPI    = 0x03;
 const uint8_t EEPROM_RDSR_OPCODE_SPI    = 0x05;
@@ -99,6 +98,8 @@ const uint8_t RCV_ADDRESS_TABLE_SIZE    = 16;
 const uint8_t MULTICAST_TABLE_SIZE      = 128;
 const uint32_t STATS_REGS_SIZE           = 0x124;
 
+
+// Registers in that are accessed in the PHY
 const uint8_t PHY_PSTATUS       = 0x1;
 const uint8_t PHY_PID           = 0x2;
 const uint8_t PHY_EPID          = 0x3;
@@ -106,178 +107,101 @@ const uint8_t PHY_GSTATUS       = 10;
 const uint8_t PHY_EPSTATUS      = 15;
 const uint8_t PHY_AGC           = 18;
 
+// Receive Descriptor Status Flags
+const uint8_t RXDS_PIF         = 0x80;
+const uint8_t RXDS_IPCS        = 0x40;
+const uint8_t RXDS_TCPCS       = 0x20;
+const uint8_t RXDS_UDPCS       = 0x10;
+const uint8_t RXDS_VP          = 0x08;
+const uint8_t RXDS_IXSM        = 0x04;
+const uint8_t RXDS_EOP         = 0x02;
+const uint8_t RXDS_DD          = 0x01;
 
+// Receive Descriptor Error Flags
+const uint8_t RXDE_RXE         = 0x80;
+const uint8_t RXDE_IPE         = 0x40;
+const uint8_t RXDE_TCPE        = 0x20;
+const uint8_t RXDE_SEQ         = 0x04;
+const uint8_t RXDE_SE          = 0x02;
+const uint8_t RXDE_CE          = 0x01;
+
+// Interrupt types
+enum IntTypes
+{
+    IT_NONE    = 0x00000, //dummy value
+    IT_TXDW    = 0x00001,
+    IT_TXQE    = 0x00002,
+    IT_LSC     = 0x00004,
+    IT_RXSEQ   = 0x00008,
+    IT_RXDMT   = 0x00010,
+    IT_RXO     = 0x00040,
+    IT_RXT     = 0x00080,
+    IT_MADC    = 0x00200,
+    IT_RXCFG   = 0x00400,
+    IT_GPI0    = 0x02000,
+    IT_GPI1    = 0x04000,
+    IT_TXDLOW  = 0x08000,
+    IT_SRPD    = 0x10000,
+    IT_ACK     = 0x20000
+};
+
+// Receive Descriptor struct
 struct RxDesc {
     Addr buf;
     uint16_t len;
     uint16_t csum;
-    union {
-        uint8_t status;
-        struct { // these may be in the worng order
-            uint8_t dd:1;    // descriptor done (hw is done when 1)
-            uint8_t eop:1;   // end of packet
-            uint8_t xism:1;  // ignore checksum
-            uint8_t vp:1;    // packet is vlan packet
-            uint8_t rsv:1;   // reserved
-            uint8_t tcpcs:1; // TCP checksum done
-            uint8_t ipcs:1;  // IP checksum done
-            uint8_t pif:1;   // passed in-exact filter
-        } st;
-    };
-    union {
-        uint8_t errors;
-        struct {
-            uint8_t ce:1;   // crc error or alignment error
-            uint8_t se:1;   // symbol error
-            uint8_t seq:1;  // sequence error
-            uint8_t rsv:1;  // reserved
-            uint8_t cxe:1;  // carrier extension error
-            uint8_t tcpe:1; // tcp checksum error
-            uint8_t ipe:1;  // ip checksum error
-            uint8_t rxe:1;  // PX data error
-        } er;
-    };
-    union {
-        uint16_t special;
-        struct {
-            uint16_t vlan:12; //vlan id
-            uint16_t cfi:1;   // canocial form id
-            uint16_t pri:3;   // user priority
-        } sp;
-    };
+    uint8_t status;
+    uint8_t errors;
+    uint16_t vlan;
 };
 
-union TxDesc {
-    uint8_t data[16];
-    struct {
-        Addr buf;
-        uint16_t len;
-        uint8_t  cso;
-        union {
-            uint8_t command;
-            struct {
-                uint8_t eop:1;  // end of packet
-                uint8_t ifcs:1; // insert crc
-                uint8_t ic:1;   // insert checksum
-                uint8_t rs:1;   // report status
-                uint8_t rps:1;  // report packet sent
-                uint8_t dext:1; // extension
-                uint8_t vle:1;  // vlan enable
-                uint8_t ide:1;  // interrupt delay enable
-            } cmd;
-        };
-        union {
-            uint8_t status:4;
-            struct {
-                uint8_t dd:1; // descriptor done
-                uint8_t ec:1; // excess collisions
-                uint8_t lc:1; // late collision
-                uint8_t tu:1; // transmit underrun
-            } st;
-        };
-        uint8_t reserved:4;
-        uint8_t css;
-        union {
-            uint16_t special;
-            struct {
-                uint16_t vlan:12; //vlan id
-                uint16_t cfi:1;   // canocial form id
-                uint16_t pri:3;   // user priority
-            } sp;
-        };
-    } legacy;
-
-    // Type 0000 descriptor
-    struct {
-        uint8_t ipcss;
-        uint8_t ipcso;
-        uint16_t ipcse;
-        uint8_t tucss;
-        uint8_t tucso;
-        uint16_t tucse;
-        uint32_t paylen:20;
-        uint8_t dtype:4;
-        union {
-            uint8_t tucommand;
-            struct {
-                uint8_t tcp:1;  // tcp/udp
-                uint8_t ip:1;   // ip ipv4/ipv6
-                uint8_t tse:1;  // tcp segment enbale
-                uint8_t rs:1;   // report status
-                uint8_t rsv0:1; // reserved
-                uint8_t dext:1; // descriptor extension
-                uint8_t rsv1:1; // reserved
-                uint8_t ide:1;  // interrupt delay enable
-            } tucmd;
-        };
-        union {
-            uint8_t status:4;
-            struct {
-                uint8_t dd:1;
-                uint8_t rsvd:3;
-            } sta;
-        };
-        uint8_t reserved:4;
-        uint8_t hdrlen;
-        uint16_t mss;
-    } t0;
-
-    // Type 0001 descriptor
-    struct {
-        Addr buf;
-        uint32_t dtalen:20;
-        uint8_t dtype:4;
-        union {
-            uint8_t dcommand;
-            struct {
-                uint8_t eop:1;  // end of packet
-                uint8_t ifcs:1; // insert crc
-                uint8_t tse:1;  // segmentation enable
-                uint8_t rs:1;   // report status
-                uint8_t rps:1;  // report packet sent
-                uint8_t dext:1; // extension
-                uint8_t vle:1;  // vlan enable
-                uint8_t ide:1;  // interrupt delay enable
-            } dcmd;
-        };
-        union {
-            uint8_t status:4;
-            struct {
-                uint8_t dd:1; // descriptor done
-                uint8_t ec:1; // excess collisions
-                uint8_t lc:1; // late collision
-                uint8_t tu:1; // transmit underrun
-            } sta;
-        };
-        union {
-            uint8_t pktopts;
-            struct {
-                uint8_t ixsm:1; // insert ip checksum
-                uint8_t txsm:1; // insert tcp checksum
-            };
-        };
-        union {
-            uint16_t special;
-            struct {
-                uint16_t vlan:12; //vlan id
-                uint16_t cfi:1;   // canocial form id
-                uint16_t pri:3;   // user priority
-            } sp;
-        };
-    } t1;
-
-    // Junk to test descriptor type!
-    struct {
-        uint64_t junk;
-        uint32_t junk1:20;
-        uint8_t dtype;
-        uint8_t junk2:5;
-        uint8_t dext:1;
-        uint8_t junk3:2;
-        uint8_t junk4:4;
-        uint32_t junk5;
-    } type;
+struct TxDesc {
+    uint64_t d1;
+    uint64_t d2;
 };
+
+namespace TxdOp {
+const uint8_t TXD_CNXT = 0x0;
+const uint8_t TXD_DATA = 0x0;
+
+bool isLegacy(TxDesc *d) { return !bits(d->d2,29,29); }
+uint8_t getType(TxDesc *d) { return bits(d->d2, 23,20); }
+bool isContext(TxDesc *d) { return !isLegacy(d) && getType(d) == TXD_CNXT; }
+bool isData(TxDesc *d) { return !isLegacy(d) && getType(d) == TXD_DATA; }
+
+Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
+Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
+void setDd(TxDesc *d)
+{
+    replaceBits(d->d1, 35, 32, 1);
+}
+
+bool ide(TxDesc *d)  { return bits(d->d2, 31,31); }
+bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }
+bool rs(TxDesc *d)   { return bits(d->d2, 28,28); }
+bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 27,27); }
+bool tse(TxDesc *d)  { return (isData(d) || isContext(d)) && bits(d->d2, 27,27); }
+bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 26,26); }
+bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
+bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 26,26); }
+bool tcp(TxDesc *d)  { assert(isContext(d)); return bits(d->d2, 25,25); }
+
+uint8_t getCso(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 23,16); }
+uint8_t getCss(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 47,40); }
+
+bool ixsm(TxDesc *d)  { return isData(d) && bits(d->d2, 40,40); }
+bool txsm(TxDesc *d)  { return isData(d) && bits(d->d2, 41,41); }
+
+int tucse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,63,48); }
+int tucso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,47,40); }
+int tucss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,39,32); }
+int ipcse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,31,16); }
+int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
+int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
+int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
+int hdrlen(TxDesc *d) { assert(isContext(d)); return bits(d->d2,47,40); }
+} // namespace TxdOp
+
 
 #define ADD_FIELD32(NAME, OFFSET, BITS) \
     inline uint32_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
@@ -295,6 +219,7 @@ struct Regs {
         const Reg<T> &operator=(T d) { _data = d; return *this;}
         bool operator==(T d) { return d == _data; }
         void operator()(T d) { _data = d; }
+        Reg() { _data = 0; }
     };
 
     struct CTRL : public Reg<uint32_t> { // 0x0000 CTRL Register
@@ -454,7 +379,6 @@ struct Regs {
         ADD_FIELD32(lpe,5,1);   // long packet reception enabled
         ADD_FIELD32(lbm,6,2);   //
         ADD_FIELD32(rdmts,8,2); //
-        ADD_FIELD32(rsvd,10,2);  //
         ADD_FIELD32(mo,12,2);    //
         ADD_FIELD32(mdr,14,1);   //
         ADD_FIELD32(bam,15,1);   //
@@ -462,11 +386,21 @@ struct Regs {
         ADD_FIELD32(vfe,18,1);   //
         ADD_FIELD32(cfien,19,1); //
         ADD_FIELD32(cfi,20,1);   //
-        ADD_FIELD32(rsvd2,21,1); //
         ADD_FIELD32(dpf,22,1);   // discard pause frames
         ADD_FIELD32(pmcf,23,1);  // pass mac control  frames
         ADD_FIELD32(bsex,25,1);  // buffer size extension
         ADD_FIELD32(secrc,26,1); // strip ethernet crc from incoming packet
+        int descSize()
+        {
+            switch(bsize()) {
+                case 0: return bsex() ? 2048 : -1;
+                case 1: return bsex() ? 1024 : 16384;
+                case 2: return bsex() ? 512 : 8192;
+                case 3: return bsex() ? 256 : 4096;
+                default:
+                        return -1;
+            }
+        }
     };
     RCTL rctl;
 
@@ -543,9 +477,20 @@ struct Regs {
     struct RDTR : public Reg<uint32_t> { // 0x2820 RDTR Register
         using Reg<uint32_t>::operator=;
         ADD_FIELD32(delay,0,16); // receive delay timer
-        ADD_FIELD32(fpd, 31,);   // flush partial descriptor block ??
+        ADD_FIELD32(fpd, 31,1);   // flush partial descriptor block ??
     };
     RDTR rdtr;
+
+    struct RXDCTL : public Reg<uint32_t> { // 0x2828 RXDCTL Register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(pthresh,0,6);   // prefetch threshold, less that this
+                                    // consider prefetch
+        ADD_FIELD32(hthresh,8,6);   // number of descriptors in host mem to
+                                    // consider prefetch
+        ADD_FIELD32(wthresh,16,6);  // writeback threshold
+        ADD_FIELD32(gran,24,1);     // granularity 0 = desc, 1 = cacheline
+    };
+    RXDCTL rxdctl;
 
     struct RADV : public Reg<uint32_t> { // 0x282C RADV Register
         using Reg<uint32_t>::operator=;
