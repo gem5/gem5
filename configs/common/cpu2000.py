@@ -518,6 +518,7 @@ class mcf(MinneDefaultBenchmark):
     name = 'mcf'
     number = 181
     lang = 'C'
+    args = [ 'mcf.in' ]
 
 class parser(MinneDefaultBenchmark):
     name = 'parser'
