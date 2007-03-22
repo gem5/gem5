@@ -132,6 +132,7 @@ class DmaPort : public Port
 
     bool dmaPending() { return pendingCount > 0; }
 
+    int cacheBlockSize() { return peerBlockSize(); }
     unsigned int drain(Event *de);
 };
 
@@ -261,12 +262,16 @@ class DmaDevice : public PioDevice
                            addr, size, event, data);
     }
 
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data = NULL)
-    { dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data); }
+    void dmaRead(Addr addr, int size, Event *event, uint8_t *data)
+    {
+        dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data);
+    }
 
     bool dmaPending() { return dmaPort->dmaPending(); }
 
     virtual unsigned int drain(Event *de);
+
+    int cacheBlockSize() { return dmaPort->cacheBlockSize(); }
 
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {
