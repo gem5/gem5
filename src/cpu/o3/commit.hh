@@ -247,6 +247,11 @@ class DefaultCommit
     /** Handles squashing due to an TC write. */
     void squashFromTC(unsigned tid);
 
+#if FULL_SYSTEM
+    /** Handles processing an interrupt. */
+    void handleInterrupt();
+#endif // FULL_SYSTEM
+
     /** Commits as many instructions as possible. */
     void commitInsts();
 
@@ -408,6 +413,16 @@ class DefaultCommit
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];
+
+    /** Records if there is a trap currently in flight. */
+    bool trapInFlight[Impl::MaxThreads];
+
+    /** Records if there were any stores committed this cycle. */
+    bool committedStores[Impl::MaxThreads];
+
+    /** Records if commit should check if the ROB is truly empty (see
+        commit_impl.hh). */
+    bool checkEmptyROB[Impl::MaxThreads];
 
     /** Pointer to the list of active threads. */
     std::list<unsigned> *activeThreads;
