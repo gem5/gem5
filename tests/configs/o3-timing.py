@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ class MyCache(BaseCache):
     mshrs = 10
     tgts_per_mshr = 5
 
-cpu = DerivO3CPU()
+cpu = DerivO3CPU(cpu_id=0)
 cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
                               MyCache(size = '2MB'))
 

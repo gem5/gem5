@@ -192,8 +192,6 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         // known that the prev reg was outside the range of normal registers
         // so the free list can avoid adding it.
         prev_reg = renamed_reg;
-
-        assert(renamed_reg < numPhysicalRegs + numMiscRegs);
     }
 
     DPRINTF(Rename, "Renamed reg %d to physical reg %d old mapping was %d\n",
