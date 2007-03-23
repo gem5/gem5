@@ -159,8 +159,12 @@ Bus::recvTiming(PacketPtr pkt)
     }
 
     short dest = pkt->getDest();
+
+    // Make sure to clear the snoop commit flag so it doesn't think an
+    // access has been handled twice.
     if (dest == Packet::Broadcast) {
         port = findPort(pkt->getAddr(), pkt->getSrc());
+        pkt->flags &= ~SNOOP_COMMIT;
         if (timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()])) {
             bool success;
 
