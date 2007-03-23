@@ -1153,19 +1153,6 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             inst->setCanCommit();
             instQueue.insertBarrier(inst);
             add_to_iq = false;
-        } else if (inst->isNonSpeculative()) {
-            DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
-                    "encountered, skipping.\n", tid);
-
-            // Same as non-speculative stores.
-            inst->setCanCommit();
-
-            // Specifically insert it as nonspeculative.
-            instQueue.insertNonSpec(inst);
-
-            ++iewDispNonSpecInsts;
-
-            add_to_iq = false;
         } else if (inst->isNop()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Nop instruction encountered, "
                     "skipping.\n", tid);
@@ -1192,6 +1179,20 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             add_to_iq = false;
         } else {
             add_to_iq = true;
+        }
+        if (inst->isNonSpeculative()) {
+            DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
+                    "encountered, skipping.\n", tid);
+
+            // Same as non-speculative stores.
+            inst->setCanCommit();
+
+            // Specifically insert it as nonspeculative.
+            instQueue.insertNonSpec(inst);
+
+            ++iewDispNonSpecInsts;
+
+            add_to_iq = false;
         }
 
         // If the instruction queue is not full, then add the
@@ -1379,6 +1380,7 @@ DefaultIEW<Impl>::executeInsts()
                     predictedNotTakenIncorrect++;
                 }
             } else if (ldstQueue.violation(tid)) {
+                assert(inst->isMemRef());
                 // If there was an ordering violation, then get the
                 // DynInst that caused the violation.  Note that this
                 // clears the violation signal.
@@ -1391,10 +1393,10 @@ DefaultIEW<Impl>::executeInsts()
 
                 // Ensure the violating instruction is older than
                 // current squash
-                if (fetchRedirect[tid] &&
-                    violator->seqNum >= toCommit->squashedSeqNum[tid])
+/*                if (fetchRedirect[tid] &&
+                    violator->seqNum >= toCommit->squashedSeqNum[tid] + 1)
                     continue;
-
+*/
                 fetchRedirect[tid] = true;
 
                 // Tell the instruction queue that a violation has occured.
@@ -1414,6 +1416,33 @@ DefaultIEW<Impl>::executeInsts()
 
                 squashDueToMemBlocked(inst, tid);
             }
+        } else {
+            // Reset any state associated with redirects that will not
+            // be used.
+            if (ldstQueue.violation(tid)) {
+                assert(inst->isMemRef());
+
+                DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
+
+                DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
+                        "%#x, inst PC: %#x.  Addr is: %#x.\n",
+                        violator->readPC(), inst->readPC(), inst->physEffAddr);
+                DPRINTF(IEW, "Violation will not be handled because "
+                        "already squashing\n");
+
+                ++memOrderViolationEvents;
+            }
+            if (ldstQueue.loadBlocked(tid) &&
+                !ldstQueue.isLoadBlockedHandled(tid)) {
+                DPRINTF(IEW, "Load operation couldn't execute because the "
+                        "memory system is blocked.  PC: %#x [sn:%lli]\n",
+                        inst->readPC(), inst->seqNum);
+                DPRINTF(IEW, "Blocked load will not be handled because "
+                        "already squashing\n");
+
+                ldstQueue.setLoadBlockedHandled(tid);
+            }
+
         }
     }
 
@@ -1563,6 +1592,7 @@ DefaultIEW<Impl>::tick()
             //DPRINTF(IEW,"NonspecInst from thread %i",tid);
             if (fromCommit->commitInfo[tid].uncached) {
                 instQueue.replayMemInst(fromCommit->commitInfo[tid].uncachedLoad);
+                fromCommit->commitInfo[tid].uncachedLoad->setAtCommit();
             } else {
                 instQueue.scheduleNonSpec(
                     fromCommit->commitInfo[tid].nonSpecSeqNum);

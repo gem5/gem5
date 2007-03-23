@@ -171,14 +171,14 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** The kind of fault this instruction has generated. */
     Fault fault;
 
-    /** The memory request. */
-    Request *req;
-
     /** Pointer to the data for the memory access. */
     uint8_t *memData;
 
     /** The effective virtual address (lds & stores only). */
     Addr effAddr;
+
+    /** Is the effective virtual address valid. */
+    bool effAddrValid;
 
     /** The effective physical address. */
     Addr physEffAddr;
@@ -601,11 +601,17 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns whether or not this instruction is ready to issue. */
     bool readyToIssue() const { return status[CanIssue]; }
 
+    /** Clears this instruction being able to issue. */
+    void clearCanIssue() { status.reset(CanIssue); }
+
     /** Sets this instruction as issued from the IQ. */
     void setIssued() { status.set(Issued); }
 
     /** Returns whether or not this instruction has issued. */
     bool isIssued() const { return status[Issued]; }
+
+    /** Clears this instruction as being issued. */
+    void clearIssued() { status.reset(Issued); }
 
     /** Sets this instruction as executed. */
     void setExecuted() { status.set(Executed); }
@@ -729,6 +735,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     bool eaCalcDone;
 
+    /** Is this instruction's memory access uncacheable. */
+    bool isUncacheable;
+
+    /** Has this instruction generated a memory request. */
+    bool reqMade;
+
   public:
     /** Sets the effective address. */
     void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
@@ -744,6 +756,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Whether or not the memory operation is done. */
     bool memOpDone;
+
+    /** Is this instruction's memory access uncacheable. */
+    bool uncacheable() { return isUncacheable; }
+
+    /** Has this instruction generated a memory request. */
+    bool hasRequest() { return reqMade; }
 
   public:
     /** Load queue index. */
@@ -776,25 +794,25 @@ template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
-    // Sometimes reads will get retried, so they may come through here
-    // twice.
-    if (!req) {
-        req = new Request();
-        req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-        req->setThreadContext(thread->readCpuId(), threadNumber);
-    } else {
-        assert(addr == req->getVaddr());
-    }
+    reqMade = true;
+    Request *req = new Request();
+    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
 
     if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
+        delete req;
         return TheISA::genAlignmentFault();
     }
 
     fault = cpu->translateDataReadReq(req, thread);
 
+    if (req->isUncacheable())
+        isUncacheable = true;
+
     if (fault == NoFault) {
         effAddr = req->getVaddr();
+        effAddrValid = true;
         physEffAddr = req->getPaddr();
         memReqFlags = req->getFlags();
 
@@ -817,6 +835,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
         // Commit will have to clean up whatever happened.  Set this
         // instruction as executed.
         this->setExecuted();
+        delete req;
     }
 
     if (traceData) {
@@ -837,21 +856,25 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
-    assert(req == NULL);
-
-    req = new Request();
+    reqMade = true;
+    Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->readCpuId(), threadNumber);
 
     if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
         TheISA::VMPageSize) {
+        delete req;
         return TheISA::genAlignmentFault();
     }
 
     fault = cpu->translateDataWriteReq(req, thread);
 
+    if (req->isUncacheable())
+        isUncacheable = true;
+
     if (fault == NoFault) {
         effAddr = req->getVaddr();
+        effAddrValid = true;
         physEffAddr = req->getPaddr();
         memReqFlags = req->getFlags();
 #if 0
@@ -863,12 +886,8 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 #else
         fault = cpu->write(req, data, sqIdx);
 #endif
-    }
-
-    if (res) {
-        // always return some result to keep misspeculated paths
-        // (which will ignore faults) deterministic
-        *res = (fault == NoFault) ? req->getExtraData() : 0;
+    } else {
+        delete req;
     }
 
     return fault;

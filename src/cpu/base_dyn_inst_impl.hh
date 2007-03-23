@@ -92,11 +92,13 @@ template <class Impl>
 void
 BaseDynInst<Impl>::initVars()
 {
-    req = NULL;
     memData = NULL;
     effAddr = 0;
+    effAddrValid = false;
     physEffAddr = 0;
 
+    isUncacheable = false;
+    reqMade = false;
     readyRegs = 0;
 
     instResult.integer = 0;
@@ -140,10 +142,6 @@ BaseDynInst<Impl>::initVars()
 template <class Impl>
 BaseDynInst<Impl>::~BaseDynInst()
 {
-    if (req) {
-        delete req;
-    }
-
     if (memData) {
         delete [] memData;
     }
@@ -271,7 +269,7 @@ void
 BaseDynInst<Impl>::markSrcRegReady()
 {
     if (++readyRegs == numSrcRegs()) {
-        status.set(CanIssue);
+        setCanIssue();
     }
 }
 

@@ -728,8 +728,10 @@ decode OPCODE default Unknown::unknown() {
         0: OpcdecFault::hw_st_quad();
         1: decode HW_LDST_QUAD {
             format HwLoad {
-                0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }}, L);
-                1: hw_ld({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }}, Q);
+                0: hw_ld({{ EA = (Rb + disp) & ~3; }}, {{ Ra = Mem.ul; }},
+                         L, IsSerializing, IsSerializeBefore);
+                1: hw_ld({{ EA = (Rb + disp) & ~7; }}, {{ Ra = Mem.uq; }},
+                         Q, IsSerializing, IsSerializeBefore);
             }
         }
     }
@@ -740,9 +742,9 @@ decode OPCODE default Unknown::unknown() {
             1: decode HW_LDST_COND {
                 0: decode HW_LDST_QUAD {
                     0: hw_st({{ EA = (Rb + disp) & ~3; }},
-                {{ Mem.ul = Ra<31:0>; }}, L);
+                {{ Mem.ul = Ra<31:0>; }}, L, IsSerializing, IsSerializeBefore);
                     1: hw_st({{ EA = (Rb + disp) & ~7; }},
-                {{ Mem.uq = Ra.uq; }}, Q);
+                {{ Mem.uq = Ra.uq; }}, Q, IsSerializing, IsSerializeBefore);
                 }
 
                 1: FailUnimpl::hw_st_cond();

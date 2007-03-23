@@ -214,6 +214,9 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
             inst_entry->regsReady = true;
         }
 
+        // Clear the bit saying this instruction can issue.
+        inst->clearCanIssue();
+
         // Add this instruction to the list of dependents.
         store_entry->dependInsts.push_back(inst_entry);
 
@@ -357,7 +360,6 @@ void
 MemDepUnit<MemDepPred, Impl>::replay(DynInstPtr &inst)
 {
     DynInstPtr temp_inst;
-    bool found_inst = false;
 
     // For now this replay function replays all waiting memory ops.
     while (!instsToReplay.empty()) {
@@ -371,14 +373,8 @@ MemDepUnit<MemDepPred, Impl>::replay(DynInstPtr &inst)
 
         moveToReady(inst_entry);
 
-        if (temp_inst == inst) {
-            found_inst = true;
-        }
-
         instsToReplay.pop_front();
     }
-
-    assert(found_inst);
 }
 
 template <class MemDepPred, class Impl>

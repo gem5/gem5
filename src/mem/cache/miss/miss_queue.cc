@@ -599,6 +599,7 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
             MemCmd cmd = mshr->getTarget()->cmd;
             mshr->pkt->setDest(Packet::Broadcast);
             mshr->pkt->result = Packet::Unknown;
+            mshr->pkt->req = mshr->getTarget()->req;
             mq.markPending(mshr, cmd);
             mshr->order = order++;
             cache->setMasterRequest(Request_MSHR, time);

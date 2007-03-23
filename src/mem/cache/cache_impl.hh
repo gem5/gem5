@@ -545,8 +545,13 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         //We are determining prefetches on access stream, call prefetcher
         prefetcher->handleMiss(pkt, curTick);
     }
+
+    Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+
     if (!pkt->req->isUncacheable()) {
-        blk = handleAccess(pkt, lat, writebacks);
+        if (!missQueue->findMSHR(blk_addr)) {
+            blk = handleAccess(pkt, lat, writebacks);
+        }
     } else {
         size = pkt->getSize();
     }

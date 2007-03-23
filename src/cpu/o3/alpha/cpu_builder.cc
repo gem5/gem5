@@ -50,11 +50,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
     Param<int> clock;
     Param<int> phase;
     Param<int> numThreads;
+Param<int> cpu_id;
 Param<int> activity;
 
 #if FULL_SYSTEM
 SimObjectParam<System *> system;
-Param<int> cpu_id;
 SimObjectParam<AlphaISA::ITB *> itb;
 SimObjectParam<AlphaISA::DTB *> dtb;
 Param<Tick> profile;
@@ -161,11 +161,11 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM_DFLT(phase, "clock phase", 0),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
+    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM_DFLT(activity, "Initial activity count", 0),
 
 #if FULL_SYSTEM
     INIT_PARAM(system, "System object"),
-    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM(itb, "Instruction translation buffer"),
     INIT_PARAM(dtb, "Data translation buffer"),
     INIT_PARAM(profile, ""),
@@ -305,14 +305,15 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     AlphaSimpleParams *params = new AlphaSimpleParams;
 
     params->clock = clock;
+    params->phase = phase;
 
     params->name = getInstanceName();
     params->numberOfThreads = actual_num_threads;
+    params->cpu_id = cpu_id;
     params->activity = activity;
 
 #if FULL_SYSTEM
     params->system = system;
-    params->cpu_id = cpu_id;
     params->itb = itb;
     params->dtb = dtb;
     params->profile = profile;

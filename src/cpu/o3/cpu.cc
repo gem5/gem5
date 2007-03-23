@@ -466,7 +466,7 @@ FullO3CPU<Impl>::tick()
             lastRunningCycle = curTick;
             timesIdled++;
         } else {
-            tickEvent.schedule(curTick + cycles(1));
+            tickEvent.schedule(nextCycle(curTick + cycles(1)));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -886,7 +886,7 @@ FullO3CPU<Impl>::resume()
 #endif
 
     if (!tickEvent.scheduled())
-        tickEvent.schedule(curTick);
+        tickEvent.schedule(nextCycle());
     _status = Running;
 }
 
@@ -979,11 +979,11 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(curTick);
+            tickEvent.schedule(nextCycle());
         }
     }
     if (!tickEvent.scheduled())
-        tickEvent.schedule(curTick);
+        tickEvent.schedule(nextCycle());
 }
 
 template <class Impl>
@@ -1393,7 +1393,7 @@ FullO3CPU<Impl>::wakeCPU()
 
     idleCycles += (curTick - 1) - lastRunningCycle;
 
-    tickEvent.schedule(curTick);
+    tickEvent.schedule(nextCycle());
 }
 
 template <class Impl>

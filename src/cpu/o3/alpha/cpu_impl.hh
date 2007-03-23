@@ -114,6 +114,7 @@ AlphaO3CPU<Impl>::AlphaO3CPU(Params *params) : FullO3CPU<Impl>(params)
 #endif
         // Give the thread the TC.
         this->thread[i]->tc = tc;
+        this->thread[i]->setCpuId(params->cpu_id);
 
         // Add the TC to the CPU's list of TC's.
         this->threadContexts.push_back(tc);

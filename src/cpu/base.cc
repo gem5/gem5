@@ -226,7 +226,8 @@ BaseCPU::startup()
 #endif
 
     if (params->progress_interval) {
-        new CPUProgressEvent(&mainEventQueue, params->progress_interval,
+        new CPUProgressEvent(&mainEventQueue,
+                             cycles(params->progress_interval),
                              this);
     }
 }
