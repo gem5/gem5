@@ -81,6 +81,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     if (isSwitchedOut() || inst->isSquashed()) {
         iewStage->decrWb(inst->seqNum);
         delete state;
+        delete pkt->req;
         delete pkt;
         return;
     } else {
@@ -94,6 +95,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     }
 
     delete state;
+    delete pkt->req;
     delete pkt;
 }
 
@@ -403,11 +405,14 @@ template <class Impl>
 Fault
 LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
 {
+    using namespace TheISA;
     // Execute a specific load.
     Fault load_fault = NoFault;
 
     DPRINTF(LSQUnit, "Executing load PC %#x, [sn:%lli]\n",
             inst->readPC(),inst->seqNum);
+
+    assert(!inst->isSquashed());
 
     load_fault = inst->initiateAcc();
 
@@ -418,12 +423,44 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
-        if (!(inst->req && inst->req->isUncacheable()) ||
+        if (!(inst->hasRequest() && inst->uncacheable()) ||
             inst->isAtCommit()) {
             inst->setExecuted();
         }
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
+    } else if (!loadBlocked()) {
+        assert(inst->effAddrValid);
+        int load_idx = inst->lqIdx;
+        incrLdIdx(load_idx);
+        while (load_idx != loadTail) {
+            // Really only need to check loads that have actually executed
+
+            // @todo: For now this is extra conservative, detecting a
+            // violation if the addresses match assuming all accesses
+            // are quad word accesses.
+
+            // @todo: Fix this, magic number being used here
+            if (loadQueue[load_idx]->effAddrValid &&
+                (loadQueue[load_idx]->effAddr >> 8) ==
+                (inst->effAddr >> 8)) {
+                // A load incorrectly passed this load.  Squash and refetch.
+                // For now return a fault to show that it was unsuccessful.
+                DynInstPtr violator = loadQueue[load_idx];
+                if (!memDepViolator ||
+                    (violator->seqNum < memDepViolator->seqNum)) {
+                    memDepViolator = violator;
+                } else {
+                    break;
+                }
+
+                ++lsqMemOrderViolation;
+
+                return genMachineCheckFault();
+            }
+
+            incrLdIdx(load_idx);
+        }
     }
 
     return load_fault;
@@ -441,6 +478,8 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
 
     DPRINTF(LSQUnit, "Executing store PC %#x [sn:%lli]\n",
             store_inst->readPC(), store_inst->seqNum);
+
+    assert(!store_inst->isSquashed());
 
     // Check the recently completed loads to see if any match this store's
     // address.  If so, then we have a memory ordering violation.
@@ -465,32 +504,36 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
         ++storesToWB;
     }
 
-    if (!memDepViolator) {
-        while (load_idx != loadTail) {
-            // Really only need to check loads that have actually executed
-            // It's safe to check all loads because effAddr is set to
-            // InvalAddr when the dyn inst is created.
+    assert(store_inst->effAddrValid);
+    while (load_idx != loadTail) {
+        // Really only need to check loads that have actually executed
+        // It's safe to check all loads because effAddr is set to
+        // InvalAddr when the dyn inst is created.
 
-            // @todo: For now this is extra conservative, detecting a
-            // violation if the addresses match assuming all accesses
-            // are quad word accesses.
+        // @todo: For now this is extra conservative, detecting a
+        // violation if the addresses match assuming all accesses
+        // are quad word accesses.
 
-            // @todo: Fix this, magic number being used here
-            if ((loadQueue[load_idx]->effAddr >> 8) ==
-                (store_inst->effAddr >> 8)) {
-                // A load incorrectly passed this store.  Squash and refetch.
-                // For now return a fault to show that it was unsuccessful.
-                memDepViolator = loadQueue[load_idx];
-                ++lsqMemOrderViolation;
-
-                return genMachineCheckFault();
+        // @todo: Fix this, magic number being used here
+        if (loadQueue[load_idx]->effAddrValid &&
+            (loadQueue[load_idx]->effAddr >> 8) ==
+            (store_inst->effAddr >> 8)) {
+            // A load incorrectly passed this store.  Squash and refetch.
+            // For now return a fault to show that it was unsuccessful.
+            DynInstPtr violator = loadQueue[load_idx];
+            if (!memDepViolator ||
+                (violator->seqNum < memDepViolator->seqNum)) {
+                memDepViolator = violator;
+            } else {
+                break;
             }
 
-            incrLdIdx(load_idx);
+            ++lsqMemOrderViolation;
+
+            return genMachineCheckFault();
         }
 
-        // If we've reached this point, there was no violation.
-        memDepViolator = NULL;
+        incrLdIdx(load_idx);
     }
 
     return store_fault;
@@ -659,7 +702,7 @@ LSQUnit<Impl>::writebackStores()
                 panic("LSQ sent out a bad address for a completed store!");
             }
             // Need to handle becoming blocked on a store.
-            DPRINTF(IEW, "D-Cache became blcoked when writing [sn:%lli], will"
+            DPRINTF(IEW, "D-Cache became blocked when writing [sn:%lli], will"
                     "retry later\n",
                     inst->seqNum);
             isStoreBlocked = true;
@@ -734,6 +777,10 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         }
     }
 
+    if (memDepViolator && squashed_num < memDepViolator->seqNum) {
+        memDepViolator = NULL;
+    }
+
     int store_idx = storeTail;
     decrStIdx(store_idx);
 
@@ -762,6 +809,11 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         storeQueue[store_idx].inst->setSquashed();
         storeQueue[store_idx].inst = NULL;
         storeQueue[store_idx].canWB = 0;
+
+        // Must delete request now that it wasn't handed off to
+        // memory.  This is quite ugly.  @todo: Figure out the proper
+        // place to really handle request deletes.
+        delete storeQueue[store_idx].req;
 
         storeQueue[store_idx].req = NULL;
         --stores;

@@ -497,6 +497,11 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
+
+        // Must delete request now that it wasn't handed off to
+        // memory.  This is quite ugly.  @todo: Figure out the proper
+        // place to really handle request deletes.
+        delete req;
         return TheISA::genMachineCheckFault();
     }
 
@@ -534,6 +539,10 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
 
         if (store_size == 0)
             continue;
+        else if (storeQueue[store_idx].inst->uncacheable())
+            continue;
+
+        assert(storeQueue[store_idx].inst->effAddrValid);
 
         // Check if the store data is within the lower and upper bounds of
         // addresses that the request needs.
@@ -550,7 +559,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             storeQueue[store_idx].inst->effAddr;
 
         // If the store's data has all of the data needed, we can forward.
-        if (store_has_lower_limit && store_has_upper_limit) {
+        if ((store_has_lower_limit && store_has_upper_limit)) {
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() & (store_size - 1);
             // @todo: Magic number, assumes byte addressing
@@ -595,6 +604,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // If it's already been written back, then don't worry about
             // stalling on it.
             if (storeQueue[store_idx].completed) {
+                panic("Should not check one of these");
                 continue;
             }
 
@@ -613,6 +623,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // rescheduled eventually
             iewStage->rescheduleMemInst(load_inst);
             iewStage->decrWb(load_inst->seqNum);
+            load_inst->clearIssued();
             ++lsqRescheduledLoads;
 
             // Do not generate a writeback event as this instruction is not
@@ -621,7 +632,11 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
                     "Store idx %i to load addr %#x\n",
                     store_idx, req->getVaddr());
 
-            ++lsqBlockedLoads;
+            // Must delete request now that it wasn't handed off to
+            // memory.  This is quite ugly.  @todo: Figure out the
+            // proper place to really handle request deletes.
+            delete req;
+
             return NoFault;
         }
     }
@@ -653,7 +668,10 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // Delete state and data packet because a load retry
             // initiates a pipeline restart; it does not retry.
             delete state;
+            delete data_pkt->req;
             delete data_pkt;
+
+            req = NULL;
 
             if (result == Packet::BadAddress) {
                 return TheISA::genMachineCheckFault();
@@ -668,6 +686,9 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // If the cache was blocked, or has become blocked due to the access,
     // handle it.
     if (lsq->cacheBlocked()) {
+        if (req)
+            delete req;
+
         ++lsqCacheBlocked;
 
         iewStage->decrWb(load_inst->seqNum);
