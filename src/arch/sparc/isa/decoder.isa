@@ -1324,8 +1324,14 @@ decode OP default Unknown::unknown()
             0x05: stb({{Mem.ub = Rd.sb;}});
             0x06: sth({{Mem.uhw = Rd.shw;}});
             0x07: sttw({{
-                      (Mem.tuw).a = RdLow<31:0>;
-                      (Mem.tuw).b = RdHigh<31:0>;
+                      //This temporary needs to be here so that the parser
+                      //will correctly identify this instruction as a store.
+                      //It's probably either the parenthesis or referencing
+                      //the member variable that throws confuses it.
+                      Twin32_t temp;
+                      temp.a = RdLow<31:0>;
+                      temp.b = RdHigh<31:0>;
+                      Mem.tuw = temp;
                   }});
         }
         format Load {
@@ -1417,8 +1423,14 @@ decode OP default Unknown::unknown()
             0x15: stba({{Mem.ub = Rd;}}, {{EXT_ASI}});
             0x16: stha({{Mem.uhw = Rd;}}, {{EXT_ASI}});
             0x17: sttwa({{
-                      (Mem.tuw).a = RdLow<31:0>;
-                      (Mem.tuw).b = RdHigh<31:0>;
+                      //This temporary needs to be here so that the parser
+                      //will correctly identify this instruction as a store.
+                      //It's probably either the parenthesis or referencing
+                      //the member variable that throws confuses it.
+                      Twin32_t temp;
+                      temp.a = RdLow<31:0>;
+                      temp.b = RdHigh<31:0>;
+                      Mem.tuw = temp;
                   }}, {{EXT_ASI}});
         }
         format LoadAlt {
