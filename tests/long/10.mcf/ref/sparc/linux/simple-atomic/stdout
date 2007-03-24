@@ -1,0 +1,33 @@
+
+MCF SPEC version 1.6.I
+by  Andreas Loebel
+Copyright (c) 1998,1999   ZIB Berlin
+All Rights Reserved.
+
+nodes                      : 1800
+active arcs                : 8190
+simplex iterations         : 6837
+flow value                 : 12860044181
+new implicit arcs          : 300000
+active arcs                : 308190
+simplex iterations         : 11843
+flow value                 : 9360043604
+new implicit arcs          : 22787
+active arcs                : 330977
+simplex iterations         : 11931
+flow value                 : 9360043512
+checksum                   : 798014
+optimal
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar 23 2007 22:37:06
+M5 started Fri Mar 23 22:37:22 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-atomic tests/run.py long/10.mcf/sparc/linux/simple-atomic
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 1719594533 because target called exit()
