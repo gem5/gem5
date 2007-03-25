@@ -658,7 +658,7 @@ DefaultCommit<Impl>::handleInterrupt()
             DPRINTF(Commit, "Interrupt detected.\n");
 
             Fault new_interrupt = cpu->getInterrupts();
-            assert(new_interrupt == interrupt);
+            assert(new_interrupt != NoFault);
 
             // Clear the interrupt now that it's going to be handled
             toIEW->commitInfo[0].clearInterrupt = true;
@@ -1120,7 +1120,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         if (head_inst->traceData) {
             head_inst->traceData->setFetchSeq(head_inst->seqNum);
             head_inst->traceData->setCPSeq(thread[tid]->numInst);
-            head_inst->traceData->finalize();
+            head_inst->traceData->dump();
+            delete head_inst->traceData;
             head_inst->traceData = NULL;
         }
 
