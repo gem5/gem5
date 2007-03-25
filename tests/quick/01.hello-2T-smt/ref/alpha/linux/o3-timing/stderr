@@ -1,3 +1,5 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7000
-0: system.remote_gdb.listener: listening for remote gdb on port 7001
+0: system.remote_gdb.listener: listening for remote gdb #0 on port 7000
+0: system.remote_gdb.listener: listening for remote gdb #1 on port 7001
 warn: Entering event queue @ 0.  Starting simulation...
+warn: Increasing stack size by one page.
+warn: Increasing stack size by one page.
