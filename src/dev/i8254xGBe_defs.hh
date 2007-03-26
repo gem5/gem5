@@ -173,18 +173,18 @@ Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
 Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
 void setDd(TxDesc *d)
 {
-    replaceBits(d->d1, 35, 32, 1);
+    replaceBits(d->d2, 35, 32, ULL(1));
 }
 
 bool ide(TxDesc *d)  { return bits(d->d2, 31,31); }
 bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }
-bool rs(TxDesc *d)   { return bits(d->d2, 28,28); }
-bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 27,27); }
-bool tse(TxDesc *d)  { return (isData(d) || isContext(d)) && bits(d->d2, 27,27); }
-bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 26,26); }
-bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
-bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 26,26); }
-bool tcp(TxDesc *d)  { assert(isContext(d)); return bits(d->d2, 25,25); }
+bool rs(TxDesc *d)   { return bits(d->d2, 27,27); }
+bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 26,26); }
+bool tse(TxDesc *d)  { return (isData(d) || isContext(d)) && bits(d->d2, 26,26); }
+bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
+bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 24,24); }
+bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 25,25); }
+bool tcp(TxDesc *d)  { assert(isContext(d)); return bits(d->d2, 24,24); }
 
 uint8_t getCso(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 23,16); }
 uint8_t getCss(TxDesc *d) { assert(isLegacy(d)); return bits(d->d2, 47,40); }
@@ -351,7 +351,7 @@ struct Regs {
         ADD_FIELD32(txdlow,15,1) // transmit desc low thresh
         ADD_FIELD32(srpd,16,1)   // small receive packet detected
         ADD_FIELD32(ack,17,1);    // receive ack frame
-        ADD_FIELD32(int_assert, 31,0); // interrupt caused a system interrupt
+        ADD_FIELD32(int_assert, 31,1); // interrupt caused a system interrupt
     };
     ICR icr;
 
@@ -393,10 +393,10 @@ struct Regs {
         int descSize()
         {
             switch(bsize()) {
-                case 0: return bsex() ? 2048 : -1;
-                case 1: return bsex() ? 1024 : 16384;
-                case 2: return bsex() ? 512 : 8192;
-                case 3: return bsex() ? 256 : 4096;
+                case 0: return bsex() == 0 ? 2048 : -1;
+                case 1: return bsex() == 0 ? 1024 : 16384;
+                case 2: return bsex() == 0 ? 512 : 8192;
+                case 3: return bsex() == 0 ? 256 : 4096;
                 default:
                         return -1;
             }
@@ -451,7 +451,7 @@ struct Regs {
 
     struct RDBA : public Reg<uint64_t> { // 0x2800 RDBA Register
         using Reg<uint64_t>::operator=;
-        ADD_FIELD64(rdbal,4,28); // base address of rx descriptor ring
+        ADD_FIELD64(rdbal,0,32); // base address of rx descriptor ring
         ADD_FIELD64(rdbah,32,32); // base address of rx descriptor ring
     };
     RDBA rdba;
@@ -506,7 +506,7 @@ struct Regs {
 
     struct TDBA : public Reg<uint64_t> { // 0x3800 TDBAL Register
         using Reg<uint64_t>::operator=;
-        ADD_FIELD64(tdbal,4,28); // base address of transmit descriptor ring
+        ADD_FIELD64(tdbal,0,32); // base address of transmit descriptor ring
         ADD_FIELD64(tdbah,32,32); // base address of transmit descriptor ring
     };
     TDBA tdba;

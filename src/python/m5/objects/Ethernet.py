@@ -67,7 +67,14 @@ if build_env['ALPHA_TLASER']:
 
 class IGbE(PciDevice):
     type = 'IGbE'
-    hardware_address = Param.EthernetAddr(NextEthernetAddr, "Ethernet Hardware Address")
+    hardware_address = Param.String("Ethernet Hardware Address")
+    use_flow_control = Param.Bool(False, "Should we use xon/xoff flow contorl (UNIMPLMENTD)")
+    rx_fifo_size = Param.MemorySize('384kB', "Size of the rx FIFO")
+    tx_fifo_size = Param.MemorySize('384kB', "Size of the tx FIFO")
+    rx_desc_cache_size = Param.Int(64, "Number of enteries in the rx descriptor cache")
+    tx_desc_cache_size = Param.Int(64, "Number of enteries in the rx descriptor cache")
+    clock = Param.Clock('500MHz', "Clock speed of the device")
+
 
 class IGbEPciData(PciConfigData):
     VendorID = 0x8086
