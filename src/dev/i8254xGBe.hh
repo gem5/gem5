@@ -78,12 +78,12 @@ class IGbE : public PciDev
     bool txTick;
 
     // Event and function to deal with RDTR timer expiring
-    void rdtrProcess() { postInterrupt(iGbReg::IT_RXDMT, true); }
+    void rdtrProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
     //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
     EventWrapper<IGbE, &IGbE::rdtrProcess> rdtrEvent;
 
     // Event and function to deal with RADV timer expiring
-    void radvProcess() { postInterrupt(iGbReg::IT_RXDMT, true); }
+    void radvProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
     //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
     EventWrapper<IGbE, &IGbE::radvProcess> radvEvent;
 
@@ -131,6 +131,8 @@ class IGbE : public PciDev
 
     Tick intClock() { return Clock::Int::ns * 1024; }
 
+    void restartClock();
+
     template<class T>
     class DescCache
     {
@@ -141,6 +143,7 @@ class IGbE : public PciDev
         virtual long descLen() const = 0;
         virtual void updateHead(long h) = 0;
         virtual void enableSm() = 0;
+        virtual void intAfterWb() const {}
 
         std::deque<T*> usedCache;
         std::deque<T*> unusedCache;
@@ -206,7 +209,7 @@ class IGbE : public PciDev
         void writeback(Addr aMask)
         {
             int curHead = descHead();
-            int max_to_wb = usedCache.size() + curHead;
+            int max_to_wb = usedCache.size();
 
             DPRINTF(EthernetDesc, "Writing back descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_wb: %d descleft: %d\n",
@@ -226,13 +229,13 @@ class IGbE : public PciDev
             moreToWb = false;
             wbAlignment = aMask;
 
-            if (max_to_wb > descLen()) {
+            if (max_to_wb + curHead > descLen()) {
                 max_to_wb = descLen() - curHead;
                 moreToWb = true;
                 // this is by definition aligned correctly
             } else if (aMask != 0) {
                 // align the wb point to the mask
-                max_to_wb = max_to_wb & ~(aMask>>4);
+                max_to_wb = max_to_wb & ~aMask;
             }
 
             DPRINTF(EthernetDesc, "Writing back %d descriptors\n", max_to_wb);
@@ -240,7 +243,7 @@ class IGbE : public PciDev
             if (max_to_wb <= 0 || wbOut)
                 return;
 
-            wbOut = max_to_wb - curHead;
+            wbOut = max_to_wb;
 
             for (int x = 0; x < wbOut; x++)
                 memcpy(&wbBuf[x], usedCache[x], sizeof(T));
@@ -251,8 +254,10 @@ class IGbE : public PciDev
                 usedCache.pop_front();
             };
 
-            igbe->dmaWrite(descBase() + curHead * sizeof(T), wbOut * sizeof(T),
-                    &wbEvent, (uint8_t*)wbBuf);
+
+            assert(wbOut);
+            igbe->dmaWrite(igbe->platform->pciToDma(descBase() + curHead * sizeof(T)),
+                    wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf);
         }
 
         /** Fetch a chunk of descriptors into the descriptor cache.
@@ -260,7 +265,7 @@ class IGbE : public PciDev
          */
         void fetchDescriptors()
         {
-            size_t max_to_fetch = cachePnt - descTail();
+            size_t max_to_fetch = descTail() - cachePnt;
             if (max_to_fetch < 0)
                 max_to_fetch = descLen() - cachePnt;
 
@@ -268,7 +273,7 @@ class IGbE : public PciDev
                         unusedCache.size()));
 
             DPRINTF(EthernetDesc, "Fetching descriptors head: %d tail: "
-                    "%d len: %d cachePnt: %d max_to_wb: %d descleft: %d\n",
+                    "%d len: %d cachePnt: %d max_to_fetch: %d descleft: %d\n",
                     descHead(), descTail(), descLen(), cachePnt,
                     max_to_fetch, descLeft());
 
@@ -279,7 +284,13 @@ class IGbE : public PciDev
             // So we don't have two descriptor fetches going on at once
             curFetching = max_to_fetch;
 
-            igbe->dmaRead(descBase() + cachePnt * sizeof(T),
+            DPRINTF(EthernetDesc, "Fetching descriptors at %#x (%#x), size: %#x\n",
+                    descBase() + cachePnt * sizeof(T),
+                    igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
+                    curFetching * sizeof(T));
+
+            assert(curFetching);
+            igbe->dmaRead(igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
                     curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf);
         }
 
@@ -302,6 +313,8 @@ class IGbE : public PciDev
             cachePnt += curFetching;
             if (cachePnt > descLen())
                 cachePnt -= descLen();
+
+            curFetching = 0;
 
             DPRINTF(EthernetDesc, "Fetching complete cachePnt %d -> %d\n",
                     oldCp, cachePnt);
@@ -330,7 +343,7 @@ class IGbE : public PciDev
             // Update the head
             updateHead(curHead);
 
-            DPRINTF(EthernetDesc, "Writeback complete cachePnt %d -> %d\n",
+            DPRINTF(EthernetDesc, "Writeback complete curHead %d -> %d\n",
                     oldHead, curHead);
 
             // If we still have more to wb, call wb now
@@ -338,6 +351,7 @@ class IGbE : public PciDev
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
                 writeback(wbAlignment);
             }
+            intAfterWb();
         }
 
 
@@ -352,7 +366,7 @@ class IGbE : public PciDev
             if (cachePnt - descTail() >= 0)
                 left += (cachePnt - descTail());
             else
-                left += (descLen() - cachePnt);
+                left += (descTail() - cachePnt);
 
             return left;
         }
@@ -428,10 +442,12 @@ class IGbE : public PciDev
         virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
         virtual void updateHead(long h) { igbe->regs.tdh(h); }
         virtual void enableSm();
+        virtual void intAfterWb() const { igbe->postInterrupt(iGbReg::IT_TXDW);}
 
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
+        int hLen;
 
       public:
         TxDescCache(IGbE *i, std::string n, int s);
@@ -467,6 +483,7 @@ class IGbE : public PciDev
   public:
     struct Params : public PciDev::Params
     {
+        Net::EthAddr hardware_address;
         bool use_flow_control;
         int rx_fifo_size;
         int tx_fifo_size;
