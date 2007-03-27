@@ -350,16 +350,3 @@ const char *Trace::flagStrings[] =
     print >>ccfile, '};'
 
     ccfile.close()
-
-if __name__ == '__main__':
-    # This file generates the header and source files for the flags
-    # that control the tracing facility.
-
-    import sys
-
-    if len(sys.argv) != 2:
-        print "%s: Need argument (basename of cc/hh files)" % sys.argv[0]
-        sys.exit(1)
-
-    gen_hh(sys.argv[1] + '.hh')
-    gen_cc(sys.argv[1] + '.cc')

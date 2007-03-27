@@ -30,10 +30,26 @@
 
 Import('*')
 
-# base/traceflags.{cc,hh} are generated from base/traceflags.py.
-# $TARGET.base will expand to "<build-dir>/base/traceflags".
-env.Command(['traceflags.hh', 'traceflags.cc'], 'traceflags.py',
-            'python $SOURCE $TARGET.base')
+def make_cc(target, source, env):
+    assert(len(source) == 1)
+    assert(len(target) == 1)
+
+    traceflags = {}
+    execfile(str(source[0]), traceflags)
+    func = traceflags['gen_cc']
+    func(str(target[0]))
+
+def make_hh(target, source, env):
+    assert(len(source) == 1)
+    assert(len(target) == 1)
+
+    traceflags = {}
+    execfile(str(source[0]), traceflags)
+    func = traceflags['gen_hh']
+    func(str(target[0]))
+
+env.Command('traceflags.hh', 'traceflags.py', make_hh)
+env.Command('traceflags.cc', 'traceflags.py', make_cc)
 
 Source('annotate.cc')
 Source('bigint.cc')
