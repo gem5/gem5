@@ -227,6 +227,12 @@ class Cache : public BaseCache
     BlkType* handleAccess(PacketPtr &pkt, int & lat,
                           PacketList & writebacks, bool update = true);
 
+
+    /**
+     *Handle doing the Compare and Swap function for SPARC.
+     */
+    void cmpAndSwap(BlkType *blk, PacketPtr &pkt);
+
     /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes an MSHR pointer and uses its

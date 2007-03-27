@@ -295,9 +295,12 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     tt[Invalid][MC::ReadReq].onRequest(MC::ReadReq);
     // we only support write allocate right now
     tt[Invalid][MC::WriteReq].onRequest(MC::ReadExReq);
+    tt[Invalid][MC::SwapReq].onRequest(MC::ReadExReq);
     tt[Shared][MC::WriteReq].onRequest(writeToSharedCmd);
+    tt[Shared][MC::SwapReq].onRequest(writeToSharedCmd);
     if (hasOwned) {
         tt[Owned][MC::WriteReq].onRequest(writeToSharedCmd);
+        tt[Owned][MC::SwapReq].onRequest(writeToSharedCmd);
     }
 
     // Prefetching causes a read

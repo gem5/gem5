@@ -122,12 +122,15 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
     if (blk != NULL) {
 
         if (!update) {
+
             if (pkt->isWrite()){
                 assert(offset < blkSize);
                 assert(pkt->getSize() <= blkSize);
                 assert(offset+pkt->getSize() <= blkSize);
                 std::memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
                        pkt->getSize());
+            } else if (pkt->isReadWrite()) {
+                cmpAndSwap(blk, pkt);
             } else if (!(pkt->flags & SATISFIED)) {
                 pkt->flags |= SATISFIED;
                 pkt->result = Packet::Success;
@@ -154,7 +157,8 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
             }
         }
 
-        if ((pkt->isWrite() && blk->isWritable()) ||
+        if ((pkt->isReadWrite() && blk->isWritable()) ||
+            (pkt->isWrite() && blk->isWritable()) ||
             (pkt->isRead() && blk->isValid())) {
 
             // We are satisfying the request
@@ -180,13 +184,15 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
                     std::memcpy(blk->data + offset, pkt->getPtr<uint8_t>(),
                            pkt->getSize());
                 }
+            } else if (pkt->isReadWrite()) {
+                cmpAndSwap(blk, pkt);
             } else {
                 assert(pkt->isRead());
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
                 }
                 std::memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
-                       pkt->getSize());
+                            pkt->getSize());
             }
 
             if (write_data ||
@@ -212,6 +218,44 @@ Cache<TagStore,Coherence>::handleAccess(PacketPtr &pkt, int & lat,
     }
 
     return blk;
+}
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::cmpAndSwap(BlkType *blk, PacketPtr &pkt){
+            uint64_t overwrite_val;
+            bool overwrite_mem;
+            uint64_t condition_val64;
+            uint32_t condition_val32;
+
+            int offset = tags->extractBlkOffset(pkt->getAddr());
+
+            assert(sizeof(uint64_t) >= pkt->getSize());
+
+            overwrite_mem = true;
+            // keep a copy of our possible write value, and copy what is at the
+            // memory address into the packet
+            std::memcpy(&overwrite_val, pkt->getPtr<uint8_t>(), pkt->getSize());
+            std::memcpy(pkt->getPtr<uint8_t>(), blk->data + offset,
+                        pkt->getSize());
+
+            if (pkt->req->isCondSwap()) {
+                if (pkt->getSize() == sizeof(uint64_t)) {
+                    condition_val64 = pkt->req->getExtraData();
+                    overwrite_mem = !std::memcmp(&condition_val64, blk->data + offset,
+                                                 sizeof(uint64_t));
+                } else if (pkt->getSize() == sizeof(uint32_t)) {
+                    condition_val32 = (uint32_t)pkt->req->getExtraData();
+                    overwrite_mem = !std::memcmp(&condition_val32, blk->data + offset,
+                                                 sizeof(uint32_t));
+                } else
+                    panic("Invalid size for conditional read/write\n");
+            }
+
+            if (overwrite_mem)
+                std::memcpy(blk->data + offset,
+                            &overwrite_val, pkt->getSize());
+
 }
 
 template<class TagStore, class Coherence>
@@ -244,8 +288,9 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
             blk = NULL;
         }
 
-        if (blk && (target->isWrite() ? blk->isWritable() : blk->isValid())) {
-            assert(target->isWrite() || target->isRead());
+        if (blk && ((target->isWrite() || target->isReadWrite()) ?
+                    blk->isWritable() : blk->isValid())) {
+            assert(target->isWrite() || target->isReadWrite() || target->isRead());
             assert(target->getOffset(blkSize) + target->getSize() <= blkSize);
             if (target->isWrite()) {
                 if (blk->checkWrite(pkt->req)) {
@@ -253,6 +298,8 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
                     std::memcpy(blk->data + target->getOffset(blkSize),
                            target->getPtr<uint8_t>(), target->getSize());
                 }
+            } else if (target->isReadWrite()) {
+                cmpAndSwap(blk, pkt);
             } else {
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
@@ -332,8 +379,9 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
             continue;
         }
 
-        if (blk && (target->isWrite() ? blk->isWritable() : blk->isValid())) {
-            assert(target->isWrite() || target->isRead());
+        if (blk && ((target->isWrite() || target->isReadWrite()) ?
+            blk->isWritable() : blk->isValid())) {
+            assert(target->isWrite() || target->isRead() || target->isReadWrite() );
             assert(target->getOffset(blkSize) + target->getSize() <= blkSize);
             if (target->isWrite()) {
                 if (blk->checkWrite(pkt->req)) {
@@ -341,6 +389,8 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
                     std::memcpy(blk->data + target->getOffset(blkSize),
                            target->getPtr<uint8_t>(), target->getSize());
                 }
+            } else if (target->isReadWrite()) {
+                cmpAndSwap(blk, pkt);
             } else {
                 if (target->req->isLocked()) {
                     blk->trackLoadLocked(target->req);
