@@ -76,24 +76,44 @@ class IGbE : public PciDev
     // Should to Rx/Tx State machine tick?
     bool rxTick;
     bool txTick;
+    bool txFifoTick;
 
     // Event and function to deal with RDTR timer expiring
-    void rdtrProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
+    void rdtrProcess() {
+        rxDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting RXT interrupt because RDTR timer expired\n");
+        postInterrupt(iGbReg::IT_RXT, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
     EventWrapper<IGbE, &IGbE::rdtrProcess> rdtrEvent;
 
     // Event and function to deal with RADV timer expiring
-    void radvProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
+    void radvProcess() {
+        rxDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting RXT interrupt because RADV timer expired\n");
+        postInterrupt(iGbReg::IT_RXT, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
     EventWrapper<IGbE, &IGbE::radvProcess> radvEvent;
 
     // Event and function to deal with TADV timer expiring
-    void tadvProcess() { postInterrupt(iGbReg::IT_TXDW, true); }
+    void tadvProcess() {
+        txDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting TXDW interrupt because TADV timer expired\n");
+        postInterrupt(iGbReg::IT_TXDW, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::tadvProcess>;
     EventWrapper<IGbE, &IGbE::tadvProcess> tadvEvent;
 
     // Event and function to deal with TIDV timer expiring
-    void tidvProcess() { postInterrupt(iGbReg::IT_TXDW, true); };
+    void tidvProcess() {
+        txDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting TXDW interrupt because TIDV timer expired\n");
+        postInterrupt(iGbReg::IT_TXDW, true);
+    }
     //friend class EventWrapper<IGbE, &IGbE::tidvProcess>;
     EventWrapper<IGbE, &IGbE::tidvProcess> tidvEvent;
 
@@ -202,8 +222,10 @@ class IGbE : public PciDev
          */
         void areaChanged()
         {
-            if (usedCache.size() > 0 || unusedCache.size() > 0)
+            if (usedCache.size() > 0 || curFetching || wbOut)
                 panic("Descriptor Address, Length or Head changed. Bad\n");
+            reset();
+
         }
 
         void writeback(Addr aMask)
@@ -229,7 +251,7 @@ class IGbE : public PciDev
             moreToWb = false;
             wbAlignment = aMask;
 
-            if (max_to_wb + curHead > descLen()) {
+            if (max_to_wb + curHead >= descLen()) {
                 max_to_wb = descLen() - curHead;
                 moreToWb = true;
                 // this is by definition aligned correctly
@@ -265,9 +287,13 @@ class IGbE : public PciDev
          */
         void fetchDescriptors()
         {
-            size_t max_to_fetch = descTail() - cachePnt;
-            if (max_to_fetch < 0)
+            size_t max_to_fetch;
+
+            if (descTail() >= cachePnt)
+                max_to_fetch = descTail() - cachePnt;
+            else
                 max_to_fetch = descLen() - cachePnt;
+
 
             max_to_fetch = std::min(max_to_fetch, (size - usedCache.size() -
                         unusedCache.size()));
@@ -311,8 +337,9 @@ class IGbE : public PciDev
 #endif
 
             cachePnt += curFetching;
-            if (cachePnt > descLen())
-                cachePnt -= descLen();
+            assert(cachePnt <= descLen());
+            if (cachePnt == descLen())
+                cachePnt = 0;
 
             curFetching = 0;
 
@@ -337,8 +364,8 @@ class IGbE : public PciDev
             curHead += wbOut;
             wbOut = 0;
 
-            if (curHead > descLen())
-                curHead = 0;
+            if (curHead >= descLen())
+                curHead -= descLen();
 
             // Update the head
             updateHead(curHead);
@@ -390,6 +417,9 @@ class IGbE : public PciDev
 
             usedCache.clear();
             unusedCache.clear();
+
+            cachePnt = 0;
+
         }
 
      };

@@ -162,7 +162,7 @@ struct TxDesc {
 
 namespace TxdOp {
 const uint8_t TXD_CNXT = 0x0;
-const uint8_t TXD_DATA = 0x0;
+const uint8_t TXD_DATA = 0x1;
 
 bool isLegacy(TxDesc *d) { return !bits(d->d2,29,29); }
 uint8_t getType(TxDesc *d) { return bits(d->d2, 23,20); }
