@@ -299,7 +299,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, PacketPtr &pkt,
                            target->getPtr<uint8_t>(), target->getSize());
                 }
             } else if (target->isReadWrite()) {
-                cmpAndSwap(blk, pkt);
+                cmpAndSwap(blk, target);
             } else {
                 if (pkt->req->isLocked()) {
                     blk->trackLoadLocked(pkt->req);
@@ -390,7 +390,7 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
                            target->getPtr<uint8_t>(), target->getSize());
                 }
             } else if (target->isReadWrite()) {
-                cmpAndSwap(blk, pkt);
+                cmpAndSwap(blk, target);
             } else {
                 if (target->req->isLocked()) {
                     blk->trackLoadLocked(target->req);
