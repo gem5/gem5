@@ -84,5 +84,8 @@ namespace X86ISA;
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 
+//Include the definitions of the micro ops
+##include "microops/microops.isa"
+
 //Include the decoder definition
 ##include "decoder/decoder.isa"
