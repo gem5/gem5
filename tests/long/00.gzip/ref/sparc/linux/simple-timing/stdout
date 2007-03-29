@@ -1,0 +1,44 @@
+spec_init
+Loading Input Data
+Duplicating 262144 bytes
+Duplicating 524288 bytes
+Input data 1048576 bytes in length
+Compressing Input Data, level 1
+Compressed data 108074 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 3
+Compressed data 97831 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 5
+Compressed data 83382 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 7
+Compressed data 76606 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 73189 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar 29 2007 03:54:03
+M5 started Thu Mar 29 03:54:23 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/simple-timing tests/run.py long/00.gzip/sparc/linux/simple-timing
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 3399390003 because target called exit()
