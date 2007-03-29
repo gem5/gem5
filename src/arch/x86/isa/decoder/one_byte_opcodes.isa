@@ -64,7 +64,7 @@
             0x6: push_ES();
             0x7: pop_ES();
             default: MultiOp::add(
-                {{out1 = in1 + in2}},
+                {{Add op0, op0, op1}},
                 OPCODE_OP_BOTTOM3,
                 [[Eb,Gb],[Ev,Gv],
                  [Gb,Eb],[Gv,Ev],

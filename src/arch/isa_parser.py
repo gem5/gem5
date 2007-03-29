@@ -311,12 +311,19 @@ def p_output_exec(t):
 def p_global_let(t):
     'global_let : LET CODELIT SEMI'
     updateExportContext()
+    exportContext["header_output"] = ''
+    exportContext["decoder_output"] = ''
+    exportContext["exec_output"] = ''
+    exportContext["decode_block"] = ''
     try:
         exec fixPythonIndentation(t[2]) in exportContext
     except Exception, exc:
         error(t.lineno(1),
               'error: %s in global let block "%s".' % (exc, t[2]))
-    t[0] = GenCode() # contributes nothing to the output C++ file
+    t[0] = GenCode(header_output = exportContext["header_output"],
+                   decoder_output = exportContext["decoder_output"],
+                   exec_output = exportContext["exec_output"],
+                   decode_block = exportContext["decode_block"])
 
 # Define the mapping from operand type extensions to C++ types and bit
 # widths (stored in operandTypeMap).
