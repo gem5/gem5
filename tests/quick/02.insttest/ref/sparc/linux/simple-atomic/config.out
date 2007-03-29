@@ -1,9 +1,6 @@
 [root]
 type=Root
-clock=1000000000000
-max_tick=0
-progress_interval=0
-output_file=cout
+dummy=0
 
 [system.physmem]
 type=PhysicalMemory
