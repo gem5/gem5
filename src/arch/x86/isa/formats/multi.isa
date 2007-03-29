@@ -74,33 +74,81 @@ let {{
 }};
 
 def format MultiOp(code, switchVal, opTags, *opt_flags) {{
-    # Loads and stores that bring in and write out values from the
-    # instructions. These are determined by the input and output tags,
-    # and the resulting instruction will have the right number of micro ops,
-    # or could be implemented as an atomic macro op.
-    instNames = []
+    # These are C++ statements to create each type of static int. Since we
+    # don't know what will be microcoded and what won't, we can't assume a
+    # particular set of arguments for the constructor.
+    instNew = []
+    orig_code = code
+    opRe = re.compile(r"%(?P<operandNum>[0-9]*)")
+    # Get all the labels out of the code and make a dict for them. We'll do
+    # this once since the position of labels shouldn't need to change at all.
+    ops = assembleMicro(code)
+    labels = buildLabelDict(ops)
     for tagSet in opTags:
-        loads = []
-        stores = []
+        # A list of strings which either have the register number to use, or
+        # a piece of code for calculating it.
+        regNums = []
+        code = orig_code
+        # Build up a name for this instructions class using the argument
+        # types. Each variation will get its own name this way.
         postfix = ''
         for tag in tagSet:
             postfix += '_' + tag
-        gather_inputs = ''
-        if len(loads) + len(stores) == 0:
-            # If there are no loads or stores, make this a single instruction.
-            iop = InstObjParams(name, Name + postfix, 'X86StaticInst',
-                    {"code": code, "gather_inputs": gather_inputs},
-                    opt_flags)
+
+        # Figure out what register indexes to use for each operand. This
+        # is where loads/stores could be set up. I need to distinguish
+        # between inputs and outputs.
+        # For right now, the indexes are just an increasing sequence
+        counter = 0
+        for tag in tagSet:
+            regNums.append("%d" % counter)
+            counter += 1
+
+        # Replace the placeholders %0, %1, etc., with the right register
+        # indexes.
+        opMatch = opRe.search(code)
+        while opMatch:
+            opNum = opMatch.group("operandNum")
+            opNum = int(opNum)
+            if opNum > len(regNums):
+                print "No operand type specified for operand %d!" % opNum
+                print "I should bail out here too!"
+            regNum = regNums[opNum]
+            code = opRe.sub(regNum, code, 1)
+            opMatch = opRe.search(code)
+
+        # All the loads which feed this instruction
+        loads = []
+        # All the ops that make up the instruction proper.
+        ops = assembleMicro(code)
+        # Get all the labels out and make a dict for them
+        # All the stores for this instruction's results
+        stores = []
+
+        # Various counts
+        numLoads = len(loads)
+        numOps = len(ops)
+        numStores = len(stores)
+        totalOps = numLoads + numOps + numStores
+        print "There are %d total ops" % totalOps
+
+        # If we can implement this instruction with exactly one microop, just
+        # use that directly.
+        newStmnt = ''
+        if totalOps == 1:
+            newStmnt = ops[0].getAllocator(labels)
         else:
             # Build up a macro op. We'll punt on this for now
             pass
 
+        instNew.append(newStmnt)
+
     decodeBlob = 'switch(%s) {\n' % switchVal
     counter = 0
-    for inst in instNames:
-        decodeBlob += '%d: return (X86StaticInst *)(new %s(machInst));\n' % \
-                      (counter, inst)
+    for newStmnt in instNew:
+        decodeBlob += 'case %d: return (X86StaticInst *)(%s);\n' % \
+                      (counter, newStmnt)
         counter += 1
     decodeBlob += '}\n'
-    # decode_block = BasicDecodeWithMnemonic.subst(iop)
+    decode_block = decodeBlob
 }};
