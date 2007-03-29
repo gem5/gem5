@@ -647,11 +647,9 @@ void MiscRegFile::setReg(int miscReg,
         return;
       case MISCREG_CWP:
         new_val = val >= NWindows ? NWindows - 1 : val;
-        if (val >= NWindows) {
+        if (val >= NWindows)
             new_val = NWindows - 1;
-            warn("Attempted to set the CWP to %d with NWindows = %d\n",
-                    val, NWindows);
-        }
+
         tc->changeRegFileContext(CONTEXT_CWP, new_val);
         break;
       case MISCREG_GL:
