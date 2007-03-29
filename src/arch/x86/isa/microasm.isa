@@ -1,0 +1,172 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2007 The Hewlett-Packard Development Company
+// All rights reserved.
+//
+// Redistribution and use of this software in source and binary forms,
+// with or without modification, are permitted provided that the
+// following conditions are met:
+//
+// The software must be used only for Non-Commercial Use which means any
+// use which is NOT directed to receiving any direct monetary
+// compensation for, or commercial advantage from such use.  Illustrative
+// examples of non-commercial use are academic research, personal study,
+// teaching, education and corporate research & development.
+// Illustrative examples of commercial use are distributing products for
+// commercial advantage and providing services using the software for
+// commercial advantage.
+//
+// If you wish to use this software or functionality therein that may be
+// covered by patents for commercial use, please contact:
+//     Director of Intellectual Property Licensing
+//     Office of Strategy and Technology
+//     Hewlett-Packard Company
+//     1501 Page Mill Road
+//     Palo Alto, California  94304
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.  Redistributions
+// in binary form must reproduce the above copyright notice, this list of
+// conditions and the following disclaimer in the documentation and/or
+// other materials provided with the distribution.  Neither the name of
+// the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.  No right of
+// sublicense is granted herewith.  Derivatives of the software and
+// output created using the software may be prepared, but only for
+// Non-Commercial Uses.  Derivatives of the software may be shared with
+// others provided: (i) the others agree to abide by the list of
+// conditions herein which includes the Non-Commercial Use restrictions;
+// and (ii) such Derivatives of the software include the above copyright
+// notice to acknowledge the contribution from this software where
+// applicable, this list of conditions and the disclaimer below.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+////////////////////////////////////////////////////////////////////
+//
+//  Code to "assemble" microcode sequences
+//
+
+let {{
+    class MicroOpStatement:
+        def __init__(self):
+            self.className = ''
+            self.label = ''
+            self.args = []
+
+        def getAllocator(self, labelDict = {}):
+            args = ''
+            for arg in self.args:
+                if arg.has_key("operandConst"):
+                    args += ", %s" % arg["operandConst"]
+                elif arg.has_key("operandCode"):
+                    args += ", %s" % arg["operandCode"]
+                elif arg.has_key("operandLabel"):
+                    if not labelDict.has_key(arg["operandLabel"]):
+                        print "Unrecognized label %s!" % arg["operandLabel"]
+                    args += ", %s" % labelDict[arg["operandLabel"]]
+                else:
+                    print "Unrecognized operand type!"
+            return 'new %s(machInst %s)' % (self.className, args)
+
+
+    def assembleMicro(code):
+        # This function takes in a block of microcode assembly and returns
+        # a python list of objects which describe it.
+
+        # Keep this around in case we need it later
+        orig_code = code
+        # A list of the statements we've found thus far
+        statements = []
+
+        # Regular expressions to pull each piece of the statement out at a
+        # time. Each expression expects the thing it's looking for to be at
+        # the beginning of the line, so the previous component is stripped
+        # before continuing.
+        labelRe = re.compile(r'^[ \t]*(?P<label>[a-zA-Z_]\w*)[ \t]:')
+        lineRe = re.compile(r'^(?P<line>[^\n][^\n]*)$')
+        classRe = re.compile(r'^[ \t]*(?P<className>[a-zA-Z_]\w*)')
+        # This recognizes three different flavors of operands:
+        # 1. Raw decimal numbers composed of digits between 0 and 9
+        # 2. Code beginning with "{" and continuing until the first "}"
+        #         ^ This one might need revising
+        # 3. A label, which starts with a capital or small letter, or
+        #    underscore, which is optionally followed by a sequence of
+        #    capital or small letters, underscores, or digts between 0 and 9
+        opRe = re.compile( \
+            r'^[ \t]*((?P<operandLabel>[a-zA-Z_]\w*)|(?P<operandConst>[0-9][0-9]*)|(\{(?P<operandCode>[^}]*)\}))')
+        lineMatch = lineRe.search(code)
+        while lineMatch != None:
+            statement = MicroOpStatement()
+            # Get a line and seperate it from the rest of the code
+            line = lineMatch.group("line")
+            print "Parsing line %s" % line
+            code = lineRe.sub('', code, 1)
+
+            # Find the label, if any
+            labelMatch = labelRe.search(line)
+            if labelMatch != None:
+                statement.label = labelMatch.group("label")
+                print "Found label %s." % statement.label
+            # Clear the label from the statement
+            line = labelRe.sub('', line, 1)
+
+            # Find the class name which is roughly equivalent to the op name
+            classMatch = classRe.search(line)
+            if classMatch == None:
+                print "Oh no! I can't find what instruction you want!"
+                print "I should really bail out here, but I don't know how!"
+            else:
+                statement.className = classMatch.group("className")
+                print "Found class name %s." % statement.className
+
+            # Clear the class name from the statement
+            line = classRe.sub('', line, 1)
+
+            #Find as many arguments as you can
+            statement.args = []
+            opMatch = opRe.search(line)
+            while opMatch is not None:
+                statement.args.append({})
+                # args is a list of dicts which collect different
+                # representations of operand values. Different forms might be
+                # needed in different places, for instance to replace a label
+                # with an offset.
+                for opType in ("operandLabel", "operandConst", "operandCode"):
+                    if opMatch.group(opType):
+                        statement.args[-1][opType] = opMatch.group(opType)
+                if len(statement.args[-1]) == 0:
+                    print "I had a problem parsing an operand!"
+                line = opRe.sub('', line, 1)
+                print "Found operand %s." % statement.args[-1]
+                opMatch = opRe.search(line)
+            print "Found operands", statement.args
+
+            # Add this statement to our collection
+            statements.append(statement)
+
+            # Get the next line
+            lineMatch = lineRe.search(code)
+        return statements
+
+    def buildLabelDict(ops):
+        labels = {}
+        count = 0
+        for op in ops:
+            if op.label:
+                labels[op.label] = count
+            count += 1
+}};

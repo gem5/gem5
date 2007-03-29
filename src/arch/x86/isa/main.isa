@@ -72,6 +72,9 @@
 
 namespace X86ISA;
 
+//Include the simple microcode assembler
+##include "microasm.isa"
+
 //Include the bitfield definitions
 ##include "bitfields.isa"
 
