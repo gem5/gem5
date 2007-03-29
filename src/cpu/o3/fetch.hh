@@ -86,6 +86,8 @@ class DefaultFetch
 
         bool snoopRangeSent;
 
+        virtual void setPeer(Port *port);
+
       protected:
         /** Atomic version of receive.  Panics. */
         virtual Tick recvAtomic(PacketPtr pkt);
@@ -183,6 +185,9 @@ class DefaultFetch
 
     /** Initialize stage. */
     void initStage();
+
+    /** Tells the fetch stage that the Icache is set. */
+    void setIcache();
 
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);

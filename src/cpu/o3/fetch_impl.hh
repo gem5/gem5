@@ -51,6 +51,15 @@
 #include <algorithm>
 
 template<class Impl>
+void
+DefaultFetch<Impl>::IcachePort::setPeer(Port *port)
+{
+    Port::setPeer(port);
+
+    fetch->setIcache();
+}
+
+template<class Impl>
 Tick
 DefaultFetch<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
 {
@@ -323,12 +332,6 @@ DefaultFetch<Impl>::initStage()
         nextNPC[tid] = cpu->readNextNPC(tid);
     }
 
-    // Size of cache block.
-    cacheBlkSize = icachePort->peerBlockSize();
-
-    // Create mask to get rid of offset bits.
-    cacheBlkMask = (cacheBlkSize - 1);
-
     for (int tid=0; tid < numThreads; tid++) {
 
         fetchStatus[tid] = Running;
@@ -337,15 +340,28 @@ DefaultFetch<Impl>::initStage()
 
         memReq[tid] = NULL;
 
-        // Create space to store a cache line.
-        cacheData[tid] = new uint8_t[cacheBlkSize];
-        cacheDataPC[tid] = 0;
-        cacheDataValid[tid] = false;
-
         stalls[tid].decode = false;
         stalls[tid].rename = false;
         stalls[tid].iew = false;
         stalls[tid].commit = false;
+    }
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::setIcache()
+{
+    // Size of cache block.
+    cacheBlkSize = icachePort->peerBlockSize();
+
+    // Create mask to get rid of offset bits.
+    cacheBlkMask = (cacheBlkSize - 1);
+
+    for (int tid=0; tid < numThreads; tid++) {
+        // Create space to store a cache line.
+        cacheData[tid] = new uint8_t[cacheBlkSize];
+        cacheDataPC[tid] = 0;
+        cacheDataValid[tid] = false;
     }
 }
 
