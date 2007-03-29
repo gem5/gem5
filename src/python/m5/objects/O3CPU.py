@@ -116,3 +116,8 @@ class DerivO3CPU(BaseCPU):
     smtROBPolicy   = Param.String("SMT ROB Sharing Policy")
     smtROBThreshold = Param.String("SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.String("SMT Commit Policy")
+
+    def addPrivateSplitL1Caches(self, ic, dc):
+        BaseCPU.addPrivateSplitL1Caches(self, ic, dc)
+        self.icache.tgts_per_mshr = 20
+        self.dcache.tgts_per_mshr = 20
