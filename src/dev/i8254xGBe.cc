@@ -55,7 +55,7 @@ using namespace iGbReg;
 using namespace Net;
 
 IGbE::IGbE(Params *p)
-    : PciDev(p), etherInt(NULL),  useFlowControl(p->use_flow_control),
+    : PciDev(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
       txTick(false), txFifoTick(false), rdtrEvent(this), radvEvent(this),
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
@@ -762,6 +762,7 @@ IGbE::RxDescCache::pktComplete()
     pktPtr = NULL;
     enableSm();
     pktDone = true;
+    igbe->checkDrain();
 }
 
 void
@@ -781,11 +782,33 @@ IGbE::RxDescCache::packetDone()
     return false;
 }
 
+bool
+IGbE::RxDescCache::hasOutstandingEvents()
+{
+    return pktEvent.scheduled() || wbEvent.scheduled() ||
+        fetchEvent.scheduled();
+}
+
+void
+IGbE::RxDescCache::serialize(std::ostream &os)
+{
+    DescCache<RxDesc>::serialize(os);
+    SERIALIZE_SCALAR(pktDone);
+}
+
+void
+IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
+{
+    DescCache<RxDesc>::unserialize(cp, section);
+    UNSERIALIZE_SCALAR(pktDone);
+}
+
+
 ///////////////////////////////////// IGbE::TxDesc /////////////////////////////////
 
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false), pktWaiting(false),
-      hLen(0), pktEvent(this)
+       pktEvent(this)
 
 {
 }
@@ -840,7 +863,7 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
 
     DPRINTF(EthernetDesc, "Starting DMA of packet\n");
     igbe->dmaRead(igbe->platform->pciToDma(TxdOp::getBuf(desc)),
-            TxdOp::getLen(desc), &pktEvent, p->data + hLen);
+            TxdOp::getLen(desc), &pktEvent, p->data + p->length);
 
 
 }
@@ -862,8 +885,9 @@ IGbE::TxDescCache::pktComplete()
     DPRINTF(EthernetDesc, "TxDescriptor data d1: %#llx d2: %#llx\n", desc->d1, desc->d2);
 
     if (!TxdOp::eop(desc)) {
-        assert(hLen == 0);
-        hLen = TxdOp::getLen(desc);
+        // This only supports two descriptors per tx packet
+        assert(pktPtr->length == 0);
+        pktPtr->length = TxdOp::getLen(desc);
         unusedCache.pop_front();
         usedCache.push_back(desc);
         pktDone = true;
@@ -875,7 +899,7 @@ IGbE::TxDescCache::pktComplete()
     }
 
     // Set the length of the data in the EtherPacket
-    pktPtr->length = TxdOp::getLen(desc) + hLen;
+    pktPtr->length += TxdOp::getLen(desc);
 
     // no support for vlans
     assert(!TxdOp::vle(desc));
@@ -944,7 +968,6 @@ IGbE::TxDescCache::pktComplete()
     pktWaiting = false;
     pktPtr = NULL;
 
-    hLen = 0;
     DPRINTF(EthernetDesc, "Descriptor Done\n");
 
     if (igbe->regs.txdctl.wthresh() == 0) {
@@ -954,7 +977,25 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
+    igbe->checkDrain();
+}
 
+void
+IGbE::TxDescCache::serialize(std::ostream &os)
+{
+    DescCache<TxDesc>::serialize(os);
+    SERIALIZE_SCALAR(pktDone);
+    SERIALIZE_SCALAR(isTcp);
+    SERIALIZE_SCALAR(pktWaiting);
+}
+
+void
+IGbE::TxDescCache::unserialize(Checkpoint *cp, const std::string &section)
+{
+    DescCache<TxDesc>::unserialize(cp, section);
+    UNSERIALIZE_SCALAR(pktDone);
+    UNSERIALIZE_SCALAR(isTcp);
+    UNSERIALIZE_SCALAR(pktWaiting);
 }
 
 bool
@@ -974,7 +1015,12 @@ IGbE::TxDescCache::enableSm()
     igbe->restartClock();
 }
 
-
+bool
+IGbE::TxDescCache::hasOutstandingEvents()
+{
+    return pktEvent.scheduled() || wbEvent.scheduled() ||
+        fetchEvent.scheduled();
+}
 
 
 ///////////////////////////////////// IGbE /////////////////////////////////
@@ -982,10 +1028,61 @@ IGbE::TxDescCache::enableSm()
 void
 IGbE::restartClock()
 {
-    if (!tickEvent.scheduled() && (rxTick || txTick))
+    if (!tickEvent.scheduled() && (rxTick || txTick) && getState() ==
+            SimObject::Running)
         tickEvent.schedule((curTick/cycles(1)) * cycles(1) + cycles(1));
 }
 
+unsigned int
+IGbE::drain(Event *de)
+{
+    unsigned int count;
+    count = pioPort->drain(de) + dmaPort->drain(de);
+    if (rxDescCache.hasOutstandingEvents() ||
+            txDescCache.hasOutstandingEvents()) {
+        count++;
+        drainEvent = de;
+    }
+
+    txFifoTick = false;
+    txTick = false;
+    rxTick = false;
+
+    if (tickEvent.scheduled())
+        tickEvent.deschedule();
+
+    if (count)
+        changeState(Draining);
+    else
+        changeState(Drained);
+
+    return count;
+}
+
+void
+IGbE::resume()
+{
+    SimObject::resume();
+
+    txFifoTick = true;
+    txTick = true;
+    rxTick = true;
+
+    restartClock();
+}
+
+void
+IGbE::checkDrain()
+{
+    if (!drainEvent)
+        return;
+
+    if (rxDescCache.hasOutstandingEvents() ||
+            txDescCache.hasOutstandingEvents()) {
+        drainEvent->process();
+        drainEvent = NULL;
+    }
+}
 
 void
 IGbE::txStateMachine()
@@ -1179,7 +1276,7 @@ IGbE::txWire()
 
 
     if (etherInt->sendPacket(txFifo.front())) {
-        DPRINTF(Ethernet, "TxFIFO: Successful transmit, bytes in fifo: %d\n",
+        DPRINTF(EthernetSM, "TxFIFO: Successful transmit, bytes available in fifo: %d\n",
                 txFifo.avail());
         txFifo.pop();
     } else {
@@ -1218,19 +1315,112 @@ IGbE::ethTxDone()
     txTick = true;
 
     restartClock();
-    DPRINTF(Ethernet, "TxFIFO: Transmission complete\n");
+    DPRINTF(EthernetSM, "TxFIFO: Transmission complete\n");
 }
 
 void
 IGbE::serialize(std::ostream &os)
 {
-    panic("Need to implemenet\n");
+    PciDev::serialize(os);
+
+    regs.serialize(os);
+    SERIALIZE_SCALAR(eeOpBits);
+    SERIALIZE_SCALAR(eeAddrBits);
+    SERIALIZE_SCALAR(eeDataBits);
+    SERIALIZE_SCALAR(eeOpcode);
+    SERIALIZE_SCALAR(eeAddr);
+    SERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
+
+    rxFifo.serialize("rxfifo", os);
+    txFifo.serialize("txfifo", os);
+
+    bool txPktExists = txPacket;
+    SERIALIZE_SCALAR(txPktExists);
+    if (txPktExists)
+        txPacket->serialize("txpacket", os);
+
+    Tick rdtr_time = 0, radv_time = 0, tidv_time = 0, tadv_time = 0,
+         inter_time = 0;
+
+    if (rdtrEvent.scheduled())
+       rdtr_time = rdtrEvent.when();
+    SERIALIZE_SCALAR(rdtr_time);
+
+    if (radvEvent.scheduled())
+       radv_time = radvEvent.when();
+    SERIALIZE_SCALAR(radv_time);
+
+    if (tidvEvent.scheduled())
+       rdtr_time = tidvEvent.when();
+    SERIALIZE_SCALAR(tidv_time);
+
+    if (tadvEvent.scheduled())
+       rdtr_time = tadvEvent.when();
+    SERIALIZE_SCALAR(tadv_time);
+
+    if (interEvent.scheduled())
+       rdtr_time = interEvent.when();
+    SERIALIZE_SCALAR(inter_time);
+
+    nameOut(os, csprintf("%s.TxDescCache", name()));
+    txDescCache.serialize(os);
+
+    nameOut(os, csprintf("%s.RxDescCache", name()));
+    rxDescCache.serialize(os);
 }
 
 void
 IGbE::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implemenet\n");
+    PciDev::unserialize(cp, section);
+
+    regs.unserialize(cp, section);
+    UNSERIALIZE_SCALAR(eeOpBits);
+    UNSERIALIZE_SCALAR(eeAddrBits);
+    UNSERIALIZE_SCALAR(eeDataBits);
+    UNSERIALIZE_SCALAR(eeOpcode);
+    UNSERIALIZE_SCALAR(eeAddr);
+    UNSERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
+
+    rxFifo.unserialize("rxfifo", cp, section);
+    txFifo.unserialize("txfifo", cp, section);
+
+    bool txPktExists;
+    UNSERIALIZE_SCALAR(txPktExists);
+    if (txPktExists) {
+        txPacket = new EthPacketData(16384);
+        txPacket->unserialize("txpacket", cp, section);
+    }
+
+    rxTick = true;
+    txTick = true;
+    txFifoTick = true;
+
+    Tick rdtr_time, radv_time, tidv_time, tadv_time, inter_time;
+    UNSERIALIZE_SCALAR(rdtr_time);
+    UNSERIALIZE_SCALAR(radv_time);
+    UNSERIALIZE_SCALAR(tidv_time);
+    UNSERIALIZE_SCALAR(tadv_time);
+    UNSERIALIZE_SCALAR(inter_time);
+
+    if (rdtr_time)
+        rdtrEvent.schedule(rdtr_time);
+
+    if (radv_time)
+        radvEvent.schedule(radv_time);
+
+    if (tidv_time)
+        tidvEvent.schedule(tidv_time);
+
+    if (tadv_time)
+        tadvEvent.schedule(tadv_time);
+
+    if (inter_time)
+        interEvent.schedule(inter_time);
+
+    txDescCache.unserialize(cp, csprintf("%s.TxDescCache", section));
+
+    rxDescCache.unserialize(cp, csprintf("%s.RxDescCache", section));
 }
 
 

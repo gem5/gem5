@@ -220,6 +220,14 @@ struct Regs {
         bool operator==(T d) { return d == _data; }
         void operator()(T d) { _data = d; }
         Reg() { _data = 0; }
+        void serialize(std::ostream &os)
+        {
+            SERIALIZE_SCALAR(_data);
+        }
+        void unserialize(Checkpoint *cp, const std::string &section)
+        {
+            UNSERIALIZE_SCALAR(_data);
+        }
     };
 
     struct CTRL : public Reg<uint32_t> { // 0x0000 CTRL Register
@@ -595,6 +603,79 @@ struct Regs {
         ADD_FIELD32(smbclkout,30,1); // smb clock out
     };
     MANC manc;
-};
 
-}; // iGbReg namespace
+    void serialize(std::ostream &os)
+    {
+        paramOut(os, "ctrl", ctrl._data);
+        paramOut(os, "sts", sts._data);
+        paramOut(os, "eecd", eecd._data);
+        paramOut(os, "eerd", eerd._data);
+        paramOut(os, "ctrl_ext", ctrl_ext._data);
+        paramOut(os, "mdic", mdic._data);
+        paramOut(os, "icr", icr._data);
+        SERIALIZE_SCALAR(imr);
+        paramOut(os, "itr", itr._data);
+        SERIALIZE_SCALAR(iam);
+        paramOut(os, "rctl", rctl._data);
+        paramOut(os, "fcttv", fcttv._data);
+        paramOut(os, "tctl", tctl._data);
+        paramOut(os, "pba", pba._data);
+        paramOut(os, "fcrtl", fcrtl._data);
+        paramOut(os, "fcrth", fcrth._data);
+        paramOut(os, "rdba", rdba._data);
+        paramOut(os, "rdlen", rdlen._data);
+        paramOut(os, "rdh", rdh._data);
+        paramOut(os, "rdt", rdt._data);
+        paramOut(os, "rdtr", rdtr._data);
+        paramOut(os, "rxdctl", rxdctl._data);
+        paramOut(os, "radv", radv._data);
+        paramOut(os, "rsrpd", rsrpd._data);
+        paramOut(os, "tdba", tdba._data);
+        paramOut(os, "tdlen", tdlen._data);
+        paramOut(os, "tdh", tdh._data);
+        paramOut(os, "tdt", tdt._data);
+        paramOut(os, "tidv", tidv._data);
+        paramOut(os, "txdctl", txdctl._data);
+        paramOut(os, "tadv", tadv._data);
+        paramOut(os, "rxcsum", rxcsum._data);
+        paramOut(os, "manc", manc._data);
+    }
+
+    void unserialize(Checkpoint *cp, const std::string &section)
+    {
+        paramIn(cp, section, "ctrl", ctrl._data);
+        paramIn(cp, section, "sts", sts._data);
+        paramIn(cp, section, "eecd", eecd._data);
+        paramIn(cp, section, "eerd", eerd._data);
+        paramIn(cp, section, "ctrl_ext", ctrl_ext._data);
+        paramIn(cp, section, "mdic", mdic._data);
+        paramIn(cp, section, "icr", icr._data);
+        UNSERIALIZE_SCALAR(imr);
+        paramIn(cp, section, "itr", itr._data);
+        UNSERIALIZE_SCALAR(iam);
+        paramIn(cp, section, "rctl", rctl._data);
+        paramIn(cp, section, "fcttv", fcttv._data);
+        paramIn(cp, section, "tctl", tctl._data);
+        paramIn(cp, section, "pba", pba._data);
+        paramIn(cp, section, "fcrtl", fcrtl._data);
+        paramIn(cp, section, "fcrth", fcrth._data);
+        paramIn(cp, section, "rdba", rdba._data);
+        paramIn(cp, section, "rdlen", rdlen._data);
+        paramIn(cp, section, "rdh", rdh._data);
+        paramIn(cp, section, "rdt", rdt._data);
+        paramIn(cp, section, "rdtr", rdtr._data);
+        paramIn(cp, section, "rxdctl", rxdctl._data);
+        paramIn(cp, section, "radv", radv._data);
+        paramIn(cp, section, "rsrpd", rsrpd._data);
+        paramIn(cp, section, "tdba", tdba._data);
+        paramIn(cp, section, "tdlen", tdlen._data);
+        paramIn(cp, section, "tdh", tdh._data);
+        paramIn(cp, section, "tdt", tdt._data);
+        paramIn(cp, section, "tidv", tidv._data);
+        paramIn(cp, section, "txdctl", txdctl._data);
+        paramIn(cp, section, "tadv", tadv._data);
+        paramIn(cp, section, "rxcsum", rxcsum._data);
+        paramIn(cp, section, "manc", manc._data);
+    }
+};
+} // iGbReg namespace

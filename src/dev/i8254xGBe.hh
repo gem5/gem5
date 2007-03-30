@@ -62,8 +62,10 @@ class IGbE : public PciDev
     uint8_t eeOpcode, eeAddr;
     uint16_t flash[iGbReg::EEPROM_SIZE];
 
+    // The drain event if we have one
+    Event *drainEvent;
+
     // cached parameters from params struct
-    Tick tickRate;
     bool useFlowControl;
 
     // packet fifos
@@ -151,7 +153,14 @@ class IGbE : public PciDev
 
     Tick intClock() { return Clock::Int::ns * 1024; }
 
+    /** This function is used to restart the clock so it can handle things like
+     * draining and resume in one place. */
     void restartClock();
+
+    /** Check if all the draining things that need to occur have occured and
+     * handle the drain event if so.
+     */
+    void checkDrain();
 
     template<class T>
     class DescCache
@@ -347,7 +356,7 @@ class IGbE : public PciDev
                     oldCp, cachePnt);
 
             enableSm();
-
+            igbe->checkDrain();
         }
 
         EventWrapper<DescCache, &DescCache::fetchComplete> fetchEvent;
@@ -379,6 +388,7 @@ class IGbE : public PciDev
                 writeback(wbAlignment);
             }
             intAfterWb();
+            igbe->checkDrain();
         }
 
 
@@ -422,6 +432,60 @@ class IGbE : public PciDev
 
         }
 
+        virtual void serialize(std::ostream &os)
+        {
+            SERIALIZE_SCALAR(cachePnt);
+            SERIALIZE_SCALAR(curFetching);
+            SERIALIZE_SCALAR(wbOut);
+            SERIALIZE_SCALAR(moreToWb);
+            SERIALIZE_SCALAR(wbAlignment);
+
+            int usedCacheSize = usedCache.size();
+            SERIALIZE_SCALAR(usedCacheSize);
+            for(int x = 0; x < usedCacheSize; x++) {
+                arrayParamOut(os, csprintf("usedCache_%d", x),
+                        (uint8_t*)usedCache[x],sizeof(T));
+            }
+
+            int unusedCacheSize = unusedCache.size();
+            SERIALIZE_SCALAR(unusedCacheSize);
+            for(int x = 0; x < unusedCacheSize; x++) {
+                arrayParamOut(os, csprintf("unusedCache_%d", x),
+                        (uint8_t*)unusedCache[x],sizeof(T));
+            }
+        }
+
+        virtual void unserialize(Checkpoint *cp, const std::string &section)
+        {
+            UNSERIALIZE_SCALAR(cachePnt);
+            UNSERIALIZE_SCALAR(curFetching);
+            UNSERIALIZE_SCALAR(wbOut);
+            UNSERIALIZE_SCALAR(moreToWb);
+            UNSERIALIZE_SCALAR(wbAlignment);
+
+            int usedCacheSize;
+            UNSERIALIZE_SCALAR(usedCacheSize);
+            T *temp;
+            for(int x = 0; x < usedCacheSize; x++) {
+                temp = new T;
+                arrayParamIn(cp, section, csprintf("usedCache_%d", x),
+                        (uint8_t*)temp,sizeof(T));
+                usedCache.push_back(temp);
+            }
+
+            int unusedCacheSize;
+            UNSERIALIZE_SCALAR(unusedCacheSize);
+            for(int x = 0; x < unusedCacheSize; x++) {
+                temp = new T;
+                arrayParamIn(cp, section, csprintf("unusedCache_%d", x),
+                        (uint8_t*)temp,sizeof(T));
+                unusedCache.push_back(temp);
+            }
+        }
+        virtual bool hasOutstandingEvents() {
+            return wbEvent.scheduled() || fetchEvent.scheduled();
+        }
+
      };
 
 
@@ -458,6 +522,10 @@ class IGbE : public PciDev
 
         EventWrapper<RxDescCache, &RxDescCache::pktComplete> pktEvent;
 
+        virtual bool hasOutstandingEvents();
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
     };
     friend class RxDescCache;
 
@@ -477,7 +545,6 @@ class IGbE : public PciDev
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
-        int hLen;
 
       public:
         TxDescCache(IGbE *i, std::string n, int s);
@@ -504,6 +571,11 @@ class IGbE : public PciDev
          */
         void pktComplete();
         EventWrapper<TxDescCache, &TxDescCache::pktComplete> pktEvent;
+
+        virtual bool hasOutstandingEvents();
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     };
     friend class TxDescCache;
@@ -543,7 +615,8 @@ class IGbE : public PciDev
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
+    virtual unsigned int drain(Event *de);
+    virtual void resume();
 
 };
 
