@@ -1,4 +1,4 @@
-0: system.remote_gdb.listener: listening for remote gdb #0 on port 7000
+0: system.remote_gdb.listener: listening for remote gdb on port 7001
 warn: Entering event queue @ 0.  Starting simulation...
 warn: Increasing stack size by one page.
 warn: ignoring syscall sigprocmask(1, 18446744073709547831, ...)
