@@ -62,8 +62,10 @@ class IGbE : public PciDev
     uint8_t eeOpcode, eeAddr;
     uint16_t flash[iGbReg::EEPROM_SIZE];
 
+    // The drain event if we have one
+    Event *drainEvent;
+
     // cached parameters from params struct
-    Tick tickRate;
     bool useFlowControl;
 
     // packet fifos
@@ -76,24 +78,44 @@ class IGbE : public PciDev
     // Should to Rx/Tx State machine tick?
     bool rxTick;
     bool txTick;
+    bool txFifoTick;
 
     // Event and function to deal with RDTR timer expiring
-    void rdtrProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
+    void rdtrProcess() {
+        rxDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting RXT interrupt because RDTR timer expired\n");
+        postInterrupt(iGbReg::IT_RXT, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
     EventWrapper<IGbE, &IGbE::rdtrProcess> rdtrEvent;
 
     // Event and function to deal with RADV timer expiring
-    void radvProcess() { rxDescCache.writeback(0); postInterrupt(iGbReg::IT_RXT, true); }
+    void radvProcess() {
+        rxDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting RXT interrupt because RADV timer expired\n");
+        postInterrupt(iGbReg::IT_RXT, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
     EventWrapper<IGbE, &IGbE::radvProcess> radvEvent;
 
     // Event and function to deal with TADV timer expiring
-    void tadvProcess() { postInterrupt(iGbReg::IT_TXDW, true); }
+    void tadvProcess() {
+        txDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting TXDW interrupt because TADV timer expired\n");
+        postInterrupt(iGbReg::IT_TXDW, true);
+    }
+
     //friend class EventWrapper<IGbE, &IGbE::tadvProcess>;
     EventWrapper<IGbE, &IGbE::tadvProcess> tadvEvent;
 
     // Event and function to deal with TIDV timer expiring
-    void tidvProcess() { postInterrupt(iGbReg::IT_TXDW, true); };
+    void tidvProcess() {
+        txDescCache.writeback(0);
+        DPRINTF(EthernetIntr, "Posting TXDW interrupt because TIDV timer expired\n");
+        postInterrupt(iGbReg::IT_TXDW, true);
+    }
     //friend class EventWrapper<IGbE, &IGbE::tidvProcess>;
     EventWrapper<IGbE, &IGbE::tidvProcess> tidvEvent;
 
@@ -131,7 +153,14 @@ class IGbE : public PciDev
 
     Tick intClock() { return Clock::Int::ns * 1024; }
 
+    /** This function is used to restart the clock so it can handle things like
+     * draining and resume in one place. */
     void restartClock();
+
+    /** Check if all the draining things that need to occur have occured and
+     * handle the drain event if so.
+     */
+    void checkDrain();
 
     template<class T>
     class DescCache
@@ -202,8 +231,10 @@ class IGbE : public PciDev
          */
         void areaChanged()
         {
-            if (usedCache.size() > 0 || unusedCache.size() > 0)
+            if (usedCache.size() > 0 || curFetching || wbOut)
                 panic("Descriptor Address, Length or Head changed. Bad\n");
+            reset();
+
         }
 
         void writeback(Addr aMask)
@@ -229,7 +260,7 @@ class IGbE : public PciDev
             moreToWb = false;
             wbAlignment = aMask;
 
-            if (max_to_wb + curHead > descLen()) {
+            if (max_to_wb + curHead >= descLen()) {
                 max_to_wb = descLen() - curHead;
                 moreToWb = true;
                 // this is by definition aligned correctly
@@ -265,9 +296,13 @@ class IGbE : public PciDev
          */
         void fetchDescriptors()
         {
-            size_t max_to_fetch = descTail() - cachePnt;
-            if (max_to_fetch < 0)
+            size_t max_to_fetch;
+
+            if (descTail() >= cachePnt)
+                max_to_fetch = descTail() - cachePnt;
+            else
                 max_to_fetch = descLen() - cachePnt;
+
 
             max_to_fetch = std::min(max_to_fetch, (size - usedCache.size() -
                         unusedCache.size()));
@@ -311,8 +346,9 @@ class IGbE : public PciDev
 #endif
 
             cachePnt += curFetching;
-            if (cachePnt > descLen())
-                cachePnt -= descLen();
+            assert(cachePnt <= descLen());
+            if (cachePnt == descLen())
+                cachePnt = 0;
 
             curFetching = 0;
 
@@ -320,7 +356,7 @@ class IGbE : public PciDev
                     oldCp, cachePnt);
 
             enableSm();
-
+            igbe->checkDrain();
         }
 
         EventWrapper<DescCache, &DescCache::fetchComplete> fetchEvent;
@@ -337,8 +373,8 @@ class IGbE : public PciDev
             curHead += wbOut;
             wbOut = 0;
 
-            if (curHead > descLen())
-                curHead = 0;
+            if (curHead >= descLen())
+                curHead -= descLen();
 
             // Update the head
             updateHead(curHead);
@@ -352,6 +388,7 @@ class IGbE : public PciDev
                 writeback(wbAlignment);
             }
             intAfterWb();
+            igbe->checkDrain();
         }
 
 
@@ -390,6 +427,63 @@ class IGbE : public PciDev
 
             usedCache.clear();
             unusedCache.clear();
+
+            cachePnt = 0;
+
+        }
+
+        virtual void serialize(std::ostream &os)
+        {
+            SERIALIZE_SCALAR(cachePnt);
+            SERIALIZE_SCALAR(curFetching);
+            SERIALIZE_SCALAR(wbOut);
+            SERIALIZE_SCALAR(moreToWb);
+            SERIALIZE_SCALAR(wbAlignment);
+
+            int usedCacheSize = usedCache.size();
+            SERIALIZE_SCALAR(usedCacheSize);
+            for(int x = 0; x < usedCacheSize; x++) {
+                arrayParamOut(os, csprintf("usedCache_%d", x),
+                        (uint8_t*)usedCache[x],sizeof(T));
+            }
+
+            int unusedCacheSize = unusedCache.size();
+            SERIALIZE_SCALAR(unusedCacheSize);
+            for(int x = 0; x < unusedCacheSize; x++) {
+                arrayParamOut(os, csprintf("unusedCache_%d", x),
+                        (uint8_t*)unusedCache[x],sizeof(T));
+            }
+        }
+
+        virtual void unserialize(Checkpoint *cp, const std::string &section)
+        {
+            UNSERIALIZE_SCALAR(cachePnt);
+            UNSERIALIZE_SCALAR(curFetching);
+            UNSERIALIZE_SCALAR(wbOut);
+            UNSERIALIZE_SCALAR(moreToWb);
+            UNSERIALIZE_SCALAR(wbAlignment);
+
+            int usedCacheSize;
+            UNSERIALIZE_SCALAR(usedCacheSize);
+            T *temp;
+            for(int x = 0; x < usedCacheSize; x++) {
+                temp = new T;
+                arrayParamIn(cp, section, csprintf("usedCache_%d", x),
+                        (uint8_t*)temp,sizeof(T));
+                usedCache.push_back(temp);
+            }
+
+            int unusedCacheSize;
+            UNSERIALIZE_SCALAR(unusedCacheSize);
+            for(int x = 0; x < unusedCacheSize; x++) {
+                temp = new T;
+                arrayParamIn(cp, section, csprintf("unusedCache_%d", x),
+                        (uint8_t*)temp,sizeof(T));
+                unusedCache.push_back(temp);
+            }
+        }
+        virtual bool hasOutstandingEvents() {
+            return wbEvent.scheduled() || fetchEvent.scheduled();
         }
 
      };
@@ -428,6 +522,10 @@ class IGbE : public PciDev
 
         EventWrapper<RxDescCache, &RxDescCache::pktComplete> pktEvent;
 
+        virtual bool hasOutstandingEvents();
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
     };
     friend class RxDescCache;
 
@@ -447,7 +545,6 @@ class IGbE : public PciDev
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
-        int hLen;
 
       public:
         TxDescCache(IGbE *i, std::string n, int s);
@@ -474,6 +571,11 @@ class IGbE : public PciDev
          */
         void pktComplete();
         EventWrapper<TxDescCache, &TxDescCache::pktComplete> pktEvent;
+
+        virtual bool hasOutstandingEvents();
+
+        virtual void serialize(std::ostream &os);
+        virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     };
     friend class TxDescCache;
@@ -513,7 +615,8 @@ class IGbE : public PciDev
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
+    virtual unsigned int drain(Event *de);
+    virtual void resume();
 
 };
 
