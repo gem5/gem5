@@ -112,7 +112,7 @@ void
 LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
                     unsigned maxSQEntries, unsigned id)
 {
-    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
+//    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     switchedOut = false;
 

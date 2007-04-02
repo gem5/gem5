@@ -81,8 +81,6 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
     // Set the number of physical registers as the number of int + float
     numPhysRegs = numPhysIntRegs + numPhysFloatRegs;
 
-    DPRINTF(IQ, "There are %i physical registers.\n", numPhysRegs);
-
     //Create an entry for each physical register within the
     //dependency graph.
     dependGraph.resize(numPhysRegs);
@@ -124,8 +122,10 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = part_amt;
         }
 
+/*
         DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
                 "%i entries per thread.\n",part_amt);
+*/
 
     } else if (policy == "threshold") {
         iqPolicy = Threshold;
@@ -139,8 +139,10 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = thresholdIQ;
         }
 
+/*
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
+*/
    } else {
        assert(0 && "Invalid IQ Sharing Policy.Options Are:{Dynamic,"
               "Partitioned, Threshold}");
@@ -360,7 +362,6 @@ template <class Impl>
 void
 InstructionQueue<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(IQ, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 }
 
@@ -368,15 +369,13 @@ template <class Impl>
 void
 InstructionQueue<Impl>::setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2e_ptr)
 {
-    DPRINTF(IQ, "Set the issue to execute queue.\n");
-    issueToExecuteQueue = i2e_ptr;
+      issueToExecuteQueue = i2e_ptr;
 }
 
 template <class Impl>
 void
 InstructionQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(IQ, "Set the time buffer.\n");
     timeBuffer = tb_ptr;
 
     fromCommit = timeBuffer->getWire(-commitToIEWDelay);

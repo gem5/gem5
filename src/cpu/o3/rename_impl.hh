@@ -168,15 +168,14 @@ template <class Impl>
 void
 DefaultRename<Impl>::setCPU(O3CPU *cpu_ptr)
 {
-    DPRINTF(Rename, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
+    DPRINTF(Rename, "Setting CPU pointer.\n");
 }
 
 template <class Impl>
 void
 DefaultRename<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(Rename, "Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
 
     // Setup wire to read information from time buffer, from IEW stage.
@@ -193,7 +192,6 @@ template <class Impl>
 void
 DefaultRename<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
-    DPRINTF(Rename, "Setting rename queue pointer.\n");
     renameQueue = rq_ptr;
 
     // Setup wire to write information to future stages.
@@ -204,7 +202,6 @@ template <class Impl>
 void
 DefaultRename<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
-    DPRINTF(Rename, "Setting decode queue pointer.\n");
     decodeQueue = dq_ptr;
 
     // Setup wire to get information from decode.
@@ -228,7 +225,6 @@ template<class Impl>
 void
 DefaultRename<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(Rename, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 }
 
@@ -237,8 +233,6 @@ template <class Impl>
 void
 DefaultRename<Impl>::setRenameMap(RenameMap rm_ptr[])
 {
-    DPRINTF(Rename, "Setting rename map pointers.\n");
-
     for (int i=0; i<numThreads; i++) {
         renameMap[i] = &rm_ptr[i];
     }
@@ -248,7 +242,6 @@ template <class Impl>
 void
 DefaultRename<Impl>::setFreeList(FreeList *fl_ptr)
 {
-    DPRINTF(Rename, "Setting free list pointer.\n");
     freeList = fl_ptr;
 }
 
@@ -256,7 +249,6 @@ template<class Impl>
 void
 DefaultRename<Impl>::setScoreboard(Scoreboard *_scoreboard)
 {
-    DPRINTF(Rename, "Setting scoreboard pointer.\n");
     scoreboard = _scoreboard;
 }
 

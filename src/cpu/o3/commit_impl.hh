@@ -96,7 +96,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
     if (policy == "aggressive"){
         commitPolicy = Aggressive;
 
-        DPRINTF(Commit,"Commit Policy set to Aggressive.");
+//        DPRINTF(Commit,"Commit Policy set to Aggressive.");
     } else if (policy == "roundrobin"){
         commitPolicy = RoundRobin;
 
@@ -105,11 +105,11 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
             priority_list.push_back(tid);
         }
 
-        DPRINTF(Commit,"Commit Policy set to Round Robin.");
+//        DPRINTF(Commit,"Commit Policy set to Round Robin.");
     } else if (policy == "oldestready"){
         commitPolicy = OldestReady;
 
-        DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
+//        DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
     } else {
         assert(0 && "Invalid SMT Commit Policy. Options Are: {Aggressive,"
                "RoundRobin,OldestReady}");
@@ -229,8 +229,8 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting CPU pointer.\n");
     cpu = cpu_ptr;
+    DPRINTF(Commit, "Commit: Setting CPU pointer.\n");
 
     // Commit must broadcast the number of free entries it has at the start of
     // the simulation, so it starts as active.
@@ -250,7 +250,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
 
     // Setup wire to send information back to IEW.
@@ -264,7 +263,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting fetch queue pointer.\n");
     fetchQueue = fq_ptr;
 
     // Setup wire to get instructions from rename (for the ROB).
@@ -275,7 +273,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting rename queue pointer.\n");
     renameQueue = rq_ptr;
 
     // Setup wire to get instructions from rename (for the ROB).
@@ -286,7 +283,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting IEW queue pointer.\n");
     iewQueue = iq_ptr;
 
     // Setup wire to get instructions from IEW.
@@ -304,7 +300,6 @@ template<class Impl>
 void
 DefaultCommit<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 }
 
@@ -312,8 +307,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setRenameMap(RenameMap rm_ptr[])
 {
-    DPRINTF(Commit, "Setting rename map pointers.\n");
-
     for (int i=0; i < numThreads; i++) {
         renameMap[i] = &rm_ptr[i];
     }
@@ -323,7 +316,6 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setROB(ROB *rob_ptr)
 {
-    DPRINTF(Commit, "Commit: Setting ROB pointer.\n");
     rob = rob_ptr;
 }
 

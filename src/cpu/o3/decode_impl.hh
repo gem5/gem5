@@ -114,15 +114,14 @@ template<class Impl>
 void
 DefaultDecode<Impl>::setCPU(O3CPU *cpu_ptr)
 {
-    DPRINTF(Decode, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
+    DPRINTF(Decode, "Setting CPU pointer.\n");
 }
 
 template<class Impl>
 void
 DefaultDecode<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(Decode, "Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
 
     // Setup wire to write information back to fetch.
@@ -138,7 +137,6 @@ template<class Impl>
 void
 DefaultDecode<Impl>::setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr)
 {
-    DPRINTF(Decode, "Setting decode queue pointer.\n");
     decodeQueue = dq_ptr;
 
     // Setup wire to write information to proper place in decode queue.
@@ -149,7 +147,6 @@ template<class Impl>
 void
 DefaultDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
-    DPRINTF(Decode, "Setting fetch queue pointer.\n");
     fetchQueue = fq_ptr;
 
     // Setup wire to read information from fetch queue.
@@ -160,7 +157,6 @@ template<class Impl>
 void
 DefaultDecode<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(Decode, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 }
 

@@ -282,8 +282,8 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setCPU(O3CPU *cpu_ptr)
 {
-    DPRINTF(IEW, "Setting CPU pointer.\n");
     cpu = cpu_ptr;
+    DPRINTF(IEW, "Setting CPU pointer.\n");
 
     instQueue.setCPU(cpu_ptr);
     ldstQueue.setCPU(cpu_ptr);
@@ -295,7 +295,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
-    DPRINTF(IEW, "Setting time buffer pointer.\n");
     timeBuffer = tb_ptr;
 
     // Setup wire to read information from time buffer, from commit.
@@ -314,7 +313,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setRenameQueue(TimeBuffer<RenameStruct> *rq_ptr)
 {
-    DPRINTF(IEW, "Setting rename queue pointer.\n");
     renameQueue = rq_ptr;
 
     // Setup wire to read information from rename queue.
@@ -325,7 +323,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 {
-    DPRINTF(IEW, "Setting IEW queue pointer.\n");
     iewQueue = iq_ptr;
 
     // Setup wire to write instructions to commit.
@@ -336,7 +333,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(IEW, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 
     ldstQueue.setActiveThreads(at_ptr);
@@ -347,7 +343,6 @@ template<class Impl>
 void
 DefaultIEW<Impl>::setScoreboard(Scoreboard *sb_ptr)
 {
-    DPRINTF(IEW, "Setting scoreboard pointer.\n");
     scoreboard = sb_ptr;
 }
 

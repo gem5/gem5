@@ -112,8 +112,6 @@ LSQ<Impl>::LSQ(Params *params)
       SQEntries(params->SQEntries), numThreads(params->numberOfThreads),
       retryTid(-1)
 {
-    DPRINTF(LSQ, "Creating LSQ object.\n");
-
     dcachePort.snoopRangeSent = false;
 
     //**********************************************/
@@ -131,20 +129,20 @@ LSQ<Impl>::LSQ(Params *params)
 
         maxLQEntries = LQEntries;
         maxSQEntries = SQEntries;
-
+/*
         DPRINTF(LSQ, "LSQ sharing policy set to Dynamic\n");
-
+*/
     } else if (policy == "partitioned") {
         lsqPolicy = Partitioned;
 
         //@todo:make work if part_amt doesnt divide evenly.
         maxLQEntries = LQEntries / numThreads;
         maxSQEntries = SQEntries / numThreads;
-
+/*
         DPRINTF(Fetch, "LSQ sharing policy set to Partitioned: "
                 "%i entries per LQ | %i entries per SQ",
                 maxLQEntries,maxSQEntries);
-
+*/
     } else if (policy == "threshold") {
         lsqPolicy = Threshold;
 
@@ -156,10 +154,11 @@ LSQ<Impl>::LSQ(Params *params)
         //amount of the LSQ
         maxLQEntries  = params->smtLSQThreshold;
         maxSQEntries  = params->smtLSQThreshold;
-
+/*
         DPRINTF(LSQ, "LSQ sharing policy set to Threshold: "
                 "%i entries per LQ | %i entries per SQ",
                 maxLQEntries,maxSQEntries);
+*/
 
     } else {
         assert(0 && "Invalid LSQ Sharing Policy.Options Are:{Dynamic,"

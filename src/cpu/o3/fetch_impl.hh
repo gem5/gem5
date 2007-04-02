@@ -266,8 +266,8 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
 {
-    DPRINTF(Fetch, "Setting the CPU pointer.\n");
     cpu = cpu_ptr;
+    DPRINTF(Fetch, "Setting the CPU pointer.\n");
 
     // Name is finally available, so create the port.
     icachePort = new IcachePort(this);
@@ -292,7 +292,6 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
-    DPRINTF(Fetch, "Setting the time buffer pointer.\n");
     timeBuffer = time_buffer;
 
     // Create wires to get information from proper places in time buffer.
@@ -306,7 +305,6 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
-    DPRINTF(Fetch, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
 }
 
@@ -314,7 +312,6 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 {
-    DPRINTF(Fetch, "Setting the fetch queue pointer.\n");
     fetchQueue = fq_ptr;
 
     // Create wire to write information to proper place in fetch queue.

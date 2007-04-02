@@ -66,7 +66,7 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
 
     } else if (policy == "partitioned") {
         robPolicy = Partitioned;
-        DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
+//	DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
 
         //@todo:make work if part_amt doesnt divide evenly.
         int part_amt = numEntries / numThreads;
@@ -78,7 +78,7 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
 
     } else if (policy == "threshold") {
         robPolicy = Threshold;
-        DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
+//	DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
         int threshold =  _smtROBThreshold;;
 
