@@ -212,11 +212,16 @@ namespace X86ISA
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {
                 nextState = ModRMState;
-            } else if(immediateSize) {
-                nextState = ImmediateState;
             } else {
-                emiIsReady = true;
-                nextState = PrefixState;
+                //If there's no modRM byte, set it to 0 so we can detect
+                //that later.
+                emi.modRM = 0;
+                if(immediateSize) {
+                    nextState = ImmediateState;
+                } else {
+                    emiIsReady = true;
+                    nextState = PrefixState;
+                }
             }
         }
         return nextState;
@@ -241,11 +246,11 @@ namespace X86ISA
                 displacementSize = 0;
         } else {
             //figure out 32/64 bit displacement size
-            if(nextByte & 0xC7 == 0x05 ||
+            if(nextByte & 0xC6 == 0x04 ||
                     nextByte & 0xC0 == 0x80)
                 displacementSize = 4;
             else if(nextByte & 0xC0 == 0x40)
-                displacementSize = 2;
+                displacementSize = 1;
             else
                 displacementSize = 0;
         }
