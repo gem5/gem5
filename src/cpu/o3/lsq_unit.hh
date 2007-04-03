@@ -297,15 +297,19 @@ class LSQUnit {
     struct SQEntry {
         /** Constructs an empty store queue entry. */
         SQEntry()
-            : inst(NULL), req(NULL), size(0), data(0),
+            : inst(NULL), req(NULL), size(0),
               canWB(0), committed(0), completed(0)
-        { }
+        {
+            bzero(data, sizeof(data));
+        }
 
         /** Constructs a store queue entry for a given instruction. */
         SQEntry(DynInstPtr &_inst)
-            : inst(_inst), req(NULL), size(0), data(0),
+            : inst(_inst), req(NULL), size(0),
               canWB(0), committed(0), completed(0)
-        { }
+        {
+            bzero(data, sizeof(data));
+        }
 
         /** The store instruction. */
         DynInstPtr inst;
@@ -314,7 +318,7 @@ class LSQUnit {
         /** The size of the store. */
         int size;
         /** The store data. */
-        IntReg data;
+        char data[sizeof(IntReg)];
         /** Whether or not the store can writeback. */
         bool canWB;
         /** Whether or not the store is committed. */
@@ -562,22 +566,14 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
         if ((store_has_lower_limit && store_has_upper_limit)) {
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() & (store_size - 1);
-            // @todo: Magic number, assumes byte addressing
-            shift_amt = shift_amt << 3;
 
-            // Cast this to type T?
-            data = storeQueue[store_idx].data >> shift_amt;
-
-            // When the data comes from the store queue entry, it's in host
-            // order. When it gets sent to the load, it needs to be in guest
-            // order so when the load converts it again, it ends up back
-            // in host order like the inst expects.
-            data = TheISA::htog(data);
+            memcpy(&data, storeQueue[store_idx].data + shift_amt, sizeof(T));
 
             assert(!load_inst->memData);
             load_inst->memData = new uint8_t[64];
 
-            memcpy(load_inst->memData, &data, req->getSize());
+            memcpy(load_inst->memData,
+                    storeQueue[store_idx].data + shift_amt, req->getSize());
 
             DPRINTF(LSQUnit, "Forwarding from store idx %i to load to "
                     "addr %#x, data %#x\n",
@@ -724,7 +720,10 @@ LSQUnit<Impl>::write(Request *req, T &data, int store_idx)
 
     storeQueue[store_idx].req = req;
     storeQueue[store_idx].size = sizeof(T);
-    storeQueue[store_idx].data = data;
+    assert(sizeof(T) <= sizeof(storeQueue[store_idx].data));
+
+    T gData = htog(data);
+    memcpy(storeQueue[store_idx].data, &gData, sizeof(T));
 
     // This function only writes the data to the store queue, so no fault
     // can happen here.
