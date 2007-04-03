@@ -83,8 +83,13 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-// Output include file directives.
+// Output include file directives. Also import the python modules we
+// need for all the x86 custom decoder stuff
 //
+
+let {{
+    import copy
+}};
 
 output header {{
 #include <cstring>
