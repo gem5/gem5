@@ -67,7 +67,18 @@ let {{
             self.label = ''
             self.args = []
 
-        def getAllocator(self, labelDict = {}):
+        # This converts a list of python bools into
+        # a comma seperated list of C++ bools.
+        def microFlagsText(self, vals):
+            text = ""
+            for val in vals:
+                if val:
+                    text += ", true"
+                else:
+                    text += ", false"
+            return text
+
+        def getAllocator(self, *microFlags):
             args = ''
             for arg in self.args:
                 if arg.has_key("operandConst"):
@@ -75,13 +86,21 @@ let {{
                 elif arg.has_key("operandCode"):
                     args += ", %s" % arg["operandCode"]
                 elif arg.has_key("operandLabel"):
-                    if not labelDict.has_key(arg["operandLabel"]):
-                        print "Unrecognized label %s!" % arg["operandLabel"]
-                    args += ", %s" % labelDict[arg["operandLabel"]]
+                    raise Exception, "Found a label while creating allocator string."
                 else:
-                    print "Unrecognized operand type!"
-            return 'new %s(machInst %s)' % (self.className, args)
+                    raise Exception, "Unrecognized operand type."
+            return 'new %s(machInst%s%s)' % (self.className, self.microFlagsText(microFlags), args)
+}};
 
+let {{
+    def buildLabelDict(ops):
+        labels = {}
+        micropc = 0
+        for op in ops:
+            if op.label:
+                labels[op.label] = count
+            micropc += 1
+        return labels
 
     def assembleMicro(code):
         # This function takes in a block of microcode assembly and returns
@@ -113,25 +132,26 @@ let {{
             statement = MicroOpStatement()
             # Get a line and seperate it from the rest of the code
             line = lineMatch.group("line")
-            print "Parsing line %s" % line
+            orig_line = line
+            # print "Parsing line %s" % line
             code = lineRe.sub('', code, 1)
 
             # Find the label, if any
             labelMatch = labelRe.search(line)
             if labelMatch != None:
                 statement.label = labelMatch.group("label")
-                print "Found label %s." % statement.label
+                # print "Found label %s." % statement.label
             # Clear the label from the statement
             line = labelRe.sub('', line, 1)
 
             # Find the class name which is roughly equivalent to the op name
             classMatch = classRe.search(line)
             if classMatch == None:
-                print "Oh no! I can't find what instruction you want!"
-                print "I should really bail out here, but I don't know how!"
+                raise Exception, "Couldn't find class name in statement: %s" \
+                        % orig_line
             else:
                 statement.className = classMatch.group("className")
-                print "Found class name %s." % statement.className
+                # print "Found class name %s." % statement.className
 
             # Clear the class name from the statement
             line = classRe.sub('', line, 1)
@@ -149,24 +169,31 @@ let {{
                     if opMatch.group(opType):
                         statement.args[-1][opType] = opMatch.group(opType)
                 if len(statement.args[-1]) == 0:
-                    print "I had a problem parsing an operand!"
+                    print "Problem parsing operand in statement: %s" \
+                            % orig_line
                 line = opRe.sub('', line, 1)
-                print "Found operand %s." % statement.args[-1]
+                # print "Found operand %s." % statement.args[-1]
                 opMatch = opRe.search(line)
-            print "Found operands", statement.args
+            # print "Found operands", statement.args
 
             # Add this statement to our collection
             statements.append(statement)
 
             # Get the next line
             lineMatch = lineRe.search(code)
-        return statements
 
-    def buildLabelDict(ops):
-        labels = {}
-        count = 0
-        for op in ops:
-            if op.label:
-                labels[op.label] = count
-            count += 1
+        # Decode the labels into displacements
+        labels = buildLabelDict(statements)
+        micropc = 0
+        for statement in statements:
+            for arg in statement.args:
+                if arg.has_key("operandLabel"):
+                    if not labels.has_key(arg["operandLabel"]):
+                        raise Exception, "Unrecognized label: %s." % arg["operandLabel"]
+                    # This is assuming that intra microcode branches go to
+                    # the next micropc + displacement, or
+                    # micropc + 1 + displacement.
+                    arg["operandConst"] = labels[arg["operandLabel"]] - micropc - 1
+            micropc += 1
+        return statements
 }};
