@@ -1,19 +1,19 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1214495                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 409828                       # Number of bytes of host memory used
-host_seconds                                  1828.73                       # Real time elapsed on the host
-host_tick_rate                                1214601                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 571923                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 373992                       # Number of bytes of host memory used
+host_seconds                                  3905.40                       # Real time elapsed on the host
+host_tick_rate                                 571972                       # Simulator tick rate (ticks/s)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-sim_insts                                  2220985165                       # Number of instructions simulated
-sim_seconds                                  1.110589                       # Number of seconds simulated
-sim_ticks                                  2221178828                       # Number of ticks simulated
+sim_insts                                  2233583679                       # Number of instructions simulated
+sim_seconds                                  1.116889                       # Number of seconds simulated
+sim_ticks                                  2233777512                       # Number of ticks simulated
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.kern.inst.arm                            0                       # number of arm instructions executed
 system.cpu.kern.inst.quiesce                        0                       # number of quiesce instructions executed
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                       2221178829                       # number of cpu cycles simulated
-system.cpu.num_insts                       2220985165                       # Number of instructions executed
-system.cpu.num_refs                         545896474                       # Number of memory references
+system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
+system.cpu.num_insts                       2233583679                       # Number of instructions executed
+system.cpu.num_refs                         547951940                       # Number of memory references
 
 ---------- End Simulation Statistics   ----------
