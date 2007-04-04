@@ -52,9 +52,19 @@ Bus::getPort(const std::string &if_name, int idx)
         } else
             fatal("Default port already set\n");
     }
+    int id;
+    if (if_name == "functional") {
+        if (!funcPort) {
+            id = maxId++;
+            funcPort = new BusPort(csprintf("%s-p%d-func", name(), id), this, id);
+            funcPortId = id;
+            interfaces[id] = funcPort;
+        }
+        return funcPort;
+    }
 
     // if_name ignored?  forced to be empty?
-    int id = maxId++;
+    id = maxId++;
     assert(maxId < std::numeric_limits<typeof(maxId)>::max());
     BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
     interfaces[id] = bp;
@@ -64,10 +74,15 @@ Bus::getPort(const std::string &if_name, int idx)
 void
 Bus::deletePortRefs(Port *p)
 {
+
     BusPort *bp =  dynamic_cast<BusPort*>(p);
     if (bp == NULL)
         panic("Couldn't convert Port* to BusPort*\n");
+    // If this is our one functional port
+    if (funcPort == bp)
+        return;
     interfaces.erase(bp->getId());
+    delete bp;
 }
 
 /** Get the ranges of anyone other buses that we are connected to. */
@@ -520,7 +535,7 @@ Bus::recvStatusChange(Port::Status status, int id)
     m5::hash_map<short,BusPort*>::iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        if (intIter->first != id)
+        if (intIter->first != id && intIter->first != funcPortId)
             intIter->second->sendStatusChange(Port::RangeChange);
 
     if (id != defaultId && defaultPort)
