@@ -31,8 +31,9 @@
 #include "cpu/o3/decode.hh"
 
 template<class Impl>
-DefaultDecode<Impl>::DefaultDecode(Params *params)
-    : renameToDecodeDelay(params->renameToDecodeDelay),
+DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, Params *params)
+    : cpu(_cpu),
+      renameToDecodeDelay(params->renameToDecodeDelay),
       iewToDecodeDelay(params->iewToDecodeDelay),
       commitToDecodeDelay(params->commitToDecodeDelay),
       fetchToDecodeDelay(params->fetchToDecodeDelay),
@@ -108,14 +109,6 @@ DefaultDecode<Impl>::regStats()
         .name(name() + ".DECODE:SquashedInsts")
         .desc("Number of squashed instructions handled by decode")
         .prereq(decodeSquashedInsts);
-}
-
-template<class Impl>
-void
-DefaultDecode<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-    DPRINTF(Decode, "Setting CPU pointer.\n");
 }
 
 template<class Impl>

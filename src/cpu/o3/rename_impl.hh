@@ -37,8 +37,9 @@
 #include "cpu/o3/rename.hh"
 
 template <class Impl>
-DefaultRename<Impl>::DefaultRename(Params *params)
-    : iewToRenameDelay(params->iewToRenameDelay),
+DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, Params *params)
+    : cpu(_cpu),
+      iewToRenameDelay(params->iewToRenameDelay),
       decodeToRenameDelay(params->decodeToRenameDelay),
       commitToRenameDelay(params->commitToRenameDelay),
       renameWidth(params->renameWidth),
@@ -162,14 +163,6 @@ DefaultRename<Impl>::regStats()
         .desc("count of insts added to the skid buffer")
         .flags(Stats::total)
         ;
-}
-
-template <class Impl>
-void
-DefaultRename<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-    DPRINTF(Rename, "Setting CPU pointer.\n");
 }
 
 template <class Impl>

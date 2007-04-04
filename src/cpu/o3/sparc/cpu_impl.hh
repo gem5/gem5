@@ -55,7 +55,7 @@
 #endif
 
 template <class Impl>
-SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(params)
+SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(this, params)
 {
     DPRINTF(O3CPU, "Creating SparcO3CPU object.\n");
 
@@ -113,6 +113,7 @@ SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(params)
 #endif
         // Give the thread the TC.
         this->thread[i]->tc = tc;
+        this->thread[i]->setCpuId(params->cpu_id);
 
         // Add the TC to the CPU's list of TC's.
         this->threadContexts.push_back(tc);
@@ -121,17 +122,6 @@ SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(params)
     for (int i=0; i < this->numThreads; i++) {
         this->thread[i]->setFuncExeInst(0);
     }
-
-    // Sets CPU pointers. These must be set at this level because the CPU
-    // pointers are defined to be the highest level of CPU class.
-    this->fetch.setCPU(this);
-    this->decode.setCPU(this);
-    this->rename.setCPU(this);
-    this->iew.setCPU(this);
-    this->commit.setCPU(this);
-
-    this->rob.setCPU(this);
-    this->regFile.setCPU(this);
 
     lockAddr = 0;
     lockFlag = false;

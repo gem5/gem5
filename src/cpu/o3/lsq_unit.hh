@@ -73,8 +73,8 @@ class LSQUnit {
     LSQUnit();
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
-              unsigned maxSQEntries, unsigned id);
+    void init(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params, LSQ *lsq_ptr,
+              unsigned maxLQEntries, unsigned maxSQEntries, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -82,16 +82,8 @@ class LSQUnit {
     /** Registers statistics. */
     void regStats();
 
-    /** Sets the CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr);
-
-    /** Sets the IEW stage pointer. */
-    void setIEW(IEW *iew_ptr)
-    { iewStage = iew_ptr; }
-
     /** Sets the pointer to the dcache port. */
-    void setDcachePort(Port *dcache_port)
-    { dcachePort = dcache_port; }
+    void setDcachePort(Port *dcache_port);
 
     /** Switches out LSQ unit. */
     void switchOut();

@@ -57,6 +57,11 @@ LSQUnit<Impl>::WritebackEvent::process()
     if (!lsqPtr->isSwitchedOut()) {
         lsqPtr->writeback(inst, pkt);
     }
+
+    if (pkt->senderState)
+        delete pkt->senderState;
+
+    delete pkt->req;
     delete pkt;
 }
 
@@ -80,10 +85,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 
     if (isSwitchedOut() || inst->isSquashed()) {
         iewStage->decrWb(inst->seqNum);
-        delete state;
-        delete pkt->req;
-        delete pkt;
-        return;
     } else {
         if (!state->noWB) {
             writeback(inst, pkt);
@@ -109,10 +110,13 @@ LSQUnit<Impl>::LSQUnit()
 
 template<class Impl>
 void
-LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
-                    unsigned maxSQEntries, unsigned id)
+LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params, LSQ *lsq_ptr,
+                    unsigned maxLQEntries, unsigned maxSQEntries, unsigned id)
 {
-//    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
+    cpu = cpu_ptr;
+    iewStage = iew_ptr;
+
+    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     switchedOut = false;
 
@@ -138,19 +142,6 @@ LSQUnit<Impl>::init(Params *params, LSQ *lsq_ptr, unsigned maxLQEntries,
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
-}
-
-template<class Impl>
-void
-LSQUnit<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-
-#if USE_CHECKER
-    if (cpu->checker) {
-        cpu->checker->setDcachePort(dcachePort);
-    }
-#endif
 }
 
 template<class Impl>
@@ -207,6 +198,19 @@ LSQUnit<Impl>::regStats()
     lsqCacheBlocked
         .name(name() + ".cacheBlocked")
         .desc("Number of times an access to memory failed due to the cache being blocked");
+}
+
+template<class Impl>
+void
+LSQUnit<Impl>::setDcachePort(Port *dcache_port)
+{
+    dcachePort = dcache_port;
+
+#if USE_CHECKER
+    if (cpu->checker) {
+        cpu->checker->setDcachePort(dcachePort);
+    }
+#endif
 }
 
 template<class Impl>

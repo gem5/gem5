@@ -39,10 +39,11 @@
 #include "cpu/o3/iew.hh"
 
 template<class Impl>
-DefaultIEW<Impl>::DefaultIEW(Params *params)
+DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, Params *params)
     : issueToExecQueue(params->backComSize, params->forwardComSize),
-      instQueue(params),
-      ldstQueue(params),
+      cpu(_cpu),
+      instQueue(_cpu, this, params),
+      ldstQueue(_cpu, this, params),
       fuPool(params->fuPool),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToIEWDelay(params->renameToIEWDelay),
@@ -63,9 +64,6 @@ DefaultIEW<Impl>::DefaultIEW(Params *params)
 
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
-
-    instQueue.setIEW(this);
-    ldstQueue.setIEW(this);
 
     for (int i=0; i < numThreads; i++) {
         dispatchStatus[i] = Running;
@@ -276,17 +274,6 @@ DefaultIEW<Impl>::initStage()
         toRename->iewInfo[tid].freeLSQEntries =
             ldstQueue.numFreeEntries(tid);
     }
-}
-
-template<class Impl>
-void
-DefaultIEW<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-    DPRINTF(IEW, "Setting CPU pointer.\n");
-
-    instQueue.setCPU(cpu_ptr);
-    ldstQueue.setCPU(cpu_ptr);
 
     cpu->activateStage(O3CPU::IEWIdx);
 }

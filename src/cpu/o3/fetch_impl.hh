@@ -110,8 +110,9 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 }
 
 template<class Impl>
-DefaultFetch<Impl>::DefaultFetch(Params *params)
-    : branchPred(params),
+DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
+    : cpu(_cpu),
+      branchPred(params),
       predecoder(NULL),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
@@ -163,6 +164,17 @@ DefaultFetch<Impl>::DefaultFetch(Params *params)
 
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
+
+    // Name is finally available, so create the port.
+    icachePort = new IcachePort(this);
+
+    icachePort->snoopRangeSent = false;
+
+#if USE_CHECKER
+    if (cpu->checker) {
+        cpu->checker->setIcachePort(icachePort);
+    }
+#endif
 }
 
 template <class Impl>
@@ -264,32 +276,6 @@ DefaultFetch<Impl>::regStats()
 
 template<class Impl>
 void
-DefaultFetch<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-    DPRINTF(Fetch, "Setting the CPU pointer.\n");
-
-    // Name is finally available, so create the port.
-    icachePort = new IcachePort(this);
-
-    icachePort->snoopRangeSent = false;
-
-#if USE_CHECKER
-    if (cpu->checker) {
-        cpu->checker->setIcachePort(icachePort);
-    }
-#endif
-
-    // Schedule fetch to get the correct PC from the CPU
-    // scheduleFetchStartupEvent(1);
-
-    // Fetch needs to start fetching instructions at the very beginning,
-    // so it must start up in active state.
-    switchToActive();
-}
-
-template<class Impl>
-void
 DefaultFetch<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
     timeBuffer = time_buffer;
@@ -342,6 +328,13 @@ DefaultFetch<Impl>::initStage()
         stalls[tid].iew = false;
         stalls[tid].commit = false;
     }
+
+    // Schedule fetch to get the correct PC from the CPU
+    // scheduleFetchStartupEvent(1);
+
+    // Fetch needs to start fetching instructions at the very beginning,
+    // so it must start up in active state.
+    switchToActive();
 }
 
 template<class Impl>

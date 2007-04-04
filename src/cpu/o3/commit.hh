@@ -136,16 +136,13 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(Params *params);
+    DefaultCommit(O3CPU *_cpu, Params *params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
 
     /** Registers statistics. */
     void regStats();
-
-    /** Sets the CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the list of threads. */
     void setThreads(std::vector<Thread *> &threads);
