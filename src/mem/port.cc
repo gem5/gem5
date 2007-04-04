@@ -51,7 +51,6 @@ Port::removeConn()
 {
     if (peer->getOwner())
         peer->getOwner()->deletePortRefs(peer);
-    delete peer;
     peer = NULL;
 }
 

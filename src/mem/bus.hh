@@ -63,6 +63,7 @@ class Bus : public MemObject
 
     Event * drainEvent;
 
+
     static const int defaultId = -3; //Make it unique from Broadcast
 
     struct DevMap {
@@ -249,6 +250,9 @@ class Bus : public MemObject
     /** Port that handles requests that don't match any of the interfaces.*/
     BusPort *defaultPort;
 
+    BusPort *funcPort;
+    int funcPortId;
+
     /** Has the user specified their own default responder? */
     bool responderSet;
 
@@ -266,7 +270,8 @@ class Bus : public MemObject
         bool responder_set)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
           tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
-          maxId(0), defaultPort(NULL), responderSet(responder_set)
+          maxId(0), defaultPort(NULL), funcPort(NULL), funcPortId(-4),
+          responderSet(responder_set)
     {
         //Both the width and clock period must be positive
         if (width <= 0)
