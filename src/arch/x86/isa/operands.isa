@@ -96,7 +96,7 @@ def operand_types {{
 }};
 
 def operands {{
-        'IntRegOp0':     ('IntReg', 'udw', 'regIndex0', 'IsInteger', 1),
-        'IntRegOp1':     ('IntReg', 'udw', 'regIndex1', 'IsInteger', 2),
-        'IntRegOp2':     ('IntReg', 'udw', 'regIndex2', 'IsInteger', 2),
+        'IntRegOp0':     ('IntReg', 'udw', 'param0', 'IsInteger', 1),
+        'IntRegOp1':     ('IntReg', 'udw', 'param1', 'IsInteger', 2),
+        'IntRegOp2':     ('IntReg', 'udw', 'param2', 'IsInteger', 2),
 }};

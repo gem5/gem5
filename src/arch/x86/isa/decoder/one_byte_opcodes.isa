@@ -61,8 +61,8 @@
 0x1: decode OPCODE_OP_TOP5 {
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::addI(rAl,Ib);
-            0x5: Inst::addI(rAx,Iz);
+            0x4: Inst::add(rAl,Ib);
+            0x5: Inst::add(rAx,Iz);
             0x6: push_ES();
             0x7: pop_ES();
             default: MultiInst::add(OPCODE_OP_BOTTOM3,
@@ -123,8 +123,8 @@
             0x7: das();
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::xorI(rAl,Ib);
-            0x5: Inst::xorI(rAx,Iz);
+            0x4: Inst::xor(rAl,Ib);
+            0x5: Inst::xor(rAx,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: aaa();
