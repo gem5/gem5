@@ -57,6 +57,11 @@ LSQUnit<Impl>::WritebackEvent::process()
     if (!lsqPtr->isSwitchedOut()) {
         lsqPtr->writeback(inst, pkt);
     }
+
+    if (pkt->senderState)
+        delete pkt->senderState;
+
+    delete pkt->req;
     delete pkt;
 }
 
@@ -80,10 +85,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 
     if (isSwitchedOut() || inst->isSquashed()) {
         iewStage->decrWb(inst->seqNum);
-        delete state;
-        delete pkt->req;
-        delete pkt;
-        return;
     } else {
         if (!state->noWB) {
             writeback(inst, pkt);
