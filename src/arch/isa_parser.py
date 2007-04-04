@@ -1032,7 +1032,7 @@ def substBitOps(code):
 # Template objects are format strings that allow substitution from
 # the attribute spaces of other objects (e.g. InstObjParams instances).
 
-labelRE = re.compile(r'[^%]%\(([^\)]+)\)[sd]')
+labelRE = re.compile(r'(?<!%)%\(([^\)]+)\)[sd]')
 
 class Template:
     def __init__(self, t):
