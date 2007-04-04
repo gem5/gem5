@@ -51,6 +51,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
 Param<int> clock;
 Param<int> phase;
 Param<int> numThreads;
+Param<int> cpu_id;
 Param<int> activity;
 
 SimObjectVectorParam<Process *> workload;
@@ -149,6 +150,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
     INIT_PARAM(clock, "clock speed"),
     INIT_PARAM_DFLT(phase, "clock phase", 0),
     INIT_PARAM(numThreads, "number of HW thread contexts"),
+    INIT_PARAM(cpu_id, "processor ID"),
     INIT_PARAM_DFLT(activity, "Initial activity count", 0),
 
     INIT_PARAM(workload, "Processes to run"),
@@ -275,9 +277,11 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     MipsSimpleParams *params = new MipsSimpleParams;
 
     params->clock = clock;
+    params->phase = phase;
 
     params->name = getInstanceName();
     params->numberOfThreads = actual_num_threads;
+    params->cpu_id = cpu_id;
     params->activity = activity;
 
     params->workload = workload;
