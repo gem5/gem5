@@ -1183,7 +1183,8 @@ Cache<TagStore,Coherence>::deletePortRefs(Port *p)
 {
     if (cpuSidePort == p || memSidePort == p)
         panic("Can only delete functional ports\n");
-    // nothing else to do
+
+    delete p;
 }
 
 
