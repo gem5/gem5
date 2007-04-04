@@ -866,7 +866,11 @@ class Format:
         context = {}
         updateExportContext()
         context.update(exportContext)
-        context.update({ 'name': name, 'Name': string.capitalize(name) })
+        if len(name):
+            Name = name[0].upper()
+            if len(name) > 1:
+                Name += name[1:]
+        context.update({ 'name': name, 'Name': Name })
         try:
             vars = self.func(self.user_code, context, *args[0], **args[1])
         except Exception, exc:
