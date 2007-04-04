@@ -57,7 +57,7 @@ class LSQ {
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(Params *params);
+    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params);
 
     /** Returns the name of the LSQ. */
     std::string name() const;
@@ -74,10 +74,6 @@ class LSQ {
 
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
-    /** Sets the CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr);
-    /** Sets the IEW stage pointer. */
-    void setIEW(IEW *iew_ptr);
     /** Switches out the LSQ. */
     void switchOut();
     /** Takes over execution from another CPU's thread. */
@@ -283,6 +279,12 @@ class LSQ {
     template <class T>
     Fault write(RequestPtr req, T &data, int store_idx);
 
+    /** The CPU pointer. */
+    O3CPU *cpu;
+
+    /** The IEW stage pointer. */
+    IEW *iewStage;
+
     /** DcachePort class for this LSQ.  Handles doing the
      * communication with the cache/memory.
      */
@@ -295,7 +297,7 @@ class LSQ {
       public:
         /** Default constructor. */
         DcachePort(LSQ *_lsq)
-            : lsq(_lsq)
+            : Port(_lsq->name() + "-dport"), lsq(_lsq)
         { }
 
         bool snoopRangeSent;
@@ -340,12 +342,6 @@ class LSQ {
 
     /** The LSQ units for individual threads. */
     LSQUnit thread[Impl::MaxThreads];
-
-    /** The CPU pointer. */
-    O3CPU *cpu;
-
-    /** The IEW stage pointer. */
-    IEW *iewStage;
 
     /** List of Active Threads in System. */
     std::list<unsigned> *activeThreads;

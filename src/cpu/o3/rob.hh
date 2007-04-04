@@ -82,16 +82,11 @@ class ROB
      *  @param _smtROBThreshold Max Resources(by %) a thread can have in the ROB.
      *  @param _numThreads      The number of active threads.
      */
-    ROB(unsigned _numEntries, unsigned _squashWidth, std::string smtROBPolicy,
-        unsigned _smtROBThreshold, unsigned _numThreads);
+    ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
+        std::string smtROBPolicy, unsigned _smtROBThreshold,
+        unsigned _numThreads);
 
     std::string name() const;
-
-    /** Function to set the CPU pointer, necessary due to which object the ROB
-     *  is created within.
-     *  @param cpu_ptr Pointer to the implementation specific full CPU object.
-     */
-    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets pointer to the list of active threads.
      *  @param at_ptr Pointer to the list of active threads.

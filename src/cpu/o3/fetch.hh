@@ -160,7 +160,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(Params *params);
+    DefaultFetch(O3CPU *_cpu, Params *params);
 
     /** Returns the name of fetch. */
     std::string name() const;
@@ -170,9 +170,6 @@ class DefaultFetch
 
     /** Returns the icache port. */
     Port *getIcachePort() { return icachePort; }
-
-    /** Sets CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);

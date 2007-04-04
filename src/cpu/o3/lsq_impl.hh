@@ -107,9 +107,11 @@ LSQ<Impl>::DcachePort::recvRetry()
 }
 
 template <class Impl>
-LSQ<Impl>::LSQ(Params *params)
-    : dcachePort(this), LQEntries(params->LQEntries),
-      SQEntries(params->SQEntries), numThreads(params->numberOfThreads),
+LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params)
+    : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this),
+      LQEntries(params->LQEntries),
+      SQEntries(params->SQEntries),
+      numThreads(params->numberOfThreads),
       retryTid(-1)
 {
     dcachePort.snoopRangeSent = false;
@@ -129,20 +131,18 @@ LSQ<Impl>::LSQ(Params *params)
 
         maxLQEntries = LQEntries;
         maxSQEntries = SQEntries;
-/*
+
         DPRINTF(LSQ, "LSQ sharing policy set to Dynamic\n");
-*/
     } else if (policy == "partitioned") {
         lsqPolicy = Partitioned;
 
         //@todo:make work if part_amt doesnt divide evenly.
         maxLQEntries = LQEntries / numThreads;
         maxSQEntries = SQEntries / numThreads;
-/*
+
         DPRINTF(Fetch, "LSQ sharing policy set to Partitioned: "
                 "%i entries per LQ | %i entries per SQ",
                 maxLQEntries,maxSQEntries);
-*/
     } else if (policy == "threshold") {
         lsqPolicy = Threshold;
 
@@ -154,12 +154,10 @@ LSQ<Impl>::LSQ(Params *params)
         //amount of the LSQ
         maxLQEntries  = params->smtLSQThreshold;
         maxSQEntries  = params->smtLSQThreshold;
-/*
+
         DPRINTF(LSQ, "LSQ sharing policy set to Threshold: "
                 "%i entries per LQ | %i entries per SQ",
                 maxLQEntries,maxSQEntries);
-*/
-
     } else {
         assert(0 && "Invalid LSQ Sharing Policy.Options Are:{Dynamic,"
                     "Partitioned, Threshold}");
@@ -167,7 +165,8 @@ LSQ<Impl>::LSQ(Params *params)
 
     //Initialize LSQs
     for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].init(params, this, maxLQEntries, maxSQEntries, tid);
+        thread[tid].init(cpu, iew_ptr, params, this,
+                         maxLQEntries, maxSQEntries, tid);
         thread[tid].setDcachePort(&dcachePort);
     }
 }
@@ -196,30 +195,6 @@ LSQ<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
 {
     activeThreads = at_ptr;
     assert(activeThreads != 0);
-}
-
-template<class Impl>
-void
-LSQ<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-
-    dcachePort.setName(name());
-
-    for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].setCPU(cpu_ptr);
-    }
-}
-
-template<class Impl>
-void
-LSQ<Impl>::setIEW(IEW *iew_ptr)
-{
-    iewStage = iew_ptr;
-
-    for (int tid=0; tid < numThreads; tid++) {
-        thread[tid].setIEW(iew_ptr);
-    }
 }
 
 template <class Impl>

@@ -86,16 +86,13 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(Params *params);
+    DefaultDecode(O3CPU *_cpu, Params *params);
 
     /** Returns the name of decode. */
     std::string name() const;
 
     /** Registers statistics. */
     void regStats();
-
-    /** Sets CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);

@@ -148,7 +148,7 @@ FullO3CPU<Impl>::DeallocateContextEvent::description()
 }
 
 template <class Impl>
-FullO3CPU<Impl>::FullO3CPU(Params *params)
+FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
     : BaseO3CPU(params),
 #if FULL_SYSTEM
       itb(params->itb),
@@ -156,19 +156,21 @@ FullO3CPU<Impl>::FullO3CPU(Params *params)
 #endif
       tickEvent(this),
       removeInstsThisCycle(false),
-      fetch(params),
-      decode(params),
-      rename(params),
-      iew(params),
-      commit(params),
+      fetch(o3_cpu, params),
+      decode(o3_cpu, params),
+      rename(o3_cpu, params),
+      iew(o3_cpu, params),
+      commit(o3_cpu, params),
 
-      regFile(params->numPhysIntRegs, params->numPhysFloatRegs),
+      regFile(o3_cpu, params->numPhysIntRegs,
+              params->numPhysFloatRegs),
 
       freeList(params->numberOfThreads,
                TheISA::NumIntRegs, params->numPhysIntRegs,
                TheISA::NumFloatRegs, params->numPhysFloatRegs),
 
-      rob(params->numROBEntries, params->squashWidth,
+      rob(o3_cpu,
+          params->numROBEntries, params->squashWidth,
           params->smtROBPolicy, params->smtROBThreshold,
           params->numberOfThreads),
 

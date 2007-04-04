@@ -35,10 +35,11 @@
 #include <list>
 
 template <class Impl>
-ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
+ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
                std::string _smtROBPolicy, unsigned _smtROBThreshold,
                unsigned _numThreads)
-    : numEntries(_numEntries),
+    : cpu(_cpu),
+      numEntries(_numEntries),
       squashWidth(_squashWidth),
       numInstsInROB(0),
       numThreads(_numThreads)
@@ -66,7 +67,7 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
 
     } else if (policy == "partitioned") {
         robPolicy = Partitioned;
-//	DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
+        DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
 
         //@todo:make work if part_amt doesnt divide evenly.
         int part_amt = numEntries / numThreads;
@@ -78,7 +79,7 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
 
     } else if (policy == "threshold") {
         robPolicy = Threshold;
-//	DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
+        DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
         int threshold =  _smtROBThreshold;;
 
@@ -90,20 +91,6 @@ ROB<Impl>::ROB(unsigned _numEntries, unsigned _squashWidth,
         assert(0 && "Invalid ROB Sharing Policy.Options Are:{Dynamic,"
                     "Partitioned, Threshold}");
     }
-}
-
-template <class Impl>
-std::string
-ROB<Impl>::name() const
-{
-    return cpu->name() + ".rob";
-}
-
-template <class Impl>
-void
-ROB<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
 
     // Set the per-thread iterators to the end of the instruction list.
     for (int i=0; i < numThreads;i++) {
@@ -114,6 +101,13 @@ ROB<Impl>::setCPU(O3CPU *cpu_ptr)
     // pointers
     head = instList[0].end();
     tail = instList[0].end();
+}
+
+template <class Impl>
+std::string
+ROB<Impl>::name() const
+{
+    return cpu->name() + ".rob";
 }
 
 template <class Impl>

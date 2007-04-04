@@ -64,8 +64,11 @@ InstructionQueue<Impl>::FUCompletion::description()
 }
 
 template <class Impl>
-InstructionQueue<Impl>::InstructionQueue(Params *params)
-    : fuPool(params->fuPool),
+InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
+                                         Params *params)
+    : cpu(cpu_ptr),
+      iewStage(iew_ptr),
+      fuPool(params->fuPool),
       numEntries(params->numIQEntries),
       totalWidth(params->issueWidth),
       numPhysIntRegs(params->numPhysIntRegs),
@@ -122,11 +125,8 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = part_amt;
         }
 
-/*
         DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
                 "%i entries per thread.\n",part_amt);
-*/
-
     } else if (policy == "threshold") {
         iqPolicy = Threshold;
 
@@ -139,10 +139,8 @@ InstructionQueue<Impl>::InstructionQueue(Params *params)
             maxEntries[i] = thresholdIQ;
         }
 
-/*
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
-*/
    } else {
        assert(0 && "Invalid IQ Sharing Policy.Options Are:{Dynamic,"
               "Partitioned, Threshold}");

@@ -95,6 +95,7 @@ class FullO3CPU : public BaseO3CPU
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
+    typedef typename Impl::O3CPU O3CPU;
 
     typedef O3ThreadState<Impl> Thread;
 
@@ -256,7 +257,7 @@ class FullO3CPU : public BaseO3CPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    FullO3CPU(Params *params);
+    FullO3CPU(O3CPU *o3_cpu, Params *params);
     /** Destructor. */
     ~FullO3CPU();
 

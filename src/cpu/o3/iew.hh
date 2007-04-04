@@ -115,7 +115,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(Params *params);
+    DefaultIEW(O3CPU *_cpu, Params *params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;
@@ -128,9 +128,6 @@ class DefaultIEW
 
     /** Returns the dcache port. */
     Port *getDcachePort() { return ldstQueue.getDcachePort(); }
-
-    /** Sets CPU pointer for IEW, IQ, and LSQ. */
-    void setCPU(O3CPU *cpu_ptr);
 
     /** Sets main time buffer used for backwards communication. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -367,16 +364,6 @@ class DefaultIEW
     /** Scoreboard pointer. */
     Scoreboard* scoreboard;
 
-  public:
-    /** Instruction queue. */
-    IQ instQueue;
-
-    /** Load / store queue. */
-    LSQ ldstQueue;
-
-    /** Pointer to the functional unit pool. */
-    FUPool *fuPool;
-
   private:
     /** CPU pointer. */
     O3CPU *cpu;
@@ -398,6 +385,14 @@ class DefaultIEW
     void printAvailableInsts();
 
   public:
+    /** Instruction queue. */
+    IQ instQueue;
+
+    /** Load / store queue. */
+    LSQ ldstQueue;
+
+    /** Pointer to the functional unit pool. */
+    FUPool *fuPool;
     /** Records if the LSQ needs to be updated on the next cycle, so that
      * IEW knows if there will be activity on the next cycle.
      */

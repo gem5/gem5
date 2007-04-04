@@ -76,7 +76,7 @@ class PhysRegFile
      * Constructs a physical register file with the specified amount of
      * integer and floating point registers.
      */
-    PhysRegFile(unsigned _numPhysicalIntRegs,
+    PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
                 unsigned _numPhysicalFloatRegs);
 
     //Everything below should be pretty well identical to the normal
@@ -268,9 +268,6 @@ class PhysRegFile
     O3CPU *cpu;
 
   public:
-    /** Sets the CPU pointer. */
-    void setCPU(O3CPU *cpu_ptr) { cpu = cpu_ptr; }
-
     /** Number of physical integer registers. */
     unsigned numPhysicalIntRegs;
     /** Number of physical floating point registers. */
@@ -278,9 +275,9 @@ class PhysRegFile
 };
 
 template <class Impl>
-PhysRegFile<Impl>::PhysRegFile(unsigned _numPhysicalIntRegs,
+PhysRegFile<Impl>::PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
                                unsigned _numPhysicalFloatRegs)
-    : numPhysicalIntRegs(_numPhysicalIntRegs),
+    : cpu(_cpu), numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs)
 {
     intRegFile = new IntReg[numPhysicalIntRegs];

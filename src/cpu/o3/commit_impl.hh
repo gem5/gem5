@@ -71,8 +71,9 @@ DefaultCommit<Impl>::TrapEvent::description()
 }
 
 template <class Impl>
-DefaultCommit<Impl>::DefaultCommit(Params *params)
-    : squashCounter(0),
+DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
+    : cpu(_cpu),
+      squashCounter(0),
       iewToCommitDelay(params->iewToCommitDelay),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToROBDelay(params->renameToROBDelay),
@@ -96,7 +97,7 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
     if (policy == "aggressive"){
         commitPolicy = Aggressive;
 
-//        DPRINTF(Commit,"Commit Policy set to Aggressive.");
+        DPRINTF(Commit,"Commit Policy set to Aggressive.");
     } else if (policy == "roundrobin"){
         commitPolicy = RoundRobin;
 
@@ -105,11 +106,11 @@ DefaultCommit<Impl>::DefaultCommit(Params *params)
             priority_list.push_back(tid);
         }
 
-//        DPRINTF(Commit,"Commit Policy set to Round Robin.");
+        DPRINTF(Commit,"Commit Policy set to Round Robin.");
     } else if (policy == "oldestready"){
         commitPolicy = OldestReady;
 
-//        DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
+        DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
     } else {
         assert(0 && "Invalid SMT Commit Policy. Options Are: {Aggressive,"
                "RoundRobin,OldestReady}");
@@ -227,20 +228,6 @@ DefaultCommit<Impl>::regStats()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::setCPU(O3CPU *cpu_ptr)
-{
-    cpu = cpu_ptr;
-    DPRINTF(Commit, "Commit: Setting CPU pointer.\n");
-
-    // Commit must broadcast the number of free entries it has at the start of
-    // the simulation, so it starts as active.
-    cpu->activateStage(O3CPU::CommitIdx);
-
-    trapLatency = cpu->cycles(trapLatency);
-}
-
-template <class Impl>
-void
 DefaultCommit<Impl>::setThreads(std::vector<Thread *> &threads)
 {
     thread = threads;
@@ -333,7 +320,12 @@ DefaultCommit<Impl>::initStage()
         toIEW->commitInfo[i].emptyROB = true;
     }
 
+    // Commit must broadcast the number of free entries it has at the
+    // start of the simulation, so it starts as active.
+    cpu->activateStage(O3CPU::CommitIdx);
+
     cpu->activityThisCycle();
+    trapLatency = cpu->cycles(trapLatency);
 }
 
 template <class Impl>

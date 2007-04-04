@@ -110,7 +110,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(Params *params);
+    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();
@@ -124,14 +124,8 @@ class InstructionQueue
     /** Resets all instruction queue state. */
     void resetState();
 
-    /** Sets CPU pointer. */
-    void setCPU(O3CPU *_cpu) { cpu = _cpu; }
-
     /** Sets active threads list. */
     void setActiveThreads(std::list<unsigned> *at_ptr);
-
-    /** Sets the IEW pointer. */
-    void setIEW(IEW *iew_ptr) { iewStage = iew_ptr; }
 
     /** Sets the timer buffer between issue and execute. */
     void setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2eQueue);
