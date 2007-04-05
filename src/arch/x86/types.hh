@@ -161,7 +161,26 @@ namespace X86ISA
     inline static bool
         operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
     {
-        //Since this is empty, it's always equal
+        if(emi1.legacy != emi2.legacy)
+            return false;
+        if(emi1.rex != emi2.rex)
+            return false;
+        if(emi1.opcode.num != emi2.opcode.num)
+            return false;
+        if(emi1.opcode.op != emi2.opcode.op)
+            return false;
+        if(emi1.opcode.prefixA != emi2.opcode.prefixA)
+            return false;
+        if(emi1.opcode.prefixB != emi2.opcode.prefixB)
+            return false;
+        if(emi1.modRM != emi2.modRM)
+            return false;
+        if(emi1.sib != emi2.sib)
+            return false;
+        if(emi1.immediate != emi2.immediate)
+            return false;
+        if(emi1.displacement != emi2.displacement)
+            return false;
         return true;
     }
 

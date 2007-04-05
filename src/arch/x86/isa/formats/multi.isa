@@ -61,151 +61,26 @@
 //
 
 let {{
-    # This builds either a regular or macro op to implement the sequence of
-    # ops we give it.
-    def genInst(name, Name, ops):
-        # If we can implement this instruction with exactly one microop, just
-        # use that directly.
-        newStmnt = ''
-        if len(ops) == 1:
-            decode_block = "return (X86StaticInst *)(%s);" % \
-                            ops[0].getAllocator()
-            return ('', '', decode_block, '')
-        else:
-            # Build a macroop to contain the sequence of microops we've
-            # been given.
-            return genMacroOp(name, Name, ops)
+    def doInst(name, Name, opTypeSet):
+        if not instDict.has_key(Name):
+            raise Exception, "Unrecognized instruction: %s" % Name
+        inst = instDict[Name]()
+        return inst.emit(opTypeSet)
 }};
 
-let {{
-    # This code builds up a decode block which decodes based on switchval.
-    # vals is a dict which matches case values with what should be decoded to.
-    # builder is called on the exploded contents of "vals" values to generate
-    # whatever code should be used.
-    def doMultiOp(name, Name, builder, switchVal, vals, default = None):
-        header_output = ''
-        decoder_output = ''
-        decode_block = 'switch(%s) {\n' % switchVal
-        exec_output = ''
-        for (val, todo) in vals.items():
-            (new_header_output,
-             new_decoder_output,
-             new_decode_block,
-             new_exec_output) = builder(name, Name, *todo)
-            header_output += new_header_output
-            decoder_output += new_decoder_output
-            decode_block += '\tcase %s: %s\n' % (val, new_decode_block)
-            exec_output += new_exec_output
-        if default:
-            (new_header_output,
-             new_decoder_output,
-             new_decode_block,
-             new_exec_output) = builder(name, Name, *default)
-            header_output += new_header_output
-            decoder_output += new_decoder_output
-            decode_block += '\tdefault: %s\n' % new_decode_block
-            exec_output += new_exec_output
-        decode_block += '}\n'
-        return (header_output, decoder_output, decode_block, exec_output)
-}};
-
-let {{
-
-    # This function specializes the given piece of code to use a particular
-    # set of argument types described by "opTags". These are "implemented"
-    # in reverse order.
-    def doCompOps(name, Name, code, opTags, postfix):
-        opNum = len(opTags) - 1
-        while len(opTags):
-            # print "Building a composite op with tags", opTags
-            # print "And code", code
-            opNum = len(opTags) - 1
-            # A regular expression to find the operand placeholders we're
-            # interested in.
-            opRe = re.compile("%%(?P<operandNum>%d)(?=[^0-9]|$)" % opNum)
-            tag = opTags[opNum]
-            # Build up a name for this instructions class using the argument
-            # types. Each variation will get its own name this way.
-            postfix = '_' + tag + postfix
-            tagParser = re.compile(r"(?P<tagType>[A-Z][A-Z]*)(?P<tagSize>[a-z][a-z]*)|(r(?P<tagReg>[A-Za-z0-9][A-Za-z0-9]*))")
-            tagMatch = tagParser.search(tag)
-            if tagMatch == None:
-                raise Exception, "Problem parsing operand tag %s" % tag
-            reg = tagMatch.group("tagReg")
-            tagType = tagMatch.group("tagType")
-            tagSize = tagMatch.group("tagSize")
-            if reg:
-                #Figure out what to do with fixed register operands
-                if reg in ("Ax", "Bx", "Cx", "Dx"):
-                    code = opRe.sub("{INTREG_R%s}" % reg.upper(), code)
-                elif reg == "Al":
-                    # We need a way to specify register width
-                    code = opRe.sub("{INTREG_RAX}", code)
-                else:
-                    print "Didn't know how to encode fixed register %s!" % reg
-            elif tagType == None or tagSize == None:
-                raise Exception, "Problem parsing operand tag: %s" % tag
-            elif tagType == "C" or tagType == "D" or tagType == "G" or \
-                                   tagType == "P" or tagType == "S" or \
-                                   tagType == "T" or tagType == "V":
-                # Use the "reg" field of the ModRM byte to select the register
-                code = opRe.sub("{(uint8_t)MODRM_REG}", code)
-            elif tagType == "E" or tagType == "Q" or tagType == "W":
-                # This might refer to memory or to a register. We need to
-                # divide it up farther.
-                regCode = opRe.sub("{(uint8_t)MODRM_RM}", code)
-                regTags = copy.copy(opTags)
-                regTags.pop(-1)
-                # This needs to refer to memory, but we'll fill in the details
-                # later. It needs to take into account unaligned memory
-                # addresses.
-                memCode = opRe.sub("0", code)
-                memTags = copy.copy(opTags)
-                memTags.pop(-1)
-                return doMultiOp(name, Name, doCompOps, "MODRM_MOD",
-                    {"3" : (regCode, regTags, postfix)},
-                           (memCode, memTags, postfix))
-            elif tagType == "I" or tagType == "J":
-                # Substitute in an immediate
-                code = opRe.sub("{IMMEDIATE}", code)
-            elif tagType == "M":
-                # This needs to refer to memory, but we'll fill in the details
-                # later. It needs to take into account unaligned memory
-                # addresses.
-                code = opRe.sub("0", code)
-            elif tagType == "PR" or tagType == "R" or tagType == "VR":
-                # There should probably be a check here to verify that mod
-                # is equal to 11b
-                code = opRe.sub("{(uint8_t)MODRM_RM}", code)
-            else:
-                raise Exception, "Unrecognized tag %s." % tag
-            opTags.pop(-1)
-
-        # At this point, we've built up "code" to have all the necessary extra
-        # instructions needed to implement whatever types of operands were
-        # specified. Now we'll assemble it it into a microOp sequence.
-        ops = assembleMicro(code)
-
-        # Build a macroop to contain the sequence of microops we've
-        # constructed. The decode block will be used to fill in our
-        # inner decode structure, and the rest will be concatenated and
-        # passed back.
-        return genInst(name, Name + postfix, ops)
-}};
-
-def format TaggedOp(code, tagSet) {{
+def format Inst(*opTypeSet) {{
     (header_output,
      decoder_output,
      decode_block,
-     exec_output) = doCompOps(name, Name, code, tagSet, '')
+     exec_output) = doInst(name, Name, list(opTypeSet))
 }};
 
-def format MultiOp(code, switchVal, opTags, *opt_flags) {{
+def format MultiInst(switchVal, *opTypeSets) {{
     switcher = {}
-    for (count, tagSet) in zip(xrange(len(opTags) - 1), opTags):
-        switcher[count] = (code, tagSet, '')
+    for (count, opTypeSet) in zip(xrange(len(opTypeSets)), opTypeSets):
+        switcher[count] = (opTypeSet,)
     (header_output,
      decoder_output,
      decode_block,
-     exec_output) = doMultiOp(name, Name, doCompOps, switchVal, switcher)
+     exec_output) = doSplitDecode(name, Name, doInst, switchVal, switcher)
 }};

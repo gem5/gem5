@@ -84,6 +84,9 @@ namespace X86ISA;
 //Include the base class for x86 instructions, and some support code
 ##include "base.isa"
 
+//Include the instruction definitions
+##include "insts/insts.isa"
+
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 

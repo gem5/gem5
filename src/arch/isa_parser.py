@@ -866,7 +866,11 @@ class Format:
         context = {}
         updateExportContext()
         context.update(exportContext)
-        context.update({ 'name': name, 'Name': string.capitalize(name) })
+        if len(name):
+            Name = name[0].upper()
+            if len(name) > 1:
+                Name += name[1:]
+        context.update({ 'name': name, 'Name': Name })
         try:
             vars = self.func(self.user_code, context, *args[0], **args[1])
         except Exception, exc:
@@ -1028,7 +1032,7 @@ def substBitOps(code):
 # Template objects are format strings that allow substitution from
 # the attribute spaces of other objects (e.g. InstObjParams instances).
 
-labelRE = re.compile(r'[^%]%\(([^\)]+)\)[sd]')
+labelRE = re.compile(r'(?<!%)%\(([^\)]+)\)[sd]')
 
 class Template:
     def __init__(self, t):

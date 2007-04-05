@@ -70,8 +70,15 @@ namespace __hash_namespace {
     template<>
     struct hash<X86ISA::ExtMachInst> {
         size_t operator()(const X86ISA::ExtMachInst &emi) const {
-            //Because these are all the same, return 0
-            return 0;
+            return (((uint64_t)emi.legacy << 56) |
+                    ((uint64_t)emi.rex  << 48) |
+                    ((uint64_t)emi.modRM << 40) |
+                    ((uint64_t)emi.sib << 32) |
+                    ((uint64_t)emi.opcode.num << 24) |
+                    ((uint64_t)emi.opcode.prefixA << 16) |
+                    ((uint64_t)emi.opcode.prefixB << 8) |
+                    ((uint64_t)emi.opcode.op)) ^
+                    emi.immediate ^ emi.displacement;
         };
     };
 }

@@ -53,5 +53,8 @@
 //
 // Authors: Gabe Black
 
-//Micro ops
+//Common microop stuff
+##include "base.isa"
+
+//Integer microop definitions
 ##include "int.isa"
