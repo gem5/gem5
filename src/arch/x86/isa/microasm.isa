@@ -69,7 +69,7 @@ let {{
         # use that directly.
         newStmnt = ''
         if len(ops) == 1:
-            decode_block = "return (X86StaticInst *)(%s);" % \
+            decode_block = "return %s;" % \
                             ops[0].getAllocator()
             return ('', '', decode_block, '')
         else:

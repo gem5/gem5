@@ -69,6 +69,9 @@ output header {{
     class X86MicroOpBase : public X86StaticInst
     {
       protected:
+        uint8_t opSize;
+        uint8_t addrSize;
+
         X86MicroOpBase(bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 const char *mnem, ExtMachInst _machInst,
