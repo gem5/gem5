@@ -79,6 +79,13 @@ output header {{
             void printReg(std::ostream &os, int reg) const;
             void printSrcReg(std::ostream &os, int reg) const;
             void printDestReg(std::ostream &os, int reg) const;
+
+            inline uint64_t merge(uint64_t into, uint64_t val, int size) const
+            {
+                //FIXME This needs to be significantly more sophisticated
+                return val;
+            }
+
         };
 }};
 
