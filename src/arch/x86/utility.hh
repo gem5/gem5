@@ -78,7 +78,8 @@ namespace __hash_namespace {
                     ((uint64_t)emi.opcode.prefixA << 16) |
                     ((uint64_t)emi.opcode.prefixB << 8) |
                     ((uint64_t)emi.opcode.op)) ^
-                    emi.immediate ^ emi.displacement;
+                    emi.immediate ^ emi.displacement ^
+                    emi.opSize;
         };
     };
 }

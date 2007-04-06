@@ -72,26 +72,34 @@
 
 namespace X86ISA;
 
-//Include the simple microcode assembler
+//Include the simple microcode assembler. This will hopefully stay
+//unspecialized for x86 and can later be made available to other ISAs.
 ##include "microasm.isa"
 
-//Include the bitfield definitions
-##include "bitfields.isa"
-
-//Include the operand_types and operand definitions
-##include "operands.isa"
+//Include code to build macroops.
+##include "macroop.isa"
 
 //Include the base class for x86 instructions, and some support code
+//Code in this file should be general and useful everywhere
 ##include "base.isa"
-
-//Include the instruction definitions
-##include "insts/insts.isa"
 
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 
-//Include the definitions of the micro ops
+//Include the operand_types and operand definitions. These are needed by
+//the microop definitions.
+##include "operands.isa"
+
+//Include the definitions of the micro ops.
+//These are StaticInst classes which stand on their own and make up an
+//internal instruction set.
 ##include "microops/microops.isa"
+
+//Include the instruction definitions which are microop assembler programs.
+##include "insts/insts.isa"
+
+//Include the bitfield definitions
+##include "bitfields.isa"
 
 //Include the decoder definition
 ##include "decoder/decoder.isa"

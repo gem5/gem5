@@ -95,9 +95,6 @@
 //malfunction of the decode mechanism.
 ##include "error.isa"
 
-//Include code to build up macro op instructions
-##include "macroop.isa"
-
 //Include a format which implements a batch of instructions which do the same
 //thing on a variety of inputs
 ##include "multi.isa"

@@ -73,7 +73,7 @@ namespace X86ISA
         static const uint8_t Prefixes[256];
         static const uint8_t UsesModRM[2][256];
         static const uint8_t ImmediateType[2][256];
-        static const uint8_t ImmediateTypeToSize[3][10];
+        static const uint8_t SizeTypeToSize[3][10];
 
       protected:
         ThreadContext * tc;
