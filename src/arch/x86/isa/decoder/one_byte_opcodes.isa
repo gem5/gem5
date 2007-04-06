@@ -61,15 +61,12 @@
 0x1: decode OPCODE_OP_TOP5 {
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
-            0x4: TaggedOp::add({{AddI %0 %0}}, [rAl]);
-            0x5: TaggedOp::add({{AddI %0 %0}}, [rAx]);
+            0x4: Inst::add(rAl,Ib);
+            0x5: Inst::add(rAx,Iz);
             0x6: push_ES();
             0x7: pop_ES();
-            default: MultiOp::add(
-                {{Add %0 %0 %1}},
-                OPCODE_OP_BOTTOM3,
-                [[Eb,Gb],[Ev,Gv],
-                 [Gb,Eb],[Gv,Ev]]);
+            default: MultiInst::add(OPCODE_OP_BOTTOM3,
+                             [Eb,Gb],[Ev,Gv],[Gb,Eb],[Gv,Ev]);
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x0: or_Eb_Gb();
@@ -126,16 +123,13 @@
             0x7: das();
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
-            0x4: TaggedOp::xor({{XorI %0 %0}}, [rAl]);
-            0x5: TaggedOp::xor({{XorI %0 %0}}, [rAx]);
+            0x4: Inst::xor(rAl,Ib);
+            0x5: Inst::xor(rAx,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: aaa();
-            default: MultiOp::xor(
-                {{Xor %0 %0 %1}},
-                OPCODE_OP_BOTTOM3,
-                [[Eb,Gb],[Ev,Gv],
-                 [Gb,Eb],[Gv,Ev]]);
+            default: MultiInst::xor(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb],[Ev,Gv],[Gb,Eb],[Gv,Ev]);
         }
         0x07: decode OPCODE_OP_BOTTOM3 {
             0x0: cmp_Eb_Gb();

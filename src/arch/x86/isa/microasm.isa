@@ -57,11 +57,153 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-//  Code to "assemble" microcode sequences
+//  Code to "specialize" a microcode sequence to use a particular
+//  variety of operands
 //
 
 let {{
-    class MicroOpStatement:
+    # This builds either a regular or macro op to implement the sequence of
+    # ops we give it.
+    def genInst(name, Name, ops):
+        # If we can implement this instruction with exactly one microop, just
+        # use that directly.
+        newStmnt = ''
+        if len(ops) == 1:
+            decode_block = "return (X86StaticInst *)(%s);" % \
+                            ops[0].getAllocator()
+            return ('', '', decode_block, '')
+        else:
+            # Build a macroop to contain the sequence of microops we've
+            # been given.
+            return genMacroOp(name, Name, ops)
+}};
+
+let {{
+    # This code builds up a decode block which decodes based on switchval.
+    # vals is a dict which matches case values with what should be decoded to.
+    # builder is called on the exploded contents of "vals" values to generate
+    # whatever code should be used.
+    def doSplitDecode(name, Name, builder, switchVal, vals, default = None):
+        header_output = ''
+        decoder_output = ''
+        decode_block = 'switch(%s) {\n' % switchVal
+        exec_output = ''
+        for (val, todo) in vals.items():
+            (new_header_output,
+             new_decoder_output,
+             new_decode_block,
+             new_exec_output) = builder(name, Name, *todo)
+            header_output += new_header_output
+            decoder_output += new_decoder_output
+            decode_block += '\tcase %s: %s\n' % (val, new_decode_block)
+            exec_output += new_exec_output
+        if default:
+            (new_header_output,
+             new_decoder_output,
+             new_decode_block,
+             new_exec_output) = builder(name, Name, *default)
+            header_output += new_header_output
+            decoder_output += new_decoder_output
+            decode_block += '\tdefault: %s\n' % new_decode_block
+            exec_output += new_exec_output
+        decode_block += '}\n'
+        return (header_output, decoder_output, decode_block, exec_output)
+}};
+
+let {{
+    class OpType(object):
+        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Za-z0-9][A-Za-z0-9]*))")
+        def __init__(self, opTypeString):
+            match = OpType.parser.search(opTypeString)
+            if match == None:
+                raise Exception, "Problem parsing operand type %s" % opTypeString
+            self.reg = match.group("reg")
+            self.tag = match.group("tag")
+            self.size = match.group("size")
+}};
+
+let {{
+
+    # This function specializes the given piece of code to use a particular
+    # set of argument types described by "opTypes". These are "implemented"
+    # in reverse order.
+    def specializeInst(name, Name, code, opTypes):
+        opNum = len(opTypes) - 1
+        while len(opTypes):
+            # print "Building a composite op with tags", opTypes
+            # print "And code", code
+            opNum = len(opTypes) - 1
+            # A regular expression to find the operand placeholders we're
+            # interested in.
+            opRe = re.compile("\\^(?P<operandNum>%d)(?=[^0-9]|$)" % opNum)
+
+            # Parse the operand type strign we're working with
+            opType = OpType(opTypes[opNum])
+
+            if opType.reg:
+                #Figure out what to do with fixed register operands
+                if opType.reg in ("Ax", "Bx", "Cx", "Dx"):
+                    code = opRe.sub("%%{INTREG_R%s}" % opType.reg.upper(), code)
+                elif opType.reg == "Al":
+                    # We need a way to specify register width
+                    code = opRe.sub("%{INTREG_RAX}", code)
+                else:
+                    print "Didn't know how to encode fixed register %s!" % opType.reg
+            elif opType.tag == None or opType.size == None:
+                raise Exception, "Problem parsing operand tag: %s" % opType.tag
+            elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
+                # Use the "reg" field of the ModRM byte to select the register
+                code = opRe.sub("%{(uint8_t)MODRM_REG}", code)
+            elif opType.tag in ("E", "Q", "W"):
+                # This might refer to memory or to a register. We need to
+                # divide it up farther.
+                regCode = opRe.sub("%{(uint8_t)MODRM_RM}", code)
+                regTypes = copy.copy(opTypes)
+                regTypes.pop(-1)
+                # This needs to refer to memory, but we'll fill in the details
+                # later. It needs to take into account unaligned memory
+                # addresses.
+                memCode = opRe.sub("%0", code)
+                memTypes = copy.copy(opTypes)
+                memTypes.pop(-1)
+                return doSplitDecode(name, Name, specializeInst, "MODRM_MOD",
+                    {"3" : (regCode, regTypes)}, (memCode, memTypes))
+            elif opType.tag in ("I", "J"):
+                # Immediates are already in the instruction, so don't leave in
+                # those parameters
+                code = opRe.sub("${IMMEDIATE}", code)
+            elif opType.tag == "M":
+                # This needs to refer to memory, but we'll fill in the details
+                # later. It needs to take into account unaligned memory
+                # addresses.
+                code = opRe.sub("%0", code)
+            elif opType.tag in ("PR", "R", "VR"):
+                # There should probably be a check here to verify that mod
+                # is equal to 11b
+                code = opRe.sub("%{(uint8_t)MODRM_RM}", code)
+            else:
+                raise Exception, "Unrecognized tag %s." % opType.tag
+            opTypes.pop(-1)
+
+        # At this point, we've built up "code" to have all the necessary extra
+        # instructions needed to implement whatever types of operands were
+        # specified. Now we'll assemble it it into a microOp sequence.
+        ops = assembleMicro(code)
+
+        # Build a macroop to contain the sequence of microops we've
+        # constructed. The decode block will be used to fill in our
+        # inner decode structure, and the rest will be concatenated and
+        # passed back.
+        return genInst(name, Name, ops)
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+//  The microcode assembler
+//
+
+let {{
+    class MicroOpStatement(object):
         def __init__(self):
             self.className = ''
             self.label = ''
@@ -80,16 +222,24 @@ let {{
 
         def getAllocator(self, *microFlags):
             args = ''
+            signature = "<"
+            emptySig = True
             for arg in self.args:
-                if arg.has_key("operandConst"):
-                    args += ", %s" % arg["operandConst"]
-                elif arg.has_key("operandCode"):
-                    args += ", %s" % arg["operandCode"]
+                if not emptySig:
+                    signature += ", "
+                emptySig = False
+                if arg.has_key("operandImm"):
+                    args += ", %s" % arg["operandImm"]
+                    signature += ImmOpType
+                elif arg.has_key("operandReg"):
+                    args += ", %s" % arg["operandReg"]
+                    signature += RegOpType
                 elif arg.has_key("operandLabel"):
                     raise Exception, "Found a label while creating allocator string."
                 else:
                     raise Exception, "Unrecognized operand type."
-            return 'new %s(machInst%s%s)' % (self.className, self.microFlagsText(microFlags), args)
+            signature += ">"
+            return 'new %s%s(machInst%s%s)' % (self.className, signature, self.microFlagsText(microFlags), args)
 }};
 
 let {{
@@ -101,7 +251,9 @@ let {{
                 labels[op.label] = count
             micropc += 1
         return labels
+}};
 
+let{{
     def assembleMicro(code):
         # This function takes in a block of microcode assembly and returns
         # a python list of objects which describe it.
@@ -115,7 +267,7 @@ let {{
         # time. Each expression expects the thing it's looking for to be at
         # the beginning of the line, so the previous component is stripped
         # before continuing.
-        labelRe = re.compile(r'^[ \t]*(?P<label>[a-zA-Z_]\w*)[ \t]:')
+        labelRe = re.compile(r'^[ \t]*(?P<label>\w\w*)[ \t]:')
         lineRe = re.compile(r'^(?P<line>[^\n][^\n]*)$')
         classRe = re.compile(r'^[ \t]*(?P<className>[a-zA-Z_]\w*)')
         # This recognizes three different flavors of operands:
@@ -126,7 +278,12 @@ let {{
         #    underscore, which is optionally followed by a sequence of
         #    capital or small letters, underscores, or digts between 0 and 9
         opRe = re.compile( \
-            r'^[ \t]*((?P<operandLabel>[a-zA-Z_]\w*)|(?P<operandConst>[0-9][0-9]*)|(\{(?P<operandCode>[^}]*)\}))')
+            r'^[ \t]*((\@(?P<operandLabel0>\w\w*))|' +
+                    r'(\@\{(?P<operandLabel1>[^}]*)\})|' +
+                    r'(\%(?P<operandReg0>\w\w*))|' +
+                    r'(\%\{(?P<operandReg1>[^}]*)\})|' +
+                    r'(\$(?P<operandImm0>\w\w*))|' +
+                    r'(\$\{(?P<operandImm1>[^}]*)\}))')
         lineMatch = lineRe.search(code)
         while lineMatch != None:
             statement = MicroOpStatement()
@@ -165,9 +322,10 @@ let {{
                 # representations of operand values. Different forms might be
                 # needed in different places, for instance to replace a label
                 # with an offset.
-                for opType in ("operandLabel", "operandConst", "operandCode"):
+                for opType in ("operandLabel0", "operandReg0", "operandImm0",
+                               "operandLabel1", "operandReg1", "operandImm1"):
                     if opMatch.group(opType):
-                        statement.args[-1][opType] = opMatch.group(opType)
+                        statement.args[-1][opType[:-1]] = opMatch.group(opType)
                 if len(statement.args[-1]) == 0:
                     print "Problem parsing operand in statement: %s" \
                             % orig_line
@@ -193,7 +351,7 @@ let {{
                     # This is assuming that intra microcode branches go to
                     # the next micropc + displacement, or
                     # micropc + 1 + displacement.
-                    arg["operandConst"] = labels[arg["operandLabel"]] - micropc - 1
+                    arg["operandImm"] = labels[arg["operandLabel"]] - micropc - 1
             micropc += 1
         return statements
 }};
