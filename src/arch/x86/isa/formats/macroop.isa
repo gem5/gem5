@@ -85,9 +85,6 @@ output header {{
                 delete [] microOps;
             }
 
-            std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const;
-
             StaticInstPtr * microOps;
 
             StaticInstPtr fetchMicroOp(MicroPC microPC)
@@ -98,20 +95,6 @@ output header {{
 
             %(BasicExecPanic)s
         };
-
-        // Base class for macroops which commit as they go. This is for
-        // instructions which can be partially completed like those with the
-        // rep prefix. This prevents those instructions from overflowing
-        // buffers with uncommitted microops.
-        class X86RollingMacroInst : public X86MacroInst
-        {
-          protected:
-            //Constructor.
-            X86RollingMacroInst(const char *mnem, ExtMachInst _machInst,
-                    uint32_t _numMicroOps)
-                        : X86MacroInst(mnem, _machInst, numMicroOps)
-            {}
-        };
 }};
 
 // Basic instruction class constructor template.
@@ -121,34 +104,24 @@ def template MacroConstructor {{
         {
                 %(constructor)s;
                 //alloc_micro_ops is the code that sets up the microOps
-                //array in the parent class. This hook will hopefully
-                //allow all that to be automated.
+                //array in the parent class.
                 %(alloc_micro_ops)s;
-                setMicroFlags();
         }
 }};
 
 let {{
-    def genMacroOp(name, Name, ops, rolling = False):
+    def genMacroOp(name, Name, opSeq, rolling = False):
         baseClass = 'X86MacroInst'
-        if rolling:
-            baseClass = 'X86RollingMacroInst'
-        numMicroOps = len(ops)
+        numMicroOps = len(opSeq.ops)
         allocMicroOps = ''
         micropc = 0
-        allocMicroOps += \
-            "microOps[0] = %s;\n" % \
-            op.getAllocator(True, not rolling, True, False)
-        micropc += 1
-        if numMicroOps > 2:
-            for op in ops[1:-1]:
-                allocMicroOps += \
-                    "microOps[%d] = %s;\n" % \
-                    (micropc, op.getAllocator(True, not rolling, False, False))
-                micropc += 1
-        allocMicroOps += \
-            "microOps[%d] = %s;\n" % \
-            op.getAllocator(True, not rolling, False, True)
+        for op in opSeq.ops:
+            allocMicroOps += \
+                "microOps[%d] = %s;\n" % \
+                (micropc, op.getAllocator(True, not rolling,
+                                          micropc == 0,
+                                          micropc == numMicroOps - 1))
+            micropc += 1
         iop = InstObjParams(name, Name, baseClass,
                 {'code' : '', 'num_micro_ops' : numMicroOps,
                 'alloc_micro_ops' : allocMicroOps})
