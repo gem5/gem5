@@ -63,7 +63,7 @@ output header {{
     };
 }};
 
-//A class which is the base of all x86 micro ops it provides a function to
+//A class which is the base of all x86 micro ops. It provides a function to
 //set necessary flags appropriately.
 output header {{
     class X86MicroOpBase : public X86StaticInst
@@ -97,6 +97,7 @@ def template BaseMicroOpTemplateDeclare {{
 
 let {{
     def buildBaseMicroOpTemplate(Name, numParams):
+        assert(numParams > 0)
         signature = "<"
         signature += "int SignatureOperandTypeSpecifier0"
         for count in xrange(1,numParams):
@@ -105,10 +106,9 @@ let {{
         signature += ">"
         subs = {"signature" : signature, "class_name" : Name}
         return BaseMicroOpTemplateDeclare.subst(subs)
+}};
 
-    RegOpType = "RegisterOperand"
-    ImmOpType = "ImmediateOperand"
-
+let {{
     def buildMicroOpTemplateDict(*params):
         signature = "<"
         if len(params):

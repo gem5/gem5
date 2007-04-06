@@ -62,23 +62,6 @@
 //
 
 let {{
-    # This builds either a regular or macro op to implement the sequence of
-    # ops we give it.
-    def genInst(name, Name, ops):
-        # If we can implement this instruction with exactly one microop, just
-        # use that directly.
-        newStmnt = ''
-        if len(ops) == 1:
-            decode_block = "return %s;" % \
-                            ops[0].getAllocator()
-            return ('', '', decode_block, '')
-        else:
-            # Build a macroop to contain the sequence of microops we've
-            # been given.
-            return genMacroOp(name, Name, ops)
-}};
-
-let {{
     # This code builds up a decode block which decodes based on switchval.
     # vals is a dict which matches case values with what should be decoded to.
     # builder is called on the exploded contents of "vals" values to generate
@@ -187,20 +170,21 @@ let {{
 
         # At this point, we've built up "code" to have all the necessary extra
         # instructions needed to implement whatever types of operands were
-        # specified. Now we'll assemble it it into a microOp sequence.
-        ops = assembleMicro(code)
-
-        # Build a macroop to contain the sequence of microops we've
-        # constructed. The decode block will be used to fill in our
-        # inner decode structure, and the rest will be concatenated and
-        # passed back.
-        return genInst(name, Name, ops)
+        # specified. Now we'll assemble it it into a StaticInst.
+        return assembleMicro(name, Name, code)
 }};
 
 ////////////////////////////////////////////////////////////////////
 //
 //  The microcode assembler
 //
+
+let {{
+    # These are used when setting up microops so that they can specialize their
+    # base class template properly.
+    RegOpType = "RegisterOperand"
+    ImmOpType = "ImmediateOperand"
+}};
 
 let {{
     class MicroOpStatement(object):
@@ -242,19 +226,9 @@ let {{
             return 'new %s%s(machInst%s%s)' % (self.className, signature, self.microFlagsText(microFlags), args)
 }};
 
-let {{
-    def buildLabelDict(ops):
-        labels = {}
-        micropc = 0
-        for op in ops:
-            if op.label:
-                labels[op.label] = count
-            micropc += 1
-        return labels
-}};
-
 let{{
-    def assembleMicro(code):
+    def assembleMicro(name, Name, code):
+
         # This function takes in a block of microcode assembly and returns
         # a python list of objects which describe it.
 
@@ -341,7 +315,13 @@ let{{
             lineMatch = lineRe.search(code)
 
         # Decode the labels into displacements
-        labels = buildLabelDict(statements)
+
+        labels = {}
+        micropc = 0
+        for statement in statements:
+            if statement.label:
+                labels[statement.label] = count
+            micropc += 1
         micropc = 0
         for statement in statements:
             for arg in statement.args:
@@ -353,5 +333,15 @@ let{{
                     # micropc + 1 + displacement.
                     arg["operandImm"] = labels[arg["operandLabel"]] - micropc - 1
             micropc += 1
-        return statements
+
+        # If we can implement this instruction with exactly one microop, just
+        # use that directly.
+        if len(statements) == 1:
+            decode_block = "return %s;" % \
+                            statements[0].getAllocator()
+            return ('', '', decode_block, '')
+        else:
+            # Build a macroop to contain the sequence of microops we've
+            # been given.
+            return genMacroOp(name, Name, statements)
 }};
