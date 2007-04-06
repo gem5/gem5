@@ -117,37 +117,33 @@ namespace X86ISA
             //Operand size override prefixes
           case OperandSizeOverride:
             DPRINTF(Predecoder, "Found operand size override prefix.\n");
+            emi.legacy.op = true;
             break;
           case AddressSizeOverride:
             DPRINTF(Predecoder, "Found address size override prefix.\n");
+            emi.legacy.addr = true;
             break;
             //Segment override prefixes
           case CSOverride:
-            DPRINTF(Predecoder, "Found cs segment override.\n");
-            break;
           case DSOverride:
-            DPRINTF(Predecoder, "Found ds segment override.\n");
-            break;
           case ESOverride:
-            DPRINTF(Predecoder, "Found es segment override.\n");
-            break;
           case FSOverride:
-            DPRINTF(Predecoder, "Found fs segment override.\n");
-            break;
           case GSOverride:
-            DPRINTF(Predecoder, "Found gs segment override.\n");
-            break;
           case SSOverride:
-            DPRINTF(Predecoder, "Found ss segment override.\n");
+            DPRINTF(Predecoder, "Found segment override.\n");
+            emi.legacy.seg = prefix;
             break;
           case Lock:
             DPRINTF(Predecoder, "Found lock prefix.\n");
+            emi.legacy.lock = true;
             break;
           case Rep:
             DPRINTF(Predecoder, "Found rep prefix.\n");
+            emi.legacy.rep = true;
             break;
           case Repne:
             DPRINTF(Predecoder, "Found repne prefix.\n");
+            emi.legacy.repne = true;
             break;
           case RexPrefix:
             DPRINTF(Predecoder, "Found Rex prefix %#x.\n", nextByte);
@@ -198,16 +194,36 @@ namespace X86ISA
             displacementCollected = 0;
             emi.displacement = 0;
 
+            //Figure out the effective operand size. This can be overriden to
+            //a fixed value at the decoder level.
+            if(/*FIXME long mode*/1)
+            {
+                if(emi.rex && emi.rex.w)
+                    emi.opSize = 3; // 64 bit operand size
+                else if(emi.legacy.op)
+                    emi.opSize = 1; // 16 bit operand size
+                else
+                    emi.opSize = 2; // 32 bit operand size
+            }
+            else if(/*FIXME default 32*/1)
+            {
+                if(emi.legacy.op)
+                    emi.opSize = 1; // 16 bit operand size
+                else
+                    emi.opSize = 2; // 32 bit operand size
+            }
+            else // 16 bit default operand size
+            {
+                if(emi.legacy.op)
+                    emi.opSize = 2; // 32 bit operand size
+                else
+                    emi.opSize = 1; // 16 bit operand size
+            }
+
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
-            int immType = ImmediateType[
-                emi.opcode.num - 1][nextByte];
-            if(0) //16 bit mode
-                immediateSize = ImmediateTypeToSize[0][immType];
-            else if(!(emi.rex & 0x4)) //32 bit mode
-                immediateSize = ImmediateTypeToSize[1][immType];
-            else //64 bit mode
-                immediateSize = ImmediateTypeToSize[2][immType];
+            int immType = ImmediateType[emi.opcode.num - 1][nextByte];
+            immediateSize = SizeTypeToSize[emi.opSize - 1][immType];
 
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {
@@ -351,6 +367,16 @@ namespace X86ISA
 
         if(immediateSize == immediateCollected)
         {
+            //XXX Warning! The following is an observed pattern and might
+            //not always be true!
+
+            //Instructions which use 64 bit operands but 32 bit immediates
+            //need to have the immediate sign extended to 64 bits.
+            //Instructions which use true 64 bit immediates won't be
+            //affected, and instructions that use true 32 bit immediates
+            //won't notice.
+            if(immediateSize == 4)
+                emi.immediate = sext<32>(emi.immediate);
             DPRINTF(Predecoder, "Collected immediate %#x.\n",
                     emi.immediate);
             emiIsReady = true;

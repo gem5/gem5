@@ -70,25 +70,31 @@ namespace X86ISA
     typedef uint64_t MachInst;
 
     enum Prefixes {
-        NoOverride = 0,
-        CSOverride = 1,
-        DSOverride = 2,
-        ESOverride = 3,
-        FSOverride = 4,
-        GSOverride = 5,
-        SSOverride = 6,
-        //The Rex prefix obviously doesn't fit in with the above, but putting
-        //it here lets us save double the space the enums take up.
-        RexPrefix = 7,
+        NoOverride,
+        CSOverride,
+        DSOverride,
+        ESOverride,
+        FSOverride,
+        GSOverride,
+        SSOverride,
+        RexPrefix,
+        OperandSizeOverride,
+        AddressSizeOverride,
+        Lock,
+        Rep,
+        Repne
+    };
+
+    BitUnion8(LegacyPrefixVector)
+        Bitfield<7> repne;
+        Bitfield<6> rep;
+        Bitfield<5> lock;
+        Bitfield<4> addr;
+        Bitfield<3> op;
         //There can be only one segment override, so they share the
         //first 3 bits in the legacyPrefixes bitfield.
-        SegmentOverride = 0x7,
-        OperandSizeOverride = 8,
-        AddressSizeOverride = 16,
-        Lock = 32,
-        Rep = 64,
-        Repne = 128
-    };
+        Bitfield<2,0> seg;
+    EndBitUnion(LegacyPrefixVector)
 
     BitUnion8(ModRM)
         Bitfield<7,6> mod;
@@ -118,7 +124,7 @@ namespace X86ISA
     struct ExtMachInst
     {
         //Prefixes
-        uint8_t legacy;
+        LegacyPrefixVector legacy;
         Rex rex;
         //This holds all of the bytes of the opcode
         struct
@@ -140,6 +146,10 @@ namespace X86ISA
         //Immediate fields
         uint64_t immediate;
         uint64_t displacement;
+
+        //The effective operand size.
+        uint8_t opSize;
+        //The
     };
 
     inline static std::ostream &

@@ -141,7 +141,7 @@ namespace X86ISA
         }
     };
 
-    enum ImmediateTypes {
+    enum SizeType {
         NoImm,
         NI = NoImm,
         ByteImm,
@@ -158,19 +158,19 @@ namespace X86ISA
         VW = VWordImm,
         ZWordImm,
         ZW = ZWordImm,
-        Pointer,
-        PO = Pointer,
         //The enter instruction takes -2- immediates for a total of 3 bytes
         Enter,
-        EN = Enter
+        EN = Enter,
+        Pointer,
+        PO = Pointer
     };
 
-    const uint8_t Predecoder::ImmediateTypeToSize[3][10] =
+    const uint8_t Predecoder::SizeTypeToSize[3][10] =
     {
-//       noimm byte word dword qword oword vword zword enter
-        {0,    1,   2,   4,    8,    16,   2,    2,    3,    4}, //16 bit
-        {0,    1,   2,   4,    8,    16,   4,    4,    3,    6}, //32 bit
-        {0,    1,   2,   4,    8,    16,   4,    8,    3,    0}  //64 bit
+//       noimm byte word dword qword oword vword zword enter pointer
+        {0,    1,   2,   4,    8,    16,   2,    2,    3,    4      }, //16 bit
+        {0,    1,   2,   4,    8,    16,   4,    4,    3,    6      }, //32 bit
+        {0,    1,   2,   4,    8,    16,   4,    8,    3,    0      }  //64 bit
     };
 
     //This table determines the immediate type. The first index is the
