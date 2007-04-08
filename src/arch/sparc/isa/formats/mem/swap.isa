@@ -137,7 +137,7 @@ def format Swap(code, postacc_code, mem_flags, *opt_flags) {{
      decoder_output,
      exec_output,
      decode_block) = doMemFormat(code, SwapFuncs, '', name, Name, flags,
-         opt_flags, postacc_code)
+         ["IsStoreConditional"], postacc_code)
 }};
 
 def format SwapAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
@@ -148,7 +148,7 @@ def format SwapAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
      decoder_output,
      exec_output,
      decode_block) = doMemFormat(code, SwapFuncs, AlternateASIPrivFaultCheck,
-         name, Name, flags, opt_flags, postacc_code)
+         name, Name, flags, ["IsStoreConditional"], postacc_code)
 }};
 
 
@@ -163,8 +163,8 @@ let {{
         decode_block = BasicDecode.subst(iop)
         microParams = {"code": code, "postacc_code" : postacc_code,
             "ea_code" : addrCalcReg, "fault_check" : faultCode}
-        exec_output = doSplitExecute(execute, name, Name, asi, opt_flags,
-                microParams);
+        exec_output = doSplitExecute(execute, name, Name, asi,
+                ["IsStoreConditional"], microParams);
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
@@ -177,7 +177,7 @@ def format CasAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
      decoder_output,
      exec_output,
      decode_block) = doCasFormat(code, SwapFuncs, AlternateASIPrivFaultCheck,
-         name, Name, flags, opt_flags, postacc_code)
+         name, Name, flags, ["IsStoreConditional"], postacc_code)
 }};
 
 

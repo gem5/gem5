@@ -877,6 +877,11 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         effAddrValid = true;
         physEffAddr = req->getPaddr();
         memReqFlags = req->getFlags();
+
+        if (req->isCondSwap()) {
+            assert(res);
+            req->setExtraData(*res);
+        }
 #if 0
         if (cpu->system->memctrl->badaddr(physEffAddr)) {
             fault = TheISA::genMachineCheckFault();
