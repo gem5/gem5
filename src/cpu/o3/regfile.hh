@@ -174,7 +174,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+        assert(reg_idx < numPhysicalFloatRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
@@ -189,7 +189,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+        assert(reg_idx < numPhysicalFloatRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
@@ -204,7 +204,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+        assert(reg_idx < numPhysicalFloatRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
@@ -217,7 +217,7 @@ class PhysRegFile
         // Remove the base Float reg dependency.
         reg_idx = reg_idx - numPhysicalIntRegs;
 
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
+        assert(reg_idx < numPhysicalFloatRegs);
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
@@ -232,11 +232,11 @@ class PhysRegFile
 
     MiscReg readMiscReg(int misc_reg, unsigned thread_id)
     {
-        return miscRegs[thread_id].readReg(misc_reg,
-                                                     cpu->tcBase(thread_id));
+        return miscRegs[thread_id].readReg(misc_reg, cpu->tcBase(thread_id));
     }
 
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned thread_id)
+    void setMiscRegNoEffect(int misc_reg,
+            const MiscReg &val, unsigned thread_id)
     {
         miscRegs[thread_id].setRegNoEffect(misc_reg, val);
     }

@@ -996,7 +996,12 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
         if (src_reg < TheISA::FP_Base_DepTag) {
             flat_src_reg = TheISA::flattenIntIndex(inst->tcBase(), src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
+        } else {
+            // Floating point and Miscellaneous registers need their indexes
+            // adjusted to account for the expanded number of flattened int regs.
+            flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
         }
+
         inst->flattenSrcReg(src_idx, flat_src_reg);
 
         // Look up the source registers to get the phys. register they've
@@ -1033,8 +1038,13 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
         RegIndex dest_reg = inst->destRegIdx(dest_idx);
         RegIndex flat_dest_reg = dest_reg;
         if (dest_reg < TheISA::FP_Base_DepTag) {
+            // Integer registers are flattened.
             flat_dest_reg = TheISA::flattenIntIndex(inst->tcBase(), dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
+        } else {
+            // Floating point and Miscellaneous registers need their indexes
+            // adjusted to account for the expanded number of flattened int regs.
+            flat_dest_reg = dest_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
         }
 
         inst->flattenDestReg(dest_idx, flat_dest_reg);
