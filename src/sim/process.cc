@@ -157,12 +157,12 @@ Process::registerThreadContext(ThreadContext *tc)
     int myIndex = threadContexts.size();
     threadContexts.push_back(tc);
 
-    RemoteGDB *rgdb = new RemoteGDB(system, tc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + myIndex);
-    gdbl->listen();
+//    RemoteGDB *rgdb = new RemoteGDB(system, tc);
+//    GDBListener *gdbl = new GDBListener(rgdb, 7000 + myIndex);
+//    gdbl->listen();
     //gdbl->accept();
 
-    remoteGDB.push_back(rgdb);
+//    remoteGDB.push_back(rgdb);
 
     // return CPU number to caller
     return myIndex;
