@@ -692,7 +692,7 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
             DPRINTF(Rename, "Blocking due to lack of free "
                     "physical registers to rename to.\n");
             blockThisCycle = true;
-
+            insts_to_rename.push_front(inst);
             ++renameFullRegistersEvents;
 
             break;
