@@ -647,7 +647,8 @@ LSQUnit<Impl>::writebackStores()
 
         memcpy(inst->memData, storeQueue[storeWBIdx].data, req->getSize());
 
-        PacketPtr data_pkt = new Packet(req, MemCmd::WriteReq,
+        MemCmd command = req->isSwap() ? MemCmd::SwapReq : MemCmd::WriteReq;
+        PacketPtr data_pkt = new Packet(req, command,
                                         Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
 
@@ -664,7 +665,7 @@ LSQUnit<Impl>::writebackStores()
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
-        if (req->isLocked()) {
+        if (inst->isStoreConditional()) {
             // Disable recording the result temporarily.  Writing to
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
