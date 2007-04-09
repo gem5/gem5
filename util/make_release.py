@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -127,6 +127,7 @@ rmtree(release_dir, 'configs/test')
 rmtree(release_dir, 'configs/splash2')
 rmtree(release_dir, 'tests/long/*/ref')
 rmtree(release_dir, 'tests/old')
+rmtree(release_dir, 'src/dev/i8*')
 
 # get rid of some of private scripts
 remove(release_dir, 'util/chgcopyright')
@@ -142,6 +143,20 @@ for line in inscript:
 
     outscript.write(line)
 outscript.close()
+
+# fix up the SConscript to deal with files we've removed
+mem_expr = re.compile('.*i8254xGBe.*')
+inscript = file(joinpath(release_dir, 'src', 'dev', 'SConscript'), 'r').readlines()
+outscript = file(joinpath(release_dir, 'src', 'dev', 'SConscript'), 'w')
+for line in inscript:
+    if mem_expr.match(line):
+        continue
+
+    outscript.write(line)
+outscript.close()
+
+
+
 
 benches = [ 'bzip2', 'eon', 'gzip', 'mcf', 'parser', 'perlbmk',
             'twolf', 'vortex' ]
