@@ -65,9 +65,29 @@ namespace X86ISA
 {
     class X86Fault : public FaultBase
     {
+      protected:
+        const char * name()
+        {
+            return "generic_x86_fault";
+        }
+
         void invoke(ThreadContext * tc)
         {
             panic("X86 faults are not implemented!");
+        }
+    };
+
+    class UnimpInstFault : public FaultBase
+    {
+      public:
+        const char * name()
+        {
+            return "unimplemented_micro";
+        }
+
+        void invoke(ThreadContext * tc)
+        {
+            panic("Unimplemented instruction!");
         }
     };
 
