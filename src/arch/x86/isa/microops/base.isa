@@ -69,19 +69,32 @@ output header {{
     class X86MicroOpBase : public X86StaticInst
     {
       protected:
+        const char * instMnem;
         uint8_t opSize;
         uint8_t addrSize;
 
-        X86MicroOpBase(bool isMicro, bool isDelayed,
+        X86MicroOpBase(ExtMachInst _machInst,
+                const char *mnem, const char *_instMnem,
+                bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
-                const char *mnem, ExtMachInst _machInst,
                 OpClass __opClass) :
-            X86StaticInst(mnem, _machInst, __opClass)
+            X86StaticInst(mnem, _machInst, __opClass),
+            instMnem(_instMnem)
         {
             flags[IsMicroOp] = isMicro;
             flags[IsDelayedCommit] = isDelayed;
             flags[IsFirstMicroOp] = isFirst;
             flags[IsLastMicroOp] = isLast;
+        }
+
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "\t%s.%s", instMnem, mnemonic);
+
+            return ss.str();
         }
     };
 }};
@@ -127,7 +140,7 @@ let {{
 }};
 
 // A tmeplate for building a specialized version of the microcode
-// instruction which knows specifies which arguments it wants
+// instruction which specifies which arguments it wants
 def template MicroOpDeclare {{
     template<>
     class %(class_name)s%(signature)s : public X86MicroOpBase
@@ -137,11 +150,15 @@ def template MicroOpDeclare {{
         void buildMe();
 
       public:
-        %(class_name)s(bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                ExtMachInst _machInst %(param_arg_dec)s);
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed,
+                bool isFirst, bool isLast
+                %(param_arg_dec)s);
 
-        %(class_name)s(ExtMachInst _machInst %(param_arg_dec)s);
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem
+                %(param_arg_dec)s);
 
         %(BasicExecDeclare)s
     };
@@ -155,19 +172,21 @@ def template MicroOpConstructor {{
     }
 
     inline %(class_name)s%(signature)s::%(class_name)s(
-            ExtMachInst machInst %(param_arg_dec)s) :
-        %(base_class)s(false, false, false, false,
-                "%(mnemonic)s", machInst, %(op_class)s)
+            ExtMachInst machInst, const char * instMnem
+            %(param_arg_dec)s) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false, %(op_class)s)
                 %(param_init)s
     {
         buildMe();
     }
 
     inline %(class_name)s%(signature)s::%(class_name)s(
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            ExtMachInst machInst %(param_arg_dec)s)
-        : %(base_class)s(isMicro, isDelayed, isFirst, isLast,
-                "%(mnemonic)s", machInst, %(op_class)s)
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast
+            %(param_arg_dec)s)
+        : %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, %(op_class)s)
                 %(param_init)s
     {
         buildMe();

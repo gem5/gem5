@@ -85,7 +85,7 @@ let {{
                     text += ", false"
             return text
 
-        def getAllocator(self, *microFlags):
+        def getAllocator(self, mnemonic, *microFlags):
             args = ''
             signature = "<"
             emptySig = True
@@ -104,7 +104,7 @@ let {{
                 else:
                     raise Exception, "Unrecognized operand type."
             signature += ">"
-            return 'new %s%s(machInst%s%s)' % (self.className, signature, self.microFlagsText(microFlags), args)
+            return 'new %s%s(machInst, %s%s%s)' % (self.className, signature, mnemonic, self.microFlagsText(microFlags), args)
 }};
 
 let{{
@@ -123,7 +123,7 @@ let{{
         # the beginning of the line, so the previous component is stripped
         # before continuing.
         labelRe = re.compile(r'^[ \t]*(?P<label>\w\w*)[ \t]:')
-        lineRe = re.compile(r'^(?P<line>[^\n][^\n]*)$')
+        lineRe = re.compile(r'^(?P<line>..*)(\n|$)')
         classRe = re.compile(r'^[ \t]*(?P<className>[a-zA-Z_]\w*)')
         # This recognizes three different flavors of operands:
         # 1. Raw decimal numbers composed of digits between 0 and 9
@@ -145,14 +145,14 @@ let{{
             # Get a line and seperate it from the rest of the code
             line = lineMatch.group("line")
             orig_line = line
-            # print "Parsing line %s" % line
+            #print "Parsing line %s" % line
             code = lineRe.sub('', code, 1)
 
             # Find the label, if any
             labelMatch = labelRe.search(line)
             if labelMatch != None:
                 statement.label = labelMatch.group("label")
-                # print "Found label %s." % statement.label
+                #print "Found label %s." % statement.label
             # Clear the label from the statement
             line = labelRe.sub('', line, 1)
 
@@ -163,7 +163,7 @@ let{{
                         % orig_line
             else:
                 statement.className = classMatch.group("className")
-                # print "Found class name %s." % statement.className
+                #print "Found class name %s." % statement.className
 
             # Clear the class name from the statement
             line = classRe.sub('', line, 1)
@@ -185,9 +185,9 @@ let{{
                     print "Problem parsing operand in statement: %s" \
                             % orig_line
                 line = opRe.sub('', line, 1)
-                # print "Found operand %s." % statement.args[-1]
+                #print "Found operand %s." % statement.args[-1]
                 opMatch = opRe.search(line)
-            # print "Found operands", statement.args
+            #print "Found operands", statement.args
 
             # Add this statement to our collection
             statements.append(statement)
@@ -215,11 +215,14 @@ let{{
                     arg["operandImm"] = labels[arg["operandLabel"]] - micropc - 1
             micropc += 1
 
+        if len(statements) == 0:
+            raise Exception, "Didn't find any microops in microcode: \n%s" % orig_code
+
         # If we can implement this instruction with exactly one microop, just
         # use that directly.
         if len(statements) == 1:
             decode_block = "return %s;" % \
-                            statements[0].getAllocator()
+                            statements[0].getAllocator('"' + name + '"')
             return ('', '', decode_block, '')
         else:
             # Build a macroop to contain the sequence of microops we've

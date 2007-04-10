@@ -72,7 +72,7 @@ def format Inst(*opTypeSet) {{
     (header_output,
      decoder_output,
      decode_block,
-     exec_output) = doInst(name, Name, list(opTypeSet))
+     exce_output) = doInst(name, Name, list(opTypeSet)).makeList()
 }};
 
 def format MultiInst(switchVal, *opTypeSets) {{
@@ -82,5 +82,5 @@ def format MultiInst(switchVal, *opTypeSets) {{
     (header_output,
      decoder_output,
      decode_block,
-     exec_output) = doSplitDecode(name, Name, doInst, switchVal, switcher)
+     exec_output) = doSplitDecode(name, Name, doInst, switchVal, switcher).makeList()
 }};

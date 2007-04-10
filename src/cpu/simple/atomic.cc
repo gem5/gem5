@@ -557,7 +557,7 @@ AtomicSimpleCPU::tick()
             }
 
         }
-        if(predecoder.needMoreBytes())
+        if(predecoder.needMoreBytes() || fault != NoFault)
             advancePC(fault);
     }
 

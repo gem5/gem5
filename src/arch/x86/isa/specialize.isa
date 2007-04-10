@@ -67,30 +67,18 @@ let {{
     # builder is called on the exploded contents of "vals" values to generate
     # whatever code should be used.
     def doSplitDecode(name, Name, builder, switchVal, vals, default = None):
-        header_output = ''
-        decoder_output = ''
-        decode_block = 'switch(%s) {\n' % switchVal
-        exec_output = ''
+        blocks = OutputBlocks()
+        blocks.decode_block += 'switch(%s) {\n' % switchVal
         for (val, todo) in vals.items():
-            (new_header_output,
-             new_decoder_output,
-             new_decode_block,
-             new_exec_output) = builder(name, Name, *todo)
-            header_output += new_header_output
-            decoder_output += new_decoder_output
-            decode_block += '\tcase %s: %s\n' % (val, new_decode_block)
-            exec_output += new_exec_output
+            built = builder(name, Name, *todo)
+            built.decode_block = '\tcase %s: %s\n' % (val, built.decode_block)
+            blocks.append(built)
         if default:
-            (new_header_output,
-             new_decoder_output,
-             new_decode_block,
-             new_exec_output) = builder(name, Name, *default)
-            header_output += new_header_output
-            decoder_output += new_decoder_output
-            decode_block += '\tdefault: %s\n' % new_decode_block
-            exec_output += new_exec_output
-        decode_block += '}\n'
-        return (header_output, decoder_output, decode_block, exec_output)
+            built = builder(name, Name, *default)
+            built.decode_block = '\tdefault: %s\n' % built.decode_block
+            blocks.append(built)
+        blocks.decode_block += '}\n'
+        return blocks
 }};
 
 let {{
@@ -143,6 +131,7 @@ let {{
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
+                code = "GenFault ${new UnimpInstFault}\n" + code
                 memCode = opRe.sub("%0", code)
                 memTypes = copy.copy(opTypes)
                 memTypes.pop(-1)
@@ -156,6 +145,7 @@ let {{
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
+                code = "GenFault ${new UnimpInstFault}\n" + code
                 code = opRe.sub("%0", code)
             elif opType.tag in ("PR", "R", "VR"):
                 # There should probably be a check here to verify that mod
@@ -168,5 +158,7 @@ let {{
         # At this point, we've built up "code" to have all the necessary extra
         # instructions needed to implement whatever types of operands were
         # specified. Now we'll assemble it it into a StaticInst.
-        return assembleMicro(name, Name, code)
+        blocks = OutputBlocks()
+        blocks.append(assembleMicro(name, Name, code))
+        return blocks
 }};
