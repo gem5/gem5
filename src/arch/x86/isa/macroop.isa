@@ -55,26 +55,30 @@
 //
 // Authors: Gabe Black
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  Architecture independent
+//
+
 // Execute method for macroops.
 def template MacroExecPanic {{
         Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
         {
             panic("Tried to execute macroop directly!");
-            M5_DUMMY_RETURN
+            return NoFault;
         }
 }};
 
 output header {{
 
-        // Base class for most macroops, except ones that need to commit as
-        // they go.
-        class X86MacroInst : public StaticInst
+        // Base class for macroops
+        class MacroOp : public StaticInst
         {
           protected:
             const uint32_t numMicroOps;
 
             //Constructor.
-            X86MacroInst(const char *mnem, ExtMachInst _machInst,
+            MacroOp(const char *mnem, ExtMachInst _machInst,
                     uint32_t _numMicroOps)
                         : StaticInst(mnem, _machInst, No_OpClass),
                         numMicroOps(_numMicroOps)
@@ -84,7 +88,7 @@ output header {{
                 flags[IsMacroOp] = true;
             }
 
-            ~X86MacroInst()
+            ~MacroOp()
             {
                 delete [] microOps;
             }
@@ -97,7 +101,26 @@ output header {{
                 return microOps[microPC];
             }
 
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const
+            {
+                return mnemonic;
+            }
+
             %(MacroExecPanic)s
+        };
+}};
+
+// Basic instruction class declaration template.
+def template MacroDeclare {{
+        /**
+         * Static instruction class for "%(mnemonic)s".
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+            // Constructor.
+            %(class_name)s(ExtMachInst machInst);
         };
 }};
 
@@ -113,23 +136,27 @@ def template MacroConstructor {{
         }
 }};
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  X86 specific
+//
+
 let {{
     def genMacroOp(name, Name, opSeq):
-        baseClass = 'X86MacroInst'
-        numMicroOps = len(opSeq.ops)
+        numMicroOps = len(opSeq)
         allocMicroOps = ''
         micropc = 0
-        for op in opSeq.ops:
+        for op in opSeq:
             allocMicroOps += \
                 "microOps[%d] = %s;\n" % \
-                (micropc, op.getAllocator(True, op.delayed,
+                (micropc, op.getAllocator('"' + name + '"', True, False, #op.delayed,
                                           micropc == 0,
                                           micropc == numMicroOps - 1))
             micropc += 1
-        iop = InstObjParams(name, Name, baseClass,
+        iop = InstObjParams(name, Name, 'MacroOp',
                 {'code' : '', 'num_micro_ops' : numMicroOps,
                 'alloc_micro_ops' : allocMicroOps})
-        header_output = BasicDeclare.subst(iop)
+        header_output = MacroDeclare.subst(iop)
         decoder_output = MacroConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
         exec_output = ''
