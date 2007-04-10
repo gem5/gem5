@@ -58,6 +58,38 @@
 // Base class for sparc instructions, and some support functions
 //
 
+let {{
+    # This class will help make dealing with output a little less verbose
+    class OutputBlocks(object):
+        def __init__(self, header_output="",
+                           decoder_output="",
+                           decode_block="",
+                           exec_output=""):
+            self.header_output = header_output
+            self.decoder_output = decoder_output
+            self.decode_block = decode_block
+            self.exec_output = exec_output
+
+        def append(self, blocks):
+            if isinstance(blocks, list) or isinstance(blocks, tuple):
+                assert(len(blocks) == 4)
+                self.header_output += blocks[0]
+                self.decoder_output += blocks[1]
+                self.decode_block += blocks[2]
+                self.exec_output += blocks[3]
+            else:
+                self.header_output += blocks.header_output
+                self.decoder_output += blocks.decoder_output
+                self.decode_block += blocks.decode_block
+                self.exec_output += blocks.exec_output
+
+        def makeList(self):
+            return (self.header_output,
+                    self.decoder_output,
+                    self.decode_block,
+                    self.exec_output)
+}};
+
 output header {{
 
         /**
