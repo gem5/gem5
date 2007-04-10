@@ -652,7 +652,7 @@ Trace::InstRecord::dump()
                         predecoder.setTC(thread);
                         predecoder.moreBytes(m5Pc, 0, shared_data->instruction);
 
-                        assert(predecoder.extMachInstRead());
+                        assert(predecoder.extMachInstReady());
 
                         StaticInstPtr legionInst =
                             StaticInst::decode(predecoder.getExtMachInst());
