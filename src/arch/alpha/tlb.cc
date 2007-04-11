@@ -292,6 +292,10 @@ ITB::regStats()
 Fault
 ITB::translate(RequestPtr &req, ThreadContext *tc) const
 {
+    //If this is a pal pc, then set PHYSICAL
+    if(FULL_SYSTEM && PcPAL(req->getPC()))
+        req->setFlags(req->getFlags() | PHYSICAL);
+
     if (PcPAL(req->getPC())) {
         // strip off PAL PC marker (lsb is 1)
         req->setPaddr((req->getVaddr() & ~3) & PAddrImplMask);

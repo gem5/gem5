@@ -335,9 +335,8 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
             thread->readNextPC());
 #endif
 
-    req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst),
-                 (FULL_SYSTEM && (thread->readPC() & 1)) ? PHYSICAL : 0,
-                 thread->readPC());
+    req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst), 0,
+            thread->readPC());
 
     Fault fault = thread->translateInstReq(req);
 
