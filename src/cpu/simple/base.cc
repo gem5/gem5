@@ -335,7 +335,11 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
             thread->readNextPC());
 #endif
 
-    req->setVirt(0, thread->readPC() & ~3, sizeof(MachInst), 0,
+    // This will generate a mask which aligns the pc on MachInst size
+    // boundaries. It won't work for non-power-of-two sized MachInsts, but
+    // it will work better than a hard coded mask.
+    const Addr PCMask = ~(sizeof(MachInst) - 1);
+    req->setVirt(0, thread->readPC() & PCMask, sizeof(MachInst), 0,
             thread->readPC());
 
     Fault fault = thread->translateInstReq(req);
