@@ -317,6 +317,7 @@ let {{
 }};
 
 def format BlockLoad(code, asi, *opt_flags) {{
+        code = filterDoubles(code)
         # We need to make sure to check the highest priority fault last.
         # That way, if other faults have been detected, they'll be overwritten
         # rather than the other way around.
@@ -329,6 +330,7 @@ def format BlockLoad(code, asi, *opt_flags) {{
 }};
 
 def format BlockStore(code, asi, *opt_flags) {{
+        code = filterDoubles(code)
         # We need to make sure to check the highest priority fault last.
         # That way, if other faults have been detected, they'll be overwritten
         # rather than the other way around.

@@ -97,6 +97,7 @@ def template BasicDecodeWithMnemonic {{
 
 // The most basic instruction format... used only for a few misc. insts
 def format BasicOperate(code, *flags) {{
+        code = filterDoubles(code)
         iop = InstObjParams(name, Name, 'SparcStaticInst', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
@@ -140,6 +141,7 @@ def format FpBasic(code, *flags) {{
     fesetround(oldrnd);
 #endif
 """
+        fp_code = filterDoubles(fp_code)
         iop = InstObjParams(name, Name, 'SparcStaticInst', fp_code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
