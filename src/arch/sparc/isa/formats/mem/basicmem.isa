@@ -71,6 +71,7 @@ let {{
 }};
 
 def format LoadAlt(code, asi, *opt_flags) {{
+        code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
@@ -79,6 +80,7 @@ def format LoadAlt(code, asi, *opt_flags) {{
 }};
 
 def format StoreAlt(code, asi, *opt_flags) {{
+        code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
@@ -87,6 +89,7 @@ def format StoreAlt(code, asi, *opt_flags) {{
 }};
 
 def format Load(code, *opt_flags) {{
+        code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
@@ -95,6 +98,7 @@ def format Load(code, *opt_flags) {{
 }};
 
 def format Store(code, *opt_flags) {{
+        code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
