@@ -101,8 +101,11 @@ pyzip_files.append(join(env['ROOT'], 'src/base/traceflags.py'))
 
 swig_modules = []
 def swig_it(module):
-    env.Command(['swig/%s_wrap.cc' % module, 'm5/internal/%s.py' % module],
-                'swig/%s.i' % module,
+    cc_file = 'swig/%s_wrap.cc' % module
+    py_file = 'm5/internal/%s.py' % module
+    source = File('swig/%s.i' % module)
+    source.rfile() # Hack to cause the symlink to the .i file to be created
+    env.Command([cc_file, py_file], source,
                 '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES')
     swig_modules.append(module)
