@@ -33,21 +33,19 @@ import sys
 
 from os.path import join as joinpath
 
+import SCons
+
 # This file defines how to build a particular configuration of M5
 # based on variable settings in the 'env' build environment.
 
 Import('*')
 
 sources = []
-def Source(*args):
-    for arg in args:
-        if isinstance(arg, (list, tuple)):
-            # Recurse to load a list
-            Source(*arg)
-        elif isinstance(arg, str):
-            sources.extend([ File(f) for f in Split(arg) ])
-        else:
-            sources.append(File(arg))
+def Source(source):
+    if isinstance(source, SCons.Node.FS.File):
+        sources.append(source)
+    else:
+        sources.append(File(source))
 
 Export('env')
 Export('Source')
