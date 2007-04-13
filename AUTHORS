@@ -29,13 +29,13 @@ Steven K. Reinhardt
 
 Ali G. Saidi
 -----------------------
+* SPARC Full System Support
 * Alpha Linux support
 * Alpha (Tsunami) platform and devices
 * I/O <-> memory interface
 * PCI device interface
 * Multiple ISA support
 * Memory bridge, bus, packet, port interfaces
-* SPARC IPRs
 
 Kevin T. Lim
 -----------------------

@@ -1,3 +1,19 @@
+Apr. XX, 2007: m5_2.0_beta3
+--------------------
+New Features
+1. Some support for SPARC full-system simulation
+
+Bug fixes since beta 2:
+1. Many SPARC linux syscall emulation support fixes
+2. Multiprocessor linux boot using the detailed O3 CPU module
+3. Simulator performance and memory leak fixes
+4. Fix issues with remote debugging 
+5. Many other minor fixes and enhancements
+
+Outstanding issues for 2.0 release:
+--------------------
+1. ???
+
 Nov. 28, 2006: m5_2.0_beta2
 --------------------
 Bug fixes since beta 1:
@@ -7,7 +23,7 @@ Bug fixes since beta 1:
 4. Draining/Switchover
 5. Functional Accesses
 6. Bus now has real timing
-7. Single config file fro all SpecCPU2000 benchmarks
+7. Single config file for all SpecCPU2000 benchmarks
 8. Several other minor bug fixes and enhancements
 
 Outstading issues for 2.0 release:
