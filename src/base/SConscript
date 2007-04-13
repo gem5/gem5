@@ -97,3 +97,5 @@ Source('stats/visit.cc')
 if env['USE_MYSQL']:
     Source('mysql.cc')
     Source('stats/mysql.cc')
+
+PySource('m5', 'traceflags.py')

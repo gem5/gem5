@@ -30,132 +30,91 @@
 #          Nathan Binkert
 
 import os
-import zipfile
-
-# handy function for path joins
-def join(*args):
-    return os.path.normpath(os.path.join(*args))
-
 Import('*')
-
-# This SConscript is in charge of collecting .py files and generating
-# a zip archive that is appended to the m5 binary.
-
-# List of files & directories to include in the zip file.  To include
-# a package, list only the root directory of the package, not any
-# internal .py files (else they will get the path stripped off when
-# they are imported into the zip file).
-pyzip_files = []
-
-# List of additional files on which the zip archive depends, but which
-# are not included in pyzip_files... i.e. individual .py files within
-# a package.
-pyzip_dep_files = []
-
-# Add the specified package to the zip archive.  Adds the directory to
-# pyzip_files and all included .py files to pyzip_dep_files.
-def addPkg(pkgdir):
-    pyzip_files.append(pkgdir)
-    origdir = os.getcwd()
-    srcdir = join(Dir('.').srcnode().abspath, pkgdir)
-    os.chdir(srcdir)
-    for path, dirs, files in os.walk('.'):
-        for i,dir in enumerate(dirs):
-            if dir == 'SCCS':
-                del dirs[i]
-                break
-
-        for f in files:
-            if f.endswith('.py'):
-                pyzip_dep_files.append(join(pkgdir, path, f))
-
-    os.chdir(origdir)
-
-# Generate Python file that contains a dict specifying the current
-# build_env flags.
-def MakeDefinesPyFile(target, source, env):
-    f = file(str(target[0]), 'w')
-    print >>f, "m5_build_env = ", source[0]
-    f.close()
-
-optionDict = dict([(opt, env[opt]) for opt in env.ExportOptions])
-env.Command('m5/defines.py', Value(optionDict), MakeDefinesPyFile)
-
-def MakeInfoPyFile(target, source, env):
-    f = file(str(target[0]), 'w')
-    for src in source:
-        data = ''.join(file(src.srcnode().abspath, 'r').xreadlines())
-        print >>f, "%s = %s" % (src, repr(data))
-    f.close()
-
-env.Command('m5/info.py',
-            [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
-            MakeInfoPyFile)
-
-# Now specify the packages & files for the zip archive.
-addPkg('m5')
-pyzip_files.append('m5/defines.py')
-pyzip_files.append('m5/info.py')
-pyzip_files.append(join(env['ROOT'], 'util/pbs/jobfile.py'))
-pyzip_files.append(join(env['ROOT'], 'src/base/traceflags.py'))
-
-swig_modules = []
-def swig_it(module):
-    cc_file = 'swig/%s_wrap.cc' % module
-    py_file = 'm5/internal/%s.py' % module
-    source = File('swig/%s.i' % module)
-    source.rfile() # Hack to cause the symlink to the .i file to be created
-    env.Command([cc_file, py_file], source,
-                '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
-                '-o ${TARGETS[0]} $SOURCES')
-    swig_modules.append(module)
-    Source('swig/%s_wrap.cc' % module)
 
 Source('swig/init.cc')
 Source('swig/pyevent.cc')
 Source('swig/pyobject.cc')
 
-swig_it('core')
-swig_it('debug')
-swig_it('event')
-swig_it('random')
-swig_it('sim_object')
-swig_it('stats')
-swig_it('trace')
+PySource('m5', 'm5/__init__.py')
+PySource('m5', 'm5/SimObject.py')
+PySource('m5', 'm5/attrdict.py')
+PySource('m5', 'm5/convert.py')
+PySource('m5', 'm5/event.py')
+PySource('m5', 'm5/main.py')
+PySource('m5', 'm5/multidict.py')
+PySource('m5', 'm5/params.py')
+PySource('m5', 'm5/proxy.py')
+PySource('m5', 'm5/smartdict.py')
+PySource('m5', 'm5/stats.py')
+PySource('m5', 'm5/ticks.py')
+PySource('m5', 'm5/util.py')
 
-# Automatically generate m5/internals/__init__.py
-def MakeInternalsInit(target, source, env):
-    f = file(str(target[0]), 'w')
-    for m in swig_modules:
-        print >>f, 'import %s' % m
-    f.close()
+PySource('m5', os.path.join(env['ROOT'], 'util/pbs/jobfile.py'))
 
-swig_py_files = [ 'm5/internal/%s.py' % m for m in swig_modules ]
-env.Command('m5/internal/__init__.py', swig_py_files, MakeInternalsInit)
-pyzip_dep_files.append('m5/internal/__init__.py')
+SwigSource('m5.internal', 'swig/core.i')
+SwigSource('m5.internal', 'swig/debug.i')
+SwigSource('m5.internal', 'swig/event.i')
+SwigSource('m5.internal', 'swig/random.i')
+SwigSource('m5.internal', 'swig/sim_object.i')
+SwigSource('m5.internal', 'swig/stats.i')
+SwigSource('m5.internal', 'swig/trace.i')
+PySource('m5.internal', 'm5/internal/__init__.py')
 
-def MakeSwigInit(target, source, env):
-    f = file(str(target[0]), 'w')
-    print >>f, 'extern "C" {'
-    for m in swig_modules:
-        print >>f, '    void init_%s();' % m
-    print >>f, '}'
-    print >>f, 'void init_swig() {'
-    for m in swig_modules:
-        print >>f, '    init_%s();' % m
-    print >>f, '}'
-    f.close()
+SimObject('m5/objects/AlphaConsole.py')
+SimObject('m5/objects/AlphaTLB.py')
+SimObject('m5/objects/BadDevice.py')
+SimObject('m5/objects/BaseCPU.py')
+SimObject('m5/objects/BaseCache.py')
+SimObject('m5/objects/BaseHier.py')
+SimObject('m5/objects/BaseMem.py')
+SimObject('m5/objects/BaseMemory.py')
+SimObject('m5/objects/BranchPred.py')
+SimObject('m5/objects/Bridge.py')
+SimObject('m5/objects/Bus.py')
+SimObject('m5/objects/Checker.py')
+SimObject('m5/objects/CoherenceProtocol.py')
+SimObject('m5/objects/DRAMMemory.py')
+SimObject('m5/objects/Device.py')
+SimObject('m5/objects/DiskImage.py')
+SimObject('m5/objects/Ethernet.py')
+SimObject('m5/objects/FUPool.py')
+SimObject('m5/objects/FastCPU.py')
+#SimObject('m5/objects/FreebsdSystem.py')
+SimObject('m5/objects/FullCPU.py')
+SimObject('m5/objects/FuncUnit.py')
+SimObject('m5/objects/FuncUnitConfig.py')
+SimObject('m5/objects/FunctionalMemory.py')
+SimObject('m5/objects/HierParams.py')
+SimObject('m5/objects/Ide.py')
+SimObject('m5/objects/IntrControl.py')
+SimObject('m5/objects/LinuxSystem.py')
+SimObject('m5/objects/MainMemory.py')
+SimObject('m5/objects/MemObject.py')
+SimObject('m5/objects/MemTest.py')
+SimObject('m5/objects/MemoryController.py')
+SimObject('m5/objects/O3CPU.py')
+SimObject('m5/objects/OzoneCPU.py')
+SimObject('m5/objects/Pci.py')
+SimObject('m5/objects/PhysicalMemory.py')
+SimObject('m5/objects/PipeTrace.py')
+SimObject('m5/objects/Platform.py')
+SimObject('m5/objects/Process.py')
+SimObject('m5/objects/Repl.py')
+SimObject('m5/objects/Root.py')
+SimObject('m5/objects/Sampler.py')
+SimObject('m5/objects/Scsi.py')
+SimObject('m5/objects/SimConsole.py')
+SimObject('m5/objects/SimpleCPU.py')
+SimObject('m5/objects/SimpleDisk.py')
+#SimObject('m5/objects/SimpleOzoneCPU.py')
+SimObject('m5/objects/SparcTLB.py')
+SimObject('m5/objects/System.py')
+SimObject('m5/objects/T1000.py')
+#SimObject('m5/objects/Tru64System.py')
+SimObject('m5/objects/Tsunami.py')
+SimObject('m5/objects/Uart.py')
 
-swig_cc_files = [ 'swig/%s_wrap.cc' % m for m in swig_modules ]
-env.Command('swig/init.cc', swig_cc_files, MakeSwigInit)
-
-# Action function to build the zip archive.  Uses the PyZipFile module
-# included in the standard Python library.
-def buildPyZip(target, source, env):
-    pzf = zipfile.PyZipFile(str(target[0]), 'w')
-    for s in source:
-        pzf.writepy(str(s))
-
-# Add the zip file target to the environment.
-env.Command('m5py.zip', pyzip_files, buildPyZip)
-env.Depends('m5py.zip', pyzip_dep_files)
+if env['ALPHA_TLASER']:
+    SimObject('m5/objects/DmaEngine.py')
+    SimObject('m5/objects/Turbolaser.py')
