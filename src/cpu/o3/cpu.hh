@@ -468,8 +468,7 @@ class FullO3CPU : public BaseO3CPU
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/
-    void removeInstsNotInROB(unsigned tid, bool squash_delay_slot,
-                             const InstSeqNum &delay_slot_seq_num);
+    void removeInstsNotInROB(unsigned tid);
 
     /** Remove all instructions younger than the given sequence number. */
     void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);

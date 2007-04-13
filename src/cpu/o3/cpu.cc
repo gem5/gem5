@@ -696,7 +696,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
 
     // Squash Throughout Pipeline
     InstSeqNum squash_seq_num = commit.rob->readHeadInst(tid)->seqNum;
-    fetch.squash(0, sizeof(TheISA::MachInst), squash_seq_num, true, tid);
+    fetch.squash(0, sizeof(TheISA::MachInst), squash_seq_num, tid);
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);
@@ -1226,9 +1226,7 @@ FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
-                                     bool squash_delay_slot,
-                                     const InstSeqNum &delay_slot_seq_num)
+FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
 {
     DPRINTF(O3CPU, "Thread %i: Deleting instructions from instruction"
             " list.\n", tid);
@@ -1259,12 +1257,6 @@ FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
     while (inst_it != end_it) {
         assert(!instList.empty());
 
-#if ISA_HAS_DELAY_SLOT
-        if(!squash_delay_slot &&
-           delay_slot_seq_num >= (*inst_it)->seqNum) {
-            break;
-        }
-#endif
         squashInstIt(inst_it, tid);
 
         inst_it--;

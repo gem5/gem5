@@ -263,8 +263,7 @@ class DefaultFetch
      * squash should be the commit stage.
      */
     void squash(const Addr &new_PC, const Addr &new_NPC,
-                const InstSeqNum &seq_num,
-                bool squash_delay_slot, unsigned tid);
+                const InstSeqNum &seq_num, unsigned tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.

@@ -709,7 +709,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Set the next NPC of this instruction (the target in Mips or Sparc).*/
     void setNextNPC(uint64_t val)
     {
+#if ISA_HAS_DELAY_SLOT
         nextNPC = val;
+#endif
     }
 
     /** Sets the ASID. */

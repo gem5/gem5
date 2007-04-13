@@ -774,20 +774,14 @@ DefaultFetch<Impl>::updateFetchStatus()
 template <class Impl>
 void
 DefaultFetch<Impl>::squash(const Addr &new_PC, const Addr &new_NPC,
-                           const InstSeqNum &seq_num,
-                           bool squash_delay_slot, unsigned tid)
+                           const InstSeqNum &seq_num, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n",tid);
 
     doSquash(new_PC, new_NPC, tid);
 
-#if ISA_HAS_DELAY_SLOT
     // Tell the CPU to remove any instructions that are not in the ROB.
-    cpu->removeInstsNotInROB(tid, squash_delay_slot, seq_num);
-#else
-    // Tell the CPU to remove any instructions that are not in the ROB.
-    cpu->removeInstsNotInROB(tid, true, 0);
-#endif
+    cpu->removeInstsNotInROB(tid);
 }
 
 template <class Impl>
@@ -896,17 +890,10 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
         DPRINTF(Fetch, "[tid:%u]: Squashing instructions due to squash "
                 "from commit.\n",tid);
-
-#if ISA_HAS_DELAY_SLOT
-    InstSeqNum doneSeqNum = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
-#else
-    InstSeqNum doneSeqNum = fromCommit->commitInfo[tid].doneSeqNum;
-#endif
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].nextPC,
                fromCommit->commitInfo[tid].nextNPC,
-               doneSeqNum,
-               fromCommit->commitInfo[tid].squashDelaySlot,
+               fromCommit->commitInfo[tid].doneSeqNum,
                tid);
 
         // Also check if there's a mispredict that happened.
@@ -955,18 +942,13 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
 
         if (fetchStatus[tid] != Squashing) {
 
-#if ISA_HAS_DELAY_SLOT
-            InstSeqNum doneSeqNum = fromDecode->decodeInfo[tid].bdelayDoneSeqNum;
-#else
-            InstSeqNum doneSeqNum = fromDecode->decodeInfo[tid].doneSeqNum;
-#endif
             DPRINTF(Fetch, "Squashing from decode with PC = %#x, NPC = %#x\n",
                     fromDecode->decodeInfo[tid].nextPC,
                     fromDecode->decodeInfo[tid].nextNPC);
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
                              fromDecode->decodeInfo[tid].nextNPC,
-                             doneSeqNum,
+                             fromDecode->decodeInfo[tid].doneSeqNum,
                              tid);
 
             return true;
@@ -1157,9 +1139,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                      instruction->readPC());
 
             ///FIXME This needs to be more robust in dealing with delay slots
-#if !ISA_HAS_DELAY_SLOT
-//	    predicted_branch |=
-#endif
             lookupAndUpdateNextPC(instruction, next_PC, next_NPC);
             predicted_branch |= (next_PC != fetch_NPC);
 
@@ -1213,11 +1192,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         PC[tid] = next_PC;
         nextPC[tid] = next_NPC;
         nextNPC[tid] = next_NPC + instSize;
-#if ISA_HAS_DELAY_SLOT
-        DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n", tid, PC[tid]);
-#else
         DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n", tid, next_PC);
-#endif
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB
         // miss)
