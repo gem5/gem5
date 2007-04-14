@@ -124,7 +124,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
         committedStores[i] = false;
         trapSquash[i] = false;
         tcSquash[i] = false;
-        PC[i] = nextPC[i] = nextNPC[i] = 0;
+        microPC[i] = nextMicroPC[i] = PC[i] = nextPC[i] = nextNPC[i] = 0;
     }
 #if FULL_SYSTEM
     interrupt = NoFault;
@@ -508,6 +508,7 @@ DefaultCommit<Impl>::squashAll(unsigned tid)
 
     toIEW->commitInfo[tid].nextPC = PC[tid];
     toIEW->commitInfo[tid].nextNPC = nextPC[tid];
+    toIEW->commitInfo[tid].nextMicroPC = nextMicroPC[tid];
 }
 
 template <class Impl>
@@ -768,6 +769,7 @@ DefaultCommit<Impl>::commit()
 
             toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
             toIEW->commitInfo[tid].nextNPC = fromIEW->nextNPC[tid];
+            toIEW->commitInfo[tid].nextMicroPC = fromIEW->nextMicroPC[tid];
 
             toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
@@ -877,6 +879,7 @@ DefaultCommit<Impl>::commitInsts()
             PC[tid] = head_inst->readPC();
             nextPC[tid] = head_inst->readNextPC();
             nextNPC[tid] = head_inst->readNextNPC();
+            nextMicroPC[tid] = head_inst->readNextMicroPC();
 
             // Increment the total number of non-speculative instructions
             // executed.
@@ -905,12 +908,10 @@ DefaultCommit<Impl>::commitInsts()
                 }
 
                 PC[tid] = nextPC[tid];
-#if ISA_HAS_DELAY_SLOT
                 nextPC[tid] = nextNPC[tid];
                 nextNPC[tid] = nextNPC[tid] + sizeof(TheISA::MachInst);
-#else
-                nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
-#endif
+                microPC[tid] = nextMicroPC[tid];
+                nextMicroPC[tid] = microPC[tid] + 1;
 
 #if FULL_SYSTEM
                 int count = 0;

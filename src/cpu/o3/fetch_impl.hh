@@ -312,7 +312,7 @@ DefaultFetch<Impl>::initStage()
     for (int tid = 0; tid < numThreads; tid++) {
         PC[tid] = cpu->readPC(tid);
         nextPC[tid] = cpu->readNextPC(tid);
-        nextNPC[tid] = cpu->readNextNPC(tid);
+        microPC[tid] = cpu->readMicroPC(tid);
     }
 
     for (int tid=0; tid < numThreads; tid++) {
@@ -439,11 +439,7 @@ DefaultFetch<Impl>::takeOverFrom()
         stalls[i].commit = 0;
         PC[i] = cpu->readPC(i);
         nextPC[i] = cpu->readNextPC(i);
-#if ISA_HAS_DELAY_SLOT
-        nextNPC[i] = cpu->readNextNPC(i);
-#else
-        nextNPC[i] = nextPC[i] + sizeof(TheISA::MachInst);
-#endif
+        microPC[i] = cpu->readMicroPC(i);
         fetchStatus[i] = Running;
     }
     numInst = 0;
@@ -493,7 +489,7 @@ DefaultFetch<Impl>::switchToInactive()
 template <class Impl>
 bool
 DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
-                                          Addr &next_NPC)
+                                          Addr &next_NPC, Addr &next_MicroPC)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -501,12 +497,21 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
     bool predict_taken;
 
     if (!inst->isControl()) {
-        next_PC  = next_NPC;
-        next_NPC = next_NPC + instSize;
-        inst->setPredTarg(next_PC, next_NPC);
+        if (inst->isMicroOp() && !inst->isLastMicroOp()) {
+            next_MicroPC++;
+        } else {
+            next_PC  = next_NPC;
+            next_NPC = next_NPC + instSize;
+            next_MicroPC = 0;
+        }
+        inst->setPredTarg(next_PC, next_NPC, next_MicroPC);
         inst->setPredTaken(false);
         return false;
     }
+
+    //Assume for now that all control flow is to a different macroop which
+    //would reset the micro pc to 0.
+    next_MicroPC = 0;
 
     int tid = inst->threadNumber;
     Addr pred_PC = next_PC;
@@ -534,7 +539,7 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
 #endif
 /*    DPRINTF(Fetch, "[tid:%i]: Branch predicted to go to %#x and then %#x.\n",
             tid, next_PC, next_NPC);*/
-    inst->setPredTarg(next_PC, next_NPC);
+    inst->setPredTarg(next_PC, next_NPC, next_MicroPC);
     inst->setPredTaken(predict_taken);
 
     ++fetchedBranches;
@@ -658,14 +663,14 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
 template <class Impl>
 inline void
 DefaultFetch<Impl>::doSquash(const Addr &new_PC,
-        const Addr &new_NPC, unsigned tid)
+        const Addr &new_NPC, const Addr &new_microPC, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing, setting PC to: %#x, NPC to: %#x.\n",
             tid, new_PC, new_NPC);
 
     PC[tid] = new_PC;
     nextPC[tid] = new_NPC;
-    nextNPC[tid] = new_NPC + instSize;
+    microPC[tid] = new_microPC;
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -693,12 +698,12 @@ DefaultFetch<Impl>::doSquash(const Addr &new_PC,
 template<class Impl>
 void
 DefaultFetch<Impl>::squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
-                                     const InstSeqNum &seq_num,
-                                     unsigned tid)
+                                     const Addr &new_MicroPC,
+                                     const InstSeqNum &seq_num, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing from decode.\n",tid);
 
-    doSquash(new_PC, new_NPC, tid);
+    doSquash(new_PC, new_NPC, new_MicroPC, tid);
 
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
@@ -774,11 +779,12 @@ DefaultFetch<Impl>::updateFetchStatus()
 template <class Impl>
 void
 DefaultFetch<Impl>::squash(const Addr &new_PC, const Addr &new_NPC,
+                           const Addr &new_MicroPC,
                            const InstSeqNum &seq_num, unsigned tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n",tid);
 
-    doSquash(new_PC, new_NPC, tid);
+    doSquash(new_PC, new_NPC, new_MicroPC, tid);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB(tid);
@@ -893,6 +899,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].nextPC,
                fromCommit->commitInfo[tid].nextNPC,
+               fromCommit->commitInfo[tid].nextMicroPC,
                fromCommit->commitInfo[tid].doneSeqNum,
                tid);
 
@@ -948,6 +955,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(unsigned tid)
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
                              fromDecode->decodeInfo[tid].nextNPC,
+                             fromDecode->decodeInfo[tid].nextMicroPC,
                              fromDecode->decodeInfo[tid].doneSeqNum,
                              tid);
 
@@ -1002,9 +1010,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     DPRINTF(Fetch, "Attempting to fetch from [tid:%i]\n", tid);
 
     // The current PC.
-    Addr &fetch_PC = PC[tid];
-
-    Addr &fetch_NPC = nextPC[tid];
+    Addr fetch_PC = PC[tid];
+    Addr fetch_NPC = nextPC[tid];
+    Addr fetch_MicroPC = microPC[tid];
 
     // Fault code for memory access.
     Fault fault = NoFault;
@@ -1063,12 +1071,16 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     Addr next_PC = fetch_PC;
     Addr next_NPC = fetch_NPC;
+    Addr next_MicroPC = fetch_MicroPC;
 
     InstSeqNum inst_seq;
     MachInst inst;
     ExtMachInst ext_inst;
     // @todo: Fix this hack.
     unsigned offset = (fetch_PC & cacheBlkMask) & ~3;
+
+    StaticInstPtr staticInst = NULL;
+    StaticInstPtr macroop = NULL;
 
     if (fault == NoFault) {
         // If the read of the first instruction was successful, then grab the
@@ -1104,19 +1116,29 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             // Make sure this is a valid index.
             assert(offset <= cacheBlkSize - instSize);
 
-            // Get the instruction from the array of the cache line.
-            inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
-                        (&cacheData[tid][offset]));
+            if (!macroop) {
+                // Get the instruction from the array of the cache line.
+                inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
+                            (&cacheData[tid][offset]));
 
-            predecoder.setTC(cpu->thread[tid]->getTC());
-            predecoder.moreBytes(fetch_PC, 0, inst);
+                predecoder.setTC(cpu->thread[tid]->getTC());
+                predecoder.moreBytes(fetch_PC, 0, inst);
 
-            ext_inst = predecoder.getExtMachInst();
+                ext_inst = predecoder.getExtMachInst();
+                staticInst = StaticInstPtr(ext_inst);
+                if (staticInst->isMacroOp())
+                    macroop = staticInst;
+            }
+            if (macroop) {
+                staticInst = macroop->fetchMicroOp(fetch_MicroPC);
+                if (staticInst->isLastMicroOp())
+                    macroop = NULL;
+            }
 
             // Create a new DynInst from the instruction fetched.
-            DynInstPtr instruction = new DynInst(ext_inst,
-                                                 fetch_PC, fetch_NPC,
-                                                 next_PC, next_NPC,
+            DynInstPtr instruction = new DynInst(staticInst,
+                                                 fetch_PC, fetch_NPC, fetch_MicroPC,
+                                                 next_PC, next_NPC, next_MicroPC,
                                                  inst_seq, cpu);
             instruction->setTid(tid);
 
@@ -1139,7 +1161,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                      instruction->readPC());
 
             ///FIXME This needs to be more robust in dealing with delay slots
-            lookupAndUpdateNextPC(instruction, next_PC, next_NPC);
+            lookupAndUpdateNextPC(instruction, next_PC, next_NPC, next_MicroPC);
             predicted_branch |= (next_PC != fetch_NPC);
 
             // Add instruction to the CPU's list of instructions.
@@ -1157,6 +1179,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             // Move to the next instruction, unless we have a branch.
             fetch_PC = next_PC;
             fetch_NPC = next_NPC;
+            fetch_MicroPC = next_MicroPC;
 
             if (instruction->isQuiesce()) {
                 DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
@@ -1167,7 +1190,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
 
-            offset += instSize;
+            if (!macroop)
+                offset += instSize;
         }
 
         if (offset >= cacheBlkSize) {
@@ -1191,7 +1215,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     if (fault == NoFault) {
         PC[tid] = next_PC;
         nextPC[tid] = next_NPC;
-        nextNPC[tid] = next_NPC + instSize;
+        microPC[tid] = next_MicroPC;
         DPRINTF(Fetch, "[tid:%i]: Setting PC to %08p.\n", tid, next_PC);
     } else {
         // We shouldn't be in an icache miss and also have a fault (an ITB
@@ -1210,8 +1234,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // We will use a nop in order to carry the fault.
         ext_inst = TheISA::NoopMachInst;
 
+        StaticInstPtr staticInst = new StaticInst(ext_inst);
         // Create a new DynInst from the dummy nop.
-        DynInstPtr instruction = new DynInst(ext_inst,
+        DynInstPtr instruction = new DynInst(staticInst,
                                              fetch_PC, fetch_NPC,
                                              next_PC, next_NPC,
                                              inst_seq, cpu);

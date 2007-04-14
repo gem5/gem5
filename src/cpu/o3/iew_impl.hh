@@ -454,6 +454,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
 #endif
     toCommit->nextPC[tid] = inst->readNextPC();
     toCommit->nextNPC[tid] = inst->readNextNPC();
+    toCommit->nextMicroPC[tid] = inst->readNextMicroPC();
 
     toCommit->includeSquashInst[tid] = false;
 

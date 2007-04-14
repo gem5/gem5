@@ -209,6 +209,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** PC of this instruction. */
     Addr PC;
 
+    /** Micro PC of this instruction. */
+    Addr microPC;
+
   protected:
     /** Next non-speculative PC.  It is not filled in at fetch, but rather
      *  once the target of the branch is truly known (either decode or
@@ -219,11 +222,17 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Next non-speculative NPC. Target PC for Mips or Sparc. */
     Addr nextNPC;
 
+    /** Next non-speculative micro PC. */
+    Addr nextMicroPC;
+
     /** Predicted next PC. */
     Addr predPC;
 
     /** Predicted next NPC. */
     Addr predNPC;
+
+    /** Predicted next microPC */
+    Addr predMicroPC;
 
     /** If this is a branch that was predicted taken */
     bool predTaken;
@@ -340,6 +349,17 @@ class BaseDynInst : public FastAlloc, public RefCounted
     {
         _flatDestRegIdx[idx] = flattened_dest;
     }
+    /** BaseDynInst constructor given a binary instruction.
+     *  @param staticInst A StaticInstPtr to the underlying instruction.
+     *  @param PC The PC of the instruction.
+     *  @param pred_PC The predicted next PC.
+     *  @param pred_NPC The predicted next NPC.
+     *  @param seq_num The sequence number of the instruction.
+     *  @param cpu Pointer to the instruction's CPU.
+     */
+    BaseDynInst(StaticInstPtr staticInst, Addr PC, Addr NPC, Addr microPC,
+            Addr pred_PC, Addr pred_NPC, Addr pred_MicroPC,
+            InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a binary instruction.
      *  @param inst The binary instruction.
@@ -349,8 +369,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(TheISA::ExtMachInst inst, Addr PC, Addr NPC,
-            Addr pred_PC, Addr pred_NPC,
+    BaseDynInst(TheISA::ExtMachInst inst, Addr PC, Addr NPC, Addr microPC,
+            Addr pred_PC, Addr pred_NPC, Addr pred_MicroPC,
             InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
@@ -402,11 +422,18 @@ class BaseDynInst : public FastAlloc, public RefCounted
 #endif
     }
 
+    Addr readNextMicroPC()
+    {
+        return nextMicroPC;
+    }
+
     /** Set the predicted target of this current instruction. */
-    void setPredTarg(Addr predicted_PC, Addr predicted_NPC)
+    void setPredTarg(Addr predicted_PC, Addr predicted_NPC,
+            Addr predicted_MicroPC)
     {
         predPC = predicted_PC;
         predNPC = predicted_NPC;
+        predMicroPC = predicted_MicroPC;
     }
 
     /** Returns the predicted PC immediately after the branch. */
@@ -414,6 +441,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Returns the predicted PC two instructions after the branch */
     Addr readPredNPC() { return predNPC; }
+
+    /** Returns the predicted micro PC after the branch */
+    Addr readPredMicroPC() { return predMicroPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
     bool readPredTaken()
@@ -430,7 +460,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool mispredicted()
     {
         return readPredPC() != readNextPC() ||
-            readPredNPC() != readNextNPC();
+            readPredNPC() != readNextNPC() ||
+            readPredMicroPC() != readNextMicroPC();
     }
 
     //
@@ -467,6 +498,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isQuiesce() const { return staticInst->isQuiesce(); }
     bool isIprAccess() const { return staticInst->isIprAccess(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
+    bool isMacroOp() const { return staticInst->isMacroOp(); }
+    bool isMicroOp() const { return staticInst->isMicroOp(); }
+    bool isDelayedCommit() const { return staticInst->isDelayedCommit(); }
+    bool isLastMicroOp() const { return staticInst->isLastMicroOp(); }
+    bool isFirstMicroOp() const { return staticInst->isFirstMicroOp(); }
+    bool isMicroBranch() const { return staticInst->isMicroBranch(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */
     void setSerializeBefore() { status.set(SerializeBefore); }
@@ -700,18 +737,26 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Read the PC of this instruction. */
     const Addr readPC() const { return PC; }
 
+    /**Read the micro PC of this instruction. */
+    const Addr readMicroPC() const { return microPC; }
+
     /** Set the next PC of this instruction (its actual target). */
-    void setNextPC(uint64_t val)
+    void setNextPC(Addr val)
     {
         nextPC = val;
     }
 
     /** Set the next NPC of this instruction (the target in Mips or Sparc).*/
-    void setNextNPC(uint64_t val)
+    void setNextNPC(Addr val)
     {
 #if ISA_HAS_DELAY_SLOT
         nextNPC = val;
 #endif
+    }
+
+    void setNextMicroPC(Addr val)
+    {
+        nextMicroPC = val;
     }
 
     /** Sets the ASID. */

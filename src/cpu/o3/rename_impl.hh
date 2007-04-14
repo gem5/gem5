@@ -963,6 +963,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", src_reg, flat_src_reg);
         }
 
         inst->flattenSrcReg(src_idx, flat_src_reg);
@@ -979,9 +980,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
 
         // See if the register is ready or not.
         if (scoreboard->getReg(renamed_reg) == true) {
-            DPRINTF(Rename, "[tid:%u]: Register is ready.\n", tid);
+            DPRINTF(Rename, "[tid:%u]: Register %d is ready.\n", tid, renamed_reg);
 
             inst->markSrcRegReady(src_idx);
+        } else {
+            DPRINTF(Rename, "[tid:%u]: Register %d is not ready.\n", tid, renamed_reg);
         }
 
         ++renameRenameLookups;
@@ -1008,6 +1011,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_dest_reg = dest_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", dest_reg, flat_dest_reg);
         }
 
         inst->flattenDestReg(dest_idx, flat_dest_reg);

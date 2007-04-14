@@ -273,6 +273,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     ///explicitly for ISAs with delay slots.
     toFetch->decodeInfo[tid].nextNPC =
         inst->branchTarget() + sizeof(TheISA::MachInst);
+    toFetch->decodeInfo[tid].nextMicroPC = inst->readMicroPC();
 #if ISA_HAS_DELAY_SLOT
     toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
         (inst->readNextPC() + sizeof(TheISA::MachInst));
@@ -735,7 +736,8 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
                 // a check at the end
                 squash(inst, inst->threadNumber);
                 Addr target = inst->branchTarget();
-                inst->setPredTarg(target, target + sizeof(TheISA::MachInst));
+                //The micro pc after an instruction level branch should be 0
+                inst->setPredTarg(target, target + sizeof(TheISA::MachInst), 0);
                 break;
             }
         }
