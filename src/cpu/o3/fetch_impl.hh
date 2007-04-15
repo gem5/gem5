@@ -1094,11 +1094,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // ended this fetch block.
         bool predicted_branch = false;
 
-        for (;
-             offset < cacheBlkSize &&
-                 numInst < fetchWidth &&
-                 !predicted_branch;
-             ++numInst) {
+        while (offset < cacheBlkSize &&
+               numInst < fetchWidth &&
+               !predicted_branch) {
 
             // If we're branching after this instruction, quite fetching
             // from the same block then.
@@ -1108,10 +1106,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 DPRINTF(Fetch, "Branch detected with PC = %#x, NPC = %#x\n",
                         fetch_PC, fetch_NPC);
             }
-
-
-            // Get a sequence number.
-            inst_seq = cpu->getAndIncrementInstSeq();
 
             // Make sure this is a valid index.
             assert(offset <= cacheBlkSize - instSize);
@@ -1129,80 +1123,87 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 if (staticInst->isMacroOp())
                     macroop = staticInst;
             }
-            if (macroop) {
-                staticInst = macroop->fetchMicroOp(fetch_MicroPC);
-                if (staticInst->isLastMicroOp())
-                    macroop = NULL;
-            }
+            do {
+                if (macroop) {
+                    staticInst = macroop->fetchMicroOp(fetch_MicroPC);
+                    if (staticInst->isLastMicroOp())
+                        macroop = NULL;
+                }
 
-            // Create a new DynInst from the instruction fetched.
-            DynInstPtr instruction = new DynInst(staticInst,
-                                                 fetch_PC, fetch_NPC, fetch_MicroPC,
-                                                 next_PC, next_NPC, next_MicroPC,
-                                                 inst_seq, cpu);
-            instruction->setTid(tid);
+                // Get a sequence number.
+                inst_seq = cpu->getAndIncrementInstSeq();
 
-            instruction->setASID(tid);
+                // Create a new DynInst from the instruction fetched.
+                DynInstPtr instruction = new DynInst(staticInst,
+                                                     fetch_PC, fetch_NPC, fetch_MicroPC,
+                                                     next_PC, next_NPC, next_MicroPC,
+                                                     inst_seq, cpu);
+                instruction->setTid(tid);
 
-            instruction->setThreadState(cpu->thread[tid]);
+                instruction->setASID(tid);
 
-            DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x created "
-                    "[sn:%lli]\n",
-                    tid, instruction->readPC(), inst_seq);
+                instruction->setThreadState(cpu->thread[tid]);
 
-            //DPRINTF(Fetch, "[tid:%i]: MachInst is %#x\n", tid, ext_inst);
+                DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x created "
+                        "[sn:%lli]\n",
+                        tid, instruction->readPC(), inst_seq);
 
-            DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n",
-                    tid, instruction->staticInst->disassemble(fetch_PC));
+                //DPRINTF(Fetch, "[tid:%i]: MachInst is %#x\n", tid, ext_inst);
 
-            instruction->traceData =
-                Trace::getInstRecord(curTick, cpu->tcBase(tid),
-                                     instruction->staticInst,
-                                     instruction->readPC());
+                DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n",
+                        tid, instruction->staticInst->disassemble(fetch_PC));
 
-            ///FIXME This needs to be more robust in dealing with delay slots
-            lookupAndUpdateNextPC(instruction, next_PC, next_NPC, next_MicroPC);
-            predicted_branch |= (next_PC != fetch_NPC);
+                instruction->traceData =
+                    Trace::getInstRecord(curTick, cpu->tcBase(tid),
+                                         instruction->staticInst,
+                                         instruction->readPC());
 
-            // Add instruction to the CPU's list of instructions.
-            instruction->setInstListIt(cpu->addInst(instruction));
+                ///FIXME This needs to be more robust in dealing with delay slots
+                predicted_branch |=
+                    lookupAndUpdateNextPC(instruction, next_PC, next_NPC, next_MicroPC);
 
-            // Write the instruction to the first slot in the queue
-            // that heads to decode.
-            toDecode->insts[numInst] = instruction;
+                // Add instruction to the CPU's list of instructions.
+                instruction->setInstListIt(cpu->addInst(instruction));
 
-            toDecode->size++;
+                // Write the instruction to the first slot in the queue
+                // that heads to decode.
+                toDecode->insts[numInst] = instruction;
 
-            // Increment stat of fetched instructions.
-            ++fetchedInsts;
+                toDecode->size++;
 
-            // Move to the next instruction, unless we have a branch.
-            fetch_PC = next_PC;
-            fetch_NPC = next_NPC;
-            fetch_MicroPC = next_MicroPC;
+                // Increment stat of fetched instructions.
+                ++fetchedInsts;
 
-            if (instruction->isQuiesce()) {
-                DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
-                        curTick);
-                fetchStatus[tid] = QuiescePending;
+                // Move to the next instruction, unless we have a branch.
+                fetch_PC = next_PC;
+                fetch_NPC = next_NPC;
+                fetch_MicroPC = next_MicroPC;
+
+                if (instruction->isQuiesce()) {
+                    DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
+                            curTick);
+                    fetchStatus[tid] = QuiescePending;
+                    ++numInst;
+                    status_change = true;
+                    break;
+                }
+
                 ++numInst;
-                status_change = true;
-                break;
-            }
-
-            if (!macroop)
-                offset += instSize;
+            } while (staticInst->isMicroOp() &&
+                     !staticInst->isLastMicroOp() &&
+                     numInst < fetchWidth);
+            offset += instSize;
         }
 
-        if (offset >= cacheBlkSize) {
-            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
-                    "block.\n", tid);
+        if (predicted_branch) {
+            DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
+                    "instruction encountered.\n", tid);
         } else if (numInst >= fetchWidth) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
                     "for this cycle.\n", tid);
-        } else if (predicted_branch) {
-            DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
-                    "instruction encountered.\n", tid);
+        } else if (offset >= cacheBlkSize) {
+            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
+                    "block.\n", tid);
         }
     }
 
