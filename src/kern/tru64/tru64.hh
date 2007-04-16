@@ -792,7 +792,7 @@ class Tru64 : public OperatingSystem
             for (int i = 0; i < process->numCpus(); ++i) {
                 ThreadContext *tc = process->threadContexts[i];
 
-                if (tc->status() == ThreadContext::Suspended) {
+                if (tc->status() == ThreadContext::Unallocated) {
                     // inactive context... grab it
                     init_thread_context(tc, attrp, uniq_val);
 
