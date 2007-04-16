@@ -79,7 +79,7 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
             /* asid */ 0);
 #endif // !FULL_SYSTEM
 
-    thread->setStatus(ThreadContext::Suspended);
+    thread->setStatus(ThreadContext::Unallocated);
 
     tc = thread->getTC();
 
