@@ -1,9 +1,6 @@
 [root]
 type=Root
-clock=1000000000000
-max_tick=0
-progress_interval=0
-output_file=cout
+dummy=0
 
 [system.physmem]
 type=PhysicalMemory
@@ -27,11 +24,11 @@ responder_set=false
 [system.cpu.workload]
 type=LiveProcess
 cmd=twolf smred
-executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/twolf
+executable=/dist/m5/cpu2000/binaries/alpha/tru64/twolf
 input=cin
 output=cout
 env=
-cwd=build/ALPHA_SE/tests/fast/long/70.twolf/alpha/linux/o3-timing
+cwd=build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing
 system=system
 uid=100
 euid=100
@@ -173,6 +170,7 @@ type=DerivO3CPU
 clock=1
 phase=0
 numThreads=1
+cpu_id=0
 activity=0
 workload=system.cpu.workload
 checker=null
@@ -253,7 +251,7 @@ assoc=2
 block_size=64
 latency=1
 mshrs=10
-tgts_per_mshr=5
+tgts_per_mshr=20
 write_buffers=8
 prioritizeRequests=false
 protocol=null
@@ -291,7 +289,7 @@ assoc=2
 block_size=64
 latency=1
 mshrs=10
-tgts_per_mshr=5
+tgts_per_mshr=20
 write_buffers=8
 prioritizeRequests=false
 protocol=null
