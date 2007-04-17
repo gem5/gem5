@@ -187,7 +187,7 @@ def operands {{
     'Hver':		('ControlReg', 'udw', 'MISCREG_HVER', None, 74),
     'StrandStsReg':	('ControlReg', 'udw', 'MISCREG_STRAND_STS_REG', None, 75),
 
-    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 80),
+    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 80),
     # Mem gets a large number so it's always last
     'Mem': 		('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 
