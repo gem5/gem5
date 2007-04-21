@@ -53,22 +53,14 @@ output decoder {{
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
 
-#if defined(linux) || defined(__APPLE__)
-#include <fenv.h>
-#endif
+#include "base/fenv.hh"
 #include <algorithm>
 
 using namespace SparcISA;
 }};
 
 output exec {{
-#if defined(linux) || defined(__APPLE__)
-#include <fenv.h>
-#endif
-
-#if defined(__sun) || defined (__OpenBSD__)
-#include <ieeefp.h>
-#endif
+#include "base/fenv.hh"
 
 #if FULL_SYSTEM
 #include "sim/pseudo_inst.hh"

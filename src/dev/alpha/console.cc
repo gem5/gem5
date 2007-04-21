@@ -76,7 +76,7 @@ AlphaConsole::AlphaConsole(Params *p)
     alphaAccess->diskOperation = 0;
     alphaAccess->outputChar = 0;
     alphaAccess->inputChar = 0;
-    bzero(alphaAccess->cpuStack, sizeof(alphaAccess->cpuStack));
+    std::memset(alphaAccess->cpuStack, 0, sizeof(alphaAccess->cpuStack));
 
 }
 

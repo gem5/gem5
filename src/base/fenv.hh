@@ -33,20 +33,21 @@
 
 #include "config/use_fenv.hh"
 
+#define M5_FE_DOWNWARD     0
+#define M5_FE_TONEAREST    1
+#define M5_FE_TOWARDZERO   2
+#define M5_FE_UPWARD       3
+
 #if USE_FENV
-
-#include <fenv.h>
-
+extern "C" {
+void m5_fesetround(int rm);
+int m5_fegetround();
+}
 #else
 
 // Dummy definitions to allow code to compile w/o a real <fenv.h>.
-
-#define FE_TONEAREST    0
-#define FE_DOWNWARD     0
-#define FE_UPWARD       0
-#define FE_TOWARDZERO   0
-
-inline int fesetround(int rounding_mode) { return 0; }
+inline void m5_fesetround(int rm) { ; }
+inline int m5_fegetround() {return 0; }
 
 #endif // USE_FENV
 

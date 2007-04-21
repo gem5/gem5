@@ -245,13 +245,13 @@ AlphaISA::MiscRegFile::readIpr(int idx, ThreadContext *tc)
         {
             AlphaISA::PTE &pte = tc->getDTBPtr()->index(!tc->misspeculating());
 
-            retval |= ((u_int64_t)pte.ppn & ULL(0x7ffffff)) << 32;
-            retval |= ((u_int64_t)pte.xre & ULL(0xf)) << 8;
-            retval |= ((u_int64_t)pte.xwe & ULL(0xf)) << 12;
-            retval |= ((u_int64_t)pte.fonr & ULL(0x1)) << 1;
-            retval |= ((u_int64_t)pte.fonw & ULL(0x1))<< 2;
-            retval |= ((u_int64_t)pte.asma & ULL(0x1)) << 4;
-            retval |= ((u_int64_t)pte.asn & ULL(0x7f)) << 57;
+            retval |= ((uint64_t)pte.ppn & ULL(0x7ffffff)) << 32;
+            retval |= ((uint64_t)pte.xre & ULL(0xf)) << 8;
+            retval |= ((uint64_t)pte.xwe & ULL(0xf)) << 12;
+            retval |= ((uint64_t)pte.fonr & ULL(0x1)) << 1;
+            retval |= ((uint64_t)pte.fonw & ULL(0x1))<< 2;
+            retval |= ((uint64_t)pte.asma & ULL(0x1)) << 4;
+            retval |= ((uint64_t)pte.asn & ULL(0x7f)) << 57;
         }
         break;
 
