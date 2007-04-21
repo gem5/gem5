@@ -29,9 +29,6 @@
  *          Ali Saidi
  */
 
-#if defined(__sun)
-#include <ieeefp.h>
-#endif
 #ifdef __SUNPRO_CC
 #include <stdlib.h>
 #include <math.h>
@@ -61,9 +58,10 @@ m5round(double r)
 {
 #if defined(__sun)
     double val;
-    fp_rnd oldrnd = fpsetround(FP_RN);
+    int oldrnd = m5_fegetround();
+    m5_fesetround(M5_FP_TONEAREST);
     val = rint(r);
-    fpsetround(oldrnd);
+    m5_fesetround(oldrnd);
     return val;
 #else
     return round(r);

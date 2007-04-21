@@ -109,37 +109,22 @@ def format FpBasic(code, *flags) {{
         fp_code = """
     Fsr |= bits(Fsr,4,0) << 5;
     Fsr = insertBits(Fsr,4,0,0);
-#if defined(__sun) || defined (__OpenBSD__)
-    fp_rnd newrnd = FP_RN;
+    int newrnd = M5_FE_TONEAREST;
     switch (Fsr<31:30>) {
-      case 0: newrnd = FP_RN; break;
-      case 1: newrnd = FP_RZ; break;
-      case 2: newrnd = FP_RP; break;
-      case 3: newrnd = FP_RM; break;
+      case 0: newrnd = M5_FE_TONEAREST; break;
+      case 1: newrnd = M5_FE_TOWARDZERO; break;
+      case 2: newrnd = M5_FE_UPWARD; break;
+      case 3: newrnd = M5_FE_DOWNWARD; break;
     }
-    fp_rnd oldrnd = fpsetround(newrnd);
-#else
-    int newrnd = FE_TONEAREST;
-    switch (Fsr<31:30>) {
-      case 0: newrnd = FE_TONEAREST; break;
-      case 1: newrnd = FE_TOWARDZERO; break;
-      case 2: newrnd = FE_UPWARD; break;
-      case 3: newrnd = FE_DOWNWARD; break;
-    }
-    int oldrnd = fegetround();
-    fesetround(newrnd);
-#endif
+    int oldrnd = m5_fegetround();
+    m5_fesetround(newrnd);
 """
 
         fp_code += code
 
 
         fp_code += """
-#if defined(__sun) || defined (__OpenBSD__)
-    fpsetround(oldrnd);
-#else
-    fesetround(oldrnd);
-#endif
+   m5_fesetround(oldrnd);
 """
         fp_code = filterDoubles(fp_code)
         iop = InstObjParams(name, Name, 'SparcStaticInst', fp_code, flags)

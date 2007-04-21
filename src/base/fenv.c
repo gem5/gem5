@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,31 +25,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Ali Saidi
  */
 
-#ifndef __BASE_FENV_HH__
-#define __BASE_FENV_HH__
+#include <assert.h>
+#include <stdlib.h>
+#include <fenv.h>
 
-#include "config/use_fenv.hh"
-
-#define M5_FE_DOWNWARD     0
-#define M5_FE_TONEAREST    1
-#define M5_FE_TOWARDZERO   2
-#define M5_FE_UPWARD       3
-
-#if USE_FENV
-extern "C" {
 void m5_fesetround(int rm);
 int m5_fegetround();
+
+static const int m5_round_ops[] =  {FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD};
+
+void m5_fesetround(int rm)
+{
+    assert(rm > 0 && rm < 4);
+    fesetround(m5_round_ops[rm]);
 }
-#else
 
-// Dummy definitions to allow code to compile w/o a real <fenv.h>.
-inline void m5_fesetround(int rm) { ; }
-inline int m5_fegetround() {return 0; }
+int m5_fegetround()
+{
+    int x;
+    int rm = fegetround();
+    for(x = 0; x < 4; x++)
+        if (m5_round_ops[x] == rm)
+            return x;
+    abort();
+    return 0;
+}
 
-#endif // USE_FENV
-
-
-#endif // __BASE_FENV_HH__
