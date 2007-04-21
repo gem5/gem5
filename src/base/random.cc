@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <cmath>
 
+#include "base/fenv.hh"
 #include "base/random.hh"
 
 using namespace std;
@@ -59,7 +60,7 @@ m5round(double r)
 #if defined(__sun)
     double val;
     int oldrnd = m5_fegetround();
-    m5_fesetround(M5_FP_TONEAREST);
+    m5_fesetround(M5_FE_TONEAREST);
     val = rint(r);
     m5_fesetround(oldrnd);
     return val;

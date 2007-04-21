@@ -33,6 +33,7 @@
 #define __CPU_O3_LSQ_UNIT_HH__
 
 #include <algorithm>
+#include <cstring>
 #include <map>
 #include <queue>
 
@@ -292,7 +293,7 @@ class LSQUnit {
             : inst(NULL), req(NULL), size(0),
               canWB(0), committed(0), completed(0)
         {
-            bzero(data, sizeof(data));
+            std::memset(data, 0, sizeof(data));
         }
 
         /** Constructs a store queue entry for a given instruction. */
@@ -300,7 +301,7 @@ class LSQUnit {
             : inst(_inst), req(NULL), size(0),
               canWB(0), committed(0), completed(0)
         {
-            bzero(data, sizeof(data));
+            std::memset(data, 0, sizeof(data));
         }
 
         /** The store instruction. */
