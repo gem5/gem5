@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                   1086                       # Nu
 global.BPredUnit.condPredicted                   2328                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         4062                       # Number of BP lookups
 global.BPredUnit.usedRAS                          562                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  49499                       # Simulator instruction rate (inst/s)
+host_inst_rate                                  49679                       # Simulator instruction rate (inst/s)
 host_mem_usage                                 154724                       # Number of bytes of host memory used
 host_seconds                                     0.23                       # Real time elapsed on the host
-host_tick_rate                               20219756                       # Simulator tick rate (ticks/s)
+host_tick_rate                               20293608                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 15                       # Number of conflicting loads.
 memdepunit.memDep.conflictingLoads                 21                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores                59                       # Number of conflicting stores.
@@ -68,9 +68,9 @@ system.cpu.commit.commitSquashedInsts            7371                       # Th
 system.cpu.committedInsts_0                      5623                       # Number of Instructions Simulated
 system.cpu.committedInsts_1                      5624                       # Number of Instructions Simulated
 system.cpu.committedInsts_total                 11247                       # Number of Instructions Simulated
-system.cpu.cpi_0                           818.157567                       # CPI: Cycles Per Instruction
-system.cpu.cpi_1                           818.012091                       # CPI: Cycles Per Instruction
-system.cpu.cpi_total                       409.042411                       # CPI: Total CPI of All Threads
+system.cpu.cpi_0                             1.636671                       # CPI: Cycles Per Instruction
+system.cpu.cpi_1                             1.636380                       # CPI: Cycles Per Instruction
+system.cpu.cpi_total                         0.818263                       # CPI: Total CPI of All Threads
 system.cpu.dcache.ReadReq_accesses               2909                       # number of ReadReq accesses(hits+misses)
 system.cpu.dcache.ReadReq_accesses_0             2909                       # number of ReadReq accesses(hits+misses)
 system.cpu.dcache.ReadReq_avg_miss_latency  6520.912548                       # average ReadReq miss latency
@@ -472,9 +472,9 @@ system.cpu.iew.lsq.thread.1.squashedStores          246                       # 
 system.cpu.iew.memOrderViolationEvents            113                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect          753                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect            174                       # Number of branches that were predicted taken incorrectly
-system.cpu.ipc_0                             0.001222                       # IPC: Instructions Per Cycle
-system.cpu.ipc_1                             0.001222                       # IPC: Instructions Per Cycle
-system.cpu.ipc_total                         0.002445                       # IPC: Total IPC of All Threads
+system.cpu.ipc_0                             0.610996                       # IPC: Instructions Per Cycle
+system.cpu.ipc_1                             0.611105                       # IPC: Instructions Per Cycle
+system.cpu.ipc_total                         1.222101                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                    8271                       # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.start_dist
                           (null)            2      0.02%            # Type of FU issued

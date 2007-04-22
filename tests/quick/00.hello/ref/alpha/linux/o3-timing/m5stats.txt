@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    415                       # Nu
 global.BPredUnit.condPredicted                   1270                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         2195                       # Number of BP lookups
 global.BPredUnit.usedRAS                          306                       # Number of times the RAS was used to get a target.
-host_inst_rate                                   5017                       # Simulator instruction rate (inst/s)
+host_inst_rate                                  22780                       # Simulator instruction rate (inst/s)
 host_mem_usage                                 154084                       # Number of bytes of host memory used
-host_seconds                                     1.12                       # Real time elapsed on the host
-host_tick_rate                                3160160                       # Simulator tick rate (ticks/s)
+host_seconds                                     0.25                       # Real time elapsed on the host
+host_tick_rate                               14337041                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 31                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores               138                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                  2061                       # Number of loads inserted to the mem dependence unit.
@@ -49,8 +49,8 @@ system.cpu.commit.commitNonSpecStalls              17                       # Th
 system.cpu.commit.commitSquashedInsts            4458                       # The number of squashed insts skipped by commit
 system.cpu.committedInsts                        5623                       # Number of Instructions Simulated
 system.cpu.committedInsts_total                  5623                       # Number of Instructions Simulated
-system.cpu.cpi                             630.179619                       # CPI: Cycles Per Instruction
-system.cpu.cpi_total                       630.179619                       # CPI: Total CPI of All Threads
+system.cpu.cpi                               1.260537                       # CPI: Cycles Per Instruction
+system.cpu.cpi_total                         1.260537                       # CPI: Total CPI of All Threads
 system.cpu.dcache.ReadReq_accesses               1516                       # number of ReadReq accesses(hits+misses)
 system.cpu.dcache.ReadReq_avg_miss_latency  4941.176471                       # average ReadReq miss latency
 system.cpu.dcache.ReadReq_avg_mshr_miss_latency  4361.386139                       # average ReadReq mshr miss latency
@@ -264,8 +264,8 @@ system.cpu.iew.lsq.thread.0.squashedStores          418                       # 
 system.cpu.iew.memOrderViolationEvents             68                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect          284                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect            109                       # Number of branches that were predicted taken incorrectly
-system.cpu.ipc                               0.001587                       # IPC: Instructions Per Cycle
-system.cpu.ipc_total                         0.001587                       # IPC: Total IPC of All Threads
+system.cpu.ipc                               0.793313                       # IPC: Instructions Per Cycle
+system.cpu.ipc_total                         0.793313                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                    8531                       # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.start_dist
                           (null)            2      0.02%            # Type of FU issued
