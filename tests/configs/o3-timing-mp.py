@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,7 @@ for cpu in cpus:
                                 L1(size = '32kB', assoc = 4))
     # connect cpu level-1 caches to shared level-2 cache
     cpu.connectMemPorts(system.toL2Bus)
+    cpu.clock = '2GHz'
 
 # connect memory to membus
 system.physmem.port = system.membus.port
