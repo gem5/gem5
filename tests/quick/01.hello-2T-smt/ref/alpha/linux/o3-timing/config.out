@@ -183,7 +183,7 @@ FUList=system.cpu.fuPool.FUList0 system.cpu.fuPool.FUList1 system.cpu.fuPool.FUL
 
 [system.cpu]
 type=DerivO3CPU
-clock=1
+clock=500
 phase=0
 numThreads=1
 cpu_id=0
