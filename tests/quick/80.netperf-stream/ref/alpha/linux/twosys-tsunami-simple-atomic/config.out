@@ -1,9 +1,6 @@
 [root]
 type=Root
-clock=1000000000000
-max_tick=0
-progress_interval=0
-output_file=cout
+dummy=0
 
 [testsys.physmem]
 type=PhysicalMemory
@@ -21,7 +18,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-stream-client.rcS
+readfile=/z/hsul/work/m5/newmem/configs/boot/netperf-stream-client.rcS
 symbolfile=
 init_param=0
 system_type=34
@@ -635,7 +632,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-server.rcS
+readfile=/z/hsul/work/m5/newmem/configs/boot/netperf-server.rcS
 symbolfile=
 init_param=0
 system_type=34
@@ -709,7 +706,7 @@ tx_delay=1000000
 rx_fifo_size=524288
 tx_fifo_size=524288
 rx_filter=true
-hardware_address=00:90:00:00:00:02
+hardware_address=00:90:00:00:00:01
 rx_thread=false
 tx_thread=false
 rss=false
