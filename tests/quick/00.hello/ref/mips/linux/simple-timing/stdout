@@ -6,8 +6,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 13 2006 18:43:33
-M5 started Fri Oct 13 18:44:16 2006
-M5 executing on zizzer.eecs.umich.edu
-command line: build/MIPS_SE/m5.debug -d build/MIPS_SE/tests/debug/quick/00.hello/mips/linux/simple-timing tests/run.py quick/00.hello/mips/linux/simple-timing
-Exiting @ tick 1738011 because target called exit()
+M5 compiled Apr 22 2007 20:47:32
+M5 started Sun Apr 22 20:47:36 2007
+M5 executing on zamp.eecs.umich.edu
+command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-timing tests/run.py quick/00.hello/mips/linux/simple-timing
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 5264500 because target called exit()
