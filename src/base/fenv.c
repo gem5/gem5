@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,44 +25,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Gabe Black
+ * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_ALPHA_FLOATREGFILE_HH__
-#define __ARCH_ALPHA_FLOATREGFILE_HH__
+#include <assert.h>
+#include <stdlib.h>
+#include <fenv.h>
 
-#include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/types.hh"
+void m5_fesetround(int rm);
+int m5_fegetround();
 
-#include <cstring>
-#include <iostream>
+static const int m5_round_ops[] =  {FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE_UPWARD};
 
-class Checkpoint;
-
-namespace AlphaISA
+void m5_fesetround(int rm)
 {
-    static inline std::string getFloatRegName(RegIndex)
-    {
-        return "";
-    }
-
-    class FloatRegFile
-    {
-      public:
-
-        union {
-            uint64_t q[NumFloatRegs];	// integer qword view
-            double d[NumFloatRegs];	// double-precision floating point view
-        };
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        { std::memset(d, 0, sizeof(d)); }
-    };
+    assert(rm > 0 && rm < 4);
+    fesetround(m5_round_ops[rm]);
 }
 
-#endif
+int m5_fegetround()
+{
+    int x;
+    int rm = fegetround();
+    for(x = 0; x < 4; x++)
+        if (m5_round_ops[x] == rm)
+            return x;
+    abort();
+    return 0;
+}
+

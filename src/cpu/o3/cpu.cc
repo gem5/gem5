@@ -384,25 +384,25 @@ FullO3CPU<Impl>::fullCPURegStats()
         .name(name() + ".cpi")
         .desc("CPI: Cycles Per Instruction")
         .precision(6);
-    cpi = simTicks / committedInsts;
+    cpi = numCycles / committedInsts;
 
     totalCpi
         .name(name() + ".cpi_total")
         .desc("CPI: Total CPI of All Threads")
         .precision(6);
-    totalCpi = simTicks / totalCommittedInsts;
+    totalCpi = numCycles / totalCommittedInsts;
 
     ipc
         .name(name() + ".ipc")
         .desc("IPC: Instructions Per Cycle")
         .precision(6);
-    ipc =  committedInsts / simTicks;
+    ipc =  committedInsts / numCycles;
 
     totalIpc
         .name(name() + ".ipc_total")
         .desc("IPC: Total IPC of All Threads")
         .precision(6);
-    totalIpc =  totalCommittedInsts / simTicks;
+    totalIpc =  totalCommittedInsts / numCycles;
 
 }
 

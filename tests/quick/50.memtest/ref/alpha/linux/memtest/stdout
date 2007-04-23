@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2007 20:30:01
-M5 started Tue Feb  6 21:04:07 2007
-M5 executing on vm1
+M5 compiled Apr 21 2007 21:50:58
+M5 started Sat Apr 21 21:51:15 2007
+M5 executing on zamp.eecs.umich.edu
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest tests/run.py quick/50.memtest/alpha/linux/memtest
 warning: overwriting port funcmem.functional value cpu1.functional with cpu2.functional
 warning: overwriting port funcmem.functional value cpu2.functional with cpu3.functional
@@ -15,4 +15,5 @@ warning: overwriting port funcmem.functional value cpu3.functional with cpu4.fun
 warning: overwriting port funcmem.functional value cpu4.functional with cpu5.functional
 warning: overwriting port funcmem.functional value cpu5.functional with cpu6.functional
 warning: overwriting port funcmem.functional value cpu6.functional with cpu7.functional
+Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 5755736 because Maximum number of loads reached!

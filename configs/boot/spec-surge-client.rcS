@@ -35,7 +35,7 @@ echo "waiting for server..."
 netcat -c -l -p 8000 
 
 echo -n "running surge client..."
-/bin/bash -c "cd /benchmarks/specsurge && ./spec-m5 1 20 1 192.168.0.1 5 40000 1000000000 1000"
+/bin/bash -c "cd /benchmarks/surge && ./spec-m5 1 20 1 192.168.0.1 5 40000 1000000000 1000"
 echo "done."
 
 echo -n "halting machine"

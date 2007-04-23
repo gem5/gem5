@@ -35,7 +35,7 @@
 #include "arch/alpha/types.hh"
 
 #include <iostream>
-#include <strings.h>
+#include <cstring>
 
 class Checkpoint;
 
@@ -71,7 +71,7 @@ namespace AlphaISA
         void unserialize(Checkpoint *cp, const std::string &section);
 
         void clear()
-        { bzero(regs, sizeof(regs)); }
+        { std::memset(regs, 0, sizeof(regs)); }
     };
 }
 

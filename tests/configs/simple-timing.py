@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,5 +44,6 @@ system = System(cpu = cpu,
                 membus = Bus())
 system.physmem.port = system.membus.port
 cpu.connectMemPorts(system.membus)
+cpu.clock = '2GHz'
 
 root = Root(system = system)
