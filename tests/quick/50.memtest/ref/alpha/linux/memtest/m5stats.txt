@@ -1,8 +1,8 @@
 
 ---------- Begin Simulation Statistics ----------
-host_mem_usage                                 435124                       # Number of bytes of host memory used
-host_seconds                                    28.46                       # Real time elapsed on the host
-host_tick_rate                                 202211                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 303680                       # Number of bytes of host memory used
+host_seconds                                    32.50                       # Real time elapsed on the host
+host_tick_rate                                 177110                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_seconds                                  0.000006                       # Number of seconds simulated
 sim_ticks                                     5755736                       # Number of ticks simulated
@@ -887,15 +887,15 @@ system.l2c.ReadReq_mshr_misses                  66414                       # nu
 system.l2c.ReadReq_mshr_uncacheable             78703                       # number of ReadReq MSHR uncacheable
 system.l2c.ReadResp_avg_mshr_uncacheable_latency          inf                       # average ReadResp mshr uncacheable latency
 system.l2c.ReadResp_mshr_uncacheable_latency       420484                       # number of ReadResp MSHR uncacheable cycles
-system.l2c.WriteReqNoAck|Writeback_accesses        86614                       # number of WriteReqNoAck|Writeback accesses(hits+misses)
-system.l2c.WriteReqNoAck|Writeback_hits         18299                       # number of WriteReqNoAck|Writeback hits
-system.l2c.WriteReqNoAck|Writeback_miss_rate     0.788729                       # miss rate for WriteReqNoAck|Writeback accesses
-system.l2c.WriteReqNoAck|Writeback_misses        68315                       # number of WriteReqNoAck|Writeback misses
-system.l2c.WriteReqNoAck|Writeback_mshr_miss_rate     0.788729                       # mshr miss rate for WriteReqNoAck|Writeback accesses
-system.l2c.WriteReqNoAck|Writeback_mshr_misses        68315                       # number of WriteReqNoAck|Writeback MSHR misses
 system.l2c.WriteReq_mshr_uncacheable            42661                       # number of WriteReq MSHR uncacheable
 system.l2c.WriteResp_avg_mshr_uncacheable_latency          inf                       # average WriteResp mshr uncacheable latency
 system.l2c.WriteResp_mshr_uncacheable_latency       298282                       # number of WriteResp MSHR uncacheable cycles
+system.l2c.Writeback_accesses                   86614                       # number of Writeback accesses(hits+misses)
+system.l2c.Writeback_hits                       18299                       # number of Writeback hits
+system.l2c.Writeback_miss_rate               0.788729                       # miss rate for Writeback accesses
+system.l2c.Writeback_misses                     68315                       # number of Writeback misses
+system.l2c.Writeback_mshr_miss_rate          0.788729                       # mshr miss rate for Writeback accesses
+system.l2c.Writeback_mshr_misses                68315                       # number of Writeback MSHR misses
 system.l2c.avg_blocked_cycles_no_mshrs   <err: div-0>                       # average number of cycles each access was blocked
 system.l2c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.l2c.avg_refs                          1.277186                       # Average number of references to valid blocks.

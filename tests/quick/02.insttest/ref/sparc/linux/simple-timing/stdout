@@ -16,9 +16,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr  8 2007 05:25:15
-M5 started Sun Apr  8 22:54:12 2007
-M5 executing on zizzer.eecs.umich.edu
+M5 compiled Apr 22 2007 20:15:56
+M5 started Sun Apr 22 20:26:07 2007
+M5 executing on zamp.eecs.umich.edu
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/simple-timing tests/run.py quick/02.insttest/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 1698003 because target called exit()
+Exiting @ tick 8251500 because target called exit()
