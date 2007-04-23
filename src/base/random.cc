@@ -29,9 +29,6 @@
  *          Ali Saidi
  */
 
-#if defined(__sun)
-#include <ieeefp.h>
-#endif
 #ifdef __SUNPRO_CC
 #include <stdlib.h>
 #include <math.h>
@@ -40,6 +37,7 @@
 #include <cstdlib>
 #include <cmath>
 
+#include "base/fenv.hh"
 #include "base/random.hh"
 
 using namespace std;
@@ -61,9 +59,10 @@ m5round(double r)
 {
 #if defined(__sun)
     double val;
-    fp_rnd oldrnd = fpsetround(FP_RN);
+    int oldrnd = m5_fegetround();
+    m5_fesetround(M5_FE_TONEAREST);
     val = rint(r);
-    fpsetround(oldrnd);
+    m5_fesetround(oldrnd);
     return val;
 #else
     return round(r);

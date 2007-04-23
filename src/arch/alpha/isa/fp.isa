@@ -192,10 +192,10 @@ output decoder {{
     }
 
     const int AlphaFP::alphaToC99RoundingMode[] = {
-        FE_TOWARDZERO,	// Chopped
-        FE_DOWNWARD,	// Minus_Infinity
-        FE_TONEAREST,	// Normal
-        FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
+        M5_FE_TOWARDZERO,	// Chopped
+        M5_FE_DOWNWARD,	// Minus_Infinity
+        M5_FE_TONEAREST,	// Normal
+        M5_FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
     };
 
     const char *AlphaFP::roundingModeSuffix[] = { "c", "m", "", "d" };
@@ -228,10 +228,10 @@ def template FloatingPointExecute {{
         if (roundingMode == Normal) {
             %(code)s;
         } else {
-            fesetround(getC99RoundingMode(
+            m5_fesetround(getC99RoundingMode(
                            xc->readMiscRegNoEffect(AlphaISA::MISCREG_FPCR)));
             %(code)s;
-            fesetround(FE_TONEAREST);
+            m5_fesetround(M5_FE_TONEAREST);
         }
 #else
         if (roundingMode != Normal && !warnedOnRounding) {
