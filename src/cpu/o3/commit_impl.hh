@@ -641,9 +641,6 @@ DefaultCommit<Impl>::handleInterrupt()
             // an interrupt needed to be handled.
             DPRINTF(Commit, "Interrupt detected.\n");
 
-            Fault new_interrupt = cpu->getInterrupts();
-            assert(new_interrupt != NoFault);
-
             // Clear the interrupt now that it's going to be handled
             toIEW->commitInfo[0].clearInterrupt = true;
 
