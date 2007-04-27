@@ -1,9 +1,6 @@
 [root]
 type=Root
-clock=1000000000000
-max_tick=0
-progress_interval=0
-output_file=cout
+dummy=0
 
 [system.physmem]
 type=PhysicalMemory
@@ -27,11 +24,11 @@ responder_set=false
 [system.cpu.workload]
 type=LiveProcess
 cmd=eon chair.control.cook chair.camera chair.surfaces chair.cook.ppm ppm pixels_out.cook
-executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/eon
+executable=/dist/m5/cpu2000/binaries/alpha/tru64/eon
 input=cin
 output=cout
 env=
-cwd=build/ALPHA_SE/tests/fast/long/30.eon/alpha/linux/simple-timing
+cwd=build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/simple-timing
 system=system
 uid=100
 euid=100
@@ -50,7 +47,7 @@ progress_interval=0
 system=system
 cpu_id=0
 workload=system.cpu.workload
-clock=1
+clock=500
 phase=0
 defer_registration=false
 // width not specified
@@ -178,24 +175,4 @@ prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
 hit_latency=1
-
-[stats]
-descriptions=true
-project_name=test
-simulation_name=test
-simulation_sample=0
-text_file=m5stats.txt
-text_compat=true
-mysql_db=
-mysql_user=
-mysql_password=
-mysql_host=
-events_start=-1
-dump_reset=false
-dump_cycle=0
-dump_period=0
-ignore_events=
-
-[statsreset]
-reset_cycle=0
 
