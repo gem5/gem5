@@ -1,9 +1,11 @@
 warn: Entering event queue @ 0.  Starting simulation...
+warn: Increasing stack size by one page.
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook
 opening camera file chair.camera
 opening surfaces file chair.surfaces
 reading data
+warn: Increasing stack size by one page.
 processing 8parts
 Grid measure is 6 by 3.0001 by 6
 cell dimension is 0.863065

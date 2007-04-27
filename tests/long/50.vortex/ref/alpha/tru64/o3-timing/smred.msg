@@ -134,7 +134,7 @@
  DB Handle Chunk's StackPtr = 20797
 
   DB[ 1] LOADED;  Handles= 20797
- KERNEL in CORE[ 1] Restored @ 40054800
+ KERNEL in CORE[ 1] Restored @ 4005c800
 
  OPEN File ./input/lendian.wnv 
     *Status            =   0
