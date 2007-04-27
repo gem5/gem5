@@ -7,12 +7,21 @@ Bug fixes since beta 2:
 1. Many SPARC linux syscall emulation support fixes
 2. Multiprocessor linux boot using the detailed O3 CPU module
 3. Simulator performance and memory leak fixes
-4. Fix issues with remote debugging 
-5. Many other minor fixes and enhancements
+4. Fix issues with remote debugging
+5. Several compile fixes, including gcc 4.1
+6. Many other minor fixes and enhancements
 
 Outstanding issues for 2.0 release:
 --------------------
-1. ???
+1. Better statistics for the caches.
+2. Clean up more SimObject parameter stuff
+3. Checkpoint/switchover testing
+4. FS mode doesn't work under Cygwin
+5. memtest regression crashes under Cygwin
+6. Make repository public
+7. Testing
+8. Validation
+9. Testing
 
 Nov. 28, 2006: m5_2.0_beta2
 --------------------
