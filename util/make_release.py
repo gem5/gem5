@@ -33,6 +33,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 from glob import glob
 from os import system
@@ -42,9 +43,10 @@ def mkdir(*args):
     path = joinpath(*args)
     os.mkdir(path)
 
-def touch(*args):
+def touch(*args, **kwargs):
+    when = kwargs.get('when', None)
     path = joinpath(*args)
-    os.utime(path, None)
+    os.utime(path, when)
 
 def rmtree(*args):
     path = joinpath(*args)
@@ -110,12 +112,17 @@ mkdir(encumbered_dir)
 
 system('bk export -tplain -w -r+ %s' % release_dir)
 
-# make sure scons doesn't try to run flex unnecessarily
-touch(release_dir, 'src/encumbered/eio/exolex.cc')
 
-# make sure scons doesn't try to rebuild the de.msg file since it
+# move the time forward on some files by a couple of minutes so we can
+# avoid building things unnecessarily
+when = int(time.time()) + 120
+
+# make sure scons doesn't try to run flex unnecessarily
+touch(release_dir, 'src/encumbered/eio/exolex.cc', when=(when, when))
+
+# make sure libelf doesn't try to rebuild the de.msg file since it
 # might fail on non linux machines
-touch(release_dir, 'ext/libelf/po/de.msg')
+touch(release_dir, 'ext/libelf/po/de.msg', when=(when, when))
 
 # get rid of non-shipping code
 rmtree(release_dir, 'src/encumbered/dev')
