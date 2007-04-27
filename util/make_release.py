@@ -113,6 +113,10 @@ system('bk export -tplain -w -r+ %s' % release_dir)
 # make sure scons doesn't try to run flex unnecessarily
 touch(release_dir, 'src/encumbered/eio/exolex.cc')
 
+# make sure scons doesn't try to rebuild the de.msg file since it
+# might fail on non linux machines
+touch(release_dir, 'ext/libelf/po/de.msg')
+
 # get rid of non-shipping code
 rmtree(release_dir, 'src/encumbered/dev')
 rmtree(release_dir, 'src/cpu/ozone')
