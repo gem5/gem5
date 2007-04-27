@@ -47,7 +47,7 @@ progress_interval=0
 system=system
 cpu_id=0
 workload=system.cpu.workload
-clock=1
+clock=500
 phase=0
 defer_registration=false
 // width not specified

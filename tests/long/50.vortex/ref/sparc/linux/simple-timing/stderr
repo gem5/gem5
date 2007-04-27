@@ -2,7 +2,6 @@ warn: More than two loadable segments in ELF object.
 warn: Ignoring segment @ 0x1838c0 length 0x10.
 warn: More than two loadable segments in ELF object.
 warn: Ignoring segment @ 0x0 length 0x0.
-0: system.remote_gdb.listener: listening for remote gdb on port 7001
 warn: Entering event queue @ 0.  Starting simulation...
 warn: Ignoring request to flush register windows.
 warn: ignoring syscall time(4026527856, 4026528256, ...)
