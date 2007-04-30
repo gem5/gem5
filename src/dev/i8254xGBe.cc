@@ -710,7 +710,7 @@ IGbE::RxDescCache::pktComplete()
             DPRINTF(EthernetDesc, "Checking UDP checksum\n");
             status |= RXDS_UDPCS;
             desc->csum = htole(cksum(udp));
-            if (cksum(tcp) != 0) {
+            if (cksum(udp) != 0) {
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
                 err |= RXDE_TCPE;
             }
@@ -927,11 +927,13 @@ IGbE::TxDescCache::pktComplete()
        if (TxdOp::txsm(desc)) {
            if (isTcp) {
                 TcpPtr tcp(ip);
+                assert(tcp);
                 tcp->sum(0);
                 tcp->sum(cksum(tcp));
                 DPRINTF(EthernetDesc, "Calculated TCP checksum\n");
            } else {
                 UdpPtr udp(ip);
+                assert(udp);
                 udp->sum(0);
                 udp->sum(cksum(udp));
                 DPRINTF(EthernetDesc, "Calculated UDP checksum\n");
@@ -1028,7 +1030,7 @@ IGbE::TxDescCache::hasOutstandingEvents()
 void
 IGbE::restartClock()
 {
-    if (!tickEvent.scheduled() && (rxTick || txTick) && getState() ==
+    if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) && getState() ==
             SimObject::Running)
         tickEvent.schedule((curTick/cycles(1)) * cycles(1) + cycles(1));
 }
