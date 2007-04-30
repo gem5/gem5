@@ -18,7 +18,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/hsul/work/m5/newmem/configs/boot/netperf-stream-client.rcS
+readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-stream-client.rcS
 symbolfile=
 init_param=0
 system_type=34
@@ -632,7 +632,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/hsul/work/m5/newmem/configs/boot/netperf-server.rcS
+readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-server.rcS
 symbolfile=
 init_param=0
 system_type=34
