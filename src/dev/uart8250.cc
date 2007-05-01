@@ -101,14 +101,11 @@ Uart8250::IntrEvent::scheduleIntr()
 
 
 Uart8250::Uart8250(Params *p)
-    : Uart(p), txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
+    : Uart(p), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
+      txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
     pioSize = 8;
 
-    IER = 0;
-    DLAB = 0;
-    LCR = 0;
-    MCR = 0;
 }
 
 Tick
