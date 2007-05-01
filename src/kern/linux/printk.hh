@@ -34,8 +34,10 @@
 
 #include "arch/isa_specific.hh"
 
+#include <sstream>
+
 class TheISA::Arguments;
 
-void Printk(TheISA::Arguments args);
+void Printk(std::stringstream &out, TheISA::Arguments args);
 
 #endif // __PRINTK_HH__

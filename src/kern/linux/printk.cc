@@ -32,21 +32,17 @@
 #include <sys/types.h>
 #include <algorithm>
 
-#include "base/trace.hh"
 #include "arch/arguments.hh"
+#include "base/trace.hh"
+#include "kern/linux/printk.hh"
 
 using namespace std;
 
 
 void
-Printk(TheISA::Arguments args)
+Printk(stringstream &out, TheISA::Arguments args)
 {
-    std::ostream &out = Trace::output();
     char *p = (char *)args++;
-
-    ios::fmtflags saved_flags = out.flags();
-    char old_fill = out.fill();
-    int old_precision = out.precision();
 
     while (*p) {
         switch (*p) {
@@ -258,8 +254,5 @@ Printk(TheISA::Arguments args)
         }
     }
 
-    out.flags(saved_flags);
-    out.fill(old_fill);
-    out.precision(old_precision);
 }
 
