@@ -51,8 +51,8 @@ DebugPrintkEvent::process(ThreadContext *tc)
 
         TheISA::Arguments args(tc);
         Printk(args);
-        SkipFuncEvent::process(tc);
     }
+    SkipFuncEvent::process(tc);
 }
 
 } // namespace linux
