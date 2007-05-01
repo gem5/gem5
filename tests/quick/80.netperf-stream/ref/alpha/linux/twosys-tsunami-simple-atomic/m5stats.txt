@@ -140,12 +140,12 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                               50427764                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 465972                       # Number of bytes of host memory used
-host_seconds                                     5.44                       # Real time elapsed on the host
-host_tick_rate                            36752487576                       # Simulator tick rate (ticks/s)
+host_inst_rate                               36787265                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 407784                       # Number of bytes of host memory used
+host_seconds                                     7.46                       # Real time elapsed on the host
+host_tick_rate                            26810828297                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   274409387                       # Number of instructions simulated
+sim_insts                                   274411697                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
 sim_ticks                                200000789468                       # Number of ticks simulated
 testsys.cpu.dtb.accesses                       335402                       # DTB accesses
@@ -383,12 +383,12 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                           105949570270                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 465972                       # Number of bytes of host memory used
+host_inst_rate                            80923531996                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 407784                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              285395062                       # Simulator tick rate (ticks/s)
+host_tick_rate                              216582530                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   274409387                       # Number of instructions simulated
+sim_insts                                   274411697                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
 sim_ticks                                      785978                       # Number of ticks simulated
 testsys.cpu.dtb.accesses                            0                       # DTB accesses
