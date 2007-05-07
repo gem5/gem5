@@ -79,13 +79,16 @@ class Bridge : public MemObject
 
             bool partialWriteFixed;
             PacketPtr oldPkt;
+            bool nacked;
 
-            PacketBuffer(PacketPtr _pkt, Tick t)
+            PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
-                  expectResponse(_pkt->needsResponse()), partialWriteFixed(false)
+                  expectResponse(_pkt->needsResponse() && !nack),
+                  partialWriteFixed(false), nacked(nack)
+
             {
-                if (!pkt->isResponse())
+                if (!pkt->isResponse() && !nack)
                     pkt->senderState = this;
             }
 
@@ -144,6 +147,7 @@ class Bridge : public MemObject
         std::list<PacketBuffer*> sendQueue;
 
         int outstandingResponses;
+        int queuedRequests;
 
         /** Max queue size for outbound packets */
         int queueLimit;
@@ -151,11 +155,13 @@ class Bridge : public MemObject
         /**
          * Is this side blocked from accepting outbound packets?
          */
-        bool queueFull() { return (sendQueue.size() == queueLimit); }
+        bool queueFull();
 
-        bool queueForSendTiming(PacketPtr pkt);
+        void queueForSendTiming(PacketPtr pkt);
 
         void finishSend(PacketBuffer *buf);
+
+        void nackRequest(PacketPtr pkt);
 
         /**
          * Handle send event, scheduled when the packet at the head of

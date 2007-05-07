@@ -574,10 +574,16 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else {
-        //Snooping a Coherence Request, do nothing
-        return true;
+    else if (pkt->result == Packet::Nacked) {
+        assert(cpu->_status == IcacheWaitResponse);
+        pkt->reinitNacked();
+        if (!sendTiming(pkt)) {
+            cpu->_status = IcacheRetry;
+            cpu->ifetch_pkt = pkt;
+        }
     }
+    //Snooping a Coherence Request, do nothing
+    return true;
 }
 
 void
@@ -663,10 +669,16 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else {
-        //Snooping a coherence req, do nothing
-        return true;
+    else if (pkt->result == Packet::Nacked) {
+        assert(cpu->_status == DcacheWaitResponse);
+        pkt->reinitNacked();
+        if (!sendTiming(pkt)) {
+            cpu->_status = DcacheRetry;
+            cpu->dcache_pkt = pkt;
+        }
     }
+    //Snooping a Coherence Request, do nothing
+    return true;
 }
 
 void
