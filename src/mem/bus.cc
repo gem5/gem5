@@ -48,6 +48,7 @@ Bus::getPort(const std::string &if_name, int idx)
         if (defaultPort == NULL) {
             defaultPort = new BusPort(csprintf("%s-default",name()), this,
                                       defaultId);
+            cachedBlockSizeValid = false;
             return defaultPort;
         } else
             fatal("Default port already set\n");
@@ -68,6 +69,7 @@ Bus::getPort(const std::string &if_name, int idx)
     assert(maxId < std::numeric_limits<typeof(maxId)>::max());
     BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
     interfaces[id] = bp;
+    cachedBlockSizeValid = false;
     return bp;
 }
 
@@ -182,6 +184,7 @@ Bus::recvTiming(PacketPtr pkt)
     if (tickNextIdle > curTick ||
             (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
         addToRetryList(pktPort);
+        DPRINTF(Bus, "recvTiming: Bus is busy, returning false\n");
         return false;
     }
 
@@ -207,11 +210,12 @@ Bus::recvTiming(PacketPtr pkt)
                     inRetry = false;
                 }
                 occupyBus(pkt);
+                DPRINTF(Bus, "recvTiming: Packet sucessfully sent\n");
                 return true;
             }
         } else {
             //Snoop didn't succeed
-            DPRINTF(Bus, "Adding a retry to RETRY list %d\n",
+            DPRINTF(Bus, "Adding1 a retry to RETRY list %d\n",
                     pktPort->getId());
             addToRetryList(pktPort);
             return false;
@@ -239,13 +243,14 @@ Bus::recvTiming(PacketPtr pkt)
         }
 
         // Packet not successfully sent. Leave or put it on the retry list.
-        DPRINTF(Bus, "Adding a retry to RETRY list %d\n",
+        DPRINTF(Bus, "Adding2 a retry to RETRY list %d\n",
                 pktPort->getId());
         addToRetryList(pktPort);
         return false;
     }
     else {
         //Forwarding up from responder, just return true;
+        DPRINTF(Bus, "recvTiming: can we be here?\n");
         return true;
     }
 }
@@ -253,12 +258,12 @@ Bus::recvTiming(PacketPtr pkt)
 void
 Bus::recvRetry(int id)
 {
-    DPRINTF(Bus, "Received a retry\n");
+    DPRINTF(Bus, "Received a retry from %s\n", id == -1 ? "self" : interfaces[id]->getPeer()->name());
     // If there's anything waiting, and the bus isn't busy...
     if (retryList.size() && curTick >= tickNextIdle) {
         //retryingPort = retryList.front();
         inRetry = true;
-        DPRINTF(Bus, "Sending a retry\n");
+        DPRINTF(Bus, "Sending a retry to %s\n", retryList.front()->getPeer()->name());
         retryList.front()->sendRetry();
         // If inRetry is still true, sendTiming wasn't called
         if (inRetry)
@@ -267,18 +272,20 @@ Bus::recvRetry(int id)
             retryList.pop_front();
             inRetry = false;
 
-            //Bring tickNextIdle up to the present
-            while (tickNextIdle < curTick)
+            if (id != -1) {
+                //Bring tickNextIdle up to the present
+                while (tickNextIdle < curTick)
+                    tickNextIdle += clock;
+
+                //Burn a cycle for the missed grant.
                 tickNextIdle += clock;
 
-            //Burn a cycle for the missed grant.
-            tickNextIdle += clock;
-
-            if (!busIdle.scheduled()) {
-                busIdle.schedule(tickNextIdle);
-            } else {
-                busIdle.reschedule(tickNextIdle);
-            }
+                if (!busIdle.scheduled()) {
+                    busIdle.schedule(tickNextIdle);
+                } else {
+                    busIdle.reschedule(tickNextIdle);
+                }
+            } // id != -1
         }
     }
     //If we weren't able to drain before, we might be able to now.
@@ -598,6 +605,37 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
     }
 }
 
+int
+Bus::findBlockSize(int id)
+{
+    if (cachedBlockSizeValid)
+        return cachedBlockSize;
+
+    int max_bs = -1, tmp_bs;
+    range_map<Addr,int>::iterator portIter;
+    std::vector<DevMap>::iterator snoopIter;
+    for (portIter = portMap.begin(); portIter != portMap.end(); portIter++) {
+        tmp_bs = interfaces[portIter->second]->peerBlockSize();
+        if (tmp_bs > max_bs)
+            max_bs = tmp_bs;
+    }
+    for (snoopIter = portSnoopList.begin();
+         snoopIter != portSnoopList.end(); snoopIter++) {
+        tmp_bs = interfaces[snoopIter->portId]->peerBlockSize();
+        if (tmp_bs > max_bs)
+            max_bs = tmp_bs;
+    }
+    if (max_bs <= 0)
+        max_bs = defaultBlockSize;
+
+    if (max_bs != 64)
+        warn_once("Blocksize found to not be 64... hmm... probably not.\n");
+    cachedBlockSize = max_bs;
+    cachedBlockSizeValid = true;
+    return max_bs;
+}
+
+
 unsigned int
 Bus::drain(Event * de)
 {
@@ -618,6 +656,7 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
     Param<int> clock;
     Param<int> width;
     Param<bool> responder_set;
+    Param<int> block_size;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
@@ -625,12 +664,14 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
     INIT_PARAM(bus_id, "a globally unique bus id"),
     INIT_PARAM(clock, "bus clock speed"),
     INIT_PARAM(width, "width of the bus (bits)"),
-    INIT_PARAM(responder_set, "Is a default responder set by the user")
+    INIT_PARAM(responder_set, "Is a default responder set by the user"),
+    INIT_PARAM(block_size, "Default blocksize if no device has one")
 END_INIT_SIM_OBJECT_PARAMS(Bus)
 
 CREATE_SIM_OBJECT(Bus)
 {
-    return new Bus(getInstanceName(), bus_id, clock, width, responder_set);
+    return new Bus(getInstanceName(), bus_id, clock, width, responder_set,
+            block_size);
 }
 
 REGISTER_SIM_OBJECT("Bus", Bus)

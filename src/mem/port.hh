@@ -161,10 +161,10 @@ class Port
 
     /** Called by a peer port in order to determine the block size of the
         device connected to this port.  It sometimes doesn't make sense for
-        this function to be called, a DMA interface doesn't really have a
-        block size, so it is defaulted to a panic.
+        this function to be called, so it just returns 0. Anytthing that is
+        concerned with the size should just ignore that.
     */
-    virtual int deviceBlockSize() { panic("??"); M5_DUMMY_RETURN }
+    virtual int deviceBlockSize() { return 0; }
 
     /** The peer port is requesting us to reply with a list of the ranges we
         are responsible for.

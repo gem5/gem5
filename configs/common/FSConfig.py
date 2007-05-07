@@ -61,7 +61,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
-    self.bridge = Bridge()
+    self.bridge = Bridge(fix_partial_write_b=True)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port

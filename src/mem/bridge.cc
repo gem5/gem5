@@ -43,20 +43,24 @@
 
 Bridge::BridgePort::BridgePort(const std::string &_name,
                                Bridge *_bridge, BridgePort *_otherPort,
-                               int _delay, int _queueLimit)
+                               int _delay, int _queueLimit,
+                               bool fix_partial_write)
     : Port(_name), bridge(_bridge), otherPort(_otherPort),
-      delay(_delay), outstandingResponses(0),
-      queueLimit(_queueLimit), sendEvent(this)
+      delay(_delay), fixPartialWrite(fix_partial_write),
+      outstandingResponses(0), queueLimit(_queueLimit), sendEvent(this)
 {
 }
 
 Bridge::Bridge(const std::string &n, int qsa, int qsb,
-               Tick _delay, int write_ack)
+               Tick _delay, int write_ack, bool fix_partial_write_a,
+               bool fix_partial_write_b)
     : MemObject(n),
-      portA(n + "-portA", this, &portB, _delay, qsa),
-      portB(n + "-portB", this, &portA, _delay, qsa),
+      portA(n + "-portA", this, &portB, _delay, qsa, fix_partial_write_a),
+      portB(n + "-portB", this, &portA, _delay, qsa, fix_partial_write_b),
       ackWrites(write_ack)
 {
+    if (ackWrites)
+        panic("No support for acknowledging writes\n");
 }
 
 Port *
@@ -82,7 +86,10 @@ Bridge::init()
 {
     // Make sure that both sides are connected to.
     if (portA.getPeer() == NULL || portB.getPeer() == NULL)
-        panic("Both ports of bus bridge are not connected to a bus.\n");
+        fatal("Both ports of bus bridge are not connected to a bus.\n");
+
+    if (portA.peerBlockSize() != portB.peerBlockSize())
+        fatal("Busses don't have the same block size... Not supported.\n");
 }
 
 
@@ -107,8 +114,10 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
 bool
 Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 {
-    if (queueFull())
+    if (queueFull()) {
+        DPRINTF(BusBridge, "Queue full, returning false\n");
         return false;
+    }
 
    if (pkt->isResponse()) {
         // This is a response for a request we forwarded earlier.  The
@@ -149,6 +158,7 @@ Bridge::BridgePort::trySend()
     assert(!sendQueue.empty());
 
     bool was_full = queueFull();
+    int pbs = peerBlockSize();
 
     PacketBuffer *buf = sendQueue.front();
 
@@ -156,10 +166,18 @@ Bridge::BridgePort::trySend()
 
     PacketPtr pkt = buf->pkt;
 
+    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
+
+    if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&
+            pkt->getOffset(pbs) && pkt->getSize() != pbs) {
+        buf->partialWriteFix(this);
+        pkt = buf->pkt;
+    }
+
     DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
-    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
+
     if (sendTiming(pkt)) {
         // send successful
         sendQueue.pop_front();
@@ -191,6 +209,7 @@ Bridge::BridgePort::trySend()
 
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
+        buf->undoPartialWriteFix();
     }
 }
 
@@ -248,6 +267,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bridge)
    Param<int> queue_size_b;
    Param<Tick> delay;
    Param<bool> write_ack;
+   Param<bool> fix_partial_write_a;
+   Param<bool> fix_partial_write_b;
 
 END_DECLARE_SIM_OBJECT_PARAMS(Bridge)
 
@@ -256,14 +277,16 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(Bridge)
     INIT_PARAM(queue_size_a, "The size of the queue for data coming into side a"),
     INIT_PARAM(queue_size_b, "The size of the queue for data coming into side b"),
     INIT_PARAM(delay, "The miminum delay to cross this bridge"),
-    INIT_PARAM(write_ack, "Acknowledge any writes that are received.")
+    INIT_PARAM(write_ack, "Acknowledge any writes that are received."),
+    INIT_PARAM(fix_partial_write_a, "Fixup any partial block writes that are received"),
+    INIT_PARAM(fix_partial_write_b, "Fixup any partial block writes that are received")
 
 END_INIT_SIM_OBJECT_PARAMS(Bridge)
 
 CREATE_SIM_OBJECT(Bridge)
 {
     return new Bridge(getInstanceName(), queue_size_a, queue_size_b, delay,
-            write_ack);
+            write_ack, fix_partial_write_a, fix_partial_write_b);
 }
 
 REGISTER_SIM_OBJECT("Bridge", Bridge)
