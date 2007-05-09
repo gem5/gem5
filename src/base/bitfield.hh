@@ -96,8 +96,9 @@ inline
 T
 insertBits(T val, int first, int last, B bit_val)
 {
+    T t_bit_val = bit_val;
     T bmask = mask(first - last + 1) << last;
-    return ((bit_val << last) & bmask) | (val & ~bmask);
+    return ((t_bit_val << last) & bmask) | (val & ~bmask);
 }
 
 /**
