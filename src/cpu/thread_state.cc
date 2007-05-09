@@ -169,9 +169,8 @@ ThreadState::getMemPort()
         return port;
 
     /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport",
-                                        baseCpu->name(), tid),
-                               process->pTable, false);
+    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), tid),
+                               process, TranslatingPort::NextPage);
 
     connectToMemFunc(port);
 

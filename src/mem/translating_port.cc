@@ -34,12 +34,14 @@
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 
 using namespace TheISA;
 
 TranslatingPort::TranslatingPort(const std::string &_name,
-                                 PageTable *p_table, bool alloc)
-    : FunctionalPort(_name), pTable(p_table), allocating(alloc)
+                                 Process *p, AllocType alloc)
+    : FunctionalPort(_name), pTable(p->pTable), process(p),
+      allocating(alloc)
 { }
 
 TranslatingPort::~TranslatingPort()
@@ -81,13 +83,18 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(), paddr)) {
-            if (allocating) {
+            if (allocating == Always) {
                 pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                  VMPageSize);
-                pTable->translate(gen.addr(), paddr);
+            } else if (allocating == NextPage) {
+                // check if we've accessed the next page on the stack
+                if (!process->checkAndAllocNextPage(gen.addr()))
+                    panic("Page table fault when accessing virtual address %#x "
+                            "during functional write\n", gen.addr());
             } else {
                 return false;
             }
+            pTable->translate(gen.addr(), paddr);
         }
 
         Port::writeBlob(paddr, p + prevSize, gen.size());
@@ -113,7 +120,7 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
 
         if (!pTable->translate(gen.addr(), paddr)) {
-            if (allocating) {
+            if (allocating == Always) {
                 pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                  VMPageSize);
                 pTable->translate(gen.addr(), paddr);

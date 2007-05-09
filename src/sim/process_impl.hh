@@ -25,49 +25,51 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Ali Saidi
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
  */
 
-#ifndef __MEM_TRANSLATING_PROT_HH__
-#define __MEM_TRANSLATING_PROT_HH__
+#ifndef __SIM_PROCESS_IMPL_HH__
+#define __SIM_PROCESS_IMPL_HH__
 
-#include "mem/port.hh"
+//
+// The purpose of this code is to fake the loader & syscall mechanism
+// when there's no OS: thus there's no reason to use it in FULL_SYSTEM
+// mode when we do have an OS.
+//
+#include "config/full_system.hh"
 
-class PageTable;
-class Process;
+#if !FULL_SYSTEM
 
-class TranslatingPort : public FunctionalPort
+#include <string>
+#include <vector>
+
+#include "mem/translating_port.hh"
+
+
+//This needs to be templated for cases where 32 bit pointers are needed.
+template<class AddrType>
+void
+copyStringArray(std::vector<std::string> &strings,
+        AddrType array_ptr, AddrType data_ptr,
+        TranslatingPort* memPort)
 {
-  public:
-    enum AllocType {
-        Always,
-        Never,
-        NextPage
-    };
+    AddrType data_ptr_swap;
+    for (int i = 0; i < strings.size(); ++i) {
+        data_ptr_swap = htog(data_ptr);
+        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
+                sizeof(AddrType));
+        memPort->writeString(data_ptr, strings[i].c_str());
+        array_ptr += sizeof(AddrType);
+        data_ptr += strings[i].size() + 1;
+    }
+    // add NULL terminator
+    data_ptr = 0;
 
-  private:
-    PageTable *pTable;
-    Process *process;
-    AllocType allocating;
+    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
+}
 
-  public:
-    TranslatingPort(const std::string &_name,
-                    Process *p, AllocType alloc);
-    virtual ~TranslatingPort();
 
-    bool tryReadBlob(Addr addr, uint8_t *p, int size);
-    bool tryWriteBlob(Addr addr, uint8_t *p, int size);
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size);
-    bool tryWriteString(Addr addr, const char *str);
-    bool tryReadString(std::string &str, Addr addr);
-
-    virtual void readBlob(Addr addr, uint8_t *p, int size);
-    virtual void writeBlob(Addr addr, uint8_t *p, int size);
-    virtual void memsetBlob(Addr addr, uint8_t val, int size);
-
-    void writeString(Addr addr, const char *str);
-    void readString(std::string &str, Addr addr);
-};
+#endif // !FULL_SYSTEM
 
 #endif
