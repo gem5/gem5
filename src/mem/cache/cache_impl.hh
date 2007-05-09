@@ -1192,6 +1192,8 @@ template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
+    assert(pkt->result != Packet::Nacked);
+
     if (!pkt->req->isUncacheable()
         && pkt->isInvalidate()
         && !pkt->isRead() && !pkt->isWrite()) {
@@ -1249,6 +1251,12 @@ template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
 {
+    // this needs to be fixed so that the cache updates the mshr and sends the
+    // packet back out on the link, but it probably won't happen so until this
+    // gets fixed, just panic when it does
+    if (pkt->result == Packet::Nacked)
+        panic("Need to implement cache resending nacked packets!\n");
+
     if (pkt->isRequest() && blocked)
     {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");

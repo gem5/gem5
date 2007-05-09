@@ -66,6 +66,9 @@ class Bridge : public MemObject
         /** Minimum delay though this bridge. */
         Tick delay;
 
+        /** Min delay to respond to a nack. */
+        Tick nackDelay;
+
         bool fixPartialWrite;
 
         class PacketBuffer : public Packet::SenderState {
@@ -149,13 +152,20 @@ class Bridge : public MemObject
         int outstandingResponses;
         int queuedRequests;
 
+        /** If we're waiting for a retry to happen.*/
+        bool inRetry;
+
         /** Max queue size for outbound packets */
-        int queueLimit;
+        int reqQueueLimit;
+
+        /** Max queue size for reserved responses. */
+        int respQueueLimit;
 
         /**
          * Is this side blocked from accepting outbound packets?
          */
-        bool queueFull();
+        bool respQueueFull();
+        bool reqQueueFull();
 
         void queueForSendTiming(PacketPtr pkt);
 
@@ -186,11 +196,10 @@ class Bridge : public MemObject
         SendEvent sendEvent;
 
       public:
-
         /** Constructor for the BusPort.*/
-        BridgePort(const std::string &_name,
-                   Bridge *_bridge, BridgePort *_otherPort,
-                   int _delay, int _queueLimit, bool fix_partial_write);
+        BridgePort(const std::string &_name, Bridge *_bridge,
+                BridgePort *_otherPort, int _delay, int _nack_delay,
+                int _req_limit, int _resp_limit, bool fix_partial_write);
 
       protected:
 
@@ -226,14 +235,32 @@ class Bridge : public MemObject
     bool ackWrites;
 
   public:
+    struct Params
+    {
+        std::string name;
+        int req_size_a;
+        int req_size_b;
+        int resp_size_a;
+        int resp_size_b;
+        Tick delay;
+        Tick nack_delay;
+        bool write_ack;
+        bool fix_partial_write_a;
+        bool fix_partial_write_b;
+    };
+
+  protected:
+    Params *_params;
+
+  public:
+    const Params *params() const { return _params; }
 
     /** A function used to return the port associated with this bus object. */
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
 
-    Bridge(const std::string &n, int qsa, int qsb, Tick _delay, int write_ack,
-            bool fix_partial_write_a, bool fix_partial_write_b);
+    Bridge(Params *p);
 };
 
 #endif //__MEM_BUS_HH__

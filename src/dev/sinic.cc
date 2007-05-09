@@ -1635,6 +1635,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
     SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
+    Param<Tick> min_backoff_delay;
+    Param<Tick> max_backoff_delay;
     SimObjectParam<PciConfigData *> configdata;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
@@ -1678,6 +1680,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
 
     INIT_PARAM(system, "System pointer"),
     INIT_PARAM(platform, "Platform pointer"),
+    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
+    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
@@ -1723,6 +1727,8 @@ CREATE_SIM_OBJECT_WNS(Sinic, SinicDevice)
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
+    params->min_backoff_delay = min_backoff_delay;
+    params->max_backoff_delay = max_backoff_delay;
     params->configData = configdata;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;
