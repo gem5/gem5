@@ -891,6 +891,7 @@ IGbE::TxDescCache::pktComplete()
         pktPtr = NULL;
 
         DPRINTF(EthernetDesc, "Partial Packet Descriptor Done\n");
+        enableSm();
         return;
     }
 
@@ -971,6 +972,7 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
+    enableSm();
     igbe->checkDrain();
 }
 
@@ -1150,6 +1152,8 @@ IGbE::txStateMachine()
 
         return;
     }
+    DPRINTF(EthernetSM, "TXS: Nothing to do, stopping ticking\n");
+    txTick = false;
 }
 
 bool
