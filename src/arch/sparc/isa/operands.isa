@@ -149,7 +149,8 @@ def operands {{
     'Fprs':		('ControlReg', 'udw', 'MISCREG_FPRS', None, 43),
     'Pcr':		('ControlReg', 'udw', 'MISCREG_PCR', None, 44),
     'Pic':		('ControlReg', 'udw', 'MISCREG_PIC', None, 45),
-    'Gsr':		('ControlReg', 'udw', 'MISCREG_GSR', None, 46),
+#   'Gsr':		('ControlReg', 'udw', 'MISCREG_GSR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 46),
+    'Gsr':		('IntReg', 'udw', 'NumIntArchRegs + 8', None, 46),
     'Softint':		('ControlReg', 'udw', 'MISCREG_SOFTINT', None, 47),
     'SoftintSet':	('ControlReg', 'udw', 'MISCREG_SOFTINT_SET', None, 48),
     'SoftintClr':	('ControlReg', 'udw', 'MISCREG_SOFTINT_CLR', None, 49),
@@ -187,7 +188,7 @@ def operands {{
     'Hver':		('ControlReg', 'udw', 'MISCREG_HVER', None, 74),
     'StrandStsReg':	('ControlReg', 'udw', 'MISCREG_STRAND_STS_REG', None, 75),
 
-    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', None, 80),
+    'Fsr':		('ControlReg', 'udw', 'MISCREG_FSR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 80),
     # Mem gets a large number so it's always last
     'Mem': 		('Mem', 'udw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 

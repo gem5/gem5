@@ -1005,11 +1005,7 @@ InstructionQueue<Impl>::squash(unsigned tid)
 
     // Read instruction sequence number of last instruction out of the
     // time buffer.
-#if ISA_HAS_DELAY_SLOT
-    squashedSeqNum[tid] = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
-#else
     squashedSeqNum[tid] = fromCommit->commitInfo[tid].doneSeqNum;
-#endif
 
     // Call doSquash if there are insts in the IQ
     if (count[tid] > 0) {

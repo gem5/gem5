@@ -51,6 +51,7 @@ def template SwapExecute {{
             }
             if(storeCond && fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, &mem_data);
             }
@@ -91,6 +92,7 @@ def template SwapInitiateAcc {{
             }
             if(fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, &mem_data);
             }
@@ -157,12 +159,14 @@ let {{
         addrCalcReg = 'EA = Rs1;'
         iop = InstObjParams(name, Name, 'Mem',
                 {"code": code, "postacc_code" : postacc_code,
-                 "fault_check": faultCode, "ea_code": addrCalcReg}, opt_flags)
+                 "fault_check": faultCode, "ea_code": addrCalcReg,
+                 "EA_trunc" : TruncateEA}, opt_flags)
         header_output = MemDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
         microParams = {"code": code, "postacc_code" : postacc_code,
-            "ea_code" : addrCalcReg, "fault_check" : faultCode}
+            "ea_code" : addrCalcReg, "fault_check" : faultCode,
+            "EA_trunc" : TruncateEA}
         exec_output = doSplitExecute(execute, name, Name, asi,
                 ["IsStoreConditional"], microParams);
         return (header_output, decoder_output, exec_output, decode_block)

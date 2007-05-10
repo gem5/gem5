@@ -59,7 +59,7 @@ namespace SparcISA
 
     typedef int RegContextVal;
 
-    typedef uint8_t RegIndex;
+    typedef uint16_t RegIndex;
 }
 
 #endif

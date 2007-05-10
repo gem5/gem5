@@ -31,10 +31,23 @@
 #include "cpu/o3/sparc/dyn_inst.hh"
 
 template <class Impl>
-SparcDynInst<Impl>::SparcDynInst(TheISA::ExtMachInst inst,
-        Addr PC, Addr NPC, Addr Pred_PC, Addr Pred_NPC,
+SparcDynInst<Impl>::SparcDynInst(StaticInstPtr staticInst,
+        Addr PC, Addr NPC, Addr microPC,
+        Addr Pred_PC, Addr Pred_NPC, Addr Pred_MicroPC,
         InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(inst, PC, NPC, Pred_PC, Pred_NPC, seq_num, cpu)
+    : BaseDynInst<Impl>(staticInst, PC, NPC, microPC,
+            Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
+{
+    initVars();
+}
+
+template <class Impl>
+SparcDynInst<Impl>::SparcDynInst(TheISA::ExtMachInst inst,
+        Addr PC, Addr NPC, Addr microPC,
+        Addr Pred_PC, Addr Pred_NPC, Addr Pred_MicroPC,
+        InstSeqNum seq_num, O3CPU *cpu)
+    : BaseDynInst<Impl>(inst, PC, NPC, microPC,
+            Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
 {
     initVars();
 }

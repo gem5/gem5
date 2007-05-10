@@ -298,11 +298,13 @@ let {{
             iop = InstObjParams(name, Name, 'BlockMem',
                     {"code": pcedCode, "ea_code": addrCalcReg,
                     "fault_check": faultCode, "micro_pc": microPc,
-                    "set_flags": flag_code}, opt_flags)
+                    "set_flags": flag_code, "EA_trunc" : TruncateEA},
+                    opt_flags)
             iop_imm = InstObjParams(name, Name + 'Imm', 'BlockMemImm',
                     {"code": pcedCode, "ea_code": addrCalcImm,
                     "fault_check": faultCode, "micro_pc": microPc,
-                    "set_flags": flag_code}, opt_flags)
+                    "set_flags": flag_code, "EA_trunc" : TruncateEA},
+                    opt_flags)
             decoder_output += BlockMemMicroConstructor.subst(iop)
             decoder_output += BlockMemMicroConstructor.subst(iop_imm)
             exec_output += doDualSplitExecute(
