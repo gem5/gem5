@@ -9,7 +9,7 @@ class BaseCache(MemObject):
         "Use an adaptive compression scheme")
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
-    latency = Param.Int("Latency")
+    latency = Param.Latency("Latency")
     compressed_bus = Param.Bool(False,
         "This cache connects to a compressed memory")
     compression_latency = Param.Latency('0ns',
@@ -59,6 +59,5 @@ class BaseCache(MemObject):
          "Use the CPU ID to seperate calculations of prefetches")
     prefetch_data_accesses_only = Param.Bool(False,
          "Only prefetch on data not on instruction accesses")
-    hit_latency = Param.Int(1,"Hit Latency of the cache")
     cpu_side = Port("Port on side closer to CPU")
     mem_side = Port("Port on side closer to MEM")
