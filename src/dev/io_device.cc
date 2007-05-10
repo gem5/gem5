@@ -111,10 +111,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         else if (backoffTime < device->maxBackoffDelay)
             backoffTime <<= 1;
 
-        if (backoffEvent.scheduled())
-            backoffEvent.reschedule(curTick + backoffTime);
-        else
-            backoffEvent.schedule(curTick + backoffTime);
+        backoffEvent.reschedule(curTick + backoffTime, true);
 
         DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
 
