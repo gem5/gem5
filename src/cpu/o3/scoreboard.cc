@@ -29,6 +29,7 @@
  *          Kevin Lim
  */
 
+#include "arch/isa_specific.hh"
 #include "cpu/o3/scoreboard.hh"
 
 Scoreboard::Scoreboard(unsigned activeThreads,
@@ -79,11 +80,18 @@ Scoreboard::name() const
 bool
 Scoreboard::getReg(PhysRegIndex phys_reg)
 {
+#if THE_ISA == ALPHA_ISA
     // Always ready if int or fp zero reg.
     if (phys_reg == zeroRegIdx ||
         phys_reg == (zeroRegIdx + numPhysicalIntRegs)) {
         return 1;
     }
+#else
+    // Always ready if int zero reg.
+    if (phys_reg == zeroRegIdx) {
+        return 1;
+    }
+#endif
 
     return regScoreBoard[phys_reg];
 }
@@ -99,11 +107,18 @@ Scoreboard::setReg(PhysRegIndex phys_reg)
 void
 Scoreboard::unsetReg(PhysRegIndex ready_reg)
 {
+#if THE_ISA == ALPHA_ISA
     if (ready_reg == zeroRegIdx ||
         ready_reg == (zeroRegIdx + numPhysicalIntRegs)) {
         // Don't do anything if int or fp zero reg.
         return;
     }
+#else
+    if (ready_reg == zeroRegIdx) {
+        // Don't do anything if int zero reg.
+        return;
+    }
+#endif
 
     regScoreBoard[ready_reg] = 0;
 }

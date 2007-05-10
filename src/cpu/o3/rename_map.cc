@@ -165,17 +165,21 @@ SimpleRenameMap::rename(RegIndex arch_reg)
 
         // If it's not referencing the zero register, then rename the
         // register.
+#if THE_ISA == ALPHA_ISA
         if (arch_reg != floatZeroReg) {
+#endif
             renamed_reg = freeList->getFloatReg();
 
             floatRenameMap[arch_reg].physical_reg = renamed_reg;
 
             assert(renamed_reg < numPhysicalRegs &&
                    renamed_reg >= numPhysicalIntRegs);
+#if THE_ISA == ALPHA_ISA
         } else {
             // Otherwise return the zero register so nothing bad happens.
             renamed_reg = floatZeroReg;
         }
+#endif
     } else {
         // Subtract off the base offset for miscellaneous registers.
         arch_reg = arch_reg - numLogicalRegs;

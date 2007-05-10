@@ -124,7 +124,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
         committedStores[i] = false;
         trapSquash[i] = false;
         tcSquash[i] = false;
-        PC[i] = nextPC[i] = nextNPC[i] = 0;
+        microPC[i] = nextMicroPC[i] = PC[i] = nextPC[i] = nextNPC[i] = 0;
     }
 #if FULL_SYSTEM
     interrupt = NoFault;
@@ -508,6 +508,7 @@ DefaultCommit<Impl>::squashAll(unsigned tid)
 
     toIEW->commitInfo[tid].nextPC = PC[tid];
     toIEW->commitInfo[tid].nextNPC = nextPC[tid];
+    toIEW->commitInfo[tid].nextMicroPC = nextMicroPC[tid];
 }
 
 template <class Impl>
@@ -738,38 +739,15 @@ DefaultCommit<Impl>::commit()
             // then use one older sequence number.
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
-#if ISA_HAS_DELAY_SLOT
-            InstSeqNum bdelay_done_seq_num = squashed_inst;
-            bool squash_bdelay_slot = fromIEW->squashDelaySlot[tid];
-            bool branchMispredict = fromIEW->branchMispredict[tid];
-
-            // Squashing/not squashing the branch delay slot only makes
-            // sense when you're squashing from a branch, ie from a branch
-            // mispredict.
-            if (branchMispredict && !squash_bdelay_slot) {
-                bdelay_done_seq_num++;
-            }
-#endif
-
             if (fromIEW->includeSquashInst[tid] == true) {
                 squashed_inst--;
-#if ISA_HAS_DELAY_SLOT
-                bdelay_done_seq_num--;
-#endif
             }
 
             // All younger instructions will be squashed. Set the sequence
             // number as the youngest instruction in the ROB.
             youngestSeqNum[tid] = squashed_inst;
 
-#if ISA_HAS_DELAY_SLOT
-            rob->squash(bdelay_done_seq_num, tid);
-            toIEW->commitInfo[tid].squashDelaySlot = squash_bdelay_slot;
-            toIEW->commitInfo[tid].bdelayDoneSeqNum = bdelay_done_seq_num;
-#else
             rob->squash(squashed_inst, tid);
-            toIEW->commitInfo[tid].squashDelaySlot = true;
-#endif
             changedROBNumEntries[tid] = true;
 
             toIEW->commitInfo[tid].doneSeqNum = squashed_inst;
@@ -788,6 +766,7 @@ DefaultCommit<Impl>::commit()
 
             toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
             toIEW->commitInfo[tid].nextNPC = fromIEW->nextNPC[tid];
+            toIEW->commitInfo[tid].nextMicroPC = fromIEW->nextMicroPC[tid];
 
             toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
@@ -806,10 +785,6 @@ DefaultCommit<Impl>::commit()
 
         // Try to commit any instructions.
         commitInsts();
-    } else {
-#if ISA_HAS_DELAY_SLOT
-        skidInsert();
-#endif
     }
 
     //Check for any activity
@@ -901,6 +876,7 @@ DefaultCommit<Impl>::commitInsts()
             PC[tid] = head_inst->readPC();
             nextPC[tid] = head_inst->readNextPC();
             nextNPC[tid] = head_inst->readNextNPC();
+            nextMicroPC[tid] = head_inst->readNextMicroPC();
 
             // Increment the total number of non-speculative instructions
             // executed.
@@ -929,12 +905,10 @@ DefaultCommit<Impl>::commitInsts()
                 }
 
                 PC[tid] = nextPC[tid];
-#if ISA_HAS_DELAY_SLOT
                 nextPC[tid] = nextNPC[tid];
                 nextNPC[tid] = nextNPC[tid] + sizeof(TheISA::MachInst);
-#else
-                nextPC[tid] = nextPC[tid] + sizeof(TheISA::MachInst);
-#endif
+                microPC[tid] = nextMicroPC[tid];
+                nextMicroPC[tid] = microPC[tid] + 1;
 
 #if FULL_SYSTEM
                 int count = 0;
@@ -1161,37 +1135,13 @@ DefaultCommit<Impl>::getInsts()
 {
     DPRINTF(Commit, "Getting instructions from Rename stage.\n");
 
-#if ISA_HAS_DELAY_SLOT
-    // Read any renamed instructions and place them into the ROB.
-    int insts_to_process = std::min((int)renameWidth,
-                               (int)(fromRename->size + skidBuffer.size()));
-    int rename_idx = 0;
-
-    DPRINTF(Commit, "%i insts available to process. Rename Insts:%i "
-            "SkidBuffer Insts:%i\n", insts_to_process, fromRename->size,
-            skidBuffer.size());
-#else
     // Read any renamed instructions and place them into the ROB.
     int insts_to_process = std::min((int)renameWidth, fromRename->size);
-#endif
-
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
         DynInstPtr inst;
 
-#if ISA_HAS_DELAY_SLOT
-        // Get insts from skidBuffer or from Rename
-        if (skidBuffer.size() > 0) {
-            DPRINTF(Commit, "Grabbing skidbuffer inst.\n");
-            inst = skidBuffer.front();
-            skidBuffer.pop();
-        } else {
-            DPRINTF(Commit, "Grabbing rename inst.\n");
-            inst = fromRename->insts[rename_idx++];
-        }
-#else
         inst = fromRename->insts[inst_num];
-#endif
         int tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
@@ -1213,30 +1163,6 @@ DefaultCommit<Impl>::getInsts()
                     inst->readPC(), inst->seqNum, tid);
         }
     }
-
-#if ISA_HAS_DELAY_SLOT
-    if (rename_idx < fromRename->size) {
-        DPRINTF(Commit,"Placing Rename Insts into skidBuffer.\n");
-
-        for (;
-             rename_idx < fromRename->size;
-             rename_idx++) {
-            DynInstPtr inst = fromRename->insts[rename_idx];
-
-            if (!inst->isSquashed()) {
-                DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
-                        "skidBuffer.\n", inst->readPC(), inst->seqNum,
-                        inst->threadNumber);
-                skidBuffer.push(inst);
-            } else {
-                DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
-                        "squashed, skipping.\n",
-                        inst->readPC(), inst->seqNum, inst->threadNumber);
-            }
-        }
-    }
-#endif
-
 }
 
 template <class Impl>

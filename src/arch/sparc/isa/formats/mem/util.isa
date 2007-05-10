@@ -149,6 +149,7 @@ def template LoadExecute {{
             %(fault_check)s;
             if(fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             if(fault == NoFault)
@@ -179,6 +180,7 @@ def template LoadInitiateAcc {{
             %(fault_check)s;
             if(fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
             return fault;
@@ -224,6 +226,7 @@ def template StoreExecute {{
             }
             if(storeCond && fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
@@ -257,6 +260,7 @@ def template StoreInitiateAcc {{
             }
             if(storeCond && fault == NoFault)
             {
+                %(EA_trunc)s
                 fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
@@ -317,6 +321,11 @@ let {{
             fault = new PrivilegedAction;
     '''
 
+    TruncateEA = '''
+#if !FULL_SYSTEM
+                EA = Pstate<3:> ? EA<31:0> : EA;
+#endif
+    '''
 }};
 
 //A simple function to generate the name of the macro op of a certain
@@ -346,7 +355,8 @@ let {{
                 (eaRegCode, nameReg, NameReg),
                 (eaImmCode, nameImm, NameImm)):
             microParams = {"code": code, "postacc_code" : postacc_code,
-                "ea_code": eaCode, "fault_check": faultCode}
+                "ea_code": eaCode, "fault_check": faultCode,
+                "EA_trunc" : TruncateEA}
             executeCode += doSplitExecute(execute, name, Name,
                     asi, opt_flags, microParams)
         return executeCode

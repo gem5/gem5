@@ -179,7 +179,9 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
 
+#if THE_ISA == ALPHA_ISA
         if (reg_idx != TheISA::ZeroReg)
+#endif
             floatRegFile[reg_idx].d = val;
     }
 
@@ -194,7 +196,9 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
                 int(reg_idx), (uint64_t)val);
 
+#if THE_ISA == ALPHA_ISA
         if (reg_idx != TheISA::ZeroReg)
+#endif
             floatRegFile[reg_idx].d = val;
     }
 
