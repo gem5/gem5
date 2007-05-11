@@ -2094,9 +2094,13 @@ class UnaryNode : public Node
         return vresult;
     }
 
-    Result total() const {
-        Op op;
-        return op(l->total());
+    Result total() const
+    {
+        const VResult &vec = this->result();
+        Result total = 0;
+        for (int i = 0; i < size(); i++)
+            total += vec[i];
+        return total;
     }
 
     virtual size_t size() const { return l->size(); }
@@ -2149,9 +2153,13 @@ class BinaryNode : public Node
         return vresult;
     }
 
-    Result total() const {
-        Op op;
-        return op(l->total(), r->total());
+    Result total() const
+    {
+        const VResult &vec = this->result();
+        Result total = 0;
+        for (int i = 0; i < size(); i++)
+            total += vec[i];
+        return total;
     }
 
     virtual size_t size() const {
