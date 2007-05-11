@@ -348,7 +348,7 @@ class UdpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True
 class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
 
 class Float(ParamValue, float):
-    pass
+    cxx_type = 'double'
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
