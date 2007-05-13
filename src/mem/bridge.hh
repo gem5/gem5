@@ -82,16 +82,15 @@ class Bridge : public MemObject
 
             bool partialWriteFixed;
             PacketPtr oldPkt;
-            bool nacked;
 
             PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
                   expectResponse(_pkt->needsResponse() && !nack),
-                  partialWriteFixed(false), nacked(nack)
+                  partialWriteFixed(false)
 
             {
-                if (!pkt->isResponse() && !nack)
+                if (!pkt->isResponse() && !nack && pkt->result != Packet::Nacked)
                     pkt->senderState = this;
             }
 
