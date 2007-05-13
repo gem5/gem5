@@ -171,8 +171,9 @@ bool
 Bus::recvTiming(PacketPtr pkt)
 {
     Port *port;
-    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
+    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s result %d\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString(),
+            pkt->result);
 
     BusPort *pktPort;
     if (pkt->getSrc() == defaultId)
@@ -272,20 +273,14 @@ Bus::recvRetry(int id)
             retryList.pop_front();
             inRetry = false;
 
-            if (id != -1) {
-                //Bring tickNextIdle up to the present
-                while (tickNextIdle < curTick)
-                    tickNextIdle += clock;
-
-                //Burn a cycle for the missed grant.
+            //Bring tickNextIdle up to the present
+            while (tickNextIdle < curTick)
                 tickNextIdle += clock;
 
-                if (!busIdle.scheduled()) {
-                    busIdle.schedule(tickNextIdle);
-                } else {
-                    busIdle.reschedule(tickNextIdle);
-                }
-            } // id != -1
+            //Burn a cycle for the missed grant.
+            tickNextIdle += clock;
+
+            busIdle.reschedule(tickNextIdle, true);
         }
     }
     //If we weren't able to drain before, we might be able to now.

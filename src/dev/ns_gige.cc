@@ -2310,10 +2310,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    if (txEvent.scheduled())
-        txEvent.reschedule(curTick + cycles(1));
-    else
-        txEvent.schedule(curTick + cycles(1));
+    txEvent.reschedule(curTick + cycles(1), true);
 }
 
 bool

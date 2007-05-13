@@ -14,9 +14,9 @@ type=LinuxAlphaSystem
 boot_cpu_frequency=1
 physmem=system.physmem
 mem_mode=timing
-kernel=/dist/m5/system/binaries/vmlinux
-console=/dist/m5/system/binaries/console
-pal=/dist/m5/system/binaries/ts_osfpal
+kernel=/Users/ali/work/system/binaries/vmlinux
+console=/Users/ali/work/system/binaries/console
+pal=/Users/ali/work/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
 readfile=tests/halt.sh
 symbolfile=
@@ -30,6 +30,7 @@ bus_id=1
 clock=2
 width=64
 responder_set=false
+block_size=64
 
 [system.intrctrl]
 type=IntrControl
@@ -57,14 +58,19 @@ system=system
 
 [system.bridge]
 type=Bridge
-queue_size_a=16
-queue_size_b=16
+req_size_a=16
+req_size_b=16
+resp_size_a=16
+resp_size_b=16
 delay=0
+nack_delay=0
 write_ack=false
+fix_partial_write_a=false
+fix_partial_write_b=true
 
 [system.disk0.image.child]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/linux-latest.img
+image_file=/Users/ali/work/system/disks/linux-latest.img
 read_only=true
 
 [system.disk0.image]
@@ -82,7 +88,7 @@ delay=2000
 
 [system.disk2.image.child]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/linux-bigswap2.img
+image_file=/Users/ali/work/system/disks/linux-bigswap2.img
 read_only=true
 
 [system.disk2.image]
@@ -100,7 +106,7 @@ delay=2000
 
 [system.simple_disk.disk]
 type=RawDiskImage
-image_file=/dist/m5/system/disks/linux-latest.img
+image_file=/Users/ali/work/system/disks/linux-latest.img
 read_only=true
 
 [system.simple_disk]
@@ -479,6 +485,8 @@ BAR5Size=0
 type=NSGigE
 system=system
 platform=system.tsunami
+min_backoff_delay=8
+max_backoff_delay=20000
 configdata=system.tsunami.ethernet.configdata
 pci_bus=0
 pci_dev=1
@@ -601,6 +609,8 @@ BAR5Size=0
 type=IdeController
 system=system
 platform=system.tsunami
+min_backoff_delay=8
+max_backoff_delay=20000
 configdata=system.tsunami.ide.configdata
 pci_bus=0
 pci_dev=0
@@ -615,4 +625,5 @@ bus_id=0
 clock=2
 width=64
 responder_set=true
+block_size=64
 

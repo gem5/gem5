@@ -727,12 +727,8 @@ IGbE::RxDescCache::pktComplete()
     if (igbe->regs.rdtr.delay()) {
         DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n",
                 igbe->regs.rdtr.delay() * igbe->intClock());
-        if (igbe->rdtrEvent.scheduled())
-            igbe->rdtrEvent.reschedule(curTick + igbe->regs.rdtr.delay() *
-                    igbe->intClock());
-        else
-            igbe->rdtrEvent.schedule(curTick + igbe->regs.rdtr.delay() *
-                    igbe->intClock());
+        igbe->rdtrEvent.reschedule(curTick + igbe->regs.rdtr.delay() *
+                    igbe->intClock(),true);
     }
 
     if (igbe->regs.radv.idv() && igbe->regs.rdtr.delay()) {
@@ -895,6 +891,7 @@ IGbE::TxDescCache::pktComplete()
         pktPtr = NULL;
 
         DPRINTF(EthernetDesc, "Partial Packet Descriptor Done\n");
+        enableSm();
         return;
     }
 
@@ -946,12 +943,8 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "Descriptor had IDE set\n");
         if (igbe->regs.tidv.idv()) {
             DPRINTF(EthernetDesc, "setting tidv\n");
-            if (igbe->tidvEvent.scheduled())
-                igbe->tidvEvent.reschedule(curTick + igbe->regs.tidv.idv() *
-                        igbe->intClock());
-            else
-                igbe->tidvEvent.schedule(curTick + igbe->regs.tidv.idv() *
-                        igbe->intClock());
+            igbe->tidvEvent.reschedule(curTick + igbe->regs.tidv.idv() *
+                        igbe->intClock(), true);
         }
 
         if (igbe->regs.tadv.idv() && igbe->regs.tidv.idv()) {
@@ -979,6 +972,7 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
+    enableSm();
     igbe->checkDrain();
 }
 
@@ -1158,6 +1152,8 @@ IGbE::txStateMachine()
 
         return;
     }
+    DPRINTF(EthernetSM, "TXS: Nothing to do, stopping ticking\n");
+    txTick = false;
 }
 
 bool
