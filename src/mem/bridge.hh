@@ -82,16 +82,15 @@ class Bridge : public MemObject
 
             bool partialWriteFixed;
             PacketPtr oldPkt;
-            bool nacked;
 
             PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
                   expectResponse(_pkt->needsResponse() && !nack),
-                  partialWriteFixed(false), nacked(nack)
+                  partialWriteFixed(false)
 
             {
-                if (!pkt->isResponse() && !nack)
+                if (!pkt->isResponse() && !nack && pkt->result != Packet::Nacked)
                     pkt->senderState = this;
             }
 
@@ -109,18 +108,24 @@ class Bridge : public MemObject
                 assert(!partialWriteFixed);
                 assert(expectResponse);
 
-                int pbs = port->peerBlockSize();
+                Addr pbs = port->peerBlockSize();
+                Addr blockAddr = pkt->getAddr() & ~(pbs-1);
                 partialWriteFixed = true;
                 PacketDataPtr data;
 
                 data = new uint8_t[pbs];
-                PacketPtr funcPkt = new Packet(pkt->req, MemCmd::ReadReq,
-                        Packet::Broadcast, pbs);
-
-                funcPkt->dataStatic(data);
-                port->sendFunctional(funcPkt);
-                assert(funcPkt->result == Packet::Success);
+                RequestPtr funcReq = new Request(blockAddr, 4, 0);
+                PacketPtr funcPkt = new Packet(funcReq, MemCmd::ReadReq,
+                            Packet::Broadcast);
+                for (int x = 0; x < pbs; x+=4) {
+                    funcReq->setPhys(blockAddr + x, 4, 0);
+                    funcPkt->reinitFromRequest();
+                    funcPkt->dataStatic(data + x);
+                    port->sendFunctional(funcPkt);
+                    assert(funcPkt->result == Packet::Success);
+                }
                 delete funcPkt;
+                delete funcReq;
 
                 oldPkt = pkt;
                 memcpy(data + oldPkt->getOffset(pbs), pkt->getPtr<uint8_t>(),
