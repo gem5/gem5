@@ -1282,9 +1282,9 @@ template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    if (checkFunctional(pkt)) {
-        myCache()->probe(pkt, false, cache->cpuSidePort);
-    }
+    myCache()->probe(pkt, false, cache->cpuSidePort);
+    if (pkt->result != Packet::Success)
+        checkFunctional(pkt);
 }
 
 
