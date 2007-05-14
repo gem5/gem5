@@ -134,8 +134,7 @@ BaseCache::CachePort::recvRetry()
                 isCpuSide && cache->doSlaveRequest()) {
 
                 DPRINTF(CachePort, "%s has more responses/requests\n", name());
-                BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
-                reqCpu->schedule(curTick + 1);
+                new BaseCache::RequestEvent(this, curTick + 1);
             }
             waitingOnRetry = false;
         }
@@ -178,8 +177,7 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
-            reqCpu->schedule(curTick + 1);
+            new BaseCache::RequestEvent(this, curTick + 1);
         }
     }
     else
@@ -196,8 +194,7 @@ BaseCache::CachePort::recvRetry()
         {
             DPRINTF(CachePort, "%s has more requests\n", name());
             //Still more to issue, rerequest in 1 cycle
-            BaseCache::CacheEvent * reqCpu = new BaseCache::CacheEvent(this, false);
-            reqCpu->schedule(curTick + 1);
+            new BaseCache::RequestEvent(this, curTick + 1);
         }
     }
     if (waitingOnRetry) DPRINTF(CachePort, "%s STILL Waiting on retry\n", name());
@@ -228,99 +225,110 @@ BaseCache::CachePort::clearBlocked()
     }
 }
 
-BaseCache::CacheEvent::CacheEvent(CachePort *_cachePort, bool _newResponse)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort),
-      newResponse(_newResponse)
+BaseCache::RequestEvent::RequestEvent(CachePort *_cachePort, Tick when)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
 {
-    if (!newResponse)
-        this->setFlags(AutoDelete);
+    this->setFlags(AutoDelete);
+    pkt = NULL;
+    schedule(when);
+}
+
+void
+BaseCache::RequestEvent::process()
+{
+    if (cachePort->waitingOnRetry) return;
+    //We have some responses to drain first
+    if (!cachePort->drainList.empty()) {
+        DPRINTF(CachePort, "%s trying to drain a response\n", cachePort->name());
+        if (cachePort->sendTiming(cachePort->drainList.front())) {
+            DPRINTF(CachePort, "%s drains a response succesfully\n", cachePort->name());
+            cachePort->drainList.pop_front();
+            if (!cachePort->drainList.empty() ||
+                !cachePort->isCpuSide && cachePort->cache->doMasterRequest() ||
+                cachePort->isCpuSide && cachePort->cache->doSlaveRequest()) {
+
+                DPRINTF(CachePort, "%s still has outstanding bus reqs\n", cachePort->name());
+                this->schedule(curTick + 1);
+            }
+        }
+        else {
+            cachePort->waitingOnRetry = true;
+            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+        }
+    }
+    else if (!cachePort->isCpuSide)
+    {            //MSHR
+        DPRINTF(CachePort, "%s trying to send a MSHR request\n", cachePort->name());
+        if (!cachePort->cache->doMasterRequest()) {
+            //This can happen if I am the owner of a block and see an upgrade
+            //while the block was in my WB Buffers.  I just remove the
+            //wb and de-assert the masterRequest
+            return;
+        }
+
+        pkt = cachePort->cache->getPacket();
+        MSHR* mshr = (MSHR*) pkt->senderState;
+        //Copy the packet, it may be modified/destroyed elsewhere
+        PacketPtr copyPkt = new Packet(*pkt);
+        copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+        mshr->pkt = copyPkt;
+
+        bool success = cachePort->sendTiming(pkt);
+        DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                pkt->getAddr(), success ? "succesful" : "unsuccesful");
+
+        cachePort->waitingOnRetry = !success;
+        if (cachePort->waitingOnRetry) {
+            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+        }
+
+        cachePort->cache->sendResult(pkt, mshr, success);
+        if (success && cachePort->cache->doMasterRequest())
+        {
+            DPRINTF(CachePort, "%s still more MSHR requests to send\n",
+                    cachePort->name());
+            //Still more to issue, rerequest in 1 cycle
+            pkt = NULL;
+            this->schedule(curTick+1);
+        }
+    }
+    else
+    {
+        //CSHR
+        assert(cachePort->cache->doSlaveRequest());
+        pkt = cachePort->cache->getCoherencePacket();
+        MSHR* cshr = (MSHR*) pkt->senderState;
+        bool success = cachePort->sendTiming(pkt);
+        cachePort->cache->sendCoherenceResult(pkt, cshr, success);
+        cachePort->waitingOnRetry = !success;
+        if (cachePort->waitingOnRetry)
+            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
+        if (success && cachePort->cache->doSlaveRequest())
+        {
+            DPRINTF(CachePort, "%s still more CSHR requests to send\n",
+                    cachePort->name());
+            //Still more to issue, rerequest in 1 cycle
+            pkt = NULL;
+            this->schedule(curTick+1);
+        }
+    }
+}
+
+const char *
+BaseCache::RequestEvent::description()
+{
+    return "Cache request event";
+}
+
+BaseCache::ResponseEvent::ResponseEvent(CachePort *_cachePort)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
+{
     pkt = NULL;
 }
 
 void
-BaseCache::CacheEvent::process()
+BaseCache::ResponseEvent::process()
 {
-    if (!newResponse)
-    {
-        if (cachePort->waitingOnRetry) return;
-       //We have some responses to drain first
-        if (!cachePort->drainList.empty()) {
-            DPRINTF(CachePort, "%s trying to drain a response\n", cachePort->name());
-            if (cachePort->sendTiming(cachePort->drainList.front())) {
-                DPRINTF(CachePort, "%s drains a response succesfully\n", cachePort->name());
-                cachePort->drainList.pop_front();
-                if (!cachePort->drainList.empty() ||
-                    !cachePort->isCpuSide && cachePort->cache->doMasterRequest() ||
-                    cachePort->isCpuSide && cachePort->cache->doSlaveRequest()) {
-
-                    DPRINTF(CachePort, "%s still has outstanding bus reqs\n", cachePort->name());
-                    this->schedule(curTick + 1);
-                }
-            }
-            else {
-                cachePort->waitingOnRetry = true;
-                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-            }
-        }
-        else if (!cachePort->isCpuSide)
-        {            //MSHR
-            DPRINTF(CachePort, "%s trying to send a MSHR request\n", cachePort->name());
-            if (!cachePort->cache->doMasterRequest()) {
-                //This can happen if I am the owner of a block and see an upgrade
-                //while the block was in my WB Buffers.  I just remove the
-                //wb and de-assert the masterRequest
-                return;
-            }
-
-            pkt = cachePort->cache->getPacket();
-            MSHR* mshr = (MSHR*) pkt->senderState;
-            //Copy the packet, it may be modified/destroyed elsewhere
-            PacketPtr copyPkt = new Packet(*pkt);
-            copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
-            mshr->pkt = copyPkt;
-
-            bool success = cachePort->sendTiming(pkt);
-            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
-                    pkt->getAddr(), success ? "succesful" : "unsuccesful");
-
-            cachePort->waitingOnRetry = !success;
-            if (cachePort->waitingOnRetry) {
-                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-            }
-
-            cachePort->cache->sendResult(pkt, mshr, success);
-            if (success && cachePort->cache->doMasterRequest())
-            {
-                DPRINTF(CachePort, "%s still more MSHR requests to send\n",
-                        cachePort->name());
-                //Still more to issue, rerequest in 1 cycle
-                pkt = NULL;
-                this->schedule(curTick+1);
-            }
-        }
-        else
-        {
-            //CSHR
-            assert(cachePort->cache->doSlaveRequest());
-            pkt = cachePort->cache->getCoherencePacket();
-            MSHR* cshr = (MSHR*) pkt->senderState;
-            bool success = cachePort->sendTiming(pkt);
-            cachePort->cache->sendCoherenceResult(pkt, cshr, success);
-            cachePort->waitingOnRetry = !success;
-            if (cachePort->waitingOnRetry)
-                DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-            if (success && cachePort->cache->doSlaveRequest())
-            {
-                DPRINTF(CachePort, "%s still more CSHR requests to send\n",
-                        cachePort->name());
-                //Still more to issue, rerequest in 1 cycle
-                pkt = NULL;
-                this->schedule(curTick+1);
-            }
-        }
-        return;
-    }
-    //Else it's a response
     assert(cachePort->transmitList.size());
     assert(cachePort->transmitList.front().first <= curTick);
     pkt = cachePort->transmitList.front().second;
@@ -354,9 +362,9 @@ BaseCache::CacheEvent::process()
 }
 
 const char *
-BaseCache::CacheEvent::description()
+BaseCache::ResponseEvent::description()
 {
-    return "BaseCache timing event";
+    return "Cache response event";
 }
 
 void
