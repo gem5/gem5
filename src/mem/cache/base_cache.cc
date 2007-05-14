@@ -229,7 +229,6 @@ BaseCache::RequestEvent::RequestEvent(CachePort *_cachePort, Tick when)
     : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
 {
     this->setFlags(AutoDelete);
-    pkt = NULL;
     schedule(when);
 }
 
@@ -266,7 +265,7 @@ BaseCache::RequestEvent::process()
             return;
         }
 
-        pkt = cachePort->cache->getPacket();
+        PacketPtr pkt = cachePort->cache->getPacket();
         MSHR* mshr = (MSHR*) pkt->senderState;
         //Copy the packet, it may be modified/destroyed elsewhere
         PacketPtr copyPkt = new Packet(*pkt);
@@ -288,7 +287,6 @@ BaseCache::RequestEvent::process()
             DPRINTF(CachePort, "%s still more MSHR requests to send\n",
                     cachePort->name());
             //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
             this->schedule(curTick+1);
         }
     }
@@ -296,7 +294,7 @@ BaseCache::RequestEvent::process()
     {
         //CSHR
         assert(cachePort->cache->doSlaveRequest());
-        pkt = cachePort->cache->getCoherencePacket();
+        PacketPtr pkt = cachePort->cache->getCoherencePacket();
         MSHR* cshr = (MSHR*) pkt->senderState;
         bool success = cachePort->sendTiming(pkt);
         cachePort->cache->sendCoherenceResult(pkt, cshr, success);
@@ -308,7 +306,6 @@ BaseCache::RequestEvent::process()
             DPRINTF(CachePort, "%s still more CSHR requests to send\n",
                     cachePort->name());
             //Still more to issue, rerequest in 1 cycle
-            pkt = NULL;
             this->schedule(curTick+1);
         }
     }
@@ -323,7 +320,6 @@ BaseCache::RequestEvent::description()
 BaseCache::ResponseEvent::ResponseEvent(CachePort *_cachePort)
     : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
 {
-    pkt = NULL;
 }
 
 void
@@ -331,7 +327,7 @@ BaseCache::ResponseEvent::process()
 {
     assert(cachePort->transmitList.size());
     assert(cachePort->transmitList.front().first <= curTick);
-    pkt = cachePort->transmitList.front().second;
+    PacketPtr pkt = cachePort->transmitList.front().second;
     cachePort->transmitList.pop_front();
     if (!cachePort->transmitList.empty()) {
         Tick time = cachePort->transmitList.front().first;

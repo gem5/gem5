@@ -120,7 +120,6 @@ class BaseCache : public MemObject
     struct RequestEvent : public Event
     {
         CachePort *cachePort;
-        PacketPtr pkt;
 
         RequestEvent(CachePort *_cachePort, Tick when);
         void process();
@@ -130,7 +129,6 @@ class BaseCache : public MemObject
     struct ResponseEvent : public Event
     {
         CachePort *cachePort;
-        PacketPtr pkt;
 
         ResponseEvent(CachePort *_cachePort);
         void process();
