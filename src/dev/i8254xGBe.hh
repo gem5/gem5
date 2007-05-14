@@ -80,6 +80,8 @@ class IGbE : public PciDev
     bool txTick;
     bool txFifoTick;
 
+    bool rxDmaPacket;
+
     // Event and function to deal with RDTR timer expiring
     void rdtrProcess() {
         rxDescCache.writeback(0);

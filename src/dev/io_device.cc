@@ -218,6 +218,9 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
     DmaReqState *reqState = new DmaReqState(event, this, size);
 
+
+    DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
+            event->scheduled());
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
             Request *req = new Request(gen.addr(), gen.size(), 0);
@@ -231,6 +234,8 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
             assert(pendingCount >= 0);
             pendingCount++;
+            DPRINTF(DMA, "--Queuing DMA for addr: %#x size: %d\n", gen.addr(),
+                    gen.size());
             queueDma(pkt);
     }
 
@@ -281,19 +286,28 @@ DmaPort::sendDma()
 
         if (transmitList.size() && backoffTime && !inRetry &&
                 !backoffEvent.scheduled()) {
+            DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
+                    backoffTime+curTick);
             backoffEvent.schedule(backoffTime+curTick);
         }
     } else if (state == System::Atomic) {
         transmitList.pop_front();
 
         Tick lat;
+        DPRINTF(DMA, "--Sending  DMA for addr: %#x size: %d\n",
+                pkt->req->getPaddr(), pkt->req->getSize());
         lat = sendAtomic(pkt);
         assert(pkt->senderState);
         DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
         assert(state);
-
         state->numBytes += pkt->req->getSize();
+
+        DPRINTF(DMA, "--Received response for  DMA for addr: %#x size: %d nb: %d, tot: %d sched %d\n",
+                pkt->req->getPaddr(), pkt->req->getSize(), state->numBytes,
+                state->totBytes, state->completionEvent->scheduled());
+
         if (state->totBytes == state->numBytes) {
+            assert(!state->completionEvent->scheduled());
             state->completionEvent->schedule(curTick + lat);
             delete state;
             delete pkt->req;

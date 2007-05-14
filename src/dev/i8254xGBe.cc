@@ -656,7 +656,7 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
         return false;
 
     pktPtr = packet;
-
+    pktDone = false;
     igbe->dmaWrite(igbe->platform->pciToDma(unusedCache.front()->buf),
             packet->length, &pktEvent, packet->data);
     return true;
@@ -683,8 +683,12 @@ IGbE::RxDescCache::pktComplete()
 
     uint8_t status = RXDS_DD | RXDS_EOP;
     uint8_t err = 0;
+
     IpPtr ip(pktPtr);
+
     if (ip) {
+        DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n", ip->id());
+
         if (igbe->regs.rxcsum.ipofld()) {
             DPRINTF(EthernetDesc, "Checking IP checksum\n");
             status |= RXDS_IPCS;
@@ -715,7 +719,10 @@ IGbE::RxDescCache::pktComplete()
                 err |= RXDE_TCPE;
             }
         }
-    } // if ip
+    } else { // if ip
+        DPRINTF(EthernetSM, "Proccesing Non-Ip packet\n");
+    }
+
 
     desc->status = htole(status);
     desc->errors = htole(err);
@@ -912,10 +919,20 @@ IGbE::TxDescCache::pktComplete()
 
     DPRINTF(EthernetDesc, "TxDescriptor data d1: %#llx d2: %#llx\n", desc->d1, desc->d2);
 
+    if (DTRACE(EthernetDesc)) {
+        IpPtr ip(pktPtr);
+        if (ip)
+            DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n",
+                    ip->id());
+        else
+            DPRINTF(EthernetSM, "Proccesing Non-Ip packet\n");
+    }
+
     // Checksums are only ofloaded for new descriptor types
     if (TxdOp::isData(desc) && ( TxdOp::ixsm(desc) || TxdOp::txsm(desc)) ) {
         DPRINTF(EthernetDesc, "Calculating checksums for packet\n");
         IpPtr ip(pktPtr);
+
         if (TxdOp::ixsm(desc)) {
             ip->sum(0);
             ip->sum(cksum(ip));
@@ -1192,6 +1209,7 @@ IGbE::rxStateMachine()
 
     // If the packet is done check for interrupts/descriptors/etc
     if (rxDescCache.packetDone()) {
+        rxDmaPacket = false;
         DPRINTF(EthernetSM, "RXS: Packet completed DMA to memory\n");
         int descLeft = rxDescCache.descLeft();
         switch (regs.rctl.rdmts()) {
@@ -1236,6 +1254,12 @@ IGbE::rxStateMachine()
         return;
     }
 
+    if (rxDmaPacket) {
+        DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
+        rxTick = false;
+        return;
+    }
+
     if (!rxDescCache.descUnused()) {
         DPRINTF(EthernetSM, "RXS: No descriptors available in cache, stopping ticking\n");
         rxTick = false;
@@ -1262,6 +1286,7 @@ IGbE::rxStateMachine()
     rxFifo.pop();
     DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
     rxTick = false;
+    rxDmaPacket = true;
 }
 
 void

@@ -119,7 +119,14 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
                 pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
-    if (pkt->isRequest() && otherPort->reqQueueFull()) {
+    DPRINTF(BusBridge, "Local queue size: %d outreq: %d outresp: %d\n",
+                    sendQueue.size(), queuedRequests, outstandingResponses);
+    DPRINTF(BusBridge, "Remove queue size: %d outreq: %d outresp: %d\n",
+                    otherPort->sendQueue.size(), otherPort->queuedRequests,
+                    otherPort->outstandingResponses);
+
+    if (pkt->isRequest() && otherPort->reqQueueFull() && pkt->result !=
+            Packet::Nacked) {
         DPRINTF(BusBridge, "Remote queue full, nacking\n");
         nackRequest(pkt);
         return true;
@@ -191,7 +198,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
 void
 Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 {
-   if (pkt->isResponse() || pkt->result == Packet::Nacked) {
+    if (pkt->isResponse() || pkt->result == Packet::Nacked) {
         // This is a response for a request we forwarded earlier.  The
         // corresponding PacketBuffer should be stored in the packet's
         // senderState field.
@@ -201,9 +208,9 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
         // from original request
         buf->fixResponse(pkt);
 
-        // Check if this packet was expecting a response (this is either it or
-        // its a nacked packet and we won't be seeing that response)
-        if (buf->expectResponse)
+        // Check if this packet was expecting a response and it's a nacked
+        // packet, in which case we will never being seeing it
+        if (buf->expectResponse && pkt->result == Packet::Nacked)
             --outstandingResponses;
 
 
@@ -212,6 +219,13 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
         DPRINTF(BusBridge, "  is response, new dest %d\n", pkt->getDest());
         delete buf;
     }
+
+
+    if (pkt->isRequest() && pkt->result != Packet::Nacked) {
+        ++queuedRequests;
+    }
+
+
 
     Tick readyTime = curTick + delay;
     PacketBuffer *buf = new PacketBuffer(pkt, readyTime);
@@ -225,7 +239,6 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
     if (sendQueue.empty()) {
         sendEvent.schedule(readyTime);
     }
-    ++queuedRequests;
     sendQueue.push_back(buf);
 }
 
@@ -254,6 +267,8 @@ Bridge::BridgePort::trySend()
     DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
+    bool wasReq = pkt->isRequest();
+    bool wasNacked = pkt->result == Packet::Nacked;
 
     if (sendTiming(pkt)) {
         // send successful
@@ -270,8 +285,12 @@ Bridge::BridgePort::trySend()
             delete buf;
         }
 
-        if (!buf->nacked)
+        if (!wasNacked) {
+            if (wasReq)
                 --queuedRequests;
+            else
+                --outstandingResponses;
+        }
 
         // If there are more packets to send, schedule event to try again.
         if (!sendQueue.empty()) {
@@ -305,7 +324,32 @@ Bridge::BridgePort::recvRetry()
 Tick
 Bridge::BridgePort::recvAtomic(PacketPtr pkt)
 {
-    return otherPort->sendAtomic(pkt) + delay;
+    int pbs = otherPort->peerBlockSize();
+    Tick atomic_delay;
+    // fix partial atomic writes... similar to the timing code that does the
+    // same
+    if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&
+             pkt->getOffset(pbs) && pkt->getSize() != pbs) {
+        PacketDataPtr data;
+        data = new uint8_t[pbs];
+        PacketPtr funcPkt = new Packet(pkt->req, MemCmd::ReadReq,
+                         Packet::Broadcast, pbs);
+
+        funcPkt->dataStatic(data);
+        otherPort->sendFunctional(funcPkt);
+        assert(funcPkt->result == Packet::Success);
+        delete funcPkt;
+        memcpy(data + pkt->getOffset(pbs), pkt->getPtr<uint8_t>(),
+                         pkt->getSize());
+        PacketPtr newPkt = new Packet(pkt->req, MemCmd::WriteInvalidateReq,
+                Packet::Broadcast, pbs);
+        pkt->dataDynamicArray(data);
+        atomic_delay = otherPort->sendAtomic(newPkt);
+        delete newPkt;
+    } else {
+        atomic_delay = otherPort->sendAtomic(pkt);
+    }
+    return atomic_delay + delay;
 }
 
 /** Function called by the port when the bus is receiving a Functional
