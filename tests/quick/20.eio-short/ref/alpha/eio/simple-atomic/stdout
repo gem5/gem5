@@ -7,9 +7,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2007 21:50:58
-M5 started Sat Apr 21 21:51:12 2007
-M5 executing on zamp.eecs.umich.edu
+M5 compiled May 14 2007 16:35:50
+M5 started Tue May 15 12:18:43 2007
+M5 executing on zizzer.eecs.umich.edu
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic tests/run.py quick/20.eio-short/alpha/eio/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 249999500 because a thread reached the max instruction count

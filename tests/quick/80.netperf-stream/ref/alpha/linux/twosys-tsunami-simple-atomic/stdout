@@ -5,11 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 30 2007 13:38:38
-M5 started Mon Apr 30 14:01:42 2007
-M5 executing on zeep
-command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic tests/run.py quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+M5 compiled May 15 2007 19:06:05
+M5 started Tue May 15 19:12:37 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic tests/run.py quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-      0: testsys.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
-      0: drivesys.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
-Exiting @ tick 4300236342388 because checkpoint
+Exiting @ tick 4300235844056 because checkpoint

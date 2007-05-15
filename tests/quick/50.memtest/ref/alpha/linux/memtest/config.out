@@ -20,13 +20,14 @@ bus_id=0
 clock=2
 width=16
 responder_set=false
+block_size=64
 
 [system.l2c]
 type=BaseCache
 size=65536
 assoc=8
 block_size=64
-latency=10
+latency=10000
 mshrs=92
 tgts_per_mshr=16
 write_buffers=8
@@ -57,7 +58,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu6]
 type=MemTest
@@ -82,7 +82,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -113,7 +113,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu4]
 type=MemTest
@@ -138,7 +137,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -169,7 +168,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu5]
 type=MemTest
@@ -194,7 +192,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -225,7 +223,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu2]
 type=MemTest
@@ -250,7 +247,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -281,7 +278,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu3]
 type=MemTest
@@ -306,7 +302,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -337,7 +333,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu0]
 type=MemTest
@@ -362,7 +357,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -393,7 +388,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu1]
 type=MemTest
@@ -418,7 +412,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -449,7 +443,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.funcmem]
 type=PhysicalMemory
@@ -481,7 +474,7 @@ type=BaseCache
 size=32768
 assoc=4
 block_size=64
-latency=1
+latency=1000
 mshrs=12
 tgts_per_mshr=8
 write_buffers=8
@@ -512,7 +505,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.toL2Bus]
 type=Bus
@@ -520,4 +512,5 @@ bus_id=0
 clock=2
 width=16
 responder_set=false
+block_size=64
 

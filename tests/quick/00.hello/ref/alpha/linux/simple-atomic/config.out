@@ -20,6 +20,7 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [system.cpu.workload]
 type=LiveProcess

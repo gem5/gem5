@@ -5,10 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 30 2007 13:38:38
-M5 started Mon Apr 30 13:52:08 2007
-M5 executing on zeep
-command line: build/ALPHA_FS/m5.opt -d build/ALPHA_FS/tests/opt/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
-Global frequency set at 2000000000 ticks per second
-      0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
-Exiting @ tick 3656708271 because m5_exit instruction encountered
+M5 compiled May 15 2007 19:06:05
+M5 started Tue May 15 19:06:07 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 1828355481500 because m5_exit instruction encountered

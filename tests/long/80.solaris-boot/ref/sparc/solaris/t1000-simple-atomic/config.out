@@ -69,6 +69,7 @@ bus_id=1
 clock=2
 width=64
 responder_set=false
+block_size=64
 
 [system.intrctrl]
 type=IntrControl
@@ -103,10 +104,15 @@ zero=true
 
 [system.bridge]
 type=Bridge
-queue_size_a=16
-queue_size_b=16
-delay=0
+req_size_a=16
+req_size_b=16
+resp_size_a=16
+resp_size_b=16
+delay=100
+nack_delay=8
 write_ack=false
+fix_partial_write_a=false
+fix_partial_write_b=true
 
 [system.disk0.image.child]
 type=RawDiskImage
@@ -361,6 +367,7 @@ bus_id=0
 clock=2
 width=64
 responder_set=false
+block_size=64
 
 [system.iobus.responder]
 type=IsaFake

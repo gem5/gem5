@@ -18,7 +18,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-stream-client.rcS
+readfile=/tmp/newmem/configs/boot/netperf-stream-client.rcS
 symbolfile=
 init_param=0
 system_type=34
@@ -30,6 +30,7 @@ bus_id=1
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [testsys.intrctrl]
 type=IntrControl
@@ -57,10 +58,15 @@ system=testsys
 
 [testsys.bridge]
 type=Bridge
-queue_size_a=16
-queue_size_b=16
-delay=0
+req_size_a=16
+req_size_b=16
+resp_size_a=16
+resp_size_b=16
+delay=50000
+nack_delay=4000
 write_ack=false
+fix_partial_write_a=false
+fix_partial_write_b=true
 
 [testsys.disk0.image.child]
 type=RawDiskImage
@@ -479,6 +485,8 @@ BAR5Size=0
 type=NSGigE
 system=testsys
 platform=testsys.tsunami
+min_backoff_delay=4000
+max_backoff_delay=10000000
 configdata=testsys.tsunami.ethernet.configdata
 pci_bus=0
 pci_dev=1
@@ -601,6 +609,8 @@ BAR5Size=0
 type=IdeController
 system=testsys
 platform=testsys.tsunami
+min_backoff_delay=4000
+max_backoff_delay=10000000
 configdata=testsys.tsunami.ide.configdata
 pci_bus=0
 pci_dev=0
@@ -615,6 +625,7 @@ bus_id=0
 clock=1000
 width=64
 responder_set=true
+block_size=64
 
 [drivesys.physmem]
 type=PhysicalMemory
@@ -632,7 +643,7 @@ kernel=/dist/m5/system/binaries/vmlinux
 console=/dist/m5/system/binaries/console
 pal=/dist/m5/system/binaries/ts_osfpal
 boot_osflags=root=/dev/hda1 console=ttyS0
-readfile=/z/saidi/work/m5.newmem/configs/boot/netperf-server.rcS
+readfile=/tmp/newmem/configs/boot/netperf-server.rcS
 symbolfile=
 init_param=0
 system_type=34
@@ -686,6 +697,8 @@ BAR5Size=0
 type=NSGigE
 system=drivesys
 platform=drivesys.tsunami
+min_backoff_delay=4000
+max_backoff_delay=10000000
 configdata=drivesys.tsunami.ethernet.configdata
 pci_bus=0
 pci_dev=1
@@ -736,6 +749,7 @@ bus_id=1
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [drivesys.membus.responder]
 type=IsaFake
@@ -754,10 +768,15 @@ system=drivesys
 
 [drivesys.bridge]
 type=Bridge
-queue_size_a=16
-queue_size_b=16
-delay=0
+req_size_a=16
+req_size_b=16
+resp_size_a=16
+resp_size_b=16
+delay=50000
+nack_delay=4000
 write_ack=false
+fix_partial_write_a=false
+fix_partial_write_b=true
 
 [drivesys.disk0.image.child]
 type=RawDiskImage
@@ -1229,6 +1248,8 @@ BAR5Size=0
 type=IdeController
 system=drivesys
 platform=drivesys.tsunami
+min_backoff_delay=4000
+max_backoff_delay=10000000
 configdata=drivesys.tsunami.ide.configdata
 pci_bus=0
 pci_dev=0
@@ -1243,4 +1264,5 @@ bus_id=0
 clock=1000
 width=64
 responder_set=true
+block_size=64
 

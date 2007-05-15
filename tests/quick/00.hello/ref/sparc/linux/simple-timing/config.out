@@ -20,6 +20,7 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [system.cpu.workload]
 type=LiveProcess
@@ -61,13 +62,14 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [system.cpu.icache]
 type=BaseCache
 size=131072
 assoc=2
 block_size=64
-latency=1
+latency=1000
 mshrs=10
 tgts_per_mshr=5
 write_buffers=8
@@ -98,14 +100,13 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu.dcache]
 type=BaseCache
 size=262144
 assoc=2
 block_size=64
-latency=1
+latency=1000
 mshrs=10
 tgts_per_mshr=5
 write_buffers=8
@@ -136,14 +137,13 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu.l2cache]
 type=BaseCache
 size=2097152
 assoc=2
 block_size=64
-latency=1
+latency=10000
 mshrs=10
 tgts_per_mshr=5
 write_buffers=8
@@ -174,5 +174,4 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
