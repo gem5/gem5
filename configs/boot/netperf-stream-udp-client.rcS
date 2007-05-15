@@ -23,7 +23,7 @@ netcat -c -l -p 8000
 
 BINARY=/benchmarks/netperf-bin/netperf
 TEST="UDP_STREAM"
-SHORT_ARGS="-l 2 -- -m 4096"
+SHORT_ARGS="-l 2 -- -m 16384 -M 16384 -s 262144 -S 262144"
 #LONG_ARGS="-k16384,0 -K16384,0 -- -m 65536 -M 65536 -s 262144 -S 262144"
 
 
