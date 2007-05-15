@@ -80,14 +80,10 @@ class Bridge : public MemObject
             short origSrc;
             bool expectResponse;
 
-            bool partialWriteFixed;
-            PacketPtr oldPkt;
-
             PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
-                  expectResponse(_pkt->needsResponse() && !nack),
-                  partialWriteFixed(false)
+                  expectResponse(_pkt->needsResponse() && !nack)
 
             {
                 if (!pkt->isResponse() && !nack && pkt->result != Packet::Nacked)
@@ -99,52 +95,7 @@ class Bridge : public MemObject
                 assert(pkt->senderState == this);
                 pkt->setDest(origSrc);
                 pkt->senderState = origSenderState;
-                if (partialWriteFixed)
-                    delete oldPkt;
             }
-
-            void partialWriteFix(Port *port)
-            {
-                assert(!partialWriteFixed);
-                assert(expectResponse);
-
-                Addr pbs = port->peerBlockSize();
-                Addr blockAddr = pkt->getAddr() & ~(pbs-1);
-                partialWriteFixed = true;
-                PacketDataPtr data;
-
-                data = new uint8_t[pbs];
-                RequestPtr funcReq = new Request(blockAddr, 4, 0);
-                PacketPtr funcPkt = new Packet(funcReq, MemCmd::ReadReq,
-                            Packet::Broadcast);
-                for (int x = 0; x < pbs; x+=4) {
-                    funcReq->setPhys(blockAddr + x, 4, 0);
-                    funcPkt->reinitFromRequest();
-                    funcPkt->dataStatic(data + x);
-                    port->sendFunctional(funcPkt);
-                    assert(funcPkt->result == Packet::Success);
-                }
-                delete funcPkt;
-                delete funcReq;
-
-                oldPkt = pkt;
-                memcpy(data + oldPkt->getOffset(pbs), pkt->getPtr<uint8_t>(),
-                        pkt->getSize());
-                pkt = new Packet(oldPkt->req, MemCmd::WriteInvalidateReq,
-                        Packet::Broadcast, pbs);
-                pkt->dataDynamicArray(data);
-                pkt->senderState = oldPkt->senderState;
-            }
-
-            void undoPartialWriteFix()
-            {
-                if (!partialWriteFixed)
-                    return;
-                delete pkt;
-                pkt = oldPkt;
-                partialWriteFixed = false;
-            }
-
         };
 
         /**

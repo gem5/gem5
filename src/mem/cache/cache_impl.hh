@@ -1146,11 +1146,11 @@ template<class TagStore, class Coherence>
 Port *
 Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "")
+    if (if_name == "" || if_name == "cpu_side")
     {
         if (cpuSidePort == NULL) {
             cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
-            sendEvent = new CacheEvent(cpuSidePort, true);
+            sendEvent = new ResponseEvent(cpuSidePort);
         }
         return cpuSidePort;
     }
@@ -1158,20 +1158,12 @@ Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
     {
         return new CpuSidePort(name() + "-cpu_side_funcport", this);
     }
-    else if (if_name == "cpu_side")
-    {
-        if (cpuSidePort == NULL) {
-            cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
-            sendEvent = new CacheEvent(cpuSidePort, true);
-        }
-        return cpuSidePort;
-    }
     else if (if_name == "mem_side")
     {
         if (memSidePort != NULL)
             panic("Already have a mem side for this cache\n");
         memSidePort = new MemSidePort(name() + "-mem_side_port", this);
-        memSendEvent = new CacheEvent(memSidePort, true);
+        memSendEvent = new ResponseEvent(memSidePort);
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
