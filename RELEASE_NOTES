@@ -1,32 +1,37 @@
 Outstanding issues for 2.0 release:
 --------------------
-1. Better statistics for the caches.
-2. Clean up more SimObject parameter stuff
-3. Checkpoint/switchover testing
-4. FS mode doesn't work under Cygwin
-5. memtest regression crashes under Cygwin
-6. Make repository public
-7. Testing
-8. Validation
-9. Testing
+1. Fix multi-level coherence/dma issues
+2. Fix O3 CPU bug in SE 40.perlbmk fails
+3. Fix O3 processing nacks/coherence messages
+4. Better statistics for the caches.
+5. Clean up more SimObject parameter stuff
+6. Checkpoint/switchover testing
+7. FS mode doesn't work under Cygwin
+8. memtest regression crashes under Cygwin
+9. Make repository public
+10. Testing
+11. Validation
+12. Testing 
 
-May XX, 2007: m5_2.0_beta3
+May 16, 2007: m5_2.0_beta3
 --------------------
 New Features
 1. Some support for SPARC full-system simulation
+2. Reworking of trace facitities (parameter names changed, variadic macros
+   removed)
+3. Scons script cleanups
+4. Some support for compiling with Intel CC
 
 Bug fixes since beta 2:
 1. Many SPARC linux syscall emulation support fixes
 2. Multiprocessor linux boot using the detailed O3 CPU module
-3. Simulator performance and memory leak fixes
-4. Fixed issue where console could stop printing in ALPHA_FS
-5. Fix issues with remote debugging
-6. Several compile fixes, including gcc 4.1
-7. Reworking of trace facitities (parameter names changed, variadic macros removed)
-8. Scons script cleanups
-9. Some support for compiling with Intel CC
-10. Many other minor fixes and enhancements
-
+3. Workaround for DMA bug (final solution to be released with 2.0f)
+4. Simulator performance and memory leak fixes
+5. Fixed issue where console could stop printing in ALPHA_FS
+6. Fix issues with remote debugging
+7. Several compile fixes, including gcc 4.1
+8. Many other minor fixes and enhancements 
+		
 Nov. 28, 2006: m5_2.0_beta2
 --------------------
 Bug fixes since beta 1:
