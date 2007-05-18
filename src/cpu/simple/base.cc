@@ -91,6 +91,9 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
     lastDcacheStall = 0;
 
     threadContexts.push_back(tc);
+
+    fetchOffset = 0;
+    stayAtPC = false;
 }
 
 BaseSimpleCPU::~BaseSimpleCPU()
@@ -335,12 +338,9 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
             thread->readNextPC());
 #endif
 
-    // This will generate a mask which aligns the pc on MachInst size
-    // boundaries. It won't work for non-power-of-two sized MachInsts, but
-    // it will work better than a hard coded mask.
     const Addr PCMask = ~(sizeof(MachInst) - 1);
-    req->setVirt(0, thread->readPC() & PCMask, sizeof(MachInst), 0,
-            thread->readPC());
+    Addr fetchPC = thread->readPC() + fetchOffset;
+    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, thread->readPC());
 
     Fault fault = thread->translateInstReq(req);
 
@@ -368,21 +368,35 @@ BaseSimpleCPU::preExecute()
 
     // decode the instruction
     inst = gtoh(inst);
+
     //If we're not in the middle of a macro instruction
     if (!curMacroStaticInst) {
+
         StaticInstPtr instPtr = NULL;
 
         //Predecode, ie bundle up an ExtMachInst
         //This should go away once the constructor can be set up properly
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
+        const Addr PCMask = ~(sizeof(MachInst) - 1);
         if(predecoder.needMoreBytes())
-            predecoder.moreBytes(thread->readPC(), 0, inst);
+            predecoder.moreBytes((thread->readPC() & PCMask) + fetchOffset,
+                    0, inst);
         else
             predecoder.process();
-        //If an instruction is ready, decode it
-        if (predecoder.extMachInstReady())
+
+        //If an instruction is ready, decode it. Otherwise, we'll have to
+        //fetch beyond the MachInst at the current pc.
+        if (predecoder.extMachInstReady()) {
+#if THE_ISA == X86_ISA
+            thread->setNextPC(thread->readPC() + predecoder.getInstSize());
+#endif // X86_ISA
+            stayAtPC = false;
             instPtr = StaticInst::decode(predecoder.getExtMachInst());
+        } else {
+            stayAtPC = true;
+            fetchOffset += sizeof(MachInst);
+        }
 
         //If we decoded an instruction and it's microcoded, start pulling
         //out micro ops
@@ -450,12 +464,14 @@ BaseSimpleCPU::postExecute()
 void
 BaseSimpleCPU::advancePC(Fault fault)
 {
+    //Since we're moving to a new pc, zero out the offset
+    fetchOffset = 0;
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         fault->invoke(tc);
         thread->setMicroPC(0);
         thread->setNextMicroPC(1);
-    } else if (predecoder.needMoreBytes()) {
+    } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst && curStaticInst->isLastMicroOp()) {
             //We should be working with a macro op
