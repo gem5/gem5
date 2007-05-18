@@ -21,5 +21,5 @@ echo "100000" > /proc/sys/net/core/netdev_max_backlog
 echo -n "waiting for server..."
 netcat -c -l -p 8000
 
-ping $SERVER
+ping -c 5 $SERVER
 /sbin/m5 exit

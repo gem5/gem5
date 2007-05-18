@@ -37,6 +37,7 @@
 #include "kern/system_events.hh"
 #include "sim/system.hh"
 
+#include <sstream>
 
 namespace Linux {
 
@@ -44,15 +45,13 @@ void
 DebugPrintkEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
-        if (!raw) {
-            StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
-            DPRINTFN("");
-        }
-
+        std::stringstream ss;
         TheISA::Arguments args(tc);
-        Printk(args);
-        SkipFuncEvent::process(tc);
+        Printk(ss, args);
+        StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
+        DPRINTFN("%s", ss.str());
     }
+    SkipFuncEvent::process(tc);
 }
 
 } // namespace linux

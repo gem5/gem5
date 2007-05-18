@@ -210,7 +210,8 @@ class Event : public Serializable, public FastAlloc
     void schedule(Tick t);
 
     /// Reschedule the event with the current priority
-    void reschedule(Tick t);
+    // always parameter means to schedule if not already scheduled
+    void reschedule(Tick t, bool always = false);
 
     /// Remove the event from the current schedule
     void deschedule();
@@ -402,16 +403,22 @@ Event::deschedule()
 }
 
 inline void
-Event::reschedule(Tick t)
+Event::reschedule(Tick t, bool always)
 {
-    assert(scheduled());
-    clearFlags(Squashed);
+    assert(scheduled() || always);
 
 #if TRACING_ON
     when_scheduled = curTick;
 #endif
     _when = t;
-    queue->reschedule(this);
+
+    if (scheduled()) {
+        clearFlags(Squashed);
+        queue->reschedule(this);
+    } else {
+        setFlags(Scheduled);
+        queue->schedule(this);
+    }
 }
 
 inline void

@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 30 2007 12:26:45
-M5 started Fri Mar 30 12:26:47 2007
+M5 compiled May 15 2007 17:08:10
+M5 started Tue May 15 17:08:12 2007
 M5 executing on zizzer.eecs.umich.edu
 command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second

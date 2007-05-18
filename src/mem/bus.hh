@@ -133,6 +133,12 @@ class Bus : public MemObject
     /** Occupy the bus with transmitting the packet pkt */
     void occupyBus(PacketPtr pkt);
 
+    /** Ask everyone on the bus what their size is
+     * @param id id of the busport that made the request
+     * @return the max of all the sizes
+     */
+    int findBlockSize(int id);
+
     /** Declaration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
     class BusPort : public Port
@@ -195,8 +201,11 @@ class Bus : public MemObject
                                             AddrRangeList &snoop)
         { bus->addressRanges(resp, snoop, id); }
 
-        // Hack to make translating port work without changes
-        virtual int deviceBlockSize() { return 32; }
+        // Ask the bus to ask everyone on the bus what their block size is and
+        // take the max of it. This might need to be changed a bit if we ever
+        // support multiple block sizes.
+        virtual int deviceBlockSize()
+        { return bus->findBlockSize(id); }
 
     };
 
@@ -256,6 +265,10 @@ class Bus : public MemObject
     /** Has the user specified their own default responder? */
     bool responderSet;
 
+    int defaultBlockSize;
+    int cachedBlockSize;
+    bool cachedBlockSizeValid;
+
   public:
 
     /** A function used to return the port associated with this bus object. */
@@ -267,11 +280,12 @@ class Bus : public MemObject
     unsigned int drain(Event *de);
 
     Bus(const std::string &n, int bus_id, int _clock, int _width,
-        bool responder_set)
+        bool responder_set, int dflt_blk_size)
         : MemObject(n), busId(bus_id), clock(_clock), width(_width),
           tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
           maxId(0), defaultPort(NULL), funcPort(NULL), funcPortId(-4),
-          responderSet(responder_set)
+          responderSet(responder_set), defaultBlockSize(dflt_blk_size),
+          cachedBlockSize(0), cachedBlockSizeValid(false)
     {
         //Both the width and clock period must be positive
         if (width <= 0)

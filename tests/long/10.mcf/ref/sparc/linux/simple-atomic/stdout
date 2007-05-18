@@ -25,9 +25,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 23 2007 22:37:06
-M5 started Fri Mar 23 22:37:22 2007
+M5 compiled May 15 2007 13:02:31
+M5 started Tue May 15 14:23:47 2007
 M5 executing on zizzer.eecs.umich.edu
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-atomic tests/run.py long/10.mcf/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 1719594533 because target called exit()
+Exiting @ tick 859797266500 because target called exit()

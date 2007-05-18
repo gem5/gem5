@@ -95,6 +95,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
+#include "sim/process_impl.hh"
 #include "sim/system.hh"
 
 using namespace std;

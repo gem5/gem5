@@ -93,7 +93,8 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 
 DmaPort::DmaPort(DmaDevice *dev, System *s)
     : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
-      pendingCount(0), actionInProgress(0), drainEvent(NULL)
+      pendingCount(0), actionInProgress(0), drainEvent(NULL),
+      backoffTime(0), inRetry(false), backoffEvent(this)
 { }
 
 bool
@@ -104,12 +105,24 @@ DmaPort::recvTiming(PacketPtr pkt)
     if (pkt->result == Packet::Nacked) {
         DPRINTF(DMA, "Received nacked Pkt %#x with State: %#x Addr: %#x\n",
                pkt, pkt->senderState, pkt->getAddr());
+
+        if (backoffTime < device->minBackoffDelay)
+            backoffTime = device->minBackoffDelay;
+        else if (backoffTime < device->maxBackoffDelay)
+            backoffTime <<= 1;
+
+        backoffEvent.reschedule(curTick + backoffTime, true);
+
+        DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
+
         pkt->reinitNacked();
-        sendDma(pkt, true);
+        queueDma(pkt, true);
     } else if (pkt->senderState) {
         DmaReqState *state;
-        DPRINTF(DMA, "Received response Pkt %#x with State: %#x Addr: %#x\n",
-               pkt, pkt->senderState, pkt->getAddr());
+        backoffTime >>= 2;
+
+        DPRINTF(DMA, "Received response Pkt %#x with State: %#x Addr: %#x size: %#x\n",
+               pkt, pkt->senderState, pkt->getAddr(), pkt->req->getSize());
         state = dynamic_cast<DmaReqState*>(pkt->senderState);
         pendingCount--;
 
@@ -117,6 +130,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         assert(state);
 
         state->numBytes += pkt->req->getSize();
+        assert(state->totBytes >= state->numBytes);
         if (state->totBytes == state->numBytes) {
             state->completionEvent->process();
             delete state;
@@ -136,7 +150,8 @@ DmaPort::recvTiming(PacketPtr pkt)
 }
 
 DmaDevice::DmaDevice(Params *p)
-    : PioDevice(p), dmaPort(NULL)
+    : PioDevice(p), dmaPort(NULL), minBackoffDelay(p->min_backoff_delay),
+      maxBackoffDelay(p->max_backoff_delay)
 { }
 
 
@@ -165,19 +180,31 @@ DmaPort::drain(Event *de)
 void
 DmaPort::recvRetry()
 {
+    assert(transmitList.size());
     PacketPtr pkt = transmitList.front();
     bool result = true;
-    while (result && transmitList.size()) {
+    do {
         DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
                    pkt, pkt->senderState);
         result = sendTiming(pkt);
         if (result) {
             DPRINTF(DMA, "-- Done\n");
             transmitList.pop_front();
+            inRetry = false;
         } else {
+            inRetry = true;
             DPRINTF(DMA, "-- Failed, queued\n");
         }
+    } while (!backoffTime &&  result && transmitList.size());
+
+    if (transmitList.size() && backoffTime && !inRetry) {
+        DPRINTF(DMA, "Scheduling backoff for %d\n", curTick+backoffTime);
+        if (!backoffEvent.scheduled())
+            backoffEvent.schedule(backoffTime+curTick);
     }
+    DPRINTF(DMA, "TransmitList: %d, backoffTime: %d inRetry: %d es: %d\n",
+            transmitList.size(), backoffTime, inRetry,
+            backoffEvent.scheduled());
 }
 
 
@@ -191,6 +218,9 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
     DmaReqState *reqState = new DmaReqState(event, this, size);
 
+
+    DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
+            event->scheduled());
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
             Request *req = new Request(gen.addr(), gen.size(), 0);
@@ -204,41 +234,80 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
             assert(pendingCount >= 0);
             pendingCount++;
-            sendDma(pkt);
+            DPRINTF(DMA, "--Queuing DMA for addr: %#x size: %d\n", gen.addr(),
+                    gen.size());
+            queueDma(pkt);
     }
 
 }
 
+void
+DmaPort::queueDma(PacketPtr pkt, bool front)
+{
+
+    if (front)
+        transmitList.push_front(pkt);
+    else
+        transmitList.push_back(pkt);
+    sendDma();
+}
+
 
 void
-DmaPort::sendDma(PacketPtr pkt, bool front)
+DmaPort::sendDma()
 {
     // some kind of selction between access methods
     // more work is going to have to be done to make
     // switching actually work
+    assert(transmitList.size());
+    PacketPtr pkt = transmitList.front();
 
     System::MemoryMode state = sys->getMemoryMode();
     if (state == System::Timing) {
+        if (backoffEvent.scheduled() || inRetry) {
+            DPRINTF(DMA, "Can't send immediately, waiting for retry or backoff timer\n");
+            return;
+        }
+
         DPRINTF(DMA, "Attempting to send Packet %#x with addr: %#x\n",
                 pkt, pkt->getAddr());
-        if (transmitList.size() || !sendTiming(pkt)) {
-            if (front)
-                transmitList.push_front(pkt);
-            else
-                transmitList.push_back(pkt);
-            DPRINTF(DMA, "-- Failed: queued\n");
-        } else {
-            DPRINTF(DMA, "-- Done\n");
+
+        bool result;
+        do {
+            result = sendTiming(pkt);
+            if (result) {
+                transmitList.pop_front();
+                DPRINTF(DMA, "-- Done\n");
+            } else {
+                inRetry = true;
+                DPRINTF(DMA, "-- Failed: queued\n");
+            }
+        } while (result && !backoffTime && transmitList.size());
+
+        if (transmitList.size() && backoffTime && !inRetry &&
+                !backoffEvent.scheduled()) {
+            DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
+                    backoffTime+curTick);
+            backoffEvent.schedule(backoffTime+curTick);
         }
     } else if (state == System::Atomic) {
+        transmitList.pop_front();
+
         Tick lat;
+        DPRINTF(DMA, "--Sending  DMA for addr: %#x size: %d\n",
+                pkt->req->getPaddr(), pkt->req->getSize());
         lat = sendAtomic(pkt);
         assert(pkt->senderState);
         DmaReqState *state = dynamic_cast<DmaReqState*>(pkt->senderState);
         assert(state);
-
         state->numBytes += pkt->req->getSize();
+
+        DPRINTF(DMA, "--Received response for  DMA for addr: %#x size: %d nb: %d, tot: %d sched %d\n",
+                pkt->req->getPaddr(), pkt->req->getSize(), state->numBytes,
+                state->totBytes, state->completionEvent->scheduled());
+
         if (state->totBytes == state->numBytes) {
+            assert(!state->completionEvent->scheduled());
             state->completionEvent->schedule(curTick + lat);
             delete state;
             delete pkt->req;

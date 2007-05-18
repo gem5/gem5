@@ -38,13 +38,9 @@ namespace Linux {
 
 class DebugPrintkEvent : public SkipFuncEvent
 {
-  private:
-    bool raw;
-
   public:
-    DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr,
-                     bool r = false)
-        : SkipFuncEvent(q, desc, addr), raw(r) {}
+    DebugPrintkEvent(PCEventQueue *q, const std::string &desc, Addr addr)
+        : SkipFuncEvent(q, desc, addr) {}
     virtual void process(ThreadContext *xc);
 };
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ m5.AddToPath('../configs/common')
 # ====================
 
 class L1(BaseCache):
-    latency = 1
+    latency = '1ns'
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
@@ -47,7 +47,7 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    latency = 100
+    latency = '10ns'
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -73,6 +73,7 @@ for cpu in cpus:
                                 L1(size = '32kB', assoc = 4))
     # connect cpu level-1 caches to shared level-2 cache
     cpu.connectMemPorts(system.toL2Bus)
+    cpu.clock = '2GHz'
 
 # connect memory to membus
 system.physmem.port = system.membus.port

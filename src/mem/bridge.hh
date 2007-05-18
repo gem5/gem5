@@ -66,6 +66,11 @@ class Bridge : public MemObject
         /** Minimum delay though this bridge. */
         Tick delay;
 
+        /** Min delay to respond to a nack. */
+        Tick nackDelay;
+
+        bool fixPartialWrite;
+
         class PacketBuffer : public Packet::SenderState {
 
           public:
@@ -75,12 +80,13 @@ class Bridge : public MemObject
             short origSrc;
             bool expectResponse;
 
-            PacketBuffer(PacketPtr _pkt, Tick t)
+            PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
                 : ready(t), pkt(_pkt),
                   origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
-                  expectResponse(_pkt->needsResponse())
+                  expectResponse(_pkt->needsResponse() && !nack)
+
             {
-                if (!pkt->isResponse())
+                if (!pkt->isResponse() && !nack && pkt->result != Packet::Nacked)
                     pkt->senderState = this;
             }
 
@@ -100,18 +106,28 @@ class Bridge : public MemObject
         std::list<PacketBuffer*> sendQueue;
 
         int outstandingResponses;
+        int queuedRequests;
+
+        /** If we're waiting for a retry to happen.*/
+        bool inRetry;
 
         /** Max queue size for outbound packets */
-        int queueLimit;
+        int reqQueueLimit;
+
+        /** Max queue size for reserved responses. */
+        int respQueueLimit;
 
         /**
          * Is this side blocked from accepting outbound packets?
          */
-        bool queueFull() { return (sendQueue.size() == queueLimit); }
+        bool respQueueFull();
+        bool reqQueueFull();
 
-        bool queueForSendTiming(PacketPtr pkt);
+        void queueForSendTiming(PacketPtr pkt);
 
         void finishSend(PacketBuffer *buf);
+
+        void nackRequest(PacketPtr pkt);
 
         /**
          * Handle send event, scheduled when the packet at the head of
@@ -136,11 +152,10 @@ class Bridge : public MemObject
         SendEvent sendEvent;
 
       public:
-
         /** Constructor for the BusPort.*/
-        BridgePort(const std::string &_name,
-                   Bridge *_bridge, BridgePort *_otherPort,
-                   int _delay, int _queueLimit);
+        BridgePort(const std::string &_name, Bridge *_bridge,
+                BridgePort *_otherPort, int _delay, int _nack_delay,
+                int _req_limit, int _resp_limit, bool fix_partial_write);
 
       protected:
 
@@ -176,13 +191,32 @@ class Bridge : public MemObject
     bool ackWrites;
 
   public:
+    struct Params
+    {
+        std::string name;
+        int req_size_a;
+        int req_size_b;
+        int resp_size_a;
+        int resp_size_b;
+        Tick delay;
+        Tick nack_delay;
+        bool write_ack;
+        bool fix_partial_write_a;
+        bool fix_partial_write_b;
+    };
+
+  protected:
+    Params *_params;
+
+  public:
+    const Params *params() const { return _params; }
 
     /** A function used to return the port associated with this bus object. */
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     virtual void init();
 
-    Bridge(const std::string &n, int qsa, int qsb, Tick _delay, int write_ack);
+    Bridge(Params *p);
 };
 
 #endif //__MEM_BUS_HH__

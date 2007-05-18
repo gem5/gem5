@@ -1,0 +1,22 @@
+#!/bin/sh
+SERVER=127.0.0.1
+CLIENT=127.0.0.1
+
+echo "setting up network..."
+ifconfig lo 127.0.0.1
+
+BINARY=/benchmarks/netperf-bin/netperf
+TEST="UDP_STREAM"
+SHORT_ARGS="-l 2 -- -m 4096"
+
+echo "running netserver..."
+/benchmarks/netperf-bin/netserver
+
+
+SHORT="$BINARY -H $SERVER -t $TEST $SHORT_ARGS"
+
+echo "starting test..."
+echo $SHORT
+eval $SHORT
+
+/sbin/m5 exit

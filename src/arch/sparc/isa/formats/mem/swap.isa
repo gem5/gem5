@@ -39,7 +39,7 @@ def template SwapExecute {{
             Addr EA;
             %(fp_enable_check)s;
             %(op_decl)s;
-            uint64_t mem_data;
+            uint64_t mem_data = 0;
 
             %(op_rd)s;
             %(ea_code)s;

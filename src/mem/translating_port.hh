@@ -35,16 +35,25 @@
 #include "mem/port.hh"
 
 class PageTable;
+class Process;
 
 class TranslatingPort : public FunctionalPort
 {
+  public:
+    enum AllocType {
+        Always,
+        Never,
+        NextPage
+    };
+
   private:
     PageTable *pTable;
-    bool allocating;
+    Process *process;
+    AllocType allocating;
 
   public:
     TranslatingPort(const std::string &_name,
-                    PageTable *p_table, bool alloc = false);
+                    Process *p, AllocType alloc);
     virtual ~TranslatingPort();
 
     bool tryReadBlob(Addr addr, uint8_t *p, int size);

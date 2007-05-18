@@ -68,6 +68,7 @@ Uart8250::IntrEvent::process()
        DPRINTF(Uart, "UART InterEvent, interrupting\n");
        uart->platform->postConsoleInt();
        uart->status |= intrBit;
+       uart->lastTxInt = curTick;
     }
     else
        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
@@ -100,14 +101,11 @@ Uart8250::IntrEvent::scheduleIntr()
 
 
 Uart8250::Uart8250(Params *p)
-    : Uart(p), txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
+    : Uart(p), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
+      txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
     pioSize = 8;
 
-    IER = 0;
-    DLAB = 0;
-    LCR = 0;
-    MCR = 0;
 }
 
 Tick
@@ -153,13 +151,13 @@ Uart8250::read(PacketPtr pkt)
 
             if (status & RX_INT) /* Rx data interrupt has a higher priority */
                 pkt->set(IIR_RXID);
-            else if (status & TX_INT)
+            else if (status & TX_INT) {
                 pkt->set(IIR_TXID);
-            else
+                //Tx interrupts are cleared on IIR reads
+                status &= ~TX_INT;
+            } else
                 pkt->set(IIR_NOPEND);
 
-            //Tx interrupts are cleared on IIR reads
-            status &= ~TX_INT;
             break;
         case 0x3: // Line Control Register (LCR)
             pkt->set(LCR);
@@ -222,7 +220,16 @@ Uart8250::write(PacketPtr pkt)
                 if (UART_IER_THRI & IER)
                 {
                     DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
-                    txIntrEvent.scheduleIntr();
+                    if (curTick - lastTxInt >
+                            (Tick)((Clock::Float::s / 2e9) * 450))  {
+                        DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
+                                curTick, lastTxInt);
+                        txIntrEvent.process();
+                    } else {
+                        DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
+                                curTick, lastTxInt);
+                        txIntrEvent.scheduleIntr();
+                    }
                 }
                 else
                 {

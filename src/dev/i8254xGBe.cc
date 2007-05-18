@@ -656,7 +656,7 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
         return false;
 
     pktPtr = packet;
-
+    pktDone = false;
     igbe->dmaWrite(igbe->platform->pciToDma(unusedCache.front()->buf),
             packet->length, &pktEvent, packet->data);
     return true;
@@ -683,8 +683,12 @@ IGbE::RxDescCache::pktComplete()
 
     uint8_t status = RXDS_DD | RXDS_EOP;
     uint8_t err = 0;
+
     IpPtr ip(pktPtr);
+
     if (ip) {
+        DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n", ip->id());
+
         if (igbe->regs.rxcsum.ipofld()) {
             DPRINTF(EthernetDesc, "Checking IP checksum\n");
             status |= RXDS_IPCS;
@@ -710,12 +714,15 @@ IGbE::RxDescCache::pktComplete()
             DPRINTF(EthernetDesc, "Checking UDP checksum\n");
             status |= RXDS_UDPCS;
             desc->csum = htole(cksum(udp));
-            if (cksum(tcp) != 0) {
+            if (cksum(udp) != 0) {
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
                 err |= RXDE_TCPE;
             }
         }
-    } // if ip
+    } else { // if ip
+        DPRINTF(EthernetSM, "Proccesing Non-Ip packet\n");
+    }
+
 
     desc->status = htole(status);
     desc->errors = htole(err);
@@ -727,12 +734,8 @@ IGbE::RxDescCache::pktComplete()
     if (igbe->regs.rdtr.delay()) {
         DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n",
                 igbe->regs.rdtr.delay() * igbe->intClock());
-        if (igbe->rdtrEvent.scheduled())
-            igbe->rdtrEvent.reschedule(curTick + igbe->regs.rdtr.delay() *
-                    igbe->intClock());
-        else
-            igbe->rdtrEvent.schedule(curTick + igbe->regs.rdtr.delay() *
-                    igbe->intClock());
+        igbe->rdtrEvent.reschedule(curTick + igbe->regs.rdtr.delay() *
+                    igbe->intClock(),true);
     }
 
     if (igbe->regs.radv.idv() && igbe->regs.rdtr.delay()) {
@@ -895,6 +898,7 @@ IGbE::TxDescCache::pktComplete()
         pktPtr = NULL;
 
         DPRINTF(EthernetDesc, "Partial Packet Descriptor Done\n");
+        enableSm();
         return;
     }
 
@@ -915,10 +919,20 @@ IGbE::TxDescCache::pktComplete()
 
     DPRINTF(EthernetDesc, "TxDescriptor data d1: %#llx d2: %#llx\n", desc->d1, desc->d2);
 
+    if (DTRACE(EthernetDesc)) {
+        IpPtr ip(pktPtr);
+        if (ip)
+            DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n",
+                    ip->id());
+        else
+            DPRINTF(EthernetSM, "Proccesing Non-Ip packet\n");
+    }
+
     // Checksums are only ofloaded for new descriptor types
     if (TxdOp::isData(desc) && ( TxdOp::ixsm(desc) || TxdOp::txsm(desc)) ) {
         DPRINTF(EthernetDesc, "Calculating checksums for packet\n");
         IpPtr ip(pktPtr);
+
         if (TxdOp::ixsm(desc)) {
             ip->sum(0);
             ip->sum(cksum(ip));
@@ -927,11 +941,13 @@ IGbE::TxDescCache::pktComplete()
        if (TxdOp::txsm(desc)) {
            if (isTcp) {
                 TcpPtr tcp(ip);
+                assert(tcp);
                 tcp->sum(0);
                 tcp->sum(cksum(tcp));
                 DPRINTF(EthernetDesc, "Calculated TCP checksum\n");
            } else {
                 UdpPtr udp(ip);
+                assert(udp);
                 udp->sum(0);
                 udp->sum(cksum(udp));
                 DPRINTF(EthernetDesc, "Calculated UDP checksum\n");
@@ -944,12 +960,8 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "Descriptor had IDE set\n");
         if (igbe->regs.tidv.idv()) {
             DPRINTF(EthernetDesc, "setting tidv\n");
-            if (igbe->tidvEvent.scheduled())
-                igbe->tidvEvent.reschedule(curTick + igbe->regs.tidv.idv() *
-                        igbe->intClock());
-            else
-                igbe->tidvEvent.schedule(curTick + igbe->regs.tidv.idv() *
-                        igbe->intClock());
+            igbe->tidvEvent.reschedule(curTick + igbe->regs.tidv.idv() *
+                        igbe->intClock(), true);
         }
 
         if (igbe->regs.tadv.idv() && igbe->regs.tidv.idv()) {
@@ -977,6 +989,7 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
+    enableSm();
     igbe->checkDrain();
 }
 
@@ -1028,7 +1041,7 @@ IGbE::TxDescCache::hasOutstandingEvents()
 void
 IGbE::restartClock()
 {
-    if (!tickEvent.scheduled() && (rxTick || txTick) && getState() ==
+    if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) && getState() ==
             SimObject::Running)
         tickEvent.schedule((curTick/cycles(1)) * cycles(1) + cycles(1));
 }
@@ -1156,6 +1169,8 @@ IGbE::txStateMachine()
 
         return;
     }
+    DPRINTF(EthernetSM, "TXS: Nothing to do, stopping ticking\n");
+    txTick = false;
 }
 
 bool
@@ -1194,6 +1209,7 @@ IGbE::rxStateMachine()
 
     // If the packet is done check for interrupts/descriptors/etc
     if (rxDescCache.packetDone()) {
+        rxDmaPacket = false;
         DPRINTF(EthernetSM, "RXS: Packet completed DMA to memory\n");
         int descLeft = rxDescCache.descLeft();
         switch (regs.rctl.rdmts()) {
@@ -1238,6 +1254,12 @@ IGbE::rxStateMachine()
         return;
     }
 
+    if (rxDmaPacket) {
+        DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
+        rxTick = false;
+        return;
+    }
+
     if (!rxDescCache.descUnused()) {
         DPRINTF(EthernetSM, "RXS: No descriptors available in cache, stopping ticking\n");
         rxTick = false;
@@ -1264,6 +1286,7 @@ IGbE::rxStateMachine()
     rxFifo.pop();
     DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
     rxTick = false;
+    rxDmaPacket = true;
 }
 
 void
@@ -1458,6 +1481,8 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(IGbE)
 
     SimObjectParam<System *> system;
     SimObjectParam<Platform *> platform;
+    Param<Tick> min_backoff_delay;
+    Param<Tick> max_backoff_delay;
     SimObjectParam<PciConfigData *> configdata;
     Param<uint32_t> pci_bus;
     Param<uint32_t> pci_dev;
@@ -1479,6 +1504,8 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(IGbE)
 
     INIT_PARAM(system, "System pointer"),
     INIT_PARAM(platform, "Platform pointer"),
+    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
+    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
     INIT_PARAM(configdata, "PCI Config data"),
     INIT_PARAM(pci_bus, "PCI bus ID"),
     INIT_PARAM(pci_dev, "PCI device number"),
@@ -1503,6 +1530,8 @@ CREATE_SIM_OBJECT(IGbE)
     params->name = getInstanceName();
     params->platform = platform;
     params->system = system;
+    params->min_backoff_delay = min_backoff_delay;
+    params->max_backoff_delay = max_backoff_delay;
     params->configData = configdata;
     params->busNum = pci_bus;
     params->deviceNum = pci_dev;

@@ -1,9 +1,6 @@
 [root]
 type=Root
-clock=1000000000000
-max_tick=0
-progress_interval=0
-output_file=cout
+dummy=0
 
 [system.physmem]
 type=PhysicalMemory
@@ -23,15 +20,16 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
+block_size=64
 
 [system.cpu.workload]
 type=LiveProcess
 cmd=twolf smred
-executable=/home/gblack/m5/dist/m5/cpu2000/binaries/alpha/tru64/twolf
+executable=/dist/m5/cpu2000/binaries/alpha/tru64/twolf
 input=cin
 output=cout
 env=
-cwd=build/ALPHA_SE/tests/fast/long/70.twolf/alpha/linux/o3-timing
+cwd=build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing
 system=system
 uid=100
 euid=100
@@ -170,9 +168,10 @@ FUList=system.cpu.fuPool.FUList0 system.cpu.fuPool.FUList1 system.cpu.fuPool.FUL
 
 [system.cpu]
 type=DerivO3CPU
-clock=1
+clock=500
 phase=0
 numThreads=1
+cpu_id=0
 activity=0
 workload=system.cpu.workload
 checker=null
@@ -251,9 +250,9 @@ type=BaseCache
 size=131072
 assoc=2
 block_size=64
-latency=1
+latency=1000
 mshrs=10
-tgts_per_mshr=5
+tgts_per_mshr=20
 write_buffers=8
 prioritizeRequests=false
 protocol=null
@@ -282,16 +281,15 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu.dcache]
 type=BaseCache
 size=262144
 assoc=2
 block_size=64
-latency=1
+latency=1000
 mshrs=10
-tgts_per_mshr=5
+tgts_per_mshr=20
 write_buffers=8
 prioritizeRequests=false
 protocol=null
@@ -320,14 +318,13 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu.l2cache]
 type=BaseCache
 size=2097152
 assoc=2
 block_size=64
-latency=1
+latency=1000
 mshrs=10
 tgts_per_mshr=5
 write_buffers=8
@@ -358,7 +355,6 @@ prefetch_policy=none
 prefetch_cache_check_push=true
 prefetch_use_cpu_id=true
 prefetch_data_accesses_only=false
-hit_latency=1
 
 [system.cpu.toL2Bus]
 type=Bus
@@ -366,4 +362,5 @@ bus_id=0
 clock=1000
 width=64
 responder_set=false
+block_size=64
 

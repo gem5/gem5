@@ -57,6 +57,7 @@ Source('circlebuf.cc')
 Source('cprintf.cc')
 Source('crc.cc')
 Source('fast_alloc.cc')
+Source('fenv.c')
 Source('fifo_buffer.cc')
 Source('hostinfo.cc')
 Source('hybrid_pred.cc')
@@ -97,3 +98,5 @@ Source('stats/visit.cc')
 if env['USE_MYSQL']:
     Source('mysql.cc')
     Source('stats/mysql.cc')
+
+PySource('m5', 'traceflags.py')

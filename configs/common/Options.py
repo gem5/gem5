@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
 parser.add_option("-n", "--num_cpus", type="int", default=1)
 parser.add_option("--caches", action="store_true")
+parser.add_option("--l2cache", action="store_true")
 
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int")

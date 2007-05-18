@@ -45,7 +45,6 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "mem/translating_port.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 
@@ -58,28 +57,6 @@ class GDBListener;
 namespace TheISA
 {
     class RemoteGDB;
-}
-
-//This needs to be templated for cases where 32 bit pointers are needed.
-template<class AddrType>
-void
-copyStringArray(std::vector<std::string> &strings,
-        AddrType array_ptr, AddrType data_ptr,
-        TranslatingPort* memPort)
-{
-    AddrType data_ptr_swap;
-    for (int i = 0; i < strings.size(); ++i) {
-        data_ptr_swap = htog(data_ptr);
-        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
-                sizeof(AddrType));
-        memPort->writeString(data_ptr, strings[i].c_str());
-        array_ptr += sizeof(AddrType);
-        data_ptr += strings[i].size() + 1;
-    }
-    // add NULL terminator
-    data_ptr = 0;
-
-    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
 }
 
 class Process : public SimObject
@@ -193,6 +170,10 @@ class Process : public SimObject
     int sim_fd(int tgt_fd);
 
     virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
+
+    // check if the this addr is on the next available page and allocate it
+    // if it's not we'll panic
+    bool checkAndAllocNextPage(Addr vaddr);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

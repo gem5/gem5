@@ -63,6 +63,9 @@ class EtherInt : public SimObject
     bool sendPacket(EthPacketPtr packet)
     { return peer ? peer->recvPacket(packet) : true; }
     virtual bool recvPacket(EthPacketPtr packet) = 0;
+
+    bool askBusy() {return peer->isBusy(); }
+    virtual bool isBusy() { return false; }
 };
 
 #endif // __DEV_ETHERINT_HH__

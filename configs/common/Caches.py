@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@ from m5.objects import *
 class L1Cache(BaseCache):
     assoc = 2
     block_size = 64
-    latency = 1
+    latency = '1ns'
     mshrs = 10
     tgts_per_mshr = 5
     protocol = CoherenceProtocol(protocol='moesi')
@@ -40,7 +40,7 @@ class L1Cache(BaseCache):
 class L2Cache(BaseCache):
     assoc = 8
     block_size = 64
-    latency = 10
+    latency = '10ns'
     mshrs = 20
     tgts_per_mshr = 12
 

@@ -51,7 +51,6 @@ parser.add_option("--kernel", action="store", type="string")
 parser.add_option("--script", action="store", type="string")
 
 # Benchmark options
-parser.add_option("--l2cache", action="store_true")
 parser.add_option("--dual", action="store_true",
                   help="Simulate two systems attached with an ethernet link")
 parser.add_option("-b", "--benchmark", action="store", type="string",

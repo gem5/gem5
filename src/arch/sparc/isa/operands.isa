@@ -52,6 +52,16 @@ output header {{
     {
         return (regNum & (~1)) | ((regNum & 1) << 5);
     }
+
+    static inline unsigned int dfprl(unsigned int regNum)
+    {
+        return dfpr(regNum) & (~0x1);
+    }
+
+    static inline unsigned int dfprh(unsigned int regNum)
+    {
+        return dfpr(regNum) | 0x1;
+    }
 }};
 
 def operands {{
@@ -79,21 +89,43 @@ def operands {{
     # differently, they get different operands. The single precision versions
     # have an s post pended to their name.
     'Frds':		('FloatReg', 'sf', 'RD', 'IsFloating', 10),
-    'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
+    #'Frd':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
+    'Frd_low':		('FloatReg', 'uw', 'dfprl(RD)', 'IsFloating', 10),
+    'Frd_high':		('FloatReg', 'uw', 'dfprh(RD)', 'IsFloating', 10),
     # Each Frd_N refers to the Nth double precision register from Frd.
     # Note that this adds twice N to the register number.
-    'Frd_0':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
-    'Frd_1':		('FloatReg', 'df', 'dfpr(RD) + 2', 'IsFloating', 10),
-    'Frd_2':		('FloatReg', 'df', 'dfpr(RD) + 4', 'IsFloating', 10),
-    'Frd_3':		('FloatReg', 'df', 'dfpr(RD) + 6', 'IsFloating', 10),
-    'Frd_4':		('FloatReg', 'df', 'dfpr(RD) + 8', 'IsFloating', 10),
-    'Frd_5':		('FloatReg', 'df', 'dfpr(RD) + 10', 'IsFloating', 10),
-    'Frd_6':		('FloatReg', 'df', 'dfpr(RD) + 12', 'IsFloating', 10),
-    'Frd_7':		('FloatReg', 'df', 'dfpr(RD) + 14', 'IsFloating', 10),
+    #'Frd_0':		('FloatReg', 'df', 'dfpr(RD)', 'IsFloating', 10),
+    'Frd_0_low':	('FloatReg', 'uw', 'dfprl(RD)', 'IsFloating', 10),
+    'Frd_0_high':	('FloatReg', 'uw', 'dfprh(RD)', 'IsFloating', 10),
+    #'Frd_1':		('FloatReg', 'df', 'dfpr(RD) + 2', 'IsFloating', 10),
+    'Frd_1_low':	('FloatReg', 'uw', 'dfprl(RD) + 2', 'IsFloating', 10),
+    'Frd_1_high':	('FloatReg', 'uw', 'dfprh(RD) + 2', 'IsFloating', 10),
+    #'Frd_2':		('FloatReg', 'df', 'dfpr(RD) + 4', 'IsFloating', 10),
+    'Frd_2_low':	('FloatReg', 'uw', 'dfprl(RD) + 4', 'IsFloating', 10),
+    'Frd_2_high':	('FloatReg', 'uw', 'dfprh(RD) + 4', 'IsFloating', 10),
+    #'Frd_3':		('FloatReg', 'df', 'dfpr(RD) + 6', 'IsFloating', 10),
+    'Frd_3_low':	('FloatReg', 'uw', 'dfprl(RD) + 6', 'IsFloating', 10),
+    'Frd_3_high':	('FloatReg', 'uw', 'dfprh(RD) + 6', 'IsFloating', 10),
+    #'Frd_4':		('FloatReg', 'df', 'dfpr(RD) + 8', 'IsFloating', 10),
+    'Frd_4_low':	('FloatReg', 'uw', 'dfprl(RD) + 8', 'IsFloating', 10),
+    'Frd_4_high':	('FloatReg', 'uw', 'dfprh(RD) + 8', 'IsFloating', 10),
+    #'Frd_5':		('FloatReg', 'df', 'dfpr(RD) + 10', 'IsFloating', 10),
+    'Frd_5_low':	('FloatReg', 'uw', 'dfprl(RD) + 10', 'IsFloating', 10),
+    'Frd_5_high':	('FloatReg', 'uw', 'dfprh(RD) + 10', 'IsFloating', 10),
+    #'Frd_6':		('FloatReg', 'df', 'dfpr(RD) + 12', 'IsFloating', 10),
+    'Frd_6_low':	('FloatReg', 'uw', 'dfprl(RD) + 12', 'IsFloating', 10),
+    'Frd_6_high':	('FloatReg', 'uw', 'dfprh(RD) + 12', 'IsFloating', 10),
+    #'Frd_7':		('FloatReg', 'df', 'dfpr(RD) + 14', 'IsFloating', 10),
+    'Frd_7_low':	('FloatReg', 'uw', 'dfprl(RD) + 14', 'IsFloating', 10),
+    'Frd_7_high':	('FloatReg', 'uw', 'dfprh(RD) + 14', 'IsFloating', 10),
     'Frs1s':		('FloatReg', 'sf', 'RS1', 'IsFloating', 11),
-    'Frs1':		('FloatReg', 'df', 'dfpr(RS1)', 'IsFloating', 11),
+    #'Frs1':		('FloatReg', 'df', 'dfpr(RS1)', 'IsFloating', 11),
+    'Frs1_low':		('FloatReg', 'uw', 'dfprl(RS1)', 'IsFloating', 11),
+    'Frs1_high':	('FloatReg', 'uw', 'dfprh(RS1)', 'IsFloating', 11),
     'Frs2s':		('FloatReg', 'sf', 'RS2', 'IsFloating', 12),
-    'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
+    #'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
+    'Frs2_low':		('FloatReg', 'uw', 'dfprl(RS2)', 'IsFloating', 12),
+    'Frs2_high':	('FloatReg', 'uw', 'dfprh(RS2)', 'IsFloating', 12),
     'NPC': 		('NPC', 'udw', None, ( None, None, 'IsControl' ), 31),
     'NNPC':		('NNPC', 'udw', None, (None, None, 'IsControl' ), 32),
     # Registers which are used explicitly in instructions

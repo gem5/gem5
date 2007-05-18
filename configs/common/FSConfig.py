@@ -61,7 +61,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
-    self.bridge = Bridge()
+    self.bridge = Bridge(fix_partial_write_b=True, delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
@@ -94,7 +94,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
-    self.bridge = Bridge()
+    self.bridge = Bridge(fix_partial_write_b=True, delay='50ns', nack_delay='4ns')
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
     self.t1000.attachIO(self.iobus)

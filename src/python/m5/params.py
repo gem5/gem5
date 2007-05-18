@@ -51,6 +51,7 @@ import sys
 import time
 
 import convert
+import proxy
 import ticks
 from util import *
 
@@ -347,7 +348,7 @@ class UdpPort(CheckedInt):  cxx_type = 'uint16_t'; size = 16; unsigned = True
 class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
 
 class Float(ParamValue, float):
-    pass
+    cxx_type = 'double'
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
@@ -477,12 +478,13 @@ def IncEthernetAddr(addr, val = 1):
     assert(bytes[0] <= 255)
     return ':'.join(map(lambda x: '%02x' % x, bytes))
 
-class NextEthernetAddr(object):
-    addr = "00:90:00:00:00:01"
+_NextEthernetAddr = "00:90:00:00:00:01"
+def NextEthernetAddr():
+    global _NextEthernetAddr
 
-    def __init__(self, inc = 1):
-        self.value = NextEthernetAddr.addr
-        NextEthernetAddr.addr = IncEthernetAddr(NextEthernetAddr.addr, inc)
+    value = _NextEthernetAddr
+    _NextEthernetAddr = IncEthernetAddr(_NextEthernetAddr, 1)
+    return value
 
 class EthernetAddr(ParamValue):
     cxx_type = 'Net::EthAddr'
@@ -508,17 +510,11 @@ class EthernetAddr(ParamValue):
 
     def unproxy(self, base):
         if self.value == NextEthernetAddr:
-            self.addr = self.value().value
+            return EthernetAddr(self.value())
         return self
 
-    def __str__(self):
-        if self.value == NextEthernetAddr:
-            if hasattr(self, 'addr'):
-                return self.addr
-            else:
-                return "NextEthernetAddr (unresolved)"
-        else:
-            return self.value
+    def ini_str(self):
+        return self.value
 
 time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
                  "%a %b %d %H:%M:%S %Z %Y",
@@ -1028,6 +1024,5 @@ __all__ = ['Param', 'VectorParam',
 
 # see comment on imports at end of __init__.py.
 from SimObject import isSimObject, isSimObjectSequence, isSimObjectClass
-import proxy
 import objects
 import internal

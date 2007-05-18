@@ -128,6 +128,7 @@ SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
         }
         i++;
     }
+    assert(done);
 }
 
 void

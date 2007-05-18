@@ -1146,11 +1146,11 @@ template<class TagStore, class Coherence>
 Port *
 Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "")
+    if (if_name == "" || if_name == "cpu_side")
     {
         if (cpuSidePort == NULL) {
             cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
-            sendEvent = new CacheEvent(cpuSidePort, true);
+            sendEvent = new ResponseEvent(cpuSidePort);
         }
         return cpuSidePort;
     }
@@ -1158,20 +1158,12 @@ Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
     {
         return new CpuSidePort(name() + "-cpu_side_funcport", this);
     }
-    else if (if_name == "cpu_side")
-    {
-        if (cpuSidePort == NULL) {
-            cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
-            sendEvent = new CacheEvent(cpuSidePort, true);
-        }
-        return cpuSidePort;
-    }
     else if (if_name == "mem_side")
     {
         if (memSidePort != NULL)
             panic("Already have a mem side for this cache\n");
         memSidePort = new MemSidePort(name() + "-mem_side_port", this);
-        memSendEvent = new CacheEvent(memSidePort, true);
+        memSendEvent = new ResponseEvent(memSidePort);
         return memSidePort;
     }
     else panic("Port name %s unrecognized\n", if_name);
@@ -1192,6 +1184,8 @@ template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
+    assert(pkt->result != Packet::Nacked);
+
     if (!pkt->req->isUncacheable()
         && pkt->isInvalidate()
         && !pkt->isRead() && !pkt->isWrite()) {
@@ -1249,6 +1243,12 @@ template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
 {
+    // this needs to be fixed so that the cache updates the mshr and sends the
+    // packet back out on the link, but it probably won't happen so until this
+    // gets fixed, just panic when it does
+    if (pkt->result == Packet::Nacked)
+        panic("Need to implement cache resending nacked packets!\n");
+
     if (pkt->isRequest() && blocked)
     {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
@@ -1282,9 +1282,9 @@ template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    if (checkFunctional(pkt)) {
-        myCache()->probe(pkt, false, cache->cpuSidePort);
-    }
+    myCache()->probe(pkt, false, cache->cpuSidePort);
+    if (pkt->result != Packet::Success)
+        checkFunctional(pkt);
 }
 
 

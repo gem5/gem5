@@ -221,10 +221,10 @@ SimpleThread::activate(int delay)
 
     lastActivate = curTick;
 
-    if (status() == ThreadContext::Unallocated) {
-        cpu->activateWhenReady(tid);
-        return;
-    }
+//    if (status() == ThreadContext::Unallocated) {
+//	cpu->activateWhenReady(tid);
+//	return;
+//   }
 
     _status = ThreadContext::Active;
 

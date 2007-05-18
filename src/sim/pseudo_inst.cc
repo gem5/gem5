@@ -87,10 +87,7 @@ namespace PseudoInst
 
         Tick resume = curTick + Clock::Int::ns * ns;
 
-        if (quiesceEvent->scheduled())
-            quiesceEvent->reschedule(resume);
-        else
-            quiesceEvent->schedule(resume);
+        quiesceEvent->reschedule(resume, true);
 
         DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
                 tc->getCpuPtr()->name(), ns, resume);
@@ -110,10 +107,7 @@ namespace PseudoInst
 
         Tick resume = curTick + tc->getCpuPtr()->cycles(cycles);
 
-        if (quiesceEvent->scheduled())
-            quiesceEvent->reschedule(resume);
-        else
-            quiesceEvent->schedule(resume);
+        quiesceEvent->reschedule(resume, true);
 
         DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
                 tc->getCpuPtr()->name(), cycles, resume);

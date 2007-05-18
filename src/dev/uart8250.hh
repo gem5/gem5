@@ -74,6 +74,7 @@ class Uart8250 : public Uart
 
   protected:
     uint8_t IER, DLAB, LCR, MCR;
+    Tick lastTxInt;
 
     class IntrEvent : public Event
     {

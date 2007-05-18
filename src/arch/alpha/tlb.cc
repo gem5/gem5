@@ -213,7 +213,7 @@ TLB::flushAddr(Addr addr, uint8_t asn)
     if (i == lookupTable.end())
         return;
 
-    while (i->first == vaddr.vpn()) {
+    while (i != lookupTable.end() && i->first == vaddr.vpn()) {
         int index = i->second;
         PTE *pte = &table[index];
         assert(pte->valid);
@@ -225,10 +225,10 @@ TLB::flushAddr(Addr addr, uint8_t asn)
             // invalidate this entry
             pte->valid = false;
 
-            lookupTable.erase(i);
+            lookupTable.erase(i++);
+        } else {
+            ++i;
         }
-
-        ++i;
     }
 }
 

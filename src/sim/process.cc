@@ -47,6 +47,7 @@
 #include "mem/translating_port.hh"
 #include "sim/builder.hh"
 #include "sim/process.hh"
+#include "sim/process_impl.hh"
 #include "sim/stats.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
@@ -182,7 +183,8 @@ Process::startup()
 
     Port *mem_port;
     mem_port = system->physmem->getPort("functional");
-    initVirtMem = new TranslatingPort("process init port", pTable, true);
+    initVirtMem = new TranslatingPort("process init port", this,
+            TranslatingPort::Always);
     mem_port->setPeer(initVirtMem);
     initVirtMem->setPeer(mem_port);
 }
@@ -248,6 +250,29 @@ Process::sim_fd(int tgt_fd)
         return -1;
 
     return fd_map[tgt_fd];
+}
+
+bool
+Process::checkAndAllocNextPage(Addr vaddr)
+{
+    // if this is an initial write we might not have
+    if (vaddr >= stack_min && vaddr < stack_base) {
+        pTable->allocate(roundDown(vaddr, VMPageSize), VMPageSize);
+        return true;
+    }
+
+    // We've accessed the next page of the stack, so extend the stack
+    // to cover it.
+    if(vaddr < stack_min && vaddr >= stack_min - TheISA::PageBytes)
+    {
+        stack_min -= TheISA::PageBytes;
+        if(stack_base - stack_min > 8*1024*1024)
+            fatal("Over max stack size for one thread\n");
+        pTable->allocate(stack_min, TheISA::PageBytes);
+        warn("Increasing stack size by one page.");
+        return true;
+    }
+    return false;
 }
 
 void

@@ -33,6 +33,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 from glob import glob
 from os import system
@@ -42,9 +43,10 @@ def mkdir(*args):
     path = joinpath(*args)
     os.mkdir(path)
 
-def touch(*args):
+def touch(*args, **kwargs):
+    when = kwargs.get('when', None)
     path = joinpath(*args)
-    os.utime(path, None)
+    os.utime(path, when)
 
 def rmtree(*args):
     path = joinpath(*args)
@@ -110,8 +112,17 @@ mkdir(encumbered_dir)
 
 system('bk export -tplain -w -r+ %s' % release_dir)
 
+
+# move the time forward on some files by a couple of minutes so we can
+# avoid building things unnecessarily
+when = int(time.time()) + 120
+
 # make sure scons doesn't try to run flex unnecessarily
-touch(release_dir, 'src/encumbered/eio/exolex.cc')
+touch(release_dir, 'src/encumbered/eio/exolex.cc', when=(when, when))
+
+# make sure libelf doesn't try to rebuild the de.msg file since it
+# might fail on non linux machines
+touch(release_dir, 'ext/libelf/po/de.msg', when=(when, when))
 
 # get rid of non-shipping code
 rmtree(release_dir, 'src/encumbered/dev')
@@ -133,30 +144,23 @@ rmtree(release_dir, 'src/dev/i8*')
 remove(release_dir, 'util/chgcopyright')
 remove(release_dir, 'util/make_release.py')
 
+def remove_sources(regex, subdir):
+    script = joinpath(release_dir, subdir, 'SConscript')
+    if isinstance(regex, str):
+        regex = re.compile(regex)
+    inscript = file(script, 'r').readlines()
+    outscript = file(script, 'w')
+    for line in inscript:
+        if regex.match(line):
+            continue
+
+        outscript.write(line)
+    outscript.close()
+
 # fix up the SConscript to deal with files we've removed
-mem_expr = re.compile('.*mem/cache/(tags/split|prefetch/(ghb|stride)).*')
-inscript = file(joinpath(release_dir, 'src', 'SConscript'), 'r').readlines()
-outscript = file(joinpath(release_dir, 'src', 'SConscript'), 'w')
-for line in inscript:
-    if mem_expr.match(line):
-        continue
-
-    outscript.write(line)
-outscript.close()
-
-# fix up the SConscript to deal with files we've removed
-mem_expr = re.compile('.*i8254xGBe.*')
-inscript = file(joinpath(release_dir, 'src', 'dev', 'SConscript'), 'r').readlines()
-outscript = file(joinpath(release_dir, 'src', 'dev', 'SConscript'), 'w')
-for line in inscript:
-    if mem_expr.match(line):
-        continue
-
-    outscript.write(line)
-outscript.close()
-
-
-
+remove_sources(r'.*split.*\.cc', 'src/mem/cache/tags')
+remove_sources(r'.*(ghb|stride)_prefetcher\.cc', 'src/mem/cache/prefetch')
+remove_sources(r'.*i8254xGBe.*', 'src/dev')
 
 benches = [ 'bzip2', 'eon', 'gzip', 'mcf', 'parser', 'perlbmk',
             'twolf', 'vortex' ]

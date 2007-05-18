@@ -134,7 +134,6 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<bool> prefetch_cache_check_push;
     Param<bool> prefetch_use_cpu_id;
     Param<bool> prefetch_data_accesses_only;
-    Param<int> hit_latency;
 
 END_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
 
@@ -190,8 +189,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(prefetch_policy, "Type of prefetcher to use", "none"),
     INIT_PARAM_DFLT(prefetch_cache_check_push, "Check if in cash on push or pop of prefetch queue", true),
     INIT_PARAM_DFLT(prefetch_use_cpu_id, "Use the CPU ID to seperate calculations of prefetches", true),
-    INIT_PARAM_DFLT(prefetch_data_accesses_only, "Only prefetch on data not on instruction accesses", false),
-    INIT_PARAM_DFLT(hit_latency, "Hit Latecny for a succesful access", 1)
+    INIT_PARAM_DFLT(prefetch_data_accesses_only, "Only prefetch on data not on instruction accesses", false)
 END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 
@@ -211,7 +209,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
             BUILD_NULL_PREFETCHER(TAGS);                                \
         }                                                               \
         Cache<TAGS, c>::Params params(tags, mq, coh, base_params,       \
-                                      pf, prefetch_access, hit_latency, \
+                                      pf, prefetch_access, latency, \
                                       true,                             \
                                       store_compressed,                 \
                                       adaptive_compression,             \

@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,9 @@ Benchmarks = {
 
     'NetperfStream':	[SysConfig('netperf-stream-client.rcS'),
                          SysConfig('netperf-server.rcS')],
+    'NetperfStreamUdp':	[SysConfig('netperf-stream-udp-client.rcS'),
+                         SysConfig('netperf-server.rcS')],
+    'NetperfUdpLocal':	[SysConfig('netperf-stream-udp-local.rcS')],
     'NetperfStreamNT':	[SysConfig('netperf-stream-nt-client.rcS'),
                          SysConfig('netperf-server.rcS')],
     'NetperfMaerts':	[SysConfig('netperf-maerts-client.rcS'),

@@ -117,13 +117,20 @@ class BaseCache : public MemObject
         std::list<std::pair<Tick,PacketPtr> > transmitList;
     };
 
-    struct CacheEvent : public Event
+    struct RequestEvent : public Event
     {
         CachePort *cachePort;
-        PacketPtr pkt;
-        bool newResponse;
 
-        CacheEvent(CachePort *_cachePort, bool response);
+        RequestEvent(CachePort *_cachePort, Tick when);
+        void process();
+        const char *description();
+    };
+
+    struct ResponseEvent : public Event
+    {
+        CachePort *cachePort;
+
+        ResponseEvent(CachePort *_cachePort);
         void process();
         const char *description();
     };
@@ -132,8 +139,8 @@ class BaseCache : public MemObject
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 
-    CacheEvent *sendEvent;
-    CacheEvent *memSendEvent;
+    ResponseEvent *sendEvent;
+    ResponseEvent *memSendEvent;
 
   private:
     void recvStatusChange(Port::Status status, bool isCpuSide)
@@ -432,9 +439,7 @@ class BaseCache : public MemObject
     {
         if (!doMasterRequest() && !memSidePort->waitingOnRetry)
         {
-            BaseCache::CacheEvent * reqCpu =
-                new BaseCache::CacheEvent(memSidePort, false);
-            reqCpu->schedule(time);
+            new RequestEvent(memSidePort, time);
         }
         uint8_t flag = 1<<cause;
         masterRequests |= flag;
@@ -469,9 +474,7 @@ class BaseCache : public MemObject
     {
         if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
         {
-            BaseCache::CacheEvent * reqCpu =
-                new BaseCache::CacheEvent(cpuSidePort, false);
-            reqCpu->schedule(time);
+            new RequestEvent(cpuSidePort, time);
         }
         uint8_t flag = 1<<cause;
         slaveRequests |= flag;

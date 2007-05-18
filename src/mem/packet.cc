@@ -85,7 +85,7 @@ MemCmd::commandInfo[] =
     { SET5(IsWrite, IsInvalidate, IsRequest, HasData, NeedsResponse),
             WriteInvalidateResp, "WriteInvalidateReq" },
     /* WriteInvalidateResp */
-    { SET5(IsWrite, IsInvalidate, IsRequest, NeedsResponse, IsResponse),
+    { SET3(IsWrite, IsInvalidate, IsResponse),
             InvalidCmd, "WriteInvalidateResp" },
     /* UpgradeReq */
     { SET3(IsInvalidate, IsRequest, IsUpgrade), InvalidCmd, "UpgradeReq" },

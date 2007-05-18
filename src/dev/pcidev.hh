@@ -105,7 +105,7 @@ class PciDev : public DmaDevice
     };
 
   public:
-    struct Params : public PioDevice::Params
+    struct Params : public DmaDevice::Params
     {
         /**
          * A pointer to the object that contains the first 64 bytes of

@@ -5,8 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 25 2007 15:05:30
-M5 started Thu Jan 25 15:06:16 2007
-M5 executing on zeep
-command line: /n/zeep/y/binkertn/build/rtc/build/ALPHA_FS/m5.opt -d /n/zeep/y/binkertn/build/rtc/build/ALPHA_FS/tests/opt/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
-Exiting @ tick 3718314928 because m5_exit instruction encountered
+M5 compiled May 15 2007 19:06:05
+M5 started Tue May 15 19:06:07 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 1870335097000 because m5_exit instruction encountered

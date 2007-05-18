@@ -680,7 +680,6 @@ LSQUnit<Impl>::writebackStores()
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
                 wb->schedule(curTick + 1);
-                delete state;
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;

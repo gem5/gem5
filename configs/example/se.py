@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -104,7 +104,14 @@ for i in xrange(np):
     if options.caches:
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
-    system.cpu[i].connectMemPorts(system.membus)
+    if options.l2cache:
+        system.l2 = L2Cache(size='2MB')
+        system.tol2bus = Bus()
+        system.l2.cpu_side = system.tol2bus.port
+        system.l2.mem_side = system.membus.port
+        system.cpu[i].connectMemPorts(system.tol2bus)
+    else:
+        system.cpu[i].connectMemPorts(system.membus)
     system.cpu[i].workload = process
 
 root = Root(system = system)

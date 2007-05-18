@@ -107,6 +107,14 @@ class DmaPort : public Port
      * here.*/
     Event *drainEvent;
 
+    /** time to wait between sending another packet, increases as NACKs are
+     * recived, decreases as responses are recived. */
+    Tick backoffTime;
+
+    /** If the port is currently waiting for a retry before it can send whatever
+     * it is that it's sending. */
+    bool inRetry;
+
     virtual bool recvTiming(PacketPtr pkt);
     virtual Tick recvAtomic(PacketPtr pkt)
     { panic("dma port shouldn't be used for pio access."); M5_DUMMY_RETURN }
@@ -122,7 +130,11 @@ class DmaPort : public Port
                                         AddrRangeList &snoop)
     { resp.clear(); snoop.clear(); }
 
-    void sendDma(PacketPtr pkt, bool front = false);
+    void queueDma(PacketPtr pkt, bool front = false);
+    void sendDma();
+
+    /** event to give us a kick every time we backoff time is reached. */
+    EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
 
   public:
     DmaPort(DmaDevice *dev, System *s);
@@ -249,8 +261,17 @@ class BasicPioDevice : public PioDevice
 
 class DmaDevice : public PioDevice
 {
-  protected:
+  public:
+    struct Params :  public PioDevice::Params
+    {
+        Tick min_backoff_delay;
+        Tick max_backoff_delay;
+    };
+
+   protected:
     DmaPort *dmaPort;
+    Tick minBackoffDelay;
+    Tick maxBackoffDelay;
 
   public:
     DmaDevice(Params *p);
