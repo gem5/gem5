@@ -75,7 +75,6 @@
 #include "mem/cache/miss/blocking_buffer.hh"
 
 // Coherence Templates
-#include "mem/cache/coherence/uni_coherence.hh"
 #include "mem/cache/coherence/simple_coherence.hh"
 
 //Prefetcher Headers
@@ -302,13 +301,8 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
     } while (0)
 
 #define BUILD_COHERENCE(b) do {						\
-        if (protocol == NULL) {						\
-            UniCoherence *coh = new UniCoherence();			\
-            BUILD_CACHES(UniCoherence);				\
-        } else {							\
-            SimpleCoherence *coh = new SimpleCoherence(protocol);	\
-            BUILD_CACHES(SimpleCoherence);				\
-        }								\
+        SimpleCoherence *coh = new SimpleCoherence(protocol);           \
+        BUILD_CACHES(SimpleCoherence);                                  \
     } while (0)
 
 #if defined(USE_TAGGED)

@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -83,7 +85,10 @@ class BaseCache : public MemObject
         BaseCache *cache;
 
       protected:
-        CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
+        Event *responseEvent;
+
+        CachePort(const std::string &_name, BaseCache *_cache);
+
         virtual void recvStatusChange(Status status);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
@@ -91,9 +96,11 @@ class BaseCache : public MemObject
 
         virtual int deviceBlockSize();
 
-        virtual void recvRetry();
+        bool recvRetryCommon();
 
       public:
+        void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
+
         void setBlocked();
 
         void clearBlocked();
@@ -104,65 +111,52 @@ class BaseCache : public MemObject
 
         bool canDrain() { return drainList.empty() && transmitList.empty(); }
 
+        bool drainResponse();
+
+        CachePort *otherPort;
+
         bool blocked;
 
         bool mustSendRetry;
 
-        bool isCpuSide;
-
         bool waitingOnRetry;
+
+        /**
+         * Bit vector for the outstanding requests for the master interface.
+         */
+        uint8_t requestCauses;
 
         std::list<PacketPtr> drainList;
 
         std::list<std::pair<Tick,PacketPtr> > transmitList;
-    };
 
-    struct RequestEvent : public Event
-    {
-        CachePort *cachePort;
+        bool isBusRequested() { return requestCauses != 0; }
 
-        RequestEvent(CachePort *_cachePort, Tick when);
-        void process();
-        const char *description();
-    };
+        // These need to be virtual since the Event objects depend on
+        // cache template parameters.
+        virtual void scheduleRequestEvent(Tick t) = 0;
 
-    struct ResponseEvent : public Event
-    {
-        CachePort *cachePort;
+        void requestBus(RequestCause cause, Tick time)
+        {
+            if (!isBusRequested() && !waitingOnRetry) {
+                scheduleRequestEvent(time);
+            }
+            requestCauses |= (1 << cause);
+        }
 
-        ResponseEvent(CachePort *_cachePort);
-        void process();
-        const char *description();
+        void deassertBusRequest(RequestCause cause)
+        {
+            requestCauses &= ~(1 << cause);
+        }
+
+        void respond(PacketPtr pkt, Tick time);
     };
 
   public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 
-    ResponseEvent *sendEvent;
-    ResponseEvent *memSendEvent;
-
   private:
-    void recvStatusChange(Port::Status status, bool isCpuSide)
-    {
-        if (status == Port::RangeChange){
-            if (!isCpuSide) {
-                cpuSidePort->sendStatusChange(Port::RangeChange);
-            }
-            else {
-                memSidePort->sendStatusChange(Port::RangeChange);
-            }
-        }
-    }
-
-    virtual PacketPtr getPacket() = 0;
-
-    virtual PacketPtr getCoherencePacket() = 0;
-
-    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
-
-    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
-
     /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause
@@ -174,16 +168,6 @@ class BaseCache : public MemObject
      * @sa #BlockedCause
      */
     uint8_t blockedSnoop;
-
-    /**
-     * Bit vector for the outstanding requests for the master interface.
-     */
-    uint8_t masterRequests;
-
-    /**
-     * Bit vector for the outstanding requests for the slave interface.
-     */
-    uint8_t slaveRequests;
 
   protected:
 
@@ -309,20 +293,10 @@ class BaseCache : public MemObject
      * of this cache.
      * @param params The parameter object for this BaseCache.
      */
-    BaseCache(const std::string &name, Params &params)
-        : MemObject(name), blocked(0), blockedSnoop(0), masterRequests(0),
-          slaveRequests(0), blkSize(params.blkSize),
-          missCount(params.maxMisses), drainEvent(NULL)
-    {
-        //Start ports at null if more than one is created we should panic
-        cpuSidePort = NULL;
-        memSidePort = NULL;
-    }
+    BaseCache(const std::string &name, Params &params);
 
     ~BaseCache()
     {
-        delete sendEvent;
-        delete memSendEvent;
     }
 
     virtual void init();
@@ -422,12 +396,12 @@ class BaseCache : public MemObject
     }
 
     /**
-     * True if the master bus should be requested.
+     * True if the memory-side bus should be requested.
      * @return True if there are outstanding requests for the master bus.
      */
-    bool doMasterRequest()
+    bool isMemSideBusRequested()
     {
-        return masterRequests != 0;
+        return memSidePort->isBusRequested();
     }
 
     /**
@@ -435,59 +409,18 @@ class BaseCache : public MemObject
      * @param cause The reason for the request.
      * @param time The time to make the request.
      */
-    void setMasterRequest(RequestCause cause, Tick time)
+    void requestMemSideBus(RequestCause cause, Tick time)
     {
-        if (!doMasterRequest() && !memSidePort->waitingOnRetry)
-        {
-            new RequestEvent(memSidePort, time);
-        }
-        uint8_t flag = 1<<cause;
-        masterRequests |= flag;
+        memSidePort->requestBus(cause, time);
     }
 
     /**
      * Clear the master bus request for the given cause.
      * @param cause The request reason to clear.
      */
-    void clearMasterRequest(RequestCause cause)
+    void deassertMemSideBusRequest(RequestCause cause)
     {
-        uint8_t flag = 1<<cause;
-        masterRequests &= ~flag;
-        checkDrain();
-    }
-
-    /**
-     * Return true if the slave bus should be requested.
-     * @return True if there are outstanding requests for the slave bus.
-     */
-    bool doSlaveRequest()
-    {
-        return slaveRequests != 0;
-    }
-
-    /**
-     * Request the slave bus for the given reason and time.
-     * @param cause The reason for the request.
-     * @param time The time to make the request.
-     */
-    void setSlaveRequest(RequestCause cause, Tick time)
-    {
-        if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
-        {
-            new RequestEvent(cpuSidePort, time);
-        }
-        uint8_t flag = 1<<cause;
-        slaveRequests |= flag;
-    }
-
-    /**
-     * Clear the slave bus request for the given reason.
-     * @param cause The request reason to clear.
-     */
-    void clearSlaveRequest(RequestCause cause)
-    {
-        uint8_t flag = 1<<cause;
-        slaveRequests &= ~flag;
+        memSidePort->deassertBusRequest(cause);
         checkDrain();
     }
 
@@ -498,111 +431,7 @@ class BaseCache : public MemObject
      */
     void respond(PacketPtr pkt, Tick time)
     {
-        assert(time >= curTick);
-        if (pkt->needsResponse()) {
-/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-            reqCpu->schedule(time);
-*/
-            if (cpuSidePort->transmitList.empty()) {
-                assert(!sendEvent->scheduled());
-                sendEvent->schedule(time);
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-
-            // something is on the list and this belongs at the end
-            if (time >= cpuSidePort->transmitList.back().first) {
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-            // Something is on the list and this belongs somewhere else
-            std::list<std::pair<Tick,PacketPtr> >::iterator i =
-                cpuSidePort->transmitList.begin();
-            std::list<std::pair<Tick,PacketPtr> >::iterator end =
-                cpuSidePort->transmitList.end();
-            bool done = false;
-
-            while (i != end && !done) {
-                if (time < i->first) {
-                    if (i == cpuSidePort->transmitList.begin()) {
-                        //Inserting at begining, reschedule
-                        sendEvent->reschedule(time);
-                    }
-                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
-                                                     (time,pkt));
-                    done = true;
-                }
-                i++;
-            }
-        }
-        else {
-            if (pkt->cmd != MemCmd::UpgradeReq)
-            {
-                delete pkt->req;
-                delete pkt;
-            }
-        }
-    }
-
-    /**
-     * Send a reponse to the slave interface and calculate miss latency.
-     * @param pkt The request to respond to.
-     * @param time The time the response is ready.
-     */
-    void respondToMiss(PacketPtr pkt, Tick time)
-    {
-        assert(time >= curTick);
-        if (!pkt->req->isUncacheable()) {
-            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                time - pkt->time;
-        }
-        if (pkt->needsResponse()) {
-/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-            reqCpu->schedule(time);
-*/
-            if (cpuSidePort->transmitList.empty()) {
-                assert(!sendEvent->scheduled());
-                sendEvent->schedule(time);
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-
-            // something is on the list and this belongs at the end
-            if (time >= cpuSidePort->transmitList.back().first) {
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-            // Something is on the list and this belongs somewhere else
-            std::list<std::pair<Tick,PacketPtr> >::iterator i =
-                cpuSidePort->transmitList.begin();
-            std::list<std::pair<Tick,PacketPtr> >::iterator end =
-                cpuSidePort->transmitList.end();
-            bool done = false;
-
-            while (i != end && !done) {
-                if (time < i->first) {
-                    if (i == cpuSidePort->transmitList.begin()) {
-                        //Inserting at begining, reschedule
-                        sendEvent->reschedule(time);
-                    }
-                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
-                                                     (time,pkt));
-                    done = true;
-                }
-                i++;
-            }
-        }
-        else {
-            if (pkt->cmd != MemCmd::UpgradeReq)
-            {
-                delete pkt->req;
-                delete pkt;
-            }
-        }
+        cpuSidePort->respond(pkt, time);
     }
 
     /**
@@ -611,65 +440,7 @@ class BaseCache : public MemObject
      */
     void respondToSnoop(PacketPtr pkt, Tick time)
     {
-        assert(time >= curTick);
-        assert (pkt->needsResponse());
-/*        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
-        reqMem->schedule(time);
-*/
-        if (memSidePort->transmitList.empty()) {
-            assert(!memSendEvent->scheduled());
-            memSendEvent->schedule(time);
-            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                (time,pkt));
-            return;
-        }
-
-        // something is on the list and this belongs at the end
-        if (time >= memSidePort->transmitList.back().first) {
-            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                (time,pkt));
-            return;
-        }
-        // Something is on the list and this belongs somewhere else
-        std::list<std::pair<Tick,PacketPtr> >::iterator i =
-            memSidePort->transmitList.begin();
-        std::list<std::pair<Tick,PacketPtr> >::iterator end =
-            memSidePort->transmitList.end();
-        bool done = false;
-
-        while (i != end && !done) {
-            if (time < i->first) {
-                if (i == memSidePort->transmitList.begin()) {
-                    //Inserting at begining, reschedule
-                    memSendEvent->reschedule(time);
-                }
-                memSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
-                done = true;
-            }
-            i++;
-        }
-    }
-
-    /**
-     * Notification from master interface that a address range changed. Nothing
-     * to do for a cache.
-     */
-    void rangeChange() {}
-
-    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop, bool isCpuSide)
-    {
-        if (isCpuSide)
-        {
-            AddrRangeList dummy;
-            memSidePort->getPeerAddressRanges(resp, dummy);
-        }
-        else
-        {
-            //This is where snoops get updated
-            AddrRangeList dummy;
-            cpuSidePort->getPeerAddressRanges(dummy, snoop);
-            return;
-        }
+        memSidePort->respond(pkt, time);
     }
 
     virtual unsigned int drain(Event *de);
@@ -686,7 +457,7 @@ class BaseCache : public MemObject
 
     bool canDrain()
     {
-        if (doMasterRequest() || doSlaveRequest()) {
+        if (isMemSideBusRequested()) {
             return false;
         } else if (memSidePort && !memSidePort->canDrain()) {
             return false;

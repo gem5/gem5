@@ -64,7 +64,7 @@ BlockingBuffer::handleMiss(PacketPtr &pkt, int blk_size, Tick time)
         std::memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), blk_size);
 
         cache->setBlocked(Blocked_NoWBBuffers);
-        cache->setMasterRequest(Request_WB, time);
+        cache->requestMemSideBus(Request_WB, time);
         return;
     }
 
@@ -77,7 +77,7 @@ BlockingBuffer::handleMiss(PacketPtr &pkt, int blk_size, Tick time)
         miss.pkt->flags |= CACHE_LINE_FILL;
     }
     cache->setBlocked(Blocked_NoMSHRs);
-    cache->setMasterRequest(Request_MSHR, time);
+    cache->requestMemSideBus(Request_MSHR, time);
 }
 
 PacketPtr
@@ -111,7 +111,7 @@ BlockingBuffer::markInService(PacketPtr &pkt, MSHR* mshr)
         // Forwarding a write/ writeback, don't need to change
         // the command
         assert(mshr == &wb);
-        cache->clearMasterRequest(Request_WB);
+        cache->deassertMemSideBusRequest(Request_WB);
         if (!pkt->needsResponse()) {
             assert(wb.getNumTargets() == 0);
             wb.deallocate();
@@ -121,7 +121,7 @@ BlockingBuffer::markInService(PacketPtr &pkt, MSHR* mshr)
         }
     } else {
         assert(mshr == &miss);
-        cache->clearMasterRequest(Request_MSHR);
+        cache->deassertMemSideBusRequest(Request_MSHR);
         if (!pkt->needsResponse()) {
             assert(miss.getNumTargets() == 0);
             miss.deallocate();
@@ -178,7 +178,7 @@ BlockingBuffer::squash(int threadNum)
         if (!miss.inService) {
             miss.deallocate();
             cache->clearBlocked(Blocked_NoMSHRs);
-            cache->clearMasterRequest(Request_MSHR);
+            cache->deassertMemSideBusRequest(Request_MSHR);
         }
     }
 }
@@ -203,7 +203,7 @@ BlockingBuffer::doWriteback(Addr addr,
     writebacks[0/*pkt->req->getThreadNum()*/]++;
 
     wb.allocateAsBuffer(pkt);
-    cache->setMasterRequest(Request_WB, curTick);
+    cache->requestMemSideBus(Request_WB, curTick);
     cache->setBlocked(Blocked_NoWBBuffers);
 }
 
@@ -221,7 +221,7 @@ BlockingBuffer::doWriteback(PacketPtr &pkt)
     std::memcpy(wb.pkt->getPtr<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
     cache->setBlocked(Blocked_NoWBBuffers);
-    cache->setMasterRequest(Request_WB, curTick);
+    cache->requestMemSideBus(Request_WB, curTick);
 }
 
 

@@ -28,6 +28,7 @@
  * Authors: Erik Hallnor
  *          Dave Greene
  *          Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -45,6 +46,8 @@
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/miss/miss_buffer.hh"
+
+#include "sim/eventq.hh"
 
 //Forward decleration
 class MSHR;
@@ -83,11 +86,26 @@ class Cache : public BaseCache
             return static_cast<Cache<TagStore,Coherence> *>(cache);
         }
 
+        void processRequestEvent();
+        void processResponseEvent();
+
         virtual bool recvTiming(PacketPtr pkt);
+
+        virtual void recvRetry();
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void recvFunctional(PacketPtr pkt);
+
+        typedef EventWrapper<CpuSidePort, &CpuSidePort::processResponseEvent>
+                ResponseEvent;
+
+        typedef EventWrapper<CpuSidePort, &CpuSidePort::processRequestEvent>
+                RequestEvent;
+
+        virtual void scheduleRequestEvent(Tick t) {
+            new RequestEvent(this, t);
+        }
     };
 
     class MemSidePort : public CachePort
@@ -103,11 +121,26 @@ class Cache : public BaseCache
             return static_cast<Cache<TagStore,Coherence> *>(cache);
         }
 
+        void processRequestEvent();
+        void processResponseEvent();
+
         virtual bool recvTiming(PacketPtr pkt);
+
+        virtual void recvRetry();
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void recvFunctional(PacketPtr pkt);
+
+        typedef EventWrapper<MemSidePort, &MemSidePort::processResponseEvent>
+                ResponseEvent;
+
+        typedef EventWrapper<MemSidePort, &MemSidePort::processRequestEvent>
+                RequestEvent;
+
+        virtual void scheduleRequestEvent(Tick t) {
+            new RequestEvent(this, t);
+        }
     };
 
     /** Tag and data Storage */
@@ -339,8 +372,6 @@ class Cache : public BaseCache
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     virtual void deletePortRefs(Port *p);
 
-    virtual void recvStatusChange(Port::Status status, bool isCpuSide);
-
     void regStats();
 
     /**
@@ -354,33 +385,20 @@ class Cache : public BaseCache
      * Selects a request to send on the bus.
      * @return The memory request to service.
      */
-    virtual PacketPtr getPacket();
+    PacketPtr getPacket();
 
     /**
      * Was the request was sent successfully?
      * @param pkt The request.
      * @param success True if the request was sent successfully.
      */
-    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success);
-
-    /**
-     * Was the CSHR request was sent successfully?
-     * @param pkt The request.
-     * @param success True if the request was sent successfully.
-     */
-    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* cshr, bool success);
+    void sendResult(PacketPtr &pkt, MSHR* mshr, bool success);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The request being responded to.
      */
     void handleResponse(PacketPtr &pkt);
-
-    /**
-     * Selects a coherence message to forward to lower levels of the hierarchy.
-     * @return The coherence message to forward.
-     */
-    virtual PacketPtr getCoherencePacket();
 
     /**
      * Snoops bus transactions to maintain coherence.

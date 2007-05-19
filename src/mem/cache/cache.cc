@@ -61,7 +61,6 @@
 #include "mem/cache/miss/miss_queue.hh"
 #include "mem/cache/miss/blocking_buffer.hh"
 
-#include "mem/cache/coherence/uni_coherence.hh"
 #include "mem/cache/coherence/simple_coherence.hh"
 
 #include "mem/cache/cache_impl.hh"
@@ -72,27 +71,22 @@
 
 #if defined(USE_CACHE_FALRU)
 template class Cache<FALRU, SimpleCoherence>;
-template class Cache<FALRU, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_IIC)
 template class Cache<IIC, SimpleCoherence>;
-template class Cache<IIC, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_LRU)
 template class Cache<LRU, SimpleCoherence>;
-template class Cache<LRU, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT)
 template class Cache<Split, SimpleCoherence>;
-template class Cache<Split, UniCoherence>;
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
 template class Cache<SplitLIFO, SimpleCoherence>;
-template class Cache<SplitLIFO, UniCoherence>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

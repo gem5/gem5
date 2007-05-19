@@ -112,10 +112,6 @@ Bridge::BridgePort::reqQueueFull()
 bool
 Bridge::BridgePort::recvTiming(PacketPtr pkt)
 {
-    if (!(pkt->flags & SNOOP_COMMIT))
-        return true;
-
-
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
                 pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
@@ -252,8 +248,6 @@ Bridge::BridgePort::trySend()
     assert(buf->ready <= curTick);
 
     PacketPtr pkt = buf->pkt;
-
-    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
 
     // Ugly! @todo When multilevel coherence works this will be removed
     if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&

@@ -348,7 +348,7 @@ MissQueue::allocateMiss(PacketPtr &pkt, int size, Tick time)
     }
     if (pkt->cmd != MemCmd::HardPFReq) {
         //If we need to request the bus (not on HW prefetch), do so
-        cache->setMasterRequest(Request_MSHR, time);
+        cache->requestMemSideBus(Request_MSHR, time);
     }
     return mshr;
 }
@@ -376,7 +376,7 @@ MissQueue::allocateWrite(PacketPtr &pkt, int size, Tick time)
         cache->setBlocked(Blocked_NoWBBuffers);
     }
 
-    cache->setMasterRequest(Request_WB, time);
+    cache->requestMemSideBus(Request_WB, time);
 
     return mshr;
 }
@@ -450,7 +450,7 @@ MissQueue::fetchBlock(Addr addr, int blk_size, Tick time,
     if (mq.isFull()) {
         cache->setBlocked(Blocked_NoMSHRs);
     }
-    cache->setMasterRequest(Request_MSHR, time);
+    cache->requestMemSideBus(Request_MSHR, time);
     return mshr;
 }
 
@@ -534,7 +534,7 @@ MissQueue::markInService(PacketPtr &pkt, MSHR* mshr)
         unblock = wb.isFull();
         wb.markInService(mshr);
         if (!wb.havePending()){
-            cache->clearMasterRequest(Request_WB);
+            cache->deassertMemSideBusRequest(Request_WB);
         }
         if (unblock) {
             // Do we really unblock?
@@ -545,7 +545,7 @@ MissQueue::markInService(PacketPtr &pkt, MSHR* mshr)
         unblock = mq.isFull();
         mq.markInService(mshr);
         if (!mq.havePending()){
-            cache->clearMasterRequest(Request_MSHR);
+            cache->deassertMemSideBusRequest(Request_MSHR);
         }
         if (mshr->originalCmd == MemCmd::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
@@ -553,7 +553,7 @@ MissQueue::markInService(PacketPtr &pkt, MSHR* mshr)
             //Also clear pending if need be
             if (!prefetcher->havePending())
             {
-                cache->clearMasterRequest(Request_PF);
+                cache->deassertMemSideBusRequest(Request_PF);
             }
         }
         if (unblock) {
@@ -602,7 +602,7 @@ MissQueue::handleResponse(PacketPtr &pkt, Tick time)
             mshr->pkt->req = mshr->getTarget()->req;
             mq.markPending(mshr, cmd);
             mshr->order = order++;
-            cache->setMasterRequest(Request_MSHR, time);
+            cache->requestMemSideBus(Request_MSHR, time);
         }
         else {
             unblock = mq.isFull();
@@ -683,7 +683,7 @@ MissQueue::squash(int threadNum)
     }
     mq.squash(threadNum);
     if (!mq.havePending()) {
-        cache->clearMasterRequest(Request_MSHR);
+        cache->deassertMemSideBusRequest(Request_MSHR);
     }
     if (unblock && !mq.isFull()) {
         cache->clearBlocked(cause);
