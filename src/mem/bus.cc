@@ -182,8 +182,10 @@ Bus::recvTiming(PacketPtr pkt)
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
-    if (tickNextIdle > curTick ||
-            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
+    if (!(pkt->flags & EXPRESS_SNOOP) &&
+        tickNextIdle > curTick ||
+        (retryList.size() && (!inRetry || pktPort != retryList.front())))
+    {
         addToRetryList(pktPort);
         DPRINTF(Bus, "recvTiming: Bus is busy, returning false\n");
         return false;
@@ -195,31 +197,18 @@ Bus::recvTiming(PacketPtr pkt)
     // access has been handled twice.
     if (dest == Packet::Broadcast) {
         port = findPort(pkt->getAddr(), pkt->getSrc());
-        pkt->flags &= ~SNOOP_COMMIT;
-        if (timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()])) {
-            bool success;
+        timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
-            pkt->flags |= SNOOP_COMMIT;
-            success = timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
-            assert(success);
-
-            if (pkt->flags & SATISFIED) {
-                //Cache-Cache transfer occuring
-                if (inRetry) {
-                    retryList.front()->onRetryList(false);
-                    retryList.pop_front();
-                    inRetry = false;
-                }
-                occupyBus(pkt);
-                DPRINTF(Bus, "recvTiming: Packet sucessfully sent\n");
-                return true;
+        if (pkt->flags & SATISFIED) {
+            //Cache-Cache transfer occuring
+            if (inRetry) {
+                retryList.front()->onRetryList(false);
+                retryList.pop_front();
+                inRetry = false;
             }
-        } else {
-            //Snoop didn't succeed
-            DPRINTF(Bus, "Adding1 a retry to RETRY list %d\n",
-                    pktPort->getId());
-            addToRetryList(pktPort);
-            return false;
+            occupyBus(pkt);
+            DPRINTF(Bus, "recvTiming: Packet sucessfully sent\n");
+            return true;
         }
     } else {
         assert(dest >= 0 && dest < maxId);
@@ -426,7 +415,6 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    pkt->flags |= SNOOP_COMMIT;
 
     // Assume one bus cycle in order to get through.  This may have
     // some clock skew issues yet again...
@@ -451,7 +439,6 @@ Bus::recvFunctional(PacketPtr pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    pkt->flags |= SNOOP_COMMIT;
 
     Port* port = findPort(pkt->getAddr(), pkt->getSrc());
     functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);

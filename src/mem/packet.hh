@@ -61,8 +61,8 @@ typedef std::list<PacketPtr> PacketList;
 #define CACHE_LINE_FILL (1 << 3)
 #define COMPRESSED      (1 << 4)
 #define NO_ALLOCATE     (1 << 5)
-#define SNOOP_COMMIT    (1 << 6)
 
+#define EXPRESS_SNOOP   (1 << 7)
 
 class MemCmd
 {

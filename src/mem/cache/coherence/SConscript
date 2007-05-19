@@ -31,5 +31,4 @@
 Import('*')
 
 Source('coherence_protocol.cc')
-Source('uni_coherence.cc')
 

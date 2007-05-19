@@ -28,6 +28,8 @@
  * Authors: Erik Hallnor
  *          Dave Greene
  *          Nathan Binkert
+ *          Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -57,18 +59,8 @@
 bool SIGNAL_NACK_HACK;
 
 template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::
-recvStatusChange(Port::Status status, bool isCpuSide)
-{
-
-}
-
-
-template<class TagStore, class Coherence>
-Cache<TagStore,Coherence>::
-Cache(const std::string &_name,
-      Cache<TagStore,Coherence>::Params &params)
+Cache<TagStore,Coherence>::Cache(const std::string &_name,
+                                 Cache<TagStore,Coherence>::Params &params)
     : BaseCache(_name, params.baseParams),
       prefetchAccess(params.prefetchAccess),
       tags(params.tags), missQueue(params.missQueue),
@@ -84,6 +76,11 @@ Cache(const std::string &_name,
       adaptiveCompression(params.adaptiveCompression),
       writebackCompressed(params.writebackCompressed)
 {
+    cpuSidePort = new CpuSidePort(_name + "-cpu_side_port", this);
+    memSidePort = new MemSidePort(_name + "-mem_side_port", this);
+    cpuSidePort->setOtherPort(memSidePort);
+    memSidePort->setOtherPort(cpuSidePort);
+
     tags->setCache(this);
     missQueue->setCache(this);
     missQueue->setPrefetcher(prefetcher);
@@ -406,7 +403,11 @@ Cache<TagStore,Coherence>::handleFill(BlkType *blk, MSHR * mshr,
 //            mshr->pkt = pkt;
             break;
         }
-        respondToMiss(target, completion_time);
+        if (!target->req->isUncacheable()) {
+            missLatency[target->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                completion_time - target->time;
+        }
+        respond(target, completion_time);
         mshr->popTarget();
     }
 
@@ -688,7 +689,7 @@ Cache<TagStore,Coherence>::getPacket()
         }
     }
 
-    assert(!doMasterRequest() || missQueue->havePending());
+    assert(!isMemSideBusRequested() || missQueue->havePending());
     assert(!pkt || pkt->time <= curTick);
     SIGNAL_NACK_HACK = false;
     return pkt;
@@ -727,7 +728,6 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
         pkt->flags &= ~NACKED_LINE;
         SIGNAL_NACK_HACK = false;
         pkt->flags &= ~SATISFIED;
-        pkt->flags &= ~SNOOP_COMMIT;
 
 //Rmove copy from mshr
         delete mshr->pkt;
@@ -781,22 +781,6 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
         }
         missQueue->handleResponse(pkt, curTick + hitLatency);
     }
-}
-
-template<class TagStore, class Coherence>
-PacketPtr
-Cache<TagStore,Coherence>::getCoherencePacket()
-{
-    return coherence->getPacket();
-}
-
-template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::sendCoherenceResult(PacketPtr &pkt,
-                                                         MSHR *cshr,
-                                                         bool success)
-{
-    coherence->sendResult(pkt, cshr, success);
 }
 
 
@@ -1146,27 +1130,15 @@ template<class TagStore, class Coherence>
 Port *
 Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "" || if_name == "cpu_side")
-    {
-        if (cpuSidePort == NULL) {
-            cpuSidePort = new CpuSidePort(name() + "-cpu_side_port", this);
-            sendEvent = new ResponseEvent(cpuSidePort);
-        }
+    if (if_name == "" || if_name == "cpu_side") {
         return cpuSidePort;
-    }
-    else if (if_name == "functional")
-    {
-        return new CpuSidePort(name() + "-cpu_side_funcport", this);
-    }
-    else if (if_name == "mem_side")
-    {
-        if (memSidePort != NULL)
-            panic("Already have a mem side for this cache\n");
-        memSidePort = new MemSidePort(name() + "-mem_side_port", this);
-        memSendEvent = new ResponseEvent(memSidePort);
+    } else if (if_name == "mem_side") {
         return memSidePort;
+    } else if (if_name == "functional") {
+        return new CpuSidePort(name() + "-cpu_side_funcport", this);
+    } else {
+        panic("Port name %s unrecognized\n", if_name);
     }
-    else panic("Port name %s unrecognized\n", if_name);
 }
 
 template<class TagStore, class Coherence>
@@ -1213,6 +1185,68 @@ Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
     return true;
 }
 
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::CpuSidePort::recvRetry()
+{
+    recvRetryCommon();
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::CpuSidePort::processRequestEvent()
+{
+    if (waitingOnRetry)
+        return;
+    //We have some responses to drain first
+    if (!drainList.empty()) {
+        if (!drainResponse()) {
+            // more responses to drain... re-request bus
+            scheduleRequestEvent(curTick + 1);
+        }
+    }
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::CpuSidePort::processResponseEvent()
+{
+    assert(transmitList.size());
+    assert(transmitList.front().first <= curTick);
+    PacketPtr pkt = transmitList.front().second;
+    transmitList.pop_front();
+    if (!transmitList.empty()) {
+        Tick time = transmitList.front().first;
+        responseEvent->schedule(time <= curTick ? curTick+1 : time);
+    }
+
+    if (pkt->flags & NACKED_LINE)
+        pkt->result = Packet::Nacked;
+    else
+        pkt->result = Packet::Success;
+    pkt->makeTimingResponse();
+    DPRINTF(CachePort, "%s attempting to send a response\n", name());
+    if (!drainList.empty() || waitingOnRetry) {
+        //Already have a list, just append
+        drainList.push_back(pkt);
+        DPRINTF(CachePort, "%s appending response onto drain list\n", name());
+    }
+    else if (!sendTiming(pkt)) {
+        //It failed, save it to list of drain events
+        DPRINTF(CachePort, "%s now waiting for a retry\n", name());
+        drainList.push_back(pkt);
+        waitingOnRetry = true;
+    }
+
+    // Check if we're done draining once this list is empty
+    if (drainList.empty() && transmitList.empty())
+        myCache()->checkDrain();
+}
+
+
 template<class TagStore, class Coherence>
 Tick
 Cache<TagStore,Coherence>::CpuSidePort::recvAtomic(PacketPtr pkt)
@@ -1249,22 +1283,148 @@ Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
     if (pkt->result == Packet::Nacked)
         panic("Need to implement cache resending nacked packets!\n");
 
-    if (pkt->isRequest() && blocked)
-    {
+    if (pkt->isRequest() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
     }
 
-    if (pkt->isResponse())
+    if (pkt->isResponse()) {
         myCache()->handleResponse(pkt);
-    else {
-        //Check if we should do the snoop
-        if (pkt->flags & SNOOP_COMMIT)
-            myCache()->snoop(pkt);
+    } else {
+        myCache()->snoop(pkt);
     }
     return true;
 }
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::MemSidePort::recvRetry()
+{
+    if (recvRetryCommon()) {
+        return;
+    }
+
+    DPRINTF(CachePort, "%s attempting to send a retry for MSHR\n", name());
+    if (!cache->isMemSideBusRequested()) {
+        //This can happen if I am the owner of a block and see an upgrade
+        //while the block was in my WB Buffers.  I just remove the
+        //wb and de-assert the masterRequest
+        waitingOnRetry = false;
+        return;
+    }
+    PacketPtr pkt = myCache()->getPacket();
+    MSHR* mshr = (MSHR*) pkt->senderState;
+    //Copy the packet, it may be modified/destroyed elsewhere
+    PacketPtr copyPkt = new Packet(*pkt);
+    copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+    mshr->pkt = copyPkt;
+
+    bool success = sendTiming(pkt);
+    DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+            pkt->getAddr(), success ? "succesful" : "unsuccesful");
+
+    waitingOnRetry = !success;
+    if (waitingOnRetry) {
+        DPRINTF(CachePort, "%s now waiting on a retry\n", name());
+    }
+
+    myCache()->sendResult(pkt, mshr, success);
+
+    if (success && cache->isMemSideBusRequested())
+    {
+        DPRINTF(CachePort, "%s has more requests\n", name());
+        //Still more to issue, rerequest in 1 cycle
+        new RequestEvent(this, curTick + 1);
+    }
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::MemSidePort::processRequestEvent()
+{
+    if (waitingOnRetry)
+        return;
+    //We have some responses to drain first
+    if (!drainList.empty()) {
+        if (!drainResponse()) {
+            // more responses to drain... re-request bus
+            scheduleRequestEvent(curTick + 1);
+        }
+        return;
+    }
+
+    DPRINTF(CachePort, "%s trying to send a MSHR request\n", name());
+    if (!isBusRequested()) {
+        //This can happen if I am the owner of a block and see an upgrade
+        //while the block was in my WB Buffers.  I just remove the
+        //wb and de-assert the masterRequest
+        return;
+    }
+
+    PacketPtr pkt = myCache()->getPacket();
+    MSHR* mshr = (MSHR*) pkt->senderState;
+    //Copy the packet, it may be modified/destroyed elsewhere
+    PacketPtr copyPkt = new Packet(*pkt);
+    copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
+    mshr->pkt = copyPkt;
+
+    bool success = sendTiming(pkt);
+    DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+            pkt->getAddr(), success ? "succesful" : "unsuccesful");
+
+    waitingOnRetry = !success;
+    if (waitingOnRetry) {
+        DPRINTF(CachePort, "%s now waiting on a retry\n", name());
+    }
+
+    myCache()->sendResult(pkt, mshr, success);
+    if (success && isBusRequested())
+    {
+        DPRINTF(CachePort, "%s still more MSHR requests to send\n", name());
+        //Still more to issue, rerequest in 1 cycle
+        scheduleRequestEvent(curTick+1);
+    }
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::MemSidePort::processResponseEvent()
+{
+    assert(transmitList.size());
+    assert(transmitList.front().first <= curTick);
+    PacketPtr pkt = transmitList.front().second;
+    transmitList.pop_front();
+    if (!transmitList.empty()) {
+        Tick time = transmitList.front().first;
+        responseEvent->schedule(time <= curTick ? curTick+1 : time);
+    }
+
+    if (pkt->flags & NACKED_LINE)
+        pkt->result = Packet::Nacked;
+    else
+        pkt->result = Packet::Success;
+    pkt->makeTimingResponse();
+    DPRINTF(CachePort, "%s attempting to send a response\n", name());
+    if (!drainList.empty() || waitingOnRetry) {
+        //Already have a list, just append
+        drainList.push_back(pkt);
+        DPRINTF(CachePort, "%s appending response onto drain list\n", name());
+    }
+    else if (!sendTiming(pkt)) {
+        //It failed, save it to list of drain events
+        DPRINTF(CachePort, "%s now waiting for a retry\n", name());
+        drainList.push_back(pkt);
+        waitingOnRetry = true;
+    }
+
+    // Check if we're done draining once this list is empty
+    if (drainList.empty() && transmitList.empty())
+        myCache()->checkDrain();
+}
+
 
 template<class TagStore, class Coherence>
 Tick
@@ -1292,15 +1452,17 @@ template<class TagStore, class Coherence>
 Cache<TagStore,Coherence>::
 CpuSidePort::CpuSidePort(const std::string &_name,
                          Cache<TagStore,Coherence> *_cache)
-    : BaseCache::CachePort(_name, _cache, true)
+    : BaseCache::CachePort(_name, _cache)
 {
+    responseEvent = new ResponseEvent(this);
 }
 
 template<class TagStore, class Coherence>
 Cache<TagStore,Coherence>::
 MemSidePort::MemSidePort(const std::string &_name,
                          Cache<TagStore,Coherence> *_cache)
-    : BaseCache::CachePort(_name, _cache, false)
+    : BaseCache::CachePort(_name, _cache)
 {
+    responseEvent = new ResponseEvent(this);
 }
 

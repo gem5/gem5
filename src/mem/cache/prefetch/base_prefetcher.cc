@@ -141,7 +141,7 @@ BasePrefetcher::getPacket()
             keepTrying = cache->inCache(pkt->getAddr());
         }
         if (pf.empty()) {
-            cache->clearMasterRequest(Request_PF);
+            cache->deassertMemSideBusRequest(Request_PF);
             if (keepTrying) return NULL; //None left, all were in cache
         }
     } while (keepTrying);
@@ -165,7 +165,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             pfRemovedMSHR++;
             pf.erase(iter);
             if (pf.empty())
-                cache->clearMasterRequest(Request_PF);
+                cache->deassertMemSideBusRequest(Request_PF);
         }
 
         //Remove anything in queue with delay older than time
@@ -182,7 +182,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
                 iter--;
             }
             if (pf.empty())
-                cache->clearMasterRequest(Request_PF);
+                cache->deassertMemSideBusRequest(Request_PF);
         }
 
 
@@ -244,7 +244,7 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             prefetch->flags |= CACHE_LINE_FILL;
 
             //Make sure to request the bus, with proper delay
-            cache->setMasterRequest(Request_PF, prefetch->time);
+            cache->requestMemSideBus(Request_PF, prefetch->time);
 
             //Increment through the list
             addr++;
