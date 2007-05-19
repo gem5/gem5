@@ -336,6 +336,13 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 Port *
 PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
+    // Accept request for "functional" port for backwards compatibility
+    // with places where this function is called from C++.  I'd prefer
+    // to move all these into Python someday.
+    if (if_name == "functional") {
+        return new MemoryPort(csprintf("%s-functional", name()), this);
+    }
+
     if (if_name != "port") {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
