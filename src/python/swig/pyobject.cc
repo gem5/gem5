@@ -62,6 +62,7 @@ lookupPort(SimObject *so, const std::string &name, int i)
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
+ * The indices i1 & i2 will be -1 for regular ports, >= 0 for vector ports.
  */
 int
 connectPorts(SimObject *o1, const std::string &name1, int i1,

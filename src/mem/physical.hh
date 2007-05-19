@@ -141,9 +141,10 @@ class PhysicalMemory : public MemObject
     }
 
     uint8_t *pmemAddr;
-    MemoryPort *port;
     int pagePtr;
     Tick lat;
+    std::vector<MemoryPort*> ports;
+    typedef std::vector<MemoryPort*>::iterator PortIterator;
 
   public:
     Addr new_page();
