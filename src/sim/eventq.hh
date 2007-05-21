@@ -293,13 +293,25 @@ class EventWrapper : public Event
     T *object;
 
   public:
-    EventWrapper(T *obj, bool del = false, EventQueue *q = &mainEventQueue,
+    EventWrapper(T *obj, bool del = false,
+                 EventQueue *q = &mainEventQueue,
                  Priority p = Default_Pri)
         : Event(q, p), object(obj)
     {
         if (del)
             setFlags(AutoDelete);
     }
+
+    EventWrapper(T *obj, Tick t, bool del = false,
+                 EventQueue *q = &mainEventQueue,
+                 Priority p = Default_Pri)
+        : Event(q, p), object(obj)
+    {
+        if (del)
+            setFlags(AutoDelete);
+        schedule(t);
+    }
+
     void process() { (object->*F)(); }
 };
 
