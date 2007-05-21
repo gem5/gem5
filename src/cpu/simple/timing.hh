@@ -66,8 +66,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Event *drainEvent;
 
-    Event *fetchEvent;
-
   private:
 
     class CpuPort : public Port
@@ -199,7 +197,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeIfetch(PacketPtr );
     void completeDataAccess(PacketPtr );
     void advanceInst(Fault fault);
+
   private:
+
+    typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
+    FetchEvent *fetchEvent;
+
     void completeDrain();
 };
 

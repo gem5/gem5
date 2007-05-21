@@ -1270,8 +1270,7 @@ NSGigE::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, true);
-    intrEvent->schedule(intrTick);
+    intrEvent = new IntrEvent(this, intrTick, true);
 }
 
 void
@@ -2770,8 +2769,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, true);
-        intrEvent->schedule(intrEventTick);
+        intrEvent = new IntrEvent(this, intrEventTick, true);
     }
 }
 

@@ -168,9 +168,7 @@ TimingSimpleCPU::resume()
             delete fetchEvent;
         }
 
-        fetchEvent =
-            new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
-        fetchEvent->schedule(nextCycle());
+        fetchEvent = new FetchEvent(this, nextCycle());
     }
 
     changeState(SimObject::Running);
@@ -224,9 +222,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    fetchEvent =
-        new EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch>(this, false);
-    fetchEvent->schedule(nextCycle(curTick + cycles(delay)));
+    fetchEvent = new FetchEvent(this, nextCycle(curTick + cycles(delay)));
 }
 
 
