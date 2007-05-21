@@ -76,6 +76,10 @@ PhysicalMemory::PhysicalMemory(Params *p)
 void
 PhysicalMemory::init()
 {
+    if (ports.size() == 0) {
+        fatal("PhysicalMemory object %s is unconnected!", name());
+    }
+
     for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
         if (*pi)
             (*pi)->sendStatusChange(Port::RangeChange);
