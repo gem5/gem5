@@ -161,12 +161,6 @@ class SimpleCoherence
     bool allowFastWrites() { return false; }
 
     bool hasProtocol() { return true; }
-
-    bool propogateInvalidate(PacketPtr pkt, bool isTiming)
-    {
-        //For now we do nothing, asssumes simple coherence is top level of cache
-        return false;
-    }
 };
 
 #endif //__SIMPLE_COHERENCE_HH__

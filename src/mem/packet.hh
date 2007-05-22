@@ -73,11 +73,11 @@ class MemCmd
     {
         InvalidCmd,
         ReadReq,
-        WriteReq,
-        WriteReqNoAck,
         ReadResp,
+        WriteReq,
         WriteResp,
         Writeback,
+        WritebackAck,
         SoftPFReq,
         HardPFReq,
         SoftPFResp,

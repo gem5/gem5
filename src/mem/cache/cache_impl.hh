@@ -794,14 +794,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
         return;
     }
 
-    //Send a timing (true) invalidate up if the protocol calls for it
-    if (coherence->propogateInvalidate(pkt, true)) {
-        //Temp hack, we had a functional read hit in the L1, mark as success
-        pkt->flags |= SATISFIED;
-        pkt->result = Packet::Success;
-        respondToSnoop(pkt, curTick + hitLatency);
-        return;
-    }
+    ///// PROPAGATE SNOOP UPWARD HERE
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt->getAddr());
@@ -1097,13 +1090,7 @@ template<class TagStore, class Coherence>
 Tick
 Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
 {
-    //Send a atomic (false) invalidate up if the protocol calls for it
-    if (coherence->propogateInvalidate(pkt, false)) {
-        //Temp hack, we had a functional read hit in the L1, mark as success
-        pkt->flags |= SATISFIED;
-        pkt->result = Packet::Success;
-        return hitLatency;
-    }
+    ///// PROPAGATE SNOOP UPWARD HERE
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     BlkType *blk = tags->findBlock(pkt->getAddr());

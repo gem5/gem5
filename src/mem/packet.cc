@@ -56,17 +56,18 @@ MemCmd::commandInfo[] =
     { 0, InvalidCmd, "InvalidCmd" },
     /* ReadReq */
     { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
+    /* ReadResp */
+    { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
     /* WriteReq */
     { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
             WriteResp, "WriteReq" },
-    /* WriteReqNoAck */
-    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "WriteReqNoAck" },
-    /* ReadResp */
-    { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
     /* WriteResp */
     { SET2(IsWrite, IsResponse), InvalidCmd, "WriteResp" },
     /* Writeback */
-    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "Writeback" },
+    { SET4(IsWrite, IsRequest, HasData, NeedsResponse),
+            WritebackAck, "Writeback" },
+    /* WritebackAck */
+    { SET2(IsWrite, IsResponse), InvalidCmd, "WritebackAck" },
     /* SoftPFReq */
     { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
             SoftPFResp, "SoftPFReq" },

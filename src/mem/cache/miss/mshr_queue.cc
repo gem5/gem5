@@ -119,7 +119,6 @@ MSHRQueue::allocate(PacketPtr &pkt, int size)
     if (!pkt->needsResponse()) {
         mshr->allocateAsBuffer(pkt);
     } else {
-        assert(size !=0);
         mshr->allocate(pkt->cmd, aligned_addr, size, pkt);
         allocatedTargets += 1;
     }
