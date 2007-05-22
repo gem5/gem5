@@ -59,8 +59,7 @@ BaseCache::CachePort::recvStatusChange(Port::Status status)
 }
 
 void
-BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp,
-                                       AddrRangeList &snoop)
+BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     cache->getAddressRanges(resp, snoop, isCpuSide);
 }

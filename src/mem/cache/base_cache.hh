@@ -87,7 +87,7 @@ class BaseCache : public MemObject
         virtual void recvStatusChange(Status status);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop);
+                                            bool &snoop);
 
         virtual int deviceBlockSize();
 
@@ -656,19 +656,18 @@ class BaseCache : public MemObject
      */
     void rangeChange() {}
 
-    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop, bool isCpuSide)
+    void getAddressRanges(AddrRangeList &resp, bool &snoop, bool isCpuSide)
     {
         if (isCpuSide)
         {
-            AddrRangeList dummy;
+            bool dummy;
             memSidePort->getPeerAddressRanges(resp, dummy);
         }
         else
         {
             //This is where snoops get updated
             AddrRangeList dummy;
-            cpuSidePort->getPeerAddressRanges(dummy, snoop);
-            return;
+            snoop = true;
         }
     }
 

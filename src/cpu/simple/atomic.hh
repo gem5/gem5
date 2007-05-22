@@ -104,8 +104,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
         virtual void recvRetry();
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,0)); }
+            bool &snoop)
+        { resp.clear(); snoop = true; }
 
     };
     CpuPort icachePort;
