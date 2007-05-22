@@ -57,20 +57,12 @@ BaseCache::BaseCache(const std::string &name, Params &params)
 }
 
 
-
 void
 BaseCache::CachePort::recvStatusChange(Port::Status status)
 {
     if (status == Port::RangeChange) {
         otherPort->sendStatusChange(Port::RangeChange);
     }
-}
-
-void
-BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
-{
-    AddrRangeList dummy;
-    otherPort->getPeerAddressRanges(resp, dummy);
 }
 
 int

@@ -89,6 +89,9 @@ class Cache : public BaseCache
         void processRequestEvent();
         void processResponseEvent();
 
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            bool &snoop);
+
         virtual bool recvTiming(PacketPtr pkt);
 
         virtual void recvRetry();
@@ -123,6 +126,9 @@ class Cache : public BaseCache
 
         void processRequestEvent();
         void processResponseEvent();
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            bool &snoop);
 
         virtual bool recvTiming(PacketPtr pkt);
 

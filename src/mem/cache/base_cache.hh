@@ -91,9 +91,6 @@ class BaseCache : public MemObject
 
         virtual void recvStatusChange(Status status);
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
-
         virtual int deviceBlockSize();
 
         bool recvRetryCommon();

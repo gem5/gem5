@@ -1140,6 +1140,18 @@ Cache<TagStore,Coherence>::deletePortRefs(Port *p)
 
 
 template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::CpuSidePort::
+getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+{
+    // CPU side port doesn't snoop; it's a target only.
+    bool dummy;
+    otherPort->getPeerAddressRanges(resp, dummy);
+    snoop = false;
+}
+
+
+template<class TagStore, class Coherence>
 bool
 Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
@@ -1257,6 +1269,18 @@ Cache<TagStore,Coherence>::CpuSidePort::recvFunctional(PacketPtr pkt)
         //TEMP ALWAYS SUCCESFUL FOR NOW
         pkt->result = Packet::Success;
     }
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::MemSidePort::
+getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+{
+    // Memory-side port always snoops.
+    bool dummy;
+    otherPort->getPeerAddressRanges(resp, dummy);
+    snoop = true;
 }
 
 
