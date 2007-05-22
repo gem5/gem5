@@ -76,9 +76,9 @@ PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
 
 void
 PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                              AddrRangeList &snoop)
+                                              bool &snoop)
 {
-    snoop.clear();
+    snoop = false;;
     resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
 }
 

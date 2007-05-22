@@ -385,18 +385,17 @@ PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
 
 void
 PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
+                                                   bool &snoop)
 {
     memory->getAddressRanges(resp, snoop);
 }
 
 void
-PhysicalMemory::getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
 {
-    snoop.clear();
+    snoop = false;
     resp.clear();
-    resp.push_back(RangeSize(start(),
-                             params()->addrRange.size()));
+    resp.push_back(RangeSize(start(), params()->addrRange.size()));
 }
 
 int

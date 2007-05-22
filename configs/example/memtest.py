@@ -75,7 +75,7 @@ if options.numtesters > 8:
      print "Error: NUmber of testers limited to 8 because of false sharing"
      sys,exit(1)
 
-cpus = [ MemTest(atomic=options.timing, max_loads=options.maxloads,
+cpus = [ MemTest(atomic=not options.timing, max_loads=options.maxloads,
                  percent_functional=50, percent_uncacheable=10,
                  progress_interval=1000)
          for i in xrange(options.numtesters) ]
@@ -83,11 +83,11 @@ cpus = [ MemTest(atomic=options.timing, max_loads=options.maxloads,
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
                 physmem = PhysicalMemory(latency = "50ps"),
-                membus = Bus(clock="500GHz", width=16))
+                membus = Bus(clock="500MHz", width=16))
 
 # l2cache & bus
 if options.caches:
-    system.toL2Bus = Bus(clock="500GHz", width=16)
+    system.toL2Bus = Bus(clock="500MHz", width=16)
     system.l2c = L2(size='64kB', assoc=8)
     system.l2c.cpu_side = system.toL2Bus.port
 
@@ -117,6 +117,9 @@ if options.timing:
     root.system.mem_mode = 'timing'
 else:
     root.system.mem_mode = 'atomic'
+
+# Not much point in this being higher than the L1 latency
+m5.ticks.setGlobalFrequency('1ns')
 
 # instantiate configuration
 m5.instantiate(root)

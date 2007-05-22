@@ -361,7 +361,7 @@ Bridge::BridgePort::recvStatusChange(Port::Status status)
 
 void
 Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
-                                           AddrRangeList &snoop)
+                                           bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
 }

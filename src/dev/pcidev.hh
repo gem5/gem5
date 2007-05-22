@@ -89,7 +89,7 @@ class PciDev : public DmaDevice
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop);
+                                            bool &snoop);
 
         Platform *platform;
 

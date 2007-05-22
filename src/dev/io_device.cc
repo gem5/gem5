@@ -48,9 +48,9 @@ PioPort::recvAtomic(PacketPtr pkt)
 }
 
 void
-PioPort::getDeviceAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+PioPort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
-    snoop.clear();
+    snoop = false;
     device->addressRanges(resp);
 }
 

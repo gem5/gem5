@@ -64,7 +64,7 @@ class PhysicalMemory : public MemObject
         virtual void recvStatusChange(Status status);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop);
+                                            bool &snoop);
 
         virtual int deviceBlockSize();
     };
@@ -169,7 +169,7 @@ class PhysicalMemory : public MemObject
 
   public:
     int deviceBlockSize();
-    void getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop);
+    void getAddressRanges(AddrRangeList &resp, bool &snoop);
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     void virtual init();
     unsigned int drain(Event *de);

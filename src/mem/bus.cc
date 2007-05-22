@@ -285,16 +285,15 @@ Bus::findPort(Addr addr, int id)
 {
     /* An interval tree would be a better way to do this. --ali. */
     int dest_id = -1;
-    AddrRangeIter iter;
-    range_map<Addr,int>::iterator i;
 
-    i = portMap.find(RangeSize(addr,1));
+    PortIter i = portMap.find(RangeSize(addr,1));
     if (i != portMap.end())
         dest_id = i->second;
 
     // Check if this matches the default range
     if (dest_id == -1) {
-        for (iter = defaultRange.begin(); iter != defaultRange.end(); iter++) {
+        for (AddrRangeIter iter = defaultRange.begin();
+             iter != defaultRange.end(); iter++) {
             if (*iter == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
                 return defaultPort;
@@ -322,88 +321,63 @@ Bus::findPort(Addr addr, int id)
     return interfaces[dest_id];
 }
 
-std::vector<int>
-Bus::findSnoopPorts(Addr addr, int id)
-{
-    int i = 0;
-    AddrRangeIter iter;
-    std::vector<int> ports;
-
-    while (i < portSnoopList.size())
-    {
-        if (portSnoopList[i].range == addr && portSnoopList[i].portId != id) {
-            //Careful  to not overlap ranges
-            //or snoop will be called more than once on the port
-
-            //@todo Fix this hack because ranges are overlapping
-            //need to make sure we dont't create overlapping ranges
-            bool hack_overlap = false;
-            int size = ports.size();
-            for (int j=0; j < size; j++) {
-                if (ports[j] == portSnoopList[i].portId)
-                    hack_overlap = true;
-            }
-
-            if (!hack_overlap)
-                ports.push_back(portSnoopList[i].portId);
-//            DPRINTF(Bus, "  found snoop addr %#llx on device%d\n", addr,
-//                    portSnoopList[i].portId);
-        }
-        i++;
-    }
-    return ports;
-}
-
 Tick
 Bus::atomicSnoop(PacketPtr pkt, Port *responder)
 {
-    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
     Tick response_time = 0;
 
-    while (!ports.empty())
-    {
-        if (interfaces[ports.back()] != responder) {
-            Tick response = interfaces[ports.back()]->sendAtomic(pkt);
+    for (SnoopIter s_iter = snoopPorts.begin();
+         s_iter != snoopPorts.end();
+         s_iter++) {
+        BusPort *p = *s_iter;
+        if (p != responder && p->getId() != pkt->getSrc()) {
+            Tick response = p->sendAtomic(pkt);
             if (response) {
                 assert(!response_time);  //Multiple responders
                 response_time = response;
             }
         }
-        ports.pop_back();
     }
+
     return response_time;
 }
 
 void
 Bus::functionalSnoop(PacketPtr pkt, Port *responder)
 {
-    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
+    // The packet may be changed by another bus on snoops, restore the
+    // id after each
+    int src_id = pkt->getSrc();
 
-    //The packet may be changed by another bus on snoops, restore the id after each
-    int id = pkt->getSrc();
-    while (!ports.empty() && pkt->result != Packet::Success)
-    {
-        if (interfaces[ports.back()] != responder)
-            interfaces[ports.back()]->sendFunctional(pkt);
-        ports.pop_back();
-        pkt->setSrc(id);
+    for (SnoopIter s_iter = snoopPorts.begin();
+         s_iter != snoopPorts.end();
+         s_iter++) {
+        BusPort *p = *s_iter;
+        if (p != responder && p->getId() != src_id) {
+            p->sendFunctional(pkt);
+        }
+        if (pkt->result == Packet::Success) {
+            break;
+        }
+        pkt->setSrc(src_id);
     }
 }
 
 bool
 Bus::timingSnoop(PacketPtr pkt, Port* responder)
 {
-    std::vector<int> ports = findSnoopPorts(pkt->getAddr(), pkt->getSrc());
-    bool success = true;
-
-    while (!ports.empty() && success)
-    {
-        if (interfaces[ports.back()] != responder) //Don't call if responder also, once will do
-            success = interfaces[ports.back()]->sendTiming(pkt);
-        ports.pop_back();
+    for (SnoopIter s_iter = snoopPorts.begin();
+         s_iter != snoopPorts.end();
+         s_iter++) {
+        BusPort *p = *s_iter;
+        if (p != responder && p->getId() != pkt->getSrc()) {
+            bool success = p->sendTiming(pkt);
+            if (!success)
+                return false;
+        }
     }
 
-    return success;
+    return true;
 }
 
 
@@ -454,7 +428,7 @@ void
 Bus::recvStatusChange(Port::Status status, int id)
 {
     AddrRangeList ranges;
-    AddrRangeList snoops;
+    bool snoops;
     AddrRangeIter iter;
 
     assert(status == Port::RangeChange &&
@@ -467,7 +441,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         // Only try to update these ranges if the user set a default responder.
         if (responderSet) {
             defaultPort->getPeerAddressRanges(ranges, snoops);
-            assert(snoops.size() == 0);
+            assert(snoops == false);
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -477,39 +451,33 @@ Bus::recvStatusChange(Port::Status status, int id)
     } else {
 
         assert((id < maxId && id >= 0) || id == defaultId);
-        Port *port = interfaces[id];
-        range_map<Addr,int>::iterator portIter;
-        std::vector<DevMap>::iterator snoopIter;
+        BusPort *port = interfaces[id];
 
         // Clean out any previously existent ids
-        for (portIter = portMap.begin(); portIter != portMap.end(); ) {
+        for (PortIter portIter = portMap.begin();
+             portIter != portMap.end(); ) {
             if (portIter->second == id)
                 portMap.erase(portIter++);
             else
                 portIter++;
         }
 
-        for (snoopIter = portSnoopList.begin(); snoopIter != portSnoopList.end(); ) {
-            if (snoopIter->portId == id)
-                snoopIter = portSnoopList.erase(snoopIter);
+        for (SnoopIter s_iter = snoopPorts.begin();
+             s_iter != snoopPorts.end(); ) {
+            if ((*s_iter)->getId() == id)
+                s_iter = snoopPorts.erase(s_iter);
             else
-                snoopIter++;
+                s_iter++;
         }
 
         port->getPeerAddressRanges(ranges, snoops);
 
-        for(iter = snoops.begin(); iter != snoops.end(); iter++) {
-            DevMap dm;
-            dm.portId = id;
-            dm.range = *iter;
-
-            //@todo, make sure we don't overlap ranges
-            DPRINTF(BusAddrRanges, "Adding snoop range %#llx - %#llx for id %d\n",
-                    dm.range.start, dm.range.end, id);
-            portSnoopList.push_back(dm);
+        if (snoops) {
+            DPRINTF(BusAddrRanges, "Adding id %d to snoop list\n", id);
+            snoopPorts.push_back(port);
         }
 
-        for(iter = ranges.begin(); iter != ranges.end(); iter++) {
+        for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
                     iter->start, iter->end, id);
             if (portMap.insert(*iter, id) == portMap.end())
@@ -532,28 +500,24 @@ Bus::recvStatusChange(Port::Status status, int id)
 }
 
 void
-Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
+Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
 {
-    std::vector<DevMap>::iterator snoopIter;
-    range_map<Addr,int>::iterator portIter;
-    AddrRangeIter dflt_iter;
-    bool subset;
-
     resp.clear();
-    snoop.clear();
+    snoop = false;
 
     DPRINTF(BusAddrRanges, "received address range request, returning:\n");
 
-    for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
-            dflt_iter++) {
+    for (AddrRangeIter dflt_iter = defaultRange.begin();
+         dflt_iter != defaultRange.end(); dflt_iter++) {
         resp.push_back(*dflt_iter);
         DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
-    for (portIter = portMap.begin(); portIter != portMap.end(); portIter++) {
-        subset = false;
-        for (dflt_iter = defaultRange.begin(); dflt_iter != defaultRange.end();
-                dflt_iter++) {
+    for (PortIter portIter = portMap.begin();
+         portIter != portMap.end(); portIter++) {
+        bool subset = false;
+        for (AddrRangeIter dflt_iter = defaultRange.begin();
+             dflt_iter != defaultRange.end(); dflt_iter++) {
             if ((portIter->first.start < dflt_iter->start &&
                 portIter->first.end >= dflt_iter->start) ||
                (portIter->first.start < dflt_iter->end &&
@@ -574,15 +538,11 @@ Bus::addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id)
         }
     }
 
-    for (snoopIter = portSnoopList.begin();
-         snoopIter != portSnoopList.end(); snoopIter++)
-    {
-        if (snoopIter->portId != id) {
-            snoop.push_back(snoopIter->range);
-            DPRINTF(BusAddrRanges, "  -- Snoop: %#llx : %#llx\n",
-                    snoopIter->range.start, snoopIter->range.end);
-            //@todo We need to properly insert snoop ranges
-            //not overlapping the ranges (multiple)
+    for (SnoopIter s_iter = snoopPorts.begin(); s_iter != snoopPorts.end();
+         s_iter++) {
+        if ((*s_iter)->getId() != id) {
+            snoop = true;
+            break;
         }
     }
 }
@@ -593,17 +553,17 @@ Bus::findBlockSize(int id)
     if (cachedBlockSizeValid)
         return cachedBlockSize;
 
-    int max_bs = -1, tmp_bs;
-    range_map<Addr,int>::iterator portIter;
-    std::vector<DevMap>::iterator snoopIter;
-    for (portIter = portMap.begin(); portIter != portMap.end(); portIter++) {
-        tmp_bs = interfaces[portIter->second]->peerBlockSize();
+    int max_bs = -1;
+
+    for (PortIter portIter = portMap.begin();
+         portIter != portMap.end(); portIter++) {
+        int tmp_bs = interfaces[portIter->second]->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }
-    for (snoopIter = portSnoopList.begin();
-         snoopIter != portSnoopList.end(); snoopIter++) {
-        tmp_bs = interfaces[snoopIter->portId]->peerBlockSize();
+    for (SnoopIter s_iter = snoopPorts.begin();
+         s_iter != snoopPorts.end(); s_iter++) {
+        int tmp_bs = (*s_iter)->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }

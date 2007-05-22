@@ -172,7 +172,7 @@ class Port
         @param snoop is a list of ranges snooped
     */
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
-            AddrRangeList &snoop)
+                                        bool &snoop)
     { panic("??"); }
 
   public:
@@ -222,7 +222,7 @@ class Port
     /** Called by the associated device if it wishes to find out the address
         ranges connected to the peer ports devices.
     */
-    void getPeerAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+    void getPeerAddressRanges(AddrRangeList &resp, bool &snoop)
     { peer->getDeviceAddressRanges(resp, snoop); }
 
     /** This function is a wrapper around sendFunctional()
