@@ -6,6 +6,9 @@
 import sys
 sys.tracebacklimit = 0
 
+sys.path.insert(0,"..")
+import ply.yacc as yacc
+
 from calclex import tokens
 
 # Parsing rules
@@ -56,7 +59,7 @@ def p_expression_name(t):
         print "Undefined name '%s'" % t[1]
         t[0] = 0
 
-import yacc
+
 yacc.yacc()
 
 

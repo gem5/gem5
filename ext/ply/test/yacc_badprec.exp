@@ -1,1 +1,1 @@
-yacc.YaccError: precedence must be a list or tuple.
+ply.yacc.YaccError: precedence must be a list or tuple.

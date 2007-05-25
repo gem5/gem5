@@ -6,6 +6,9 @@
 import sys
 sys.tracebacklimit = 0
 
+sys.path.insert(0,"..")
+import ply.yacc as yacc
+
 from calclex import tokens
 
 # Parsing rules
@@ -58,7 +61,6 @@ def p_expression_name(t):
 
 p_error = "blah"
 
-import yacc
 yacc.yacc()
 
 

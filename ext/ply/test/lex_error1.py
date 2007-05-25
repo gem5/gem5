@@ -2,7 +2,10 @@
 #
 # Missing t_error() rule
 
-import lex
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = [
     "PLUS",
@@ -14,7 +17,6 @@ t_PLUS = r'\+'
 t_MINUS = r'-'
 t_NUMBER = r'\d+'
 
-import sys
 sys.tracebacklimit = 0
 
 lex.lex()

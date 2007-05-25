@@ -14,6 +14,10 @@
 # such tokens
 # -----------------------------------------------------------------------------
 
+import sys
+sys.path.insert(0,"../..")
+
+
 tokens = (
     'H_EDIT_DESCRIPTOR',
     )
@@ -34,10 +38,10 @@ def t_H_EDIT_DESCRIPTOR(t):
 
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
-    t.skip(1)
+    t.lexer.skip(1)
 
 # Build the lexer
-import lex
+import ply.lex as lex
 lex.lex()
 lex.runmain()
 

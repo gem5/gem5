@@ -4,7 +4,10 @@
 # A lexer for ANSI C.
 # ----------------------------------------------------------------------
 
-import lex
+import sys
+sys.path.insert(0,"../..")
+
+import ply.lex as lex
 
 # Reserved words
 reserved = (
@@ -53,7 +56,7 @@ t_ignore           = ' \t\x0c'
 # Newlines
 def t_NEWLINE(t):
     r'\n+'
-    t.lineno += t.value.count("\n")
+    t.lexer.lineno += t.value.count("\n")
 
 # Operators
 t_PLUS             = r'\+'
@@ -64,7 +67,7 @@ t_MOD              = r'%'
 t_OR               = r'\|'
 t_AND              = r'&'
 t_NOT              = r'~'
-t_XOR              = r'^'
+t_XOR              = r'\^'
 t_LSHIFT           = r'<<'
 t_RSHIFT           = r'>>'
 t_LOR              = r'\|\|'
@@ -149,7 +152,7 @@ def t_preprocessor(t):
 
 def t_error(t):
     print "Illegal character %s" % repr(t.value[0])
-    t.skip(1)
+    t.lexer.skip(1)
 
 lexer = lex.lex(optimize=1)
 if __name__ == "__main__":

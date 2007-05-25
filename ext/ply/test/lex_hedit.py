@@ -13,6 +13,10 @@
 # This example shows how to modify the state of the lexer to parse
 # such tokens
 # -----------------------------------------------------------------------------
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = (
     'H_EDIT_DESCRIPTOR',
@@ -33,10 +37,9 @@ def t_H_EDIT_DESCRIPTOR(t):
 
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
-    t.skip(1)
+    t.lexer.skip(1)
 
 # Build the lexer
-import lex
 lex.lex()
 lex.runmain(data="3Habc 10Habcdefghij 2Hxy")
 
