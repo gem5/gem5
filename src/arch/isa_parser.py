@@ -194,7 +194,7 @@ def t_error(t):
     t.skip(1)
 
 # Build the lexer
-lex.lex()
+lexer = lex.lex()
 
 #####################################################################
 #
@@ -729,7 +729,7 @@ def p_error(t):
 # END OF GRAMMAR RULES
 #
 # Now build the parser.
-yacc.yacc()
+parser = yacc.yacc()
 
 
 #####################################################################
@@ -1881,7 +1881,8 @@ def parse_isa_desc(isa_desc_file, output_dir):
     fileNameStack.push((isa_desc_file, 0))
 
     # Parse it.
-    (isa_name, namespace, global_code, namespace_code) = yacc.parse(isa_desc)
+    (isa_name, namespace, global_code, namespace_code) = \
+        parser.parse(isa_desc, lexer=lexer)
 
     # grab the last three path components of isa_desc_file to put in
     # the output
