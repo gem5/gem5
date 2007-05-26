@@ -1,6 +1,10 @@
 # -----------------------------------------------------------------------------
 # calclex.py
 # -----------------------------------------------------------------------------
+import sys
+
+sys.path.append("..")
+import ply.lex as lex
 
 tokens = (
     'NAME','NUMBER',
@@ -36,10 +40,9 @@ def t_newline(t):
 
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
-    t.skip(1)
+    t.lexer.skip(1)
 
 # Build the lexer
-import lex
 lex.lex()
 
 

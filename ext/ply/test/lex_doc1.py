@@ -2,7 +2,10 @@
 #
 # Missing documentation string
 
-import lex
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = [
     "PLUS",

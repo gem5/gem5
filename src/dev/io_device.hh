@@ -59,7 +59,7 @@ class PioPort : public SimpleTimingPort
     virtual Tick recvAtomic(PacketPtr pkt);
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                        AddrRangeList &snoop);
+                                        bool &snoop);
 
   public:
 
@@ -127,8 +127,8 @@ class DmaPort : public Port
     virtual void recvRetry() ;
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                        AddrRangeList &snoop)
-    { resp.clear(); snoop.clear(); }
+                                        bool &snoop)
+    { resp.clear(); snoop = false; }
 
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();

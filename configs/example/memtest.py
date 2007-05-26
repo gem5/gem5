@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@ if args:
 # ====================
 
 class L1(BaseCache):
-    latency = 1
+    latency = '1ns'
     block_size = 64
     mshrs = 12
     tgts_per_mshr = 8
@@ -65,7 +65,7 @@ class L1(BaseCache):
 
 class L2(BaseCache):
     block_size = 64
-    latency = 10
+    latency = '10ns'
     mshrs = 92
     tgts_per_mshr = 16
     write_buffers = 8
@@ -75,28 +75,25 @@ if options.numtesters > 8:
      print "Error: NUmber of testers limited to 8 because of false sharing"
      sys,exit(1)
 
-if options.timing:
-     cpus = [ MemTest(atomic=False, max_loads=options.maxloads, percent_functional=50,
-                      percent_uncacheable=10, progress_interval=1000)
-              for i in xrange(options.numtesters) ]
-else:
-     cpus = [ MemTest(atomic=True, max_loads=options.maxloads, percent_functional=50,
-                      percent_uncacheable=10, progress_interval=1000)
-              for i in xrange(options.numtesters) ]
+cpus = [ MemTest(atomic=not options.timing, max_loads=options.maxloads,
+                 percent_functional=50, percent_uncacheable=10,
+                 progress_interval=1000)
+         for i in xrange(options.numtesters) ]
+
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(latency = "50ps"), membus = Bus(clock="500GHz", width=16))
+                physmem = PhysicalMemory(latency = "50ps"),
+                membus = Bus(clock="500MHz", width=16))
 
 # l2cache & bus
 if options.caches:
-    system.toL2Bus = Bus(clock="500GHz", width=16)
+    system.toL2Bus = Bus(clock="500MHz", width=16)
     system.l2c = L2(size='64kB', assoc=8)
     system.l2c.cpu_side = system.toL2Bus.port
 
     # connect l2c to membus
     system.l2c.mem_side = system.membus.port
 
-which_port = 0
 # add L1 caches
 for cpu in cpus:
     if options.caches:
@@ -105,12 +102,7 @@ for cpu in cpus:
          cpu.l1c.mem_side = system.toL2Bus.port
     else:
          cpu.test = system.membus.port
-    if  which_port == 0:
-         system.funcmem.port = cpu.functional
-         which_port = 1
-    else:
-         system.funcmem.functional = cpu.functional
-
+    system.funcmem.port = cpu.functional
 
 # connect memory to membus
 system.physmem.port = system.membus.port
@@ -125,6 +117,9 @@ if options.timing:
     root.system.mem_mode = 'timing'
 else:
     root.system.mem_mode = 'atomic'
+
+# Not much point in this being higher than the L1 latency
+m5.ticks.setGlobalFrequency('1ns')
 
 # instantiate configuration
 m5.instantiate(root)

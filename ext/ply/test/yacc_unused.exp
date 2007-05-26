@@ -1,4 +1,4 @@
-./yacc_unused.py:60: Symbol 'COMMA' used, but not defined as a token or a rule.
+./yacc_unused.py:63: Symbol 'COMMA' used, but not defined as a token or a rule.
 yacc: Symbol 'COMMA' is unreachable.
 yacc: Symbol 'exprlist' is unreachable.
-yacc.YaccError: Unable to construct parser.
+ply.yacc.YaccError: Unable to construct parser.

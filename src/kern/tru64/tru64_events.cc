@@ -54,7 +54,7 @@ BadAddrEvent::process(ThreadContext *tc)
     uint64_t a0 = tc->readIntReg(ArgumentReg0);
 
     AddrRangeList resp;
-    AddrRangeList snoop;
+    bool snoop;
     AddrRangeIter iter;
     bool found = false;
 

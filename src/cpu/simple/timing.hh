@@ -66,8 +66,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     Event *drainEvent;
 
-    Event *fetchEvent;
-
   private:
 
     class CpuPort : public Port
@@ -93,8 +91,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
         virtual void recvStatusChange(Status status);
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); snoop.push_back(RangeSize(0,0)); }
+                                            bool &snoop)
+        { resp.clear(); snoop = false; }
 
         struct TickEvent : public Event
         {
@@ -199,7 +197,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeIfetch(PacketPtr );
     void completeDataAccess(PacketPtr );
     void advanceInst(Fault fault);
+
   private:
+
+    typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
+    FetchEvent *fetchEvent;
+
     void completeDrain();
 };
 

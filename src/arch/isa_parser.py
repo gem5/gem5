@@ -40,8 +40,8 @@ from types import *
 # of 'build' in the current tree.
 sys.path[0:0] = [os.environ['M5_PLY']]
 
-import lex
-import yacc
+from ply import lex
+from ply import yacc
 
 #####################################################################
 #

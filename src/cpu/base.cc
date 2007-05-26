@@ -179,10 +179,9 @@ BaseCPU::BaseCPU(Params *p)
         if (p->functionTraceStart == 0) {
             functionTracingEnabled = true;
         } else {
-            Event *e =
-                new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
-                                                                         true);
-            e->schedule(p->functionTraceStart);
+            new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
+                                                                     p->functionTraceStart,
+                                                                     true);
         }
     }
 #if FULL_SYSTEM

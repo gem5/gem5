@@ -1,1 +1,1 @@
-yacc.YaccError: module does not define a list 'tokens'
+ply.yacc.YaccError: module does not define a list 'tokens'

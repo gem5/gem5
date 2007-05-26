@@ -2,7 +2,10 @@
 #
 # t_error defined, but not function
 
-import lex
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = [
     "PLUS",
@@ -16,7 +19,6 @@ t_NUMBER = r'\d+'
 
 t_error = "foo"
 
-import sys
 sys.tracebacklimit = 0
 
 lex.lex()

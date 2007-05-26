@@ -57,7 +57,8 @@ cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(), membus = Bus(clock="500GHz", width=16))
+                physmem = PhysicalMemory(),
+                membus = Bus(clock="500GHz", width=16))
 
 # l2cache & bus
 system.toL2Bus = Bus(clock="500GHz", width=16)
@@ -67,18 +68,12 @@ system.l2c.cpu_side = system.toL2Bus.port
 # connect l2c to membus
 system.l2c.mem_side = system.membus.port
 
-which_port = 0
 # add L1 caches
 for cpu in cpus:
     cpu.l1c = L1(size = '32kB', assoc = 4)
     cpu.l1c.cpu_side = cpu.test
     cpu.l1c.mem_side = system.toL2Bus.port
-    if  which_port == 0:
-         system.funcmem.port = cpu.functional
-         which_port = 1
-    else:
-         system.funcmem.functional = cpu.functional
-
+    system.funcmem.port = cpu.functional
 
 # connect memory to membus
 system.physmem.port = system.membus.port

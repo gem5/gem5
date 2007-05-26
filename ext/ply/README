@@ -1,14 +1,8 @@
-PLY (Python Lex-Yacc)                   Version 1.2  (November 27, 2002)
+PLY (Python Lex-Yacc)                   Version 2.3  (February 18, 2007)
 
-David M. Beazley
-Department of Computer Science
-University of Chicago
-Chicago, IL  60637
-beazley@cs.uchicago.edu
+David M. Beazley (dave@dabeaz.com)
 
-Copyright (C) 2001   David M. Beazley
-
-$Header: /home/stever/bk/newmem2/ext/ply/README 1.1 03/06/06 14:53:34-00:00 stever@ $
+Copyright (C) 2001-2007   David M. Beazley
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -52,11 +46,10 @@ Python, there are several reasons why you might want to consider PLY:
     Currently, PLY builds its parsing tables using the SLR algorithm which 
     is slightly weaker than LALR(1) used in traditional yacc. 
 
- -  Like John Aycock's excellent SPARK toolkit, PLY uses Python 
-    reflection to build lexers and parsers.  This greatly simplifies 
-    the task of parser construction since it reduces the number of files
-    and eliminates the need to run a separate lex/yacc tool before
-    running your program.
+ -  PLY uses Python introspection features to build lexers and parsers.  
+    This greatly simplifies the task of parser construction since it reduces 
+    the number of files and eliminates the need to run a separate lex/yacc 
+    tool before running your program.
 
  -  PLY can be used to build parsers for "real" programming languages.
     Although it is not ultra-fast due to its Python implementation,
@@ -77,51 +70,79 @@ common usability problems.
 How to Use
 ==========
 
-PLY consists of two files : lex.py and yacc.py.  To use the system,
-simply copy these files to your project and import them like standard
-Python modules.
+PLY consists of two files : lex.py and yacc.py.  These are contained
+within the 'ply' directory which may also be used as a Python package.
+To use PLY, simply copy the 'ply' directory to your project and import
+lex and yacc from the associated 'ply' package.  For example:
+
+     import ply.lex as lex
+     import ply.yacc as yacc
+
+Alternatively, you can copy just the files lex.py and yacc.py
+individually and use them as modules.  For example:
+
+     import lex
+     import yacc
+
+The file setup.py can be used to install ply using distutils.
 
 The file doc/ply.html contains complete documentation on how to use
 the system.
 
 The example directory contains several different examples including a
-PLY specification for ANSI C as given in K&R 2nd Ed.   Note: To use
-the examples, you will need to copy the lex.py and yacc.py files to
-the example directory.
+PLY specification for ANSI C as given in K&R 2nd Ed.   
 
 A simple example is found at the end of this document
 
 Requirements
 ============
-PLY requires the use of Python 2.0 or greater.  It should work on
-just about any platform.
+PLY requires the use of Python 2.1 or greater.  However, you should
+use the latest Python release if possible.  It should work on just
+about any platform.  PLY has been tested with both CPython and Jython.
+However, it does not seem to work with IronPython.
 
 Resources
 =========
-
 More information about PLY can be obtained on the PLY webpage at:
 
-     http://systems.cs.uchicago.edu/ply
+     http://www.dabeaz.com/ply
 
 For a detailed overview of parsing theory, consult the excellent
 book "Compilers : Principles, Techniques, and Tools" by Aho, Sethi, and
 Ullman.  The topics found in "Lex & Yacc" by Levine, Mason, and Brown
 may also be useful.
 
-Given that this is the first release, I welcome your comments on how
-to improve the current implementation.  See the TODO file for things that
-still need to be done.
+A Google group for PLY can be found at
+
+     http://groups.google.com/group/ply-hack
 
 Acknowledgments
 ===============
-
 A special thanks is in order for all of the students in CS326 who
 suffered through about 25 different versions of these tools :-).
+
+The CHANGES file acknowledges those who have contributed patches.
+
+Elias Ioup did the first implementation of LALR(1) parsing in PLY-1.x. 
+Andrew Waters and Markus Schoepflin were instrumental in reporting bugs
+and testing a revised LALR(1) implementation for PLY-2.0.
+
+Special Note for PLY-2.x
+========================
+PLY-2.0 is the first in a series of PLY releases that will be adding a
+variety of significant new features.  The first release in this series
+(Ply-2.0) should be 100% compatible with all previous Ply-1.x releases
+except for the fact that Ply-2.0 features a correct implementation of
+LALR(1) table generation.  
+
+If you have suggestions for improving PLY in future 2.x releases, please
+contact me.   - Dave
 
 Example
 =======
 
-Here is a simple example showing a PLY implementation of a calculator with variables.
+Here is a simple example showing a PLY implementation of a calculator
+with variables.
 
 # -----------------------------------------------------------------------------
 # calc.py
@@ -160,14 +181,14 @@ t_ignore = " \t"
 
 def t_newline(t):
     r'\n+'
-    t.lineno += t.value.count("\n")
+    t.lexer.lineno += t.value.count("\n")
     
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
-    t.skip(1)
+    t.lexer.skip(1)
     
 # Build the lexer
-import lex
+import ply.lex as lex
 lex.lex()
 
 # Precedence rules for the arithmetic operators
@@ -180,48 +201,48 @@ precedence = (
 # dictionary of names (for storing variables)
 names = { }
 
-def p_statement_assign(t):
+def p_statement_assign(p):
     'statement : NAME EQUALS expression'
-    names[t[1]] = t[3]
+    names[p[1]] = p[3]
 
-def p_statement_expr(t):
+def p_statement_expr(p):
     'statement : expression'
-    print t[1]
+    print p[1]
 
-def p_expression_binop(t):
+def p_expression_binop(p):
     '''expression : expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    if t[2] == '+'  : t[0] = t[1] + t[3]
-    elif t[2] == '-': t[0] = t[1] - t[3]
-    elif t[2] == '*': t[0] = t[1] * t[3]
-    elif t[2] == '/': t[0] = t[1] / t[3]
+    if p[2] == '+'  : p[0] = p[1] + p[3]
+    elif p[2] == '-': p[0] = p[1] - p[3]
+    elif p[2] == '*': p[0] = p[1] * p[3]
+    elif p[2] == '/': p[0] = p[1] / p[3]
 
-def p_expression_uminus(t):
+def p_expression_uminus(p):
     'expression : MINUS expression %prec UMINUS'
-    t[0] = -t[2]
+    p[0] = -p[2]
 
-def p_expression_group(t):
+def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
-    t[0] = t[2]
+    p[0] = p[2]
 
-def p_expression_number(t):
+def p_expression_number(p):
     'expression : NUMBER'
-    t[0] = t[1]
+    p[0] = p[1]
 
-def p_expression_name(t):
+def p_expression_name(p):
     'expression : NAME'
     try:
-        t[0] = names[t[1]]
+        p[0] = names[p[1]]
     except LookupError:
-        print "Undefined name '%s'" % t[1]
-        t[0] = 0
+        print "Undefined name '%s'" % p[1]
+        p[0] = 0
 
-def p_error(t):
-    print "Syntax error at '%s'" % t.value
+def p_error(p):
+    print "Syntax error at '%s'" % p.value
 
-import yacc
+import ply.yacc as yacc
 yacc.yacc()
 
 while 1:
@@ -232,13 +253,21 @@ while 1:
     yacc.parse(s)
 
 
+Bug Reports and Patches
+=======================
+Because of the extremely specialized and advanced nature of PLY, I
+rarely spend much time working on it unless I receive very specific
+bug-reports and/or patches to fix problems. I also try to incorporate
+submitted feature requests and enhancements into each new version.  To
+contact me about bugs and/or new features, please send email to
+dave@dabeaz.com.
 
+In addition there is a Google group for discussing PLY related issues at
 
+    http://groups.google.com/group/ply-hack
+ 
+-- Dave
 
-
-
-
-    
 
 
 

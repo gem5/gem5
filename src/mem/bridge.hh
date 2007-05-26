@@ -182,7 +182,7 @@ class Bridge : public MemObject
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop);
+                                            bool &snoop);
     };
 
     BridgePort portA, portB;

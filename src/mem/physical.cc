@@ -52,7 +52,7 @@ using namespace std;
 using namespace TheISA;
 
 PhysicalMemory::PhysicalMemory(Params *p)
-    : MemObject(p->name), pmemAddr(NULL), port(NULL), lat(p->latency), _params(p)
+    : MemObject(p->name), pmemAddr(NULL), lat(p->latency), _params(p)
 {
     if (params()->addrRange.size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
@@ -76,9 +76,14 @@ PhysicalMemory::PhysicalMemory(Params *p)
 void
 PhysicalMemory::init()
 {
-    if (!port)
-        panic("PhysicalMemory not connected to anything!");
-    port->sendStatusChange(Port::RangeChange);
+    if (ports.size() == 0) {
+        fatal("PhysicalMemory object %s is unconnected!", name());
+    }
+
+    for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
+        if (*pi)
+            (*pi)->sendStatusChange(Port::RangeChange);
+    }
 }
 
 PhysicalMemory::~PhysicalMemory()
@@ -335,18 +340,32 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 Port *
 PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
-    if (if_name == "port" && idx == -1) {
-        if (port != NULL)
-           panic("PhysicalMemory::getPort: additional port requested to memory!");
-        port = new MemoryPort(name() + "-port", this);
-        return port;
-    } else if (if_name == "functional") {
-        /* special port for functional writes at startup. And for memtester */
-        return new MemoryPort(name() + "-funcport", this);
-    } else {
+    // Accept request for "functional" port for backwards compatibility
+    // with places where this function is called from C++.  I'd prefer
+    // to move all these into Python someday.
+    if (if_name == "functional") {
+        return new MemoryPort(csprintf("%s-functional", name()), this);
+    }
+
+    if (if_name != "port") {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
+
+    if (idx >= ports.size()) {
+        ports.resize(idx+1);
+    }
+
+    if (ports[idx] != NULL) {
+        panic("PhysicalMemory::getPort: port %d already assigned", idx);
+    }
+
+    MemoryPort *port =
+        new MemoryPort(csprintf("%s-port%d", name(), idx), this);
+
+    ports[idx] = port;
+    return port;
 }
+
 
 void
 PhysicalMemory::recvStatusChange(Port::Status status)
@@ -366,18 +385,17 @@ PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
 
 void
 PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
+                                                   bool &snoop)
 {
     memory->getAddressRanges(resp, snoop);
 }
 
 void
-PhysicalMemory::getAddressRanges(AddrRangeList &resp, AddrRangeList &snoop)
+PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
 {
-    snoop.clear();
+    snoop = false;
     resp.clear();
-    resp.push_back(RangeSize(start(),
-                             params()->addrRange.size()));
+    resp.push_back(RangeSize(start(), params()->addrRange.size()));
 }
 
 int
@@ -420,7 +438,11 @@ PhysicalMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 unsigned int
 PhysicalMemory::drain(Event *de)
 {
-    int count = port->drain(de);
+    int count = 0;
+    for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
+        count += (*pi)->drain(de);
+    }
+
     if (count)
         changeState(Draining);
     else

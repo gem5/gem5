@@ -52,93 +52,6 @@
 
 class Bus : public MemObject
 {
-    /** a globally unique id for this bus. */
-    int busId;
-    /** the clock speed for the bus */
-    int clock;
-    /** the width of the bus in bytes */
-    int width;
-    /** the next tick at which the bus will be idle */
-    Tick tickNextIdle;
-
-    Event * drainEvent;
-
-
-    static const int defaultId = -3; //Make it unique from Broadcast
-
-    struct DevMap {
-        int portId;
-        Range<Addr> range;
-    };
-    range_map<Addr, int> portMap;
-    AddrRangeList defaultRange;
-    std::vector<DevMap> portSnoopList;
-
-    /** Function called by the port when the bus is recieving a Timing
-      transaction.*/
-    bool recvTiming(PacketPtr pkt);
-
-    /** Function called by the port when the bus is recieving a Atomic
-      transaction.*/
-    Tick recvAtomic(PacketPtr pkt);
-
-    /** Function called by the port when the bus is recieving a Functional
-        transaction.*/
-    void recvFunctional(PacketPtr pkt);
-
-    /** Timing function called by port when it is once again able to process
-     * requests. */
-    void recvRetry(int id);
-
-    /** Function called by the port when the bus is recieving a status change.*/
-    void recvStatusChange(Port::Status status, int id);
-
-    /** Find which port connected to this bus (if any) should be given a packet
-     * with this address.
-     * @param addr Address to find port for.
-     * @param id Id of the port this packet was received from (to prevent
-     *             loops)
-     * @return pointer to port that the packet should be sent out of.
-     */
-    Port *findPort(Addr addr, int id);
-
-    /** Find all ports with a matching snoop range, except src port.  Keep in mind
-     * that the ranges shouldn't overlap or you will get a double snoop to the same
-     * interface.and the cache will assert out.
-     * @param addr Address to find snoop prts for.
-     * @param id Id of the src port of the request to avoid calling snoop on src
-     * @return vector of IDs to snoop on
-     */
-    std::vector<int> findSnoopPorts(Addr addr, int id);
-
-    /** Snoop all relevant ports atomicly. */
-    Tick atomicSnoop(PacketPtr pkt, Port* responder);
-
-    /** Snoop all relevant ports functionally. */
-    void functionalSnoop(PacketPtr pkt, Port *responder);
-
-    /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
-     * the snoop to happen
-     * @return True if succeds.
-     */
-    bool timingSnoop(PacketPtr pkt, Port *responder);
-
-    /** Process address range request.
-     * @param resp addresses that we can respond to
-     * @param snoop addresses that we would like to snoop
-     * @param id ide of the busport that made the request.
-     */
-    void addressRanges(AddrRangeList &resp, AddrRangeList &snoop, int id);
-
-    /** Occupy the bus with transmitting the packet pkt */
-    void occupyBus(PacketPtr pkt);
-
-    /** Ask everyone on the bus what their size is
-     * @param id id of the busport that made the request
-     * @return the max of all the sizes
-     */
-    int findBlockSize(int id);
-
     /** Declaration of the buses port type, one will be instantiated for each
         of the interfaces connecting to the bus. */
     class BusPort : public Port
@@ -198,7 +111,7 @@ class Bus : public MemObject
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
+                                            bool &snoop)
         { bus->addressRanges(resp, snoop, id); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
@@ -218,6 +131,84 @@ class Bus : public MemObject
         void process();
         const char *description();
     };
+
+    /** a globally unique id for this bus. */
+    int busId;
+    /** the clock speed for the bus */
+    int clock;
+    /** the width of the bus in bytes */
+    int width;
+    /** the next tick at which the bus will be idle */
+    Tick tickNextIdle;
+
+    Event * drainEvent;
+
+
+    static const int defaultId = -3; //Make it unique from Broadcast
+
+    typedef range_map<Addr,int>::iterator PortIter;
+    range_map<Addr, int> portMap;
+
+    AddrRangeList defaultRange;
+
+    typedef std::vector<BusPort*>::iterator SnoopIter;
+    std::vector<BusPort*> snoopPorts;
+
+    /** Function called by the port when the bus is recieving a Timing
+      transaction.*/
+    bool recvTiming(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a Atomic
+      transaction.*/
+    Tick recvAtomic(PacketPtr pkt);
+
+    /** Function called by the port when the bus is recieving a Functional
+        transaction.*/
+    void recvFunctional(PacketPtr pkt);
+
+    /** Timing function called by port when it is once again able to process
+     * requests. */
+    void recvRetry(int id);
+
+    /** Function called by the port when the bus is recieving a status change.*/
+    void recvStatusChange(Port::Status status, int id);
+
+    /** Find which port connected to this bus (if any) should be given a packet
+     * with this address.
+     * @param addr Address to find port for.
+     * @param id Id of the port this packet was received from (to prevent
+     *             loops)
+     * @return pointer to port that the packet should be sent out of.
+     */
+    Port *findPort(Addr addr, int id);
+
+    /** Snoop all relevant ports atomicly. */
+    Tick atomicSnoop(PacketPtr pkt, Port* responder);
+
+    /** Snoop all relevant ports functionally. */
+    void functionalSnoop(PacketPtr pkt, Port *responder);
+
+    /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
+     * the snoop to happen
+     * @return True if succeds.
+     */
+    bool timingSnoop(PacketPtr pkt, Port *responder);
+
+    /** Process address range request.
+     * @param resp addresses that we can respond to
+     * @param snoop addresses that we would like to snoop
+     * @param id ide of the busport that made the request.
+     */
+    void addressRanges(AddrRangeList &resp, bool &snoop, int id);
+
+    /** Occupy the bus with transmitting the packet pkt */
+    void occupyBus(PacketPtr pkt);
+
+    /** Ask everyone on the bus what their size is
+     * @param id id of the busport that made the request
+     * @return the max of all the sizes
+     */
+    int findBlockSize(int id);
 
     BusFreeEvent busIdle;
 
