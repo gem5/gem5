@@ -5,6 +5,9 @@
 # "Lex and Yacc", p. 63.
 # -----------------------------------------------------------------------------
 
+import sys
+sys.path.insert(0,"../..")
+
 tokens = (
     'NAME','NUMBER',
     'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
@@ -35,14 +38,14 @@ t_ignore = " \t"
 
 def t_newline(t):
     r'\n+'
-    t.lineno += t.value.count("\n")
+    t.lexer.lineno += t.value.count("\n")
 
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
-    t.skip(1)
+    t.lexer.skip(1)
 
 # Build the lexer
-import lex
+import ply.lex as lex
 lex.lex(optimize=1)
 
 # Parsing rules
@@ -98,7 +101,7 @@ def p_expression_name(t):
 def p_error(t):
     print "Syntax error at '%s'" % t.value
 
-import yacc
+import ply.yacc as yacc
 yacc.yacc(optimize=1)
 
 while 1:

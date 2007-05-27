@@ -2,7 +2,10 @@
 #
 # No rules defined
 
-import lex
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = [
     "PLUS",
@@ -10,7 +13,6 @@ tokens = [
     "NUMBER",
     ]
 
-import sys
 sys.tracebacklimit = 0
 
 lex.lex()

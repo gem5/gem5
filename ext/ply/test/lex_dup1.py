@@ -2,7 +2,10 @@
 #
 # Duplicated rule specifiers
 
-import lex
+import sys
+sys.path.insert(0,"..")
+
+import ply.lex as lex
 
 tokens = [
     "PLUS",
@@ -19,7 +22,6 @@ t_NUMBER = r'\d+'
 def t_error(t):
     pass
 
-import sys
 sys.tracebacklimit = 0
 
 lex.lex()

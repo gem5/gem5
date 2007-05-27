@@ -1,22 +1,14 @@
 The PLY to-do list:
 
-$Header: /home/stever/bk/newmem2/ext/ply/TODO 1.1 03/06/06 14:53:34-00:00 stever@ $
+1. More interesting parsing examples.
 
-1. Create a Python package using distutils
-
-2. More interesting parsing examples.
-
-3. Work on the ANSI C grammar so that it can actually parse C programs.  To do this,
+2. Work on the ANSI C grammar so that it can actually parse C programs.  To do this,
    some extra code needs to be added to the lexer to deal with typedef names and enumeration
    constants.
 
-4. Get LALR(1) to work.   Hard, but not impossible.
+3. More tests in the test directory.
 
-5. More tests in the test directory.
+4. Performance improvements and cleanup in yacc.py.
 
-6. Performance improvements and cleanup in yacc.py.
-
-7. More documentation.
-
-8. Lots and lots of cleanup.
+5. More documentation (?).
 

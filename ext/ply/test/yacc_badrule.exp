@@ -1,5 +1,5 @@
-./yacc_badrule.py:22: Syntax error. Expected ':'
-./yacc_badrule.py:26: Syntax error in rule 'statement'
-./yacc_badrule.py:31: Syntax error. Expected ':'
-./yacc_badrule.py:40: Syntax error. Expected ':'
-yacc.YaccError: Unable to construct parser.
+./yacc_badrule.py:25: Syntax error. Expected ':'
+./yacc_badrule.py:29: Syntax error in rule 'statement'
+./yacc_badrule.py:34: Syntax error. Expected ':'
+./yacc_badrule.py:43: Syntax error. Expected ':'
+ply.yacc.YaccError: Unable to construct parser.
