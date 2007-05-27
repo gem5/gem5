@@ -120,10 +120,6 @@ when = int(time.time()) + 120
 # make sure scons doesn't try to run flex unnecessarily
 touch(release_dir, 'src/encumbered/eio/exolex.cc', when=(when, when))
 
-# make sure libelf doesn't try to rebuild the de.msg file since it
-# might fail on non linux machines
-touch(release_dir, 'ext/libelf/po/de.msg', when=(when, when))
-
 # get rid of non-shipping code
 rmtree(release_dir, 'src/encumbered/dev')
 rmtree(release_dir, 'src/cpu/ozone')
