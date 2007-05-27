@@ -31,22 +31,13 @@
 
 #include <string>
 
-// Because of the -Wundef flag we have to do this
-#define __LIBELF_INTERNAL__     0
-#define __LIBELF_NEED_LINK_H    0
-#define __LIBELF_SYMBOL_VERSIONS 0
-
 #include "gelf.h"
 
 #include "base/loader/elf_object.hh"
-#include "base/misc.hh"
-
 #include "base/loader/symtab.hh"
-
+#include "base/misc.hh"
 #include "base/trace.hh"	// for DPRINTF
-
 #include "sim/byteswap.hh"
-
 
 using namespace std;
 
