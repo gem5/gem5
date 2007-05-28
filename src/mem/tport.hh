@@ -58,9 +58,26 @@
 class SimpleTimingPort : public Port
 {
   protected:
+    /** A deferred packet, buffered to transmit later. */
+    class DeferredPacket {
+      public:
+        Tick tick;      ///< The tick when the packet is ready to transmit
+        PacketPtr pkt;  ///< Pointer to the packet to transmit
+        DeferredPacket(Tick t, PacketPtr p)
+            : tick(t), pkt(p)
+        {}
+    };
+
+    typedef std::list<DeferredPacket> DeferredPacketList;
+    typedef std::list<DeferredPacket>::iterator DeferredPacketIterator;
+
     /** A list of outgoing timing response packets that haven't been
      * serviced yet. */
-    std::list<std::pair<Tick,PacketPtr> > transmitList;
+    DeferredPacketList transmitList;
+
+    /** This function attempts to send deferred packets.  Scheduled to
+     * be called in the future via SendEvent. */
+    void processSendEvent();
 
     /**
      * This class is used to implemented sendTiming() with a delay. When
@@ -68,26 +85,18 @@ class SimpleTimingPort : public Port
      * When the event time expires it attempts to send the packet.
      * If it cannot, the packet sent when recvRetry() is called.
      **/
-    class SendEvent : public Event
-    {
-        SimpleTimingPort *port;
+    typedef EventWrapper<SimpleTimingPort, &SimpleTimingPort::processSendEvent>
+            SendEvent;
 
-      public:
-        SendEvent(SimpleTimingPort *p)
-            : Event(&mainEventQueue), port(p)
-        { }
-
-        virtual void process();
-
-        virtual const char *description()
-        { return "Future scheduled sendTiming event"; }
-    };
-
-    SendEvent sendEvent;
+    Event *sendEvent;
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
     Event *drainEvent;
+
+    /** Check the list of buffered packets against the supplied
+     * functional request. */
+    void checkFunctional(PacketPtr funcPkt);
 
     /** Schedule a sendTiming() event to be called in the future.
      * @param pkt packet to send
@@ -115,8 +124,12 @@ class SimpleTimingPort : public Port
   public:
 
     SimpleTimingPort(std::string pname, MemObject *_owner = NULL)
-        : Port(pname, _owner), sendEvent(this), drainEvent(NULL)
+        : Port(pname, _owner),
+          sendEvent(new SendEvent(this)),
+          drainEvent(NULL)
     {}
+
+    ~SimpleTimingPort() { delete sendEvent; }
 
     /** Hook for draining timing accesses from the system.  The
      * associated SimObject's drain() functions should be implemented
