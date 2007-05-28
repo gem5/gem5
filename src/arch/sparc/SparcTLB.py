@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Ali Saidi
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+class SparcTLB(SimObject):
+    type = 'SparcTLB'
+    abstract = True
+    size = Param.Int("TLB size")
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class SparcDTB(SparcTLB):
+    type = 'SparcDTB'
+    size = 64
 
-    Source('memtest.cc')
+class SparcITB(SparcTLB):
+    type = 'SparcITB'
+    size = 64

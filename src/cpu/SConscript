@@ -103,6 +103,9 @@ env.Depends('static_inst_exec_sigs.hh', Value(env['CPU_MODELS']))
 # and one of these are not being used.
 CheckerSupportedCPUList = ['O3CPU', 'OzoneCPU']
 
+SimObject('BaseCPU.py')
+SimObject('FuncUnit.py')
+
 Source('activity.cc')
 Source('base.cc')
 Source('cpuevent.cc')
@@ -116,6 +119,8 @@ Source('simple_thread.cc')
 Source('thread_state.cc')
 
 if env['FULL_SYSTEM']:
+    SimObject('IntrControl.py')
+
     Source('intr_control.cc')
     Source('profile.cc')
 

@@ -30,6 +30,9 @@
 
 Import('*')
 
+SimObject('Root.py')
+SimObject('System.py')
+
 Source('async.cc')
 Source('builder.cc')
 Source('core.cc')
@@ -50,5 +53,7 @@ Source('system.cc')
 if env['FULL_SYSTEM']:
     Source('pseudo_inst.cc')
 else:
+    SimObject('Process.py')
+
     Source('process.cc')
     Source('syscall_emul.cc')

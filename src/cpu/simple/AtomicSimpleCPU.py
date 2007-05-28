@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,18 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.params import *
+from m5 import build_env
+from BaseCPU import BaseCPU
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
-
-    Source('memtest.cc')
+class AtomicSimpleCPU(BaseCPU):
+    type = 'AtomicSimpleCPU'
+    width = Param.Int(1, "CPU width")
+    simulate_stalls = Param.Bool(False, "Simulate cache stall cycles")
+    function_trace = Param.Bool(False, "Enable function trace")
+    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+    if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
+    icache_port = Port("Instruction Port")
+    dcache_port = Port("Data Port")
+    _mem_ports = ['icache_port', 'dcache_port']

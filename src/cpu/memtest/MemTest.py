@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,27 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
+from m5 import build_env
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class MemTest(SimObject):
+    type = 'MemTest'
+    max_loads = Param.Counter("number of loads to execute")
+    atomic = Param.Bool(False, "Execute tester in atomic mode? (or timing)\n")
+    memory_size = Param.Int(65536, "memory size")
+    percent_dest_unaligned = Param.Percent(50,
+        "percent of copy dest address that are unaligned")
+    percent_reads = Param.Percent(65, "target read percentage")
+    percent_source_unaligned = Param.Percent(50,
+        "percent of copy source address that are unaligned")
+    percent_functional = Param.Percent(50, "percent of access that are functional")
+    percent_uncacheable = Param.Percent(10,
+        "target uncacheable percentage")
+    progress_interval = Param.Counter(1000000,
+        "progress report interval (in accesses)")
+    trace_addr = Param.Addr(0, "address to trace")
 
-    Source('memtest.cc')
+    test = Port("Port to the memory system to test")
+    functional = Port("Port to the functional memory used for verification")

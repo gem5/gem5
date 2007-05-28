@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Kevin Lim
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from FuncUnit import *
+from FuncUnitConfig import *
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class FUPool(SimObject):
+    type = 'FUPool'
+    FUList = VectorParam.FUDesc("list of FU's for this pool")
 
-    Source('memtest.cc')
+class DefaultFUPool(FUPool):
+    FUList = [ IntALU(), IntMultDiv(), FP_ALU(), FP_MultDiv(), ReadPort(),
+               WritePort(), RdWrPort(), IprPort() ]

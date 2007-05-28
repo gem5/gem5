@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,13 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from Device import BasicPioDevice
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
-
-    Source('memtest.cc')
+class AlphaConsole(BasicPioDevice):
+    type = 'AlphaConsole'
+    cpu = Param.BaseCPU(Parent.cpu[0], "Processor")
+    disk = Param.SimpleDisk("Simple Disk")
+    sim_console = Param.SimConsole(Parent.any, "The Simulator Console")
+    system = Param.AlphaSystem(Parent.any, "system object")

@@ -32,6 +32,9 @@
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
+    SimObject('AlphaConsole.py')
+    SimObject('Tsunami.py')
+
     Source('console.cc')
     Source('tsunami.cc')
     Source('tsunami_cchip.cc')

@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,19 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+class DiskImage(SimObject):
+    type = 'DiskImage'
+    abstract = True
+    image_file = Param.String("disk image file")
+    read_only = Param.Bool(False, "read only image")
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class RawDiskImage(DiskImage):
+    type = 'RawDiskImage'
 
-    Source('memtest.cc')
+class CowDiskImage(DiskImage):
+    type = 'CowDiskImage'
+    child = Param.DiskImage(RawDiskImage(read_only=True),
+                            "child image")
+    table_size = Param.Int(65536, "initial table size")
