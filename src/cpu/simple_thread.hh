@@ -38,7 +38,6 @@
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
-#include "mem/physical.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/eventq.hh"

@@ -31,23 +31,32 @@
 #include "mem/tport.hh"
 
 void
-SimpleTimingPort::recvFunctional(PacketPtr pkt)
+SimpleTimingPort::checkFunctional(PacketPtr pkt)
 {
-    std::list<std::pair<Tick,PacketPtr> >::iterator i = transmitList.begin();
-    std::list<std::pair<Tick,PacketPtr> >::iterator end = transmitList.end();
-    bool notDone = true;
+    DeferredPacketIterator i = transmitList.begin();
+    DeferredPacketIterator end = transmitList.end();
 
-    while (i != end && notDone) {
-        PacketPtr target = i->second;
+    while (i != end) {
+        PacketPtr target = i->pkt;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
-        if (target->intersect(pkt))
-            notDone = fixPacket(pkt, target);
+        if (target->intersect(pkt)) {
+            if (!fixPacket(pkt, target)) {
+                // fixPacket returns true for continue, false for done
+                return;
+            }
+        }
 
         i++;
     }
+}
 
-    //Then just do an atomic access and throw away the returned latency
+void
+SimpleTimingPort::recvFunctional(PacketPtr pkt)
+{
+    checkFunctional(pkt);
+
+    // Just do an atomic access and throw away the returned latency
     if (pkt->result != Packet::Success)
         recvAtomic(pkt);
 }
@@ -67,12 +76,9 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         pkt->makeTimingResponse();
         sendTiming(pkt, latency);
     }
-    else {
-        if (pkt->cmd != MemCmd::UpgradeReq)
-        {
-            delete pkt->req;
-            delete pkt;
-        }
+    else if (pkt->cmd != MemCmd::UpgradeReq) {
+        delete pkt->req;
+        delete pkt;
     }
     return true;
 }
@@ -81,12 +87,12 @@ void
 SimpleTimingPort::recvRetry()
 {
     assert(!transmitList.empty());
-    if (Port::sendTiming(transmitList.front().second)) {
+    if (Port::sendTiming(transmitList.front().pkt)) {
         transmitList.pop_front();
         DPRINTF(Bus, "No Longer waiting on retry\n");
         if (!transmitList.empty()) {
-            Tick time = transmitList.front().first;
-            sendEvent.schedule(time <= curTick ? curTick+1 : time);
+            Tick time = transmitList.front().tick;
+            sendEvent->schedule(time <= curTick ? curTick+1 : time);
         }
     }
 
@@ -101,29 +107,29 @@ SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
 {
     // Nothing is on the list: add it and schedule an event
     if (transmitList.empty()) {
-        assert(!sendEvent.scheduled());
-        sendEvent.schedule(curTick+time);
-        transmitList.push_back(std::pair<Tick,PacketPtr>(time+curTick,pkt));
+        assert(!sendEvent->scheduled());
+        sendEvent->schedule(curTick+time);
+        transmitList.push_back(DeferredPacket(time+curTick, pkt));
         return;
     }
 
     // something is on the list and this belongs at the end
-    if (time+curTick >= transmitList.back().first) {
-        transmitList.push_back(std::pair<Tick,PacketPtr>(time+curTick,pkt));
+    if (time+curTick >= transmitList.back().tick) {
+        transmitList.push_back(DeferredPacket(time+curTick, pkt));
         return;
     }
     // Something is on the list and this belongs somewhere else
-    std::list<std::pair<Tick,PacketPtr> >::iterator i = transmitList.begin();
-    std::list<std::pair<Tick,PacketPtr> >::iterator end = transmitList.end();
+    DeferredPacketIterator i = transmitList.begin();
+    DeferredPacketIterator end = transmitList.end();
     bool done = false;
 
     while (i != end && !done) {
-        if (time+curTick < i->first) {
+        if (time+curTick < i->tick) {
             if (i == transmitList.begin()) {
                 //Inserting at begining, reschedule
-                sendEvent.reschedule(time+curTick);
+                sendEvent->reschedule(time+curTick);
             }
-            transmitList.insert(i,std::pair<Tick,PacketPtr>(time+curTick,pkt));
+            transmitList.insert(i, DeferredPacket(time+curTick, pkt));
             done = true;
         }
         i++;
@@ -132,20 +138,20 @@ SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
 }
 
 void
-SimpleTimingPort::SendEvent::process()
+SimpleTimingPort::processSendEvent()
 {
-    assert(port->transmitList.size());
-    assert(port->transmitList.front().first <= curTick);
-    if (port->Port::sendTiming(port->transmitList.front().second)) {
+    assert(transmitList.size());
+    assert(transmitList.front().tick <= curTick);
+    if (Port::sendTiming(transmitList.front().pkt)) {
         //send successful, remove packet
-        port->transmitList.pop_front();
-        if (!port->transmitList.empty()) {
-            Tick time = port->transmitList.front().first;
-            schedule(time <= curTick ? curTick+1 : time);
+        transmitList.pop_front();
+        if (!transmitList.empty()) {
+            Tick time = transmitList.front().tick;
+            sendEvent->schedule(time <= curTick ? curTick+1 : time);
         }
-        if (port->transmitList.empty() && port->drainEvent) {
-            port->drainEvent->process();
-            port->drainEvent = NULL;
+        if (transmitList.empty() && drainEvent) {
+            drainEvent->process();
+            drainEvent = NULL;
         }
         return;
     }
