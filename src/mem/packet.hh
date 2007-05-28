@@ -506,16 +506,18 @@ class Packet
     bool intersect(PacketPtr p);
 };
 
-/** This function given a functional packet and a timing packet either satisfies
- * the timing packet, or updates the timing packet to reflect the updated state
- * in the timing packet. It returns if the functional packet should continue to
- * traverse the memory hierarchy or not.
+/** This function given a functional packet and a timing packet either
+ * satisfies the timing packet, or updates the timing packet to
+ * reflect the updated state in the timing packet. It returns if the
+ * functional packet should continue to traverse the memory hierarchy
+ * or not.
  */
 bool fixPacket(PacketPtr func, PacketPtr timing);
 
-/** This function is a wrapper for the fixPacket field that toggles the hasData bit
- * it is used when a response is waiting in the caches, but hasn't been marked as a
- * response yet (so the fixPacket needs to get the correct value for the hasData)
+/** This function is a wrapper for the fixPacket field that toggles
+ * the hasData bit it is used when a response is waiting in the
+ * caches, but hasn't been marked as a response yet (so the fixPacket
+ * needs to get the correct value for the hasData)
  */
 bool fixDelayedResponsePacket(PacketPtr func, PacketPtr timing);
 
