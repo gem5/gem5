@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,17 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+class AlphaTLB(SimObject):
+    type = 'AlphaTLB'
+    abstract = True
+    size = Param.Int("TLB size")
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class AlphaDTB(AlphaTLB):
+    type = 'AlphaDTB'
+    size = 64
 
-    Source('memtest.cc')
+class AlphaITB(AlphaTLB):
+    type = 'AlphaITB'
+    size = 48

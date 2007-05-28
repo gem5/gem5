@@ -30,6 +30,11 @@
 
 Import('*')
 
+SimObject('Bridge.py')
+SimObject('Bus.py')
+SimObject('PhysicalMemory.py')
+SimObject('MemObject.py')
+
 Source('bridge.cc')
 Source('bus.cc')
 Source('dram.cc')

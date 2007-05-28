@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Ron Dreslinski
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.SimObject import SimObject
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
-
-    Source('memtest.cc')
+class MemObject(SimObject):
+    type = 'MemObject'
+    abstract = True

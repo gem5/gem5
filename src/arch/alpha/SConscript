@@ -40,6 +40,9 @@ if env['TARGET_ISA'] == 'alpha':
     Source('remote_gdb.cc')
 
     if env['FULL_SYSTEM']:
+        SimObject('AlphaSystem.py')
+        SimObject('AlphaTLB.py')
+
         Source('arguments.cc')
         Source('ev5.cc')
         Source('idle_event.cc')

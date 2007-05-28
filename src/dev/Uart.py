@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,20 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5 import build_env
+from Device import BasicPioDevice
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
+class Uart(BasicPioDevice):
+    type = 'Uart'
+    abstract = True
+    sim_console = Param.SimConsole(Parent.any, "The console")
 
-    Source('memtest.cc')
+class Uart8250(Uart):
+    type = 'Uart8250'
+
+if build_env['ALPHA_TLASER']:
+    class Uart8530(Uart):
+        type = 'Uart8530'
+

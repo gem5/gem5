@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,14 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
 
-if 'O3CPU' in env['CPU_MODELS']:
-    SimObject('MemTest.py')
-
-    Source('memtest.cc')
+class SimConsole(SimObject):
+    type = 'SimConsole'
+    append_name = Param.Bool(True, "append name() to filename")
+    intr_control = Param.IntrControl(Parent.any, "interrupt controller")
+    port = Param.TcpPort(3456, "listen port")
+    number = Param.Int(0, "console number")
+    output = Param.String('console', "file to dump output to")

@@ -31,6 +31,9 @@
 Import('*')
 
 if 'OzoneCPU' in env['CPU_MODELS']:
+    SimObject('OzoneCPU.py')
+    SimObject('SimpleOzoneCPU.py')
+
     need_bp_unit = True
     Source('base_dyn_inst.cc')
     Source('bpred_unit.cc')
@@ -42,4 +45,5 @@ if 'OzoneCPU' in env['CPU_MODELS']:
     Source('lw_lsq.cc')
     Source('rename_table.cc')
     if env['USE_CHECKER']:
+        SimObject('m5/objects/OzoneChecker.py')
         Source('checker_builder.cc')
