@@ -28,7 +28,7 @@
  * Internal APIs
  */
 
-#include <sys/errno.h>
+#include <errno.h>
 
 #include <assert.h>
 #include "libelf.h"

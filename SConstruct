@@ -182,7 +182,6 @@ for t in abs_targets:
 env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
-Export('env')
 
 #Parse CC/CXX early so that we use the correct compiler for 
 # to test for dependencies/versions/libraries/includes
@@ -191,6 +190,8 @@ if ARGUMENTS.get('CC', None):
 
 if ARGUMENTS.get('CXX', None):
     env['CXX'] = ARGUMENTS.get('CXX')
+
+Export('env')
 
 env.SConsignFile(joinpath(build_root,"sconsign"))
 

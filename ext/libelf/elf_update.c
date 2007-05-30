@@ -27,6 +27,9 @@
 
 #include <sys/mman.h>
 #include <sys/param.h>
+#ifdef __sun
+#include <sys/sysmacros.h>
+#endif
 
 #include <assert.h>
 #include <errno.h>
