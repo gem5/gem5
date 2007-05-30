@@ -36,7 +36,7 @@ SimpleTimingPort::checkFunctional(PacketPtr pkt)
     DeferredPacketIterator i = transmitList.begin();
     DeferredPacketIterator end = transmitList.end();
 
-    while (i != end) {
+    for (; i != end; ++i) {
         PacketPtr target = i->pkt;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
@@ -46,8 +46,6 @@ SimpleTimingPort::checkFunctional(PacketPtr pkt)
                 return;
             }
         }
-
-        i++;
     }
 }
 
@@ -74,7 +72,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (pkt->needsResponse()) {
         pkt->makeTimingResponse();
-        sendTiming(pkt, latency);
+        schedSendTiming(pkt, latency);
     }
     else if (pkt->cmd != MemCmd::UpgradeReq) {
         delete pkt->req;
@@ -83,81 +81,85 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     return true;
 }
 
-void
-SimpleTimingPort::recvRetry()
-{
-    assert(!transmitList.empty());
-    if (Port::sendTiming(transmitList.front().pkt)) {
-        transmitList.pop_front();
-        DPRINTF(Bus, "No Longer waiting on retry\n");
-        if (!transmitList.empty()) {
-            Tick time = transmitList.front().tick;
-            sendEvent->schedule(time <= curTick ? curTick+1 : time);
-        }
-    }
-
-    if (transmitList.empty() && drainEvent) {
-        drainEvent->process();
-        drainEvent = NULL;
-    }
-}
 
 void
-SimpleTimingPort::sendTiming(PacketPtr pkt, Tick time)
+SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
 {
+    assert(when > curTick);
+
     // Nothing is on the list: add it and schedule an event
     if (transmitList.empty()) {
         assert(!sendEvent->scheduled());
-        sendEvent->schedule(curTick+time);
-        transmitList.push_back(DeferredPacket(time+curTick, pkt));
+        sendEvent->schedule(when);
+        transmitList.push_back(DeferredPacket(when, pkt));
         return;
     }
 
     // something is on the list and this belongs at the end
-    if (time+curTick >= transmitList.back().tick) {
-        transmitList.push_back(DeferredPacket(time+curTick, pkt));
+    if (when >= transmitList.back().tick) {
+        transmitList.push_back(DeferredPacket(when, pkt));
         return;
     }
     // Something is on the list and this belongs somewhere else
     DeferredPacketIterator i = transmitList.begin();
     DeferredPacketIterator end = transmitList.end();
-    bool done = false;
 
-    while (i != end && !done) {
-        if (time+curTick < i->tick) {
+    for (; i != end; ++i) {
+        if (when < i->tick) {
             if (i == transmitList.begin()) {
                 //Inserting at begining, reschedule
-                sendEvent->reschedule(time+curTick);
+                sendEvent->reschedule(when);
             }
-            transmitList.insert(i, DeferredPacket(time+curTick, pkt));
-            done = true;
+            transmitList.insert(i, DeferredPacket(when, pkt));
+            return;
         }
-        i++;
     }
-    assert(done);
+    assert(false); // should never get here
 }
 
+
 void
-SimpleTimingPort::processSendEvent()
+SimpleTimingPort::sendDeferredPacket()
 {
-    assert(transmitList.size());
-    assert(transmitList.front().tick <= curTick);
-    if (Port::sendTiming(transmitList.front().pkt)) {
+    assert(deferredPacketReady());
+    bool success = sendTiming(transmitList.front().pkt);
+
+    if (success) {
         //send successful, remove packet
         transmitList.pop_front();
         if (!transmitList.empty()) {
             Tick time = transmitList.front().tick;
             sendEvent->schedule(time <= curTick ? curTick+1 : time);
         }
+
         if (transmitList.empty() && drainEvent) {
             drainEvent->process();
             drainEvent = NULL;
         }
-        return;
     }
-    // send unsuccessful (due to flow control).  Will get retry
-    // callback later; save for then if not already
-    DPRINTF(Bus, "Waiting on retry\n");
+
+    waitingOnRetry = !success;
+
+    if (waitingOnRetry) {
+        DPRINTF(Bus, "Send failed, waiting on retry\n");
+    }
+}
+
+
+void
+SimpleTimingPort::recvRetry()
+{
+    DPRINTF(Bus, "Received retry\n");
+    assert(waitingOnRetry);
+    sendDeferredPacket();
+}
+
+
+void
+SimpleTimingPort::processSendEvent()
+{
+    assert(!waitingOnRetry);
+    sendDeferredPacket();
 }
 
 

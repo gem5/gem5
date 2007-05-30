@@ -94,15 +94,29 @@ class SimpleTimingPort : public Port
      * here.*/
     Event *drainEvent;
 
+    /** Remember whether we're awaiting a retry from the bus. */
+    bool waitingOnRetry;
+
     /** Check the list of buffered packets against the supplied
      * functional request. */
     void checkFunctional(PacketPtr funcPkt);
 
+    /** Check whether we have a packet ready to go on the transmit list. */
+    bool deferredPacketReady()
+    { return !transmitList.empty() && transmitList.front().tick <= curTick; }
+
     /** Schedule a sendTiming() event to be called in the future.
      * @param pkt packet to send
-     * @param time increment from now (in ticks) to send packet
+     * @param absolute time (in ticks) to send packet
      */
-    void sendTiming(PacketPtr pkt, Tick time);
+    void schedSendTiming(PacketPtr pkt, Tick when);
+
+    /** Attempt to send the packet at the head of the deferred packet
+     * list.  Caller must guarantee that the deferred packet list is
+     * non-empty and that the head packet is scheduled for curTick (or
+     * earlier).
+     */
+    void sendDeferredPacket();
 
     /** This function is notification that the device should attempt to send a
      * packet again. */
@@ -126,7 +140,8 @@ class SimpleTimingPort : public Port
     SimpleTimingPort(std::string pname, MemObject *_owner = NULL)
         : Port(pname, _owner),
           sendEvent(new SendEvent(this)),
-          drainEvent(NULL)
+          drainEvent(NULL),
+          waitingOnRetry(false)
     {}
 
     ~SimpleTimingPort() { delete sendEvent; }
