@@ -72,7 +72,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (pkt->needsResponse()) {
         pkt->makeTimingResponse();
-        schedSendTiming(pkt, latency);
+        schedSendTiming(pkt, curTick + latency);
     }
     else if (pkt->cmd != MemCmd::UpgradeReq) {
         delete pkt->req;
