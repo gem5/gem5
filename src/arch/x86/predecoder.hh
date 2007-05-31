@@ -60,6 +60,8 @@
 
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
@@ -81,6 +83,8 @@ namespace X86ISA
         MachInst fetchChunk;
         //The pc of the start of fetchChunk
         Addr basePC;
+        //The pc the current instruction started at
+        Addr origPC;
         //The offset into fetchChunk of current processing
         int offset;
         //The extended machine instruction being generated
@@ -130,6 +134,8 @@ namespace X86ISA
                 outOfBytes = true;
         }
 
+        void reset();
+
         //State machine state
       protected:
         //Whether or not we're out of bytes
@@ -144,6 +150,7 @@ namespace X86ISA
         int immediateCollected;
 
         enum State {
+            ResetState,
             PrefixState,
             OpcodeState,
             ModRMState,
@@ -166,9 +173,9 @@ namespace X86ISA
 
       public:
         Predecoder(ThreadContext * _tc) :
-            tc(_tc), basePC(0), offset(0),
+            tc(_tc), basePC(0), origPC(0), offset(0),
             outOfBytes(true), emiIsReady(false),
-            state(PrefixState)
+            state(ResetState)
         {}
 
         ThreadContext * getTC()
@@ -218,6 +225,15 @@ namespace X86ISA
             assert(emiIsReady);
             emiIsReady = false;
             return emi;
+        }
+
+        int getInstSize()
+        {
+            DPRINTF(Predecoder,
+                    "Calculating the instruction size: "
+                    "basePC: %#x offset: %#x origPC: %#x\n",
+                    basePC, offset, origPC);
+            return basePC + offset - origPC;
         }
     };
 };

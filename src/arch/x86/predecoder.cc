@@ -62,6 +62,21 @@
 
 namespace X86ISA
 {
+    void Predecoder::reset()
+    {
+        origPC = basePC + offset;
+        DPRINTF(Predecoder, "Setting origPC to %#x\n", origPC);
+        emi.opcode.num = 0;
+
+        immediateCollected = 0;
+        emi.immediate = 0;
+        displacementCollected = 0;
+        emi.displacement = 0;
+
+        emi.modRM = 0;
+        emi.sib = 0;
+    }
+
     void Predecoder::process()
     {
         //This function drives the predecoder state machine.
@@ -78,6 +93,9 @@ namespace X86ISA
             uint8_t nextByte = getNextByte();
             switch(state)
             {
+              case ResetState:
+                reset();
+                state = PrefixState;
               case PrefixState:
                 state = doPrefixState(nextByte);
                 break;
@@ -150,7 +168,6 @@ namespace X86ISA
             emi.rex = nextByte;
             break;
           case 0:
-            emi.opcode.num = 0;
             nextState = OpcodeState;
             break;
           default:
@@ -188,12 +205,6 @@ namespace X86ISA
             DPRINTF(Predecoder, "Found opcode %#x.\n", nextByte);
             emi.opcode.op = nextByte;
 
-            //Prepare for any immediate/displacement we might need
-            immediateCollected = 0;
-            emi.immediate = 0;
-            displacementCollected = 0;
-            emi.displacement = 0;
-
             //Figure out the effective operand size. This can be overriden to
             //a fixed value at the decoder level.
             if(/*FIXME long mode*/1)
@@ -229,14 +240,11 @@ namespace X86ISA
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {
                 nextState = ModRMState;
             } else {
-                //If there's no modRM byte, set it to 0 so we can detect
-                //that later.
-                emi.modRM = 0;
                 if(immediateSize) {
                     nextState = ImmediateState;
                 } else {
                     emiIsReady = true;
-                    nextState = PrefixState;
+                    nextState = ResetState;
                 }
             }
         }
@@ -282,7 +290,7 @@ namespace X86ISA
             nextState = ImmediateState;
         } else {
             emiIsReady = true;
-            nextState = PrefixState;
+            nextState = ResetState;
         }
         //The ModRM byte is consumed no matter what
         consumeByte();
@@ -304,7 +312,7 @@ namespace X86ISA
             nextState = ImmediateState;
         } else {
             emiIsReady = true;
-            nextState = PrefixState;
+            nextState = ResetState;
         }
         return nextState;
     }
@@ -344,7 +352,7 @@ namespace X86ISA
                 nextState = ImmediateState;
             } else {
                 emiIsReady = true;
-                nextState = PrefixState;
+                nextState = ResetState;
             }
         }
         else
@@ -380,7 +388,7 @@ namespace X86ISA
             DPRINTF(Predecoder, "Collected immediate %#x.\n",
                     emi.immediate);
             emiIsReady = true;
-            nextState = PrefixState;
+            nextState = ResetState;
         }
         else
             nextState = ImmediateState;

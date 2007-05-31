@@ -117,7 +117,8 @@ void RegFile::setNextPC(Addr val)
 
 Addr RegFile::readNextNPC()
 {
-    return nextRip + sizeof(MachInst);
+    //There's no way to know how big the -next- instruction will be.
+    return nextRip + 1;
 }
 
 void RegFile::setNextNPC(Addr val)

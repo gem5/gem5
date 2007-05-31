@@ -237,11 +237,11 @@
             0x7: xchg_Ev_Gv();
         }
         0x11: decode OPCODE_OP_BOTTOM3 {
-            0x0: Inst::MOV(); //mov_Eb_Gb();
-            0x1: Inst::MOV(); //mov_Ev_Gv();
-            0x2: Inst::MOV(); //mov_Gb_Eb();
-            0x3: Inst::MOV(); //mov_Gv_Ev();
-            0x4: Inst::MOV(); //mov_MwRv_Sw();
+            0x0: Inst::MOV(Eb, Gb);
+            0x1: Inst::MOV(Ev, Gv);
+            0x2: Inst::MOV(Gb, Eb);
+            0x3: Inst::MOV(Gv, Ev);
+            0x4: mov_MwRv_Sw(); //What to do with this one?
             0x5: lea_Gv_M();
             0x6: mov_Sw_MwRv();
             0x7: group10_Ev(); //Make sure this is Ev

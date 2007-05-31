@@ -170,7 +170,7 @@ namespace X86ISA
 //       noimm byte word dword qword oword vword zword enter pointer
         {0,    1,   2,   4,    8,    16,   2,    2,    3,    4      }, //16 bit
         {0,    1,   2,   4,    8,    16,   4,    4,    3,    6      }, //32 bit
-        {0,    1,   2,   4,    8,    16,   4,    8,    3,    0      }  //64 bit
+        {0,    1,   2,   4,    8,    16,   8,    4,    3,    0      }  //64 bit
     };
 
     //This table determines the immediate type. The first index is the
