@@ -64,8 +64,13 @@ class Micro_Container(object):
             string += "  %s\n" % microop
         return string
 
-class Macroop(Micro_Container):
+class Combinational_Macroop(Micro_Container):
     pass
+
+class Rom_Macroop(object):
+    def __init__(self, name, target):
+        self.name = name
+        self.target = target
 
 class Rom(Micro_Container):
     def __init__(self, name):
@@ -310,6 +315,9 @@ def p_block(t):
 # Defines a section of microcode that should go in the current ROM
 def p_rom_block(t):
     'rom_block : DEF ROM block SEMI'
+    if not t.parser.rom:
+        print_error("Rom block found, but no Rom object specified.")
+        raise TypeError, "Rom block found, but no Rom object was specified."
     for statement in t[3].statements:
         handle_statement(t.parser, t.parser.rom, statement)
     t[0] = t.parser.rom
@@ -317,7 +325,12 @@ def p_rom_block(t):
 # Defines a macroop that jumps to an external label in the ROM
 def p_macroop_def_0(t):
     'macroop_def : DEF MACROOP ID LPAREN ID RPAREN SEMI'
-    t[0] = t[4]
+    if not t.parser.rom_macroop_type:
+        print_error("ROM based macroop found, but no ROM macroop class was specified.")
+        raise TypeError, "ROM based macroop found, but no ROM macroop class was specified."
+    macroop = t.parser.rom_macroop_type(t[3], t[5])
+    t[0] = macroop
+
 
 # Defines a macroop that is combinationally generated
 def p_macroop_def_1(t):
@@ -438,13 +451,15 @@ def p_error(t):
 
 class MicroAssembler(object):
 
-    def __init__(self, macro_type, microops, rom):
+    def __init__(self, macro_type, microops,
+            rom = None, rom_macroop_type = None):
         self.lexer = lex.lex()
         self.parser = yacc.yacc()
         self.parser.macro_type = macro_type
         self.parser.macroops = {}
         self.parser.microops = microops
         self.parser.rom = rom
+        self.parser.rom_macroop_type = rom_macroop_type
 
     def assemble(self, asm):
         self.parser.parse(asm, lexer=self.lexer)

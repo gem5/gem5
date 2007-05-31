@@ -26,7 +26,7 @@
 #
 # Authors: Gabe Black
 
-from micro_asm import MicroAssembler, Macroop, Rom
+from micro_asm import MicroAssembler, Combinational_Macroop, Rom_Macroop, Rom
 
 class Bah(object):
     def __init__(self):
@@ -52,7 +52,7 @@ microops = {
     "dah": Dah
 }
 
-class TestMacroop(Macroop):
+class TestMacroop(Combinational_Macroop):
     def tweak(self):
         microops["bah"] = Bah_Tweaked
     def untweak(self):
@@ -68,7 +68,7 @@ class TestMacroop(Macroop):
             "print": self.print_debug
         }
 
-assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'))
+assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'), Rom_Macroop)
 
 testAssembly = '''
 # Single line comment
