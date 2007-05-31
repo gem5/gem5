@@ -75,7 +75,7 @@ if 'O3CPU' in env['CPU_MODELS']:
         sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
 
     if env['USE_CHECKER']:
-        SimObject('m5/objects/O3Checker.py')
+        SimObject('O3Checker.py')
         Source('checker_builder.cc')
 
 if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:

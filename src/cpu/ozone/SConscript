@@ -45,5 +45,5 @@ if 'OzoneCPU' in env['CPU_MODELS']:
     Source('lw_lsq.cc')
     Source('rename_table.cc')
     if env['USE_CHECKER']:
-        SimObject('m5/objects/OzoneChecker.py')
+        SimObject('OzoneChecker.py')
         Source('checker_builder.cc')
