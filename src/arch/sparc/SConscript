@@ -41,6 +41,9 @@ if env['TARGET_ISA'] == 'sparc':
     Source('remote_gdb.cc')
 
     if env['FULL_SYSTEM']:
+        SimObject('SparcSystem.py')
+        SimObject('SparcTLB.py')
+
         Source('arguments.cc')
         Source('pagetable.cc')
         Source('stacktrace.cc')

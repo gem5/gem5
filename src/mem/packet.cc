@@ -192,11 +192,12 @@ fixPacket(PacketPtr func, PacketPtr timing)
             func->flags |= SATISFIED;
             return false;
         } else {
-            // In this case the timing packet only partially satisfies the
-            // requset, so we would need more information to make this work.
-            // Like bytes valid in the packet or something, so the request could
-            // continue and get this bit of possibly newer data along with the
-            // older data not written to yet.
+            // In this case the timing packet only partially satisfies
+            // the request, so we would need more information to make
+            // this work.  Like bytes valid in the packet or
+            // something, so the request could continue and get this
+            // bit of possibly newer data along with the older data
+            // not written to yet.
             panic("Timing packet only partially satisfies the functional"
                     "request. Now what?");
         }

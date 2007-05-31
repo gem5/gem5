@@ -142,27 +142,38 @@ void MiscRegFile::clear()
 
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 {
-    switch (miscReg) {
-      case MISCREG_TLB_DATA:
-        /* Package up all the data for the tlb:
-         * 6666555555555544444444443333333333222222222211111111110000000000
-         * 3210987654321098765432109876543210987654321098765432109876543210
-         *   secContext   | priContext    |             |tl|partid|  |||||^hpriv
-         *                                                           ||||^red
-         *                                                           |||^priv
-         *                                                           ||^am
-         *                                                           |^lsuim
-         *                                                           ^lsudm
-         */
-        return bits((uint64_t)hpstate,2,2) |
-               bits((uint64_t)hpstate,5,5) << 1 |
-               bits((uint64_t)pstate,3,2) << 2 |
-               bits((uint64_t)lsuCtrlReg,3,2) << 4 |
-               bits((uint64_t)partId,7,0) << 8 |
-               bits((uint64_t)tl,2,0) << 16 |
-               (uint64_t)priContext << 32 |
-               (uint64_t)secContext << 48;
 
+  // The three miscRegs are moved up from the switch statement
+  // due to more frequent calls.
+
+  if (miscReg == MISCREG_GL)
+    return gl;
+  if (miscReg == MISCREG_CWP)
+    return cwp;
+  if (miscReg == MISCREG_TLB_DATA) {
+    /* Package up all the data for the tlb:
+     * 6666555555555544444444443333333333222222222211111111110000000000
+     * 3210987654321098765432109876543210987654321098765432109876543210
+     *   secContext   | priContext    |             |tl|partid|  |||||^hpriv
+     *                                                           ||||^red
+     *                                                           |||^priv
+     *                                                           ||^am
+     *                                                           |^lsuim
+     *                                                           ^lsudm
+     */
+    return bits((uint64_t)hpstate,2,2) |
+           bits((uint64_t)hpstate,5,5) << 1 |
+           bits((uint64_t)pstate,3,2) << 2 |
+           bits((uint64_t)lsuCtrlReg,3,2) << 4 |
+           bits((uint64_t)partId,7,0) << 8 |
+           bits((uint64_t)tl,2,0) << 16 |
+                (uint64_t)priContext << 32 |
+                (uint64_t)secContext << 48;
+  }
+
+    switch (miscReg) {
+      //case MISCREG_TLB_DATA:
+      //  [original contents see above]
       //case MISCREG_Y:
       //  return y;
       //case MISCREG_CCR:
@@ -207,8 +218,9 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
         return tl;
       case MISCREG_PIL:
         return pil;
-      case MISCREG_CWP:
-        return cwp;
+      //CWP, GL moved
+      //case MISCREG_CWP:
+      //  return cwp;
       //case MISCREG_CANSAVE:
       //  return cansave;
       //case MISCREG_CANRESTORE:
@@ -219,8 +231,8 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
       //  return otherwin;
       //case MISCREG_WSTATE:
       //  return wstate;
-      case MISCREG_GL:
-        return gl;
+      //case MISCREG_GL:
+      //  return gl;
 
         /** Hyper privileged registers */
       case MISCREG_HPSTATE:

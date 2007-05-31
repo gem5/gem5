@@ -70,7 +70,7 @@ using namespace std;
 using namespace TheISA;
 
 BaseSimpleCPU::BaseSimpleCPU(Params *p)
-    : BaseCPU(p), thread(NULL), predecoder(NULL)
+    : BaseCPU(p), traceData(NULL), thread(NULL), predecoder(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
@@ -329,18 +329,20 @@ BaseSimpleCPU::checkForInterrupts()
 Fault
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
+    uint64_t threadPC = thread->readPC();
+
     // set up memory request for instruction fetch
 #if ISA_HAS_DELAY_SLOT
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",thread->readPC(),
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",threadPC,
             thread->readNextPC(),thread->readNextNPC());
 #else
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",thread->readPC(),
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",threadPC,
             thread->readNextPC());
 #endif
 
     const Addr PCMask = ~(sizeof(MachInst) - 1);
     Addr fetchPC = thread->readPC() + fetchOffset;
-    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, thread->readPC());
+    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, threadPC());
 
     Fault fault = thread->translateInstReq(req);
 
@@ -413,6 +415,7 @@ BaseSimpleCPU::preExecute()
             fetchMicroOp(thread->readMicroPC());
     }
 
+#if TRACING_ON
     //If we decoded an instruction this "tick", record information about it.
     if(curStaticInst)
     {
@@ -426,6 +429,7 @@ BaseSimpleCPU::preExecute()
         thread->setInst(inst);
 #endif // FULL_SYSTEM
     }
+#endif // TRACING_ON
 }
 
 void

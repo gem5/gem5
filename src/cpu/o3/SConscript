@@ -33,6 +33,10 @@ import sys
 Import('*')
 
 if 'O3CPU' in env['CPU_MODELS']:
+    SimObject('FUPool.py')
+    SimObject('FuncUnitConfig.py')
+    SimObject('O3CPU.py')
+
     Source('base_dyn_inst.cc')
     Source('bpred_unit.cc')
     Source('commit.cc')
@@ -71,6 +75,7 @@ if 'O3CPU' in env['CPU_MODELS']:
         sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
 
     if env['USE_CHECKER']:
+        SimObject('O3Checker.py')
         Source('checker_builder.cc')
 
 if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:

@@ -53,7 +53,6 @@
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
 #include "cpu/profile.hh"
-#include "mem/physical.hh"
 #include "sim/faults.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"

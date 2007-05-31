@@ -32,6 +32,17 @@
 Import('*')
 
 if env['FULL_SYSTEM']:
+    SimObject('BadDevice.py')
+    SimObject('Device.py')
+    SimObject('DiskImage.py')
+    SimObject('Ethernet.py')
+    SimObject('Ide.py')
+    SimObject('Pci.py')
+    SimObject('Platform.py')
+    SimObject('SimConsole.py')
+    SimObject('SimpleDisk.py')
+    SimObject('Uart.py')
+
     Source('baddev.cc')
     Source('disk_image.cc')
     Source('etherbus.cc')

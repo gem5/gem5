@@ -38,14 +38,6 @@ class CowIdeDisk(IdeDisk):
     def childImage(self, ci):
         self.image.child.image_file = ci
 
-class CowMmDisk(MmDisk):
-    image = CowDiskImage(child=RawDiskImage(read_only=True),
-                         read_only=False)
-
-    def childImage(self, ci):
-        self.image.child.image_file = ci
-
-
 class BaseTsunami(Tsunami):
     ethernet = NSGigE(configdata=NSGigEPciData(),
                       pci_bus=0, pci_dev=1, pci_func=0)
@@ -87,6 +79,13 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     return self
 
 def makeSparcSystem(mem_mode, mdesc = None):
+    class CowMmDisk(MmDisk):
+        image = CowDiskImage(child=RawDiskImage(read_only=True),
+                             read_only=False)
+
+        def childImage(self, ci):
+            self.image.child.image_file = ci
+
     self = SparcSystem()
     if not mdesc:
         # generic system

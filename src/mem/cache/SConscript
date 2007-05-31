@@ -30,6 +30,8 @@
 
 Import('*')
 
+SimObject('BaseCache.py')
+
 Source('base_cache.cc')
 Source('cache.cc')
 Source('cache_builder.cc')

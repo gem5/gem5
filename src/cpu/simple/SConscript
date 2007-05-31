@@ -33,10 +33,12 @@ Import('*')
 need_simple_base = False
 if 'AtomicSimpleCPU' in env['CPU_MODELS']:
     need_simple_base = True
+    SimObject('AtomicSimpleCPU.py')
     Source('atomic.cc')
 
 if 'TimingSimpleCPU' in env['CPU_MODELS']:
     need_simple_base = True
+    SimObject('TimingSimpleCPU.py')
     Source('timing.cc')
 
 if need_simple_base:
