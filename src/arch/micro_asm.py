@@ -72,6 +72,9 @@ class Rom_Macroop(object):
         self.name = name
         self.target = target
 
+    def __str__(self):
+        return "%s: %s\n" % (self.name, self.target)
+
 class Rom(Micro_Container):
     def __init__(self, name):
         super(Rom, self).__init__(name)
@@ -329,7 +332,7 @@ def p_macroop_def_0(t):
         print_error("ROM based macroop found, but no ROM macroop class was specified.")
         raise TypeError, "ROM based macroop found, but no ROM macroop class was specified."
     macroop = t.parser.rom_macroop_type(t[3], t[5])
-    t[0] = macroop
+    t.parser.macroops[t[3]] = macroop
 
 
 # Defines a macroop that is combinationally generated
