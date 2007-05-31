@@ -91,6 +91,13 @@ def macroop squishy {
     .tweak
 };
 
+#Extending the rom...
+def rom
+{
+    #Here's more stuff for the rom
+    bah
+};
+
 def macroop squashy {
     bah
 };
