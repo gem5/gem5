@@ -68,17 +68,22 @@ class TestMacroop(Macroop):
 assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'))
 
 testAssembly = '''
+# Single line comment
+
 def rom {
     goo: bah
     extern la: hoop 4*8, "a"
-};
+}; /* multiline comment on one line */
+
+/* multi line comment across lines
+   to make sure they work */
 
 def macroop squishy {
     .tweak
     bah
     .untweak
     bah
-    dah
+    dah # single line comment after something
     .tweak
 };
 
@@ -86,6 +91,6 @@ def macroop squashy {
     bah
 };
 
-def macroop (bar);
+def macroop jumper (bar);
 '''
 assembler.assemble(testAssembly)

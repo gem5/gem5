@@ -174,7 +174,6 @@ tokens = reserved + (
 
         'LPAREN', 'RPAREN',
         'LBRACE', 'RBRACE',
-        #'COMMA',
         'COLON', 'SEMI', 'DOT',
         'NEWLINE'
         )
@@ -190,62 +189,79 @@ reserved_map = { }
 for r in reserved:
     reserved_map[r.lower()] = r
 
+def t_ANY_COMMENT(t):
+    r'\#[^\n]*(?=\n)'
+    #print "t_ANY_COMMENT %s" % t.value
+
+def t_ANY_MULTILINECOMMENT(t):
+    r'/\*([^/]|((?<!\*)/))*\*/'
+    #print "t_ANY_MULTILINECOMMENT %s" % t.value
+
 def t_params_COLON(t):
     r':'
     t.lexer.begin('asm')
+    #print "t_params_COLON %s" % t.value
     return t
 
 def t_asm_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
     t.lexer.begin('params')
+    #print "t_asm_ID %s" % t.value
     return t
 
 def t_ANY_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
+    #print "t_ANY_ID %s" % t.value
     return t
 
 def t_params_PARAMS(t):
     r'([^\n;]|((?<=\\)[\n;]))+'
     t.lineno += t.value.count('\n')
     t.lexer.begin('asm')
+    #print "t_params_PARAMS %s" % t.value
     return t
 
 def t_INITIAL_LBRACE(t):
     r'\{'
     t.lexer.begin('asm')
+    #print "t_INITIAL_LBRACE %s" % t.value
     return t
 
 def t_asm_RBRACE(t):
     r'\}'
     t.lexer.begin('INITIAL')
+    #print "t_asm_RBRACE %s" % t.value
     return t
 
 def t_INITIAL_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
+    #print "t_INITIAL_NEWLINE %s" % t.value
 
 def t_asm_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
+    #print "t_asm_NEWLINE %s" % t.value
     return t
 
 def t_params_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
     t.lexer.begin('asm')
+    #print "t_params_NEWLINE %s" % t.value
     return t
 
 def t_params_SEMI(t):
     r';'
     t.lexer.begin('asm')
+    #print "t_params_SEMI %s" % t.value
     return t
 
 # Basic regular expressions to pick out simple tokens
 t_ANY_LPAREN = r'\('
 t_ANY_RPAREN = r'\)'
-#t_COMMA  = r','
 t_ANY_SEMI   = r';'
 t_ANY_DOT    = r'\.'
 
@@ -300,7 +316,7 @@ def p_rom_block(t):
 
 # Defines a macroop that jumps to an external label in the ROM
 def p_macroop_def_0(t):
-    'macroop_def : DEF MACROOP LPAREN ID RPAREN SEMI'
+    'macroop_def : DEF MACROOP ID LPAREN ID RPAREN SEMI'
     t[0] = t[4]
 
 # Defines a macroop that is combinationally generated
@@ -313,7 +329,7 @@ def p_macroop_def_1(t):
         raise
     for statement in t[4].statements:
         handle_statement(t.parser, curop, statement)
-    t.parser.macroops.append(curop)
+    t.parser.macroops[t[3]] = curop
 
 def p_statements_0(t):
     'statements : statement'
@@ -419,15 +435,17 @@ class MicroAssembler(object):
         self.lexer = lex.lex()
         self.parser = yacc.yacc()
         self.parser.macro_type = macro_type
-        self.parser.macroops = []
+        self.parser.macroops = {}
         self.parser.microops = microops
         self.parser.rom = rom
 
     def assemble(self, asm):
         self.parser.parse(asm, lexer=self.lexer)
-        for macroop in self.parser.macroops:
+        # Begin debug printing
+        for macroop in self.parser.macroops.values():
             print macroop
         print self.parser.rom
+        # End debug printing
         macroops = self.parser.macroops
-        self.parser.macroops = []
+        self.parser.macroops = {}
         return macroops
