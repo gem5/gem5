@@ -94,13 +94,12 @@ if env.get('CXX'):
     m4env['CXX'] = env['CXX']
 
 # If we have gm4 use it
-subp = subprocess.Popen("gm4 --version", shell=True, stdout=subprocess.PIPE, 
-                        stderr=subprocess.STDOUT, close_fds=True)
-if subp.communicate()[0].find('GNU') >= 0:
+if m4env.Detect('gm4'):
     m4env['M4'] = 'gm4'
 
 # Check that m4 is available
-if not m4env.get('M4'):
+import SCons.Tool.m4
+if not SCons.Tool.m4.exists(m4env):
    print "Error: Can't find version of M4 macro processor.  " + \
          "Please install M4 and try again."
    Exit(1)
