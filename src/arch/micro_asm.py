@@ -91,6 +91,7 @@ class Statement(object):
     def __init__(self):
         self.is_microop = False
         self.is_directive = False
+        self.params = ""
 
 class Microop(Statement):
     def __init__(self):
@@ -98,7 +99,6 @@ class Microop(Statement):
         self.mnemonic = ""
         self.labels = []
         self.is_microop = True
-        self.params = ""
 
 class Directive(Statement):
     def __init__(self):
@@ -136,7 +136,7 @@ def handle_statement(parser, container, statement):
             raise
     elif statement.is_directive:
         try:
-            eval('container.%s()' % statement.name)
+            eval('container.directives[statement.name](%s)' % statement.params)
         except:
             print_error("Error executing directive.")
             print container.directives
@@ -415,10 +415,17 @@ def p_label_1(t):
     label.text = t[2]
     t[0] = label
 
-def p_directive(t):
+def p_directive_0(t):
     'directive : DOT ID'
     directive = Directive()
     directive.name = t[2]
+    t[0] = directive
+
+def p_directive_1(t):
+    'directive : DOT ID PARAMS'
+    directive = Directive()
+    directive.name = t[2]
+    directive.params = t[3]
     t[0] = directive
 
 # Parse error handler.  Note that the argument here is the offending

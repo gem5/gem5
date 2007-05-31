@@ -57,12 +57,15 @@ class TestMacroop(Macroop):
         microops["bah"] = Bah_Tweaked
     def untweak(self):
         microops["bah"] = Bah
+    def print_debug(self, message):
+        print message
 
     def __init__(self, name):
         super(TestMacroop, self).__init__(name)
         self.directives = {
             "tweak": self.tweak,
-            "untweak": self.untweak
+            "untweak": self.untweak,
+            "print": self.print_debug
         }
 
 assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'))
@@ -82,6 +85,7 @@ def macroop squishy {
     .tweak
     bah
     .untweak
+    .print "In the midst"
     bah
     dah # single line comment after something
     .tweak
