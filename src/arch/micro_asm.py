@@ -197,74 +197,80 @@ reserved_map = { }
 for r in reserved:
     reserved_map[r.lower()] = r
 
+# Ignore comments
 def t_ANY_COMMENT(t):
     r'\#[^\n]*(?=\n)'
-    #print "t_ANY_COMMENT %s" % t.value
 
 def t_ANY_MULTILINECOMMENT(t):
     r'/\*([^/]|((?<!\*)/))*\*/'
-    #print "t_ANY_MULTILINECOMMENT %s" % t.value
 
+# A colon marks the end of a label. It should follow an ID which will
+# put the lexer in the "params" state. Seeing the colon will put it back
+# in the "asm" state since it knows it saw a label and not a mnemonic.
 def t_params_COLON(t):
     r':'
     t.lexer.begin('asm')
-    #print "t_params_COLON %s" % t.value
     return t
 
+# An "ID" in the micro assembler is either a label, directive, or mnemonic
+# If it's either a directive or a mnemonic, it will be optionally followed by
+# parameters. If it's a label, the following colon will make the lexer stop
+# looking for parameters.
 def t_asm_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
     t.lexer.begin('params')
-    #print "t_asm_ID %s" % t.value
     return t
 
+# If there is a label and you're -not- in the assember (which would be caught
+# above), don't start looking for parameters.
 def t_ANY_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
-    #print "t_ANY_ID %s" % t.value
     return t
 
+# Parameters are a string of text which don't contain an unescaped statement
+# statement terminator, ie a newline or semi colon.
 def t_params_PARAMS(t):
     r'([^\n;]|((?<=\\)[\n;]))+'
     t.lineno += t.value.count('\n')
     t.lexer.begin('asm')
-    #print "t_params_PARAMS %s" % t.value
     return t
 
+# Braces enter and exit micro assembly
 def t_INITIAL_LBRACE(t):
     r'\{'
     t.lexer.begin('asm')
-    #print "t_INITIAL_LBRACE %s" % t.value
     return t
 
 def t_asm_RBRACE(t):
     r'\}'
     t.lexer.begin('INITIAL')
-    #print "t_asm_RBRACE %s" % t.value
     return t
 
+# At the top level, keep track of newlines only for line counting.
 def t_INITIAL_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
-    #print "t_INITIAL_NEWLINE %s" % t.value
 
+# In the micro assembler, do line counting but also return a token. The
+# token is needed by the parser to detect the end of a statement.
 def t_asm_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
-    #print "t_asm_NEWLINE %s" % t.value
     return t
 
+# A newline or semi colon when looking for params signals that the statement
+# is over and the lexer should go back to looking for regular assembly.
 def t_params_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
     t.lexer.begin('asm')
-    #print "t_params_NEWLINE %s" % t.value
     return t
 
 def t_params_SEMI(t):
     r';'
     t.lexer.begin('asm')
-    #print "t_params_SEMI %s" % t.value
     return t
 
 # Basic regular expressions to pick out simple tokens
@@ -303,17 +309,8 @@ def p_rom_or_macros_1(t):
     'rom_or_macros : rom_or_macros rom_or_macro'
 
 def p_rom_or_macro_0(t):
-    '''rom_or_macro : rom_block'''
-
-def p_rom_or_macro_1(t):
-    '''rom_or_macro : macroop_def'''
-
-# A block of statements
-def p_block(t):
-    'block : LBRACE statements RBRACE'
-    block = Block()
-    block.statements = t[2]
-    t[0] = block
+    '''rom_or_macro : rom_block
+                    | macroop_def'''
 
 # Defines a section of microcode that should go in the current ROM
 def p_rom_block(t):
@@ -347,6 +344,13 @@ def p_macroop_def_1(t):
         handle_statement(t.parser, curop, statement)
     t.parser.macroops[t[3]] = curop
 
+# A block of statements
+def p_block(t):
+    'block : LBRACE statements RBRACE'
+    block = Block()
+    block.statements = t[2]
+    t[0] = block
+
 def p_statements_0(t):
     'statements : statement'
     if t[1]:
@@ -370,6 +374,7 @@ def p_content_of_statement_0(t):
                             | directive'''
     t[0] = t[1]
 
+# Ignore empty statements
 def p_content_of_statement_1(t):
     'content_of_statement : '
     pass
@@ -380,6 +385,7 @@ def p_end_of_statement(t):
                         | SEMI'''
     pass
 
+# Different flavors of microop to avoid shift/reduce errors
 def p_microop_0(t):
     'microop : labels ID'
     microop = Microop()
@@ -408,6 +414,7 @@ def p_microop_3(t):
     microop.params = t[2]
     t[0] = microop
 
+# Labels in the microcode
 def p_labels_0(t):
     'labels : label'
     t[0] = [t[1]]
@@ -431,6 +438,7 @@ def p_label_1(t):
     label.text = t[2]
     t[0] = label
 
+# Directives for the macroop
 def p_directive_0(t):
     'directive : DOT ID'
     directive = Directive()
