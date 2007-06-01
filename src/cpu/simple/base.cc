@@ -342,7 +342,7 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
 
     const Addr PCMask = ~(sizeof(MachInst) - 1);
     Addr fetchPC = thread->readPC() + fetchOffset;
-    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, threadPC());
+    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, threadPC);
 
     Fault fault = thread->translateInstReq(req);
 
