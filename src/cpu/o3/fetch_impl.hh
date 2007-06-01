@@ -1151,10 +1151,14 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n",
                     tid, instruction->staticInst->disassemble(fetch_PC));
 
+#if TRACING_ON
             instruction->traceData =
                 Trace::getInstRecord(curTick, cpu->tcBase(tid),
                                      instruction->staticInst,
                                      instruction->readPC());
+#elif
+            instruction->traceData = NULL;
+#endif
 
             ///FIXME This needs to be more robust in dealing with delay slots
 #if !ISA_HAS_DELAY_SLOT

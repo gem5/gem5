@@ -329,7 +329,7 @@ BaseSimpleCPU::checkForInterrupts()
 Fault
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
-    uint64_t threadPC = thread->readPC();
+    Addr threadPC = thread->readPC();
 
     // set up memory request for instruction fetch
 #if ISA_HAS_DELAY_SLOT
@@ -340,8 +340,8 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
             thread->readNextPC());
 #endif
 
-    const Addr PCMask = ~(sizeof(MachInst) - 1);
-    Addr fetchPC = thread->readPC() + fetchOffset;
+    const Addr PCMask = ~((Addr)sizeof(MachInst) - 1);
+    Addr fetchPC = threadPC + fetchOffset;
     req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, threadPC);
 
     Fault fault = thread->translateInstReq(req);
@@ -380,7 +380,7 @@ BaseSimpleCPU::preExecute()
         //This should go away once the constructor can be set up properly
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
-        const Addr PCMask = ~(sizeof(MachInst) - 1);
+        const Addr PCMask = ~((Addr)sizeof(MachInst) - 1);
         if(predecoder.needMoreBytes())
             predecoder.moreBytes((thread->readPC() & PCMask) + fetchOffset,
                     0, inst);
