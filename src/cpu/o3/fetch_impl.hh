@@ -1156,7 +1156,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 Trace::getInstRecord(curTick, cpu->tcBase(tid),
                                      instruction->staticInst,
                                      instruction->readPC());
-#elif
+#else
             instruction->traceData = NULL;
 #endif
 
