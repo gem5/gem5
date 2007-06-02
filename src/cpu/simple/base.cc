@@ -380,10 +380,8 @@ BaseSimpleCPU::preExecute()
         //This should go away once the constructor can be set up properly
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
-        const Addr PCMask = ~((Addr)sizeof(MachInst) - 1);
         if(predecoder.needMoreBytes())
-            predecoder.moreBytes((thread->readPC() & PCMask) + fetchOffset,
-                    0, inst);
+            predecoder.moreBytes(thread->readPC() + fetchOffset, 0, inst);
         else
             predecoder.process();
 
