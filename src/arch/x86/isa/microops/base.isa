@@ -204,63 +204,6 @@ def template MicroLdStOpConstructor {{
 
 //////////////////////////////////////////////////////////////////////////
 //
-// LIMMOp Microop templates
-//
-//////////////////////////////////////////////////////////////////////////
-
-def template MicroLIMMOpDeclare {{
-    class %(class_name)s : public X86MicroOpBase
-    {
-      protected:
-        const RegIndex dest;
-        const uint64_t imm;
-        void buildMe();
-
-      public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _dest, uint64_t _imm);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                RegIndex _dest, uint64_t _imm);
-
-        %(BasicExecDeclare)s
-    };
-}};
-
-def template MicroLIMMOpConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            RegIndex _dest, uint64_t _imm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s),
-                dest(_dest), imm(_imm)
-    {
-        buildMe();
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _dest, uint64_t _imm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                dest(_dest), imm(_imm)
-    {
-        buildMe();
-    }
-}};
-
-//////////////////////////////////////////////////////////////////////////
-//
 // FpOp Microop templates
 //
 //////////////////////////////////////////////////////////////////////////

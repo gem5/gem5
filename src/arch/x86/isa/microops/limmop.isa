@@ -53,14 +53,97 @@
 //
 // Authors: Gabe Black
 
-//Common microop stuff
-##include "base.isa"
+//////////////////////////////////////////////////////////////////////////
+//
+// LIMMOp Microop templates
+//
+//////////////////////////////////////////////////////////////////////////
 
-//Register microop definitions
-##include "regop.isa"
+def template MicroLimmOpExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+            %(op_wb)s;
+            return NoFault;
+        }
+}};
 
-//Load immediate microop definition
-##include "limmop.isa"
+def template MicroLimmOpDeclare {{
+    class %(class_name)s : public X86MicroOpBase
+    {
+      protected:
+        const RegIndex dest;
+        const uint64_t imm;
+        void buildMe();
 
-//Miscellaneous microop definitions
-##include "specop.isa"
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                RegIndex _dest, uint64_t _imm);
+
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                RegIndex _dest, uint64_t _imm);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroLimmOpConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            RegIndex _dest, uint64_t _imm) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false, %(op_class)s),
+                dest(_dest), imm(_imm)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            RegIndex _dest, uint64_t _imm) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+                dest(_dest), imm(_imm)
+    {
+        buildMe();
+    }
+}};
+
+let {{
+    class LimmOp(object):
+        def __init__(self, dest, imm):
+            self.dest = dest
+            self.imm = imm
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
+                    %(flags)s %(dest)s, %(imm)s,)''' % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags),
+                "dest" : self.dest, "imm" : self.imm }
+
+    microopClasses["limm"] = LimmOp
+}};
+
+let {{
+    # Build up the all register version of this micro op
+    iop = InstObjParams("limm", "Limm", 'X86MicroOpBase',
+            {"code" : "DestReg = imm;"})
+    header_output += MicroLimmOpDeclare.subst(iop)
+    decoder_output += MicroLimmOpConstructor.subst(iop)
+    exec_output += MicroLimmOpExecute.subst(iop)
+}};
