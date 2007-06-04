@@ -61,12 +61,11 @@
 0x1: decode OPCODE_OP_TOP5 {
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::ADD(rAl,Ib);
-            0x5: Inst::ADD(rAx,Iz);
+            0x4: ADD();
+            0x5: ADD();
             0x6: push_ES();
             0x7: pop_ES();
-            default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
-                             [Eb,Gb],[Ev,Gv],[Gb,Eb],[Gv,Ev]);
+            default: ADD();
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x0: or_Eb_Gb();
@@ -123,13 +122,12 @@
             0x7: das();
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::XOR(rAl,Ib);
-            0x5: Inst::XOR(rAx,Iz);
+            0x4: Inst::XOR(ALIb);
+            0x5: Inst::XOR(rAX,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: aaa();
-            default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
-                                    [Eb,Gb],[Ev,Gv],[Gb,Eb],[Gv,Ev]);
+            default: MultiInst::XOR(EbGb, EvGv, GbEb, GvEv);
         }
         0x07: decode OPCODE_OP_BOTTOM3 {
             0x0: cmp_Eb_Gb();
@@ -237,10 +235,10 @@
             0x7: xchg_Ev_Gv();
         }
         0x11: decode OPCODE_OP_BOTTOM3 {
-            0x0: Inst::MOV(Eb, Gb);
-            0x1: Inst::MOV(Ev, Gv);
-            0x2: Inst::MOV(Gb, Eb);
-            0x3: Inst::MOV(Gv, Ev);
+            0x0: MOV();
+            0x1: MOV();
+            0x2: MOV();
+            0x3: MOV();
             0x4: mov_MwRv_Sw(); //What to do with this one?
             0x5: lea_Gv_M();
             0x6: mov_Sw_MwRv();

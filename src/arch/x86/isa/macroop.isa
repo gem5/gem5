@@ -149,7 +149,8 @@ let {{
         for op in opSeq:
             allocMicroOps += \
                 "microOps[%d] = %s;\n" % \
-                (micropc, op.getAllocator('"' + name + '"', True, False, #op.delayed,
+                (micropc, op.getAllocator('"' + name + '"', True, False,
+                                          #op.delayed,
                                           micropc == 0,
                                           micropc == numMicroOps - 1))
             micropc += 1

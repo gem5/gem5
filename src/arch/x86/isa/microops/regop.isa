@@ -1,0 +1,328 @@
+// Copyright (c) 2007 The Hewlett-Packard Development Company
+// All rights reserved.
+//
+// Redistribution and use of this software in source and binary forms,
+// with or without modification, are permitted provided that the
+// following conditions are met:
+//
+// The software must be used only for Non-Commercial Use which means any
+// use which is NOT directed to receiving any direct monetary
+// compensation for, or commercial advantage from such use.  Illustrative
+// examples of non-commercial use are academic research, personal study,
+// teaching, education and corporate research & development.
+// Illustrative examples of commercial use are distributing products for
+// commercial advantage and providing services using the software for
+// commercial advantage.
+//
+// If you wish to use this software or functionality therein that may be
+// covered by patents for commercial use, please contact:
+//     Director of Intellectual Property Licensing
+//     Office of Strategy and Technology
+//     Hewlett-Packard Company
+//     1501 Page Mill Road
+//     Palo Alto, California  94304
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.  Redistributions
+// in binary form must reproduce the above copyright notice, this list of
+// conditions and the following disclaimer in the documentation and/or
+// other materials provided with the distribution.  Neither the name of
+// the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.  No right of
+// sublicense is granted herewith.  Derivatives of the software and
+// output created using the software may be prepared, but only for
+// Non-Commercial Uses.  Derivatives of the software may be shared with
+// others provided: (i) the others agree to abide by the list of
+// conditions herein which includes the Non-Commercial Use restrictions;
+// and (ii) such Derivatives of the software include the above copyright
+// notice to acknowledge the contribution from this software where
+// applicable, this list of conditions and the disclaimer below.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+//////////////////////////////////////////////////////////////////////////
+//
+// RegOp Microop templates
+//
+//////////////////////////////////////////////////////////////////////////
+
+def template MicroRegOpExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+            return fault;
+        }
+}};
+
+def template MicroRegOpImmExecute {{
+        Fault %(class_name)sImm::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+            %(code)s;
+
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+            return fault;
+        }
+}};
+
+def template MicroRegOpDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+        const RegIndex src1;
+        const RegIndex src2;
+        const RegIndex dest;
+        const bool setStatus;
+        const uint8_t dataSize;
+        const uint8_t ext;
+        void buildMe();
+
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroRegOpImmDeclare {{
+
+    class %(class_name)sImm : public %(base_class)s
+    {
+      protected:
+        const RegIndex src1;
+        const uint8_t imm8;
+        const RegIndex dest;
+        const bool setStatus;
+        const uint8_t dataSize;
+        const uint8_t ext;
+        void buildMe();
+
+      public:
+        %(class_name)sImm(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+
+        %(class_name)sImm(ExtMachInst _machInst,
+                const char * instMnem,
+                RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroRegOpConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false, %(op_class)s),
+                src1(_src1), src2(_src2), dest(_dest),
+                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+                src1(_src1), src2(_src2), dest(_dest),
+                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+    {
+        buildMe();
+    }
+}};
+
+def template MicroRegOpImmConstructor {{
+
+    inline void %(class_name)sImm::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)sImm::%(class_name)sImm(
+            ExtMachInst machInst, const char * instMnem,
+            RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false, %(op_class)s),
+                src1(_src1), imm8(_imm8), dest(_dest),
+                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)sImm::%(class_name)sImm(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+                src1(_src1), imm8(_imm8), dest(_dest),
+                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+    {
+        buildMe();
+    }
+}};
+
+let {{
+    class RegOp(object):
+        def __init__(self, dest, src1, src2):
+            self.dest = dest
+            self.src1 = src1
+            self.src2 = src2
+            self.setStatus = False
+            self.dataSize = 1
+            self.ext = 0
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
+                    %(flags)s %(src1)s, %(src2)s, %(dest)s,
+                    %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags),
+                "src1" : self.src1, "src2" : self.src2,
+                "dest" : self.dest,
+                "setStatus" : self.setStatus,
+                "dataSize" : self.dataSize,
+                "ext" : self.ext}
+
+    class RegOpImm(object):
+        def __init__(self, dest, src1, imm):
+            self.dest = dest
+            self.src1 = src1
+            self.imm = imm
+            self.setStatus = False
+            self.dataSize = 1
+            self.ext = 0
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
+                    %(flags)s %(src1)s, %(imm8)s, %(dest)s,
+                    %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags),
+                "src1" : self.src1, "imm8" : self.imm8,
+                "dest" : self.dest,
+                "setStatus" : self.setStatus,
+                "dataSize" : self.dataSize,
+                "ext" : self.ext}
+}};
+
+let {{
+
+    # Make these empty strings so that concatenating onto
+    # them will always work.
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    def defineMicroIntOp(mnemonic, code):
+        global header_output
+        global decoder_output
+        global exec_output
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        # Find op2 in each of the instruction definitions. Create two versions
+        # of the code, one with an integer operand, and one with an immediate
+        # operand.
+        matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
+        regCode = matcher.sub("SrcReg2", code)
+        immCode = matcher.sub("imm8", code)
+
+        # Build up the all register version of this micro op
+        iop = InstObjParams(name, Name, 'X86MicroOpBase', {"code" : regCode})
+        header_output += MicroRegOpDeclare.subst(iop)
+        decoder_output += MicroRegOpConstructor.subst(iop)
+        exec_output += MicroRegOpExecute.subst(iop)
+
+        class RegOpChild(RegOp):
+            def __init__(self, dest, src1, src2):
+                super(RegOpChild, self).__init__(self, dest, src1, src2)
+                self.mnemonic = name
+
+        microopClasses[name] = RegOpChild
+
+        # Build up the immediate version of this micro op
+        iop = InstObjParams(name + "i", Name,
+                'X86MicroOpBase', {"code" : immCode})
+        header_output += MicroRegOpImmDeclare.subst(iop)
+        decoder_output += MicroRegOpImmConstructor.subst(iop)
+        exec_output += MicroRegOpImmExecute.subst(iop)
+
+        class RegOpImmChild(RegOpImm):
+            def __init__(self, dest, src1, imm):
+                super(RegOpImmChild, self).__init__(self, dest, src1, imm)
+                self.mnemonic = name + "i"
+
+        microopClasses[name + "i"] = RegOpChild
+
+    defineMicroIntOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
+    defineMicroIntOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroIntOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to add in CF, set OF,CF,SF
+    defineMicroIntOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to subtract CF, set OF,CF,SF
+    defineMicroIntOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
+    defineMicroIntOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to set OF,CF,SF
+    defineMicroIntOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
+    defineMicroIntOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)') #Needs to set OF,CF,SF and not DestReg
+    defineMicroIntOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)')
+
+}};

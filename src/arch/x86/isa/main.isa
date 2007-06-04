@@ -81,10 +81,6 @@ namespace X86ISA;
 //Include code to build macroops.
 ##include "macroop.isa"
 
-//Include the simple microcode assembler. This will hopefully stay
-//unspecialized for x86 and can later be made available to other ISAs.
-##include "microasm.isa"
-
 ////////////////////////////////////////////////////////////////////
 //
 // X86 only infrastructure code.

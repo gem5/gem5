@@ -96,6 +96,9 @@ def operand_types {{
 }};
 
 def operands {{
+        'DestReg':       ('IntReg', 'uqw', 'dest', 'IsInteger', 1),
+        'SrcReg1':       ('IntReg', 'uqw', 'src1', 'IsInteger', 2),
+        'SrcReg2':       ('IntReg', 'uqw', 'src2', 'IsInteger', 3),
         'IntRegOp0':     ('IntReg', 'udw', 'param0', 'IsInteger', 1),
         'IntRegOp1':     ('IntReg', 'udw', 'param1', 'IsInteger', 2),
         'IntRegOp2':     ('IntReg', 'udw', 'param2', 'IsInteger', 2),

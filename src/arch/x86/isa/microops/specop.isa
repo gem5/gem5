@@ -53,11 +53,73 @@
 //
 // Authors: Gabe Black
 
-//Common microop stuff
-##include "base.isa"
+//////////////////////////////////////////////////////////////////////////
+//
+// Fault Microop
+//
+//////////////////////////////////////////////////////////////////////////
 
-//Miscellaneous microop definitions
-##include "specop.isa"
+def template MicroFaultExecute {{
+        Fault %(class_name)s ::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            //Return the fault we were constructed with
+            return fault;
+        }
+}};
 
-//Register microop definitions
-##include "regop.isa"
+def template MicroFaultDeclare {{
+    class %(class_name)s : public X86MicroOpBase
+    {
+      protected:
+        Fault fault;
+        void buildMe();
+
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                Fault _fault);
+
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                Fault _fault);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroFaultConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem, Fault _fault) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false, %(op_class)s), fault(_fault)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            Fault _fault) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+                fault(_fault)
+    {
+        buildMe();
+    }
+}};
+
+let {{
+    # This microop takes in a single parameter, a fault to return.
+    iop = InstObjParams("fault", "GenFault", 'X86MicroOpBase', {"code" : ""})
+    header_output += MicroFaultDeclare.subst(iop)
+    decoder_output += MicroFaultConstructor.subst(iop)
+    exec_output += MicroFaultExecute.subst(iop)
+}};
