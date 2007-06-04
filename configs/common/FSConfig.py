@@ -38,14 +38,14 @@ class CowIdeDisk(IdeDisk):
     def childImage(self, ci):
         self.image.child.image_file = ci
 
-class BaseTsunami(Tsunami):
-    ethernet = NSGigE(configdata=NSGigEPciData(),
-                      pci_bus=0, pci_dev=1, pci_func=0)
-    etherint = NSGigEInt(device=Parent.ethernet)
-    ide = IdeController(disks=[Parent.disk0, Parent.disk2],
-                        pci_func=0, pci_dev=0, pci_bus=0)
-
 def makeLinuxAlphaSystem(mem_mode, mdesc = None):
+    class BaseTsunami(Tsunami):
+        ethernet = NSGigE(configdata=NSGigEPciData(),
+                          pci_bus=0, pci_dev=1, pci_func=0)
+        etherint = NSGigEInt(device=Parent.ethernet)
+        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
+                            pci_func=0, pci_dev=0, pci_bus=0)
+
     self = LinuxAlphaSystem()
     if not mdesc:
         # generic system
