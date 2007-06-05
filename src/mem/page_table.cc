@@ -90,8 +90,6 @@ PageTable::page_check(Addr addr, int64_t size) const
 }
 
 
-
-
 void
 PageTable::allocate(Addr vaddr, int64_t size)
 {
@@ -109,12 +107,7 @@ PageTable::allocate(Addr vaddr, int64_t size)
         }
 
         pTable[vaddr] = system->new_page();
-        pTableCache[2].paddr = pTableCache[1].paddr;
-        pTableCache[2].vaddr = pTableCache[1].vaddr;
-        pTableCache[1].paddr = pTableCache[0].paddr;
-        pTableCache[1].vaddr = pTableCache[0].vaddr;
-        pTableCache[0].paddr = pTable[vaddr];
-        pTableCache[0].vaddr = vaddr;
+        updateCache(vaddr, pTable[vaddr]);
     }
 }
 
@@ -126,16 +119,16 @@ PageTable::translate(Addr vaddr, Addr &paddr)
     Addr page_addr = pageAlign(vaddr);
     paddr = 0;
 
-    if (pTableCache[0].vaddr == vaddr) {
-        paddr = pTableCache[0].paddr;
+    if (pTableCache[0].vaddr == page_addr) {
+        paddr = pTableCache[0].paddr + pageOffset(vaddr);
         return true;
     }
-    if (pTableCache[1].vaddr == vaddr) {
-        paddr = pTableCache[1].paddr;
+    if (pTableCache[1].vaddr == page_addr) {
+        paddr = pTableCache[1].paddr + pageOffset(vaddr);
         return true;
     }
-    if (pTableCache[2].vaddr == vaddr) {
-        paddr = pTableCache[2].paddr;
+    if (pTableCache[2].vaddr == page_addr) {
+        paddr = pTableCache[2].paddr + pageOffset(vaddr);
         return true;
     }
 
@@ -145,6 +138,7 @@ PageTable::translate(Addr vaddr, Addr &paddr)
         return false;
     }
 
+    updateCache(page_addr, iter->second);
     paddr = iter->second + pageOffset(vaddr);
     return true;
 }

@@ -95,6 +95,22 @@ class PageTable
      */
     Fault translate(RequestPtr &req);
 
+    /**
+     * Update the page table cache.
+     * @param vaddr virtual address (page aligned) to check
+     * @param paddr physical address (page aligned) to return
+     */
+    inline void updateCache(Addr vaddr, Addr paddr)
+    {
+        pTableCache[2].paddr = pTableCache[1].paddr;
+        pTableCache[2].vaddr = pTableCache[1].vaddr;
+        pTableCache[1].paddr = pTableCache[0].paddr;
+        pTableCache[1].vaddr = pTableCache[0].vaddr;
+        pTableCache[0].paddr = paddr;
+        pTableCache[0].vaddr = vaddr;
+    }
+
+
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 };
