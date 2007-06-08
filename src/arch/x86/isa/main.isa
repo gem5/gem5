@@ -85,8 +85,8 @@ namespace X86ISA;
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 
-//Include the simple microcode assembler. This will hopefully stay
-//unspecialized for x86 and can later be made available to other ISAs.
+//This file brings in the microcode, microop classes, macroop classes,
+//and supporting components and assembles everything into macroops.
 ##include "microasm.isa"
 
 //Include code to specialize an instruction template to operate on
