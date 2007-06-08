@@ -129,7 +129,6 @@ let {{
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
-                # code = "GenFault #${new UnimpInstFault}#\n" + code
                 print "%0"
                 memTypes = copy.copy(opTypes)
                 memTypes.pop(0)
@@ -137,14 +136,12 @@ let {{
                 return doSplitDecode(Name, specializeInst, "MODRM_MOD",
                     {"3" : (regTypes, memEnv)}, (memTypes, memEnv))
             elif opType.tag in ("I", "J"):
-                # Immediates are already in the instruction, so don't leave in
-                # those parameters
+                # Immediates
                 print "IMMEDIATE"
             elif opType.tag == "M":
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
-                #code = "GenFault #${new UnimpInstFault}#\n" + code
                 print "%0"
             elif opType.tag in ("PR", "R", "VR"):
                 # There should probably be a check here to verify that mod
@@ -154,8 +151,7 @@ let {{
                 raise Exception, "Unrecognized tag %s." % opType.tag
             opTypes.pop(0)
 
-        # At this point, we've built up "code" to have all the necessary extra
-        # instructions needed to implement whatever types of operands were
-        # specified. Now we'll assemble it it into a StaticInst.
+        # Generate code to return a macroop of the given name which will
+        # operate in the given "emulation environment"
         return genMacroop(Name, env)
 }};
