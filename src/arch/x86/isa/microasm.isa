@@ -55,8 +55,13 @@
 //
 // Authors: Gabe Black
 
-//##include "microops/microops.isa"
-//##include "macroop.isa"
+//Include the definitions of the micro ops.
+//These are StaticInst classes which stand on their own and make up an
+//internal instruction set.
+##include "microops/microops.isa"
+
+//Include code to build macroops.
+##include "macroop.isa"
 
 let {{
     import sys
@@ -67,40 +72,4 @@ let {{
     mainRom = Rom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
     macroopDict = assembler.assemble(microcode)
-}};
-
-////////////////////////////////////////////////////////////////////
-//
-// Microcode assembler specialization for x86
-//
-
-let {{
-    from micro_asm import MicroAssembler, Combinational_Macroop, Rom_Macroop, Rom
-    class X86Macroop(Combinational_Macroop):
-        def __init__(self, name):
-            super(X86Macroop, self).__init__(name)
-            self.directives = {
-            }
-
-    mainRom = Rom('main ROM')
-}};
-
-let {{
-    class X86Microop(object):
-        def __init__(self, name):
-            self.name = name
-
-        # This converts a list of python bools into
-        # a comma seperated list of C++ bools.
-        def microFlagsText(self, vals):
-            text = ""
-            for val in vals:
-                if val:
-                    text += ", true"
-                else:
-                    text += ", false"
-            return text
-
-        def getAllocator(self, mnemonic, *microFlags):
-            return 'new %s(machInst, %s)' % (self.className, mnemonic, self.microFlagsText(microFlags))
 }};
