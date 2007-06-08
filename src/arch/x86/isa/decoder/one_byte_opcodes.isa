@@ -122,12 +122,14 @@
             0x7: das();
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::XOR(ALIb);
-            0x5: Inst::XOR(rAX,Iz);
+            0x4: Inst::XOR(rAl,Ib);
+            0x5: Inst::XOR(rAx,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: aaa();
-            default: MultiInst::XOR(EbGb, EvGv, GbEb, GvEv);
+            default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev]);
         }
         0x07: decode OPCODE_OP_BOTTOM3 {
             0x0: cmp_Eb_Gb();
