@@ -66,24 +66,23 @@ let {{
     # vals is a dict which matches case values with what should be decoded to.
     # builder is called on the exploded contents of "vals" values to generate
     # whatever code should be used.
-    def doSplitDecode(name, Name, builder, switchVal, vals, default = None):
-        blocks = OutputBlocks()
-        blocks.decode_block += 'switch(%s) {\n' % switchVal
+    def doSplitDecode(Name, builder, switchVal, vals, default = None):
+        decode_block = 'switch(%s) {\n' % switchVal
         for (val, todo) in vals.items():
-            built = builder(name, Name, *todo)
-            built.decode_block = '\tcase %s: %s\n' % (val, built.decode_block)
-            blocks.append(built)
+            new_block = builder(Name, *todo)
+            new_block = '\tcase %s: %s\n' % (val, new_block)
+            decode_block += new_block
         if default:
-            built = builder(name, Name, *default)
-            built.decode_block = '\tdefault: %s\n' % built.decode_block
-            blocks.append(built)
-        blocks.decode_block += '}\n'
-        return blocks
+            new_block = builder(Name, *default)
+            new_block = '\tdefault: %s\n' % new_block
+            decode_block += new_block
+        decode_block += '}\n'
+        return decode_block
 }};
 
 let {{
     class OpType(object):
-        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Za-z0-9][A-Za-z0-9]*))")
+        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Z0-9])(?P<rsize>[a-z]*))")
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
@@ -91,74 +90,72 @@ let {{
             self.reg = match.group("reg")
             self.tag = match.group("tag")
             self.size = match.group("size")
+            self.rsize = match.group("rsize")
 
     # This function specializes the given piece of code to use a particular
-    # set of argument types described by "opTypes". These are "implemented"
-    # in reverse order.
-    def specializeInst(name, Name, code, opTypes):
-        opNum = len(opTypes) - 1
+    # set of argument types described by "opTypes".
+    def specializeInst(Name, opTypes, env):
         while len(opTypes):
             # print "Building a composite op with tags", opTypes
             # print "And code", code
             opNum = len(opTypes) - 1
-            # A regular expression to find the operand placeholders we're
-            # interested in.
-            opRe = re.compile("\\^(?P<operandNum>%d)(?=[^0-9]|$)" % opNum)
 
-            # Parse the operand type strign we're working with
+            # Parse the operand type string we're working with
             opType = OpType(opTypes[opNum])
 
             if opType.reg:
                 #Figure out what to do with fixed register operands
-                if opType.reg in ("Ax", "Bx", "Cx", "Dx"):
-                    code = opRe.sub("%%{INTREG_R%s}" % opType.reg.upper(), code)
-                elif opType.reg == "Al":
-                    # We need a way to specify register width
-                    code = opRe.sub("%{INTREG_RAX}", code)
-                else:
-                    print "Didn't know how to encode fixed register %s!" % opType.reg
+                #This is the index to use, so we should stick it some place.
+                print "INTREG_R%s" % (opType.reg + opType.size.upper())
+                if opType.size:
+                    if opType.rsize in ("l", "h", "b"):
+                        print "byte"
+                    elif opType.rsize == "x":
+                        print "word"
+                    else:
+                        print "Didn't recognize fixed register size %s!" % opType.rsize
             elif opType.tag == None or opType.size == None:
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
             elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
-                code = opRe.sub("%{(uint8_t)MODRM_REG}", code)
+                print "(uint8_t)MODRM_REG"
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
-                regCode = opRe.sub("%{(uint8_t)MODRM_RM}", code)
+                print "(uint8_t)MODRM_RM"
                 regTypes = copy.copy(opTypes)
-                regTypes.pop(-1)
+                regTypes.pop(0)
+                regEnv = copy.copy(env)
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
-                code = "GenFault ${new UnimpInstFault}\n" + code
-                memCode = opRe.sub("%0", code)
+                # code = "GenFault #${new UnimpInstFault}#\n" + code
+                print "%0"
                 memTypes = copy.copy(opTypes)
-                memTypes.pop(-1)
-                return doSplitDecode(name, Name, specializeInst, "MODRM_MOD",
-                    {"3" : (regCode, regTypes)}, (memCode, memTypes))
+                memTypes.pop(0)
+                memEnv = copy.copy(env)
+                return doSplitDecode(Name, specializeInst, "MODRM_MOD",
+                    {"3" : (regTypes, memEnv)}, (memTypes, memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates are already in the instruction, so don't leave in
                 # those parameters
-                code = opRe.sub("${IMMEDIATE}", code)
+                print "IMMEDIATE"
             elif opType.tag == "M":
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
-                code = "GenFault ${new UnimpInstFault}\n" + code
-                code = opRe.sub("%0", code)
+                #code = "GenFault #${new UnimpInstFault}#\n" + code
+                print "%0"
             elif opType.tag in ("PR", "R", "VR"):
                 # There should probably be a check here to verify that mod
                 # is equal to 11b
-                code = opRe.sub("%{(uint8_t)MODRM_RM}", code)
+                print "(uint8_t)MODRM_RM"
             else:
                 raise Exception, "Unrecognized tag %s." % opType.tag
-            opTypes.pop(-1)
+            opTypes.pop(0)
 
         # At this point, we've built up "code" to have all the necessary extra
         # instructions needed to implement whatever types of operands were
         # specified. Now we'll assemble it it into a StaticInst.
-        blocks = OutputBlocks()
-        blocks.append(assembleMicro(name, Name, code))
-        return blocks
+        return genMacroop(Name, env)
 }};

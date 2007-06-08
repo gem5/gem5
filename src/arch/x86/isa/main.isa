@@ -72,33 +72,8 @@
 
 namespace X86ISA;
 
-////////////////////////////////////////////////////////////////////
-//
-// General infrastructure code. These files provide infrastructure
-// which was developed to support x86 but isn't specific to it.
-//
-
-//Include code to build macroops.
-##include "macroop.isa"
-
-////////////////////////////////////////////////////////////////////
-//
-// X86 only infrastructure code.
-//
-
 //Include the base class for x86 instructions, and some support code.
 ##include "base.isa"
-
-//Include code to specialize an instruction template to operate on
-//a particular set of operands. This is specific to x86 and the x86
-//microcode ISA.
-##include "specialize.isa"
-
-////////////////////////////////////////////////////////////////////
-//
-// Code which directly specifies isa components like instructions
-// microops, and the decoder.
-//
 
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
@@ -112,8 +87,17 @@ namespace X86ISA;
 //internal instruction set.
 ##include "microops/microops.isa"
 
-//Include the instruction definitions which are microop assembler programs.
-##include "insts/insts.isa"
+//Include code to build macroops.
+##include "macroop.isa"
+
+//Include the simple microcode assembler. This will hopefully stay
+//unspecialized for x86 and can later be made available to other ISAs.
+##include "microasm.isa"
+
+//Include code to specialize an instruction template to operate on
+//a particular set of operands. This is specific to x86 and the x86
+//microcode ISA.
+##include "specialize.isa"
 
 //Include the bitfield definitions
 ##include "bitfields.isa"

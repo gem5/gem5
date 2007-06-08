@@ -221,7 +221,7 @@ def template MicroRegOpImmConstructor {{
 }};
 
 let {{
-    class RegOp(object):
+    class RegOp(X86Microop):
         def __init__(self, dest, src1, src2):
             self.dest = dest
             self.src1 = src1
@@ -243,7 +243,7 @@ let {{
                 "dataSize" : self.dataSize,
                 "ext" : self.ext}
 
-    class RegOpImm(object):
+    class RegOpImm(X86Microop):
         def __init__(self, dest, src1, imm):
             self.dest = dest
             self.src1 = src1
@@ -274,10 +274,11 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    def defineMicroIntOp(mnemonic, code):
+    def defineMicroRegOp(mnemonic, code):
         global header_output
         global decoder_output
         global exec_output
+        global microopClasses
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -296,7 +297,8 @@ let {{
 
         class RegOpChild(RegOp):
             def __init__(self, dest, src1, src2):
-                super(RegOpChild, self).__init__(self, dest, src1, src2)
+                super(RegOpChild, self).__init__(dest, src1, src2)
+                self.className = Name
                 self.mnemonic = name
 
         microopClasses[name] = RegOpChild
@@ -310,19 +312,20 @@ let {{
 
         class RegOpImmChild(RegOpImm):
             def __init__(self, dest, src1, imm):
-                super(RegOpImmChild, self).__init__(self, dest, src1, imm)
+                super(RegOpImmChild, self).__init__(dest, src1, imm)
+                self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
         microopClasses[name + "i"] = RegOpChild
 
-    defineMicroIntOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
-    defineMicroIntOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
-    defineMicroIntOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to add in CF, set OF,CF,SF
-    defineMicroIntOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to subtract CF, set OF,CF,SF
-    defineMicroIntOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
-    defineMicroIntOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to set OF,CF,SF
-    defineMicroIntOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
-    defineMicroIntOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)') #Needs to set OF,CF,SF and not DestReg
-    defineMicroIntOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)')
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroRegOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to add in CF, set OF,CF,SF
+    defineMicroRegOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to subtract CF, set OF,CF,SF
+    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
+    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to set OF,CF,SF
+    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
+    defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)') #Needs to set OF,CF,SF and not DestReg
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)')
 
 }};

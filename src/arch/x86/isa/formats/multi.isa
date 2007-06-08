@@ -60,27 +60,13 @@
 // Instructions that do the same thing to multiple sets of arguments.
 //
 
-let {{
-    def doInst(name, Name, opTypeSet):
-        if not instDict.has_key(Name):
-            raise Exception, "Unrecognized instruction: %s" % Name
-        inst = instDict[Name]()
-        return inst.emit(opTypeSet)
-}};
-
 def format Inst(*opTypeSet) {{
-    (header_output,
-     decoder_output,
-     decode_block,
-     exce_output) = doInst(name, Name, list(opTypeSet)).makeList()
+    decode_block = specializeInst(Name, list(opTypeSet), EmulEnv())
 }};
 
 def format MultiInst(switchVal, *opTypeSets) {{
     switcher = {}
     for (count, opTypeSet) in zip(xrange(len(opTypeSets)), opTypeSets):
-        switcher[count] = (opTypeSet,)
-    (header_output,
-     decoder_output,
-     decode_block,
-     exec_output) = doSplitDecode(name, Name, doInst, switchVal, switcher).makeList()
+        switcher[count] = (opTypeSet, EmulEnv())
+    decode_block = doSplitDecode(Name, specializeInst, switchVal, switcher)
 }};

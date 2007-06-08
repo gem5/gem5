@@ -85,3 +85,5 @@ def bitfield SIB sib;
 def bitfield SIB_SCALE sib.scale;
 def bitfield SIB_INDEX sib.index;
 def bitfield SIB_BASE sib.base;
+
+def bitfield OPSIZE opSize;

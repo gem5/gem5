@@ -99,6 +99,7 @@ output header {{
 #include "arch/x86/faults.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regfile.hh"
+#include "arch/x86/types.hh"
 #include "base/misc.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
@@ -106,6 +107,9 @@ output header {{
 }};
 
 output decoder {{
+
+namespace X86Macroop {
+};
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
