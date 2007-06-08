@@ -55,6 +55,20 @@
 //
 // Authors: Gabe Black
 
+//##include "microops/microops.isa"
+//##include "macroop.isa"
+
+let {{
+    import sys
+    sys.path[0:0] = ["src/arch/x86/isa/"]
+    from insts import microcode
+    print microcode
+    from micro_asm import MicroAssembler, Rom_Macroop, Rom
+    mainRom = Rom('main ROM')
+    assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
+    macroopDict = assembler.assemble(microcode)
+}};
+
 ////////////////////////////////////////////////////////////////////
 //
 // Microcode assembler specialization for x86
@@ -88,6 +102,5 @@ let {{
             return text
 
         def getAllocator(self, mnemonic, *microFlags):
-            args = ''
-            return 'new %s(machInst, %s%s%s)' % (self.className, mnemonic, self.microFlagsText(microFlags), args)
+            return 'new %s(machInst, %s)' % (self.className, mnemonic, self.microFlagsText(microFlags))
 }};
