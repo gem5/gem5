@@ -57,10 +57,11 @@
 
 //Include the definitions of the micro ops.
 //These are StaticInst classes which stand on their own and make up an
-//internal instruction set.
+//internal instruction set, and also python representations which are passed
+//into the microcode assembler.
 ##include "microops/microops.isa"
 
-//Include code to build macroops.
+//Include code to build macroops in both C++ and python.
 ##include "macroop.isa"
 
 let {{
