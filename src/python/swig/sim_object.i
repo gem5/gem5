@@ -66,6 +66,7 @@ class System {
     private:
       System();
     public:
+      SimObject::MemoryMode getMemoryMode();
       void setMemoryMode(SimObject::MemoryMode mode);
 };
 

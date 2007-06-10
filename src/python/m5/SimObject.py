@@ -722,6 +722,13 @@ class SimObject(object):
         for child in self._children.itervalues():
             child.resume()
 
+    def getMemoryMode(self):
+        if not isinstance(self, m5.objects.System):
+            return None
+
+        system_ptr = internal.sim_object.convertToSystemPtr(self._ccObject)
+        return system_ptr.getMemoryMode()
+
     def changeTiming(self, mode):
         if isinstance(self, m5.objects.System):
             # i don't know if there's a better way to do this - calling
