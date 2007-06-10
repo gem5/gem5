@@ -270,16 +270,29 @@ if compare_versions(swig_version[2], min_swig_version) < 0:
     Exit(1)
 
 # Set up SWIG flags & scanner
-env.Append(SWIGFLAGS=Split('-c++ -python -modern $_CPPINCFLAGS'))
+swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
+env.Append(SWIGFLAGS=swig_flags)
 
-import SCons.Scanner
+# filter out all existing swig scanners, they mess up the dependency
+# stuff for some reason
+scanners = []
+for scanner in env['SCANNERS']:
+    skeys = scanner.skeys
+    if skeys == '.i':
+        continue
+    
+    if isinstance(skeys, (list, tuple)) and '.i' in skeys:
+        continue
 
+    scanners.append(scanner)
+
+# add the new swig scanner that we like better
+from SCons.Scanner import ClassicCPP as CPPScanner
 swig_inc_re = '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+scanners.append(CPPScanner("SwigScan", [ ".i" ], "CPPPATH", swig_inc_re))
 
-swig_scanner = SCons.Scanner.ClassicCPP("SwigScan", ".i", "CPPPATH",
-                                        swig_inc_re)
-
-env.Append(SCANNERS = swig_scanner)
+# replace the scanners list that has what we want
+env['SCANNERS'] = scanners
 
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
