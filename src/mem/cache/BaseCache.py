@@ -27,6 +27,7 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
+from m5.proxy import Self
 from MemObject import MemObject
 
 class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
@@ -77,7 +78,7 @@ class BaseCache(MemObject):
          "Squash prefetches with a later time on a subsequent miss")
     prefetch_degree = Param.Int(1,
          "Degree of the prefetch depth")
-    prefetch_latency = Param.Tick(10,
+    prefetch_latency = Param.Latency(10 * Self.latency,
          "Latency of the prefetcher")
     prefetch_policy = Param.Prefetch('none',
          "Type of prefetcher to use")

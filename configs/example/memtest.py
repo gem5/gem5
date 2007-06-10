@@ -82,8 +82,7 @@ cpus = [ MemTest(atomic=not options.timing, max_loads=options.maxloads,
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(latency = "50ps"),
-                membus = Bus(clock="500MHz", width=16))
+                physmem = PhysicalMemory(latency = "50ns"), membus = Bus(clock="500MHz", width=16))
 
 # l2cache & bus
 if options.caches:
