@@ -131,7 +131,7 @@ class Benchmark(object):
     def makeLiveProcessArgs(self, **kwargs):
         # set up default args for LiveProcess object
         process_args = {}
-        process_args['cmd'] = self.name + ' ' + ' '.join(self.args)
+        process_args['cmd'] = [ self.name ] + self.args
         process_args['executable'] = self.executable
         if self.stdin:
             process_args['input'] = self.stdin
