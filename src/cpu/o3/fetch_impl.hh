@@ -29,6 +29,9 @@
  *          Korey Sewell
  */
 
+#include <algorithm>
+#include <cstring>
+
 #include "config/use_checker.hh"
 
 #include "arch/isa_traits.hh"
@@ -47,8 +50,6 @@
 #include "arch/vtophys.hh"
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
-
-#include <algorithm>
 
 template<class Impl>
 void
@@ -374,7 +375,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
         return;
     }
 
-    memcpy(cacheData[tid], pkt->getPtr<uint8_t *>(), cacheBlkSize);
+    memcpy(cacheData[tid], pkt->getPtr<uint8_t>(), cacheBlkSize);
     cacheDataValid[tid] = true;
 
     if (!drainPending) {
