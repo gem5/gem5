@@ -605,6 +605,13 @@ Bus::drain(Event * de)
     }
 }
 
+void
+Bus::startup()
+{
+    if (tickNextIdle < curTick)
+        tickNextIdle = (curTick / clock) * clock + clock;
+}
+
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
 
     Param<int> bus_id;

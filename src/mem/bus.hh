@@ -267,6 +267,7 @@ class Bus : public MemObject
     virtual void deletePortRefs(Port *p);
 
     virtual void init();
+    virtual void startup();
 
     unsigned int drain(Event *de);
 
