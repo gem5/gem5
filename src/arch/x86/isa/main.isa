@@ -67,7 +67,7 @@
 ////////////////////////////////////////////////////////////////////
 //
 // Namespace statement.  Everything below this line will be in the
-// SparcISAInst namespace.
+// X86ISAInst namespace.
 //
 
 namespace X86ISA;
