@@ -158,6 +158,6 @@ let {{
             opTypes.pop(0)
 
         # Generate code to return a macroop of the given name which will
-        # operate in the given "emulation environment"
+        # operate in the "emulation environment" env
         return genMacroop(Name, env)
 }};
