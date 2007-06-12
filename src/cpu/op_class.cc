@@ -34,7 +34,7 @@
 const char *
 opClassStrings[Num_OpClasses] =
 {
-    "(null)",
+    "No_OpClass",
     "IntAlu",
     "IntMult",
     "IntDiv",
