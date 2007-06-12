@@ -87,6 +87,7 @@
 
 #include "arch/x86/intregfile.hh"
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "sim/serialize.hh"
 
 #include <string.h>
@@ -119,11 +120,13 @@ void IntRegFile::clear()
 
 IntReg IntRegFile::readReg(int intReg)
 {
+    DPRINTF(X86, "Read int reg %d and got value %#x\n", intReg, regs[intReg]);
     return regs[intReg];
 }
 
 void IntRegFile::setReg(int intReg, const IntReg &val)
 {
+    DPRINTF(X86, "Setting int reg %d to value %#x\n", intReg, val);
     regs[intReg] = val;
 }
 
