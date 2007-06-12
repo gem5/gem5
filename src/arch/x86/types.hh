@@ -149,7 +149,8 @@ namespace X86ISA
 
         //The effective operand size.
         uint8_t opSize;
-        //The
+        //The effective address size.
+        uint8_t addrSize;
     };
 
     inline static std::ostream &

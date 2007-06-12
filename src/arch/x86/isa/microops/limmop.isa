@@ -72,7 +72,7 @@ def template MicroLimmOpExecute {{
 }};
 
 def template MicroLimmOpDeclare {{
-    class %(class_name)s : public X86MicroOpBase
+    class %(class_name)s : public X86MicroopBase
     {
       protected:
         const RegIndex dest;
@@ -141,7 +141,7 @@ let {{
 
 let {{
     # Build up the all register version of this micro op
-    iop = InstObjParams("limm", "Limm", 'X86MicroOpBase',
+    iop = InstObjParams("limm", "Limm", 'X86MicroopBase',
             {"code" : "DestReg = imm;"})
     header_output += MicroLimmOpDeclare.subst(iop)
     decoder_output += MicroLimmOpConstructor.subst(iop)

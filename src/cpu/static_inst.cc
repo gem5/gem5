@@ -76,9 +76,9 @@ StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
 }
 
 StaticInstPtr
-StaticInst::fetchMicroOp(MicroPC micropc)
+StaticInst::fetchMicroop(MicroPC micropc)
 {
-    panic("StaticInst::fetchMicroOp() called on instruction "
+    panic("StaticInst::fetchMicroop() called on instruction "
             "that is not microcoded.");
 }
 

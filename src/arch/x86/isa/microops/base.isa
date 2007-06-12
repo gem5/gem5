@@ -64,14 +64,14 @@ let {{
 //A class which is the base of all x86 micro ops. It provides a function to
 //set necessary flags appropriately.
 output header {{
-    class X86MicroOpBase : public X86StaticInst
+    class X86MicroopBase : public X86StaticInst
     {
       protected:
         const char * instMnem;
         uint8_t opSize;
         uint8_t addrSize;
 
-        X86MicroOpBase(ExtMachInst _machInst,
+        X86MicroopBase(ExtMachInst _machInst,
                 const char *mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
@@ -79,10 +79,10 @@ output header {{
             X86StaticInst(mnem, _machInst, __opClass),
             instMnem(_instMnem)
         {
-            flags[IsMicroOp] = isMicro;
+            flags[IsMicroop] = isMicro;
             flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroOp] = isFirst;
-            flags[IsLastMicroOp] = isLast;
+            flags[IsFirstMicroop] = isFirst;
+            flags[IsLastMicroop] = isLast;
         }
 
         std::string generateDisassembly(Addr pc,
@@ -108,15 +108,19 @@ let {{
         def __init__(self, name):
             self.name = name
 
+        # This converts a python bool into a C++ bool
+        def cppBool(self, val):
+            if val:
+                return "true"
+            else:
+                return "false"
+
         # This converts a list of python bools into
         # a comma seperated list of C++ bools.
         def microFlagsText(self, vals):
             text = ""
             for val in vals:
-                if val:
-                    text += ", true"
-                else:
-                    text += ", false"
+                text += ", %s" % self.cppBool(val)
             return text
 
         def getAllocator(self, mnemonic, *microFlags):
@@ -130,7 +134,7 @@ let {{
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroLdStOpDeclare {{
-    class %(class_name)s : public X86MicroOpBase
+    class %(class_name)s : public X86MicroopBase
     {
       protected:
         const uint8_t scale;

@@ -66,6 +66,8 @@ namespace X86ISA
     {
         origPC = basePC + offset;
         DPRINTF(Predecoder, "Setting origPC to %#x\n", origPC);
+        emi.rex = 0;
+        emi.legacy = 0;
         emi.opcode.num = 0;
 
         immediateCollected = 0;

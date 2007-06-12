@@ -248,14 +248,14 @@ def template BlockMemConstructor {{
             : %(base_class)s("%(mnemonic)s", machInst)
         {
             %(constructor)s;
-            microOps[0] = new %(class_name)s_0(machInst);
-            microOps[1] = new %(class_name)s_1(machInst);
-            microOps[2] = new %(class_name)s_2(machInst);
-            microOps[3] = new %(class_name)s_3(machInst);
-            microOps[4] = new %(class_name)s_4(machInst);
-            microOps[5] = new %(class_name)s_5(machInst);
-            microOps[6] = new %(class_name)s_6(machInst);
-            microOps[7] = new %(class_name)s_7(machInst);
+            microops[0] = new %(class_name)s_0(machInst);
+            microops[1] = new %(class_name)s_1(machInst);
+            microops[2] = new %(class_name)s_2(machInst);
+            microops[3] = new %(class_name)s_3(machInst);
+            microops[4] = new %(class_name)s_4(machInst);
+            microops[5] = new %(class_name)s_5(machInst);
+            microops[6] = new %(class_name)s_6(machInst);
+            microops[7] = new %(class_name)s_7(machInst);
         }
 }};
 
@@ -289,9 +289,9 @@ let {{
         for microPc in range(8):
             flag_code = ''
             if (microPc == 7):
-                flag_code = "flags[IsLastMicroOp] = true;"
+                flag_code = "flags[IsLastMicroop] = true;"
             elif (microPc == 0):
-                flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroOp] = true;"
+                flag_code = "flags[IsDelayedCommit] = true; flags[IsFirstMicroop] = true;"
             else:
                 flag_code = "flags[IsDelayedCommit] = true;"
             pcedCode = matcher.sub("Frd_%d" % microPc, code)

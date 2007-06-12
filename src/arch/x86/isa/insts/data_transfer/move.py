@@ -53,7 +53,11 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop MOV{
+    mov "env.reg", "env.reg", "env.regm"
+};
+'''
 #let {{
 #    class MOV(Inst):
 #	"Mov ^0 ^0 ^1"

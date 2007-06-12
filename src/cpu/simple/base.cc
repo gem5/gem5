@@ -400,17 +400,17 @@ BaseSimpleCPU::preExecute()
 
         //If we decoded an instruction and it's microcoded, start pulling
         //out micro ops
-        if (instPtr && instPtr->isMacroOp()) {
+        if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
             curStaticInst = curMacroStaticInst->
-                fetchMicroOp(thread->readMicroPC());
+                fetchMicroop(thread->readMicroPC());
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
         curStaticInst = curMacroStaticInst->
-            fetchMicroOp(thread->readMicroPC());
+            fetchMicroop(thread->readMicroPC());
     }
 
     //If we decoded an instruction this "tick", record information about it.
@@ -475,7 +475,7 @@ BaseSimpleCPU::advancePC(Fault fault)
         thread->setNextMicroPC(1);
     } else {
         //If we're at the last micro op for this instruction
-        if (curStaticInst && curStaticInst->isLastMicroOp()) {
+        if (curStaticInst && curStaticInst->isLastMicroop()) {
             //We should be working with a macro op
             assert(curMacroStaticInst);
             //Close out this macro op, and clean up the
