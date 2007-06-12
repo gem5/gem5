@@ -58,9 +58,21 @@
 // Bitfield definitions.
 //
 
-//Prefixes
+//REX prefix
 def bitfield REX rex;
+def bitfield REX_W rex.w;
+def bitfield REX_R rex.r;
+def bitfield REX_X rex.x;
+def bitfield REX_B rex.b;
+
+//Legacy prefixes
 def bitfield LEGACY legacy;
+def bitfield LEGACY_REPNE legacy.repne;
+def bitfield LEGACY_REP legacy.rep;
+def bitfield LEGACY_LOCK legacy.lock;
+def bitfield LEGACY_ADDR legacy.addr;
+def bitfield LEGACY_OP legacy.op;
+def bitfield LEGACY_SEG legacy.seg;
 
 // Pieces of the opcode
 def bitfield OPCODE_NUM opcode.num;
