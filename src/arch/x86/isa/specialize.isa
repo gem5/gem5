@@ -67,17 +67,20 @@ let {{
     # builder is called on the exploded contents of "vals" values to generate
     # whatever code should be used.
     def doSplitDecode(Name, builder, switchVal, vals, default = None):
-        decode_block = 'switch(%s) {\n' % switchVal
+        blocks = OutputBlocks()
+        blocks.decode_block = 'switch(%s) {\n' % switchVal
         for (val, todo) in vals.items():
-            new_block = builder(Name, *todo)
-            new_block = '\tcase %s: %s\n' % (val, new_block)
-            decode_block += new_block
+            new_blocks = builder(Name, *todo)
+            new_blocks.decode_block = \
+                '\tcase %s: %s\n' % (val, new_blocks.decode_block)
+            blocks.append(new_blocks)
         if default:
-            new_block = builder(Name, *default)
-            new_block = '\tdefault: %s\n' % new_block
-            decode_block += new_block
-        decode_block += '}\n'
-        return decode_block
+            new_blocks = builder(Name, *default)
+            new_blocks.decode_block = \
+                '\tdefault: %s\n' % new_blocks.decode_block
+            blocks.append(new_blocks)
+        blocks.decode_block += '}\n'
+        return blocks
 }};
 
 let {{
@@ -95,18 +98,18 @@ let {{
     # This function specializes the given piece of code to use a particular
     # set of argument types described by "opTypes".
     def specializeInst(Name, opTypes, env):
+        print "Specializing %s with opTypes %s" % (Name, opTypes)
         while len(opTypes):
-            # print "Building a composite op with tags", opTypes
-            # print "And code", code
-            opNum = len(opTypes) - 1
-
             # Parse the operand type string we're working with
-            opType = OpType(opTypes[opNum])
+            opType = OpType(opTypes[0])
 
             if opType.reg:
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
-                print "INTREG_R%s" % (opType.reg + opType.size.upper())
+                if opType.reg in ("A", "B", "C", "D"):
+                    env.addReg("INTREG_R%sX" % opType.reg)
+                else:
+                    env.addReg("INTREG_R%s" % opType.reg)
                 if opType.size:
                     if opType.rsize in ("l", "h", "b"):
                         print "byte"
@@ -118,23 +121,23 @@ let {{
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
             elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
-                print "(uint8_t)MODRM_REG"
+                env.addReg("(uint8_t)MODRM_REG")
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
-                print "(uint8_t)MODRM_RM"
                 regTypes = copy.copy(opTypes)
                 regTypes.pop(0)
                 regEnv = copy.copy(env)
+                regEnv.addReg("(uint8_t)MODRM_RM")
                 # This needs to refer to memory, but we'll fill in the details
                 # later. It needs to take into account unaligned memory
                 # addresses.
-                print "%0"
                 memTypes = copy.copy(opTypes)
                 memTypes.pop(0)
                 memEnv = copy.copy(env)
+                print "%0"
                 return doSplitDecode(Name, specializeInst, "MODRM_MOD",
-                    {"3" : (regTypes, memEnv)}, (memTypes, memEnv))
+                    {"3" : (regTypes, regEnv)}, (memTypes, memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
                 print "IMMEDIATE"
@@ -146,7 +149,7 @@ let {{
             elif opType.tag in ("PR", "R", "VR"):
                 # There should probably be a check here to verify that mod
                 # is equal to 11b
-                print "(uint8_t)MODRM_RM"
+                env.addReg("(uint8_t)MODRM_RM")
             else:
                 raise Exception, "Unrecognized tag %s." % opType.tag
             opTypes.pop(0)
