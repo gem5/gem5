@@ -8,10 +8,9 @@ global.BPredUnit.condIncorrect                    208                       # Nu
 global.BPredUnit.condPredicted                    376                       # Number of conditional branches predicted
 global.BPredUnit.lookups                          738                       # Number of BP lookups
 global.BPredUnit.usedRAS                          140                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  54176                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 153592                       # Number of bytes of host memory used
-host_seconds                                     0.04                       # Real time elapsed on the host
-host_tick_rate                               46286693                       # Simulator tick rate (ticks/s)
+host_inst_rate                                   8881                       # Simulator instruction rate (inst/s)
+host_seconds                                     0.27                       # Real time elapsed on the host
+host_tick_rate                                7632084                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                  8                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores                 7                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                   608                       # Number of loads inserted to the mem dependence unit.
@@ -268,7 +267,7 @@ system.cpu.ipc                               0.580920                       # IP
 system.cpu.ipc_total                         0.580920                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                    3075                       # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.start_dist
-                          (null)            0      0.00%            # Type of FU issued
+                      No_OpClass            0      0.00%            # Type of FU issued
                           IntAlu         2178     70.83%            # Type of FU issued
                          IntMult            1      0.03%            # Type of FU issued
                           IntDiv            0      0.00%            # Type of FU issued
@@ -286,7 +285,7 @@ system.cpu.iq.ISSUE:FU_type_0.end_dist
 system.cpu.iq.ISSUE:fu_busy_cnt                    35                       # FU busy when requested
 system.cpu.iq.ISSUE:fu_busy_rate             0.011382                       # FU busy rate (busy events/executed inst)
 system.cpu.iq.ISSUE:fu_full.start_dist
-                          (null)            0      0.00%            # attempts to use FU when none available
+                      No_OpClass            0      0.00%            # attempts to use FU when none available
                           IntAlu            2      5.71%            # attempts to use FU when none available
                          IntMult            0      0.00%            # attempts to use FU when none available
                           IntDiv            0      0.00%            # attempts to use FU when none available

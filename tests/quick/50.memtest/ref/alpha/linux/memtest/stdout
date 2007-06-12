@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 18 2007 23:44:20
-M5 started Fri May 18 23:46:19 2007
-M5 executing on zizzer.eecs.umich.edu
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest tests/run.py quick/50.memtest/alpha/linux/memtest
+M5 compiled Jun 10 2007 14:06:20
+M5 started Sun Jun 10 14:22:51 2007
+M5 executing on iceaxe
+command line: /Users/nate/build/outgoing/build/ALPHA_SE/m5.debug -d /Users/nate/build/outgoing/build/ALPHA_SE/tests/debug/quick/50.memtest/alpha/linux/memtest tests/run.py quick/50.memtest/alpha/linux/memtest
 Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 84350509 because Maximum number of loads reached!
