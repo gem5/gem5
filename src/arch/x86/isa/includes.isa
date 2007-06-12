@@ -108,8 +108,6 @@ output header {{
 
 output decoder {{
 
-namespace X86Macroop {
-};
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
