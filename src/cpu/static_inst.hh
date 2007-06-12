@@ -143,11 +143,11 @@ class StaticInstBase : public RefCounted
         IsUnverifiable, ///< Can't be verified by a checker
 
         //Flags for microcode
-        IsMacroOp,      ///< Is a macroop containing microops
-        IsMicroOp,	///< Is a microop
+        IsMacroop,      ///< Is a macroop containing microops
+        IsMicroop,	///< Is a microop
         IsDelayedCommit,	///< This microop doesn't commit right away
-        IsLastMicroOp,	///< This microop ends a microop sequence
-        IsFirstMicroOp,	///< This microop begins a microop sequence
+        IsLastMicroop,	///< This microop ends a microop sequence
+        IsFirstMicroop,	///< This microop begins a microop sequence
         //This flag doesn't do anything yet
         IsMicroBranch,	///< This microop branches within the microcode for a macroop
 
@@ -242,11 +242,11 @@ class StaticInstBase : public RefCounted
     bool isQuiesce() const { return flags[IsQuiesce]; }
     bool isIprAccess() const { return flags[IsIprAccess]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
-    bool isMacroOp() const { return flags[IsMacroOp]; }
-    bool isMicroOp() const { return flags[IsMicroOp]; }
+    bool isMacroop() const { return flags[IsMacroop]; }
+    bool isMicroop() const { return flags[IsMicroop]; }
     bool isDelayedCommit() const { return flags[IsDelayedCommit]; }
-    bool isLastMicroOp() const { return flags[IsLastMicroOp]; }
-    bool isFirstMicroOp() const { return flags[IsFirstMicroOp]; }
+    bool isLastMicroop() const { return flags[IsLastMicroop]; }
+    bool isFirstMicroop() const { return flags[IsFirstMicroop]; }
     //This flag doesn't do anything yet
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}
@@ -369,7 +369,7 @@ class StaticInst : public StaticInstBase
      * Return the microop that goes with a particular micropc. This should
      * only be defined/used in macroops which will contain microops
      */
-    virtual StaticInstPtr fetchMicroOp(MicroPC micropc);
+    virtual StaticInstPtr fetchMicroop(MicroPC micropc);
 
     /**
      * Return the target address for a PC-relative branch.

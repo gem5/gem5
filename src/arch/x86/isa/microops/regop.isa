@@ -231,17 +231,18 @@ let {{
             self.ext = 0
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
-                    %(flags)s %(src1)s, %(src2)s, %(dest)s,
+            allocator = '''new %(class_name)s(machInst, "%(mnemonic)s"
+                    %(flags)s, %(src1)s, %(src2)s, %(dest)s,
                     %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "src2" : self.src2,
                 "dest" : self.dest,
-                "setStatus" : self.setStatus,
+                "setStatus" : self.cppBool(self.setStatus),
                 "dataSize" : self.dataSize,
                 "ext" : self.ext}
+            return allocator
 
     class RegOpImm(X86Microop):
         def __init__(self, dest, src1, imm):
@@ -253,17 +254,18 @@ let {{
             self.ext = 0
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
-                    %(flags)s %(src1)s, %(imm8)s, %(dest)s,
+            allocator = '''new %(class_name)s(machInst, "%(mnemonic)s"
+                    %(flags)s, %(src1)s, %(imm8)s, %(dest)s,
                     %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "imm8" : self.imm8,
                 "dest" : self.dest,
-                "setStatus" : self.setStatus,
+                "setStatus" : self.cppBool(self.setStatus),
                 "dataSize" : self.dataSize,
                 "ext" : self.ext}
+            return allocator
 }};
 
 let {{
@@ -290,7 +292,7 @@ let {{
         immCode = matcher.sub("imm8", code)
 
         # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'X86MicroOpBase', {"code" : regCode})
+        iop = InstObjParams(name, Name, 'X86MicroopBase', {"code" : regCode})
         header_output += MicroRegOpDeclare.subst(iop)
         decoder_output += MicroRegOpConstructor.subst(iop)
         exec_output += MicroRegOpExecute.subst(iop)
@@ -305,7 +307,7 @@ let {{
 
         # Build up the immediate version of this micro op
         iop = InstObjParams(name + "i", Name,
-                'X86MicroOpBase', {"code" : immCode})
+                'X86MicroopBase', {"code" : immCode})
         header_output += MicroRegOpImmDeclare.subst(iop)
         decoder_output += MicroRegOpImmConstructor.subst(iop)
         exec_output += MicroRegOpImmExecute.subst(iop)

@@ -69,7 +69,7 @@ def template MicroFaultExecute {{
 }};
 
 def template MicroFaultDeclare {{
-    class %(class_name)s : public X86MicroOpBase
+    class %(class_name)s : public X86MicroopBase
     {
       protected:
         Fault fault;
@@ -118,7 +118,7 @@ def template MicroFaultConstructor {{
 
 let {{
     # This microop takes in a single parameter, a fault to return.
-    iop = InstObjParams("fault", "GenFault", 'X86MicroOpBase', {"code" : ""})
+    iop = InstObjParams("fault", "GenFault", 'X86MicroopBase', {"code" : ""})
     header_output += MicroFaultDeclare.subst(iop)
     decoder_output += MicroFaultConstructor.subst(iop)
     exec_output += MicroFaultExecute.subst(iop)

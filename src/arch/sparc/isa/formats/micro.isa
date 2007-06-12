@@ -58,33 +58,33 @@ output header {{
         class SparcMacroInst : public SparcStaticInst
         {
           protected:
-            const uint32_t numMicroOps;
+            const uint32_t numMicroops;
 
             //Constructor.
             SparcMacroInst(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, uint32_t _numMicroOps)
+                    OpClass __opClass, uint32_t _numMicroops)
                         : SparcStaticInst(mnem, _machInst, __opClass),
-                        numMicroOps(_numMicroOps)
+                        numMicroops(_numMicroops)
             {
-                assert(numMicroOps);
-                microOps = new StaticInstPtr[numMicroOps];
-                flags[IsMacroOp] = true;
+                assert(numMicroops);
+                microops = new StaticInstPtr[numMicroops];
+                flags[IsMacroop] = true;
             }
 
             ~SparcMacroInst()
             {
-                delete [] microOps;
+                delete [] microops;
             }
 
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
 
-            StaticInstPtr * microOps;
+            StaticInstPtr * microops;
 
-            StaticInstPtr fetchMicroOp(MicroPC microPC)
+            StaticInstPtr fetchMicroop(MicroPC microPC)
             {
-                assert(microPC < numMicroOps);
-                return microOps[microPC];
+                assert(microPC < numMicroops);
+                return microops[microPC];
             }
 
             %(MacroExecute)s
@@ -100,7 +100,7 @@ output header {{
                     ExtMachInst _machInst, OpClass __opClass)
                         : SparcStaticInst(mnem, _machInst, __opClass)
             {
-                flags[IsMicroOp] = true;
+                flags[IsMicroop] = true;
             }
         };
 

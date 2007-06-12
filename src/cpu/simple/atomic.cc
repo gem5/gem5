@@ -540,8 +540,8 @@ AtomicSimpleCPU::tick()
             }
 
             // @todo remove me after debugging with legion done
-            if (curStaticInst && (!curStaticInst->isMicroOp() ||
-                        curStaticInst->isFirstMicroOp()))
+            if (curStaticInst && (!curStaticInst->isMicroop() ||
+                        curStaticInst->isFirstMicroop()))
                 instCnt++;
 
             if (simulate_stalls) {
