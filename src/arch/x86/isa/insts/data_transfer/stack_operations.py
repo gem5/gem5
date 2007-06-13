@@ -53,7 +53,12 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop POP {
+    # There needs to be a load here to actually "pop" the data
+    addi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
+};
+'''
 #let {{
 #    class POP(Inst):
 #	"GenFault ${new UnimpInstFault}"

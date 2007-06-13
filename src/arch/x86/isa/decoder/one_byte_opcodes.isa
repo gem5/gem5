@@ -179,7 +179,7 @@
             0x3: pop_rBX();
             0x4: pop_rSP();
             0x5: pop_rBP();
-            0x6: pop_rSI();
+            0x6: Inst::POP(rSI);
             0x7: pop_rDI();
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
