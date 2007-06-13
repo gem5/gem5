@@ -166,6 +166,9 @@ class BaseSimpleCPU : public BaseCPU
         return numInst - startNumInst;
     }
 
+    // Mask to align PCs to MachInst sized boundaries
+    static const Addr PCMask = ~((Addr)sizeof(TheISA::MachInst) - 1);
+
     // number of simulated memory references
     Stats::Scalar<> numMemRefs;
 

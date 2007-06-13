@@ -336,13 +336,12 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
     DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",threadPC,
             thread->readNextPC(),thread->readNextNPC());
 #else
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p",threadPC,
+    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p\n",threadPC,
             thread->readNextPC());
 #endif
 
-    const Addr PCMask = ~((Addr)sizeof(MachInst) - 1);
-    Addr fetchPC = threadPC + fetchOffset;
-    req->setVirt(0, fetchPC & PCMask, sizeof(MachInst), 0, threadPC);
+    Addr fetchPC = (threadPC & PCMask) + fetchOffset;
+    req->setVirt(0, fetchPC, sizeof(MachInst), 0, threadPC);
 
     Fault fault = thread->translateInstReq(req);
 
@@ -381,7 +380,8 @@ BaseSimpleCPU::preExecute()
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
         if(predecoder.needMoreBytes())
-            predecoder.moreBytes(thread->readPC() + fetchOffset, 0, inst);
+            predecoder.moreBytes(thread->readPC(),
+                    (thread->readPC() & PCMask) + fetchOffset, 0, inst);
         else
             predecoder.process();
 

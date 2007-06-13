@@ -1128,7 +1128,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                         (&cacheData[tid][offset]));
 
             predecoder.setTC(cpu->thread[tid]->getTC());
-            predecoder.moreBytes(fetch_PC, 0, inst);
+            predecoder.moreBytes(fetch_PC, fetch_PC, 0, inst);
 
             ext_inst = predecoder.getExtMachInst();
 

@@ -69,22 +69,15 @@ namespace AlphaISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr off, MachInst inst)
+        void moreBytes(Addr pc, Addr _fetchPC, Addr off, MachInst inst)
         {
-            fetchPC = pc;
+            fetchPC = _fetchPC;
             assert(off == 0);
             ext_inst = inst;
 #if FULL_SYSTEM
             if (pc && 0x1)
                 ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
 #endif
-        }
-
-        //Use this to give data to the predecoder. This should be used
-        //when instructions are executed in order.
-        void moreBytes(MachInst machInst)
-        {
-            moreBytes(fetchPC + sizeof(machInst), 0, machInst);
         }
 
         bool needMoreBytes()

@@ -67,7 +67,7 @@ namespace SparcISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr currPC, Addr off, MachInst inst)
+        void moreBytes(Addr pc, Addr fetchPC, Addr off, MachInst inst)
         {
             assert(off == 0);
 
@@ -83,13 +83,6 @@ namespace SparcISA
             else
                 emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
                         << (sizeof(MachInst) * 8));
-        }
-
-        //Use this to give data to the predecoder. This should be used
-        //when instructions are executed in order.
-        void moreBytes(MachInst machInst)
-        {
-            moreBytes(0, 0, machInst);
         }
 
         bool needMoreBytes()

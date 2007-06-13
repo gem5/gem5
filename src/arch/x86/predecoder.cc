@@ -209,34 +209,38 @@ namespace X86ISA
 
             //Figure out the effective operand size. This can be overriden to
             //a fixed value at the decoder level.
+            int logOpSize;
             if(/*FIXME long mode*/1)
             {
-                if(emi.rex && emi.rex.w)
-                    emi.opSize = 3; // 64 bit operand size
+                if(emi.rex.w)
+                    logOpSize = 3; // 64 bit operand size
                 else if(emi.legacy.op)
-                    emi.opSize = 1; // 16 bit operand size
+                    logOpSize = 1; // 16 bit operand size
                 else
-                    emi.opSize = 2; // 32 bit operand size
+                    logOpSize = 2; // 32 bit operand size
             }
             else if(/*FIXME default 32*/1)
             {
                 if(emi.legacy.op)
-                    emi.opSize = 1; // 16 bit operand size
+                    logOpSize = 1; // 16 bit operand size
                 else
-                    emi.opSize = 2; // 32 bit operand size
+                    logOpSize = 2; // 32 bit operand size
             }
             else // 16 bit default operand size
             {
                 if(emi.legacy.op)
-                    emi.opSize = 2; // 32 bit operand size
+                    logOpSize = 2; // 32 bit operand size
                 else
-                    emi.opSize = 1; // 16 bit operand size
+                    logOpSize = 1; // 16 bit operand size
             }
 
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
             int immType = ImmediateType[emi.opcode.num - 1][nextByte];
-            immediateSize = SizeTypeToSize[emi.opSize - 1][immType];
+            immediateSize = SizeTypeToSize[logOpSize - 1][immType];
+
+            //Set the actual op size
+            emi.opSize = 1 << logOpSize;
 
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {

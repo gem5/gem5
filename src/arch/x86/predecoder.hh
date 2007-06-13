@@ -192,21 +192,14 @@ namespace X86ISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr currPC, Addr off, MachInst data)
+        void moreBytes(Addr pc, Addr fetchPC, Addr off, MachInst data)
         {
-            basePC = currPC;
+            basePC = fetchPC;
             offset = off;
             fetchChunk = data;
             assert(off < sizeof(MachInst));
             outOfBytes = false;
             process();
-        }
-
-        //Use this to give data to the predecoder. This should be used
-        //when instructions are executed in order.
-        void moreBytes(MachInst machInst)
-        {
-            moreBytes(basePC + sizeof(machInst), 0, machInst);
         }
 
         bool needMoreBytes()
