@@ -231,11 +231,10 @@ let {{
             self.ext = 0
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, "%(mnemonic)s"
+            allocator = '''new %(class_name)s(machInst, mnemonic
                     %(flags)s, %(src1)s, %(src2)s, %(dest)s,
                     %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
-                "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "src2" : self.src2,
                 "dest" : self.dest,
@@ -245,20 +244,19 @@ let {{
             return allocator
 
     class RegOpImm(X86Microop):
-        def __init__(self, dest, src1, imm):
+        def __init__(self, dest, src1, imm8):
             self.dest = dest
             self.src1 = src1
-            self.imm = imm
+            self.imm8 = imm8
             self.setStatus = False
             self.dataSize = 1
             self.ext = 0
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, "%(mnemonic)s"
+            allocator = '''new %(class_name)s(machInst, mnemonic
                     %(flags)s, %(src1)s, %(imm8)s, %(dest)s,
                     %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
-                "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "imm8" : self.imm8,
                 "dest" : self.dest,
@@ -318,7 +316,7 @@ let {{
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        microopClasses[name + "i"] = RegOpChild
+        microopClasses[name + "i"] = RegOpImmChild
 
     defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
     defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
