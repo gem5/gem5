@@ -85,7 +85,7 @@ let {{
 
 let {{
     class OpType(object):
-        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Z0-9])(?P<rsize>[a-z]*))")
+        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Z0-9]*)(?P<rsize>[a-z]*))")
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
