@@ -66,7 +66,7 @@ BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst machInst,
                                Addr inst_PC, Addr inst_NPC,
                                Addr pred_PC, Addr pred_NPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(machInst), traceData(NULL), cpu(cpu)
+  : staticInst(machInst, inst_PC), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 

@@ -63,6 +63,7 @@ class AtomicSimpleCPU;
 class TimingSimpleCPU;
 class InorderCPU;
 class SymbolTable;
+class AddrDecodePage;
 
 namespace Trace {
     class InstRecord;
@@ -349,6 +350,7 @@ class StaticInst : public StaticInstBase
         : StaticInstBase(__opClass),
           machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
     {
+        memset(&recentDecodes, 0, 2 * sizeof(cacheElement));
     }
 
   public:
@@ -437,11 +439,52 @@ class StaticInst : public StaticInstBase
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
-    //This is defined as inline below.
-    static StaticInstPtr decode(ExtMachInst mach_inst);
+    //This is defined as inlined below.
+    static StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
     /// Return name of machine instruction
     std::string getName() { return mnemonic; }
+
+    /// Decoded instruction cache type, for address decoding.
+    /// A generic hash_map is used.
+    typedef m5::hash_map<Addr, AddrDecodePage *> AddrDecodeCache;
+
+    /// A cache of decoded instruction objects from addresses.
+    static AddrDecodeCache addrDecodeCache;
+
+    struct cacheElement {
+        Addr page_addr;
+        AddrDecodePage *decodePage;
+    } ;
+
+    /// An array of recently decoded instructions.
+    // might not use an array if there is only two elements
+    static struct cacheElement recentDecodes[2];
+
+    /// Updates the recently decoded instructions entries
+    /// @param page_addr The page address recently used.
+    /// @param decodePage Pointer to decoding page containing the decoded
+    ///                   instruction.
+    static inline void
+    updateCache(Addr page_addr, AddrDecodePage *decodePage)
+    {
+        recentDecodes[1].page_addr = recentDecodes[0].page_addr;
+        recentDecodes[1].decodePage = recentDecodes[0].decodePage;
+        recentDecodes[0].page_addr = page_addr;
+        recentDecodes[0].decodePage = decodePage;
+    }
+
+    /// Searches the decoded instruction cache for instruction decoding.
+    /// If it is not found, then we decode the instruction.
+    /// Otherwise, we get the instruction from the cache and move it into
+    /// the address-to-instruction decoding page.
+    /// @param mach_inst The binary instruction to decode.
+    /// @param addr The address that contained the binary instruction.
+    /// @param decodePage Pointer to decoding page containing the instruction.
+    /// @retval A pointer to the corresponding StaticInst object.
+    //This is defined as inlined below.
+    static StaticInstPtr searchCache(ExtMachInst mach_inst, Addr addr,
+                                     AddrDecodePage * decodePage);
 };
 
 typedef RefCountingPtr<StaticInstBase> StaticInstBasePtr;
@@ -472,8 +515,8 @@ class StaticInstPtr : public RefCountingPtr<StaticInst>
 
     /// Construct directly from machine instruction.
     /// Calls StaticInst::decode().
-    explicit StaticInstPtr(TheISA::ExtMachInst mach_inst)
-        : RefCountingPtr<StaticInst>(StaticInst::decode(mach_inst))
+    explicit StaticInstPtr(TheISA::ExtMachInst mach_inst, Addr addr)
+        : RefCountingPtr<StaticInst>(StaticInst::decode(mach_inst, addr))
     {
     }
 
@@ -484,8 +527,55 @@ class StaticInstPtr : public RefCountingPtr<StaticInst>
     }
 };
 
+/// A page of a list of decoded instructions from an address.
+class AddrDecodePage
+{
+  typedef TheISA::ExtMachInst ExtMachInst;
+  protected:
+    StaticInstPtr instructions[TheISA::PageBytes];
+    bool valid[TheISA::PageBytes];
+    Addr lowerMask;
+
+  public:
+    /// Constructor
+    AddrDecodePage() {
+        lowerMask = TheISA::PageBytes - 1;
+        memset(valid, 0, TheISA::PageBytes);
+    }
+
+    /// Checks if the instruction is already decoded and the machine
+    /// instruction in the cache matches the current machine instruction
+    /// related to the address
+    /// @param mach_inst The binary instruction to check
+    /// @param addr The address containing the instruction
+    inline bool decoded(ExtMachInst mach_inst, Addr addr)
+    {
+        return (valid[addr & lowerMask] &&
+                (instructions[addr & lowerMask]->machInst == mach_inst));
+    }
+
+    /// Returns the instruction object. decoded should be called first
+    /// to check if the instruction is valid.
+    /// @param addr The address of the instruction.
+    /// @retval A pointer to the corresponding StaticInst object.
+    inline StaticInstPtr getInst(Addr addr)
+    {   return instructions[addr & lowerMask]; }
+
+    /// Inserts a pointer to a StaticInst object into the list of decoded
+    /// instructions on the page.
+    /// @param addr The address of the instruction.
+    /// @param si A pointer to the corresponding StaticInst object.
+    inline void insert(Addr addr, StaticInstPtr &si)
+    {
+        instructions[addr & lowerMask] = si;
+        valid[addr & lowerMask] = true;
+    }
+
+};
+
+
 inline StaticInstPtr
-StaticInst::decode(StaticInst::ExtMachInst mach_inst)
+StaticInst::decode(StaticInst::ExtMachInst mach_inst, Addr addr)
 {
 #ifdef DECODE_CACHE_HASH_STATS
     // Simple stats on decode hash_map.  Turns out the default
@@ -499,12 +589,54 @@ StaticInst::decode(StaticInst::ExtMachInst mach_inst)
     }
 #endif
 
+    Addr page_addr = addr & ~(TheISA::PageBytes - 1);
+
+    // checks recently decoded addresses
+    if (recentDecodes[0].decodePage &&
+        page_addr == recentDecodes[0].page_addr) {
+        if (recentDecodes[0].decodePage->decoded(mach_inst, addr))
+            return recentDecodes[0].decodePage->getInst(addr);
+
+        return searchCache(mach_inst, addr, recentDecodes[0].decodePage);
+    }
+
+    if (recentDecodes[1].decodePage &&
+        page_addr == recentDecodes[1].page_addr) {
+        if (recentDecodes[1].decodePage->decoded(mach_inst, addr))
+            return recentDecodes[1].decodePage->getInst(addr);
+
+        return searchCache(mach_inst, addr, recentDecodes[1].decodePage);
+    }
+
+    // searches the page containing the address to decode
+    AddrDecodeCache::iterator iter = addrDecodeCache.find(page_addr);
+    if (iter != addrDecodeCache.end()) {
+        updateCache(page_addr, iter->second);
+        if (iter->second->decoded(mach_inst, addr))
+            return iter->second->getInst(addr);
+
+        return searchCache(mach_inst, addr, iter->second);
+    }
+
+    // creates a new object for a page of decoded instructions
+    AddrDecodePage * decodePage = new AddrDecodePage;
+    addrDecodeCache[page_addr] = decodePage;
+    updateCache(page_addr, decodePage);
+    return searchCache(mach_inst, addr, decodePage);
+}
+
+inline StaticInstPtr
+StaticInst::searchCache(ExtMachInst mach_inst, Addr addr,
+                        AddrDecodePage * decodePage)
+{
     DecodeCache::iterator iter = decodeCache.find(mach_inst);
     if (iter != decodeCache.end()) {
+        decodePage->insert(addr, iter->second);
         return iter->second;
     }
 
     StaticInstPtr si = TheISA::decodeInst(mach_inst);
+    decodePage->insert(addr, si);
     decodeCache[mach_inst] = si;
     return si;
 }

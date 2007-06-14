@@ -284,7 +284,7 @@ RemoteGDB::setSingleStep()
     // User was stopped at pc, e.g. the instruction at pc was not
     // executed.
     MachInst inst = read<MachInst>(pc);
-    StaticInstPtr si(inst);
+    StaticInstPtr si(inst, pc);
     if (si->hasBranchTarget(pc, context, bpc)) {
         // Don't bother setting a breakpoint on the taken branch if it
         // is the same as the next pc
