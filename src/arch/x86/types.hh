@@ -120,6 +120,24 @@ namespace X86ISA
         Bitfield<2,0> bottom3;
     EndBitUnion(Opcode)
 
+    BitUnion8(OperatingMode)
+        Bitfield<3> mode;
+        Bitfield<2,0> submode;
+    EndBitUnion(OperatingMode)
+
+    enum X86Mode {
+        LongMode,
+        LegacyMode
+    };
+
+    enum X86SubMode {
+        SixtyFourBitMode,
+        CompatabilityMode,
+        ProtectedMode,
+        Virtual8086Mode,
+        RealMode
+    };
+
     //The intermediate structure the x86 predecoder returns.
     struct ExtMachInst
     {
@@ -151,6 +169,9 @@ namespace X86ISA
         uint8_t opSize;
         //The effective address size.
         uint8_t addrSize;
+
+        //Mode information
+        OperatingMode mode;
     };
 
     inline static std::ostream &
@@ -172,6 +193,8 @@ namespace X86ISA
     inline static bool
         operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
     {
+        if(emi1.mode != emi2.mode)
+            return false;
         if(emi1.legacy != emi2.legacy)
             return false;
         if(emi1.rex != emi2.rex)

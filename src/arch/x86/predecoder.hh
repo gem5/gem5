@@ -176,7 +176,10 @@ namespace X86ISA
             tc(_tc), basePC(0), origPC(0), offset(0),
             outOfBytes(true), emiIsReady(false),
             state(ResetState)
-        {}
+        {
+            emi.mode.mode = LongMode;
+            emi.mode.submode = SixtyFourBitMode;
+        }
 
         ThreadContext * getTC()
         {

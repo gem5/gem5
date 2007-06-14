@@ -77,6 +77,7 @@ namespace X86ISA
 
         emi.modRM = 0;
         emi.sib = 0;
+        emi.mode = 0;
     }
 
     void Predecoder::process()
