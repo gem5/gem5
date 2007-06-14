@@ -101,7 +101,7 @@ let {{
     # This function specializes the given piece of code to use a particular
     # set of argument types described by "opTypes".
     def specializeInst(Name, opTypes, env):
-        print "Specializing %s with opTypes %s" % (Name, opTypes)
+        # print "Specializing %s with opTypes %s" % (Name, opTypes)
         while len(opTypes):
             # Parse the operand type string we're working with
             opType = OpType(opTypes[0])
