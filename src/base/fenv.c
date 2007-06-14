@@ -39,7 +39,7 @@ static const int m5_round_ops[] =  {FE_DOWNWARD, FE_TONEAREST, FE_TOWARDZERO, FE
 
 void m5_fesetround(int rm)
 {
-    assert(rm > 0 && rm < 4);
+    assert(rm >= 0 && rm < 4);
     fesetround(m5_round_ops[rm]);
 }
 
