@@ -132,10 +132,11 @@ def template MacroConstructor {{
         inline X86Macroop::%(class_name)s::%(class_name)s(ExtMachInst machInst, EmulEnv env)
             : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s)
         {
-                %(constructor)s;
-                //alloc_microops is the code that sets up the microops
-                //array in the parent class.
-                %(alloc_microops)s;
+            %(adjust_env)s;
+            %(constructor)s;
+            //alloc_microops is the code that sets up the microops
+            //array in the parent class.
+            %(alloc_microops)s;
         }
 }};
 
@@ -147,11 +148,15 @@ def template MacroConstructor {{
 let {{
     from micro_asm import Combinational_Macroop, Rom_Macroop
     class X86Macroop(Combinational_Macroop):
+        def setAdjustEnv(self, val):
+            self.adjust_env = val
         def __init__(self, name):
             super(X86Macroop, self).__init__(name)
             self.directives = {
+                "adjust_env" : self.setAdjustEnv
             }
             self.declared = False
+            self.adjust_env = ""
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % (self.name, env.getAllocator())
         def getDeclaration(self):
@@ -174,7 +179,8 @@ let {{
                 micropc += 1
             iop = InstObjParams(self.name, self.name, "Macroop",
                                 {"code" : "", "num_microops" : numMicroops,
-                                 "alloc_microops" : allocMicroops})
+                                 "alloc_microops" : allocMicroops,
+                                 "adjust_env" : self.adjust_env})
             return MacroConstructor.subst(iop);
 }};
 
@@ -218,13 +224,10 @@ let {{
                               %(dataSize)s)''' % \
                 self.__dict__
         def addReg(self, reg):
-            print "Adding reg \"%s\"" % reg
             if not self.regUsed:
-                print "Added as reg"
                 self.reg = reg
                 self.regUsed = True
             elif not self.regmUsed:
-                print "Added as regm"
                 self.regm = reg
                 self.regmUsed = True
             else:
