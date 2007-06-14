@@ -60,8 +60,7 @@
 
 namespace X86ISA
 {
-    //XXX This will definitely need to be something larger in the future.
-    const int NumMicroIntRegs = 0;
+    const int NumMicroIntRegs = 16;
 
     const int NumMMXRegs = 8;
     const int NumXMMRegs = 16;
