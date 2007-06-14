@@ -37,6 +37,8 @@ StaticInstPtr StaticInst::nullStaticInstPtr;
 
 // Define the decode cache hash map.
 StaticInst::DecodeCache StaticInst::decodeCache;
+StaticInst::AddrDecodeCache StaticInst::addrDecodeCache;
+StaticInst::cacheElement StaticInst::recentDecodes[2];
 
 void
 StaticInst::dumpDecodeCacheStats()

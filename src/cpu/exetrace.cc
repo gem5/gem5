@@ -656,7 +656,7 @@ Trace::InstRecord::dump()
                         assert(predecoder.extMachInstReady());
 
                         StaticInstPtr legionInst =
-                            StaticInst::decode(predecoder.getExtMachInst());
+                            StaticInst::decode(predecoder.getExtMachInst(), lgnPc);
                         outs << setfill(' ') << setw(15)
                              << " Legion Inst: "
                              << "0x" << setw(8) << setfill('0') << hex

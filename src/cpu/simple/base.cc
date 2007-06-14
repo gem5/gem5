@@ -392,7 +392,8 @@ BaseSimpleCPU::preExecute()
             thread->setNextPC(thread->readPC() + predecoder.getInstSize());
 #endif // X86_ISA
             stayAtPC = false;
-            instPtr = StaticInst::decode(predecoder.getExtMachInst());
+            instPtr = StaticInst::decode(predecoder.getExtMachInst(),
+                                         thread->readPC());
         } else {
             stayAtPC = true;
             fetchOffset += sizeof(MachInst);
@@ -437,7 +438,7 @@ BaseSimpleCPU::postExecute()
     if (thread->profile) {
         bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : thread->readPC();
-        StaticInstPtr si(inst);
+        StaticInstPtr si(inst, thread->readPC());
         ProfileNode *node = thread->profile->consume(tc, si);
         if (node)
             thread->profileNode = node;
