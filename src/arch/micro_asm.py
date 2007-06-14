@@ -232,8 +232,15 @@ def t_ANY_ID(t):
 # Parameters are a string of text which don't contain an unescaped statement
 # statement terminator, ie a newline or semi colon.
 def t_params_PARAMS(t):
-    r'([^\n;]|((?<=\\)[\n;]))+'
+    r'([^\n;\\]|(\\[\n;\\]))+'
     t.lineno += t.value.count('\n')
+    unescapeParamsRE = re.compile(r'(\\[\n;\\])')
+    def unescapeParams(mo):
+        val = mo.group(0)
+        print "About to sub %s for %s" % (val[1], val)
+        return val[1]
+    print "Looking for matches in %s" % t.value
+    t.value = unescapeParamsRE.sub(unescapeParams, t.value)
     t.lexer.begin('asm')
     return t
 
