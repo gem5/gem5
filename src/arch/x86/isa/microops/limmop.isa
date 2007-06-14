@@ -123,18 +123,21 @@ def template MicroLimmOpConstructor {{
 }};
 
 let {{
-    class LimmOp(object):
+    class LimmOp(X86Microop):
         def __init__(self, dest, imm):
+            self.className = "Limm"
+            self.mnemonic = "limm"
             self.dest = dest
             self.imm = imm
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, %(mnemonic)s,
-                    %(flags)s %(dest)s, %(imm)s,)''' % {
+            allocator = '''new %(class_name)s(machInst, mnemonic
+                    %(flags)s, %(dest)s, %(imm)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
                 "dest" : self.dest, "imm" : self.imm }
+            return allocator
 
     microopClasses["limm"] = LimmOp
 }};
