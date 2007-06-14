@@ -390,8 +390,15 @@ namespace X86ISA
             //Instructions which use true 64 bit immediates won't be
             //affected, and instructions that use true 32 bit immediates
             //won't notice.
-            if(immediateSize == 4)
+            switch(immediateSize)
+            {
+              case 4:
                 emi.immediate = sext<32>(emi.immediate);
+                break;
+              case 1:
+                emi.immediate = sext<8>(emi.immediate);
+            }
+
             DPRINTF(Predecoder, "Collected immediate %#x.\n",
                     emi.immediate);
             emiIsReady = true;
