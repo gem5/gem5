@@ -55,6 +55,7 @@
 
 microcode = '''
 def macroop POP {
+    .adjust_env "if(machInst.mode.submode == SixtyFourBitMode && env.dataSize == 4) env.dataSize = 8\;"
     # There needs to be a load here to actually "pop" the data
     addi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
 };
