@@ -163,11 +163,11 @@
             0x7: dec_eDI();
         }
         0x0A: decode OPCODE_OP_BOTTOM3 {
-            0x0: push_rAX();
+            0x0: Inst::PUSH(rAx);
             0x1: push_rCX();
             0x2: push_rDX();
             0x3: push_rBX();
-            0x4: push_rSP();
+            0x4: Inst::PUSH(rSP);
             0x5: push_rBP();
             0x6: push_rSI();
             0x7: push_rDI();
@@ -230,7 +230,17 @@
             0x0: group1_Eb_Ib();
             0x1: group1_Ev_Iz();
             0x2: group1_Eb_Ib();
-            0x3: group1_Ev_Ib();
+            //0x3: group1_Ev_Ib();
+            0x3: decode MODRM_REG {
+                0x0: add_Eb_Ib();
+                0x1: or_Eb_Ib();
+                0x2: adc_Eb_Ib();
+                0x3: sbb_Eb_Ib();
+                0x4: Inst::AND(Eb,Ib);
+                0x5: sub_Eb_Ib();
+                0x6: xor_Eb_Ib();
+                0x7: cmp_Eb_Ib();
+            }
             0x4: test_Eb_Gb();
             0x5: test_Ev_Gv();
             0x6: xchg_Eb_Gb();
@@ -313,8 +323,14 @@
             0x3: ret_near();
             0x4: les_Gz_Mp();
             0x5: lds_Gz_Mp();
-            0x6: group12_Eb_Ib();
-            0x7: group12_Ev_Iz();
+            //0x6: group12_Eb_Ib();
+            0x6: decode MODRM_REG {
+                0x0: Inst::MOV(Eb,Ib);
+            }
+            //0x7: group12_Ev_Iz();
+            0x7: decode MODRM_REG {
+                0x0: Inst::MOV(Ev,Iz);
+            }
         }
         0x19: decode OPCODE_OP_BOTTOM3 {
             0x0: enter_Iw_Ib();

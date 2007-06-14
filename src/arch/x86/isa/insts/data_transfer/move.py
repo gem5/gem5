@@ -54,8 +54,25 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop MOV{
+def macroop MOV_R_R {
     mov "env.reg", "env.reg", "env.regm"
+};
+
+def macroop MOV_M_R {
+    #Do a store to put the register operand into memory
+};
+
+def macroop MOV_R_M {
+    #Do a load to fill the register operand from memory
+};
+
+def macroop MOV_R_I {
+    limm "env.reg", "env.immediate"
+};
+
+def macroop MOV_M_I {
+    limm "env.reg", "env.immediate"
+    #Do a store to put the register operand into memory
 };
 '''
 #let {{

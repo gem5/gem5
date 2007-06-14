@@ -54,9 +54,42 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop XOR
+def macroop XOR_R_R
 {
     xor "env.reg", "env.reg", "env.regm"
+};
+
+def macroop XOR_R_I
+{
+    limm "NUM_INTREGS", "env.immediate"
+    xor "env.reg", "env.reg", "NUM_INTREGS"
+};
+
+def macroop XOR_M_R
+{
+    #Do a load to get one of the sources
+    xor "NUM_INTREGS", "NUM_INTREGS", "env.reg"
+    #Do a store to write the destination
+};
+
+def macroop XOR_R_M
+{
+    #Do a load to get one of the sources
+    xor "env.reg", "env.reg", "NUM_INTREGS"
+};
+
+def macroop AND_R_I
+{
+    limm "NUM_INTREGS", "env.immediate"
+    and "env.reg", "env.reg", "NUM_INTREGS"
+};
+
+def macroop AND_M_I
+{
+    #Do a load to get one of the sources
+    limm "NUM_INTREGS", "env.immediate"
+    and "NUM_INTREGS", "NUM_INTREGS", "NUM_INTREGS+1"
+    #Do a store to write the destination
 };
 '''
 #let {{
