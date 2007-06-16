@@ -190,14 +190,8 @@ MemTest::init()
     blockAddrMask = blockSize - 1;
     traceBlockAddr = blockAddr(traceBlockAddr);
 
-    // set up intial memory contents here
-
-    cachePort.memsetBlob(baseAddr1, 1, size);
-    funcPort.memsetBlob(baseAddr1, 1, size);
-    cachePort.memsetBlob(baseAddr2, 2, size);
-    funcPort.memsetBlob(baseAddr2, 2, size);
-    cachePort.memsetBlob(uncacheAddr, 3, size);
-    funcPort.memsetBlob(uncacheAddr, 3, size);
+    // initial memory contents for both physical memory and functional
+    // memory should be 0; no need to initialize them.
 }
 
 static void
@@ -267,7 +261,7 @@ MemTest::completeRequest(PacketPtr pkt)
         break;
 */
       default:
-        panic("invalid command");
+        panic("invalid command %s (%d)", pkt->cmdString(), pkt->cmd.toInt());
     }
 
     if (blockAddr(req->getPaddr()) == traceBlockAddr) {
