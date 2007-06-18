@@ -46,11 +46,13 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
+#include "mem/cache/miss/mshr_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
-#include "mem/port.hh"
+#include "mem/tport.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
 
 /**
  * Reasons for Caches to be Blocked.
@@ -79,7 +81,7 @@ class MSHR;
  */
 class BaseCache : public MemObject
 {
-    class CachePort : public Port
+    class CachePort : public SimpleTimingPort
     {
       public:
         BaseCache *cache;
@@ -102,77 +104,76 @@ class BaseCache : public MemObject
 
         void clearBlocked();
 
-        bool checkFunctional(PacketPtr pkt);
-
         void checkAndSendFunctional(PacketPtr pkt);
-
-        bool canDrain() { return drainList.empty() && transmitList.empty(); }
-
-        bool drainResponse();
 
         CachePort *otherPort;
 
         bool blocked;
 
-        bool mustSendRetry;
-
         bool waitingOnRetry;
+
+        bool mustSendRetry;
 
         /**
          * Bit vector for the outstanding requests for the master interface.
          */
         uint8_t requestCauses;
 
-        std::list<PacketPtr> drainList;
-
-        std::list<std::pair<Tick,PacketPtr> > transmitList;
-
         bool isBusRequested() { return requestCauses != 0; }
-
-        // These need to be virtual since the Event objects depend on
-        // cache template parameters.
-        virtual void scheduleRequestEvent(Tick t) = 0;
 
         void requestBus(RequestCause cause, Tick time)
         {
+            DPRINTF(Cache, "Asserting bus request for cause %d\n", cause);
             if (!isBusRequested() && !waitingOnRetry) {
-                scheduleRequestEvent(time);
+                assert(!sendEvent->scheduled());
+                sendEvent->schedule(time);
             }
             requestCauses |= (1 << cause);
         }
 
         void deassertBusRequest(RequestCause cause)
         {
+            DPRINTF(Cache, "Deasserting bus request for cause %d\n", cause);
             requestCauses &= ~(1 << cause);
         }
 
-        void respond(PacketPtr pkt, Tick time);
+        void respond(PacketPtr pkt, Tick time) {
+            schedSendTiming(pkt, time);
+        }
     };
 
   public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 
-  private:
+  protected:
+
+    /** Miss status registers */
+    MSHRQueue mshrQueue;
+
+    /** Write/writeback buffer */
+    MSHRQueue writeBuffer;
+
+    /** Block size of this cache */
+    const int blkSize;
+
+    /** The number of targets for each MSHR. */
+    const int numTarget;
+
+    /** Increasing order number assigned to each incoming request. */
+    uint64_t order;
+
     /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause
      */
     uint8_t blocked;
 
-    /**
-     * Bit vector for the blocking reasons for the snoop path.
-     * @sa #BlockedCause
-     */
-    uint8_t blockedSnoop;
-
-  protected:
-
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
 
-    /** Block size of this cache */
-    const int blkSize;
+    /** Pointer to the MSHR that has no targets. */
+    MSHR *noTargetMSHR;
 
     /** The number of misses to trigger an exit event. */
     Counter missCount;
@@ -246,6 +247,73 @@ class BaseCache : public MemObject
     /** The number of cache copies performed. */
     Stats::Scalar<> cacheCopies;
 
+    /** Number of blocks written back per thread. */
+    Stats::Vector<> writebacks;
+
+    /** Number of misses that hit in the MSHRs per command and thread. */
+    Stats::Vector<> mshr_hits[MemCmd::NUM_MEM_CMDS];
+    /** Demand misses that hit in the MSHRs. */
+    Stats::Formula demandMshrHits;
+    /** Total number of misses that hit in the MSHRs. */
+    Stats::Formula overallMshrHits;
+
+    /** Number of misses that miss in the MSHRs, per command and thread. */
+    Stats::Vector<> mshr_misses[MemCmd::NUM_MEM_CMDS];
+    /** Demand misses that miss in the MSHRs. */
+    Stats::Formula demandMshrMisses;
+    /** Total number of misses that miss in the MSHRs. */
+    Stats::Formula overallMshrMisses;
+
+    /** Number of misses that miss in the MSHRs, per command and thread. */
+    Stats::Vector<> mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
+    /** Total number of misses that miss in the MSHRs. */
+    Stats::Formula overallMshrUncacheable;
+
+    /** Total cycle latency of each MSHR miss, per command and thread. */
+    Stats::Vector<> mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
+    /** Total cycle latency of demand MSHR misses. */
+    Stats::Formula demandMshrMissLatency;
+    /** Total cycle latency of overall MSHR misses. */
+    Stats::Formula overallMshrMissLatency;
+
+    /** Total cycle latency of each MSHR miss, per command and thread. */
+    Stats::Vector<> mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
+    /** Total cycle latency of overall MSHR misses. */
+    Stats::Formula overallMshrUncacheableLatency;
+
+    /** The total number of MSHR accesses per command and thread. */
+    Stats::Formula mshrAccesses[MemCmd::NUM_MEM_CMDS];
+    /** The total number of demand MSHR accesses. */
+    Stats::Formula demandMshrAccesses;
+    /** The total number of MSHR accesses. */
+    Stats::Formula overallMshrAccesses;
+
+    /** The miss rate in the MSHRs pre command and thread. */
+    Stats::Formula mshrMissRate[MemCmd::NUM_MEM_CMDS];
+    /** The demand miss rate in the MSHRs. */
+    Stats::Formula demandMshrMissRate;
+    /** The overall miss rate in the MSHRs. */
+    Stats::Formula overallMshrMissRate;
+
+    /** The average latency of an MSHR miss, per command and thread. */
+    Stats::Formula avgMshrMissLatency[MemCmd::NUM_MEM_CMDS];
+    /** The average latency of a demand MSHR miss. */
+    Stats::Formula demandAvgMshrMissLatency;
+    /** The average overall latency of an MSHR miss. */
+    Stats::Formula overallAvgMshrMissLatency;
+
+    /** The average latency of an MSHR miss, per command and thread. */
+    Stats::Formula avgMshrUncacheableLatency[MemCmd::NUM_MEM_CMDS];
+    /** The average overall latency of an MSHR miss. */
+    Stats::Formula overallAvgMshrUncacheableLatency;
+
+    /** The number of times a thread hit its MSHR cap. */
+    Stats::Vector<> mshr_cap_events;
+    /** The number of times software prefetches caused the MSHR to block. */
+    Stats::Vector<> soft_prefetch_mshr_full;
+
+    Stats::Scalar<> mshr_no_allocate_misses;
+
     /**
      * @}
      */
@@ -260,12 +328,13 @@ class BaseCache : public MemObject
     class Params
     {
       public:
-        /** List of address ranges of this cache. */
-        std::vector<Range<Addr> > addrRange;
         /** The hit latency for this cache. */
         int hitLatency;
         /** The block size of this cache. */
         int blkSize;
+        int numMSHRs;
+        int numTargets;
+        int numWriteBuffers;
         /**
          * The maximum number of misses this cache should handle before
          * ending the simulation.
@@ -275,10 +344,12 @@ class BaseCache : public MemObject
         /**
          * Construct an instance of this parameter class.
          */
-        Params(std::vector<Range<Addr> > addr_range,
-               int hit_latency, int _blkSize, Counter max_misses)
-            : addrRange(addr_range), hitLatency(hit_latency), blkSize(_blkSize),
-              maxMisses(max_misses)
+        Params(int _hitLatency, int _blkSize,
+               int _numMSHRs, int _numTargets, int _numWriteBuffers,
+               Counter _maxMisses)
+            : hitLatency(_hitLatency), blkSize(_blkSize),
+              numMSHRs(_numMSHRs), numTargets(_numTargets),
+              numWriteBuffers(_numWriteBuffers), maxMisses(_maxMisses)
         {
         }
     };
@@ -307,20 +378,16 @@ class BaseCache : public MemObject
         return blkSize;
     }
 
+
+    Addr blockAlign(Addr addr) const { return (addr & ~(blkSize - 1)); }
+
+
     /**
      * Returns true if the cache is blocked for accesses.
      */
     bool isBlocked()
     {
         return blocked != 0;
-    }
-
-    /**
-     * Returns true if the cache is blocked for snoops.
-     */
-    bool isBlockedForSnoop()
-    {
-        return blockedSnoop != 0;
     }
 
     /**
@@ -346,23 +413,6 @@ class BaseCache : public MemObject
     }
 
     /**
-     * Marks the snoop path of the cache as blocked for the given cause. This
-     * also sets the blocked flag in the master interface.
-     * @param cause The reason to block the snoop path.
-     */
-    void setBlockedForSnoop(BlockedCause cause)
-    {
-        uint8_t flag = 1 << cause;
-        uint8_t old_state = blockedSnoop;
-        if (!(blockedSnoop & flag)) {
-            //Wasn't already blocked for this cause
-            blockedSnoop |= flag;
-            if (!old_state)
-                memSidePort->setBlocked();
-        }
-    }
-
-    /**
      * Marks the cache as unblocked for the given cause. This also clears the
      * blocked flags in the appropriate interfaces.
      * @param cause The newly unblocked cause.
@@ -381,13 +431,6 @@ class BaseCache : public MemObject
                 blocked_cycles[cause] += curTick - blockedCycle;
                 DPRINTF(Cache,"Unblocking from all causes\n");
                 cpuSidePort->clearBlocked();
-            }
-        }
-        if (blockedSnoop & flag)
-        {
-            blockedSnoop &= ~flag;
-            if (!isBlockedForSnoop()) {
-                memSidePort->clearBlocked();
             }
         }
     }
@@ -418,55 +461,26 @@ class BaseCache : public MemObject
     void deassertMemSideBusRequest(RequestCause cause)
     {
         memSidePort->deassertBusRequest(cause);
-        checkDrain();
-    }
-
-    /**
-     * Send a response to the slave interface.
-     * @param pkt The request being responded to.
-     * @param time The time the response is ready.
-     */
-    void respond(PacketPtr pkt, Tick time)
-    {
-        cpuSidePort->respond(pkt, time);
-    }
-
-    /**
-     * Suppliess the data if cache to cache transfers are enabled.
-     * @param pkt The bus transaction to fulfill.
-     */
-    void respondToSnoop(PacketPtr pkt, Tick time)
-    {
-        memSidePort->respond(pkt, time);
+        // checkDrain();
     }
 
     virtual unsigned int drain(Event *de);
 
-    void checkDrain()
-    {
-        if (drainEvent && canDrain()) {
-            drainEvent->process();
-            changeState(SimObject::Drained);
-            // Clear the drain event
-            drainEvent = NULL;
-        }
-    }
-
-    bool canDrain()
-    {
-        if (isMemSideBusRequested()) {
-            return false;
-        } else if (memSidePort && !memSidePort->canDrain()) {
-            return false;
-        } else if (cpuSidePort && !cpuSidePort->canDrain()) {
-            return false;
-        }
-        return true;
-    }
-
     virtual bool inCache(Addr addr) = 0;
 
     virtual bool inMissQueue(Addr addr) = 0;
+
+    void incMissCount(PacketPtr pkt)
+    {
+        misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+
+        if (missCount) {
+            --missCount;
+            if (missCount == 0)
+                exitSimLoop("A cache reached the maximum miss count");
+        }
+    }
+
 };
 
 #endif //__BASE_CACHE_HH__

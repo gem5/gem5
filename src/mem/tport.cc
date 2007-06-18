@@ -67,14 +67,17 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // code to hanldle nacks here, but I'm pretty sure it didn't work
     // correctly with the drain code, so that would need to be fixed
     // if we ever added it back.
-    assert(pkt->result != Packet::Nacked);
+    assert(pkt->isRequest());
+    assert(pkt->result == Packet::Unknown);
+    bool needsResponse = pkt->needsResponse();
     Tick latency = recvAtomic(pkt);
     // turn packet around to go back to requester if response expected
-    if (pkt->needsResponse()) {
-        pkt->makeTimingResponse();
+    if (needsResponse) {
+        // recvAtomic() should already have turned packet into atomic response
+        assert(pkt->isResponse());
+        pkt->convertAtomicToTimingResponse();
         schedSendTiming(pkt, curTick + latency);
-    }
-    else if (pkt->cmd != MemCmd::UpgradeReq) {
+    } else {
         delete pkt->req;
         delete pkt;
     }

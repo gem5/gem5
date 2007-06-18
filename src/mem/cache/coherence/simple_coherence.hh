@@ -95,24 +95,13 @@ class SimpleCoherence
     }
 
     /**
-     * Was the CSHR request was sent successfully?
-     * @param pkt The request.
-     * @param success True if the request was sent successfully.
-     */
-    void sendResult(PacketPtr &pkt, MSHR* cshr, bool success)
-    {
-        //Don't do coherence
-        return;
-    }
-
-
-    /**
      * Return the proper state given the current state and the bus response.
      * @param pkt The bus response.
      * @param current The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(PacketPtr &pkt, CacheBlk::State current)
+    CacheBlk::State getNewState(PacketPtr pkt,
+                                CacheBlk::State current = 0)
     {
         return protocol->getNewState(pkt, current);
     }

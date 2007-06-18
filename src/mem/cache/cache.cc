@@ -58,9 +58,6 @@
 #include "mem/cache/tags/split_lifo.hh"
 #endif
 
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
-
 #include "mem/cache/coherence/simple_coherence.hh"
 
 #include "mem/cache/cache_impl.hh"

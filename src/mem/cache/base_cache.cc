@@ -41,18 +41,23 @@
 using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
-    : Port(_name, _cache), cache(_cache), otherPort(NULL)
+    : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
+      blocked(false), waitingOnRetry(false), mustSendRetry(false),
+      requestCauses(0)
 {
-    blocked = false;
-    waitingOnRetry = false;
 }
 
 
 BaseCache::BaseCache(const std::string &name, Params &params)
     : MemObject(name),
-      blocked(0), blockedSnoop(0),
+      mshrQueue(params.numMSHRs, 4),
+      writeBuffer(params.numWriteBuffers, params.numMSHRs+1000),
       blkSize(params.blkSize),
-      missCount(params.maxMisses), drainEvent(NULL)
+      numTarget(params.numTargets),
+      blocked(0),
+      noTargetMSHR(NULL),
+      missCount(params.maxMisses),
+      drainEvent(NULL)
 {
 }
 
@@ -71,120 +76,13 @@ BaseCache::CachePort::deviceBlockSize()
     return cache->getBlockSize();
 }
 
-bool
-BaseCache::CachePort::checkFunctional(PacketPtr pkt)
-{
-    //Check storage here first
-    list<PacketPtr>::iterator i = drainList.begin();
-    list<PacketPtr>::iterator iend = drainList.end();
-    bool notDone = true;
-    while (i != iend && notDone) {
-        PacketPtr target = *i;
-        // If the target contains data, and it overlaps the
-        // probed request, need to update data
-        if (target->intersect(pkt)) {
-            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a drain\n",
-                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
-            notDone = fixPacket(pkt, target);
-        }
-        i++;
-    }
-    //Also check the response not yet ready to be on the list
-    std::list<std::pair<Tick,PacketPtr> >::iterator j = transmitList.begin();
-    std::list<std::pair<Tick,PacketPtr> >::iterator jend = transmitList.end();
-
-    while (j != jend && notDone) {
-        PacketPtr target = j->second;
-        // If the target contains data, and it overlaps the
-        // probed request, need to update data
-        if (target->intersect(pkt)) {
-            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a response\n",
-                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
-            notDone = fixDelayedResponsePacket(pkt, target);
-        }
-        j++;
-    }
-    return notDone;
-}
 
 void
 BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
 {
-    bool notDone = checkFunctional(pkt);
-    if (notDone)
+    checkFunctional(pkt);
+    if (pkt->result != Packet::Success)
         sendFunctional(pkt);
-}
-
-
-void
-BaseCache::CachePort::respond(PacketPtr pkt, Tick time)
-{
-    assert(time >= curTick);
-    if (pkt->needsResponse()) {
-        if (transmitList.empty()) {
-            assert(!responseEvent->scheduled());
-            responseEvent->schedule(time);
-            transmitList.push_back(std::pair<Tick,PacketPtr>(time,pkt));
-            return;
-        }
-
-        // something is on the list and this belongs at the end
-        if (time >= transmitList.back().first) {
-            transmitList.push_back(std::pair<Tick,PacketPtr>(time,pkt));
-            return;
-        }
-        // Something is on the list and this belongs somewhere else
-        std::list<std::pair<Tick,PacketPtr> >::iterator i =
-            transmitList.begin();
-        std::list<std::pair<Tick,PacketPtr> >::iterator end =
-            transmitList.end();
-        bool done = false;
-
-        while (i != end && !done) {
-            if (time < i->first) {
-                if (i == transmitList.begin()) {
-                    //Inserting at begining, reschedule
-                    responseEvent->reschedule(time);
-                }
-                transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
-                done = true;
-            }
-            i++;
-        }
-    }
-    else {
-        assert(0);
-        // this code was on the cpuSidePort only... do we still need it?
-        if (pkt->cmd != MemCmd::UpgradeReq)
-        {
-            delete pkt->req;
-            delete pkt;
-        }
-    }
-}
-
-bool
-BaseCache::CachePort::drainResponse()
-{
-    DPRINTF(CachePort,
-            "%s attempting to send a retry for response (%i waiting)\n",
-            name(), drainList.size());
-    //We have some responses to drain first
-    PacketPtr pkt = drainList.front();
-    if (sendTiming(pkt)) {
-        drainList.pop_front();
-        DPRINTF(CachePort, "%s sucessful in sending a retry for"
-                "response (%i still waiting)\n", name(), drainList.size());
-        if (!drainList.empty() || isBusRequested()) {
-
-            DPRINTF(CachePort, "%s has more responses/requests\n", name());
-            return false;
-        }
-    } else {
-        waitingOnRetry = true;
-        DPRINTF(CachePort, "%s now waiting on a retry\n", name());
-    }
-    return true;
 }
 
 
@@ -193,17 +91,6 @@ BaseCache::CachePort::recvRetryCommon()
 {
     assert(waitingOnRetry);
     waitingOnRetry = false;
-    if (!drainList.empty()) {
-        if (!drainResponse()) {
-            // more responses to drain... re-request bus
-            scheduleRequestEvent(curTick + 1);
-        }
-        // Check if we're done draining once this list is empty
-        if (drainList.empty()) {
-            cache->checkDrain();
-        }
-        return true;
-    }
     return false;
 }
 
@@ -451,17 +338,289 @@ BaseCache::regStats()
         .desc("number of cache copies performed")
         ;
 
+    writebacks
+        .init(maxThreadsPerCPU)
+        .name(name() + ".writebacks")
+        .desc("number of writebacks")
+        .flags(total)
+        ;
+
+    // MSHR statistics
+    // MSHR hit statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_hits[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_hits")
+            .desc("number of " + cstr + " MSHR hits")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrHits
+        .name(name() + ".demand_mshr_hits")
+        .desc("number of demand (read+write) MSHR hits")
+        .flags(total)
+        ;
+    demandMshrHits = mshr_hits[MemCmd::ReadReq] + mshr_hits[MemCmd::WriteReq];
+
+    overallMshrHits
+        .name(name() + ".overall_mshr_hits")
+        .desc("number of overall MSHR hits")
+        .flags(total)
+        ;
+    overallMshrHits = demandMshrHits + mshr_hits[MemCmd::SoftPFReq] +
+        mshr_hits[MemCmd::HardPFReq];
+
+    // MSHR miss statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_misses[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_misses")
+            .desc("number of " + cstr + " MSHR misses")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrMisses
+        .name(name() + ".demand_mshr_misses")
+        .desc("number of demand (read+write) MSHR misses")
+        .flags(total)
+        ;
+    demandMshrMisses = mshr_misses[MemCmd::ReadReq] + mshr_misses[MemCmd::WriteReq];
+
+    overallMshrMisses
+        .name(name() + ".overall_mshr_misses")
+        .desc("number of overall MSHR misses")
+        .flags(total)
+        ;
+    overallMshrMisses = demandMshrMisses + mshr_misses[MemCmd::SoftPFReq] +
+        mshr_misses[MemCmd::HardPFReq];
+
+    // MSHR miss latency statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_miss_latency[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_miss_latency")
+            .desc("number of " + cstr + " MSHR miss cycles")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrMissLatency
+        .name(name() + ".demand_mshr_miss_latency")
+        .desc("number of demand (read+write) MSHR miss cycles")
+        .flags(total)
+        ;
+    demandMshrMissLatency = mshr_miss_latency[MemCmd::ReadReq]
+        + mshr_miss_latency[MemCmd::WriteReq];
+
+    overallMshrMissLatency
+        .name(name() + ".overall_mshr_miss_latency")
+        .desc("number of overall MSHR miss cycles")
+        .flags(total)
+        ;
+    overallMshrMissLatency = demandMshrMissLatency +
+        mshr_miss_latency[MemCmd::SoftPFReq] + mshr_miss_latency[MemCmd::HardPFReq];
+
+    // MSHR uncacheable statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_uncacheable[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_uncacheable")
+            .desc("number of " + cstr + " MSHR uncacheable")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    overallMshrUncacheable
+        .name(name() + ".overall_mshr_uncacheable_misses")
+        .desc("number of overall MSHR uncacheable misses")
+        .flags(total)
+        ;
+    overallMshrUncacheable = mshr_uncacheable[MemCmd::ReadReq]
+        + mshr_uncacheable[MemCmd::WriteReq] + mshr_uncacheable[MemCmd::SoftPFReq]
+        + mshr_uncacheable[MemCmd::HardPFReq];
+
+    // MSHR miss latency statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_uncacheable_lat[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_uncacheable_latency")
+            .desc("number of " + cstr + " MSHR uncacheable cycles")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    overallMshrUncacheableLatency
+        .name(name() + ".overall_mshr_uncacheable_latency")
+        .desc("number of overall MSHR uncacheable cycles")
+        .flags(total)
+        ;
+    overallMshrUncacheableLatency = mshr_uncacheable_lat[MemCmd::ReadReq]
+        + mshr_uncacheable_lat[MemCmd::WriteReq]
+        + mshr_uncacheable_lat[MemCmd::SoftPFReq]
+        + mshr_uncacheable_lat[MemCmd::HardPFReq];
+
+#if 0
+    // MSHR access formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshrAccesses[access_idx]
+            .name(name() + "." + cstr + "_mshr_accesses")
+            .desc("number of " + cstr + " mshr accesses(hits+misses)")
+            .flags(total | nozero | nonan)
+            ;
+        mshrAccesses[access_idx] =
+            mshr_hits[access_idx] + mshr_misses[access_idx]
+            + mshr_uncacheable[access_idx];
+    }
+
+    demandMshrAccesses
+        .name(name() + ".demand_mshr_accesses")
+        .desc("number of demand (read+write) mshr accesses")
+        .flags(total | nozero | nonan)
+        ;
+    demandMshrAccesses = demandMshrHits + demandMshrMisses;
+
+    overallMshrAccesses
+        .name(name() + ".overall_mshr_accesses")
+        .desc("number of overall (read+write) mshr accesses")
+        .flags(total | nozero | nonan)
+        ;
+    overallMshrAccesses = overallMshrHits + overallMshrMisses
+        + overallMshrUncacheable;
+#endif
+
+    // MSHR miss rate formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshrMissRate[access_idx]
+            .name(name() + "." + cstr + "_mshr_miss_rate")
+            .desc("mshr miss rate for " + cstr + " accesses")
+            .flags(total | nozero | nonan)
+            ;
+
+        mshrMissRate[access_idx] =
+            mshr_misses[access_idx] / accesses[access_idx];
+    }
+
+    demandMshrMissRate
+        .name(name() + ".demand_mshr_miss_rate")
+        .desc("mshr miss rate for demand accesses")
+        .flags(total)
+        ;
+    demandMshrMissRate = demandMshrMisses / demandAccesses;
+
+    overallMshrMissRate
+        .name(name() + ".overall_mshr_miss_rate")
+        .desc("mshr miss rate for overall accesses")
+        .flags(total)
+        ;
+    overallMshrMissRate = overallMshrMisses / overallAccesses;
+
+    // mshrMiss latency formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        avgMshrMissLatency[access_idx]
+            .name(name() + "." + cstr + "_avg_mshr_miss_latency")
+            .desc("average " + cstr + " mshr miss latency")
+            .flags(total | nozero | nonan)
+            ;
+
+        avgMshrMissLatency[access_idx] =
+            mshr_miss_latency[access_idx] / mshr_misses[access_idx];
+    }
+
+    demandAvgMshrMissLatency
+        .name(name() + ".demand_avg_mshr_miss_latency")
+        .desc("average overall mshr miss latency")
+        .flags(total)
+        ;
+    demandAvgMshrMissLatency = demandMshrMissLatency / demandMshrMisses;
+
+    overallAvgMshrMissLatency
+        .name(name() + ".overall_avg_mshr_miss_latency")
+        .desc("average overall mshr miss latency")
+        .flags(total)
+        ;
+    overallAvgMshrMissLatency = overallMshrMissLatency / overallMshrMisses;
+
+    // mshrUncacheable latency formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        avgMshrUncacheableLatency[access_idx]
+            .name(name() + "." + cstr + "_avg_mshr_uncacheable_latency")
+            .desc("average " + cstr + " mshr uncacheable latency")
+            .flags(total | nozero | nonan)
+            ;
+
+        avgMshrUncacheableLatency[access_idx] =
+            mshr_uncacheable_lat[access_idx] / mshr_uncacheable[access_idx];
+    }
+
+    overallAvgMshrUncacheableLatency
+        .name(name() + ".overall_avg_mshr_uncacheable_latency")
+        .desc("average overall mshr uncacheable latency")
+        .flags(total)
+        ;
+    overallAvgMshrUncacheableLatency = overallMshrUncacheableLatency / overallMshrUncacheable;
+
+    mshr_cap_events
+        .init(maxThreadsPerCPU)
+        .name(name() + ".mshr_cap_events")
+        .desc("number of times MSHR cap was activated")
+        .flags(total)
+        ;
+
+    //software prefetching stats
+    soft_prefetch_mshr_full
+        .init(maxThreadsPerCPU)
+        .name(name() + ".soft_prefetch_mshr_full")
+        .desc("number of mshr full events for SW prefetching instrutions")
+        .flags(total)
+        ;
+
+    mshr_no_allocate_misses
+        .name(name() +".no_allocate_misses")
+        .desc("Number of misses that were no-allocate")
+        ;
+
 }
 
 unsigned int
 BaseCache::drain(Event *de)
 {
+    int count = memSidePort->drain(de) + cpuSidePort->drain(de);
+
     // Set status
-    if (!canDrain()) {
+    if (count != 0) {
         drainEvent = de;
 
         changeState(SimObject::Draining);
-        return 1;
+        return count;
     }
 
     changeState(SimObject::Drained);

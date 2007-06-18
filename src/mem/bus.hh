@@ -182,9 +182,6 @@ class Bus : public MemObject
      */
     Port *findPort(Addr addr, int id);
 
-    /** Snoop all relevant ports atomicly. */
-    Tick atomicSnoop(PacketPtr pkt, Port* responder);
-
     /** Snoop all relevant ports functionally. */
     void functionalSnoop(PacketPtr pkt, Port *responder);
 

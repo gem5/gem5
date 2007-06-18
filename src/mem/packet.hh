@@ -54,16 +54,6 @@ typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 
-//Coherence Flags
-#define NACKED_LINE     (1 << 0)
-#define SATISFIED       (1 << 1)
-#define SHARED_LINE     (1 << 2)
-#define CACHE_LINE_FILL (1 << 3)
-#define COMPRESSED      (1 << 4)
-#define NO_ALLOCATE     (1 << 5)
-
-#define EXPRESS_SNOOP   (1 << 7)
-
 class MemCmd
 {
   public:
@@ -82,12 +72,15 @@ class MemCmd
         HardPFReq,
         SoftPFResp,
         HardPFResp,
-        InvalidateReq,
         WriteInvalidateReq,
         WriteInvalidateResp,
         UpgradeReq,
         ReadExReq,
         ReadExResp,
+        LoadLockedReq,
+        LoadLockedResp,
+        StoreCondReq,
+        StoreCondResp,
         SwapReq,
         SwapResp,
         NUM_MEM_CMDS
@@ -97,18 +90,19 @@ class MemCmd
     /** List of command attributes. */
     enum Attribute
     {
-        IsRead,
-        IsWrite,
-        IsPrefetch,
+        IsRead,         //!< Data flows from responder to requester
+        IsWrite,        //!< Data flows from requester to responder
+        IsPrefetch,     //!< Not a demand access
         IsInvalidate,
-        IsRequest,
-        IsResponse,
-        NeedsResponse,
+        NeedsExclusive, //!< Requires exclusive copy to complete in-cache
+        IsRequest,      //!< Issued by requester
+        IsResponse,     //!< Issue by responder
+        NeedsResponse,  //!< Requester needs response from target
         IsSWPrefetch,
         IsHWPrefetch,
         IsUpgrade,
-        HasData,
-        IsReadWrite,
+        IsLocked,       //!< Alpha/MIPS LL or SC access
+        HasData,        //!< There is an associated payload
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -141,10 +135,12 @@ class MemCmd
     bool isWrite()  const       { return testCmdAttrib(IsWrite); }
     bool isRequest() const      { return testCmdAttrib(IsRequest); }
     bool isResponse() const     { return testCmdAttrib(IsResponse); }
+    bool needsExclusive() const  { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
-    bool isReadWrite() const    { return testCmdAttrib(IsReadWrite); }
+    bool isReadWrite() const    { return isRead() && isWrite(); }
+    bool isLocked() const       { return testCmdAttrib(IsLocked); }
 
     const Command responseCommand() const {
         return commandInfo[cmd].response;
@@ -187,9 +183,6 @@ class Packet
   public:
 
     typedef MemCmd::Command Command;
-
-    /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
-    uint64_t flags;
 
   private:
    /** A pointer to the data being transfered.  It can be differnt
@@ -235,6 +228,14 @@ class Packet
     /** Is the 'src' field valid? */
     bool srcValid;
 
+    enum SnoopFlag {
+        MemInhibit,
+        Shared,
+        NUM_SNOOP_FLAGS
+    };
+
+    /** Coherence snoopFlags for snooping */
+    std::bitset<NUM_SNOOP_FLAGS> snoopFlags;
 
   public:
 
@@ -301,14 +302,17 @@ class Packet
     bool isWrite()  const       { return cmd.isWrite(); }
     bool isRequest() const      { return cmd.isRequest(); }
     bool isResponse() const     { return cmd.isResponse(); }
+    bool needsExclusive() const  { return cmd.needsExclusive(); }
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
     bool isReadWrite() const    { return cmd.isReadWrite(); }
+    bool isLocked() const       { return cmd.isLocked(); }
 
-    bool isCacheFill() const    { return (flags & CACHE_LINE_FILL) != 0; }
-    bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }
-    bool isCompressed() const   { return (flags & COMPRESSED) != 0; }
+    void assertMemInhibit()     { snoopFlags[MemInhibit] = true; }
+    void assertShared()         { snoopFlags[Shared] = true; }
+    bool memInhibitAsserted()   { return snoopFlags[MemInhibit]; }
+    bool sharedAsserted()       { return snoopFlags[Shared]; }
 
     bool nic_pkt() { panic("Unimplemented"); M5_DUMMY_RETURN }
 
@@ -327,6 +331,8 @@ class Packet
     /** Accessor function that returns the source index of the packet. */
     short getSrc() const { assert(srcValid); return src; }
     void setSrc(short _src) { src = _src; srcValid = true; }
+    /** Reset source field, e.g. to retransmit packet on different bus. */
+    void clearSrc() { srcValid = false; }
 
     /** Accessor function that returns the destination index of
         the packet. */
@@ -347,13 +353,12 @@ class Packet
     Packet(Request *_req, MemCmd _cmd, short _dest)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
-           addrSizeValid(_req->validPaddr),
-           srcValid(false),
+           addrSizeValid(_req->validPaddr), srcValid(false),
+           snoopFlags(0),
+           time(curTick),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {
-        flags = 0;
-        time = curTick;
     }
 
     /** Alternate constructor if you are trying to create a packet with
@@ -361,14 +366,32 @@ class Packet
      *  this allows for overriding the size/addr of the req.*/
     Packet(Request *_req, MemCmd _cmd, short _dest, int _blkSize)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
-           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
-           dest(_dest),
+           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
            addrSizeValid(_req->validPaddr), srcValid(false),
+           snoopFlags(0),
+           time(curTick),
            req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
            result(Unknown)
     {
-        flags = 0;
-        time = curTick;
+    }
+
+    /** Alternate constructor for copying a packet.  Copy all fields
+     * *except* set data allocation as static... even if the original
+     * packet's data was dynamic, we don't want to free it when the
+     * new packet is deallocated.  Note that if original packet used
+     * dynamic data, user must guarantee that the new packet's
+     * lifetime is less than that of the original packet. */
+    Packet(Packet *origPkt)
+        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(origPkt->addr), size(origPkt->size),
+           dest(origPkt->dest),
+           addrSizeValid(origPkt->addrSizeValid), srcValid(origPkt->srcValid),
+           snoopFlags(origPkt->snoopFlags),
+           time(curTick),
+           req(origPkt->req), coherence(origPkt->coherence),
+           senderState(origPkt->senderState), cmd(origPkt->cmd),
+           result(origPkt->result)
+    {
     }
 
     /** Destructor. */
@@ -382,7 +405,7 @@ class Packet
      *   multiple transactions. */
     void reinitFromRequest() {
         assert(req->validPaddr);
-        flags = 0;
+        snoopFlags = 0;
         addr = req->paddr;
         size = req->size;
         time = req->time;
@@ -395,29 +418,40 @@ class Packet
         }
     }
 
-    /** Take a request packet and modify it in place to be suitable
-     *   for returning as a response to that request.  Used for timing
-     *   accesses only.  For atomic and functional accesses, the
-     *   request packet is always implicitly passed back *without*
-     *   modifying the destination fields, so this function
-     *   should not be called. */
-    void makeTimingResponse() {
+    /**
+     * Take a request packet and modify it in place to be suitable for
+     * returning as a response to that request.  The source and
+     * destination fields are *not* modified, as is appropriate for
+     * atomic accesses.
+     */
+    void makeAtomicResponse()
+    {
         assert(needsResponse());
         assert(isRequest());
+        assert(result == Unknown);
         cmd = cmd.responseCommand();
+        result = Success;
+    }
+
+    /**
+     * Perform the additional work required for timing responses above
+     * and beyond atomic responses; i.e., change the destination to
+     * point back to the requester and clear the source field.
+     */
+    void convertAtomicToTimingResponse()
+    {
         dest = src;
         srcValid = false;
     }
 
     /**
      * Take a request packet and modify it in place to be suitable for
-     * returning as a response to that request.
+     * returning as a response to a timing request.
      */
-    void makeAtomicResponse()
+    void makeTimingResponse()
     {
-        assert(needsResponse());
-        assert(isRequest());
-        cmd = cmd.responseCommand();
+        makeAtomicResponse();
+        convertAtomicToTimingResponse();
     }
 
     /**
@@ -494,6 +528,40 @@ class Packet
     void set(T v);
 
     /**
+     * Copy data into the packet from the provided pointer.
+     */
+    void setData(uint8_t *p)
+    {
+        std::memcpy(getPtr<uint8_t>(), p, getSize());
+    }
+
+    /**
+     * Copy data into the packet from the provided block pointer,
+     * which is aligned to the given block size.
+     */
+    void setDataFromBlock(uint8_t *blk_data, int blkSize)
+    {
+        setData(blk_data + getOffset(blkSize));
+    }
+
+    /**
+     * Copy data from the packet to the provided block pointer, which
+     * is aligned to the given block size.
+     */
+    void writeData(uint8_t *p)
+    {
+        std::memcpy(p, getPtr<uint8_t>(), getSize());
+    }
+
+    /**
+     * Copy data from the packet to the memory at the provided pointer.
+     */
+    void writeDataToBlock(uint8_t *blk_data, int blkSize)
+    {
+        writeData(blk_data + getOffset(blkSize));
+    }
+
+    /**
      * delete the data pointed to in the data pointer. Ok to call to
      * matter how data was allocted.
      */
@@ -504,15 +572,35 @@ class Packet
 
     /** Do the packet modify the same addresses. */
     bool intersect(PacketPtr p);
+
+    /**
+     * Check a functional request against a memory value represented
+     * by a base/size pair and an associated data array.  If the
+     * functional request is a read, it may be satisfied by the memory
+     * value.  If the functional request is a write, it may update the
+     * memory value.
+     */
+    bool checkFunctional(Addr base, int size, uint8_t *data);
+
+    /**
+     * Check a functional request against a memory value stored in
+     * another packet (i.e. an in-transit request or response).
+     */
+    bool checkFunctional(PacketPtr otherPkt) {
+        return (otherPkt->hasData() &&
+                checkFunctional(otherPkt->getAddr(), otherPkt->getSize(),
+                                otherPkt->getPtr<uint8_t>()));
+    }
 };
 
-/** This function given a functional packet and a timing packet either
- * satisfies the timing packet, or updates the timing packet to
- * reflect the updated state in the timing packet. It returns if the
- * functional packet should continue to traverse the memory hierarchy
- * or not.
+
+
+/** Temporary for backwards compatibility.
  */
-bool fixPacket(PacketPtr func, PacketPtr timing);
+inline
+bool fixPacket(PacketPtr func, PacketPtr timing) {
+    return !func->checkFunctional(timing);
+}
 
 /** This function is a wrapper for the fixPacket field that toggles
  * the hasData bit it is used when a response is waiting in the

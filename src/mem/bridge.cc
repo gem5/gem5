@@ -339,17 +339,14 @@ void
 Bridge::BridgePort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketBuffer*>::iterator i;
-    bool pktContinue = true;
 
     for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
-        if (pkt->intersect((*i)->pkt)) {
-            pktContinue &= fixPacket(pkt, (*i)->pkt);
-        }
+        if (pkt->checkFunctional((*i)->pkt))
+            return;
     }
 
-    if (pktContinue) {
-        otherPort->sendFunctional(pkt);
-    }
+    // fall through if pkt still not satisfied
+    otherPort->sendFunctional(pkt);
 }
 
 /** Function called by the port when the bus is receiving a status change.*/

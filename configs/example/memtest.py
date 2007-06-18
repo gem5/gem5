@@ -33,14 +33,32 @@ m5.AddToPath('../common')
 
 parser = optparse.OptionParser()
 
-parser.add_option("--caches", action="store_true")
-parser.add_option("-t", "--timing", action="store_true")
-parser.add_option("-m", "--maxtick", type="int")
-parser.add_option("-l", "--maxloads", default = "1000000000000", type="int")
-parser.add_option("-n", "--numtesters", default = "8", type="int")
-parser.add_option("-p", "--protocol",
-                  default="moesi",
-                  help="The coherence protocol to use for the L1'a (i.e. MOESI, MOSI)")
+parser.add_option("-c", "--cache-levels", type="int", default=2,
+                  metavar="LEVELS",
+                  help="Number of cache levels [default: %default]")
+parser.add_option("-a", "--atomic", action="store_true",
+                  help="Use atomic (non-timing) mode")
+parser.add_option("-b", "--blocking", action="store_true",
+                  help="Use blocking caches")
+parser.add_option("-l", "--maxloads", default="1G", metavar="N",
+                  help="Stop after N loads [default: %default]")
+parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
+                  metavar="T",
+                  help="Stop after T ticks")
+parser.add_option("-n", "--numtesters", type="int", default=8,
+                  metavar="N",
+                  help="Number of tester pseudo-CPUs [default: %default]")
+parser.add_option("-p", "--protocol", default="moesi",
+                  help="Coherence protocol [default: %default]")
+
+parser.add_option("-f", "--functional", type="int", default=0,
+                  metavar="PCT",
+                  help="Target percentage of functional accesses "
+                  "[default: %default]")
+parser.add_option("-u", "--uncacheable", type="int", default=0,
+                  metavar="PCT",
+                  help="Target percentage of uncacheable accesses "
+                  "[default: %default]")
 
 (options, args) = parser.parse_args()
 
@@ -48,14 +66,29 @@ if args:
      print "Error: script doesn't take any positional arguments"
      sys.exit(1)
 
+# Should generalize this someday... would be cool to have a loop that
+# just iterates, adding a level of caching each time.
+#if options.cache_levels != 2 and options.cache_levels != 0:
+#     print "Error: number of cache levels must be 0 or 2"
+#     sys.exit(1)
+
+if options.blocking:
+     num_l1_mshrs = 1
+     num_l2_mshrs = 1
+else:
+     num_l1_mshrs = 12
+     num_l2_mshrs = 92
+
+block_size = 64
+
 # --------------------
 # Base L1 Cache
 # ====================
 
 class L1(BaseCache):
     latency = '1ns'
-    block_size = 64
-    mshrs = 12
+    block_size = block_size
+    mshrs = num_l1_mshrs
     tgts_per_mshr = 8
     protocol = CoherenceProtocol(protocol=options.protocol)
 
@@ -64,29 +97,31 @@ class L1(BaseCache):
 # ----------------------
 
 class L2(BaseCache):
-    block_size = 64
+    block_size = block_size
     latency = '10ns'
-    mshrs = 92
+    mshrs = num_l2_mshrs
     tgts_per_mshr = 16
     write_buffers = 8
+    protocol = CoherenceProtocol(protocol=options.protocol)
 
-#MAX CORES IS 8 with the false sharing method
-if options.numtesters > 8:
-     print "Error: NUmber of testers limited to 8 because of false sharing"
-     sys,exit(1)
+if options.numtesters > block_size:
+     print "Error: Number of testers limited to %s because of false sharing" \
+           % (block_size)
+     sys.exit(1)
 
-cpus = [ MemTest(atomic=not options.timing, max_loads=options.maxloads,
-                 percent_functional=50, percent_uncacheable=10,
+cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads,
+                 percent_functional=options.functional,
+                 percent_uncacheable=options.uncacheable,
                  progress_interval=1000)
          for i in xrange(options.numtesters) ]
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(latency = "50ps"),
+                physmem = PhysicalMemory(latency = "100ns"),
                 membus = Bus(clock="500MHz", width=16))
 
 # l2cache & bus
-if options.caches:
+if options.cache_levels == 2:
     system.toL2Bus = Bus(clock="500MHz", width=16)
     system.l2c = L2(size='64kB', assoc=8)
     system.l2c.cpu_side = system.toL2Bus.port
@@ -96,10 +131,14 @@ if options.caches:
 
 # add L1 caches
 for cpu in cpus:
-    if options.caches:
+    if options.cache_levels == 2:
          cpu.l1c = L1(size = '32kB', assoc = 4)
          cpu.test = cpu.l1c.cpu_side
          cpu.l1c.mem_side = system.toL2Bus.port
+    elif options.cache_levels == 1:
+         cpu.l1c = L1(size = '32kB', assoc = 4)
+         cpu.test = cpu.l1c.cpu_side
+         cpu.l1c.mem_side = system.membus.port
     else:
          cpu.test = system.membus.port
     system.funcmem.port = cpu.functional
@@ -113,10 +152,10 @@ system.physmem.port = system.membus.port
 # -----------------------
 
 root = Root( system = system )
-if options.timing:
-    root.system.mem_mode = 'timing'
-else:
+if options.atomic:
     root.system.mem_mode = 'atomic'
+else:
+    root.system.mem_mode = 'timing'
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')
@@ -125,9 +164,6 @@ m5.ticks.setGlobalFrequency('1ns')
 m5.instantiate(root)
 
 # simulate until program terminates
-if options.maxtick:
-    exit_event = m5.simulate(options.maxtick)
-else:
-    exit_event = m5.simulate(10000000000000)
+exit_event = m5.simulate(options.maxtick)
 
 print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()

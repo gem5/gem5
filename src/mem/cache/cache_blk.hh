@@ -39,6 +39,7 @@
 
 #include "sim/core.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
+#include "mem/packet.hh"
 #include "mem/request.hh"
 
 /**
@@ -51,8 +52,6 @@ enum CacheBlkStatusBits {
     BlkWritable =	0x02,
     /** dirty (modified) */
     BlkDirty =		0x04,
-    /** compressed */
-    BlkCompressed =	0x08,
     /** block was referenced */
     BlkReferenced =	0x10,
     /** block was a hardware prefetch yet unaccessed*/
@@ -174,18 +173,9 @@ class CacheBlk
      * Check to see if a block has been written.
      * @return True if the block is dirty.
      */
-    bool isModified() const
+    bool isDirty() const
     {
         return (status & BlkDirty) != 0;
-    }
-
-    /**
-     * Check to see if this block contains compressed data.
-     * @return True iF the block's data is compressed.
-     */
-    bool isCompressed() const
-    {
-        return (status & BlkCompressed) != 0;
     }
 
     /**
@@ -213,10 +203,10 @@ class CacheBlk
      * redundant records on the list, but that's OK, as they'll all
      * get blown away at the next store.
      */
-    void trackLoadLocked(Request *req)
+    void trackLoadLocked(PacketPtr pkt)
     {
-        assert(req->isLocked());
-        lockList.push_front(Lock(req));
+        assert(pkt->isLocked());
+        lockList.push_front(Lock(pkt->req));
     }
 
     /**
@@ -230,9 +220,10 @@ class CacheBlk
      * @return True if write should proceed, false otherwise.  Returns
      * false only in the case of a failed store conditional.
      */
-    bool checkWrite(Request *req)
+    bool checkWrite(PacketPtr pkt)
     {
-        if (req->isLocked()) {
+        Request *req = pkt->req;
+        if (pkt->isLocked()) {
             // it's a store conditional... have to check for matching
             // load locked.
             bool success = false;

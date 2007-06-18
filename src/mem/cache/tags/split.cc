@@ -298,27 +298,25 @@ Split::findBlock(Addr addr) const
 }
 
 SplitBlk*
-Split::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                     BlkList &compress_blocks)
+Split::findReplacement(Addr addr, PacketList &writebacks)
 {
     SplitBlk *blk;
 
+    assert(0);
+#if 0
     if (pkt->nic_pkt()) {
         DPRINTF(Split, "finding a replacement for nic_req\n");
         nic_repl++;
         if (lifo && lifo_net)
-            blk = lifo_net->findReplacement(pkt, writebacks,
-                                             compress_blocks);
+            blk = lifo_net->findReplacement(addr, writebacks);
         else if (lru_net)
-            blk = lru_net->findReplacement(pkt, writebacks,
-                                            compress_blocks);
+            blk = lru_net->findReplacement(addr, writebacks);
         // in this case, this is an LRU only cache, it's non partitioned
         else
-            blk = lru->findReplacement(pkt, writebacks, compress_blocks);
+            blk = lru->findReplacement(addr, writebacks);
     } else {
         DPRINTF(Split, "finding replacement for cpu_req\n");
-        blk = lru->findReplacement(pkt, writebacks,
-                                    compress_blocks);
+        blk = lru->findReplacement(addr, writebacks);
         cpu_repl++;
     }
 
@@ -346,6 +344,7 @@ Split::findReplacement(PacketPtr &pkt, PacketList &writebacks,
     // blk attributes for the new blk coming IN
     blk->ts = curTick;
     blk->isNIC = (pkt->nic_pkt()) ? true : false;
+#endif
 
     return blk;
 }
@@ -400,8 +399,13 @@ Split::regenerateBlkAddr(Addr tag, int set) const
 }
 
 Addr
-Split::extractTag(Addr addr, SplitBlk *blk) const
+Split::extractTag(Addr addr) const
 {
+    // need to fix this if we want to use it... old interface of
+    // passing in blk was too weird
+    assert(0);
+    return 0;
+/*
     if (blk->part == 2) {
         if (lifo_net)
             return lifo_net->extractTag(addr);
@@ -411,5 +415,6 @@ Split::extractTag(Addr addr, SplitBlk *blk) const
             panic("this shouldn't happen");
     } else
         return lru->extractTag(addr);
+*/
 }
 

@@ -89,8 +89,8 @@ class CoherenceProtocol : public SimObject
      * @param oldState The current block state.
      * @return The new state.
      */
-    CacheBlk::State getNewState(PacketPtr &pkt,
-                                CacheBlk::State oldState);
+    CacheBlk::State getNewState(PacketPtr pkt,
+                                CacheBlk::State oldState = 0);
 
     /**
      * Handle snooped bus requests.

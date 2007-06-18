@@ -102,7 +102,6 @@ void
 MemTest::sendPkt(PacketPtr pkt) {
     if (atomic) {
         cachePort.sendAtomic(pkt);
-        pkt->makeAtomicResponse();
         completeRequest(pkt);
     }
     else if (!cachePort.sendTiming(pkt)) {
@@ -165,8 +164,6 @@ MemTest::MemTest(const string &name,
     tickEvent.schedule(0);
 
     id = TESTER_ALLOCATOR++;
-    if (TESTER_ALLOCATOR > 8)
-        panic("False sharing memtester only allows up to 8 testers");
 
     accessRetry = false;
 }
@@ -190,14 +187,8 @@ MemTest::init()
     blockAddrMask = blockSize - 1;
     traceBlockAddr = blockAddr(traceBlockAddr);
 
-    // set up intial memory contents here
-
-    cachePort.memsetBlob(baseAddr1, 1, size);
-    funcPort.memsetBlob(baseAddr1, 1, size);
-    cachePort.memsetBlob(baseAddr2, 2, size);
-    funcPort.memsetBlob(baseAddr2, 2, size);
-    cachePort.memsetBlob(uncacheAddr, 3, size);
-    funcPort.memsetBlob(uncacheAddr, 3, size);
+    // initial memory contents for both physical memory and functional
+    // memory should be 0; no need to initialize them.
 }
 
 static void
@@ -230,15 +221,10 @@ MemTest::completeRequest(PacketPtr pkt)
       case MemCmd::ReadResp:
 
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
-            cerr << name() << ": on read of 0x" << hex << req->getPaddr()
-                 << " (0x" << hex << blockAddr(req->getPaddr()) << ")"
-                 << "@ cycle " << dec << curTick
-                 << ", cache returns 0x";
-            printData(cerr, pkt_data, pkt->getSize());
-            cerr << ", expected 0x";
-            printData(cerr, data, pkt->getSize());
-            cerr << endl;
-            fatal("");
+            panic("%s: read of %x (blk %x) @ cycle %d "
+                  "returns %x, expected %x\n", name(),
+                  req->getPaddr(), blockAddr(req->getPaddr()), curTick,
+                  *pkt_data, *data);
         }
 
         numReads++;
@@ -267,7 +253,7 @@ MemTest::completeRequest(PacketPtr pkt)
         break;
 */
       default:
-        panic("invalid command");
+        panic("invalid command %s (%d)", pkt->cmdString(), pkt->cmd.toInt());
     }
 
     if (blockAddr(req->getPaddr()) == traceBlockAddr) {

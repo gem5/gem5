@@ -241,7 +241,6 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             }
 
             pf.push_back(prefetch);
-            prefetch->flags |= CACHE_LINE_FILL;
 
             //Make sure to request the bus, with proper delay
             cache->requestMemSideBus(Request_PF, prefetch->time);
