@@ -139,31 +139,6 @@ CoherenceProtocol::regStats()
         .desc("readEx snoops on exclusive blocks")
         ;
 
-    snoopCount[Shared][MemCmd::InvalidateReq]
-        .name(name() + ".snoop_inv_shared")
-        .desc("Invalidate snoops on shared blocks")
-        ;
-
-    snoopCount[Owned][MemCmd::InvalidateReq]
-        .name(name() + ".snoop_inv_owned")
-        .desc("Invalidate snoops on owned blocks")
-        ;
-
-    snoopCount[Exclusive][MemCmd::InvalidateReq]
-        .name(name() + ".snoop_inv_exclusive")
-        .desc("Invalidate snoops on exclusive blocks")
-        ;
-
-    snoopCount[Modified][MemCmd::InvalidateReq]
-        .name(name() + ".snoop_inv_modified")
-        .desc("Invalidate snoops on modified blocks")
-        ;
-
-    snoopCount[Invalid][MemCmd::InvalidateReq]
-        .name(name() + ".snoop_inv_invalid")
-        .desc("Invalidate snoops on invalid blocks")
-        ;
-
     snoopCount[Shared][MemCmd::WriteInvalidateReq]
         .name(name() + ".snoop_writeinv_shared")
         .desc("WriteInvalidate snoops on shared blocks")
@@ -219,7 +194,7 @@ CoherenceProtocol::supplyAndGotoSharedTrans(BaseCache *cache, PacketPtr &pkt,
                                             CacheBlk::State & new_state)
 {
     new_state = (blk->status & ~stateMask) | Shared;
-    pkt->flags |= SHARED_LINE;
+    pkt->assertShared();
     return supplyTrans(cache, pkt, blk, mshr, new_state);
 }
 
@@ -231,7 +206,7 @@ CoherenceProtocol::supplyAndGotoOwnedTrans(BaseCache *cache, PacketPtr &pkt,
                                            CacheBlk::State & new_state)
 {
     new_state = (blk->status & ~stateMask) | Owned;
-    pkt->flags |= SHARED_LINE;
+    pkt->assertShared();
     return supplyTrans(cache, pkt, blk, mshr, new_state);
 }
 
@@ -253,7 +228,7 @@ CoherenceProtocol::assertShared(BaseCache *cache, PacketPtr &pkt,
                                             CacheBlk::State & new_state)
 {
     new_state = (blk->status & ~stateMask) | Shared;
-    pkt->flags |= SHARED_LINE;
+    pkt->assertShared();
     return false;
 }
 
@@ -295,11 +270,14 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     tt[Invalid][MC::ReadReq].onRequest(MC::ReadReq);
     // we only support write allocate right now
     tt[Invalid][MC::WriteReq].onRequest(MC::ReadExReq);
+    tt[Invalid][MC::ReadExReq].onRequest(MC::ReadExReq);
     tt[Invalid][MC::SwapReq].onRequest(MC::ReadExReq);
     tt[Shared][MC::WriteReq].onRequest(writeToSharedCmd);
+    tt[Shared][MC::ReadExReq].onRequest(MC::ReadExReq);
     tt[Shared][MC::SwapReq].onRequest(writeToSharedCmd);
     if (hasOwned) {
         tt[Owned][MC::WriteReq].onRequest(writeToSharedCmd);
+        tt[Owned][MC::ReadExReq].onRequest(MC::ReadExReq);
         tt[Owned][MC::SwapReq].onRequest(writeToSharedCmd);
     }
 
@@ -333,12 +311,10 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     //
     tt[Invalid][MC::ReadReq].onSnoop(nullTransition);
     tt[Invalid][MC::ReadExReq].onSnoop(nullTransition);
-    tt[Invalid][MC::InvalidateReq].onSnoop(invalidateTrans);
     tt[Invalid][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     tt[Shared][MC::ReadReq].onSnoop(hasExclusive
                                    ? assertShared : nullTransition);
     tt[Shared][MC::ReadExReq].onSnoop(invalidateTrans);
-    tt[Shared][MC::InvalidateReq].onSnoop(invalidateTrans);
     tt[Shared][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     if (doUpgrades) {
         tt[Invalid][MC::UpgradeReq].onSnoop(nullTransition);
@@ -348,13 +324,11 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     tt[Modified][MC::ReadReq].onSnoop(hasOwned
                                      ? supplyAndGotoOwnedTrans
                                      : supplyAndGotoSharedTrans);
-    tt[Modified][MC::InvalidateReq].onSnoop(invalidateTrans);
     tt[Modified][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
 
     if (hasExclusive) {
         tt[Exclusive][MC::ReadReq].onSnoop(assertShared);
         tt[Exclusive][MC::ReadExReq].onSnoop(invalidateTrans);
-        tt[Exclusive][MC::InvalidateReq].onSnoop(invalidateTrans);
         tt[Exclusive][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
 
@@ -362,7 +336,6 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
         tt[Owned][MC::ReadReq].onSnoop(supplyAndGotoOwnedTrans);
         tt[Owned][MC::ReadExReq].onSnoop(supplyAndInvalidateTrans);
         tt[Owned][MC::UpgradeReq].onSnoop(invalidateTrans);
-        tt[Owned][MC::InvalidateReq].onSnoop(invalidateTrans);
         tt[Owned][MC::WriteInvalidateReq].onSnoop(invalidateTrans);
     }
 
@@ -391,7 +364,7 @@ CoherenceProtocol::getBusCmd(MemCmd cmdIn, CacheBlk::State state,
 
 
 CacheBlk::State
-CoherenceProtocol::getNewState(PacketPtr &pkt, CacheBlk::State oldState)
+CoherenceProtocol::getNewState(PacketPtr pkt, CacheBlk::State oldState)
 {
     CacheBlk::State state = oldState & stateMask;
     int cmd_idx = pkt->cmdToIndex();
@@ -403,7 +376,7 @@ CoherenceProtocol::getNewState(PacketPtr &pkt, CacheBlk::State oldState)
 
     //Check if it's exclusive and the shared line was asserted,
     //then  goto shared instead
-    if (newState == Exclusive && (pkt->flags & SHARED_LINE)) {
+    if (newState == Exclusive && pkt->sharedAsserted()) {
         newState = Shared;
     }
 

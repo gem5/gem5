@@ -345,17 +345,6 @@ class IIC : public BaseTags
         return hitLatency;
     }
 
-    /**
-     * Generate the tag from the address.
-     * @param addr The address to a get a tag for.
-     * @param blk Ignored here.
-     * @return the tag.
-     */
-    Addr extractTag(Addr addr, IICTag *blk) const
-    {
-        return (addr >> tagShift);
-    }
-
      /**
      * Generate the tag from the address.
      * @param addr The address to a get a tag for.
@@ -423,18 +412,6 @@ class IIC : public BaseTags
     }
 
     /**
-     * Decompress a block if it is compressed.
-     * @param index The tag store index for the block to uncompress.
-     */
-    void decompressBlock(unsigned long index);
-
-    /**
-     * Try and compress a block if it is not already compressed.
-     * @param index The tag store index for the block to compress.
-     */
-    void compressBlock(unsigned long index);
-
-    /**
      * Invalidate a block.
      * @param blk The block to invalidate.
      */
@@ -462,11 +439,9 @@ class IIC : public BaseTags
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
-     * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                            BlkList &compress_blocks);
+    IICTag* findReplacement(Addr addr, PacketList &writebacks);
 
     /**
      * Read the data from the internal storage of the given cache block.

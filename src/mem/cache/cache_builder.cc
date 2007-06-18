@@ -70,12 +70,7 @@
 #include "base/compression/null_compression.hh"
 #include "base/compression/lzss_compression.hh"
 
-// MissQueue Templates
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
-
 // Coherence Templates
-#include "mem/cache/coherence/uni_coherence.hh"
 #include "mem/cache/coherence/simple_coherence.hh"
 
 //Prefetcher Headers
@@ -208,13 +203,9 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         else {                                                          \
             BUILD_NULL_PREFETCHER(TAGS);                                \
         }                                                               \
-        Cache<TAGS, c>::Params params(tags, mq, coh, base_params,       \
+        Cache<TAGS, c>::Params params(tags, coh, base_params,       \
                                       pf, prefetch_access, latency, \
                                       true,                             \
-                                      store_compressed,                 \
-                                      adaptive_compression,             \
-                                      compressed_bus,                   \
-                                      compAlg, compression_latency,     \
                                       prefetch_miss);                   \
         Cache<TAGS, c> *retval =                                        \
             new Cache<TAGS, c>(getInstanceName(), params);              \
@@ -302,13 +293,6 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
     } while (0)
 
 #define BUILD_COHERENCE(b) do {						\
-        if (protocol == NULL) {						\
-            UniCoherence *coh = new UniCoherence();			\
-            BUILD_CACHES(UniCoherence);				\
-        } else {							\
-            SimpleCoherence *coh = new SimpleCoherence(protocol);	\
-            BUILD_CACHES(SimpleCoherence);				\
-        }								\
     } while (0)
 
 #if defined(USE_TAGGED)
@@ -375,8 +359,9 @@ CREATE_SIM_OBJECT(BaseCache)
     }
 
     // Build BaseCache param object
-    BaseCache::Params base_params(addr_range, latency,
-                                  block_size, max_miss_count);
+    BaseCache::Params base_params(latency, block_size,
+                                  mshrs, tgts_per_mshr, write_buffers,
+                                  max_miss_count);
 
     //Warnings about prefetcher policy
     if (pf_policy == "none" && (prefetch_miss || prefetch_access)) {
@@ -414,14 +399,8 @@ CREATE_SIM_OBJECT(BaseCache)
     const void *repl = NULL;
 #endif
 
-    if (mshrs == 1 /*|| out_bus->doEvents() == false*/) {
-        BlockingBuffer *mq = new BlockingBuffer(true);
-        BUILD_COHERENCE(BlockingBuffer);
-    } else {
-        MissQueue *mq = new MissQueue(mshrs, tgts_per_mshr, write_buffers,
-                                      true, prefetch_miss);
-        BUILD_COHERENCE(MissQueue);
-    }
+    SimpleCoherence *coh = new SimpleCoherence(protocol);
+    BUILD_CACHES(SimpleCoherence);
     return NULL;
 }
 

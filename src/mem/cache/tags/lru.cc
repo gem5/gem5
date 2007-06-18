@@ -194,10 +194,9 @@ LRU::findBlock(Addr addr) const
 }
 
 LRUBlk*
-LRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                     BlkList &compress_blocks)
+LRU::findReplacement(Addr addr, PacketList &writebacks)
 {
-    unsigned set = extractSet(pkt->getAddr());
+    unsigned set = extractSet(addr);
     // grab a replacement candidate
     LRUBlk *blk = sets[set].blks[assoc-1];
     sets[set].moveToHead(blk);

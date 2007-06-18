@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Erik Hallnor
+ *          Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -44,11 +46,13 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
+#include "mem/cache/miss/mshr_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
-#include "mem/port.hh"
+#include "mem/tport.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
 
 /**
  * Reasons for Caches to be Blocked.
@@ -77,91 +81,87 @@ class MSHR;
  */
 class BaseCache : public MemObject
 {
-    class CachePort : public Port
+    class CachePort : public SimpleTimingPort
     {
       public:
         BaseCache *cache;
 
       protected:
-        CachePort(const std::string &_name, BaseCache *_cache, bool _isCpuSide);
-        virtual void recvStatusChange(Status status);
+        Event *responseEvent;
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        CachePort(const std::string &_name, BaseCache *_cache);
+
+        virtual void recvStatusChange(Status status);
 
         virtual int deviceBlockSize();
 
-        virtual void recvRetry();
+        bool recvRetryCommon();
 
       public:
+        void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
+
         void setBlocked();
 
         void clearBlocked();
 
-        bool checkFunctional(PacketPtr pkt);
-
         void checkAndSendFunctional(PacketPtr pkt);
 
-        bool canDrain() { return drainList.empty() && transmitList.empty(); }
+        CachePort *otherPort;
 
         bool blocked;
 
-        bool mustSendRetry;
-
-        bool isCpuSide;
-
         bool waitingOnRetry;
 
-        std::list<PacketPtr> drainList;
+        bool mustSendRetry;
 
-        std::list<std::pair<Tick,PacketPtr> > transmitList;
-    };
+        /**
+         * Bit vector for the outstanding requests for the master interface.
+         */
+        uint8_t requestCauses;
 
-    struct RequestEvent : public Event
-    {
-        CachePort *cachePort;
+        bool isBusRequested() { return requestCauses != 0; }
 
-        RequestEvent(CachePort *_cachePort, Tick when);
-        void process();
-        const char *description();
-    };
+        void requestBus(RequestCause cause, Tick time)
+        {
+            DPRINTF(Cache, "Asserting bus request for cause %d\n", cause);
+            if (!isBusRequested() && !waitingOnRetry) {
+                assert(!sendEvent->scheduled());
+                sendEvent->schedule(time);
+            }
+            requestCauses |= (1 << cause);
+        }
 
-    struct ResponseEvent : public Event
-    {
-        CachePort *cachePort;
+        void deassertBusRequest(RequestCause cause)
+        {
+            DPRINTF(Cache, "Deasserting bus request for cause %d\n", cause);
+            requestCauses &= ~(1 << cause);
+        }
 
-        ResponseEvent(CachePort *_cachePort);
-        void process();
-        const char *description();
+        void respond(PacketPtr pkt, Tick time) {
+            schedSendTiming(pkt, time);
+        }
     };
 
   public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 
-    ResponseEvent *sendEvent;
-    ResponseEvent *memSendEvent;
+  protected:
 
-  private:
-    void recvStatusChange(Port::Status status, bool isCpuSide)
-    {
-        if (status == Port::RangeChange){
-            if (!isCpuSide) {
-                cpuSidePort->sendStatusChange(Port::RangeChange);
-            }
-            else {
-                memSidePort->sendStatusChange(Port::RangeChange);
-            }
-        }
-    }
+    /** Miss status registers */
+    MSHRQueue mshrQueue;
 
-    virtual PacketPtr getPacket() = 0;
+    /** Write/writeback buffer */
+    MSHRQueue writeBuffer;
 
-    virtual PacketPtr getCoherencePacket() = 0;
+    /** Block size of this cache */
+    const int blkSize;
 
-    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
+    /** The number of targets for each MSHR. */
+    const int numTarget;
 
-    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* mshr, bool success) = 0;
+    /** Increasing order number assigned to each incoming request. */
+    uint64_t order;
 
     /**
      * Bit vector of the blocking reasons for the access path.
@@ -169,29 +169,11 @@ class BaseCache : public MemObject
      */
     uint8_t blocked;
 
-    /**
-     * Bit vector for the blocking reasons for the snoop path.
-     * @sa #BlockedCause
-     */
-    uint8_t blockedSnoop;
-
-    /**
-     * Bit vector for the outstanding requests for the master interface.
-     */
-    uint8_t masterRequests;
-
-    /**
-     * Bit vector for the outstanding requests for the slave interface.
-     */
-    uint8_t slaveRequests;
-
-  protected:
-
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
 
-    /** Block size of this cache */
-    const int blkSize;
+    /** Pointer to the MSHR that has no targets. */
+    MSHR *noTargetMSHR;
 
     /** The number of misses to trigger an exit event. */
     Counter missCount;
@@ -265,6 +247,73 @@ class BaseCache : public MemObject
     /** The number of cache copies performed. */
     Stats::Scalar<> cacheCopies;
 
+    /** Number of blocks written back per thread. */
+    Stats::Vector<> writebacks;
+
+    /** Number of misses that hit in the MSHRs per command and thread. */
+    Stats::Vector<> mshr_hits[MemCmd::NUM_MEM_CMDS];
+    /** Demand misses that hit in the MSHRs. */
+    Stats::Formula demandMshrHits;
+    /** Total number of misses that hit in the MSHRs. */
+    Stats::Formula overallMshrHits;
+
+    /** Number of misses that miss in the MSHRs, per command and thread. */
+    Stats::Vector<> mshr_misses[MemCmd::NUM_MEM_CMDS];
+    /** Demand misses that miss in the MSHRs. */
+    Stats::Formula demandMshrMisses;
+    /** Total number of misses that miss in the MSHRs. */
+    Stats::Formula overallMshrMisses;
+
+    /** Number of misses that miss in the MSHRs, per command and thread. */
+    Stats::Vector<> mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
+    /** Total number of misses that miss in the MSHRs. */
+    Stats::Formula overallMshrUncacheable;
+
+    /** Total cycle latency of each MSHR miss, per command and thread. */
+    Stats::Vector<> mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
+    /** Total cycle latency of demand MSHR misses. */
+    Stats::Formula demandMshrMissLatency;
+    /** Total cycle latency of overall MSHR misses. */
+    Stats::Formula overallMshrMissLatency;
+
+    /** Total cycle latency of each MSHR miss, per command and thread. */
+    Stats::Vector<> mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
+    /** Total cycle latency of overall MSHR misses. */
+    Stats::Formula overallMshrUncacheableLatency;
+
+    /** The total number of MSHR accesses per command and thread. */
+    Stats::Formula mshrAccesses[MemCmd::NUM_MEM_CMDS];
+    /** The total number of demand MSHR accesses. */
+    Stats::Formula demandMshrAccesses;
+    /** The total number of MSHR accesses. */
+    Stats::Formula overallMshrAccesses;
+
+    /** The miss rate in the MSHRs pre command and thread. */
+    Stats::Formula mshrMissRate[MemCmd::NUM_MEM_CMDS];
+    /** The demand miss rate in the MSHRs. */
+    Stats::Formula demandMshrMissRate;
+    /** The overall miss rate in the MSHRs. */
+    Stats::Formula overallMshrMissRate;
+
+    /** The average latency of an MSHR miss, per command and thread. */
+    Stats::Formula avgMshrMissLatency[MemCmd::NUM_MEM_CMDS];
+    /** The average latency of a demand MSHR miss. */
+    Stats::Formula demandAvgMshrMissLatency;
+    /** The average overall latency of an MSHR miss. */
+    Stats::Formula overallAvgMshrMissLatency;
+
+    /** The average latency of an MSHR miss, per command and thread. */
+    Stats::Formula avgMshrUncacheableLatency[MemCmd::NUM_MEM_CMDS];
+    /** The average overall latency of an MSHR miss. */
+    Stats::Formula overallAvgMshrUncacheableLatency;
+
+    /** The number of times a thread hit its MSHR cap. */
+    Stats::Vector<> mshr_cap_events;
+    /** The number of times software prefetches caused the MSHR to block. */
+    Stats::Vector<> soft_prefetch_mshr_full;
+
+    Stats::Scalar<> mshr_no_allocate_misses;
+
     /**
      * @}
      */
@@ -279,12 +328,13 @@ class BaseCache : public MemObject
     class Params
     {
       public:
-        /** List of address ranges of this cache. */
-        std::vector<Range<Addr> > addrRange;
         /** The hit latency for this cache. */
         int hitLatency;
         /** The block size of this cache. */
         int blkSize;
+        int numMSHRs;
+        int numTargets;
+        int numWriteBuffers;
         /**
          * The maximum number of misses this cache should handle before
          * ending the simulation.
@@ -294,10 +344,12 @@ class BaseCache : public MemObject
         /**
          * Construct an instance of this parameter class.
          */
-        Params(std::vector<Range<Addr> > addr_range,
-               int hit_latency, int _blkSize, Counter max_misses)
-            : addrRange(addr_range), hitLatency(hit_latency), blkSize(_blkSize),
-              maxMisses(max_misses)
+        Params(int _hitLatency, int _blkSize,
+               int _numMSHRs, int _numTargets, int _numWriteBuffers,
+               Counter _maxMisses)
+            : hitLatency(_hitLatency), blkSize(_blkSize),
+              numMSHRs(_numMSHRs), numTargets(_numTargets),
+              numWriteBuffers(_numWriteBuffers), maxMisses(_maxMisses)
         {
         }
     };
@@ -309,20 +361,10 @@ class BaseCache : public MemObject
      * of this cache.
      * @param params The parameter object for this BaseCache.
      */
-    BaseCache(const std::string &name, Params &params)
-        : MemObject(name), blocked(0), blockedSnoop(0), masterRequests(0),
-          slaveRequests(0), blkSize(params.blkSize),
-          missCount(params.maxMisses), drainEvent(NULL)
-    {
-        //Start ports at null if more than one is created we should panic
-        cpuSidePort = NULL;
-        memSidePort = NULL;
-    }
+    BaseCache(const std::string &name, Params &params);
 
     ~BaseCache()
     {
-        delete sendEvent;
-        delete memSendEvent;
     }
 
     virtual void init();
@@ -336,20 +378,16 @@ class BaseCache : public MemObject
         return blkSize;
     }
 
+
+    Addr blockAlign(Addr addr) const { return (addr & ~(blkSize - 1)); }
+
+
     /**
      * Returns true if the cache is blocked for accesses.
      */
     bool isBlocked()
     {
         return blocked != 0;
-    }
-
-    /**
-     * Returns true if the cache is blocked for snoops.
-     */
-    bool isBlockedForSnoop()
-    {
-        return blockedSnoop != 0;
     }
 
     /**
@@ -375,23 +413,6 @@ class BaseCache : public MemObject
     }
 
     /**
-     * Marks the snoop path of the cache as blocked for the given cause. This
-     * also sets the blocked flag in the master interface.
-     * @param cause The reason to block the snoop path.
-     */
-    void setBlockedForSnoop(BlockedCause cause)
-    {
-        uint8_t flag = 1 << cause;
-        uint8_t old_state = blockedSnoop;
-        if (!(blockedSnoop & flag)) {
-            //Wasn't already blocked for this cause
-            blockedSnoop |= flag;
-            if (!old_state)
-                memSidePort->setBlocked();
-        }
-    }
-
-    /**
      * Marks the cache as unblocked for the given cause. This also clears the
      * blocked flags in the appropriate interfaces.
      * @param cause The newly unblocked cause.
@@ -412,22 +433,15 @@ class BaseCache : public MemObject
                 cpuSidePort->clearBlocked();
             }
         }
-        if (blockedSnoop & flag)
-        {
-            blockedSnoop &= ~flag;
-            if (!isBlockedForSnoop()) {
-                memSidePort->clearBlocked();
-            }
-        }
     }
 
     /**
-     * True if the master bus should be requested.
+     * True if the memory-side bus should be requested.
      * @return True if there are outstanding requests for the master bus.
      */
-    bool doMasterRequest()
+    bool isMemSideBusRequested()
     {
-        return masterRequests != 0;
+        return memSidePort->isBusRequested();
     }
 
     /**
@@ -435,269 +449,38 @@ class BaseCache : public MemObject
      * @param cause The reason for the request.
      * @param time The time to make the request.
      */
-    void setMasterRequest(RequestCause cause, Tick time)
+    void requestMemSideBus(RequestCause cause, Tick time)
     {
-        if (!doMasterRequest() && !memSidePort->waitingOnRetry)
-        {
-            new RequestEvent(memSidePort, time);
-        }
-        uint8_t flag = 1<<cause;
-        masterRequests |= flag;
+        memSidePort->requestBus(cause, time);
     }
 
     /**
      * Clear the master bus request for the given cause.
      * @param cause The request reason to clear.
      */
-    void clearMasterRequest(RequestCause cause)
+    void deassertMemSideBusRequest(RequestCause cause)
     {
-        uint8_t flag = 1<<cause;
-        masterRequests &= ~flag;
-        checkDrain();
-    }
-
-    /**
-     * Return true if the slave bus should be requested.
-     * @return True if there are outstanding requests for the slave bus.
-     */
-    bool doSlaveRequest()
-    {
-        return slaveRequests != 0;
-    }
-
-    /**
-     * Request the slave bus for the given reason and time.
-     * @param cause The reason for the request.
-     * @param time The time to make the request.
-     */
-    void setSlaveRequest(RequestCause cause, Tick time)
-    {
-        if (!doSlaveRequest() && !cpuSidePort->waitingOnRetry)
-        {
-            new RequestEvent(cpuSidePort, time);
-        }
-        uint8_t flag = 1<<cause;
-        slaveRequests |= flag;
-    }
-
-    /**
-     * Clear the slave bus request for the given reason.
-     * @param cause The request reason to clear.
-     */
-    void clearSlaveRequest(RequestCause cause)
-    {
-        uint8_t flag = 1<<cause;
-        slaveRequests &= ~flag;
-        checkDrain();
-    }
-
-    /**
-     * Send a response to the slave interface.
-     * @param pkt The request being responded to.
-     * @param time The time the response is ready.
-     */
-    void respond(PacketPtr pkt, Tick time)
-    {
-        assert(time >= curTick);
-        if (pkt->needsResponse()) {
-/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-            reqCpu->schedule(time);
-*/
-            if (cpuSidePort->transmitList.empty()) {
-                assert(!sendEvent->scheduled());
-                sendEvent->schedule(time);
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-
-            // something is on the list and this belongs at the end
-            if (time >= cpuSidePort->transmitList.back().first) {
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-            // Something is on the list and this belongs somewhere else
-            std::list<std::pair<Tick,PacketPtr> >::iterator i =
-                cpuSidePort->transmitList.begin();
-            std::list<std::pair<Tick,PacketPtr> >::iterator end =
-                cpuSidePort->transmitList.end();
-            bool done = false;
-
-            while (i != end && !done) {
-                if (time < i->first) {
-                    if (i == cpuSidePort->transmitList.begin()) {
-                        //Inserting at begining, reschedule
-                        sendEvent->reschedule(time);
-                    }
-                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
-                                                     (time,pkt));
-                    done = true;
-                }
-                i++;
-            }
-        }
-        else {
-            if (pkt->cmd != MemCmd::UpgradeReq)
-            {
-                delete pkt->req;
-                delete pkt;
-            }
-        }
-    }
-
-    /**
-     * Send a reponse to the slave interface and calculate miss latency.
-     * @param pkt The request to respond to.
-     * @param time The time the response is ready.
-     */
-    void respondToMiss(PacketPtr pkt, Tick time)
-    {
-        assert(time >= curTick);
-        if (!pkt->req->isUncacheable()) {
-            missLatency[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                time - pkt->time;
-        }
-        if (pkt->needsResponse()) {
-/*            CacheEvent *reqCpu = new CacheEvent(cpuSidePort, pkt);
-            reqCpu->schedule(time);
-*/
-            if (cpuSidePort->transmitList.empty()) {
-                assert(!sendEvent->scheduled());
-                sendEvent->schedule(time);
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-
-            // something is on the list and this belongs at the end
-            if (time >= cpuSidePort->transmitList.back().first) {
-                cpuSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                    (time,pkt));
-                return;
-            }
-            // Something is on the list and this belongs somewhere else
-            std::list<std::pair<Tick,PacketPtr> >::iterator i =
-                cpuSidePort->transmitList.begin();
-            std::list<std::pair<Tick,PacketPtr> >::iterator end =
-                cpuSidePort->transmitList.end();
-            bool done = false;
-
-            while (i != end && !done) {
-                if (time < i->first) {
-                    if (i == cpuSidePort->transmitList.begin()) {
-                        //Inserting at begining, reschedule
-                        sendEvent->reschedule(time);
-                    }
-                    cpuSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>
-                                                     (time,pkt));
-                    done = true;
-                }
-                i++;
-            }
-        }
-        else {
-            if (pkt->cmd != MemCmd::UpgradeReq)
-            {
-                delete pkt->req;
-                delete pkt;
-            }
-        }
-    }
-
-    /**
-     * Suppliess the data if cache to cache transfers are enabled.
-     * @param pkt The bus transaction to fulfill.
-     */
-    void respondToSnoop(PacketPtr pkt, Tick time)
-    {
-        assert(time >= curTick);
-        assert (pkt->needsResponse());
-/*        CacheEvent *reqMem = new CacheEvent(memSidePort, pkt);
-        reqMem->schedule(time);
-*/
-        if (memSidePort->transmitList.empty()) {
-            assert(!memSendEvent->scheduled());
-            memSendEvent->schedule(time);
-            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                (time,pkt));
-            return;
-        }
-
-        // something is on the list and this belongs at the end
-        if (time >= memSidePort->transmitList.back().first) {
-            memSidePort->transmitList.push_back(std::pair<Tick,PacketPtr>
-                                                (time,pkt));
-            return;
-        }
-        // Something is on the list and this belongs somewhere else
-        std::list<std::pair<Tick,PacketPtr> >::iterator i =
-            memSidePort->transmitList.begin();
-        std::list<std::pair<Tick,PacketPtr> >::iterator end =
-            memSidePort->transmitList.end();
-        bool done = false;
-
-        while (i != end && !done) {
-            if (time < i->first) {
-                if (i == memSidePort->transmitList.begin()) {
-                    //Inserting at begining, reschedule
-                    memSendEvent->reschedule(time);
-                }
-                memSidePort->transmitList.insert(i,std::pair<Tick,PacketPtr>(time,pkt));
-                done = true;
-            }
-            i++;
-        }
-    }
-
-    /**
-     * Notification from master interface that a address range changed. Nothing
-     * to do for a cache.
-     */
-    void rangeChange() {}
-
-    void getAddressRanges(AddrRangeList &resp, bool &snoop, bool isCpuSide)
-    {
-        if (isCpuSide)
-        {
-            bool dummy;
-            memSidePort->getPeerAddressRanges(resp, dummy);
-        }
-        else
-        {
-            //This is where snoops get updated
-            AddrRangeList dummy;
-            snoop = true;
-        }
+        memSidePort->deassertBusRequest(cause);
+        // checkDrain();
     }
 
     virtual unsigned int drain(Event *de);
 
-    void checkDrain()
-    {
-        if (drainEvent && canDrain()) {
-            drainEvent->process();
-            changeState(SimObject::Drained);
-            // Clear the drain event
-            drainEvent = NULL;
-        }
-    }
-
-    bool canDrain()
-    {
-        if (doMasterRequest() || doSlaveRequest()) {
-            return false;
-        } else if (memSidePort && !memSidePort->canDrain()) {
-            return false;
-        } else if (cpuSidePort && !cpuSidePort->canDrain()) {
-            return false;
-        }
-        return true;
-    }
-
     virtual bool inCache(Addr addr) = 0;
 
     virtual bool inMissQueue(Addr addr) = 0;
+
+    void incMissCount(PacketPtr pkt)
+    {
+        misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+
+        if (missCount) {
+            --missCount;
+            if (missCount == 0)
+                exitSimLoop("A cache reached the maximum miss count");
+        }
+    }
+
 };
 
 #endif //__BASE_CACHE_HH__

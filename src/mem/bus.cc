@@ -33,7 +33,7 @@
  * Definition of a bus object.
  */
 
-
+#include <algorithm>
 #include <limits>
 
 #include "base/misc.hh"
@@ -183,7 +183,8 @@ Bus::recvTiming(PacketPtr pkt)
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
     if (tickNextIdle > curTick ||
-            (retryList.size() && (!inRetry || pktPort != retryList.front()))) {
+        (retryList.size() && (!inRetry || pktPort != retryList.front())))
+    {
         addToRetryList(pktPort);
         DPRINTF(Bus, "recvTiming: Bus is busy, returning false\n");
         return false;
@@ -195,31 +196,18 @@ Bus::recvTiming(PacketPtr pkt)
     // access has been handled twice.
     if (dest == Packet::Broadcast) {
         port = findPort(pkt->getAddr(), pkt->getSrc());
-        pkt->flags &= ~SNOOP_COMMIT;
-        if (timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()])) {
-            bool success;
+        timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
-            pkt->flags |= SNOOP_COMMIT;
-            success = timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
-            assert(success);
-
-            if (pkt->flags & SATISFIED) {
-                //Cache-Cache transfer occuring
-                if (inRetry) {
-                    retryList.front()->onRetryList(false);
-                    retryList.pop_front();
-                    inRetry = false;
-                }
-                occupyBus(pkt);
-                DPRINTF(Bus, "recvTiming: Packet sucessfully sent\n");
-                return true;
+        if (pkt->memInhibitAsserted()) {
+            //Cache-Cache transfer occuring
+            if (inRetry) {
+                retryList.front()->onRetryList(false);
+                retryList.pop_front();
+                inRetry = false;
             }
-        } else {
-            //Snoop didn't succeed
-            DPRINTF(Bus, "Adding1 a retry to RETRY list %d\n",
-                    pktPort->getId());
-            addToRetryList(pktPort);
-            return false;
+            occupyBus(pkt);
+            DPRINTF(Bus, "recvTiming: Packet sucessfully sent\n");
+            return true;
         }
     } else {
         assert(dest >= 0 && dest < maxId);
@@ -332,27 +320,6 @@ Bus::findPort(Addr addr, int id)
     return interfaces[dest_id];
 }
 
-Tick
-Bus::atomicSnoop(PacketPtr pkt, Port *responder)
-{
-    Tick response_time = 0;
-
-    for (SnoopIter s_iter = snoopPorts.begin();
-         s_iter != snoopPorts.end();
-         s_iter++) {
-        BusPort *p = *s_iter;
-        if (p != responder && p->getId() != pkt->getSrc()) {
-            Tick response = p->sendAtomic(pkt);
-            if (response) {
-                assert(!response_time);  //Multiple responders
-                response_time = response;
-            }
-        }
-    }
-
-    return response_time;
-}
-
 void
 Bus::functionalSnoop(PacketPtr pkt, Port *responder)
 {
@@ -400,21 +367,57 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    pkt->flags |= SNOOP_COMMIT;
 
-    // Assume one bus cycle in order to get through.  This may have
-    // some clock skew issues yet again...
-    pkt->finishTime = curTick + clock;
+    // Variables for recording original command and snoop response (if
+    // any)... if a snooper respondes, we will need to restore
+    // original command so that additional snoops can take place
+    // properly
+    MemCmd orig_cmd = pkt->cmd;
+    Packet::Result response_result = Packet::Unknown;
+    MemCmd response_cmd = MemCmd::InvalidCmd;
 
-    Port *port = findPort(pkt->getAddr(), pkt->getSrc());
-    Tick snoopTime = atomicSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
+    Port *target_port = findPort(pkt->getAddr(), pkt->getSrc());
 
-    if (snoopTime)
-        return snoopTime;  //Snoop satisfies it
-    else if (port)
-        return port->sendAtomic(pkt);
-    else
-        return 0;
+    SnoopIter s_end = snoopPorts.end();
+    for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
+        BusPort *p = *s_iter;
+        // same port should not have both target addresses and snooping
+        assert(p != target_port);
+        if (p->getId() != pkt->getSrc()) {
+            p->sendAtomic(pkt);
+            if (pkt->result != Packet::Unknown) {
+                // response from snoop agent
+                assert(pkt->cmd != orig_cmd);
+                assert(pkt->memInhibitAsserted());
+                assert(pkt->isResponse());
+                // should only happen once
+                assert(response_result == Packet::Unknown);
+                assert(response_cmd == MemCmd::InvalidCmd);
+                // save response state
+                response_result = pkt->result;
+                response_cmd = pkt->cmd;
+                // restore original packet state for remaining snoopers
+                pkt->cmd = orig_cmd;
+                pkt->result = Packet::Unknown;
+            }
+        }
+    }
+
+    Tick response_time = target_port->sendAtomic(pkt);
+
+    // if we got a response from a snooper, restore it here
+    if (response_result != Packet::Unknown) {
+        assert(response_cmd != MemCmd::InvalidCmd);
+        // no one else should have responded
+        assert(pkt->result == Packet::Unknown);
+        assert(pkt->cmd == orig_cmd);
+        pkt->cmd = response_cmd;
+        pkt->result = response_result;
+    }
+
+    // why do we have this packet field and the return value both???
+    pkt->finishTime = std::max(response_time, curTick + clock);
+    return pkt->finishTime;
 }
 
 /** Function called by the port when the bus is receiving a Functional
@@ -425,7 +428,6 @@ Bus::recvFunctional(PacketPtr pkt)
     DPRINTF(Bus, "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
-    pkt->flags |= SNOOP_COMMIT;
 
     Port* port = findPort(pkt->getAddr(), pkt->getSrc());
     functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);

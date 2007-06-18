@@ -215,14 +215,13 @@ FALRU::findBlock(Addr addr) const
 }
 
 FALRUBlk*
-FALRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                       BlkList &compress_blocks)
+FALRU::findReplacement(Addr addr, PacketList &writebacks)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);
     moveToHead(blk);
     tagHash.erase(blk->tag);
-    tagHash[blkAlign(pkt->getAddr())] = blk;
+    tagHash[blkAlign(addr)] = blk;
     if (blk->isValid()) {
         replacements[0]++;
     } else {

@@ -30,8 +30,5 @@
 
 Import('*')
 
-Source('blocking_buffer.cc')
-Source('miss_buffer.cc')
-Source('miss_queue.cc')
 Source('mshr.cc')
 Source('mshr_queue.cc')

@@ -33,5 +33,4 @@ Import('*')
 SimObject('CoherenceProtocol.py')
 
 Source('coherence_protocol.cc')
-Source('uni_coherence.cc')
 

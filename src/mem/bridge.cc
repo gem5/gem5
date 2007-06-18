@@ -112,10 +112,6 @@ Bridge::BridgePort::reqQueueFull()
 bool
 Bridge::BridgePort::recvTiming(PacketPtr pkt)
 {
-    if (!(pkt->flags & SNOOP_COMMIT))
-        return true;
-
-
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
                 pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
@@ -253,8 +249,6 @@ Bridge::BridgePort::trySend()
 
     PacketPtr pkt = buf->pkt;
 
-    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
-
     // Ugly! @todo When multilevel coherence works this will be removed
     if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&
             pkt->result != Packet::Nacked) {
@@ -345,17 +339,14 @@ void
 Bridge::BridgePort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketBuffer*>::iterator i;
-    bool pktContinue = true;
 
     for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
-        if (pkt->intersect((*i)->pkt)) {
-            pktContinue &= fixPacket(pkt, (*i)->pkt);
-        }
+        if (pkt->checkFunctional((*i)->pkt))
+            return;
     }
 
-    if (pktContinue) {
-        otherPort->sendFunctional(pkt);
-    }
+    // fall through if pkt still not satisfied
+    otherPort->sendFunctional(pkt);
 }
 
 /** Function called by the port when the bus is receiving a status change.*/

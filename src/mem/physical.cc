@@ -58,8 +58,9 @@ PhysicalMemory::PhysicalMemory(Params *p)
         panic("Memory Size not divisible by page size\n");
 
     int map_flags = MAP_ANON | MAP_PRIVATE;
-    pmemAddr = (uint8_t *)mmap(NULL, params()->addrRange.size(), PROT_READ | PROT_WRITE,
-            map_flags, -1, 0);
+    pmemAddr =
+        (uint8_t *)mmap(NULL, params()->addrRange.size(),
+                        PROT_READ | PROT_WRITE, map_flags, -1, 0);
 
     if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
@@ -121,8 +122,9 @@ PhysicalMemory::calculateLatency(PacketPtr pkt)
 // Add load-locked to tracking list.  Should only be called if the
 // operation is a load and the LOCKED flag is set.
 void
-PhysicalMemory::trackLoadLocked(Request *req)
+PhysicalMemory::trackLoadLocked(PacketPtr pkt)
 {
+    Request *req = pkt->req;
     Addr paddr = LockedAddr::mask(req->getPaddr());
 
     // first we check if we already have a locked addr for this
@@ -151,10 +153,11 @@ PhysicalMemory::trackLoadLocked(Request *req)
 // conflict with locked addresses, and for success/failure of store
 // conditionals.
 bool
-PhysicalMemory::checkLockedAddrList(Request *req)
+PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
 {
+    Request *req = pkt->req;
     Addr paddr = LockedAddr::mask(req->getPaddr());
-    bool isLocked = req->isLocked();
+    bool isLocked = pkt->isLocked();
 
     // Initialize return value.  Non-conditional stores always
     // succeed.  Assume conditional stores will fail until proven
@@ -198,74 +201,50 @@ PhysicalMemory::checkLockedAddrList(Request *req)
     return success;
 }
 
-void
-PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
+
+#if TRACING_ON
+
+#define CASE(A, T)                                                      \
+  case sizeof(T):                                                       \
+    DPRINTF(MemoryAccess, A " of size %i on address 0x%x data 0x%x\n",  \
+            pkt->getSize(), pkt->getAddr(), pkt->get<T>());             \
+  break
+
+
+#define TRACE_PACKET(A)                                                 \
+    do {                                                                \
+        switch (pkt->getSize()) {                                       \
+          CASE(A, uint64_t);                                            \
+          CASE(A, uint32_t);                                            \
+          CASE(A, uint16_t);                                            \
+          CASE(A, uint8_t);                                             \
+          default:                                                      \
+            DPRINTF(MemoryAccess, A " of size %i on address 0x%x\n",    \
+                    pkt->getSize(), pkt->getAddr());                    \
+        }                                                               \
+    } while (0)
+
+#else
+
+#define TRACE_PACKET(A)
+
+#endif
+
+Tick
+PhysicalMemory::doAtomicAccess(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= start() &&
            pkt->getAddr() + pkt->getSize() <= start() + size());
 
-    if (pkt->isRead()) {
-        if (pkt->req->isLocked()) {
-            trackLoadLocked(pkt->req);
-        }
-        memcpy(pkt->getPtr<uint8_t>(), pmemAddr + pkt->getAddr() - start(),
-               pkt->getSize());
-#if TRACING_ON
-        switch (pkt->getSize()) {
-          case sizeof(uint64_t):
-            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint64_t>());
-            break;
-          case sizeof(uint32_t):
-            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint32_t>());
-            break;
-          case sizeof(uint16_t):
-            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint16_t>());
-            break;
-          case sizeof(uint8_t):
-            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint8_t>());
-            break;
-          default:
-            DPRINTF(MemoryAccess, "Read of size %i on address 0x%x\n",
-                    pkt->getSize(), pkt->getAddr());
-        }
-#endif
+    if (pkt->memInhibitAsserted()) {
+        DPRINTF(MemoryAccess, "mem inhibited on 0x%x: not responding\n",
+                pkt->getAddr());
+        return 0;
     }
-    else if (pkt->isWrite()) {
-        if (writeOK(pkt->req)) {
-                memcpy(pmemAddr + pkt->getAddr() - start(), pkt->getPtr<uint8_t>(),
-                        pkt->getSize());
-#if TRACING_ON
-            switch (pkt->getSize()) {
-              case sizeof(uint64_t):
-                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
-                        pkt->getSize(), pkt->getAddr(),pkt->get<uint64_t>());
-                break;
-              case sizeof(uint32_t):
-                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
-                        pkt->getSize(), pkt->getAddr(),pkt->get<uint32_t>());
-                break;
-              case sizeof(uint16_t):
-                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
-                        pkt->getSize(), pkt->getAddr(),pkt->get<uint16_t>());
-                break;
-              case sizeof(uint8_t):
-                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x data 0x%x\n",
-                        pkt->getSize(), pkt->getAddr(),pkt->get<uint8_t>());
-                break;
-              default:
-                DPRINTF(MemoryAccess, "Write of size %i on address 0x%x\n",
-                        pkt->getSize(), pkt->getAddr());
-            }
-#endif
-        }
-    } else if (pkt->isInvalidate()) {
-        //upgrade or invalidate
-        pkt->flags |= SATISFIED;
-    } else if (pkt->isReadWrite()) {
+
+    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - start();
+
+    if (pkt->cmd == MemCmd::SwapReq) {
         IntReg overwrite_val;
         bool overwrite_mem;
         uint64_t condition_val64;
@@ -277,65 +256,75 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
         // keep a copy of our possible write value, and copy what is at the
         // memory address into the packet
         std::memcpy(&overwrite_val, pkt->getPtr<uint8_t>(), pkt->getSize());
-        std::memcpy(pkt->getPtr<uint8_t>(), pmemAddr + pkt->getAddr() - start(),
-               pkt->getSize());
+        std::memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
 
         if (pkt->req->isCondSwap()) {
             if (pkt->getSize() == sizeof(uint64_t)) {
                 condition_val64 = pkt->req->getExtraData();
-                overwrite_mem = !std::memcmp(&condition_val64, pmemAddr +
-                        pkt->getAddr() - start(), sizeof(uint64_t));
+                overwrite_mem = !std::memcmp(&condition_val64, hostAddr,
+                                             sizeof(uint64_t));
             } else if (pkt->getSize() == sizeof(uint32_t)) {
                 condition_val32 = (uint32_t)pkt->req->getExtraData();
-                overwrite_mem = !std::memcmp(&condition_val32, pmemAddr +
-                        pkt->getAddr() - start(), sizeof(uint32_t));
+                overwrite_mem = !std::memcmp(&condition_val32, hostAddr,
+                                             sizeof(uint32_t));
             } else
                 panic("Invalid size for conditional read/write\n");
         }
 
         if (overwrite_mem)
-            std::memcpy(pmemAddr + pkt->getAddr() - start(),
-               &overwrite_val, pkt->getSize());
+            std::memcpy(hostAddr, &overwrite_val, pkt->getSize());
 
-#if TRACING_ON
-        switch (pkt->getSize()) {
-          case sizeof(uint64_t):
-            DPRINTF(MemoryAccess, "Read/Write of size %i on address 0x%x old data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint64_t>());
-            DPRINTF(MemoryAccess, "New Data 0x%x %s conditional (0x%x) and %s \n",
-                    overwrite_mem, pkt->req->isCondSwap() ? "was" : "wasn't",
-                    condition_val64, overwrite_mem ? "happened" : "didn't happen");
-            break;
-          case sizeof(uint32_t):
-            DPRINTF(MemoryAccess, "Read/Write of size %i on address 0x%x old data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint32_t>());
-            DPRINTF(MemoryAccess, "New Data 0x%x %s conditional (0x%x) and %s \n",
-                    overwrite_mem, pkt->req->isCondSwap() ? "was" : "wasn't",
-                    condition_val32, overwrite_mem ? "happened" : "didn't happen");
-            break;
-          case sizeof(uint16_t):
-            DPRINTF(MemoryAccess, "Read/Write of size %i on address 0x%x old data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint16_t>());
-            DPRINTF(MemoryAccess, "New Data 0x%x wasn't conditional and happned\n",
-                    overwrite_mem);
-            break;
-          case sizeof(uint8_t):
-            DPRINTF(MemoryAccess, "Read/Write of size %i on address 0x%x old data 0x%x\n",
-                    pkt->getSize(), pkt->getAddr(),pkt->get<uint8_t>());
-            DPRINTF(MemoryAccess, "New Data 0x%x wasn't conditional and happned\n",
-                    overwrite_mem);
-            break;
-          default:
-            DPRINTF(MemoryAccess, "Read/Write of size %i on address 0x%x\n",
-                    pkt->getSize(), pkt->getAddr());
+        TRACE_PACKET("Read/Write");
+    } else if (pkt->isRead()) {
+        assert(!pkt->isWrite());
+        if (pkt->isLocked()) {
+            trackLoadLocked(pkt);
         }
-#endif
+        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        TRACE_PACKET("Read");
+    } else if (pkt->isWrite()) {
+        if (writeOK(pkt)) {
+            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+            TRACE_PACKET("Write");
+        }
+    } else if (pkt->isInvalidate()) {
+        //upgrade or invalidate
+        if (pkt->needsResponse()) {
+            pkt->makeAtomicResponse();
+        }
     } else {
         panic("unimplemented");
     }
 
+    if (pkt->needsResponse()) {
+        pkt->makeAtomicResponse();
+    }
+    return calculateLatency(pkt);
+}
+
+
+void
+PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
+{
+    assert(pkt->getAddr() >= start() &&
+           pkt->getAddr() + pkt->getSize() <= start() + size());
+
+    uint8_t *hostAddr = pmemAddr + pkt->getAddr() - start();
+
+    if (pkt->cmd == MemCmd::ReadReq) {
+        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        TRACE_PACKET("Read");
+    } else if (pkt->cmd == MemCmd::WriteReq) {
+        memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+        TRACE_PACKET("Write");
+    } else {
+        panic("PhysicalMemory: unimplemented functional command %s",
+              pkt->cmdString());
+    }
+
     pkt->result = Packet::Success;
 }
+
 
 Port *
 PhysicalMemory::getPort(const std::string &if_name, int idx)
@@ -407,8 +396,7 @@ PhysicalMemory::MemoryPort::deviceBlockSize()
 Tick
 PhysicalMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
-    memory->doFunctionalAccess(pkt);
-    return memory->calculateLatency(pkt);
+    return memory->doAtomicAccess(pkt);
 }
 
 void

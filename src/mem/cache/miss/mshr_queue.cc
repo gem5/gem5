@@ -29,22 +29,21 @@
  */
 
 /** @file
- * Definition of the MSHRQueue.
+ * Definition of MSHRQueue class functions.
  */
 
 #include "mem/cache/miss/mshr_queue.hh"
-#include "sim/eventq.hh"
 
 using namespace std;
 
-MSHRQueue::MSHRQueue(int num_mshrs, int reserve)
-    : numMSHRs(num_mshrs + reserve - 1), numReserve(reserve)
+MSHRQueue::MSHRQueue(int num_entries, int reserve)
+    : numEntries(num_entries + reserve - 1), numReserve(reserve)
 {
     allocated = 0;
-    inServiceMSHRs = 0;
-    allocatedTargets = 0;
-    registers = new MSHR[numMSHRs];
-    for (int i = 0; i < numMSHRs; ++i) {
+    inServiceEntries = 0;
+    registers = new MSHR[numEntries];
+    for (int i = 0; i < numEntries; ++i) {
+        registers[i].queue = this;
         freeList.push_back(&registers[i]);
     }
 }
@@ -54,7 +53,7 @@ MSHRQueue::~MSHRQueue()
     delete [] registers;
 }
 
-MSHR*
+MSHR *
 MSHRQueue::findMatch(Addr addr) const
 {
     MSHR::ConstIterator i = allocatedList.begin();
@@ -87,19 +86,19 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 
 }
 
-MSHR*
-MSHRQueue::findPending(PacketPtr &pkt) const
+MSHR *
+MSHRQueue::findPending(Addr addr, int size) const
 {
     MSHR::ConstIterator i = pendingList.begin();
     MSHR::ConstIterator end = pendingList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
-        if (mshr->addr < pkt->getAddr()) {
-            if (mshr->addr + mshr->pkt->getSize() > pkt->getAddr()) {
+        if (mshr->addr < addr) {
+            if (mshr->addr + mshr->size > addr) {
                 return mshr;
             }
         } else {
-            if (pkt->getAddr() + pkt->getSize() > mshr->addr) {
+            if (addr + size > mshr->addr) {
                 return mshr;
             }
         }
@@ -107,74 +106,37 @@ MSHRQueue::findPending(PacketPtr &pkt) const
     return NULL;
 }
 
-MSHR*
-MSHRQueue::allocate(PacketPtr &pkt, int size)
+MSHR *
+MSHRQueue::allocate(Addr addr, int size, PacketPtr &pkt, bool isFill)
 {
-    Addr aligned_addr = pkt->getAddr() & ~((Addr)size - 1);
     assert(!freeList.empty());
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
 
-    if (!pkt->needsResponse()) {
-        mshr->allocateAsBuffer(pkt);
-    } else {
-        assert(size !=0);
-        mshr->allocate(pkt->cmd, aligned_addr, size, pkt);
-        allocatedTargets += 1;
-    }
+    mshr->allocate(addr, size, pkt, isFill);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
 
     allocated += 1;
-    return mshr;
-}
-
-MSHR*
-MSHRQueue::allocateFetch(Addr addr, int size, PacketPtr &target)
-{
-    MSHR *mshr = freeList.front();
-    assert(mshr->getNumTargets() == 0);
-    freeList.pop_front();
-    mshr->allocate(MemCmd::ReadReq, addr, size, target);
-    mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
-    mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
-
-    allocated += 1;
-    return mshr;
-}
-
-MSHR*
-MSHRQueue::allocateTargetList(Addr addr, int size)
-{
-    MSHR *mshr = freeList.front();
-    assert(mshr->getNumTargets() == 0);
-    freeList.pop_front();
-    PacketPtr dummy;
-    mshr->allocate(MemCmd::ReadReq, addr, size, dummy);
-    mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
-    mshr->inService = true;
-    ++inServiceMSHRs;
-    ++allocated;
     return mshr;
 }
 
 
 void
-MSHRQueue::deallocate(MSHR* mshr)
+MSHRQueue::deallocate(MSHR *mshr)
 {
     deallocateOne(mshr);
 }
 
 MSHR::Iterator
-MSHRQueue::deallocateOne(MSHR* mshr)
+MSHRQueue::deallocateOne(MSHR *mshr)
 {
     MSHR::Iterator retval = allocatedList.erase(mshr->allocIter);
     freeList.push_front(mshr);
     allocated--;
-    allocatedTargets -= mshr->getNumTargets();
     if (mshr->inService) {
-        inServiceMSHRs--;
+        inServiceEntries--;
     } else {
         pendingList.erase(mshr->readyIter);
     }
@@ -193,29 +155,29 @@ MSHRQueue::moveToFront(MSHR *mshr)
 }
 
 void
-MSHRQueue::markInService(MSHR* mshr)
+MSHRQueue::markInService(MSHR *mshr)
 {
     //assert(mshr == pendingList.front());
+#if 0
     if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == MemCmd::UpgradeReq)) {
         assert(mshr->getNumTargets() == 0);
         deallocate(mshr);
         return;
     }
+#endif
     mshr->inService = true;
     pendingList.erase(mshr->readyIter);
     //mshr->readyIter = NULL;
-    inServiceMSHRs += 1;
+    inServiceEntries += 1;
     //pendingList.pop_front();
 }
 
 void
-MSHRQueue::markPending(MSHR* mshr, MemCmd cmd)
+MSHRQueue::markPending(MSHR *mshr)
 {
     //assert(mshr->readyIter == NULL);
-    mshr->pkt->cmd = cmd;
-    mshr->pkt->flags &= ~SATISFIED;
     mshr->inService = false;
-    --inServiceMSHRs;
+    --inServiceEntries;
     /**
      * @ todo might want to add rerequests to front of pending list for
      * performance.
@@ -232,11 +194,8 @@ MSHRQueue::squash(int threadNum)
         MSHR *mshr = *i;
         if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {
-                PacketPtr target = mshr->getTarget();
                 mshr->popTarget();
-
                 assert(0/*target->req->getThreadNum()*/ == threadNum);
-                target = NULL;
             }
             assert(!mshr->hasTargets());
             assert(mshr->ntargets==0);

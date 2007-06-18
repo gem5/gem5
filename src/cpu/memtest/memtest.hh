@@ -85,13 +85,13 @@ class MemTest : public MemObject
         TickEvent(MemTest *c)
             : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c) {}
         void process() {cpu->tick();}
-        virtual const char *description() { return "tick event"; }
+        virtual const char *description() { return "MemTest tick"; }
     };
 
     TickEvent tickEvent;
+
     class CpuPort : public Port
     {
-
         MemTest *memtest;
 
       public:
@@ -116,7 +116,7 @@ class MemTest : public MemObject
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             bool &snoop)
-        { resp.clear(); snoop = true; }
+        { resp.clear(); snoop = false; }
     };
 
     CpuPort cachePort;

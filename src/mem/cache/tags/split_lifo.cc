@@ -266,10 +266,9 @@ SplitLIFO::findBlock(Addr addr) const
 }
 
 SplitBlk*
-SplitLIFO::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                           BlkList &compress_blocks)
+SplitLIFO::findReplacement(Addr addr, PacketList &writebacks)
 {
-    unsigned set = extractSet(pkt->getAddr());
+    unsigned set = extractSet(addr);
 
     SplitBlk *firstIn = sets[set].firstIn;
     SplitBlk *lastIn = sets[set].lastIn;
@@ -289,7 +288,7 @@ SplitLIFO::findReplacement(PacketPtr &pkt, PacketList &writebacks,
     }
 
     DPRINTF(Split, "just assigned %#x addr into LIFO, replacing %#x status %#x\n",
-            pkt->getAddr(), regenerateBlkAddr(blk->tag, set), blk->status);
+            addr, regenerateBlkAddr(blk->tag, set), blk->status);
     if (blk->isValid()) {
         replacements[0]++;
         totalRefs += blk->refCount;
