@@ -59,6 +59,100 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+output header {{
+    /**
+     * Base classes for RegOps which provides a generateDisassembly method.
+     */
+    class RegOp : public X86MicroopBase
+    {
+      protected:
+        const RegIndex src1;
+        const RegIndex src2;
+        const RegIndex dest;
+        const bool setStatus;
+        const uint8_t dataSize;
+        const uint8_t ext;
+
+        // Constructor
+        RegOp(ExtMachInst _machInst,
+                const char *mnem, const char *_instMnem,
+                bool isMicro, bool isDelayed,
+                bool isFirst, bool isLast,
+                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
+                OpClass __opClass) :
+            X86MicroopBase(_machInst, mnem, _instMnem,
+                    isMicro, isDelayed, isFirst, isLast,
+                    __opClass),
+            src1(_src1), src2(_src2), dest(_dest),
+            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+        {
+        }
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
+
+    class RegOpImm : public X86MicroopBase
+    {
+      protected:
+        const RegIndex src1;
+        const uint8_t imm8;
+        const RegIndex dest;
+        const bool setStatus;
+        const uint8_t dataSize;
+        const uint8_t ext;
+
+        // Constructor
+        RegOpImm(ExtMachInst _machInst,
+                const char * mnem, const char *_instMnem,
+                bool isMicro, bool isDelayed,
+                bool isFirst, bool isLast,
+                RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
+                OpClass __opClass) :
+            X86MicroopBase(_machInst, mnem, _instMnem,
+                    isMicro, isDelayed, isFirst, isLast,
+                    __opClass),
+            src1(_src1), imm8(_imm8), dest(_dest),
+            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+        {
+        }
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string RegOp::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        printReg(response, dest);
+        response << ", ";
+        printReg(response, src1);
+        response << ", ";
+        printReg(response, src2);
+        return response.str();
+    }
+
+    std::string RegOpImm::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        printReg(response, dest);
+        response << ", ";
+        printReg(response, src1);
+        ccprintf(response, ", %#x", imm8);
+        return response.str();
+    }
+}};
+
 def template MicroRegOpExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
@@ -101,12 +195,6 @@ def template MicroRegOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
       protected:
-        const RegIndex src1;
-        const RegIndex src2;
-        const RegIndex dest;
-        const bool setStatus;
-        const uint8_t dataSize;
-        const uint8_t ext;
         void buildMe();
 
       public:
@@ -130,12 +218,6 @@ def template MicroRegOpImmDeclare {{
     class %(class_name)sImm : public %(base_class)s
     {
       protected:
-        const RegIndex src1;
-        const uint8_t imm8;
-        const RegIndex dest;
-        const bool setStatus;
-        const uint8_t dataSize;
-        const uint8_t ext;
         void buildMe();
 
       public:
@@ -166,9 +248,9 @@ def template MicroRegOpConstructor {{
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
             bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s),
-                src1(_src1), src2(_src2), dest(_dest),
-                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+                false, false, false, false,
+                _src1, _src2, _dest, _setStatus, _dataSize, _ext,
+                %(op_class)s)
     {
         buildMe();
     }
@@ -179,9 +261,9 @@ def template MicroRegOpConstructor {{
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
             bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                src1(_src1), src2(_src2), dest(_dest),
-                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+                isMicro, isDelayed, isFirst, isLast,
+                _src1, _src2, _dest, _setStatus, _dataSize, _ext,
+                %(op_class)s)
     {
         buildMe();
     }
@@ -199,9 +281,9 @@ def template MicroRegOpImmConstructor {{
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
             bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s),
-                src1(_src1), imm8(_imm8), dest(_dest),
-                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+                false, false, false, false,
+                _src1, _imm8, _dest, _setStatus, _dataSize, _ext,
+                %(op_class)s)
     {
         buildMe();
     }
@@ -212,9 +294,9 @@ def template MicroRegOpImmConstructor {{
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
             bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                src1(_src1), imm8(_imm8), dest(_dest),
-                setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+                isMicro, isDelayed, isFirst, isLast,
+                _src1, _imm8, _dest, _setStatus, _dataSize, _ext,
+                %(op_class)s)
     {
         buildMe();
     }
@@ -227,7 +309,7 @@ let {{
             self.src1 = src1
             self.src2 = src2
             self.setStatus = False
-            self.dataSize = 1
+            self.dataSize = "env.dataSize"
             self.ext = 0
 
         def getAllocator(self, *microFlags):
@@ -249,7 +331,7 @@ let {{
             self.src1 = src1
             self.imm8 = imm8
             self.setStatus = False
-            self.dataSize = 1
+            self.dataSize = "env.dataSize"
             self.ext = 0
 
         def getAllocator(self, *microFlags):
@@ -290,7 +372,7 @@ let {{
         immCode = matcher.sub("imm8", code)
 
         # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'X86MicroopBase', {"code" : regCode})
+        iop = InstObjParams(name, Name, 'RegOp', {"code" : regCode})
         header_output += MicroRegOpDeclare.subst(iop)
         decoder_output += MicroRegOpConstructor.subst(iop)
         exec_output += MicroRegOpExecute.subst(iop)
@@ -305,7 +387,7 @@ let {{
 
         # Build up the immediate version of this micro op
         iop = InstObjParams(name + "i", Name,
-                'X86MicroopBase', {"code" : immCode})
+                'RegOpImm', {"code" : immCode})
         header_output += MicroRegOpImmDeclare.subst(iop)
         decoder_output += MicroRegOpImmConstructor.subst(iop)
         exec_output += MicroRegOpImmExecute.subst(iop)
