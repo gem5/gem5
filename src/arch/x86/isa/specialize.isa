@@ -148,7 +148,6 @@ let {{
                     (memName, memTypes, memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
-                print "IMMEDIATE"
                 Name += "_I"
             elif opType.tag == "M":
                 # This needs to refer to memory, but we'll fill in the details

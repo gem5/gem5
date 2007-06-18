@@ -79,6 +79,9 @@ def template MicroLimmOpDeclare {{
         const uint64_t imm;
         void buildMe();
 
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
@@ -91,6 +94,20 @@ def template MicroLimmOpDeclare {{
 
         %(BasicExecDeclare)s
     };
+}};
+
+def template MicroLimmOpDisassembly {{
+    std::string %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        printReg(response, dest);
+        response << ", ";
+        ccprintf(response, "%#x", imm);
+        return response.str();
+    }
 }};
 
 def template MicroLimmOpConstructor {{
@@ -148,5 +165,6 @@ let {{
             {"code" : "DestReg = imm;"})
     header_output += MicroLimmOpDeclare.subst(iop)
     decoder_output += MicroLimmOpConstructor.subst(iop)
+    decoder_output += MicroLimmOpDisassembly.subst(iop)
     exec_output += MicroLimmOpExecute.subst(iop)
 }};
