@@ -131,7 +131,8 @@ def handle_statement(parser, container, statement):
             microop = eval('parser.microops[statement.mnemonic](%s)' %
                     statement.params)
         except:
-            print_error("Error creating microop object.")
+            print_error("Error creating microop object with mnemonic %s." % \
+                    statement.mnemonic)
             raise
         try:
             for label in statement.labels:
