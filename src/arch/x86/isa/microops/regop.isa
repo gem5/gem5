@@ -356,11 +356,20 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    def defineMicroRegOp(mnemonic, code):
+    def setUpMicroRegOp(name, Name, base, code, child):
         global header_output
         global decoder_output
         global exec_output
         global microopClasses
+
+        iop = InstObjParams(name, Name, base, {"code" : code})
+        header_output += MicroRegOpDeclare.subst(iop)
+        decoder_output += MicroRegOpConstructor.subst(iop)
+        exec_output += MicroRegOpExecute.subst(iop)
+
+        microopClasses[name] = child
+
+    def defineMicroRegOp(mnemonic, code):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -371,34 +380,23 @@ let {{
         regCode = matcher.sub("SrcReg2", code)
         immCode = matcher.sub("imm8", code)
 
-        # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'RegOp', {"code" : regCode})
-        header_output += MicroRegOpDeclare.subst(iop)
-        decoder_output += MicroRegOpConstructor.subst(iop)
-        exec_output += MicroRegOpExecute.subst(iop)
-
+        # Build the all register version of this micro op
         class RegOpChild(RegOp):
             def __init__(self, dest, src1, src2):
                 super(RegOpChild, self).__init__(dest, src1, src2)
                 self.className = Name
                 self.mnemonic = name
 
-        microopClasses[name] = RegOpChild
+        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild);
 
-        # Build up the immediate version of this micro op
-        iop = InstObjParams(name + "i", Name,
-                'RegOpImm', {"code" : immCode})
-        header_output += MicroRegOpImmDeclare.subst(iop)
-        decoder_output += MicroRegOpImmConstructor.subst(iop)
-        exec_output += MicroRegOpImmExecute.subst(iop)
-
-        class RegOpImmChild(RegOpImm):
-            def __init__(self, dest, src1, imm):
-                super(RegOpImmChild, self).__init__(dest, src1, imm)
+        # Build the immediate version of this micro op
+        class RegOpChildImm(RegOpImm):
+            def __init__(self, dest, src1, src2):
+                super(RegOpChildImm, self).__init__(dest, src1, src2)
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        microopClasses[name + "i"] = RegOpImmChild
+        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm);
 
     defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
     defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
@@ -412,10 +410,6 @@ let {{
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code):
-        global header_output
-        global decoder_output
-        global exec_output
-        global microopClasses
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -426,50 +420,30 @@ let {{
         regCode = matcher.sub("SrcReg2", code)
         immCode = matcher.sub("imm8", code)
 
-        # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'RegOp', {"code" : regCode})
-        header_output += MicroRegOpDeclare.subst(iop)
-        decoder_output += MicroRegOpConstructor.subst(iop)
-        exec_output += MicroRegOpExecute.subst(iop)
-
+        # Build the all register version of this micro op
         class RegOpChild(RegOp):
             def __init__(self, src1, src2):
                 super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2)
                 self.className = Name
                 self.mnemonic = name
 
-        microopClasses[name] = RegOpChild
+        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild);
 
-        # Build up the immediate version of this micro op
-        iop = InstObjParams(name + "i", Name,
-                'RegOpImm', {"code" : immCode})
-        header_output += MicroRegOpImmDeclare.subst(iop)
-        decoder_output += MicroRegOpImmConstructor.subst(iop)
-        exec_output += MicroRegOpImmExecute.subst(iop)
-
-        class RegOpImmChild(RegOpImm):
-            def __init__(self, src1, imm):
-                super(RegOpImmChild, self).__init__("NUM_INTREGS", src1, imm)
+        # Build the immediate version of this micro op
+        class RegOpChildImm(RegOpImm):
+            def __init__(self, src1, src2):
+                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2)
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        microopClasses[name + "i"] = RegOpImmChild
+        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm);
 
     defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2')
 
     # This has it's own function because Rd ops don't always have two parameters
     def defineMicroRegOpRd(mnemonic, code):
-        global header_output
-        global decoder_output
-        global exec_output
-        global microopClasses
         Name = mnemonic
         name = mnemonic.lower()
-
-        iop = InstObjParams(name, Name, 'RegOp', {"code" : code})
-        header_output += MicroRegOpDeclare.subst(iop)
-        decoder_output += MicroRegOpConstructor.subst(iop)
-        exec_output += MicroRegOpExecute.subst(iop)
 
         class RegOpChild(RegOp):
             def __init__(self, dest, src1 = "NUM_INTREGS"):
@@ -477,7 +451,25 @@ let {{
                 self.className = Name
                 self.mnemonic = name
 
-        microopClasses[name] = RegOpChild
+        setUpMicroRegOp(name, Name, "RegOp", code, RegOpChild);
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
+
+    def defineMicroRegOpImm(mnemonic, code):
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        class RegOpChild(RegOpImm):
+            def __init__(self, dest, src1, src2):
+                super(RegOpChild, self).__init__(dest, src1, src2)
+                self.className = Name
+                self.mnemonic = name
+
+        setUpMicroRegOp(name, Name, "RegOpImm", code, RegOpChild);
+
+    defineMicroRegOpImm('Sext', '''
+            IntReg val = SrcReg1;
+            int sign_bit = bits(val, imm8-1, imm8-1);
+            val = sign_bit ? (val | ~mask(imm8)) : val;
+            DestReg = merge(DestReg, val, dataSize);''')
 }};

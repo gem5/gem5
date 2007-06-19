@@ -74,6 +74,15 @@ def macroop MOV_M_I {
     limm "env.reg", "IMMEDIATE"
     #Do a store to put the register operand into memory
 };
+
+def macroop MOVSXD_R_R {
+    sext "env.reg", "env.regm", "env.dataSize"
+};
+
+def macroop MOVSXD_R_M {
+    #Do a load to fill the register operand from memory
+    sext "env.reg", "env.regm", "env.dataSize"
+};
 '''
 #let {{
 #    class MOV(Inst):

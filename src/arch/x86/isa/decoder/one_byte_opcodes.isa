@@ -172,25 +172,33 @@
                 default: aas();
             }
         }
-        0x08: decode OPCODE_OP_BOTTOM3 {
-            0x0: inc_eAX();
-            0x1: inc_eCX();
-            0x2: inc_eDX();
-            0x3: inc_eBX();
-            0x4: inc_eSP();
-            0x5: inc_eBP();
-            0x6: inc_eSI();
-            0x7: inc_eDI();
+        0x08: decode MODE_SUBMODE {
+            0x0: M5InternalError::error (
+                {{"Tried to execute an REX prefix!"}});
+            default: decode OPCODE_OP_BOTTOM3 {
+                0x0: inc_eAX();
+                0x1: inc_eCX();
+                0x2: inc_eDX();
+                0x3: inc_eBX();
+                0x4: inc_eSP();
+                0x5: inc_eBP();
+                0x6: inc_eSI();
+                0x7: inc_eDI();
+            }
         }
-        0x09: decode OPCODE_OP_BOTTOM3 {
-            0x0: dec_eAX();
-            0x1: dec_eCX();
-            0x2: dec_eDX();
-            0x3: dec_eBX();
-            0x4: dec_eSP();
-            0x5: dec_eBP();
-            0x6: dec_eSI();
-            0x7: dec_eDI();
+        0x09: decode MODE_SUBMODE {
+            0x0: M5InternalError::error (
+                {{"Tried to execute an REX prefix!"}});
+            default: decode OPCODE_OP_BOTTOM3 {
+                0x0: dec_eAX();
+                0x1: dec_eCX();
+                0x2: dec_eDX();
+                0x3: dec_eBX();
+                0x4: dec_eSP();
+                0x5: dec_eBP();
+                0x6: dec_eSI();
+                0x7: dec_eDI();
+            }
         }
         format Inst {
             0x0A: decode OPCODE_OP_BOTTOM3 {
@@ -227,7 +235,10 @@
                 0x0: This_should_be_an_illegal_instruction();
                 default: bound_Gv_Ma();
             }
-            0x3: arpl_Ew_Gw();
+            0x3: decode MODE_SUBMODE {
+                0x0: Inst::MOVSXD(Gv,Ed);
+                default: arpl_Ew_Gw();
+            }
             0x4: M5InternalError::error(
                 {{"Tried to execute the FS segment override prefix!"}});
             0x5: M5InternalError::error(
@@ -301,7 +312,7 @@
             0x7: group10_Ev(); //Make sure this is Ev
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
-            0x0: nop_or_pause(); //Check for repe prefix
+            default: nop_or_pause(); //Check for repe prefix
             0x1: xchg_rCX_rAX();
             0x2: xchg_rDX_rAX();
             0x3: xchg_rVX_rAX();
