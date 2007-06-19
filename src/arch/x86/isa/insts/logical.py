@@ -94,17 +94,9 @@ def macroop AND_M_I
 '''
 #let {{
 #microcodeString = '''
-#    def macroop AND
-#    {
-#	And reg reg regm
-#    };
 #    def macroop OR
 #    {
 #	Or reg reg regm
-#    };
-#    def macroop XOR
-#    {
-#	Xor reg reg regm
 #    };
 #    def macroop NOT
 #    {

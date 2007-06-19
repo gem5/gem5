@@ -73,15 +73,9 @@ def macroop PUSH_R {
 };
 '''
 #let {{
-#    class POP(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class POPA(Inst):
-#	"GenFault ${new UnimpInstFault}"
 #    class POPA(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class POPAD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class PUSH(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class PUSHA(Inst):
 #	"GenFault ${new UnimpInstFault}"
