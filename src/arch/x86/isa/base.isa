@@ -182,6 +182,33 @@ output decoder {{
             ccprintf(os, "\t%s : %s   ", instMnemonic, mnemonic);
         }
 
+        void printSegment(std::ostream &os, int segment)
+        {
+            switch (segment)
+            {
+              case 0:
+                ccprintf(os, "ES");
+                break;
+              case 1:
+                ccprintf(os, "CS");
+                break;
+              case 2:
+                ccprintf(os, "SS");
+                break;
+              case 3:
+                ccprintf(os, "DS");
+                break;
+              case 4:
+                ccprintf(os, "FS");
+                break;
+              case 5:
+                ccprintf(os, "GS");
+                break;
+              default:
+                panic("Unrecognized segment %d\n", segment);
+            }
+        }
+
         void
         X86StaticInst::printSrcReg(std::ostream &os, int reg) const
         {
