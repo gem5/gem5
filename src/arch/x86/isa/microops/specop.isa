@@ -59,8 +59,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-def template MicroFaultExecute {{
-        Fault %(class_name)s ::execute(%(CPU_exec_context)s *xc,
+output header {{
+    class MicroFault : public X86MicroopBase
+    {
+      protected:
+        Fault fault;
+        void buildMe();
+
+      public:
+        MicroFault(ExtMachInst _machInst, const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                Fault _fault);
+
+        MicroFault(ExtMachInst _machInst, const char * instMnem,
+                Fault _fault);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+output decoder {{
+        Fault MicroFault::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             //Return the fault we were constructed with
@@ -68,58 +87,35 @@ def template MicroFaultExecute {{
         }
 }};
 
-def template MicroFaultDeclare {{
-    class %(class_name)s : public X86MicroopBase
-    {
-      protected:
-        Fault fault;
-        void buildMe();
-
-      public:
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                Fault _fault);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                Fault _fault);
-
-        %(BasicExecDeclare)s
-    };
-}};
-
-def template MicroFaultConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
+output decoder {{
+    inline MicroFault::MicroFault(
             ExtMachInst machInst, const char * instMnem, Fault _fault) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s), fault(_fault)
+        X86MicroopBase(machInst, "fault", instMnem,
+                false, false, false, false, No_OpClass), fault(_fault)
     {
-        buildMe();
     }
 
-    inline %(class_name)s::%(class_name)s(
+    inline MicroFault::MicroFault(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             Fault _fault) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+        X86MicroopBase(machInst, "fault", instMnem,
+                isMicro, isDelayed, isFirst, isLast, No_OpClass),
                 fault(_fault)
     {
-        buildMe();
     }
 }};
 
 let {{
-    # This microop takes in a single parameter, a fault to return.
-    iop = InstObjParams("fault", "GenFault", 'X86MicroopBase', {"code" : ""})
-    header_output += MicroFaultDeclare.subst(iop)
-    decoder_output += MicroFaultConstructor.subst(iop)
-    exec_output += MicroFaultExecute.subst(iop)
+    class Fault(X86Microop):
+        def __init__(self, fault):
+            self.fault = fault
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new MicroFault(machInst, mnemonic
+                    %(flags)s, %(fault)s)''' % {
+                "flags" : self.microFlagsText(microFlags),
+                "fault" : self.fault}
+            return allocator
+    microopClasses["fault"] = Fault
 }};
