@@ -100,3 +100,8 @@ def bitfield SIB_BASE sib.base;
 
 def bitfield OPSIZE opSize;
 def bitfield ADDRSIZE addrSize;
+def bitfield STACKSIZE stackSize;
+
+def bitfield MODE mode;
+def bitfield MODE_MODE mode.mode;
+def bitfield MODE_SUBMODE mode.submode;

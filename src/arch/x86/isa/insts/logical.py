@@ -61,34 +61,34 @@ def macroop XOR_R_R
 
 def macroop XOR_R_I
 {
-    limm "NUM_INTREGS", "env.immediate"
-    xor "env.reg", "env.reg", "NUM_INTREGS"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    xor "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop XOR_M_R
 {
     #Do a load to get one of the sources
-    xor "NUM_INTREGS", "NUM_INTREGS", "env.reg"
+    xor "NUM_INTREGS+1", "NUM_INTREGS+1", "env.reg"
     #Do a store to write the destination
 };
 
 def macroop XOR_R_M
 {
     #Do a load to get one of the sources
-    xor "env.reg", "env.reg", "NUM_INTREGS"
+    xor "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop AND_R_I
 {
-    limm "NUM_INTREGS", "env.immediate"
-    and "env.reg", "env.reg", "NUM_INTREGS"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    and "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop AND_M_I
 {
     #Do a load to get one of the sources
-    limm "NUM_INTREGS", "env.immediate"
-    and "NUM_INTREGS", "NUM_INTREGS", "NUM_INTREGS+1"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    and "NUM_INTREGS+1", "NUM_INTREGS+1", "NUM_INTREGS+2"
     #Do a store to write the destination
 };
 '''

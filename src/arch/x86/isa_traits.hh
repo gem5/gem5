@@ -93,7 +93,7 @@ namespace X86ISA
 
     // semantically meaningful register indices
     //There is no such register in X86
-    const int ZeroReg = 0;
+    const int ZeroReg = NUM_INTREGS;
     const int StackPointerReg = INTREG_RSP;
     //X86 doesn't seem to have a link register
     const int ReturnAddressReg = 0;

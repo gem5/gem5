@@ -67,11 +67,11 @@ def macroop MOV_R_M {
 };
 
 def macroop MOV_R_I {
-    limm "env.reg", "env.immediate"
+    limm "env.reg", "IMMEDIATE"
 };
 
 def macroop MOV_M_I {
-    limm "env.reg", "env.immediate"
+    limm "env.reg", "IMMEDIATE"
     #Do a store to put the register operand into memory
 };
 '''
