@@ -650,7 +650,7 @@ Trace::InstRecord::dump()
                              << endl;
 
                         predecoder.setTC(thread);
-                        predecoder.moreBytes(m5Pc, m5Pc, 0,
+                        predecoder.moreBytes(m5Pc, m5Pc,
                                 shared_data->instruction);
 
                         assert(predecoder.extMachInstReady());
