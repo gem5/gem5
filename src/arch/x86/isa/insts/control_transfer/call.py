@@ -53,7 +53,18 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop CALL_I
+{
+    .adjust_env "if(machInst.mode.submode == SixtyFourBitMode && env.dataSize == 4) env.dataSize = 8\;"
+
+    limm "NUM_INTREGS+2", "IMMEDIATE"
+    rdip "NUM_INTREGS+1"
+    subi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
+    st "NUM_INTREGS+1", 2, [0, "NUM_INTREGS", "INTREG_RSP"]
+    wrip "NUM_INTREGS+1", "NUM_INTREGS+2"
+};
+'''
 #let {{
 #    class CALL(Inst):
 #	"GenFault ${new UnimpInstFault}"

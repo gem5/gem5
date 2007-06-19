@@ -63,8 +63,14 @@
         0x00: decode OPCODE_OP_BOTTOM3 {
             0x4: ADD();
             0x5: ADD();
-            0x6: push_ES();
-            0x7: pop_ES();
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: push_ES();
+            }
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: pop_ES();
+            }
             default: ADD();
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
@@ -74,7 +80,10 @@
             0x3: or_Gv_Ev();
             0x4: or_Al_Ib();
             0x5: or_rAX_Iz();
-            0x6: push_CS();
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: push_CS();
+            }
             //Any time this is seen, it should generate a two byte opcode
             0x7: M5InternalError::error(
                 {{"Saw a one byte opcode whose value was 0x0F!"}});
@@ -86,8 +95,14 @@
             0x3: adc_Gv_Ev();
             0x4: adc_Al_Ib();
             0x5: adc_rAX_Iz();
-            0x6: push_SS();
-            0x7: pop_SS();
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: push_SS();
+            }
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: pop_SS();
+            }
         }
         0x03: decode OPCODE_OP_BOTTOM3 {
             0x0: sbb_Eb_Gb();
@@ -96,8 +111,14 @@
             0x3: sbb_Gv_Ev();
             0x4: sbb_Al_Ib();
             0x5: sbb_rAX_Iz();
-            0x6: push_DS();
-            0x7: pop_DS();
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: push_DS();
+            }
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: pop_DS();
+            }
         }
         0x04: decode OPCODE_OP_BOTTOM3 {
             0x0: and_Eb_Gb();
@@ -108,7 +129,10 @@
             0x5: and_rAX_Iz();
             0x6: M5InternalError::error(
                 {{"Tried to execute the ES segment override prefix!"}});
-            0x7: daa();
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: daa();
+            }
         }
         0x05: decode OPCODE_OP_BOTTOM3 {
             0x0: sub_Eb_Gb();
@@ -126,7 +150,10 @@
             0x5: Inst::XOR(rAx,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
-            0x7: aaa();
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: aaa();
+            }
             default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev]);
@@ -140,7 +167,10 @@
             0x5: cmp_rAX_Iz();
             0x6: M5InternalError::error(
                 {{"Tried to execute the DS segment override prefix!"}});
-            0x7: aas();
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: aas();
+            }
         }
         0x08: decode OPCODE_OP_BOTTOM3 {
             0x0: inc_eAX();
@@ -162,30 +192,41 @@
             0x6: dec_eSI();
             0x7: dec_eDI();
         }
-        0x0A: decode OPCODE_OP_BOTTOM3 {
-            0x0: Inst::PUSH(rAx);
-            0x1: push_rCX();
-            0x2: push_rDX();
-            0x3: push_rBX();
-            0x4: Inst::PUSH(rSP);
-            0x5: push_rBP();
-            0x6: push_rSI();
-            0x7: push_rDI();
-        }
-        0x0B: decode OPCODE_OP_BOTTOM3 {
-            0x0: pop_rAX();
-            0x1: pop_rCX();
-            0x2: pop_rDX();
-            0x3: pop_rBX();
-            0x4: pop_rSP();
-            0x5: pop_rBP();
-            0x6: Inst::POP(rSI);
-            0x7: pop_rDI();
+        format Inst {
+            0x0A: decode OPCODE_OP_BOTTOM3 {
+                0x0: PUSH(rAx);
+                0x1: PUSH(rCx);
+                0x2: PUSH(rDx);
+                0x3: PUSH(rBx);
+                0x4: PUSH(rSP);
+                0x5: PUSH(rBP);
+                0x6: PUSH(rSI);
+                0x7: PUSH(rDI);
+            }
+            0x0B: decode OPCODE_OP_BOTTOM3 {
+                0x0: POP(rAx);
+                0x1: POP(rCx);
+                0x2: POP(rDx);
+                0x3: POP(rBx);
+                0x4: POP(rSP);
+                0x5: POP(rBP);
+                0x6: POP(rSI);
+                0x7: POP(rDI);
+            }
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
-            0x0: pusha();
-            0x1: popa();
-            0x2: bound_Gv_Ma();
+            0x0: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: pusha();
+            }
+            0x1: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: popa();
+            }
+            0x2: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: bound_Gv_Ma();
+            }
             0x3: arpl_Ew_Gw();
             0x4: M5InternalError::error(
                 {{"Tried to execute the FS segment override prefix!"}});
@@ -229,7 +270,10 @@
         0x10: decode OPCODE_OP_BOTTOM3 {
             0x0: group1_Eb_Ib();
             0x1: group1_Ev_Iz();
-            0x2: group1_Eb_Ib();
+            0x2: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: group1_Eb_Ib();
+            }
             //0x3: group1_Ev_Ib();
             0x3: decode MODRM_REG {
                 0x0: add_Eb_Ib();
@@ -269,12 +313,23 @@
         0x13: decode OPCODE_OP_BOTTOM3 {
             0x0: cbw_or_cwde_or_cdqe_rAX();
             0x1: cwd_or_cdq_or_cqo_rAX_rDX();
-            0x2: call_Ap();
+            0x2: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: call_Ap();
+            }
             0x3: fwait(); //aka wait
             0x4: pushf_Fv();
             0x5: popf_Fv();
-            0x6: sahf();
-            0x7: lahf();
+            //Both of these should be illegal only if CPUID.AHF64=0,
+            //according to sandpile.org
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: sahf();
+            }
+            0x7: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: lahf();
+            }
         }
         0x14: decode OPCODE_OP_BOTTOM3 {
             0x0: mov_Al_Ob();
@@ -321,8 +376,14 @@
             0x1: group2_Ev_Ib();
             0x2: ret_near_Iw();
             0x3: ret_near();
-            0x4: les_Gz_Mp();
-            0x5: lds_Gz_Mp();
+            0x4: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: les_Gz_Mp();
+            }
+            0x5: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: lds_Gz_Mp();
+            }
             //0x6: group12_Eb_Ib();
             0x6: decode MODRM_REG {
                 0x0: Inst::MOV(Eb,Ib);
@@ -339,7 +400,10 @@
             0x3: ret_far();
             0x4: int3();
             0x5: int_Ib();
-            0x6: into();
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: into();
+            }
             0x7: iret();
         }
         0x1A: decode OPCODE_OP_BOTTOM3 {
@@ -347,9 +411,18 @@
             0x1: group2_Ev_1();
             0x2: group2_Eb_Cl();
             0x3: group2_Ev_Cl();
-            0x4: aam_Ib();
-            0x5: aad_Ib();
-            0x6: salc();
+            0x4: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: aam_Ib();
+            }
+            0x5: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: aad_Ib();
+            }
+            0x6: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: salc();
+            }
             0x7: xlat();
         }
         0x1B: decode OPCODE_OP_BOTTOM3 {
@@ -373,9 +446,12 @@
             0x7: out_Ib_eAX();
         }
         0x1D: decode OPCODE_OP_BOTTOM3 {
-            0x0: call_Jz();
+            0x0: Inst::CALL(Jz);
             0x1: jmp_Jz();
-            0x2: jmp_Ap();
+            0x2: decode MODE_SUBMODE {
+                0x0: This_should_be_an_illegal_instruction();
+                default: jmp_Ap();
+            }
             0x3: jmp_Jb();
             0x4: in_Al_Dx();
             0x5: in_eAX_Dx();
