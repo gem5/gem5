@@ -59,8 +59,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-def template MicroLdStOpDeclare {{
-    class %(class_name)s : public X86MicroopBase
+
+// Load templates
+
+output header {{
+    /**
+     * Base class for load and store ops
+     */
+    class LdStOp : public X86MicroopBase
     {
       protected:
         const uint8_t scale;
@@ -71,6 +77,195 @@ def template MicroLdStOpDeclare {{
         const RegIndex data;
         const uint8_t dataSize;
         const uint8_t addressSize;
+
+        //Constructor
+        LdStOp(ExtMachInst _machInst,
+                const char * mnem, const char * _instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                uint8_t _scale, RegIndex _index, RegIndex _base,
+                uint64_t _disp, uint8_t _segment,
+                RegIndex _data,
+                uint8_t _dataSize, uint8_t _addressSize,
+                OpClass __opClass) :
+        X86MicroopBase(machInst, mnem, _instMnem,
+                isMicro, isDelayed, isFirst, isLast, __opClass),
+                scale(_scale), index(_index), base(_base),
+                disp(_disp), segment(_segment),
+                data(_data),
+                dataSize(_dataSize), addressSize(_addressSize)
+        {}
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string LdStOp::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        printReg(response, data);
+        response << ", ";
+        printSegment(response, segment);
+        ccprintf(response, ":[%d*", scale);
+        printReg(response, index);
+        response << " + ";
+        printReg(response, base);
+        ccprintf(response, " + %#x]", disp);
+        return response.str();
+    }
+}};
+
+def template MicroLoadExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+          Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
+
+        fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, 0);
+        if(fault == NoFault)
+        {
+            %(code)s;
+        }
+        if(fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template MicroLoadInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+            Trace::InstRecord * traceData) const
+    {
+        Fault fault = NoFault;
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
+
+        fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, 0);
+
+        return fault;
+    }
+}};
+
+def template MicroLoadCompleteAcc {{
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+            %(CPU_exec_context)s * xc,
+            Trace::InstRecord * traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        Mem = pkt->get<typeof(Mem)>();
+        %(code)s;
+
+        if(fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+// Store templates
+
+def template MicroStoreExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s * xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        Addr EA;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
+
+        %(code)s;
+
+        if(fault == NoFault)
+        {
+            fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
+                    EA, 0, 0);
+        }
+        if(fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template MicroStoreInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s * xc,
+            Trace::InstRecord * traceData) const
+    {
+        Fault fault = NoFault;
+
+        Addr EA;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
+
+        %(code)s;
+
+        if(fault == NoFault)
+        {
+            fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
+                    EA, 0, 0);
+        }
+        if(fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+        return fault;
+    }
+}};
+
+def template MicroStoreCompleteAcc {{
+    Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
+            Trace::InstRecord * traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+// Common templates
+
+//This delcares the initiateAcc function in memory operations
+def template InitiateAccDeclare {{
+    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+//This declares the completeAcc function in memory operations
+def template CompleteAccDeclare {{
+    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template MicroLdStOpDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
         void buildMe();
 
       public:
@@ -90,6 +285,10 @@ def template MicroLdStOpDeclare {{
                 uint8_t _dataSize, uint8_t _addressSize);
 
         %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
     };
 }};
 
@@ -107,11 +306,10 @@ def template MicroLdStOpConstructor {{
             RegIndex _data,
             uint8_t _dataSize, uint8_t _addressSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s),
-                scale(_scale), index(_index), base(_base),
-                disp(_disp), segment(_segment),
-                data(_data),
-                dataSize(_dataSize), addressSize(_addressSize)
+                false, false, false, false,
+                _scale, _index, _base,
+                _disp, _segment, _data,
+                _dataSize, _addressSize, %(op_class)s)
     {
         buildMe();
     }
@@ -120,17 +318,106 @@ def template MicroLdStOpConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             uint8_t _scale, RegIndex _index, RegIndex _base,
-            uint64_t _disp, uint8_t segment,
-            RegIndex data,
-            uint8_t dataSize, uint8_t addressSize) :
+            uint64_t _disp, uint8_t _segment,
+            RegIndex _data,
+            uint8_t _dataSize, uint8_t _addressSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                scale(_scale), index(_index), base(_base),
-                disp(_disp), segment(_segment),
-                data(_data),
-                dataSize(_dataSize), addressSize(_addressSize)
+                isMicro, isDelayed, isFirst, isLast,
+                _scale, _index, _base,
+                _disp, _segment, _data,
+                _dataSize, _addressSize, %(op_class)s)
     {
         buildMe();
     }
+}};
+
+let {{
+    class LdStOp(X86Microop):
+        def __init__(self, data, segment, addr, disp):
+            self.data = data
+            [self.scale, self.index, self.base] = addr
+            self.disp = disp
+            self.segment = segment
+            self.dataSize = "env.dataSize"
+            self.addressSize = "env.addressSize"
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, mnemonic
+                    %(flags)s, %(scale)s, %(index)s, %(base)s,
+                    %(disp)s, %(segment)s, %(data)s,
+                    %(dataSize)s, %(addressSize)s)''' % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags),
+                "scale" : self.scale, "index" : self.index,
+                "base" : self.base,
+                "disp" : self.disp,
+                "segment" : self.segment, "data" : self.data,
+                "dataSize" : self.dataSize, "addressSize" : self.addressSize}
+            return allocator
+}};
+
+let {{
+
+    # Make these empty strings so that concatenating onto
+    # them will always work.
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    calculateEA = "EA = scale * Index + Base + disp;"
+
+    def defineMicroLoadOp(mnemonic, code):
+        global header_output
+        global decoder_output
+        global exec_output
+        global microopClasses
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        # Build up the all register version of this micro op
+        iop = InstObjParams(name, Name, 'LdStOp',
+                {"code": code, "ea_code": calculateEA})
+        header_output += MicroLdStOpDeclare.subst(iop)
+        decoder_output += MicroLdStOpConstructor.subst(iop)
+        exec_output += MicroLoadExecute.subst(iop)
+        exec_output += MicroLoadInitiateAcc.subst(iop)
+        exec_output += MicroLoadCompleteAcc.subst(iop)
+
+        class LoadOp(LdStOp):
+            def __init__(self, data, segment, addr, disp = 0):
+                super(LoadOp, self).__init__(data, segment, addr, disp)
+                self.className = Name
+                self.mnemonic = name
+
+        microopClasses[name] = LoadOp
+
+    defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);')
+
+    def defineMicroStoreOp(mnemonic, code):
+        global header_output
+        global decoder_output
+        global exec_output
+        global microopClasses
+        Name = mnemonic
+        name = mnemonic.lower()
+
+        # Build up the all register version of this micro op
+        iop = InstObjParams(name, Name, 'LdStOp',
+                {"code": code, "ea_code": calculateEA})
+        header_output += MicroLdStOpDeclare.subst(iop)
+        decoder_output += MicroLdStOpConstructor.subst(iop)
+        exec_output += MicroStoreExecute.subst(iop)
+        exec_output += MicroStoreInitiateAcc.subst(iop)
+        exec_output += MicroStoreCompleteAcc.subst(iop)
+
+        class StoreOp(LdStOp):
+            def __init__(self, data, addr, segment):
+                super(LoadOp, self).__init__(data, addr, segment)
+                self.className = Name
+                self.mnemonic = name
+
+        microopClasses[name] = StoreOp
+
+    defineMicroLoadOp('St', 'Mem = Data;')
 }};
 

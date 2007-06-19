@@ -55,15 +55,21 @@
 
 microcode = '''
 def macroop POP_R {
+
+    # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env "if(machInst.mode.submode == SixtyFourBitMode && env.dataSize == 4) env.dataSize = 8\;"
-    # There needs to be a load here to actually "pop" the data
+
+    ld "env.reg", 2, [0, "NUM_INTREGS", "INTREG_RSP"]
     addi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
 };
 
 def macroop PUSH_R {
+
+    # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env "if(machInst.mode.submode == SixtyFourBitMode && env.dataSize == 4) env.dataSize = 8\;"
+
     subi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
-    # There needs to be a store here to actually "push" the data
+    st "env.reg", 2, [0, "NUM_INTREGS", "INTREG_RSP"]
 };
 '''
 #let {{

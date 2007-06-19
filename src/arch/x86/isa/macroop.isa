@@ -189,17 +189,18 @@ output header {{
     {
         X86ISA::RegIndex reg;
         X86ISA::RegIndex regm;
-        uint64_t immediate;
-        uint64_t displacement;
-        int addressSize;
+        uint8_t scale;
+        X86ISA::RegIndex index;
+        X86ISA::RegIndex base;
         int dataSize;
+        int addressSize;
+        int stackSize;
 
         EmulEnv(X86ISA::RegIndex _reg, X86ISA::RegIndex _regm,
-                uint64_t _immediate, uint64_t _displacement,
-                int _addressSize, int _dataSize) :
+                int _dataSize, int _addressSize, int _stackSize) :
             reg(_reg), regm(_regm),
-            immediate(_immediate), displacement(_displacement),
-            addressSize(_addressSize), dataSize(_dataSize)
+            dataSize(_dataSize), addressSize(_addressSize),
+            stackSize(_stackSize)
         {;}
     };
 }};
@@ -211,17 +212,15 @@ let {{
             self.regUsed = False
             self.regm = "0"
             self.regmUsed = False
-            self.immediate = "IMMEDIATE"
-            self.displacement = "DISPLACEMENT"
             self.addressSize = "ADDRSIZE"
             self.dataSize = "OPSIZE"
+            self.stackSize = "STACKSIZE"
         def getAllocator(self):
             return '''EmulEnv(%(reg)s,
                               %(regm)s,
-                              %(immediate)s,
-                              %(displacement)s,
+                              %(dataSize)s,
                               %(addressSize)s,
-                              %(dataSize)s)''' % \
+                              %(stackSize)s)''' % \
                 self.__dict__
         def addReg(self, reg):
             if not self.regUsed:
