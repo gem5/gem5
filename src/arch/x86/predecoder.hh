@@ -195,12 +195,12 @@ namespace X86ISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, Addr off, MachInst data)
+        void moreBytes(Addr pc, Addr fetchPC, MachInst data)
         {
+            DPRINTF(Predecoder, "Getting more bytes.\n");
             basePC = fetchPC;
-            offset = off;
+            offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
             fetchChunk = data;
-            assert(off < sizeof(MachInst));
             outOfBytes = false;
             process();
         }

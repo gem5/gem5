@@ -44,8 +44,6 @@ namespace AlphaISA
     {
       protected:
         ThreadContext * tc;
-        //The pc of the current instruction
-        Addr fetchPC;
         //The extended machine instruction being generated
         ExtMachInst ext_inst;
 
@@ -69,10 +67,8 @@ namespace AlphaISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr _fetchPC, Addr off, MachInst inst)
+        void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
         {
-            fetchPC = _fetchPC;
-            assert(off == 0);
             ext_inst = inst;
 #if FULL_SYSTEM
             if (pc && 0x1)

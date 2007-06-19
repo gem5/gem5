@@ -67,10 +67,8 @@ namespace SparcISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, Addr off, MachInst inst)
+        void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
         {
-            assert(off == 0);
-
             emi = inst;
             //The I bit, bit 13, is used to figure out where the ASI
             //should come from. Use that in the ExtMachInst. This is

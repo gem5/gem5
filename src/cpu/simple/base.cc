@@ -379,11 +379,11 @@ BaseSimpleCPU::preExecute()
         //This should go away once the constructor can be set up properly
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
-        if(predecoder.needMoreBytes())
-            predecoder.moreBytes(thread->readPC(),
-                    (thread->readPC() & PCMask) + fetchOffset, 0, inst);
-        else
-            predecoder.process();
+        Addr fetchPC = (thread->readPC() & PCMask) + fetchOffset;
+        //if(predecoder.needMoreBytes())
+            predecoder.moreBytes(thread->readPC(), fetchPC, inst);
+        //else
+        //    predecoder.process();
 
         //If an instruction is ready, decode it. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
