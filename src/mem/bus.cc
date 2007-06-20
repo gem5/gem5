@@ -121,7 +121,7 @@ void Bus::occupyBus(PacketPtr pkt)
     if (tickNextIdle < curTick) {
         tickNextIdle = curTick;
         if (tickNextIdle % clock != 0)
-            tickNextIdle -= (curTick % clock) + clock;
+            tickNextIdle = curTick - (curTick % clock) + clock;
     }
 
     // The packet will be sent. Figure out how long it occupies the bus, and
