@@ -315,7 +315,7 @@
             0x0: Inst::MOV(Eb,Gb);
             0x1: Inst::MOV(Ev,Gv);
             0x2: Inst::MOV(Gb,Eb);
-            0x3: Inst::MOV(Gv,Eb);
+            0x3: Inst::MOV(Gv,Ev);
             0x4: mov_MwRv_Sw(); //What to do with this one?
             0x5: Inst::LEA(Gv,M);
             0x6: mov_Sw_MwRv();
