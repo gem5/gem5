@@ -64,7 +64,8 @@ class EtherDump(SimObject):
 
 class IGbE(PciDevice):
     type = 'IGbE'
-    hardware_address = Param.String("Ethernet Hardware Address")
+    hardware_address = Param.EthernetAddr(NextEthernetAddr,
+        "Ethernet Hardware Address")
     use_flow_control = Param.Bool(False,
         "Should we use xon/xoff flow contorl (UNIMPLEMENTD)")
     rx_fifo_size = Param.MemorySize('384kB', "Size of the rx FIFO")
@@ -100,9 +101,9 @@ class IGbEInt(EtherInt):
     type = 'IGbEInt'
     device = Param.IGbE("Ethernet device of this interface")
 
-
-
 class EtherDevBase(PciDevice):
+    type = 'EtherDevBase'
+    abstract = True
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
 
