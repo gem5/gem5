@@ -268,7 +268,6 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     int argv_array_size = intSize * (argv.size() + 1);
 
     int argc_size = intSize;
-    int window_save_size = intSize * 16;
 
     int space_needed =
         mysterious_size +
@@ -276,8 +275,7 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
         aux_array_size +
         envp_array_size +
         argv_array_size +
-        argc_size +
-        window_save_size;
+        argc_size;
 
     stack_min = stack_base - space_needed;
     stack_min &= alignmentMask;
@@ -296,10 +294,6 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
-#ifndef NDEBUG
-    // only used in DPRINTF
-    Addr window_save_base = argc_base - window_save_size;
-#endif
 
     DPRINTF(X86, "The addresses of items on the initial stack:\n");
     DPRINTF(X86, "0x%x - file name\n", file_name_base);
@@ -309,7 +303,6 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     DPRINTF(X86, "0x%x - envp array\n", envp_array_base);
     DPRINTF(X86, "0x%x - argv array\n", argv_array_base);
     DPRINTF(X86, "0x%x - argc \n", argc_base);
-    DPRINTF(X86, "0x%x - window save\n", window_save_base);
     DPRINTF(X86, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
