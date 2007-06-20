@@ -269,11 +269,9 @@ Tick
 BaseCPU::nextCycle(Tick begin_tick)
 {
     Tick next_tick = begin_tick;
-    next_tick -= (next_tick % clock);
+    if (next_tick % clock != 0)
+        next_tick = next_tick - (next_tick % clock) + clock;
     next_tick += phase;
-
-    while (next_tick < curTick)
-        next_tick += clock;
 
     assert(next_tick >= curTick);
     return next_tick;

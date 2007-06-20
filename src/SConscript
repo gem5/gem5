@@ -277,9 +277,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     if strip:
         stripped_bin = bin + '.stripped'
         if sys.platform == 'sunos5':
-            newEnv.Command(stripped_bin, bin, 'cp $SOURCE $TARGET; strip $TARGET')
+            cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
-            newEnv.Command(stripped_bin, bin, 'strip $SOURCE -o $TARGET')
+            cmd = 'strip $SOURCE -o $TARGET'
+        newEnv.Command(stripped_bin, bin, cmd)
         bin = stripped_bin
     targets = newEnv.Concat(exe, [bin, 'm5py.zip'])
     newEnv.M5Binary = targets[0]

@@ -39,6 +39,7 @@ class System(SimObject):
     physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
     if build_env['FULL_SYSTEM']:
+        abstract = True
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                              "boot processor frequency")
         init_param = Param.UInt64(0, "numerical value to pass into simulator")

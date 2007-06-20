@@ -55,7 +55,7 @@ class DerivO3CPU(BaseCPU):
             checker.itb = Parent.itb
             checker.dtb = Parent.dtb
 
-    cachePorts = Param.Unsigned("Cache Ports")
+    cachePorts = Param.Unsigned(200, "Cache Ports")
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
     _mem_ports = ['icache_port', 'dcache_port']
@@ -137,15 +137,15 @@ class DerivO3CPU(BaseCPU):
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
 
-    smtNumFetchingThreads = Param.Unsigned("SMT Number of Fetching Threads")
-    smtFetchPolicy = Param.String("SMT Fetch policy")
-    smtLSQPolicy    = Param.String("SMT LSQ Sharing Policy")
-    smtLSQThreshold = Param.String("SMT LSQ Threshold Sharing Parameter")
-    smtIQPolicy    = Param.String("SMT IQ Sharing Policy")
-    smtIQThreshold = Param.String("SMT IQ Threshold Sharing Parameter")
-    smtROBPolicy   = Param.String("SMT ROB Sharing Policy")
-    smtROBThreshold = Param.String("SMT ROB Threshold Sharing Parameter")
-    smtCommitPolicy = Param.String("SMT Commit Policy")
+    smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
+    smtFetchPolicy = Param.String('SingleThread', "SMT Fetch policy")
+    smtLSQPolicy    = Param.String('Partitioned', "SMT LSQ Sharing Policy")
+    smtLSQThreshold = Param.Int(100, "SMT LSQ Threshold Sharing Parameter")
+    smtIQPolicy    = Param.String('Partitioned', "SMT IQ Sharing Policy")
+    smtIQThreshold = Param.Int(100, "SMT IQ Threshold Sharing Parameter")
+    smtROBPolicy   = Param.String('Partitioned', "SMT ROB Sharing Policy")
+    smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
+    smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
 
     def addPrivateSplitL1Caches(self, ic, dc):
         BaseCPU.addPrivateSplitL1Caches(self, ic, dc)
