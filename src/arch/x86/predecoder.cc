@@ -277,7 +277,8 @@ namespace X86ISA
                 displacementSize = 0;
         } else {
             //figure out 32/64 bit displacement size
-            if(modRM.mod == 0 && modRM.rm == 4 || modRM.mod == 2)
+            if(modRM.mod == 0 && (modRM.rm == 4 || modRM.rm == 5)
+                    || modRM.mod == 2)
                 displacementSize = 4;
             else if(modRM.mod == 1)
                 displacementSize = 1;
