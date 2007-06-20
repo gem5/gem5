@@ -64,22 +64,43 @@
 let {{
     # This code builds up a decode block which decodes based on switchval.
     # vals is a dict which matches case values with what should be decoded to.
-    # builder is called on the exploded contents of "vals" values to generate
-    # whatever code should be used.
-    def doSplitDecode(builder, switchVal, vals, default = None):
+    # Each element of the dict is a list containing a function and then the
+    # arguments to pass to it.
+    def doSplitDecode(switchVal, vals, default = None):
         blocks = OutputBlocks()
         blocks.decode_block = 'switch(%s) {\n' % switchVal
         for (val, todo) in vals.items():
-            new_blocks = builder(*todo)
+            new_blocks = todo[0](*todo[1:])
             new_blocks.decode_block = \
                 '\tcase %s: %s\n' % (val, new_blocks.decode_block)
             blocks.append(new_blocks)
         if default:
-            new_blocks = builder(*default)
+            new_blocks = default[0](*default[1:])
             new_blocks.decode_block = \
                 '\tdefault: %s\n' % new_blocks.decode_block
             blocks.append(new_blocks)
         blocks.decode_block += '}\n'
+        return blocks
+}};
+
+let {{
+    def doRipRelativeDecode(Name, opTypes, env):
+        # print "RIPing %s with opTypes %s" % (Name, opTypes)
+        normBlocks = specializeInst(Name + "_M", copy.copy(opTypes), copy.copy(env))
+        ripBlocks = specializeInst(Name + "_P", copy.copy(opTypes), copy.copy(env))
+
+        blocks = OutputBlocks()
+        blocks.append(normBlocks)
+        blocks.append(ripBlocks)
+
+        blocks.decode_block = '''
+        if(machInst.modRM.mod == 0 &&
+          machInst.modRM.rm == 5 &&
+          machInst.mode.submode == SixtyFourBitMode)
+        { %s }
+        else
+        { %s }''' % \
+         (ripBlocks.decode_block, normBlocks.decode_block)
         return blocks
 }};
 
@@ -142,9 +163,9 @@ let {{
                 # modrm addressing.
                 memEnv = copy.copy(env)
                 memEnv.doModRM = True
-                return doSplitDecode(specializeInst, "MODRM_MOD",
-                    {"3" : (Name + "_R", copy.copy(opTypes), regEnv)},
-                           (Name + "_M", copy.copy(opTypes), memEnv))
+                return doSplitDecode("MODRM_MOD",
+                    {"3" : (specializeInst, Name + "_R", copy.copy(opTypes), regEnv)},
+                           (doRipRelativeDecode, Name, copy.copy(opTypes), memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
                 Name += "_I"

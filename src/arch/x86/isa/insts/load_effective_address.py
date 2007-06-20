@@ -57,4 +57,9 @@ microcode = '''
 def macroop LEA_R_M {
     lea "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
 };
+
+def macroop LEA_R_P {
+    rdip "NUM_INTREGS+7"
+    lea "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+};
 '''
