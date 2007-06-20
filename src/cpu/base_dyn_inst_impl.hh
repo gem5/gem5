@@ -62,19 +62,66 @@ my_hash_t thishash;
 #endif
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst machInst,
+BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
                                Addr inst_PC, Addr inst_NPC,
+                               Addr inst_MicroPC,
                                Addr pred_PC, Addr pred_NPC,
+                               Addr pred_MicroPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(machInst, inst_PC), traceData(NULL), cpu(cpu)
+  : staticInst(_staticInst), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
+    bool nextIsMicro =
+        staticInst->isMicroOp() && !staticInst->isLastMicroOp();
+
     PC = inst_PC;
-    nextPC = inst_NPC;
-    nextNPC = nextPC + sizeof(TheISA::MachInst);
+    microPC = inst_MicroPC;
+    if (nextIsMicro) {
+        nextPC = inst_PC;
+        nextNPC = inst_NPC;
+        nextMicroPC = microPC + 1;
+    } else {
+        nextPC = inst_NPC;
+        nextNPC = nextPC + sizeof(TheISA::MachInst);
+        nextMicroPC = 0;
+    }
     predPC = pred_PC;
     predNPC = pred_NPC;
+    predMicroPC = pred_MicroPC;
+    predTaken = false;
+
+    initVars();
+}
+
+template <class Impl>
+BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst inst,
+                               Addr inst_PC, Addr inst_NPC,
+                               Addr inst_MicroPC,
+                               Addr pred_PC, Addr pred_NPC,
+                               Addr pred_MicroPC,
+                               InstSeqNum seq_num, ImplCPU *cpu)
+  : staticInst(inst), traceData(NULL), cpu(cpu)
+{
+    seqNum = seq_num;
+
+    bool nextIsMicro =
+        staticInst->isMicroOp() && !staticInst->isLastMicroOp();
+
+    PC = inst_PC;
+    microPC = inst_MicroPC;
+    if (nextIsMicro) {
+        nextPC = inst_PC;
+        nextNPC = inst_NPC;
+        nextMicroPC = microPC + 1;
+    } else {
+        nextPC = inst_NPC;
+        nextNPC = nextPC + sizeof(TheISA::MachInst);
+        nextMicroPC = 0;
+    }
+    predPC = pred_PC;
+    predNPC = pred_NPC;
+    predMicroPC = pred_MicroPC;
     predTaken = false;
 
     initVars();

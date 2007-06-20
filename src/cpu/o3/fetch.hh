@@ -227,7 +227,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC, Addr &next_NPC);
+    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC, Addr &next_NPC, Addr &next_MicroPC);
 
     /**
      * Fetches the cache line that contains fetch_PC.  Returns any
@@ -242,12 +242,14 @@ class DefaultFetch
     bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid);
 
     /** Squashes a specific thread and resets the PC. */
-    inline void doSquash(const Addr &new_PC, const Addr &new_NPC, unsigned tid);
+    inline void doSquash(const Addr &new_PC, const Addr &new_NPC,
+                         const Addr &new_MicroPC, unsigned tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode that should be sqaushed.
      */
     void squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
+                          const Addr &new_MicroPC,
                           const InstSeqNum &seq_num, unsigned tid);
 
     /** Checks if a thread is stalled. */
@@ -263,8 +265,8 @@ class DefaultFetch
      * squash should be the commit stage.
      */
     void squash(const Addr &new_PC, const Addr &new_NPC,
-                const InstSeqNum &seq_num,
-                bool squash_delay_slot, unsigned tid);
+                const Addr &new_MicroPC,
+                const InstSeqNum &seq_num, unsigned tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -347,15 +349,11 @@ class DefaultFetch
     /** Per-thread fetch PC. */
     Addr PC[Impl::MaxThreads];
 
+    /** Per-thread fetch micro PC. */
+    Addr microPC[Impl::MaxThreads];
+
     /** Per-thread next PC. */
     Addr nextPC[Impl::MaxThreads];
-
-    /** Per-thread next Next PC.
-     *  This is not a real register but is used for
-     *  architectures that use a branch-delay slot.
-     *  (such as MIPS or Sparc)
-     */
-    Addr nextNPC[Impl::MaxThreads];
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];

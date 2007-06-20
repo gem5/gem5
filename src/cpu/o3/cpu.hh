@@ -433,22 +433,34 @@ class FullO3CPU : public BaseO3CPU
     void setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid);
 
     /** Reads the commit PC of a specific thread. */
-    uint64_t readPC(unsigned tid);
+    Addr readPC(unsigned tid);
 
     /** Sets the commit PC of a specific thread. */
     void setPC(Addr new_PC, unsigned tid);
 
+    /** Reads the commit micro PC of a specific thread. */
+    Addr readMicroPC(unsigned tid);
+
+    /** Sets the commmit micro PC of a specific thread. */
+    void setMicroPC(Addr new_microPC, unsigned tid);
+
     /** Reads the next PC of a specific thread. */
-    uint64_t readNextPC(unsigned tid);
+    Addr readNextPC(unsigned tid);
 
     /** Sets the next PC of a specific thread. */
-    void setNextPC(uint64_t val, unsigned tid);
+    void setNextPC(Addr val, unsigned tid);
 
     /** Reads the next NPC of a specific thread. */
-    uint64_t readNextNPC(unsigned tid);
+    Addr readNextNPC(unsigned tid);
 
     /** Sets the next NPC of a specific thread. */
-    void setNextNPC(uint64_t val, unsigned tid);
+    void setNextNPC(Addr val, unsigned tid);
+
+    /** Reads the commit next micro PC of a specific thread. */
+    Addr readNextMicroPC(unsigned tid);
+
+    /** Sets the commit next micro PC of a specific thread. */
+    void setNextMicroPC(Addr val, unsigned tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
@@ -468,8 +480,7 @@ class FullO3CPU : public BaseO3CPU
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/
-    void removeInstsNotInROB(unsigned tid, bool squash_delay_slot,
-                             const InstSeqNum &delay_slot_seq_num);
+    void removeInstsNotInROB(unsigned tid);
 
     /** Remove all instructions younger than the given sequence number. */
     void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);
