@@ -280,7 +280,17 @@
         }
         0x10: decode OPCODE_OP_BOTTOM3 {
             0x0: group1_Eb_Ib();
-            0x1: group1_Ev_Iz();
+            //0x1: group1_Ev_Iz();
+            0x1: decode MODRM_REG {
+                0x0: add_Ev_Iz();
+                0x1: or_Ev_Ibz();
+                0x2: adc_Ev_Iz();
+                0x3: sbb_Ev_Iz();
+                0x4: Inst::AND(Ev,Iz);
+                0x5: Inst::SUB(Ev,Iz);
+                0x6: xor_Ev_Iz();
+                0x7: cmp_Ev_Iz();
+            }
             0x2: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: group1_Eb_Ib();
@@ -296,8 +306,8 @@
                 0x6: xor_Eb_Ib();
                 0x7: cmp_Eb_Ib();
             }
-            0x4: test_Eb_Gb();
-            0x5: test_Ev_Gv();
+            0x4: Inst::TEST(Eb,Gb);
+            0x5: Inst::TEST(Ev,Gv);
             0x6: xchg_Eb_Gb();
             0x7: xchg_Ev_Gv();
         }
@@ -307,7 +317,7 @@
             0x2: Inst::MOV(Gb,Eb);
             0x3: Inst::MOV(Gv,Eb);
             0x4: mov_MwRv_Sw(); //What to do with this one?
-            0x5: lea_Gv_M();
+            0x5: Inst::LEA(Gv,M);
             0x6: mov_Sw_MwRv();
             0x7: group10_Ev(); //Make sure this is Ev
         }
@@ -353,8 +363,8 @@
             0x7: cmps_Yv_Xv();
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
-            0x0: test_Al_Ib();
-            0x1: test_rAX_Iz();
+            0x0: Inst::TEST(rAl,Ib);
+            0x1: Inst::TEST(rAX,Iz);
             0x2: stos_Yb_Al();
             0x3: stos_Yv_rAX();
             0x4: lods_Al_Xb();
@@ -372,15 +382,17 @@
             0x6: mov_Dh_Ib();
             0x7: mov_Bh_Ib();
         }
-        0x17: decode OPCODE_OP_BOTTOM3 {
-            0x0: mov_rAX_Iv();
-            0x1: mov_rCX_Iv();
-            0x2: mov_rDX_Iv();
-            0x3: mov_rBX_Iv();
-            0x4: mov_rSP_Iv();
-            0x5: mov_rBP_Iv();
-            0x6: mov_rSI_Iv();
-            0x7: mov_rDI_Iv();
+        format Inst {
+            0x17: decode OPCODE_OP_BOTTOM3 {
+                0x0: MOV(rAX,Iv);
+                0x1: MOV(rCX,Iv);
+                0x2: MOV(rDX,Iv);
+                0x3: MOV(rBX,Iv);
+                0x4: MOV(rSP,Iv);
+                0x5: MOV(rBP,Iv);
+                0x6: MOV(rSI,Iv);
+                0x7: MOV(rDI,Iv);
+            }
         }
         0x18: decode OPCODE_OP_BOTTOM3 {
             0x0: group2_Eb_Ib();

@@ -53,7 +53,19 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop SUB_R_I
+{
+    subi "env.reg", "env.reg", "IMMEDIATE"
+};
+
+def macroop SUB_M_I
+{
+    #Load into t1
+    subi "NUM_INTREGS+1", "NUM_INTREGS+1", "IMMEDIATE"
+    #save from t1
+};
+'''
 #let {{
 #    class ADC(Inst):
 #	"Adc ^0 ^0 ^1"

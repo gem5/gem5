@@ -111,6 +111,12 @@ output header {{
         };
 }};
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  X86 specific
+//
+//////////////////////////////////////////////////////////////////////////////
+
 // Basic instruction class declaration template.
 def template MacroDeclare {{
         namespace X86Macroop
@@ -122,28 +128,25 @@ def template MacroDeclare {{
             {
               public:
                 // Constructor.
-                %(class_name)s(ExtMachInst machInst, EmulEnv env);
+                %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv env);
             };
         };
 }};
 
 // Basic instruction class constructor template.
 def template MacroConstructor {{
-        inline X86Macroop::%(class_name)s::%(class_name)s(ExtMachInst machInst, EmulEnv env)
+        inline X86Macroop::%(class_name)s::%(class_name)s(
+                ExtMachInst machInst, EmulEnv env)
             : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s)
         {
             %(adjust_env)s;
+            %(do_modrm)s;
             %(constructor)s;
             //alloc_microops is the code that sets up the microops
             //array in the parent class.
             %(alloc_microops)s;
         }
 }};
-
-//////////////////////////////////////////////////////////////////////////////
-//
-//  X86 specific
-//
 
 let {{
     from micro_asm import Combinational_Macroop, Rom_Macroop
@@ -157,6 +160,7 @@ let {{
             }
             self.declared = False
             self.adjust_env = ""
+            self.doModRM = ""
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % (self.name, env.getAllocator())
         def getDeclaration(self):
@@ -180,29 +184,9 @@ let {{
             iop = InstObjParams(self.name, self.name, "Macroop",
                                 {"code" : "", "num_microops" : numMicroops,
                                  "alloc_microops" : allocMicroops,
-                                 "adjust_env" : self.adjust_env})
+                                 "adjust_env" : self.adjust_env,
+                                 "do_modrm" : self.doModRM})
             return MacroConstructor.subst(iop);
-}};
-
-output header {{
-    struct EmulEnv
-    {
-        X86ISA::RegIndex reg;
-        X86ISA::RegIndex regm;
-        uint8_t scale;
-        X86ISA::RegIndex index;
-        X86ISA::RegIndex base;
-        int dataSize;
-        int addressSize;
-        int stackSize;
-
-        EmulEnv(X86ISA::RegIndex _reg, X86ISA::RegIndex _regm,
-                int _dataSize, int _addressSize, int _stackSize) :
-            reg(_reg), regm(_regm),
-            dataSize(_dataSize), addressSize(_addressSize),
-            stackSize(_stackSize)
-        {;}
-    };
 }};
 
 let {{
@@ -215,6 +199,8 @@ let {{
             self.addressSize = "ADDRSIZE"
             self.dataSize = "OPSIZE"
             self.stackSize = "STACKSIZE"
+            self.doModRM = False
+
         def getAllocator(self):
             return '''EmulEnv(%(reg)s,
                               %(regm)s,
@@ -234,12 +220,15 @@ let {{
 }};
 
 let {{
+    doModRMString = "env.doModRM(machInst);\n"
     def genMacroop(Name, env):
         blocks = OutputBlocks()
         if not macroopDict.has_key(Name):
             raise Exception, "Unrecognized instruction: %s" % Name
         macroop = macroopDict[Name]
         if not macroop.declared:
+            if env.doModRM:
+                macroop.doModRM = doModRMString
             blocks.header_output = macroop.getDeclaration()
             blocks.decoder_output = macroop.getDefinition()
             macroop.declared = True

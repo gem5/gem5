@@ -160,7 +160,7 @@ namespace X86ISA
         } opcode;
         //Modifier bytes
         ModRM modRM;
-        uint8_t sib;
+        Sib sib;
         //Immediate fields
         uint64_t immediate;
         uint64_t displacement;

@@ -59,11 +59,11 @@ def macroop MOV_R_R {
 };
 
 def macroop MOV_M_R {
-    #Do a store to put the register operand into memory
+    st "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
 };
 
 def macroop MOV_R_M {
-    #Do a load to fill the register operand from memory
+    ld "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
 };
 
 def macroop MOV_R_I {

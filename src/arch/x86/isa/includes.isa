@@ -96,6 +96,7 @@ output header {{
 #include <sstream>
 #include <iostream>
 
+#include "arch/x86/emulenv.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regfile.hh"

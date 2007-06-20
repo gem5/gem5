@@ -85,6 +85,7 @@
 
 Import('*')
 if env['TARGET_ISA'] == 'x86':
+    Source('emulenv.cc')
     Source('floatregfile.cc')
     Source('intregfile.cc')
     Source('miscregfile.cc')
