@@ -204,19 +204,17 @@ FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
         _status = Idle;
     }
 
-    checker = NULL;
-
-    if (params->checker) {
 #if USE_CHECKER
+    if (params->checker) {
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
 #if FULL_SYSTEM
         checker->setSystem(params->system);
 #endif
-#else
-        panic("Checker enabled but not compiled in!");
-#endif // USE_CHECKER
+    } else {
+        checker = NULL;
     }
+#endif // USE_CHECKER
 
 #if !FULL_SYSTEM
     thread.resize(number_of_threads);
