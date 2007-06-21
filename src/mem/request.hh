@@ -39,6 +39,7 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
+#include "base/fast_alloc.hh"
 #include "sim/host.hh"
 #include "sim/core.hh"
 
@@ -76,7 +77,7 @@ const uint32_t MEM_SWAP         = 0x100000;
 const uint32_t MEM_SWAP_COND    = 0x200000;
 
 
-class Request
+class Request : public FastAlloc
 {
   private:
     /**
@@ -152,6 +153,8 @@ class Request
         setThreadContext(_cpuNum, _threadNum);
         setVirt(_asid, _vaddr, _size, _flags, _pc);
     }
+
+    ~Request() {}  // for FastAlloc
 
     /**
      * Set up CPU and thread numbers. */
