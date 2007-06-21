@@ -72,5 +72,33 @@ let {{
     from micro_asm import MicroAssembler, Rom_Macroop, Rom
     mainRom = Rom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
+    # Add in symbols for the microcode registers
+    for num in range(15):
+        assembler.symbols["t%d" % num] = "NUM_INTREGS+%d" % num
+    # Add in symbols for the segment descriptor registers
+    for letter in ("C", "D", "E", "F", "G", "S"):
+        assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
+    # Miscellaneous symbols
+    symbols = {
+        "reg" : "env.reg",
+        "regm" : "env.regm",
+        "imm" : "IMMEDIATE",
+        "disp" : "DISPLACEMENT",
+        "scale" : "env.scale",
+        "index" : "env.index",
+        "base" : "env.base",
+        "dsz" : "env.dataSize",
+        "osz" : "env.operandSize",
+        "ssz" : "env.stackSize"
+    }
+    assembler.symbols.update(symbols)
+
+    # Code literal which forces a default 64 bit operand size in 64 bit mode.
+    assembler.symbols["oszIn64Override"] = '''
+    if (machInst.mode.submode == SixtyFourBitMode &&
+            env.dataSize == 4)
+        env.dataSize = 8;
+    '''
+
     macroopDict = assembler.assemble(microcode)
 }};
