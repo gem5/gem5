@@ -58,16 +58,16 @@ def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld reg, ss, [0, t0, "INTREG_RSP"]
-    addi "INTREG_RSP", "INTREG_RSP", dsz
+    ld reg, ss, [0, t0, rsp]
+    addi rsp, rsp, dsz
 };
 
 def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    subi "INTREG_RSP", "INTREG_RSP", dsz
-    st reg, ss, [0, t0, "INTREG_RSP"]
+    subi rsp, rsp, dsz
+    st reg, ss, [0, t0, rsp]
 };
 '''
 #let {{
