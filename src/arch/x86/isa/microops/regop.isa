@@ -162,6 +162,7 @@ def template MicroRegOpExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(code)s;
+            %(flag_code)s;
 
             //Write the resulting state to the execution context
             if(fault == NoFault)
@@ -181,6 +182,7 @@ def template MicroRegOpImmExecute {{
             %(op_decl)s;
             %(op_rd)s;
             %(code)s;
+            %(flag_code)s;
 
             //Write the resulting state to the execution context
             if(fault == NoFault)
@@ -304,11 +306,11 @@ def template MicroRegOpImmConstructor {{
 
 let {{
     class RegOp(X86Microop):
-        def __init__(self, dest, src1, src2):
+        def __init__(self, dest, src1, src2, setStatus):
             self.dest = dest
             self.src1 = src1
             self.src2 = src2
-            self.setStatus = False
+            self.setStatus = setStatus
             self.dataSize = "env.dataSize"
             self.ext = 0
 
@@ -326,11 +328,11 @@ let {{
             return allocator
 
     class RegOpImm(X86Microop):
-        def __init__(self, dest, src1, imm8):
+        def __init__(self, dest, src1, imm8, setStatus):
             self.dest = dest
             self.src1 = src1
             self.imm8 = imm8
-            self.setStatus = False
+            self.setStatus = setStatus
             self.dataSize = "env.dataSize"
             self.ext = 0
 
@@ -356,20 +358,22 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    def setUpMicroRegOp(name, Name, base, code, child):
+    def setUpMicroRegOp(name, Name, base, code, child, flagCode):
         global header_output
         global decoder_output
         global exec_output
         global microopClasses
 
-        iop = InstObjParams(name, Name, base, {"code" : code})
+        iop = InstObjParams(name, Name, base,
+                {"code" : code,
+                 "flag_code" : flagCode})
         header_output += MicroRegOpDeclare.subst(iop)
         decoder_output += MicroRegOpConstructor.subst(iop)
         exec_output += MicroRegOpExecute.subst(iop)
 
         microopClasses[name] = child
 
-    def defineMicroRegOp(mnemonic, code):
+    def defineMicroRegOp(mnemonic, code, flagCode):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -382,31 +386,31 @@ let {{
 
         # Build the all register version of this micro op
         class RegOpChild(RegOp):
-            def __init__(self, dest, src1, src2):
-                super(RegOpChild, self).__init__(dest, src1, src2)
+            def __init__(self, dest, src1, src2, setStatus=False):
+                super(RegOpChild, self).__init__(dest, src1, src2, setStatus)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild);
+        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild, flagCode);
 
         # Build the immediate version of this micro op
         class RegOpChildImm(RegOpImm):
-            def __init__(self, dest, src1, src2):
-                super(RegOpChildImm, self).__init__(dest, src1, src2)
+            def __init__(self, dest, src1, src2, setStatus=False):
+                super(RegOpChildImm, self).__init__(dest, src1, src2, setStatus)
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm);
+        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm, flagCode);
 
-    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to set OF,CF,SF
-    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
-    defineMicroRegOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)') #Needs to add in CF, set OF,CF,SF
-    defineMicroRegOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to subtract CF, set OF,CF,SF
-    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
-    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)') #Needs to set OF,CF,SF
-    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
-    defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)') #Needs to set OF,CF,SF and not DestReg
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)')
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)', "") #Needs to set OF,CF,SF
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)', "")
+    defineMicroRegOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)', "") #Needs to add in CF, set OF,CF,SF
+    defineMicroRegOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', "") #Needs to subtract CF, set OF,CF,SF
+    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)', "")
+    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', "") #Needs to set OF,CF,SF
+    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)', "")
+    defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', "") #Needs to set OF,CF,SF and not DestReg
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)', "")
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code):
@@ -423,20 +427,20 @@ let {{
         # Build the all register version of this micro op
         class RegOpChild(RegOp):
             def __init__(self, src1, src2):
-                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2)
+                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2, False)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild);
+        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild, "");
 
         # Build the immediate version of this micro op
         class RegOpChildImm(RegOpImm):
             def __init__(self, src1, src2):
-                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2)
+                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, False)
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm);
+        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm, "");
 
     defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2')
 
@@ -447,11 +451,11 @@ let {{
 
         class RegOpChild(RegOp):
             def __init__(self, dest, src1 = "NUM_INTREGS"):
-                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS")
+                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS", False)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", code, RegOpChild);
+        setUpMicroRegOp(name, Name, "RegOp", code, RegOpChild, "");
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
@@ -461,11 +465,11 @@ let {{
 
         class RegOpChild(RegOpImm):
             def __init__(self, dest, src1, src2):
-                super(RegOpChild, self).__init__(dest, src1, src2)
+                super(RegOpChild, self).__init__(dest, src1, src2, False)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOpImm", code, RegOpChild);
+        setUpMicroRegOp(name, Name, "RegOpImm", code, RegOpChild, "");
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = SrcReg1;
