@@ -55,11 +55,11 @@
 
 microcode = '''
 def macroop LEA_R_M {
-    lea "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    lea reg, ds, [scale, index, base], disp
 };
 
 def macroop LEA_R_P {
-    rdip "NUM_INTREGS+7"
-    lea "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    rdip t7
+    lea reg, ds, [scale, index, base], disp
 };
 '''

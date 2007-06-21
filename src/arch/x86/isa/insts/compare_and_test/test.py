@@ -56,44 +56,40 @@
 microcode = '''
 def macroop TEST_M_R
 {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    and "NUM_INTREGS", "NUM_INTREGS+1", "env.reg"
+    ld t1, ds, [scale, index, base], disp
+    and t0, t1, reg
 };
 
 def macroop TEST_P_R
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    and "NUM_INTREGS", "NUM_INTREGS+1", "env.reg"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    and t0, t1, reg
 };
 
 def macroop TEST_R_R
 {
-    and "NUM_INTREGS", "env.reg", "env.regm"
+    and t0, reg, regm
 };
 
 def macroop TEST_M_I
 {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    limm "NUM_INTREGS+2", "IMMEDIATE"
-    and "NUM_INTREGS", "NUM_INTREGS+1", "NUM_INTREGS+2"
+    ld t1, ds, [scale, index, base], disp
+    limm t2, imm
+    and t0, t1, t2
 };
 
 def macroop TEST_P_I
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    limm "NUM_INTREGS+2", "IMMEDIATE"
-    and "NUM_INTREGS", "NUM_INTREGS+1", "NUM_INTREGS+2"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    limm t2, imm
+    and t0, t1, t2
 };
 
 def macroop TEST_R_I
 {
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    and "NUM_INTREGS", "env.reg", "NUM_INTREGS+1"
+    limm t1, imm
+    and t0, reg, t1
 };
 '''

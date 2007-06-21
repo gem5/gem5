@@ -55,59 +55,55 @@
 
 microcode = '''
 def macroop MOV_R_R {
-    mov "env.reg", "env.reg", "env.regm"
+    mov reg, reg, regm
 };
 
 def macroop MOV_M_R {
-    st "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    st reg, ds, [scale, index, base], disp
 };
 
 def macroop MOV_P_R {
-    rdip "NUM_INTREGS+7"
-    st "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    rdip t7
+    st reg, ds, [scale, index, base], disp
 };
 
 def macroop MOV_R_M {
-    ld "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    ld reg, ds, [scale, index, base], disp
 };
 
 def macroop MOV_R_P {
-    rdip "NUM_INTREGS+7"
-    ld "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+    rdip t7
+    ld reg, ds, [scale, index, base], disp
 };
 
 def macroop MOV_R_I {
-    limm "env.reg", "IMMEDIATE"
+    limm reg, imm
 };
 
 def macroop MOV_M_I {
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    limm t1, imm
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop MOV_P_I {
-    rdip "NUM_INTREGS+7"
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    rdip t7
+    limm t1, imm
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop MOVSXD_R_R {
-    sext "env.reg", "env.regm", "env.dataSize"
+    sext reg, regm, dsz
 };
 
 def macroop MOVSXD_R_M {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    sext "env.reg", "NUM_INTREGS+1", "env.dataSize"
+    ld t1, ds, [scale, index, base], disp
+    sext reg, t1, dsz
 };
 
 def macroop MOVSXD_R_P {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    sext "env.reg", "NUM_INTREGS+1", "env.dataSize"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    sext reg, t1, dsz
 };
 '''
 #let {{

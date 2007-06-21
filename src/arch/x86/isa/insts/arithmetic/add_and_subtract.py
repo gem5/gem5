@@ -56,26 +56,22 @@
 microcode = '''
 def macroop SUB_R_I
 {
-    subi "env.reg", "env.reg", "IMMEDIATE"
+    subi reg, reg, imm
 };
 
 def macroop SUB_M_I
 {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    subi "NUM_INTREGS+1", "NUM_INTREGS+1", "IMMEDIATE"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    ld t1, ds, [scale, index, base], disp
+    subi t1, t1, imm
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop SUB_P_I
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    subi "NUM_INTREGS+1", "NUM_INTREGS+1", "IMMEDIATE"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    subi t1, t1, imm
+    st t1, ds, [scale, index, base], disp
 };
 '''
 #let {{
