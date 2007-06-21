@@ -150,4 +150,4 @@ namespace X86ISA
     };
 };
 
-#endif // __ARCH_X86_INTERRUPTS_HH__
+#endif // __ARCH_X86_INTREGS_HH__
