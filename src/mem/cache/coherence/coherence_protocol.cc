@@ -259,7 +259,7 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     MC::Command writeToSharedCmd =
         doUpgrades ? MC::UpgradeReq : MC::ReadExReq;
     MC::Command writeToSharedResp =
-        doUpgrades ? MC::UpgradeReq : MC::ReadExResp;
+        doUpgrades ? MC::UpgradeResp : MC::ReadExResp;
 
     // Note that all transitions by default cause a panic.
     // Override the valid transitions with the appropriate actions here.
@@ -272,6 +272,7 @@ CoherenceProtocol::CoherenceProtocol(const string &name,
     tt[Invalid][MC::WriteReq].onRequest(MC::ReadExReq);
     tt[Invalid][MC::ReadExReq].onRequest(MC::ReadExReq);
     tt[Invalid][MC::SwapReq].onRequest(MC::ReadExReq);
+    tt[Invalid][MC::UpgradeReq].onRequest(MC::UpgradeReq);
     tt[Shared][MC::WriteReq].onRequest(writeToSharedCmd);
     tt[Shared][MC::ReadExReq].onRequest(MC::ReadExReq);
     tt[Shared][MC::SwapReq].onRequest(writeToSharedCmd);

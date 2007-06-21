@@ -36,8 +36,9 @@
 
 using namespace std;
 
-MSHRQueue::MSHRQueue(int num_entries, int reserve)
-    : numEntries(num_entries + reserve - 1), numReserve(reserve)
+MSHRQueue::MSHRQueue(int num_entries, int reserve, int _index)
+    : numEntries(num_entries + reserve - 1), numReserve(reserve),
+      index(_index)
 {
     allocated = 0;
     inServiceEntries = 0;
@@ -107,14 +108,14 @@ MSHRQueue::findPending(Addr addr, int size) const
 }
 
 MSHR *
-MSHRQueue::allocate(Addr addr, int size, PacketPtr &pkt, bool isFill)
+MSHRQueue::allocate(Addr addr, int size, PacketPtr &pkt)
 {
     assert(!freeList.empty());
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
 
-    mshr->allocate(addr, size, pkt, isFill);
+    mshr->allocate(addr, size, pkt);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
     mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
 

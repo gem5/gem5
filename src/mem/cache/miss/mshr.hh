@@ -136,7 +136,7 @@ public:
      * @param size The number of bytes to request.
      * @param pkt  The original miss.
      */
-    void allocate(Addr addr, int size, PacketPtr pkt, bool isFill);
+    void allocate(Addr addr, int size, PacketPtr pkt);
 
     /**
      * Allocate this MSHR as a buffer for the given request.

@@ -152,40 +152,21 @@ Cache<TagStore,Coherence>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 template<class TagStore, class Coherence>
 MSHR *
 Cache<TagStore,Coherence>::allocateBuffer(PacketPtr pkt, Tick time,
-                                          bool isFill, bool requestBus)
+                                          bool requestBus)
 {
-    int  size = isFill ? blkSize : pkt->getSize();
-    Addr addr = isFill ? tags->blkAlign(pkt->getAddr()) : pkt->getAddr();
+    MSHRQueue *mq = NULL;
 
-    MSHR *mshr = NULL;
-
-    if (pkt->isWrite()) {
+    if (pkt->isWrite() && !pkt->isRead()) {
         /**
          * @todo Add write merging here.
          */
-        mshr = writeBuffer.allocate(addr, size, pkt, isFill);
-        mshr->order = order++;
-
-        if (writeBuffer.isFull()) {
-            setBlocked(Blocked_NoWBBuffers);
-        }
-
-        if (requestBus) {
-            requestMemSideBus(Request_WB, time);
-        }
+        mq = &writeBuffer;
     } else {
-        mshr = mshrQueue.allocate(addr, size, pkt, isFill);
-        mshr->order = order++;
-        if (mshrQueue.isFull()) {
-            setBlocked(Blocked_NoMSHRs);
-        }
-        if (requestBus) {
-            requestMemSideBus(Request_MSHR, time);
-        }
+        mq = &mshrQueue;
     }
 
-    assert(mshr != NULL);
-    return mshr;
+    return allocateBufferInternal(mq, pkt->getAddr(), pkt->getSize(),
+                                  pkt, time, requestBus);
 }
 
 
@@ -193,33 +174,7 @@ template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::markInService(MSHR *mshr)
 {
-    bool unblock = false;
-    BlockedCause cause = NUM_BLOCKED_CAUSES;
-
-    /**
-     * @todo Should include MSHRQueue pointer in MSHR to select the correct
-     * one.
-     */
-    if (mshr->queue == &writeBuffer) {
-        // Forwarding a write/ writeback, don't need to change
-        // the command
-        unblock = writeBuffer.isFull();
-        writeBuffer.markInService(mshr);
-        if (!writeBuffer.havePending()){
-            deassertMemSideBusRequest(Request_WB);
-        }
-        if (unblock) {
-            // Do we really unblock?
-            unblock = !writeBuffer.isFull();
-            cause = Blocked_NoWBBuffers;
-        }
-    } else {
-        assert(mshr->queue == &mshrQueue);
-        unblock = mshrQueue.isFull();
-        mshrQueue.markInService(mshr);
-        if (!mshrQueue.havePending()){
-            deassertMemSideBusRequest(Request_MSHR);
-        }
+    markInServiceInternal(mshr);
 #if 0
         if (mshr->originalCmd == MemCmd::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
@@ -231,14 +186,6 @@ Cache<TagStore,Coherence>::markInService(MSHR *mshr)
             }
         }
 #endif
-        if (unblock) {
-            unblock = !mshrQueue.isFull();
-            cause = Blocked_NoMSHRs;
-        }
-    }
-    if (unblock) {
-        clearBlocked(cause);
-    }
 }
 
 
@@ -275,9 +222,16 @@ Cache<TagStore,Coherence>::squash(int threadNum)
 
 template<class TagStore, class Coherence>
 bool
-Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *blk, int &lat)
+Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 {
+    if (pkt->req->isUncacheable())  {
+        blk = NULL;
+        lat = hitLatency;
+        return false;
+    }
+
     bool satisfied = false;  // assume the worst
+    blk = tags->findBlock(pkt->getAddr(), lat);
 
     if (prefetchAccess) {
         //We are determining prefetches on access stream, call prefetcher
@@ -307,6 +261,8 @@ Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *blk, int &lat)
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
             satisfied = true;
 
+            // Check RMW operations first since both isRead() and
+            // isWrite() will be true for them
             if (pkt->cmd == MemCmd::SwapReq) {
                 cmpAndSwap(blk, pkt);
             } else if (pkt->isWrite()) {
@@ -314,12 +270,16 @@ Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *blk, int &lat)
                     blk->status |= BlkDirty;
                     pkt->writeDataToBlock(blk->data, blkSize);
                 }
-            } else {
-                assert(pkt->isRead());
+            } else if (pkt->isRead()) {
                 if (pkt->isLocked()) {
                     blk->trackLoadLocked(pkt);
                 }
                 pkt->setDataFromBlock(blk->data, blkSize);
+            } else {
+                // Not a read or write... must be an upgrade.  it's OK
+                // to just ack those as long as we have an exclusive
+                // copy at this level.
+                assert(pkt->cmd == MemCmd::UpgradeReq);
             }
         } else {
             // permission violation... nothing to do here, leave unsatisfied
@@ -351,19 +311,24 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
     // we charge hitLatency for doing just about anything here
     Tick time =  curTick + hitLatency;
 
+    if (pkt->memInhibitAsserted()) {
+        DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
+                pkt->getAddr());
+        assert(!pkt->req->isUncacheable());
+        return true;
+    }
+
     if (pkt->req->isUncacheable()) {
-        allocateBuffer(pkt, time, false, true);
+        allocateBuffer(pkt, time, true);
         assert(pkt->needsResponse()); // else we should delete it here??
         return true;
     }
 
     PacketList writebacks;
     int lat = hitLatency;
-    BlkType *blk = tags->findBlock(pkt->getAddr(), lat);
     bool satisfied = false;
 
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
-
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
     if (!mshr) {
@@ -373,6 +338,7 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
         // cache block... a more aggressive system could detect the
         // overlap (if any) and forward data out of the MSHRs, but we
         // don't do that yet)
+        BlkType *blk = NULL;
         satisfied = access(pkt, blk, lat);
     }
 
@@ -401,7 +367,7 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
         PacketPtr wbPkt = writebacks.front();
-        allocateBuffer(wbPkt, time, false, true);
+        allocateBuffer(wbPkt, time, true);
         writebacks.pop_front();
     }
 
@@ -435,7 +401,7 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
             // be changed.
-            allocateBuffer(pkt, time, true, true);
+            allocateMissBuffer(pkt, time, true);
         }
     }
 
@@ -450,52 +416,107 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
 
 
 template<class TagStore, class Coherence>
+PacketPtr
+Cache<TagStore,Coherence>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
+                                        bool needsExclusive)
+{
+    bool blkValid = blk && blk->isValid();
+
+    if (cpu_pkt->req->isUncacheable()) {
+        assert(blk == NULL);
+        return NULL;
+    }
+
+    if (!blkValid &&
+        (cpu_pkt->cmd == MemCmd::Writeback ||
+         cpu_pkt->cmd == MemCmd::UpgradeReq)) {
+            // For now, writebacks from upper-level caches that
+            // completely miss in the cache just go through. If we had
+            // "fast write" support (where we could write the whole
+            // block w/o fetching new data) we might want to allocate
+            // on writeback misses instead.
+        return NULL;
+    }
+
+    MemCmd cmd;
+    const bool useUpgrades = true;
+    if (blkValid && useUpgrades) {
+        // only reason to be here is that blk is shared
+        // (read-only) and we need exclusive
+        assert(needsExclusive && !blk->isWritable());
+        cmd = MemCmd::UpgradeReq;
+    } else {
+        // block is invalid
+        cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
+    }
+    PacketPtr pkt = new Packet(cpu_pkt->req, cmd, Packet::Broadcast, blkSize);
+
+    pkt->allocate();
+    return pkt;
+}
+
+
+template<class TagStore, class Coherence>
 Tick
 Cache<TagStore,Coherence>::atomicAccess(PacketPtr pkt)
 {
+    int lat = hitLatency;
+
+    if (pkt->memInhibitAsserted()) {
+        DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
+                pkt->getAddr());
+        assert(!pkt->req->isUncacheable());
+        return lat;
+    }
+
     // should assert here that there are no outstanding MSHRs or
     // writebacks... that would mean that someone used an atomic
     // access in timing mode
 
-    if (pkt->req->isUncacheable()) {
-        // Uncacheables just go through
-        return memSidePort->sendAtomic(pkt);
-    }
+    BlkType *blk = NULL;
 
-    PacketList writebacks;
-    int lat = hitLatency;
-    BlkType *blk = tags->findBlock(pkt->getAddr(), lat);
-    bool satisfied = access(pkt, blk, lat);
-
-    if (!satisfied) {
+    if (!access(pkt, blk, lat)) {
         // MISS
-        CacheBlk::State old_state = (blk) ? blk->status : 0;
-        MemCmd cmd = coherence->getBusCmd(pkt->cmd, old_state);
-        Packet busPkt = Packet(pkt->req, cmd, Packet::Broadcast, blkSize);
-        busPkt.allocate();
+        PacketPtr busPkt = getBusPacket(pkt, blk, pkt->needsExclusive());
 
-        DPRINTF(Cache, "Sending a atomic %s for %x\n",
-                busPkt.cmdString(), busPkt.getAddr());
+        bool isCacheFill = (busPkt != NULL);
 
-        lat += memSidePort->sendAtomic(&busPkt);
+        if (busPkt == NULL) {
+            // just forwarding the same request to the next level
+            // no local cache operation involved
+            busPkt = pkt;
+        }
+
+        DPRINTF(Cache, "Sending an atomic %s for %x\n",
+                busPkt->cmdString(), busPkt->getAddr());
+
+#if TRACING_ON
+        CacheBlk::State old_state = blk ? blk->status : 0;
+#endif
+
+        lat += memSidePort->sendAtomic(busPkt);
 
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
-                busPkt.cmdString(), busPkt.getAddr(), old_state);
+                busPkt->cmdString(), busPkt->getAddr(), old_state);
 
-        blk = handleFill(&busPkt, blk, writebacks);
-        bool status = satisfyCpuSideRequest(pkt, blk);
-        assert(status);
+        if (isCacheFill) {
+            PacketList writebacks;
+            blk = handleFill(busPkt, blk, writebacks);
+            bool status = satisfyCpuSideRequest(pkt, blk);
+            assert(status);
+            delete busPkt;
+
+            // Handle writebacks if needed
+            while (!writebacks.empty()){
+                PacketPtr wbPkt = writebacks.front();
+                memSidePort->sendAtomic(wbPkt);
+                writebacks.pop_front();
+                delete wbPkt;
+            }
+        }
     }
 
     // We now have the block one way or another (hit or completed miss)
-
-    // Handle writebacks if needed
-    while (!writebacks.empty()){
-        PacketPtr wbPkt = writebacks.front();
-        memSidePort->sendAtomic(wbPkt);
-        writebacks.pop_front();
-        delete wbPkt;
-    }
 
     if (pkt->needsResponse()) {
         pkt->makeAtomicResponse();
@@ -553,211 +574,6 @@ Cache<TagStore,Coherence>::functionalAccess(PacketPtr pkt,
 //
 /////////////////////////////////////////////////////
 
-template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt, Tick time)
-{
-    MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
-#ifndef NDEBUG
-    int num_targets = mshr->getNumTargets();
-#endif
-
-    bool unblock = false;
-    bool unblock_target = false;
-    BlockedCause cause = NUM_BLOCKED_CAUSES;
-
-    if (mshr->isCacheFill) {
-#if 0
-        mshr_miss_latency[mshr->originalCmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
-            curTick - pkt->time;
-#endif
-        // targets were handled in the cache tags
-        if (mshr == noTargetMSHR) {
-            // we always clear at least one target
-            unblock_target = true;
-            cause = Blocked_NoTargets;
-            noTargetMSHR = NULL;
-        }
-
-        if (mshr->hasTargets()) {
-            // Didn't satisfy all the targets, need to resend
-            mshrQueue.markPending(mshr);
-            mshr->order = order++;
-            requestMemSideBus(Request_MSHR, time);
-        }
-        else {
-            unblock = mshrQueue.isFull();
-            mshrQueue.deallocate(mshr);
-            if (unblock) {
-                unblock = !mshrQueue.isFull();
-                cause = Blocked_NoMSHRs;
-            }
-        }
-    } else {
-        if (pkt->req->isUncacheable()) {
-            mshr_uncacheable_lat[pkt->cmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
-                curTick - pkt->time;
-        }
-        if (mshr->hasTargets() && pkt->req->isUncacheable()) {
-            // Should only have 1 target if we had any
-            assert(num_targets == 1);
-            MSHR::Target *target = mshr->getTarget();
-            assert(target->cpuSide);
-            mshr->popTarget();
-            if (pkt->isRead()) {
-                target->pkt->setData(pkt->getPtr<uint8_t>());
-            }
-            cpuSidePort->respond(target->pkt, time);
-            assert(!mshr->hasTargets());
-        }
-        else if (mshr->hasTargets()) {
-            //Must be a no_allocate with possibly more than one target
-            assert(!mshr->isCacheFill);
-            while (mshr->hasTargets()) {
-                MSHR::Target *target = mshr->getTarget();
-                assert(target->isCpuSide());
-                mshr->popTarget();
-                if (pkt->isRead()) {
-                    target->pkt->setData(pkt->getPtr<uint8_t>());
-                }
-                cpuSidePort->respond(target->pkt, time);
-            }
-        }
-
-        if (pkt->isWrite()) {
-            // If the wrtie buffer is full, we might unblock now
-            unblock = writeBuffer.isFull();
-            writeBuffer.deallocate(mshr);
-            if (unblock) {
-                // Did we really unblock?
-                unblock = !writeBuffer.isFull();
-                cause = Blocked_NoWBBuffers;
-            }
-        } else {
-            unblock = mshrQueue.isFull();
-            mshrQueue.deallocate(mshr);
-            if (unblock) {
-                unblock = !mshrQueue.isFull();
-                cause = Blocked_NoMSHRs;
-            }
-        }
-    }
-    if (unblock || unblock_target) {
-        clearBlocked(cause);
-    }
-}
-
-
-template<class TagStore, class Coherence>
-void
-Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
-{
-    Tick time = curTick + hitLatency;
-    MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
-    assert(mshr);
-    if (pkt->result == Packet::Nacked) {
-        //pkt->reinitFromRequest();
-        warn("NACKs from devices not connected to the same bus "
-             "not implemented\n");
-        return;
-    }
-    assert(pkt->result != Packet::BadAddress);
-    assert(pkt->result == Packet::Success);
-    DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
-
-    if (mshr->isCacheFill) {
-        DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
-                pkt->getAddr());
-        BlkType *blk = tags->findBlock(pkt->getAddr());
-        PacketList writebacks;
-        blk = handleFill(pkt, blk, writebacks);
-        satisfyMSHR(mshr, pkt, blk);
-        // copy writebacks to write buffer
-        while (!writebacks.empty()) {
-            PacketPtr wbPkt = writebacks.front();
-            allocateBuffer(wbPkt, time, false, true);
-            writebacks.pop_front();
-        }
-    }
-    handleResponse(pkt, time);
-}
-
-
-
-
-template<class TagStore, class Coherence>
-PacketPtr
-Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
-{
-    assert(blk && blk->isValid() && blk->isDirty());
-
-    writebacks[0/*pkt->req->getThreadNum()*/]++;
-
-    Request *writebackReq =
-        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
-    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
-    writeback->allocate();
-    std::memcpy(writeback->getPtr<uint8_t>(), blk->data, blkSize);
-
-    blk->status &= ~BlkDirty;
-    return writeback;
-}
-
-
-// Note that the reason we return a list of writebacks rather than
-// inserting them directly in the write buffer is that this function
-// is called by both atomic and timing-mode accesses, and in atomic
-// mode we don't mess with the write buffer (we just perform the
-// writebacks atomically once the original request is complete).
-template<class TagStore, class Coherence>
-typename Cache<TagStore,Coherence>::BlkType*
-Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
-                                      PacketList &writebacks)
-{
-    Addr addr = pkt->getAddr();
-
-    if (blk == NULL) {
-
-        // need to do a replacement
-        blk = tags->findReplacement(addr, writebacks);
-        if (blk->isValid()) {
-            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
-                    tags->regenerateBlkAddr(blk->tag, blk->set), addr,
-                    blk->isDirty() ? "writeback" : "clean");
-
-            if (blk->isDirty()) {
-                // Save writeback packet for handling by caller
-                writebacks.push_back(writebackBlk(blk));
-            }
-        }
-
-        blk->tag = tags->extractTag(addr);
-        blk->status = coherence->getNewState(pkt);
-        assert(pkt->isRead());
-    } else {
-        // existing block... probably an upgrade
-        assert(blk->tag == tags->extractTag(addr));
-        // either we're getting new data or the block should already be valid
-        assert(pkt->isRead() || blk->isValid());
-        CacheBlk::State old_state = blk->status;
-        blk->status = coherence->getNewState(pkt, old_state);
-        if (blk->status != old_state)
-            DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
-                    addr, old_state, blk->status);
-        else
-            warn("Changing state to same value\n");
-    }
-
-    // if we got new data, copy it in
-    if (pkt->isRead()) {
-        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
-    }
-
-    blk->whenReady = pkt->finishTime;
-
-    return blk;
-}
-
 
 template<class TagStore, class Coherence>
 bool
@@ -798,7 +614,7 @@ Cache<TagStore,Coherence>::satisfyTarget(MSHR::Target *target, BlkType *blk)
 }
 
 template<class TagStore, class Coherence>
-void
+bool
 Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
                                        BlkType *blk)
 {
@@ -818,7 +634,11 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
             // Invalid access, need to do another request
             // can occur if block is invalidated, or not correct
             // permissions
-            break;
+            MSHRQueue *mq = mshr->queue;
+            mq->markPending(mshr);
+            mshr->order = order++;
+            requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+            return false;
         }
 
 
@@ -840,6 +660,159 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
         cpuSidePort->respond(target->pkt, completion_time);
         mshr->popTarget();
     }
+
+    return true;
+}
+
+
+template<class TagStore, class Coherence>
+void
+Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
+{
+    Tick time = curTick + hitLatency;
+    MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+    assert(mshr);
+    if (pkt->result == Packet::Nacked) {
+        //pkt->reinitFromRequest();
+        warn("NACKs from devices not connected to the same bus "
+             "not implemented\n");
+        return;
+    }
+    assert(pkt->result != Packet::BadAddress);
+    assert(pkt->result == Packet::Success);
+    DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
+
+    MSHRQueue *mq = mshr->queue;
+    bool wasFull = mq->isFull();
+
+    if (mshr == noTargetMSHR) {
+        // we always clear at least one target
+        clearBlocked(Blocked_NoTargets);
+        noTargetMSHR = NULL;
+    }
+
+    // Can we deallocate MSHR when done?
+    bool deallocate = false;
+
+    if (mshr->isCacheFill) {
+#if 0
+        mshr_miss_latency[mshr->originalCmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
+            curTick - pkt->time;
+#endif
+        DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
+                pkt->getAddr());
+        BlkType *blk = tags->findBlock(pkt->getAddr());
+        PacketList writebacks;
+        blk = handleFill(pkt, blk, writebacks);
+        deallocate = satisfyMSHR(mshr, pkt, blk);
+        // copy writebacks to write buffer
+        while (!writebacks.empty()) {
+            PacketPtr wbPkt = writebacks.front();
+            allocateBuffer(wbPkt, time, true);
+            writebacks.pop_front();
+        }
+    } else {
+        if (pkt->req->isUncacheable()) {
+            mshr_uncacheable_lat[pkt->cmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
+                curTick - pkt->time;
+        }
+
+        while (mshr->hasTargets()) {
+            MSHR::Target *target = mshr->getTarget();
+            assert(target->isCpuSide());
+            mshr->popTarget();
+            if (pkt->isRead()) {
+                target->pkt->setData(pkt->getPtr<uint8_t>());
+            }
+            cpuSidePort->respond(target->pkt, time);
+        }
+        assert(!mshr->hasTargets());
+        deallocate = true;
+    }
+
+    if (deallocate) {
+        mq->deallocate(mshr);
+        if (wasFull && !mq->isFull()) {
+            clearBlocked((BlockedCause)mq->index);
+        }
+    }
+}
+
+
+
+
+template<class TagStore, class Coherence>
+PacketPtr
+Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
+{
+    assert(blk && blk->isValid() && blk->isDirty());
+
+    writebacks[0/*pkt->req->getThreadNum()*/]++;
+
+    Request *writebackReq =
+        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
+    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
+    writeback->allocate();
+    std::memcpy(writeback->getPtr<uint8_t>(), blk->data, blkSize);
+
+    blk->status &= ~BlkDirty;
+    return writeback;
+}
+
+
+// Note that the reason we return a list of writebacks rather than
+// inserting them directly in the write buffer is that this function
+// is called by both atomic and timing-mode accesses, and in atomic
+// mode we don't mess with the write buffer (we just perform the
+// writebacks atomically once the original request is complete).
+template<class TagStore, class Coherence>
+typename Cache<TagStore,Coherence>::BlkType*
+Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
+                                      PacketList &writebacks)
+{
+    Addr addr = pkt->getAddr();
+
+    if (blk == NULL) {
+        // better have read new data
+        assert(pkt->isRead());
+
+        // need to do a replacement
+        blk = tags->findReplacement(addr, writebacks);
+        if (blk->isValid()) {
+            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
+                    tags->regenerateBlkAddr(blk->tag, blk->set), addr,
+                    blk->isDirty() ? "writeback" : "clean");
+
+            if (blk->isDirty()) {
+                // Save writeback packet for handling by caller
+                writebacks.push_back(writebackBlk(blk));
+            }
+        }
+
+        blk->tag = tags->extractTag(addr);
+        blk->status = coherence->getNewState(pkt);
+    } else {
+        // existing block... probably an upgrade
+        assert(blk->tag == tags->extractTag(addr));
+        // either we're getting new data or the block should already be valid
+        assert(pkt->isRead() || blk->isValid());
+        CacheBlk::State old_state = blk->status;
+        blk->status = coherence->getNewState(pkt, old_state);
+        if (blk->status != old_state)
+            DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
+                    addr, old_state, blk->status);
+        else
+            warn("Changing state to same value\n");
+    }
+
+    // if we got new data, copy it in
+    if (pkt->isRead()) {
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+    }
+
+    blk->whenReady = pkt->finishTime;
+
+    return blk;
 }
 
 
@@ -1052,7 +1025,7 @@ Cache<TagStore,Coherence>::getNextMSHR()
             // (hwpf_mshr_misses)
             mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
             // Don't request bus, since we already have it
-            return allocateBuffer(pkt, curTick, true, false);
+            return allocateMissBuffer(pkt, curTick, false);
         }
     }
 
@@ -1062,7 +1035,7 @@ Cache<TagStore,Coherence>::getNextMSHR()
 
 template<class TagStore, class Coherence>
 PacketPtr
-Cache<TagStore,Coherence>::getPacket()
+Cache<TagStore,Coherence>::getTimingPacket()
 {
     MSHR *mshr = getNextMSHR();
 
@@ -1073,30 +1046,21 @@ Cache<TagStore,Coherence>::getPacket()
     BlkType *blk = tags->findBlock(mshr->addr);
 
     // use request from 1st target
-    MSHR::Target *tgt1 = mshr->getTarget();
-    PacketPtr tgt1_pkt = tgt1->pkt;
-    PacketPtr pkt;
+    PacketPtr tgt_pkt = mshr->getTarget()->pkt;
+    PacketPtr pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive);
 
-    if (mshr->isCacheFill) {
-        MemCmd cmd;
-        if (blk && blk->isValid()) {
-            // only reason to be here is that blk is shared
-            // (read-only) and we need exclusive
-            assert(mshr->needsExclusive && !blk->isWritable());
-            cmd = MemCmd::UpgradeReq;
-        } else {
-            // block is invalid
-            cmd = mshr->needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
+    mshr->isCacheFill = (pkt != NULL);
+
+    if (pkt == NULL) {
+        // make copy of current packet to forward
+        pkt = new Packet(tgt_pkt);
+        pkt->allocate();
+        if (pkt->isWrite()) {
+            pkt->setData(tgt_pkt->getPtr<uint8_t>());
         }
-        pkt = new Packet(tgt1_pkt->req, cmd, Packet::Broadcast);
-    } else {
-        assert(blk == NULL);
-        assert(mshr->getNumTargets() == 1);
-        pkt = new Packet(tgt1_pkt->req, tgt1_pkt->cmd, Packet::Broadcast);
     }
 
     pkt->senderState = mshr;
-    pkt->allocate();
     return pkt;
 }
 
@@ -1243,7 +1207,7 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
         waitingOnRetry = !success;
     } else {
         // check for non-response packets (requests & writebacks)
-        PacketPtr pkt = myCache()->getPacket();
+        PacketPtr pkt = myCache()->getTimingPacket();
         MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
         bool success = sendTiming(pkt);

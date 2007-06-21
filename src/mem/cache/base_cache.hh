@@ -54,41 +54,49 @@
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 
-/**
- * Reasons for Caches to be Blocked.
- */
-enum BlockedCause{
-    Blocked_NoMSHRs,
-    Blocked_NoTargets,
-    Blocked_NoWBBuffers,
-    Blocked_Coherence,
-    NUM_BLOCKED_CAUSES
-};
-
-/**
- * Reasons for cache to request a bus.
- */
-enum RequestCause{
-    Request_MSHR,
-    Request_WB,
-    Request_Coherence,
-    Request_PF
-};
-
 class MSHR;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
 class BaseCache : public MemObject
 {
+    /**
+     * Indexes to enumerate the MSHR queues.
+     */
+    enum MSHRQueueIndex {
+        MSHRQueue_MSHRs,
+        MSHRQueue_WriteBuffer
+    };
+
+    /**
+     * Reasons for caches to be blocked.
+     */
+    enum BlockedCause {
+        Blocked_NoMSHRs = MSHRQueue_MSHRs,
+        Blocked_NoWBBuffers = MSHRQueue_WriteBuffer,
+        Blocked_NoTargets,
+        NUM_BLOCKED_CAUSES
+    };
+
+  public:
+    /**
+     * Reasons for cache to request a bus.
+     */
+    enum RequestCause {
+        Request_MSHR = MSHRQueue_MSHRs,
+        Request_WB = MSHRQueue_WriteBuffer,
+        Request_PF,
+        NUM_REQUEST_CAUSES
+    };
+
+  private:
+
     class CachePort : public SimpleTimingPort
     {
       public:
         BaseCache *cache;
 
       protected:
-        Event *responseEvent;
-
         CachePort(const std::string &_name, BaseCache *_cache);
 
         virtual void recvStatusChange(Status status);
@@ -153,6 +161,36 @@ class BaseCache : public MemObject
 
     /** Write/writeback buffer */
     MSHRQueue writeBuffer;
+
+    MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
+                                 PacketPtr pkt, Tick time, bool requestBus)
+    {
+        MSHR *mshr = mq->allocate(addr, size, pkt);
+        mshr->order = order++;
+
+        if (mq->isFull()) {
+            setBlocked((BlockedCause)mq->index);
+        }
+
+        if (requestBus) {
+            requestMemSideBus((RequestCause)mq->index, time);
+        }
+
+        return mshr;
+    }
+
+    void markInServiceInternal(MSHR *mshr)
+    {
+        MSHRQueue *mq = mshr->queue;
+        bool wasFull = mq->isFull();
+        mq->markInService(mshr);
+        if (!mq->havePending()) {
+            deassertMemSideBusRequest((RequestCause)mq->index);
+        }
+        if (wasFull && !mq->isFull()) {
+            clearBlocked((BlockedCause)mq->index);
+        }
+    }
 
     /** Block size of this cache */
     const int blkSize;
@@ -380,6 +418,31 @@ class BaseCache : public MemObject
 
 
     Addr blockAlign(Addr addr) const { return (addr & ~(blkSize - 1)); }
+
+
+    MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
+    {
+        return allocateBufferInternal(&mshrQueue,
+                                      blockAlign(pkt->getAddr()), blkSize,
+                                      pkt, time, requestBus);
+    }
+
+    MSHR *allocateBuffer(PacketPtr pkt, Tick time, bool requestBus)
+    {
+        MSHRQueue *mq = NULL;
+
+        if (pkt->isWrite() && !pkt->isRead()) {
+            /**
+             * @todo Add write merging here.
+             */
+            mq = &writeBuffer;
+        } else {
+            mq = &mshrQueue;
+        }
+
+        return allocateBufferInternal(mq, pkt->getAddr(), pkt->getSize(),
+                                      pkt, time, requestBus);
+    }
 
 
     /**

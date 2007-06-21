@@ -35,8 +35,6 @@
 #include <set>
 
 #include "base/statistics.hh"
-//#include "mem/functional/functional.hh"
-//#include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -50,9 +48,6 @@ class MemTest : public MemObject
   public:
 
     MemTest(const std::string &name,
-//	    MemInterface *_cache_interface,
-//	    PhysicalMemory *main_mem,
-//	    PhysicalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
             unsigned _percentFunctional,
@@ -136,12 +131,7 @@ class MemTest : public MemObject
         uint8_t *data;
     };
 
-//    Request *dataReq;
     PacketPtr retryPkt;
-//    MemInterface *cacheInterface;
-//    PhysicalMemory *mainMem;
-//    PhysicalMemory *checkMem;
-//    SimpleThread *thread;
 
     bool accessRetry;
 

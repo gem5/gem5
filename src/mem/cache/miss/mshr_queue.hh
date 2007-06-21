@@ -74,6 +74,9 @@ class MSHRQueue
     int allocated;
     /** The number of entries that have been forwarded to the bus. */
     int inServiceEntries;
+    /** The index of this queue within the cache (MSHR queue vs. write
+     * buffer). */
+    const int index;
 
     /**
      * Create a queue with a given number of entries.
@@ -81,7 +84,7 @@ class MSHRQueue
      * @param reserve The minimum number of entries needed to satisfy
      * any access.
      */
-    MSHRQueue(int num_entries, int reserve = 1);
+    MSHRQueue(int num_entries, int reserve, int index);
 
     /** Destructor */
     ~MSHRQueue();
@@ -118,7 +121,7 @@ class MSHRQueue
      *
      * @pre There are free entries.
      */
-    MSHR *allocate(Addr addr, int size, PacketPtr &pkt, bool isFill);
+    MSHR *allocate(Addr addr, int size, PacketPtr &pkt);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the

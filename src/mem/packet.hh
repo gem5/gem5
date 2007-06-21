@@ -67,7 +67,6 @@ class MemCmd
         WriteReq,
         WriteResp,
         Writeback,
-        WritebackAck,
         SoftPFReq,
         HardPFReq,
         SoftPFResp,
@@ -75,6 +74,7 @@ class MemCmd
         WriteInvalidateReq,
         WriteInvalidateResp,
         UpgradeReq,
+        UpgradeResp,
         ReadExReq,
         ReadExResp,
         LoadLockedReq,
@@ -100,7 +100,6 @@ class MemCmd
         NeedsResponse,  //!< Requester needs response from target
         IsSWPrefetch,
         IsHWPrefetch,
-        IsUpgrade,
         IsLocked,       //!< Alpha/MIPS LL or SC access
         HasData,        //!< There is an associated payload
         NUM_COMMAND_ATTRIBUTES

@@ -50,8 +50,9 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
 
 BaseCache::BaseCache(const std::string &name, Params &params)
     : MemObject(name),
-      mshrQueue(params.numMSHRs, 4),
-      writeBuffer(params.numWriteBuffers, params.numMSHRs+1000),
+      mshrQueue(params.numMSHRs, 4, MSHRQueue_MSHRs),
+      writeBuffer(params.numWriteBuffers, params.numMSHRs+1000,
+                  MSHRQueue_WriteBuffer),
       blkSize(params.blkSize),
       numTarget(params.numTargets),
       blocked(0),
@@ -127,6 +128,7 @@ BaseCache::init()
         panic("Cache not hooked up on both sides\n");
     cpuSidePort->sendStatusChange(Port::RangeChange);
 }
+
 
 void
 BaseCache::regStats()

@@ -60,6 +60,11 @@ parser.add_option("-u", "--uncacheable", type="int", default=0,
                   help="Target percentage of uncacheable accesses "
                   "[default: %default]")
 
+parser.add_option("--progress", type="int", default=1000,
+                  metavar="NLOADS",
+                  help="Progress message interval "
+                  "[default: %default]")
+
 (options, args) = parser.parse_args()
 
 if args:
@@ -112,7 +117,7 @@ if options.numtesters > block_size:
 cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads,
                  percent_functional=options.functional,
                  percent_uncacheable=options.uncacheable,
-                 progress_interval=1000)
+                 progress_interval=options.progress)
          for i in xrange(options.numtesters) ]
 
 # system simulated

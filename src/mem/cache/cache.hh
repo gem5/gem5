@@ -179,7 +179,7 @@ class Cache : public BaseCache
      * @return Pointer to the cache block touched by the request. NULL if it
      * was a miss.
      */
-    bool access(PacketPtr pkt, BlkType *blk, int & lat);
+    bool access(PacketPtr pkt, BlkType *&blk, int &lat);
 
     /**
      *Handle doing the Compare and Swap function for SPARC.
@@ -201,7 +201,7 @@ class Cache : public BaseCache
 
     bool satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
     bool satisfyTarget(MSHR::Target *target, BlkType *blk);
-    void satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
+    bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
     void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data);
 
@@ -310,15 +310,16 @@ class Cache : public BaseCache
      * @param isFill Whether to fetch & allocate a block
      *               or just forward the request.
      */
-    MSHR *allocateBuffer(PacketPtr pkt, Tick time, bool isFill,
-                         bool requestBus);
+    MSHR *allocateBuffer(PacketPtr pkt, Tick time, bool requestBus);
 
     /**
      * Selects a outstanding request to service.
      * @return The request to service, NULL if none found.
      */
+    PacketPtr getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
+                           bool needsExclusive);
     MSHR *getNextMSHR();
-    PacketPtr getPacket();
+    PacketPtr getTimingPacket();
 
     /**
      * Marks a request as in service (sent on the bus). This can have side
@@ -327,13 +328,6 @@ class Cache : public BaseCache
      * @param pkt The request that was sent on the bus.
      */
     void markInService(MSHR *mshr);
-
-    /**
-     * Collect statistics and free resources of a satisfied request.
-     * @param pkt The request that has been satisfied.
-     * @param time The time when the request is satisfied.
-     */
-    void handleResponse(PacketPtr pkt, Tick time);
 
     /**
      * Perform the given writeback request.

@@ -54,12 +54,12 @@ MSHR::MSHR()
 }
 
 void
-MSHR::allocate(Addr _addr, int _size, PacketPtr target, bool cacheFill)
+MSHR::allocate(Addr _addr, int _size, PacketPtr target)
 {
     addr = _addr;
     size = _size;
     assert(target);
-    isCacheFill = cacheFill;
+    isCacheFill = false;
     needsExclusive = target->needsExclusive();
     _isUncacheable = target->req->isUncacheable();
     inService = false;
