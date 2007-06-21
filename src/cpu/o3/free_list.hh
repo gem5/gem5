@@ -168,7 +168,9 @@ SimpleFreeList::addReg(PhysRegIndex freed_reg)
         if (freed_reg != TheISA::ZeroReg)
             freeIntRegs.push(freed_reg);
     } else if (freed_reg < numPhysicalRegs) {
+#if THE_ISA == ALPHA_ISA
         if (freed_reg != (TheISA::ZeroReg + numPhysicalIntRegs))
+#endif
             freeFloatRegs.push(freed_reg);
     }
 }

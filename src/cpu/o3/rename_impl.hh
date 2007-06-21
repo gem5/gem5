@@ -356,47 +356,12 @@ DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
     }
 
     // Clear the instruction list and skid buffer in case they have any
-    // insts in them. Since we support multiple ISAs, we cant just:
-    // "insts[tid].clear();" or "skidBuffer[tid].clear()" since there is
-    // a possible delay slot inst for different architectures
-    // insts[tid].clear();
-#if ISA_HAS_DELAY_SLOT
-    DPRINTF(Rename, "[tid:%i] Squashing incoming decode instructions until "
-            "[sn:%i].\n",tid, squash_seq_num);
-    ListIt ilist_it = insts[tid].begin();
-    while (ilist_it != insts[tid].end()) {
-        if ((*ilist_it)->seqNum > squash_seq_num) {
-            (*ilist_it)->setSquashed();
-            DPRINTF(Rename, "Squashing incoming decode instruction, "
-                    "[tid:%i] [sn:%i] PC %08p.\n", tid, (*ilist_it)->seqNum, (*ilist_it)->PC);
-        }
-        ilist_it++;
-    }
-#else
+    // insts in them.
     insts[tid].clear();
-#endif
 
     // Clear the skid buffer in case it has any data in it.
-    // See comments above.
-    //     skidBuffer[tid].clear();
-#if ISA_HAS_DELAY_SLOT
-    DPRINTF(Rename, "[tid:%i] Squashing incoming skidbuffer instructions "
-            "until [sn:%i].\n", tid, squash_seq_num);
-    ListIt slist_it = skidBuffer[tid].begin();
-    while (slist_it != skidBuffer[tid].end()) {
-        if ((*slist_it)->seqNum > squash_seq_num) {
-            (*slist_it)->setSquashed();
-            DPRINTF(Rename, "Squashing skidbuffer instruction, [tid:%i] [sn:%i]"
-                    "PC %08p.\n", tid, (*slist_it)->seqNum, (*slist_it)->PC);
-        }
-        slist_it++;
-    }
-    resumeUnblocking = (skidBuffer[tid].size() != 0);
-    DPRINTF(Rename, "Resume unblocking set to %s\n",
-            resumeUnblocking ? "true" : "false");
-#else
     skidBuffer[tid].clear();
-#endif
+
     doSquash(squash_seq_num, tid);
 }
 
@@ -776,10 +741,8 @@ DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
 #ifdef DEBUG
-#if !ISA_HAS_DELAY_SLOT
     for (int i=0; i < numThreads; i++)
         assert(insts[i].empty());
-#endif
 #endif
     for (int i = 0; i < insts_from_decode; ++i) {
         DynInstPtr inst = fromDecode->insts[i];
@@ -1000,6 +963,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", src_reg, flat_src_reg);
         }
 
         inst->flattenSrcReg(src_idx, flat_src_reg);
@@ -1016,9 +980,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
 
         // See if the register is ready or not.
         if (scoreboard->getReg(renamed_reg) == true) {
-            DPRINTF(Rename, "[tid:%u]: Register is ready.\n", tid);
+            DPRINTF(Rename, "[tid:%u]: Register %d is ready.\n", tid, renamed_reg);
 
             inst->markSrcRegReady(src_idx);
+        } else {
+            DPRINTF(Rename, "[tid:%u]: Register %d is not ready.\n", tid, renamed_reg);
         }
 
         ++renameRenameLookups;
@@ -1045,6 +1011,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_dest_reg = dest_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", dest_reg, flat_dest_reg);
         }
 
         inst->flattenDestReg(dest_idx, flat_dest_reg);
@@ -1248,13 +1215,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
         DPRINTF(Rename, "[tid:%u]: Squashing instructions due to squash from "
                 "commit.\n", tid);
 
-#if ISA_HAS_DELAY_SLOT
-        InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
-#else
-        InstSeqNum squashed_seq_num = fromCommit->commitInfo[tid].doneSeqNum;
-#endif
-
-        squash(squashed_seq_num, tid);
+        squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
 
         return true;
     }

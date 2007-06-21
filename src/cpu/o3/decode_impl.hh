@@ -49,8 +49,6 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, Params *params)
         stalls[i].rename = false;
         stalls[i].iew = false;
         stalls[i].commit = false;
-
-        squashAfterDelaySlot[i] = false;
     }
 
     // @todo: Make into a parameter
@@ -275,20 +273,16 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     ///explicitly for ISAs with delay slots.
     toFetch->decodeInfo[tid].nextNPC =
         inst->branchTarget() + sizeof(TheISA::MachInst);
+    toFetch->decodeInfo[tid].nextMicroPC = inst->readMicroPC();
 #if ISA_HAS_DELAY_SLOT
     toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
         (inst->readNextPC() + sizeof(TheISA::MachInst));
-
-    toFetch->decodeInfo[tid].bdelayDoneSeqNum = bdelayDoneSeqNum[tid];
-    squashAfterDelaySlot[tid] = false;
-
-    InstSeqNum squash_seq_num = bdelayDoneSeqNum[tid];
 #else
     toFetch->decodeInfo[tid].branchTaken =
         inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
+#endif
 
     InstSeqNum squash_seq_num = inst->seqNum;
-#endif
 
     // Might have to tell fetch to unblock.
     if (decodeStatus[tid] == Blocked ||
@@ -309,30 +303,10 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
     // Clear the instruction list and skid buffer in case they have any
     // insts in them.
     while (!insts[tid].empty()) {
-
-#if ISA_HAS_DELAY_SLOT
-        if (insts[tid].front()->seqNum <= squash_seq_num) {
-            DPRINTF(Decode, "[tid:%i]: Cannot remove incoming decode "
-                    "instructions before delay slot [sn:%i]. %i insts"
-                    "left in decode.\n", tid, squash_seq_num,
-                    insts[tid].size());
-            break;
-        }
-#endif
         insts[tid].pop();
     }
 
     while (!skidBuffer[tid].empty()) {
-
-#if ISA_HAS_DELAY_SLOT
-        if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
-            DPRINTF(Decode, "[tid:%i]: Cannot remove skidBuffer "
-                    "instructions before delay slot [sn:%i]. %i insts"
-                    "left in decode.\n", tid, squash_seq_num,
-                    insts[tid].size());
-            break;
-        }
-#endif
         skidBuffer[tid].pop();
     }
 
@@ -760,47 +734,12 @@ DefaultDecode<Impl>::decodeInsts(unsigned tid)
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
-#if !ISA_HAS_DELAY_SLOT
                 squash(inst, inst->threadNumber);
                 Addr target = inst->branchTarget();
-                inst->setPredTarg(target, target + sizeof(TheISA::MachInst));
+                //The micro pc after an instruction level branch should be 0
+                inst->setPredTarg(target, target + sizeof(TheISA::MachInst), 0);
                 break;
-#else
-                // If mispredicted as taken, then ignore delay slot
-                // instruction... else keep delay slot and squash
-                // after it is sent to rename
-                if (inst->readPredTaken() && inst->isCondDelaySlot()) {
-                    DPRINTF(Decode, "[tid:%i]: Conditional delay slot inst."
-                            "[sn:%i] PC %#x mispredicted as taken.\n", tid,
-                            inst->seqNum, inst->PC);
-                    bdelayDoneSeqNum[tid] = inst->seqNum;
-                    squash(inst, inst->threadNumber);
-                    Addr target = inst->branchTarget();
-                    inst->setPredTarg(target,
-                            target + sizeof(TheISA::MachInst));
-                    break;
-                } else {
-                    DPRINTF(Decode, "[tid:%i]: Misprediction detected at "
-                            "[sn:%i] PC %#x, will squash after delay slot "
-                            "inst. is sent to Rename\n",
-                            tid, inst->seqNum, inst->PC);
-                    bdelayDoneSeqNum[tid] = inst->seqNum + 1;
-                    squashAfterDelaySlot[tid] = true;
-                    squashInst[tid] = inst;
-                    continue;
-                }
-#endif
             }
-        }
-
-        if (squashAfterDelaySlot[tid]) {
-            assert(!inst->isSquashed());
-            squash(squashInst[tid], squashInst[tid]->threadNumber);
-            Addr target = squashInst[tid]->branchTarget();
-            squashInst[tid]->setPredTarg(target,
-                    target + sizeof(TheISA::MachInst));
-            assert(!inst->isSquashed());
-            break;
         }
     }
 

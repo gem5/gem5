@@ -73,8 +73,13 @@ class AlphaDynInst : public BaseDynInst<Impl>
 
   public:
     /** BaseDynInst constructor given a binary instruction. */
-    AlphaDynInst(ExtMachInst inst, Addr PC, Addr NPC,
-                 Addr Pred_PC, Addr Pred_NPC,
+    AlphaDynInst(StaticInstPtr staticInst, Addr PC, Addr NPC, Addr microPC,
+                 Addr Pred_PC, Addr Pred_NPC, Addr Pred_MicroPC,
+                 InstSeqNum seq_num, O3CPU *cpu);
+
+    /** BaseDynInst constructor given a binary instruction. */
+    AlphaDynInst(ExtMachInst inst, Addr PC, Addr NPC, Addr microPC,
+                 Addr Pred_PC, Addr Pred_NPC, Addr Pred_MicroPC,
                  InstSeqNum seq_num, O3CPU *cpu);
 
     /** BaseDynInst constructor given a static inst pointer. */

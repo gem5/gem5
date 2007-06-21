@@ -69,7 +69,6 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, Params *params)
         dispatchStatus[i] = Running;
         stalls[i].commit = false;
         fetchRedirect[i] = false;
-        bdelayDoneSeqNum[i] = 0;
     }
 
     wbMax = wbWidth * params->wbDepth;
@@ -410,31 +409,14 @@ DefaultIEW<Impl>::squash(unsigned tid)
     instQueue.squash(tid);
 
     // Tell the LDSTQ to start squashing.
-#if ISA_HAS_DELAY_SLOT
-    ldstQueue.squash(fromCommit->commitInfo[tid].bdelayDoneSeqNum, tid);
-#else
     ldstQueue.squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
-#endif
     updatedQueues = true;
 
     // Clear the skid buffer in case it has any data in it.
     DPRINTF(IEW, "[tid:%i]: Removing skidbuffer instructions until [sn:%i].\n",
-            tid, fromCommit->commitInfo[tid].bdelayDoneSeqNum);
+            tid, fromCommit->commitInfo[tid].doneSeqNum);
 
     while (!skidBuffer[tid].empty()) {
-#if ISA_HAS_DELAY_SLOT
-        if (skidBuffer[tid].front()->seqNum <=
-            fromCommit->commitInfo[tid].bdelayDoneSeqNum) {
-            DPRINTF(IEW, "[tid:%i]: Cannot remove skidbuffer instructions "
-                    "that occur before delay slot [sn:%i].\n",
-                    fromCommit->commitInfo[tid].bdelayDoneSeqNum,
-                    tid);
-            break;
-        } else {
-            DPRINTF(IEW, "[tid:%i]: Removing instruction [sn:%i] from "
-                    "skidBuffer.\n", tid, skidBuffer[tid].front()->seqNum);
-        }
-#endif
         if (skidBuffer[tid].front()->isLoad() ||
             skidBuffer[tid].front()->isStore() ) {
             toRename->iewInfo[tid].dispatchedToLSQ++;
@@ -444,8 +426,6 @@ DefaultIEW<Impl>::squash(unsigned tid)
 
         skidBuffer[tid].pop();
     }
-
-    bdelayDoneSeqNum[tid] = fromCommit->commitInfo[tid].bdelayDoneSeqNum;
 
     emptyRenameInsts(tid);
 }
@@ -462,38 +442,19 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
     toCommit->mispredPC[tid] = inst->readPC();
     toCommit->branchMispredict[tid] = true;
 
-    int instSize = sizeof(TheISA::MachInst);
 #if ISA_HAS_DELAY_SLOT
-    bool branch_taken =
+    int instSize = sizeof(TheISA::MachInst);
+    toCommit->branchTaken[tid] =
         !(inst->readNextPC() + instSize == inst->readNextNPC() &&
           (inst->readNextPC() == inst->readPC() + instSize ||
            inst->readNextPC() == inst->readPC() + 2 * instSize));
-    DPRINTF(Sparc, "Branch taken = %s [sn:%i]\n",
-            branch_taken ? "true": "false", inst->seqNum);
-
-    toCommit->branchTaken[tid] = branch_taken;
-
-    bool squashDelaySlot = true;
-//	(inst->readNextPC() != inst->readPC() + sizeof(TheISA::MachInst));
-    DPRINTF(Sparc, "Squash delay slot = %s [sn:%i]\n",
-            squashDelaySlot ? "true": "false", inst->seqNum);
-    toCommit->squashDelaySlot[tid] = squashDelaySlot;
-    //If we're squashing the delay slot, we need to pick back up at NextPC.
-    //Otherwise, NextPC isn't being squashed, so we should pick back up at
-    //NextNPC.
-    if (squashDelaySlot) {
-        toCommit->nextPC[tid] = inst->readNextPC();
-        toCommit->nextNPC[tid] = inst->readNextNPC();
-    } else {
-        toCommit->nextPC[tid] = inst->readNextNPC();
-        toCommit->nextNPC[tid] = inst->readNextNPC() + instSize;
-    }
 #else
     toCommit->branchTaken[tid] = inst->readNextPC() !=
         (inst->readPC() + sizeof(TheISA::MachInst));
-    toCommit->nextPC[tid] = inst->readNextPC();
-    toCommit->nextNPC[tid] = inst->readNextPC() + instSize;
 #endif
+    toCommit->nextPC[tid] = inst->readNextPC();
+    toCommit->nextNPC[tid] = inst->readNextNPC();
+    toCommit->nextMicroPC[tid] = inst->readNextMicroPC();
 
     toCommit->includeSquashInst[tid] = false;
 
@@ -510,11 +471,7 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readNextPC();
-#if ISA_HAS_DELAY_SLOT
     toCommit->nextNPC[tid] = inst->readNextNPC();
-#else
-    toCommit->nextNPC[tid] = inst->readNextPC() + sizeof(TheISA::MachInst);
-#endif
     toCommit->branchMispredict[tid] = false;
 
     toCommit->includeSquashInst[tid] = false;
@@ -532,11 +489,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
     toCommit->nextPC[tid] = inst->readPC();
-#if ISA_HAS_DELAY_SLOT
     toCommit->nextNPC[tid] = inst->readNextPC();
-#else
-    toCommit->nextNPC[tid] = inst->readPC() + sizeof(TheISA::MachInst);
-#endif
     toCommit->branchMispredict[tid] = false;
 
     // Must include the broadcasted SN in the squash.
@@ -880,10 +833,8 @@ DefaultIEW<Impl>::sortInsts()
 {
     int insts_from_rename = fromRename->size;
 #ifdef DEBUG
-#if !ISA_HAS_DELAY_SLOT
     for (int i = 0; i < numThreads; i++)
         assert(insts[i].empty());
-#endif
 #endif
     for (int i = 0; i < insts_from_rename; ++i) {
         insts[fromRename->insts[i]->threadNumber].push(fromRename->insts[i]);
@@ -894,21 +845,9 @@ template <class Impl>
 void
 DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
 {
-    DPRINTF(IEW, "[tid:%i]: Removing incoming rename instructions until "
-            "[sn:%i].\n", tid, bdelayDoneSeqNum[tid]);
+    DPRINTF(IEW, "[tid:%i]: Removing incoming rename instructions\n", tid);
 
     while (!insts[tid].empty()) {
-#if ISA_HAS_DELAY_SLOT
-        if (insts[tid].front()->seqNum <= bdelayDoneSeqNum[tid]) {
-            DPRINTF(IEW, "[tid:%i]: Done removing, cannot remove instruction"
-                    " that occurs at or before delay slot [sn:%i].\n",
-                    tid, bdelayDoneSeqNum[tid]);
-            break;
-        } else {
-            DPRINTF(IEW, "[tid:%i]: Removing incoming rename instruction "
-                    "[sn:%i].\n", tid, insts[tid].front()->seqNum);
-        }
-#endif
 
         if (insts[tid].front()->isLoad() ||
             insts[tid].front()->isStore() ) {
