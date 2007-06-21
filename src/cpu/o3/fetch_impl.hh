@@ -498,7 +498,7 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
     bool predict_taken;
 
     if (!inst->isControl()) {
-        if (inst->isMicroOp() && !inst->isLastMicroOp()) {
+        if (inst->isMicroop() && !inst->isLastMicroop()) {
             next_MicroPC++;
         } else {
             next_PC  = next_NPC;
@@ -1120,14 +1120,14 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 predecoder.moreBytes(fetch_PC, fetch_PC, 0, inst);
 
                 ext_inst = predecoder.getExtMachInst();
-                staticInst = StaticInstPtr(ext_inst);
-                if (staticInst->isMacroOp())
+                staticInst = StaticInstPtr(ext_inst, fetch_PC);
+                if (staticInst->isMacroop())
                     macroop = staticInst;
             }
             do {
                 if (macroop) {
-                    staticInst = macroop->fetchMicroOp(fetch_MicroPC);
-                    if (staticInst->isLastMicroOp())
+                    staticInst = macroop->fetchMicroop(fetch_MicroPC);
+                    if (staticInst->isLastMicroop())
                         macroop = NULL;
                 }
 
@@ -1194,8 +1194,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 }
 
                 ++numInst;
-            } while (staticInst->isMicroOp() &&
-                     !staticInst->isLastMicroOp() &&
+            } while (staticInst->isMicroop() &&
+                     !staticInst->isLastMicroop() &&
                      numInst < fetchWidth);
             offset += instSize;
         }
@@ -1240,13 +1240,12 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // We will use a nop in order to carry the fault.
         ext_inst = TheISA::NoopMachInst;
 
-        StaticInstPtr staticInst = new StaticInst(ext_inst);
         // Create a new DynInst from the dummy nop.
-        DynInstPtr instruction = new DynInst(staticInst,
-                                             fetch_PC, fetch_NPC,
-                                             next_PC, next_NPC,
+        DynInstPtr instruction = new DynInst(ext_inst,
+                                             fetch_PC, fetch_NPC, fetch_MicroPC,
+                                             next_PC, next_NPC, next_MicroPC,
                                              inst_seq, cpu);
-        instruction->setPredTarg(next_PC, next_NPC);
+        instruction->setPredTarg(next_PC, next_NPC, 1);
         instruction->setTid(tid);
 
         instruction->setASID(tid);

@@ -498,11 +498,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isQuiesce() const { return staticInst->isQuiesce(); }
     bool isIprAccess() const { return staticInst->isIprAccess(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
-    bool isMacroOp() const { return staticInst->isMacroOp(); }
-    bool isMicroOp() const { return staticInst->isMicroOp(); }
+    bool isMacroop() const { return staticInst->isMacroop(); }
+    bool isMicroop() const { return staticInst->isMicroop(); }
     bool isDelayedCommit() const { return staticInst->isDelayedCommit(); }
-    bool isLastMicroOp() const { return staticInst->isLastMicroOp(); }
-    bool isFirstMicroOp() const { return staticInst->isFirstMicroOp(); }
+    bool isLastMicroop() const { return staticInst->isLastMicroop(); }
+    bool isFirstMicroop() const { return staticInst->isFirstMicroop(); }
     bool isMicroBranch() const { return staticInst->isMicroBranch(); }
 
     /** Temporarily sets this instruction as a serialize before instruction. */

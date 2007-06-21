@@ -73,7 +73,7 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
     seqNum = seq_num;
 
     bool nextIsMicro =
-        staticInst->isMicroOp() && !staticInst->isLastMicroOp();
+        staticInst->isMicroop() && !staticInst->isLastMicroop();
 
     PC = inst_PC;
     microPC = inst_MicroPC;
@@ -101,12 +101,12 @@ BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst inst,
                                Addr pred_PC, Addr pred_NPC,
                                Addr pred_MicroPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(inst), traceData(NULL), cpu(cpu)
+  : staticInst(inst, inst_PC), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
     bool nextIsMicro =
-        staticInst->isMicroOp() && !staticInst->isLastMicroOp();
+        staticInst->isMicroop() && !staticInst->isLastMicroop();
 
     PC = inst_PC;
     microPC = inst_MicroPC;
