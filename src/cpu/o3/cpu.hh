@@ -42,6 +42,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "config/use_checker.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
@@ -617,11 +618,13 @@ class FullO3CPU : public BaseO3CPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum;//[Impl::MaxThreads];
 
+#if USE_CHECKER
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
     Checker<DynInstPtr> *checker;
+#endif
 
 #if FULL_SYSTEM
     /** Pointer to the system. */

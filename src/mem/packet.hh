@@ -43,6 +43,7 @@
 #include <bitset>
 
 #include "base/compiler.hh"
+#include "base/fast_alloc.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 #include "sim/host.hh"
@@ -177,7 +178,7 @@ class MemCmd
  * ultimate destination and back, possibly being conveyed by several
  * different Packets along the way.)
  */
-class Packet
+class Packet : public FastAlloc
 {
   public:
 
@@ -257,7 +258,7 @@ class Packet
     /** A virtual base opaque structure used to hold coherence-related
      *    state.  A specific subclass would be derived from this to
      *    carry state specific to a particular coherence protocol.  */
-    class CoherenceState {
+    class CoherenceState : public FastAlloc {
       public:
         virtual ~CoherenceState() {}
     };
@@ -274,7 +275,7 @@ class Packet
      *    needed to process it.  A specific subclass would be derived
      *    from this to carry state specific to a particular sending
      *    device.  */
-    class SenderState {
+    class SenderState : public FastAlloc {
       public:
         virtual ~SenderState() {}
     };

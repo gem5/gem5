@@ -59,20 +59,55 @@ def macroop MOV_R_R {
 };
 
 def macroop MOV_M_R {
-    #Do a store to put the register operand into memory
+    st "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+};
+
+def macroop MOV_P_R {
+    rdip "NUM_INTREGS+7"
+    st "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
 };
 
 def macroop MOV_R_M {
-    #Do a load to fill the register operand from memory
+    ld "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
+};
+
+def macroop MOV_R_P {
+    rdip "NUM_INTREGS+7"
+    ld "env.reg", 3, ["env.scale", "env.index", "env.base"], "DISPLACEMENT"
 };
 
 def macroop MOV_R_I {
-    limm "env.reg", "env.immediate"
+    limm "env.reg", "IMMEDIATE"
 };
 
 def macroop MOV_M_I {
-    limm "env.reg", "env.immediate"
-    #Do a store to put the register operand into memory
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+
+def macroop MOV_P_I {
+    rdip "NUM_INTREGS+7"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+
+def macroop MOVSXD_R_R {
+    sext "env.reg", "env.regm", "env.dataSize"
+};
+
+def macroop MOVSXD_R_M {
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    sext "env.reg", "NUM_INTREGS+1", "env.dataSize"
+};
+
+def macroop MOVSXD_R_P {
+    rdip "NUM_INTREGS+7"
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    sext "env.reg", "NUM_INTREGS+1", "env.dataSize"
 };
 '''
 #let {{

@@ -160,7 +160,7 @@ namespace X86ISA
         } opcode;
         //Modifier bytes
         ModRM modRM;
-        uint8_t sib;
+        Sib sib;
         //Immediate fields
         uint64_t immediate;
         uint64_t displacement;
@@ -169,6 +169,8 @@ namespace X86ISA
         uint8_t opSize;
         //The effective address size.
         uint8_t addrSize;
+        //The effective stack size.
+        uint8_t stackSize;
 
         //Mode information
         OperatingMode mode;
@@ -193,8 +195,6 @@ namespace X86ISA
     inline static bool
         operator == (const ExtMachInst &emi1, const ExtMachInst &emi2)
     {
-        if(emi1.mode != emi2.mode)
-            return false;
         if(emi1.legacy != emi2.legacy)
             return false;
         if(emi1.rex != emi2.rex)
@@ -214,6 +214,14 @@ namespace X86ISA
         if(emi1.immediate != emi2.immediate)
             return false;
         if(emi1.displacement != emi2.displacement)
+            return false;
+        if(emi1.mode != emi2.mode)
+            return false;
+        if(emi1.opSize != emi2.opSize)
+            return false;
+        if(emi1.addrSize != emi2.addrSize)
+            return false;
+        if(emi1.stackSize != emi2.stackSize)
             return false;
         return true;
     }

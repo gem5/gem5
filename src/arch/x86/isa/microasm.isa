@@ -68,7 +68,7 @@ let {{
     import sys
     sys.path[0:0] = ["src/arch/x86/isa/"]
     from insts import microcode
-    print microcode
+    # print microcode
     from micro_asm import MicroAssembler, Rom_Macroop, Rom
     mainRom = Rom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)

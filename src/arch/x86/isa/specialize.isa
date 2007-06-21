@@ -64,18 +64,18 @@
 let {{
     # This code builds up a decode block which decodes based on switchval.
     # vals is a dict which matches case values with what should be decoded to.
-    # builder is called on the exploded contents of "vals" values to generate
-    # whatever code should be used.
-    def doSplitDecode(builder, switchVal, vals, default = None):
+    # Each element of the dict is a list containing a function and then the
+    # arguments to pass to it.
+    def doSplitDecode(switchVal, vals, default = None):
         blocks = OutputBlocks()
         blocks.decode_block = 'switch(%s) {\n' % switchVal
         for (val, todo) in vals.items():
-            new_blocks = builder(*todo)
+            new_blocks = todo[0](*todo[1:])
             new_blocks.decode_block = \
                 '\tcase %s: %s\n' % (val, new_blocks.decode_block)
             blocks.append(new_blocks)
         if default:
-            new_blocks = builder(*default)
+            new_blocks = default[0](*default[1:])
             new_blocks.decode_block = \
                 '\tdefault: %s\n' % new_blocks.decode_block
             blocks.append(new_blocks)
@@ -84,8 +84,29 @@ let {{
 }};
 
 let {{
+    def doRipRelativeDecode(Name, opTypes, env):
+        # print "RIPing %s with opTypes %s" % (Name, opTypes)
+        normBlocks = specializeInst(Name + "_M", copy.copy(opTypes), copy.copy(env))
+        ripBlocks = specializeInst(Name + "_P", copy.copy(opTypes), copy.copy(env))
+
+        blocks = OutputBlocks()
+        blocks.append(normBlocks)
+        blocks.append(ripBlocks)
+
+        blocks.decode_block = '''
+        if(machInst.modRM.mod == 0 &&
+          machInst.modRM.rm == 5 &&
+          machInst.mode.submode == SixtyFourBitMode)
+        { %s }
+        else
+        { %s }''' % \
+         (ripBlocks.decode_block, normBlocks.decode_block)
+        return blocks
+}};
+
+let {{
     class OpType(object):
-        parser = re.compile(r"(?P<tag>[A-Z][A-Z]*)(?P<size>[a-z][a-z]*)|(r(?P<reg>[A-Z0-9]*)(?P<rsize>[a-z]*))")
+        parser = re.compile(r"(?P<tag>[A-Z]+)(?P<size>[a-z]*)|(r(?P<reg>[A-Z0-9]+)(?P<rsize>[a-z]*))")
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
@@ -105,14 +126,15 @@ let {{
         while len(opTypes):
             # Parse the operand type string we're working with
             opType = OpType(opTypes[0])
+            opTypes.pop(0)
 
             if opType.reg:
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
                 if opType.reg in ("A", "B", "C", "D"):
-                    env.addReg("INTREG_R%sX" % opType.reg)
+                    env.addReg("INTREG_R%sX | (REX_B << 3)" % opType.reg)
                 else:
-                    env.addReg("INTREG_R%s" % opType.reg)
+                    env.addReg("INTREG_R%s | (REX_B << 3)" % opType.reg)
                 if opType.size:
                     if opType.rsize in ("l", "h", "b"):
                         print "byte"
@@ -121,6 +143,11 @@ let {{
                     else:
                         print "Didn't recognize fixed register size %s!" % opType.rsize
                 Name += "_R"
+            elif opType.tag == "M":
+                # This refers to memory. The macroop constructor sets up modrm
+                # addressing. Non memory modrm settings should cause an error.
+                Name += "_M"
+                env.doModRM = True
             elif opType.tag == None or opType.size == None:
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
             elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
@@ -130,40 +157,24 @@ let {{
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
-                regTypes = copy.copy(opTypes)
-                regTypes.pop(0)
                 regEnv = copy.copy(env)
                 regEnv.addReg(ModRMRMIndex)
-                regName = Name + "_R"
-                # This needs to refer to memory, but we'll fill in the details
-                # later. It needs to take into account unaligned memory
-                # addresses.
-                memTypes = copy.copy(opTypes)
-                memTypes.pop(0)
+                # This refers to memory. The macroop constructor should set up
+                # modrm addressing.
                 memEnv = copy.copy(env)
-                memName = Name + "_M"
-                print "%0"
-                return doSplitDecode(specializeInst, "MODRM_MOD",
-                    {"3" : (regName, regTypes, regEnv)},
-                    (memName, memTypes, memEnv))
+                memEnv.doModRM = True
+                return doSplitDecode("MODRM_MOD",
+                    {"3" : (specializeInst, Name + "_R", copy.copy(opTypes), regEnv)},
+                           (doRipRelativeDecode, Name, copy.copy(opTypes), memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
-                print "IMMEDIATE"
                 Name += "_I"
-            elif opType.tag == "M":
-                # This needs to refer to memory, but we'll fill in the details
-                # later. It needs to take into account unaligned memory
-                # addresses.
-                print "%0"
-                Name += "_M"
             elif opType.tag in ("PR", "R", "VR"):
-                # There should probably be a check here to verify that mod
-                # is equal to 11b
+                # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
                 Name += "_R"
             else:
                 raise Exception, "Unrecognized tag %s." % opType.tag
-            opTypes.pop(0)
 
         # Generate code to return a macroop of the given name which will
         # operate in the "emulation environment" env

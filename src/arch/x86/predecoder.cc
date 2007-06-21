@@ -264,31 +264,30 @@ namespace X86ISA
     Predecoder::State Predecoder::doModRMState(uint8_t nextByte)
     {
         State nextState = ErrorState;
-        emi.modRM = nextByte;
+        ModRM modRM;
+        modRM = nextByte;
         DPRINTF(Predecoder, "Found modrm byte %#x.\n", nextByte);
         if (0) {//FIXME in 16 bit mode
             //figure out 16 bit displacement size
-            if(nextByte & 0xC7 == 0x06 ||
-                    nextByte & 0xC0 == 0x80)
+            if(modRM.mod == 0 && modRM.rm == 6 || modRM.mod == 2)
                 displacementSize = 2;
-            else if(nextByte & 0xC0 == 0x40)
+            else if(modRM.mod == 1)
                 displacementSize = 1;
             else
                 displacementSize = 0;
         } else {
             //figure out 32/64 bit displacement size
-            if(nextByte & 0xC6 == 0x04 ||
-                    nextByte & 0xC0 == 0x80)
+            if(modRM.mod == 0 && (modRM.rm == 4 || modRM.rm == 5)
+                    || modRM.mod == 2)
                 displacementSize = 4;
-            else if(nextByte & 0xC0 == 0x40)
+            else if(modRM.mod == 1)
                 displacementSize = 1;
             else
                 displacementSize = 0;
         }
         //If there's an SIB, get that next.
         //There is no SIB in 16 bit mode.
-        if(nextByte & 0x7 == 4 &&
-                nextByte & 0xC0 != 0xC0) {
+        if(modRM.rm == 4 && modRM.mod != 3) {
                 // && in 32/64 bit mode)
             nextState = SIBState;
         } else if(displacementSize) {
@@ -301,6 +300,7 @@ namespace X86ISA
         }
         //The ModRM byte is consumed no matter what
         consumeByte();
+        emi.modRM = modRM;
         return nextState;
     }
 

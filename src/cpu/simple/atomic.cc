@@ -521,15 +521,15 @@ AtomicSimpleCPU::tick()
             dcache_access = false; // assume no dcache access
 
             //Fetch more instruction memory if necessary
-            if(predecoder.needMoreBytes())
-            {
+            //if(predecoder.needMoreBytes())
+            //{
                 icache_access = true;
                 ifetch_pkt->reinitFromRequest();
 
                 icache_latency = icachePort.sendAtomic(ifetch_pkt);
                 // ifetch_req is initialized to read the instruction directly
                 // into the CPU object's inst field.
-            }
+            //}
 
             preExecute();
 

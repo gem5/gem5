@@ -61,50 +61,76 @@ def macroop XOR_R_R
 
 def macroop XOR_R_I
 {
-    limm "NUM_INTREGS", "env.immediate"
-    xor "env.reg", "env.reg", "NUM_INTREGS"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    xor "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop XOR_M_R
 {
-    #Do a load to get one of the sources
-    xor "NUM_INTREGS", "NUM_INTREGS", "env.reg"
-    #Do a store to write the destination
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    xor "NUM_INTREGS+1", "NUM_INTREGS+1", "env.reg"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+
+def macroop XOR_P_R
+{
+    rdip "NUM_INTREGS+7"
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    xor "NUM_INTREGS+1", "NUM_INTREGS+1", "env.reg"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
 };
 
 def macroop XOR_R_M
 {
-    #Do a load to get one of the sources
-    xor "env.reg", "env.reg", "NUM_INTREGS"
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    xor "env.reg", "env.reg", "NUM_INTREGS+1"
+};
+
+def macroop XOR_R_P
+{
+    rdip "NUM_INTREGS+7"
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    xor "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop AND_R_I
 {
-    limm "NUM_INTREGS", "env.immediate"
-    and "env.reg", "env.reg", "NUM_INTREGS"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    and "env.reg", "env.reg", "NUM_INTREGS+1"
 };
 
 def macroop AND_M_I
 {
-    #Do a load to get one of the sources
-    limm "NUM_INTREGS", "env.immediate"
-    and "NUM_INTREGS", "NUM_INTREGS", "NUM_INTREGS+1"
-    #Do a store to write the destination
+    ld "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    and "NUM_INTREGS+2", "NUM_INTREGS+2", "NUM_INTREGS+1"
+    st "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+
+def macroop AND_P_I
+{
+    rdip "NUM_INTREGS+7"
+    ld "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    limm "NUM_INTREGS+1", "IMMEDIATE"
+    and "NUM_INTREGS+2", "NUM_INTREGS+2", "NUM_INTREGS+1"
+    st "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
 };
 '''
 #let {{
 #microcodeString = '''
-#    def macroop AND
-#    {
-#	And reg reg regm
-#    };
 #    def macroop OR
 #    {
 #	Or reg reg regm
-#    };
-#    def macroop XOR
-#    {
-#	Xor reg reg regm
 #    };
 #    def macroop NOT
 #    {

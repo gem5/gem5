@@ -115,11 +115,14 @@ void Bus::occupyBus(PacketPtr pkt)
     //Bring tickNextIdle up to the present tick
     //There is some potential ambiguity where a cycle starts, which might make
     //a difference when devices are acting right around a cycle boundary. Using
-    //a < allows things which happen exactly on a cycle boundary to take up only
-    //the following cycle. Anthing that happens later will have to "wait" for
-    //the end of that cycle, and then start using the bus after that.
-    while (tickNextIdle < curTick)
-        tickNextIdle += clock;
+    //a < allows things which happen exactly on a cycle boundary to take up
+    //only the following cycle. Anything that happens later will have to "wait"
+    //for the end of that cycle, and then start using the bus after that.
+    if (tickNextIdle < curTick) {
+        tickNextIdle = curTick;
+        if (tickNextIdle % clock != 0)
+            tickNextIdle = curTick - (curTick % clock) + clock;
+    }
 
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
@@ -132,10 +135,9 @@ void Bus::occupyBus(PacketPtr pkt)
         // We're using the "adding instead of dividing" trick again here
         if (pkt->hasData()) {
             int dataSize = pkt->getSize();
-            for (int transmitted = 0; transmitted < dataSize;
-                    transmitted += width) {
+            numCycles += dataSize/width;
+            if (dataSize % width)
                 numCycles++;
-            }
         } else {
             // If the packet didn't have data, it must have been a response.
             // Those use the bus for one cycle to send their data.

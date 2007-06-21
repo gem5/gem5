@@ -53,7 +53,31 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop SUB_R_I
+{
+    subi "env.reg", "env.reg", "IMMEDIATE"
+};
+
+def macroop SUB_M_I
+{
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    subi "NUM_INTREGS+1", "NUM_INTREGS+1", "IMMEDIATE"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+
+def macroop SUB_P_I
+{
+    rdip "NUM_INTREGS+7"
+    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+    subi "NUM_INTREGS+1", "NUM_INTREGS+1", "IMMEDIATE"
+    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
+        "DISPLACEMENT"
+};
+'''
 #let {{
 #    class ADC(Inst):
 #	"Adc ^0 ^0 ^1"

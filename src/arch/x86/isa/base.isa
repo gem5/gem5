@@ -95,6 +95,14 @@ output header {{
         /**
          * Base class for all X86 static instructions.
          */
+        BitUnion64(X86IntReg)
+            Bitfield<63,0> R;
+            Bitfield<31,0> E;
+            Bitfield<15,0> X;
+            Bitfield<15,8> H;
+            Bitfield<7, 0> L;
+        EndBitUnion(X86IntReg)
+
         class X86StaticInst : public StaticInst
         {
           protected:
@@ -114,8 +122,48 @@ output header {{
 
             inline uint64_t merge(uint64_t into, uint64_t val, int size) const
             {
-                //FIXME This needs to be significantly more sophisticated
+                X86IntReg reg;
+                reg = into;
+                //FIXME This needs to be handle high bytes as well
+                switch(size)
+                {
+                  case 1:
+                    reg.L = val;
+                    break;
+                  case 2:
+                    reg.X = val;
+                    break;
+                  case 4:
+                    //XXX Check if this should be zeroed or sign extended
+                    reg = 0;
+                    reg.E = val;
+                    break;
+                  case 8:
+                    reg.R = val;
+                    break;
+                  default:
+                    panic("Tried to merge with unrecognized size %d.\n", size);
+                }
                 return val;
+            }
+
+            inline uint64_t pick(uint64_t from, int size)
+            {
+                X86IntReg reg;
+                reg = from;
+                switch(size)
+                {
+                  case 1:
+                    return reg.L;
+                  case 2:
+                    return reg.E;
+                  case 4:
+                    return reg.X;
+                  case 8:
+                    return reg.R;
+                  default:
+                    panic("Tried to pick with unrecognized size %d.\n", size);
+                }
             }
 
         };
@@ -126,6 +174,39 @@ output decoder {{
         inline void printMnemonic(std::ostream &os, const char * mnemonic)
         {
             ccprintf(os, "\t%s   ", mnemonic);
+        }
+
+        inline void printMnemonic(std::ostream &os,
+                const char * instMnemonic, const char * mnemonic)
+        {
+            ccprintf(os, "\t%s : %s   ", instMnemonic, mnemonic);
+        }
+
+        void printSegment(std::ostream &os, int segment)
+        {
+            switch (segment)
+            {
+              case 0:
+                ccprintf(os, "ES");
+                break;
+              case 1:
+                ccprintf(os, "CS");
+                break;
+              case 2:
+                ccprintf(os, "SS");
+                break;
+              case 3:
+                ccprintf(os, "DS");
+                break;
+              case 4:
+                ccprintf(os, "FS");
+                break;
+              case 5:
+                ccprintf(os, "GS");
+                break;
+              default:
+                panic("Unrecognized segment %d\n", segment);
+            }
         }
 
         void
@@ -197,6 +278,8 @@ output decoder {{
                   case INTREG_R15W:
                     ccprintf(os, "r15");
                     break;
+                  default:
+                    ccprintf(os, "t%d", reg - NUM_INTREGS);
                 }
             } else if (reg < Ctrl_Base_DepTag) {
                 ccprintf(os, "%%f%d", reg - FP_Base_DepTag);

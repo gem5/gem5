@@ -131,7 +131,8 @@ def handle_statement(parser, container, statement):
             microop = eval('parser.microops[statement.mnemonic](%s)' %
                     statement.params)
         except:
-            print_error("Error creating microop object.")
+            print_error("Error creating microop object with mnemonic %s." % \
+                    statement.mnemonic)
             raise
         try:
             for label in statement.labels:
@@ -237,9 +238,7 @@ def t_params_PARAMS(t):
     unescapeParamsRE = re.compile(r'(\\[\n;\\])')
     def unescapeParams(mo):
         val = mo.group(0)
-        print "About to sub %s for %s" % (val[1], val)
         return val[1]
-    print "Looking for matches in %s" % t.value
     t.value = unescapeParamsRE.sub(unescapeParams, t.value)
     t.lexer.begin('asm')
     return t
@@ -482,9 +481,9 @@ class MicroAssembler(object):
     def assemble(self, asm):
         self.parser.parse(asm, lexer=self.lexer)
         # Begin debug printing
-        for macroop in self.parser.macroops.values():
-            print macroop
-        print self.parser.rom
+        #for macroop in self.parser.macroops.values():
+        #    print macroop
+        #print self.parser.rom
         # End debug printing
         macroops = self.parser.macroops
         self.parser.macroops = {}

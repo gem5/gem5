@@ -55,98 +55,38 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_UTILITY_HH__
-#define __ARCH_X86_UTILITY_HH__
-
-#include "arch/x86/types.hh"
-#include "base/hashmap.hh"
+#include "arch/x86/emulenv.hh"
 #include "base/misc.hh"
-#include "cpu/thread_context.hh"
-#include "sim/host.hh"
 
-class ThreadContext;
+using namespace X86ISA;
 
-namespace __hash_namespace {
-    template<>
-    struct hash<X86ISA::ExtMachInst> {
-        size_t operator()(const X86ISA::ExtMachInst &emi) const {
-            return (((uint64_t)emi.legacy << 56) |
-                    ((uint64_t)emi.rex  << 48) |
-                    ((uint64_t)emi.modRM << 40) |
-                    ((uint64_t)emi.sib << 32) |
-                    ((uint64_t)emi.opcode.num << 24) |
-                    ((uint64_t)emi.opcode.prefixA << 16) |
-                    ((uint64_t)emi.opcode.prefixB << 8) |
-                    ((uint64_t)emi.opcode.op)) ^
-                    emi.immediate ^ emi.displacement ^
-                    emi.mode ^
-                    emi.opSize ^ emi.addrSize ^ emi.stackSize;
-        };
-    };
+void EmulEnv::doModRM(const ExtMachInst & machInst)
+{
+    assert(machInst.modRM.mod != 3);
+    //Use the SIB byte for addressing if the modrm byte calls for it.
+    if (machInst.modRM.rm == 4 && machInst.addrSize != 2) {
+        scale = 1 << machInst.sib.scale;
+        index = machInst.sib.index;
+        base = machInst.sib.base;
+        //In this special case, we don't use a base. The displacement also
+        //changes, but that's managed by the predecoder.
+        if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
+            base = NUM_INTREGS;
+        //In -this- special case, we don't use an index.
+        if (machInst.sib.index == INTREG_RSP)
+            index = NUM_INTREGS;
+    } else {
+        if (machInst.addrSize == 2) {
+            warn("I'm not really using 16 bit MODRM like I'm supposed to!\n");
+        } else {
+            scale = 0;
+            base = machInst.modRM.rm;
+            if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
+                base = NUM_INTREGS;
+                if (machInst.mode.submode == SixtyFourBitMode)
+                    base = NUM_INTREGS+7;
+            }
+        }
+    }
 }
 
-namespace X86ISA
-{
-    static inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        return false;
-    }
-
-    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCallerSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    // Instruction address compression hooks
-    inline Addr realPCToFetchPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    inline Addr fetchPCToRealPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    inline size_t fetchInstSize()
-    {
-        return sizeof(MachInst);
-    }
-
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
-
-    inline void initCPU(ThreadContext *tc, int cpuId)
-    {
-        panic("initCPU not implemented!\n");
-    }
-
-    inline void startupCPU(ThreadContext *tc, int cpuId)
-    {
-        tc->activate(0);
-    }
-};
-
-#endif // __ARCH_X86_UTILITY_HH__

@@ -55,98 +55,36 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_UTILITY_HH__
-#define __ARCH_X86_UTILITY_HH__
+#ifndef __ARCH_X86_EMULENV_HH__
+#define __ARCH_X86_EMULENV_HH__
 
 #include "arch/x86/types.hh"
-#include "base/hashmap.hh"
-#include "base/misc.hh"
-#include "cpu/thread_context.hh"
-#include "sim/host.hh"
-
-class ThreadContext;
-
-namespace __hash_namespace {
-    template<>
-    struct hash<X86ISA::ExtMachInst> {
-        size_t operator()(const X86ISA::ExtMachInst &emi) const {
-            return (((uint64_t)emi.legacy << 56) |
-                    ((uint64_t)emi.rex  << 48) |
-                    ((uint64_t)emi.modRM << 40) |
-                    ((uint64_t)emi.sib << 32) |
-                    ((uint64_t)emi.opcode.num << 24) |
-                    ((uint64_t)emi.opcode.prefixA << 16) |
-                    ((uint64_t)emi.opcode.prefixB << 8) |
-                    ((uint64_t)emi.opcode.op)) ^
-                    emi.immediate ^ emi.displacement ^
-                    emi.mode ^
-                    emi.opSize ^ emi.addrSize ^ emi.stackSize;
-        };
-    };
-}
+#include "arch/x86/intregs.hh"
 
 namespace X86ISA
 {
-    static inline bool
-    inUserMode(ThreadContext *tc)
+    struct EmulEnv
     {
-        return false;
-    }
+        RegIndex reg;
+        RegIndex regm;
+        uint8_t scale;
+        RegIndex index;
+        RegIndex base;
+        int dataSize;
+        int addressSize;
+        int stackSize;
 
-    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
+        EmulEnv(RegIndex _reg, RegIndex _regm,
+                int _dataSize, int _addressSize, int _stackSize) :
+            reg(_reg), regm(_regm),
+            scale(0), index(NUM_INTREGS),
+            base(NUM_INTREGS),
+            dataSize(_dataSize), addressSize(_addressSize),
+            stackSize(_stackSize)
+        {;}
 
-    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCallerSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    // Instruction address compression hooks
-    inline Addr realPCToFetchPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    inline Addr fetchPCToRealPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    inline size_t fetchInstSize()
-    {
-        return sizeof(MachInst);
-    }
-
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
-
-    inline void initCPU(ThreadContext *tc, int cpuId)
-    {
-        panic("initCPU not implemented!\n");
-    }
-
-    inline void startupCPU(ThreadContext *tc, int cpuId)
-    {
-        tc->activate(0);
-    }
+        void doModRM(const ExtMachInst & machInst);
+    };
 };
 
-#endif // __ARCH_X86_UTILITY_HH__
+#endif // __ARCH_X86_TYPES_HH__
