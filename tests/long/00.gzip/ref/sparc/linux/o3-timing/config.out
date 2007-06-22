@@ -24,12 +24,12 @@ block_size=64
 
 [system.cpu.workload]
 type=LiveProcess
-cmd=insttest
-executable=tests/test-progs/insttest/bin/sparc/linux/insttest
+cmd=gzip input.log 1
+executable=/dist/m5/cpu2000/binaries/sparc/linux/gzip
 input=cin
 output=cout
 env=
-cwd=
+cwd=build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing
 system=system
 uid=100
 euid=100

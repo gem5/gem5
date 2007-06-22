@@ -279,25 +279,37 @@ class DefaultCommit
     /** Returns the PC of the head instruction of the ROB.
      * @todo: Probably remove this function as it returns only thread 0.
      */
-    uint64_t readPC() { return PC[0]; }
+    Addr readPC() { return PC[0]; }
 
     /** Returns the PC of a specific thread. */
-    uint64_t readPC(unsigned tid) { return PC[tid]; }
+    Addr readPC(unsigned tid) { return PC[tid]; }
 
     /** Sets the PC of a specific thread. */
-    void setPC(uint64_t val, unsigned tid) { PC[tid] = val; }
+    void setPC(Addr val, unsigned tid) { PC[tid] = val; }
+
+    /** Reads the micro PC of a specific thread. */
+    Addr readMicroPC(unsigned tid) { return microPC[tid]; }
+
+    /** Sets the micro PC of a specific thread */
+    void setMicroPC(Addr val, unsigned tid) { microPC[tid] = val; }
 
     /** Reads the next PC of a specific thread. */
-    uint64_t readNextPC(unsigned tid) { return nextPC[tid]; }
+    Addr readNextPC(unsigned tid) { return nextPC[tid]; }
 
     /** Sets the next PC of a specific thread. */
-    void setNextPC(uint64_t val, unsigned tid) { nextPC[tid] = val; }
+    void setNextPC(Addr val, unsigned tid) { nextPC[tid] = val; }
 
     /** Reads the next NPC of a specific thread. */
-    uint64_t readNextNPC(unsigned tid) { return nextNPC[tid]; }
+    Addr readNextNPC(unsigned tid) { return nextNPC[tid]; }
 
     /** Sets the next NPC of a specific thread. */
-    void setNextNPC(uint64_t val, unsigned tid) { nextNPC[tid] = val; }
+    void setNextNPC(Addr val, unsigned tid) { nextNPC[tid] = val; }
+
+    /** Reads the micro PC of a specific thread. */
+    Addr readNextMicroPC(unsigned tid) { return nextMicroPC[tid]; }
+
+    /** Sets the micro PC of a specific thread */
+    void setNextMicroPC(Addr val, unsigned tid) { nextMicroPC[tid] = val; }
 
   private:
     /** Time buffer interface. */
@@ -402,11 +414,19 @@ class DefaultCommit
      */
     Addr PC[Impl::MaxThreads];
 
+    /** The commit micro PC of each thread.  Refers to the instruction that
+     * is currently being processed/committed.
+     */
+    Addr microPC[Impl::MaxThreads];
+
     /** The next PC of each thread. */
     Addr nextPC[Impl::MaxThreads];
 
     /** The next NPC of each thread. */
     Addr nextNPC[Impl::MaxThreads];
+
+    /** The next micro PC of each thread. */
+    Addr nextMicroPC[Impl::MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

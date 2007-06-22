@@ -91,6 +91,9 @@ let {{
         "osz" : "env.operandSize",
         "ssz" : "env.stackSize"
     }
+
+    for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
+        assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
     assembler.symbols.update(symbols)
 
     # Code literal which forces a default 64 bit operand size in 64 bit mode.

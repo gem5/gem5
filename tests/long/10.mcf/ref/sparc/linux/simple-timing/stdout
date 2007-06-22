@@ -4,19 +4,15 @@ by  Andreas Loebel
 Copyright (c) 1998,1999   ZIB Berlin
 All Rights Reserved.
 
-nodes                      : 1800
-active arcs                : 8190
-simplex iterations         : 6837
-flow value                 : 12860044181
-new implicit arcs          : 300000
-active arcs                : 308190
-simplex iterations         : 11843
-flow value                 : 9360043604
-new implicit arcs          : 22787
-active arcs                : 330977
-simplex iterations         : 11931
-flow value                 : 9360043512
-checksum                   : 798014
+nodes                      : 500
+active arcs                : 1905
+simplex iterations         : 1502
+flow value                 : 4990014995
+new implicit arcs          : 23867
+active arcs                : 25772
+simplex iterations         : 2663
+flow value                 : 3080014995
+checksum                   : 68389
 optimal
 M5 Simulator System
 
@@ -25,9 +21,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 15 2007 13:02:31
-M5 started Tue May 15 15:05:32 2007
+M5 compiled Jun 21 2007 21:15:48
+M5 started Fri Jun 22 02:01:52 2007
 M5 executing on zizzer.eecs.umich.edu
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-timing tests/run.py long/10.mcf/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 2669284585000 because target called exit()
+Exiting @ tick 359340764000 because target called exit()

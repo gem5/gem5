@@ -57,10 +57,12 @@ let {{
         addrCalcImm = 'EA = Rs1 + imm;'
         iop = InstObjParams(name, Name, 'Mem',
                 {"code": code, "postacc_code" : postacc_code,
-                 "fault_check": faultCode, "ea_code": addrCalcReg}, opt_flags)
+                 "fault_check": faultCode, "ea_code": addrCalcReg,
+                 "EA_trunc": TruncateEA}, opt_flags)
         iop_imm = InstObjParams(name, Name + "Imm", 'MemImm',
                 {"code": code, "postacc_code" : postacc_code,
-                "fault_check": faultCode, "ea_code": addrCalcImm}, opt_flags)
+                 "fault_check": faultCode, "ea_code": addrCalcImm,
+                 "EA_trunc": TruncateEA}, opt_flags)
         header_output = MemDeclare.subst(iop) + MemDeclare.subst(iop_imm)
         decoder_output = BasicConstructor.subst(iop) + BasicConstructor.subst(iop_imm)
         decode_block = ROrImmDecode.subst(iop)

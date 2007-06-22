@@ -88,8 +88,8 @@ Sparc32LiveProcess::startup()
 
     //From the SPARC ABI
 
-    //The process runs in user mode
-    threadContexts[0]->setMiscReg(MISCREG_PSTATE, 0x02);
+    //The process runs in user mode with 32 bit addresses
+    threadContexts[0]->setMiscReg(MISCREG_PSTATE, 0x0a);
 
     //Setup default FP state
     threadContexts[0]->setMiscRegNoEffect(MISCREG_FSR, 0);

@@ -694,7 +694,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
 
     // Squash Throughout Pipeline
     InstSeqNum squash_seq_num = commit.rob->readHeadInst(tid)->seqNum;
-    fetch.squash(0, sizeof(TheISA::MachInst), squash_seq_num, true, tid);
+    fetch.squash(0, sizeof(TheISA::MachInst), 0, squash_seq_num, tid);
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);
@@ -1150,6 +1150,20 @@ FullO3CPU<Impl>::setPC(Addr new_PC,unsigned tid)
 
 template <class Impl>
 uint64_t
+FullO3CPU<Impl>::readMicroPC(unsigned tid)
+{
+    return commit.readMicroPC(tid);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setMicroPC(Addr new_PC,unsigned tid)
+{
+    commit.setMicroPC(new_PC, tid);
+}
+
+template <class Impl>
+uint64_t
 FullO3CPU<Impl>::readNextPC(unsigned tid)
 {
     return commit.readNextPC(tid);
@@ -1174,6 +1188,20 @@ void
 FullO3CPU<Impl>::setNextNPC(uint64_t val,unsigned tid)
 {
     commit.setNextNPC(val, tid);
+}
+
+template <class Impl>
+uint64_t
+FullO3CPU<Impl>::readNextMicroPC(unsigned tid)
+{
+    return commit.readNextMicroPC(tid);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::setNextMicroPC(Addr new_PC,unsigned tid)
+{
+    commit.setNextMicroPC(new_PC, tid);
 }
 
 template <class Impl>
@@ -1224,9 +1252,7 @@ FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
-                                     bool squash_delay_slot,
-                                     const InstSeqNum &delay_slot_seq_num)
+FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid)
 {
     DPRINTF(O3CPU, "Thread %i: Deleting instructions from instruction"
             " list.\n", tid);
@@ -1257,12 +1283,6 @@ FullO3CPU<Impl>::removeInstsNotInROB(unsigned tid,
     while (inst_it != end_it) {
         assert(!instList.empty());
 
-#if ISA_HAS_DELAY_SLOT
-        if(!squash_delay_slot &&
-           delay_slot_seq_num >= (*inst_it)->seqNum) {
-            break;
-        }
-#endif
         squashInstIt(inst_it, tid);
 
         inst_it--;

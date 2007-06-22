@@ -103,7 +103,6 @@ output header {{
 #include "base/misc.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
-#include "mem/request.hh"  // some constructors use MemReq flags
 #include "sim/faults.hh"
 }};
 

@@ -61,8 +61,8 @@ def macroop CALL_I
 
     limm t2, imm
     rdip t1
-    subi "INTREG_RSP", "INTREG_RSP", dsz
-    st t1, ss, [0, t0, "INTREG_RSP"]
+    subi rsp, rsp, dsz
+    st t1, ss, [0, t0, rsp]
     wrip t1, t2
 };
 '''
