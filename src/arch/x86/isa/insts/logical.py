@@ -56,74 +56,64 @@
 microcode = '''
 def macroop XOR_R_R
 {
-    xor "env.reg", "env.reg", "env.regm"
+    xor reg, reg, regm
 };
 
 def macroop XOR_R_I
 {
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    xor "env.reg", "env.reg", "NUM_INTREGS+1"
+    limm t1, imm
+    xor reg, reg, t1
 };
 
 def macroop XOR_M_R
 {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    xor "NUM_INTREGS+1", "NUM_INTREGS+1", "env.reg"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    ld t1, ds, [scale, index, base], disp
+    xor t1, t1, reg
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop XOR_P_R
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    xor "NUM_INTREGS+1", "NUM_INTREGS+1", "env.reg"
-    st "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    xor t1, t1, reg
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop XOR_R_M
 {
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    xor "env.reg", "env.reg", "NUM_INTREGS+1"
+    ld t1, ds, [scale, index, base], disp
+    xor reg, reg, t1
 };
 
 def macroop XOR_R_P
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+1", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    xor "env.reg", "env.reg", "NUM_INTREGS+1"
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    xor reg, reg, t1
 };
 
 def macroop AND_R_I
 {
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    and "env.reg", "env.reg", "NUM_INTREGS+1"
+    limm t1, imm
+    and reg, reg, t1
 };
 
 def macroop AND_M_I
 {
-    ld "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    and "NUM_INTREGS+2", "NUM_INTREGS+2", "NUM_INTREGS+1"
-    st "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    ld t2, ds, [scale, index, base], disp
+    limm t1, imm
+    and t2, t2, t1
+    st t2, ds, [scale, index, base], disp
 };
 
 def macroop AND_P_I
 {
-    rdip "NUM_INTREGS+7"
-    ld "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
-    limm "NUM_INTREGS+1", "IMMEDIATE"
-    and "NUM_INTREGS+2", "NUM_INTREGS+2", "NUM_INTREGS+1"
-    st "NUM_INTREGS+2", 3, ["env.scale", "env.index", "env.base"], \
-        "DISPLACEMENT"
+    rdip t7
+    ld t2, ds, [scale, index, base], disp
+    limm t1, imm
+    and t2, t2, t1
+    st t2, ds, [scale, index, base], disp
 };
 '''
 #let {{

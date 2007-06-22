@@ -55,99 +55,22 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INTREGS_HH__
-#define __ARCH_X86_INTREGS_HH__
+#ifndef __ARCH_X86_SEGMENTREGS_HH__
+#define __ARCH_X86_SEGMENTREGS_HH__
 
 namespace X86ISA
 {
-    enum IntRegIndex
+    enum SegmentRegIndex
     {
-        INTREG_RAX,
-        INTREG_EAX = INTREG_RAX,
-        INTREG_AX = INTREG_RAX,
-        INTREG_AL = INTREG_RAX,
+        SEGMENT_REG_ES,
+        SEGMENT_REG_CS,
+        SEGMENT_REG_SS,
+        SEGMENT_REG_DS,
+        SEGMENT_REG_FS,
+        SEGMENT_REG_GS,
 
-        INTREG_RCX,
-        INTREG_ECX = INTREG_RCX,
-        INTREG_CX = INTREG_RCX,
-        INTREG_CL = INTREG_RCX,
-
-        INTREG_RDX,
-        INTREG_EDX = INTREG_RDX,
-        INTREG_DX = INTREG_RDX,
-        INTREG_DL = INTREG_RDX,
-
-        INTREG_RBX,
-        INTREG_EBX = INTREG_RBX,
-        INTREG_BX = INTREG_RBX,
-        INTREG_BL = INTREG_RBX,
-
-        INTREG_RSP,
-        INTREG_ESP = INTREG_RSP,
-        INTREG_SP = INTREG_RSP,
-        INTREG_SPL = INTREG_RSP,
-        INTREG_AH = INTREG_RSP,
-
-        INTREG_RBP,
-        INTREG_EBP = INTREG_RBP,
-        INTREG_BP = INTREG_RBP,
-        INTREG_BPL = INTREG_RBP,
-        INTREG_CH = INTREG_RBP,
-
-        INTREG_RSI,
-        INTREG_ESI = INTREG_RSI,
-        INTREG_SI = INTREG_RSI,
-        INTREG_SIL = INTREG_RSI,
-        INTREG_DH = INTREG_RSI,
-
-        INTREG_RDI,
-        INTREG_EDI = INTREG_RDI,
-        INTREG_DI = INTREG_RDI,
-        INTREG_DIL = INTREG_RDI,
-        INTREG_BH = INTREG_RDI,
-
-        INTREG_R8,
-        INTREG_R8D = INTREG_R8,
-        INTREG_R8W = INTREG_R8,
-        INTREG_R8B = INTREG_R8,
-
-        INTREG_R9,
-        INTREG_R9D = INTREG_R9,
-        INTREG_R9W = INTREG_R9,
-        INTREG_R9B = INTREG_R9,
-
-        INTREG_R10,
-        INTREG_R10D = INTREG_R10,
-        INTREG_R10W = INTREG_R10,
-        INTREG_R10B = INTREG_R10,
-
-        INTREG_R11,
-        INTREG_R11D = INTREG_R11,
-        INTREG_R11W = INTREG_R11,
-        INTREG_R11B = INTREG_R11,
-
-        INTREG_R12,
-        INTREG_R12D = INTREG_R12,
-        INTREG_R12W = INTREG_R12,
-        INTREG_R12B = INTREG_R12,
-
-        INTREG_R13,
-        INTREG_R13D = INTREG_R13,
-        INTREG_R13W = INTREG_R13,
-        INTREG_R13B = INTREG_R13,
-
-        INTREG_R14,
-        INTREG_R14D = INTREG_R14,
-        INTREG_R14W = INTREG_R14,
-        INTREG_R14B = INTREG_R14,
-
-        INTREG_R15,
-        INTREG_R15D = INTREG_R15,
-        INTREG_R15W = INTREG_R15,
-        INTREG_R15B = INTREG_R15,
-
-        NUM_INTREGS
+        NUM_SEGMENTREGS
     };
 };
 
-#endif // __ARCH_X86_INTREGS_HH__
+#endif // __ARCH_X86_SEGMENTREGS_HH__

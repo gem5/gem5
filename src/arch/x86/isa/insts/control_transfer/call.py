@@ -56,13 +56,14 @@
 microcode = '''
 def macroop CALL_I
 {
-    .adjust_env "if(machInst.mode.submode == SixtyFourBitMode && env.dataSize == 4) env.dataSize = 8\;"
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
 
-    limm "NUM_INTREGS+2", "IMMEDIATE"
-    rdip "NUM_INTREGS+1"
-    subi "INTREG_RSP", "INTREG_RSP", "env.dataSize"
-    st "NUM_INTREGS+1", 2, [0, "NUM_INTREGS", "INTREG_RSP"]
-    wrip "NUM_INTREGS+1", "NUM_INTREGS+2"
+    limm t2, imm
+    rdip t1
+    subi "INTREG_RSP", "INTREG_RSP", dsz
+    st t1, ss, [0, t0, "INTREG_RSP"]
+    wrip t1, t2
 };
 '''
 #let {{
