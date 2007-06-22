@@ -158,14 +158,14 @@ MSHRQueue::moveToFront(MSHR *mshr)
 void
 MSHRQueue::markInService(MSHR *mshr)
 {
-    //assert(mshr == pendingList.front());
-#if 0
-    if (!mshr->pkt->needsResponse() && !(mshr->pkt->cmd == MemCmd::UpgradeReq)) {
-        assert(mshr->getNumTargets() == 0);
+    if (mshr->isSimpleForward()) {
+        // we just forwarded the request packet & don't expect a
+        // response, so get rid of it
+        assert(mshr->getNumTargets() == 1);
+        mshr->popTarget();
         deallocate(mshr);
         return;
     }
-#endif
     mshr->inService = true;
     pendingList.erase(mshr->readyIter);
     //mshr->readyIter = NULL;

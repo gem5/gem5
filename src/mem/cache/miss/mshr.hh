@@ -164,28 +164,19 @@ public:
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets()
-    {
-        return ntargets;
-    }
+    int getNumTargets() { return ntargets; }
 
     /**
      * Returns a pointer to the target list.
      * @return a pointer to the target list.
      */
-    TargetList* getTargetList()
-    {
-        return &targets;
-    }
+    TargetList* getTargetList() { return &targets; }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget()
-    {
-        return &targets.front();
-    }
+    Target *getTarget() { return &targets.front(); }
 
     /**
      * Pop first target.
@@ -200,9 +191,14 @@ public:
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets()
+    bool hasTargets() { return !targets.empty(); }
+
+    bool isSimpleForward()
     {
-        return !targets.empty();
+        if (getNumTargets() != 1)
+            return false;
+        Target *tgt = getTarget();
+        return tgt->isCpuSide() && !tgt->pkt->needsResponse();
     }
 
     /**

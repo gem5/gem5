@@ -137,23 +137,6 @@ class Cache : public BaseCache
     BasePrefetcher *prefetcher;
 
     /**
-     * The clock ratio of the outgoing bus.
-     * Used for calculating critical word first.
-     */
-    int busRatio;
-
-     /**
-      * The bus width in bytes of the outgoing bus.
-      * Used for calculating critical word first.
-      */
-    int busWidth;
-
-    /**
-     * The latency of a hit in this device.
-     */
-    int hitLatency;
-
-    /**
      * Can this cache should allocate a block on a line-sized write miss.
      */
     const bool doFastWrites;
@@ -302,15 +285,6 @@ class Cache : public BaseCache
      * @param threadNum The thread to squash.
      */
     void squash(int threadNum);
-
-    /**
-     * Allocate a new MSHR or write buffer to handle a miss.
-     * @param pkt The access that missed.
-     * @param time The time to continue processing the miss.
-     * @param isFill Whether to fetch & allocate a block
-     *               or just forward the request.
-     */
-    MSHR *allocateBuffer(PacketPtr pkt, Tick time, bool requestBus);
 
     /**
      * Selects a outstanding request to service.

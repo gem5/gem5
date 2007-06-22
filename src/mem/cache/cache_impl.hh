@@ -150,27 +150,6 @@ Cache<TagStore,Coherence>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 
 
 template<class TagStore, class Coherence>
-MSHR *
-Cache<TagStore,Coherence>::allocateBuffer(PacketPtr pkt, Tick time,
-                                          bool requestBus)
-{
-    MSHRQueue *mq = NULL;
-
-    if (pkt->isWrite() && !pkt->isRead()) {
-        /**
-         * @todo Add write merging here.
-         */
-        mq = &writeBuffer;
-    } else {
-        mq = &mshrQueue;
-    }
-
-    return allocateBufferInternal(mq, pkt->getAddr(), pkt->getSize(),
-                                  pkt, time, requestBus);
-}
-
-
-template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::markInService(MSHR *mshr)
 {
@@ -437,6 +416,8 @@ Cache<TagStore,Coherence>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
             // on writeback misses instead.
         return NULL;
     }
+
+    assert(cpu_pkt->needsResponse());
 
     MemCmd cmd;
     const bool useUpgrades = true;
@@ -1043,23 +1024,34 @@ Cache<TagStore,Coherence>::getTimingPacket()
         return NULL;
     }
 
-    BlkType *blk = tags->findBlock(mshr->addr);
-
     // use request from 1st target
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
-    PacketPtr pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive);
+    PacketPtr pkt = NULL;
 
-    mshr->isCacheFill = (pkt != NULL);
+    if (mshr->isSimpleForward()) {
+        // no response expected, just forward packet as it is
+        assert(tags->findBlock(mshr->addr) == NULL);
+        pkt = tgt_pkt;
+    } else {
+        BlkType *blk = tags->findBlock(mshr->addr);
+        pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive);
 
-    if (pkt == NULL) {
-        // make copy of current packet to forward
-        pkt = new Packet(tgt_pkt);
-        pkt->allocate();
-        if (pkt->isWrite()) {
-            pkt->setData(tgt_pkt->getPtr<uint8_t>());
+        mshr->isCacheFill = (pkt != NULL);
+
+        if (pkt == NULL) {
+            // not a cache block request, but a response is expected
+            assert(!mshr->isSimpleForward());
+            // make copy of current packet to forward, keep current
+            // copy for response handling
+            pkt = new Packet(tgt_pkt);
+            pkt->allocate();
+            if (pkt->isWrite()) {
+                pkt->setData(tgt_pkt->getPtr<uint8_t>());
+            }
         }
     }
 
+    assert(pkt != NULL);
     pkt->senderState = mshr;
     return pkt;
 }

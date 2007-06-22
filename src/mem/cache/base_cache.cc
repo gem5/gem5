@@ -54,6 +54,7 @@ BaseCache::BaseCache(const std::string &name, Params &params)
       writeBuffer(params.numWriteBuffers, params.numMSHRs+1000,
                   MSHRQueue_WriteBuffer),
       blkSize(params.blkSize),
+      hitLatency(params.hitLatency),
       numTarget(params.numTargets),
       blocked(0),
       noTargetMSHR(NULL),

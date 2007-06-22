@@ -195,6 +195,11 @@ class BaseCache : public MemObject
     /** Block size of this cache */
     const int blkSize;
 
+    /**
+     * The latency of a hit in this device.
+     */
+    int hitLatency;
+
     /** The number of targets for each MSHR. */
     const int numTarget;
 
@@ -464,15 +469,10 @@ class BaseCache : public MemObject
         if (blocked == 0) {
             blocked_causes[cause]++;
             blockedCycle = curTick;
+            cpuSidePort->setBlocked();
         }
-        int old_state = blocked;
-        if (!(blocked & flag)) {
-            //Wasn't already blocked for this cause
-            blocked |= flag;
-            DPRINTF(Cache,"Blocking for cause %s\n", cause);
-            if (!old_state)
-                cpuSidePort->setBlocked();
-        }
+        blocked |= flag;
+        DPRINTF(Cache,"Blocking for cause %d, mask=%d\n", cause, blocked);
     }
 
     /**
@@ -485,16 +485,11 @@ class BaseCache : public MemObject
     void clearBlocked(BlockedCause cause)
     {
         uint8_t flag = 1 << cause;
-        DPRINTF(Cache,"Unblocking for cause %s, causes left=%i\n",
-                cause, blocked);
-        if (blocked & flag)
-        {
-            blocked &= ~flag;
-            if (!isBlocked()) {
-                blocked_cycles[cause] += curTick - blockedCycle;
-                DPRINTF(Cache,"Unblocking from all causes\n");
-                cpuSidePort->clearBlocked();
-            }
+        blocked &= ~flag;
+        DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
+        if (blocked == 0) {
+            blocked_cycles[cause] += curTick - blockedCycle;
+            cpuSidePort->clearBlocked();
         }
     }
 
