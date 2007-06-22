@@ -6,9 +6,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun 10 2007 14:06:20
-M5 started Sun Jun 10 14:22:36 2007
-M5 executing on iceaxe
-command line: /Users/nate/build/outgoing/build/ALPHA_SE/m5.debug -d /Users/nate/build/outgoing/build/ALPHA_SE/tests/debug/quick/00.hello/alpha/tru64/o3-timing tests/run.py quick/00.hello/alpha/tru64/o3-timing
+M5 compiled Jun 21 2007 21:25:27
+M5 started Fri Jun 22 00:04:44 2007
+M5 executing on zizzer.eecs.umich.edu
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/tru64/o3-timing tests/run.py quick/00.hello/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 2053000 because target called exit()
+Exiting @ tick 2055000 because target called exit()
