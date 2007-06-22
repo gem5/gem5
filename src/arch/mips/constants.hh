@@ -28,70 +28,14 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
-#define __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
+#ifndef __ARCH_MIPS_CONSTANTS_HH__
+#define __ARCH_MIPS_CONSTANTS_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/isa_traits.hh"
-#include "base/misc.hh"
-#include "sim/faults.hh"
-
-class Checkpoint;
-class ThreadContext;
+//#include "config/full_system.hh"
 
 namespace MipsISA
 {
-    static inline std::string getIntRegName(RegIndex)
-    {
-        return "";
-    }
-
-    enum MiscIntRegNums {
-       LO = NumIntArchRegs,
-       HI,
-       DSPACX0,
-       DSPLo1,
-       DSPHi1,
-       DSPACX1,
-       DSPLo2,
-       DSPHi2,
-       DSPACX2,
-       DSPLo3,
-       DSPHi3,
-       DSPACX3,
-       DSPControl,
-       DSPLo0 = LO,
-       DSPHi0 = HI
-    };
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-
-      public:
-        void clear() { bzero(&regs, sizeof(regs)); }
-
-        IntReg readReg(int intReg)
-        {
-            return regs[intReg];
-        }
-
-        Fault setReg(int intReg, const IntReg &val)
-        {
-            if (intReg != ZeroReg) {
-                regs[intReg] = val;
-            }
-
-            return NoFault;
-        }
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-    };
-
 } // namespace MipsISA
 
 #endif

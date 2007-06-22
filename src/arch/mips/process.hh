@@ -48,12 +48,12 @@ class MipsLiveProcess : public LiveProcess
                 System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
                 std::vector<std::string> &argv,
                 std::vector<std::string> &envp,
-                const std::string &cwd,
+                    const std::string &cwd,
                 uint64_t _uid, uint64_t _euid,
                 uint64_t _gid, uint64_t _egid,
                 uint64_t _pid, uint64_t _ppid);
 
-    void startup();
+    virtual void startup();
 
 };
 

@@ -30,18 +30,18 @@
 
 ////////////////////////////////////////////////////////////////////
 //
-// Integer operate instructions
+// Coprocessor instructions
 //
 
 //Outputs to decoder.hh
 output header {{
 
-        class Control : public MipsStaticInst
+        class CP0Control : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                CP0Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
                            MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
@@ -49,26 +49,13 @@ output header {{
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 
-        class CP0Control : public Control
-        {
-                protected:
-
-                /// Constructor
-                CP0Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                           Control(mnem, _machInst, __opClass)
-                {
-                }
-
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-        };
-
-        class CP1Control : public Control
+        class CP1Control : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
                 CP1Control(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                           Control(mnem, _machInst, __opClass)
+                           MipsStaticInst(mnem, _machInst, __opClass)
                 {
                 }
 
@@ -77,46 +64,34 @@ output header {{
 
 }};
 
+// Basic instruction class execute method template.
+def template ControlExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+                %(op_decl)s;
+                %(op_rd)s;
+
+                if (isCoprocessorEnabled(xc, 0)) {
+                    %(code)s;
+                } else {
+                    fault = new CoprocessorUnusableFault();
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                }
+                return fault;
+        }
+}};
+
 //Outputs to decoder.cc
 output decoder {{
-        std::string Control::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "%-10s ", mnemonic);
-
-            if (mnemonic == "mfc0" || mnemonic == "mtc0") {
-                ccprintf(ss, "%-10s %d,%d,%d", mnemonic,RT,RD,SEL);
-            } else {
-
-                // just print the first dest... if there's a second one,
-                // it's generally implicit
-                if (_numDestRegs > 0) {
-                    printReg(ss, _destRegIdx[0]);
-                }
-
-                ss << ", ";
-
-                // just print the first two source regs... if there's
-                // a third one, it's a read-modify-write dest (Rc),
-                // e.g. for CMOVxx
-                if (_numSrcRegs > 0) {
-                    printReg(ss, _srcRegIdx[0]);
-                }
-
-                if (_numSrcRegs > 1) {
-                    ss << ", ";
-                    printReg(ss, _srcRegIdx[1]);
-                }
-            }
-
-            return ss.str();
-        }
-
         std::string CP0Control::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream ss;
-            ccprintf(ss, "%-10s r%d, r%d, %d", mnemonic, RT, RD, SEL);
+            ccprintf(ss, "%-10s r%d, %d, %d", mnemonic, RT, RD, SEL);
             return ss.str();
         }
 
@@ -129,28 +104,50 @@ output decoder {{
 
 }};
 
-def format System(code, *flags) {{
-        iop = InstObjParams(name, Name, 'Control', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+output exec {{
+        bool isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)
+        {
+          switch(cop_num)
+            {
+            case 0:
+#if FULL_SYSTEM
+              if((xc->readMiscReg(MipsISA::Status) & 0x10000006) == 0 && (xc->readMiscReg(MipsISA::Debug) & 0x40000000 ) == 0) {
+                  // Unable to use Status_CU0, etc directly, using bitfields & masks
+                  return false;
+              }
+#else
+              //printf("Syscall Emulation Mode: CP0 Enable Check defaults to TRUE\n");
+#endif
+              break;
+            case 1:
+              break;
+            case 2:
+              break;
+            case 3:
+              break;
+            default: panic("Invalid Coprocessor Number Specified");
+              break;
+            }
+            return true;
+        }
 }};
 
 def format CP0Control(code, *flags) {{
-        iop = InstObjParams(name, Name, 'CP0Control', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    flags += ('IsNonSpeculative', )
+    iop = InstObjParams(name, Name, 'CP0Control', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ControlExecute.subst(iop)
 }};
 
 def format CP1Control(code, *flags) {{
-        iop = InstObjParams(name, Name, 'CP1Control', code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    flags += ('IsNonSpeculative', )
+    iop = InstObjParams(name, Name, 'CP1Control', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ControlExecute.subst(iop)
 }};
 
 

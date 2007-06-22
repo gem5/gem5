@@ -54,9 +54,32 @@ FaultName ResetFault::_name = "reset";
 FaultVect ResetFault::_vect = 0x0001;
 FaultStat ResetFault::_count;
 
+FaultName CoprocessorUnusableFault::_name = "Coprocessor Unusable";
+FaultVect CoprocessorUnusableFault::_vect = 0xF001;
+FaultStat CoprocessorUnusableFault::_count;
+
+FaultName ReservedInstructionFault::_name = "Reserved Instruction";
+FaultVect ReservedInstructionFault::_vect = 0x0F01;
+FaultStat ReservedInstructionFault::_count;
+
+FaultName ThreadFault::_name = "thread";
+FaultVect ThreadFault::_vect = 0x00F1;
+FaultStat ThreadFault::_count;
+
+
 FaultName ArithmeticFault::_name = "arith";
 FaultVect ArithmeticFault::_vect = 0x0501;
 FaultStat ArithmeticFault::_count;
+
+FaultName UnimplementedOpcodeFault::_name = "opdec";
+FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
+FaultStat UnimplementedOpcodeFault::_count;
+
+#if !FULL_SYSTEM
+//FaultName PageTableFault::_name = "page_table_fault";
+//FaultVect PageTableFault::_vect = 0x0000;
+//FaultStat PageTableFault::_count;
+#endif
 
 FaultName InterruptFault::_name = "interrupt";
 FaultVect InterruptFault::_vect = 0x0101;
@@ -90,21 +113,77 @@ FaultName ItbAcvFault::_name = "iaccvio";
 FaultVect ItbAcvFault::_vect = 0x0081;
 FaultStat ItbAcvFault::_count;
 
-FaultName UnimplementedOpcodeFault::_name = "opdec";
-FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
-FaultStat UnimplementedOpcodeFault::_count;
-
 FaultName FloatEnableFault::_name = "fen";
 FaultVect FloatEnableFault::_vect = 0x0581;
 FaultStat FloatEnableFault::_count;
 
-FaultName PalFault::_name = "pal";
-FaultVect PalFault::_vect = 0x2001;
-FaultStat PalFault::_count;
-
 FaultName IntegerOverflowFault::_name = "intover";
 FaultVect IntegerOverflowFault::_vect = 0x0501;
 FaultStat IntegerOverflowFault::_count;
+
+FaultName DspStateDisabledFault::_name = "intover";
+FaultVect DspStateDisabledFault::_vect = 0x001a;
+FaultStat DspStateDisabledFault::_count;
+
+
+/*void PageTableFault::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+
+    Addr page_addr = p->pTable->pageAlign(vaddr);
+
+    warn("%i: [tid:%i]: %s encountered @ addr %x. Allocating new page for address range %x - %x.\n",
+         curTick, tc->getThreadNum(), name(), vaddr, page_addr, page_addr+VMPageSize);
+
+    p->pTable->allocate(page_addr, VMPageSize);
+
+    return;
+}
+*/
+    /* address is higher than the stack region or in the current stack region
+    if (vaddr > p->stack_base || vaddr > p->stack_min)
+        FaultBase::invoke(tc);
+
+    // We've accessed the next page
+    if (vaddr > p->stack_min - PageBytes) {
+        p->stack_min -= PageBytes;
+        if (p->stack_base - p->stack_min > 8*1024*1024) {
+            warn("Already allocated Over max stack size for one thread\n");
+        }
+        warn("%i: Allocating page for range %x - %x",
+             curTick, p->stack_min, p->stack_min-PageBytes);
+
+        p->pTable->allocate(p->stack_min, PageBytes);
+        warn("Increasing stack size by one page.");
+    } else {
+        FaultBase::invoke(tc);
+        }*/
+
+void ResetFault::invoke(ThreadContext *tc)
+{
+    warn("[tid:%i]: %s encountered.\n", tc->getThreadNum(), name());
+    //tc->getCpuPtr()->reset();
+}
+
+void CoprocessorUnusableFault::invoke(ThreadContext *tc)
+{
+    panic("[tid:%i]: %s encountered.\n", tc->getThreadNum(), name());
+}
+
+void ReservedInstructionFault::invoke(ThreadContext *tc)
+{
+    panic("[tid:%i]: %s encountered.\n", tc->getThreadNum(), name());
+}
+
+void ThreadFault::invoke(ThreadContext *tc)
+{
+    panic("[tid:%i]: %s encountered.\n", tc->getThreadNum(), name());
+}
+
+void DspStateDisabledFault::invoke(ThreadContext *tc)
+{
+    panic("[tid:%i]: %s encountered.\n", tc->getThreadNum(), name());
+}
 
 } // namespace MipsISA
 

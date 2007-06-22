@@ -70,7 +70,9 @@ def template TlbOpExecute {{
 
 // Primary format for integer operate instructions:
 def format TlbOp(code, *opt_flags) {{
-        iop = InstObjParams(name, Name, 'MipsStaticInst', code, opt_flags)
+        orig_code = code
+        cblk = code
+        iop = InstObjParams(name, Name, 'MipsStaticInst', cblk, opt_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecodeWithMnemonic.subst(iop)

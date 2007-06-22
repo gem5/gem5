@@ -28,6 +28,7 @@
 //
 // Authors: Korey Sewell
 
+//@TODO: Make sure the naming convention is consistent here.
 ////////////////////////////////////////////////////////////////////
 //
 // Bitfield definitions.
@@ -58,6 +59,7 @@ def bitfield RT_RD    <20:11>;
 def bitfield RD	      <15:11>;
 
 def bitfield INTIMM	  <15: 0>;
+def bitfield RS_RT_INTIMM <25: 0>;
 
 // Floating-point operate format
 def bitfield FMT      <25:21>;
@@ -81,7 +83,7 @@ def bitfield BRANCH_CC <20:18>;
 // CP0 Register Select
 def bitfield SEL       < 2: 0>;
 
-// Interrupts
+// INTERRUPTS
 def bitfield SC       < 5: 5>;
 
 // Branch format
@@ -100,3 +102,20 @@ def bitfield LSB	<10: 6>;
 
 // M5 instructions
 def bitfield M5FUNC <7:0>;
+
+// DSP instructions
+def bitfield OP        <10:6>;
+def bitfield OP_HI     <10:9>;
+def bitfield OP_LO     <8:6>;
+def bitfield DSPSA     <23:21>;
+def bitfield HILOSA    <25:20>;
+def bitfield RDDSPMASK <21:16>;
+def bitfield WRDSPMASK <16:11>;
+def bitfield ACSRC     <22:21>;
+def bitfield ACDST     <12:11>;
+def bitfield BP        <12:11>;
+
+// MT Instructions
+def bitfield POS   <10: 6>;
+def bitfield MT_U     <5:5>;
+def bitfield MT_H     <4:4>;

@@ -88,7 +88,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             + completeAccTemplate.subst(iop))
 }};
 
-
 output header {{
         std::string inst2string(MachInst machInst);
 }};
@@ -97,7 +96,7 @@ output decoder {{
 
 std::string inst2string(MachInst machInst)
 {
-    std::string str = "";
+    string str = "";
     uint32_t mask = 0x80000000;
 
     for(int i=0; i < 32; i++) {
@@ -114,40 +113,3 @@ std::string inst2string(MachInst machInst)
 }
 
 }};
-output exec {{
-
-    using namespace MipsISA;
-
-    /// CLEAR ALL CPU INST/EXE HAZARDS
-    inline void
-    clear_exe_inst_hazards()
-    {
-        //CODE HERE
-    }
-
-
-    /// Check "FP enabled" machine status bit.  Called when executing any FP
-    /// instruction in full-system mode.
-    /// @retval Full-system mode: NoFault if FP is enabled, FenFault
-    /// if not.  Non-full-system mode: always returns NoFault.
-#if FULL_SYSTEM
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
-    {
-        Fault fault = NoFault;	// dummy... this ipr access should not fault
-        if (!Mips34k::ICSR_FPE(xc->readIpr(MipsISA::IPR_ICSR, fault))) {
-            fault = FloatEnableFault;
-        }
-        return fault;
-    }
-#else
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
-    {
-        return NoFault;
-    }
-#endif
-
-
-
-}};
-
-

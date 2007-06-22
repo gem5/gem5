@@ -349,22 +349,22 @@ class SimpleThread : public ThreadState
         regs.setNextNPC(val);
     }
 
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid = 0)
     {
         return regs.readMiscRegNoEffect(misc_reg);
     }
 
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscReg(int misc_reg, unsigned tid = 0)
     {
         return regs.readMiscReg(misc_reg, tc);
     }
 
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0)
     {
         return regs.setMiscRegNoEffect(misc_reg, val);
     }
 
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid = 0)
     {
         return regs.setMiscReg(misc_reg, val, tc);
     }

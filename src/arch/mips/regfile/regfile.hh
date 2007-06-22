@@ -32,6 +32,8 @@
 #define __ARCH_MIPS_REGFILE_REGFILE_HH__
 
 #include "arch/mips/types.hh"
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/float_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
@@ -49,33 +51,50 @@ namespace MipsISA
         MiscRegFile miscRegFile;	// control register file
 
       public:
-
         void clear()
+        {
+            intRegFile.clear();
+            floatRegFile.clear();
+            miscRegFile.clear();
+        }
+
+        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes)
         {
             bzero(&intRegFile, sizeof(intRegFile));
             bzero(&floatRegFile, sizeof(floatRegFile));
-            bzero(&miscRegFile, sizeof(miscRegFile));
+            miscRegFile.reset(core_name, num_threads, num_vpes);
         }
 
-        MiscReg readMiscRegNoEffect(int miscReg)
+        IntReg readIntReg(int intReg)
         {
-            return miscRegFile.readRegNoEffect(miscReg);
+            return intRegFile.readReg(intReg);
         }
 
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc)
+        Fault setIntReg(int intReg, const IntReg &val)
         {
-            return miscRegFile.readReg(miscReg, tc);
+            return intRegFile.setReg(intReg, val);
         }
 
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val)
+        MiscReg readMiscRegNoEffect(int miscReg, unsigned tid = 0)
         {
-            miscRegFile.setRegNoEffect(miscReg, val);
+            return miscRegFile.readRegNoEffect(miscReg, tid);
+        }
+
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc,
+                                      unsigned tid = 0)
+        {
+            return miscRegFile.readReg(miscReg, tc, tid);
+        }
+
+        void setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid = 0)
+        {
+            miscRegFile.setRegNoEffect(miscReg, val, tid);
         }
 
         void setMiscReg(int miscReg, const MiscReg &val,
-                ThreadContext * tc)
+                ThreadContext * tc, unsigned tid = 0)
         {
-            miscRegFile.setReg(miscReg, val, tc);
+            miscRegFile.setReg(miscReg, val, tc, tid);
         }
 
         FloatRegVal readFloatReg(int floatReg)
@@ -98,35 +117,26 @@ namespace MipsISA
             return floatRegFile.readRegBits(floatReg,width);
         }
 
-        void setFloatReg(int floatReg, const FloatRegVal &val)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val)
         {
-            floatRegFile.setReg(floatReg, val, SingleWidth);
+            return floatRegFile.setReg(floatReg, val, SingleWidth);
         }
 
-        void setFloatReg(int floatReg, const FloatRegVal &val, int width)
+        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width)
         {
-            floatRegFile.setReg(floatReg, val, width);
+            return floatRegFile.setReg(floatReg, val, width);
         }
 
-        void setFloatRegBits(int floatReg, const FloatRegBits &val)
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
         {
-            floatRegFile.setRegBits(floatReg, val, SingleWidth);
+            return floatRegFile.setRegBits(floatReg, val, SingleWidth);
         }
 
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
         {
-            floatRegFile.setRegBits(floatReg, val, width);
+            return floatRegFile.setRegBits(floatReg, val, width);
         }
 
-        IntReg readIntReg(int intReg)
-        {
-            return intRegFile.readReg(intReg);
-        }
-
-        void setIntReg(int intReg, const IntReg &val)
-        {
-            intRegFile.setReg(intReg, val);
-        }
       protected:
 
         Addr pc;			// program counter
@@ -134,6 +144,7 @@ namespace MipsISA
         Addr nnpc;			// next-next-cycle program counter
                                         // used to implement branch delay slot
                                         // not real register
+
       public:
         Addr readPC()
         {

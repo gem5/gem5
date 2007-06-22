@@ -128,6 +128,7 @@ baseFlags = [
     'Mbox',
     'MemDepUnit',
     'MemoryAccess',
+    'MipsPRA',
     'O3CPU',
     'OzoneCPU',
     'OzoneLSQ',

@@ -1,0 +1,218 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2006 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Korey Sewell
+
+////////////////////////////////////////////////////////////////////
+//
+// DSP integer operate instructions
+//
+output header {{
+#include <iostream>
+    using namespace std;
+    /**
+     * Base class for integer operations.
+     */
+    class DspIntOp : public MipsStaticInst
+    {
+      protected:
+
+        /// Constructor
+        DspIntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            MipsStaticInst(mnem, _machInst, __opClass)
+        {
+        }
+    };
+
+    class DspHiLoOp : public MipsStaticInst
+    {
+      protected:
+
+        /// Constructor
+        DspHiLoOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+            MipsStaticInst(mnem, _machInst, __opClass)
+        {
+        }
+    };
+}};
+
+// Dsp instruction class execute method template.
+def template DspExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(op_decl)s;
+
+                if (isDspPresent(xc))
+                {
+                    if (isDspEnabled(xc))
+                    {
+                        %(op_rd)s;
+                        %(code)s;
+                    }
+                    else
+                    {
+                        fault = new DspStateDisabledFault();
+                    }
+                }
+                else
+                {
+                    fault = new ReservedInstructionFault();
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                }
+                return fault;
+        }
+}};
+
+// DspHiLo instruction class execute method template.
+def template DspHiLoExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(op_decl)s;
+
+                if (isDspPresent(xc))
+                {
+                    if (isDspEnabled(xc))
+                    {
+                        %(op_rd)s;
+                        %(code)s;
+                    }
+                    else
+                    {
+                        fault = new DspStateDisabledFault();
+                    }
+                }
+                else
+                {
+                    fault = new ReservedInstructionFault();
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                    //If there are 2 Destination Registers then
+                    //concatenate the values for the traceData
+                    if(traceData && _numDestRegs == 2) {
+                        // FIXME - set the trace value correctly here
+                        //uint64_t hilo_final_val = (uint64_t)HI_RD_SEL << 32 | LO_RD_SEL;
+                        //traceData->setData(hilo_final_val);
+                    }
+                }
+                return fault;
+        }
+}};
+
+//Outputs to decoder.cc
+output decoder {{
+}};
+
+output exec {{
+    bool isDspEnabled(%(CPU_exec_context)s *xc)
+    {
+#if FULL_SYSTEM
+        if( bits( xc->readMiscReg(MipsISA::Status), 24, 24 ) == 0 )
+            return false;
+#else
+        //printf("Syscall Emulation Mode: isDspEnabled() check defaults to TRUE\n");
+#endif
+        return true;
+    }
+}};
+
+output exec {{
+    bool isDspPresent(%(CPU_exec_context)s *xc)
+    {
+#if FULL_SYSTEM
+        if( bits( xc->readMiscReg(MipsISA::Config3), 10, 10 ) == 0 )
+            return false;
+#else
+        //printf("Syscall Emulation Mode: isDspPresent() check defaults to TRUE\n");
+#endif
+        return true;
+    }
+}};
+
+// add code to fetch the DSPControl register
+// and write it back after execution, giving
+// the instruction the opportunity to modify
+// it if necessary
+def format DspIntOp(code, *opt_flags) {{
+
+    decl_code = 'uint32_t dspctl;\n'
+    decl_code += 'dspctl = DSPControl;\n'
+
+    write_code = 'DSPControl = dspctl;\n'
+
+    code = decl_code + code + write_code
+
+    iop = InstObjParams(name, Name, 'DspIntOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = DspExecute.subst(iop)
+}};
+
+// add code to fetch the DSPControl register
+// and write it back after execution, giving
+// the instruction the opportunity to modify
+// it if necessary; also, fetch the appropriate
+// HI/LO register pair, based on the AC
+// instruction field.
+
+def format DspHiLoOp(code, *opt_flags) {{
+
+    decl_code = 'int64_t dspac;\n'
+    decl_code += 'uint32_t dspctl;\n'
+
+    fetch_code = 'dspctl = DSPControl;\n'
+    fetch_code += 'dspac = HI_RD_SEL;\n'
+    fetch_code += 'dspac = dspac << 32 | LO_RD_SEL;\n'
+
+    write_code = 'DSPControl = dspctl;\n'
+    write_code += 'HI_RD_SEL = dspac<63:32>;\n'
+    write_code += 'LO_RD_SEL = dspac<31:0>;\n'
+
+    code = decl_code + fetch_code + code + write_code
+
+    iop = InstObjParams(name, Name, 'DspHiLoOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = DspHiLoExecute.subst(iop)
+
+}};
+
+
+

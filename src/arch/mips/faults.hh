@@ -80,6 +80,42 @@ class AlignmentFault : public MipsFault
     bool isAlignmentFault() {return true;}
 };
 
+class UnimplementedOpcodeFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+};
+
+#if !FULL_SYSTEM
+//class PageTableFault : public MipsFault
+//{
+//private:
+//  Addr vaddr;
+//  static FaultName _name;
+//  static FaultVect _vect;
+//  static FaultStat _count;
+//public:
+//  PageTableFault(Addr va)
+//      : vaddr(va) {}
+//  FaultName name() {return _name;}
+//  FaultVect vect() {return _vect;}
+//  FaultStat & countStat() {return _count;}
+//  void invoke(ThreadContext * tc);
+//};
+
+static inline Fault genPageTableFault(Addr va)
+{
+    return new PageTableFault(va);
+}
+#endif
+
+
 static inline Fault genMachineCheckFault()
 {
     return new MachineCheckFault;
@@ -100,7 +136,48 @@ class ResetFault : public MipsFault
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
 };
+
+class CoprocessorUnusableFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
+};
+
+class ReservedInstructionFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
+};
+
+class ThreadFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
+};
+
 
 class ArithmeticFault : public MipsFault
 {
@@ -217,34 +294,8 @@ class ItbAcvFault : public MipsFault
     FaultStat & countStat() {return _count;}
 };
 
-class UnimplementedOpcodeFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
 class FloatEnableFault : public MipsFault
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class PalFault : public MipsFault
-{
-  protected:
-    bool skipFaultingInstruction() {return true;}
   private:
     static FaultName _name;
     static FaultVect _vect;
@@ -265,6 +316,19 @@ class IntegerOverflowFault : public MipsFault
     FaultName name() {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
+};
+
+class DspStateDisabledFault : public MipsFault
+{
+  private:
+    static FaultName _name;
+    static FaultVect _vect;
+    static FaultStat _count;
+  public:
+    FaultName name() {return _name;}
+    FaultVect vect() {return _vect;}
+    FaultStat & countStat() {return _count;}
+    void invoke(ThreadContext * tc);
 };
 
 } // MipsISA namespace

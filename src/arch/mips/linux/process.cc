@@ -37,7 +37,9 @@
 #include "kern/linux/linux.hh"
 
 #include "sim/process.hh"
+#include "sim/system.hh"
 #include "sim/syscall_emul.hh"
+#include "sim/eventq.hh"
 
 using namespace std;
 using namespace MipsISA;
@@ -50,7 +52,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
 
     strcpy(name->sysname, "Linux");
-    strcpy(name->nodename, "m5.eecs.umich.edu");
+    strcpy(name->nodename,"m5.eecs.umich.edu");
     strcpy(name->release, "2.4.20");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
@@ -116,7 +118,6 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 1;
 }
 
-
 SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
@@ -155,12 +156,12 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 34 */ SyscallDesc("nice", unimplementedFunc),
     /* 35 */ SyscallDesc("ftime", unimplementedFunc),
     /* 36 */ SyscallDesc("sync", unimplementedFunc),
-    /* 37 */ SyscallDesc("kill", ignoreFunc),
+    /* 37 */ SyscallDesc("kill", unimplementedFunc),
     /* 38 */ SyscallDesc("rename", unimplementedFunc),
     /* 39 */ SyscallDesc("mkdir", unimplementedFunc),
     /* 40 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
-    /* 42 */ SyscallDesc("pipe", unimplementedFunc),
+    /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
     /* 43 */ SyscallDesc("times", unimplementedFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
     /* 45 */ SyscallDesc("brk", obreakFunc),
@@ -172,7 +173,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("umount2", unimplementedFunc),
     /* 53 */ SyscallDesc("lock", unimplementedFunc),
-    /* 54 */ SyscallDesc("ioctl", ioctlFunc<MipsLinux>),
+    /* 54 */ SyscallDesc("ioctl", unimplementedFunc/*ioctlFunc<MipsLinux>*/),
     /* 55 */ SyscallDesc("fcntl", fcntlFunc),
     /* 56 */ SyscallDesc("mpx", unimplementedFunc),
     /* 57 */ SyscallDesc("setpgid", unimplementedFunc),
@@ -193,9 +194,9 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 72 */ SyscallDesc("sigsuspend", unimplementedFunc),
     /* 73 */ SyscallDesc("sigpending", unimplementedFunc),
     /* 74 */ SyscallDesc("sethostname", ignoreFunc),
-    /* 75 */ SyscallDesc("setrlimit", unimplementedFunc),
-    /* 76 */ SyscallDesc("getrlimit", unimplementedFunc),
-    /* 77 */ SyscallDesc("getrusage", unimplementedFunc),
+    /* 75 */ SyscallDesc("setrlimit", unimplementedFunc/*setrlimitFunc<MipsLinux>*/),
+    /* 76 */ SyscallDesc("getrlimit", unimplementedFunc/*getrlimitFunc<MipsLinux>*/),
+    /* 77 */ SyscallDesc("getrusage", getrusageFunc<MipsLinux>),
     /* 78 */ SyscallDesc("gettimeofday", unimplementedFunc),
     /* 79 */ SyscallDesc("settimeofday", unimplementedFunc),
     /* 80 */ SyscallDesc("getgroups", unimplementedFunc),
@@ -212,8 +213,8 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 91 */ SyscallDesc("munmap",munmapFunc),
     /* 92 */ SyscallDesc("truncate", truncateFunc),
     /* 93 */ SyscallDesc("ftruncate", ftruncateFunc),
-    /* 94 */ SyscallDesc("fchmod", unimplementedFunc),
-    /* 95 */ SyscallDesc("fchown", unimplementedFunc),
+    /* 94 */ SyscallDesc("fchmod", fchmodFunc<MipsLinux>),
+    /* 95 */ SyscallDesc("fchown", fchownFunc),
     /* 96 */ SyscallDesc("getpriority", unimplementedFunc),
     /* 97 */ SyscallDesc("setpriority", unimplementedFunc),
     /* 98 */ SyscallDesc("profil", unimplementedFunc),
@@ -238,7 +239,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 120 */ SyscallDesc("clone", unimplementedFunc),
+    /* 120 */ SyscallDesc("clone", unimplementedFunc/*cloneFunc<MipsLinux>*/),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
     /* 122 */ SyscallDesc("uname", unameFunc),
     /* 123 */ SyscallDesc("modify_ldt", unimplementedFunc),
@@ -271,7 +272,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 150 */ SyscallDesc("unused#150", unimplementedFunc),
     /* 151 */ SyscallDesc("getsid", unimplementedFunc),
     /* 152 */ SyscallDesc("fdatasync", unimplementedFunc),
-    /* 153 */ SyscallDesc("sysctl", unimplementedFunc),
+    /* 153 */ SyscallDesc("sysctl", ignoreFunc),
     /* 154 */ SyscallDesc("mlock", unimplementedFunc),
     /* 155 */ SyscallDesc("munlock", unimplementedFunc),
     /* 156 */ SyscallDesc("mlockall", unimplementedFunc),
@@ -312,12 +313,12 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 191 */ SyscallDesc("getresgid", unimplementedFunc),
     /* 192 */ SyscallDesc("prctl", unimplementedFunc),
     /* 193 */ SyscallDesc("rt_sigreturn", unimplementedFunc),
-    /* 194 */ SyscallDesc("rt_sigaction", ignoreFunc),
-    /* 195 */ SyscallDesc("rt_sigprocmask", ignoreFunc),
+    /* 194 */ SyscallDesc("rt_sigaction", unimplementedFunc/*rt_sigactionFunc<MipsLinux>*/),
+    /* 195 */ SyscallDesc("rt_sigprocmask", unimplementedFunc/*rt_sigprocmaskFunc<MipsLinux>*/),
     /* 196 */ SyscallDesc("rt_sigpending", unimplementedFunc),
     /* 197 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),
     /* 198 */ SyscallDesc("rt_sigqueueinfo", ignoreFunc),
-    /* 199 */ SyscallDesc("rt_sigsuspend", unimplementedFunc),
+    /* 199 */ SyscallDesc("rt_sigsuspend", unimplementedFunc/*rt_sigsuspendFunc<MipsLinux>*/),
     /* 200 */ SyscallDesc("pread64", unimplementedFunc),
     /* 201 */ SyscallDesc("pwrite64", unimplementedFunc),
     /* 202 */ SyscallDesc("chown", unimplementedFunc),
@@ -400,8 +401,9 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 279 */ SyscallDesc("unknown #279", unimplementedFunc),
     /* 280 */ SyscallDesc("add_key", unimplementedFunc),
     /* 281 */ SyscallDesc("request_key", unimplementedFunc),
-    /* 282 */ SyscallDesc("keyctl", unimplementedFunc),
+    /* 282 */ SyscallDesc("keyctl", unimplementedFunc)
 };
+
 
 MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
                                      ObjectFile *objFile,
@@ -421,7 +423,13 @@ MipsLinuxProcess::MipsLinuxProcess(const std::string &name,
     : MipsLiveProcess(name, objFile, system, stdin_fd, stdout_fd, stderr_fd,
                       argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
-{ }
+{  }
+
+void
+MipsLinuxProcess::startup()
+{
+    MipsLiveProcess::argsInit(MachineBytes, VMPageSize);
+}
 
 SyscallDesc*
 MipsLinuxProcess::getDesc(int callnum)
@@ -434,3 +442,8 @@ MipsLinuxProcess::getDesc(int callnum)
 
     return &syscallDescs[m5_sys_idx];
 }
+
+
+
+
+

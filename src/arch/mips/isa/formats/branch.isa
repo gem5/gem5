@@ -36,6 +36,7 @@
 output header {{
 
 #include <iostream>
+    using namespace std;
 
     /**
      * Base class for instructions whose disassembly is not purely a
@@ -216,7 +217,7 @@ output decoder {{
     }
 }};
 
-def format Branch(code,*opt_flags) {{
+def format Branch(code, *opt_flags) {{
     not_taken_code = '  NNPC = NNPC;\n'
     not_taken_code += '} \n'
 
@@ -230,18 +231,63 @@ def format Branch(code,*opt_flags) {{
             not_taken_code = '  NPC = NNPC;\n'
             not_taken_code += '  NNPC = NNPC + 4;\n'
             not_taken_code += '} \n'
-            inst_flags = ('IsCondDelaySlot', )
+            inst_flags += ('IsCondDelaySlot', )
         else:
             inst_flags += (x, )
 
     #Take into account uncond. branch instruction
-    if 'cond == 1' in code:
-         inst_flags += ('IsUnCondControl', )
+    if 'cond = 1' in code:
+         inst_flags += ('IsUncondControl', )
     else:
          inst_flags += ('IsCondControl', )
 
     #Condition code
     code = 'bool cond;\n' + code
+    code += 'if (cond) {\n'
+    code += '  NNPC = NPC + disp;\n'
+    code += '} else {\n'
+    code += not_taken_code
+
+    iop = InstObjParams(name, Name, 'Branch', code, inst_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format DspBranch(code, *opt_flags) {{
+    not_taken_code = '  NNPC = NNPC;\n'
+    not_taken_code += '} \n'
+
+    #Build Instruction Flags
+    #Use Link & Likely Flags to Add Link/Condition Code
+    inst_flags = ('IsDirectControl', )
+    for x in opt_flags:
+        if x == 'Link':
+            code += 'R31 = NNPC;\n'
+        elif x == 'Likely':
+            not_taken_code = '  NPC = NNPC;\n'
+            not_taken_code += '  NNPC = NNPC + 4;\n'
+            not_taken_code += '} \n'
+            inst_flags += ('IsCondDelaySlot', )
+        else:
+            inst_flags += (x, )
+
+    #Take into account uncond. branch instruction
+    if 'cond = 1' in code:
+         inst_flags += ('IsUncondControl', )
+    else:
+         inst_flags += ('IsCondControl', )
+
+    #Declaration code
+    decl_code = 'bool cond;\n'
+    decl_code += 'uint32_t dspctl;\n'
+
+    #Fetch code
+    fetch_code = 'dspctl = DSPControl;\n'
+
+    #Condition code
+    code = decl_code + fetch_code + code
     code += 'if (cond) {\n'
     code += '  NNPC = NPC + disp;\n'
     code += '} else {\n'
