@@ -25,7 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Steve Reinhardt
-#          Gabe Black
 #          Korey Sewell
 
 import os
@@ -1411,6 +1410,9 @@ class ControlRegOperand(Operand):
             error(0, 'Attempt to write control register as FP')
         wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
              (self.dest_reg_idx, self.base_name)
+        wb += 'if (traceData) { traceData->setData(%s); }' % \
+              self.base_name
+        return wb
 
 class ControlBitfieldOperand(ControlRegOperand):
     def makeRead(self):
