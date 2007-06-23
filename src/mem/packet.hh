@@ -384,7 +384,7 @@ class Packet : public FastAlloc
     Packet(Packet *origPkt)
         :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(origPkt->addr), size(origPkt->size),
-           dest(origPkt->dest),
+           src(origPkt->src), dest(origPkt->dest),
            addrSizeValid(origPkt->addrSizeValid), srcValid(origPkt->srcValid),
            snoopFlags(origPkt->snoopFlags),
            time(curTick),
@@ -440,7 +440,7 @@ class Packet : public FastAlloc
      */
     void convertAtomicToTimingResponse()
     {
-        dest = src;
+        dest = getSrc();
         srcValid = false;
     }
 
