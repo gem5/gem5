@@ -34,6 +34,7 @@
 //
 output header {{
 #include <iostream>
+    using namespace std;
         /**
          * Base class for integer operations.
          */
@@ -64,12 +65,12 @@ output header {{
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 
-        class HiLoMiscOp: public HiLoOp
+        class HiLoRsSelOp: public HiLoOp
         {
                 protected:
 
                 /// Constructor
-                HiLoMiscOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                HiLoRsSelOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
                                 HiLoOp(mnem, _machInst, __opClass)
                 {
                 }
@@ -77,6 +78,31 @@ output header {{
                 std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 
+        class HiLoRdSelOp: public HiLoOp
+        {
+                protected:
+
+                /// Constructor
+                HiLoRdSelOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                HiLoOp(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
+
+        class HiLoRdSelValOp: public HiLoOp
+        {
+                protected:
+
+                /// Constructor
+                HiLoRdSelValOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                                HiLoOp(mnem, _machInst, __opClass)
+                {
+                }
+
+                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        };
 
         class IntImmOp : public MipsStaticInst
         {
@@ -105,9 +131,7 @@ output header {{
 
 }};
 
-// HiLo<Misc> instruction class execute method template.
-// Mainly to get instruction trace data to print out
-// correctly
+// HiLo instruction class execute method template.
 def template HiLoExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
@@ -121,12 +145,58 @@ def template HiLoExecute {{
                 if(fault == NoFault)
                 {
                     %(op_wb)s;
-                    //If there are 2 Destination Registers then
-                    //concatenate the values for the traceData
-                    if(traceData && _numDestRegs == 2) {
-                        uint64_t hilo_final_val = (uint64_t)HI << 32 | LO;
-                        traceData->setData(hilo_final_val);
-                    }
+                }
+                return fault;
+        }
+}};
+
+// HiLoRsSel instruction class execute method template.
+def template HiLoRsSelExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(op_decl)s;
+
+                if( ACSRC > 0 && !isDspEnabled(xc) )
+                {
+                    fault = new DspStateDisabledFault();
+                }
+                else
+                {
+                    %(op_rd)s;
+                    %(code)s;
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                }
+                return fault;
+        }
+}};
+
+// HiLoRdSel instruction class execute method template.
+def template HiLoRdSelExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+        {
+                Fault fault = NoFault;
+
+                %(op_decl)s;
+
+                if( ACDST > 0 && !isDspEnabled(xc) )
+                {
+                    fault = new DspStateDisabledFault();
+                }
+                else
+                {
+                    %(op_rd)s;
+                    %(code)s;
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
                 }
                 return fault;
         }
@@ -181,7 +251,37 @@ output decoder {{
             return ss.str();
         }
 
-        std::string HiLoMiscOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        std::string HiLoRsSelOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+                printReg(ss, _destRegIdx[0]);
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            return ss.str();
+        }
+
+        std::string HiLoRdSelOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+
+            ccprintf(ss, "%-10s ", mnemonic);
+
+            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+                printReg(ss, _destRegIdx[0]);
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+                printReg(ss, _srcRegIdx[0]);
+            }
+
+            return ss.str();
+        }
+
+        std::string HiLoRdSelValOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream ss;
 
@@ -239,26 +339,43 @@ def format IntImmOp(code, *opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format HiLoOp(code, *opt_flags) {{
-    code += 'HI = val<63:32>;\n'
-    code += 'LO = val<31:0>;\n'
+def format HiLoRsSelOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'HiLoRsSelOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = HiLoRsSelExecute.subst(iop)
+}};
 
+def format HiLoRdSelOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'HiLoRdSelOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = HiLoRdSelExecute.subst(iop)
+}};
+
+def format HiLoRdSelValOp(code, *opt_flags) {{
+
+    if '.sd' in code:
+        code = 'int64_t ' + code
+    elif '.ud' in code:
+        code = 'uint64_t ' + code
+
+    code += 'HI_RD_SEL = val<63:32>;\n'
+    code += 'LO_RD_SEL = val<31:0>;\n'
+
+    iop = InstObjParams(name, Name, 'HiLoRdSelOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = HiLoRdSelExecute.subst(iop)
+}};
+
+def format HiLoOp(code, *opt_flags) {{
     iop = InstObjParams(name, Name, 'HiLoOp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = HiLoExecute.subst(iop)
 }};
-
-def format HiLoMiscOp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'HiLoMiscOp', code, opt_flags)
-    header_output = BasicDeclare.subst(iop)
-    decoder_output = BasicConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
-    exec_output = BasicExecute.subst(iop)
-}};
-
-
-
-
-

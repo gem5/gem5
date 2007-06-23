@@ -129,6 +129,7 @@ baseFlags = [
     'MemDepUnit',
     'MemoryAccess',
     'MemTest',
+    'MipsPRA',
     'O3CPU',
     'OzoneCPU',
     'OzoneLSQ',

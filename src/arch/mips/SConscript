@@ -35,7 +35,9 @@ Import('*')
 if env['TARGET_ISA'] == 'mips':
     Source('faults.cc')
     Source('isa_traits.cc')
+    Source('regfile/misc_regfile.cc')
     Source('utility.cc')
+    Source('dsp.cc')
 
     if env['FULL_SYSTEM']:
         #Insert Full-System Files Here

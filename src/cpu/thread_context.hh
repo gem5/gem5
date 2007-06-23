@@ -234,6 +234,10 @@ class ThreadContext
 
     virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
 
+    virtual uint64_t readRegOtherThread(int misc_reg, unsigned tid) { return 0; }
+
+    virtual void setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid) { };
+
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() = 0;

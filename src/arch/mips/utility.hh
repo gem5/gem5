@@ -35,12 +35,14 @@
 #define __ARCH_MIPS_UTILITY_HH__
 
 #include "arch/mips/types.hh"
+#include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
-#include "cpu/thread_context.hh"
 //XXX This is needed for size_t. We should use something other than size_t
 //#include "kern/linux/linux.hh"
 #include "sim/host.hh"
+
+#include "cpu/thread_context.hh"
 
 class ThreadContext;
 
@@ -66,6 +68,8 @@ namespace MipsISA {
     template <class TC>
     void zeroRegisters(TC *tc);
 
+    void startupCPU(ThreadContext *tc, int cpuId);
+
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     // Instruction address compression hooks
@@ -88,9 +92,17 @@ namespace MipsISA {
         return 0;
     }
 
-    inline void startupCPU(ThreadContext *tc, int cpuId)
-    {
-        tc->activate(0);
+    static inline ExtMachInst
+    makeExtMI(MachInst inst, ThreadContext * xc) {
+#if FULL_SYSTEM
+        ExtMachInst ext_inst = inst;
+        if (xc->readPC() && 0x1)
+            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
+        else
+            return ext_inst;
+#else
+        return ExtMachInst(inst);
+#endif
     }
 };
 

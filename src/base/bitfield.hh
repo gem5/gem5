@@ -59,6 +59,17 @@ bits(T val, int first, int last)
 }
 
 /**
+ * Extract the bit from this position from 'val' and right justify it.
+ */
+template <class T>
+inline
+T
+bits(T val, int bit)
+{
+    return bits(val, bit, bit);
+}
+
+/**
  * Mask off the given bits in place like bits() but without shifting.
  * msb = 63, lsb = 0
  */
@@ -102,6 +113,17 @@ insertBits(T val, int first, int last, B bit_val)
 }
 
 /**
+ * Overloaded for access to only one bit in value
+ */
+template <class T, class B>
+inline
+T
+insertBits(T val, int bit, B bit_val)
+{
+    return insertBits(val, bit, bit, bit_val);
+}
+
+/**
  * A convenience function to replace bits first to last of val with bit_val
  * in place.
  */
@@ -113,6 +135,14 @@ replaceBits(T& val, int first, int last, B bit_val)
     val = insertBits(val, first, last, bit_val);
 }
 
+/** Overloaded function to allow to access only 1 bit*/
+template <class T, class B>
+inline
+void
+replaceBits(T& val, int bit, B bit_val)
+{
+    val = insertBits(val, bit, bit, bit_val);
+}
 /**
  * Returns the bit position of the MSB that is set in the input
  */

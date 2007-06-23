@@ -37,46 +37,185 @@ output header {{
         /**
          * Base class for MIPS MT ASE operations.
          */
-        class MT : public MipsStaticInst
+        class MTOp : public MipsStaticInst
         {
                 protected:
 
                 /// Constructor
-                MT(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    MipsStaticInst(mnem, _machInst, __opClass)
+                MTOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                    MipsStaticInst(mnem, _machInst, __opClass), user_mode(false)
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+               std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+                bool user_mode;
+        };
+
+        class MTUserModeOp : public MTOp
+        {
+                protected:
+
+                /// Constructor
+                MTUserModeOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                    MTOp(mnem, _machInst, __opClass)
+                {
+                    user_mode = true;
+                }
+
+            //std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 }};
 
 output decoder {{
-        //Edit This Template When MT is Implemented
-        std::string MT::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    std::string MTOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        if (mnemonic == "mttc0" || mnemonic == "mftc0") {
+            ccprintf(ss, "%-10s r%d, r%d, %d", mnemonic, RT, RD, SEL);
+        } else if (mnemonic == "mftgpr") {
+            ccprintf(ss, "%-10s r%d, r%d", mnemonic, RD, RT);
+        } else {
+            ccprintf(ss, "%-10s r%d, r%d", mnemonic, RT, RD);
+        }
+
+        return ss.str();
+    }
+}};
+
+output exec {{
+    void getThrRegExValues(%(CPU_exec_context)s *xc, unsigned &vpe_conf0, unsigned &tc_bind_mt, unsigned &tc_bind, unsigned &vpe_control, unsigned &mvp_conf0)
+    {
+        vpe_conf0 = xc->readMiscReg(VPEConf0);
+        tc_bind_mt = xc->readRegOtherThread(TCBind + Ctrl_Base_DepTag);
+        tc_bind = xc->readMiscReg(TCBind);
+        vpe_control = xc->readMiscReg(VPEControl);
+        mvp_conf0 = xc->readMiscReg(MVPConf0);
+    }
+
+    void getMTExValues(%(CPU_exec_context)s *xc, unsigned &config3)
+    {
+        config3 = xc->readMiscReg(Config3_MT);
+    }
+}};
+
+def template ThreadRegisterExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
-                return "Disassembly of MT instruction\n";
+            Fault fault = NoFault;
+            int64_t data;
+            %(op_decl)s;
+            %(op_rd)s;
+
+            unsigned vpe_conf0, tc_bind_mt, tc_bind, vpe_control, mvp_conf0;
+
+            getThrRegExValues(xc, vpe_conf0, tc_bind_mt, tc_bind, vpe_control, mvp_conf0);
+
+            if (isCoprocessorEnabled(xc, 0)) {
+                if (bits(vpe_conf0, VPEC0_MVP) == 0 &&
+                    bits(tc_bind_mt, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO) !=
+                    bits(tc_bind, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO)) {
+                    data = -1;
+                } else if (bits(vpe_control, VPEC_TARG_TC_HI, VPEC_TARG_TC_LO) >
+                           bits(mvp_conf0, MVPC0_PTC_HI, MVPC0_PTC_LO)) {
+                    data = -1;
+                } else {
+                    int top_bit = 0;
+                    int bottom_bit = 0;
+
+                    if (MT_H == 1) {
+                        top_bit = 63;
+                        bottom_bit = 32;
+                    } else {
+                        top_bit = 31;
+                        bottom_bit = 0;
+                    }
+
+                    %(code)s;
+                }
+            } else {
+                fault = new CoprocessorUnusableFault();
+            }
+
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+
+            return fault;
         }
 }};
 
-def template MTExecute {{
-        //Edit This Template When MT is Implemented
+def template MTExecute{{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
-                //Write the resulting state to the execution context
-                %(op_wb)s;
+                Fault fault = NoFault;
+                %(op_decl)s;
+                %(op_rd)s;
 
-                //Call into the trap handler with the appropriate fault
-                return No_Fault;
+                unsigned config3;
+
+                getMTExValues(xc, config3);
+
+                if (isCoprocessorEnabled(xc, 0)) {
+                    if (bits(config3, CFG3_MT) == 1) {
+                        %(code)s;
+                    } else {
+                        fault = new ReservedInstructionFault();
+                    }
+                } else {
+                    fault = new CoprocessorUnusableFault();
+                }
+
+                if(fault == NoFault)
+                {
+                    %(op_wb)s;
+                }
+                return fault;
         }
 }};
 
 // Primary format for integer operate instructions:
-def format MipsMT() {{
-        code = 'panic(\"Mips MT Is Currently Unimplemented.\");\n'
-        iop = InstObjParams(name, Name, 'MT', code)
+def format MT_Control(code, *opt_flags) {{
+        inst_flags = ('IsNonSpeculative', )
+        op_type = 'MTOp'
+
+        for x in opt_flags:
+            if x == 'UserMode':
+                op_type = 'MTUserModeOp'
+            else:
+                inst_flags += (x, )
+
+        iop = InstObjParams(name, Name, op_type, code, inst_flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+        exec_output = MTExecute.subst(iop)
+}};
+
+def format MT_MFTR(code, *flags) {{
+        flags += ('IsNonSpeculative', )
+#        code = 'std::cerr << curTick << \": T\" << xc->tcBase()->getThreadNum() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
+
+        code += 'if (MT_H == 1) {\n'
+        code += 'data = bits(data, top_bit, bottom_bit);\n'
+        code += '}\n'
+        code += 'Rd = data;\n'
+
+        iop = InstObjParams(name, Name, 'MTOp', code, flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = ThreadRegisterExecute.subst(iop)
+}};
+
+def format MT_MTTR(code, *flags) {{
+        flags += ('IsNonSpeculative', )
+#        code = 'std::cerr << curTick << \": T\" << xc->tcBase()->getThreadNum() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
+        iop = InstObjParams(name, Name, 'MTOp', code, flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = ThreadRegisterExecute.subst(iop)
 }};

@@ -44,6 +44,9 @@
 //Include the integer formats
 ##include "int.isa"
 
+//Include the DSP integer format
+##include "dsp.isa"
+
 //Include the floatOp format
 ##include "fp.isa"
 

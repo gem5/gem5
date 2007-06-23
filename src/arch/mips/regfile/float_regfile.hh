@@ -88,12 +88,9 @@ namespace MipsISA
 
       public:
 
-        void clear()
-        {
-            bzero(regs, sizeof(regs));
-        }
+        void clear() { bzero(&regs, sizeof(regs)); }
 
-        double readReg(int floatReg, int width)
+        double readReg(int floatReg, int width, unsigned tid = 0)
         {
             switch(width)
             {
@@ -115,7 +112,7 @@ namespace MipsISA
             }
         }
 
-        FloatRegBits readRegBits(int floatReg, int width)
+        FloatRegBits readRegBits(int floatReg, int width, unsigned tid = 0)
         {
             if (floatReg < NumFloatArchRegs - 1) {
                 switch(width)
@@ -137,8 +134,9 @@ namespace MipsISA
             }
         }
 
-        Fault setReg(int floatReg, const FloatRegVal &val, int width)
+        Fault setReg(int floatReg, const FloatRegVal &val, int width, unsigned tid = 0)
         {
+            using namespace std;
             switch(width)
             {
               case SingleWidth:
@@ -165,8 +163,9 @@ namespace MipsISA
             return NoFault;
         }
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
+        Fault setRegBits(int floatReg, const FloatRegBits &val, int width, unsigned tid = 0)
         {
+            using namespace std;
 
             switch(width)
             {

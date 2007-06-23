@@ -87,6 +87,12 @@ output decoder {{
 }};
 
 output exec {{
+        inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+        {
+            //@TODO: Implement correct CP0 checks to see if the CP1
+            // unit is enable or not
+            return NoFault;
+        }
 
         //If any operand is Nan return the appropriate QNaN
         template <class T>
@@ -145,7 +151,7 @@ output exec {{
                 uint32_t fcsr_bits = cpu->tcBase()->readFloatRegBits(FCSR);
 
                 //Write FCSR from FloatRegFile
-                cpu->tcBase()->setFloatRegBits(FCSR, genInvalidVector(fcsr_bits));
+                cpu->tcBase()->setFloatRegOperandBits(FCSR, genInvalidVector(fcsr_bits));
 
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
@@ -160,6 +166,7 @@ output exec {{
             //Read FCSR from FloatRegFile
             uint32_t fcsr = cpu->tcBase()->readFloatRegBits(FCSR);
 
+            // TODO: Use utility function here
             fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
 
             //Write FCSR from FloatRegFile

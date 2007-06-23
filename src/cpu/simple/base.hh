@@ -215,6 +215,7 @@ class BaseSimpleCPU : public BaseCPU
         // need to do this...
     }
 
+
     Fault copySrcTranslate(Addr src);
 
     Fault copy(Addr dest);
@@ -352,6 +353,18 @@ class BaseSimpleCPU : public BaseCPU
     void setStCondFailures(unsigned sc_failures) {
         thread->setStCondFailures(sc_failures);
     }
+
+     MiscReg readRegOtherThread(int regIdx, int tid = -1)
+     {
+        panic("Simple CPU models do not support multithreaded "
+              "register access.\n");
+     }
+
+     void setRegOtherThread(int regIdx, const MiscReg &val, int tid = -1)
+     {
+        panic("Simple CPU models do not support multithreaded "
+              "register access.\n");
+     }
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }

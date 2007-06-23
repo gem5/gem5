@@ -37,6 +37,9 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
+#include "arch/isa_traits.hh"
+#include "base/misc.hh"
+#include "base/trace.hh"
 #include "mem/request.hh"
 
 
@@ -46,6 +49,11 @@ template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
+    unsigned tid = req->getThreadNum();
+    xc->setMiscReg(LLAddr, req->getPaddr() & ~0xf, tid);
+    xc->setMiscReg(LLFlag, true, tid);
+    DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link Address set to %x.\n",
+            tid, req->getPaddr() & ~0xf);
 }
 
 
@@ -53,6 +61,52 @@ template <class XC>
 inline bool
 handleLockedWrite(XC *xc, Request *req)
 {
+    unsigned tid = req->getThreadNum();
+
+    if (req->isUncacheable()) {
+        // Funky Turbolaser mailbox access...don't update
+        // result register (see stq_c in decoder.isa)
+        req->setExtraData(2);
+    } else {
+        // standard store conditional
+        bool lock_flag = xc->readMiscReg(LLFlag, tid);
+        Addr lock_addr = xc->readMiscReg(LLAddr, tid);
+
+        if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
+            // Lock flag not set or addr mismatch in CPU;
+            // don't even bother sending to memory system
+            req->setExtraData(0);
+            xc->setMiscReg(LLFlag, false, tid);
+
+            // the rest of this code is not architectural;
+            // it's just a debugging aid to help detect
+            // livelock by warning on long sequences of failed
+            // store conditionals
+            int stCondFailures = xc->readStCondFailures();
+            stCondFailures++;
+            xc->setStCondFailures(stCondFailures);
+            if (stCondFailures % 10 == 0) {
+                warn("%i: cpu %d: %d consecutive "
+                     "store conditional failures\n",
+                     curTick, xc->readCpuId(), stCondFailures);
+            }
+
+            if (stCondFailures == 5000) {
+                panic("Max (5000) Store Conditional Fails Reached. Check Code For Deadlock.\n");
+            }
+
+            if (!lock_flag){
+                DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, Store Conditional Failed.\n",
+                        tid);
+            } else if ((req->getPaddr() & ~0xf) != lock_addr) {
+                DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, Store Conditional Failed.\n",
+                        tid);
+            }
+            // store conditional failed already, so don't issue it to mem
+            return false;
+        }
+    }
+
     return true;
 }
 

@@ -69,6 +69,8 @@ output header {{
 
         const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
         const StaticInstPtr &memAccInst() const { return memAccPtr; }
+
+        unsigned memAccFlags() { return memAccessFlags; }
     };
 
      /**
@@ -108,6 +110,37 @@ output decoder {{
                         flags[IsFloating] ? FD : RD,
                         RS, RT);
     }
+
+}};
+
+output exec {{
+    /** return data in cases where there the size of data is only
+        known in the packet
+    */
+    uint64_t getStoreData(Packet *packet) {
+        switch (packet->getSize())
+        {
+          case 8:
+            return packet->get<uint8_t>();
+
+          case 16:
+            return packet->get<uint16_t>();
+
+          case 32:
+            return packet->get<uint32_t>();
+
+          case 864:
+            return packet->get<uint64_t>();
+
+          default:
+            std::cerr << "bad store data size = " << packet->getSize() << std::endl;
+
+            assert(0);
+            return 0;
+        }
+    }
+
+
 }};
 
 def template LoadStoreDeclare {{
@@ -125,7 +158,7 @@ def template LoadStoreDeclare {{
         {
           public:
             /// Constructor
-            EAComp(MachInst machInst);
+            EAComp(ExtMachInst machInst);
 
             %(BasicExecDeclare)s
         };
@@ -137,7 +170,7 @@ def template LoadStoreDeclare {{
         {
           public:
             /// Constructor
-            MemAcc(MachInst machInst);
+            MemAcc(ExtMachInst machInst);
 
             %(BasicExecDeclare)s
         };
@@ -145,13 +178,15 @@ def template LoadStoreDeclare {{
       public:
 
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
 
         %(BasicExecDeclare)s
 
         %(InitiateAccDeclare)s
 
         %(CompleteAccDeclare)s
+
+        %(MemAccSizeDeclare)s
     };
 }};
 
@@ -162,15 +197,18 @@ def template InitiateAccDeclare {{
 
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(Packet *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
+def template MemAccSizeDeclare {{
+    int memAccSize(%(CPU_exec_context)s *xc);
+}};
 
 def template EACompConstructor {{
     /** TODO: change op_class to AddrGenOp or something (requires
      * creating new member of OpClass enum in op_class.hh, updating
      * config files, etc.). */
-    inline %(class_name)s::EAComp::EAComp(MachInst machInst)
+    inline %(class_name)s::EAComp::EAComp(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
     {
         %(constructor)s;
@@ -179,7 +217,7 @@ def template EACompConstructor {{
 
 
 def template MemAccConstructor {{
-    inline %(class_name)s::MemAcc::MemAcc(MachInst machInst)
+    inline %(class_name)s::MemAcc::MemAcc(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
     {
         %(constructor)s;
@@ -188,7 +226,7 @@ def template MemAccConstructor {{
 
 
 def template LoadStoreConstructor {{
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           new EAComp(machInst), new MemAcc(machInst))
     {
@@ -210,8 +248,8 @@ def template EACompExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
+        // NOTE: Trace Data is written using execute or completeAcc templates
         if (fault == NoFault) {
-            %(op_wb)s;
             xc->setEA(EA);
         }
 
@@ -227,19 +265,16 @@ def template LoadMemAccExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
+
         EA = xc->getEA();
 
-        if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
-            %(memacc_code)s;
-        }
+        fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
+        %(memacc_code)s;
+
+        // NOTE: Write back data using execute or completeAcc templates
 
         return fault;
     }
@@ -292,9 +327,8 @@ def template LoadInitiateAcc {{
     }
 }};
 
-
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -302,6 +336,7 @@ def template LoadCompleteAcc {{
 
         %(fp_enable_check)s;
         %(op_decl)s;
+        %(op_rd)s;
 
         Mem = pkt->get<typeof(Mem)>();
 
@@ -318,6 +353,15 @@ def template LoadCompleteAcc {{
 }};
 
 
+
+def template LoadStoreMemAccSize {{
+    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
+    {
+        // Return the memory access size in bytes
+        return (%(mem_acc_size)d / 8);
+    }
+}};
+
 def template StoreMemAccExecute {{
     Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
@@ -325,10 +369,12 @@ def template StoreMemAccExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
+        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
+
         EA = xc->getEA();
 
         if (fault == NoFault) {
@@ -337,16 +383,9 @@ def template StoreMemAccExecute {{
 
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
-        }
-
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
+                              memAccessFlags, &write_result);
+            // @NOTE: Need to Call Complete Access to Set Trace Data
+            //if (traceData) { traceData->setData(Mem); }
         }
 
         return fault;
@@ -389,13 +428,13 @@ def template StoreCondMemAccExecute {{
     }
 }};
 
-
 def template StoreExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
+        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -408,7 +447,7 @@ def template StoreExecute {{
 
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+                              memAccessFlags, &write_result);
             if (traceData) { traceData->setData(Mem); }
         }
 
@@ -487,7 +526,7 @@ def template StoreInitiateAcc {{
 
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -502,6 +541,8 @@ def template StoreCompleteAcc {{
 
         if (fault == NoFault) {
             %(op_wb)s;
+
+            if (traceData) { traceData->setData(getStoreData(pkt)); }
         }
 
         return fault;
@@ -509,7 +550,7 @@ def template StoreCompleteAcc {{
 }};
 
 def template StoreCondCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
@@ -584,13 +625,22 @@ def template MiscInitiateAcc {{
 
 
 def template MiscCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+    Fault %(class_name)s::completeAcc(Packet *pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
         panic("Misc instruction does not support split access method!");
 
         return NoFault;
+    }
+}};
+
+
+def template MiscMemAccSize {{
+    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
+    {
+        panic("Misc instruction does not support split access method!");
+        return 0;
     }
 }};
 
@@ -650,6 +700,7 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
     decl_code += '\tbyte_offset ^= 3;\n'
     decl_code += '#endif\n'
     decl_code += 'fault = xc->read(EA, (uint32_t&)mem_word, memAccessFlags);\n'
+    #decl_code += 'xc->readFunctional(EA,(uint32_t&)mem_word);'
     memacc_code = decl_code + memacc_code + '\nMem = mem_word;\n'
 
     (header_output, decoder_output, decode_block, exec_output) = \

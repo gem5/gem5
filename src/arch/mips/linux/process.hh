@@ -30,7 +30,8 @@
 #define __MIPS_LINUX_PROCESS_HH__
 
 #include "arch/mips/process.hh"
-
+#include "arch/mips/linux/linux.hh"
+#include "sim/eventq.hh"
 
 /// A process with emulated Mips/Linux syscalls.
 class MipsLinuxProcess : public MipsLiveProcess
@@ -48,16 +49,19 @@ class MipsLinuxProcess : public MipsLiveProcess
                       uint64_t _gid, uint64_t _egid,
                       uint64_t _pid, uint64_t _ppid);
 
+    void startup();
+
     virtual SyscallDesc* getDesc(int callnum);
 
     /// The target system's hostname.
     static const char *hostname;
 
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
+    /// ID of the thread group leader for the process
+    uint64_t __tgid;
 
+    /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
     const int Num_Syscall_Descs;
 };
-
 
 #endif // __MIPS_LINUX_PROCESS_HH__
