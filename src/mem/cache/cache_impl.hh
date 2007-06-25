@@ -185,9 +185,6 @@ Cache<TagStore,Coherence>::squash(int threadNum)
         cause = Blocked_NoMSHRs;
     }
     mshrQueue.squash(threadNum);
-    if (!mshrQueue.havePending()) {
-        deassertMemSideBusRequest(Request_MSHR);
-    }
     if (unblock && !mshrQueue.isFull()) {
         clearBlocked(cause);
     }
@@ -368,11 +365,14 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
             if (mshr->threadNum != 0/*pkt->req->getThreadNum()*/) {
                 mshr->threadNum = -1;
             }
-            mshr->allocateTarget(pkt);
+            mshr->allocateTarget(pkt, time, order++);
             if (mshr->getNumTargets() == numTarget) {
                 noTargetMSHR = mshr;
                 setBlocked(Blocked_NoTargets);
-                mshrQueue.moveToFront(mshr);
+                // need to be careful with this... if this mshr isn't
+                // ready yet (i.e. time > curTick_, we don't want to
+                // move it ahead of mshrs that are ready
+                // mshrQueue.moveToFront(mshr);
             }
         } else {
             // no MSHR
@@ -630,7 +630,6 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
     if (mshr->promoteDeferredTargets()) {
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
-        mshr->order = order++;
         requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
         return false;
     }
@@ -879,7 +878,7 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
     // we have outstanding...
     if (mshr && mshr->inService) {
         assert(mshr->getNumTargets() < numTarget); //handle later
-        mshr->allocateSnoopTarget(pkt);
+        mshr->allocateSnoopTarget(pkt, curTick, order++);
         assert(mshr->getNumTargets() < numTarget); //handle later
         return;
     }
@@ -1202,6 +1201,7 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
     } else {
         // check for non-response packets (requests & writebacks)
         PacketPtr pkt = myCache()->getTimingPacket();
+        assert(pkt != NULL);
         MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
         bool success = sendTiming(pkt);
@@ -1220,14 +1220,12 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
     // tried to send packet... if it was successful (no retry), see if
     // we need to rerequest bus or not
     if (!waitingOnRetry) {
-        if (isBusRequested()) {
-            // more requests/writebacks: rerequest ASAP
-            DPRINTF(CachePort, "still more MSHR requests to send\n");
-            sendEvent->schedule(curTick+1);
-        } else if (!transmitList.empty()) {
-            // deferred packets: rerequest bus, but possibly not until later
-            Tick time = transmitList.front().tick;
-            sendEvent->schedule(time <= curTick ? curTick+1 : time);
+        Tick nextReady = std::min(deferredPacketReadyTick(),
+                                  myCache()->nextMSHRReadyTick());
+        // @TODO: need to facotr in prefetch requests here somehow
+        if (nextReady != MaxTick) {
+            DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
+            sendEvent->schedule(std::max(nextReady, curTick + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
             if (drainEvent) {

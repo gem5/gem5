@@ -41,6 +41,7 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <algorithm>
 #include <inttypes.h>
 
 #include "base/misc.hh"
@@ -105,6 +106,9 @@ class BaseCache : public MemObject
 
         bool recvRetryCommon();
 
+        typedef EventWrapper<Port, &Port::sendRetry>
+            SendRetryEvent;
+
       public:
         void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
 
@@ -120,27 +124,12 @@ class BaseCache : public MemObject
 
         bool mustSendRetry;
 
-        /**
-         * Bit vector for the outstanding requests for the master interface.
-         */
-        uint8_t requestCauses;
-
-        bool isBusRequested() { return requestCauses != 0; }
-
         void requestBus(RequestCause cause, Tick time)
         {
             DPRINTF(Cache, "Asserting bus request for cause %d\n", cause);
-            if (!isBusRequested() && !waitingOnRetry) {
-                assert(!sendEvent->scheduled());
-                sendEvent->schedule(time);
+            if (!waitingOnRetry) {
+                schedSendEvent(time);
             }
-            requestCauses |= (1 << cause);
-        }
-
-        void deassertBusRequest(RequestCause cause)
-        {
-            DPRINTF(Cache, "Deasserting bus request for cause %d\n", cause);
-            requestCauses &= ~(1 << cause);
         }
 
         void respond(PacketPtr pkt, Tick time) {
@@ -163,8 +152,7 @@ class BaseCache : public MemObject
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
     {
-        MSHR *mshr = mq->allocate(addr, size, pkt);
-        mshr->order = order++;
+        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
 
         if (mq->isFull()) {
             setBlocked((BlockedCause)mq->index);
@@ -182,9 +170,6 @@ class BaseCache : public MemObject
         MSHRQueue *mq = mshr->queue;
         bool wasFull = mq->isFull();
         mq->markInService(mshr);
-        if (!mq->havePending()) {
-            deassertMemSideBusRequest((RequestCause)mq->index);
-        }
         if (wasFull && !mq->isFull()) {
             clearBlocked((BlockedCause)mq->index);
         }
@@ -491,13 +476,10 @@ class BaseCache : public MemObject
         }
     }
 
-    /**
-     * True if the memory-side bus should be requested.
-     * @return True if there are outstanding requests for the master bus.
-     */
-    bool isMemSideBusRequested()
+    Tick nextMSHRReadyTick()
     {
-        return memSidePort->isBusRequested();
+        return std::min(mshrQueue.nextMSHRReadyTick(),
+                        writeBuffer.nextMSHRReadyTick());
     }
 
     /**
@@ -516,7 +498,9 @@ class BaseCache : public MemObject
      */
     void deassertMemSideBusRequest(RequestCause cause)
     {
-        memSidePort->deassertBusRequest(cause);
+        // obsolete!!
+        assert(false);
+        // memSidePort->deassertBusRequest(cause);
         // checkDrain();
     }
 

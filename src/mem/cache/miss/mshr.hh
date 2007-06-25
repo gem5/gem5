@@ -55,13 +55,14 @@ class MSHR : public Packet::SenderState
     class Target {
       public:
         Tick time;      //!< Time when request was received (for stats)
+        Counter order;  //!< Global order (for memory consistency mgmt)
         PacketPtr pkt;  //!< Pending request packet.
         bool cpuSide;   //!< Did request come from cpu side or mem side?
 
         bool isCpuSide() { return cpuSide; }
 
-        Target(PacketPtr _pkt, bool _cpuSide, Tick _time = curTick)
-            : time(_time), pkt(_pkt), cpuSide(_cpuSide)
+        Target(PacketPtr _pkt, Tick _time, Counter _order, bool _cpuSide)
+            : time(_time), order(_order), pkt(_pkt), cpuSide(_cpuSide)
         {}
     };
 
@@ -78,6 +79,12 @@ class MSHR : public Packet::SenderState
 
     /** Pointer to queue containing this MSHR. */
     MSHRQueue *queue;
+
+    /** Cycle when ready to issue */
+    Tick readyTick;
+
+    /** Order number assigned by the miss queue. */
+    Counter order;
 
     /** Address of the request. */
     Addr addr;
@@ -103,8 +110,6 @@ class MSHR : public Packet::SenderState
     short threadNum;
     /** The number of currently allocated targets. */
     short ntargets;
-    /** Order number of assigned by the miss queue. */
-    uint64_t order;
 
     /**
      * Pointer to this MSHR on the ready list.
@@ -136,13 +141,8 @@ public:
      * @param size The number of bytes to request.
      * @param pkt  The original miss.
      */
-    void allocate(Addr addr, int size, PacketPtr pkt);
-
-    /**
-     * Allocate this MSHR as a buffer for the given request.
-     * @param target The memory request to buffer.
-     */
-    void allocateAsBuffer(PacketPtr target);
+    void allocate(Addr addr, int size, PacketPtr pkt,
+                  Tick when, Counter _order);
 
     /**
      * Mark this MSHR as free.
@@ -153,8 +153,8 @@ public:
      * Add a request to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(PacketPtr target);
-    void allocateSnoopTarget(PacketPtr target);
+    void allocateTarget(PacketPtr target, Tick when, Counter order);
+    void allocateSnoopTarget(PacketPtr target, Tick when, Counter order);
 
     /** A simple constructor. */
     MSHR();

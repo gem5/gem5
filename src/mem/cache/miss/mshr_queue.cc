@@ -90,8 +90,8 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 MSHR *
 MSHRQueue::findPending(Addr addr, int size) const
 {
-    MSHR::ConstIterator i = pendingList.begin();
-    MSHR::ConstIterator end = pendingList.end();
+    MSHR::ConstIterator i = readyList.begin();
+    MSHR::ConstIterator end = readyList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
         if (mshr->addr < addr) {
@@ -107,17 +107,37 @@ MSHRQueue::findPending(Addr addr, int size) const
     return NULL;
 }
 
+
+MSHR::Iterator
+MSHRQueue::addToReadyList(MSHR *mshr)
+{
+    if (readyList.empty() || readyList.back()->readyTick <= mshr->readyTick) {
+        return readyList.insert(readyList.end(), mshr);
+    }
+
+    MSHR::Iterator i = readyList.begin();
+    MSHR::Iterator end = readyList.end();
+    for (; i != end; ++i) {
+        if ((*i)->readyTick > mshr->readyTick) {
+            return readyList.insert(i, mshr);
+        }
+    }
+    assert(false);
+}
+
+
 MSHR *
-MSHRQueue::allocate(Addr addr, int size, PacketPtr &pkt)
+MSHRQueue::allocate(Addr addr, int size, PacketPtr &pkt,
+                    Tick when, Counter order)
 {
     assert(!freeList.empty());
     MSHR *mshr = freeList.front();
     assert(mshr->getNumTargets() == 0);
     freeList.pop_front();
 
-    mshr->allocate(addr, size, pkt);
+    mshr->allocate(addr, size, pkt, when, order);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
-    mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
+    mshr->readyIter = addToReadyList(mshr);
 
     allocated += 1;
     return mshr;
@@ -139,7 +159,7 @@ MSHRQueue::deallocateOne(MSHR *mshr)
     if (mshr->inService) {
         inServiceEntries--;
     } else {
-        pendingList.erase(mshr->readyIter);
+        readyList.erase(mshr->readyIter);
     }
     mshr->deallocate();
     return retval;
@@ -150,14 +170,15 @@ MSHRQueue::moveToFront(MSHR *mshr)
 {
     if (!mshr->inService) {
         assert(mshr == *(mshr->readyIter));
-        pendingList.erase(mshr->readyIter);
-        mshr->readyIter = pendingList.insert(pendingList.begin(), mshr);
+        readyList.erase(mshr->readyIter);
+        mshr->readyIter = readyList.insert(readyList.begin(), mshr);
     }
 }
 
 void
 MSHRQueue::markInService(MSHR *mshr)
 {
+    assert(!mshr->inService);
     if (mshr->isSimpleForward()) {
         // we just forwarded the request packet & don't expect a
         // response, so get rid of it
@@ -167,23 +188,23 @@ MSHRQueue::markInService(MSHR *mshr)
         return;
     }
     mshr->inService = true;
-    pendingList.erase(mshr->readyIter);
+    readyList.erase(mshr->readyIter);
     //mshr->readyIter = NULL;
     inServiceEntries += 1;
-    //pendingList.pop_front();
+    //readyList.pop_front();
 }
 
 void
 MSHRQueue::markPending(MSHR *mshr)
 {
-    //assert(mshr->readyIter == NULL);
+    assert(mshr->inService);
     mshr->inService = false;
     --inServiceEntries;
     /**
      * @ todo might want to add rerequests to front of pending list for
      * performance.
      */
-    mshr->readyIter = pendingList.insert(pendingList.end(), mshr);
+    mshr->readyIter = addToReadyList(mshr);
 }
 
 void

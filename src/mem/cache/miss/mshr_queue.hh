@@ -51,7 +51,7 @@ class MSHRQueue
     /** Holds pointers to all allocated entries. */
     MSHR::List allocatedList;
     /** Holds pointers to entries that haven't been sent to the bus. */
-    MSHR::List pendingList;
+    MSHR::List readyList;
     /** Holds non allocated entries. */
     MSHR::List freeList;
 
@@ -68,6 +68,9 @@ class MSHRQueue
      * operations can allocate upto 4 entries at one time.
      */
     const int numReserve;
+
+    MSHR::Iterator addToReadyList(MSHR *mshr);
+
 
   public:
     /** The number of allocated entries. */
@@ -121,7 +124,8 @@ class MSHRQueue
      *
      * @pre There are free entries.
      */
-    MSHR *allocate(Addr addr, int size, PacketPtr &pkt);
+    MSHR *allocate(Addr addr, int size, PacketPtr &pkt,
+                   Tick when, Counter order);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the
@@ -147,7 +151,7 @@ class MSHRQueue
 
     /**
      * Mark the given MSHR as in service. This removes the MSHR from the
-     * pendingList. Deallocates the MSHR if it does not expect a response.
+     * readyList. Deallocates the MSHR if it does not expect a response.
      * @param mshr The MSHR to mark in service.
      */
     void markInService(MSHR *mshr);
@@ -171,7 +175,7 @@ class MSHRQueue
      */
     bool havePending() const
     {
-        return !pendingList.empty();
+        return !readyList.empty();
     }
 
     /**
@@ -184,15 +188,20 @@ class MSHRQueue
     }
 
     /**
-     * Returns the MSHR at the head of the pendingList.
+     * Returns the MSHR at the head of the readyList.
      * @return The next request to service.
      */
     MSHR *getNextMSHR() const
     {
-        if (pendingList.empty()) {
+        if (readyList.empty() || readyList.front()->readyTick > curTick) {
             return NULL;
         }
-        return pendingList.front();
+        return readyList.front();
+    }
+
+    Tick nextMSHRReadyTick() const
+    {
+        return readyList.empty() ? MaxTick : readyList.front()->readyTick;
     }
 };
 

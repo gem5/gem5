@@ -42,7 +42,7 @@ using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
     : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
-      blocked(false), mustSendRetry(false), requestCauses(0)
+      blocked(false), mustSendRetry(false)
 {
 }
 
@@ -116,7 +116,9 @@ BaseCache::CachePort::clearBlocked()
     {
         DPRINTF(Cache, "Cache Sending Retry\n");
         mustSendRetry = false;
-        sendRetry();
+        SendRetryEvent *ev = new SendRetryEvent(this, true);
+        // @TODO: need to find a better time (next bus cycle?)
+        ev->schedule(curTick + 1);
     }
 }
 
