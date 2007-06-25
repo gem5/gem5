@@ -368,7 +368,7 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
             if (mshr->threadNum != 0/*pkt->req->getThreadNum()*/) {
                 mshr->threadNum = -1;
             }
-            mshr->allocateTarget(pkt, true);
+            mshr->allocateTarget(pkt);
             if (mshr->getNumTargets() == numTarget) {
                 noTargetMSHR = mshr;
                 setBlocked(Blocked_NoTargets);
@@ -483,8 +483,7 @@ Cache<TagStore,Coherence>::atomicAccess(PacketPtr pkt)
         if (isCacheFill) {
             PacketList writebacks;
             blk = handleFill(busPkt, blk, writebacks);
-            bool status = satisfyCpuSideRequest(pkt, blk);
-            assert(status);
+            satisfyCpuSideRequest(pkt, blk);
             delete busPkt;
 
             // Handle writebacks if needed
@@ -538,12 +537,14 @@ Cache<TagStore,Coherence>::functionalAccess(PacketPtr pkt,
 
     // There can be many matching outstanding writes.
     std::vector<MSHR*> writes;
-    writeBuffer.findMatches(blk_addr, writes);
+    assert(!writeBuffer.findMatches(blk_addr, writes));
+/*  Need to change this to iterate through targets in mshr??
     for (int i = 0; i < writes.size(); ++i) {
         MSHR *mshr = writes[i];
         if (pkt->checkFunctional(mshr->addr, mshr->size, mshr->writeData))
             return;
     }
+*/
 
     otherSidePort->checkAndSendFunctional(pkt);
 }
@@ -557,42 +558,29 @@ Cache<TagStore,Coherence>::functionalAccess(PacketPtr pkt,
 
 
 template<class TagStore, class Coherence>
-bool
+void
 Cache<TagStore,Coherence>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
 {
-    if (blk && (pkt->needsExclusive() ? blk->isWritable() : blk->isValid())) {
-        assert(pkt->isWrite() || pkt->isReadWrite() || pkt->isRead());
-        assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
+    assert(blk);
+    assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
+    assert(pkt->isWrite() || pkt->isReadWrite() || pkt->isRead());
+    assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
 
-        if (pkt->isWrite()) {
-            if (blk->checkWrite(pkt)) {
-                blk->status |= BlkDirty;
-                pkt->writeDataToBlock(blk->data, blkSize);
-            }
-        } else if (pkt->isReadWrite()) {
-            cmpAndSwap(blk, pkt);
-        } else {
-            if (pkt->isLocked()) {
-                blk->trackLoadLocked(pkt);
-            }
-            pkt->setDataFromBlock(blk->data, blkSize);
+    if (pkt->isWrite()) {
+        if (blk->checkWrite(pkt)) {
+            blk->status |= BlkDirty;
+            pkt->writeDataToBlock(blk->data, blkSize);
         }
-
-        return true;
+    } else if (pkt->isReadWrite()) {
+        cmpAndSwap(blk, pkt);
     } else {
-        return false;
+        if (pkt->isLocked()) {
+            blk->trackLoadLocked(pkt);
+        }
+        pkt->setDataFromBlock(blk->data, blkSize);
     }
 }
 
-
-template<class TagStore, class Coherence>
-bool
-Cache<TagStore,Coherence>::satisfyTarget(MSHR::Target *target, BlkType *blk)
-{
-    assert(target != NULL);
-    assert(target->isCpuSide());
-    return satisfyCpuSideRequest(target->pkt, blk);
-}
 
 template<class TagStore, class Coherence>
 bool
@@ -611,35 +599,40 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
 
-        if (!satisfyTarget(target, blk)) {
-            // Invalid access, need to do another request
-            // can occur if block is invalidated, or not correct
-            // permissions
-            MSHRQueue *mq = mshr->queue;
-            mq->markPending(mshr);
-            mshr->order = order++;
-            requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
-            return false;
+        if (target->isCpuSide()) {
+            satisfyCpuSideRequest(target->pkt, blk);
+            // How many bytes pass the first request is this one
+            int transfer_offset =
+                target->pkt->getOffset(blkSize) - initial_offset;
+            if (transfer_offset < 0) {
+                transfer_offset += blkSize;
+            }
+
+            // If critical word (no offset) return first word time
+            Tick completion_time = tags->getHitLatency() +
+                transfer_offset ? pkt->finishTime : pkt->firstWordTime;
+
+            if (!target->pkt->req->isUncacheable()) {
+                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                    completion_time - target->time;
+            }
+            target->pkt->makeTimingResponse();
+            cpuSidePort->respond(target->pkt, completion_time);
+        } else {
+            // response to snoop request
+            DPRINTF(Cache, "processing deferred snoop...\n");
+            handleSnoop(target->pkt, blk, true);
         }
 
-
-        // How many bytes pass the first request is this one
-        int transfer_offset = target->pkt->getOffset(blkSize) - initial_offset;
-        if (transfer_offset < 0) {
-            transfer_offset += blkSize;
-        }
-
-        // If critical word (no offset) return first word time
-        Tick completion_time = tags->getHitLatency() +
-            transfer_offset ? pkt->finishTime : pkt->firstWordTime;
-
-        if (!target->pkt->req->isUncacheable()) {
-            missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                completion_time - target->time;
-        }
-        target->pkt->makeTimingResponse();
-        cpuSidePort->respond(target->pkt, completion_time);
         mshr->popTarget();
+    }
+
+    if (mshr->promoteDeferredTargets()) {
+        MSHRQueue *mq = mshr->queue;
+        mq->markPending(mshr);
+        mshr->order = order++;
+        requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+        return false;
     }
 
     return true;
@@ -653,6 +646,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
     Tick time = curTick + hitLatency;
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     assert(mshr);
+
     if (pkt->result == Packet::Nacked) {
         //pkt->reinitFromRequest();
         warn("NACKs from devices not connected to the same bus "
@@ -661,7 +655,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
     }
     assert(pkt->result != Packet::BadAddress);
     assert(pkt->result == Packet::Success);
-    DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
+    DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
 
     MSHRQueue *mq = mshr->queue;
     bool wasFull = mq->isFull();
@@ -883,7 +877,12 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
     // better not be snooping a request that conflicts with something
     // we have outstanding...
-    assert(!mshr || !mshr->inService);
+    if (mshr && mshr->inService) {
+        assert(mshr->getNumTargets() < numTarget); //handle later
+        mshr->allocateSnoopTarget(pkt);
+        assert(mshr->getNumTargets() < numTarget); //handle later
+        return;
+    }
 
     //We also need to check the writeback buffers and handle those
     std::vector<MSHR *> writebacks;
@@ -895,6 +894,9 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
         for (int i=0; i<writebacks.size(); i++) {
             mshr = writebacks[i];
             assert(!mshr->isUncacheable());
+            assert(mshr->getNumTargets() == 1);
+            PacketPtr wb_pkt = mshr->getTarget()->pkt;
+            assert(wb_pkt->cmd == MemCmd::Writeback);
 
             if (pkt->isRead()) {
                 pkt->assertMemInhibit();
@@ -906,7 +908,7 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
                     // the packet's invalidate flag is set...
                     assert(pkt->isInvalidate());
                 }
-                doTimingSupplyResponse(pkt, mshr->writeData);
+                doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>());
             }
 
             if (pkt->isInvalidate()) {
@@ -1208,7 +1210,7 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
 
         waitingOnRetry = !success;
         if (waitingOnRetry) {
-            DPRINTF(CachePort, "%s now waiting on a retry\n", name());
+            DPRINTF(CachePort, "now waiting on a retry\n");
         } else {
             myCache()->markInService(mshr);
         }
@@ -1220,8 +1222,7 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
     if (!waitingOnRetry) {
         if (isBusRequested()) {
             // more requests/writebacks: rerequest ASAP
-            DPRINTF(CachePort, "%s still more MSHR requests to send\n",
-                    name());
+            DPRINTF(CachePort, "still more MSHR requests to send\n");
             sendEvent->schedule(curTick+1);
         } else if (!transmitList.empty()) {
             // deferred packets: rerequest bus, but possibly not until later

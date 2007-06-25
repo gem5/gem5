@@ -182,8 +182,7 @@ class Cache : public BaseCache
     BlkType *handleFill(PacketPtr pkt, BlkType *blk,
                         PacketList &writebacks);
 
-    bool satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
-    bool satisfyTarget(MSHR::Target *target, BlkType *blk);
+    void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
     bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
     void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data);

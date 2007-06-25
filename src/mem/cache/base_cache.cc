@@ -42,8 +42,7 @@ using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
     : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
-      blocked(false), waitingOnRetry(false), mustSendRetry(false),
-      requestCauses(0)
+      blocked(false), mustSendRetry(false), requestCauses(0)
 {
 }
 

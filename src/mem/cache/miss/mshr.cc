@@ -68,12 +68,16 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target)
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem0-side request), so set cpuSide to true here.
     targets.push_back(Target(target, true));
+    assert(deferredTargets.empty());
+    deferredNeedsExclusive = false;
+    pendingInvalidate = false;
 }
 
 void
 MSHR::deallocate()
 {
     assert(targets.empty());
+    assert(deferredTargets.empty());
     assert(ntargets == 0);
     inService = false;
     //allocIter = NULL;
@@ -84,41 +88,77 @@ MSHR::deallocate()
  * Adds a target to an MSHR
  */
 void
-MSHR::allocateTarget(PacketPtr target, bool cpuSide)
+MSHR::allocateTarget(PacketPtr target)
 {
-    //If we append an invalidate and we issued a read to the bus,
-    //but now have some pending writes, we need to move
-    //the invalidate to before the first non-read
-    if (inService && !inServiceForExclusive && needsExclusive
-        && !cpuSide && target->isInvalidate()) {
-        std::list<Target> temp;
-
-        while (!targets.empty()) {
-            if (targets.front().pkt->needsExclusive()) break;
-            //Place on top of temp stack
-            temp.push_front(targets.front());
-            //Remove from targets
-            targets.pop_front();
+    if (inService) {
+        if (!deferredTargets.empty() || pendingInvalidate ||
+            (!needsExclusive && target->needsExclusive())) {
+            // need to put on deferred list
+            deferredTargets.push_back(Target(target, true));
+            if (target->needsExclusive()) {
+                deferredNeedsExclusive = true;
+            }
+        } else {
+            // still OK to append to outstanding request
+            targets.push_back(Target(target, true));
+        }
+    } else {
+        if (target->needsExclusive()) {
+            needsExclusive = true;
         }
 
-        //Now that we have all the reads off until first non-read, we can
-        //place the invalidate on
-        targets.push_front(Target(target, cpuSide));
-
-        //Now we pop off the temp_stack and put them back
-        while (!temp.empty()) {
-            targets.push_front(temp.front());
-            temp.pop_front();
-        }
-    }
-    else {
-        targets.push_back(Target(target, cpuSide));
+        targets.push_back(Target(target, true));
     }
 
     ++ntargets;
+}
+
+void
+MSHR::allocateSnoopTarget(PacketPtr target)
+{
+    assert(inService); // don't bother to call otherwise
+
+    if (pendingInvalidate) {
+        // a prior snoop has already appended an invalidation, so
+        // logically we don't have the block anymore...
+        return;
+    }
+
+    if (needsExclusive) {
+        // We're awaiting an exclusive copy, so ownership is pending.
+        // It's up to us to respond once the data arrives.
+        target->assertMemInhibit();
+    } else if (target->needsExclusive()) {
+        // This transaction will take away our pending copy
+        pendingInvalidate = true;
+    } else {
+        // If we're not going to supply data or perform an
+        // invalidation, we don't need to save this.
+        return;
+    }
+
+    targets.push_back(Target(target, false));
+    ++ntargets;
+}
+
+
+bool
+MSHR::promoteDeferredTargets()
+{
+    if (deferredTargets.empty()) {
+        return false;
+    }
+
+    assert(targets.empty());
+    targets = deferredTargets;
+    deferredTargets.clear();
     assert(targets.size() == ntargets);
 
-    needsExclusive = needsExclusive || target->needsExclusive();
+    needsExclusive = deferredNeedsExclusive;
+    pendingInvalidate = false;
+    deferredNeedsExclusive = false;
+
+    return true;
 }
 
 

@@ -85,9 +85,6 @@ class MSHR : public Packet::SenderState
     /** Size of the request. */
     int size;
 
-    /** Data associated with the request (if a write). */
-    uint8_t *writeData;
-
     /** True if the request has been sent to the bus. */
     bool inService;
 
@@ -95,12 +92,13 @@ class MSHR : public Packet::SenderState
     bool isCacheFill;
     /** True if we need to get an exclusive copy of the block. */
     bool needsExclusive;
+
     /** True if the request is uncacheable */
     bool _isUncacheable;
 
-    /** True if the request that has been sent to the bus is for en
-     * exclusive copy. */
-    bool inServiceForExclusive;
+    bool deferredNeedsExclusive;
+    bool pendingInvalidate;
+
     /** Thread number of the miss. */
     short threadNum;
     /** The number of currently allocated targets. */
@@ -123,6 +121,8 @@ class MSHR : public Packet::SenderState
 private:
     /** List of all requests that match the address */
     TargetList targets;
+
+    TargetList deferredTargets;
 
 public:
 
@@ -153,7 +153,8 @@ public:
      * Add a request to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(PacketPtr target, bool cpuSide);
+    void allocateTarget(PacketPtr target);
+    void allocateSnoopTarget(PacketPtr target);
 
     /** A simple constructor. */
     MSHR();
@@ -200,6 +201,8 @@ public:
         Target *tgt = getTarget();
         return tgt->isCpuSide() && !tgt->pkt->needsResponse();
     }
+
+    bool promoteDeferredTargets();
 
     /**
      * Prints the contents of this MSHR to stderr.

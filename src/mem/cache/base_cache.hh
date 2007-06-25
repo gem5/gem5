@@ -118,8 +118,6 @@ class BaseCache : public MemObject
 
         bool blocked;
 
-        bool waitingOnRetry;
-
         bool mustSendRetry;
 
         /**
