@@ -892,9 +892,9 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
     // better not be snooping a request that conflicts with something
     // we have outstanding...
     if (mshr && mshr->inService) {
-        assert(mshr->getNumTargets() < numTarget); //handle later
         mshr->allocateSnoopTarget(pkt, curTick, order++);
-        assert(mshr->getNumTargets() < numTarget); //handle later
+        if (mshr->getNumTargets() > numTarget)
+           warn("allocating bonus target for snoop"); //handle later
         return;
     }
 
