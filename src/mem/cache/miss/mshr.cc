@@ -132,13 +132,15 @@ MSHR::allocateSnoopTarget(PacketPtr target, Tick when, Counter _order)
         // We're awaiting an exclusive copy, so ownership is pending.
         // It's up to us to respond once the data arrives.
         target->assertMemInhibit();
-    } else if (target->needsExclusive()) {
+    }
+
+    if (target->needsExclusive()) {
         // This transaction will take away our pending copy
         pendingInvalidate = true;
     } else {
-        // If we're not going to supply data or perform an
-        // invalidation, we don't need to save this.
-        return;
+        // We'll keep our pending copy, but we can't let the other guy
+        // think he's getting it exclusive
+        target->assertShared();
     }
 
     targets.push_back(Target(target, when, _order, false));

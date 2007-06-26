@@ -912,7 +912,6 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
 
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
-                assert(0);
                 markInService(mshr);
             }
             return;
@@ -1201,18 +1200,24 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
     } else {
         // check for non-response packets (requests & writebacks)
         PacketPtr pkt = myCache()->getTimingPacket();
-        assert(pkt != NULL);
-        MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
-
-        bool success = sendTiming(pkt);
-        DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
-                pkt->getAddr(), success ? "successful" : "unsuccessful");
-
-        waitingOnRetry = !success;
-        if (waitingOnRetry) {
-            DPRINTF(CachePort, "now waiting on a retry\n");
+        if (pkt == NULL) {
+            // can happen if e.g. we attempt a writeback and fail, but
+            // before the retry, the writeback is eliminated because
+            // we snoop another cache's ReadEx.
+            waitingOnRetry = false;
         } else {
-            myCache()->markInService(mshr);
+            MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+
+            bool success = sendTiming(pkt);
+            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+                    pkt->getAddr(), success ? "successful" : "unsuccessful");
+
+            waitingOnRetry = !success;
+            if (waitingOnRetry) {
+                DPRINTF(CachePort, "now waiting on a retry\n");
+            } else {
+                myCache()->markInService(mshr);
+            }
         }
     }
 
