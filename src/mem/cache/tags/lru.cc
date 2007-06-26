@@ -173,6 +173,8 @@ LRU::findBlock(Addr addr, int &lat)
     if (blk != NULL) {
         // move this block to head of the MRU list
         sets[set].moveToHead(blk);
+        DPRINTF(Cache, "set %x: moving blk %x to MRU\n",
+                set, regenerateBlkAddr(tag, set));
         if (blk->whenReady > curTick
             && blk->whenReady - curTick > hitLatency) {
             lat = blk->whenReady - curTick;
@@ -214,6 +216,8 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
         }
     }
 
+    DPRINTF(Cache, "set %x: selecting blk %x for replacement\n",
+            set, regenerateBlkAddr(blk->tag, set));
     return blk;
 }
 

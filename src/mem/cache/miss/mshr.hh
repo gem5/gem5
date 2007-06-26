@@ -105,11 +105,19 @@ class MSHR : public Packet::SenderState
 
     bool deferredNeedsExclusive;
     bool pendingInvalidate;
+    /** Is there a pending upgrade that got replaced? */
+    bool replacedPendingUpgrade;
+    bool replacedPendingUpgradeDirty;
 
     /** Thread number of the miss. */
     short threadNum;
     /** The number of currently allocated targets. */
     short ntargets;
+
+
+    /** Data buffer (if needed).  Currently used only for pending
+     * upgrade handling. */
+    uint8_t *data;
 
     /**
      * Pointer to this MSHR on the ready list.
@@ -203,6 +211,9 @@ public:
     }
 
     bool promoteDeferredTargets();
+
+    void handleReplacement(CacheBlk *blk, int blkSize);
+    bool handleReplacedPendingUpgrade(Packet *pkt);
 
     /**
      * Prints the contents of this MSHR to stderr.

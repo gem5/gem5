@@ -300,7 +300,6 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
         return true;
     }
 
-    PacketList writebacks;
     int lat = hitLatency;
     bool satisfied = false;
 
@@ -319,6 +318,8 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
     }
 
 #if 0
+    PacketList writebacks;
+
     // If this is a block size write/hint (WH64) allocate the block here
     // if the coherence protocol allows it.
     /** @todo make the fast write alloc (wh64) work with coherence. */
@@ -338,7 +339,6 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
             ++fastWrites;
         }
     }
-#endif
 
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
@@ -346,6 +346,7 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
         allocateBuffer(wbPkt, time, true);
         writebacks.pop_front();
     }
+#endif
 
     bool needsResponse = pkt->needsResponse();
 
@@ -676,6 +677,15 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
         BlkType *blk = tags->findBlock(pkt->getAddr());
+
+        if (blk == NULL && pkt->cmd == MemCmd::UpgradeResp) {
+            if (!mshr->handleReplacedPendingUpgrade(pkt)) {
+                mq->markPending(mshr);
+                requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+                return;
+            }
+        }
+
         PacketList writebacks;
         blk = handleFill(pkt, blk, writebacks);
         deallocate = satisfyMSHR(mshr, pkt, blk);
@@ -747,15 +757,20 @@ Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
     Addr addr = pkt->getAddr();
 
     if (blk == NULL) {
-        // better have read new data
+        // better have read new data...
         assert(pkt->isRead());
 
         // need to do a replacement
         blk = tags->findReplacement(addr, writebacks);
         if (blk->isValid()) {
+            Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
+            MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
+            if (repl_mshr) {
+                repl_mshr->handleReplacement(blk, blkSize);
+            }
+
             DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
-                    tags->regenerateBlkAddr(blk->tag, blk->set), addr,
-                    blk->isDirty() ? "writeback" : "clean");
+                    repl_addr, addr, blk->isDirty() ? "writeback" : "clean");
 
             if (blk->isDirty()) {
                 // Save writeback packet for handling by caller
@@ -992,7 +1007,7 @@ Cache<TagStore,Coherence>::getNextMSHR()
             return conflict_mshr;
         }
 
-        // No conclifts; issue read
+        // No conflicts; issue read
         return miss_mshr;
     }
 
