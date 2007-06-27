@@ -622,7 +622,7 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
         } else {
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
-            handleSnoop(target->pkt, blk, true);
+            handleSnoop(target->pkt, blk, true, true);
         }
 
         mshr->popTarget();
@@ -678,12 +678,10 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
                 pkt->getAddr());
         BlkType *blk = tags->findBlock(pkt->getAddr());
 
-        if (blk == NULL && pkt->cmd == MemCmd::UpgradeResp) {
-            if (!mshr->handleReplacedPendingUpgrade(pkt)) {
-                mq->markPending(mshr);
-                requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
-                return;
-            }
+        if (!mshr->handleFill(pkt, blk)) {
+            mq->markPending(mshr);
+            requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+            return;
         }
 
         PacketList writebacks;
@@ -814,10 +812,12 @@ Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
 template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::doTimingSupplyResponse(PacketPtr req_pkt,
-                                                  uint8_t *blk_data)
+                                                  uint8_t *blk_data,
+                                                  bool already_copied)
 {
-    // timing-mode snoop responses require a new packet
-    PacketPtr pkt = new Packet(req_pkt);
+    // timing-mode snoop responses require a new packet, unless we
+    // already made a copy...
+    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
     pkt->allocate();
     pkt->makeTimingResponse();
     pkt->setDataFromBlock(blk_data, blkSize);
@@ -827,7 +827,7 @@ Cache<TagStore,Coherence>::doTimingSupplyResponse(PacketPtr req_pkt,
 template<class TagStore, class Coherence>
 void
 Cache<TagStore,Coherence>::handleSnoop(PacketPtr pkt, BlkType *blk,
-                                       bool is_timing)
+                                       bool is_timing, bool is_deferred)
 {
     if (!blk || !blk->isValid()) {
         return;
@@ -854,9 +854,10 @@ Cache<TagStore,Coherence>::handleSnoop(PacketPtr pkt, BlkType *blk,
     }
 
     if (supply) {
+        assert(!pkt->memInhibitAsserted());
         pkt->assertMemInhibit();
         if (is_timing) {
-            doTimingSupplyResponse(pkt, blk->data);
+            doTimingSupplyResponse(pkt, blk->data, is_deferred);
         } else {
             pkt->makeAtomicResponse();
             pkt->setDataFromBlock(blk->data, blkSize);
@@ -892,6 +893,8 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
     // better not be snooping a request that conflicts with something
     // we have outstanding...
     if (mshr && mshr->inService) {
+        DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x\n",
+                blk_addr);
         mshr->allocateSnoopTarget(pkt, curTick, order++);
         if (mshr->getNumTargets() > numTarget)
            warn("allocating bonus target for snoop"); //handle later
@@ -913,6 +916,7 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
             assert(wb_pkt->cmd == MemCmd::Writeback);
 
             if (pkt->isRead()) {
+                assert(!pkt->memInhibitAsserted());
                 pkt->assertMemInhibit();
                 if (!pkt->needsExclusive()) {
                     pkt->assertShared();
@@ -922,7 +926,7 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
                     // the packet's invalidate flag is set...
                     assert(pkt->isInvalidate());
                 }
-                doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>());
+                doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(), false);
             }
 
             if (pkt->isInvalidate()) {
@@ -933,7 +937,7 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
         }
     }
 
-    handleSnoop(pkt, blk, true);
+    handleSnoop(pkt, blk, true, false);
 }
 
 
@@ -948,7 +952,7 @@ Cache<TagStore,Coherence>::snoopAtomic(PacketPtr pkt)
     }
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
-    handleSnoop(pkt, blk, false);
+    handleSnoop(pkt, blk, false, false);
     return hitLatency;
 }
 

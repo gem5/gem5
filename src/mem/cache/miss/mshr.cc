@@ -75,6 +75,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     assert(deferredTargets.empty());
     deferredNeedsExclusive = false;
     pendingInvalidate = false;
+    pendingShared = false;
     replacedPendingUpgrade = false;
     data = NULL;
 }
@@ -120,7 +121,7 @@ MSHR::allocateTarget(PacketPtr target, Tick when, Counter _order)
 }
 
 void
-MSHR::allocateSnoopTarget(PacketPtr target, Tick when, Counter _order)
+MSHR::allocateSnoopTarget(PacketPtr pkt, Tick when, Counter _order)
 {
     assert(inService); // don't bother to call otherwise
 
@@ -130,23 +131,33 @@ MSHR::allocateSnoopTarget(PacketPtr target, Tick when, Counter _order)
         return;
     }
 
-    if (needsExclusive) {
-        // We're awaiting an exclusive copy, so ownership is pending.
-        // It's up to us to respond once the data arrives.
-        target->assertMemInhibit();
-    }
+    DPRINTF(Cache, "deferred snoop on %x: %s %s\n", addr,
+            needsExclusive ? "needsExclusive" : "",
+            pkt->needsExclusive() ? "pkt->needsExclusive()" : "");
 
-    if (target->needsExclusive()) {
-        // This transaction will take away our pending copy
-        pendingInvalidate = true;
+    if (needsExclusive || pkt->needsExclusive()) {
+        // actual target device (typ. PhysicalMemory) will delete the
+        // packet on reception, so we need to save a copy here
+        targets.push_back(Target(new Packet(pkt), when, _order, false));
+        ++ntargets;
+
+        if (needsExclusive) {
+            // We're awaiting an exclusive copy, so ownership is pending.
+            // It's up to us to respond once the data arrives.
+            pkt->assertMemInhibit();
+        }
+
+        if (pkt->needsExclusive()) {
+            // This transaction will take away our pending copy
+            pendingInvalidate = true;
+        }
     } else {
-        // We'll keep our pending copy, but we can't let the other guy
-        // think he's getting it exclusive
-        target->assertShared();
+        // Read to a read: no conflict, so no need to record as
+        // target, but make sure neither reader thinks he's getting an
+        // exclusive copy
+        pendingShared = true;
+        pkt->assertShared();
     }
-
-    targets.push_back(Target(target, when, _order, false));
-    ++ntargets;
 }
 
 
@@ -164,6 +175,7 @@ MSHR::promoteDeferredTargets()
 
     needsExclusive = deferredNeedsExclusive;
     pendingInvalidate = false;
+    pendingShared = false;
     deferredNeedsExclusive = false;
     order = targets.front().order;
     readyTick = std::max(curTick, targets.front().time);
@@ -200,25 +212,33 @@ MSHR::handleReplacement(CacheBlk *blk, int blkSize)
 
 
 bool
-MSHR::handleReplacedPendingUpgrade(Packet *pkt)
+MSHR::handleFill(Packet *pkt, CacheBlk *blk)
 {
-    // @TODO: if upgrade is nacked and replacedPendingUpgradeDirty is true, then we need to writeback the data (or rel
-    assert(pkt->cmd == MemCmd::UpgradeResp);
-    assert(replacedPendingUpgrade);
-    replacedPendingUpgrade = false; // reset
-    if (replacedPendingUpgradeDirty) {
-        // we wrote back the previous copy; just reissue as a ReadEx
-        return false;
+    if (replacedPendingUpgrade) {
+        // block was replaced while upgrade request was in service
+        assert(pkt->cmd == MemCmd::UpgradeResp);
+        assert(blk == NULL);
+        assert(replacedPendingUpgrade);
+        replacedPendingUpgrade = false; // reset
+        if (replacedPendingUpgradeDirty) {
+            // we wrote back the previous copy; just reissue as a ReadEx
+            return false;
+        }
+
+        // previous copy was not dirty, but we are now owner...  fake out
+        // cache by taking saved data and converting UpgradeResp to
+        // ReadExResp
+        assert(data);
+        pkt->cmd = MemCmd::ReadExResp;
+        pkt->setData(data);
+        delete [] data;
+        data = NULL;
+    } else if (pendingShared) {
+        // we snooped another read while this read was in
+        // service... assert shared line on its behalf
+        pkt->assertShared();
     }
 
-    // previous copy was not dirty, but we are now owner...  fake out
-    // cache by taking saved data and converting UpgradeResp to
-    // ReadExResp
-    assert(data);
-    pkt->cmd = MemCmd::ReadExResp;
-    pkt->setData(data);
-    delete [] data;
-    data = NULL;
     return true;
 }
 

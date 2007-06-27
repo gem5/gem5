@@ -207,6 +207,9 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
         totalRefs += blk->refCount;
         ++sampledRefs;
         blk->refCount = 0;
+
+        DPRINTF(Cache, "set %x: selecting blk %x for replacement\n",
+                set, regenerateBlkAddr(blk->tag, set));
     } else if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
@@ -216,8 +219,6 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
         }
     }
 
-    DPRINTF(Cache, "set %x: selecting blk %x for replacement\n",
-            set, regenerateBlkAddr(blk->tag, set));
     return blk;
 }
 

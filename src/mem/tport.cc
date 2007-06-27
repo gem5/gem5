@@ -69,11 +69,21 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // if we ever added it back.
     assert(pkt->isRequest());
     assert(pkt->result == Packet::Unknown);
+
+    if (pkt->memInhibitAsserted()) {
+        // snooper will supply based on copy of packet
+        // still target's responsibility to delete packet
+        delete pkt->req;
+        delete pkt;
+        return true;
+    }
+
     bool needsResponse = pkt->needsResponse();
     Tick latency = recvAtomic(pkt);
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
-        // recvAtomic() should already have turned packet into atomic response
+        // recvAtomic() should already have turned packet into
+        // atomic response
         assert(pkt->isResponse());
         pkt->convertAtomicToTimingResponse();
         schedSendTiming(pkt, curTick + latency);
@@ -81,6 +91,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         delete pkt->req;
         delete pkt;
     }
+
     return true;
 }
 

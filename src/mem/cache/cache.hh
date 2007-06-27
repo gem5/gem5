@@ -185,14 +185,16 @@ class Cache : public BaseCache
     void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
     bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
-    void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data);
+    void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
+                                bool already_copied);
 
     /**
      * Sets the blk to the new state.
      * @param blk The cache block being snooped.
      * @param new_state The new coherence state for the block.
      */
-    void handleSnoop(PacketPtr ptk, BlkType *blk, bool is_timing);
+    void handleSnoop(PacketPtr ptk, BlkType *blk,
+                     bool is_timing, bool is_deferred);
 
     /**
      * Create a writeback request for the given block.
