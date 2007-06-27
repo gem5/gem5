@@ -76,7 +76,6 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     deferredNeedsExclusive = false;
     pendingInvalidate = false;
     pendingShared = false;
-    replacedPendingUpgrade = false;
     data = NULL;
 }
 
@@ -185,61 +184,13 @@ MSHR::promoteDeferredTargets()
 
 
 void
-MSHR::handleReplacement(CacheBlk *blk, int blkSize)
-{
-    // must be an outstanding upgrade request on block we're about to
-    // replace...
-    assert(!blk->isWritable());
-    assert(needsExclusive);
-    replacedPendingUpgrade = true;
-
-    // if it's dirty, just remember what happened and allow the
-    // writeback to continue.  we'll reissue a ReadEx later whether
-    // the upgrade succeeds or not
-    if (blk->isDirty()) {
-        replacedPendingUpgradeDirty = true;
-        return;
-    }
-
-    // if not dirty, we need to save it off as it will be only valid
-    // copy in system if upgrade is successful (and may need to be
-    // written back then, as the current owner if any will be
-    // invalidating its block)
-    replacedPendingUpgradeDirty = false;
-    data = new uint8_t[blkSize];
-    std::memcpy(data, blk->data, blkSize);
-}
-
-
-bool
 MSHR::handleFill(Packet *pkt, CacheBlk *blk)
 {
-    if (replacedPendingUpgrade) {
-        // block was replaced while upgrade request was in service
-        assert(pkt->cmd == MemCmd::UpgradeResp);
-        assert(blk == NULL);
-        assert(replacedPendingUpgrade);
-        replacedPendingUpgrade = false; // reset
-        if (replacedPendingUpgradeDirty) {
-            // we wrote back the previous copy; just reissue as a ReadEx
-            return false;
-        }
-
-        // previous copy was not dirty, but we are now owner...  fake out
-        // cache by taking saved data and converting UpgradeResp to
-        // ReadExResp
-        assert(data);
-        pkt->cmd = MemCmd::ReadExResp;
-        pkt->setData(data);
-        delete [] data;
-        data = NULL;
-    } else if (pendingShared) {
+    if (pendingShared) {
         // we snooped another read while this read was in
         // service... assert shared line on its behalf
         pkt->assertShared();
     }
-
-    return true;
 }
 
 

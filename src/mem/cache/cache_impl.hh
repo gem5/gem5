@@ -58,6 +58,9 @@ Cache<TagStore,Coherence>::Cache(const std::string &_name,
       doFastWrites(params.doFastWrites),
       prefetchMiss(params.prefetchMiss)
 {
+    tempBlock = new BlkType();
+    tempBlock->data = new uint8_t[blkSize];
+
     cpuSidePort = new CpuSidePort(_name + "-cpu_side_port", this);
     memSidePort = new MemSidePort(_name + "-mem_side_port", this);
     cpuSidePort->setOtherPort(memSidePort);
@@ -678,11 +681,8 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
                 pkt->getAddr());
         BlkType *blk = tags->findBlock(pkt->getAddr());
 
-        if (!mshr->handleFill(pkt, blk)) {
-            mq->markPending(mshr);
-            requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
-            return;
-        }
+        // give mshr a chance to do some dirty work
+        mshr->handleFill(pkt, blk);
 
         PacketList writebacks;
         blk = handleFill(pkt, blk, writebacks);
@@ -692,6 +692,13 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
             PacketPtr wbPkt = writebacks.front();
             allocateBuffer(wbPkt, time, true);
             writebacks.pop_front();
+        }
+        // if we used temp block, clear it out
+        if (blk == tempBlock) {
+            if (blk->isDirty()) {
+                allocateBuffer(writebackBlk(blk), time, true);
+            }
+            tags->invalidateBlk(blk);
         }
     } else {
         if (pkt->req->isUncacheable()) {
@@ -764,15 +771,26 @@ Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
             Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
             MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
             if (repl_mshr) {
-                repl_mshr->handleReplacement(blk, blkSize);
-            }
+                // must be an outstanding upgrade request on block
+                // we're about to replace...
+                assert(!blk->isWritable());
+                assert(repl_mshr->needsExclusive);
+                // too hard to replace block with transient state;
+                // just use temporary storage to complete the current
+                // request and then get rid of it
+                assert(!tempBlock->isValid());
+                blk = tempBlock;
+                tempBlock->set = tags->extractSet(addr);
+                DPRINTF(Cache, "using temp block for %x\n", addr);
+            } else {
+                DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
+                        repl_addr, addr,
+                        blk->isDirty() ? "writeback" : "clean");
 
-            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
-                    repl_addr, addr, blk->isDirty() ? "writeback" : "clean");
-
-            if (blk->isDirty()) {
-                // Save writeback packet for handling by caller
-                writebacks.push_back(writebackBlk(blk));
+                if (blk->isDirty()) {
+                    // Save writeback packet for handling by caller
+                    writebacks.push_back(writebackBlk(blk));
+                }
             }
         }
 

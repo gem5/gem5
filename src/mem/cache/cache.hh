@@ -136,6 +136,9 @@ class Cache : public BaseCache
     /** Prefetcher */
     BasePrefetcher *prefetcher;
 
+    /** Temporary cache block for occasional transitory use */
+    BlkType *tempBlock;
+
     /**
      * Can this cache should allocate a block on a line-sized write miss.
      */

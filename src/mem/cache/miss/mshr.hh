@@ -106,9 +106,6 @@ class MSHR : public Packet::SenderState
     bool deferredNeedsExclusive;
     bool pendingInvalidate;
     bool pendingShared;
-    /** Is there a pending upgrade that got replaced? */
-    bool replacedPendingUpgrade;
-    bool replacedPendingUpgradeDirty;
 
     /** Thread number of the miss. */
     short threadNum;
@@ -213,8 +210,7 @@ public:
 
     bool promoteDeferredTargets();
 
-    void handleReplacement(CacheBlk *blk, int blkSize);
-    bool handleFill(Packet *pkt, CacheBlk *blk);
+    void handleFill(Packet *pkt, CacheBlk *blk);
 
     /**
      * Prints the contents of this MSHR to stderr.
