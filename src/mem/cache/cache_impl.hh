@@ -48,13 +48,13 @@
 #include "sim/sim_exit.hh" // for SimExitEvent
 
 
-template<class TagStore, class Coherence>
-Cache<TagStore,Coherence>::Cache(const std::string &_name,
-                                 Cache<TagStore,Coherence>::Params &params)
+template<class TagStore>
+Cache<TagStore>::Cache(const std::string &_name,
+                       Cache<TagStore>::Params &params)
     : BaseCache(_name, params.baseParams),
       prefetchAccess(params.prefetchAccess),
       tags(params.tags),
-      coherence(params.coherence), prefetcher(params.prefetcher),
+      prefetcher(params.prefetcher),
       doFastWrites(params.doFastWrites),
       prefetchMiss(params.prefetchMiss)
 {
@@ -67,23 +67,21 @@ Cache<TagStore,Coherence>::Cache(const std::string &_name,
     memSidePort->setOtherPort(cpuSidePort);
 
     tags->setCache(this);
-    coherence->setCache(this);
     prefetcher->setCache(this);
 }
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::regStats()
+Cache<TagStore>::regStats()
 {
     BaseCache::regStats();
     tags->regStats(name());
-    coherence->regStats(name());
     prefetcher->regStats(name());
 }
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 Port *
-Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
+Cache<TagStore>::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "" || if_name == "cpu_side") {
         return cpuSidePort;
@@ -96,9 +94,9 @@ Cache<TagStore,Coherence>::getPort(const std::string &if_name, int idx)
     }
 }
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::deletePortRefs(Port *p)
+Cache<TagStore>::deletePortRefs(Port *p)
 {
     if (cpuSidePort == p || memSidePort == p)
         panic("Can only delete functional ports\n");
@@ -107,9 +105,9 @@ Cache<TagStore,Coherence>::deletePortRefs(Port *p)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
+Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 {
     uint64_t overwrite_val;
     bool overwrite_mem;
@@ -152,9 +150,9 @@ Cache<TagStore,Coherence>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 /////////////////////////////////////////////////////
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::markInService(MSHR *mshr)
+Cache<TagStore>::markInService(MSHR *mshr)
 {
     markInServiceInternal(mshr);
 #if 0
@@ -171,9 +169,9 @@ Cache<TagStore,Coherence>::markInService(MSHR *mshr)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::squash(int threadNum)
+Cache<TagStore>::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
@@ -199,9 +197,9 @@ Cache<TagStore,Coherence>::squash(int threadNum)
 //
 /////////////////////////////////////////////////////
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 bool
-Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *&blk, int &lat)
+Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 {
     if (pkt->req->isUncacheable())  {
         blk = NULL;
@@ -280,9 +278,9 @@ Cache<TagStore,Coherence>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 bool
-Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
+Cache<TagStore>::timingAccess(PacketPtr pkt)
 {
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
@@ -398,10 +396,10 @@ Cache<TagStore,Coherence>::timingAccess(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 PacketPtr
-Cache<TagStore,Coherence>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
-                                        bool needsExclusive)
+Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
+                              bool needsExclusive)
 {
     bool blkValid = blk && blk->isValid();
 
@@ -441,9 +439,9 @@ Cache<TagStore,Coherence>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 Tick
-Cache<TagStore,Coherence>::atomicAccess(PacketPtr pkt)
+Cache<TagStore>::atomicAccess(PacketPtr pkt)
 {
     int lat = hitLatency;
 
@@ -511,10 +509,10 @@ Cache<TagStore,Coherence>::atomicAccess(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::functionalAccess(PacketPtr pkt,
-                                            CachePort *otherSidePort)
+Cache<TagStore>::functionalAccess(PacketPtr pkt,
+                                  CachePort *otherSidePort)
 {
     Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
     BlkType *blk = tags->findBlock(pkt->getAddr());
@@ -561,9 +559,9 @@ Cache<TagStore,Coherence>::functionalAccess(PacketPtr pkt,
 /////////////////////////////////////////////////////
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
+Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
 {
     assert(blk);
     assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
@@ -586,10 +584,10 @@ Cache<TagStore,Coherence>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 bool
-Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
-                                       BlkType *blk)
+Cache<TagStore>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
+                             BlkType *blk)
 {
     // respond to MSHR targets, if any
 
@@ -642,9 +640,9 @@ Cache<TagStore,Coherence>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
+Cache<TagStore>::handleResponse(PacketPtr pkt)
 {
     Tick time = curTick + hitLatency;
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
@@ -730,9 +728,9 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr pkt)
 
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 PacketPtr
-Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
+Cache<TagStore>::writebackBlk(BlkType *blk)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
@@ -754,12 +752,13 @@ Cache<TagStore,Coherence>::writebackBlk(BlkType *blk)
 // is called by both atomic and timing-mode accesses, and in atomic
 // mode we don't mess with the write buffer (we just perform the
 // writebacks atomically once the original request is complete).
-template<class TagStore, class Coherence>
-typename Cache<TagStore,Coherence>::BlkType*
-Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
-                                      PacketList &writebacks)
+template<class TagStore>
+typename Cache<TagStore>::BlkType*
+Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
+                            PacketList &writebacks)
 {
     Addr addr = pkt->getAddr();
+    CacheBlk::State old_state = blk ? blk->status : 0;
 
     if (blk == NULL) {
         // better have read new data...
@@ -795,20 +794,23 @@ Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
         }
 
         blk->tag = tags->extractTag(addr);
-        blk->status = coherence->getNewState(pkt);
     } else {
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
         // either we're getting new data or the block should already be valid
         assert(pkt->isRead() || blk->isValid());
-        CacheBlk::State old_state = blk->status;
-        blk->status = coherence->getNewState(pkt, old_state);
-        if (blk->status != old_state)
-            DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
-                    addr, old_state, blk->status);
-        else
-            warn("Changing state to same value\n");
     }
+
+    if (pkt->needsExclusive()) {
+        blk->status = BlkValid | BlkWritable | BlkDirty;
+    } else if (!pkt->sharedAsserted()) {
+        blk->status = BlkValid | BlkWritable;
+    } else {
+        blk->status = BlkValid;
+    }
+
+    DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
+            addr, old_state, blk->status);
 
     // if we got new data, copy it in
     if (pkt->isRead()) {
@@ -827,11 +829,11 @@ Cache<TagStore,Coherence>::handleFill(PacketPtr pkt, BlkType *blk,
 //
 /////////////////////////////////////////////////////
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::doTimingSupplyResponse(PacketPtr req_pkt,
-                                                  uint8_t *blk_data,
-                                                  bool already_copied)
+Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
+                                        uint8_t *blk_data,
+                                        bool already_copied)
 {
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
@@ -842,10 +844,10 @@ Cache<TagStore,Coherence>::doTimingSupplyResponse(PacketPtr req_pkt,
     memSidePort->respond(pkt, curTick + hitLatency);
 }
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::handleSnoop(PacketPtr pkt, BlkType *blk,
-                                       bool is_timing, bool is_deferred)
+Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
+                             bool is_timing, bool is_deferred)
 {
     if (!blk || !blk->isValid()) {
         return;
@@ -894,9 +896,9 @@ Cache<TagStore,Coherence>::handleSnoop(PacketPtr pkt, BlkType *blk,
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
+Cache<TagStore>::snoopTiming(PacketPtr pkt)
 {
     if (pkt->req->isUncacheable()) {
         //Can't get a hit on an uncacheable address
@@ -959,9 +961,9 @@ Cache<TagStore,Coherence>::snoopTiming(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 Tick
-Cache<TagStore,Coherence>::snoopAtomic(PacketPtr pkt)
+Cache<TagStore>::snoopAtomic(PacketPtr pkt)
 {
     if (pkt->req->isUncacheable()) {
         // Can't get a hit on an uncacheable address
@@ -975,9 +977,9 @@ Cache<TagStore,Coherence>::snoopAtomic(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 MSHR *
-Cache<TagStore,Coherence>::getNextMSHR()
+Cache<TagStore>::getNextMSHR()
 {
     // Check both MSHR queue and write buffer for potential requests
     MSHR *miss_mshr  = mshrQueue.getNextMSHR();
@@ -1051,9 +1053,9 @@ Cache<TagStore,Coherence>::getNextMSHR()
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 PacketPtr
-Cache<TagStore,Coherence>::getTimingPacket()
+Cache<TagStore>::getTimingPacket()
 {
     MSHR *mshr = getNextMSHR();
 
@@ -1100,9 +1102,9 @@ Cache<TagStore,Coherence>::getTimingPacket()
 //
 ///////////////
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::CpuSidePort::
+Cache<TagStore>::CpuSidePort::
 getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     // CPU side port doesn't snoop; it's a target only.
@@ -1112,9 +1114,9 @@ getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 bool
-Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
+Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isRequest() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
@@ -1127,17 +1129,17 @@ Cache<TagStore,Coherence>::CpuSidePort::recvTiming(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 Tick
-Cache<TagStore,Coherence>::CpuSidePort::recvAtomic(PacketPtr pkt)
+Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
     return myCache()->atomicAccess(pkt);
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::CpuSidePort::recvFunctional(PacketPtr pkt)
+Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
     checkFunctional(pkt);
     if (pkt->result != Packet::Success)
@@ -1145,10 +1147,10 @@ Cache<TagStore,Coherence>::CpuSidePort::recvFunctional(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
-Cache<TagStore,Coherence>::
+template<class TagStore>
+Cache<TagStore>::
 CpuSidePort::CpuSidePort(const std::string &_name,
-                         Cache<TagStore,Coherence> *_cache)
+                         Cache<TagStore> *_cache)
     : BaseCache::CachePort(_name, _cache)
 {
 }
@@ -1159,9 +1161,9 @@ CpuSidePort::CpuSidePort(const std::string &_name,
 //
 ///////////////
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::MemSidePort::
+Cache<TagStore>::MemSidePort::
 getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
@@ -1171,9 +1173,9 @@ getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 bool
-Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
 {
     // this needs to be fixed so that the cache updates the mshr and sends the
     // packet back out on the link, but it probably won't happen so until this
@@ -1196,9 +1198,9 @@ Cache<TagStore,Coherence>::MemSidePort::recvTiming(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 Tick
-Cache<TagStore,Coherence>::MemSidePort::recvAtomic(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvAtomic(PacketPtr pkt)
 {
     // in atomic mode, responses go back to the sender via the
     // function return from sendAtomic(), not via a separate
@@ -1209,9 +1211,9 @@ Cache<TagStore,Coherence>::MemSidePort::recvAtomic(PacketPtr pkt)
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::MemSidePort::recvFunctional(PacketPtr pkt)
+Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
     checkFunctional(pkt);
     if (pkt->result != Packet::Success)
@@ -1220,9 +1222,9 @@ Cache<TagStore,Coherence>::MemSidePort::recvFunctional(PacketPtr pkt)
 
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::MemSidePort::sendPacket()
+Cache<TagStore>::MemSidePort::sendPacket()
 {
     // if we have responses that are ready, they take precedence
     if (deferredPacketReady()) {
@@ -1278,28 +1280,27 @@ Cache<TagStore,Coherence>::MemSidePort::sendPacket()
     }
 }
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::MemSidePort::recvRetry()
+Cache<TagStore>::MemSidePort::recvRetry()
 {
     assert(waitingOnRetry);
     sendPacket();
 }
 
 
-template<class TagStore, class Coherence>
+template<class TagStore>
 void
-Cache<TagStore,Coherence>::MemSidePort::processSendEvent()
+Cache<TagStore>::MemSidePort::processSendEvent()
 {
     assert(!waitingOnRetry);
     sendPacket();
 }
 
 
-template<class TagStore, class Coherence>
-Cache<TagStore,Coherence>::
-MemSidePort::MemSidePort(const std::string &_name,
-                         Cache<TagStore,Coherence> *_cache)
+template<class TagStore>
+Cache<TagStore>::
+MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache)
     : BaseCache::CachePort(_name, _cache)
 {
     // override default send event from SimpleTimingPort

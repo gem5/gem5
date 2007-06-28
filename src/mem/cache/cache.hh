@@ -39,9 +39,7 @@
 #ifndef __CACHE_HH__
 #define __CACHE_HH__
 
-#include "base/compression/base.hh"
 #include "base/misc.hh" // fatal, panic, and warn
-#include "cpu/smt.hh" // SMT_MAX_THREADS
 
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache_blk.hh"
@@ -55,11 +53,9 @@ class BasePrefetcher;
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
  * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore. Buffering handles all misses and writes/writebacks
- * @sa MissQueue. Coherence handles all coherence policy details @sa
- * UniCoherence, SimpleMultiCoherence.
+ * storage @sa TagStore.
  */
-template <class TagStore, class Coherence>
+template <class TagStore>
 class Cache : public BaseCache
 {
   public:
@@ -76,13 +72,13 @@ class Cache : public BaseCache
     {
       public:
         CpuSidePort(const std::string &_name,
-                    Cache<TagStore,Coherence> *_cache);
+                    Cache<TagStore> *_cache);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the
         // cache pointer there.
-        Cache<TagStore,Coherence> *myCache() {
-            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        Cache<TagStore> *myCache() {
+            return static_cast<Cache<TagStore> *>(cache);
         }
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
@@ -99,13 +95,13 @@ class Cache : public BaseCache
     {
       public:
         MemSidePort(const std::string &_name,
-                    Cache<TagStore,Coherence> *_cache);
+                    Cache<TagStore> *_cache);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the
         // cache pointer there.
-        Cache<TagStore,Coherence> *myCache() {
-            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        Cache<TagStore> *myCache() {
+            return static_cast<Cache<TagStore> *>(cache);
         }
 
         void sendPacket();
@@ -129,9 +125,6 @@ class Cache : public BaseCache
 
     /** Tag and data Storage */
     TagStore *tags;
-
-    /** Coherence protocol. */
-    Coherence *coherence;
 
     /** Prefetcher */
     BasePrefetcher *prefetcher;
@@ -212,20 +205,19 @@ class Cache : public BaseCache
     {
       public:
         TagStore *tags;
-        Coherence *coherence;
         BaseCache::Params baseParams;
         BasePrefetcher*prefetcher;
         bool prefetchAccess;
         const bool doFastWrites;
         const bool prefetchMiss;
 
-        Params(TagStore *_tags, Coherence *coh,
+        Params(TagStore *_tags,
                BaseCache::Params params,
                BasePrefetcher *_prefetcher,
                bool prefetch_access, int hit_latency,
                bool do_fast_writes,
                bool prefetch_miss)
-            : tags(_tags), coherence(coh),
+            : tags(_tags),
               baseParams(params),
               prefetcher(_prefetcher), prefetchAccess(prefetch_access),
               doFastWrites(do_fast_writes),

@@ -48,8 +48,6 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
 parser.add_option("-n", "--numtesters", type="int", default=8,
                   metavar="N",
                   help="Number of tester pseudo-CPUs [default: %default]")
-parser.add_option("-p", "--protocol", default="moesi",
-                  help="Coherence protocol [default: %default]")
 
 parser.add_option("-f", "--functional", type="int", default=0,
                   metavar="PCT",
@@ -95,7 +93,6 @@ class L1(BaseCache):
     block_size = block_size
     mshrs = num_l1_mshrs
     tgts_per_mshr = 8
-    protocol = CoherenceProtocol(protocol=options.protocol)
 
 # ----------------------
 # Base L2 Cache
@@ -107,7 +104,6 @@ class L2(BaseCache):
     mshrs = num_l2_mshrs
     tgts_per_mshr = 16
     write_buffers = 8
-    protocol = CoherenceProtocol(protocol=options.protocol)
 
 if options.numtesters > block_size:
      print "Error: Number of testers limited to %s because of false sharing" \

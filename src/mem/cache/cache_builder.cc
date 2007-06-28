@@ -42,7 +42,6 @@
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/bus.hh"
-#include "mem/cache/coherence/coherence_protocol.hh"
 #include "sim/builder.hh"
 
 // Tag Templates
@@ -65,13 +64,6 @@
 #if defined(USE_CACHE_SPLIT_LIFO)
 #include "mem/cache/tags/split_lifo.hh"
 #endif
-
-// Compression Templates
-#include "base/compression/null_compression.hh"
-#include "base/compression/lzss_compression.hh"
-
-// Coherence Templates
-#include "mem/cache/coherence/simple_coherence.hh"
 
 //Prefetcher Headers
 #if defined(USE_GHB)
@@ -100,16 +92,11 @@ BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
     Param<int> tgts_per_mshr;
     Param<int> write_buffers;
     Param<bool> prioritizeRequests;
-    SimObjectParam<CoherenceProtocol *> protocol;
     Param<Addr> trace_addr;
     Param<int> hash_delay;
 #if defined(USE_CACHE_IIC)
     SimObjectParam<Repl *> repl;
 #endif
-    Param<bool> compressed_bus;
-    Param<bool> store_compressed;
-    Param<bool> adaptive_compression;
-    Param<int> compression_latency;
     Param<int> subblock_size;
     Param<Counter> max_miss_count;
     VectorParam<Range<Addr> > addr_range;
@@ -144,23 +131,12 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
     INIT_PARAM_DFLT(write_buffers, "number of write buffers", 8),
     INIT_PARAM_DFLT(prioritizeRequests, "always service demand misses first",
                     false),
-    INIT_PARAM_DFLT(protocol, "coherence protocol to use in the cache", NULL),
     INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
 
     INIT_PARAM_DFLT(hash_delay, "time in cycles of hash access",1),
 #if defined(USE_CACHE_IIC)
     INIT_PARAM_DFLT(repl, "replacement policy",NULL),
 #endif
-    INIT_PARAM_DFLT(compressed_bus,
-                    "This cache connects to a compressed memory",
-                    false),
-    INIT_PARAM_DFLT(store_compressed, "Store compressed data in the cache",
-                    false),
-    INIT_PARAM_DFLT(adaptive_compression, "Use an adaptive compression scheme",
-                    false),
-    INIT_PARAM_DFLT(compression_latency,
-                    "Latency in cycles of compression algorithm",
-                    0),
     INIT_PARAM_DFLT(subblock_size,
                     "Size of subblock in IIC used for compression",
                     0),
@@ -188,7 +164,7 @@ BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
 END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 
 
-#define BUILD_CACHE(TAGS, tags, c)                                      \
+#define BUILD_CACHE(TAGS, tags)                                      \
     do {                                                                \
         BasePrefetcher *pf;                                           \
         if (pf_policy == "tagged") {                                    \
@@ -203,12 +179,12 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         else {                                                          \
             BUILD_NULL_PREFETCHER(TAGS);                                \
         }                                                               \
-        Cache<TAGS, c>::Params params(tags, coh, base_params,       \
-                                      pf, prefetch_access, latency, \
-                                      true,                             \
-                                      prefetch_miss);                   \
-        Cache<TAGS, c> *retval =                                        \
-            new Cache<TAGS, c>(getInstanceName(), params);              \
+        Cache<TAGS>::Params params(tags, base_params,       \
+                                   pf, prefetch_access, latency,        \
+                                   true,                                \
+                                   prefetch_miss);                      \
+        Cache<TAGS> *retval =                                        \
+            new Cache<TAGS>(getInstanceName(), params);              \
         return retval;                                                  \
     } while (0)
 
@@ -216,79 +192,68 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
         panic("%s not compiled into M5", x);		\
     } while (0)
 
-#define BUILD_COMPRESSED_CACHE(TAGS, tags, c)           \
-    do {                                                \
-        CompressionAlgorithm *compAlg;                  \
-        if (compressed_bus || store_compressed) {       \
-            compAlg = new LZSSCompression();            \
-        } else {                                        \
-            compAlg = new NullCompression();            \
-        }                                               \
-        BUILD_CACHE(TAGS, tags, c);                     \
-    } while (0)
-
 #if defined(USE_CACHE_FALRU)
-#define BUILD_FALRU_CACHE(c) do {			    \
+#define BUILD_FALRU_CACHE do {			    \
         FALRU *tags = new FALRU(block_size, size, latency); \
-        BUILD_COMPRESSED_CACHE(FALRU, tags, c);		\
+        BUILD_CACHE(FALRU, tags);		\
     } while (0)
 #else
-#define BUILD_FALRU_CACHE(c) BUILD_CACHE_PANIC("falru cache")
+#define BUILD_FALRU_CACHE BUILD_CACHE_PANIC("falru cache")
 #endif
 
 #if defined(USE_CACHE_LRU)
-#define BUILD_LRU_CACHE(c) do {				\
+#define BUILD_LRU_CACHE do {				\
         LRU *tags = new LRU(numSets, block_size, assoc, latency);	\
-        BUILD_COMPRESSED_CACHE(LRU, tags, c);			\
+        BUILD_CACHE(LRU, tags);			\
     } while (0)
 #else
-#define BUILD_LRU_CACHE(c) BUILD_CACHE_PANIC("lru cache")
+#define BUILD_LRU_CACHE BUILD_CACHE_PANIC("lru cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-#define BUILD_SPLIT_CACHE(c) do {					\
+#define BUILD_SPLIT_CACHE do {					\
         Split *tags = new Split(numSets, block_size, assoc, split_size, lifo, \
                                 two_queue, latency);		\
-        BUILD_COMPRESSED_CACHE(Split, tags, c);			\
+        BUILD_CACHE(Split, tags);			\
     } while (0)
 #else
-#define BUILD_SPLIT_CACHE(c) BUILD_CACHE_PANIC("split cache")
+#define BUILD_SPLIT_CACHE BUILD_CACHE_PANIC("split cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-#define BUILD_SPLIT_LIFO_CACHE(c) do {				\
+#define BUILD_SPLIT_LIFO_CACHE do {				\
         SplitLIFO *tags = new SplitLIFO(block_size, size, assoc,        \
                                         latency, two_queue, -1);	\
-        BUILD_COMPRESSED_CACHE(SplitLIFO, tags, c);			\
+        BUILD_CACHE(SplitLIFO, tags);			\
     } while (0)
 #else
-#define BUILD_SPLIT_LIFO_CACHE(c) BUILD_CACHE_PANIC("lifo cache")
+#define BUILD_SPLIT_LIFO_CACHE BUILD_CACHE_PANIC("lifo cache")
 #endif
 
 #if defined(USE_CACHE_IIC)
-#define BUILD_IIC_CACHE(c) do {			\
+#define BUILD_IIC_CACHE do {			\
         IIC *tags = new IIC(iic_params);		\
-        BUILD_COMPRESSED_CACHE(IIC, tags, c);	\
+        BUILD_CACHE(IIC, tags);	\
     } while (0)
 #else
-#define BUILD_IIC_CACHE(c) BUILD_CACHE_PANIC("iic")
+#define BUILD_IIC_CACHE BUILD_CACHE_PANIC("iic")
 #endif
 
-#define BUILD_CACHES(c) do {				\
+#define BUILD_CACHES do {				\
         if (repl == NULL) {				\
             if (numSets == 1) {				\
-                BUILD_FALRU_CACHE(c);		\
+                BUILD_FALRU_CACHE;		\
             } else {					\
                 if (split == true) {			\
-                    BUILD_SPLIT_CACHE(c);		\
+                    BUILD_SPLIT_CACHE;		\
                 } else if (lifo == true) {		\
-                    BUILD_SPLIT_LIFO_CACHE(c);	\
+                    BUILD_SPLIT_LIFO_CACHE;	\
                 } else {				\
-                    BUILD_LRU_CACHE(c);		\
+                    BUILD_LRU_CACHE;		\
                 }					\
             }						\
         } else {					\
-            BUILD_IIC_CACHE(c);			\
+            BUILD_IIC_CACHE;			\
         }						\
     } while (0)
 
@@ -399,8 +364,7 @@ CREATE_SIM_OBJECT(BaseCache)
     const void *repl = NULL;
 #endif
 
-    SimpleCoherence *coh = new SimpleCoherence(protocol);
-    BUILD_CACHES(SimpleCoherence);
+    BUILD_CACHES;
     return NULL;
 }
 
