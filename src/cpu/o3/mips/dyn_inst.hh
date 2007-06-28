@@ -107,7 +107,7 @@ class MipsDynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscReg(int misc_reg, unsigned tid = 0)
     {
         return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
@@ -122,11 +122,12 @@ class MipsDynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid = 0)
     {
         return this->cpu->setMiscReg(misc_reg, val,
                                                this->threadNumber);
     }
+
 
     /** Calls a syscall. */
     void syscall(int64_t callnum);
@@ -204,6 +205,55 @@ class MipsDynInst : public BaseDynInst<Impl>
     {
         this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
+    }
+
+    /** Reads a miscellaneous register. */
+    TheISA::MiscReg readMiscRegOperandNoEffect(const StaticInst *si, int idx)
+    {
+        return this->cpu->readMiscRegNoEffect(
+                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                this->threadNumber);
+    }
+
+    /** Reads a misc. register, including any side-effects the read
+     * might have as defined by the architecture.
+     */
+    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    {
+        return this->cpu->readMiscReg(
+                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                this->threadNumber);
+    }
+
+    /** Sets a misc. register. */
+    void setMiscRegOperandNoEffect(const StaticInst * si, int idx, const MiscReg &val)
+    {
+        this->instResult.integer = val;
+        return this->cpu->setMiscRegNoEffect(
+                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                val, this->threadNumber);
+    }
+
+    /** Sets a misc. register, including any side-effects the write
+     * might have as defined by the architecture.
+     */
+    void setMiscRegOperand(const StaticInst *si, int idx,
+                                     const MiscReg &val)
+    {
+        return this->cpu->setMiscReg(
+                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+                val, this->threadNumber);
+    }
+
+    uint64_t readRegOtherThread(int misc_reg)
+    {
+        panic("MIPS MT not defined for O3 CPU.\n");
+        return 0;
+    }
+
+    void setRegOtherThread(int misc_reg, const TheISA::MiscReg &val)
+    {
+        panic("MIPS MT not defined for O3 CPU.\n");
     }
 
   public:
