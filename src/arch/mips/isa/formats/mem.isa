@@ -117,7 +117,7 @@ output exec {{
     /** return data in cases where there the size of data is only
         known in the packet
     */
-    uint64_t getStoreData(Packet *packet) {
+    uint64_t getStoreData(%(CPU_exec_context)s *xc, Packet *packet) {
         switch (packet->getSize())
         {
           case 8:
@@ -542,7 +542,7 @@ def template StoreCompleteAcc {{
         if (fault == NoFault) {
             %(op_wb)s;
 
-            if (traceData) { traceData->setData(getStoreData(pkt)); }
+            if (traceData) { traceData->setData(getStoreData(xc, pkt)); }
         }
 
         return fault;
