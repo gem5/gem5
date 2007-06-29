@@ -369,7 +369,6 @@ def template StoreMemAccExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
-        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -383,7 +382,7 @@ def template StoreMemAccExecute {{
 
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
+                              memAccessFlags, NULL);
             // @NOTE: Need to Call Complete Access to Set Trace Data
             //if (traceData) { traceData->setData(Mem); }
         }
@@ -434,7 +433,6 @@ def template StoreExecute {{
     {
         Addr EA;
         Fault fault = NoFault;
-        uint64_t write_result = 0;
 
         %(fp_enable_check)s;
         %(op_decl)s;
@@ -447,7 +445,7 @@ def template StoreExecute {{
 
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
+                              memAccessFlags, NULL);
             if (traceData) { traceData->setData(Mem); }
         }
 

@@ -27,6 +27,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Korey Sewell
+//          Brett Miller
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -557,20 +558,12 @@ decode OPCODE_HI default Unknown::unknown() {
                 }});
 
                 0x1F: deret({{
-                  // if(EJTagImplemented()) {
-                  if(Debug_DM == 1){
-                    Debug_DM = 1;
-                    Debug_IEXI = 0;
-                    NPC = DEPC;
-                  }
-                  else
-                    {
-                      // Undefined;
-                    }
-                  //} // EJTag Implemented
-                  //else {
-                  // Reserved Instruction Exception
-                  //}
+                    //if(Debug_DM == 1){
+                    //Debug_DM = 1;
+                    //Debug_IEXI = 0;
+                    //NPC = DEPC;
+                    //}
+                    panic("deret not implemented");
                 }});
               }
 
