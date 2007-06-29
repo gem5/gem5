@@ -150,8 +150,10 @@ output exec {{
                 //Read FCSR from FloatRegFile
                 uint32_t fcsr_bits = cpu->tcBase()->readFloatRegBits(FCSR);
 
+                uint32_t new_fcsr = genInvalidVector(fcsr_bits);
+
                 //Write FCSR from FloatRegFile
-                cpu->tcBase()->setFloatRegOperandBits(FCSR, genInvalidVector(fcsr_bits));
+                cpu->tcBase()->setFloatRegBits(FCSR, new_fcsr);
 
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
