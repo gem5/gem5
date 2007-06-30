@@ -143,6 +143,37 @@ Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 }
 
 
+template<class TagStore>
+void
+Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
+{
+    assert(blk);
+    assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
+    assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
+
+    // Check RMW operations first since both isRead() and
+    // isWrite() will be true for them
+    if (pkt->cmd == MemCmd::SwapReq) {
+        cmpAndSwap(blk, pkt);
+    } else if (pkt->isWrite()) {
+        if (blk->checkWrite(pkt)) {
+            blk->status |= BlkDirty;
+            pkt->writeDataToBlock(blk->data, blkSize);
+        }
+    } else if (pkt->isRead()) {
+        if (pkt->isLocked()) {
+            blk->trackLoadLocked(pkt);
+        }
+        pkt->setDataFromBlock(blk->data, blkSize);
+    } else {
+        // Not a read or write... must be an upgrade.  it's OK
+        // to just ack those as long as we have an exclusive
+        // copy at this level.
+        assert(pkt->cmd == MemCmd::UpgradeReq);
+    }
+}
+
+
 /////////////////////////////////////////////////////
 //
 // MSHR helper functions
@@ -237,27 +268,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
             // OK to satisfy access
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
             satisfied = true;
-
-            // Check RMW operations first since both isRead() and
-            // isWrite() will be true for them
-            if (pkt->cmd == MemCmd::SwapReq) {
-                cmpAndSwap(blk, pkt);
-            } else if (pkt->isWrite()) {
-                if (blk->checkWrite(pkt)) {
-                    blk->status |= BlkDirty;
-                    pkt->writeDataToBlock(blk->data, blkSize);
-                }
-            } else if (pkt->isRead()) {
-                if (pkt->isLocked()) {
-                    blk->trackLoadLocked(pkt);
-                }
-                pkt->setDataFromBlock(blk->data, blkSize);
-            } else {
-                // Not a read or write... must be an upgrade.  it's OK
-                // to just ack those as long as we have an exclusive
-                // copy at this level.
-                assert(pkt->cmd == MemCmd::UpgradeReq);
-            }
+            satisfyCpuSideRequest(pkt, blk);
         } else {
             // permission violation... nothing to do here, leave unsatisfied
             // for statistics purposes this counts like a complete miss
@@ -556,31 +567,6 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
 // Response handling: responses from the memory side
 //
 /////////////////////////////////////////////////////
-
-
-template<class TagStore>
-void
-Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
-{
-    assert(blk);
-    assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
-    assert(pkt->isWrite() || pkt->isReadWrite() || pkt->isRead());
-    assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
-
-    if (pkt->isWrite()) {
-        if (blk->checkWrite(pkt)) {
-            blk->status |= BlkDirty;
-            pkt->writeDataToBlock(blk->data, blkSize);
-        }
-    } else if (pkt->isReadWrite()) {
-        cmpAndSwap(blk, pkt);
-    } else {
-        if (pkt->isLocked()) {
-            blk->trackLoadLocked(pkt);
-        }
-        pkt->setDataFromBlock(blk->data, blkSize);
-    }
-}
 
 
 template<class TagStore>
