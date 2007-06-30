@@ -105,7 +105,7 @@ class SimpleTimingPort : public Port
     bool deferredPacketReady()
     { return !transmitList.empty() && transmitList.front().tick <= curTick; }
 
-    Tick deferredPacketReadyTick()
+    Tick deferredPacketReadyTime()
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
     void schedSendEvent(Tick when)

@@ -56,11 +56,11 @@ MSHR::MSHR()
 
 void
 MSHR::allocate(Addr _addr, int _size, PacketPtr target,
-               Tick when, Counter _order)
+               Tick whenReady, Counter _order)
 {
     addr = _addr;
     size = _size;
-    readyTick = when;
+    readyTime = whenReady;
     order = _order;
     assert(target);
     isCacheFill = false;
@@ -71,7 +71,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     ntargets = 1;
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem-side request), so set cpuSide to true here.
-    targets.push_back(Target(target, when, _order, true));
+    targets.push_back(Target(target, whenReady, _order, true));
     assert(deferredTargets.empty());
     deferredNeedsExclusive = false;
     pendingInvalidate = false;
@@ -94,33 +94,33 @@ MSHR::deallocate()
  * Adds a target to an MSHR
  */
 void
-MSHR::allocateTarget(PacketPtr target, Tick when, Counter _order)
+MSHR::allocateTarget(PacketPtr target, Tick whenReady, Counter _order)
 {
     if (inService) {
         if (!deferredTargets.empty() || pendingInvalidate ||
             (!needsExclusive && target->needsExclusive())) {
             // need to put on deferred list
-            deferredTargets.push_back(Target(target, when, _order, true));
+            deferredTargets.push_back(Target(target, whenReady, _order, true));
             if (target->needsExclusive()) {
                 deferredNeedsExclusive = true;
             }
         } else {
             // still OK to append to outstanding request
-            targets.push_back(Target(target, when, _order, true));
+            targets.push_back(Target(target, whenReady, _order, true));
         }
     } else {
         if (target->needsExclusive()) {
             needsExclusive = true;
         }
 
-        targets.push_back(Target(target, when, _order, true));
+        targets.push_back(Target(target, whenReady, _order, true));
     }
 
     ++ntargets;
 }
 
 void
-MSHR::allocateSnoopTarget(PacketPtr pkt, Tick when, Counter _order)
+MSHR::allocateSnoopTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 {
     assert(inService); // don't bother to call otherwise
 
@@ -137,7 +137,7 @@ MSHR::allocateSnoopTarget(PacketPtr pkt, Tick when, Counter _order)
     if (needsExclusive || pkt->needsExclusive()) {
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
-        targets.push_back(Target(new Packet(pkt), when, _order, false));
+        targets.push_back(Target(new Packet(pkt), whenReady, _order, false));
         ++ntargets;
 
         if (needsExclusive) {
@@ -177,7 +177,7 @@ MSHR::promoteDeferredTargets()
     pendingShared = false;
     deferredNeedsExclusive = false;
     order = targets.front().order;
-    readyTick = std::max(curTick, targets.front().time);
+    readyTime = std::max(curTick, targets.front().readyTime);
 
     return true;
 }

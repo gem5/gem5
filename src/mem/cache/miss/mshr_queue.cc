@@ -111,14 +111,14 @@ MSHRQueue::findPending(Addr addr, int size) const
 MSHR::Iterator
 MSHRQueue::addToReadyList(MSHR *mshr)
 {
-    if (readyList.empty() || readyList.back()->readyTick <= mshr->readyTick) {
+    if (readyList.empty() || readyList.back()->readyTime <= mshr->readyTime) {
         return readyList.insert(readyList.end(), mshr);
     }
 
     MSHR::Iterator i = readyList.begin();
     MSHR::Iterator end = readyList.end();
     for (; i != end; ++i) {
-        if ((*i)->readyTick > mshr->readyTick) {
+        if ((*i)->readyTime > mshr->readyTime) {
             return readyList.insert(i, mshr);
         }
     }

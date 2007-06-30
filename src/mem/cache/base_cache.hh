@@ -476,10 +476,10 @@ class BaseCache : public MemObject
         }
     }
 
-    Tick nextMSHRReadyTick()
+    Tick nextMSHRReadyTime()
     {
-        return std::min(mshrQueue.nextMSHRReadyTick(),
-                        writeBuffer.nextMSHRReadyTick());
+        return std::min(mshrQueue.nextMSHRReadyTime(),
+                        writeBuffer.nextMSHRReadyTime());
     }
 
     /**

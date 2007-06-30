@@ -54,15 +54,17 @@ class MSHR : public Packet::SenderState
 
     class Target {
       public:
-        Tick time;      //!< Time when request was received (for stats)
+        Tick recvTime;  //!< Time when request was received (for stats)
+        Tick readyTime; //!< Time when request is ready to be serviced
         Counter order;  //!< Global order (for memory consistency mgmt)
         PacketPtr pkt;  //!< Pending request packet.
         bool cpuSide;   //!< Did request come from cpu side or mem side?
 
         bool isCpuSide() { return cpuSide; }
 
-        Target(PacketPtr _pkt, Tick _time, Counter _order, bool _cpuSide)
-            : time(_time), order(_order), pkt(_pkt), cpuSide(_cpuSide)
+        Target(PacketPtr _pkt, Tick _readyTime, Counter _order, bool _cpuSide)
+            : recvTime(curTick), readyTime(_readyTime), order(_order),
+              pkt(_pkt), cpuSide(_cpuSide)
         {}
     };
 
@@ -81,7 +83,7 @@ class MSHR : public Packet::SenderState
     MSHRQueue *queue;
 
     /** Cycle when ready to issue */
-    Tick readyTick;
+    Tick readyTime;
 
     /** Order number assigned by the miss queue. */
     Counter order;

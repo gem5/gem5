@@ -150,20 +150,29 @@ BaseCache::regStats()
             ;
     }
 
+// These macros make it easier to sum the right subset of commands and
+// to change the subset of commands that are considered "demand" vs
+// "non-demand"
+#define SUM_DEMAND(s) \
+    (s[MemCmd::ReadReq] + s[MemCmd::WriteReq] + s[MemCmd::ReadExReq])
+
+// should writebacks be included here?  prior code was inconsistent...
+#define SUM_NON_DEMAND(s) \
+    (s[MemCmd::SoftPFReq] + s[MemCmd::HardPFReq])
+
     demandHits
         .name(name() + ".demand_hits")
         .desc("number of demand (read+write) hits")
         .flags(total)
         ;
-    demandHits = hits[MemCmd::ReadReq] + hits[MemCmd::WriteReq];
+    demandHits = SUM_DEMAND(hits);
 
     overallHits
         .name(name() + ".overall_hits")
         .desc("number of overall hits")
         .flags(total)
         ;
-    overallHits = demandHits + hits[MemCmd::SoftPFReq] + hits[MemCmd::HardPFReq]
-        + hits[MemCmd::Writeback];
+    overallHits = demandHits + SUM_NON_DEMAND(hits);
 
     // Miss statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -183,15 +192,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) misses")
         .flags(total)
         ;
-    demandMisses = misses[MemCmd::ReadReq] + misses[MemCmd::WriteReq];
+    demandMisses = SUM_DEMAND(misses);
 
     overallMisses
         .name(name() + ".overall_misses")
         .desc("number of overall misses")
         .flags(total)
         ;
-    overallMisses = demandMisses + misses[MemCmd::SoftPFReq] +
-        misses[MemCmd::HardPFReq] + misses[MemCmd::Writeback];
+    overallMisses = demandMisses + SUM_NON_DEMAND(misses);
 
     // Miss latency statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -211,15 +219,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) miss cycles")
         .flags(total)
         ;
-    demandMissLatency = missLatency[MemCmd::ReadReq] + missLatency[MemCmd::WriteReq];
+    demandMissLatency = SUM_DEMAND(missLatency);
 
     overallMissLatency
         .name(name() + ".overall_miss_latency")
         .desc("number of overall miss cycles")
         .flags(total)
         ;
-    overallMissLatency = demandMissLatency + missLatency[MemCmd::SoftPFReq] +
-        missLatency[MemCmd::HardPFReq];
+    overallMissLatency = demandMissLatency + SUM_NON_DEMAND(missLatency);
 
     // access formulas
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -368,15 +375,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) MSHR hits")
         .flags(total)
         ;
-    demandMshrHits = mshr_hits[MemCmd::ReadReq] + mshr_hits[MemCmd::WriteReq];
+    demandMshrHits = SUM_DEMAND(mshr_hits);
 
     overallMshrHits
         .name(name() + ".overall_mshr_hits")
         .desc("number of overall MSHR hits")
         .flags(total)
         ;
-    overallMshrHits = demandMshrHits + mshr_hits[MemCmd::SoftPFReq] +
-        mshr_hits[MemCmd::HardPFReq];
+    overallMshrHits = demandMshrHits + SUM_NON_DEMAND(mshr_hits);
 
     // MSHR miss statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -396,15 +402,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) MSHR misses")
         .flags(total)
         ;
-    demandMshrMisses = mshr_misses[MemCmd::ReadReq] + mshr_misses[MemCmd::WriteReq];
+    demandMshrMisses = SUM_DEMAND(mshr_misses);
 
     overallMshrMisses
         .name(name() + ".overall_mshr_misses")
         .desc("number of overall MSHR misses")
         .flags(total)
         ;
-    overallMshrMisses = demandMshrMisses + mshr_misses[MemCmd::SoftPFReq] +
-        mshr_misses[MemCmd::HardPFReq];
+    overallMshrMisses = demandMshrMisses + SUM_NON_DEMAND(mshr_misses);
 
     // MSHR miss latency statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -424,16 +429,15 @@ BaseCache::regStats()
         .desc("number of demand (read+write) MSHR miss cycles")
         .flags(total)
         ;
-    demandMshrMissLatency = mshr_miss_latency[MemCmd::ReadReq]
-        + mshr_miss_latency[MemCmd::WriteReq];
+    demandMshrMissLatency = SUM_DEMAND(mshr_miss_latency);
 
     overallMshrMissLatency
         .name(name() + ".overall_mshr_miss_latency")
         .desc("number of overall MSHR miss cycles")
         .flags(total)
         ;
-    overallMshrMissLatency = demandMshrMissLatency +
-        mshr_miss_latency[MemCmd::SoftPFReq] + mshr_miss_latency[MemCmd::HardPFReq];
+    overallMshrMissLatency =
+        demandMshrMissLatency + SUM_NON_DEMAND(mshr_miss_latency);
 
     // MSHR uncacheable statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -453,9 +457,8 @@ BaseCache::regStats()
         .desc("number of overall MSHR uncacheable misses")
         .flags(total)
         ;
-    overallMshrUncacheable = mshr_uncacheable[MemCmd::ReadReq]
-        + mshr_uncacheable[MemCmd::WriteReq] + mshr_uncacheable[MemCmd::SoftPFReq]
-        + mshr_uncacheable[MemCmd::HardPFReq];
+    overallMshrUncacheable =
+        SUM_DEMAND(mshr_uncacheable) + SUM_NON_DEMAND(mshr_uncacheable);
 
     // MSHR miss latency statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -475,10 +478,9 @@ BaseCache::regStats()
         .desc("number of overall MSHR uncacheable cycles")
         .flags(total)
         ;
-    overallMshrUncacheableLatency = mshr_uncacheable_lat[MemCmd::ReadReq]
-        + mshr_uncacheable_lat[MemCmd::WriteReq]
-        + mshr_uncacheable_lat[MemCmd::SoftPFReq]
-        + mshr_uncacheable_lat[MemCmd::HardPFReq];
+    overallMshrUncacheableLatency =
+        SUM_DEMAND(mshr_uncacheable_lat) +
+        SUM_NON_DEMAND(mshr_uncacheable_lat);
 
 #if 0
     // MSHR access formulas

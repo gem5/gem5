@@ -193,15 +193,15 @@ class MSHRQueue
      */
     MSHR *getNextMSHR() const
     {
-        if (readyList.empty() || readyList.front()->readyTick > curTick) {
+        if (readyList.empty() || readyList.front()->readyTime > curTick) {
             return NULL;
         }
         return readyList.front();
     }
 
-    Tick nextMSHRReadyTick() const
+    Tick nextMSHRReadyTime() const
     {
-        return readyList.empty() ? MaxTick : readyList.front()->readyTick;
+        return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
 };
 

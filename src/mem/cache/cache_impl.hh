@@ -615,7 +615,7 @@ Cache<TagStore>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
 
             if (!target->pkt->req->isUncacheable()) {
                 missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                    completion_time - target->time;
+                    completion_time - target->recvTime;
             }
             target->pkt->makeTimingResponse();
             cpuSidePort->respond(target->pkt, completion_time);
@@ -668,11 +668,14 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     // Can we deallocate MSHR when done?
     bool deallocate = false;
 
+    // Initial target is used just for stats
+    MSHR::Target *initial_tgt = mshr->getTarget();
+    int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
+    Tick miss_latency = curTick - initial_tgt->recvTime;
+
     if (mshr->isCacheFill) {
-#if 0
-        mshr_miss_latency[mshr->originalCmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
-            curTick - pkt->time;
-#endif
+        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+            miss_latency;
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
         BlkType *blk = tags->findBlock(pkt->getAddr());
@@ -698,8 +701,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         }
     } else {
         if (pkt->req->isUncacheable()) {
-            mshr_uncacheable_lat[pkt->cmd.toInt()][0/*pkt->req->getThreadNum()*/] +=
-                curTick - pkt->time;
+            mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+                miss_latency;
         }
 
         while (mshr->hasTargets()) {
@@ -1262,8 +1265,8 @@ Cache<TagStore>::MemSidePort::sendPacket()
     // tried to send packet... if it was successful (no retry), see if
     // we need to rerequest bus or not
     if (!waitingOnRetry) {
-        Tick nextReady = std::min(deferredPacketReadyTick(),
-                                  myCache()->nextMSHRReadyTick());
+        Tick nextReady = std::min(deferredPacketReadyTime(),
+                                  myCache()->nextMSHRReadyTime());
         // @TODO: need to facotr in prefetch requests here somehow
         if (nextReady != MaxTick) {
             DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
