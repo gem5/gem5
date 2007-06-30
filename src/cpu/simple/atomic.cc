@@ -148,23 +148,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     icachePort.snoopRangeSent = false;
     dcachePort.snoopRangeSent = false;
 
-    ifetch_req = new Request();
-    ifetch_req->setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
-    ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
-    ifetch_pkt->dataStatic(&inst);
-
-    data_read_req = new Request();
-    data_read_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
-    data_read_pkt = new Packet(data_read_req, MemCmd::ReadReq,
-                               Packet::Broadcast);
-    data_read_pkt->dataStatic(&dataReg);
-
-    data_write_req = new Request();
-    data_write_req->setThreadContext(p->cpu_id, 0); // Add thread ID here too
-    data_write_pkt = new Packet(data_write_req, MemCmd::WriteReq,
-                                Packet::Broadcast);
-    data_swap_pkt = new Packet(data_write_req, MemCmd::SwapReq,
-                                Packet::Broadcast);
+    ifetch_req.setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(p->cpu_id, 0); // Add thread ID here too
+    data_write_req.setThreadContext(p->cpu_id, 0); // Add thread ID here too
 }
 
 
@@ -282,9 +268,7 @@ Fault
 AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     // use the CPU's statically allocated read request and packet objects
-    Request *req = data_read_req;
-    PacketPtr pkt = data_read_pkt;
-
+    Request *req = &data_read_req;
     req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
@@ -296,19 +280,15 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // Now do the access.
     if (fault == NoFault) {
-        pkt->reinitFromRequest();
+        Packet pkt = Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        pkt.dataStatic(&data);
 
         if (req->isMmapedIpr())
-            dcache_latency = TheISA::handleIprRead(thread->getTC(),pkt);
+            dcache_latency = TheISA::handleIprRead(thread->getTC(), &pkt);
         else
-            dcache_latency = dcachePort.sendAtomic(pkt);
+            dcache_latency = dcachePort.sendAtomic(&pkt);
         dcache_access = true;
-#if !defined(NDEBUG)
-        if (pkt->result != Packet::Success)
-            panic("Unable to find responder for address pa = %#X va = %#X\n",
-                    pkt->req->getPaddr(), pkt->req->getVaddr());
-#endif
-        data = pkt->get<T>();
+        assert(!pkt.isError());
 
         if (req->isLocked()) {
             TheISA::handleLockedRead(thread, req);
@@ -378,15 +358,8 @@ Fault
 AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
-    Request *req = data_write_req;
-    PacketPtr pkt;
-
+    Request *req = &data_write_req;
     req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
-
-    if (req->isSwap())
-        pkt = data_swap_pkt;
-    else
-        pkt = data_write_pkt;
 
     if (traceData) {
         traceData->setAddr(addr);
@@ -397,6 +370,11 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
+        Packet pkt =
+            Packet(req, req->isSwap() ? MemCmd::SwapReq : MemCmd::WriteReq,
+                   Packet::Broadcast);
+        pkt.dataStatic(&data);
+
         bool do_access = true;  // flag to suppress cache access
 
         if (req->isLocked()) {
@@ -409,27 +387,19 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
 
         if (do_access) {
-            pkt->reinitFromRequest();
-            pkt->dataStatic(&data);
-
             if (req->isMmapedIpr()) {
-                dcache_latency = TheISA::handleIprWrite(thread->getTC(), pkt);
+                dcache_latency = TheISA::handleIprWrite(thread->getTC(), &pkt);
             } else {
                 data = htog(data);
-                dcache_latency = dcachePort.sendAtomic(pkt);
+                dcache_latency = dcachePort.sendAtomic(&pkt);
             }
             dcache_access = true;
-
-#if !defined(NDEBUG)
-            if (pkt->result != Packet::Success)
-                panic("Unable to find responder for address pa = %#X va = %#X\n",
-                        pkt->req->getPaddr(), pkt->req->getVaddr());
-#endif
+            assert(!pkt.isError());
         }
 
         if (req->isSwap()) {
             assert(res);
-            *res = pkt->get<T>();
+            *res = pkt.get<T>();
         } else if (res) {
             *res = req->getExtraData();
         }
@@ -513,7 +483,7 @@ AtomicSimpleCPU::tick()
         if (!curStaticInst || !curStaticInst->isDelayedCommit())
             checkForInterrupts();
 
-        Fault fault = setupFetchRequest(ifetch_req);
+        Fault fault = setupFetchRequest(&ifetch_req);
 
         if (fault == NoFault) {
             Tick icache_latency = 0;
@@ -524,9 +494,11 @@ AtomicSimpleCPU::tick()
             //if(predecoder.needMoreBytes())
             //{
                 icache_access = true;
-                ifetch_pkt->reinitFromRequest();
+                Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
+                                           Packet::Broadcast);
+                ifetch_pkt.dataStatic(&inst);
 
-                icache_latency = icachePort.sendAtomic(ifetch_pkt);
+                icache_latency = icachePort.sendAtomic(&ifetch_pkt);
                 // ifetch_req is initialized to read the instruction directly
                 // into the CPU object's inst field.
             //}

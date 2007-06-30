@@ -501,7 +501,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
     // received a response from the icache: execute the received
     // instruction
-    assert(pkt->result == Packet::Success);
+    assert(!pkt->isError());
     assert(_status == IcacheWaitResponse);
 
     _status = Running;
@@ -569,7 +569,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else if (pkt->result == Packet::Nacked) {
+    else if (pkt->wasNacked()) {
         assert(cpu->_status == IcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {
@@ -600,7 +600,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 {
     // received a response from the dcache: complete the load or store
     // instruction
-    assert(pkt->result == Packet::Success);
+    assert(!pkt->isError());
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
@@ -663,7 +663,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else if (pkt->result == Packet::Nacked) {
+    else if (pkt->wasNacked()) {
         assert(cpu->_status == DcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {

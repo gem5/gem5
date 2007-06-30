@@ -84,6 +84,13 @@ class MemCmd
         StoreCondResp,
         SwapReq,
         SwapResp,
+        // Error responses
+        // @TODO these should be classified as responses rather than
+        // requests; coding them as requests initially for backwards
+        // compatibility
+        NetworkNackError,  // nacked at network layer (not by protocol)
+        InvalidDestError,  // packet dest field invalid
+        BadAddressError,   // memory address invalid
         NUM_MEM_CMDS
     };
 
@@ -103,6 +110,7 @@ class MemCmd
         IsHWPrefetch,
         IsLocked,       //!< Alpha/MIPS LL or SC access
         HasData,        //!< There is an associated payload
+        IsError,        //!< Error response
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -135,12 +143,13 @@ class MemCmd
     bool isWrite()  const       { return testCmdAttrib(IsWrite); }
     bool isRequest() const      { return testCmdAttrib(IsRequest); }
     bool isResponse() const     { return testCmdAttrib(IsResponse); }
-    bool needsExclusive() const  { return testCmdAttrib(NeedsExclusive); }
+    bool needsExclusive() const { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isReadWrite() const    { return isRead() && isWrite(); }
     bool isLocked() const       { return testCmdAttrib(IsLocked); }
+    bool isError() const        { return testCmdAttrib(IsError); }
 
     const Command responseCommand() const {
         return commandInfo[cmd].response;
@@ -184,6 +193,12 @@ class Packet : public FastAlloc
 
     typedef MemCmd::Command Command;
 
+    /** The command field of the packet. */
+    MemCmd cmd;
+
+    /** A pointer to the original request. */
+    RequestPtr req;
+
   private:
    /** A pointer to the data being transfered.  It can be differnt
     *    sizes at each level of the heirarchy so it belongs in the
@@ -223,19 +238,28 @@ class Packet : public FastAlloc
      *   (unlike * addr, size, and src). */
     short dest;
 
+    /** The original value of the command field.  Only valid when the
+     * current command field is an error condition; in that case, the
+     * previous contents of the command field are copied here.  This
+     * field is *not* set on non-error responses.
+     */
+    MemCmd origCmd;
+
     /** Are the 'addr' and 'size' fields valid? */
     bool addrSizeValid;
     /** Is the 'src' field valid? */
     bool srcValid;
+    bool destValid;
 
-    enum SnoopFlag {
+    enum Flag {
+        // Snoop flags
         MemInhibit,
         Shared,
-        NUM_SNOOP_FLAGS
+        NUM_PACKET_FLAGS
     };
 
-    /** Coherence snoopFlags for snooping */
-    std::bitset<NUM_SNOOP_FLAGS> snoopFlags;
+    /** Status flags */
+    std::bitset<NUM_PACKET_FLAGS> flags;
 
   public:
 
@@ -251,22 +275,6 @@ class Packet : public FastAlloc
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */
     static const short Broadcast = -1;
-
-    /** A pointer to the original request. */
-    RequestPtr req;
-
-    /** A virtual base opaque structure used to hold coherence-related
-     *    state.  A specific subclass would be derived from this to
-     *    carry state specific to a particular coherence protocol.  */
-    class CoherenceState : public FastAlloc {
-      public:
-        virtual ~CoherenceState() {}
-    };
-
-    /** This packet's coherence state.  Caches should use
-     *   dynamic_cast<> to cast to the state appropriate for the
-     *   system's coherence protocol.  */
-    CoherenceState *coherence;
 
     /** A virtual base opaque structure used to hold state associated
      *    with the packet but specific to the sending device (e.g., an
@@ -284,11 +292,6 @@ class Packet : public FastAlloc
      *   to cast to the state appropriate to the sender. */
     SenderState *senderState;
 
-  public:
-
-    /** The command field of the packet. */
-    MemCmd cmd;
-
     /** Return the string name of the cmd field (for debugging and
      *   tracing). */
     const std::string &cmdString() const { return cmd.toString(); }
@@ -296,68 +299,59 @@ class Packet : public FastAlloc
     /** Return the index of this command. */
     inline int cmdToIndex() const { return cmd.toInt(); }
 
-  public:
-
     bool isRead() const         { return cmd.isRead(); }
     bool isWrite()  const       { return cmd.isWrite(); }
     bool isRequest() const      { return cmd.isRequest(); }
     bool isResponse() const     { return cmd.isResponse(); }
-    bool needsExclusive() const  { return cmd.needsExclusive(); }
+    bool needsExclusive() const { return cmd.needsExclusive(); }
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
     bool isReadWrite() const    { return cmd.isReadWrite(); }
     bool isLocked() const       { return cmd.isLocked(); }
+    bool isError() const        { return cmd.isError(); }
 
-    void assertMemInhibit()     { snoopFlags[MemInhibit] = true; }
-    void assertShared()         { snoopFlags[Shared] = true; }
-    bool memInhibitAsserted()   { return snoopFlags[MemInhibit]; }
-    bool sharedAsserted()       { return snoopFlags[Shared]; }
+    // Snoop flags
+    void assertMemInhibit()     { flags[MemInhibit] = true; }
+    void assertShared()         { flags[Shared] = true; }
+    bool memInhibitAsserted()   { return flags[MemInhibit]; }
+    bool sharedAsserted()       { return flags[Shared]; }
+
+    // Network error conditions... encapsulate them as methods since
+    // their encoding keeps changing (from result field to command
+    // field, etc.)
+    void setNacked()     { origCmd = cmd; cmd = MemCmd::NetworkNackError; }
+    void setBadAddress() { origCmd = cmd; cmd = MemCmd::BadAddressError; }
+    bool wasNacked()     { return cmd == MemCmd::NetworkNackError; }
+    bool hadBadAddress() { return cmd == MemCmd::BadAddressError; }
 
     bool nic_pkt() { panic("Unimplemented"); M5_DUMMY_RETURN }
 
-    /** Possible results of a packet's request. */
-    enum Result
-    {
-        Success,
-        BadAddress,
-        Nacked,
-        Unknown
-    };
-
-    /** The result of this packet's request. */
-    Result result;
-
     /** Accessor function that returns the source index of the packet. */
-    short getSrc() const { assert(srcValid); return src; }
+    short getSrc() const    { assert(srcValid); return src; }
     void setSrc(short _src) { src = _src; srcValid = true; }
     /** Reset source field, e.g. to retransmit packet on different bus. */
     void clearSrc() { srcValid = false; }
 
     /** Accessor function that returns the destination index of
         the packet. */
-    short getDest() const { return dest; }
-    void setDest(short _dest) { dest = _dest; }
+    short getDest() const     { assert(destValid); return dest; }
+    void setDest(short _dest) { dest = _dest; destValid = true; }
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
-    int getSize() const { assert(addrSizeValid); return size; }
+    int getSize() const  { assert(addrSizeValid); return size; }
     Addr getOffset(int blkSize) const { return addr & (Addr)(blkSize - 1); }
-
-    void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
-    void cmdOverride(MemCmd newCmd) { cmd = newCmd; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
      *   need not be valid. The command and destination addresses
      *   must be supplied.  */
     Packet(Request *_req, MemCmd _cmd, short _dest)
-        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+        :  cmd(_cmd), req(_req),
+           data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
-           addrSizeValid(_req->validPaddr), srcValid(false),
-           snoopFlags(0),
-           time(curTick),
-           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
-           result(Unknown)
+           addrSizeValid(_req->validPaddr), srcValid(false), destValid(true),
+           flags(0), time(curTick), senderState(NULL)
     {
     }
 
@@ -365,13 +359,11 @@ class Packet : public FastAlloc
      *  a request that is for a whole block, not the address from the req.
      *  this allows for overriding the size/addr of the req.*/
     Packet(Request *_req, MemCmd _cmd, short _dest, int _blkSize)
-        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+        :  cmd(_cmd), req(_req),
+           data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
-           addrSizeValid(_req->validPaddr), srcValid(false),
-           snoopFlags(0),
-           time(curTick),
-           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
-           result(Unknown)
+           addrSizeValid(_req->validPaddr), srcValid(false), destValid(true),
+           flags(0), time(curTick), senderState(NULL)
     {
     }
 
@@ -382,15 +374,14 @@ class Packet : public FastAlloc
      * dynamic data, user must guarantee that the new packet's
      * lifetime is less than that of the original packet. */
     Packet(Packet *origPkt)
-        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+        :  cmd(origPkt->cmd), req(origPkt->req),
+           data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(origPkt->addr), size(origPkt->size),
            src(origPkt->src), dest(origPkt->dest),
-           addrSizeValid(origPkt->addrSizeValid), srcValid(origPkt->srcValid),
-           snoopFlags(origPkt->snoopFlags),
-           time(curTick),
-           req(origPkt->req), coherence(origPkt->coherence),
-           senderState(origPkt->senderState), cmd(origPkt->cmd),
-           result(origPkt->result)
+           addrSizeValid(origPkt->addrSizeValid),
+           srcValid(origPkt->srcValid), destValid(origPkt->destValid),
+           flags(origPkt->flags),
+           time(curTick), senderState(origPkt->senderState)
     {
     }
 
@@ -405,12 +396,11 @@ class Packet : public FastAlloc
      *   multiple transactions. */
     void reinitFromRequest() {
         assert(req->validPaddr);
-        snoopFlags = 0;
+        flags = 0;
         addr = req->paddr;
         size = req->size;
         time = req->time;
         addrSizeValid = true;
-        result = Unknown;
         if (dynamicData) {
             deleteData();
             dynamicData = false;
@@ -424,34 +414,24 @@ class Packet : public FastAlloc
      * destination fields are *not* modified, as is appropriate for
      * atomic accesses.
      */
-    void makeAtomicResponse()
+    void makeResponse()
     {
         assert(needsResponse());
         assert(isRequest());
-        assert(result == Unknown);
         cmd = cmd.responseCommand();
-        result = Success;
-    }
-
-    /**
-     * Perform the additional work required for timing responses above
-     * and beyond atomic responses; i.e., change the destination to
-     * point back to the requester and clear the source field.
-     */
-    void convertAtomicToTimingResponse()
-    {
-        dest = getSrc();
+        dest = src;
+        destValid = srcValid;
         srcValid = false;
     }
 
-    /**
-     * Take a request packet and modify it in place to be suitable for
-     * returning as a response to a timing request.
-     */
+    void makeAtomicResponse()
+    {
+        makeResponse();
+    }
+
     void makeTimingResponse()
     {
-        makeAtomicResponse();
-        convertAtomicToTimingResponse();
+        makeResponse();
     }
 
     /**
@@ -462,9 +442,10 @@ class Packet : public FastAlloc
     void
     reinitNacked()
     {
-        assert(needsResponse() && result == Nacked);
-        dest =  Broadcast;
-        result = Unknown;
+        assert(wasNacked());
+        cmd = origCmd;
+        assert(needsResponse());
+        setDest(Broadcast);
     }
 
 

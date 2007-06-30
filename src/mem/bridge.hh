@@ -86,7 +86,7 @@ class Bridge : public MemObject
                   expectResponse(_pkt->needsResponse() && !nack)
 
             {
-                if (!pkt->isResponse() && !nack && pkt->result != Packet::Nacked)
+                if (!pkt->isResponse() && !nack && !pkt->wasNacked())
                     pkt->senderState = this;
             }
 

@@ -853,24 +853,6 @@ OzoneLWLSQ<Impl>::storePostSend(PacketPtr pkt, DynInstPtr &inst)
         }
 #endif
     }
-
-    if (pkt->result != Packet::Success) {
-        DPRINTF(OzoneLSQ,"D-Cache Write Miss!\n");
-
-        DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
-                inst->seqNum);
-
-        //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
-
-        //DPRINTF(OzoneLWLSQ, "Added MSHR. count = %i\n",mshrSeqNums.size());
-
-        // @todo: Increment stat here.
-    } else {
-        DPRINTF(OzoneLSQ,"D-Cache: Write Hit!\n");
-
-        DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
-                inst->seqNum);
-    }
 }
 
 template <class Impl>

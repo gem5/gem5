@@ -661,16 +661,6 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
         cpu->lockFlag = true;
     }
 
-    if (data_pkt->result != Packet::Success) {
-        DPRINTF(OzoneLSQ, "OzoneLSQ: D-cache miss!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
-                inst->seqNum);
-    } else {
-        DPRINTF(OzoneLSQ, "OzoneLSQ: D-cache hit!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
-                inst->seqNum);
-    }
-
     return NoFault;
 }
 

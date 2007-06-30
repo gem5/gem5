@@ -82,7 +82,7 @@ void
 BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
 {
     checkFunctional(pkt);
-    if (pkt->result != Packet::Success)
+    if (!pkt->isResponse())
         sendFunctional(pkt);
 }
 

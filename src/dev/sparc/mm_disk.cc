@@ -61,7 +61,6 @@ MmDisk::read(PacketPtr pkt)
     uint32_t d32;
     uint64_t d64;
 
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     accessAddr = pkt->getAddr() - pioAddr;
 
@@ -101,7 +100,7 @@ MmDisk::read(PacketPtr pkt)
         panic("Invalid access size\n");
     }
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -115,7 +114,6 @@ MmDisk::write(PacketPtr pkt)
     uint32_t d32;
     uint64_t d64;
 
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     accessAddr = pkt->getAddr() - pioAddr;
 
@@ -157,7 +155,7 @@ MmDisk::write(PacketPtr pkt)
         panic("Invalid access size\n");
     }
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

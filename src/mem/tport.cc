@@ -55,7 +55,7 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
     checkFunctional(pkt);
 
     // Just do an atomic access and throw away the returned latency
-    if (pkt->result != Packet::Success)
+    if (!pkt->isResponse())
         recvAtomic(pkt);
 }
 
@@ -68,7 +68,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // correctly with the drain code, so that would need to be fixed
     // if we ever added it back.
     assert(pkt->isRequest());
-    assert(pkt->result == Packet::Unknown);
 
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
@@ -85,7 +84,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
-        pkt->convertAtomicToTimingResponse();
         schedSendTiming(pkt, curTick + latency);
     } else {
         delete pkt->req;
@@ -138,12 +136,15 @@ void
 SimpleTimingPort::sendDeferredPacket()
 {
     assert(deferredPacketReady());
-    bool success = sendTiming(transmitList.front().pkt);
+    // take packet off list here; if recvTiming() on the other side
+    // calls sendTiming() back on us (like SimpleTimingCpu does), then
+    // we get confused by having a non-active packet on transmitList
+    DeferredPacket dp = transmitList.front();
+    transmitList.pop_front();
+    bool success = sendTiming(dp.pkt);
 
     if (success) {
-        //send successful, remove packet
-        transmitList.pop_front();
-        if (!transmitList.empty()) {
+        if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
             sendEvent->schedule(time <= curTick ? curTick+1 : time);
         }
@@ -152,6 +153,12 @@ SimpleTimingPort::sendDeferredPacket()
             drainEvent->process();
             drainEvent = NULL;
         }
+    } else {
+        // Unsuccessful, need to put back on transmitList.  Callee
+        // should not have messed with it (since it didn't accept that
+        // packet), so we can just push it back on the front.
+        assert(!sendEvent->scheduled());
+        transmitList.push_front(dp);
     }
 
     waitingOnRetry = !success;

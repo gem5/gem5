@@ -54,7 +54,6 @@ PciConfigAll::PciConfigAll(Params *p)
 Tick
 PciConfigAll::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
 
     pkt->allocate();
 
@@ -74,14 +73,13 @@ PciConfigAll::read(PacketPtr pkt)
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return params()->pio_delay;
 }
 
 Tick
 PciConfigAll::write(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     panic("Attempting to write to config space on non-existant device\n");
     M5_DUMMY_RETURN
 }

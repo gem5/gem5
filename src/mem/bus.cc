@@ -173,9 +173,8 @@ bool
 Bus::recvTiming(PacketPtr pkt)
 {
     Port *port;
-    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s result %d\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString(),
-            pkt->result);
+    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
     BusPort *pktPort;
     if (pkt->getSrc() == defaultId)
@@ -329,6 +328,8 @@ Bus::functionalSnoop(PacketPtr pkt, Port *responder)
     // id after each
     int src_id = pkt->getSrc();
 
+    assert(pkt->isRequest()); // hasn't already been satisfied
+
     for (SnoopIter s_iter = snoopPorts.begin();
          s_iter != snoopPorts.end();
          s_iter++) {
@@ -336,7 +337,7 @@ Bus::functionalSnoop(PacketPtr pkt, Port *responder)
         if (p != responder && p->getId() != src_id) {
             p->sendFunctional(pkt);
         }
-        if (pkt->result == Packet::Success) {
+        if (pkt->isResponse()) {
             break;
         }
         pkt->setSrc(src_id);
@@ -369,14 +370,15 @@ Bus::recvAtomic(PacketPtr pkt)
     DPRINTF(Bus, "recvAtomic: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
+    assert(pkt->isRequest());
 
     // Variables for recording original command and snoop response (if
     // any)... if a snooper respondes, we will need to restore
     // original command so that additional snoops can take place
     // properly
     MemCmd orig_cmd = pkt->cmd;
-    Packet::Result response_result = Packet::Unknown;
     MemCmd response_cmd = MemCmd::InvalidCmd;
+    int orig_src = pkt->getSrc();
 
     Port *target_port = findPort(pkt->getAddr(), pkt->getSrc());
 
@@ -387,20 +389,18 @@ Bus::recvAtomic(PacketPtr pkt)
         assert(p != target_port);
         if (p->getId() != pkt->getSrc()) {
             p->sendAtomic(pkt);
-            if (pkt->result != Packet::Unknown) {
+            if (pkt->isResponse()) {
                 // response from snoop agent
                 assert(pkt->cmd != orig_cmd);
                 assert(pkt->memInhibitAsserted());
-                assert(pkt->isResponse());
                 // should only happen once
-                assert(response_result == Packet::Unknown);
                 assert(response_cmd == MemCmd::InvalidCmd);
                 // save response state
-                response_result = pkt->result;
                 response_cmd = pkt->cmd;
                 // restore original packet state for remaining snoopers
                 pkt->cmd = orig_cmd;
-                pkt->result = Packet::Unknown;
+                pkt->setSrc(orig_src);
+                pkt->setDest(Packet::Broadcast);
             }
         }
     }
@@ -408,13 +408,11 @@ Bus::recvAtomic(PacketPtr pkt)
     Tick response_time = target_port->sendAtomic(pkt);
 
     // if we got a response from a snooper, restore it here
-    if (response_result != Packet::Unknown) {
-        assert(response_cmd != MemCmd::InvalidCmd);
+    if (response_cmd != MemCmd::InvalidCmd) {
         // no one else should have responded
-        assert(pkt->result == Packet::Unknown);
+        assert(!pkt->isResponse());
         assert(pkt->cmd == orig_cmd);
         pkt->cmd = response_cmd;
-        pkt->result = response_result;
     }
 
     // why do we have this packet field and the return value both???
@@ -434,8 +432,8 @@ Bus::recvFunctional(PacketPtr pkt)
     Port* port = findPort(pkt->getAddr(), pkt->getSrc());
     functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
 
-    // If the snooping found what we were looking for, we're done.
-    if (pkt->result != Packet::Success && port) {
+    // If the snooping hasn't found what we were looking for, keep going.
+    if (!pkt->isResponse() && port) {
         port->sendFunctional(pkt);
     }
 }

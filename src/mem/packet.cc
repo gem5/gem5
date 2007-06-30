@@ -115,7 +115,13 @@ MemCmd::commandInfo[] =
         SwapResp, "SwapReq" },
     /* SwapResp -- for Swap ldstub type operations */
     { SET5(IsRead, IsWrite, NeedsExclusive, IsResponse, HasData),
-        InvalidCmd, "SwapResp" }
+            InvalidCmd, "SwapResp" },
+    /* NetworkNackError  -- nacked at network layer (not by protocol) */
+    { SET2(IsRequest, IsError), InvalidCmd, "NetworkNackError" },
+    /* InvalidDestError  -- packet dest field invalid */
+    { SET2(IsRequest, IsError), InvalidCmd, "InvalidDestError" },
+    /* BadAddressError   -- memory address invalid */
+    { SET2(IsRequest, IsError), InvalidCmd, "BadAddressError" }
 };
 
 
@@ -205,7 +211,7 @@ Packet::checkFunctional(Addr addr, int size, uint8_t *data)
         if (func_start >= val_start && func_end <= val_end) {
             allocate();
             std::memcpy(getPtr<uint8_t>(), data + offset, getSize());
-            result = Packet::Success;
+            makeResponse();
             return true;
         } else {
             // In this case the timing packet only partially satisfies
@@ -244,15 +250,6 @@ operator<<(std::ostream &o, const Packet &p)
     o.setf(std::ios_base::hex, std::ios_base::showbase);
     o <<  p.getAddr() + p.getSize() - 1 << "] ";
     o.unsetf(std::ios_base::hex| std::ios_base::showbase);
-
-    if (p.result == Packet::Success)
-        o << "Successful ";
-    if (p.result == Packet::BadAddress)
-        o << "BadAddress ";
-    if (p.result == Packet::Nacked)
-        o << "Nacked ";
-    if (p.result == Packet::Unknown)
-        o << "Inflight ";
 
     if (p.isRead())
         o << "Read ";

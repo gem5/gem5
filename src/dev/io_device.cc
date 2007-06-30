@@ -100,9 +100,7 @@ DmaPort::DmaPort(DmaDevice *dev, System *s)
 bool
 DmaPort::recvTiming(PacketPtr pkt)
 {
-
-
-    if (pkt->result == Packet::Nacked) {
+    if (pkt->wasNacked()) {
         DPRINTF(DMA, "Received nacked Pkt %#x with State: %#x Addr: %#x\n",
                pkt, pkt->senderState, pkt->getAddr());
 

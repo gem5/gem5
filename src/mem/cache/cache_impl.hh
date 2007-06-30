@@ -502,7 +502,6 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 
     if (pkt->needsResponse()) {
         pkt->makeAtomicResponse();
-        pkt->result = Packet::Success;
     }
 
     return lat;
@@ -648,14 +647,13 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     assert(mshr);
 
-    if (pkt->result == Packet::Nacked) {
+    if (pkt->wasNacked()) {
         //pkt->reinitFromRequest();
         warn("NACKs from devices not connected to the same bus "
              "not implemented\n");
         return;
     }
-    assert(pkt->result != Packet::BadAddress);
-    assert(pkt->result == Packet::Success);
+    assert(!pkt->isError());
     DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
 
     MSHRQueue *mq = mshr->queue;
@@ -1142,7 +1140,7 @@ void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
     checkFunctional(pkt);
-    if (pkt->result != Packet::Success)
+    if (!pkt->isResponse())
         myCache()->functionalAccess(pkt, cache->memSidePort);
 }
 
@@ -1180,7 +1178,7 @@ Cache<TagStore>::MemSidePort::recvTiming(PacketPtr pkt)
     // this needs to be fixed so that the cache updates the mshr and sends the
     // packet back out on the link, but it probably won't happen so until this
     // gets fixed, just panic when it does
-    if (pkt->result == Packet::Nacked)
+    if (pkt->wasNacked())
         panic("Need to implement cache resending nacked packets!\n");
 
     if (pkt->isRequest() && blocked) {
@@ -1216,7 +1214,7 @@ void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
     checkFunctional(pkt);
-    if (pkt->result != Packet::Success)
+    if (!pkt->isResponse())
         myCache()->functionalAccess(pkt, cache->cpuSidePort);
 }
 

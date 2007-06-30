@@ -322,7 +322,7 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
               pkt->cmdString());
     }
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
 }
 
 
