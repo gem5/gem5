@@ -632,7 +632,11 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     DPRINTF(OzoneLSQ, "Doing timing access for inst PC %#x\n",
             inst->readPC());
 
-    PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+    PacketPtr data_pkt =
+        new Packet(req,
+                   (req->isLocked() ?
+                    MemCmd::LoadLockedReq : Packet::ReadReq),
+                   Packet::Broadcast);
     data_pkt->dataStatic(inst->memData);
 
     LSQSenderState *state = new LSQSenderState;

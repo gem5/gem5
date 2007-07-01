@@ -260,7 +260,10 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     // Now do the access.
     if (fault == NoFault) {
         PacketPtr pkt =
-            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            new Packet(req,
+                       (req->isLocked() ?
+                        MemCmd::LoadLockedReq : MemCmd::ReadReq),
+                       Packet::Broadcast);
         pkt->dataDynamic<T>(new T);
 
         if (!dcachePort.sendTiming(pkt)) {
@@ -350,25 +353,27 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
-        assert(dcache_pkt == NULL);
-        if (req->isSwap())
-            dcache_pkt = new Packet(req, MemCmd::SwapReq, Packet::Broadcast);
-        else
-            dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
-        dcache_pkt->allocate();
-        dcache_pkt->set(data);
-
+        MemCmd cmd = MemCmd::WriteReq; // default
         bool do_access = true;  // flag to suppress cache access
 
+        assert(dcache_pkt == NULL);
+
         if (req->isLocked()) {
+            cmd = MemCmd::StoreCondReq;
             do_access = TheISA::handleLockedWrite(thread, req);
-        }
-        if (req->isCondSwap()) {
-             assert(res);
-             req->setExtraData(*res);
+        } else if (req->isSwap()) {
+            cmd = MemCmd::SwapReq;
+            if (req->isCondSwap()) {
+                assert(res);
+                req->setExtraData(*res);
+            }
         }
 
         if (do_access) {
+            dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
+            dcache_pkt->allocate();
+            dcache_pkt->set(data);
+
             if (!dcachePort.sendTiming(dcache_pkt)) {
                 _status = DcacheRetry;
             } else {
@@ -609,7 +614,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
-    if (pkt->isRead() && pkt->req->isLocked()) {
+    if (pkt->isRead() && pkt->isLocked()) {
         TheISA::handleLockedRead(thread, pkt->req);
     }
 

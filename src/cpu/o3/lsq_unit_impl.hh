@@ -647,7 +647,9 @@ LSQUnit<Impl>::writebackStores()
 
         memcpy(inst->memData, storeQueue[storeWBIdx].data, req->getSize());
 
-        MemCmd command = req->isSwap() ? MemCmd::SwapReq : MemCmd::WriteReq;
+        MemCmd command =
+            req->isSwap() ? MemCmd::SwapReq :
+            (req->isLocked() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
         PacketPtr data_pkt = new Packet(req, command,
                                         Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);

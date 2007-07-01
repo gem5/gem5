@@ -643,7 +643,10 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // if we the cache is not blocked, do cache access
     if (!lsq->cacheBlocked()) {
         PacketPtr data_pkt =
-            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            new Packet(req,
+                       (req->isLocked() ?
+                        MemCmd::LoadLockedReq : MemCmd::ReadReq),
+                       Packet::Broadcast);
         data_pkt->dataStatic(load_inst->memData);
 
         LSQSenderState *state = new LSQSenderState;

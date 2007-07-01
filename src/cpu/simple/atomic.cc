@@ -280,7 +280,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet pkt = Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        Packet pkt =
+            Packet(req,
+                   req->isLocked() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
+                   Packet::Broadcast);
         pkt.dataStatic(&data);
 
         if (req->isMmapedIpr())
@@ -370,23 +373,24 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
-        Packet pkt =
-            Packet(req, req->isSwap() ? MemCmd::SwapReq : MemCmd::WriteReq,
-                   Packet::Broadcast);
-        pkt.dataStatic(&data);
-
+        MemCmd cmd = MemCmd::WriteReq; // default
         bool do_access = true;  // flag to suppress cache access
 
         if (req->isLocked()) {
+            cmd = MemCmd::StoreCondReq;
             do_access = TheISA::handleLockedWrite(thread, req);
+        } else if (req->isSwap()) {
+            cmd = MemCmd::SwapReq;
+            if (req->isCondSwap()) {
+                assert(res);
+                req->setExtraData(*res);
+            }
         }
-        if (req->isCondSwap()) {
-             assert(res);
-             req->setExtraData(*res);
-        }
-
 
         if (do_access) {
+            Packet pkt = Packet(req, cmd, Packet::Broadcast);
+            pkt.dataStatic(&data);
+
             if (req->isMmapedIpr()) {
                 dcache_latency = TheISA::handleIprWrite(thread->getTC(), &pkt);
             } else {
@@ -395,12 +399,14 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             }
             dcache_access = true;
             assert(!pkt.isError());
+
+            if (req->isSwap()) {
+                assert(res);
+                *res = pkt.get<T>();
+            }
         }
 
-        if (req->isSwap()) {
-            assert(res);
-            *res = pkt.get<T>();
-        } else if (res) {
+        if (res && !req->isSwap()) {
             *res = req->getExtraData();
         }
     }
