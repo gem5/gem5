@@ -284,7 +284,6 @@ PciDev::writeConfig(PacketPtr pkt)
     }
     pkt->makeAtomicResponse();
     return configDelay;
-
 }
 
 void

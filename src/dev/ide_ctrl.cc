@@ -232,8 +232,10 @@ Tick
 IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC)
-        return  PciDev::readConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        return PciDev::readConfig(pkt);
+    }
+
     assert(offset >= IDE_CTRL_CONF_START && (offset + 1) <= IDE_CTRL_CONF_END);
 
     pkt->allocate();
@@ -297,7 +299,6 @@ IdeController::readConfig(PacketPtr pkt)
     }
     pkt->makeAtomicResponse();
     return configDelay;
-
 }
 
 
@@ -361,6 +362,7 @@ IdeController::writeConfig(PacketPtr pkt)
           default:
             panic("invalid access size(?) for PCI configspace!\n");
         }
+        pkt->makeAtomicResponse();
     }
 
     /* Trap command register writes and enable IO/BM as appropriate as well as
@@ -403,7 +405,6 @@ IdeController::writeConfig(PacketPtr pkt)
             bm_enabled = false;
         break;
     }
-    pkt->makeAtomicResponse();
     return configDelay;
 }
 

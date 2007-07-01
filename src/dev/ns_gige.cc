@@ -487,7 +487,7 @@ NSGigE::writeConfig(PacketPtr pkt)
             ioEnable = false;
         break;
     }
-    pkt->makeAtomicResponse();
+
     return configDelay;
 }
 
