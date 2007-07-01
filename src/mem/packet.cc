@@ -164,31 +164,6 @@ Packet::intersect(PacketPtr p)
     return !(s1 > e2 || e1 < s2);
 }
 
-bool
-fixDelayedResponsePacket(PacketPtr func, PacketPtr timing)
-{
-    bool result;
-
-    if (timing->isRead() || timing->isWrite()) {
-        // Ugly hack to deal with the fact that we queue the requests
-        // and don't convert them to responses until we issue them on
-        // the bus.  I tried to avoid this by converting packets to
-        // responses right away, but this breaks during snoops where a
-        // responder may do the conversion before other caches have
-        // done the snoop.  Would work if we copied the packet instead
-        // of just hanging on to a pointer.
-        MemCmd oldCmd = timing->cmd;
-        timing->cmd = timing->cmd.responseCommand();
-        result = fixPacket(func, timing);
-        timing->cmd = oldCmd;
-    }
-    else {
-        //Don't toggle if it isn't a read/write response
-        result = fixPacket(func, timing);
-    }
-
-    return result;
-}
 
 bool
 Packet::checkFunctional(Addr addr, int size, uint8_t *data)

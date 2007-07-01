@@ -40,11 +40,8 @@ SimpleTimingPort::checkFunctional(PacketPtr pkt)
         PacketPtr target = i->pkt;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
-        if (target->intersect(pkt)) {
-            if (!fixPacket(pkt, target)) {
-                // fixPacket returns true for continue, false for done
-                return;
-            }
+        if (pkt->checkFunctional(target)) {
+            return;
         }
     }
 }

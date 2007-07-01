@@ -574,22 +574,6 @@ class Packet : public FastAlloc
     }
 };
 
-
-
-/** Temporary for backwards compatibility.
- */
-inline
-bool fixPacket(PacketPtr func, PacketPtr timing) {
-    return !func->checkFunctional(timing);
-}
-
-/** This function is a wrapper for the fixPacket field that toggles
- * the hasData bit it is used when a response is waiting in the
- * caches, but hasn't been marked as a response yet (so the fixPacket
- * needs to get the correct value for the hasData)
- */
-bool fixDelayedResponsePacket(PacketPtr func, PacketPtr timing);
-
 std::ostream & operator<<(std::ostream &o, const Packet &p);
 
 #endif //__MEM_PACKET_HH
