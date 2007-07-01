@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,9 +51,6 @@ parser.add_option("-n", "--numcpus",
 parser.add_option("-f", "--frequency",
                   default = "1GHz",
                   help="Frequency of each CPU")
-parser.add_option("-p", "--protocol",
-                  default="moesi",
-                  help="The coherence protocol to use for the L1'a (i.e. MOESI, MOSI)")
 parser.add_option("--l1size",
                   default = "32kB")
 parser.add_option("--l1latency",
@@ -141,7 +138,6 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 12
     tgts_per_mshr = 8
-    protocol = CoherenceProtocol(protocol=options.protocol)
 
 # ----------------------
 # Base L2 Cache Definition

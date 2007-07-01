@@ -35,7 +35,6 @@ class L1Cache(BaseCache):
     latency = '1ns'
     mshrs = 10
     tgts_per_mshr = 5
-    protocol = CoherenceProtocol(protocol='moesi')
 
 class L2Cache(BaseCache):
     assoc = 8
