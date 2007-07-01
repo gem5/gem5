@@ -57,7 +57,7 @@ AtomicSimpleCPU::TickEvent::process()
 const char *
 AtomicSimpleCPU::TickEvent::description()
 {
-    return "AtomicSimpleCPU tick event";
+    return "AtomicSimpleCPU tick";
 }
 
 Port *

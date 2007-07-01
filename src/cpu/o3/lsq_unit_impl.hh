@@ -69,7 +69,7 @@ template<class Impl>
 const char *
 LSQUnit<Impl>::WritebackEvent::description()
 {
-    return "Store writeback event";
+    return "Store writeback";
 }
 
 template<class Impl>

@@ -357,7 +357,7 @@ MiscRegFile::CP0Event::process()
 const char *
 MiscRegFile::CP0Event::description()
 {
-    return "Coprocessor-0 event";
+    return "Coprocessor-0";
 }
 
 void

@@ -67,7 +67,7 @@ template <class Impl>
 const char *
 DefaultCommit<Impl>::TrapEvent::description()
 {
-    return "Trap event";
+    return "Trap";
 }
 
 template <class Impl>

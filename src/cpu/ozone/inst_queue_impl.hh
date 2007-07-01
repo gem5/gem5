@@ -64,7 +64,7 @@ template <class Impl>
 const char *
 InstQueue<Impl>::FUCompletion::description()
 {
-    return "Functional unit completion event";
+    return "Functional unit completion";
 }
 #endif
 template <class Impl>
