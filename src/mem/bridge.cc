@@ -360,6 +360,8 @@ Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
                                            bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
+    // we don't allow snooping across bridges
+    snoop = false;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bridge)
