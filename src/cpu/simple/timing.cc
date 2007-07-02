@@ -370,7 +370,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         }
 
         if (do_access) {
-            dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
+            dcache_pkt = new Packet(req, cmd, Packet::Broadcast);
             dcache_pkt->allocate();
             dcache_pkt->set(data);
 

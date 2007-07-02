@@ -99,7 +99,7 @@ MemCmd::commandInfo[] =
             InvalidCmd, "ReadExResp" },
     /* LoadLockedReq */
     { SET4(IsRead, IsLocked, IsRequest, NeedsResponse),
-            ReadResp, "LoadLockedReq" },
+            LoadLockedResp, "LoadLockedReq" },
     /* LoadLockedResp */
     { SET4(IsRead, IsLocked, IsResponse, HasData),
             InvalidCmd, "LoadLockedResp" },
