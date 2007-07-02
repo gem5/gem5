@@ -377,7 +377,8 @@ Bus::recvAtomic(PacketPtr pkt)
     // original command so that additional snoops can take place
     // properly
     MemCmd orig_cmd = pkt->cmd;
-    MemCmd response_cmd = MemCmd::InvalidCmd;
+    MemCmd snoop_response_cmd = MemCmd::InvalidCmd;
+    Tick snoop_response_latency = 0;
     int orig_src = pkt->getSrc();
 
     Port *target_port = findPort(pkt->getAddr(), pkt->getSrc());
@@ -388,15 +389,16 @@ Bus::recvAtomic(PacketPtr pkt)
         // same port should not have both target addresses and snooping
         assert(p != target_port);
         if (p->getId() != pkt->getSrc()) {
-            p->sendAtomic(pkt);
+            Tick latency = p->sendAtomic(pkt);
             if (pkt->isResponse()) {
                 // response from snoop agent
                 assert(pkt->cmd != orig_cmd);
                 assert(pkt->memInhibitAsserted());
                 // should only happen once
-                assert(response_cmd == MemCmd::InvalidCmd);
+                assert(snoop_response_cmd == MemCmd::InvalidCmd);
                 // save response state
-                response_cmd = pkt->cmd;
+                snoop_response_cmd = pkt->cmd;
+                snoop_response_latency = latency;
                 // restore original packet state for remaining snoopers
                 pkt->cmd = orig_cmd;
                 pkt->setSrc(orig_src);
@@ -405,19 +407,20 @@ Bus::recvAtomic(PacketPtr pkt)
         }
     }
 
-    Tick response_time = target_port->sendAtomic(pkt);
+    Tick response_latency = target_port->sendAtomic(pkt);
 
     // if we got a response from a snooper, restore it here
-    if (response_cmd != MemCmd::InvalidCmd) {
+    if (snoop_response_cmd != MemCmd::InvalidCmd) {
         // no one else should have responded
         assert(!pkt->isResponse());
         assert(pkt->cmd == orig_cmd);
-        pkt->cmd = response_cmd;
+        pkt->cmd = snoop_response_cmd;
+        response_latency = snoop_response_latency;
     }
 
     // why do we have this packet field and the return value both???
-    pkt->finishTime = std::max(response_time, curTick + clock);
-    return pkt->finishTime;
+    pkt->finishTime = curTick + response_latency;
+    return response_latency;
 }
 
 /** Function called by the port when the bus is receiving a Functional
