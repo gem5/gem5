@@ -698,6 +698,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             if (pkt->isRead()) {
                 target->pkt->setData(pkt->getPtr<uint8_t>());
             }
+            target->pkt->makeTimingResponse();
             cpuSidePort->respond(target->pkt, time);
         }
         assert(!mshr->hasTargets());

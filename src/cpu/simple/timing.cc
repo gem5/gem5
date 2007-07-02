@@ -356,8 +356,6 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         MemCmd cmd = MemCmd::WriteReq; // default
         bool do_access = true;  // flag to suppress cache access
 
-        assert(dcache_pkt == NULL);
-
         if (req->isLocked()) {
             cmd = MemCmd::StoreCondReq;
             do_access = TheISA::handleLockedWrite(thread, req);
@@ -369,11 +367,14 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             }
         }
 
-        if (do_access) {
-            dcache_pkt = new Packet(req, cmd, Packet::Broadcast);
-            dcache_pkt->allocate();
-            dcache_pkt->set(data);
+        // Note: need to allocate dcache_pkt even if do_access is
+        // false, as it's used unconditionally to call completeAcc().
+        assert(dcache_pkt == NULL);
+        dcache_pkt = new Packet(req, cmd, Packet::Broadcast);
+        dcache_pkt->allocate();
+        dcache_pkt->set(data);
 
+        if (do_access) {
             if (!dcachePort.sendTiming(dcache_pkt)) {
                 _status = DcacheRetry;
             } else {
