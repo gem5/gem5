@@ -705,6 +705,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         deallocate = true;
     }
 
+    delete pkt;
+
     if (deallocate) {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
@@ -1242,6 +1244,9 @@ Cache<TagStore>::MemSidePort::sendPacket()
             waitingOnRetry = !success;
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");
+                if (!mshr->isSimpleForward()) {
+                    delete pkt;
+                }
             } else {
                 myCache()->markInService(mshr);
             }
