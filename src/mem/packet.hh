@@ -368,14 +368,15 @@ class Packet : public FastAlloc
     }
 
     /** Alternate constructor for copying a packet.  Copy all fields
-     * *except* set data allocation as static... even if the original
-     * packet's data was dynamic, we don't want to free it when the
-     * new packet is deallocated.  Note that if original packet used
-     * dynamic data, user must guarantee that the new packet's
-     * lifetime is less than that of the original packet. */
+     * *except* if the original packet's data was dynamic, don't copy
+     * that, as we can't guarantee that the new packet's lifetime is
+     * less than that of the original packet.  In this case the new
+     * packet should allocate its own data. */
     Packet(Packet *origPkt)
         :  cmd(origPkt->cmd), req(origPkt->req),
-           data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           data(origPkt->staticData ? origPkt->data : NULL),
+           staticData(origPkt->staticData),
+           dynamicData(false), arrayData(false),
            addr(origPkt->addr), size(origPkt->size),
            src(origPkt->src), dest(origPkt->dest),
            addrSizeValid(origPkt->addrSizeValid),
