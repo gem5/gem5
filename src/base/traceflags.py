@@ -47,6 +47,7 @@ baseFlags = [
     'BusBridge',
     'Cache',
     'CachePort',
+    'CacheRepl',
     'Chains',
     'Checker',
     'Clock',
