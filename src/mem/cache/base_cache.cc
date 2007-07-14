@@ -162,7 +162,7 @@ BaseCache::CachePort::recvRetry()
         mshr->pkt = copyPkt;
 
         bool success = sendTiming(pkt);
-        DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+        DPRINTF(CachePort, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
 
         waitingOnRetry = !success;
@@ -272,7 +272,7 @@ BaseCache::RequestEvent::process()
         mshr->pkt = copyPkt;
 
         bool success = cachePort->sendTiming(pkt);
-        DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+        DPRINTF(CachePort, "Address %x was %s in sending the timing request\n",
                 pkt->getAddr(), success ? "succesful" : "unsuccesful");
 
         cachePort->waitingOnRetry = !success;

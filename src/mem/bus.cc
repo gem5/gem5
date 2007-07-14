@@ -173,9 +173,8 @@ bool
 Bus::recvTiming(PacketPtr pkt)
 {
     Port *port;
-    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s result %d\n",
-            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString(),
-            pkt->result);
+    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
+            pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
     BusPort *pktPort;
     if (pkt->getSrc() == defaultId)
@@ -261,7 +260,6 @@ Bus::recvTiming(PacketPtr pkt)
 void
 Bus::recvRetry(int id)
 {
-    DPRINTF(Bus, "Received a retry from %s\n", id == -1 ? "self" : interfaces[id]->getPeer()->name());
     // If there's anything waiting, and the bus isn't busy...
     if (retryList.size() && curTick >= tickNextIdle) {
         //retryingPort = retryList.front();

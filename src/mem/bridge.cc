@@ -213,10 +213,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
         if (buf->expectResponse && pkt->result == Packet::Nacked)
             --outstandingResponses;
 
-
-        DPRINTF(BusBridge, "restoring  sender state: %#X, from packet buffer: %#X\n",
-                        pkt->senderState, buf);
-        DPRINTF(BusBridge, "  is response, new dest %d\n", pkt->getDest());
+        DPRINTF(BusBridge, "response, new dest %d\n", pkt->getDest());
         delete buf;
     }
 
@@ -229,8 +226,6 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 
     Tick readyTime = curTick + delay;
     PacketBuffer *buf = new PacketBuffer(pkt, readyTime);
-    DPRINTF(BusBridge, "old sender state: %#X, new sender state: %#X\n",
-            buf->origSenderState, buf);
 
     // If we're about to put this packet at the head of the queue, we
     // need to schedule an event to do the transmit.  Otherwise there

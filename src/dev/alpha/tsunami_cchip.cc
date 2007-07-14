@@ -453,7 +453,7 @@ TsunamiCChip::postRTC()
        if (!(cpumask & itint)) {
            itint |= cpumask;
            tsunami->intrctrl->post(i, TheISA::INTLEVEL_IRQ2, 0);
-           DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d", i);
+           DPRINTF(Tsunami, "Posting RTC interrupt to cpu=%d\n", i);
        }
     }
 

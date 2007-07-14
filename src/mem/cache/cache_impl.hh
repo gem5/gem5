@@ -631,8 +631,10 @@ Cache<TagStore,Coherence>::access(PacketPtr &pkt)
         delete wbPkt;
     }
 
-    DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
-            (blk) ? "hit" : "miss");
+    if (!pkt->req->isUncacheable()) {
+        DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
+                (blk) ? "hit" : "miss");
+    }
 
     if (blk) {
         // Hit
@@ -713,14 +715,14 @@ Cache<TagStore,Coherence>::sendResult(PacketPtr &pkt, MSHR* mshr,
             BlkType *blk = tags->findBlock(pkt->getAddr());
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
-            if (old_state != new_state)
-                DPRINTF(Cache, "Block for blk addr %x moving from state "
-                        "%i to %i\n", pkt->getAddr(), old_state, new_state);
             //Set the state on the upgrade
             std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
             PacketList writebacks;
             handleFill(blk, mshr, new_state, writebacks, pkt);
             assert(writebacks.empty());
+            if (old_state != new_state)
+                DPRINTF(Cache, "Block addr %x moving from state "
+                        "%i to %i\n", pkt->getAddr(), old_state, new_state);
             missQueue->handleResponse(pkt, curTick + hitLatency);
         }
     } else if (pkt && !pkt->req->isUncacheable()) {
@@ -756,7 +758,7 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
             //Make the response a Bad address and send it
         }
 //	MemDebug::cacheResponse(pkt);
-        DPRINTF(Cache, "Handling reponse to %x\n", pkt->getAddr());
+        DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
 
         if (pkt->isCacheFill() && !pkt->isNoAllocate()) {
             DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
@@ -765,13 +767,11 @@ Cache<TagStore,Coherence>::handleResponse(PacketPtr &pkt)
             CacheBlk::State old_state = (blk) ? blk->status : 0;
             PacketList writebacks;
             CacheBlk::State new_state = coherence->getNewState(pkt,old_state);
-            if (old_state != new_state)
-                DPRINTF(Cache, "Block for blk addr %x moving from "
-                        "state %i to %i\n",
-                        pkt->getAddr(),
-                        old_state, new_state);
             blk = handleFill(blk, (MSHR*)pkt->senderState,
                                    new_state, writebacks, pkt);
+            if (old_state != new_state)
+                DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
+                        pkt->getAddr(), old_state, new_state);
             while (!writebacks.empty()) {
                 PacketPtr wbPkt = writebacks.front();
                 missQueue->doWriteback(wbPkt);
@@ -919,7 +919,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
     }
 
     if (satisfy) {
-        DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
+        DPRINTF(Cache, "snooped a %s request for addr %x and "
                 "now supplying data, new state is %i\n",
                 pkt->cmdString(), blk_addr, new_state);
 
@@ -928,7 +928,7 @@ Cache<TagStore,Coherence>::snoop(PacketPtr &pkt)
         return;
     }
     if (blk)
-        DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
+        DPRINTF(Cache, "snooped a %s request for addr %x, "
                 "new state is %i\n", pkt->cmdString(), blk_addr, new_state);
 
     handleSnoop(blk, new_state);
@@ -1070,11 +1070,11 @@ return 0;
                 coherence->getNewState(busPkt, old_state);
             DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
                     busPkt->cmdString(), busPkt->getAddr(), old_state);
-            if (old_state != new_state)
-                DPRINTF(Cache, "Block for blk addr %x moving from state "
-                        "%i to %i\n", busPkt->getAddr(), old_state, new_state);
 
             handleFill(blk, busPkt, new_state, writebacks, pkt);
+            if (old_state != new_state)
+                DPRINTF(Cache, "Block addr %x moving from state "
+                        "%i to %i\n", busPkt->getAddr(), old_state, new_state);
             //Free the packet
             delete busPkt;
 
@@ -1127,8 +1127,8 @@ Cache<TagStore,Coherence>::snoopProbe(PacketPtr &pkt)
     CacheBlk::State new_state = 0;
     bool satisfy = coherence->handleBusRequest(pkt,blk,mshr, new_state);
     if (satisfy) {
-        DPRINTF(Cache, "Cache snooped a %s request for addr %x and "
-                "now supplying data, new state is %i\n",
+        DPRINTF(Cache, "Cache snooped a %s request for addr %x, "
+                "supplying data, new state is %i\n",
                 pkt->cmdString(), blk_addr, new_state);
 
             handleSnoop(blk, new_state, pkt);
