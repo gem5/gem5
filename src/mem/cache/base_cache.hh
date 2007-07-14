@@ -126,7 +126,7 @@ class BaseCache : public MemObject
 
         void requestBus(RequestCause cause, Tick time)
         {
-            DPRINTF(Cache, "Asserting bus request for cause %d\n", cause);
+            DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
             if (!waitingOnRetry) {
                 schedSendEvent(time);
             }

@@ -1238,7 +1238,8 @@ Cache<TagStore>::MemSidePort::sendPacket()
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
             bool success = sendTiming(pkt);
-            DPRINTF(Cache, "Address %x was %s in sending the timing request\n",
+            DPRINTF(CachePort,
+                    "Address %x was %s in sending the timing request\n",
                     pkt->getAddr(), success ? "successful" : "unsuccessful");
 
             waitingOnRetry = !success;
