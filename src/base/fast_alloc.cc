@@ -34,14 +34,14 @@
  * by permission.
  */
 
-#ifndef NO_FAST_ALLOC
+#include <assert.h>
+#include "base/fast_alloc.hh"
+
+#if !NO_FAST_ALLOC
 
 #ifdef __GNUC__
 #pragma implementation
 #endif
-
-#include <assert.h>
-#include "base/fast_alloc.hh"
 
 void *FastAlloc::freeLists[Num_Buckets];
 

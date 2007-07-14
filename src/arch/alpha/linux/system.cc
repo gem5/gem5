@@ -132,7 +132,12 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
     debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
     idleStartEvent = addKernelFuncEvent<IdleStartEvent>("cpu_idle");
 
-    if (kernelSymtab->findAddress("alpha_switch_to", addr) && DTRACE(Thread)) {
+    // Disable for now as it runs into panic() calls in VPTr methods
+    // (see sim/vptr.hh).  Once those bugs are fixed, we can
+    // re-enable, but we should find a better way to turn it on than
+    // using DTRACE(Thread), since looking at a trace flag at tick 0
+    // leads to non-intuitive behavior with --trace-start.
+    if (false && kernelSymtab->findAddress("alpha_switch_to", addr)) {
         printThreadEvent = new PrintThreadInfo(&pcEventQueue, "threadinfo",
                                                addr + sizeof(MachInst) * 6);
     } else {
