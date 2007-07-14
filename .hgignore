@@ -1,0 +1,6 @@
+syntax: glob
+build
+parser.out
+parsetab.py
+*.pyc
+*~
