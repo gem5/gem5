@@ -248,7 +248,6 @@ Bus::recvTiming(PacketPtr pkt)
 void
 Bus::recvRetry(int id)
 {
-    DPRINTF(Bus, "Received a retry from %s\n", id == -1 ? "self" : interfaces[id]->getPeer()->name());
     // If there's anything waiting, and the bus isn't busy...
     if (retryList.size() && curTick >= tickNextIdle) {
         //retryingPort = retryList.front();

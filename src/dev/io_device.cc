@@ -101,8 +101,8 @@ bool
 DmaPort::recvTiming(PacketPtr pkt)
 {
     if (pkt->wasNacked()) {
-        DPRINTF(DMA, "Received nacked Pkt %#x with State: %#x Addr: %#x\n",
-               pkt, pkt->senderState, pkt->getAddr());
+        DPRINTF(DMA, "Received nacked %s addr %#x\n",
+                pkt->cmdString(), pkt->getAddr());
 
         if (backoffTime < device->minBackoffDelay)
             backoffTime = device->minBackoffDelay;
@@ -119,8 +119,8 @@ DmaPort::recvTiming(PacketPtr pkt)
         DmaReqState *state;
         backoffTime >>= 2;
 
-        DPRINTF(DMA, "Received response Pkt %#x with State: %#x Addr: %#x size: %#x\n",
-               pkt, pkt->senderState, pkt->getAddr(), pkt->req->getSize());
+        DPRINTF(DMA, "Received response %s addr %#x size %#x\n",
+                pkt->cmdString(), pkt->getAddr(), pkt->req->getSize());
         state = dynamic_cast<DmaReqState*>(pkt->senderState);
         pendingCount--;
 
@@ -182,8 +182,8 @@ DmaPort::recvRetry()
     PacketPtr pkt = transmitList.front();
     bool result = true;
     do {
-        DPRINTF(DMA, "Retry on  Packet %#x with senderState: %#x\n",
-                   pkt, pkt->senderState);
+        DPRINTF(DMA, "Retry on %s addr %#x\n",
+                pkt->cmdString(), pkt->getAddr());
         result = sendTiming(pkt);
         if (result) {
             DPRINTF(DMA, "-- Done\n");
@@ -267,8 +267,8 @@ DmaPort::sendDma()
             return;
         }
 
-        DPRINTF(DMA, "Attempting to send Packet %#x with addr: %#x\n",
-                pkt, pkt->getAddr());
+        DPRINTF(DMA, "Attempting to send %s addr %#x\n",
+                pkt->cmdString(), pkt->getAddr());
 
         bool result;
         do {
