@@ -49,6 +49,10 @@ parser.add_option("-n", "--numtesters", type="int", default=8,
                   metavar="N",
                   help="Number of tester pseudo-CPUs [default: %default]")
 
+parser.add_option("-t", "--treespec", type="string",
+                  help="Colon-separated multilevel tree specification")
+
+
 parser.add_option("-f", "--functional", type="int", default=0,
                   metavar="PCT",
                   help="Target percentage of functional accesses "
@@ -69,84 +73,83 @@ if args:
      print "Error: script doesn't take any positional arguments"
      sys.exit(1)
 
-# Should generalize this someday... would be cool to have a loop that
-# just iterates, adding a level of caching each time.
-#if options.cache_levels != 2 and options.cache_levels != 0:
-#     print "Error: number of cache levels must be 0 or 2"
-#     sys.exit(1)
-
-if options.blocking:
-     num_l1_mshrs = 1
-     num_l2_mshrs = 1
-else:
-     num_l1_mshrs = 12
-     num_l2_mshrs = 92
-
 block_size = 64
 
-# --------------------
-# Base L1 Cache
-# ====================
+if not options.treespec:
+     # convert simple cache_levels option to treespec
+     treespec = [options.numtesters, 1]
+     numtesters = options.numtesters
+else:
+     try:
+          treespec = [int(x) for x in options.treespec.split(':')]
+          numtesters = reduce(lambda x,y: x*y, treespec)
+     except:
+          print "Error parsing treespec option"
+          sys.exit(1)
 
-class L1(BaseCache):
-    latency = '1ns'
-    block_size = block_size
-    mshrs = num_l1_mshrs
-    tgts_per_mshr = 8
-
-# ----------------------
-# Base L2 Cache
-# ----------------------
-
-class L2(BaseCache):
-    block_size = block_size
-    latency = '10ns'
-    mshrs = num_l2_mshrs
-    tgts_per_mshr = 16
-    write_buffers = 8
-
-if options.numtesters > block_size:
+if numtesters > block_size:
      print "Error: Number of testers limited to %s because of false sharing" \
            % (block_size)
      sys.exit(1)
 
-cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads,
-                 percent_functional=options.functional,
-                 percent_uncacheable=options.uncacheable,
-                 progress_interval=options.progress)
-         for i in xrange(options.numtesters) ]
+if len(treespec) < 1:
+     print "Error parsing treespec"
+     sys.exit(1)
+
+# define prototype L1 cache
+proto_l1 = BaseCache(size = '32kB', assoc = 4, block_size = block_size,
+                     latency = '1ns', tgts_per_mshr = 8)
+
+if options.blocking:
+     proto_l1.mshrs = 1
+else:
+     proto_l1.mshrs = 8
+
+# build a list of prototypes, one for each cache level (L1 is at end,
+# followed by the tester pseudo-cpu objects)
+prototypes = [ proto_l1,
+               MemTest(atomic=options.atomic, max_loads=options.maxloads,
+                       percent_functional=options.functional,
+                       percent_uncacheable=options.uncacheable,
+                       progress_interval=options.progress) ]
+
+while len(prototypes) < len(treespec):
+     # clone previous level and update params
+     prev = prototypes[0]
+     next = prev()
+     next.size = prev.size * 4
+     next.latency = prev.latency * 10
+     next.assoc = prev.assoc * 2
+     prototypes.insert(0, next)
 
 # system simulated
-system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = PhysicalMemory(latency = "100ns"),
-                membus = Bus(clock="500MHz", width=16))
+system = System(funcmem = PhysicalMemory(),
+                physmem = PhysicalMemory(latency = "100ns"))
 
-# l2cache & bus
-if options.cache_levels == 2:
-    system.toL2Bus = Bus(clock="500MHz", width=16)
-    system.l2c = L2(size='64kB', assoc=8)
-    system.l2c.cpu_side = system.toL2Bus.port
+def make_level(spec, prototypes, attach_obj, attach_port):
+     fanout = spec[0]
+     parent = attach_obj # use attach obj as config parent too
+     if fanout > 1:
+          new_bus = Bus(clock="500MHz", width=16)
+          new_bus.port = getattr(attach_obj, attach_port)
+          parent.cpu_side_bus = new_bus
+          attach_obj = new_bus
+          attach_port = "port"
+     objs = [prototypes[0]() for i in xrange(fanout)]
+     if len(spec) > 1:
+          # we just built caches, more levels to go
+          parent.cache = objs
+          for cache in objs:
+               cache.mem_side = getattr(attach_obj, attach_port)
+               make_level(spec[1:], prototypes[1:], cache, "cpu_side")
+     else:
+          # we just built the MemTest objects
+          parent.cpu = objs
+          for t in objs:
+               t.test = getattr(attach_obj, attach_port)
+               t.functional = system.funcmem.port
 
-    # connect l2c to membus
-    system.l2c.mem_side = system.membus.port
-
-# add L1 caches
-for cpu in cpus:
-    if options.cache_levels == 2:
-         cpu.l1c = L1(size = '32kB', assoc = 4)
-         cpu.test = cpu.l1c.cpu_side
-         cpu.l1c.mem_side = system.toL2Bus.port
-    elif options.cache_levels == 1:
-         cpu.l1c = L1(size = '32kB', assoc = 4)
-         cpu.test = cpu.l1c.cpu_side
-         cpu.l1c.mem_side = system.membus.port
-    else:
-         cpu.test = system.membus.port
-    system.funcmem.port = cpu.functional
-
-# connect memory to membus
-system.physmem.port = system.membus.port
-
+make_level(treespec, prototypes, system.physmem, "port")
 
 # -----------------------
 # run simulation
