@@ -37,7 +37,7 @@ parser.add_option("-a", "--atomic", action="store_true",
                   help="Use atomic (non-timing) mode")
 parser.add_option("-b", "--blocking", action="store_true",
                   help="Use blocking caches")
-parser.add_option("-l", "--maxloads", metavar="N",
+parser.add_option("-l", "--maxloads", metavar="N", default=0,
                   help="Stop after N loads")
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
@@ -116,14 +116,18 @@ if options.blocking:
 else:
      proto_l1.mshrs = 8
 
-# build a list of prototypes, one for each cache level (L1 is at end,
-# followed by the tester pseudo-cpu objects)
-prototypes = [ proto_l1,
-               MemTest(atomic=options.atomic, max_loads=options.maxloads,
+# build a list of prototypes, one for each level of treespec, starting
+# at the end (last entry is tester objects)
+prototypes = [ MemTest(atomic=options.atomic, max_loads=options.maxloads,
                        percent_functional=options.functional,
                        percent_uncacheable=options.uncacheable,
                        progress_interval=options.progress) ]
 
+# next comes L1 cache, if any
+if len(treespec) > 1:
+     prototypes.insert(0, proto_l1)
+
+# now add additional cache levels (if any) by scaling L1 params
 while len(prototypes) < len(treespec):
      # clone previous level and update params
      prev = prototypes[0]

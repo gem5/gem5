@@ -232,7 +232,7 @@ MemTest::completeRequest(PacketPtr pkt)
             nextProgressMessage += progressInterval;
         }
 
-        if (numReads >= maxLoads)
+        if (maxLoads != 0 && numReads >= maxLoads)
             exitSimLoop("maximum number of loads reached");
         break;
 
