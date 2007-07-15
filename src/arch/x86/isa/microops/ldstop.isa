@@ -59,63 +59,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-output header {{
-    /**
-     * Base class for load and store ops
-     */
-    class LdStOp : public X86MicroopBase
-    {
-      protected:
-        const uint8_t scale;
-        const RegIndex index;
-        const RegIndex base;
-        const uint64_t disp;
-        const uint8_t segment;
-        const RegIndex data;
-        const uint8_t dataSize;
-        const uint8_t addressSize;
-
-        //Constructor
-        LdStOp(ExtMachInst _machInst,
-                const char * mnem, const char * _instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize,
-                OpClass __opClass) :
-        X86MicroopBase(machInst, mnem, _instMnem,
-                isMicro, isDelayed, isFirst, isLast, __opClass),
-                scale(_scale), index(_index), base(_base),
-                disp(_disp), segment(_segment),
-                data(_data),
-                dataSize(_dataSize), addressSize(_addressSize)
-        {}
-
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
-    };
-}};
-
-output decoder {{
-    std::string LdStOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        printReg(response, data);
-        response << ", ";
-        printSegment(response, segment);
-        ccprintf(response, ":[%d*", scale);
-        printReg(response, index);
-        response << " + ";
-        printReg(response, base);
-        ccprintf(response, " + %#x]", disp);
-        return response.str();
-    }
-}};
-
 // LEA template
 
 def template MicroLeaExecute {{
@@ -424,7 +367,7 @@ let {{
         name = mnemonic.lower()
 
         # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'LdStOp',
+        iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
                 {"code": code, "ea_code": calculateEA})
         header_output += MicroLdStOpDeclare.subst(iop)
         decoder_output += MicroLdStOpConstructor.subst(iop)
@@ -451,7 +394,7 @@ let {{
         name = mnemonic.lower()
 
         # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'LdStOp',
+        iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
                 {"code": code, "ea_code": calculateEA})
         header_output += MicroLdStOpDeclare.subst(iop)
         decoder_output += MicroLdStOpConstructor.subst(iop)
@@ -469,7 +412,7 @@ let {{
 
     defineMicroLoadOp('St', 'Mem = Data;')
 
-    iop = InstObjParams("lea", "Lea", 'LdStOp',
+    iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);", "ea_code": calculateEA})
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)

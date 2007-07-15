@@ -68,12 +68,12 @@ output header {{
      * 'Unknown' class is used for unrecognized/illegal instructions.
      * This is a leaf class.
      */
-    class FailUnimplemented : public X86StaticInst
+    class FailUnimplemented : public X86ISA::X86StaticInst
     {
       public:
         /// Constructor
         FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
-            : X86StaticInst(_mnemonic, _machInst, No_OpClass)
+            : X86ISA::X86StaticInst(_mnemonic, _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path
@@ -95,7 +95,7 @@ output header {{
      * probably make the 'warned' flag a static member of the derived
      * class.
      */
-    class WarnUnimplemented : public X86StaticInst
+    class WarnUnimplemented : public X86ISA::X86StaticInst
     {
       private:
         /// Have we warned on this instruction yet?
@@ -104,7 +104,7 @@ output header {{
       public:
         /// Constructor
         WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst)
-            : X86StaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
+            : X86ISA::X86StaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
         {
             // don't call execute() (which panics) if we're on a
             // speculative path

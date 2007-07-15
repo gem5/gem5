@@ -61,42 +61,6 @@ let {{
     microopClasses = {}
 }};
 
-//A class which is the base of all x86 micro ops. It provides a function to
-//set necessary flags appropriately.
-output header {{
-    class X86MicroopBase : public X86StaticInst
-    {
-      protected:
-        const char * instMnem;
-        uint8_t opSize;
-        uint8_t addrSize;
-
-        X86MicroopBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                OpClass __opClass) :
-            X86StaticInst(mnem, _machInst, __opClass),
-            instMnem(_instMnem)
-        {
-            flags[IsMicroop] = isMicro;
-            flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroop] = isFirst;
-            flags[IsLastMicroop] = isLast;
-        }
-
-        std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "\t%s.%s", instMnem, mnemonic);
-
-            return ss.str();
-        }
-    };
-}};
-
 //////////////////////////////////////////////////////////////////////////
 //
 // Base class for the python representation of x86 microops

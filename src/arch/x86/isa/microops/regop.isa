@@ -59,100 +59,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-output header {{
-    /**
-     * Base classes for RegOps which provides a generateDisassembly method.
-     */
-    class RegOp : public X86MicroopBase
-    {
-      protected:
-        const RegIndex src1;
-        const RegIndex src2;
-        const RegIndex dest;
-        const bool setStatus;
-        const uint8_t dataSize;
-        const uint8_t ext;
-
-        // Constructor
-        RegOp(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
-                OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
-                    __opClass),
-            src1(_src1), src2(_src2), dest(_dest),
-            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
-        {
-        }
-
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
-    };
-
-    class RegOpImm : public X86MicroopBase
-    {
-      protected:
-        const RegIndex src1;
-        const uint8_t imm8;
-        const RegIndex dest;
-        const bool setStatus;
-        const uint8_t dataSize;
-        const uint8_t ext;
-
-        // Constructor
-        RegOpImm(ExtMachInst _machInst,
-                const char * mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
-                OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
-                    __opClass),
-            src1(_src1), imm8(_imm8), dest(_dest),
-            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
-        {
-        }
-
-        std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const;
-    };
-}};
-
-output decoder {{
-    std::string RegOp::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest);
-        response << ", ";
-        printReg(response, src1);
-        response << ", ";
-        printReg(response, src2);
-        return response.str();
-    }
-
-    std::string RegOpImm::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest);
-        response << ", ";
-        printReg(response, src1);
-        ccprintf(response, ", %#x", imm8);
-        return response.str();
-    }
-}};
-
 def template MicroRegOpExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
@@ -391,7 +297,8 @@ let {{
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild, flagCode);
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", \
+                regCode, RegOpChild, flagCode);
 
         # Build the immediate version of this micro op
         class RegOpChildImm(RegOpImm):
@@ -400,7 +307,8 @@ let {{
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm, flagCode);
+        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
+                immCode, RegOpChildImm, flagCode);
 
     defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)', "") #Needs to set OF,CF,SF
     defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)', "")
@@ -431,7 +339,7 @@ let {{
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", regCode, RegOpChild, "");
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, RegOpChild, "");
 
         # Build the immediate version of this micro op
         class RegOpChildImm(RegOpImm):
@@ -440,7 +348,8 @@ let {{
                 self.className = Name + "Imm"
                 self.mnemonic = name + "i"
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "RegOpImm", immCode, RegOpChildImm, "");
+        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
+                immCode, RegOpChildImm, "");
 
     defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2')
 
@@ -455,7 +364,7 @@ let {{
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOp", code, RegOpChild, "");
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", code, RegOpChild, "");
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
@@ -469,7 +378,7 @@ let {{
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "RegOpImm", code, RegOpChild, "");
+        setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code, RegOpChild, "");
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = SrcReg1;

@@ -72,7 +72,7 @@ def template MicroLimmOpExecute {{
 }};
 
 def template MicroLimmOpDeclare {{
-    class %(class_name)s : public X86MicroopBase
+    class %(class_name)s : public X86ISA::X86MicroopBase
     {
       protected:
         const RegIndex dest;
