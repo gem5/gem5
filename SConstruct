@@ -259,7 +259,8 @@ if not env.has_key('SWIG'):
 # Check for appropriate SWIG version
 swig_version = os.popen('swig -version').read().split()
 # First 3 words should be "SWIG Version x.y.z"
-if swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
+if len(swig_version) < 3 or \
+        swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
     print 'Error determining SWIG version.'
     Exit(1)
 
