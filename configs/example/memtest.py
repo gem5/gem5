@@ -33,24 +33,38 @@ m5.AddToPath('../common')
 
 parser = optparse.OptionParser()
 
-parser.add_option("-c", "--cache-levels", type="int", default=2,
-                  metavar="LEVELS",
-                  help="Number of cache levels [default: %default]")
 parser.add_option("-a", "--atomic", action="store_true",
                   help="Use atomic (non-timing) mode")
 parser.add_option("-b", "--blocking", action="store_true",
                   help="Use blocking caches")
-parser.add_option("-l", "--maxloads", default="1G", metavar="N",
-                  help="Stop after N loads [default: %default]")
+parser.add_option("-l", "--maxloads", metavar="N",
+                  help="Stop after N loads")
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
                   help="Stop after T ticks")
-parser.add_option("-n", "--numtesters", type="int", default=8,
-                  metavar="N",
-                  help="Number of tester pseudo-CPUs [default: %default]")
 
-parser.add_option("-t", "--treespec", type="string",
-                  help="Colon-separated multilevel tree specification")
+#
+# The "tree" specification is a colon-separated list of one or more
+# integers.  The first integer is the number of caches/testers
+# connected directly to main memory.  The last integer in the list is
+# the number of testers associated with the uppermost level of memory
+# (L1 cache, if there are caches, or main memory if no caches).  Thus
+# if there is only one integer, there are no caches, and the integer
+# specifies the number of testers connected directly to main memory.
+# The other integers (if any) specify the number of caches at each
+# level of the hierarchy between.
+#
+# Examples:
+#
+#  "2:1"    Two caches connected to memory with a single tester behind each
+#           (single-level hierarchy, two testers total)
+#
+#  "2:2:1"  Two-level hierarchy, 2 L1s behind each of 2 L2s, 4 testers total
+#
+parser.add_option("-t", "--treespec", type="string", default="8:1",
+                  help="Colon-separated multilevel tree specification, "
+                  "see script comments for details "
+                  "[default: %default]")
 
 parser.add_option("--force-bus", action="store_true",
                   help="Use bus between levels even with single cache")
@@ -77,17 +91,12 @@ if args:
 
 block_size = 64
 
-if not options.treespec:
-     # convert simple cache_levels option to treespec
-     treespec = [options.numtesters, 1]
-     numtesters = options.numtesters
-else:
-     try:
-          treespec = [int(x) for x in options.treespec.split(':')]
-          numtesters = reduce(lambda x,y: x*y, treespec)
-     except:
-          print "Error parsing treespec option"
-          sys.exit(1)
+try:
+     treespec = [int(x) for x in options.treespec.split(':')]
+     numtesters = reduce(lambda x,y: x*y, treespec)
+except:
+     print "Error parsing treespec option"
+     sys.exit(1)
 
 if numtesters > block_size:
      print "Error: Number of testers limited to %s because of false sharing" \
