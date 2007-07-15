@@ -61,7 +61,7 @@
 #include <inttypes.h>
 #include <iostream>
 
-#include "base/bitfield.hh"
+#include "base/bitunion.hh"
 #include "base/cprintf.hh"
 
 namespace X86ISA

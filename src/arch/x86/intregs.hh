@@ -58,7 +58,7 @@
 #ifndef __ARCH_X86_INTREGS_HH__
 #define __ARCH_X86_INTREGS_HH__
 
-#include "base/bitfield.hh"
+#include "base/bitunion.hh"
 
 namespace X86ISA
 {
