@@ -52,6 +52,8 @@ parser.add_option("-n", "--numtesters", type="int", default=8,
 parser.add_option("-t", "--treespec", type="string",
                   help="Colon-separated multilevel tree specification")
 
+parser.add_option("--force-bus", action="store_true",
+                  help="Use bus between levels even with single cache")
 
 parser.add_option("-f", "--functional", type="int", default=0,
                   metavar="PCT",
@@ -129,7 +131,7 @@ system = System(funcmem = PhysicalMemory(),
 def make_level(spec, prototypes, attach_obj, attach_port):
      fanout = spec[0]
      parent = attach_obj # use attach obj as config parent too
-     if fanout > 1:
+     if fanout > 1 or options.force_bus:
           new_bus = Bus(clock="500MHz", width=16)
           new_bus.port = getattr(attach_obj, attach_port)
           parent.cpu_side_bus = new_bus
