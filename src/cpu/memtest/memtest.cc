@@ -57,7 +57,13 @@ int TESTER_ALLOCATOR=0;
 bool
 MemTest::CpuPort::recvTiming(PacketPtr pkt)
 {
-    memtest->completeRequest(pkt);
+    if (pkt->isResponse()) {
+        memtest->completeRequest(pkt);
+    } else {
+        // must be snoop upcall
+        assert(pkt->isRequest());
+        assert(pkt->getDest() == Packet::Broadcast);
+    }
     return true;
 }
 
