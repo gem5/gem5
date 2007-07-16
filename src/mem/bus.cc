@@ -172,7 +172,7 @@ void Bus::occupyBus(PacketPtr pkt)
 bool
 Bus::recvTiming(PacketPtr pkt)
 {
-    Port *port;
+    int port_id;
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
@@ -196,8 +196,8 @@ Bus::recvTiming(PacketPtr pkt)
     // Make sure to clear the snoop commit flag so it doesn't think an
     // access has been handled twice.
     if (dest == Packet::Broadcast) {
-        port = findPort(pkt->getAddr(), pkt->getSrc());
-        timingSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
+        port_id = findPort(pkt->getAddr());
+        timingSnoop(pkt, interfaces[port_id]);
 
         if (pkt->memInhibitAsserted()) {
             //Cache-Cache transfer occuring
@@ -213,13 +213,13 @@ Bus::recvTiming(PacketPtr pkt)
     } else {
         assert(dest >= 0 && dest < maxId);
         assert(dest != pkt->getSrc()); // catch infinite loops
-        port = interfaces[dest];
+        port_id = dest;
     }
 
     occupyBus(pkt);
 
-    if (port) {
-        if (port->sendTiming(pkt))  {
+    if (port_id != pkt->getSrc()) {
+        if (interfaces[port_id]->sendTiming(pkt))  {
             // Packet was successfully sent. Return true.
             // Also take care of retries
             if (inRetry) {
@@ -279,8 +279,8 @@ Bus::recvRetry(int id)
     }
 }
 
-Port *
-Bus::findPort(Addr addr, int id)
+int
+Bus::findPort(Addr addr)
 {
     /* An interval tree would be a better way to do this. --ali. */
     int dest_id = -1;
@@ -295,7 +295,7 @@ Bus::findPort(Addr addr, int id)
              iter != defaultRange.end(); iter++) {
             if (*iter == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
-                return defaultPort;
+                return defaultId;
             }
         }
 
@@ -306,18 +306,11 @@ Bus::findPort(Addr addr, int id)
             DPRINTF(Bus, "Unable to find destination for addr: %#llx, will use "
                     "default port", addr);
 
-            return defaultPort;
+            return defaultId;
         }
     }
 
-
-    // we shouldn't be sending this back to where it came from
-    // do the snoop access and then we should terminate
-    // the cyclical call.
-    if (dest_id == id)
-        return 0;
-
-    return interfaces[dest_id];
+    return dest_id;
 }
 
 void
@@ -380,7 +373,8 @@ Bus::recvAtomic(PacketPtr pkt)
     Tick snoop_response_latency = 0;
     int orig_src = pkt->getSrc();
 
-    Port *target_port = findPort(pkt->getAddr(), pkt->getSrc());
+    int target_port_id = findPort(pkt->getAddr());
+    Port *target_port = interfaces[target_port_id];
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
@@ -406,7 +400,13 @@ Bus::recvAtomic(PacketPtr pkt)
         }
     }
 
-    Tick response_latency = target_port->sendAtomic(pkt);
+    Tick response_latency = 0;
+
+    // we can get requests sent up from the memory side of the bus for
+    // snooping... don't send them back down!
+    if (target_port_id != pkt->getSrc()) {
+        response_latency = target_port->sendAtomic(pkt);
+    }
 
     // if we got a response from a snooper, restore it here
     if (snoop_response_cmd != MemCmd::InvalidCmd) {
@@ -431,11 +431,12 @@ Bus::recvFunctional(PacketPtr pkt)
             pkt->getSrc(), pkt->getDest(), pkt->getAddr(), pkt->cmdString());
     assert(pkt->getDest() == Packet::Broadcast);
 
-    Port* port = findPort(pkt->getAddr(), pkt->getSrc());
-    functionalSnoop(pkt, port ? port : interfaces[pkt->getSrc()]);
+    int port_id = findPort(pkt->getAddr());
+    Port *port = interfaces[port_id];
+    functionalSnoop(pkt, port);
 
     // If the snooping hasn't found what we were looking for, keep going.
-    if (!pkt->isResponse() && port) {
+    if (!pkt->isResponse() && port_id != pkt->getSrc()) {
         port->sendFunctional(pkt);
     }
 }

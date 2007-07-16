@@ -176,11 +176,9 @@ class Bus : public MemObject
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
      * @param addr Address to find port for.
-     * @param id Id of the port this packet was received from (to prevent
-     *             loops)
-     * @return pointer to port that the packet should be sent out of.
+     * @return id of port that the packet should be sent out of.
      */
-    Port *findPort(Addr addr, int id);
+    int findPort(Addr addr);
 
     /** Snoop all relevant ports functionally. */
     void functionalSnoop(PacketPtr pkt, Port *responder);
