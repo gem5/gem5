@@ -165,11 +165,25 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
             blk->trackLoadLocked(pkt);
         }
         pkt->setDataFromBlock(blk->data, blkSize);
+        if (pkt->getSize() == blkSize) {
+            // special handling for coherent block requests from
+            // upper-level caches
+            if (pkt->needsExclusive()) {
+                // on ReadExReq we give up our copy
+                tags->invalidateBlk(blk);
+            } else {
+                // on ReadReq we create shareable copies here and in
+                // the requester
+                pkt->assertShared();
+                blk->status &= ~BlkWritable;
+            }
+        }
     } else {
         // Not a read or write... must be an upgrade.  it's OK
         // to just ack those as long as we have an exclusive
         // copy at this level.
         assert(pkt->cmd == MemCmd::UpgradeReq);
+        tags->invalidateBlk(blk);
     }
 }
 
@@ -269,6 +283,18 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
             satisfied = true;
             satisfyCpuSideRequest(pkt, blk);
+        } else if (pkt->cmd == MemCmd::Writeback) {
+            // special case: writeback to read-only block (e.g., from
+            // L1 into L2).  since we're really just passing ownership
+            // from one cache to another, we can update this cache to
+            // be the owner without making the block writeable
+            assert(!blk->isWritable() /* && !blk->isDirty() */);
+            assert(blkSize == pkt->getSize());
+            std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+            blk->status |= BlkDirty;
+            satisfied = true;
+            // nothing else to do; writeback doesn't expect response
+            assert(!pkt->needsResponse());
         } else {
             // permission violation... nothing to do here, leave unsatisfied
             // for statistics purposes this counts like a complete miss
@@ -363,9 +389,10 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     bool needsResponse = pkt->needsResponse();
 
     if (satisfied) {
-        assert(needsResponse);
-        pkt->makeTimingResponse();
-        cpuSidePort->respond(pkt, curTick+lat);
+        if (needsResponse) {
+            pkt->makeTimingResponse();
+            cpuSidePort->respond(pkt, curTick+lat);
+        }
     } else {
         // miss
         if (prefetchMiss)
@@ -456,10 +483,30 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 {
     int lat = hitLatency;
 
+    // @TODO: make this a parameter
+    bool last_level_cache = false;
+
     if (pkt->memInhibitAsserted()) {
-        DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
-                pkt->getAddr());
         assert(!pkt->req->isUncacheable());
+        // have to invalidate ourselves and any lower caches even if
+        // upper cache will be responding
+        if (pkt->isInvalidate()) {
+            BlkType *blk = tags->findBlock(pkt->getAddr());
+            if (blk && blk->isValid()) {
+                tags->invalidateBlk(blk);
+                DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: invalidating\n",
+                        pkt->cmdString(), pkt->getAddr());
+            }
+            if (!last_level_cache) {
+                DPRINTF(Cache, "forwarding mem-inhibited %s on 0x%x\n",
+                        pkt->cmdString(), pkt->getAddr());
+                lat += memSidePort->sendAtomic(pkt);
+            }
+        } else {
+            DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: not responding\n",
+                    pkt->cmdString(), pkt->getAddr());
+        }
+
         return lat;
     }
 
@@ -791,9 +838,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         assert(pkt->isRead() || blk->isValid());
     }
 
-    if (pkt->needsExclusive()) {
-        blk->status = BlkValid | BlkWritable | BlkDirty;
-    } else if (!pkt->sharedAsserted()) {
+    if (pkt->needsExclusive() || !pkt->sharedAsserted()) {
         blk->status = BlkValid | BlkWritable;
     } else {
         blk->status = BlkValid;
@@ -839,6 +884,37 @@ void
 Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
                              bool is_timing, bool is_deferred)
 {
+    assert(pkt->isRequest());
+
+    // first propagate snoop upward to see if anyone above us wants to
+    // handle it.  save & restore packet src since it will get
+    // rewritten to be relative to cpu-side bus (if any)
+    bool alreadySupplied = pkt->memInhibitAsserted();
+    bool upperSupply = false;
+    if (is_timing) {
+        Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+        snoopPkt->setExpressSnoop();
+        cpuSidePort->sendTiming(snoopPkt);
+        if (snoopPkt->memInhibitAsserted()) {
+            // cache-to-cache response from some upper cache
+            assert(!alreadySupplied);
+            pkt->assertMemInhibit();
+        }
+        if (snoopPkt->sharedAsserted()) {
+            pkt->assertShared();
+        }
+        delete snoopPkt;
+    } else {
+        int origSrc = pkt->getSrc();
+        cpuSidePort->sendAtomic(pkt);
+        if (!alreadySupplied && pkt->memInhibitAsserted()) {
+            // cache-to-cache response from some upper cache:
+            // forward response to original requester
+            assert(pkt->isResponse());
+        }
+        pkt->setSrc(origSrc);
+    }
+
     if (!blk || !blk->isValid()) {
         return;
     }
@@ -846,7 +922,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
     // and then do it later
-    bool supply = blk->isDirty() && pkt->isRead();
+    bool supply = blk->isDirty() && pkt->isRead() && !upperSupply;
     bool invalidate = pkt->isInvalidate();
 
     if (pkt->isRead() && !pkt->isInvalidate()) {

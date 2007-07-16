@@ -144,7 +144,7 @@ system = System(funcmem = PhysicalMemory(),
 def make_level(spec, prototypes, attach_obj, attach_port):
      fanout = spec[0]
      parent = attach_obj # use attach obj as config parent too
-     if fanout > 1 or options.force_bus:
+     if len(spec) > 1 and (fanout > 1 or options.force_bus):
           new_bus = Bus(clock="500MHz", width=16)
           new_bus.port = getattr(attach_obj, attach_port)
           parent.cpu_side_bus = new_bus

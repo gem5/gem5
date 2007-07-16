@@ -64,7 +64,9 @@ MemTest::CpuPort::recvTiming(PacketPtr pkt)
 Tick
 MemTest::CpuPort::recvAtomic(PacketPtr pkt)
 {
-    panic("MemTest doesn't expect recvAtomic callback!");
+    // must be snoop upcall
+    assert(pkt->isRequest());
+    assert(pkt->getDest() == Packet::Broadcast);
     return curTick;
 }
 

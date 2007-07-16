@@ -252,9 +252,11 @@ class Packet : public FastAlloc
     bool destValid;
 
     enum Flag {
-        // Snoop flags
+        // Snoop response flags
         MemInhibit,
         Shared,
+        // Special control flags
+        ExpressSnoop,
         NUM_PACKET_FLAGS
     };
 
@@ -317,6 +319,10 @@ class Packet : public FastAlloc
     bool memInhibitAsserted()   { return flags[MemInhibit]; }
     bool sharedAsserted()       { return flags[Shared]; }
 
+    // Special control flags
+    void setExpressSnoop()      { flags[ExpressSnoop] = true; }
+    bool isExpressSnoop()       { return flags[ExpressSnoop]; }
+
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
     // field, etc.)
@@ -372,7 +378,7 @@ class Packet : public FastAlloc
      * that, as we can't guarantee that the new packet's lifetime is
      * less than that of the original packet.  In this case the new
      * packet should allocate its own data. */
-    Packet(Packet *origPkt)
+    Packet(Packet *origPkt, bool clearFlags = false)
         :  cmd(origPkt->cmd), req(origPkt->req),
            data(origPkt->staticData ? origPkt->data : NULL),
            staticData(origPkt->staticData),
@@ -381,7 +387,7 @@ class Packet : public FastAlloc
            src(origPkt->src), dest(origPkt->dest),
            addrSizeValid(origPkt->addrSizeValid),
            srcValid(origPkt->srcValid), destValid(origPkt->destValid),
-           flags(origPkt->flags),
+           flags(clearFlags ? 0 : origPkt->flags),
            time(curTick), senderState(origPkt->senderState)
     {
     }

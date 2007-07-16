@@ -183,8 +183,9 @@ Bus::recvTiming(PacketPtr pkt)
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
-    if (tickNextIdle > curTick ||
-        (retryList.size() && (!inRetry || pktPort != retryList.front())))
+    if (!pkt->isExpressSnoop() &&
+        (tickNextIdle > curTick ||
+         (retryList.size() && (!inRetry || pktPort != retryList.front()))))
     {
         addToRetryList(pktPort);
         DPRINTF(Bus, "recvTiming: Bus is busy, returning false\n");
