@@ -39,7 +39,6 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
-    protocol = CoherenceProtocol(protocol='moesi')
 
 # ----------------------
 # Base L2 Cache

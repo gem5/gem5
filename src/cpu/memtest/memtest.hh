@@ -35,8 +35,6 @@
 #include <set>
 
 #include "base/statistics.hh"
-//#include "mem/functional/functional.hh"
-//#include "mem/mem_interface.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -50,9 +48,6 @@ class MemTest : public MemObject
   public:
 
     MemTest(const std::string &name,
-//	    MemInterface *_cache_interface,
-//	    PhysicalMemory *main_mem,
-//	    PhysicalMemory *check_mem,
             unsigned _memorySize,
             unsigned _percentReads,
             unsigned _percentFunctional,
@@ -85,13 +80,13 @@ class MemTest : public MemObject
         TickEvent(MemTest *c)
             : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c) {}
         void process() {cpu->tick();}
-        virtual const char *description() { return "tick event"; }
+        virtual const char *description() { return "MemTest tick"; }
     };
 
     TickEvent tickEvent;
+
     class CpuPort : public Port
     {
-
         MemTest *memtest;
 
       public:
@@ -116,7 +111,7 @@ class MemTest : public MemObject
 
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             bool &snoop)
-        { resp.clear(); snoop = true; }
+        { resp.clear(); snoop = false; }
     };
 
     CpuPort cachePort;
@@ -136,12 +131,7 @@ class MemTest : public MemObject
         uint8_t *data;
     };
 
-//    Request *dataReq;
     PacketPtr retryPkt;
-//    MemInterface *cacheInterface;
-//    PhysicalMemory *mainMem;
-//    PhysicalMemory *checkMem;
-//    SimpleThread *thread;
 
     bool accessRetry;
 

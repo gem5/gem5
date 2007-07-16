@@ -74,7 +74,6 @@ DumbTOD::DumbTOD(Params *p)
 Tick
 DumbTOD::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 8);
 
@@ -82,7 +81,7 @@ DumbTOD::read(PacketPtr pkt)
     pkt->set(todTime);
     todTime += 1000;
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

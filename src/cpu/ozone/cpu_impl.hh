@@ -84,7 +84,7 @@ template <class Impl>
 const char *
 OzoneCPU<Impl>::TickEvent::description()
 {
-    return "OzoneCPU tick event";
+    return "OzoneCPU tick";
 }
 
 template <class Impl>

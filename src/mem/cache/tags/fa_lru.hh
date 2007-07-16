@@ -201,11 +201,9 @@ public:
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
-     * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findReplacement(PacketPtr &pkt, PacketList & writebacks,
-                              BlkList &compress_blocks);
+    FALRUBlk* findReplacement(Addr addr, PacketList & writebacks);
 
     /**
      * Return the hit latency of this cache.
@@ -248,10 +246,9 @@ public:
      * Generate the tag from the addres. For fully associative this is just the
      * block address.
      * @param addr The address to get the tag from.
-     * @param blk ignored here
      * @return The tag.
      */
-    Addr extractTag(Addr addr, FALRUBlk *blk) const
+    Addr extractTag(Addr addr) const
     {
         return blkAlign(addr);
     }

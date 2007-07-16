@@ -112,10 +112,6 @@ Bridge::BridgePort::reqQueueFull()
 bool
 Bridge::BridgePort::recvTiming(PacketPtr pkt)
 {
-    if (!(pkt->flags & SNOOP_COMMIT))
-        return true;
-
-
     DPRINTF(BusBridge, "recvTiming: src %d dest %d addr 0x%x\n",
                 pkt->getSrc(), pkt->getDest(), pkt->getAddr());
 
@@ -125,14 +121,13 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
                     otherPort->sendQueue.size(), otherPort->queuedRequests,
                     otherPort->outstandingResponses);
 
-    if (pkt->isRequest() && otherPort->reqQueueFull() && pkt->result !=
-            Packet::Nacked) {
+    if (pkt->isRequest() && otherPort->reqQueueFull() && !pkt->wasNacked()) {
         DPRINTF(BusBridge, "Remote queue full, nacking\n");
         nackRequest(pkt);
         return true;
     }
 
-    if (pkt->needsResponse() && pkt->result != Packet::Nacked)
+    if (pkt->needsResponse() && !pkt->wasNacked())
         if (respQueueFull()) {
             DPRINTF(BusBridge, "Local queue full, no space for response, nacking\n");
             DPRINTF(BusBridge, "queue size: %d outreq: %d outstanding resp: %d\n",
@@ -153,7 +148,7 @@ void
 Bridge::BridgePort::nackRequest(PacketPtr pkt)
 {
     // Nack the packet
-    pkt->result = Packet::Nacked;
+    pkt->setNacked();
     pkt->setDest(pkt->getSrc());
 
     //put it on the list to send
@@ -198,7 +193,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
 void
 Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse() || pkt->result == Packet::Nacked) {
+    if (pkt->isResponse() || pkt->wasNacked()) {
         // This is a response for a request we forwarded earlier.  The
         // corresponding PacketBuffer should be stored in the packet's
         // senderState field.
@@ -210,7 +205,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 
         // Check if this packet was expecting a response and it's a nacked
         // packet, in which case we will never being seeing it
-        if (buf->expectResponse && pkt->result == Packet::Nacked)
+        if (buf->expectResponse && pkt->wasNacked())
             --outstandingResponses;
 
         DPRINTF(BusBridge, "response, new dest %d\n", pkt->getDest());
@@ -218,7 +213,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
     }
 
 
-    if (pkt->isRequest() && pkt->result != Packet::Nacked) {
+    if (pkt->isRequest() && !pkt->wasNacked()) {
         ++queuedRequests;
     }
 
@@ -248,11 +243,9 @@ Bridge::BridgePort::trySend()
 
     PacketPtr pkt = buf->pkt;
 
-    pkt->flags &= ~SNOOP_COMMIT; //CLear it if it was set
-
     // Ugly! @todo When multilevel coherence works this will be removed
     if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&
-            pkt->result != Packet::Nacked) {
+            !pkt->wasNacked()) {
         PacketPtr funcPkt = new Packet(pkt->req, MemCmd::WriteReq,
                             Packet::Broadcast);
         funcPkt->dataStatic(pkt->getPtr<uint8_t>());
@@ -265,7 +258,7 @@ Bridge::BridgePort::trySend()
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
     bool wasReq = pkt->isRequest();
-    bool wasNacked = pkt->result == Packet::Nacked;
+    bool wasNacked = pkt->wasNacked();
 
     if (sendTiming(pkt)) {
         // send successful
@@ -340,17 +333,14 @@ void
 Bridge::BridgePort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketBuffer*>::iterator i;
-    bool pktContinue = true;
 
     for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
-        if (pkt->intersect((*i)->pkt)) {
-            pktContinue &= fixPacket(pkt, (*i)->pkt);
-        }
+        if (pkt->checkFunctional((*i)->pkt))
+            return;
     }
 
-    if (pktContinue) {
-        otherPort->sendFunctional(pkt);
-    }
+    // fall through if pkt still not satisfied
+    otherPort->sendFunctional(pkt);
 }
 
 /** Function called by the port when the bus is receiving a status change.*/
@@ -365,6 +355,8 @@ Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
                                            bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
+    // we don't allow snooping across bridges
+    snoop = false;
 }
 
 BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bridge)

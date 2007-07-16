@@ -583,7 +583,7 @@ template<class Impl>
 const char *
 BackEnd<Impl>::LdWritebackEvent::description()
 {
-    return "Load writeback event";
+    return "Load writeback";
 }
 
 
@@ -603,7 +603,7 @@ template <class Impl>
 const char *
 BackEnd<Impl>::DCacheCompletionEvent::description()
 {
-    return "Cache completion event";
+    return "Cache completion";
 }
 
 template <class Impl>

@@ -47,5 +47,5 @@ EndQuiesceEvent::process()
 const char*
 EndQuiesceEvent::description()
 {
-    return "End Quiesce Event.";
+    return "End Quiesce";
 }

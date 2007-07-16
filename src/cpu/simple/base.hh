@@ -131,9 +131,6 @@ class BaseSimpleCPU : public BaseCPU
     // The predecoder
     TheISA::Predecoder predecoder;
 
-    // Static data storage
-    TheISA::LargestRead dataReg;
-
     StaticInstPtr curStaticInst;
     StaticInstPtr curMacroStaticInst;
 

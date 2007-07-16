@@ -102,7 +102,6 @@ AlphaConsole::read(PacketPtr pkt)
      * machine dependent address swizzle is required?
      */
 
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
@@ -130,7 +129,7 @@ AlphaConsole::read(PacketPtr pkt)
                     /* Old console code read in everyting as a 32bit int
                      * we now break that for better error checking.
                      */
-                  pkt->result = Packet::BadAddress;
+                  pkt->setBadAddress();
             }
             DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
                     pkt->get<uint32_t>());
@@ -187,17 +186,15 @@ AlphaConsole::read(PacketPtr pkt)
                     pkt->get<uint64_t>());
             break;
         default:
-          pkt->result = Packet::BadAddress;
+          pkt->setBadAddress();
     }
-    if (pkt->result == Packet::Unknown)
-        pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
 Tick
 AlphaConsole::write(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;
 
@@ -245,7 +242,7 @@ AlphaConsole::write(PacketPtr pkt)
             panic("Unknown 64bit access, %#x\n", daddr);
     }
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
 
     return pioDelay;
 }

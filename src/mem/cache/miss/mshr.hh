@@ -36,22 +36,42 @@
 #ifndef __MSHR_HH__
 #define __MSHR_HH__
 
-#include "mem/packet.hh"
 #include <list>
-#include <deque>
 
-class MSHR;
+#include "mem/packet.hh"
+
+class CacheBlk;
+class MSHRQueue;
 
 /**
  * Miss Status and handling Register. This class keeps all the information
  * needed to handle a cache miss including a list of target requests.
  */
-class MSHR {
+class MSHR : public Packet::SenderState
+{
+
   public:
+
+    class Target {
+      public:
+        Tick recvTime;  //!< Time when request was received (for stats)
+        Tick readyTime; //!< Time when request is ready to be serviced
+        Counter order;  //!< Global order (for memory consistency mgmt)
+        PacketPtr pkt;  //!< Pending request packet.
+        bool cpuSide;   //!< Did request come from cpu side or mem side?
+
+        bool isCpuSide() { return cpuSide; }
+
+        Target(PacketPtr _pkt, Tick _readyTime, Counter _order, bool _cpuSide)
+            : recvTime(curTick), readyTime(_readyTime), order(_order),
+              pkt(_pkt), cpuSide(_cpuSide)
+        {}
+    };
+
     /** Defines the Data structure of the MSHR targetlist. */
-    typedef std::list<PacketPtr> TargetList;
+    typedef std::list<Target> TargetList;
     /** Target list iterator. */
-    typedef std::list<PacketPtr>::iterator TargetListIterator;
+    typedef std::list<Target>::iterator TargetListIterator;
     /** A list of MSHRs. */
     typedef std::list<MSHR *> List;
     /** MSHR list iterator. */
@@ -59,28 +79,52 @@ class MSHR {
     /** MSHR list const_iterator. */
     typedef List::const_iterator ConstIterator;
 
-    /** Address of the miss. */
+    /** Pointer to queue containing this MSHR. */
+    MSHRQueue *queue;
+
+    /** Cycle when ready to issue */
+    Tick readyTime;
+
+    /** Order number assigned by the miss queue. */
+    Counter order;
+
+    /** Address of the request. */
     Addr addr;
-    /** Adress space id of the miss. */
-    short asid;
+
+    /** Size of the request. */
+    int size;
+
     /** True if the request has been sent to the bus. */
     bool inService;
+
+    /** True if we will be putting the returned block in the cache */
+    bool isCacheFill;
+    /** True if we need to get an exclusive copy of the block. */
+    bool needsExclusive;
+
+    /** True if the request is uncacheable */
+    bool _isUncacheable;
+
+    bool deferredNeedsExclusive;
+    bool pendingInvalidate;
+    bool pendingShared;
+
     /** Thread number of the miss. */
-    int threadNum;
-    /** The request that is forwarded to the next level of the hierarchy. */
-    PacketPtr pkt;
+    short threadNum;
     /** The number of currently allocated targets. */
     short ntargets;
-    /** The original requesting command. */
-    MemCmd originalCmd;
-    /** Order number of assigned by the miss queue. */
-    uint64_t order;
+
+
+    /** Data buffer (if needed).  Currently used only for pending
+     * upgrade handling. */
+    uint8_t *data;
 
     /**
      * Pointer to this MSHR on the ready list.
      * @sa MissQueue, MSHRQueue::readyList
      */
     Iterator readyIter;
+
     /**
      * Pointer to this MSHR on the allocated list.
      * @sa MissQueue, MSHRQueue::allocatedList
@@ -91,7 +135,12 @@ private:
     /** List of all requests that match the address */
     TargetList targets;
 
+    TargetList deferredTargets;
+
 public:
+
+    bool isUncacheable() { return _isUncacheable; }
+
     /**
      * Allocate a miss to this MSHR.
      * @param cmd The requesting command.
@@ -100,14 +149,8 @@ public:
      * @param size The number of bytes to request.
      * @param pkt  The original miss.
      */
-    void allocate(MemCmd cmd, Addr addr, int size,
-                  PacketPtr &pkt);
-
-    /**
-     * Allocate this MSHR as a buffer for the given request.
-     * @param target The memory request to buffer.
-     */
-    void allocateAsBuffer(PacketPtr &target);
+    void allocate(Addr addr, int size, PacketPtr pkt,
+                  Tick when, Counter _order);
 
     /**
      * Mark this MSHR as free.
@@ -118,7 +161,8 @@ public:
      * Add a request to the list of targets.
      * @param target The target.
      */
-    void allocateTarget(PacketPtr &target);
+    void allocateTarget(PacketPtr target, Tick when, Counter order);
+    void allocateSnoopTarget(PacketPtr target, Tick when, Counter order);
 
     /** A simple constructor. */
     MSHR();
@@ -129,28 +173,19 @@ public:
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets()
-    {
-        return(ntargets);
-    }
+    int getNumTargets() { return ntargets; }
 
     /**
      * Returns a pointer to the target list.
      * @return a pointer to the target list.
      */
-    TargetList* getTargetList()
-    {
-        return &targets;
-    }
+    TargetList* getTargetList() { return &targets; }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    PacketPtr getTarget()
-    {
-        return targets.front();
-    }
+    Target *getTarget() { return &targets.front(); }
 
     /**
      * Pop first target.
@@ -165,10 +200,19 @@ public:
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets()
+    bool hasTargets() { return !targets.empty(); }
+
+    bool isSimpleForward()
     {
-        return !targets.empty();
+        if (getNumTargets() != 1)
+            return false;
+        Target *tgt = getTarget();
+        return tgt->isCpuSide() && !tgt->pkt->needsResponse();
     }
+
+    bool promoteDeferredTargets();
+
+    void handleFill(Packet *pkt, CacheBlk *blk);
 
     /**
      * Prints the contents of this MSHR to stderr.

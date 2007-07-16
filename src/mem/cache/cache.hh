@@ -28,6 +28,7 @@
  * Authors: Erik Hallnor
  *          Dave Greene
  *          Steve Reinhardt
+ *          Ron Dreslinski
  */
 
 /**
@@ -38,26 +39,23 @@
 #ifndef __CACHE_HH__
 #define __CACHE_HH__
 
-#include "base/compression/base.hh"
 #include "base/misc.hh" // fatal, panic, and warn
-#include "cpu/smt.hh" // SMT_MAX_THREADS
 
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache_blk.hh"
-#include "mem/cache/miss/miss_buffer.hh"
+#include "mem/cache/miss/mshr.hh"
+
+#include "sim/eventq.hh"
 
 //Forward decleration
-class MSHR;
 class BasePrefetcher;
 
 /**
  * A template-policy based cache. The behavior of the cache can be altered by
  * supplying different template policies. TagStore handles all tag and data
- * storage @sa TagStore. Buffering handles all misses and writes/writebacks
- * @sa MissQueue. Coherence handles all coherence policy details @sa
- * UniCoherence, SimpleMultiCoherence.
+ * storage @sa TagStore.
  */
-template <class TagStore, class Coherence>
+template <class TagStore>
 class Cache : public BaseCache
 {
   public:
@@ -74,14 +72,17 @@ class Cache : public BaseCache
     {
       public:
         CpuSidePort(const std::string &_name,
-                    Cache<TagStore,Coherence> *_cache);
+                    Cache<TagStore> *_cache);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the
         // cache pointer there.
-        Cache<TagStore,Coherence> *myCache() {
-            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        Cache<TagStore> *myCache() {
+            return static_cast<Cache<TagStore> *>(cache);
         }
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            bool &snoop);
 
         virtual bool recvTiming(PacketPtr pkt);
 
@@ -94,65 +95,42 @@ class Cache : public BaseCache
     {
       public:
         MemSidePort(const std::string &_name,
-                    Cache<TagStore,Coherence> *_cache);
+                    Cache<TagStore> *_cache);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the
         // cache pointer there.
-        Cache<TagStore,Coherence> *myCache() {
-            return static_cast<Cache<TagStore,Coherence> *>(cache);
+        Cache<TagStore> *myCache() {
+            return static_cast<Cache<TagStore> *>(cache);
         }
 
+        void sendPacket();
+
+        void processSendEvent();
+
+        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+                                            bool &snoop);
+
         virtual bool recvTiming(PacketPtr pkt);
+
+        virtual void recvRetry();
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
         virtual void recvFunctional(PacketPtr pkt);
+
+        typedef EventWrapper<MemSidePort, &MemSidePort::processSendEvent>
+                SendEvent;
     };
 
     /** Tag and data Storage */
     TagStore *tags;
-    /** Miss and Writeback handler */
-    MissBuffer *missQueue;
-    /** Coherence protocol. */
-    Coherence *coherence;
 
     /** Prefetcher */
     BasePrefetcher *prefetcher;
 
-    /**
-     * The clock ratio of the outgoing bus.
-     * Used for calculating critical word first.
-     */
-    int busRatio;
-
-     /**
-      * The bus width in bytes of the outgoing bus.
-      * Used for calculating critical word first.
-      */
-    int busWidth;
-
-    /**
-     * The latency of a hit in this device.
-     */
-    int hitLatency;
-
-     /**
-      * A permanent mem req to always be used to cause invalidations.
-      * Used to append to target list, to cause an invalidation.
-      */
-    PacketPtr invalidatePkt;
-    Request *invalidateReq;
-
-    /**
-     * Policy class for performing compression.
-     */
-    CompressionAlgorithm *compressionAlg;
-
-    /**
-     * The block size of this cache. Set to value in the Tags object.
-     */
-    const int16_t blkSize;
+    /** Temporary cache block for occasional transitory use */
+    BlkType *tempBlock;
 
     /**
      * Can this cache should allocate a block on a line-sized write miss.
@@ -162,57 +140,13 @@ class Cache : public BaseCache
     const bool prefetchMiss;
 
     /**
-     * Can the data can be stored in a compressed form.
-     */
-    const bool storeCompressed;
-
-    /**
-     * Do we need to compress blocks on writebacks (i.e. because
-     * writeback bus is compressed but storage is not)?
-     */
-    const bool compressOnWriteback;
-
-    /**
-     * The latency of a compression operation.
-     */
-    const int16_t compLatency;
-
-    /**
-     * Should we use an adaptive compression scheme.
-     */
-    const bool adaptiveCompression;
-
-    /**
-     * Do writebacks need to be compressed (i.e. because writeback bus
-     * is compressed), whether or not they're already compressed for
-     * storage.
-     */
-    const bool writebackCompressed;
-
-    /**
-     * Compare the internal block data to the fast access block data.
-     * @param blk The cache block to check.
-     * @return True if the data is the same.
-     */
-    bool verifyData(BlkType *blk);
-
-    /**
-     * Update the internal data of the block. The data to write is assumed to
-     * be in the fast access data.
-     * @param blk The block with the data to update.
-     * @param writebacks A list to store any generated writebacks.
-     * @param compress_block True if we should compress this block
-     */
-    void updateData(BlkType *blk, PacketList &writebacks, bool compress_block);
-
-    /**
      * Handle a replacement for the given request.
      * @param blk A pointer to the block, usually NULL
      * @param pkt The memory request to satisfy.
      * @param new_state The new state of the block.
      * @param writebacks A list to store any generated writebacks.
      */
-    BlkType* doReplacement(BlkType *blk, PacketPtr &pkt,
+    BlkType* doReplacement(BlkType *blk, PacketPtr pkt,
                            CacheBlk::State new_state, PacketList &writebacks);
 
     /**
@@ -224,59 +158,39 @@ class Cache : public BaseCache
      * @return Pointer to the cache block touched by the request. NULL if it
      * was a miss.
      */
-    BlkType* handleAccess(PacketPtr &pkt, int & lat,
-                          PacketList & writebacks, bool update = true);
-
+    bool access(PacketPtr pkt, BlkType *&blk, int &lat);
 
     /**
      *Handle doing the Compare and Swap function for SPARC.
      */
-    void cmpAndSwap(BlkType *blk, PacketPtr &pkt);
-
-    /**
-     * Populates a cache block and handles all outstanding requests for the
-     * satisfied fill request. This version takes an MSHR pointer and uses its
-     * request to fill the cache block, while repsonding to its targets.
-     * @param blk The cache block if it already exists.
-     * @param mshr The MSHR that contains the fill data and targets to satisfy.
-     * @param new_state The state of the new cache block.
-     * @param writebacks List for any writebacks that need to be performed.
-     * @return Pointer to the new cache block.
-     */
-    BlkType* handleFill(BlkType *blk, MSHR * mshr, CacheBlk::State new_state,
-                        PacketList & writebacks, PacketPtr pkt);
+    void cmpAndSwap(BlkType *blk, PacketPtr pkt);
 
     /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
      * Used for Cache::probe.
-     * @param blk The cache block if it already exists.
      * @param pkt The memory request with the fill data.
-     * @param new_state The state of the new cache block.
+     * @param blk The cache block if it already exists.
      * @param writebacks List for any writebacks that need to be performed.
-     * @param target The memory request to perform after the fill.
      * @return Pointer to the new cache block.
      */
-    BlkType* handleFill(BlkType *blk, PacketPtr &pkt,
-                        CacheBlk::State new_state,
-                        PacketList & writebacks, PacketPtr target = NULL);
+    BlkType *handleFill(PacketPtr pkt, BlkType *blk,
+                        PacketList &writebacks);
 
-    /**
-     * Sets the blk to the new state and handles the given request.
-     * @param blk The cache block being snooped.
-     * @param new_state The new coherence state for the block.
-     * @param pkt The request to satisfy
-     */
-    void handleSnoop(BlkType *blk, CacheBlk::State new_state,
-                     PacketPtr &pkt);
+    void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
+    bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
+
+    void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
+                                bool already_copied);
 
     /**
      * Sets the blk to the new state.
      * @param blk The cache block being snooped.
      * @param new_state The new coherence state for the block.
      */
-    void handleSnoop(BlkType *blk, CacheBlk::State new_state);
+    void handleSnoop(PacketPtr ptk, BlkType *blk,
+                     bool is_timing, bool is_deferred);
 
     /**
      * Create a writeback request for the given block.
@@ -291,44 +205,23 @@ class Cache : public BaseCache
     {
       public:
         TagStore *tags;
-        MissBuffer *missQueue;
-        Coherence *coherence;
         BaseCache::Params baseParams;
         BasePrefetcher*prefetcher;
         bool prefetchAccess;
-        int hitLatency;
-        CompressionAlgorithm *compressionAlg;
-        const int16_t blkSize;
         const bool doFastWrites;
         const bool prefetchMiss;
-        const bool storeCompressed;
-        const bool compressOnWriteback;
-        const int16_t compLatency;
-        const bool adaptiveCompression;
-        const bool writebackCompressed;
 
-        Params(TagStore *_tags, MissBuffer *mq, Coherence *coh,
+        Params(TagStore *_tags,
                BaseCache::Params params,
                BasePrefetcher *_prefetcher,
                bool prefetch_access, int hit_latency,
                bool do_fast_writes,
-               bool store_compressed, bool adaptive_compression,
-               bool writeback_compressed,
-               CompressionAlgorithm *_compressionAlg, int comp_latency,
                bool prefetch_miss)
-            : tags(_tags), missQueue(mq), coherence(coh),
+            : tags(_tags),
               baseParams(params),
               prefetcher(_prefetcher), prefetchAccess(prefetch_access),
-              hitLatency(hit_latency),
-              compressionAlg(_compressionAlg),
-              blkSize(_tags->getBlockSize()),
               doFastWrites(do_fast_writes),
-              prefetchMiss(prefetch_miss),
-              storeCompressed(store_compressed),
-              compressOnWriteback(!store_compressed && writeback_compressed),
-              compLatency(comp_latency),
-              adaptiveCompression(adaptive_compression),
-              writebackCompressed(writeback_compressed)
+              prefetchMiss(prefetch_miss)
         {
         }
     };
@@ -339,8 +232,6 @@ class Cache : public BaseCache
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     virtual void deletePortRefs(Port *p);
 
-    virtual void recvStatusChange(Port::Status status, bool isCpuSide);
-
     void regStats();
 
     /**
@@ -348,98 +239,90 @@ class Cache : public BaseCache
      * @param pkt The request to perform.
      * @return The result of the access.
      */
-    bool access(PacketPtr &pkt);
+    bool timingAccess(PacketPtr pkt);
 
     /**
-     * Selects a request to send on the bus.
-     * @return The memory request to service.
+     * Performs the access specified by the request.
+     * @param pkt The request to perform.
+     * @return The result of the access.
      */
-    virtual PacketPtr getPacket();
+    Tick atomicAccess(PacketPtr pkt);
 
     /**
-     * Was the request was sent successfully?
-     * @param pkt The request.
-     * @param success True if the request was sent successfully.
+     * Performs the access specified by the request.
+     * @param pkt The request to perform.
+     * @return The result of the access.
      */
-    virtual void sendResult(PacketPtr &pkt, MSHR* mshr, bool success);
-
-    /**
-     * Was the CSHR request was sent successfully?
-     * @param pkt The request.
-     * @param success True if the request was sent successfully.
-     */
-    virtual void sendCoherenceResult(PacketPtr &pkt, MSHR* cshr, bool success);
+    void functionalAccess(PacketPtr pkt, CachePort *otherSidePort);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The request being responded to.
      */
-    void handleResponse(PacketPtr &pkt);
-
-    /**
-     * Selects a coherence message to forward to lower levels of the hierarchy.
-     * @return The coherence message to forward.
-     */
-    virtual PacketPtr getCoherencePacket();
+    void handleResponse(PacketPtr pkt);
 
     /**
      * Snoops bus transactions to maintain coherence.
      * @param pkt The current bus transaction.
      */
-    void snoop(PacketPtr &pkt);
+    void snoopTiming(PacketPtr pkt);
 
-    void snoopResponse(PacketPtr &pkt);
+    /**
+     * Snoop for the provided request in the cache and return the estimated
+     * time of completion.
+     * @param pkt The memory request to snoop
+     * @return The estimated completion time.
+     */
+    Tick snoopAtomic(PacketPtr pkt);
 
     /**
      * Squash all requests associated with specified thread.
      * intended for use by I-cache.
      * @param threadNum The thread to squash.
      */
-    void squash(int threadNum)
+    void squash(int threadNum);
+
+    /**
+     * Selects a outstanding request to service.
+     * @return The request to service, NULL if none found.
+     */
+    PacketPtr getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
+                           bool needsExclusive);
+    MSHR *getNextMSHR();
+    PacketPtr getTimingPacket();
+
+    /**
+     * Marks a request as in service (sent on the bus). This can have side
+     * effect since storage for no response commands is deallocated once they
+     * are successfully sent.
+     * @param pkt The request that was sent on the bus.
+     */
+    void markInService(MSHR *mshr);
+
+    /**
+     * Perform the given writeback request.
+     * @param pkt The writeback request.
+     */
+    void doWriteback(PacketPtr pkt);
+
+    /**
+     * Return whether there are any outstanding misses.
+     */
+    bool outstandingMisses() const
     {
-        missQueue->squash(threadNum);
+        return mshrQueue.allocated != 0;
     }
 
-    /**
-     * Return the number of outstanding misses in a Cache.
-     * Default returns 0.
-     *
-     * @retval unsigned The number of missing still outstanding.
-     */
-    unsigned outstandingMisses() const
-    {
-        return missQueue->getMisses();
+    CacheBlk *findBlock(Addr addr) {
+        return tags->findBlock(addr);
     }
-
-    /**
-     * Perform the access specified in the request and return the estimated
-     * time of completion. This function can either update the hierarchy state
-     * or just perform the access wherever the data is found depending on the
-     * state of the update flag.
-     * @param pkt The memory request to satisfy
-     * @param update If true, update the hierarchy, otherwise just perform the
-     * request.
-     * @return The estimated completion time.
-     */
-    Tick probe(PacketPtr &pkt, bool update, CachePort * otherSidePort);
-
-    /**
-     * Snoop for the provided request in the cache and return the estimated
-     * time of completion.
-     * @todo Can a snoop probe not change state?
-     * @param pkt The memory request to satisfy
-     * @param update If true, update the hierarchy, otherwise just perform the
-     * request.
-     * @return The estimated completion time.
-     */
-    Tick snoopProbe(PacketPtr &pkt);
 
     bool inCache(Addr addr) {
         return (tags->findBlock(addr) != 0);
     }
 
     bool inMissQueue(Addr addr) {
-        return (missQueue->findMSHR(addr) != 0);
+        return (mshrQueue.findMatch(addr) != 0);
     }
 };
 

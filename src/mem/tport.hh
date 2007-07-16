@@ -105,6 +105,24 @@ class SimpleTimingPort : public Port
     bool deferredPacketReady()
     { return !transmitList.empty() && transmitList.front().tick <= curTick; }
 
+    Tick deferredPacketReadyTime()
+    { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
+
+    void schedSendEvent(Tick when)
+    {
+        if (waitingOnRetry) {
+            assert(!sendEvent->scheduled());
+            return;
+        }
+
+        if (!sendEvent->scheduled()) {
+            sendEvent->schedule(when);
+        } else if (sendEvent->when() > when) {
+            sendEvent->reschedule(when);
+        }
+    }
+
+
     /** Schedule a sendTiming() event to be called in the future.
      * @param pkt packet to send
      * @param absolute time (in ticks) to send packet

@@ -271,7 +271,7 @@ IGbE::read(PacketPtr pkt)
             pkt->set<uint32_t>(0);
     };
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -543,7 +543,7 @@ IGbE::write(PacketPtr pkt)
            panic("Write request to unknown register number: %#x\n", daddr);
     };
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

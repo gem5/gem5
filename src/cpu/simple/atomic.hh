@@ -121,13 +121,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     };
     DcachePort dcachePort;
 
-    Request  *ifetch_req;
-    PacketPtr ifetch_pkt;
-    Request  *data_read_req;
-    PacketPtr data_read_pkt;
-    Request  *data_write_req;
-    PacketPtr data_write_pkt;
-    PacketPtr data_swap_pkt;
+    Request ifetch_req;
+    Request data_read_req;
+    Request data_write_req;
 
     bool dcache_access;
     Tick dcache_latency;

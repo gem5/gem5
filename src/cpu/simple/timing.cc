@@ -260,7 +260,10 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     // Now do the access.
     if (fault == NoFault) {
         PacketPtr pkt =
-            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            new Packet(req,
+                       (req->isLocked() ?
+                        MemCmd::LoadLockedReq : MemCmd::ReadReq),
+                       Packet::Broadcast);
         pkt->dataDynamic<T>(new T);
 
         if (!dcachePort.sendTiming(pkt)) {
@@ -350,23 +353,26 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Now do the access.
     if (fault == NoFault) {
-        assert(dcache_pkt == NULL);
-        if (req->isSwap())
-            dcache_pkt = new Packet(req, MemCmd::SwapReq, Packet::Broadcast);
-        else
-            dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
-        dcache_pkt->allocate();
-        dcache_pkt->set(data);
-
+        MemCmd cmd = MemCmd::WriteReq; // default
         bool do_access = true;  // flag to suppress cache access
 
         if (req->isLocked()) {
+            cmd = MemCmd::StoreCondReq;
             do_access = TheISA::handleLockedWrite(thread, req);
+        } else if (req->isSwap()) {
+            cmd = MemCmd::SwapReq;
+            if (req->isCondSwap()) {
+                assert(res);
+                req->setExtraData(*res);
+            }
         }
-        if (req->isCondSwap()) {
-             assert(res);
-             req->setExtraData(*res);
-        }
+
+        // Note: need to allocate dcache_pkt even if do_access is
+        // false, as it's used unconditionally to call completeAcc().
+        assert(dcache_pkt == NULL);
+        dcache_pkt = new Packet(req, cmd, Packet::Broadcast);
+        dcache_pkt->allocate();
+        dcache_pkt->set(data);
 
         if (do_access) {
             if (!dcachePort.sendTiming(dcache_pkt)) {
@@ -501,7 +507,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
     // received a response from the icache: execute the received
     // instruction
-    assert(pkt->result == Packet::Success);
+    assert(!pkt->isError());
     assert(_status == IcacheWaitResponse);
 
     _status = Running;
@@ -569,7 +575,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else if (pkt->result == Packet::Nacked) {
+    else if (pkt->wasNacked()) {
         assert(cpu->_status == IcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {
@@ -600,7 +606,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 {
     // received a response from the dcache: complete the load or store
     // instruction
-    assert(pkt->result == Packet::Success);
+    assert(!pkt->isError());
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
@@ -609,7 +615,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
-    if (pkt->isRead() && pkt->req->isLocked()) {
+    if (pkt->isRead() && pkt->isLocked()) {
         TheISA::handleLockedRead(thread, pkt->req);
     }
 
@@ -663,7 +669,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 
         return true;
     }
-    else if (pkt->result == Packet::Nacked) {
+    else if (pkt->wasNacked()) {
         assert(cpu->_status == DcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {

@@ -68,7 +68,6 @@ PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
 Tick
 PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= configAddr &&
            pkt->getAddr() < configAddr + PCI_CONFIG_SIZE);
     return pkt->isRead() ? device->readConfig(pkt) : device->writeConfig(pkt);
@@ -156,7 +155,7 @@ PciDev::readConfig(PacketPtr pkt)
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return configDelay;
 
 }
@@ -283,9 +282,8 @@ PciDev::writeConfig(PacketPtr pkt)
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return configDelay;
-
 }
 
 void

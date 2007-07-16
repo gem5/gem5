@@ -55,16 +55,6 @@ typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 
-//Coherence Flags
-#define NACKED_LINE     (1 << 0)
-#define SATISFIED       (1 << 1)
-#define SHARED_LINE     (1 << 2)
-#define CACHE_LINE_FILL (1 << 3)
-#define COMPRESSED      (1 << 4)
-#define NO_ALLOCATE     (1 << 5)
-#define SNOOP_COMMIT    (1 << 6)
-
-
 class MemCmd
 {
   public:
@@ -74,23 +64,33 @@ class MemCmd
     {
         InvalidCmd,
         ReadReq,
-        WriteReq,
-        WriteReqNoAck,
         ReadResp,
+        WriteReq,
         WriteResp,
         Writeback,
         SoftPFReq,
         HardPFReq,
         SoftPFResp,
         HardPFResp,
-        InvalidateReq,
         WriteInvalidateReq,
         WriteInvalidateResp,
         UpgradeReq,
+        UpgradeResp,
         ReadExReq,
         ReadExResp,
+        LoadLockedReq,
+        LoadLockedResp,
+        StoreCondReq,
+        StoreCondResp,
         SwapReq,
         SwapResp,
+        // Error responses
+        // @TODO these should be classified as responses rather than
+        // requests; coding them as requests initially for backwards
+        // compatibility
+        NetworkNackError,  // nacked at network layer (not by protocol)
+        InvalidDestError,  // packet dest field invalid
+        BadAddressError,   // memory address invalid
         NUM_MEM_CMDS
     };
 
@@ -98,18 +98,19 @@ class MemCmd
     /** List of command attributes. */
     enum Attribute
     {
-        IsRead,
-        IsWrite,
-        IsPrefetch,
+        IsRead,         //!< Data flows from responder to requester
+        IsWrite,        //!< Data flows from requester to responder
+        IsPrefetch,     //!< Not a demand access
         IsInvalidate,
-        IsRequest,
-        IsResponse,
-        NeedsResponse,
+        NeedsExclusive, //!< Requires exclusive copy to complete in-cache
+        IsRequest,      //!< Issued by requester
+        IsResponse,     //!< Issue by responder
+        NeedsResponse,  //!< Requester needs response from target
         IsSWPrefetch,
         IsHWPrefetch,
-        IsUpgrade,
-        HasData,
-        IsReadWrite,
+        IsLocked,       //!< Alpha/MIPS LL or SC access
+        HasData,        //!< There is an associated payload
+        IsError,        //!< Error response
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -142,10 +143,13 @@ class MemCmd
     bool isWrite()  const       { return testCmdAttrib(IsWrite); }
     bool isRequest() const      { return testCmdAttrib(IsRequest); }
     bool isResponse() const     { return testCmdAttrib(IsResponse); }
+    bool needsExclusive() const { return testCmdAttrib(NeedsExclusive); }
     bool needsResponse() const  { return testCmdAttrib(NeedsResponse); }
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
-    bool isReadWrite() const    { return testCmdAttrib(IsReadWrite); }
+    bool isReadWrite() const    { return isRead() && isWrite(); }
+    bool isLocked() const       { return testCmdAttrib(IsLocked); }
+    bool isError() const        { return testCmdAttrib(IsError); }
 
     const Command responseCommand() const {
         return commandInfo[cmd].response;
@@ -189,8 +193,11 @@ class Packet : public FastAlloc
 
     typedef MemCmd::Command Command;
 
-    /** Temporary FLAGS field until cache gets working, this should be in coherence/sender state. */
-    uint64_t flags;
+    /** The command field of the packet. */
+    MemCmd cmd;
+
+    /** A pointer to the original request. */
+    RequestPtr req;
 
   private:
    /** A pointer to the data being transfered.  It can be differnt
@@ -231,11 +238,30 @@ class Packet : public FastAlloc
      *   (unlike * addr, size, and src). */
     short dest;
 
+    /** The original value of the command field.  Only valid when the
+     * current command field is an error condition; in that case, the
+     * previous contents of the command field are copied here.  This
+     * field is *not* set on non-error responses.
+     */
+    MemCmd origCmd;
+
     /** Are the 'addr' and 'size' fields valid? */
     bool addrSizeValid;
     /** Is the 'src' field valid? */
     bool srcValid;
+    bool destValid;
 
+    enum Flag {
+        // Snoop response flags
+        MemInhibit,
+        Shared,
+        // Special control flags
+        ExpressSnoop,
+        NUM_PACKET_FLAGS
+    };
+
+    /** Status flags */
+    std::bitset<NUM_PACKET_FLAGS> flags;
 
   public:
 
@@ -251,22 +277,6 @@ class Packet : public FastAlloc
     /** The special destination address indicating that the packet
      *   should be routed based on its address. */
     static const short Broadcast = -1;
-
-    /** A pointer to the original request. */
-    RequestPtr req;
-
-    /** A virtual base opaque structure used to hold coherence-related
-     *    state.  A specific subclass would be derived from this to
-     *    carry state specific to a particular coherence protocol.  */
-    class CoherenceState : public FastAlloc {
-      public:
-        virtual ~CoherenceState() {}
-    };
-
-    /** This packet's coherence state.  Caches should use
-     *   dynamic_cast<> to cast to the state appropriate for the
-     *   system's coherence protocol.  */
-    CoherenceState *coherence;
 
     /** A virtual base opaque structure used to hold state associated
      *    with the packet but specific to the sending device (e.g., an
@@ -284,11 +294,6 @@ class Packet : public FastAlloc
      *   to cast to the state appropriate to the sender. */
     SenderState *senderState;
 
-  public:
-
-    /** The command field of the packet. */
-    MemCmd cmd;
-
     /** Return the string name of the cmd field (for debugging and
      *   tracing). */
     const std::string &cmdString() const { return cmd.toString(); }
@@ -296,80 +301,95 @@ class Packet : public FastAlloc
     /** Return the index of this command. */
     inline int cmdToIndex() const { return cmd.toInt(); }
 
-  public:
-
     bool isRead() const         { return cmd.isRead(); }
     bool isWrite()  const       { return cmd.isWrite(); }
     bool isRequest() const      { return cmd.isRequest(); }
     bool isResponse() const     { return cmd.isResponse(); }
+    bool needsExclusive() const { return cmd.needsExclusive(); }
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
     bool isReadWrite() const    { return cmd.isReadWrite(); }
+    bool isLocked() const       { return cmd.isLocked(); }
+    bool isError() const        { return cmd.isError(); }
 
-    bool isCacheFill() const    { return (flags & CACHE_LINE_FILL) != 0; }
-    bool isNoAllocate() const   { return (flags & NO_ALLOCATE) != 0; }
-    bool isCompressed() const   { return (flags & COMPRESSED) != 0; }
+    // Snoop flags
+    void assertMemInhibit()     { flags[MemInhibit] = true; }
+    void assertShared()         { flags[Shared] = true; }
+    bool memInhibitAsserted()   { return flags[MemInhibit]; }
+    bool sharedAsserted()       { return flags[Shared]; }
+
+    // Special control flags
+    void setExpressSnoop()      { flags[ExpressSnoop] = true; }
+    bool isExpressSnoop()       { return flags[ExpressSnoop]; }
+
+    // Network error conditions... encapsulate them as methods since
+    // their encoding keeps changing (from result field to command
+    // field, etc.)
+    void setNacked()     { origCmd = cmd; cmd = MemCmd::NetworkNackError; }
+    void setBadAddress() { origCmd = cmd; cmd = MemCmd::BadAddressError; }
+    bool wasNacked()     { return cmd == MemCmd::NetworkNackError; }
+    bool hadBadAddress() { return cmd == MemCmd::BadAddressError; }
 
     bool nic_pkt() { panic("Unimplemented"); M5_DUMMY_RETURN }
 
-    /** Possible results of a packet's request. */
-    enum Result
-    {
-        Success,
-        BadAddress,
-        Nacked,
-        Unknown
-    };
-
-    /** The result of this packet's request. */
-    Result result;
-
     /** Accessor function that returns the source index of the packet. */
-    short getSrc() const { assert(srcValid); return src; }
+    short getSrc() const    { assert(srcValid); return src; }
     void setSrc(short _src) { src = _src; srcValid = true; }
+    /** Reset source field, e.g. to retransmit packet on different bus. */
+    void clearSrc() { srcValid = false; }
 
     /** Accessor function that returns the destination index of
         the packet. */
-    short getDest() const { return dest; }
-    void setDest(short _dest) { dest = _dest; }
+    short getDest() const     { assert(destValid); return dest; }
+    void setDest(short _dest) { dest = _dest; destValid = true; }
 
     Addr getAddr() const { assert(addrSizeValid); return addr; }
-    int getSize() const { assert(addrSizeValid); return size; }
+    int getSize() const  { assert(addrSizeValid); return size; }
     Addr getOffset(int blkSize) const { return addr & (Addr)(blkSize - 1); }
-
-    void addrOverride(Addr newAddr) { assert(addrSizeValid); addr = newAddr; }
-    void cmdOverride(MemCmd newCmd) { cmd = newCmd; }
 
     /** Constructor.  Note that a Request object must be constructed
      *   first, but the Requests's physical address and size fields
      *   need not be valid. The command and destination addresses
      *   must be supplied.  */
     Packet(Request *_req, MemCmd _cmd, short _dest)
-        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
+        :  cmd(_cmd), req(_req),
+           data(NULL), staticData(false), dynamicData(false), arrayData(false),
            addr(_req->paddr), size(_req->size), dest(_dest),
-           addrSizeValid(_req->validPaddr),
-           srcValid(false),
-           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
-           result(Unknown)
+           addrSizeValid(_req->validPaddr), srcValid(false), destValid(true),
+           flags(0), time(curTick), senderState(NULL)
     {
-        flags = 0;
-        time = curTick;
     }
 
     /** Alternate constructor if you are trying to create a packet with
      *  a request that is for a whole block, not the address from the req.
      *  this allows for overriding the size/addr of the req.*/
     Packet(Request *_req, MemCmd _cmd, short _dest, int _blkSize)
-        :  data(NULL), staticData(false), dynamicData(false), arrayData(false),
-           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize),
-           dest(_dest),
-           addrSizeValid(_req->validPaddr), srcValid(false),
-           req(_req), coherence(NULL), senderState(NULL), cmd(_cmd),
-           result(Unknown)
+        :  cmd(_cmd), req(_req),
+           data(NULL), staticData(false), dynamicData(false), arrayData(false),
+           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
+           addrSizeValid(_req->validPaddr), srcValid(false), destValid(true),
+           flags(0), time(curTick), senderState(NULL)
     {
-        flags = 0;
-        time = curTick;
+    }
+
+    /** Alternate constructor for copying a packet.  Copy all fields
+     * *except* if the original packet's data was dynamic, don't copy
+     * that, as we can't guarantee that the new packet's lifetime is
+     * less than that of the original packet.  In this case the new
+     * packet should allocate its own data. */
+    Packet(Packet *origPkt, bool clearFlags = false)
+        :  cmd(origPkt->cmd), req(origPkt->req),
+           data(origPkt->staticData ? origPkt->data : NULL),
+           staticData(origPkt->staticData),
+           dynamicData(false), arrayData(false),
+           addr(origPkt->addr), size(origPkt->size),
+           src(origPkt->src), dest(origPkt->dest),
+           addrSizeValid(origPkt->addrSizeValid),
+           srcValid(origPkt->srcValid), destValid(origPkt->destValid),
+           flags(clearFlags ? 0 : origPkt->flags),
+           time(curTick), senderState(origPkt->senderState)
+    {
     }
 
     /** Destructor. */
@@ -388,7 +408,6 @@ class Packet : public FastAlloc
         size = req->size;
         time = req->time;
         addrSizeValid = true;
-        result = Unknown;
         if (dynamicData) {
             deleteData();
             dynamicData = false;
@@ -396,29 +415,30 @@ class Packet : public FastAlloc
         }
     }
 
-    /** Take a request packet and modify it in place to be suitable
-     *   for returning as a response to that request.  Used for timing
-     *   accesses only.  For atomic and functional accesses, the
-     *   request packet is always implicitly passed back *without*
-     *   modifying the destination fields, so this function
-     *   should not be called. */
-    void makeTimingResponse() {
-        assert(needsResponse());
-        assert(isRequest());
-        cmd = cmd.responseCommand();
-        dest = src;
-        srcValid = false;
-    }
-
     /**
      * Take a request packet and modify it in place to be suitable for
-     * returning as a response to that request.
+     * returning as a response to that request.  The source and
+     * destination fields are *not* modified, as is appropriate for
+     * atomic accesses.
      */
-    void makeAtomicResponse()
+    void makeResponse()
     {
         assert(needsResponse());
         assert(isRequest());
         cmd = cmd.responseCommand();
+        dest = src;
+        destValid = srcValid;
+        srcValid = false;
+    }
+
+    void makeAtomicResponse()
+    {
+        makeResponse();
+    }
+
+    void makeTimingResponse()
+    {
+        makeResponse();
     }
 
     /**
@@ -429,9 +449,10 @@ class Packet : public FastAlloc
     void
     reinitNacked()
     {
-        assert(needsResponse() && result == Nacked);
-        dest =  Broadcast;
-        result = Unknown;
+        assert(wasNacked());
+        cmd = origCmd;
+        assert(needsResponse());
+        setDest(Broadcast);
     }
 
 
@@ -495,6 +516,40 @@ class Packet : public FastAlloc
     void set(T v);
 
     /**
+     * Copy data into the packet from the provided pointer.
+     */
+    void setData(uint8_t *p)
+    {
+        std::memcpy(getPtr<uint8_t>(), p, getSize());
+    }
+
+    /**
+     * Copy data into the packet from the provided block pointer,
+     * which is aligned to the given block size.
+     */
+    void setDataFromBlock(uint8_t *blk_data, int blkSize)
+    {
+        setData(blk_data + getOffset(blkSize));
+    }
+
+    /**
+     * Copy data from the packet to the provided block pointer, which
+     * is aligned to the given block size.
+     */
+    void writeData(uint8_t *p)
+    {
+        std::memcpy(p, getPtr<uint8_t>(), getSize());
+    }
+
+    /**
+     * Copy data from the packet to the memory at the provided pointer.
+     */
+    void writeDataToBlock(uint8_t *blk_data, int blkSize)
+    {
+        writeData(blk_data + getOffset(blkSize));
+    }
+
+    /**
      * delete the data pointed to in the data pointer. Ok to call to
      * matter how data was allocted.
      */
@@ -505,22 +560,26 @@ class Packet : public FastAlloc
 
     /** Do the packet modify the same addresses. */
     bool intersect(PacketPtr p);
+
+    /**
+     * Check a functional request against a memory value represented
+     * by a base/size pair and an associated data array.  If the
+     * functional request is a read, it may be satisfied by the memory
+     * value.  If the functional request is a write, it may update the
+     * memory value.
+     */
+    bool checkFunctional(Addr base, int size, uint8_t *data);
+
+    /**
+     * Check a functional request against a memory value stored in
+     * another packet (i.e. an in-transit request or response).
+     */
+    bool checkFunctional(PacketPtr otherPkt) {
+        return (otherPkt->hasData() &&
+                checkFunctional(otherPkt->getAddr(), otherPkt->getSize(),
+                                otherPkt->getPtr<uint8_t>()));
+    }
 };
-
-/** This function given a functional packet and a timing packet either
- * satisfies the timing packet, or updates the timing packet to
- * reflect the updated state in the timing packet. It returns if the
- * functional packet should continue to traverse the memory hierarchy
- * or not.
- */
-bool fixPacket(PacketPtr func, PacketPtr timing);
-
-/** This function is a wrapper for the fixPacket field that toggles
- * the hasData bit it is used when a response is waiting in the
- * caches, but hasn't been marked as a response yet (so the fixPacket
- * needs to get the correct value for the hasData)
- */
-bool fixDelayedResponsePacket(PacketPtr func, PacketPtr timing);
 
 std::ostream & operator<<(std::ostream &o, const Packet &p);
 

@@ -40,11 +40,8 @@ SimpleTimingPort::checkFunctional(PacketPtr pkt)
         PacketPtr target = i->pkt;
         // If the target contains data, and it overlaps the
         // probed request, need to update data
-        if (target->intersect(pkt)) {
-            if (!fixPacket(pkt, target)) {
-                // fixPacket returns true for continue, false for done
-                return;
-            }
+        if (pkt->checkFunctional(target)) {
+            return;
         }
     }
 }
@@ -55,7 +52,7 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
     checkFunctional(pkt);
 
     // Just do an atomic access and throw away the returned latency
-    if (pkt->result != Packet::Success)
+    if (!pkt->isResponse())
         recvAtomic(pkt);
 }
 
@@ -67,17 +64,29 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // code to hanldle nacks here, but I'm pretty sure it didn't work
     // correctly with the drain code, so that would need to be fixed
     // if we ever added it back.
-    assert(pkt->result != Packet::Nacked);
+    assert(pkt->isRequest());
+
+    if (pkt->memInhibitAsserted()) {
+        // snooper will supply based on copy of packet
+        // still target's responsibility to delete packet
+        delete pkt->req;
+        delete pkt;
+        return true;
+    }
+
+    bool needsResponse = pkt->needsResponse();
     Tick latency = recvAtomic(pkt);
     // turn packet around to go back to requester if response expected
-    if (pkt->needsResponse()) {
-        pkt->makeTimingResponse();
+    if (needsResponse) {
+        // recvAtomic() should already have turned packet into
+        // atomic response
+        assert(pkt->isResponse());
         schedSendTiming(pkt, curTick + latency);
-    }
-    else if (pkt->cmd != MemCmd::UpgradeReq) {
+    } else {
         delete pkt->req;
         delete pkt;
     }
+
     return true;
 }
 
@@ -88,28 +97,30 @@ SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
     assert(when > curTick);
 
     // Nothing is on the list: add it and schedule an event
-    if (transmitList.empty()) {
-        assert(!sendEvent->scheduled());
-        sendEvent->schedule(when);
-        transmitList.push_back(DeferredPacket(when, pkt));
+    if (transmitList.empty() || when < transmitList.front().tick) {
+        transmitList.push_front(DeferredPacket(when, pkt));
+        schedSendEvent(when);
         return;
     }
 
-    // something is on the list and this belongs at the end
+    // list is non-empty and this is not the head, so event should
+    // already be scheduled
+    assert(waitingOnRetry ||
+           (sendEvent->scheduled() && sendEvent->when() <= when));
+
+    // list is non-empty & this belongs at the end
     if (when >= transmitList.back().tick) {
         transmitList.push_back(DeferredPacket(when, pkt));
         return;
     }
-    // Something is on the list and this belongs somewhere else
+
+    // this belongs in the middle somewhere
     DeferredPacketIterator i = transmitList.begin();
+    i++; // already checked for insertion at front
     DeferredPacketIterator end = transmitList.end();
 
     for (; i != end; ++i) {
         if (when < i->tick) {
-            if (i == transmitList.begin()) {
-                //Inserting at begining, reschedule
-                sendEvent->reschedule(when);
-            }
             transmitList.insert(i, DeferredPacket(when, pkt));
             return;
         }
@@ -122,12 +133,15 @@ void
 SimpleTimingPort::sendDeferredPacket()
 {
     assert(deferredPacketReady());
-    bool success = sendTiming(transmitList.front().pkt);
+    // take packet off list here; if recvTiming() on the other side
+    // calls sendTiming() back on us (like SimpleTimingCpu does), then
+    // we get confused by having a non-active packet on transmitList
+    DeferredPacket dp = transmitList.front();
+    transmitList.pop_front();
+    bool success = sendTiming(dp.pkt);
 
     if (success) {
-        //send successful, remove packet
-        transmitList.pop_front();
-        if (!transmitList.empty()) {
+        if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
             sendEvent->schedule(time <= curTick ? curTick+1 : time);
         }
@@ -136,6 +150,12 @@ SimpleTimingPort::sendDeferredPacket()
             drainEvent->process();
             drainEvent = NULL;
         }
+    } else {
+        // Unsuccessful, need to put back on transmitList.  Callee
+        // should not have messed with it (since it didn't accept that
+        // packet), so we can just push it back on the front.
+        assert(!sendEvent->scheduled());
+        transmitList.push_front(dp);
     }
 
     waitingOnRetry = !success;

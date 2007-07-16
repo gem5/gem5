@@ -643,7 +643,10 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     // if we the cache is not blocked, do cache access
     if (!lsq->cacheBlocked()) {
         PacketPtr data_pkt =
-            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            new Packet(req,
+                       (req->isLocked() ?
+                        MemCmd::LoadLockedReq : MemCmd::ReadReq),
+                       Packet::Broadcast);
         data_pkt->dataStatic(load_inst->memData);
 
         LSQSenderState *state = new LSQSenderState;
@@ -653,8 +656,6 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
         data_pkt->senderState = state;
 
         if (!dcachePort->sendTiming(data_pkt)) {
-            Packet::Result result = data_pkt->result;
-
             // Delete state and data packet because a load retry
             // initiates a pipeline restart; it does not retry.
             delete state;
@@ -662,10 +663,6 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             delete data_pkt;
 
             req = NULL;
-
-            if (result == Packet::BadAddress) {
-                return TheISA::genMachineCheckFault();
-            }
 
             // If the access didn't succeed, tell the LSQ by setting
             // the retry thread id.

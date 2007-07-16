@@ -56,17 +56,16 @@ MemCmd::commandInfo[] =
     { 0, InvalidCmd, "InvalidCmd" },
     /* ReadReq */
     { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
-    /* WriteReq */
-    { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
-            WriteResp, "WriteReq" },
-    /* WriteReqNoAck */
-    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "WriteReqNoAck" },
     /* ReadResp */
     { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
+    /* WriteReq */
+    { SET5(IsWrite, NeedsExclusive, IsRequest, NeedsResponse, HasData),
+            WriteResp, "WriteReq" },
     /* WriteResp */
-    { SET2(IsWrite, IsResponse), InvalidCmd, "WriteResp" },
+    { SET3(IsWrite, NeedsExclusive, IsResponse), InvalidCmd, "WriteResp" },
     /* Writeback */
-    { SET3(IsWrite, IsRequest, HasData), InvalidCmd, "Writeback" },
+    { SET4(IsWrite, NeedsExclusive, IsRequest, HasData),
+            InvalidCmd, "Writeback" },
     /* SoftPFReq */
     { SET4(IsRead, IsRequest, IsSWPrefetch, NeedsResponse),
             SoftPFResp, "SoftPFReq" },
@@ -79,28 +78,50 @@ MemCmd::commandInfo[] =
     /* HardPFResp */
     { SET4(IsRead, IsResponse, IsHWPrefetch, HasData),
             InvalidCmd, "HardPFResp" },
-    /* InvalidateReq */
-    { SET2(IsInvalidate, IsRequest), InvalidCmd, "InvalidateReq" },
     /* WriteInvalidateReq */
-    { SET5(IsWrite, IsInvalidate, IsRequest, HasData, NeedsResponse),
+    { SET6(IsWrite, NeedsExclusive, IsInvalidate,
+           IsRequest, HasData, NeedsResponse),
             WriteInvalidateResp, "WriteInvalidateReq" },
     /* WriteInvalidateResp */
-    { SET3(IsWrite, IsInvalidate, IsResponse),
+    { SET4(IsWrite, NeedsExclusive, IsInvalidate, IsResponse),
             InvalidCmd, "WriteInvalidateResp" },
     /* UpgradeReq */
-    { SET3(IsInvalidate, IsRequest, IsUpgrade), InvalidCmd, "UpgradeReq" },
+    { SET4(IsInvalidate, NeedsExclusive, IsRequest, NeedsResponse),
+            UpgradeResp, "UpgradeReq" },
+    /* UpgradeResp */
+    { SET3(IsInvalidate, NeedsExclusive, IsResponse),
+            InvalidCmd, "UpgradeResp" },
     /* ReadExReq */
-    { SET4(IsRead, IsInvalidate, IsRequest, NeedsResponse),
+    { SET5(IsRead, NeedsExclusive, IsInvalidate, IsRequest, NeedsResponse),
             ReadExResp, "ReadExReq" },
     /* ReadExResp */
-    { SET4(IsRead, IsInvalidate, IsResponse, HasData),
+    { SET5(IsRead, NeedsExclusive, IsInvalidate, IsResponse, HasData),
             InvalidCmd, "ReadExResp" },
+    /* LoadLockedReq */
+    { SET4(IsRead, IsLocked, IsRequest, NeedsResponse),
+            LoadLockedResp, "LoadLockedReq" },
+    /* LoadLockedResp */
+    { SET4(IsRead, IsLocked, IsResponse, HasData),
+            InvalidCmd, "LoadLockedResp" },
+    /* StoreCondReq */
+    { SET6(IsWrite, NeedsExclusive, IsLocked,
+           IsRequest, NeedsResponse, HasData),
+            StoreCondResp, "StoreCondReq" },
+    /* StoreCondResp */
+    { SET4(IsWrite, NeedsExclusive, IsLocked, IsResponse),
+            InvalidCmd, "StoreCondResp" },
     /* SwapReq -- for Swap ldstub type operations */
-    { SET4(IsReadWrite, IsRequest, HasData, NeedsResponse),
+    { SET6(IsRead, IsWrite, NeedsExclusive, IsRequest, HasData, NeedsResponse),
         SwapResp, "SwapReq" },
     /* SwapResp -- for Swap ldstub type operations */
-    { SET3(IsReadWrite, IsResponse, HasData),
-        InvalidCmd, "SwapResp" }
+    { SET5(IsRead, IsWrite, NeedsExclusive, IsResponse, HasData),
+            InvalidCmd, "SwapResp" },
+    /* NetworkNackError  -- nacked at network layer (not by protocol) */
+    { SET2(IsRequest, IsError), InvalidCmd, "NetworkNackError" },
+    /* InvalidDestError  -- packet dest field invalid */
+    { SET2(IsRequest, IsError), InvalidCmd, "InvalidDestError" },
+    /* BadAddressError   -- memory address invalid */
+    { SET2(IsRequest, IsError), InvalidCmd, "BadAddressError" }
 };
 
 
@@ -143,54 +164,30 @@ Packet::intersect(PacketPtr p)
     return !(s1 > e2 || e1 < s2);
 }
 
-bool
-fixDelayedResponsePacket(PacketPtr func, PacketPtr timing)
-{
-    bool result;
-
-    if (timing->isRead() || timing->isWrite()) {
-        // Ugly hack to deal with the fact that we queue the requests
-        // and don't convert them to responses until we issue them on
-        // the bus.  I tried to avoid this by converting packets to
-        // responses right away, but this breaks during snoops where a
-        // responder may do the conversion before other caches have
-        // done the snoop.  Would work if we copied the packet instead
-        // of just hanging on to a pointer.
-        MemCmd oldCmd = timing->cmd;
-        timing->cmd = timing->cmd.responseCommand();
-        result = fixPacket(func, timing);
-        timing->cmd = oldCmd;
-    }
-    else {
-        //Don't toggle if it isn't a read/write response
-        result = fixPacket(func, timing);
-    }
-
-    return result;
-}
 
 bool
-fixPacket(PacketPtr func, PacketPtr timing)
+Packet::checkFunctional(Addr addr, int size, uint8_t *data)
 {
-    Addr funcStart      = func->getAddr();
-    Addr funcEnd        = func->getAddr() + func->getSize() - 1;
-    Addr timingStart    = timing->getAddr();
-    Addr timingEnd      = timing->getAddr() + timing->getSize() - 1;
+    Addr func_start = getAddr();
+    Addr func_end   = getAddr() + getSize() - 1;
+    Addr val_start  = addr;
+    Addr val_end    = val_start + size - 1;
 
-    assert(!(funcStart > timingEnd || timingStart > funcEnd));
+    if (func_start > val_end || val_start > func_end) {
+        // no intersection
+        return false;
+    }
 
-    // this packet can't solve our problem, continue on
-    if (!timing->hasData())
-        return true;
+    // offset of functional request into supplied value (could be
+    // negative if partial overlap)
+    int offset = func_start - val_start;
 
-    if (func->isRead()) {
-        if (funcStart >= timingStart && funcEnd <= timingEnd) {
-            func->allocate();
-            std::memcpy(func->getPtr<uint8_t>(), timing->getPtr<uint8_t>() +
-                    funcStart - timingStart, func->getSize());
-            func->result = Packet::Success;
-            func->flags |= SATISFIED;
-            return false;
+    if (isRead()) {
+        if (func_start >= val_start && func_end <= val_end) {
+            allocate();
+            std::memcpy(getPtr<uint8_t>(), data + offset, getSize());
+            makeResponse();
+            return true;
         } else {
             // In this case the timing packet only partially satisfies
             // the request, so we would need more information to make
@@ -198,25 +195,21 @@ fixPacket(PacketPtr func, PacketPtr timing)
             // something, so the request could continue and get this
             // bit of possibly newer data along with the older data
             // not written to yet.
-            panic("Timing packet only partially satisfies the functional"
-                    "request. Now what?");
+            panic("Memory value only partially satisfies the functional "
+                  "request. Now what?");
         }
-    } else if (func->isWrite()) {
-        if (funcStart >= timingStart) {
-            std::memcpy(timing->getPtr<uint8_t>() + (funcStart - timingStart),
-                   func->getPtr<uint8_t>(),
-                   (std::min(funcEnd, timingEnd) - funcStart) + 1);
-        } else { // timingStart > funcStart
-            std::memcpy(timing->getPtr<uint8_t>(),
-                   func->getPtr<uint8_t>() + (timingStart - funcStart),
-                   (std::min(funcEnd, timingEnd) - timingStart) + 1);
+    } else if (isWrite()) {
+        if (offset >= 0) {
+            std::memcpy(data + offset, getPtr<uint8_t>(),
+                        (std::min(func_end, val_end) - func_start) + 1);
+        } else { // val_start > func_start
+            std::memcpy(data, getPtr<uint8_t>() - offset,
+                        (std::min(func_end, val_end) - val_start) + 1);
         }
         // we always want to keep going with a write
-        return true;
+        return false;
     } else
-        panic("Don't know how to handle command type %#x\n",
-                func->cmdToIndex());
-
+        panic("Don't know how to handle command %s\n", cmdString());
 }
 
 
@@ -233,21 +226,10 @@ operator<<(std::ostream &o, const Packet &p)
     o <<  p.getAddr() + p.getSize() - 1 << "] ";
     o.unsetf(std::ios_base::hex| std::ios_base::showbase);
 
-    if (p.result == Packet::Success)
-        o << "Successful ";
-    if (p.result == Packet::BadAddress)
-        o << "BadAddress ";
-    if (p.result == Packet::Nacked)
-        o << "Nacked ";
-    if (p.result == Packet::Unknown)
-        o << "Inflight ";
-
     if (p.isRead())
         o << "Read ";
     if (p.isWrite())
         o << "Write ";
-    if (p.isReadWrite())
-        o << "Read/Write ";
     if (p.isInvalidate())
         o << "Invalidate ";
     if (p.isRequest())

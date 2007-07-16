@@ -56,7 +56,6 @@ IsaFake::IsaFake(Params *p)
 Tick
 IsaFake::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
 
     if (params()->warnAccess != "")
         warn("Device %s accessed by read to address %#x size=%d\n",
@@ -64,7 +63,7 @@ IsaFake::read(PacketPtr pkt)
     if (params()->retBadAddr) {
         DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
-        pkt->result = Packet::BadAddress;
+        pkt->setBadAddress();
     } else {
         assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
         DPRINTF(Tsunami, "read  va=%#x size=%d\n",
@@ -85,7 +84,7 @@ IsaFake::read(PacketPtr pkt)
           default:
             panic("invalid access size!\n");
         }
-        pkt->result = Packet::Success;
+        pkt->makeAtomicResponse();
     }
     return pioDelay;
 }
@@ -117,7 +116,7 @@ IsaFake::write(PacketPtr pkt)
     if (params()->retBadAddr) {
         DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
-        pkt->result = Packet::BadAddress;
+        pkt->setBadAddress();
     } else {
         DPRINTF(Tsunami, "write - va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
@@ -140,7 +139,7 @@ IsaFake::write(PacketPtr pkt)
                 panic("invalid access size!\n");
             }
         }
-        pkt->result = Packet::Success;
+        pkt->makeAtomicResponse();
     }
     return pioDelay;
 }

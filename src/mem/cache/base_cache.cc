@@ -40,28 +40,35 @@
 
 using namespace std;
 
-BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
-                                bool _isCpuSide)
-    : Port(_name, _cache), cache(_cache), isCpuSide(_isCpuSide)
+BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
+    : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
+      blocked(false), mustSendRetry(false)
 {
-    blocked = false;
-    waitingOnRetry = false;
-    //Start ports at null if more than one is created we should panic
-    //cpuSidePort = NULL;
-    //memSidePort = NULL;
+}
+
+
+BaseCache::BaseCache(const std::string &name, Params &params)
+    : MemObject(name),
+      mshrQueue(params.numMSHRs, 4, MSHRQueue_MSHRs),
+      writeBuffer(params.numWriteBuffers, params.numMSHRs+1000,
+                  MSHRQueue_WriteBuffer),
+      blkSize(params.blkSize),
+      hitLatency(params.hitLatency),
+      numTarget(params.numTargets),
+      blocked(0),
+      noTargetMSHR(NULL),
+      missCount(params.maxMisses),
+      drainEvent(NULL)
+{
 }
 
 
 void
 BaseCache::CachePort::recvStatusChange(Port::Status status)
 {
-    cache->recvStatusChange(status, isCpuSide);
-}
-
-void
-BaseCache::CachePort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
-{
-    cache->getAddressRanges(resp, snoop, isCpuSide);
+    if (status == Port::RangeChange) {
+        otherPort->sendStatusChange(Port::RangeChange);
+    }
 }
 
 int
@@ -70,136 +77,25 @@ BaseCache::CachePort::deviceBlockSize()
     return cache->getBlockSize();
 }
 
-bool
-BaseCache::CachePort::checkFunctional(PacketPtr pkt)
-{
-    //Check storage here first
-    list<PacketPtr>::iterator i = drainList.begin();
-    list<PacketPtr>::iterator iend = drainList.end();
-    bool notDone = true;
-    while (i != iend && notDone) {
-        PacketPtr target = *i;
-        // If the target contains data, and it overlaps the
-        // probed request, need to update data
-        if (target->intersect(pkt)) {
-            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a drain\n",
-                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
-            notDone = fixPacket(pkt, target);
-        }
-        i++;
-    }
-    //Also check the response not yet ready to be on the list
-    std::list<std::pair<Tick,PacketPtr> >::iterator j = transmitList.begin();
-    std::list<std::pair<Tick,PacketPtr> >::iterator jend = transmitList.end();
-
-    while (j != jend && notDone) {
-        PacketPtr target = j->second;
-        // If the target contains data, and it overlaps the
-        // probed request, need to update data
-        if (target->intersect(pkt)) {
-            DPRINTF(Cache, "Functional %s access to blk_addr %x intersects a response\n",
-                    pkt->cmdString(), pkt->getAddr() & ~(cache->getBlockSize() - 1));
-            notDone = fixDelayedResponsePacket(pkt, target);
-        }
-        j++;
-    }
-    return notDone;
-}
 
 void
 BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
 {
-    bool notDone = checkFunctional(pkt);
-    if (notDone)
+    checkFunctional(pkt);
+    if (!pkt->isResponse())
         sendFunctional(pkt);
 }
 
-void
-BaseCache::CachePort::recvRetry()
+
+bool
+BaseCache::CachePort::recvRetryCommon()
 {
-    PacketPtr pkt;
     assert(waitingOnRetry);
-    if (!drainList.empty()) {
-        DPRINTF(CachePort, "%s attempting to send a retry for response (%i waiting)\n"
-                , name(), drainList.size());
-        //We have some responses to drain first
-        pkt = drainList.front();
-        drainList.pop_front();
-        if (sendTiming(pkt)) {
-            DPRINTF(CachePort, "%s sucessful in sending a retry for"
-                    "response (%i still waiting)\n", name(), drainList.size());
-            if (!drainList.empty() ||
-                !isCpuSide && cache->doMasterRequest() ||
-                isCpuSide && cache->doSlaveRequest()) {
-
-                DPRINTF(CachePort, "%s has more responses/requests\n", name());
-                new BaseCache::RequestEvent(this, curTick + 1);
-            }
-            waitingOnRetry = false;
-        }
-        else {
-            drainList.push_front(pkt);
-        }
-        // Check if we're done draining once this list is empty
-        if (drainList.empty())
-            cache->checkDrain();
-    }
-    else if (!isCpuSide)
-    {
-        DPRINTF(CachePort, "%s attempting to send a retry for MSHR\n", name());
-        if (!cache->doMasterRequest()) {
-            //This can happen if I am the owner of a block and see an upgrade
-            //while the block was in my WB Buffers.  I just remove the
-            //wb and de-assert the masterRequest
-            waitingOnRetry = false;
-            return;
-        }
-        pkt = cache->getPacket();
-        MSHR* mshr = (MSHR*) pkt->senderState;
-        //Copy the packet, it may be modified/destroyed elsewhere
-        PacketPtr copyPkt = new Packet(*pkt);
-        copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
-        mshr->pkt = copyPkt;
-
-        bool success = sendTiming(pkt);
-        DPRINTF(CachePort, "Address %x was %s in sending the timing request\n",
-                pkt->getAddr(), success ? "succesful" : "unsuccesful");
-
-        waitingOnRetry = !success;
-        if (waitingOnRetry) {
-            DPRINTF(CachePort, "%s now waiting on a retry\n", name());
-        }
-
-        cache->sendResult(pkt, mshr, success);
-
-        if (success && cache->doMasterRequest())
-        {
-            DPRINTF(CachePort, "%s has more requests\n", name());
-            //Still more to issue, rerequest in 1 cycle
-            new BaseCache::RequestEvent(this, curTick + 1);
-        }
-    }
-    else
-    {
-        assert(cache->doSlaveRequest());
-        //pkt = cache->getCoherencePacket();
-        //We save the packet, no reordering on CSHRS
-        pkt = cache->getCoherencePacket();
-        MSHR* cshr = (MSHR*)pkt->senderState;
-        bool success = sendTiming(pkt);
-        cache->sendCoherenceResult(pkt, cshr, success);
-        waitingOnRetry = !success;
-        if (success && cache->doSlaveRequest())
-        {
-            DPRINTF(CachePort, "%s has more requests\n", name());
-            //Still more to issue, rerequest in 1 cycle
-            new BaseCache::RequestEvent(this, curTick + 1);
-        }
-    }
-    if (waitingOnRetry) DPRINTF(CachePort, "%s STILL Waiting on retry\n", name());
-    else DPRINTF(CachePort, "%s no longer waiting on retry\n", name());
-    return;
+    waitingOnRetry = false;
+    return false;
 }
+
+
 void
 BaseCache::CachePort::setBlocked()
 {
@@ -220,147 +116,12 @@ BaseCache::CachePort::clearBlocked()
     {
         DPRINTF(Cache, "Cache Sending Retry\n");
         mustSendRetry = false;
-        sendRetry();
+        SendRetryEvent *ev = new SendRetryEvent(this, true);
+        // @TODO: need to find a better time (next bus cycle?)
+        ev->schedule(curTick + 1);
     }
 }
 
-BaseCache::RequestEvent::RequestEvent(CachePort *_cachePort, Tick when)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
-{
-    this->setFlags(AutoDelete);
-    schedule(when);
-}
-
-void
-BaseCache::RequestEvent::process()
-{
-    if (cachePort->waitingOnRetry) return;
-    //We have some responses to drain first
-    if (!cachePort->drainList.empty()) {
-        DPRINTF(CachePort, "%s trying to drain a response\n", cachePort->name());
-        if (cachePort->sendTiming(cachePort->drainList.front())) {
-            DPRINTF(CachePort, "%s drains a response succesfully\n", cachePort->name());
-            cachePort->drainList.pop_front();
-            if (!cachePort->drainList.empty() ||
-                !cachePort->isCpuSide && cachePort->cache->doMasterRequest() ||
-                cachePort->isCpuSide && cachePort->cache->doSlaveRequest()) {
-
-                DPRINTF(CachePort, "%s still has outstanding bus reqs\n", cachePort->name());
-                this->schedule(curTick + 1);
-            }
-        }
-        else {
-            cachePort->waitingOnRetry = true;
-            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-        }
-    }
-    else if (!cachePort->isCpuSide)
-    {            //MSHR
-        DPRINTF(CachePort, "%s trying to send a MSHR request\n", cachePort->name());
-        if (!cachePort->cache->doMasterRequest()) {
-            //This can happen if I am the owner of a block and see an upgrade
-            //while the block was in my WB Buffers.  I just remove the
-            //wb and de-assert the masterRequest
-            return;
-        }
-
-        PacketPtr pkt = cachePort->cache->getPacket();
-        MSHR* mshr = (MSHR*) pkt->senderState;
-        //Copy the packet, it may be modified/destroyed elsewhere
-        PacketPtr copyPkt = new Packet(*pkt);
-        copyPkt->dataStatic<uint8_t>(pkt->getPtr<uint8_t>());
-        mshr->pkt = copyPkt;
-
-        bool success = cachePort->sendTiming(pkt);
-        DPRINTF(CachePort, "Address %x was %s in sending the timing request\n",
-                pkt->getAddr(), success ? "succesful" : "unsuccesful");
-
-        cachePort->waitingOnRetry = !success;
-        if (cachePort->waitingOnRetry) {
-            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-        }
-
-        cachePort->cache->sendResult(pkt, mshr, success);
-        if (success && cachePort->cache->doMasterRequest())
-        {
-            DPRINTF(CachePort, "%s still more MSHR requests to send\n",
-                    cachePort->name());
-            //Still more to issue, rerequest in 1 cycle
-            this->schedule(curTick+1);
-        }
-    }
-    else
-    {
-        //CSHR
-        assert(cachePort->cache->doSlaveRequest());
-        PacketPtr pkt = cachePort->cache->getCoherencePacket();
-        MSHR* cshr = (MSHR*) pkt->senderState;
-        bool success = cachePort->sendTiming(pkt);
-        cachePort->cache->sendCoherenceResult(pkt, cshr, success);
-        cachePort->waitingOnRetry = !success;
-        if (cachePort->waitingOnRetry)
-            DPRINTF(CachePort, "%s now waiting on a retry\n", cachePort->name());
-        if (success && cachePort->cache->doSlaveRequest())
-        {
-            DPRINTF(CachePort, "%s still more CSHR requests to send\n",
-                    cachePort->name());
-            //Still more to issue, rerequest in 1 cycle
-            this->schedule(curTick+1);
-        }
-    }
-}
-
-const char *
-BaseCache::RequestEvent::description()
-{
-    return "Cache request event";
-}
-
-BaseCache::ResponseEvent::ResponseEvent(CachePort *_cachePort)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cachePort(_cachePort)
-{
-}
-
-void
-BaseCache::ResponseEvent::process()
-{
-    assert(cachePort->transmitList.size());
-    assert(cachePort->transmitList.front().first <= curTick);
-    PacketPtr pkt = cachePort->transmitList.front().second;
-    cachePort->transmitList.pop_front();
-    if (!cachePort->transmitList.empty()) {
-        Tick time = cachePort->transmitList.front().first;
-        schedule(time <= curTick ? curTick+1 : time);
-    }
-
-    if (pkt->flags & NACKED_LINE)
-        pkt->result = Packet::Nacked;
-    else
-        pkt->result = Packet::Success;
-    pkt->makeTimingResponse();
-    DPRINTF(CachePort, "%s attempting to send a response\n", cachePort->name());
-    if (!cachePort->drainList.empty() || cachePort->waitingOnRetry) {
-        //Already have a list, just append
-        cachePort->drainList.push_back(pkt);
-        DPRINTF(CachePort, "%s appending response onto drain list\n", cachePort->name());
-    }
-    else if (!cachePort->sendTiming(pkt)) {
-        //It failed, save it to list of drain events
-        DPRINTF(CachePort, "%s now waiting for a retry\n", cachePort->name());
-        cachePort->drainList.push_back(pkt);
-        cachePort->waitingOnRetry = true;
-    }
-
-    // Check if we're done draining once this list is empty
-    if (cachePort->drainList.empty() && cachePort->transmitList.empty())
-        cachePort->cache->checkDrain();
-}
-
-const char *
-BaseCache::ResponseEvent::description()
-{
-    return "Cache response event";
-}
 
 void
 BaseCache::init()
@@ -369,6 +130,7 @@ BaseCache::init()
         panic("Cache not hooked up on both sides\n");
     cpuSidePort->sendStatusChange(Port::RangeChange);
 }
+
 
 void
 BaseCache::regStats()
@@ -388,20 +150,29 @@ BaseCache::regStats()
             ;
     }
 
+// These macros make it easier to sum the right subset of commands and
+// to change the subset of commands that are considered "demand" vs
+// "non-demand"
+#define SUM_DEMAND(s) \
+    (s[MemCmd::ReadReq] + s[MemCmd::WriteReq] + s[MemCmd::ReadExReq])
+
+// should writebacks be included here?  prior code was inconsistent...
+#define SUM_NON_DEMAND(s) \
+    (s[MemCmd::SoftPFReq] + s[MemCmd::HardPFReq])
+
     demandHits
         .name(name() + ".demand_hits")
         .desc("number of demand (read+write) hits")
         .flags(total)
         ;
-    demandHits = hits[MemCmd::ReadReq] + hits[MemCmd::WriteReq];
+    demandHits = SUM_DEMAND(hits);
 
     overallHits
         .name(name() + ".overall_hits")
         .desc("number of overall hits")
         .flags(total)
         ;
-    overallHits = demandHits + hits[MemCmd::SoftPFReq] + hits[MemCmd::HardPFReq]
-        + hits[MemCmd::Writeback];
+    overallHits = demandHits + SUM_NON_DEMAND(hits);
 
     // Miss statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -421,15 +192,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) misses")
         .flags(total)
         ;
-    demandMisses = misses[MemCmd::ReadReq] + misses[MemCmd::WriteReq];
+    demandMisses = SUM_DEMAND(misses);
 
     overallMisses
         .name(name() + ".overall_misses")
         .desc("number of overall misses")
         .flags(total)
         ;
-    overallMisses = demandMisses + misses[MemCmd::SoftPFReq] +
-        misses[MemCmd::HardPFReq] + misses[MemCmd::Writeback];
+    overallMisses = demandMisses + SUM_NON_DEMAND(misses);
 
     // Miss latency statistics
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -449,15 +219,14 @@ BaseCache::regStats()
         .desc("number of demand (read+write) miss cycles")
         .flags(total)
         ;
-    demandMissLatency = missLatency[MemCmd::ReadReq] + missLatency[MemCmd::WriteReq];
+    demandMissLatency = SUM_DEMAND(missLatency);
 
     overallMissLatency
         .name(name() + ".overall_miss_latency")
         .desc("number of overall miss cycles")
         .flags(total)
         ;
-    overallMissLatency = demandMissLatency + missLatency[MemCmd::SoftPFReq] +
-        missLatency[MemCmd::HardPFReq];
+    overallMissLatency = demandMissLatency + SUM_NON_DEMAND(missLatency);
 
     // access formulas
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
@@ -580,17 +349,284 @@ BaseCache::regStats()
         .desc("number of cache copies performed")
         ;
 
+    writebacks
+        .init(maxThreadsPerCPU)
+        .name(name() + ".writebacks")
+        .desc("number of writebacks")
+        .flags(total)
+        ;
+
+    // MSHR statistics
+    // MSHR hit statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_hits[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_hits")
+            .desc("number of " + cstr + " MSHR hits")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrHits
+        .name(name() + ".demand_mshr_hits")
+        .desc("number of demand (read+write) MSHR hits")
+        .flags(total)
+        ;
+    demandMshrHits = SUM_DEMAND(mshr_hits);
+
+    overallMshrHits
+        .name(name() + ".overall_mshr_hits")
+        .desc("number of overall MSHR hits")
+        .flags(total)
+        ;
+    overallMshrHits = demandMshrHits + SUM_NON_DEMAND(mshr_hits);
+
+    // MSHR miss statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_misses[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_misses")
+            .desc("number of " + cstr + " MSHR misses")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrMisses
+        .name(name() + ".demand_mshr_misses")
+        .desc("number of demand (read+write) MSHR misses")
+        .flags(total)
+        ;
+    demandMshrMisses = SUM_DEMAND(mshr_misses);
+
+    overallMshrMisses
+        .name(name() + ".overall_mshr_misses")
+        .desc("number of overall MSHR misses")
+        .flags(total)
+        ;
+    overallMshrMisses = demandMshrMisses + SUM_NON_DEMAND(mshr_misses);
+
+    // MSHR miss latency statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_miss_latency[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_miss_latency")
+            .desc("number of " + cstr + " MSHR miss cycles")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    demandMshrMissLatency
+        .name(name() + ".demand_mshr_miss_latency")
+        .desc("number of demand (read+write) MSHR miss cycles")
+        .flags(total)
+        ;
+    demandMshrMissLatency = SUM_DEMAND(mshr_miss_latency);
+
+    overallMshrMissLatency
+        .name(name() + ".overall_mshr_miss_latency")
+        .desc("number of overall MSHR miss cycles")
+        .flags(total)
+        ;
+    overallMshrMissLatency =
+        demandMshrMissLatency + SUM_NON_DEMAND(mshr_miss_latency);
+
+    // MSHR uncacheable statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_uncacheable[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_uncacheable")
+            .desc("number of " + cstr + " MSHR uncacheable")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    overallMshrUncacheable
+        .name(name() + ".overall_mshr_uncacheable_misses")
+        .desc("number of overall MSHR uncacheable misses")
+        .flags(total)
+        ;
+    overallMshrUncacheable =
+        SUM_DEMAND(mshr_uncacheable) + SUM_NON_DEMAND(mshr_uncacheable);
+
+    // MSHR miss latency statistics
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshr_uncacheable_lat[access_idx]
+            .init(maxThreadsPerCPU)
+            .name(name() + "." + cstr + "_mshr_uncacheable_latency")
+            .desc("number of " + cstr + " MSHR uncacheable cycles")
+            .flags(total | nozero | nonan)
+            ;
+    }
+
+    overallMshrUncacheableLatency
+        .name(name() + ".overall_mshr_uncacheable_latency")
+        .desc("number of overall MSHR uncacheable cycles")
+        .flags(total)
+        ;
+    overallMshrUncacheableLatency =
+        SUM_DEMAND(mshr_uncacheable_lat) +
+        SUM_NON_DEMAND(mshr_uncacheable_lat);
+
+#if 0
+    // MSHR access formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshrAccesses[access_idx]
+            .name(name() + "." + cstr + "_mshr_accesses")
+            .desc("number of " + cstr + " mshr accesses(hits+misses)")
+            .flags(total | nozero | nonan)
+            ;
+        mshrAccesses[access_idx] =
+            mshr_hits[access_idx] + mshr_misses[access_idx]
+            + mshr_uncacheable[access_idx];
+    }
+
+    demandMshrAccesses
+        .name(name() + ".demand_mshr_accesses")
+        .desc("number of demand (read+write) mshr accesses")
+        .flags(total | nozero | nonan)
+        ;
+    demandMshrAccesses = demandMshrHits + demandMshrMisses;
+
+    overallMshrAccesses
+        .name(name() + ".overall_mshr_accesses")
+        .desc("number of overall (read+write) mshr accesses")
+        .flags(total | nozero | nonan)
+        ;
+    overallMshrAccesses = overallMshrHits + overallMshrMisses
+        + overallMshrUncacheable;
+#endif
+
+    // MSHR miss rate formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        mshrMissRate[access_idx]
+            .name(name() + "." + cstr + "_mshr_miss_rate")
+            .desc("mshr miss rate for " + cstr + " accesses")
+            .flags(total | nozero | nonan)
+            ;
+
+        mshrMissRate[access_idx] =
+            mshr_misses[access_idx] / accesses[access_idx];
+    }
+
+    demandMshrMissRate
+        .name(name() + ".demand_mshr_miss_rate")
+        .desc("mshr miss rate for demand accesses")
+        .flags(total)
+        ;
+    demandMshrMissRate = demandMshrMisses / demandAccesses;
+
+    overallMshrMissRate
+        .name(name() + ".overall_mshr_miss_rate")
+        .desc("mshr miss rate for overall accesses")
+        .flags(total)
+        ;
+    overallMshrMissRate = overallMshrMisses / overallAccesses;
+
+    // mshrMiss latency formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        avgMshrMissLatency[access_idx]
+            .name(name() + "." + cstr + "_avg_mshr_miss_latency")
+            .desc("average " + cstr + " mshr miss latency")
+            .flags(total | nozero | nonan)
+            ;
+
+        avgMshrMissLatency[access_idx] =
+            mshr_miss_latency[access_idx] / mshr_misses[access_idx];
+    }
+
+    demandAvgMshrMissLatency
+        .name(name() + ".demand_avg_mshr_miss_latency")
+        .desc("average overall mshr miss latency")
+        .flags(total)
+        ;
+    demandAvgMshrMissLatency = demandMshrMissLatency / demandMshrMisses;
+
+    overallAvgMshrMissLatency
+        .name(name() + ".overall_avg_mshr_miss_latency")
+        .desc("average overall mshr miss latency")
+        .flags(total)
+        ;
+    overallAvgMshrMissLatency = overallMshrMissLatency / overallMshrMisses;
+
+    // mshrUncacheable latency formulas
+    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
+        MemCmd cmd(access_idx);
+        const string &cstr = cmd.toString();
+
+        avgMshrUncacheableLatency[access_idx]
+            .name(name() + "." + cstr + "_avg_mshr_uncacheable_latency")
+            .desc("average " + cstr + " mshr uncacheable latency")
+            .flags(total | nozero | nonan)
+            ;
+
+        avgMshrUncacheableLatency[access_idx] =
+            mshr_uncacheable_lat[access_idx] / mshr_uncacheable[access_idx];
+    }
+
+    overallAvgMshrUncacheableLatency
+        .name(name() + ".overall_avg_mshr_uncacheable_latency")
+        .desc("average overall mshr uncacheable latency")
+        .flags(total)
+        ;
+    overallAvgMshrUncacheableLatency = overallMshrUncacheableLatency / overallMshrUncacheable;
+
+    mshr_cap_events
+        .init(maxThreadsPerCPU)
+        .name(name() + ".mshr_cap_events")
+        .desc("number of times MSHR cap was activated")
+        .flags(total)
+        ;
+
+    //software prefetching stats
+    soft_prefetch_mshr_full
+        .init(maxThreadsPerCPU)
+        .name(name() + ".soft_prefetch_mshr_full")
+        .desc("number of mshr full events for SW prefetching instrutions")
+        .flags(total)
+        ;
+
+    mshr_no_allocate_misses
+        .name(name() +".no_allocate_misses")
+        .desc("Number of misses that were no-allocate")
+        ;
+
 }
 
 unsigned int
 BaseCache::drain(Event *de)
 {
+    int count = memSidePort->drain(de) + cpuSidePort->drain(de);
+
     // Set status
-    if (!canDrain()) {
+    if (count != 0) {
         drainEvent = de;
 
         changeState(SimObject::Draining);
-        return 1;
+        return count;
     }
 
     changeState(SimObject::Drained);

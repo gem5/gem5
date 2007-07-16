@@ -51,7 +51,6 @@ class BaseCache(MemObject):
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
     prioritizeRequests = Param.Bool(False,
         "always service demand misses first")
-    protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
     repl = Param.Repl(NULL, "replacement policy")
     size = Param.MemorySize("capacity in bytes")
     split = Param.Bool(False, "whether or not this cache is split")

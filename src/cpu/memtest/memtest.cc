@@ -64,7 +64,9 @@ MemTest::CpuPort::recvTiming(PacketPtr pkt)
 Tick
 MemTest::CpuPort::recvAtomic(PacketPtr pkt)
 {
-    panic("MemTest doesn't expect recvAtomic callback!");
+    // must be snoop upcall
+    assert(pkt->isRequest());
+    assert(pkt->getDest() == Packet::Broadcast);
     return curTick;
 }
 
@@ -102,7 +104,6 @@ void
 MemTest::sendPkt(PacketPtr pkt) {
     if (atomic) {
         cachePort.sendAtomic(pkt);
-        pkt->makeAtomicResponse();
         completeRequest(pkt);
     }
     else if (!cachePort.sendTiming(pkt)) {
@@ -165,8 +166,6 @@ MemTest::MemTest(const string &name,
     tickEvent.schedule(0);
 
     id = TESTER_ALLOCATOR++;
-    if (TESTER_ALLOCATOR > 8)
-        panic("False sharing memtester only allows up to 8 testers");
 
     accessRetry = false;
 }
@@ -194,29 +193,25 @@ MemTest::init()
     // memory should be 0; no need to initialize them.
 }
 
-static void
-printData(ostream &os, uint8_t *data, int nbytes)
-{
-    os << hex << setfill('0');
-    // assume little-endian: print bytes from highest address to lowest
-    for (uint8_t *dp = data + nbytes - 1; dp >= data; --dp) {
-        os << setw(2) << (unsigned)*dp;
-    }
-    os << dec;
-}
 
 void
 MemTest::completeRequest(PacketPtr pkt)
 {
+    Request *req = pkt->req;
+
+    DPRINTF(MemTest, "completing %s at address %x (blk %x)\n",
+            pkt->isWrite() ? "write" : "read",
+            req->getPaddr(), blockAddr(req->getPaddr()));
+
     MemTestSenderState *state =
         dynamic_cast<MemTestSenderState *>(pkt->senderState);
 
     uint8_t *data = state->data;
     uint8_t *pkt_data = pkt->getPtr<uint8_t>();
-    Request *req = pkt->req;
 
     //Remove the address from the list of outstanding
-    std::set<unsigned>::iterator removeAddr = outstandingAddrs.find(req->getPaddr());
+    std::set<unsigned>::iterator removeAddr =
+        outstandingAddrs.find(req->getPaddr());
     assert(removeAddr != outstandingAddrs.end());
     outstandingAddrs.erase(removeAddr);
 
@@ -224,15 +219,10 @@ MemTest::completeRequest(PacketPtr pkt)
       case MemCmd::ReadResp:
 
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
-            cerr << name() << ": on read of 0x" << hex << req->getPaddr()
-                 << " (0x" << hex << blockAddr(req->getPaddr()) << ")"
-                 << "@ cycle " << dec << curTick
-                 << ", cache returns 0x";
-            printData(cerr, pkt_data, pkt->getSize());
-            cerr << ", expected 0x";
-            printData(cerr, data, pkt->getSize());
-            cerr << endl;
-            fatal("");
+            panic("%s: read of %x (blk %x) @ cycle %d "
+                  "returns %x, expected %x\n", name(),
+                  req->getPaddr(), blockAddr(req->getPaddr()), curTick,
+                  *pkt_data, *data);
         }
 
         numReads++;
@@ -244,38 +234,16 @@ MemTest::completeRequest(PacketPtr pkt)
             nextProgressMessage += progressInterval;
         }
 
-        if (numReads >= maxLoads)
-            exitSimLoop("Maximum number of loads reached!");
+        if (maxLoads != 0 && numReads >= maxLoads)
+            exitSimLoop("maximum number of loads reached");
         break;
 
       case MemCmd::WriteResp:
         numWritesStat++;
         break;
-/*
-      case Copy:
-        //Also remove dest from outstanding list
-        removeAddr = outstandingAddrs.find(req->dest);
-        assert(removeAddr != outstandingAddrs.end());
-        outstandingAddrs.erase(removeAddr);
-        numCopiesStat++;
-        break;
-*/
+
       default:
         panic("invalid command %s (%d)", pkt->cmdString(), pkt->cmd.toInt());
-    }
-
-    if (blockAddr(req->getPaddr()) == traceBlockAddr) {
-        cerr << name() << ": completed "
-             << (pkt->isWrite() ? "write" : "read")
-             << " access of "
-             << dec << pkt->getSize() << " bytes at address 0x"
-             << hex << req->getPaddr()
-             << " (0x" << hex << blockAddr(req->getPaddr()) << ")"
-             << ", value = 0x";
-        printData(cerr, pkt_data, pkt->getSize());
-        cerr << " @ cycle " << dec << curTick;
-
-        cerr << endl;
     }
 
     noResponseCycles = 0;
@@ -333,7 +301,7 @@ MemTest::tick()
     //mem tester
     //We can eliminate the lower bits of the offset, and then use the id
     //to offset within the blks
-    offset &= ~63; //Not the low order bits
+    offset = blockAddr(offset);
     offset += id;
     access_size = 0;
 
@@ -359,31 +327,26 @@ MemTest::tick()
     if (cmd < percentReads) {
         // read
 
-        //For now we only allow one outstanding request per addreess per tester
-        //This means we assume CPU does write forwarding to reads that alias something
-        //in the cpu store buffer.
+        // For now we only allow one outstanding request per address
+        // per tester This means we assume CPU does write forwarding
+        // to reads that alias something in the cpu store buffer.
         if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
             delete [] result;
             delete req;
             return;
         }
-        else outstandingAddrs.insert(paddr);
+
+        outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
         funcPort.readBlob(req->getPaddr(), result, req->getSize());
 
-        if (blockAddr(paddr) == traceBlockAddr) {
-            cerr << name()
-                 << ": initiating read "
-                 << ((probe) ? "probe of " : "access of ")
-                 << dec << req->getSize() << " bytes from addr 0x"
-                 << hex << paddr
-                 << " (0x" << hex << blockAddr(paddr) << ")"
-                 << " at cycle "
-                 << dec << curTick << endl;
-        }
+        DPRINTF(MemTest,
+                "initiating read at address %x (blk %x) expecting %x\n",
+                req->getPaddr(), blockAddr(req->getPaddr()), *result);
 
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        pkt->setSrc(0);
         pkt->dataDynamicArray(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
@@ -393,37 +356,27 @@ MemTest::tick()
             pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
-//	    req->completionEvent = new MemCompleteEvent(req, result, this);
             sendPkt(pkt);
         }
     } else {
         // write
 
-        //For now we only allow one outstanding request per addreess per tester
-        //This means we assume CPU does write forwarding to reads that alias something
-        //in the cpu store buffer.
+        // For now we only allow one outstanding request per addreess
+        // per tester.  This means we assume CPU does write forwarding
+        // to reads that alias something in the cpu store buffer.
         if (outstandingAddrs.find(paddr) != outstandingAddrs.end()) {
             delete [] result;
             delete req;
             return;
         }
 
-        else outstandingAddrs.insert(paddr);
+        outstandingAddrs.insert(paddr);
 
-/*
-        if (blockAddr(req->getPaddr()) == traceBlockAddr) {
-            cerr << name() << ": initiating write "
-                 << ((probe)?"probe of ":"access of ")
-                 << dec << req->getSize() << " bytes (value = 0x";
-            printData(cerr, data_pkt->getPtr(), req->getSize());
-            cerr << ") to addr 0x"
-                 << hex << req->getPaddr()
-                 << " (0x" << hex << blockAddr(req->getPaddr()) << ")"
-                 << " at cycle "
-                 << dec << curTick << endl;
-        }
-*/
+        DPRINTF(MemTest, "initiating write at address %x (blk %x) value %x\n",
+                req->getPaddr(), blockAddr(req->getPaddr()), data & 0xff);
+
         PacketPtr pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
+        pkt->setSrc(0);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
         pkt->dataDynamicArray(pkt_data);
         memcpy(pkt_data, &data, req->getSize());
@@ -437,54 +390,9 @@ MemTest::tick()
             pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
-//	    req->completionEvent = new MemCompleteEvent(req, NULL, this);
             sendPkt(pkt);
         }
     }
-/*    else {
-        // copy
-        unsigned source_align = random() % 100;
-        unsigned dest_align = random() % 100;
-        unsigned offset2 = random() % size;
-
-        Addr source = ((base) ? baseAddr1 : baseAddr2) + offset;
-        Addr dest = ((base) ? baseAddr2 : baseAddr1) + offset2;
-        if (outstandingAddrs.find(source) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(source);
-        if (outstandingAddrs.find(dest) != outstandingAddrs.end()) return;
-        else outstandingAddrs.insert(dest);
-
-        if (source_align >= percentSourceUnaligned) {
-            source = blockAddr(source);
-        }
-        if (dest_align >= percentDestUnaligned) {
-            dest = blockAddr(dest);
-        }
-        req->cmd = Copy;
-        req->flags &= ~UNCACHEABLE;
-        req->paddr = source;
-        req->dest = dest;
-        delete [] req->data;
-        req->data = new uint8_t[blockSize];
-        req->size = blockSize;
-        if (source == traceBlockAddr || dest == traceBlockAddr) {
-            cerr << name()
-                 << ": initiating copy of "
-                 << dec << req->size << " bytes from addr 0x"
-                 << hex << source
-                 << " (0x" << hex << blockAddr(source) << ")"
-                 << " to addr 0x"
-                 << hex << dest
-                 << " (0x" << hex << blockAddr(dest) << ")"
-                 << " at cycle "
-                 << dec << curTick << endl;
-        }*
-        cacheInterface->access(req);
-        uint8_t result[blockSize];
-        checkMem->access(Read, source, &result, blockSize);
-        checkMem->access(Write, dest, &result, blockSize);
-    }
-*/
 }
 
 void
