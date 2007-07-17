@@ -193,6 +193,13 @@ namespace BitfieldBackend
     class BitUnionOperators : public Base
     {
       public:
+        BitUnionOperators(Type & _data)
+        {
+            Base::__data = _data;
+        }
+
+        BitUnionOperators() {}
+
         operator Type () const
         {
             return Base::__data;
