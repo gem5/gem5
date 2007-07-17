@@ -182,10 +182,16 @@ public:
     TargetList* getTargetList() { return &targets; }
 
     /**
+     * Returns true if there are targets left.
+     * @return true if there are targets
+     */
+    bool hasTargets() { return !targets.empty(); }
+
+    /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() { return &targets.front(); }
+    Target *getTarget() { assert(hasTargets());  return &targets.front(); }
 
     /**
      * Pop first target.
@@ -195,12 +201,6 @@ public:
         --ntargets;
         targets.pop_front();
     }
-
-    /**
-     * Returns true if there are targets left.
-     * @return true if there are targets
-     */
-    bool hasTargets() { return !targets.empty(); }
 
     bool isSimpleForward()
     {
