@@ -56,21 +56,24 @@
 microcode = '''
 def macroop SUB_R_I
 {
-    subi reg, reg, imm
+    limm t1, imm
+    sub reg, reg, t1
 };
 
 def macroop SUB_M_I
 {
+    limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    subi t1, t1, imm
+    sub t1, t1, t2
     st t1, ds, [scale, index, base], disp
 };
 
 def macroop SUB_P_I
 {
     rdip t7
+    limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    subi t1, t1, imm
+    sub t1, t1, t2
     st t1, ds, [scale, index, base], disp
 };
 '''
