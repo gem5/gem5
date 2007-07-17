@@ -60,4 +60,11 @@ def macroop JZ_I
     limm t2, imm
     wrip t1, t2, flags=(CZF,)
 };
+
+def macroop JNZ_I
+{
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(nCZF,)
+};
 '''
