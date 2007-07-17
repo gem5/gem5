@@ -315,6 +315,29 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 }
 
 
+class ForwardResponseRecord : public Packet::SenderState
+{
+    Packet::SenderState *prevSenderState;
+    int prevSrc;
+#ifndef NDEBUG
+    BaseCache *cache;
+#endif
+  public:
+    ForwardResponseRecord(Packet *pkt, BaseCache *_cache)
+        : prevSenderState(pkt->senderState), prevSrc(pkt->getSrc())
+#ifndef NDEBUG
+          , cache(_cache)
+#endif
+    {}
+    void restore(Packet *pkt, BaseCache *_cache)
+    {
+        assert(_cache == cache);
+        pkt->senderState = prevSenderState;
+        pkt->setDest(prevSrc);
+    }
+};
+
+
 template<class TagStore>
 bool
 Cache<TagStore>::timingAccess(PacketPtr pkt)
@@ -324,6 +347,19 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
     // we charge hitLatency for doing just about anything here
     Tick time =  curTick + hitLatency;
+
+    if (pkt->isResponse()) {
+        // must be cache-to-cache response from upper to lower level
+        ForwardResponseRecord *rec =
+            dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
+        assert(rec != NULL);
+        rec->restore(pkt, this);
+        delete rec;
+        memSidePort->respond(pkt, time);
+        return true;
+    }
+
+    assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
         DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
@@ -392,6 +428,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         if (needsResponse) {
             pkt->makeTimingResponse();
             cpuSidePort->respond(pkt, curTick+lat);
+        } else {
+            delete pkt;
         }
     } else {
         // miss
@@ -422,12 +460,6 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             // be changed.
             allocateMissBuffer(pkt, time, true);
         }
-    }
-
-    if (!needsResponse) {
-        // Need to clean up the packet on a writeback miss, but leave
-        // the request for the next level.
-        delete pkt;
     }
 
     return true;
@@ -872,7 +904,14 @@ Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
 {
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
-    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
+    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt, true);
+    if (!req_pkt->isInvalidate()) {
+        // note that we're ignoring the shared flag on req_pkt... it's
+        // basically irrelveant, as we'll always assert shared unless
+        // it's an exclusive request, in which case the shared line
+        // should never be asserted1
+        pkt->assertShared();
+    }
     pkt->allocate();
     pkt->makeTimingResponse();
     pkt->setDataFromBlock(blk_data, blkSize);
@@ -894,11 +933,14 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (is_timing) {
         Packet *snoopPkt = new Packet(pkt, true);  // clear flags
         snoopPkt->setExpressSnoop();
+        snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
         cpuSidePort->sendTiming(snoopPkt);
         if (snoopPkt->memInhibitAsserted()) {
             // cache-to-cache response from some upper cache
             assert(!alreadySupplied);
             pkt->assertMemInhibit();
+        } else {
+            delete snoopPkt->senderState;
         }
         if (snoopPkt->sharedAsserted()) {
             pkt->assertShared();
