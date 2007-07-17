@@ -53,8 +53,11 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class JMP(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop JZ_I
+{
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CZF,)
+};
+'''

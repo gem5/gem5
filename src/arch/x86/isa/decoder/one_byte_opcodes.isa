@@ -263,7 +263,7 @@
             0x1: jno_Jb();
             0x2: jb_Jb();
             0x3: jnb_Jb();
-            0x4: jz_Jb();
+            0x4: Inst::JZ(Jb);
             0x5: jnz_Jb();
             0x6: jbe_Jb();
             0x7: jnbe_Jb();
