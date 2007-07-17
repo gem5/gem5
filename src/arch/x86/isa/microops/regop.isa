@@ -67,8 +67,12 @@ def template MicroRegOpExecute {{
 
             %(op_decl)s;
             %(op_rd)s;
-            %(code)s;
-            %(flag_code)s;
+
+            if(%(cond_check)s)
+            {
+                %(code)s;
+                %(flag_code)s;
+            }
 
             //Write the resulting state to the execution context
             if(fault == NoFault)
@@ -87,8 +91,12 @@ def template MicroRegOpImmExecute {{
 
             %(op_decl)s;
             %(op_rd)s;
-            %(code)s;
-            %(flag_code)s;
+
+            if(%(cond_check)s)
+            {
+                %(code)s;
+                %(flag_code)s;
+            }
 
             //Write the resulting state to the execution context
             if(fault == NoFault)
@@ -110,12 +118,12 @@ def template MicroRegOpDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint8_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint8_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -133,12 +141,12 @@ def template MicroRegOpImmDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint8_t _ext);
 
         %(class_name)sImm(ExtMachInst _machInst,
                 const char * instMnem,
                 RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint8_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -154,10 +162,10 @@ def template MicroRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
-            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
-                _src1, _src2, _dest, _setStatus, _dataSize, _ext,
+                _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -167,10 +175,10 @@ def template MicroRegOpConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
-            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
-                _src1, _src2, _dest, _setStatus, _dataSize, _ext,
+                _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -187,10 +195,10 @@ def template MicroRegOpImmConstructor {{
     inline %(class_name)sImm::%(class_name)sImm(
             ExtMachInst machInst, const char * instMnem,
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
-                _src1, _imm8, _dest, _setStatus, _dataSize, _ext,
+                _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -200,10 +208,10 @@ def template MicroRegOpImmConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-            bool _setStatus, uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint8_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
-                _src1, _imm8, _dest, _setStatus, _dataSize, _ext,
+                _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -211,46 +219,74 @@ def template MicroRegOpImmConstructor {{
 }};
 
 let {{
+    class X86MicroMeta(type):
+        def __new__(mcls, name, bases, dict):
+            abstract = False
+            if "abstract" in dict:
+                abstract = dict['abstract']
+                del dict['abstract']
+
+            cls = type.__new__(mcls, name, bases, dict)
+            if not abstract:
+                allClasses[name] = cls
+            return cls
+
+    class XXX86Microop(object):
+        __metaclass__ = X86MicroMeta
+        abstract = True
+
     class RegOp(X86Microop):
-        def __init__(self, dest, src1, src2, setStatus):
+        abstract = True
+        def __init__(self, dest, src1, src2, flags):
             self.dest = dest
             self.src1 = src1
             self.src2 = src2
-            self.setStatus = setStatus
+            self.flags = flags
             self.dataSize = "env.dataSize"
-            self.ext = 0
+            if flags is None:
+                self.ext = 0
+            else:
+                if not isinstance(flags, (list, tuple)):
+                    raise Exception, "flags must be a list or tuple of flags"
+                self.ext = " | ".join(flags)
+                self.className += "Flags"
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, mnemonic
                     %(flags)s, %(src1)s, %(src2)s, %(dest)s,
-                    %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
+                    %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "src2" : self.src2,
                 "dest" : self.dest,
-                "setStatus" : self.cppBool(self.setStatus),
                 "dataSize" : self.dataSize,
                 "ext" : self.ext}
             return allocator
 
     class RegOpImm(X86Microop):
-        def __init__(self, dest, src1, imm8, setStatus):
+        abstract = True
+        def __init__(self, dest, src1, imm8, flags):
             self.dest = dest
             self.src1 = src1
             self.imm8 = imm8
-            self.setStatus = setStatus
+            self.flags = flags
             self.dataSize = "env.dataSize"
-            self.ext = 0
+            if flags is None:
+                self.ext = 0
+            else:
+                if not isinstance(flags, (list, tuple)):
+                    raise Exception, "flags must be a list or tuple of flags"
+                self.ext = " | ".join(flags)
+                self.className += "Flags"
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, mnemonic
                     %(flags)s, %(src1)s, %(imm8)s, %(dest)s,
-                    %(setStatus)s, %(dataSize)s, %(ext)s)''' % {
+                    %(dataSize)s, %(ext)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "imm8" : self.imm8,
                 "dest" : self.dest,
-                "setStatus" : self.cppBool(self.setStatus),
                 "dataSize" : self.dataSize,
                 "ext" : self.ext}
             return allocator
@@ -264,7 +300,8 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    def setUpMicroRegOp(name, Name, base, code, child, flagCode):
+    # A function which builds the C++ classes that implement the microops
+    def setUpMicroRegOp(name, Name, base, code, flagCode, condCheck):
         global header_output
         global decoder_output
         global exec_output
@@ -272,14 +309,20 @@ let {{
 
         iop = InstObjParams(name, Name, base,
                 {"code" : code,
-                 "flag_code" : flagCode})
+                 "flag_code" : flagCode,
+                 "cond_check" : condCheck})
         header_output += MicroRegOpDeclare.subst(iop)
         decoder_output += MicroRegOpConstructor.subst(iop)
         exec_output += MicroRegOpExecute.subst(iop)
 
-        microopClasses[name] = child
 
-    def defineMicroRegOp(mnemonic, code, flagCode):
+    checkCCFlagBits = "checkCondition(ccFlagBits)"
+    genCCFlagBits = "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, SrcReg1, %s);"
+
+
+    # This creates a python representations of a microop which are a cross
+    # product of reg/immediate and flag/no flag versions.
+    def defineMicroRegOp(mnemonic, code, secondSrc = "op2", cc=False):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -290,35 +333,47 @@ let {{
         regCode = matcher.sub("SrcReg2", code)
         immCode = matcher.sub("imm8", code)
 
-        # Build the all register version of this micro op
+        if not cc:
+            flagCode = genCCFlagBits % secondSrc
+            condCode = "true"
+        else:
+            flagCode = ""
+            condCode = checkCCFlagBits
+
+        regFlagCode = matcher.sub("SrcReg2", flagCode)
+        immFlagCode = matcher.sub("imm8", flagCode)
+
         class RegOpChild(RegOp):
-            def __init__(self, dest, src1, src2, setStatus=False):
-                super(RegOpChild, self).__init__(dest, src1, src2, setStatus)
-                self.className = Name
-                self.mnemonic = name
+            mnemonic = name
+            className = Name
+            def __init__(self, dest, src1, src2, flags=None):
+                super(RegOpChild, self).__init__(dest, src1, src2, flags)
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", \
-                regCode, RegOpChild, flagCode);
+        microopClasses[name] = RegOpChild
 
-        # Build the immediate version of this micro op
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true");
+        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, regFlagCode, condCode);
+
         class RegOpChildImm(RegOpImm):
-            def __init__(self, dest, src1, src2, setStatus=False):
-                super(RegOpChildImm, self).__init__(dest, src1, src2, setStatus)
-                self.className = Name + "Imm"
-                self.mnemonic = name + "i"
+            mnemonic = name + 'i'
+            className = Name + 'Imm'
+            def __init__(self, dest, src1, src2, flags=None):
+                super(RegOpChildImm, self).__init__(dest, src1, src2, flags)
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
-                immCode, RegOpChildImm, flagCode);
+        microopClasses[name + 'i'] = RegOpChildImm
 
-    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)', "") #Needs to set OF,CF,SF
-    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)', "")
-    defineMicroRegOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)', "") #Needs to add in CF, set OF,CF,SF
-    defineMicroRegOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', "") #Needs to subtract CF, set OF,CF,SF
-    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)', "")
-    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', "") #Needs to set OF,CF,SF
-    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)', "")
-    defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', "") #Needs to set OF,CF,SF and not DestReg
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)', "")
+        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true");
+        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode, immFlagCode, condCode);
+
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroRegOp('Adc', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
+    defineMicroRegOp('Sbb', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', '-op2')
+    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
+    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', '-op2')
+    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
+    defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', '-op2')
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)', cc=True)
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code):
@@ -332,24 +387,27 @@ let {{
         regCode = matcher.sub("SrcReg2", code)
         immCode = matcher.sub("imm8", code)
 
-        # Build the all register version of this micro op
         class RegOpChild(RegOp):
-            def __init__(self, src1, src2):
-                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2, False)
-                self.className = Name
-                self.mnemonic = name
+            mnemonic = name
+            className = Name
+            def __init__(self, src1, src2, flags=None):
+                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2, flags)
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, RegOpChild, "");
+        microopClasses[name] = RegOpChild
 
-        # Build the immediate version of this micro op
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true");
+        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, "", checkCCFlagBits);
+
         class RegOpChildImm(RegOpImm):
+            mnemonic = name
+            className = Name
             def __init__(self, src1, src2):
-                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, False)
-                self.className = Name + "Imm"
-                self.mnemonic = name + "i"
+                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, None)
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
-                immCode, RegOpChildImm, "");
+        microopClasses[name + 'i'] = RegOpChildImm
+
+        setUpMicroRegOp(name + 'i', Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true");
+        setUpMicroRegOp(name + 'i', Name + "ImmFlags", "X86ISA::RegOpImm", immCode, "", checkCCFlagBits);
 
     defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2')
 
@@ -360,11 +418,13 @@ let {{
 
         class RegOpChild(RegOp):
             def __init__(self, dest, src1 = "NUM_INTREGS"):
-                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS", False)
+                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS", None)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", code, RegOpChild, "");
+        microopClasses[name] = RegOpChild
+
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", code, "", "true");
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
@@ -374,11 +434,13 @@ let {{
 
         class RegOpChild(RegOpImm):
             def __init__(self, dest, src1, src2):
-                super(RegOpChild, self).__init__(dest, src1, src2, False)
+                super(RegOpChild, self).__init__(dest, src1, src2, None)
                 self.className = Name
                 self.mnemonic = name
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code, RegOpChild, "");
+        microopClasses[name] = RegOpChild
+
+        setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code, "", "true");
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = SrcReg1;

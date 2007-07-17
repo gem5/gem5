@@ -62,18 +62,84 @@
 
 namespace X86ISA
 {
+    namespace ConditionTests
+    {
+        enum CondTest {
+            True,
+            NotFalse = True,
+            ECF,
+            EZF,
+            SZnZF,
+            MSTRZ,
+            STRZ,
+            MSTRC,
+            STRZnZF,
+            OF,
+            CF,
+            ZF,
+            CvZF,
+            SF,
+            PF,
+            SxOF,
+            SxOvZF,
+
+            False,
+            NotTrue = False,
+            NotECF,
+            NotEZF,
+            NotSZnZF,
+            NotMSTRZ,
+            NotSTRZ,
+            NotMSTRC,
+            NotSTRZnZF,
+            NotOF,
+            NotCF,
+            NotZF,
+            NotCvZF,
+            NotSF,
+            NotPF,
+            NotSxOF,
+            NotSxOvZF
+        };
+    }
+
     /**
      * Base classes for RegOps which provides a generateDisassembly method.
      */
-    class RegOp : public X86MicroopBase
+    class RegOpBase : public X86MicroopBase
     {
       protected:
         const RegIndex src1;
-        const RegIndex src2;
         const RegIndex dest;
-        const bool setStatus;
         const uint8_t dataSize;
-        const uint8_t ext;
+        const uint16_t ext;
+
+        // Constructor
+        RegOpBase(ExtMachInst _machInst,
+                const char *mnem, const char *_instMnem,
+                bool isMicro, bool isDelayed,
+                bool isFirst, bool isLast,
+                RegIndex _src1, RegIndex _dest,
+                uint8_t _dataSize, uint16_t _ext,
+                OpClass __opClass) :
+            X86MicroopBase(_machInst, mnem, _instMnem,
+                    isMicro, isDelayed, isFirst, isLast,
+                    __opClass),
+            src1(_src1), dest(_dest),
+            dataSize(_dataSize), ext(_ext)
+        {
+        }
+
+        //Figure out what the condition code flags should be.
+        uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
+                uint64_t _dest, uint64_t _src1, uint64_t _src2) const;
+        bool checkCondition(uint64_t flags) const;
+    };
+
+    class RegOp : public RegOpBase
+    {
+      protected:
+        const RegIndex src2;
 
         // Constructor
         RegOp(ExtMachInst _machInst,
@@ -81,13 +147,13 @@ namespace X86ISA
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
+                uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
+            RegOpBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
+                    _src1, _dest, _dataSize, _ext,
                     __opClass),
-            src1(_src1), src2(_src2), dest(_dest),
-            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+            src2(_src2)
         {
         }
 
@@ -95,15 +161,10 @@ namespace X86ISA
             const SymbolTable *symtab) const;
     };
 
-    class RegOpImm : public X86MicroopBase
+    class RegOpImm : public RegOpBase
     {
       protected:
-        const RegIndex src1;
         const uint8_t imm8;
-        const RegIndex dest;
-        const bool setStatus;
-        const uint8_t dataSize;
-        const uint8_t ext;
 
         // Constructor
         RegOpImm(ExtMachInst _machInst,
@@ -111,13 +172,13 @@ namespace X86ISA
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                bool _setStatus, uint8_t _dataSize, uint8_t _ext,
+                uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
+            RegOpBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
+                    _src1, _dest, _dataSize, _ext,
                     __opClass),
-            src1(_src1), imm8(_imm8), dest(_dest),
-            setStatus(_setStatus), dataSize(_dataSize), ext(_ext)
+            imm8(_imm8)
         {
         }
 
