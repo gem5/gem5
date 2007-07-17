@@ -96,6 +96,19 @@ let {{
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
     assembler.symbols.update(symbols)
 
+    for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF'):
+        assembler.symbols[flag] = flag + "Bit"
+
+    for cond in ('True', 'False', 'ECF', 'EZF', 'SZnZF',
+                 'MSTRZ', 'STRZ', 'MSTRC', 'STRZnZF',
+                 'OF', 'CF', 'ZF', 'CvZF',
+                 'SF', 'PF', 'SxOF', 'SxOvZF'):
+        assembler.symbols["C%s" % cond] = "ConditionTests::%s" % cond
+        assembler.symbols["nC%s" % cond] = "ConditionTests::Not%s" % cond
+
+    assembler.symbols["CTrue"] = "ConditionTests::True"
+    assembler.symbols["CFalse"] = "ConditionTests::False"
+
     # Code literal which forces a default 64 bit operand size in 64 bit mode.
     assembler.symbols["oszIn64Override"] = '''
     if (machInst.mode.submode == SixtyFourBitMode &&
