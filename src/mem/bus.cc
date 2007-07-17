@@ -183,7 +183,7 @@ Bus::recvTiming(PacketPtr pkt)
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
-    if (!pkt->isExpressSnoop() &&
+    if (!(pkt->isResponse() || pkt->isExpressSnoop()) &&
         (tickNextIdle > curTick ||
          (retryList.size() && (!inRetry || pktPort != retryList.front()))))
     {
@@ -194,8 +194,6 @@ Bus::recvTiming(PacketPtr pkt)
 
     short dest = pkt->getDest();
 
-    // Make sure to clear the snoop commit flag so it doesn't think an
-    // access has been handled twice.
     if (dest == Packet::Broadcast) {
         port_id = findPort(pkt->getAddr());
         timingSnoop(pkt, interfaces[port_id]);
@@ -234,6 +232,8 @@ Bus::recvTiming(PacketPtr pkt)
         }
 
         // Packet not successfully sent. Leave or put it on the retry list.
+        // illegal to block responses... can lead to deadlock
+        assert(!pkt->isResponse());
         DPRINTF(Bus, "Adding2 a retry to RETRY list %d\n",
                 pktPort->getId());
         addToRetryList(pktPort);
