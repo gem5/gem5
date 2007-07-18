@@ -53,12 +53,12 @@ typedef Stats::Scalar<> FaultStat;
 class FaultBase : public RefCounted
 {
   public:
-    virtual FaultName name() = 0;
+    virtual FaultName name() const = 0;
     virtual void invoke(ThreadContext * tc);
 //    template<typename T>
 //    bool isA() {return dynamic_cast<T *>(this);}
-    virtual bool isMachineCheckFault() {return false;}
-    virtual bool isAlignmentFault() {return false;}
+    virtual bool isMachineCheckFault() const {return false;}
+    virtual bool isAlignmentFault() const {return false;}
 };
 
 FaultBase * const NoFault = 0;
@@ -72,7 +72,7 @@ class UnimpFault : public FaultBase
         : panicStr(_str)
     { }
 
-    FaultName name() {return "Unimplemented simulator feature";}
+    FaultName name() const {return "Unimplemented simulator feature";}
     void invoke(ThreadContext * tc);
 };
 
@@ -82,7 +82,7 @@ class PageTableFault : public FaultBase
   private:
     Addr vaddr;
   public:
-    FaultName name() {return "M5 page table fault";}
+    FaultName name() const {return "M5 page table fault";}
     PageTableFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext * tc);
 };

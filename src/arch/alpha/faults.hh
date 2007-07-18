@@ -66,10 +66,10 @@ class MachineCheckFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    bool isMachineCheckFault() {return true;}
+    bool isMachineCheckFault() const {return true;}
 };
 
 class AlignmentFault : public AlphaFault
@@ -79,10 +79,10 @@ class AlignmentFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    bool isAlignmentFault() {return true;}
+    bool isAlignmentFault() const {return true;}
 };
 
 static inline Fault genMachineCheckFault()
@@ -102,7 +102,7 @@ class ResetFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -116,7 +116,7 @@ class ArithmeticFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
@@ -133,7 +133,7 @@ class InterruptFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -150,7 +150,7 @@ class DtbFault : public AlphaFault
         : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
     { }
 #endif
-    FaultName name() = 0;
+    FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
@@ -170,7 +170,7 @@ class NDtbMissFault : public DtbFault
         : DtbFault(vaddr, reqFlags, flags)
     { }
 #endif
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -187,7 +187,7 @@ class PDtbMissFault : public DtbFault
         : DtbFault(vaddr, reqFlags, flags)
     { }
 #endif
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -204,7 +204,7 @@ class DtbPageFault : public DtbFault
         : DtbFault(vaddr, reqFlags, flags)
     { }
 #endif
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -221,7 +221,7 @@ class DtbAcvFault : public DtbFault
         : DtbFault(vaddr, reqFlags, flags)
     { }
 #endif
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -238,7 +238,7 @@ class DtbAlignmentFault : public DtbFault
         : DtbFault(vaddr, reqFlags, flags)
     { }
 #endif
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -251,7 +251,7 @@ class ItbFault : public AlphaFault
     ItbFault(Addr _pc)
         : pc(_pc)
     { }
-    FaultName name() = 0;
+    FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
@@ -269,7 +269,7 @@ class ItbMissFault : public ItbFault
     ItbMissFault(Addr pc)
         : ItbFault(pc)
     { }
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -284,7 +284,7 @@ class ItbPageFault : public ItbFault
     ItbPageFault(Addr pc)
         : ItbFault(pc)
     { }
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -299,7 +299,7 @@ class ItbAcvFault : public ItbFault
     ItbAcvFault(Addr pc)
         : ItbFault(pc)
     { }
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -311,7 +311,7 @@ class UnimplementedOpcodeFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -323,7 +323,7 @@ class FloatEnableFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -337,7 +337,7 @@ class PalFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -349,7 +349,7 @@ class IntegerOverflowFault : public AlphaFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
