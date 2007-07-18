@@ -297,14 +297,14 @@
             }
             //0x3: group1_Ev_Ib();
             0x3: decode MODRM_REG {
-                0x0: add_Eb_Ib();
-                0x1: or_Eb_Ib();
-                0x2: adc_Eb_Ib();
-                0x3: sbb_Eb_Ib();
-                0x4: Inst::AND(Eb,Ib);
-                0x5: sub_Eb_Ib();
-                0x6: xor_Eb_Ib();
-                0x7: cmp_Eb_Ib();
+                0x0: add_Ev_Ib();
+                0x1: or_Ev_Ib();
+                0x2: adc_Ev_Ib();
+                0x3: sbb_Ev_Ib();
+                0x4: Inst::AND(Ev,Ib);
+                0x5: sub_Ev_Ib();
+                0x6: xor_Ev_Ib();
+                0x7: cmp_Ev_Ib();
             }
             0x4: Inst::TEST(Eb,Gb);
             0x5: Inst::TEST(Ev,Gv);
