@@ -288,7 +288,7 @@ namespace BitfieldBackend
         { return __data; } \
         \
         inline const __DataType operator = (const __DataType & _data) \
-        { __data = _data; } \
+        { return __data = _data;} \
     } name;
 
 //Regular bitfields
