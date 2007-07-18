@@ -75,6 +75,9 @@ output header {{
                 Fault _fault);
 
         %(BasicExecDeclare)s
+
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
     };
 }};
 
@@ -103,6 +106,22 @@ output decoder {{
                 isMicro, isDelayed, isFirst, isLast, No_OpClass),
                 fault(_fault)
     {
+    }
+}};
+
+output decoder {{
+    std::string MicroFault::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        if(fault)
+            response << fault->name();
+        else
+            response << "No Fault";
+
+        return response.str();
     }
 }};
 
