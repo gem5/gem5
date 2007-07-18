@@ -237,12 +237,12 @@ let {{
 
     class RegOp(X86Microop):
         abstract = True
-        def __init__(self, dest, src1, src2, flags):
+        def __init__(self, dest, src1, src2, flags, dataSize):
             self.dest = dest
             self.src1 = src1
             self.src2 = src2
             self.flags = flags
-            self.dataSize = "env.dataSize"
+            self.dataSize = dataSize
             if flags is None:
                 self.ext = 0
             else:
@@ -265,12 +265,12 @@ let {{
 
     class RegOpImm(X86Microop):
         abstract = True
-        def __init__(self, dest, src1, imm8, flags):
+        def __init__(self, dest, src1, imm8, flags, dataSize):
             self.dest = dest
             self.src1 = src1
             self.imm8 = imm8
             self.flags = flags
-            self.dataSize = "env.dataSize"
+            self.dataSize = dataSize
             if flags is None:
                 self.ext = 0
             else:
@@ -346,8 +346,8 @@ let {{
         class RegOpChild(RegOp):
             mnemonic = name
             className = Name
-            def __init__(self, dest, src1, src2, flags=None):
-                super(RegOpChild, self).__init__(dest, src1, src2, flags)
+            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__(dest, src1, src2, flags, dataSize)
 
         microopClasses[name] = RegOpChild
 
@@ -357,8 +357,8 @@ let {{
         class RegOpChildImm(RegOpImm):
             mnemonic = name + 'i'
             className = Name + 'Imm'
-            def __init__(self, dest, src1, src2, flags=None):
-                super(RegOpChildImm, self).__init__(dest, src1, src2, flags)
+            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
+                super(RegOpChildImm, self).__init__(dest, src1, src2, flags, dataSize)
 
         microopClasses[name + 'i'] = RegOpChildImm
 
@@ -390,8 +390,8 @@ let {{
         class RegOpChild(RegOp):
             mnemonic = name
             className = Name
-            def __init__(self, src1, src2, flags=None):
-                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2, flags)
+            def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
 
         microopClasses[name] = RegOpChild
 
@@ -401,8 +401,8 @@ let {{
         class RegOpChildImm(RegOpImm):
             mnemonic = name
             className = Name
-            def __init__(self, src1, src2):
-                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, None)
+            def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
+                super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
 
         microopClasses[name + 'i'] = RegOpChildImm
 
@@ -417,8 +417,8 @@ let {{
         name = mnemonic.lower()
 
         class RegOpChild(RegOp):
-            def __init__(self, dest, src1 = "NUM_INTREGS"):
-                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS", None)
+            def __init__(self, dest, src1 = "NUM_INTREGS", dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__(dest, src1, "NUM_INTREGS", None, dataSize)
                 self.className = Name
                 self.mnemonic = name
 
@@ -433,8 +433,8 @@ let {{
         name = mnemonic.lower()
 
         class RegOpChild(RegOpImm):
-            def __init__(self, dest, src1, src2):
-                super(RegOpChild, self).__init__(dest, src1, src2, None)
+            def __init__(self, dest, src1, src2, dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__(dest, src1, src2, None, dataSize)
                 self.className = Name
                 self.mnemonic = name
 
