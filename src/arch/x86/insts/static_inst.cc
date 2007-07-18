@@ -99,76 +99,84 @@ namespace X86ISA
     }
 
     void
-    X86StaticInst::printSrcReg(std::ostream &os, int reg) const
+    X86StaticInst::printSrcReg(std::ostream &os, int reg, int size) const
     {
         if(_numSrcRegs > reg)
-            printReg(os, _srcRegIdx[reg]);
+            printReg(os, _srcRegIdx[reg], size);
     }
 
     void
-    X86StaticInst::printDestReg(std::ostream &os, int reg) const
+    X86StaticInst::printDestReg(std::ostream &os, int reg, int size) const
     {
         if(_numDestRegs > reg)
-            printReg(os, _destRegIdx[reg]);
+            printReg(os, _destRegIdx[reg], size);
     }
 
     void
-    X86StaticInst::printReg(std::ostream &os, int reg) const
+    X86StaticInst::printReg(std::ostream &os, int reg, int size) const
     {
+        assert(size == 1 || size == 2 || size == 4 || size == 8);
+        static const char * abcdFormats[9] =
+            {"", "%sl",  "%sx",  "", "e%sx", "", "", "", "r%sx"};
+        static const char * piFormats[9] =
+            {"", "%sl",  "%s",   "", "e%s",  "", "", "", "r%s"};
+        static const char * longFormats[9] =
+            {"", "r%sb", "r%sw", "", "r%sd", "", "", "", "r%s"};
+        static const char * microFormats[9] =
+            {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
+
         if (reg < FP_Base_DepTag) {
-            //FIXME These should print differently depending on the
-            //mode etc, but for now this will get the point across
             switch (reg) {
               case INTREG_RAX:
-                ccprintf(os, "rax");
+                ccprintf(os, abcdFormats[size], "a");
                 break;
               case INTREG_RBX:
-                ccprintf(os, "rbx");
+                ccprintf(os, abcdFormats[size], "b");
                 break;
               case INTREG_RCX:
-                ccprintf(os, "rcx");
+                ccprintf(os, abcdFormats[size], "c");
                 break;
               case INTREG_RDX:
-                ccprintf(os, "rdx");
+                ccprintf(os, abcdFormats[size], "d");
                 break;
               case INTREG_RSP:
-                ccprintf(os, "rsp");
+                ccprintf(os, piFormats[size], "sp");
                 break;
               case INTREG_RBP:
-                ccprintf(os, "rbp");
+                ccprintf(os, piFormats[size], "bp");
                 break;
               case INTREG_RSI:
-                ccprintf(os, "rsi");
+                ccprintf(os, piFormats[size], "si");
                 break;
               case INTREG_RDI:
-                ccprintf(os, "rdi");
+                ccprintf(os, piFormats[size], "di");
                 break;
               case INTREG_R8W:
-                ccprintf(os, "r8");
+                ccprintf(os, longFormats[size], "8");
                 break;
               case INTREG_R9W:
-                ccprintf(os, "r9");
+                ccprintf(os, longFormats[size], "9");
                 break;
               case INTREG_R10W:
-                ccprintf(os, "r10");
+                ccprintf(os, longFormats[size], "10");
                 break;
               case INTREG_R11W:
-                ccprintf(os, "r11");
+                ccprintf(os, longFormats[size], "11");
                 break;
               case INTREG_R12W:
-                ccprintf(os, "r12");
+                ccprintf(os, longFormats[size], "12");
                 break;
               case INTREG_R13W:
-                ccprintf(os, "r13");
+                ccprintf(os, longFormats[size], "13");
                 break;
               case INTREG_R14W:
-                ccprintf(os, "r14");
+                ccprintf(os, longFormats[size], "14");
                 break;
               case INTREG_R15W:
-                ccprintf(os, "r15");
+                ccprintf(os, longFormats[size], "15");
                 break;
               default:
-                ccprintf(os, "t%d", reg - NUM_INTREGS);
+                ccprintf(os, microFormats[size], reg - NUM_INTREGS);
             }
         } else if (reg < Ctrl_Base_DepTag) {
             ccprintf(os, "%%f%d", reg - FP_Base_DepTag);

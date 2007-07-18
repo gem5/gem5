@@ -66,13 +66,13 @@ namespace X86ISA
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        printReg(response, data);
+        printReg(response, data, dataSize);
         response << ", ";
         printSegment(response, segment);
         ccprintf(response, ":[%d*", scale);
-        printReg(response, index);
+        printReg(response, index, addressSize);
         response << " + ";
-        printReg(response, base);
+        printReg(response, base, addressSize);
         ccprintf(response, " + %#x]", disp);
         return response.str();
     }

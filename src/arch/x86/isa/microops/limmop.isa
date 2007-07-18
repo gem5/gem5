@@ -77,6 +77,7 @@ def template MicroLimmOpDeclare {{
       protected:
         const RegIndex dest;
         const uint64_t imm;
+        const uint8_t dataSize;
         void buildMe();
 
         std::string generateDisassembly(Addr pc,
@@ -86,11 +87,11 @@ def template MicroLimmOpDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _dest, uint64_t _imm);
+                RegIndex _dest, uint64_t _imm, uint8_t _dataSize);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                RegIndex _dest, uint64_t _imm);
+                RegIndex _dest, uint64_t _imm, uint8_t _dataSize);
 
         %(BasicExecDeclare)s
     };
@@ -103,7 +104,7 @@ def template MicroLimmOpDisassembly {{
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest);
+        printReg(response, dest, dataSize);
         response << ", ";
         ccprintf(response, "%#x", imm);
         return response.str();
@@ -119,10 +120,10 @@ def template MicroLimmOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            RegIndex _dest, uint64_t _imm) :
+            RegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false, %(op_class)s),
-                dest(_dest), imm(_imm)
+                dest(_dest), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
     }
@@ -130,10 +131,10 @@ def template MicroLimmOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _dest, uint64_t _imm) :
+            RegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                dest(_dest), imm(_imm)
+                dest(_dest), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
     }
@@ -146,14 +147,16 @@ let {{
             self.mnemonic = "limm"
             self.dest = dest
             self.imm = imm
+            self.dataSize = "env.dataSize"
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, mnemonic
-                    %(flags)s, %(dest)s, %(imm)s)''' % {
+                    %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
-                "dest" : self.dest, "imm" : self.imm }
+                "dest" : self.dest, "imm" : self.imm,
+                "dataSize" : self.dataSize}
             return allocator
 
     microopClasses["limm"] = LimmOp
