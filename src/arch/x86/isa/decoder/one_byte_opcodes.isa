@@ -322,7 +322,7 @@
             0x7: group10_Ev(); //Make sure this is Ev
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
-            default: nop_or_pause(); //Check for repe prefix
+            default: Inst::NOP(); //XXX repe makes this a "pause"
             0x1: xchg_rCX_rAX();
             0x2: xchg_rDX_rAX();
             0x3: xchg_rVX_rAX();
