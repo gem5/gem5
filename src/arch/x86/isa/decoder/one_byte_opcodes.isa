@@ -297,7 +297,7 @@
             }
             //0x3: group1_Ev_Ib();
             0x3: decode MODRM_REG {
-                0x0: add_Ev_Ib();
+                0x0: Inst::ADD(Ev,Ib);
                 0x1: or_Ev_Ib();
                 0x2: adc_Ev_Ib();
                 0x3: sbb_Ev_Ib();

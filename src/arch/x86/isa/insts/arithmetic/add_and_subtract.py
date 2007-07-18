@@ -54,6 +54,29 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop ADD_R_I
+{
+    limm t1, imm
+    add reg, reg, t1
+};
+
+def macroop ADD_M_I
+{
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    add t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADD_P_I
+{
+    rdip t7
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    add t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
 def macroop SUB_R_I
 {
     limm t1, imm
