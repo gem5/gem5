@@ -86,6 +86,7 @@
  */
 
 #include "arch/x86/miscregfile.hh"
+#include "sim/serialize.hh"
 
 using namespace X86ISA;
 using namespace std;
@@ -105,31 +106,65 @@ void MiscRegFile::clear()
 
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 {
-    panic("No misc registers in x86 yet!\n");
+    switch(miscReg)
+    {
+      case MISCREG_CR1:
+      case MISCREG_CR5:
+      case MISCREG_CR6:
+      case MISCREG_CR7:
+      case MISCREG_CR9:
+      case MISCREG_CR10:
+      case MISCREG_CR11:
+      case MISCREG_CR12:
+      case MISCREG_CR13:
+      case MISCREG_CR14:
+      case MISCREG_CR15:
+        panic("Tried to read invalid control register %d\n", miscReg);
+        break;
+    }
+    return regVal[miscReg];
 }
 
 MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 {
-    panic("No misc registers in x86 yet!\n");
+    warn("No miscreg effects implemented yet!\n");
+    return readRegNoEffect(miscReg);
 }
 
 void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
 {
-    panic("No misc registers in x86 yet!\n");
+    switch(miscReg)
+    {
+      case MISCREG_CR1:
+      case MISCREG_CR5:
+      case MISCREG_CR6:
+      case MISCREG_CR7:
+      case MISCREG_CR9:
+      case MISCREG_CR10:
+      case MISCREG_CR11:
+      case MISCREG_CR12:
+      case MISCREG_CR13:
+      case MISCREG_CR14:
+      case MISCREG_CR15:
+        panic("Tried to write invalid control register %d\n", miscReg);
+        break;
+    }
+    regVal[miscReg] = val;
 }
 
 void MiscRegFile::setReg(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
-    panic("No misc registers in x86 yet!\n");
+    warn("No miscreg effects implemented yet!\n");
+    setRegNoEffect(miscReg, val);
 }
 
 void MiscRegFile::serialize(std::ostream & os)
 {
-    panic("No misc registers in x86 yet!\n");
+    SERIALIZE_ARRAY(regVal, NumMiscRegs);
 }
 
 void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
 {
-    panic("No misc registers in x86 yet!\n");
+    UNSERIALIZE_ARRAY(regVal, NumMiscRegs);
 }

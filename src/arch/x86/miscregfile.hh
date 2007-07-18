@@ -89,6 +89,7 @@
 #define __ARCH_X86_MISCREGFILE_HH__
 
 #include "arch/x86/faults.hh"
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
 
 #include <string>
@@ -100,11 +101,14 @@ namespace X86ISA
     std::string getMiscRegName(RegIndex);
 
     //These will have to be updated in the future.
-    const int NumMiscArchRegs = 0;
-    const int NumMiscRegs = 0;
+    const int NumMiscArchRegs = NUM_MISCREGS;
+    const int NumMiscRegs = NUM_MISCREGS;
 
     class MiscRegFile
     {
+      protected:
+        MiscReg regVal[NumMiscRegs];
+
       public:
         void clear();
 
