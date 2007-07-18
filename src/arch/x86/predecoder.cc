@@ -235,13 +235,41 @@ namespace X86ISA
                     logOpSize = 1; // 16 bit operand size
             }
 
+            //Set the actual op size
+            emi.opSize = 1 << logOpSize;
+
+            //Figure out the effective address size. This can be overriden to
+            //a fixed value at the decoder level.
+            int logAddrSize;
+            if(/*FIXME 64-bit mode*/1)
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 2; // 32 bit address size
+                else
+                    logAddrSize = 3; // 64 bit address size
+            }
+            else if(/*FIXME default 32*/1)
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 1; // 16 bit address size
+                else
+                    logAddrSize = 2; // 32 bit address size
+            }
+            else // 16 bit default operand size
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 2; // 32 bit address size
+                else
+                    logAddrSize = 1; // 16 bit address size
+            }
+
+            //Set the actual address size
+            emi.addrSize = 1 << logAddrSize;
+
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
             int immType = ImmediateType[emi.opcode.num - 1][nextByte];
             immediateSize = SizeTypeToSize[logOpSize - 1][immType];
-
-            //Set the actual op size
-            emi.opSize = 1 << logOpSize;
 
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {
