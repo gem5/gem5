@@ -64,7 +64,7 @@ def macroop MOV_M_R {
 
 def macroop MOV_P_R {
     rdip t7
-    st reg, ds, [scale, index, base], disp
+    st reg, ds, [0, t0, t7], disp
 };
 
 def macroop MOV_R_M {
@@ -73,7 +73,7 @@ def macroop MOV_R_M {
 
 def macroop MOV_R_P {
     rdip t7
-    ld reg, ds, [scale, index, base], disp
+    ld reg, ds, [0, t0, t7], disp
 };
 
 def macroop MOV_R_I {
@@ -88,7 +88,7 @@ def macroop MOV_M_I {
 def macroop MOV_P_I {
     rdip t7
     limm t1, imm
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop MOVSXD_R_R {
@@ -102,8 +102,66 @@ def macroop MOVSXD_R_M {
 
 def macroop MOVSXD_R_P {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sext reg, t1, dsz
+};
+
+def macroop MOVZX_B_R_R {
+    mov reg, reg, t0
+    mov reg, reg, regm, dataSize=1
+};
+
+def macroop MOVZX_B_R_M {
+    mov reg, reg, t0
+    ld reg, ds, [scale, index, base], disp, dataSize=1
+};
+
+def macroop MOVZX_B_R_P {
+    rdip t7
+    mov reg, reg, t0
+    ld reg, ds, [0, t0, t7], disp, dataSize=1
+};
+
+def macroop MOVZX_B_M_R {
+    mov t1, t1, t0
+    mov t1, t1, reg, dataSize=1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop MOVZX_B_P_R {
+    rdip t7
+    mov t1, t1, t0
+    mov t1, t1, reg, dataSize=1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop MOVZX_W_R_R {
+    mov reg, reg, t0
+    mov reg, reg, regm, dataSize=2
+};
+
+def macroop MOVZX_W_R_M {
+    mov reg, reg, t0
+    ld reg, ds, [scale, index, base], disp, dataSize=2
+};
+
+def macroop MOVZX_W_R_P {
+    rdip t7
+    mov reg, reg, t0
+    ld reg, ds, [0, t0, t7], disp, dataSize=2
+};
+
+def macroop MOVZX_W_M_R {
+    mov t1, t1, t0
+    mov t1, t1, reg, dataSize=2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop MOVZX_W_P_R {
+    rdip t7
+    mov t1, t1, t0
+    mov t1, t1, reg, dataSize=2
+    st t1, ds, [0, t0, t7], disp
 };
 '''
 #let {{

@@ -66,8 +66,8 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
     //Use the SIB byte for addressing if the modrm byte calls for it.
     if (machInst.modRM.rm == 4 && machInst.addrSize != 2) {
         scale = 1 << machInst.sib.scale;
-        index = machInst.sib.index;
-        base = machInst.sib.base;
+        index = machInst.sib.index | (machInst.rex.x << 3);
+        base = machInst.sib.base | (machInst.rex.b << 3);
         //In this special case, we don't use a base. The displacement also
         //changes, but that's managed by the predecoder.
         if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
@@ -80,11 +80,13 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
             warn("I'm not really using 16 bit MODRM like I'm supposed to!\n");
         } else {
             scale = 0;
-            base = machInst.modRM.rm;
+            base = machInst.modRM.rm | (machInst.rex.b << 3);
             if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
                 base = NUM_INTREGS;
-                if (machInst.mode.submode == SixtyFourBitMode)
-                    base = NUM_INTREGS+7;
+                //Since we need to use a different encoding of this
+                //instruction anyway, just ignore the base in those cases
+//                if (machInst.mode.submode == SixtyFourBitMode)
+//                    base = NUM_INTREGS+7;
             }
         }
     }

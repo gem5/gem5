@@ -67,21 +67,25 @@
                 0x03: lsl_Gv_Ew();
                 //sandpile.org doesn't seem to know what this is... ?
                 0x04: loadall_or_reset_or_hang();
+#if FULL_SYSTEM
                 0x05: syscall();
+#else
+                0x05: SyscallInst::syscall('xc->syscall(rax)');
+#endif
                 0x06: clts();
                 //sandpile.org says (AMD) after sysret, so I might want to check
                 //if that means amd64 or AMD machines
                 0x07: loadall_or_sysret();
             }
             0x01: decode OPCODE_OP_BOTTOM3 {
-                0x0: holderholder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: invd();
+                0x1: wbinvd();
+                0x2: This_should_be_an_illegal_instruction();
+                0x3: UD1();
+                0x4: This_should_be_an_illegal_instruction();
+                0x5: threednow();
+                0x6: threednow();
+                0x7: threednow();
             }
             0x02: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -94,14 +98,14 @@
                 0x7: holder();
             }
             0x03: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: group17();
+                0x1: group17();
+                0x2: group17();
+                0x3: group17();
+                0x4: group17();
+                0x5: group17();
+                0x6: group17();
+                0x7: group17();
             }
             0x04: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -124,44 +128,44 @@
                 0x7: holder();
             }
             0x06: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: wrmsr();
+                0x1: rdtsc();
+                0x2: rdmsr();
+                0x3: rdpmc();
+                0x4: sysenter();
+                0x5: sysexit();
+                0x6: This_should_be_an_illegal_instruction();
+                0x7: getsec();
             }
             0x07: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: three_byte_opcode();
+                0x1: three_byte_opcode();
+                0x2: three_byte_opcode();
+                0x3: three_byte_opcode();
+                0x4: three_byte_opcode();
+                0x5: three_byte_opcode();
+                0x6: three_byte_opcode();
+                0x7: three_byte_opcode();
             }
             0x08: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: cmovo_Gv_Ev();
+                0x1: cmovno_Gv_Ev();
+                0x2: cmovb_Gv_Ev();
+                0x3: cmovnb_Gv_Ev();
+                0x4: cmovz_Gv_Ev();
+                0x5: cmovnz_Gv_Ev();
+                0x6: cmovbe_Gv_Ev();
+                0x7: cmovnbe_Gv_Ev();
             }
             0x09: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: cmovs_Gv_Ev();
+                0x1: cmovns_Gv_Ev();
+                0x2: cmovp_Gv_Ev();
+                0x3: cmovnp_Gv_Ev();
+                0x4: cmovl_Gv_Ev();
+                0x5: cmovnl_Gv_Ev();
+                0x6: cmovle_Gv_Ev();
+                0x7: cmovnle_Gv_Ev();
             }
             0x0A: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -227,81 +231,81 @@
                 0x0: jo_Jz();
                 0x1: jno_Jz();
                 0x2: jb_Jz();
-                0x3: jnb_Jz();
-                0x4: jz_Jz();
+                0x3: Inst::JNB(Jz);
+                0x4: Inst::JZ(Jz);
                 0x5: Inst::JNZ(Jz);
-                0x6: jbe_Jz();
+                0x6: Inst::JBE(Jz);
                 0x7: jnbe_Jz();
             }
             0x11: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: js_Jz();
+                0x1: jns_Jz();
+                0x2: jp_Jz();
+                0x3: jnp_Jz();
+                0x4: jl_Jz();
+                0x5: jnl_Jz();
+                0x6: jle_Jz();
+                0x7: jnle_Jz();
             }
             0x12: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: seto_Eb();
+                0x1: setno_Eb();
+                0x2: setb_Eb();
+                0x3: setnb_Eb();
+                0x4: setz_Eb();
+                0x5: setnz_Eb();
+                0x6: setbe_Eb();
+                0x7: setnbe_Eb();
             }
             0x13: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: sets_Eb();
+                0x1: setns_Eb();
+                0x2: setp_Eb();
+                0x3: setnp_Eb();
+                0x4: setl_Eb();
+                0x5: setnl_Eb();
+                0x6: setle_Eb();
+                0x7: setnle_Eb();
             }
             0x14: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: push_fs();
+                0x1: pop_fs();
+                0x2: cpuid();
+                0x3: bt_Ev_Gv();
+                0x4: shld_Ev_Gv_Ib();
+                0x5: shld_Ev_Gv_rCl();
+                0x6: xbts_and_cmpxchg();
+                0x7: ibts_and_cmpxchg();
             }
             0x15: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: push_gs();
+                0x1: pop_gs();
+                0x2: rsm_smm();
+                0x3: bts_Ev_Gv();
+                0x4: shrd_Ev_Gv_Ib();
+                0x5: shrd_Ev_Gv_rCl();
+                0x6: group16();
+                0x7: imul_Gv_Ev();
             }
             0x16: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: cmpxchg_Eb_Gb();
+                0x1: cmpxchg_Ev_Gv();
+                0x2: lss_Gz_Mp();
+                0x3: btr_Ev_Gv();
+                0x4: lfs_Gz_Mp();
+                0x5: lgs_Gz_Mp();
+                0x6: Inst::MOVZX_B(Gv,Eb);
+                0x7: Inst::MOVZX_W(Gv,Ew);
             }
             0x17: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: jmpe_Jz(); // IA-64?
+                0x1: group11_UD2();
+                0x2: group8_Ev_Ib();
+                0x3: btc_Ev_Gv();
+                0x4: bsf_Gv_Ev();
+                0x5: bsr_Gv_Ev();
+                0x6: movsx_Gv_Eb();
+                0x7: movsx_Gv_Ew();
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -314,14 +318,14 @@
                 0x7: holder();
             }
             0x19: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: bswap_rAx();
+                0x1: bswap_rCx();
+                0x2: bswap_rDx();
+                0x3: bswap_rBx();
+                0x4: bswap_rSP();
+                0x5: bswap_rBP();
+                0x6: bswap_rSI();
+                0x7: bswap_rDI();
             }
             0x1A: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();

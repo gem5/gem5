@@ -163,8 +163,8 @@
             0x1: cmp_Ev_Gv();
             0x2: cmp_Gb_Eb();
             0x3: cmp_Gv_Ev();
-            0x4: cmp_Al_Ib();
-            0x5: cmp_rAX_Iz();
+            0x4: Inst::CMP(rAl,Ib);
+            0x5: Inst::CMP(rAX,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the DS segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
@@ -262,10 +262,10 @@
             0x0: jo_Jb();
             0x1: jno_Jb();
             0x2: jb_Jb();
-            0x3: jnb_Jb();
+            0x3: Inst::JNB(Jb);
             0x4: Inst::JZ(Jb);
             0x5: Inst::JNZ(Jb);
-            0x6: jbe_Jb();
+            0x6: Inst::JBE(Jb);
             0x7: jnbe_Jb();
         }
         0x0F: decode OPCODE_OP_BOTTOM3 {
@@ -475,7 +475,7 @@
                 0x0: This_should_be_an_illegal_instruction();
                 default: jmp_Ap();
             }
-            0x3: jmp_Jb();
+            0x3: Inst::JMP(Jb);
             0x4: in_Al_Dx();
             0x5: in_eAX_Dx();
             0x6: out_Dx_Al();

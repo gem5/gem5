@@ -53,8 +53,10 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class CMP(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop CMP_R_I
+{
+    limm t1, imm
+    sub t0, reg, t1, flags=(OF, SF, ZF, AF, PF, CF)
+};
+'''

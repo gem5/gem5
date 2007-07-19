@@ -126,12 +126,12 @@ def template MicroRegOpDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 RegIndex _src1, RegIndex _src2, RegIndex _dest,
-                uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -149,12 +149,12 @@ def template MicroRegOpImmDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)sImm(ExtMachInst _machInst,
                 const char * instMnem,
                 RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-                uint8_t _dataSize, uint8_t _ext);
+                uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -170,7 +170,7 @@ def template MicroRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
-            uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
                 _src1, _src2, _dest, _dataSize, _ext,
@@ -183,7 +183,7 @@ def template MicroRegOpConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             RegIndex _src1, RegIndex _src2, RegIndex _dest,
-            uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
                 _src1, _src2, _dest, _dataSize, _ext,
@@ -203,7 +203,7 @@ def template MicroRegOpImmConstructor {{
     inline %(class_name)sImm::%(class_name)sImm(
             ExtMachInst machInst, const char * instMnem,
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-            uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
                 _src1, _imm8, _dest, _dataSize, _ext,
@@ -216,7 +216,7 @@ def template MicroRegOpImmConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             RegIndex _src1, uint8_t _imm8, RegIndex _dest,
-            uint8_t _dataSize, uint8_t _ext) :
+            uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
                 _src1, _imm8, _dest, _dataSize, _ext,

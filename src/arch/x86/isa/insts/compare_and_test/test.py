@@ -63,7 +63,7 @@ def macroop TEST_M_R
 def macroop TEST_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     and t0, t1, reg, flags=(SF, ZF, PF)
 };
 
@@ -82,7 +82,7 @@ def macroop TEST_M_I
 def macroop TEST_P_I
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     limm t2, imm
     and t0, t1, t2, flags=(SF, ZF, PF)
 };
