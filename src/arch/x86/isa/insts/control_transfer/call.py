@@ -56,7 +56,7 @@
 microcode = '''
 def macroop CALL_I
 {
-    # Make the default data size of pops 64 bits in 64 bit mode
+    # Make the default data size of calls 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
     limm t2, imm
