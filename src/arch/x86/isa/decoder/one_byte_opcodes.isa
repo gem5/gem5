@@ -398,7 +398,7 @@
             0x0: group2_Eb_Ib();
             0x1: group2_Ev_Ib();
             0x2: ret_near_Iw();
-            0x3: ret_near();
+            0x3: Inst::RET();
             0x4: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: les_Gz_Mp();
