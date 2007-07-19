@@ -53,8 +53,14 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#   class RET(Inst):
-# 	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop RET
+{
+    # Make the default data size of rets 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    ld t1, ss, [0, t0, rsp]
+    addi rsp, rsp, dsz
+    wripi t1, 0
+};
+'''
