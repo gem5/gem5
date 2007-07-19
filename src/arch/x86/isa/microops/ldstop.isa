@@ -404,13 +404,13 @@ let {{
 
         class StoreOp(LdStOp):
             def __init__(self, data, segment, addr, disp = 0):
-                super(LoadOp, self).__init__(data, segment, addr, disp)
+                super(StoreOp, self).__init__(data, segment, addr, disp)
                 self.className = Name
                 self.mnemonic = name
 
         microopClasses[name] = StoreOp
 
-    defineMicroLoadOp('St', 'Mem = Data;')
+    defineMicroStoreOp('St', 'Mem = Data;')
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);", "ea_code": calculateEA})
