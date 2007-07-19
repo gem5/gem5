@@ -58,7 +58,7 @@
 // Decode the two byte opcodes
 //
 0x2: decode OPCODE_PREFIXA {
-    0xF0: decode OPCODE_OP_TOP5 {
+    0x0F: decode OPCODE_OP_TOP5 {
         format WarnUnimpl {
             0x00: decode OPCODE_OP_BOTTOM3 {
                 0x00: group6();
@@ -67,9 +67,7 @@
                 0x03: lsl_Gv_Ew();
                 //sandpile.org doesn't seem to know what this is... ?
                 0x04: loadall_or_reset_or_hang();
-                //sandpile.org says (AMD) after syscall, so I might want to check
-                //if that means amd64 or AMD machines
-                0x05: loadall_or_syscall();
+                0x05: syscall();
                 0x06: clts();
                 //sandpile.org says (AMD) after sysret, so I might want to check
                 //if that means amd64 or AMD machines
@@ -226,14 +224,14 @@
                 0x7: holder();
             }
             0x10: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: jo_Jz();
+                0x1: jno_Jz();
+                0x2: jb_Jz();
+                0x3: jnb_Jz();
+                0x4: jz_Jz();
+                0x5: Inst::JNZ(Jz);
+                0x6: jbe_Jz();
+                0x7: jnbe_Jz();
             }
             0x11: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
