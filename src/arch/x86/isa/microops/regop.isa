@@ -73,6 +73,10 @@ def template MicroRegOpExecute {{
                 %(code)s;
                 %(flag_code)s;
             }
+            else
+            {
+                %(else_code)s;
+            }
 
             //Write the resulting state to the execution context
             if(fault == NoFault)
@@ -96,6 +100,10 @@ def template MicroRegOpImmExecute {{
             {
                 %(code)s;
                 %(flag_code)s;
+            }
+            else
+            {
+                %(else_code)s;
             }
 
             //Write the resulting state to the execution context
@@ -301,7 +309,7 @@ let {{
     exec_output = ""
 
     # A function which builds the C++ classes that implement the microops
-    def setUpMicroRegOp(name, Name, base, code, flagCode, condCheck):
+    def setUpMicroRegOp(name, Name, base, code, flagCode, condCheck, elseCode):
         global header_output
         global decoder_output
         global exec_output
@@ -310,7 +318,8 @@ let {{
         iop = InstObjParams(name, Name, base,
                 {"code" : code,
                  "flag_code" : flagCode,
-                 "cond_check" : condCheck})
+                 "cond_check" : condCheck,
+                 "else_code" : elseCode})
         header_output += MicroRegOpDeclare.subst(iop)
         decoder_output += MicroRegOpConstructor.subst(iop)
         exec_output += MicroRegOpExecute.subst(iop)
@@ -322,7 +331,7 @@ let {{
 
     # This creates a python representations of a microop which are a cross
     # product of reg/immediate and flag/no flag versions.
-    def defineMicroRegOp(mnemonic, code, secondSrc = "op2", cc=False):
+    def defineMicroRegOp(mnemonic, code, secondSrc = "op2", cc=False, elseCode=";"):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -351,8 +360,8 @@ let {{
 
         microopClasses[name] = RegOpChild
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true");
-        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, regFlagCode, condCode);
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true", elseCode);
+        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, regFlagCode, condCode, elseCode);
 
         class RegOpChildImm(RegOpImm):
             mnemonic = name + 'i'
@@ -362,8 +371,8 @@ let {{
 
         microopClasses[name + 'i'] = RegOpChildImm
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true");
-        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode, immFlagCode, condCode);
+        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true", elseCode);
+        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode, immFlagCode, condCode, elseCode);
 
     defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
     defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
@@ -373,10 +382,11 @@ let {{
     defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', '-op2')
     defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
     defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', '-op2')
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)', cc=True)
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
+            elseCode='DestReg=DestReg;', cc=True)
 
     # This has it's own function because Wr ops have implicit destinations
-    def defineMicroRegOpWr(mnemonic, code):
+    def defineMicroRegOpWr(mnemonic, code, elseCode=";"):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -395,21 +405,21 @@ let {{
 
         microopClasses[name] = RegOpChild
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true");
-        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, "", checkCCFlagBits);
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode, "", "true", elseCode);
+        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode, "", checkCCFlagBits, elseCode);
 
         class RegOpChildImm(RegOpImm):
-            mnemonic = name
-            className = Name
+            mnemonic = name + 'i'
+            className = Name + 'Imm'
             def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
                 super(RegOpChildImm, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
 
         microopClasses[name + 'i'] = RegOpChildImm
 
-        setUpMicroRegOp(name + 'i', Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true");
-        setUpMicroRegOp(name + 'i', Name + "ImmFlags", "X86ISA::RegOpImm", immCode, "", checkCCFlagBits);
+        setUpMicroRegOp(name + 'i', Name + "Imm", "X86ISA::RegOpImm", immCode, "", "true", elseCode);
+        setUpMicroRegOp(name + 'i', Name + "ImmFlags", "X86ISA::RegOpImm", immCode, "", checkCCFlagBits, elseCode);
 
-    defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2')
+    defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2', elseCode="RIP = RIP;")
 
     # This has it's own function because Rd ops don't always have two parameters
     def defineMicroRegOpRd(mnemonic, code):
@@ -424,7 +434,7 @@ let {{
 
         microopClasses[name] = RegOpChild
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOp", code, "", "true");
+        setUpMicroRegOp(name, Name, "X86ISA::RegOp", code, "", "true", ";");
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
@@ -440,7 +450,7 @@ let {{
 
         microopClasses[name] = RegOpChild
 
-        setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code, "", "true");
+        setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code, "", "true", ";");
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = SrcReg1;
