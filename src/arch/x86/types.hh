@@ -86,11 +86,12 @@ namespace X86ISA
     };
 
     BitUnion8(LegacyPrefixVector)
+        Bitfield<7, 4> decodeVal;
         Bitfield<7> repne;
         Bitfield<6> rep;
         Bitfield<5> lock;
-        Bitfield<4> addr;
-        Bitfield<3> op;
+        Bitfield<4> op;
+        Bitfield<3> addr;
         //There can be only one segment override, so they share the
         //first 3 bits in the legacyPrefixes bitfield.
         Bitfield<2,0> seg;
