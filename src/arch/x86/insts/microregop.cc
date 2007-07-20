@@ -63,24 +63,32 @@
 namespace X86ISA
 {
     uint64_t RegOpBase::genFlags(uint64_t oldFlags, uint64_t flagMask,
-            uint64_t _dest, uint64_t _src1, uint64_t _src2) const
+            uint64_t _dest, uint64_t _src1, uint64_t _src2,
+            bool subtract) const
     {
+        DPRINTF(Sparc, "flagMask = %#x\n", flagMask);
         uint64_t flags = oldFlags & ~flagMask;
-        if(flagMask & CFBit && findCarry(dataSize, _dest, _src1, _src2))
-            flags |= CFBit;
-        if(flagMask & PFBit && findParity(dataSize, _dest))
+        if(flagMask & CFBit)
+            if(findCarry(dataSize*8, _dest, _src1, _src2))
+                flags |= CFBit;
+            if(subtract)
+                flags ^= CFBit;
+        if(flagMask & PFBit && findParity(dataSize*8, _dest))
             flags |= PFBit;
-        if(flagMask & ECFBit && findCarry(dataSize, _dest, _src1, _src2))
+        if(flagMask & ECFBit && findCarry(dataSize*8, _dest, _src1, _src2))
             flags |= ECFBit;
-        if(flagMask & AFBit && findCarry(4, _dest, _src1, _src2))
-            flags |= AFBit;
-        if(flagMask & EZFBit && findZero(dataSize, _dest))
+        if(flagMask & AFBit)
+            if(findCarry(4, _dest, _src1, _src2))
+                flags |= AFBit;
+            if(subtract)
+                flags ^= AFBit;
+        if(flagMask & EZFBit && findZero(dataSize*8, _dest))
             flags |= EZFBit;
-        if(flagMask & ZFBit && findZero(dataSize, _dest))
+        if(flagMask & ZFBit && findZero(dataSize*8, _dest))
             flags |= ZFBit;
-        if(flagMask & SFBit && findNegative(dataSize, _dest))
+        if(flagMask & SFBit && findNegative(dataSize*8, _dest))
             flags |= SFBit;
-        if(flagMask & OFBit && findOverflow(dataSize, _dest, _src1, _src2))
+        if(flagMask & OFBit && findOverflow(dataSize*8, _dest, _src1, _src2))
             flags |= OFBit;
         return flags;
     }
