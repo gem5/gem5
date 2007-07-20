@@ -389,9 +389,19 @@ let {{
     defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', True)
     defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
     defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', True)
-    defineMicroRegOp('mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
+    defineMicroRegOp('Mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
     defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
             elseCode='DestReg=DestReg;', cc=True)
+
+    # Shift instructions
+    defineMicroRegOp('Sll', '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            DestReg = merge(DestReg, SrcReg1 << shiftAmt, dataSize);
+            ''')
+    # There are special rules for the flag for a single bit shift
+    defineMicroRegOp('Bll', '''
+            DestReg = merge(DestReg, SrcReg1 << 1, dataSize);
+            ''')
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code, elseCode=";"):

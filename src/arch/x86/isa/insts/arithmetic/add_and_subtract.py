@@ -54,6 +54,11 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop ADD_R_R
+{
+    add reg, reg, regm
+};
+
 def macroop ADD_R_I
 {
     limm t1, imm
@@ -77,9 +82,55 @@ def macroop ADD_P_I
     st t1, ds, [scale, index, base], disp
 };
 
+def macroop ADD_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    add t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADD_P_R
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    add t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADD_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    add reg, reg, t1
+};
+
+def macroop ADD_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    add reg, reg, t1
+};
+
+def macroop SUB_R_R
+{
+    sub reg, reg, regm
+};
+
 def macroop SUB_R_I
 {
     limm t1, imm
+    sub reg, reg, t1
+};
+
+def macroop SUB_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    sub reg, reg, t1
+};
+
+def macroop SUB_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
     sub reg, reg, t1
 };
 
@@ -97,6 +148,21 @@ def macroop SUB_P_I
     limm t2, imm
     ld t1, ds, [scale, index, base], disp
     sub t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SUB_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    sub t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SUB_P_R
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    sub t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
 '''

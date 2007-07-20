@@ -61,8 +61,6 @@
 0x1: decode OPCODE_OP_TOP5 {
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
-            0x4: ADD();
-            0x5: ADD();
             0x6: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: push_ES();
@@ -71,15 +69,12 @@
                 0x0: This_should_be_an_illegal_instruction();
                 default: pop_ES();
             }
-            default: ADD();
+            default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
-            0x0: or_Eb_Gb();
-            0x1: or_Ev_Gv();
-            0x2: or_Gb_Eb();
-            0x3: or_Gv_Ev();
-            0x4: or_Al_Ib();
-            0x5: or_rAX_Iz();
             0x6: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: push_CS();
@@ -87,6 +82,10 @@
             //Any time this is seen, it should generate a two byte opcode
             0x7: M5InternalError::error(
                 {{"Saw a one byte opcode whose value was 0x0F!"}});
+            default: MultiInst::OR(OPCODE_OP_BOTTOM3,
+                                   [Eb,Gb], [Ev,Gv],
+                                   [Gb,Eb], [Gv,Ev],
+                                   [rAl,Ib], [rAx,Iz]);
         }
         0x02: decode OPCODE_OP_BOTTOM3 {
             0x0: adc_Eb_Gb();
@@ -121,33 +120,27 @@
             }
         }
         0x04: decode OPCODE_OP_BOTTOM3 {
-            0x0: and_Eb_Gb();
-            0x1: and_Ev_Gv();
-            0x2: and_Gb_Eb();
-            0x3: and_Gv_Ev();
-            0x4: and_Al_Ib();
-            0x5: and_rAX_Iz();
             0x6: M5InternalError::error(
                 {{"Tried to execute the ES segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: daa();
             }
+            default: MultiInst::AND(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x05: decode OPCODE_OP_BOTTOM3 {
-            0x0: sub_Eb_Gb();
-            0x1: sub_Ev_Gv();
-            0x2: sub_Gb_Eb();
-            0x3: sub_Gv_Ev();
-            0x4: sub_Al_Ib();
-            0x5: sub_rAX_Iz();
             0x6: M5InternalError::error(
                 {{"Tried to execute the CS segment override prefix!"}});
             0x7: das();
+            default: MultiInst::SUB(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
-            0x4: Inst::XOR(rAl,Ib);
-            0x5: Inst::XOR(rAx,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
@@ -156,21 +149,20 @@
             }
             default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
-                                    [Gb,Eb], [Gv,Ev]);
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x07: decode OPCODE_OP_BOTTOM3 {
-            0x0: cmp_Eb_Gb();
-            0x1: cmp_Ev_Gv();
-            0x2: cmp_Gb_Eb();
-            0x3: cmp_Gv_Ev();
-            0x4: Inst::CMP(rAl,Ib);
-            0x5: Inst::CMP(rAX,Iz);
             0x6: M5InternalError::error(
                 {{"Tried to execute the DS segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: aas();
             }
+            default: MultiInst::CMP(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x08: decode MODE_SUBMODE {
             0x0: M5InternalError::error (
@@ -276,10 +268,20 @@
             0x4: jl_Jb();
             0x5: jnl_Jb();
             0x6: jle_Jb();
-            0x7: jnke_Jb();
+            0x7: Inst::JNLE(Jb);
         }
         0x10: decode OPCODE_OP_BOTTOM3 {
-            0x0: group1_Eb_Ib();
+            //0x0: group1_Eb_Ib();
+            0x0: decode MODRM_REG {
+                0x0: Inst::ADD(Eb,Ib);
+                0x1: Inst::OR(Eb,Ib);
+                0x2: adc_Eb_Ib();
+                0x3: sbb_Eb_Ib();
+                0x4: Inst::AND(Eb,Ib);
+                0x5: Inst::SUB(Eb,Ib);
+                0x6: Inst::XOR(Eb,Ib);
+                0x7: Inst::CMP(Eb,Ib);
+            }
             //0x1: group1_Ev_Iz();
             0x1: decode MODRM_REG {
                 0x0: add_Ev_Iz();
@@ -289,11 +291,21 @@
                 0x4: Inst::AND(Ev,Iz);
                 0x5: Inst::SUB(Ev,Iz);
                 0x6: xor_Ev_Iz();
-                0x7: cmp_Ev_Iz();
+                0x7: Inst::CMP(Ev,Iz);
             }
             0x2: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
-                default: group1_Eb_Ib();
+                //default: group1_Eb_Ib();
+                default: decode MODRM_REG {
+                    0x0: Inst::ADD(Eb,Ib);
+                    0x1: Inst::OR(Eb,Ib);
+                    0x2: adc_Eb_Ib();
+                    0x3: sbb_Eb_Ib();
+                    0x4: Inst::AND(Eb,Ib);
+                    0x5: Inst::SUB(Eb,Ib);
+                    0x6: Inst::XOR(Eb,Ib);
+                    0x7: Inst::CMP(Eb,Ib);
+                }
             }
             //0x3: group1_Ev_Ib();
             0x3: decode MODRM_REG {
@@ -304,7 +316,7 @@
                 0x4: Inst::AND(Ev,Ib);
                 0x5: sub_Ev_Ib();
                 0x6: xor_Ev_Ib();
-                0x7: cmp_Ev_Ib();
+                0x7: Inst::CMP(Ev,Ib);
             }
             0x4: Inst::TEST(Eb,Gb);
             0x5: Inst::TEST(Ev,Gv);
@@ -322,10 +334,10 @@
             0x7: group10_Ev(); //Make sure this is Ev
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
-            default: Inst::NOP(); //XXX repe makes this a "pause"
+            0x0: Inst::NOP(); //XXX repe makes this a "pause"
             0x1: xchg_rCX_rAX();
             0x2: xchg_rDX_rAX();
-            0x3: xchg_rVX_rAX();
+            0x3: xchg_rBX_rAX();
             0x4: xchg_rSP_rAX();
             0x5: xchg_rBP_rAX();
             0x6: xchg_rSI_rAX();
@@ -395,8 +407,28 @@
             }
         }
         0x18: decode OPCODE_OP_BOTTOM3 {
-            0x0: group2_Eb_Ib();
-            0x1: group2_Ev_Ib();
+            //0x0: group2_Eb_Ib();
+            0x0: decode MODRM_REG {
+                0x0: rol_Eb_Ib();
+                0x1: ror_Eb_Ib();
+                0x2: rcl_Eb_Ib();
+                0x3: rcr_Eb_Ib();
+                0x4: Inst::SAL(Eb,Ib);
+                0x5: shr_Eb_Ib();
+                0x6: Inst::SAL(Eb,Ib);
+                0x7: sar_Eb_Ib();
+            }
+            //0x1: group2_Ev_Ib();
+            0x1: decode MODRM_REG {
+                0x0: rol_Ev_Ib();
+                0x1: ror_Ev_Ib();
+                0x2: rcl_Ev_Ib();
+                0x3: rcr_Ev_Ib();
+                0x4: Inst::SAL(Ev,Ib);
+                0x5: shr_Ev_Ib();
+                0x6: Inst::SAL(Ev,Ib);
+                0x7: sar_Ev_Ib();
+            }
             0x2: ret_near_Iw();
             0x3: Inst::RET_NEAR();
             0x4: decode MODE_SUBMODE {
