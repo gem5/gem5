@@ -176,28 +176,28 @@
             0x0: M5InternalError::error (
                 {{"Tried to execute an REX prefix!"}});
             default: decode OPCODE_OP_BOTTOM3 {
-                0x0: inc_eAX();
-                0x1: inc_eCX();
-                0x2: inc_eDX();
-                0x3: inc_eBX();
-                0x4: inc_eSP();
-                0x5: inc_eBP();
-                0x6: inc_eSI();
-                0x7: inc_eDI();
+                0x0: Inst::INC(rAx);
+                0x1: Inst::INC(rCx);
+                0x2: Inst::INC(rDx);
+                0x3: Inst::INC(rBx);
+                0x4: Inst::INC(rSP);
+                0x5: Inst::INC(rBP);
+                0x6: Inst::INC(rSI);
+                0x7: Inst::INC(rDI);
             }
         }
         0x09: decode MODE_SUBMODE {
             0x0: M5InternalError::error (
                 {{"Tried to execute an REX prefix!"}});
             default: decode OPCODE_OP_BOTTOM3 {
-                0x0: dec_eAX();
-                0x1: dec_eCX();
-                0x2: dec_eDX();
-                0x3: dec_eBX();
-                0x4: dec_eSP();
-                0x5: dec_eBP();
-                0x6: dec_eSI();
-                0x7: dec_eDI();
+                0x0: Inst::DEC(rAx);
+                0x1: Inst::DEC(rCX);
+                0x2: Inst::DEC(rDx);
+                0x3: Inst::DEC(rBx);
+                0x4: Inst::DEC(rSP);
+                0x5: Inst::DEC(rBP);
+                0x6: Inst::DEC(rSI);
+                0x7: Inst::DEC(rDI);
             }
         }
         format Inst {
@@ -266,7 +266,7 @@
             0x4: Inst::JZ(Jb);
             0x5: Inst::JNZ(Jb);
             0x6: Inst::JBE(Jb);
-            0x7: jnbe_Jb();
+            0x7: Inst::JNBE(Jb);
         }
         0x0F: decode OPCODE_OP_BOTTOM3 {
             0x0: js_Jb();
@@ -398,7 +398,7 @@
             0x0: group2_Eb_Ib();
             0x1: group2_Ev_Ib();
             0x2: ret_near_Iw();
-            0x3: Inst::RET();
+            0x3: Inst::RET_NEAR();
             0x4: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: les_Gz_Mp();
@@ -469,7 +469,7 @@
             0x7: out_Ib_eAX();
         }
         0x1D: decode OPCODE_OP_BOTTOM3 {
-            0x0: Inst::CALL(Jz);
+            0x0: Inst::CALL_NEAR(Jz);
             0x1: jmp_Jz();
             0x2: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
@@ -502,7 +502,17 @@
             0x4: cld();
             0x5: std();
             0x6: group4();
-            0x7: group5();
+            //0x7: group5();
+            0x7: decode MODRM_REG {
+                0x0: Inst::INC(Ev);
+                0x1: dev_Ev();
+                0x2: call_Ev();
+                0x3: call_Mp();
+                0x4: jmp_Ev();
+                0x5: jmp_Mp();
+                0x6: push_Ev();
+                0x7: This_should_be_an_illegal_instruction();
+            }
         }
     }
     default: FailUnimpl::oneByteOps();

@@ -235,7 +235,7 @@
                 0x4: Inst::JZ(Jz);
                 0x5: Inst::JNZ(Jz);
                 0x6: Inst::JBE(Jz);
-                0x7: jnbe_Jz();
+                0x7: Inst::JNBE(Jz);
             }
             0x11: decode OPCODE_OP_BOTTOM3 {
                 0x0: js_Jz();
@@ -285,7 +285,7 @@
                 0x4: shrd_Ev_Gv_Ib();
                 0x5: shrd_Ev_Gv_rCl();
                 0x6: group16();
-                0x7: imul_Gv_Ev();
+                0x7: Inst::IMUL(Gv,Ev);
             }
             0x16: decode OPCODE_OP_BOTTOM3 {
                 0x0: cmpxchg_Eb_Gb();
@@ -304,8 +304,8 @@
                 0x3: btc_Ev_Gv();
                 0x4: bsf_Gv_Ev();
                 0x5: bsr_Gv_Ev();
-                0x6: movsx_Gv_Eb();
-                0x7: movsx_Gv_Ew();
+                0x6: Inst::MOVSX_B(Gv,Eb);
+                0x7: Inst::MOVSX_W(Gv,Ew);
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
