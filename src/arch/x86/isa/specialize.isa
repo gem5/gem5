@@ -118,6 +118,7 @@ let {{
 
     ModRMRegIndex = "(MODRM_REG | (REX_R << 3))"
     ModRMRMIndex = "(MODRM_RM | (REX_B << 3))"
+    InstRegIndex = "(OPCODE_OP_BOTTOM3 | (REX_B << 3))"
 
     # This function specializes the given piece of code to use a particular
     # set of argument types described by "opTypes".
@@ -143,6 +144,10 @@ let {{
                     else:
                         print "Didn't recognize fixed register size %s!" % opType.rsize
                 Name += "_R"
+            elif opType.tag == "B":
+                # This refers to registers whose index is encoded as part of the opcode
+                Name += "_R"
+                env.addReg(InstRegIndex)
             elif opType.tag == "M":
                 # This refers to memory. The macroop constructor sets up modrm
                 # addressing. Non memory modrm settings should cause an error.
