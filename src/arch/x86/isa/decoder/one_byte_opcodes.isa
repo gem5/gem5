@@ -167,52 +167,16 @@
         0x08: decode MODE_SUBMODE {
             0x0: M5InternalError::error (
                 {{"Tried to execute an REX prefix!"}});
-            default: decode OPCODE_OP_BOTTOM3 {
-                0x0: Inst::INC(rAx);
-                0x1: Inst::INC(rCx);
-                0x2: Inst::INC(rDx);
-                0x3: Inst::INC(rBx);
-                0x4: Inst::INC(rSP);
-                0x5: Inst::INC(rBP);
-                0x6: Inst::INC(rSI);
-                0x7: Inst::INC(rDI);
-            }
+            default: Inst::INC(B);
         }
         0x09: decode MODE_SUBMODE {
             0x0: M5InternalError::error (
                 {{"Tried to execute an REX prefix!"}});
-            default: decode OPCODE_OP_BOTTOM3 {
-                0x0: Inst::DEC(rAx);
-                0x1: Inst::DEC(rCX);
-                0x2: Inst::DEC(rDx);
-                0x3: Inst::DEC(rBx);
-                0x4: Inst::DEC(rSP);
-                0x5: Inst::DEC(rBP);
-                0x6: Inst::DEC(rSI);
-                0x7: Inst::DEC(rDI);
-            }
+            default: Inst::DEC(B);
         }
         format Inst {
-            0x0A: decode OPCODE_OP_BOTTOM3 {
-                0x0: PUSH(rAx);
-                0x1: PUSH(rCx);
-                0x2: PUSH(rDx);
-                0x3: PUSH(rBx);
-                0x4: PUSH(rSP);
-                0x5: PUSH(rBP);
-                0x6: PUSH(rSI);
-                0x7: PUSH(rDI);
-            }
-            0x0B: decode OPCODE_OP_BOTTOM3 {
-                0x0: POP(rAx);
-                0x1: POP(rCx);
-                0x2: POP(rDx);
-                0x3: POP(rBx);
-                0x4: POP(rSP);
-                0x5: POP(rBP);
-                0x6: POP(rSI);
-                0x7: POP(rDI);
-            }
+            0x0A: PUSH(B);
+            0x0B: POP(B);
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
             0x0: decode MODE_SUBMODE {
@@ -284,13 +248,13 @@
             }
             //0x1: group1_Ev_Iz();
             0x1: decode MODRM_REG {
-                0x0: add_Ev_Iz();
-                0x1: or_Ev_Ibz();
+                0x0: Inst::ADD(Ev,Iz);
+                0x1: Inst::OR(Ev,Iz);
                 0x2: adc_Ev_Iz();
                 0x3: sbb_Ev_Iz();
                 0x4: Inst::AND(Ev,Iz);
                 0x5: Inst::SUB(Ev,Iz);
-                0x6: xor_Ev_Iz();
+                0x6: Inst::XOR(Ev,Iz);
                 0x7: Inst::CMP(Ev,Iz);
             }
             0x2: decode MODE_SUBMODE {
@@ -310,12 +274,12 @@
             //0x3: group1_Ev_Ib();
             0x3: decode MODRM_REG {
                 0x0: Inst::ADD(Ev,Ib);
-                0x1: or_Ev_Ib();
+                0x1: Inst::OR(Ev,Ib);
                 0x2: adc_Ev_Ib();
                 0x3: sbb_Ev_Ib();
                 0x4: Inst::AND(Ev,Ib);
-                0x5: sub_Ev_Ib();
-                0x6: xor_Ev_Ib();
+                0x5: Inst::SUB(Ev,Ib);
+                0x6: Inst::XOR(Ev,Ib);
                 0x7: Inst::CMP(Ev,Ib);
             }
             0x4: Inst::TEST(Eb,Gb);
@@ -335,13 +299,7 @@
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::NOP(); //XXX repe makes this a "pause"
-            0x1: xchg_rCX_rAX();
-            0x2: xchg_rDX_rAX();
-            0x3: xchg_rBX_rAX();
-            0x4: xchg_rSP_rAX();
-            0x5: xchg_rBP_rAX();
-            0x6: xchg_rSI_rAX();
-            0x7: xchg_rDI_rAX();
+            default: xchg_B_rAX();
         }
         0x13: decode OPCODE_OP_BOTTOM3 {
             0x0: cbw_or_cwde_or_cdqe_rAX();
@@ -394,18 +352,7 @@
             0x6: mov_Dh_Ib();
             0x7: mov_Bh_Ib();
         }
-        format Inst {
-            0x17: decode OPCODE_OP_BOTTOM3 {
-                0x0: MOV(rAX,Iv);
-                0x1: MOV(rCX,Iv);
-                0x2: MOV(rDX,Iv);
-                0x3: MOV(rBX,Iv);
-                0x4: MOV(rSP,Iv);
-                0x5: MOV(rBP,Iv);
-                0x6: MOV(rSI,Iv);
-                0x7: MOV(rDI,Iv);
-            }
-        }
+        0x17: Inst::MOV(B,Iv);
         0x18: decode OPCODE_OP_BOTTOM3 {
             //0x0: group2_Eb_Ib();
             0x0: decode MODRM_REG {

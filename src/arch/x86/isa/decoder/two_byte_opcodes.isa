@@ -317,16 +317,7 @@
                 0x6: holder();
                 0x7: holder();
             }
-            0x19: decode OPCODE_OP_BOTTOM3 {
-                0x0: bswap_rAx();
-                0x1: bswap_rCx();
-                0x2: bswap_rDx();
-                0x3: bswap_rBx();
-                0x4: bswap_rSP();
-                0x5: bswap_rBP();
-                0x6: bswap_rSI();
-                0x7: bswap_rDI();
-            }
+            0x19: bswap_B();
             0x1A: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
                 0x1: holder();
