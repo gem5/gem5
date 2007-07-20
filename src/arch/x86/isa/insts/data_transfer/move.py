@@ -54,6 +54,11 @@
 # Authors: Gabe Black
 
 microcode = '''
+
+#
+# Regular moves
+#
+
 def macroop MOV_R_R {
     mov reg, reg, regm
 };
@@ -91,77 +96,87 @@ def macroop MOV_P_I {
     st t1, ds, [0, t0, t7], disp
 };
 
+#
+# Sign extending moves
+#
+
 def macroop MOVSXD_R_R {
-    sext reg, regm, dsz
+    sext reg, regm, 32
 };
 
 def macroop MOVSXD_R_M {
-    ld t1, ds, [scale, index, base], disp
-    sext reg, t1, dsz
+    ld t1, ds, [scale, index, base], disp, dataSize=4
+    sext reg, t1, 32
 };
 
 def macroop MOVSXD_R_P {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
-    sext reg, t1, dsz
+    ld t1, ds, [0, t0, t7], disp, dataSize=4
+    sext reg, t1, 32
 };
 
+def macroop MOVSX_B_R_R {
+    sext reg, regm, 8
+};
+
+def macroop MOVSX_B_R_M {
+    ld reg, ds, [scale, index, base], disp, dataSize=1
+    sext reg, reg, 8
+};
+
+def macroop MOVSX_B_R_P {
+    rdip t7
+    ld reg, ds, [0, t0, t7], disp, dataSize=1
+    sext reg, reg, 8
+};
+
+def macroop MOVSX_W_R_R {
+    sext reg, regm, 16
+};
+
+def macroop MOVSX_W_R_M {
+    ld reg, ds, [scale, index, base], disp, dataSize=2
+    sext reg, reg, 16
+};
+
+def macroop MOVSX_W_R_P {
+    rdip t7
+    ld reg, ds, [0, t0, t7], disp, dataSize=2
+    sext reg, reg, 16
+};
+
+#
+# Zero extending moves
+#
+
 def macroop MOVZX_B_R_R {
-    mov reg, reg, t0
-    mov reg, reg, regm, dataSize=1
+    zext reg, regm, 8
 };
 
 def macroop MOVZX_B_R_M {
-    mov reg, reg, t0
-    ld reg, ds, [scale, index, base], disp, dataSize=1
+    ld t1, ds, [scale, index, base], disp, dataSize=1
+    zext reg, t1, 8
 };
 
 def macroop MOVZX_B_R_P {
     rdip t7
-    mov reg, reg, t0
-    ld reg, ds, [0, t0, t7], disp, dataSize=1
-};
-
-def macroop MOVZX_B_M_R {
-    mov t1, t1, t0
-    mov t1, t1, reg, dataSize=1
-    st t1, ds, [scale, index, base], disp
-};
-
-def macroop MOVZX_B_P_R {
-    rdip t7
-    mov t1, t1, t0
-    mov t1, t1, reg, dataSize=1
-    st t1, ds, [0, t0, t7], disp
+    ld t1, ds, [0, t0, t7], disp, dataSize=1
+    zext reg, t1, 8
 };
 
 def macroop MOVZX_W_R_R {
-    mov reg, reg, t0
-    mov reg, reg, regm, dataSize=2
+    zext reg, regm, 16
 };
 
 def macroop MOVZX_W_R_M {
-    mov reg, reg, t0
-    ld reg, ds, [scale, index, base], disp, dataSize=2
+    ld t1, ds, [scale, index, base], disp, dataSize=2
+    zext reg, t1, 16
 };
 
 def macroop MOVZX_W_R_P {
     rdip t7
-    mov reg, reg, t0
-    ld reg, ds, [0, t0, t7], disp, dataSize=2
-};
-
-def macroop MOVZX_W_M_R {
-    mov t1, t1, t0
-    mov t1, t1, reg, dataSize=2
-    st t1, ds, [scale, index, base], disp
-};
-
-def macroop MOVZX_W_P_R {
-    rdip t7
-    mov t1, t1, t0
-    mov t1, t1, reg, dataSize=2
-    st t1, ds, [0, t0, t7], disp
+    ld t1, ds, [0, t0, t7], disp, dataSize=2
+    zext reg, t1, 16
 };
 '''
 #let {{
