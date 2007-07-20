@@ -123,7 +123,25 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, 0);
+        unsigned flags = 0;
+        switch(dataSize)
+        {
+          case 1:
+            fault = xc->read(EA, (uint8_t&)Mem, flags);
+            break;
+          case 2:
+            fault = xc->read(EA, (uint16_t&)Mem, flags);
+            break;
+          case 4:
+            fault = xc->read(EA, (uint32_t&)Mem, flags);
+            break;
+          case 8:
+            fault = xc->read(EA, (uint64_t&)Mem, flags);
+            break;
+          default:
+            panic("Bad operand size!\n");
+        }
+
         if(fault == NoFault)
         {
             %(code)s;
@@ -149,7 +167,24 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, 0);
+        unsigned flags = 0;
+        switch(dataSize)
+        {
+          case 1:
+            fault = xc->read(EA, (uint8_t&)Mem, flags);
+            break;
+          case 2:
+            fault = xc->read(EA, (uint16_t&)Mem, flags);
+            break;
+          case 4:
+            fault = xc->read(EA, (uint32_t&)Mem, flags);
+            break;
+          case 8:
+            fault = xc->read(EA, (uint64_t&)Mem, flags);
+            break;
+          default:
+            panic("Bad operand size!\n");
+        }
 
         return fault;
     }
@@ -195,8 +230,25 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
-                    EA, 0, 0);
+            unsigned flags = 0;
+            uint64_t *res = 0;
+            switch(dataSize)
+            {
+              case 1:
+                fault = xc->write((uint8_t&)Mem, EA, flags, res);
+                break;
+              case 2:
+                fault = xc->write((uint16_t&)Mem, EA, flags, res);
+                break;
+              case 4:
+                fault = xc->write((uint32_t&)Mem, EA, flags, res);
+                break;
+              case 8:
+                fault = xc->write((uint64_t&)Mem, EA, flags, res);
+                break;
+              default:
+                panic("Bad operand size!\n");
+            }
         }
         if(fault == NoFault)
         {
@@ -223,8 +275,25 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
-                    EA, 0, 0);
+            unsigned flags = 0;
+            uint64_t *res = 0;
+            switch(dataSize)
+            {
+              case 1:
+                fault = xc->write((uint8_t&)Mem, EA, flags, res);
+                break;
+              case 2:
+                fault = xc->write((uint16_t&)Mem, EA, flags, res);
+                break;
+              case 4:
+                fault = xc->write((uint32_t&)Mem, EA, flags, res);
+                break;
+              case 8:
+                fault = xc->write((uint64_t&)Mem, EA, flags, res);
+                break;
+              default:
+                panic("Bad operand size!\n");
+            }
         }
         if(fault == NoFault)
         {
