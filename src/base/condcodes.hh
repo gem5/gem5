@@ -32,6 +32,7 @@
 #define __BASE_CONDCODE_HH__
 
 #include "base/bitfield.hh"
+#include "base/trace.hh"
 
 /**
  * Calculate the carry flag from an addition. This should work even when
@@ -41,7 +42,9 @@ inline
 bool
 findCarry(int width, uint64_t dest, uint64_t src1, uint64_t src2) {
     int shift = width - 1;
-    return (~(dest >> shift) + (src1 >> shift) + (src2 >> shift)) & 0x2;
+    return ((~(dest >> shift) & 1) +
+            ((src1 >> shift) & 1) +
+            ((src2 >> shift) & 1)) & 0x2;
 }
 
 /**
