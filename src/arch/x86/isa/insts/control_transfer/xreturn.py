@@ -54,7 +54,7 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop RET
+def macroop RET_NEAR
 {
     # Make the default data size of rets 64 bits in 64 bit mode
     .adjust_env oszIn64Override

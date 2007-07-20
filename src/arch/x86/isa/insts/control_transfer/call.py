@@ -54,7 +54,7 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop CALL_I
+def macroop CALL_NEAR_I
 {
     # Make the default data size of calls 64 bits in 64 bit mode
     .adjust_env oszIn64Override
