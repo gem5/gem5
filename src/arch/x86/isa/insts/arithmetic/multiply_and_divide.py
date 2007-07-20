@@ -53,7 +53,31 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+
+#
+# Two operand signed multiply. These should set the CF and OF flags if the
+# result is too large for the destination register
+#
+
+def macroop IMUL_R_R
+{
+    mul1s reg, reg, regm
+};
+
+def macroop IMUL_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    mul1s reg, reg, t1
+};
+
+def macroop IMUL_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    mul1s reg, reg, t1
+};
+'''
 #let {{
 #    class MUL(Inst):
 #	"GenFault ${new UnimpInstFault}"
