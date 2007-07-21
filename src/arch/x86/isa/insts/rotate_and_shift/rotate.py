@@ -53,14 +53,50 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop ROL_R_I
+{
+    rol reg, reg, imm
+};
+
+def macroop ROL_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    rol t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROL_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rol t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop ROR_R_I
+{
+    ror reg, reg, imm
+};
+
+def macroop ROR_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    ror t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROR_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    ror t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+'''
 #let {{
 #    class RCL(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class RCR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class ROL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class ROR(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #}};

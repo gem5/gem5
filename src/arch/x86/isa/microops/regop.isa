@@ -381,34 +381,6 @@ let {{
         setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode,
                 flagCode = immFlagCode, condCheck = condCode, elseCode = elseCode);
 
-    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
-    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
-    defineMicroRegOp('Adc', '''
-            CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, SrcReg1 + op2 + flags.CF, dataSize);
-            ''')
-    defineMicroRegOp('Sbb', '''
-            CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, SrcReg1 - op2 - flags.CF, dataSize);
-            ''', True)
-    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
-    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', True)
-    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
-    # defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', True)
-    defineMicroRegOp('Mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
-            elseCode='DestReg=DestReg;', cc=True)
-
-    # Shift instructions
-    defineMicroRegOp('Sll', '''
-            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
-            DestReg = merge(DestReg, SrcReg1 << shiftAmt, dataSize);
-            ''')
-    # There are special rules for the flag for a single bit shift
-    defineMicroRegOp('Bll', '''
-            DestReg = merge(DestReg, SrcReg1 << 1, dataSize);
-            ''')
-
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code, elseCode=";"):
         Name = mnemonic
@@ -445,8 +417,6 @@ let {{
         setUpMicroRegOp(name + 'i', Name + "ImmFlags", "X86ISA::RegOpImm", immCode,
                 condCheck = checkCCFlagBits, elseCode = elseCode);
 
-    defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2', elseCode="RIP = RIP;")
-
     # This has it's own function because Rd ops don't always have two parameters
     def defineMicroRegOpRd(mnemonic, code):
         Name = mnemonic
@@ -462,8 +432,6 @@ let {{
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOp", code);
 
-    defineMicroRegOpRd('Rdip', 'DestReg = RIP')
-
     def defineMicroRegOpImm(mnemonic, code):
         Name = mnemonic
         name = mnemonic.lower()
@@ -477,6 +445,80 @@ let {{
         microopClasses[name] = RegOpChild
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code);
+
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroRegOp('Adc', '''
+            CCFlagBits flags = ccFlagBits;
+            DestReg = merge(DestReg, SrcReg1 + op2 + flags.CF, dataSize);
+            ''')
+    defineMicroRegOp('Sbb', '''
+            CCFlagBits flags = ccFlagBits;
+            DestReg = merge(DestReg, SrcReg1 - op2 - flags.CF, dataSize);
+            ''', True)
+    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
+    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', True)
+    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
+    # defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', True)
+    defineMicroRegOp('Mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
+            elseCode='DestReg=DestReg;', cc=True)
+
+    # Shift instructions
+    defineMicroRegOp('Sll', '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            DestReg = merge(DestReg, SrcReg1 << shiftAmt, dataSize);
+            ''')
+    defineMicroRegOp('Srl', '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            // Because what happens to the bits shift -in- on a right shift
+            // is not defined in the C/C++ standard, we have to mask them out
+            // to be sure they're zero.
+            uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
+            DestReg = merge(DestReg, (SrcReg1 >> shiftAmt) & logicalMask, dataSize);
+            ''')
+    defineMicroRegOp('Sra', '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            // Because what happens to the bits shift -in- on a right shift
+            // is not defined in the C/C++ standard, we have to sign extend
+            // them manually to be sure.
+            uint64_t arithMask =
+                -bits(op2, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
+            DestReg = merge(DestReg, (SrcReg1 >> shiftAmt) | arithMask, dataSize);
+            ''')
+    defineMicroRegOp('Ror', '''
+            uint8_t shiftAmt =
+                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            if(shiftAmt)
+            {
+                uint64_t top = SrcReg1 << (dataSize * 8 - shiftAmt);
+                uint64_t bottom = bits(SrcReg1, dataSize * 8, shiftAmt);
+                DestReg = merge(DestReg, top | bottom, dataSize);
+            }
+            else
+                DestReg = DestReg;
+            ''')
+    defineMicroRegOp('Rcr', '''
+            ''')
+    defineMicroRegOp('Rol', '''
+            uint8_t shiftAmt =
+                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            if(shiftAmt)
+            {
+                uint64_t top = SrcReg1 << shiftAmt;
+                uint64_t bottom =
+                    bits(SrcReg1, dataSize * 8 - 1, dataSize * 8 - shiftAmt);
+                DestReg = merge(DestReg, top | bottom, dataSize);
+            }
+            else
+                DestReg = DestReg;
+            ''')
+    defineMicroRegOp('Rcl', '''
+            ''')
+
+    defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2', elseCode="RIP = RIP;")
+
+    defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = SrcReg1;

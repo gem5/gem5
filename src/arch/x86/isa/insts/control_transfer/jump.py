@@ -235,4 +235,10 @@ def macroop JMP_M
     wripi t1, 0
 };
 
+def macroop JMP_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    wripi t1, 0
+};
 '''

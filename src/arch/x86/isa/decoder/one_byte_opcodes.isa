@@ -306,7 +306,7 @@
             0x1: cwd_or_cdq_or_cqo_rAX_rDX();
             0x2: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: call_Ap();
+                default: call_far_Ap();
             }
             0x3: fwait(); //aka wait
             0x4: pushf_Fv();
@@ -356,25 +356,25 @@
         0x18: decode OPCODE_OP_BOTTOM3 {
             //0x0: group2_Eb_Ib();
             0x0: decode MODRM_REG {
-                0x0: rol_Eb_Ib();
-                0x1: ror_Eb_Ib();
+                0x0: Inst::ROL(Eb,Ib);
+                0x1: Inst::ROR(Eb,Ib);
                 0x2: rcl_Eb_Ib();
                 0x3: rcr_Eb_Ib();
                 0x4: Inst::SAL(Eb,Ib);
-                0x5: shr_Eb_Ib();
+                0x5: Inst::SHR(Eb,Ib);
                 0x6: Inst::SAL(Eb,Ib);
-                0x7: sar_Eb_Ib();
+                0x7: Inst::SAR(Eb,Ib);
             }
             //0x1: group2_Ev_Ib();
             0x1: decode MODRM_REG {
-                0x0: rol_Ev_Ib();
-                0x1: ror_Ev_Ib();
+                0x0: Inst::ROL(Ev,Ib);
+                0x1: Inst::ROR(Ev,Ib);
                 0x2: rcl_Ev_Ib();
                 0x3: rcr_Ev_Ib();
                 0x4: Inst::SAL(Ev,Ib);
-                0x5: shr_Ev_Ib();
+                0x5: Inst::SHR(Ev,Ib);
                 0x6: Inst::SAL(Ev,Ib);
-                0x7: sar_Ev_Ib();
+                0x7: Inst::SAR(Ev,Ib);
             }
             0x2: ret_near_Iw();
             0x3: Inst::RET_NEAR();
@@ -452,7 +452,7 @@
             0x1: Inst::JMP(Jz);
             0x2: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: jmp_Ap();
+                default: jmp_far_Ap();
             }
             0x3: Inst::JMP(Jb);
             0x4: in_Al_Dx();
@@ -480,22 +480,24 @@
             0x3: sti();
             0x4: cld();
             0x5: std();
-            //0x6: group4();
-            0x6: decode MODRM_REG {
-                0x0: Inst::INC(Eb);
-                0x1: Inst::DEC(Eb);
-                default: Inst::UD2();
-            }
-            //0x7: group5();
-            0x7: decode MODRM_REG {
-                0x0: Inst::INC(Ev);
-                0x1: Inst::DEC(Ev);
-                0x2: call_Ev();
-                0x3: call_Mp();
-                0x4: jmp_Ev();
-                0x5: jmp_Mp();
-                0x6: push_Ev();
-                0x7: Inst::UD2();
+            format Inst {
+                //0x6: group4();
+                0x6: decode MODRM_REG {
+                    0x0: INC(Eb);
+                    0x1: DEC(Eb);
+                    default: UD2();
+                }
+                //0x7: group5();
+                0x7: decode MODRM_REG {
+                    0x0: INC(Ev);
+                    0x1: DEC(Ev);
+                    0x2: CALL_NEAR(Ev);
+                    0x3: WarnUnimpl::call_far_Mp();
+                    0x4: JMP(Ev);
+                    0x5: WarnUnimpl::jmp_far_Mp();
+                    0x6: PUSH(Ev);
+                    0x7: UD2();
+                }
             }
         }
     }
