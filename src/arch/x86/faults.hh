@@ -66,7 +66,7 @@ namespace X86ISA
     class X86Fault : public FaultBase
     {
       protected:
-        const char * name()
+        const char * name() const
         {
             return "generic_x86_fault";
         }
@@ -80,7 +80,7 @@ namespace X86ISA
     class UnimpInstFault : public FaultBase
     {
       public:
-        const char * name()
+        const char * name() const
         {
             return "unimplemented_micro";
         }
