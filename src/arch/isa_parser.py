@@ -134,7 +134,7 @@ def t_INTLIT(t):
     try:
         t.value = int(t.value,0)
     except ValueError:
-        error(t.lineno, 'Integer value "%s" too large' % t.value)
+        error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
         t.value = 0
     return t
 
@@ -144,7 +144,7 @@ def t_STRLIT(t):
     r"(?m)'([^'])+'"
     # strip off quotes
     t.value = t.value[1:-1]
-    t.lineno += t.value.count('\n')
+    t.lexer.lineno += t.value.count('\n')
     return t
 
 
@@ -154,22 +154,22 @@ def t_CODELIT(t):
     r"(?m)\{\{([^\}]|}(?!\}))+\}\}"
     # strip off {{ & }}
     t.value = t.value[2:-2]
-    t.lineno += t.value.count('\n')
+    t.lexer.lineno += t.value.count('\n')
     return t
 
 def t_CPPDIRECTIVE(t):
     r'^\#[^\#].*\n'
-    t.lineno += t.value.count('\n')
+    t.lexer.lineno += t.value.count('\n')
     return t
 
 def t_NEWFILE(t):
     r'^\#\#newfile\s+"[\w/.-]*"'
-    fileNameStack.push((t.value[11:-1], t.lineno))
-    t.lineno = 0
+    fileNameStack.push((t.value[11:-1], t.lexer.lineno))
+    t.lexer.lineno = 0
 
 def t_ENDFILE(t):
     r'^\#\#endfile'
-    (old_filename, t.lineno) = fileNameStack.pop()
+    (old_filename, t.lexer.lineno) = fileNameStack.pop()
 
 #
 # The functions t_NEWLINE, t_ignore, and t_error are
@@ -179,7 +179,7 @@ def t_ENDFILE(t):
 # Newlines
 def t_NEWLINE(t):
     r'\n+'
-    t.lineno += t.value.count('\n')
+    t.lexer.lineno += t.value.count('\n')
 
 # Comments
 def t_comment(t):
@@ -190,7 +190,7 @@ t_ignore           = ' \t\x0c'
 
 # Error handler
 def t_error(t):
-    error(t.lineno, "illegal character '%s'" % t.value[0])
+    error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
     t.skip(1)
 
 # Build the lexer
@@ -318,7 +318,7 @@ def p_global_let(t):
     try:
         exec fixPythonIndentation(t[2]) in exportContext
     except Exception, exc:
-        error(t.lineno(1),
+        error(t.lexer.lineno,
               'error: %s in global let block "%s".' % (exc, t[2]))
     t[0] = GenCode(header_output = exportContext["header_output"],
                    decoder_output = exportContext["decoder_output"],
@@ -332,9 +332,9 @@ def p_def_operand_types(t):
     try:
         userDict = eval('{' + t[3] + '}')
     except Exception, exc:
-        error(t.lineno(1),
+        error(t.lexer.lineno,
               'error: %s in def operand_types block "%s".' % (exc, t[3]))
-    buildOperandTypeMap(userDict, t.lineno(1))
+    buildOperandTypeMap(userDict, t.lexer.lineno)
     t[0] = GenCode() # contributes nothing to the output C++ file
 
 # Define the mapping from operand names to operand classes and other
@@ -342,14 +342,14 @@ def p_def_operand_types(t):
 def p_def_operands(t):
     'def_operands : DEF OPERANDS CODELIT SEMI'
     if not globals().has_key('operandTypeMap'):
-        error(t.lineno(1),
+        error(t.lexer.lineno,
               'error: operand types must be defined before operands')
     try:
         userDict = eval('{' + t[3] + '}')
     except Exception, exc:
-        error(t.lineno(1),
+        error(t.lexer.lineno,
               'error: %s in def operands block "%s".' % (exc, t[3]))
-    buildOperandNameMap(userDict, t.lineno(1))
+    buildOperandNameMap(userDict, t.lexer.lineno)
     t[0] = GenCode() # contributes nothing to the output C++ file
 
 # A bitfield definition looks like:
@@ -376,7 +376,7 @@ def p_def_bitfield_1(t):
 def p_def_bitfield_struct(t):
     'def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI'
     if (t[2] != ''):
-        error(t.lineno(1), 'error: structure bitfields are always unsigned.')
+        error(t.lexer.lineno, 'error: structure bitfields are always unsigned.')
     expr = 'machInst.%s' % t[5]
     hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
     t[0] = GenCode(header_output = hash_define)
@@ -410,7 +410,7 @@ def p_def_template(t):
 def p_def_format(t):
     'def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI'
     (id, params, code) = (t[3], t[5], t[7])
-    defFormat(id, params, code, t.lineno(1))
+    defFormat(id, params, code, t.lexer.lineno)
     t[0] = GenCode()
 
 # The formal parameter list for an instruction format is a possibly
@@ -520,7 +520,7 @@ def p_decode_stmt_list_0(t):
 def p_decode_stmt_list_1(t):
     'decode_stmt_list : decode_stmt decode_stmt_list'
     if (t[1].has_decode_default and t[2].has_decode_default):
-        error(t.lineno(1), 'Two default cases in decode block')
+        error(t.lexer.lineno, 'Two default cases in decode block')
     t[0] = t[1] + t[2]
 
 #
@@ -565,7 +565,7 @@ def p_push_format_id(t):
         formatStack.push(formatMap[t[1]])
         t[0] = ('', '// format %s' % t[1])
     except KeyError:
-        error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
+        error(t.lexer.lineno, 'instruction format "%s" not defined.' % t[1])
 
 # Nested decode block: if the value of the current field matches the
 # specified constant, do a nested decode on some other field.
@@ -617,7 +617,7 @@ def p_inst_0(t):
     'inst : ID LPAREN arg_list RPAREN'
     # Pass the ID and arg list to the current format class to deal with.
     currentFormat = formatStack.top()
-    codeObj = currentFormat.defineInst(t[1], t[3], t.lineno(1))
+    codeObj = currentFormat.defineInst(t[1], t[3], t.lexer.lineno)
     args = ','.join(map(str, t[3]))
     args = re.sub('(?m)^', '//', args)
     args = re.sub('^//', '', args)
@@ -632,8 +632,8 @@ def p_inst_1(t):
     try:
         format = formatMap[t[1]]
     except KeyError:
-        error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
-    codeObj = format.defineInst(t[3], t[5], t.lineno(1))
+        error(t.lexer.lineno, 'instruction format "%s" not defined.' % t[1])
+    codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
     comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
     codeObj.prepend_all(comment)
     t[0] = codeObj
@@ -722,7 +722,7 @@ def p_empty(t):
 # *token*, not a grammar symbol (hence the need to use t.value)
 def p_error(t):
     if t:
-        error(t.lineno, "syntax error at '%s'" % t.value)
+        error(t.lexer.lineno, "syntax error at '%s'" % t.value)
     else:
         error(0, "unknown syntax error", True)
 
