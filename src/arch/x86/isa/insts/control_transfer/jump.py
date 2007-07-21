@@ -74,6 +74,16 @@ def macroop JNZ_I
     wrip t1, t2, flags=(nCZF,)
 };
 
+def macroop JB_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CCF,)
+};
+
 def macroop JNB_I
 {
     # Make the default data size of jumps 64 bits in 64 bit mode
@@ -104,6 +114,76 @@ def macroop JNBE_I
     wrip t1, t2, flags=(nCCvZF,)
 };
 
+def macroop JS_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CSF,)
+};
+
+def macroop JNS_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(nCSF,)
+};
+
+def macroop JP_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CPF,)
+};
+
+def macroop JNP_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(nCPF,)
+};
+
+def macroop JL_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CSxOF,)
+};
+
+def macroop JNL_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(nCSxOF,)
+};
+
+def macroop JLE_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(CSxOvZF,)
+};
+
 def macroop JNLE_I
 {
     # Make the default data size of jumps 64 bits in 64 bit mode
@@ -112,6 +192,26 @@ def macroop JNLE_I
     rdip t1
     limm t2, imm
     wrip t1, t2, flags=(nCSxOvZF,)
+};
+
+def macroop JO_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(COF,)
+};
+
+def macroop JNO_I
+{
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t1
+    limm t2, imm
+    wrip t1, t2, flags=(nCOF,)
 };
 
 def macroop JMP_I

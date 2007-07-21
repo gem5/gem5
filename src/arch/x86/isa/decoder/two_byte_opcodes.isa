@@ -227,25 +227,27 @@
                 0x6: holder();
                 0x7: holder();
             }
-            0x10: decode OPCODE_OP_BOTTOM3 {
-                0x0: jo_Jz();
-                0x1: jno_Jz();
-                0x2: jb_Jz();
-                0x3: Inst::JNB(Jz);
-                0x4: Inst::JZ(Jz);
-                0x5: Inst::JNZ(Jz);
-                0x6: Inst::JBE(Jz);
-                0x7: Inst::JNBE(Jz);
-            }
-            0x11: decode OPCODE_OP_BOTTOM3 {
-                0x0: js_Jz();
-                0x1: jns_Jz();
-                0x2: jp_Jz();
-                0x3: jnp_Jz();
-                0x4: jl_Jz();
-                0x5: jnl_Jz();
-                0x6: jle_Jz();
-                0x7: jnle_Jz();
+            format Inst {
+                0x10: decode OPCODE_OP_BOTTOM3 {
+                    0x0: JO(Jz);
+                    0x1: JNO(Jz);
+                    0x2: JB(Jz);
+                    0x3: JNB(Jz);
+                    0x4: JZ(Jz);
+                    0x5: JNZ(Jz);
+                    0x6: JBE(Jz);
+                    0x7: JNBE(Jz);
+                }
+                0x11: decode OPCODE_OP_BOTTOM3 {
+                    0x0: JS(Jz);
+                    0x1: JNS(Jz);
+                    0x2: JP(Jz);
+                    0x3: JNP(Jz);
+                    0x4: JL(Jz);
+                    0x5: JNL(Jz);
+                    0x6: JLE(Jz);
+                    0x7: JNLE(Jz);
+                }
             }
             0x12: decode OPCODE_OP_BOTTOM3 {
                 0x0: seto_Eb();

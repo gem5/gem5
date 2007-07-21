@@ -214,25 +214,27 @@
             0x6: outs_Dx_Xb();
             0x7: outs_Dx_Xz();
         }
-        0x0E: decode OPCODE_OP_BOTTOM3 {
-            0x0: jo_Jb();
-            0x1: jno_Jb();
-            0x2: jb_Jb();
-            0x3: Inst::JNB(Jb);
-            0x4: Inst::JZ(Jb);
-            0x5: Inst::JNZ(Jb);
-            0x6: Inst::JBE(Jb);
-            0x7: Inst::JNBE(Jb);
-        }
-        0x0F: decode OPCODE_OP_BOTTOM3 {
-            0x0: js_Jb();
-            0x1: jns_Jb();
-            0x2: jp_Jb();
-            0x3: jnp_Jb();
-            0x4: jl_Jb();
-            0x5: jnl_Jb();
-            0x6: jle_Jb();
-            0x7: Inst::JNLE(Jb);
+        format Inst {
+            0x0E: decode OPCODE_OP_BOTTOM3 {
+                0x0: JO(Jb);
+                0x1: JNO(Jb);
+                0x2: JB(Jb);
+                0x3: JNB(Jb);
+                0x4: JZ(Jb);
+                0x5: JNZ(Jb);
+                0x6: JBE(Jb);
+                0x7: JNBE(Jb);
+            }
+            0x0F: decode OPCODE_OP_BOTTOM3 {
+                0x0: JS(Jb);
+                0x1: JNS(Jb);
+                0x2: JP(Jb);
+                0x3: JNP(Jb);
+                0x4: JL(Jb);
+                0x5: JNL(Jb);
+                0x6: JLE(Jb);
+                0x7: JNLE(Jb);
+            }
         }
         0x10: decode OPCODE_OP_BOTTOM3 {
             //0x0: group1_Eb_Ib();
