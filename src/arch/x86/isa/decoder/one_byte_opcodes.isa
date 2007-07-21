@@ -88,12 +88,6 @@
                                    [rAl,Ib], [rAx,Iz]);
         }
         0x02: decode OPCODE_OP_BOTTOM3 {
-            0x0: adc_Eb_Gb();
-            0x1: adc_Ev_Gv();
-            0x2: adc_Gb_Eb();
-            0x3: adc_Gv_Ev();
-            0x4: adc_Al_Ib();
-            0x5: adc_rAX_Iz();
             0x6: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: push_SS();
@@ -102,14 +96,12 @@
                 0x0: This_should_be_an_illegal_instruction();
                 default: pop_SS();
             }
+            default: MultiInst::ADC(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x03: decode OPCODE_OP_BOTTOM3 {
-            0x0: sbb_Eb_Gb();
-            0x1: sbb_Ev_Gv();
-            0x2: sbb_Gb_Eb();
-            0x3: sbb_Gv_Ev();
-            0x4: sbb_Al_Ib();
-            0x5: sbb_rAX_Iz();
             0x6: decode MODE_SUBMODE {
                 0x0: This_should_be_an_illegal_instruction();
                 default: push_DS();
@@ -118,6 +110,10 @@
                 0x0: This_should_be_an_illegal_instruction();
                 default: pop_DS();
             }
+            default: MultiInst::SBB(OPCODE_OP_BOTTOM3,
+                                    [Eb,Gb], [Ev,Gv],
+                                    [Gb,Eb], [Gv,Ev],
+                                    [rAl,Ib], [rAx,Iz]);
         }
         0x04: decode OPCODE_OP_BOTTOM3 {
             0x6: M5InternalError::error(
@@ -237,52 +233,54 @@
             }
         }
         0x10: decode OPCODE_OP_BOTTOM3 {
-            //0x0: group1_Eb_Ib();
-            0x0: decode MODRM_REG {
-                0x0: Inst::ADD(Eb,Ib);
-                0x1: Inst::OR(Eb,Ib);
-                0x2: adc_Eb_Ib();
-                0x3: sbb_Eb_Ib();
-                0x4: Inst::AND(Eb,Ib);
-                0x5: Inst::SUB(Eb,Ib);
-                0x6: Inst::XOR(Eb,Ib);
-                0x7: Inst::CMP(Eb,Ib);
-            }
-            //0x1: group1_Ev_Iz();
-            0x1: decode MODRM_REG {
-                0x0: Inst::ADD(Ev,Iz);
-                0x1: Inst::OR(Ev,Iz);
-                0x2: adc_Ev_Iz();
-                0x3: sbb_Ev_Iz();
-                0x4: Inst::AND(Ev,Iz);
-                0x5: Inst::SUB(Ev,Iz);
-                0x6: Inst::XOR(Ev,Iz);
-                0x7: Inst::CMP(Ev,Iz);
-            }
-            0x2: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
-                //default: group1_Eb_Ib();
-                default: decode MODRM_REG {
-                    0x0: Inst::ADD(Eb,Ib);
-                    0x1: Inst::OR(Eb,Ib);
-                    0x2: adc_Eb_Ib();
-                    0x3: sbb_Eb_Ib();
-                    0x4: Inst::AND(Eb,Ib);
-                    0x5: Inst::SUB(Eb,Ib);
-                    0x6: Inst::XOR(Eb,Ib);
-                    0x7: Inst::CMP(Eb,Ib);
+            format Inst {
+                //0x0: group1_Eb_Ib();
+                0x0: decode MODRM_REG {
+                    0x0: ADD(Eb,Ib);
+                    0x1: OR(Eb,Ib);
+                    0x2: ADC(Eb,Ib);
+                    0x3: SBB(Eb,Ib);
+                    0x4: AND(Eb,Ib);
+                    0x5: SUB(Eb,Ib);
+                    0x6: XOR(Eb,Ib);
+                    0x7: CMP(Eb,Ib);
                 }
-            }
-            //0x3: group1_Ev_Ib();
-            0x3: decode MODRM_REG {
-                0x0: Inst::ADD(Ev,Ib);
-                0x1: Inst::OR(Ev,Ib);
-                0x2: adc_Ev_Ib();
-                0x3: sbb_Ev_Ib();
-                0x4: Inst::AND(Ev,Ib);
-                0x5: Inst::SUB(Ev,Ib);
-                0x6: Inst::XOR(Ev,Ib);
-                0x7: Inst::CMP(Ev,Ib);
+                //0x1: group1_Ev_Iz();
+                0x1: decode MODRM_REG {
+                    0x0: ADD(Ev,Iz);
+                    0x1: OR(Ev,Iz);
+                    0x2: ADC(Ev,Iz);
+                    0x3: SBB(Ev,Iz);
+                    0x4: AND(Ev,Iz);
+                    0x5: SUB(Ev,Iz);
+                    0x6: XOR(Ev,Iz);
+                    0x7: CMP(Ev,Iz);
+                }
+                0x2: decode MODE_SUBMODE {
+                    0x0: WarnUnimpl::This_should_be_an_illegal_instruction();
+                    //default: group1_Eb_Ib();
+                    default: decode MODRM_REG {
+                        0x0: ADD(Eb,Ib);
+                        0x1: OR(Eb,Ib);
+                        0x2: ADC(Eb,Ib);
+                        0x3: SBB(Eb,Ib);
+                        0x4: AND(Eb,Ib);
+                        0x5: SUB(Eb,Ib);
+                        0x6: XOR(Eb,Ib);
+                        0x7: CMP(Eb,Ib);
+                    }
+                }
+                //0x3: group1_Ev_Ib();
+                0x3: decode MODRM_REG {
+                    0x0: ADD(Ev,Ib);
+                    0x1: OR(Ev,Ib);
+                    0x2: ADC(Ev,Ib);
+                    0x3: SBB(Ev,Ib);
+                    0x4: AND(Ev,Ib);
+                    0x5: SUB(Ev,Ib);
+                    0x6: XOR(Ev,Ib);
+                    0x7: CMP(Ev,Ib);
+                }
             }
             0x4: Inst::TEST(Eb,Gb);
             0x5: Inst::TEST(Ev,Gv);
@@ -492,7 +490,7 @@
                 0x4: jmp_Ev();
                 0x5: jmp_Mp();
                 0x6: push_Ev();
-                0x7: This_should_be_an_illegal_instruction();
+                0x7: WarnUnimpl::This_should_be_an_illegal_instruction();
             }
         }
     }

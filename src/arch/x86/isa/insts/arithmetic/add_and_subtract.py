@@ -165,6 +165,118 @@ def macroop SUB_P_R
     sub t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
+
+def macroop ADC_R_R
+{
+    adc reg, reg, regm
+};
+
+def macroop ADC_R_I
+{
+    limm t1, imm
+    adc reg, reg, t1
+};
+
+def macroop ADC_M_I
+{
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    adc t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADC_P_I
+{
+    rdip t7
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    adc t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADC_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    adc t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADC_P_R
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    adc t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ADC_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    adc reg, reg, t1
+};
+
+def macroop ADC_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    adc reg, reg, t1
+};
+
+def macroop SBB_R_R
+{
+    sbb reg, reg, regm
+};
+
+def macroop SBB_R_I
+{
+    limm t1, imm
+    sbb reg, reg, t1
+};
+
+def macroop SBB_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    sbb reg, reg, t1
+};
+
+def macroop SBB_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    sbb reg, reg, t1
+};
+
+def macroop SBB_M_I
+{
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    sbb t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SBB_P_I
+{
+    rdip t7
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    sbb t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SBB_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    sbb t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SBB_P_R
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    sbb t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
 '''
 #let {{
 #    class ADC(Inst):
