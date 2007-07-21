@@ -369,7 +369,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
-        allocateBuffer(pkt, time, true);
+        // writes go in write buffer, reads use MSHR
+        if (pkt->isWrite() && !pkt->isRead()) {
+            allocateWriteBuffer(pkt, time, true);
+        } else {
+            allocateUncachedReadBuffer(pkt, time, true);
+        }
         assert(pkt->needsResponse()); // else we should delete it here??
         return true;
     }
@@ -417,7 +422,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
         PacketPtr wbPkt = writebacks.front();
-        allocateBuffer(wbPkt, time, true);
+        allocateWriteBuffer(wbPkt, time, true);
         writebacks.pop_front();
     }
 #endif
@@ -458,7 +463,11 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
             // be changed.
-            allocateMissBuffer(pkt, time, true);
+            if (pkt->cmd == MemCmd::Writeback) {
+                allocateWriteBuffer(pkt, time, true);
+            } else {
+                allocateMissBuffer(pkt, time, true);
+            }
         }
     }
 
@@ -492,6 +501,10 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     assert(cpu_pkt->needsResponse());
 
     MemCmd cmd;
+    // @TODO make useUpgrades a parameter.
+    // Note that ownership protocols require upgrade, otherwise a
+    // write miss on a shared owned block will generate a ReadExcl,
+    // which will clobber the owned copy.
     const bool useUpgrades = true;
     if (blkValid && useUpgrades) {
         // only reason to be here is that blk is shared
@@ -649,62 +662,6 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
 
 
 template<class TagStore>
-bool
-Cache<TagStore>::satisfyMSHR(MSHR *mshr, PacketPtr pkt,
-                             BlkType *blk)
-{
-    // respond to MSHR targets, if any
-
-    // First offset for critical word first calculations
-    int initial_offset = 0;
-
-    if (mshr->hasTargets()) {
-        initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);
-    }
-
-    while (mshr->hasTargets()) {
-        MSHR::Target *target = mshr->getTarget();
-
-        if (target->isCpuSide()) {
-            satisfyCpuSideRequest(target->pkt, blk);
-            // How many bytes pass the first request is this one
-            int transfer_offset =
-                target->pkt->getOffset(blkSize) - initial_offset;
-            if (transfer_offset < 0) {
-                transfer_offset += blkSize;
-            }
-
-            // If critical word (no offset) return first word time
-            Tick completion_time = tags->getHitLatency() +
-                transfer_offset ? pkt->finishTime : pkt->firstWordTime;
-
-            if (!target->pkt->req->isUncacheable()) {
-                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                    completion_time - target->recvTime;
-            }
-            target->pkt->makeTimingResponse();
-            cpuSidePort->respond(target->pkt, completion_time);
-        } else {
-            // response to snoop request
-            DPRINTF(Cache, "processing deferred snoop...\n");
-            handleSnoop(target->pkt, blk, true, true);
-        }
-
-        mshr->popTarget();
-    }
-
-    if (mshr->promoteDeferredTargets()) {
-        MSHRQueue *mq = mshr->queue;
-        mq->markPending(mshr);
-        requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
-        return false;
-    }
-
-    return true;
-}
-
-
-template<class TagStore>
 void
 Cache<TagStore>::handleResponse(PacketPtr pkt)
 {
@@ -730,68 +687,105 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         noTargetMSHR = NULL;
     }
 
-    // Can we deallocate MSHR when done?
-    bool deallocate = false;
-
     // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
+    BlkType *blk = tags->findBlock(pkt->getAddr());
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick - initial_tgt->recvTime;
+    PacketList writebacks;
 
-    if (mshr->isCacheFill) {
+    if (pkt->req->isUncacheable()) {
+        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+            miss_latency;
+    } else {
         mshr_miss_latency[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
             miss_latency;
+    }
+
+    if (mshr->isCacheFill) {
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
-        BlkType *blk = tags->findBlock(pkt->getAddr());
 
         // give mshr a chance to do some dirty work
         mshr->handleFill(pkt, blk);
 
-        PacketList writebacks;
         blk = handleFill(pkt, blk, writebacks);
-        deallocate = satisfyMSHR(mshr, pkt, blk);
-        // copy writebacks to write buffer
-        while (!writebacks.empty()) {
-            PacketPtr wbPkt = writebacks.front();
-            allocateBuffer(wbPkt, time, true);
-            writebacks.pop_front();
-        }
-        // if we used temp block, clear it out
-        if (blk == tempBlock) {
-            if (blk->isDirty()) {
-                allocateBuffer(writebackBlk(blk), time, true);
-            }
-            tags->invalidateBlk(blk);
-        }
-    } else {
-        if (pkt->req->isUncacheable()) {
-            mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
-                miss_latency;
-        }
-
-        while (mshr->hasTargets()) {
-            MSHR::Target *target = mshr->getTarget();
-            assert(target->isCpuSide());
-            mshr->popTarget();
-            if (pkt->isRead()) {
-                target->pkt->setData(pkt->getPtr<uint8_t>());
-            }
-            target->pkt->makeTimingResponse();
-            cpuSidePort->respond(target->pkt, time);
-        }
-        assert(!mshr->hasTargets());
-        deallocate = true;
+        assert(blk != NULL);
     }
 
-    delete pkt;
+    // First offset for critical word first calculations
+    int initial_offset = 0;
 
-    if (deallocate) {
+    if (mshr->hasTargets()) {
+        initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);
+    }
+
+    while (mshr->hasTargets()) {
+        MSHR::Target *target = mshr->getTarget();
+
+        if (target->isCpuSide()) {
+            Tick completion_time;
+            if (blk != NULL) {
+                satisfyCpuSideRequest(target->pkt, blk);
+                // How many bytes pass the first request is this one
+                int transfer_offset =
+                    target->pkt->getOffset(blkSize) - initial_offset;
+                if (transfer_offset < 0) {
+                    transfer_offset += blkSize;
+                }
+
+                // If critical word (no offset) return first word time
+                completion_time = tags->getHitLatency() +
+                    transfer_offset ? pkt->finishTime : pkt->firstWordTime;
+
+                if (!target->pkt->req->isUncacheable()) {
+                    missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                        completion_time - target->recvTime;
+                }
+            } else {
+                // not a cache fill, just forwarding response
+                completion_time = tags->getHitLatency() + pkt->finishTime;
+                if (pkt->isRead()) {
+                    target->pkt->setData(pkt->getPtr<uint8_t>());
+                }
+            }
+            target->pkt->makeTimingResponse();
+            cpuSidePort->respond(target->pkt, completion_time);
+        } else {
+            // response to snoop request
+            DPRINTF(Cache, "processing deferred snoop...\n");
+            handleSnoop(target->pkt, blk, true, true);
+        }
+
+        mshr->popTarget();
+    }
+
+    if (mshr->promoteDeferredTargets()) {
+        MSHRQueue *mq = mshr->queue;
+        mq->markPending(mshr);
+        requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+    } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
             clearBlocked((BlockedCause)mq->index);
         }
     }
+
+    // copy writebacks to write buffer
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        allocateWriteBuffer(wbPkt, time, true);
+        writebacks.pop_front();
+    }
+    // if we used temp block, clear it out
+    if (blk == tempBlock) {
+        if (blk->isDirty()) {
+            allocateWriteBuffer(writebackBlk(blk), time, true);
+        }
+        tags->invalidateBlk(blk);
+    }
+
+    delete pkt;
 }
 
 
@@ -933,6 +927,9 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (is_timing) {
         Packet *snoopPkt = new Packet(pkt, true);  // clear flags
         snoopPkt->setExpressSnoop();
+        if (is_deferred) {
+            snoopPkt->setDeferredSnoop();
+        }
         snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
         cpuSidePort->sendTiming(snoopPkt);
         if (snoopPkt->memInhibitAsserted()) {
@@ -1020,12 +1017,11 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
     // better not be snooping a request that conflicts with something
     // we have outstanding...
-    if (mshr && mshr->inService) {
+    if (mshr && mshr->handleSnoop(pkt, order++)) {
         DPRINTF(Cache, "Deferring snoop on in-service MSHR to blk %x\n",
                 blk_addr);
-        mshr->allocateSnoopTarget(pkt, curTick, order++);
         if (mshr->getNumTargets() > numTarget)
-           warn("allocating bonus target for snoop"); //handle later
+            warn("allocating bonus target for snoop"); //handle later
         return;
     }
 
@@ -1226,6 +1222,7 @@ template<class TagStore>
 bool
 Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
+    // illegal to block responses... can lead to deadlock
     if (pkt->isRequest() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;

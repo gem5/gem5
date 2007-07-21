@@ -119,25 +119,23 @@ MSHR::allocateTarget(PacketPtr target, Tick whenReady, Counter _order)
     ++ntargets;
 }
 
-void
-MSHR::allocateSnoopTarget(PacketPtr pkt, Tick whenReady, Counter _order)
+bool
+MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    assert(inService); // don't bother to call otherwise
+    if (!inService || (pkt->isExpressSnoop() && !pkt->isDeferredSnoop())) {
+        return false;
+    }
 
     if (pendingInvalidate) {
         // a prior snoop has already appended an invalidation, so
         // logically we don't have the block anymore...
-        return;
+        return true;
     }
-
-    DPRINTF(Cache, "deferred snoop on %x: %s %s\n", addr,
-            needsExclusive ? "needsExclusive" : "",
-            pkt->needsExclusive() ? "pkt->needsExclusive()" : "");
 
     if (needsExclusive || pkt->needsExclusive()) {
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
-        targets.push_back(Target(new Packet(pkt), whenReady, _order, false));
+        targets.push_back(Target(new Packet(pkt), curTick, _order, false));
         ++ntargets;
 
         if (needsExclusive) {
@@ -157,6 +155,8 @@ MSHR::allocateSnoopTarget(PacketPtr pkt, Tick whenReady, Counter _order)
         pendingShared = true;
         pkt->assertShared();
     }
+
+    return true;
 }
 
 

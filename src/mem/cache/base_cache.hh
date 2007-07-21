@@ -410,28 +410,28 @@ class BaseCache : public MemObject
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
+        assert(!pkt->req->isUncacheable());
         return allocateBufferInternal(&mshrQueue,
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
     }
 
-    MSHR *allocateBuffer(PacketPtr pkt, Tick time, bool requestBus)
+    MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
-        MSHRQueue *mq = NULL;
-
-        if (pkt->isWrite() && !pkt->isRead()) {
-            /**
-             * @todo Add write merging here.
-             */
-            mq = &writeBuffer;
-        } else {
-            mq = &mshrQueue;
-        }
-
-        return allocateBufferInternal(mq, pkt->getAddr(), pkt->getSize(),
+        assert(pkt->isWrite() && !pkt->isRead());
+        return allocateBufferInternal(&writeBuffer,
+                                      pkt->getAddr(), pkt->getSize(),
                                       pkt, time, requestBus);
     }
 
+    MSHR *allocateUncachedReadBuffer(PacketPtr pkt, Tick time, bool requestBus)
+    {
+        assert(pkt->req->isUncacheable());
+        assert(pkt->isRead());
+        return allocateBufferInternal(&mshrQueue,
+                                      pkt->getAddr(), pkt->getSize(),
+                                      pkt, time, requestBus);
+    }
 
     /**
      * Returns true if the cache is blocked for accesses.

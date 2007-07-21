@@ -162,7 +162,7 @@ public:
      * @param target The target.
      */
     void allocateTarget(PacketPtr target, Tick when, Counter order);
-    void allocateSnoopTarget(PacketPtr target, Tick when, Counter order);
+    bool handleSnoop(PacketPtr target, Counter order);
 
     /** A simple constructor. */
     MSHR();
