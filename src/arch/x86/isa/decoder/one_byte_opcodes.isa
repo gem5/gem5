@@ -62,11 +62,11 @@
     format WarnUnimpl {
         0x00: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: push_ES();
             }
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: pop_ES();
             }
             default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
@@ -76,7 +76,7 @@
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: push_CS();
             }
             //Any time this is seen, it should generate a two byte opcode
@@ -89,11 +89,11 @@
         }
         0x02: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: push_SS();
             }
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: pop_SS();
             }
             default: MultiInst::ADC(OPCODE_OP_BOTTOM3,
@@ -103,11 +103,11 @@
         }
         0x03: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: push_DS();
             }
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: pop_DS();
             }
             default: MultiInst::SBB(OPCODE_OP_BOTTOM3,
@@ -119,7 +119,7 @@
             0x6: M5InternalError::error(
                 {{"Tried to execute the ES segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: daa();
             }
             default: MultiInst::AND(OPCODE_OP_BOTTOM3,
@@ -140,7 +140,7 @@
             0x6: M5InternalError::error(
                 {{"Tried to execute the SS segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: aaa();
             }
             default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
@@ -152,7 +152,7 @@
             0x6: M5InternalError::error(
                 {{"Tried to execute the DS segment override prefix!"}});
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: aas();
             }
             default: MultiInst::CMP(OPCODE_OP_BOTTOM3,
@@ -176,15 +176,15 @@
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
             0x0: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: pusha();
             }
             0x1: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: popa();
             }
             0x2: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: bound_Gv_Ma();
             }
             0x3: decode MODE_SUBMODE {
@@ -257,7 +257,7 @@
                     0x7: CMP(Ev,Iz);
                 }
                 0x2: decode MODE_SUBMODE {
-                    0x0: WarnUnimpl::This_should_be_an_illegal_instruction();
+                    0x0: UD2();
                     //default: group1_Eb_Ib();
                     default: decode MODRM_REG {
                         0x0: ADD(Eb,Ib);
@@ -281,9 +281,9 @@
                     0x6: XOR(Ev,Ib);
                     0x7: CMP(Ev,Ib);
                 }
+                0x4: Inst::TEST(Eb,Gb);
+                0x5: Inst::TEST(Ev,Gv);
             }
-            0x4: Inst::TEST(Eb,Gb);
-            0x5: Inst::TEST(Ev,Gv);
             0x6: xchg_Eb_Gb();
             0x7: xchg_Ev_Gv();
         }
@@ -305,7 +305,7 @@
             0x0: cbw_or_cwde_or_cdqe_rAX();
             0x1: cwd_or_cdq_or_cqo_rAX_rDX();
             0x2: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: call_Ap();
             }
             0x3: fwait(); //aka wait
@@ -314,11 +314,11 @@
             //Both of these should be illegal only if CPUID.AHF64=0,
             //according to sandpile.org
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: sahf();
             }
             0x7: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: lahf();
             }
         }
@@ -379,11 +379,11 @@
             0x2: ret_near_Iw();
             0x3: Inst::RET_NEAR();
             0x4: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: les_Gz_Mp();
             }
             0x5: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: lds_Gz_Mp();
             }
             //0x6: group12_Eb_Ib();
@@ -403,7 +403,7 @@
             0x4: int3();
             0x5: int_Ib();
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: into();
             }
             0x7: iret();
@@ -414,15 +414,15 @@
             0x2: group2_Eb_Cl();
             0x3: group2_Ev_Cl();
             0x4: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: aam_Ib();
             }
             0x5: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: aad_Ib();
             }
             0x6: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: salc();
             }
             0x7: xlat();
@@ -449,9 +449,9 @@
         }
         0x1D: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::CALL_NEAR(Jz);
-            0x1: jmp_Jz();
+            0x1: Inst::JMP(Jz);
             0x2: decode MODE_SUBMODE {
-                0x0: This_should_be_an_illegal_instruction();
+                0x0: Inst::UD2();
                 default: jmp_Ap();
             }
             0x3: Inst::JMP(Jb);
@@ -480,17 +480,22 @@
             0x3: sti();
             0x4: cld();
             0x5: std();
-            0x6: group4();
+            //0x6: group4();
+            0x6: decode MODRM_REG {
+                0x0: Inst::INC(Eb);
+                0x1: Inst::DEC(Eb);
+                default: Inst::UD2();
+            }
             //0x7: group5();
             0x7: decode MODRM_REG {
                 0x0: Inst::INC(Ev);
-                0x1: dev_Ev();
+                0x1: Inst::DEC(Ev);
                 0x2: call_Ev();
                 0x3: call_Mp();
                 0x4: jmp_Ev();
                 0x5: jmp_Mp();
                 0x6: push_Ev();
-                0x7: WarnUnimpl::This_should_be_an_illegal_instruction();
+                0x7: Inst::UD2();
             }
         }
     }

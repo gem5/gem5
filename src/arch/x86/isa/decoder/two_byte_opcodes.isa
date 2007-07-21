@@ -80,9 +80,9 @@
             0x01: decode OPCODE_OP_BOTTOM3 {
                 0x0: invd();
                 0x1: wbinvd();
-                0x2: This_should_be_an_illegal_instruction();
-                0x3: UD1();
-                0x4: This_should_be_an_illegal_instruction();
+                0x2: Inst::UD2();
+                0x3: UD2();
+                0x4: Inst::UD2();
                 0x5: threednow();
                 0x6: threednow();
                 0x7: threednow();
@@ -134,7 +134,7 @@
                 0x3: rdpmc();
                 0x4: sysenter();
                 0x5: sysexit();
-                0x6: This_should_be_an_illegal_instruction();
+                0x6: Inst::UD2();
                 0x7: getsec();
             }
             0x07: decode OPCODE_OP_BOTTOM3 {

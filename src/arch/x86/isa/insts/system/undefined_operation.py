@@ -53,28 +53,9 @@
 #
 # Authors: Gabe Black
 
-categories = ["arithmetic",
-              "cache_and_memory_management",
-              "compare_and_test",
-              "control_transfer",
-              "data_conversion",
-              "data_transfer",
-              "flags",
-              "input_output",
-              "load_effective_address",
-              "load_segment_registers",
-              "logical",
-              "no_operation",
-              "processor_information",
-              "rotate_and_shift",
-              "semaphores",
-              "string",
-              "system_calls",
-              "system"]
-
 microcode = '''
-# X86 microcode
+def macroop UD2
+{
+    fault "new X86Fault"
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
