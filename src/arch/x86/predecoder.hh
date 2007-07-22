@@ -106,13 +106,13 @@ namespace X86ISA
             toGet = toGet > remaining ? remaining : toGet;
 
             //Shift the bytes we want to be all the way to the right
-            uint64_t partialDisp = fetchChunk >> (offset * 8);
+            uint64_t partialImm = fetchChunk >> (offset * 8);
             //Mask off what we don't want
-            partialDisp &= mask(toGet * 8);
+            partialImm &= mask(toGet * 8);
             //Shift it over to overlay with our displacement.
-            partialDisp <<= (displacementCollected * 8);
+            partialImm <<= (immediateCollected * 8);
             //Put it into our displacement
-            current |= partialDisp;
+            current |= partialImm;
             //Update how many bytes we've collected.
             collected += toGet;
             consumeBytes(toGet);
@@ -144,9 +144,10 @@ namespace X86ISA
         bool emiIsReady;
         //The size of the displacement value
         int displacementSize;
-        int displacementCollected;
         //The size of the immediate value
         int immediateSize;
+        //This is how much of any immediate value we've gotten. This is used
+        //for both the actual immediate and the displacement.
         int immediateCollected;
 
         enum State {

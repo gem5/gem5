@@ -72,7 +72,6 @@ namespace X86ISA
 
         immediateCollected = 0;
         emi.immediate = 0;
-        displacementCollected = 0;
         emi.displacement = 0;
 
         emi.modRM = 0;
@@ -359,14 +358,16 @@ namespace X86ISA
     {
         State nextState = ErrorState;
 
-        getImmediate(displacementCollected,
+        getImmediate(immediateCollected,
                 emi.displacement,
                 displacementSize);
 
         DPRINTF(Predecoder, "Collecting %d byte displacement, got %d bytes.\n",
-                displacementSize, displacementCollected);
+                displacementSize, immediateCollected);
 
-        if(displacementSize == displacementCollected) {
+        if(displacementSize == immediateCollected) {
+            //Reset this for other immediates.
+            immediateCollected = 0;
             //Sign extend the displacement
             switch(displacementSize)
             {
@@ -411,6 +412,9 @@ namespace X86ISA
 
         if(immediateSize == immediateCollected)
         {
+            //Reset this for other immediates.
+            immediateCollected = 0;
+
             //XXX Warning! The following is an observed pattern and might
             //not always be true!
 
