@@ -232,8 +232,8 @@
                 0x7: JNLE(Jb);
             }
         }
-        0x10: decode OPCODE_OP_BOTTOM3 {
-            format Inst {
+        format Inst {
+            0x10: decode OPCODE_OP_BOTTOM3 {
                 //0x0: group1_Eb_Ib();
                 0x0: decode MODRM_REG {
                     0x0: ADD(Eb,Ib);
@@ -281,11 +281,11 @@
                     0x6: XOR(Ev,Ib);
                     0x7: CMP(Ev,Ib);
                 }
-                0x4: Inst::TEST(Eb,Gb);
-                0x5: Inst::TEST(Ev,Gv);
+                0x4: TEST(Eb,Gb);
+                0x5: TEST(Ev,Gv);
+                0x6: XCHG(Eb,Gb);
+                0x7: XCHG(Ev,Gv);
             }
-            0x6: xchg_Eb_Gb();
-            0x7: xchg_Ev_Gv();
         }
         0x11: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::MOV(Eb,Gb);
@@ -342,57 +342,52 @@
             0x6: scas_Yb_Al();
             0x7: scas_Yv_rAX();
         }
-        0x16: decode OPCODE_OP_BOTTOM3 {
-            0x0: mov_Al_Ib();
-            0x1: mov_Cl_Ib();
-            0x2: mov_Dl_Ib();
-            0x3: mov_Bl_Ib();
-            0x4: mov_Ah_Ib();
-            0x5: mov_Ch_Ib();
-            0x6: mov_Dh_Ib();
-            0x7: mov_Bh_Ib();
-        }
-        0x17: Inst::MOV(B,Iv);
-        0x18: decode OPCODE_OP_BOTTOM3 {
-            //0x0: group2_Eb_Ib();
-            0x0: decode MODRM_REG {
-                0x0: Inst::ROL(Eb,Ib);
-                0x1: Inst::ROR(Eb,Ib);
-                0x2: rcl_Eb_Ib();
-                0x3: rcr_Eb_Ib();
-                0x4: Inst::SAL(Eb,Ib);
-                0x5: Inst::SHR(Eb,Ib);
-                0x6: Inst::SAL(Eb,Ib);
-                0x7: Inst::SAR(Eb,Ib);
-            }
-            //0x1: group2_Ev_Ib();
-            0x1: decode MODRM_REG {
-                0x0: Inst::ROL(Ev,Ib);
-                0x1: Inst::ROR(Ev,Ib);
-                0x2: rcl_Ev_Ib();
-                0x3: rcr_Ev_Ib();
-                0x4: Inst::SAL(Ev,Ib);
-                0x5: Inst::SHR(Ev,Ib);
-                0x6: Inst::SAL(Ev,Ib);
-                0x7: Inst::SAR(Ev,Ib);
-            }
-            0x2: ret_near_Iw();
-            0x3: Inst::RET_NEAR();
-            0x4: decode MODE_SUBMODE {
-                0x0: Inst::UD2();
-                default: les_Gz_Mp();
-            }
-            0x5: decode MODE_SUBMODE {
-                0x0: Inst::UD2();
-                default: lds_Gz_Mp();
-            }
-            //0x6: group12_Eb_Ib();
-            0x6: decode MODRM_REG {
-                0x0: Inst::MOV(Eb,Ib);
-            }
-            //0x7: group12_Ev_Iz();
-            0x7: decode MODRM_REG {
-                0x0: Inst::MOV(Ev,Iz);
+        format Inst {
+            0x16: MOV(B,Ib);
+            0x17: MOV(B,Iv);
+            0x18: decode OPCODE_OP_BOTTOM3 {
+                //0x0: group2_Eb_Ib();
+                0x0: decode MODRM_REG {
+                    0x0: ROL(Eb,Ib);
+                    0x1: ROR(Eb,Ib);
+                    0x2: RCL(Eb,Ib);
+                    0x3: RCR(Eb,Ib);
+                    0x4: SAL(Eb,Ib);
+                    0x5: SHR(Eb,Ib);
+                    0x6: SAL(Eb,Ib);
+                    0x7: SAR(Eb,Ib);
+                }
+                //0x1: group2_Ev_Ib();
+                0x1: decode MODRM_REG {
+                    0x0: ROL(Ev,Ib);
+                    0x1: ROR(Ev,Ib);
+                    0x2: RCL(Ev,Ib);
+                    0x3: RCR(Ev,Ib);
+                    0x4: SAL(Ev,Ib);
+                    0x5: SHR(Ev,Ib);
+                    0x6: SAL(Ev,Ib);
+                    0x7: SAR(Ev,Ib);
+                }
+                0x2: RET_NEAR(Iw);
+                0x3: RET_NEAR();
+                0x4: decode MODE_SUBMODE {
+                    0x0: UD2();
+                    default: WarnUnimpl::les_Gz_Mp();
+                }
+                0x5: decode MODE_SUBMODE {
+                    0x0: UD2();
+                    default: WarnUnimpl::lds_Gz_Mp();
+                }
+                //0x6: group12_Eb_Ib();
+                0x6: decode MODRM_REG {
+                    0x0: MOV(Eb,Ib);
+                    default: UD2();
+                }
+                //0x7: group12_Ev_Iz();
+                0x7: decode MODRM_REG {
+                    0x0: MOV(Ev,Iz);
+                    default: UD2();
+                }
             }
         }
         0x19: decode OPCODE_OP_BOTTOM3 {

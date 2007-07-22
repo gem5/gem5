@@ -93,6 +93,46 @@ def macroop ROR_P_I
     ror t1, t1, imm
     st t1, ds, [0, t0, t7], disp
 };
+
+def macroop RCL_R_I
+{
+    rcl reg, reg, imm
+};
+
+def macroop RCL_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    rcl t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCL_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcl t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop RCR_R_I
+{
+    rcr reg, reg, imm
+};
+
+def macroop RCR_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    rcr t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCR_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcr t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
 '''
 #let {{
 #    class RCL(Inst):
