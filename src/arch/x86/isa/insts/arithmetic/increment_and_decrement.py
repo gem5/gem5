@@ -53,7 +53,47 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop INC_R
+{
+    addi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
+};
+
+def macroop INC_M
+{
+    ld t1, ds, [scale, index, base], disp
+    addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop INC_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    addi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop DEC_R
+{
+    subi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
+};
+
+def macroop DEC_M
+{
+    ld t1, ds, [scale, index, base], disp
+    subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop DEC_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    subi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, ds, [0, t0, t7], disp
+};
+'''
 #let {{
 #    class DEC(Inst):
 #	"GenFault ${new UnimpInstFault}"

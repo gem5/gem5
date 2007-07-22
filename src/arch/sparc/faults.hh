@@ -65,7 +65,6 @@ class SparcFaultBase : public FaultBase
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-    virtual FaultName name() = 0;
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
     virtual FaultStat & countStat() = 0;
@@ -78,7 +77,7 @@ class SparcFault : public SparcFaultBase
   protected:
     static FaultVals vals;
   public:
-    FaultName name() {return vals.name;}
+    FaultName name() const {return vals.name;}
     TrapType trapType() {return vals.trapType;}
     FaultPriority priority() {return vals.priority;}
     FaultStat & countStat() {return vals.count;}
@@ -133,7 +132,7 @@ class InternalProcessorError :
     public SparcFault<InternalProcessorError>
 {
   public:
-    bool isMachineCheckFault() {return true;}
+    bool isMachineCheckFault() const {return true;}
 };
 
 class InstructionInvalidTSBEntry : public SparcFault<InstructionInvalidTSBEntry> {};
@@ -152,7 +151,7 @@ class MemAddressNotAligned :
     public SparcFault<MemAddressNotAligned>
 {
   public:
-    bool isAlignmentFault() {return true;}
+    bool isAlignmentFault() const {return true;}
 };
 
 class LDDFMemAddressNotAligned : public SparcFault<LDDFMemAddressNotAligned> {};

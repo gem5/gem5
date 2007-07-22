@@ -59,16 +59,15 @@
 #define __ARCH_X86_SYSCALLRETURN_HH__
 
 #include "base/misc.hh"
+#include "cpu/thread_context.hh"
 #include "sim/syscallreturn.hh"
-
-class ThreadContext;
 
 namespace X86ISA
 {
     static inline void setSyscallReturn(SyscallReturn return_value,
             ThreadContext * tc)
     {
-        panic("setSyscallReturn not implemented!\n");
+        tc->setIntReg(INTREG_RAX, return_value.value());
     }
 };
 

@@ -67,11 +67,12 @@ def bitfield REX_B rex.b;
 
 //Legacy prefixes
 def bitfield LEGACY legacy;
+def bitfield LEGACY_DECODEVAL legacy.decodeVal;
 def bitfield LEGACY_REPNE legacy.repne;
 def bitfield LEGACY_REP legacy.rep;
 def bitfield LEGACY_LOCK legacy.lock;
-def bitfield LEGACY_ADDR legacy.addr;
 def bitfield LEGACY_OP legacy.op;
+def bitfield LEGACY_ADDR legacy.addr;
 def bitfield LEGACY_SEG legacy.seg;
 
 // Pieces of the opcode

@@ -58,8 +58,18 @@
 #ifndef __ARCH_X86_INTREGS_HH__
 #define __ARCH_X86_INTREGS_HH__
 
+#include "base/bitunion.hh"
+
 namespace X86ISA
 {
+    BitUnion64(X86IntReg)
+        Bitfield<63,0> R;
+        Bitfield<31,0> E;
+        Bitfield<15,0> X;
+        Bitfield<15,8> H;
+        Bitfield<7, 0> L;
+    EndBitUnion(X86IntReg)
+
     enum IntRegIndex
     {
         INTREG_RAX,

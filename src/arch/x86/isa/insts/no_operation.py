@@ -53,8 +53,9 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#   class NOP(Inst):
-# 	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop NOP
+{
+    fault "NoFault"
+};
+'''

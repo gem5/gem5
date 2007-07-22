@@ -54,16 +54,51 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop CALL_I
+def macroop CALL_NEAR_I
 {
-    # Make the default data size of pops 64 bits in 64 bit mode
+    # Make the default data size of calls 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    limm t2, imm
+    limm t1, imm
+    rdip t7
+    subi rsp, rsp, dsz
+    st t7, ss, [0, t0, rsp]
+    wrip t7, t1
+};
+
+def macroop CALL_NEAR_R
+{
+    # Make the default data size of calls 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
     rdip t1
     subi rsp, rsp, dsz
     st t1, ss, [0, t0, rsp]
-    wrip t1, t2
+    wripi reg, 0
+};
+
+def macroop CALL_NEAR_M
+{
+    # Make the default data size of calls 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    subi rsp, rsp, dsz
+    st t7, ss, [0, t0, rsp]
+    wripi t1, 0
+};
+
+def macroop CALL_NEAR_P
+{
+    # Make the default data size of calls 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    subi rsp, rsp, dsz
+    st t7, ss, [0, t0, rsp]
+    wripi t1, 0
 };
 '''
 #let {{

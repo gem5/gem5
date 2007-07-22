@@ -25,67 +25,70 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Gabe Black
+ * Authors: Gabe Black
  */
 
-#ifndef __FAULTS_HH__
-#define __FAULTS_HH__
+#ifndef __BASE_CONDCODE_HH__
+#define __BASE_CONDCODE_HH__
 
-#include "base/refcnt.hh"
-#include "sim/stats.hh"
-#include "config/full_system.hh"
+#include "base/bitfield.hh"
+#include "base/trace.hh"
 
-class ThreadContext;
-class FaultBase;
-typedef RefCountingPtr<FaultBase> Fault;
+/**
+ * Calculate the carry flag from an addition. This should work even when
+ * a carry value is also added in.
+ */
+inline
+bool
+findCarry(int width, uint64_t dest, uint64_t src1, uint64_t src2) {
+    int shift = width - 1;
+    return ((~(dest >> shift) & 1) +
+            ((src1 >> shift) & 1) +
+            ((src2 >> shift) & 1)) & 0x2;
+}
 
-typedef const char * FaultName;
-typedef Stats::Scalar<> FaultStat;
+/**
+ * Calculate the overflow flag from an addition.
+ */
+inline
+bool
+findOverflow(int width, uint64_t dest, uint64_t src1, uint64_t src2) {
+    int shift = width - 1;
+    return ((src1 ^ ~src2) & (src1 ^ dest)) & (1 << shift);
+}
 
-// Each class has it's name statically define in _name,
-// and has a virtual function to access it's name.
-// The function is necessary because otherwise, all objects
-// which are being accessed cast as a FaultBase * (namely
-// all faults returned using the Fault type) will use the
-// generic FaultBase name.
+/**
+ * Calculate the parity of a value. 1 is for odd parity and 0 is for even.
+ */
+inline
+bool
+findParity(int width, uint64_t dest) {
+    dest &= width;
+    dest ^= (dest >> 32);
+    dest ^= (dest >> 16);
+    dest ^= (dest >> 8);
+    dest ^= (dest >> 4);
+    dest ^= (dest >> 2);
+    dest ^= (dest >> 1);
+    return dest & 1;
+}
 
-class FaultBase : public RefCounted
-{
-  public:
-    virtual FaultName name() const = 0;
-    virtual void invoke(ThreadContext * tc);
-//    template<typename T>
-//    bool isA() {return dynamic_cast<T *>(this);}
-    virtual bool isMachineCheckFault() const {return false;}
-    virtual bool isAlignmentFault() const {return false;}
-};
+/**
+ * Calculate the negative flag.
+ */
+inline
+bool
+findNegative(int width, uint64_t dest) {
+    return bits(dest, width - 1, width - 1);
+}
 
-FaultBase * const NoFault = 0;
+/**
+ * Calculate the zero flag.
+ */
+inline
+bool
+findZero(int width, uint64_t dest) {
+    return !(dest & mask(width));
+}
 
-class UnimpFault : public FaultBase
-{
-  private:
-    std::string panicStr;
-  public:
-    UnimpFault(std::string _str)
-        : panicStr(_str)
-    { }
-
-    FaultName name() const {return "Unimplemented simulator feature";}
-    void invoke(ThreadContext * tc);
-};
-
-#if !FULL_SYSTEM
-class PageTableFault : public FaultBase
-{
-  private:
-    Addr vaddr;
-  public:
-    FaultName name() const {return "M5 page table fault";}
-    PageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc);
-};
-#endif
-
-#endif // __FAULTS_HH__
+#endif // __BASE_CONDCODE_HH__

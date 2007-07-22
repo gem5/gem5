@@ -55,7 +55,8 @@
 
 categories = ["conditional_move",
               "move",
-              "stack_operations"]
+              "stack_operations",
+              "xchg"]
 
 microcode = ""
 for category in categories:

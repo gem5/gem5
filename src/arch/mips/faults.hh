@@ -61,10 +61,10 @@ class MachineCheckFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    bool isMachineCheckFault() {return true;}
+    bool isMachineCheckFault() const {return true;}
 };
 
 class AlignmentFault : public MipsFault
@@ -74,10 +74,10 @@ class AlignmentFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    bool isAlignmentFault() {return true;}
+    bool isAlignmentFault() const {return true;}
 };
 
 class UnimplementedOpcodeFault : public MipsFault
@@ -87,7 +87,7 @@ class UnimplementedOpcodeFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -133,7 +133,7 @@ class ResetFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
@@ -146,7 +146,7 @@ class CoprocessorUnusableFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
@@ -159,7 +159,7 @@ class ReservedInstructionFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
@@ -172,7 +172,7 @@ class ThreadFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
@@ -188,7 +188,7 @@ class ArithmeticFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
@@ -205,7 +205,7 @@ class InterruptFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -217,7 +217,7 @@ class NDtbMissFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -229,7 +229,7 @@ class PDtbMissFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -241,7 +241,7 @@ class DtbPageFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -253,7 +253,7 @@ class DtbAcvFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -265,7 +265,7 @@ class ItbMissFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -277,7 +277,7 @@ class ItbPageFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -289,7 +289,7 @@ class ItbAcvFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -301,7 +301,7 @@ class FloatEnableFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -313,7 +313,7 @@ class IntegerOverflowFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
@@ -325,7 +325,7 @@ class DspStateDisabledFault : public MipsFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    FaultName name() {return _name;}
+    FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);

@@ -54,6 +54,62 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop OR_R_R
+{
+    or reg, reg, regm
+};
+
+def macroop OR_M_I
+{
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    or t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop OR_P_I
+{
+    limm t2, imm
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    or t1, t1, t2
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop OR_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    or t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop OR_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    or t1, t1, reg
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop OR_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    or reg, reg, t1
+};
+
+def macroop OR_R_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    or reg, reg, t1
+};
+
+def macroop OR_R_I
+{
+    limm t1, imm
+    or reg, reg, t1
+};
+
 def macroop XOR_R_R
 {
     xor reg, reg, regm
@@ -63,6 +119,23 @@ def macroop XOR_R_I
 {
     limm t1, imm
     xor reg, reg, t1
+};
+
+def macroop XOR_M_I
+{
+    limm t2, imm
+    ld t1, ds, [scale, index, base], disp
+    xor t1, t1, t2
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop XOR_P_I
+{
+    limm t2, imm
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    xor t1, t1, t2
+    st t1, ds, [scale, index, base], disp
 };
 
 def macroop XOR_M_R
@@ -93,6 +166,24 @@ def macroop XOR_R_P
     xor reg, reg, t1
 };
 
+def macroop AND_R_R
+{
+    and reg, reg, regm
+};
+
+def macroop AND_R_M
+{
+    ld t1, ds, [scale, index, base], disp
+    and reg, reg, t1
+};
+
+def macroop AND_R_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    and reg, reg, t1
+};
+
 def macroop AND_R_I
 {
     limm t1, imm
@@ -114,6 +205,21 @@ def macroop AND_P_I
     limm t1, imm
     and t2, t2, t1
     st t2, ds, [scale, index, base], disp
+};
+
+def macroop AND_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    and t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop AND_P_R
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    and t1, t1, reg
+    st t1, ds, [scale, index, base], disp
 };
 '''
 #let {{

@@ -54,25 +54,45 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop RET_NEAR
-{
-    # Make the default data size of rets 64 bits in 64 bit mode
-    .adjust_env oszIn64Override
 
-    ld t1, ss, [0, t0, rsp]
-    addi rsp, rsp, dsz
-    wripi t1, 0
+# All the memory versions need to use LOCK, regardless of if it was set
+
+def macroop XCHG_R_R
+{
+    # Use the xor trick instead of moves to reduce register pressure.
+    # This probably doesn't make much of a difference, but it's easy.
+    xor reg, reg, regm
+    xor regm, regm, reg
+    xor reg, reg, regm
 };
 
-def macroop RET_NEAR_I
+def macroop XCHG_R_M
 {
-    # Make the default data size of rets 64 bits in 64 bit mode
-    .adjust_env oszIn64Override
+    ld t1, ds, [scale, index, base], disp
+    st reg, ds, [scale, index, base], disp
+    mov reg, reg, t1
+};
 
-    limm t2, imm
-    ld t1, ss, [0, t0, rsp]
-    addi rsp, rsp, dsz
-    add rsp, rsp, t2
-    wripi t1, 0
+def macroop XCHG_R_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    st reg, ds, [0, t0, t7], disp
+    mov reg, reg, t1
+};
+
+def macroop XCHG_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    st reg, ds, [scale, index, base], disp
+    mov reg, reg, t1
+};
+
+def macroop XCHG_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    st reg, ds, [0, t0, t7], disp
+    mov reg, reg, t1
 };
 '''

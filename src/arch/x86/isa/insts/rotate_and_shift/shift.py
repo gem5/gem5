@@ -53,7 +53,67 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop SAL_R_I
+{
+    sll reg, reg, imm
+};
+
+def macroop SAL_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    sll t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAL_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    sll t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SHR_R_I
+{
+    srl reg, reg, imm
+};
+
+def macroop SHR_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    srl t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SHR_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    srl t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SAR_R_I
+{
+    sra reg, reg, imm
+};
+
+def macroop SAR_M_I
+{
+    ld t1, ds, [scale, index, base], disp
+    sra t1, t1, imm
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAR_P_I
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    sra t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+'''
 #let {{
 #    class SAL(Inst):
 #	"GenFault ${new UnimpInstFault}"
