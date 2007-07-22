@@ -340,6 +340,8 @@ namespace X86ISA
         emi.sib = nextByte;
         DPRINTF(Predecoder, "Found SIB byte %#x.\n", nextByte);
         consumeByte();
+        if(emi.modRM.mod == 0 && emi.sib.base == 5)
+            displacementSize = 4;
         if(displacementSize) {
             nextState = DisplacementState;
         } else if(immediateSize) {
