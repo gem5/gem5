@@ -68,10 +68,21 @@ class MSHR : public Packet::SenderState
         {}
     };
 
-    /** Defines the Data structure of the MSHR targetlist. */
-    typedef std::list<Target> TargetList;
-    /** Target list iterator. */
-    typedef std::list<Target>::iterator TargetListIterator;
+    class TargetList : public std::list<Target> {
+        /** Target list iterator. */
+        typedef std::list<Target>::iterator Iterator;
+
+      public:
+        bool needsExclusive;
+        bool hasUpgrade;
+
+        TargetList();
+        void resetFlags() { needsExclusive = hasUpgrade = false; }
+        bool isReset()    { return !needsExclusive && !hasUpgrade; }
+        void add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide);
+        void replaceUpgrades();
+    };
+
     /** A list of MSHRs. */
     typedef std::list<MSHR *> List;
     /** MSHR list iterator. */
@@ -99,13 +110,13 @@ class MSHR : public Packet::SenderState
 
     /** True if we will be putting the returned block in the cache */
     bool isCacheFill;
+
     /** True if we need to get an exclusive copy of the block. */
-    bool needsExclusive;
+    bool needsExclusive() { return targets->needsExclusive; }
 
     /** True if the request is uncacheable */
     bool _isUncacheable;
 
-    bool deferredNeedsExclusive;
     bool pendingInvalidate;
     bool pendingShared;
 
@@ -133,9 +144,9 @@ class MSHR : public Packet::SenderState
 
 private:
     /** List of all requests that match the address */
-    TargetList targets;
+    TargetList *targets;
 
-    TargetList deferredTargets;
+    TargetList *deferredTargets;
 
 public:
 
@@ -179,19 +190,19 @@ public:
      * Returns a pointer to the target list.
      * @return a pointer to the target list.
      */
-    TargetList* getTargetList() { return &targets; }
+    TargetList *getTargetList() { return targets; }
 
     /**
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets() { return !targets.empty(); }
+    bool hasTargets() { return !targets->empty(); }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() { assert(hasTargets());  return &targets.front(); }
+    Target *getTarget() { assert(hasTargets());  return &targets->front(); }
 
     /**
      * Pop first target.
@@ -199,7 +210,7 @@ public:
     void popTarget()
     {
         --ntargets;
-        targets.pop_front();
+        targets->pop_front();
     }
 
     bool isSimpleForward()

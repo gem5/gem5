@@ -836,7 +836,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                 // must be an outstanding upgrade request on block
                 // we're about to replace...
                 assert(!blk->isWritable());
-                assert(repl_mshr->needsExclusive);
+                assert(repl_mshr->needsExclusive());
                 // too hard to replace block with transient state;
                 // just use temporary storage to complete the current
                 // request and then get rid of it
@@ -1177,7 +1177,7 @@ Cache<TagStore>::getTimingPacket()
         pkt = tgt_pkt;
     } else {
         BlkType *blk = tags->findBlock(mshr->addr);
-        pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive);
+        pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
 
         mshr->isCacheFill = (pkt != NULL);
 
