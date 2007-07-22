@@ -257,7 +257,7 @@ class Packet : public FastAlloc
         Shared,
         // Special control flags
         ExpressSnoop,
-        DeferredSnoop,
+        LowerMSHRPending,  // not yet in service
         NUM_PACKET_FLAGS
     };
 
@@ -323,8 +323,8 @@ class Packet : public FastAlloc
     // Special control flags
     void setExpressSnoop()      { flags[ExpressSnoop] = true; }
     bool isExpressSnoop()       { return flags[ExpressSnoop]; }
-    void setDeferredSnoop()     { flags[DeferredSnoop] = true; }
-    bool isDeferredSnoop()      { return flags[DeferredSnoop]; }
+    void setLowerMSHRPending()  { flags[LowerMSHRPending] = true; }
+    bool lowerMSHRPending()     { return flags[LowerMSHRPending]; }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command

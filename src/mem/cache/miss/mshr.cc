@@ -164,7 +164,7 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    if (!inService || (pkt->isExpressSnoop() && !pkt->isDeferredSnoop())) {
+    if (!inService || (pkt->isExpressSnoop() && pkt->lowerMSHRPending())) {
         // Request has not been issued yet, or it's been issued
         // locally but is buffered unissued at some downstream cache
         // which is forwarding us this snoop.  Either way, the packet

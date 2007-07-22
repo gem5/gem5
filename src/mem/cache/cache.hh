@@ -190,7 +190,8 @@ class Cache : public BaseCache
      * @param new_state The new coherence state for the block.
      */
     void handleSnoop(PacketPtr ptk, BlkType *blk,
-                     bool is_timing, bool is_deferred);
+                     bool is_timing, bool is_deferred,
+                     bool lower_mshr_pending);
 
     /**
      * Create a writeback request for the given block.
