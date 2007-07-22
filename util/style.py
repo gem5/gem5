@@ -84,7 +84,7 @@ def checkwhite(filename):
         if not checkwhite_line(line):
             yield line,num + 1
 
-def fixwhite_line(line):
+def fixwhite_line(line, tabsize):
     if lead.search(line):
         newline = ''
         for i,c in enumerate(line):
@@ -117,7 +117,7 @@ def fixwhite(filename, tabsize, fixonly=None):
 
     for i,line in enumerate(lines):
         if fixonly is None or i in fixonly:
-            line = fixwhite_line(line)
+            line = fixwhite_line(line, tabsize)
 
         print >>f, line,
 
@@ -230,8 +230,23 @@ def validate(filename, stats, verbose, exit_code):
                     msg(i, line, 'improper spacing after %s' % match.group(1))
                 bad()
 
+def modified_lines(old_data, new_data):
+    from itertools import count
+    from mercurial import bdiff, mdiff
+
+    modified = set()
+    counter = count()
+    for pbeg, pend, fbeg, fend in bdiff.blocks(old_data, new_data):
+        for i in counter:
+            if i < fbeg:
+                modified.add(i)
+            elif i + 1 >= fend:
+                break
+    return modified
+
 def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
-    from mercurial import bdiff, mdiff, util
+    from mercurial import mdiff
+
     if hooktype != 'pretxncommit':
         raise AttributeError, \
               "This hook is only meant for pretxncommit, not %s" % hooktype
@@ -269,25 +284,26 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
     for fname in modified:
         fctx = wctx.filectx(fname)
         pctx = fctx.parents()
-        assert len(pctx) == 1
+        assert len(pctx) in (1, 2)
 
-        pdata = pctx[0].data()
-        fdata = fctx.data()
+        file_data = fctx.data()
+        mod_lines = modified_lines(pctx[0].data(), file_data)
+        if len(pctx) == 2:
+            m2 = modified_lines(pctx[1].data(), file_data)
+            mod_lines = mod_lines & m2 # only the lines that are new in both
 
         fixonly = set()
-        lines = enumerate(mdiff.splitnewlines(fdata))
-        for pbeg, pend, fbeg, fend in bdiff.blocks(pdata, fdata):
-            for i, line in lines:
-                if i < fbeg:
-                    if checkwhite_line(line):
-                        continue
+        for i,line in enumerate(mdiff.splitnewlines(file_data)):
+            if i not in mod_lines:
+                continue
 
-                    ui.write("invalid whitespace: %s:%d\n" % (fname, i+1))
-                    if verbose:
-                        ui.write(">>%s<<\n" % line[:-1])
-                    fixonly.add(i)
-                elif i + 1 >= fend:
-                    break
+            if checkwhite_line(line):
+                continue
+
+            ui.write("invalid whitespace: %s:%d\n" % (fname, i+1))
+            if verbose:
+                ui.write(">>%s<<\n" % line[:-1])
+            fixonly.add(i)
 
         if fixonly:
             if prompt(fname, fixonly):
