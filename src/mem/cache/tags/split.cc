@@ -300,7 +300,7 @@ Split::findBlock(Addr addr) const
 SplitBlk*
 Split::findReplacement(Addr addr, PacketList &writebacks)
 {
-    SplitBlk *blk;
+    SplitBlk *blk = NULL;
 
     assert(0);
 #if 0

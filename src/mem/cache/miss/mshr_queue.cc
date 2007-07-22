@@ -123,6 +123,7 @@ MSHRQueue::addToReadyList(MSHR *mshr)
         }
     }
     assert(false);
+    return end;  // keep stupid compilers happy
 }
 
 

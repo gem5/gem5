@@ -821,7 +821,9 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                             PacketList &writebacks)
 {
     Addr addr = pkt->getAddr();
+#if TRACING_ON
     CacheBlk::State old_state = blk ? blk->status : 0;
+#endif
 
     if (blk == NULL) {
         // better have read new data...
