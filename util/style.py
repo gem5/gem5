@@ -84,7 +84,7 @@ def checkwhite(filename):
         if not checkwhite_line(line):
             yield line,num + 1
 
-def fixwhite_line(line):
+def fixwhite_line(line, tabsize):
     if lead.search(line):
         newline = ''
         for i,c in enumerate(line):
@@ -117,7 +117,7 @@ def fixwhite(filename, tabsize, fixonly=None):
 
     for i,line in enumerate(lines):
         if fixonly is None or i in fixonly:
-            line = fixwhite_line(line)
+            line = fixwhite_line(line, tabsize)
 
         print >>f, line,
 
