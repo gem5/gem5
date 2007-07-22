@@ -499,6 +499,19 @@ let {{
                 DestReg = DestReg;
             ''')
     defineMicroRegOp('Rcr', '''
+            uint8_t shiftAmt =
+                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            if(shiftAmt)
+            {
+                CCFlagBits flags = ccFlagBits;
+                uint64_t top = flags.CF << (dataSize * 8 - shiftAmt);
+                if(shiftAmt > 1)
+                    top |= SrcReg1 << (dataSize * 8 - shiftAmt - 1);
+                uint64_t bottom = bits(SrcReg1, dataSize * 8, shiftAmt);
+                DestReg = merge(DestReg, top | bottom, dataSize);
+            }
+            else
+                DestReg = DestReg;
             ''')
     defineMicroRegOp('Rol', '''
             uint8_t shiftAmt =
@@ -514,6 +527,21 @@ let {{
                 DestReg = DestReg;
             ''')
     defineMicroRegOp('Rcl', '''
+            uint8_t shiftAmt =
+                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            if(shiftAmt)
+            {
+                CCFlagBits flags = ccFlagBits;
+                uint64_t top = SrcReg1 << shiftAmt;
+                uint64_t bottom = flags.CF << (shiftAmt - 1);
+                if(shiftAmt > 1)
+                    bottom |=
+                        bits(SrcReg1, dataSize * 8 - 1,
+                                      dataSize * 8 - shiftAmt + 1);
+                DestReg = merge(DestReg, top | bottom, dataSize);
+            }
+            else
+                DestReg = DestReg;
             ''')
 
     defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2', elseCode="RIP = RIP;")
