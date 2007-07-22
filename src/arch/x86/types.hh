@@ -61,7 +61,7 @@
 #include <inttypes.h>
 #include <iostream>
 
-#include "base/bitfield.hh"
+#include "base/bitunion.hh"
 #include "base/cprintf.hh"
 
 namespace X86ISA
@@ -86,11 +86,12 @@ namespace X86ISA
     };
 
     BitUnion8(LegacyPrefixVector)
+        Bitfield<7, 4> decodeVal;
         Bitfield<7> repne;
         Bitfield<6> rep;
         Bitfield<5> lock;
-        Bitfield<4> addr;
-        Bitfield<3> op;
+        Bitfield<4> op;
+        Bitfield<3> addr;
         //There can be only one segment override, so they share the
         //first 3 bits in the legacyPrefixes bitfield.
         Bitfield<2,0> seg;
@@ -184,8 +185,8 @@ namespace X86ISA
                            "prefixA = %#x,\n\t\tprefixB = %#x\n\t},\n\t"
                      "modRM = %#x,\n\tsib = %#x,\n\t"
                      "immediate = %#x,\n\tdisplacement = %#x\n}\n",
-                     emi.legacy, (uint8_t)emi.rex,
-                     emi.opcode.num, emi.opcode.op,
+                     (uint8_t)emi.legacy, (uint8_t)emi.rex,
+                     emi.opcode.num, (uint8_t)emi.opcode.op,
                      emi.opcode.prefixA, emi.opcode.prefixB,
                      (uint8_t)emi.modRM, (uint8_t)emi.sib,
                      emi.immediate, emi.displacement);

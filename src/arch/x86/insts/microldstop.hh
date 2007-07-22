@@ -55,40 +55,48 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/emulenv.hh"
-#include "base/misc.hh"
+#ifndef __ARCH_X86_INSTS_MICROLDSTOP_HH__
+#define __ARCH_X86_INSTS_MICROLDSTOP_HH__
 
-using namespace X86ISA;
+#include "arch/x86/insts/microop.hh"
 
-void EmulEnv::doModRM(const ExtMachInst & machInst)
+namespace X86ISA
 {
-    assert(machInst.modRM.mod != 3);
-    //Use the SIB byte for addressing if the modrm byte calls for it.
-    if (machInst.modRM.rm == 4 && machInst.addrSize != 2) {
-        scale = 1 << machInst.sib.scale;
-        index = machInst.sib.index | (machInst.rex.x << 3);
-        base = machInst.sib.base | (machInst.rex.b << 3);
-        //In this special case, we don't use a base. The displacement also
-        //changes, but that's managed by the predecoder.
-        if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
-            base = NUM_INTREGS;
-        //In -this- special case, we don't use an index.
-        if (machInst.sib.index == INTREG_RSP)
-            index = NUM_INTREGS;
-    } else {
-        if (machInst.addrSize == 2) {
-            warn("I'm not really using 16 bit MODRM like I'm supposed to!\n");
-        } else {
-            scale = 0;
-            base = machInst.modRM.rm | (machInst.rex.b << 3);
-            if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
-                base = NUM_INTREGS;
-                //Since we need to use a different encoding of this
-                //instruction anyway, just ignore the base in those cases
-//                if (machInst.mode.submode == SixtyFourBitMode)
-//                    base = NUM_INTREGS+7;
-            }
-        }
-    }
+    /**
+     * Base class for load and store ops
+     */
+    class LdStOp : public X86MicroopBase
+    {
+      protected:
+        const uint8_t scale;
+        const RegIndex index;
+        const RegIndex base;
+        const uint64_t disp;
+        const uint8_t segment;
+        const RegIndex data;
+        const uint8_t dataSize;
+        const uint8_t addressSize;
+
+        //Constructor
+        LdStOp(ExtMachInst _machInst,
+                const char * mnem, const char * _instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                uint8_t _scale, RegIndex _index, RegIndex _base,
+                uint64_t _disp, uint8_t _segment,
+                RegIndex _data,
+                uint8_t _dataSize, uint8_t _addressSize,
+                OpClass __opClass) :
+        X86MicroopBase(machInst, mnem, _instMnem,
+                isMicro, isDelayed, isFirst, isLast, __opClass),
+                scale(_scale), index(_index), base(_base),
+                disp(_disp), segment(_segment),
+                data(_data),
+                dataSize(_dataSize), addressSize(_addressSize)
+        {}
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+    };
 }
 
+#endif //__ARCH_X86_INSTS_MICROLDSTOP_HH__

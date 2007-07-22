@@ -56,6 +56,7 @@
  */
 
 #include "arch/x86/linux/process.hh"
+#include "arch/x86/linux/linux.hh"
 #include "kern/linux/linux.hh"
 #include "sim/syscall_emul.hh"
 
@@ -82,7 +83,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*   0 */ SyscallDesc("read", unimplementedFunc),
     /*   1 */ SyscallDesc("write", unimplementedFunc),
-    /*   2 */ SyscallDesc("open", unimplementedFunc),
+    /*   2 */ SyscallDesc("open", openFunc<X86Linux>),
     /*   3 */ SyscallDesc("close", unimplementedFunc),
     /*   4 */ SyscallDesc("stat", unimplementedFunc),
     /*   5 */ SyscallDesc("fstat", unimplementedFunc),

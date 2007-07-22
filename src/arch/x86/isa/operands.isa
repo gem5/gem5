@@ -102,6 +102,8 @@ def operands {{
         'Base':          ('IntReg', 'uqw', 'base', 'IsInteger', 4),
         'Index':         ('IntReg', 'uqw', 'index', 'IsInteger', 5),
         'Data':          ('IntReg', 'uqw', 'data', 'IsInteger', 6),
+        'rax':           ('IntReg', 'uqw', 'INTREG_RAX', 'IsInteger', 7),
         'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 10),
+        'ccFlagBits':       ('IntReg', 'uqw', 'NUM_INTREGS + NumMicroIntRegs', None, 20),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};

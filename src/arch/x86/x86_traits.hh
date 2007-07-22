@@ -61,6 +61,7 @@
 namespace X86ISA
 {
     const int NumMicroIntRegs = 16;
+    const int NumPseudoIntRegs = 1;
 
     const int NumMMXRegs = 8;
     const int NumXMMRegs = 16;

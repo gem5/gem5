@@ -69,6 +69,25 @@ def macroop PUSH_R {
     subi rsp, rsp, dsz
     st reg, ss, [0, t0, rsp]
 };
+
+def macroop PUSH_M {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    ld t1, ds, [scale, index, base], disp
+    subi rsp, rsp, dsz
+    st t1, ss, [0, t0, rsp]
+};
+
+def macroop PUSH_P {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    subi rsp, rsp, dsz
+    st t1, ss, [0, t0, rsp]
+};
 '''
 #let {{
 #    class POPA(Inst):

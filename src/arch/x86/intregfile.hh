@@ -104,7 +104,8 @@ namespace X86ISA
     std::string getIntRegName(RegIndex);
 
     const int NumIntArchRegs = NUM_INTREGS;
-    const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
+    const int NumIntRegs =
+        NumIntArchRegs + NumMicroIntRegs + NumPseudoIntRegs;
 
     class IntRegFile
     {

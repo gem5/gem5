@@ -55,40 +55,86 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/emulenv.hh"
-#include "base/misc.hh"
+#ifndef __ARCH_X86_INSTS_STATICINST_HH__
+#define __ARCH_X86_INSTS_STATICINST_HH__
 
-using namespace X86ISA;
+#include "cpu/static_inst.hh"
 
-void EmulEnv::doModRM(const ExtMachInst & machInst)
+namespace X86ISA
 {
-    assert(machInst.modRM.mod != 3);
-    //Use the SIB byte for addressing if the modrm byte calls for it.
-    if (machInst.modRM.rm == 4 && machInst.addrSize != 2) {
-        scale = 1 << machInst.sib.scale;
-        index = machInst.sib.index | (machInst.rex.x << 3);
-        base = machInst.sib.base | (machInst.rex.b << 3);
-        //In this special case, we don't use a base. The displacement also
-        //changes, but that's managed by the predecoder.
-        if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
-            base = NUM_INTREGS;
-        //In -this- special case, we don't use an index.
-        if (machInst.sib.index == INTREG_RSP)
-            index = NUM_INTREGS;
-    } else {
-        if (machInst.addrSize == 2) {
-            warn("I'm not really using 16 bit MODRM like I'm supposed to!\n");
-        } else {
-            scale = 0;
-            base = machInst.modRM.rm | (machInst.rex.b << 3);
-            if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
-                base = NUM_INTREGS;
-                //Since we need to use a different encoding of this
-                //instruction anyway, just ignore the base in those cases
-//                if (machInst.mode.submode == SixtyFourBitMode)
-//                    base = NUM_INTREGS+7;
+    /**
+     * Base class for all X86 static instructions.
+     */
+
+    class X86StaticInst : public StaticInst
+    {
+      protected:
+        // Constructor.
+        X86StaticInst(const char *mnem,
+             ExtMachInst _machInst, OpClass __opClass)
+                : StaticInst(mnem, _machInst, __opClass)
+            {
+            }
+
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const;
+
+        void printMnemonic(std::ostream &os, const char * mnemonic) const;
+        void printMnemonic(std::ostream &os, const char * instMnemonic,
+                const char * mnemonic) const;
+
+        void printSegment(std::ostream &os, int segment) const;
+
+        void printReg(std::ostream &os, int reg, int size) const;
+        void printSrcReg(std::ostream &os, int reg, int size) const;
+        void printDestReg(std::ostream &os, int reg, int size) const;
+
+        inline uint64_t merge(uint64_t into, uint64_t val, int size) const
+        {
+            X86IntReg reg;
+            reg = into;
+            //FIXME This needs to be handle high bytes as well
+            switch(size)
+            {
+              case 1:
+                reg.L = val;
+                break;
+              case 2:
+                reg.X = val;
+                break;
+              case 4:
+                //XXX Check if this should be zeroed or sign extended
+                reg = 0;
+                reg.E = val;
+                break;
+              case 8:
+                reg.R = val;
+                break;
+              default:
+                panic("Tried to merge with unrecognized size %d.\n", size);
+            }
+            return val;
+        }
+
+        inline uint64_t pick(uint64_t from, int size)
+        {
+            X86IntReg reg;
+            reg = from;
+            switch(size)
+            {
+              case 1:
+                return reg.L;
+              case 2:
+                return reg.E;
+              case 4:
+                return reg.X;
+              case 8:
+                return reg.R;
+              default:
+                panic("Tried to pick with unrecognized size %d.\n", size);
             }
         }
-    }
+    };
 }
 
+#endif //__ARCH_X86_INSTS_STATICINST_HH__

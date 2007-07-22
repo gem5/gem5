@@ -97,6 +97,9 @@ output header {{
 #include <iostream>
 
 #include "arch/x86/emulenv.hh"
+#include "arch/x86/insts/microldstop.hh"
+#include "arch/x86/insts/microregop.hh"
+#include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/regfile.hh"
 #include "arch/x86/types.hh"
@@ -108,6 +111,7 @@ output header {{
 
 output decoder {{
 #include "arch/x86/faults.hh"
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/segmentregs.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"

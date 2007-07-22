@@ -69,7 +69,8 @@ categories = ["arithmetic",
               "rotate_and_shift",
               "semaphores",
               "string",
-              "system_calls"]
+              "system_calls",
+              "system"]
 
 microcode = '''
 # X86 microcode

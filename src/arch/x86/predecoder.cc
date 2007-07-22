@@ -72,7 +72,6 @@ namespace X86ISA
 
         immediateCollected = 0;
         emi.immediate = 0;
-        displacementCollected = 0;
         emi.displacement = 0;
 
         emi.modRM = 0;
@@ -235,13 +234,41 @@ namespace X86ISA
                     logOpSize = 1; // 16 bit operand size
             }
 
+            //Set the actual op size
+            emi.opSize = 1 << logOpSize;
+
+            //Figure out the effective address size. This can be overriden to
+            //a fixed value at the decoder level.
+            int logAddrSize;
+            if(/*FIXME 64-bit mode*/1)
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 2; // 32 bit address size
+                else
+                    logAddrSize = 3; // 64 bit address size
+            }
+            else if(/*FIXME default 32*/1)
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 1; // 16 bit address size
+                else
+                    logAddrSize = 2; // 32 bit address size
+            }
+            else // 16 bit default operand size
+            {
+                if(emi.legacy.addr)
+                    logAddrSize = 2; // 32 bit address size
+                else
+                    logAddrSize = 1; // 16 bit address size
+            }
+
+            //Set the actual address size
+            emi.addrSize = 1 << logAddrSize;
+
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
             int immType = ImmediateType[emi.opcode.num - 1][nextByte];
             immediateSize = SizeTypeToSize[logOpSize - 1][immType];
-
-            //Set the actual op size
-            emi.opSize = 1 << logOpSize;
 
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {
@@ -277,8 +304,7 @@ namespace X86ISA
                 displacementSize = 0;
         } else {
             //figure out 32/64 bit displacement size
-            if(modRM.mod == 0 && (modRM.rm == 4 || modRM.rm == 5)
-                    || modRM.mod == 2)
+            if(modRM.mod == 0 && modRM.rm == 5 || modRM.mod == 2)
                 displacementSize = 4;
             else if(modRM.mod == 1)
                 displacementSize = 1;
@@ -313,6 +339,8 @@ namespace X86ISA
         emi.sib = nextByte;
         DPRINTF(Predecoder, "Found SIB byte %#x.\n", nextByte);
         consumeByte();
+        if(emi.modRM.mod == 0 && emi.sib.base == 5)
+            displacementSize = 4;
         if(displacementSize) {
             nextState = DisplacementState;
         } else if(immediateSize) {
@@ -330,14 +358,16 @@ namespace X86ISA
     {
         State nextState = ErrorState;
 
-        getImmediate(displacementCollected,
+        getImmediate(immediateCollected,
                 emi.displacement,
                 displacementSize);
 
         DPRINTF(Predecoder, "Collecting %d byte displacement, got %d bytes.\n",
-                displacementSize, displacementCollected);
+                displacementSize, immediateCollected);
 
-        if(displacementSize == displacementCollected) {
+        if(displacementSize == immediateCollected) {
+            //Reset this for other immediates.
+            immediateCollected = 0;
             //Sign extend the displacement
             switch(displacementSize)
             {
@@ -382,6 +412,9 @@ namespace X86ISA
 
         if(immediateSize == immediateCollected)
         {
+            //Reset this for other immediates.
+            immediateCollected = 0;
+
             //XXX Warning! The following is an observed pattern and might
             //not always be true!
 
