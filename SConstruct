@@ -67,7 +67,7 @@ import sys
 import os
 import subprocess
 
-from os.path import join as joinpath
+from os.path import isdir, join as joinpath
 
 # Check for recent-enough Python and SCons versions.  If your system's
 # default installation of Python is not recent enough, you can use a
@@ -96,6 +96,34 @@ SRCDIR = joinpath(ROOT, 'src')
 
 # tell python where to find m5 python code
 sys.path.append(joinpath(ROOT, 'src/python'))
+
+def check_style_hook(ui):
+    ui.readconfig(joinpath(ROOT, '.hg', 'hgrc'))
+    style_hook = ui.config('hooks', 'pretxncommit.style', None)
+
+    if not style_hook:
+        print """\
+You're missing the M5 style hook.
+Please install the hook so we can ensure that all code fits a common style.
+
+All you'd need to do is add the following lines to your repository .hg/hgrc
+or your personal .hgrc
+----------------
+
+[extensions]
+style = %s/util/style.py
+
+[hooks]
+pretxncommit.style = python:style.check_whitespace
+""" % (ROOT)
+        sys.exit(1)
+
+if isdir(joinpath(ROOT, '.hg')):
+    try:
+        from mercurial import ui
+        check_style_hook(ui.ui())
+    except ImportError:
+        pass
 
 ###################################################
 #
