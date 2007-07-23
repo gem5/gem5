@@ -77,6 +77,27 @@ def macroop IMUL_R_P
     ld t1, ds, [scale, index, base], disp
     mul1s reg, reg, t1
 };
+
+def macroop IMUL_R_R_I
+{
+    limm t1, imm
+    mul1s reg, regm, t1
+};
+
+def macroop IMUL_R_M_I
+{
+    limm t1, imm
+    ld t2, ds, [scale, index, base], disp
+    mul1s reg, t2, t1
+};
+
+def macroop IMUL_R_P_I
+{
+    rdip t7
+    limm t1, imm
+    ld t2, ds, [0, t0, t7]
+    mul1s reg, t2, t1
+};
 '''
 #let {{
 #    class MUL(Inst):

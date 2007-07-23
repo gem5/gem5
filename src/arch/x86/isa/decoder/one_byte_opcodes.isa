@@ -160,28 +160,28 @@
                                     [Gb,Eb], [Gv,Ev],
                                     [rAb,Ib], [rAv,Iz]);
         }
-        0x08: decode MODE_SUBMODE {
-            0x0: M5InternalError::error (
-                {{"Tried to execute an REX prefix!"}});
-            default: Inst::INC(B);
-        }
-        0x09: decode MODE_SUBMODE {
-            0x0: M5InternalError::error (
-                {{"Tried to execute an REX prefix!"}});
-            default: Inst::DEC(B);
-        }
         format Inst {
-            0x0A: PUSH(B);
-            0x0B: POP(B);
+            0x08: decode MODE_SUBMODE {
+                0x0: M5InternalError::error (
+                    {{"Tried to execute an REX prefix!"}});
+                default: INC(Bv);
+            }
+            0x09: decode MODE_SUBMODE {
+                0x0: M5InternalError::error (
+                    {{"Tried to execute an REX prefix!"}});
+                default: DEC(Bv);
+            }
+            0x0A: PUSH(Bv);
+            0x0B: POP(Bv);
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
             0x0: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: pusha();
+                default: Inst::PUSHA();
             }
             0x1: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: popa();
+                default: Inst::POPA();
             }
             0x2: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
@@ -204,10 +204,10 @@
                 {{"Tried to execute the DS address size override prefix!"}});
         }
         0x0D: decode OPCODE_OP_BOTTOM3 {
-            0x0: push_Iz();
-            0x1: imul_Gv_Ev_Iz();
-            0x2: push_Ib();
-            0x3: imul_Gv_Ev_Ib();
+            0x0: Inst::PUSH(Iz);
+            0x1: Inst::IMUL(Gv,Ev,Iz);
+            0x2: Inst::PUSH(Ib);
+            0x3: Inst::IMUL(Gv,Ev,Ib);
             0x4: ins_Yb_Dx();
             0x5: ins_Yz_Dx();
             0x6: outs_Dx_Xb();
@@ -346,8 +346,8 @@
             0x7: scas_Yv_rAX();
         }
         format Inst {
-            0x16: MOV(B,Ib);
-            0x17: MOV(B,Iv);
+            0x16: MOV(Bb,Ib);
+            0x17: MOV(Bv,Iv);
             0x18: decode OPCODE_OP_BOTTOM3 {
                 //0x0: group2_Eb_Ib();
                 0x0: decode MODRM_REG {
