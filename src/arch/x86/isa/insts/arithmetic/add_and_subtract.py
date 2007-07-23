@@ -277,6 +277,26 @@ def macroop SBB_P_R
     sbb t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
+
+def macroop NEG_R
+{
+    sub reg, t0, reg, flags=(CF,OF,SF,ZF,AF,PF)
+};
+
+def macroop NEG_M
+{
+    ld t1, ds, [scale, index, base], disp
+    sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop NEG_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
+    st t1, ds, [0, t0, t7], disp
+};
 '''
 #let {{
 #    class ADC(Inst):

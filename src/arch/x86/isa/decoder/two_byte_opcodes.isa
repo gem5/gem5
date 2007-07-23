@@ -296,8 +296,11 @@
                 0x3: btr_Ev_Gv();
                 0x4: lfs_Gz_Mp();
                 0x5: lgs_Gz_Mp();
-                0x6: Inst::MOVZX_B(Gv,Eb);
-                0x7: Inst::MOVZX_W(Gv,Ew);
+                //The size of the second operand in these instructions should
+                //really be "b" or "w", but it's set to v in order to have a
+                //consistent register size. This shouldn't affect behavior.
+                0x6: Inst::MOVZX_B(Gv,Ev);
+                0x7: Inst::MOVZX_W(Gv,Ev);
             }
             0x17: decode OPCODE_OP_BOTTOM3 {
                 0x0: jmpe_Jz(); // IA-64?
@@ -306,8 +309,11 @@
                 0x3: btc_Ev_Gv();
                 0x4: bsf_Gv_Ev();
                 0x5: bsr_Gv_Ev();
-                0x6: Inst::MOVSX_B(Gv,Eb);
-                0x7: Inst::MOVSX_W(Gv,Ew);
+                //The size of the second operand in these instructions should
+                //really be "b" or "w", but it's set to v in order to have a
+                //consistent register size. This shouldn't affect behavior.
+                0x6: Inst::MOVSX_B(Gv,Ev);
+                0x7: Inst::MOVSX_W(Gv,Ev);
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
