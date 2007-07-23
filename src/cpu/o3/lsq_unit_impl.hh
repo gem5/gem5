@@ -649,7 +649,7 @@ LSQUnit<Impl>::writebackStores()
 
         MemCmd command =
             req->isSwap() ? MemCmd::SwapReq :
-            (req->isLocked() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
+            (req->isLocked() ? MemCmd::StoreCondReq : MemCmd::WriteReq);
         PacketPtr data_pkt = new Packet(req, command,
                                         Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
