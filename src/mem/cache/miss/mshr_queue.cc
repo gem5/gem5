@@ -179,20 +179,12 @@ MSHRQueue::moveToFront(MSHR *mshr)
 void
 MSHRQueue::markInService(MSHR *mshr)
 {
-    assert(!mshr->inService);
-    if (mshr->isSimpleForward()) {
-        // we just forwarded the request packet & don't expect a
-        // response, so get rid of it
-        assert(mshr->getNumTargets() == 1);
-        mshr->popTarget();
+    if (mshr->markInService()) {
         deallocate(mshr);
-        return;
+    } else {
+        readyList.erase(mshr->readyIter);
+        inServiceEntries += 1;
     }
-    mshr->inService = true;
-    readyList.erase(mshr->readyIter);
-    //mshr->readyIter = NULL;
-    inServiceEntries += 1;
-    //readyList.pop_front();
 }
 
 void

@@ -81,6 +81,7 @@ class MSHR : public Packet::SenderState
         bool isReset()    { return !needsExclusive && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide);
         void replaceUpgrades();
+        void clearDownstreamPending();
     };
 
     /** A list of MSHRs. */
@@ -116,6 +117,8 @@ class MSHR : public Packet::SenderState
 
     /** True if the request is uncacheable */
     bool _isUncacheable;
+
+    bool downstreamPending;
 
     bool pendingInvalidate;
     bool pendingShared;
@@ -162,6 +165,8 @@ public:
      */
     void allocate(Addr addr, int size, PacketPtr pkt,
                   Tick when, Counter _order);
+
+    bool markInService();
 
     /**
      * Mark this MSHR as free.

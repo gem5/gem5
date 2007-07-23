@@ -754,7 +754,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         } else {
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
-            handleSnoop(target->pkt, blk, true, true, false);
+            handleSnoop(target->pkt, blk, true, true);
         }
 
         mshr->popTarget();
@@ -917,8 +917,7 @@ Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
 template<class TagStore>
 void
 Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
-                             bool is_timing, bool is_deferred,
-                             bool lower_mshr_pending)
+                             bool is_timing, bool is_deferred)
 {
     assert(pkt->isRequest());
 
@@ -930,9 +929,6 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (is_timing) {
         Packet *snoopPkt = new Packet(pkt, true);  // clear flags
         snoopPkt->setExpressSnoop();
-        if (lower_mshr_pending) {
-            snoopPkt->setLowerMSHRPending();
-        }
         snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
         cpuSidePort->sendTiming(snoopPkt);
         if (snoopPkt->memInhibitAsserted()) {
@@ -1019,16 +1015,6 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
     Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
-    // If a lower cache has an operation on this block pending (not
-    // yet in service) on the MSHR, then the upper caches need to know
-    // about it, as this means that the pending operation logically
-    // succeeds the current snoop.  It's not sufficient to record
-    // whether the MSHR *is* in service, as this misses the window
-    // where the lower cache has completed the request and the
-    // response is on its way back up the hierarchy.
-    bool lower_mshr_pending =
-        (mshr && (!mshr->inService) || pkt->lowerMSHRPending());
-
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
     if (mshr && mshr->handleSnoop(pkt, order++)) {
@@ -1075,7 +1061,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
         }
     }
 
-    handleSnoop(pkt, blk, true, false, lower_mshr_pending);
+    handleSnoop(pkt, blk, true, false);
 }
 
 
@@ -1090,7 +1076,7 @@ Cache<TagStore>::snoopAtomic(PacketPtr pkt)
     }
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
-    handleSnoop(pkt, blk, false, false, false);
+    handleSnoop(pkt, blk, false, false);
     return hitLatency;
 }
 

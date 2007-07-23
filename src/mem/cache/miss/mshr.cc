@@ -63,7 +63,8 @@ MSHR::TargetList::TargetList()
 
 
 inline void
-MSHR::TargetList::add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide)
+MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
+                      Counter order, bool cpuSide)
 {
     if (cpuSide) {
         if (pkt->needsExclusive()) {
@@ -72,6 +73,12 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide
 
         if (pkt->cmd == MemCmd::UpgradeReq) {
             hasUpgrade = true;
+        }
+
+        MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+        if (mshr != NULL) {
+            assert(!mshr->downstreamPending);
+            mshr->downstreamPending = true;
         }
     }
 
@@ -98,6 +105,20 @@ MSHR::TargetList::replaceUpgrades()
 
 
 void
+MSHR::TargetList::clearDownstreamPending()
+{
+    Iterator end_i = end();
+    for (Iterator i = begin(); i != end_i; ++i) {
+        MSHR *mshr = dynamic_cast<MSHR*>(i->pkt->senderState);
+        if (mshr != NULL) {
+            assert(mshr->downstreamPending);
+            mshr->downstreamPending = false;
+        }
+    }
+}
+
+
+void
 MSHR::allocate(Addr _addr, int _size, PacketPtr target,
                Tick whenReady, Counter _order)
 {
@@ -109,6 +130,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     isCacheFill = false;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
+    downstreamPending = false;
     threadNum = 0;
     ntargets = 1;
     // Don't know of a case where we would allocate a new MSHR for a
@@ -120,6 +142,28 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     pendingShared = false;
     data = NULL;
 }
+
+
+bool
+MSHR::markInService()
+{
+    assert(!inService);
+    if (isSimpleForward()) {
+        // we just forwarded the request packet & don't expect a
+        // response, so get rid of it
+        assert(getNumTargets() == 1);
+        popTarget();
+        return true;
+    }
+    inService = true;
+    if (!downstreamPending) {
+        // let upstream caches know that the request has made it to a
+        // level where it's going to get a response
+        targets->clearDownstreamPending();
+    }
+    return false;
+}
+
 
 void
 MSHR::deallocate()
@@ -164,7 +208,7 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    if (!inService || (pkt->isExpressSnoop() && pkt->lowerMSHRPending())) {
+    if (!inService || downstreamPending) {
         // Request has not been issued yet, or it's been issued
         // locally but is buffered unissued at some downstream cache
         // which is forwarding us this snoop.  Either way, the packet
