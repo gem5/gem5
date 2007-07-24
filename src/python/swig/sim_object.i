@@ -31,6 +31,7 @@
 %module sim_object
 
 %{
+#include "enums/MemoryMode.hh"
 #include "python/swig/pyobject.hh"
 %}
 
@@ -49,12 +50,6 @@ class SimObject {
       Drained
     };
 
-    enum MemoryMode {
-      Invalid,
-      Atomic,
-      Timing
-    };
-
     unsigned int drain(Event *drain_event);
     void resume();
     void switchOut();
@@ -66,11 +61,9 @@ class System {
     private:
       System();
     public:
-      SimObject::MemoryMode getMemoryMode();
-      void setMemoryMode(SimObject::MemoryMode mode);
+      Enums::MemoryMode getMemoryMode();
+      void setMemoryMode(Enums::MemoryMode mode);
 };
-
-SimObject *createSimObject(const std::string &name);
 
 int connectPorts(SimObject *o1, const std::string &name1, int i1,
                  SimObject *o2, const std::string &name2, int i2);

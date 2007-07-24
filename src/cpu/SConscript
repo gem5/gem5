@@ -72,7 +72,7 @@ temp_cpu_list = env['CPU_MODELS'][:]
 if env['USE_CHECKER']:
     temp_cpu_list.append('CheckerCPU')
 
-# Generate header.  
+# Generate header.
 def gen_cpu_exec_signatures(target, source, env):
     f = open(str(target[0]), 'w')
     print >> f, '''
@@ -111,7 +111,6 @@ Source('base.cc')
 Source('cpuevent.cc')
 Source('exetrace.cc')
 Source('func_unit.cc')
-Source('op_class.cc')
 Source('pc_event.cc')
 Source('quiesce_event.cc')
 Source('static_inst.cc')

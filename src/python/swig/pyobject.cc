@@ -36,7 +36,6 @@
 #include "base/output.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
@@ -89,12 +88,6 @@ inifile()
     return inifile;
 }
 
-SimObject *
-createSimObject(const string &name)
-{
-    return SimObjectClass::createObject(inifile(), name);
-}
-
 /**
  * Pointer to the Python function that maps names to SimObjects.
  */
@@ -130,7 +123,6 @@ void
 loadIniFile(PyObject *_resolveFunc)
 {
     resolveFunc = _resolveFunc;
-    configStream = simout.find("config.out");
 
     // The configuration database is now complete; start processing it.
     inifile().load(simout.resolve("config.ini"));

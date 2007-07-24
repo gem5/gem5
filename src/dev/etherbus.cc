@@ -42,7 +42,7 @@
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
-#include "sim/builder.hh"
+#include "params/EtherBus.hh"
 #include "sim/core.hh"
 
 using namespace std;
@@ -103,25 +103,8 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
     return true;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherBus)
-
-    Param<bool> loopback;
-    Param<double> speed;
-    SimObjectParam<EtherDump *> packet_dump;
-
-END_DECLARE_SIM_OBJECT_PARAMS(EtherBus)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherBus)
-
-    INIT_PARAM(loopback, "send the packet back to the sending interface"),
-    INIT_PARAM(speed, "bus speed in ticks per byte"),
-    INIT_PARAM(packet_dump, "object to dump network packets to")
-
-END_INIT_SIM_OBJECT_PARAMS(EtherBus)
-
-CREATE_SIM_OBJECT(EtherBus)
+EtherBus *
+EtherBusParams::create()
 {
-    return new EtherBus(getInstanceName(), speed, loopback, packet_dump);
+    return new EtherBus(name, speed, loopback, dump);
 }
-
-REGISTER_SIM_OBJECT("EtherBus", EtherBus)

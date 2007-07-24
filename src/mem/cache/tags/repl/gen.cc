@@ -39,7 +39,7 @@
 #include "base/misc.hh"
 #include "mem/cache/tags/iic.hh"
 #include "mem/cache/tags/repl/gen.hh"
-#include "sim/builder.hh"
+#include "params/GenRepl.hh"
 #include "sim/host.hh"
 
 using namespace std;
@@ -247,31 +247,8 @@ GenRepl::findTagPtr(unsigned long index)
     return false;
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(GenRepl)
-
-    Param<int> num_pools;
-    Param<int> fresh_res;
-    Param<int> pool_res;
-
-END_DECLARE_SIM_OBJECT_PARAMS(GenRepl)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(GenRepl)
-
-    INIT_PARAM(num_pools, "capacity in bytes"),
-    INIT_PARAM(fresh_res, "associativity"),
-    INIT_PARAM(pool_res, "block size in bytes")
-
-END_INIT_SIM_OBJECT_PARAMS(GenRepl)
-
-
-CREATE_SIM_OBJECT(GenRepl)
+GenRepl *
+GenReplParams::create()
 {
-    return new GenRepl(getInstanceName(), num_pools, fresh_res, pool_res);
+    return new GenRepl(name, num_pools, fresh_res, pool_res);
 }
-
-REGISTER_SIM_OBJECT("GenRepl", GenRepl)
-
-#endif // DOXYGEN_SHOULD_SKIP_THIS

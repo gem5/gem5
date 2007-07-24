@@ -52,7 +52,7 @@
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/uart.hh"
-#include "sim/builder.hh"
+#include "params/SimConsole.hh"
 
 using namespace std;
 
@@ -325,38 +325,17 @@ SimConsole::out(char c)
 
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
-
-    SimObjectParam<IntrControl *> intr_control;
-    Param<string> output;
-    Param<int> port;
-    Param<bool> append_name;
-    Param<int> number;
-
-END_DECLARE_SIM_OBJECT_PARAMS(SimConsole)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(SimConsole)
-
-    INIT_PARAM(intr_control, "interrupt controller"),
-    INIT_PARAM(output, "file to dump output to"),
-    INIT_PARAM(port, ""),
-    INIT_PARAM_DFLT(append_name, "append name() to filename", true),
-    INIT_PARAM_DFLT(number, "console number", 0)
-
-END_INIT_SIM_OBJECT_PARAMS(SimConsole)
-
-CREATE_SIM_OBJECT(SimConsole)
+SimConsole *
+SimConsoleParams::create()
 {
     string filename = output;
     ostream *stream = NULL;
 
     if (!filename.empty()) {
         if (append_name)
-            filename += "." + getInstanceName();
+            filename += "." + name;
         stream = simout.find(filename);
     }
 
-    return new SimConsole(getInstanceName(), stream, number, port);
+    return new SimConsole(name, stream, number, port);
 }
-
-REGISTER_SIM_OBJECT("SimConsole", SimConsole)

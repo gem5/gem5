@@ -32,10 +32,10 @@
 #include <limits>
 #include <vector>
 
-#include "sim/core.hh"
-
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
+#include "enums/OpClass.hh"
+#include "sim/core.hh"
 
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
@@ -259,12 +259,12 @@ InstructionQueue<Impl>::regStats()
     }
 */
     statIssuedInstType
-        .init(numThreads,Num_OpClasses)
+        .init(numThreads,Enums::Num_OpClass)
         .name(name() + ".ISSUE:FU_type")
         .desc("Type of FU issued")
         .flags(total | pdf | dist)
         ;
-    statIssuedInstType.ysubnames(opClassStrings);
+    statIssuedInstType.ysubnames(Enums::OpClassStrings);
 
     //
     //  How long did instructions for a particular FU type wait prior to issue
@@ -297,7 +297,7 @@ InstructionQueue<Impl>::regStats()
         .flags(pdf | dist)
         ;
     for (int i=0; i < Num_OpClasses; ++i) {
-        statFuBusy.subname(i, opClassStrings[i]);
+        statFuBusy.subname(i, Enums::OpClassStrings[i]);
     }
 
     fuBusy

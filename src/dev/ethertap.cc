@@ -50,7 +50,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/ethertap.hh"
-#include "sim/builder.hh"
+#include "params/EtherTap.hh"
 
 using namespace std;
 
@@ -313,28 +313,10 @@ EtherTap::unserialize(Checkpoint *cp, const std::string &section)
 
 //=====================================================================
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherTap)
-
-    SimObjectParam<EtherInt *> peer;
-    SimObjectParam<EtherDump *> dump;
-    Param<unsigned> port;
-    Param<unsigned> bufsz;
-
-END_DECLARE_SIM_OBJECT_PARAMS(EtherTap)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherTap)
-
-    INIT_PARAM_DFLT(peer, "peer interface", NULL),
-    INIT_PARAM_DFLT(dump, "object to dump network packets to", NULL),
-    INIT_PARAM_DFLT(port, "tap port", 3500),
-    INIT_PARAM_DFLT(bufsz, "tap buffer size", 10000)
-
-END_INIT_SIM_OBJECT_PARAMS(EtherTap)
-
-
-CREATE_SIM_OBJECT(EtherTap)
+EtherTap *
+EtherTapParams::create()
 {
-    EtherTap *tap = new EtherTap(getInstanceName(), dump, port, bufsz);
+    EtherTap *tap = new EtherTap(name, dump, port, bufsz);
 
     if (peer) {
         tap->setPeer(peer);
@@ -343,5 +325,3 @@ CREATE_SIM_OBJECT(EtherTap)
 
     return tap;
 }
-
-REGISTER_SIM_OBJECT("EtherTap", EtherTap)

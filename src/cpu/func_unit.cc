@@ -32,7 +32,8 @@
 
 #include "base/misc.hh"
 #include "cpu/func_unit.hh"
-#include "sim/builder.hh"
+#include "params/OpDesc.hh"
+#include "params/FUDesc.hh"
 
 using namespace std;
 
@@ -116,56 +117,17 @@ FuncUnit::issueLatency(OpClass capability)
 //
 //  The operation-class description object
 //
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(OpDesc)
-
-    SimpleEnumParam<OpClass> opClass;
-    Param<unsigned>    opLat;
-    Param<unsigned>    issueLat;
-
-END_DECLARE_SIM_OBJECT_PARAMS(OpDesc)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(OpDesc)
-
-    INIT_ENUM_PARAM(opClass, "type of operation", opClassStrings),
-    INIT_PARAM(opLat,        "cycles until result is available"),
-    INIT_PARAM(issueLat,     "cycles until another can be issued")
-
-END_INIT_SIM_OBJECT_PARAMS(OpDesc)
-
-
-CREATE_SIM_OBJECT(OpDesc)
+OpDesc *
+OpDescParams::create()
 {
-    return new OpDesc(getInstanceName(), opClass, opLat, issueLat);
+    return new OpDesc(name, opClass, opLat, issueLat);
 }
-
-REGISTER_SIM_OBJECT("OpDesc", OpDesc)
-
 
 //
 //  The FuDesc object
 //
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(FUDesc)
-
-    SimObjectVectorParam<OpDesc *> opList;
-    Param<unsigned>                count;
-
-END_DECLARE_SIM_OBJECT_PARAMS(FUDesc)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(FUDesc)
-
-    INIT_PARAM(opList, "list of operation classes for this FU type"),
-    INIT_PARAM(count,  "number of these FU's available")
-
-END_INIT_SIM_OBJECT_PARAMS(FUDesc)
-
-
-CREATE_SIM_OBJECT(FUDesc)
+FUDesc *
+FUDescParams::create()
 {
-    return new FUDesc(getInstanceName(), opList, count);
+    return new FUDesc(name, opList, count);
 }
-
-REGISTER_SIM_OBJECT("FUDesc", FUDesc)
-

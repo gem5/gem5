@@ -45,7 +45,8 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
-#include "sim/builder.hh"
+#include "params/CowDiskImage.hh"
+#include "params/RawDiskImage.hh"
 #include "sim/sim_exit.hh"
 #include "sim/byteswap.hh"
 
@@ -143,29 +144,11 @@ RawDiskImage::write(const uint8_t *data, off_t offset)
     return stream.tellp() - pos;
 }
 
-DEFINE_SIM_OBJECT_CLASS_NAME("DiskImage", DiskImage)
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(RawDiskImage)
-
-    Param<string> image_file;
-    Param<bool> read_only;
-
-END_DECLARE_SIM_OBJECT_PARAMS(RawDiskImage)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(RawDiskImage)
-
-    INIT_PARAM(image_file, "disk image file"),
-    INIT_PARAM_DFLT(read_only, "read only image", false)
-
-END_INIT_SIM_OBJECT_PARAMS(RawDiskImage)
-
-
-CREATE_SIM_OBJECT(RawDiskImage)
+RawDiskImage *
+RawDiskImageParams::create()
 {
-    return new RawDiskImage(getInstanceName(), image_file, read_only);
+    return new RawDiskImage(name, image_file, read_only);
 }
-
-REGISTER_SIM_OBJECT("RawDiskImage", RawDiskImage)
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -440,33 +423,12 @@ CowDiskImage::unserialize(Checkpoint *cp, const string &section)
     open(cowFilename);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(CowDiskImage)
-
-    SimObjectParam<DiskImage *> child;
-    Param<string> image_file;
-    Param<int> table_size;
-    Param<bool> read_only;
-
-END_DECLARE_SIM_OBJECT_PARAMS(CowDiskImage)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(CowDiskImage)
-
-    INIT_PARAM(child, "child image"),
-    INIT_PARAM_DFLT(image_file, "disk image file", ""),
-    INIT_PARAM_DFLT(table_size, "initial table size", 65536),
-    INIT_PARAM_DFLT(read_only, "don't write back to the copy-on-write file",
-                    true)
-
-END_INIT_SIM_OBJECT_PARAMS(CowDiskImage)
-
-
-CREATE_SIM_OBJECT(CowDiskImage)
+CowDiskImage *
+CowDiskImageParams::create()
 {
     if (((string)image_file).empty())
-        return new CowDiskImage(getInstanceName(), child, table_size);
+        return new CowDiskImage(name, child, table_size);
     else
-        return new CowDiskImage(getInstanceName(), child, table_size,
+        return new CowDiskImage(name, child, table_size,
                                 image_file, read_only);
 }
-
-REGISTER_SIM_OBJECT("CowDiskImage", CowDiskImage)

@@ -40,7 +40,6 @@
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
-#include "sim/param.hh"
 
 using namespace std;
 
@@ -59,7 +58,7 @@ SimObject::SimObjectList SimObject::simObjectList;
 //
 // SimObject constructor: used to maintain static simObjectList
 //
-SimObject::SimObject(Params *p)
+SimObject::SimObject(const Params *p)
     : _params(p)
 {
 #ifdef DEBUG
@@ -70,13 +69,18 @@ SimObject::SimObject(Params *p)
     state = Running;
 }
 
-//
-// SimObject constructor: used to maintain static simObjectList
-//
-SimObject::SimObject(const string &_name)
-    : _params(new Params)
+SimObjectParams *
+makeParams(const string &name)
 {
-    _params->name = _name;
+    SimObjectParams *params = new SimObjectParams;
+    params->name = name;
+
+    return params;
+}
+
+SimObject::SimObject(const string &_name)
+    : _params(makeParams(_name))
+{
 #ifdef DEBUG
     doDebugBreak = false;
 #endif
@@ -272,5 +276,3 @@ SimObject::takeOverFrom(BaseCPU *cpu)
 {
     panic("Unimplemented!");
 }
-
-DEFINE_SIM_OBJECT_CLASS_NAME("SimObject", SimObject)

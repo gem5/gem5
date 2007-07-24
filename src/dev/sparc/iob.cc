@@ -45,11 +45,10 @@
 #include "dev/platform.hh"
 #include "mem/port.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
-Iob::Iob(Params *p)
+Iob::Iob(const Params *p)
     : PioDevice(p), ic(p->platform->intrctrl)
 {
     iobManAddr = ULL(0x9800000000);
@@ -372,31 +371,8 @@ Iob::unserialize(Checkpoint *cp, const std::string &section)
     };
 }
 
-
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Iob)
-    Param<Tick> pio_latency;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-END_DECLARE_SIM_OBJECT_PARAMS(Iob)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Iob)
-
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object")
-
-END_INIT_SIM_OBJECT_PARAMS(Iob)
-
-CREATE_SIM_OBJECT(Iob)
+Iob *
+IobParams::create()
 {
-    Iob::Params *p = new Iob::Params;
-    p->name = getInstanceName();
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    return new Iob(p);
+    return new Iob(this);
 }
-
-REGISTER_SIM_OBJECT("Iob", Iob)

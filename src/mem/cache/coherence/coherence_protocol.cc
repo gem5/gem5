@@ -41,7 +41,7 @@
 #include "mem/cache/miss/mshr.hh"
 #include "mem/cache/cache.hh"
 #include "mem/cache/coherence/coherence_protocol.hh"
-#include "sim/builder.hh"
+#include "params/CoherenceProtocol.hh"
 
 using namespace std;
 
@@ -258,18 +258,12 @@ CoherenceProtocol::assertShared(BaseCache *cache, PacketPtr &pkt,
 }
 
 CoherenceProtocol::CoherenceProtocol(const string &name,
-                                     const string &protocol,
+                                     Enums::Coherence protocol,
                                      const bool doUpgrades)
     : SimObject(name)
 {
-    // Python should catch this, but in case it doesn't...
-    if (!(protocol == "msi"  || protocol == "mesi" ||
-          protocol == "mosi" || protocol == "moesi")) {
-        fatal("CoherenceProtocol: unrecognized protocol %s\n",  protocol);
-    }
-
-    bool hasOwned = (protocol == "mosi" || protocol == "moesi");
-    bool hasExclusive = (protocol == "mesi" || protocol == "moesi");
+    bool hasOwned = (protocol == Enums::mosi || protocol == Enums::moesi);
+    bool hasExclusive = (protocol == Enums::mesi || protocol == Enums::moesi);
 
     if (hasOwned && !doUpgrades) {
         fatal("CoherenceProtocol: ownership protocols require upgrade "
@@ -466,30 +460,8 @@ CoherenceProtocol::invalidTransition(BaseCache *cache, PacketPtr &pkt,
     return false;
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(CoherenceProtocol)
-
-    Param<string> protocol;
-    Param<bool> do_upgrades;
-
-END_DECLARE_SIM_OBJECT_PARAMS(CoherenceProtocol)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(CoherenceProtocol)
-
-    INIT_PARAM(protocol, "name of coherence protocol"),
-    INIT_PARAM_DFLT(do_upgrades, "use upgrade transactions?", true)
-
-END_INIT_SIM_OBJECT_PARAMS(CoherenceProtocol)
-
-
-CREATE_SIM_OBJECT(CoherenceProtocol)
+CoherenceProtocol *
+CoherenceProtocolParams::create()
 {
-    return new CoherenceProtocol(getInstanceName(), protocol,
-                                 do_upgrades);
+    return new CoherenceProtocol(name, protocol, do_upgrades);
 }
-
-REGISTER_SIM_OBJECT("CoherenceProtocol", CoherenceProtocol)
-
-#endif // DOXYGEN_SHOULD_SKIP_THIS

@@ -35,7 +35,7 @@
 #include "cpu/simple/timing.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/TimingSimpleCPU.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -158,7 +158,7 @@ void
 TimingSimpleCPU::resume()
 {
     if (_status != SwitchedOut && _status != Idle) {
-        assert(system->getMemoryMode() == System::Timing);
+        assert(system->getMemoryMode() == Enums::timing);
 
         // Delete the old event if it existed.
         if (fetchEvent) {
@@ -701,79 +701,11 @@ TimingSimpleCPU::DcachePort::recvRetry()
 //
 //  TimingSimpleCPU Simulation Object
 //
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
-
-    Param<Counter> max_insts_any_thread;
-    Param<Counter> max_insts_all_threads;
-    Param<Counter> max_loads_any_thread;
-    Param<Counter> max_loads_all_threads;
-    Param<Tick> progress_interval;
-    SimObjectParam<System *> system;
-    Param<int> cpu_id;
-
-#if FULL_SYSTEM
-    SimObjectParam<TheISA::ITB *> itb;
-    SimObjectParam<TheISA::DTB *> dtb;
-    Param<Tick> profile;
-
-    Param<bool> do_quiesce;
-    Param<bool> do_checkpoint_insts;
-    Param<bool> do_statistics_insts;
-#else
-    SimObjectParam<Process *> workload;
-#endif // FULL_SYSTEM
-
-    Param<int> clock;
-    Param<int> phase;
-
-    Param<bool> defer_registration;
-    Param<int> width;
-    Param<bool> function_trace;
-    Param<Tick> function_trace_start;
-    Param<bool> simulate_stalls;
-
-END_DECLARE_SIM_OBJECT_PARAMS(TimingSimpleCPU)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
-
-    INIT_PARAM(max_insts_any_thread,
-               "terminate when any thread reaches this inst count"),
-    INIT_PARAM(max_insts_all_threads,
-               "terminate when all threads have reached this inst count"),
-    INIT_PARAM(max_loads_any_thread,
-               "terminate when any thread reaches this load count"),
-    INIT_PARAM(max_loads_all_threads,
-               "terminate when all threads have reached this load count"),
-    INIT_PARAM(progress_interval, "Progress interval"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(cpu_id, "processor ID"),
-
-#if FULL_SYSTEM
-    INIT_PARAM(itb, "Instruction TLB"),
-    INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(profile, ""),
-    INIT_PARAM(do_quiesce, ""),
-    INIT_PARAM(do_checkpoint_insts, ""),
-    INIT_PARAM(do_statistics_insts, ""),
-#else
-    INIT_PARAM(workload, "processes to run"),
-#endif // FULL_SYSTEM
-
-    INIT_PARAM(clock, "clock speed"),
-    INIT_PARAM_DFLT(phase, "clock phase", 0),
-    INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
-    INIT_PARAM(width, "cpu width"),
-    INIT_PARAM(function_trace, "Enable function trace"),
-    INIT_PARAM(function_trace_start, "Cycle to start function trace"),
-    INIT_PARAM(simulate_stalls, "Simulate cache stall cycles")
-
-END_INIT_SIM_OBJECT_PARAMS(TimingSimpleCPU)
-
-
-CREATE_SIM_OBJECT(TimingSimpleCPU)
+TimingSimpleCPU *
+TimingSimpleCPUParams::create()
 {
     TimingSimpleCPU::Params *params = new TimingSimpleCPU::Params();
-    params->name = getInstanceName();
+    params->name = name;
     params->numberOfThreads = 1;
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;
@@ -796,12 +728,11 @@ CREATE_SIM_OBJECT(TimingSimpleCPU)
     params->do_checkpoint_insts = do_checkpoint_insts;
     params->do_statistics_insts = do_statistics_insts;
 #else
-    params->process = workload;
+    if (workload.size() != 1)
+        panic("only one workload allowed");
+    params->process = workload[0];
 #endif
 
     TimingSimpleCPU *cpu = new TimingSimpleCPU(params);
     return cpu;
 }
-
-REGISTER_SIM_OBJECT("TimingSimpleCPU", TimingSimpleCPU)
-

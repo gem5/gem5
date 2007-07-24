@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,15 +25,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Nathan Binkert
  */
 
-/**
- * @file
- * SimObject Declaration of pure virtual MemTraceReader class.
- */
+%{
+#include "base/inet.hh"
+%}
 
-#include "cpu/trace/reader/mem_trace_reader.hh"
-#include "sim/param.hh"
+namespace Net {
+struct EthAddr
+{
+    EthAddr();
+    EthAddr(const uint8_t ea[6]);
+    EthAddr(const std::string &addr);
+};
+}
 
-DEFINE_SIM_OBJECT_CLASS_NAME("MemTraceReader", MemTraceReader);

@@ -37,9 +37,10 @@
 #ifndef __DEV_TSUNAMI_IO_HH__
 #define __DEV_TSUNAMI_IO_HH__
 
-#include "dev/io_device.hh"
 #include "base/range.hh"
 #include "dev/alpha/tsunami.hh"
+#include "dev/io_device.hh"
+#include "params/TsunamiIO.hh"
 #include "sim/eventq.hh"
 
 /**
@@ -85,9 +86,6 @@ class TsunamiIO : public BasicPioDevice
         /** Current RTC register address/index */
         int addr;
 
-        /** should the year be interpreted as BCD? */
-        bool year_is_bcd;
-
         /** Data for real-time clock function */
         union {
             uint8_t clock_data[10];
@@ -114,7 +112,7 @@ class TsunamiIO : public BasicPioDevice
 
       public:
         RTC(const std::string &name, Tsunami* tsunami,
-            const std::vector<int> &t, bool bcd, Tick i);
+            const TsunamiIOParams *params);
 
         /** RTC address port: write address of RTC RAM data to access */
         void writeAddr(const uint8_t data);
@@ -313,23 +311,19 @@ class TsunamiIO : public BasicPioDevice
      */
     Tick frequency() const;
 
-    struct Params : public BasicPioDevice::Params
-    {
-        Tick frequency;
-        Tsunami *tsunami;
-        std::vector<int> init_time;
-        bool year_is_bcd;
-    };
-
-  protected:
-    const Params *params() const { return (const Params*)_params; }
-
   public:
+    typedef TsunamiIOParams Params;
     /**
      * Initialize all the data for devices supported by Tsunami I/O.
      * @param p pointer to Params struct
      */
-    TsunamiIO(Params *p);
+    TsunamiIO(const Params *p);
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

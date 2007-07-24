@@ -36,8 +36,9 @@
 #ifndef __MEM_MEM_OBJECT_HH__
 #define __MEM_MEM_OBJECT_HH__
 
-#include "sim/sim_object.hh"
 #include "mem/port.hh"
+#include "params/MemObject.hh"
+#include "sim/sim_object.hh"
 
 /**
  * The base MemoryObject class, allows for an accesor function to a
@@ -46,7 +47,15 @@
 class MemObject : public SimObject
 {
   public:
+    typedef MemObjectParams Params;
+    MemObject(const Params *params);
     MemObject(const std::string &name);
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
   public:
     /** Additional function to return the Port of a memory object. */

@@ -38,18 +38,16 @@
 #include <deque>
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "base/chunk_generator.hh"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
-#include "dev/ide_disk.hh"
 #include "dev/ide_ctrl.hh"
-#include "dev/alpha/tsunami.hh"
-#include "dev/alpha/tsunami_pchip.hh"
-#include "sim/builder.hh"
-#include "sim/sim_object.hh"
+#include "dev/ide_disk.hh"
+#include "params/IdeDisk.hh"
 #include "sim/core.hh"
-#include "arch/isa_traits.hh"
+#include "sim/sim_object.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -1116,32 +1114,8 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_ARRAY(dataBuffer, MAX_DMA_SIZE);
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-enum DriveID { master, slave };
-static const char *DriveID_strings[] = { "master", "slave" };
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
-
-    SimObjectParam<DiskImage *> image;
-    SimpleEnumParam<DriveID> driveID;
-    Param<int> delay;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IdeDisk)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IdeDisk)
-
-    INIT_PARAM(image, "Disk image"),
-    INIT_ENUM_PARAM(driveID, "Drive ID (0=master 1=slave)", DriveID_strings),
-    INIT_PARAM_DFLT(delay, "Fixed disk delay in microseconds", 1)
-
-END_INIT_SIM_OBJECT_PARAMS(IdeDisk)
-
-
-CREATE_SIM_OBJECT(IdeDisk)
+IdeDisk *
+IdeDiskParams::create()
 {
-    return new IdeDisk(getInstanceName(), image, driveID, delay);
+    return new IdeDisk(name, image, driveID, delay);
 }
-
-REGISTER_SIM_OBJECT("IdeDisk", IdeDisk)
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS

@@ -38,6 +38,7 @@
 
 #include "base/statistics.hh"
 #include "mem/physical.hh"
+#include "params/DRAMMemory.hh"
 
 class DRAMMemory : public PhysicalMemory
 {
@@ -144,28 +145,16 @@ class DRAMMemory : public PhysicalMemory
     int prechargeBanksAround(int bank);
 
   public:
-    struct Params : public PhysicalMemory::Params
+    typedef DRAMMemoryParams Params;
+    DRAMMemory(const Params *p);
+
+    const Params *
+    params() const
     {
-        /* additional params for dram protocol*/
-        int cpu_ratio;
-        int bus_width;
+        return dynamic_cast<const Params *>(_params);
+    }
 
-        std::string mem_type; /* DRDRAM, SDRAM */
-        std::string mem_actpolicy; /* closed, open */
-        std::string memctrladdr_type; /* interleaved, anythingelse */
-
-        int act_lat;
-        int cas_lat;
-        int war_lat;
-        int pre_lat;
-        int dpl_lat;
-        int trc_lat;
-        int num_banks;
-        int num_cpus;
-
-    };
     virtual void regStats();
-    DRAMMemory(Params *p);
 };
 
 #endif// __MEM_DRAM_HH__

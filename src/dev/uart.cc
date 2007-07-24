@@ -35,19 +35,14 @@
 #include "dev/simconsole.hh"
 #include "dev/uart.hh"
 #include "dev/platform.hh"
-#include "sim/builder.hh"
 
 using namespace std;
 
-Uart::Uart(Params *p)
-    : BasicPioDevice(p), platform(p->platform), cons(p->cons)
+Uart::Uart(const Params *p)
+    : BasicPioDevice(p), platform(p->platform), cons(p->sim_console)
 {
-
     status = 0;
 
     // set back pointers
     cons->uart = this;
 }
-
-DEFINE_SIM_OBJECT_CLASS_NAME("Uart", Uart)
-

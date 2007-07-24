@@ -40,7 +40,7 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "dev/etherdump.hh"
-#include "sim/builder.hh"
+#include "params/EtherDump.hh"
 #include "sim/core.hh"
 
 using std::string;
@@ -116,23 +116,8 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
     stream.flush();
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
-
-    Param<string> file;
-    Param<int> maxlen;
-
-END_DECLARE_SIM_OBJECT_PARAMS(EtherDump)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherDump)
-
-    INIT_PARAM(file, "file to dump packets to"),
-    INIT_PARAM(maxlen, "max portion of packet data to dump")
-
-END_INIT_SIM_OBJECT_PARAMS(EtherDump)
-
-CREATE_SIM_OBJECT(EtherDump)
+EtherDump *
+EtherDumpParams::create()
 {
-    return new EtherDump(getInstanceName(), simout.resolve(file), maxlen);
+    return new EtherDump(name, simout.resolve(file), maxlen);
 }
-
-REGISTER_SIM_OBJECT("EtherDump", EtherDump)

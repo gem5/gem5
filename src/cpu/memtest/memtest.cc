@@ -46,7 +46,7 @@
 #include "mem/packet.hh"
 //#include "mem/physical.hh"
 #include "mem/request.hh"
-#include "sim/builder.hh"
+#include "params/MemTest.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
 
@@ -496,53 +496,15 @@ MemTest::doRetry()
     }
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(MemTest)
-
-//    SimObjectParam<BaseCache *> cache;
-//    SimObjectParam<PhysicalMemory *> main_mem;
-//    SimObjectParam<PhysicalMemory *> check_mem;
-    Param<unsigned> memory_size;
-    Param<unsigned> percent_reads;
-    Param<unsigned> percent_functional;
-    Param<unsigned> percent_uncacheable;
-    Param<unsigned> progress_interval;
-    Param<unsigned> percent_source_unaligned;
-    Param<unsigned> percent_dest_unaligned;
-    Param<Addr> trace_addr;
-    Param<Counter> max_loads;
-    Param<bool> atomic;
-
-END_DECLARE_SIM_OBJECT_PARAMS(MemTest)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(MemTest)
-
-//    INIT_PARAM(cache, "L1 cache"),
-//    INIT_PARAM(main_mem, "hierarchical memory"),
-//    INIT_PARAM(check_mem, "check memory"),
-    INIT_PARAM(memory_size, "memory size"),
-    INIT_PARAM(percent_reads, "target read percentage"),
-    INIT_PARAM(percent_functional, "percentage of access that are functional"),
-    INIT_PARAM(percent_uncacheable, "target uncacheable percentage"),
-    INIT_PARAM(progress_interval, "progress report interval (in accesses)"),
-    INIT_PARAM(percent_source_unaligned,
-               "percent of copy source address that are unaligned"),
-    INIT_PARAM(percent_dest_unaligned,
-               "percent of copy dest address that are unaligned"),
-    INIT_PARAM(trace_addr, "address to trace"),
-                              INIT_PARAM(max_loads, "terminate when we have reached this load count"),
-    INIT_PARAM(atomic, "Is the tester testing atomic mode (or timing)")
-
-END_INIT_SIM_OBJECT_PARAMS(MemTest)
-
-
-CREATE_SIM_OBJECT(MemTest)
+MemTest *
+MemTestParams::create()
 {
-    return new MemTest(getInstanceName(), /*cache->getInterface(),*/ /*main_mem,*/
-                       /*check_mem,*/ memory_size, percent_reads, percent_functional,
+    return new MemTest(name,
+#if 0
+                       cache->getInterface(), main_mem, check_mem,
+#endif
+                       memory_size, percent_reads, percent_functional,
                        percent_uncacheable, progress_interval,
                        percent_source_unaligned, percent_dest_unaligned,
                        trace_addr, max_loads, atomic);
 }
-
-REGISTER_SIM_OBJECT("MemTest", MemTest)

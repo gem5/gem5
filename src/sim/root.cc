@@ -36,28 +36,17 @@
 #include <vector>
 
 #include "base/misc.hh"
-#include "sim/builder.hh"
+#include "params/Root.hh"
 #include "sim/sim_object.hh"
 
 // Dummy Object
 struct Root : public SimObject
 {
-    Root(const std::string &name) : SimObject(name) {}
+    Root(RootParams *params) : SimObject(params) {}
 };
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Root)
-
-    Param<int> dummy; // needed below
-
-END_DECLARE_SIM_OBJECT_PARAMS(Root)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Root)
-
-    INIT_PARAM(dummy, "")  // All SimObjects must have params
-
-END_INIT_SIM_OBJECT_PARAMS(Root)
-
-CREATE_SIM_OBJECT(Root)
+Root *
+RootParams::create()
 {
     static bool created = false;
     if (created)
@@ -65,7 +54,5 @@ CREATE_SIM_OBJECT(Root)
 
     created = true;
 
-    return  new Root(getInstanceName());
+    return new Root(this);
 }
-
-REGISTER_SIM_OBJECT("Root", Root)

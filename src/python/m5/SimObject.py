@@ -29,6 +29,8 @@
 
 import sys, types
 
+import proxy
+import m5
 from util import *
 from multidict import multidict
 
@@ -61,7 +63,7 @@ def isSimObjectOrSequence(value):
 from params import *
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
-from params import ParamDesc, isNullPointer, SimObjVector
+from params import ParamDesc, VectorParamDesc, isNullPointer, SimObjVector
 
 noDot = False
 try:
@@ -109,6 +111,9 @@ except:
 #
 #####################################################################
 
+# list of all SimObject classes
+allClasses = {}
+
 # dict to look up SimObjects based on path
 instanceDict = {}
 
@@ -119,12 +124,14 @@ instanceDict = {}
 class MetaSimObject(type):
     # Attributes that can be set only at initialization time
     init_keywords = { 'abstract' : types.BooleanType,
+                      'cxx_namespace' : types.StringType,
+                      'cxx_class' : types.StringType,
+                      'cxx_type' : types.StringType,
+                      'cxx_predecls' : types.ListType,
+                      'swig_predecls' : types.ListType,
                       'type' : types.StringType }
     # Attributes that can be set any time
-    keywords = { 'check' : types.FunctionType,
-                 'cxx_type' : types.StringType,
-                 'cxx_predecls' : types.ListType,
-                 'swig_predecls' : types.ListType }
+    keywords = { 'check' : types.FunctionType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
@@ -132,6 +139,8 @@ class MetaSimObject(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
+        assert name not in allClasses
+
         # Copy "private" attributes, functions, and classes to the
         # official dict.  Everything else goes in _init_dict to be
         # filtered in __init__.
@@ -144,8 +153,13 @@ class MetaSimObject(type):
             else:
                 # must be a param/port setting
                 value_dict[key] = val
+        if 'abstract' not in value_dict:
+            value_dict['abstract'] = False
         cls_dict['_value_dict'] = value_dict
-        return super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
+        cls = super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
+        if 'type' in value_dict:
+            allClasses[name] = cls
+        return cls
 
     # subclass initialization
     def __init__(cls, name, bases, dict):
@@ -183,6 +197,34 @@ class MetaSimObject(type):
             # mark base as having been subclassed
             base._instantiated = True
 
+        # default keyword values
+        if 'type' in cls._value_dict:
+            _type = cls._value_dict['type']
+            if 'cxx_class' not in cls._value_dict:
+                cls._value_dict['cxx_class'] = _type
+
+            namespace = cls._value_dict.get('cxx_namespace', None)
+
+            _cxx_class = cls._value_dict['cxx_class']
+            if 'cxx_type' not in cls._value_dict:
+                t = _cxx_class + '*'
+                if namespace:
+                    t = '%s::%s' % (namespace, t)
+                cls._value_dict['cxx_type'] = t
+            if 'cxx_predecls' not in cls._value_dict:
+                # A forward class declaration is sufficient since we are
+                # just declaring a pointer.
+                decl = 'class %s;' % _cxx_class
+                if namespace:
+                    decl = 'namespace %s { %s }' % (namespace, decl)
+                cls._value_dict['cxx_predecls'] = [decl]
+
+            if 'swig_predecls' not in cls._value_dict:
+                # A forward class declaration is sufficient since we are
+                # just declaring a pointer.
+                cls._value_dict['swig_predecls'] = \
+                    cls._value_dict['cxx_predecls']
+
         # Now process the _value_dict items.  They could be defining
         # new (or overriding existing) parameters or ports, setting
         # class keywords (e.g., 'abstract'), or setting parameter
@@ -206,12 +248,6 @@ class MetaSimObject(type):
             # default: use normal path (ends up in __setattr__)
             else:
                 setattr(cls, key, val)
-
-        cls.cxx_type = cls.type + '*'
-        # A forward class declaration is sufficient since we are just
-        # declaring a pointer.
-        cls.cxx_predecls = ['class %s;' % cls.type]
-        cls.swig_predecls = cls.cxx_predecls
 
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
@@ -310,18 +346,19 @@ class MetaSimObject(type):
         return cls.__name__
 
     def cxx_decl(cls):
-        code = "#ifndef __PARAMS__%s\n#define __PARAMS__%s\n\n" % (cls, cls)
-
         if str(cls) != 'SimObject':
             base = cls.__bases__[0].type
         else:
             base = None
 
+        code = "#ifndef __PARAMS__%s\n" % cls
+        code += "#define __PARAMS__%s\n\n" % cls
+
         # The 'dict' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
         # here).
-        params = cls._params.dict.values()
+        params = cls._params.local.values()
         try:
             ptypes = [p.ptype for p in params]
         except:
@@ -330,9 +367,10 @@ class MetaSimObject(type):
             raise
 
         # get a list of lists of predeclaration lines
-        predecls = [p.cxx_predecls() for p in params]
-        # flatten
-        predecls = reduce(lambda x,y:x+y, predecls, [])
+        predecls = []
+        predecls.extend(cls.cxx_predecls)
+        for p in params:
+            predecls.extend(p.cxx_predecls())
         # remove redundant lines
         predecls2 = []
         for pd in predecls:
@@ -345,17 +383,21 @@ class MetaSimObject(type):
         if base:
             code += '#include "params/%s.hh"\n\n' % base
 
-        # Generate declarations for locally defined enumerations.
-        enum_ptypes = [t for t in ptypes if issubclass(t, Enum)]
-        if enum_ptypes:
-            code += "\n".join([t.cxx_decl() for t in enum_ptypes])
-            code += "\n\n"
+        for ptype in ptypes:
+            if issubclass(ptype, Enum):
+                code += '#include "enums/%s.hh"\n' % ptype.__name__
+                code += "\n\n"
 
         # now generate the actual param struct
         code += "struct %sParams" % cls
         if base:
             code += " : public %sParams" % base
-        code += " {\n"
+        code += "\n{\n"
+        if cls == SimObject:
+            code += "    virtual ~%sParams() {}\n" % cls
+        if not hasattr(cls, 'abstract') or not cls.abstract:
+            if 'type' in cls.__dict__:
+                code += "    %s create();\n" % cls.cxx_type
         decls = [p.cxx_decl() for p in params]
         decls.sort()
         code += "".join(["    %s\n" % d for d in decls])
@@ -365,12 +407,34 @@ class MetaSimObject(type):
         code += "\n#endif\n"
         return code
 
-    def swig_decl(cls):
+    def cxx_type_decl(cls):
+        if str(cls) != 'SimObject':
+            base = cls.__bases__[0]
+        else:
+            base = None
 
-        code = '%%module %sParams\n' % cls
+        code = ''
+
+        if base:
+            code += '#include "%s_type.h"\n' % base
+
+        # now generate dummy code for inheritance
+        code += "struct %s" % cls.cxx_class
+        if base:
+            code += " : public %s" % base.cxx_class
+        code += "\n{};\n"
+
+        return code
+
+    def swig_decl(cls):
+        code = '%%module %s\n' % cls
+
+        code += '%{\n'
+        code += '#include "params/%s.hh"\n' % cls
+        code += '%}\n\n'
 
         if str(cls) != 'SimObject':
-            base = cls.__bases__[0].type
+            base = cls.__bases__[0]
         else:
             base = None
 
@@ -378,11 +442,12 @@ class MetaSimObject(type):
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
         # here).
-        params = cls._params.dict.values()
+        params = cls._params.local.values()
         ptypes = [p.ptype for p in params]
 
         # get a list of lists of predeclaration lines
-        predecls = [p.swig_predecls() for p in params]
+        predecls = []
+        predecls.extend([ p.swig_predecls() for p in params ])
         # flatten
         predecls = reduce(lambda x,y:x+y, predecls, [])
         # remove redundant lines
@@ -395,11 +460,14 @@ class MetaSimObject(type):
         code += "\n\n";
 
         if base:
-            code += '%%import "python/m5/swig/%sParams.i"\n\n' % base
+            code += '%%import "params/%s.i"\n\n' % base
 
-        code += '%{\n'
-        code += '#include "params/%s.hh"\n' % cls
-        code += '%}\n\n'
+        for ptype in ptypes:
+            if issubclass(ptype, Enum):
+                code += '%%import "enums/%s.hh"\n' % ptype.__name__
+                code += "\n\n"
+
+        code += '%%import "params/%s_type.hh"\n\n' % cls
         code += '%%include "params/%s.hh"\n\n' % cls
 
         return code
@@ -412,6 +480,7 @@ class SimObject(object):
     # get this metaclass.
     __metaclass__ = MetaSimObject
     type = 'SimObject'
+    abstract = True
 
     name = Param.String("Object name")
 
@@ -440,6 +509,7 @@ class SimObject(object):
         self._parent = None
         self._children = {}
         self._ccObject = None  # pointer to C++ object
+        self._ccParams = None
         self._instantiated = False # really "cloned"
 
         # Inherit parameter values from class using multidict so
@@ -577,8 +647,11 @@ class SimObject(object):
             value._maybe_set_parent(self, attr)
         elif isSimObjectSequence(value):
             value = SimObjVector(value)
-            [v._maybe_set_parent(self, "%s%d" % (attr, i))
-             for i,v in enumerate(value)]
+            if len(value) == 1:
+                value[0]._maybe_set_parent(self, attr)
+            else:
+                for i,v in enumerate(value):
+                    v._maybe_set_parent(self, "%s%d" % (attr, i))
 
         self._values[attr] = value
 
@@ -680,24 +753,65 @@ class SimObject(object):
         for child in child_names:
             self._children[child].print_ini()
 
-    # Call C++ to create C++ object corresponding to this object and
-    # (recursively) all its children
-    def createCCObject(self):
-        self.getCCObject() # force creation
-        for child in self._children.itervalues():
-            child.createCCObject()
+    def getCCParams(self):
+        if self._ccParams:
+            return self._ccParams
+
+        cc_params_struct = eval('m5.objects.params.%sParams' % self.type)
+        cc_params = cc_params_struct()
+        cc_params.object = self
+        cc_params.name = str(self)
+
+        param_names = self._params.keys()
+        param_names.sort()
+        for param in param_names:
+            value = self._values.get(param)
+            if value is None:
+                continue
+
+            value = value.getValue()
+            if isinstance(self._params[param], VectorParamDesc):
+                assert isinstance(value, list)
+                vec = getattr(cc_params, param)
+                assert not len(vec)
+                for v in value:
+                    vec.append(v)
+            else:
+                setattr(cc_params, param, value)
+
+        port_names = self._ports.keys()
+        port_names.sort()
+        for port_name in port_names:
+            port = self._port_refs.get(port_name, None)
+            if port != None:
+                setattr(cc_params, port_name, port)
+        self._ccParams = cc_params
+        return self._ccParams
 
     # Get C++ object corresponding to this object, calling C++ if
     # necessary to construct it.  Does *not* recursively create
     # children.
     def getCCObject(self):
+        import internal
+        params = self.getCCParams()
         if not self._ccObject:
             self._ccObject = -1 # flag to catch cycles in recursion
-            self._ccObject = internal.sim_object.createSimObject(self.path())
+            self._ccObject = params.create()
         elif self._ccObject == -1:
             raise RuntimeError, "%s: recursive call to getCCObject()" \
                   % self.path()
         return self._ccObject
+
+    # Call C++ to create C++ object corresponding to this object and
+    # (recursively) all its children
+    def createCCObject(self):
+        self.getCCParams()
+        self.getCCObject() # force creation
+        for child in self._children.itervalues():
+            child.createCCObject()
+
+    def getValue(self):
+        return self.getCCObject()
 
     # Create C++ port connections corresponding to the connections in
     # _port_refs (& recursively for all children)
@@ -730,6 +844,7 @@ class SimObject(object):
         return system_ptr.getMemoryMode()
 
     def changeTiming(self, mode):
+        import internal
         if isinstance(self, m5.objects.System):
             # i don't know if there's a better way to do this - calling
             # setMemoryMode directly from self._ccObject results in calling
@@ -740,6 +855,7 @@ class SimObject(object):
             child.changeTiming(mode)
 
     def takeOverFrom(self, old_cpu):
+        import internal
         cpu_ptr = internal.sim_object.convertToBaseCPUPtr(old_cpu._ccObject)
         self._ccObject.takeOverFrom(cpu_ptr)
 
@@ -794,9 +910,4 @@ def resolveSimObject(name):
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = ['SimObject']
-
-# see comment on imports at end of __init__.py.
-import proxy
-import internal
-import m5
+__all__ = [ 'SimObject' ]

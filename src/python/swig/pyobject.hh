@@ -36,7 +36,6 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
-SimObject *createSimObject(const std::string &name);
 extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 SimObject *resolveSimObject(const std::string &name);
 void loadIniFile(PyObject *_resolveFunc);

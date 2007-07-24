@@ -39,10 +39,11 @@
 
 #include <string>
 
-#include "sim/sim_object.hh"
-#include "mem/packet.hh"
-#include "mem/cache/cache_blk.hh"
 #include "base/statistics.hh"
+#include "enums/Coherence.hh"
+#include "mem/cache/cache_blk.hh"
+#include "mem/packet.hh"
+#include "sim/sim_object.hh"
 
 class BaseCache;
 class MSHR;
@@ -60,7 +61,7 @@ class CoherenceProtocol : public SimObject
      * @param protocol The string representation of the protocol to use.
      * @param doUpgrades True if bus upgrades should be used.
      */
-    CoherenceProtocol(const std::string &name, const std::string &protocol,
+    CoherenceProtocol(const std::string &name, Enums::Coherence protocol,
                       const bool doUpgrades);
 
     /**

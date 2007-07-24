@@ -75,9 +75,6 @@ extern std::ostream *outputStream;
 void setOutputFile(const std::string &file);
 void setOutputDir(const std::string &dir);
 
-/// Output stream for configuration dump.
-extern std::ostream *configStream;
-
 struct Callback;
 void registerExitCallback(Callback *callback);
 void doExitCleanup();

@@ -38,8 +38,7 @@
 
 #include "cpu/trace/opt_cpu.hh"
 #include "cpu/trace/reader/mem_trace_reader.hh"
-
-#include "sim/builder.hh"
+#include "params/OptCPU.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;
@@ -211,31 +210,8 @@ OptCPU::TickEvent::description()
 }
 
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(OptCPU)
-
-    SimObjectParam<MemTraceReader *> data_trace;
-    Param<int> size;
-    Param<int> block_size;
-Param<int> assoc;
-
-END_DECLARE_SIM_OBJECT_PARAMS(OptCPU)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(OptCPU)
-
-    INIT_PARAM_DFLT(data_trace, "memory trace", NULL),
-    INIT_PARAM(size, "cache size"),
-    INIT_PARAM(block_size, "block size"),
-    INIT_PARAM(assoc,"associativity")
-
-END_INIT_SIM_OBJECT_PARAMS(OptCPU)
-
-CREATE_SIM_OBJECT(OptCPU)
+OptCPU *
+OptCPUParams::create()
 {
-    return new OptCPU(getInstanceName(),
-                      data_trace,
-                      block_size,
-                      size,
-                      assoc);
+    return new OptCPU(name, data_trace, block_size, size, assoc);
 }
-
-REGISTER_SIM_OBJECT("OptCPU", OptCPU)

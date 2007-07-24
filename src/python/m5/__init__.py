@@ -27,19 +27,10 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
-import atexit
 import os
 import sys
 
-# import the SWIG-wrapped main C++ functions
-import internal
-# import a few SWIG-wrapped items (those that are likely to be used
-# directly by user scripts) completely into this module for
-# convenience
-import event
-
-# import the m5 compile options
-import defines
+import smartdict
 
 # define a MaxTick parameter
 MaxTick = 2**63 - 1
@@ -69,177 +60,11 @@ def AddToPath(path):
     sys.path.insert(1, path)
 
 # make a SmartDict out of the build options for our local use
-import smartdict
 build_env = smartdict.SmartDict()
-build_env.update(defines.m5_build_env)
 
 # make a SmartDict out of the OS environment too
 env = smartdict.SmartDict()
 env.update(os.environ)
-
-# The final hook to generate .ini files.  Called from the user script
-# once the config is built.
-def instantiate(root):
-    # we need to fix the global frequency
-    ticks.fixGlobalFrequency()
-
-    root.unproxy_all()
-    # ugly temporary hack to get output to config.ini
-    sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
-    root.print_ini()
-    sys.stdout.close() # close config.ini
-    sys.stdout = sys.__stdout__ # restore to original
-
-    # load config.ini into C++
-    internal.core.loadIniFile(resolveSimObject)
-
-    # Initialize the global statistics
-    internal.stats.initSimStats()
-
-    # Create the C++ sim objects and connect ports
-    root.createCCObject()
-    root.connectPorts()
-
-    # Do a second pass to finish initializing the sim objects
-    internal.sim_object.initAll()
-
-    # Do a third pass to initialize statistics
-    internal.sim_object.regAllStats()
-
-    # Check to make sure that the stats package is properly initialized
-    internal.stats.check()
-
-    # Reset to put the stats in a consistent state.
-    internal.stats.reset()
-
-def doDot(root):
-    dot = pydot.Dot()
-    instance.outputDot(dot)
-    dot.orientation = "portrait"
-    dot.size = "8.5,11"
-    dot.ranksep="equally"
-    dot.rank="samerank"
-    dot.write("config.dot")
-    dot.write_ps("config.ps")
-
-need_resume = []
-need_startup = True
-def simulate(*args, **kwargs):
-    global need_resume, need_startup
-
-    if need_startup:
-        internal.core.SimStartup()
-        need_startup = False
-
-    for root in need_resume:
-        resume(root)
-    need_resume = []
-
-    return internal.event.simulate(*args, **kwargs)
-
-# Export curTick to user script.
-def curTick():
-    return internal.core.cvar.curTick
-
-# Python exit handlers happen in reverse order.  We want to dump stats last.
-atexit.register(internal.stats.dump)
-
-# register our C++ exit callback function with Python
-atexit.register(internal.core.doExitCleanup)
-
-# This loops until all objects have been fully drained.
-def doDrain(root):
-    all_drained = drain(root)
-    while (not all_drained):
-        all_drained = drain(root)
-
-# Tries to drain all objects.  Draining might not be completed unless
-# all objects return that they are drained on the first call.  This is
-# because as objects drain they may cause other objects to no longer
-# be drained.
-def drain(root):
-    all_drained = False
-    drain_event = internal.event.createCountedDrain()
-    unready_objects = root.startDrain(drain_event, True)
-    # If we've got some objects that can't drain immediately, then simulate
-    if unready_objects > 0:
-        drain_event.setCount(unready_objects)
-        simulate()
-    else:
-        all_drained = True
-    internal.event.cleanupCountedDrain(drain_event)
-    return all_drained
-
-def resume(root):
-    root.resume()
-
-def checkpoint(root, dir):
-    if not isinstance(root, objects.Root):
-        raise TypeError, "Checkpoint must be called on a root object."
-    doDrain(root)
-    print "Writing checkpoint"
-    internal.sim_object.serializeAll(dir)
-    resume(root)
-
-def restoreCheckpoint(root, dir):
-    print "Restoring from checkpoint"
-    internal.sim_object.unserializeAll(dir)
-    need_resume.append(root)
-
-def changeToAtomic(system):
-    if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System)
-    if system.getMemoryMode() != internal.sim_object.SimObject.Atomic:
-        doDrain(system)
-        print "Changing memory mode to atomic"
-        system.changeTiming(internal.sim_object.SimObject.Atomic)
-
-def changeToTiming(system):
-    if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System)
-
-    if system.getMemoryMode() != internal.sim_object.SimObject.Timing:
-        doDrain(system)
-        print "Changing memory mode to timing"
-        system.changeTiming(internal.sim_object.SimObject.Timing)
-
-def switchCpus(cpuList):
-    print "switching cpus"
-    if not isinstance(cpuList, list):
-        raise RuntimeError, "Must pass a list to this function"
-    for i in cpuList:
-        if not isinstance(i, tuple):
-            raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
-
-    [old_cpus, new_cpus] = zip(*cpuList)
-
-    for cpu in old_cpus:
-        if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % cpu
-    for cpu in new_cpus:
-        if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % cpu
-
-    # Drain all of the individual CPUs
-    drain_event = internal.event.createCountedDrain()
-    unready_cpus = 0
-    for old_cpu in old_cpus:
-        unready_cpus += old_cpu.startDrain(drain_event, False)
-    # If we've got some objects that can't drain immediately, then simulate
-    if unready_cpus > 0:
-        drain_event.setCount(unready_cpus)
-        simulate()
-    internal.event.cleanupCountedDrain(drain_event)
-    # Now all of the CPUs are ready to be switched out
-    for old_cpu in old_cpus:
-        old_cpu._ccObject.switchOut()
-    index = 0
-    for new_cpu in new_cpus:
-        new_cpu.takeOverFrom(old_cpus[index])
-        new_cpu._ccObject.resume()
-        index += 1
 
 # Since we have so many mutual imports in this package, we should:
 # 1. Put all intra-package imports at the *bottom* of the file, unless
@@ -250,7 +75,24 @@ def switchCpus(cpuList):
 #    you can get the wrong result if foo is only partially imported
 #    at the point you do that (i.e., because foo is in the middle of
 #    importing *you*).
-from main import options
-import objects
+try:
+    import internal
+    running_m5 = True
+except ImportError:
+    running_m5 = False
+
+if running_m5:
+    from event import *
+    from simulate import *
+    from main import options
+
+if running_m5:
+    import defines
+    build_env.update(defines.m5_build_env)
+else:
+    import __scons
+    build_env.update(__scons.m5_build_env)
+
+import SimObject
 import params
-from SimObject import resolveSimObject
+import objects

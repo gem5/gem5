@@ -41,7 +41,9 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/pc_event.hh"
+#include "enums/MemoryMode.hh"
 #include "mem/port.hh"
+#include "params/System.hh"
 #include "sim/sim_object.hh"
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
@@ -68,13 +70,18 @@ class System : public SimObject
 
     static const char *MemoryModeStrings[3];
 
-    SimObject::MemoryMode getMemoryMode() { assert(memoryMode); return memoryMode; }
+    Enums::MemoryMode
+    getMemoryMode()
+    {
+        assert(memoryMode);
+        return memoryMode;
+    }
 
     /** Change the memory mode of the system. This should only be called by the
      * python!!
      * @param mode Mode to change to (atomic/timing)
      */
-    void setMemoryMode(SimObject::MemoryMode mode);
+    void setMemoryMode(Enums::MemoryMode mode);
 
     PhysicalMemory *physmem;
     PCEventQueue pcEventQueue;
@@ -122,8 +129,7 @@ class System : public SimObject
 #endif // FULL_SYSTEM
 
   protected:
-
-    SimObject::MemoryMode memoryMode;
+    Enums::MemoryMode memoryMode;
 
 #if FULL_SYSTEM
     /**
@@ -164,22 +170,7 @@ class System : public SimObject
     bool breakpoint();
 
   public:
-    struct Params
-    {
-        std::string name;
-        PhysicalMemory *physmem;
-        SimObject::MemoryMode mem_mode;
-
-#if FULL_SYSTEM
-        Tick boot_cpu_frequency;
-        std::string boot_osflags;
-        uint64_t init_param;
-
-        std::string kernel_path;
-        std::string readfile;
-        std::string symbolfile;
-#endif
-    };
+    typedef SystemParams Params;
 
   protected:
     Params *_params;

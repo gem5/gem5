@@ -45,7 +45,7 @@
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
+#include "params/SimpleDisk.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -91,23 +91,8 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 #endif
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(SimpleDisk)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<DiskImage *> disk;
-
-END_DECLARE_SIM_OBJECT_PARAMS(SimpleDisk)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(SimpleDisk)
-
-    INIT_PARAM(system, "System pointer"),
-    INIT_PARAM(disk, "Disk Image")
-
-END_INIT_SIM_OBJECT_PARAMS(SimpleDisk)
-
-CREATE_SIM_OBJECT(SimpleDisk)
+SimpleDisk *
+SimpleDiskParams::create()
 {
-    return new SimpleDisk(getInstanceName(), system, disk);
+    return new SimpleDisk(name, system, disk);
 }
-
-REGISTER_SIM_OBJECT("SimpleDisk", SimpleDisk)

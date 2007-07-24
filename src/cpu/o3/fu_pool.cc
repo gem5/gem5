@@ -32,7 +32,7 @@
 
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/func_unit.hh"
-#include "sim/builder.hh"
+#include "params/FUPool.hh"
 
 using namespace std;
 
@@ -275,25 +275,8 @@ FUPool::takeOverFrom()
 //
 //  The FuPool object
 //
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(FUPool)
-
-    SimObjectVectorParam<FUDesc *> FUList;
-
-END_DECLARE_SIM_OBJECT_PARAMS(FUPool)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(FUPool)
-
-    INIT_PARAM(FUList, "list of FU's for this pool")
-
-END_INIT_SIM_OBJECT_PARAMS(FUPool)
-
-
-CREATE_SIM_OBJECT(FUPool)
+FUPool *
+FUPoolParams::create()
 {
-    return new FUPool(getInstanceName(), FUList);
+    return new FUPool(name, FUList);
 }
-
-REGISTER_SIM_OBJECT("FUPool", FUPool)
-

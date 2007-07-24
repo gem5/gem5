@@ -39,7 +39,7 @@
 
 #include "base/trace.hh"
 #include "mem/bridge.hh"
-#include "sim/builder.hh"
+#include "params/Bridge.hh"
 
 Bridge::BridgePort::BridgePort(const std::string &_name,
                                Bridge *_bridge, BridgePort *_otherPort,
@@ -367,50 +367,8 @@ Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
     otherPort->getPeerAddressRanges(resp, snoop);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bridge)
-
-   Param<int> req_size_a;
-   Param<int> req_size_b;
-   Param<int> resp_size_a;
-   Param<int> resp_size_b;
-   Param<Tick> delay;
-   Param<Tick> nack_delay;
-   Param<bool> write_ack;
-   Param<bool> fix_partial_write_a;
-   Param<bool> fix_partial_write_b;
-
-END_DECLARE_SIM_OBJECT_PARAMS(Bridge)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Bridge)
-
-    INIT_PARAM(req_size_a, "The size of the queue for requests coming into side a"),
-    INIT_PARAM(req_size_b, "The size of the queue for requests coming into side b"),
-    INIT_PARAM(resp_size_a, "The size of the queue for responses coming into side a"),
-    INIT_PARAM(resp_size_b, "The size of the queue for responses coming into side b"),
-    INIT_PARAM(delay, "The miminum delay to cross this bridge"),
-    INIT_PARAM(nack_delay, "The minimum delay to nack a packet"),
-    INIT_PARAM(write_ack, "Acknowledge any writes that are received."),
-    INIT_PARAM(fix_partial_write_a, "Fixup any partial block writes that are received"),
-    INIT_PARAM(fix_partial_write_b, "Fixup any partial block writes that are received")
-
-END_INIT_SIM_OBJECT_PARAMS(Bridge)
-
-CREATE_SIM_OBJECT(Bridge)
+Bridge *
+BridgeParams::create()
 {
-    Bridge::Params *p = new Bridge::Params;
-    p->name = getInstanceName();
-    p->req_size_a = req_size_a;
-    p->req_size_b = req_size_b;
-    p->resp_size_a = resp_size_a;
-    p->resp_size_b = resp_size_b;
-    p->delay = delay;
-    p->nack_delay = nack_delay;
-    p->write_ack = write_ack;
-    p->fix_partial_write_a = fix_partial_write_a;
-    p->fix_partial_write_b = fix_partial_write_b;
-    return new Bridge(p);
+    return new Bridge(this);
 }
-
-REGISTER_SIM_OBJECT("Bridge", Bridge)
-
-

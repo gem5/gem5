@@ -35,9 +35,10 @@
 #ifndef __TSUNAMI_PCHIP_HH__
 #define __TSUNAMI_PCHIP_HH__
 
-#include "dev/alpha/tsunami.hh"
 #include "base/range.hh"
+#include "dev/alpha/tsunami.hh"
 #include "dev/io_device.hh"
+#include "params/TsunamiPChip.hh"
 
 /**
  * A very simple implementation of the Tsunami PCI interface chips.
@@ -61,19 +62,18 @@ class TsunamiPChip : public BasicPioDevice
     uint64_t tba[4];
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        Tsunami *tsunami;
-    };
-  protected:
-    const Params *params() const { return (const Params*)_params; }
-
-  public:
+    typedef TsunamiPChipParams Params;
     /**
      * Register the PChip with the mmu and init all wsba, wsm, and tba to 0
      * @param p pointer to the parameters struct
      */
-    TsunamiPChip(Params *p);
+    TsunamiPChip(const Params *p);
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     /**
      * Translate a PCI bus address to a memory address for DMA.

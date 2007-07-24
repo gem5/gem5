@@ -42,6 +42,7 @@
 #include "dev/io_device.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"
+#include "params/PciDevice.hh"
 #include "sim/byteswap.hh"
 
 #define BAR_IO_MASK 0x3
@@ -105,32 +106,12 @@ class PciDev : public DmaDevice
     };
 
   public:
-    struct Params : public DmaDevice::Params
+    typedef PciDeviceParams Params;
+    const Params *
+    params() const
     {
-        /**
-         * A pointer to the object that contains the first 64 bytes of
-         * config space
-         */
-        PciConfigData *configData;
-
-        /** The bus number we are on */
-        uint32_t busNum;
-
-        /** The device number we have */
-        uint32_t deviceNum;
-
-        /** The function number */
-        uint32_t functionNum;
-
-        /** The latency for pio accesses. */
-        Tick pio_delay;
-
-        /** The latency for a config access. */
-        Tick config_delay;
-    };
-
-  public:
-    const Params *params() const { return (const Params *)_params; }
+        return dynamic_cast<const Params *>(_params);
+    }
 
   protected:
     /** The current config space. Unlike the PciConfigData this is
@@ -266,8 +247,8 @@ class PciDev : public DmaDevice
         if (if_name == "config") {
             if (configPort != NULL)
                 panic("pciconfig port already connected to.");
-            configPort = new PciConfigPort(this, params()->busNum,
-                    params()->deviceNum, params()->functionNum,
+            configPort = new PciConfigPort(this, params()->pci_bus,
+                    params()->pci_dev, params()->pci_func,
                     params()->platform);
             return configPort;
         }

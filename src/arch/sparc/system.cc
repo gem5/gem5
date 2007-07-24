@@ -35,8 +35,8 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
+#include "params/SparcSystem.hh"
 #include "sim/byteswap.hh"
-#include "sim/builder.hh"
 
 
 using namespace BigEndianGuest;
@@ -216,104 +216,8 @@ SparcSystem::unserialize(Checkpoint *cp, const std::string &section)
     partitionDescSymtab->unserialize("partition_desc_symtab", cp, section);
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
-
-    SimObjectParam<PhysicalMemory *> physmem;
-    SimObjectParam<PhysicalMemory *> rom;
-    SimObjectParam<PhysicalMemory *> nvram;
-    SimObjectParam<PhysicalMemory *> hypervisor_desc;
-    SimObjectParam<PhysicalMemory *> partition_desc;
-    SimpleEnumParam<System::MemoryMode> mem_mode;
-
-    Param<Addr> reset_addr;
-    Param<Addr> hypervisor_addr;
-    Param<Addr> openboot_addr;
-    Param<Addr> nvram_addr;
-    Param<Addr> hypervisor_desc_addr;
-    Param<Addr> partition_desc_addr;
-
-    Param<std::string> kernel;
-    Param<std::string> reset_bin;
-    Param<std::string> hypervisor_bin;
-    Param<std::string> openboot_bin;
-    Param<std::string> nvram_bin;
-    Param<std::string> hypervisor_desc_bin;
-    Param<std::string> partition_desc_bin;
-
-    Param<Tick> boot_cpu_frequency;
-    Param<std::string> boot_osflags;
-    Param<std::string> readfile;
-    Param<unsigned int> init_param;
-
-END_DECLARE_SIM_OBJECT_PARAMS(SparcSystem)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(SparcSystem)
-
-    INIT_PARAM(physmem, "phsyical memory"),
-    INIT_PARAM(rom, "ROM for boot code"),
-    INIT_PARAM(nvram, "Non-volatile RAM for the nvram"),
-    INIT_PARAM(hypervisor_desc, "ROM for the hypervisor description"),
-    INIT_PARAM(partition_desc, "ROM for the partition description"),
-    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
-            System::MemoryModeStrings),
-
-    INIT_PARAM(reset_addr, "Address that reset should be loaded at"),
-    INIT_PARAM(hypervisor_addr, "Address that hypervisor should be loaded at"),
-    INIT_PARAM(openboot_addr, "Address that openboot should be loaded at"),
-    INIT_PARAM(nvram_addr, "Address that nvram should be loaded at"),
-    INIT_PARAM(hypervisor_desc_addr,
-            "Address that hypervisor description should be loaded at"),
-    INIT_PARAM(partition_desc_addr,
-            "Address that partition description should be loaded at"),
-
-    INIT_PARAM(kernel, "file that contains the kernel code"),
-    INIT_PARAM(reset_bin, "file that contains the reset code"),
-    INIT_PARAM(hypervisor_bin, "file that contains the hypervisor code"),
-    INIT_PARAM(openboot_bin, "file that contains the openboot code"),
-    INIT_PARAM(nvram_bin, "file that contains the nvram image"),
-    INIT_PARAM(hypervisor_desc_bin,
-            "file that contains the hypervisor description image"),
-    INIT_PARAM(partition_desc_bin,
-            "file that contains the partition description image"),
-    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
-                    "a"),
-    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
-    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0)
-
-END_INIT_SIM_OBJECT_PARAMS(SparcSystem)
-
-CREATE_SIM_OBJECT(SparcSystem)
+SparcSystem *
+SparcSystemParams::create()
 {
-    SparcSystem::Params *p = new SparcSystem::Params;
-    p->name = getInstanceName();
-    p->boot_cpu_frequency = boot_cpu_frequency;
-    p->physmem = physmem;
-    p->rom = rom;
-    p->nvram = nvram;
-    p->hypervisor_desc = hypervisor_desc;
-    p->partition_desc = partition_desc;
-    p->mem_mode = mem_mode;
-    p->kernel_path = kernel;
-    p->reset_addr = reset_addr;
-    p->hypervisor_addr = hypervisor_addr;
-    p->openboot_addr = openboot_addr;
-    p->nvram_addr = nvram_addr;
-    p->hypervisor_desc_addr = hypervisor_desc_addr;
-    p->partition_desc_addr = partition_desc_addr;
-    p->reset_bin = reset_bin;
-    p->hypervisor_bin = hypervisor_bin;
-    p->openboot_bin = openboot_bin;
-    p->nvram_bin = nvram_bin;
-    p->hypervisor_desc_bin = hypervisor_desc_bin;
-    p->partition_desc_bin = partition_desc_bin;
-    p->boot_osflags = boot_osflags;
-    p->init_param = init_param;
-    p->readfile = readfile;
-    return new SparcSystem(p);
+    return new SparcSystem(this);
 }
-
-REGISTER_SIM_OBJECT("SparcSystem", SparcSystem)
-
-
