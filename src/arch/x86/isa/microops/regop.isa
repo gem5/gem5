@@ -466,11 +466,11 @@ let {{
 
     # Shift instructions
     defineMicroRegOp('Sll', '''
-            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             DestReg = merge(DestReg, SrcReg1 << shiftAmt, dataSize);
             ''')
     defineMicroRegOp('Srl', '''
-            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             // Because what happens to the bits shift -in- on a right shift
             // is not defined in the C/C++ standard, we have to mask them out
             // to be sure they're zero.
@@ -478,7 +478,7 @@ let {{
             DestReg = merge(DestReg, (SrcReg1 >> shiftAmt) & logicalMask, dataSize);
             ''')
     defineMicroRegOp('Sra', '''
-            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             // Because what happens to the bits shift -in- on a right shift
             // is not defined in the C/C++ standard, we have to sign extend
             // them manually to be sure.
@@ -488,7 +488,7 @@ let {{
             ''')
     defineMicroRegOp('Ror', '''
             uint8_t shiftAmt =
-                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+                (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
                 uint64_t top = SrcReg1 << (dataSize * 8 - shiftAmt);
@@ -500,7 +500,7 @@ let {{
             ''')
     defineMicroRegOp('Rcr', '''
             uint8_t shiftAmt =
-                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+                (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
@@ -515,7 +515,7 @@ let {{
             ''')
     defineMicroRegOp('Rol', '''
             uint8_t shiftAmt =
-                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+                (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
                 uint64_t top = SrcReg1 << shiftAmt;
@@ -528,7 +528,7 @@ let {{
             ''')
     defineMicroRegOp('Rcl', '''
             uint8_t shiftAmt =
-                (op2 & ((dataSize == 8) ? mask(4) : mask(3)));
+                (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
