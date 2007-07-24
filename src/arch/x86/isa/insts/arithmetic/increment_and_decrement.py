@@ -94,9 +94,3 @@ def macroop DEC_P
     st t1, ds, [0, t0, t7], disp
 };
 '''
-#let {{
-#    class DEC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class INC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
