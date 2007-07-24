@@ -148,7 +148,13 @@ void
 Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
 {
     assert(blk);
-    assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
+    // Occasionally this is not true... if we are a lower-level cache
+    // satisfying a string of Read and ReadEx requests from
+    // upper-level caches, a Read will mark the block as shared but we
+    // can satisfy a following ReadEx anyway since we can rely on the
+    // Read requester(s) to have buffered the ReadEx snoop and to
+    // invalidate their blocks after receiving them.
+    // assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
     assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
 
     // Check RMW operations first since both isRead() and
@@ -727,7 +733,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             Tick completion_time;
             if (blk != NULL) {
                 satisfyCpuSideRequest(target->pkt, blk);
-                // How many bytes pass the first request is this one
+                // How many bytes past the first request is this one
                 int transfer_offset =
                     target->pkt->getOffset(blkSize) - initial_offset;
                 if (transfer_offset < 0) {
@@ -738,10 +744,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 completion_time = tags->getHitLatency() +
                     transfer_offset ? pkt->finishTime : pkt->firstWordTime;
 
-                if (!target->pkt->req->isUncacheable()) {
-                    missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
-                        completion_time - target->recvTime;
-                }
+                assert(!target->pkt->req->isUncacheable());
+                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                    completion_time - target->recvTime;
             } else {
                 // not a cache fill, just forwarding response
                 completion_time = tags->getHitLatency() + pkt->finishTime;
@@ -1004,7 +1009,9 @@ template<class TagStore>
 void
 Cache<TagStore>::snoopTiming(PacketPtr pkt)
 {
-    if (pkt->req->isUncacheable()) {
+    // Note that some deferred snoops don't have requests, since the
+    // original access may have already completed
+    if (pkt->req && pkt->req->isUncacheable()) {
         //Can't get a hit on an uncacheable address
         //Revisit this for multi level coherence
         return;

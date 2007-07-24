@@ -208,7 +208,7 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
 bool
 MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 {
-    if (!inService || downstreamPending) {
+    if (!inService || (pkt->isExpressSnoop() && downstreamPending)) {
         // Request has not been issued yet, or it's been issued
         // locally but is buffered unissued at some downstream cache
         // which is forwarding us this snoop.  Either way, the packet
@@ -249,13 +249,19 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     if (targets->needsExclusive || pkt->needsExclusive()) {
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
-        targets->add(new Packet(pkt), curTick, _order, false);
+        PacketPtr cp_pkt = new Packet(pkt);
+        targets->add(cp_pkt, curTick, _order, false);
         ++ntargets;
 
         if (targets->needsExclusive) {
             // We're awaiting an exclusive copy, so ownership is pending.
             // It's up to us to respond once the data arrives.
             pkt->assertMemInhibit();
+        } else {
+            // Someone else may respond before we get around to
+            // processing this snoop, which means the copied request
+            // pointer will no longer be valid
+            cp_pkt->req = NULL;
         }
 
         if (pkt->needsExclusive()) {
