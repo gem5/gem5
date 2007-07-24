@@ -298,15 +298,3 @@ def macroop NEG_P
     st t1, ds, [0, t0, t7], disp
 };
 '''
-#let {{
-#    class ADC(Inst):
-#	"Adc ^0 ^0 ^1"
-#    class ADD(Inst):
-#	"Add ^0 ^0 ^1"
-#    class SBB(Inst):
-#	"Sbb ^0 ^0 ^1"
-#    class SUB(Inst):
-#	"Sub ^0 ^0 ^1"
-#    class NEG(Inst):
-#	"Sub ^0 $0 ^0"
-#}};
