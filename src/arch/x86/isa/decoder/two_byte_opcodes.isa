@@ -81,21 +81,58 @@
                 0x0: invd();
                 0x1: wbinvd();
                 0x2: Inst::UD2();
-                0x3: UD2();
+                0x3: Inst::UD2();
                 0x4: Inst::UD2();
                 0x5: threednow();
                 0x6: threednow();
                 0x7: threednow();
             }
-            0x02: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x02: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: holder();
+                    0x1: holder();
+                    0x2: holder();
+                    0x3: holder();
+                    0x4: holder();
+                    0x5: holder();
+                    0x6: holder();
+                    0x7: holder();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: holder();
+                    0x1: holder();
+                    0x2: holder();
+                    0x3: holder();
+                    0x4: holder();
+                    0x5: holder();
+                    0x6: holder();
+                    0x7: holder();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: holder();
+                    0x1: holder();
+                    0x2: holder();
+                    0x3: holder();
+                    0x4: holder();
+                    0x5: holder();
+                    0x6: holder();
+                    0x7: holder();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: holder();
+                    0x1: holder();
+                    0x2: holder();
+                    0x3: holder();
+                    0x4: holder();
+                    0x5: holder();
+                    0x6: holder();
+                    0x7: holder();
+                }
+                default: Inst::UD2();
             }
             0x03: decode OPCODE_OP_BOTTOM3 {
                 0x0: group17();
@@ -147,25 +184,27 @@
                 0x6: three_byte_opcode();
                 0x7: three_byte_opcode();
             }
-            0x08: decode OPCODE_OP_BOTTOM3 {
-                0x0: cmovo_Gv_Ev();
-                0x1: cmovno_Gv_Ev();
-                0x2: cmovb_Gv_Ev();
-                0x3: cmovnb_Gv_Ev();
-                0x4: cmovz_Gv_Ev();
-                0x5: cmovnz_Gv_Ev();
-                0x6: cmovbe_Gv_Ev();
-                0x7: cmovnbe_Gv_Ev();
-            }
-            0x09: decode OPCODE_OP_BOTTOM3 {
-                0x0: cmovs_Gv_Ev();
-                0x1: cmovns_Gv_Ev();
-                0x2: cmovp_Gv_Ev();
-                0x3: cmovnp_Gv_Ev();
-                0x4: cmovl_Gv_Ev();
-                0x5: cmovnl_Gv_Ev();
-                0x6: cmovle_Gv_Ev();
-                0x7: cmovnle_Gv_Ev();
+            format Inst {
+                0x08: decode OPCODE_OP_BOTTOM3 {
+                    0x0: CMOVO(Gv,Ev);
+                    0x1: CMOVNO(Gv,Ev);
+                    0x2: CMOVB(Gv,Ev);
+                    0x3: CMOVNB(Gv,Ev);
+                    0x4: CMOVZ(Gv,Ev);
+                    0x5: CMOVNZ(Gv,Ev);
+                    0x6: CMOVBE(Gv,Ev);
+                    0x7: CMOVNBE(Gv,Ev);
+                }
+                0x09: decode OPCODE_OP_BOTTOM3 {
+                    0x0: CMOVS(Gv,Ev);
+                    0x1: CMOVNS(Gv,Ev);
+                    0x2: CMOVP(Gv,Ev);
+                    0x3: CMOVNP(Gv,Ev);
+                    0x4: CMOVL(Gv,Ev);
+                    0x5: CMOVNL(Gv,Ev);
+                    0x6: CMOVLE(Gv,Ev);
+                    0x7: CMOVNLE(Gv,Ev);
+                }
             }
             0x0A: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -248,26 +287,26 @@
                     0x6: JLE(Jz);
                     0x7: JNLE(Jz);
                 }
-            }
-            0x12: decode OPCODE_OP_BOTTOM3 {
-                0x0: seto_Eb();
-                0x1: setno_Eb();
-                0x2: setb_Eb();
-                0x3: setnb_Eb();
-                0x4: setz_Eb();
-                0x5: setnz_Eb();
-                0x6: setbe_Eb();
-                0x7: setnbe_Eb();
-            }
-            0x13: decode OPCODE_OP_BOTTOM3 {
-                0x0: sets_Eb();
-                0x1: setns_Eb();
-                0x2: setp_Eb();
-                0x3: setnp_Eb();
-                0x4: setl_Eb();
-                0x5: setnl_Eb();
-                0x6: setle_Eb();
-                0x7: setnle_Eb();
+                0x12: decode OPCODE_OP_BOTTOM3 {
+                    0x0: SETO(Eb);
+                    0x1: SETNO(Eb);
+                    0x2: SETB(Eb);
+                    0x3: SETNB(Eb);
+                    0x4: SETZ(Eb);
+                    0x5: SETNZ(Eb);
+                    0x6: SETBE(Eb);
+                    0x7: SETNBE(Eb);
+                }
+                0x13: decode OPCODE_OP_BOTTOM3 {
+                    0x0: SETS(Eb);
+                    0x1: SETNS(Eb);
+                    0x2: SETP(Eb);
+                    0x3: SETNP(Eb);
+                    0x4: SETL(Eb);
+                    0x5: SETNL(Eb);
+                    0x6: SETLE(Eb);
+                    0x7: SETNLE(Eb);
+                }
             }
             0x14: decode OPCODE_OP_BOTTOM3 {
                 0x0: push_fs();
