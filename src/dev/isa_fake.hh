@@ -35,12 +35,13 @@
 #ifndef __ISA_FAKE_HH__
 #define __ISA_FAKE_HH__
 
+#include <string>
+
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/alpha/tsunami.hh"
+#include "params/IsaFake.hh"
 #include "mem/packet.hh"
-
-#include <string>
 
 /**
  * IsaFake is a device that returns, BadAddr, 1 or 0 on all reads and
@@ -51,27 +52,19 @@
  */
 class IsaFake : public BasicPioDevice
 {
-  public:
-    struct Params : public BasicPioDevice::Params
-    {
-        Addr pio_size;
-        bool retBadAddr;
-        bool updateData;
-        uint8_t retData8;
-        uint16_t retData16;
-        uint32_t retData32;
-        uint64_t retData64;
-        std::string warnAccess;
-    };
   protected:
-    const Params *params() const { return (const Params*)_params; }
     uint8_t retData8;
     uint16_t retData16;
     uint32_t retData32;
     uint64_t retData64;
 
-
   public:
+    typedef IsaFakeParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
     /**
       * The constructor for Tsunmami Fake just registers itself with the MMU.
       * @param p params structure

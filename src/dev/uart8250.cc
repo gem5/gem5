@@ -43,7 +43,6 @@
 #include "dev/platform.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -100,12 +99,11 @@ Uart8250::IntrEvent::scheduleIntr()
 }
 
 
-Uart8250::Uart8250(Params *p)
+Uart8250::Uart8250(const Params *p)
     : Uart(p), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
       txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
 {
     pioSize = 8;
-
 }
 
 Tick
@@ -338,37 +336,8 @@ Uart8250::unserialize(Checkpoint *cp, const std::string &section)
         txIntrEvent.schedule(txintrwhen);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Uart8250)
-
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<SimConsole *> sim_console;
-    SimObjectParam<System *> system;
-
-END_DECLARE_SIM_OBJECT_PARAMS(Uart8250)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Uart8250)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(sim_console, "The Simulator Console"),
-    INIT_PARAM(system, "system object")
-
-END_INIT_SIM_OBJECT_PARAMS(Uart8250)
-
-CREATE_SIM_OBJECT(Uart8250)
+Uart8250 *
+Uart8250Params::create()
 {
-    Uart8250::Params *p = new Uart8250::Params;
-    p->name = getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->cons = sim_console;
-    p->system = system;
-    return new Uart8250(p);
+    return new Uart8250(this);
 }
-
-REGISTER_SIM_OBJECT("Uart8250", Uart8250)
-

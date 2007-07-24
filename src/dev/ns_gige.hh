@@ -45,6 +45,7 @@
 #include "dev/ns_gige_reg.h"
 #include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
+#include "params/NSGigE.hh"
 #include "sim/eventq.hh"
 
 // Hash filtering constants
@@ -349,31 +350,10 @@ class NSGigE : public PciDev
     NSGigEInt *interface;
 
   public:
-    struct Params : public PciDev::Params
-    {
-        Tick clock;
-        Tick intr_delay;
-        Tick tx_delay;
-        Tick rx_delay;
-        bool dma_desc_free;
-        bool dma_data_free;
-        Tick dma_read_delay;
-        Tick dma_write_delay;
-        Tick dma_read_factor;
-        Tick dma_write_factor;
-        bool rx_filter;
-        Net::EthAddr eaddr;
-        uint32_t tx_fifo_size;
-        uint32_t rx_fifo_size;
-        bool rx_thread;
-        bool tx_thread;
-        bool rss;
-        bool dma_no_allocate;
-    };
-
+    typedef NSGigEParams Params;
+    const Params *params() const { return (const Params *)_params; }
     NSGigE(Params *params);
     ~NSGigE();
-    const Params *params() const { return (const Params *)_params; }
 
     virtual Tick writeConfig(PacketPtr pkt);
 

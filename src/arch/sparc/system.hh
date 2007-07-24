@@ -37,35 +37,15 @@
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
+#include "params/SparcSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 class SparcSystem : public System
 {
   public:
-    struct Params : public System::Params
-    {
-        PhysicalMemory *rom;
-        PhysicalMemory *nvram;
-        PhysicalMemory *hypervisor_desc;
-        PhysicalMemory *partition_desc;
-        Addr reset_addr;
-        Addr hypervisor_addr;
-        Addr openboot_addr;
-        Addr nvram_addr;
-        Addr hypervisor_desc_addr;
-        Addr partition_desc_addr;
-        std::string reset_bin;
-        std::string hypervisor_bin;
-        std::string openboot_bin;
-        std::string nvram_bin;
-        std::string hypervisor_desc_bin;
-        std::string partition_desc_bin;
-        std::string boot_osflags;
-    };
-
+    typedef SparcSystemParams Params;
     SparcSystem(Params *p);
-
     ~SparcSystem();
 
 /**

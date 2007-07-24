@@ -39,7 +39,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/bus.hh"
-#include "sim/builder.hh"
+#include "params/Bus.hh"
 
 Port *
 Bus::getPort(const std::string &if_name, int idx)
@@ -612,28 +612,8 @@ Bus::startup()
         tickNextIdle = (curTick / clock) * clock + clock;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Bus)
-
-    Param<int> bus_id;
-    Param<int> clock;
-    Param<int> width;
-    Param<bool> responder_set;
-    Param<int> block_size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(Bus)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Bus)
-    INIT_PARAM(bus_id, "a globally unique bus id"),
-    INIT_PARAM(clock, "bus clock speed"),
-    INIT_PARAM(width, "width of the bus (bits)"),
-    INIT_PARAM(responder_set, "Is a default responder set by the user"),
-    INIT_PARAM(block_size, "Default blocksize if no device has one")
-END_INIT_SIM_OBJECT_PARAMS(Bus)
-
-CREATE_SIM_OBJECT(Bus)
+Bus *
+BusParams::create()
 {
-    return new Bus(getInstanceName(), bus_id, clock, width, responder_set,
-            block_size);
+    return new Bus(name, bus_id, clock, width, responder_set, block_size);
 }
-
-REGISTER_SIM_OBJECT("Bus", Bus)

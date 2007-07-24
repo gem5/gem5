@@ -25,43 +25,35 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Nathan Binkert
+ * Authors: Nathan Binkert
  */
 
 #ifndef __CPU__OP_CLASS_HH__
 #define __CPU__OP_CLASS_HH__
 
-/**
- * @file
- * Definition of operation classes.
- */
+#include "enums/OpClass.hh"
 
-/**
- * Instruction operation classes.  These classes are used for
- * assigning instructions to functional units.
+/*
+ * Do a bunch of wonky stuff to maintain backward compatability so I
+ * don't have to change code in a zillion places.
  */
-enum OpClass {
-    No_OpClass = 0,	///< Instruction does not use a functional unit
-    IntAluOp,		///< Integer ALU operaton (add/sub/logical)
-    IntMultOp,		///< Integer multiply
-    IntDivOp,		///< Integer divide
-    FloatAddOp,		///< Floating point add/subtract
-    FloatCmpOp,		///< Floating point comparison
-    FloatCvtOp,		///< Floating point<->integer conversion
-    FloatMultOp,	///< Floating point multiply
-    FloatDivOp,		///< Floating point divide
-    FloatSqrtOp,	///< Floating point square root
-    MemReadOp,		///< Memory read port
-    MemWriteOp,		///< Memory write port
-    IprAccessOp,	///< Internal Processor Register read/write port
-    InstPrefetchOp,	///< Instruction prefetch port (on I-cache)
-    Num_OpClasses	///< Total number of operation classes
-};
+using Enums::OpClass;
+using Enums::No_OpClass;
+using Enums::Num_OpClass;
 
-/**
- * Array mapping OpClass enum values to strings.  Defined in op_class.cc.
- */
-extern const char *opClassStrings[Num_OpClasses];
+const OpClass IntAluOp = Enums::IntAlu;
+const OpClass IntMultOp = Enums::IntMult;
+const OpClass IntDivOp = Enums::IntDiv;
+const OpClass FloatAddOp = Enums::FloatAdd;
+const OpClass FloatCmpOp = Enums::FloatCmp;
+const OpClass FloatCvtOp = Enums::FloatCvt;
+const OpClass FloatMultOp = Enums::FloatMult;
+const OpClass FloatDivOp = Enums::FloatDiv;
+const OpClass FloatSqrtOp = Enums::FloatSqrt;
+const OpClass MemReadOp = Enums::MemRead;
+const OpClass MemWriteOp = Enums::MemWrite;
+const OpClass IprAccessOp = Enums::IprAccess;
+const OpClass InstPrefetchOp = Enums::InstPrefetch;
+const OpClass Num_OpClasses = Num_OpClass;
 
 #endif // __CPU__OP_CLASS_HH__

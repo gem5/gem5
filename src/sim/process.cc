@@ -45,7 +45,7 @@
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/translating_port.hh"
-#include "sim/builder.hh"
+#include "params/LiveProcess.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
 #include "sim/stats.hh"
@@ -312,14 +312,6 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 
-//
-// need to declare these here since there is no concrete Process type
-// that can be constructed (i.e., no REGISTER_SIM_OBJECT() macro call,
-// which is where these get declared for concrete types).
-//
-DEFINE_SIM_OBJECT_CLASS_NAME("Process", Process)
-
-
 ////////////////////////////////////////////////////////////////////////
 //
 // LiveProcess member definitions
@@ -551,46 +543,8 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
     return process;
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
-
-    VectorParam<string> cmd;
-    Param<string> executable;
-    Param<string> input;
-    Param<string> output;
-    VectorParam<string> env;
-    Param<string> cwd;
-    SimObjectParam<System *> system;
-    Param<uint64_t> uid;
-    Param<uint64_t> euid;
-    Param<uint64_t> gid;
-    Param<uint64_t> egid;
-    Param<uint64_t> pid;
-    Param<uint64_t> ppid;
-
-END_DECLARE_SIM_OBJECT_PARAMS(LiveProcess)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(LiveProcess)
-
-    INIT_PARAM(cmd, "command line (executable plus arguments)"),
-    INIT_PARAM(executable, "executable (overrides cmd[0] if set)"),
-    INIT_PARAM(input, "filename for stdin (dflt: use sim stdin)"),
-    INIT_PARAM(output, "filename for stdout/stderr (dflt: use sim stdout)"),
-    INIT_PARAM(env, "environment settings"),
-    INIT_PARAM(cwd, "current working directory"),
-    INIT_PARAM(system, "system"),
-    INIT_PARAM(uid, "user id"),
-    INIT_PARAM(euid, "effective user id"),
-    INIT_PARAM(gid, "group id"),
-    INIT_PARAM(egid, "effective group id"),
-    INIT_PARAM(pid, "process id"),
-    INIT_PARAM(ppid, "parent process id")
-
-END_INIT_SIM_OBJECT_PARAMS(LiveProcess)
-
-
-CREATE_SIM_OBJECT(LiveProcess)
+LiveProcess *
+LiveProcessParams::create()
 {
     string in = input;
     string out = output;
@@ -612,12 +566,9 @@ CREATE_SIM_OBJECT(LiveProcess)
 
     stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
 
-    return LiveProcess::create(getInstanceName(), system,
+    return LiveProcess::create(name, system,
                                stdin_fd, stdout_fd, stderr_fd,
                                (string)executable == "" ? cmd[0] : executable,
                                cmd, env, cwd,
                                uid, euid, gid, egid, pid, ppid);
 }
-
-
-REGISTER_SIM_OBJECT("LiveProcess", LiveProcess)

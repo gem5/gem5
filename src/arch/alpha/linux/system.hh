@@ -41,6 +41,7 @@ class IdleStartEvent;
 #include "arch/alpha/idle_event.hh"
 #include "arch/alpha/system.hh"
 #include "kern/linux/events.hh"
+#include "params/LinuxAlphaSystem.hh"
 
 using namespace AlphaISA;
 using namespace Linux;
@@ -129,6 +130,7 @@ class LinuxAlphaSystem : public AlphaSystem
     IdleStartEvent *idleStartEvent;
 
   public:
+    typedef LinuxAlphaSystemParams Params;
     LinuxAlphaSystem(Params *p);
     ~LinuxAlphaSystem();
 

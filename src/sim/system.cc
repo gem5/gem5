@@ -40,12 +40,13 @@
 #include "cpu/thread_context.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
-#include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
 #include "kern/kernel_stats.hh"
+#else
+#include "params/System.hh"
 #endif
 
 using namespace std;
@@ -90,14 +91,14 @@ System::System(Params *p)
     /**
      * Load the kernel code into memory
      */
-    if (params()->kernel_path == "") {
+    if (params()->kernel == "") {
         warn("No kernel set for full system simulation. Assuming you know what"
                 " you're doing...\n");
     } else {
         // Load kernel code
-        kernel = createObjectFile(params()->kernel_path);
+        kernel = createObjectFile(params()->kernel);
         if (kernel == NULL)
-            fatal("Could not load kernel file %s", params()->kernel_path);
+            fatal("Could not load kernel file %s", params()->kernel);
 
         // Load program sections into memory
         kernel->loadSections(&functionalPort, LoadAddrMask);
@@ -146,7 +147,7 @@ int rgdb_wait = -1;
 int rgdb_enable = true;
 
 void
-System::setMemoryMode(MemoryMode mode)
+System::setMemoryMode(Enums::MemoryMode mode)
 {
     assert(getState() == Drained);
     memoryMode = mode;
@@ -269,39 +270,16 @@ printSystems()
 const char *System::MemoryModeStrings[3] = {"invalid", "atomic",
     "timing"};
 
-#if FULL_SYSTEM
+#if !FULL_SYSTEM
 
-// In full system mode, only derived classes (e.g. AlphaLinuxSystem)
-// can be created directly.
-
-DEFINE_SIM_OBJECT_CLASS_NAME("System", System)
-
-#else
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(System)
-
-    SimObjectParam<PhysicalMemory *> physmem;
-    SimpleEnumParam<System::MemoryMode> mem_mode;
-
-END_DECLARE_SIM_OBJECT_PARAMS(System)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(System)
-
-    INIT_PARAM(physmem, "physical memory"),
-    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
-            System::MemoryModeStrings)
-
-END_INIT_SIM_OBJECT_PARAMS(System)
-
-CREATE_SIM_OBJECT(System)
+System *
+SystemParams::create()
 {
     System::Params *p = new System::Params;
-    p->name = getInstanceName();
+    p->name = name;
     p->physmem = physmem;
     p->mem_mode = mem_mode;
     return new System(p);
 }
-
-REGISTER_SIM_OBJECT("System", System)
 
 #endif

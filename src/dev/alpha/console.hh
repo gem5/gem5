@@ -38,6 +38,7 @@
 #include "base/range.hh"
 #include "dev/alpha/access.h"
 #include "dev/io_device.hh"
+#include "params/AlphaConsole.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 
@@ -98,20 +99,14 @@ class AlphaConsole : public BasicPioDevice
     BaseCPU *cpu;
 
   public:
-    struct Params : public BasicPioDevice::Params
+    typedef AlphaConsoleParams Params;
+    AlphaConsole(const Params *p);
+
+    const Params *
+    params() const
     {
-        SimConsole *cons;
-        SimpleDisk *disk;
-        AlphaSystem *alpha_sys;
-        BaseCPU *cpu;
-    };
-  protected:
-    const Params *params() const {return (const Params *)_params; }
-
-  public:
-
-    /** Standard Constructor */
-    AlphaConsole(Params *p);
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual void startup();
 

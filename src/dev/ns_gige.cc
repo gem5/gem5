@@ -43,7 +43,8 @@
 #include "dev/pciconfigall.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/NSGigE.hh"
+#include "params/NSGigEInt.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
@@ -118,7 +119,7 @@ NSGigE::NSGigE(Params *p)
 
 
     regsReset();
-    memcpy(&rom.perfectMatch, p->eaddr.bytes(), ETH_ADDR_LEN);
+    memcpy(&rom.perfectMatch, p->hardware_address.bytes(), ETH_ADDR_LEN);
 
     memset(&rxDesc32, 0, sizeof(rxDesc32));
     memset(&txDesc32, 0, sizeof(txDesc32));
@@ -2773,23 +2774,10 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     }
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
-
-    SimObjectParam<EtherInt *> peer;
-    SimObjectParam<NSGigE *> device;
-
-END_DECLARE_SIM_OBJECT_PARAMS(NSGigEInt)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigEInt)
-
-    INIT_PARAM_DFLT(peer, "peer interface", NULL),
-    INIT_PARAM(device, "Ethernet device of this interface")
-
-END_INIT_SIM_OBJECT_PARAMS(NSGigEInt)
-
-CREATE_SIM_OBJECT(NSGigEInt)
+NSGigEInt *
+NSGigEIntParams::create()
 {
-    NSGigEInt *dev_int = new NSGigEInt(getInstanceName(), device);
+    NSGigEInt *dev_int = new NSGigEInt(name, device);
 
     EtherInt *p = (EtherInt *)peer;
     if (p) {
@@ -2800,121 +2788,8 @@ CREATE_SIM_OBJECT(NSGigEInt)
     return dev_int;
 }
 
-REGISTER_SIM_OBJECT("NSGigEInt", NSGigEInt)
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> min_backoff_delay;
-    Param<Tick> max_backoff_delay;
-    SimObjectParam<PciConfigData *> configdata;
-    Param<uint32_t> pci_bus;
-    Param<uint32_t> pci_dev;
-    Param<uint32_t> pci_func;
-    Param<Tick> pio_latency;
-    Param<Tick> config_latency;
-
-    Param<Tick> clock;
-    Param<bool> dma_desc_free;
-    Param<bool> dma_data_free;
-    Param<Tick> dma_read_delay;
-    Param<Tick> dma_write_delay;
-    Param<Tick> dma_read_factor;
-    Param<Tick> dma_write_factor;
-    Param<bool> dma_no_allocate;
-    Param<Tick> intr_delay;
-
-    Param<Tick> rx_delay;
-    Param<Tick> tx_delay;
-    Param<uint32_t> rx_fifo_size;
-    Param<uint32_t> tx_fifo_size;
-
-    Param<bool> rx_filter;
-    Param<string> hardware_address;
-    Param<bool> rx_thread;
-    Param<bool> tx_thread;
-    Param<bool> rss;
-
-END_DECLARE_SIM_OBJECT_PARAMS(NSGigE)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(NSGigE)
-
-    INIT_PARAM(system, "System pointer"),
-    INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
-    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
-    INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(pci_bus, "PCI bus ID"),
-    INIT_PARAM(pci_dev, "PCI device number"),
-    INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
-    INIT_PARAM(clock, "State machine cycle time"),
-
-    INIT_PARAM(dma_desc_free, "DMA of Descriptors is free"),
-    INIT_PARAM(dma_data_free, "DMA of Data is free"),
-    INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
-    INIT_PARAM(dma_write_delay, "fixed delay for dma writes"),
-    INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
-    INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
-    INIT_PARAM(dma_no_allocate, "Should DMA reads allocate cache lines"),
-    INIT_PARAM(intr_delay, "Interrupt Delay in microseconds"),
-
-    INIT_PARAM(rx_delay, "Receive Delay"),
-    INIT_PARAM(tx_delay, "Transmit Delay"),
-    INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
-    INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
-
-    INIT_PARAM(rx_filter, "Enable Receive Filter"),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM(rx_thread, ""),
-    INIT_PARAM(tx_thread, ""),
-    INIT_PARAM(rss, "")
-
-END_INIT_SIM_OBJECT_PARAMS(NSGigE)
-
-
-CREATE_SIM_OBJECT(NSGigE)
+NSGigE *
+NSGigEParams::create()
 {
-    NSGigE::Params *params = new NSGigE::Params;
-
-    params->name = getInstanceName();
-    params->platform = platform;
-    params->system = system;
-    params->min_backoff_delay = min_backoff_delay;
-    params->max_backoff_delay = max_backoff_delay;
-    params->configData = configdata;
-    params->busNum = pci_bus;
-    params->deviceNum = pci_dev;
-    params->functionNum = pci_func;
-    params->pio_delay = pio_latency;
-    params->config_delay = config_latency;
-
-    params->clock = clock;
-    params->dma_desc_free = dma_desc_free;
-    params->dma_data_free = dma_data_free;
-    params->dma_read_delay = dma_read_delay;
-    params->dma_write_delay = dma_write_delay;
-    params->dma_read_factor = dma_read_factor;
-    params->dma_write_factor = dma_write_factor;
-    params->dma_no_allocate = dma_no_allocate;
-    params->pio_delay = pio_latency;
-    params->intr_delay = intr_delay;
-
-    params->rx_delay = rx_delay;
-    params->tx_delay = tx_delay;
-    params->rx_fifo_size = rx_fifo_size;
-    params->tx_fifo_size = tx_fifo_size;
-
-    params->rx_filter = rx_filter;
-    params->eaddr = hardware_address;
-    params->rx_thread = rx_thread;
-    params->tx_thread = tx_thread;
-    params->rss = rss;
-
-    return new NSGigE(params);
+    return new NSGigE(this);
 }
-
-REGISTER_SIM_OBJECT("NSGigE", NSGigE)

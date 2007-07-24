@@ -38,7 +38,6 @@
 
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
-#include "sim/param.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;

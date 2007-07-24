@@ -34,9 +34,9 @@
  */
 #include <sstream>
 
-#include "cpu/trace/reader/ibm_reader.hh"
-#include "sim/builder.hh"
 #include "base/misc.hh" // for fatal
+#include "cpu/trace/reader/ibm_reader.hh"
+#include "params/IBMReader.hh"
 
 using namespace std;
 
@@ -100,23 +100,8 @@ IBMReader::getNextReq(MemReqPtr &req)
     return 0;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IBMReader)
-
-    Param<string> filename;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IBMReader)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IBMReader)
-
-    INIT_PARAM(filename, "trace file")
-
-END_INIT_SIM_OBJECT_PARAMS(IBMReader)
-
-
-CREATE_SIM_OBJECT(IBMReader)
+IBMReader *
+IBMReaderParams::create()
 {
-    return new IBMReader(getInstanceName(), filename);
+    return new IBMReader(name, filename);
 }
-
-REGISTER_SIM_OBJECT("IBMReader", IBMReader)

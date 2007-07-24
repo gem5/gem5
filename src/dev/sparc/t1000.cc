@@ -39,7 +39,7 @@
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
 #include "dev/sparc/t1000.hh"
-#include "sim/builder.hh"
+#include "params/T1000.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -101,23 +101,8 @@ T1000::calcConfigAddr(int bus, int dev, int func)
     M5_DUMMY_RETURN
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(T1000)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<IntrControl *> intrctrl;
-
-END_DECLARE_SIM_OBJECT_PARAMS(T1000)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(T1000)
-
-    INIT_PARAM(system, "system"),
-    INIT_PARAM(intrctrl, "interrupt controller")
-
-END_INIT_SIM_OBJECT_PARAMS(T1000)
-
-CREATE_SIM_OBJECT(T1000)
+T1000 *
+T1000Params::create()
 {
-    return new T1000(getInstanceName(), system, intrctrl);
+    return new T1000(name, system, intrctrl);
 }
-
-REGISTER_SIM_OBJECT("T1000", T1000)

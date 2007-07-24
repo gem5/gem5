@@ -36,7 +36,6 @@
 #include "dev/isa_fake.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -44,13 +43,13 @@ using namespace std;
 IsaFake::IsaFake(Params *p)
     : BasicPioDevice(p)
 {
-    if (!params()->retBadAddr)
+    if (!p->ret_bad_addr)
         pioSize = p->pio_size;
 
-    retData8 = params()->retData8;
-    retData16 = params()->retData16;
-    retData32 = params()->retData32;
-    retData64 = params()->retData64;
+    retData8 = p->ret_data8;
+    retData16 = p->ret_data16;
+    retData32 = p->ret_data32;
+    retData64 = p->ret_data64;
 }
 
 Tick
@@ -58,10 +57,10 @@ IsaFake::read(PacketPtr pkt)
 {
     assert(pkt->result == Packet::Unknown);
 
-    if (params()->warnAccess != "")
+    if (params()->warn_access != "")
         warn("Device %s accessed by read to address %#x size=%d\n",
                 name(), pkt->getAddr(), pkt->getSize());
-    if (params()->retBadAddr) {
+    if (params()->ret_bad_addr) {
         DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
         pkt->result = Packet::BadAddress;
@@ -93,7 +92,7 @@ IsaFake::read(PacketPtr pkt)
 Tick
 IsaFake::write(PacketPtr pkt)
 {
-    if (params()->warnAccess != "") {
+    if (params()->warn_access != "") {
         uint64_t data;
         switch (pkt->getSize()) {
           case sizeof(uint64_t):
@@ -114,7 +113,7 @@ IsaFake::write(PacketPtr pkt)
         warn("Device %s accessed by write to address %#x size=%d data=%#x\n",
                 name(), pkt->getAddr(), pkt->getSize(), data);
     }
-    if (params()->retBadAddr) {
+    if (params()->ret_bad_addr) {
         DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
         pkt->result = Packet::BadAddress;
@@ -122,7 +121,7 @@ IsaFake::write(PacketPtr pkt)
         DPRINTF(Tsunami, "write - va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
 
-        if (params()->updateData) {
+        if (params()->update_data) {
             switch (pkt->getSize()) {
               case sizeof(uint64_t):
                 retData64 = pkt->get<uint64_t>();
@@ -145,57 +144,8 @@ IsaFake::write(PacketPtr pkt)
     return pioDelay;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
-
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    Param<Addr> pio_size;
-    Param<bool> ret_bad_addr;
-    Param<bool> update_data;
-    Param<std::string> warn_access;
-    Param<uint8_t> ret_data8;
-    Param<uint16_t> ret_data16;
-    Param<uint32_t> ret_data32;
-    Param<uint64_t> ret_data64;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IsaFake)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IsaFake)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(pio_size, "Size of address range"),
-    INIT_PARAM(ret_bad_addr, "Return pkt status BadAddr"),
-    INIT_PARAM(update_data, "Update returned data"),
-    INIT_PARAM(warn_access, "Warn if this device is touched"),
-    INIT_PARAM(ret_data8, "Data to return if not bad addr"),
-    INIT_PARAM(ret_data16, "Data to return if not bad addr"),
-    INIT_PARAM(ret_data32, "Data to return if not bad addr"),
-    INIT_PARAM(ret_data64, "Data to return if not bad addr"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object")
-
-END_INIT_SIM_OBJECT_PARAMS(IsaFake)
-
-CREATE_SIM_OBJECT(IsaFake)
+IsaFake *
+IsaFakeParams::create()
 {
-    IsaFake::Params *p = new IsaFake::Params;
-    p->name = getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->pio_size = pio_size;
-    p->retBadAddr = ret_bad_addr;
-    p->updateData = update_data;
-    p->warnAccess = warn_access;
-    p->retData8= ret_data8;
-    p->retData16 = ret_data16;
-    p->retData32 = ret_data32;
-    p->retData64 = ret_data64;
-    p->platform = platform;
-    p->system = system;
-    return new IsaFake(p);
+    return new IsaFake(this);
 }
-
-REGISTER_SIM_OBJECT("IsaFake", IsaFake)

@@ -39,6 +39,8 @@
 #include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
 #include "dev/sinicreg.hh"
+#include "params/Sinic.hh"
+#include "params/SinicInt.hh"
 #include "sim/eventq.hh"
 
 namespace Sinic {
@@ -80,12 +82,8 @@ class Base : public PciDev
  * Construction/Destruction/Parameters
  */
   public:
-    struct Params : public PciDev::Params
-    {
-        Tick clock;
-        Tick intr_delay;
-    };
-
+    typedef SinicParams Params;
+    const Params *params() const { return (const Params *)_params; }
     Base(Params *p);
 };
 
@@ -313,43 +311,8 @@ class Device : public Base
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-/**
- * Construction/Destruction/Parameters
- */
   public:
-    struct Params : public Base::Params
-    {
-        Tick tx_delay;
-        Tick rx_delay;
-        bool rx_filter;
-        Net::EthAddr eaddr;
-        uint32_t rx_max_copy;
-        uint32_t tx_max_copy;
-        uint32_t rx_max_intr;
-        uint32_t rx_fifo_size;
-        uint32_t tx_fifo_size;
-        uint32_t rx_fifo_threshold;
-        uint32_t rx_fifo_low_mark;
-        uint32_t tx_fifo_high_mark;
-        uint32_t tx_fifo_threshold;
-        Tick dma_read_delay;
-        Tick dma_read_factor;
-        Tick dma_write_delay;
-        Tick dma_write_factor;
-        bool rx_thread;
-        bool tx_thread;
-        bool rss;
-        uint32_t virtual_count;
-        bool zero_copy;
-        bool delay_copy;
-        bool virtual_addr;
-    };
-
-  protected:
-    const Params *params() const { return (const Params *)_params; }
-
-  public:
-    Device(Params *params);
+    Device(Params *p);
     ~Device();
 };
 

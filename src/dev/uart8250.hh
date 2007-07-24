@@ -38,7 +38,7 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/uart.hh"
-
+#include "params/Uart8250.hh"
 
 /* UART8250 Interrupt ID Register
  *  bit 0    Interrupt Pending 0 = true, 1 = false
@@ -70,8 +70,6 @@ class Platform;
 
 class Uart8250 : public Uart
 {
-
-
   protected:
     uint8_t IER, DLAB, LCR, MCR;
     Tick lastTxInt;
@@ -92,12 +90,17 @@ class Uart8250 : public Uart
     IntrEvent rxIntrEvent;
 
   public:
-    Uart8250(Params *p);
+    typedef Uart8250Params Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+    Uart8250(const Params *p);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
     virtual void addressRanges(AddrRangeList &range_list);
-
 
     /**
      * Inform the uart that there is data available.

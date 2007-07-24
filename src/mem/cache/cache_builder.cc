@@ -36,14 +36,14 @@
 #include <vector>
 
 // Must be included first to determine which caches we want
+#include "enums/Prefetch.hh"
 #include "mem/config/cache.hh"
 #include "mem/config/prefetch.hh"
-
 #include "mem/cache/base_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/bus.hh"
 #include "mem/cache/coherence/coherence_protocol.hh"
-#include "sim/builder.hh"
+#include "params/BaseCache.hh"
 
 // Tag Templates
 #if defined(USE_CACHE_LRU)
@@ -93,123 +93,23 @@
 using namespace std;
 using namespace TheISA;
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
-
-    Param<int> size;
-    Param<int> assoc;
-    Param<int> block_size;
-    Param<int> latency;
-    Param<int> mshrs;
-    Param<int> tgts_per_mshr;
-    Param<int> write_buffers;
-    Param<bool> prioritizeRequests;
-    SimObjectParam<CoherenceProtocol *> protocol;
-    Param<Addr> trace_addr;
-    Param<int> hash_delay;
-#if defined(USE_CACHE_IIC)
-    SimObjectParam<Repl *> repl;
-#endif
-    Param<bool> compressed_bus;
-    Param<bool> store_compressed;
-    Param<bool> adaptive_compression;
-    Param<int> compression_latency;
-    Param<int> subblock_size;
-    Param<Counter> max_miss_count;
-    VectorParam<Range<Addr> > addr_range;
-//    SimObjectParam<MemTraceWriter *> mem_trace;
-    Param<bool> split;
-    Param<int> split_size;
-    Param<bool> lifo;
-    Param<bool> two_queue;
-    Param<bool> prefetch_miss;
-    Param<bool> prefetch_access;
-    Param<int> prefetcher_size;
-    Param<bool> prefetch_past_page;
-    Param<bool> prefetch_serial_squash;
-    Param<Tick> prefetch_latency;
-    Param<int> prefetch_degree;
-    Param<string> prefetch_policy;
-    Param<bool> prefetch_cache_check_push;
-    Param<bool> prefetch_use_cpu_id;
-    Param<bool> prefetch_data_accesses_only;
-
-END_DECLARE_SIM_OBJECT_PARAMS(BaseCache)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(BaseCache)
-
-    INIT_PARAM(size, "capacity in bytes"),
-    INIT_PARAM(assoc, "associativity"),
-    INIT_PARAM(block_size, "block size in bytes"),
-    INIT_PARAM(latency, "hit latency in CPU cycles"),
-    INIT_PARAM(mshrs, "number of MSHRs (max outstanding requests)"),
-    INIT_PARAM(tgts_per_mshr, "max number of accesses per MSHR"),
-    INIT_PARAM_DFLT(write_buffers, "number of write buffers", 8),
-    INIT_PARAM_DFLT(prioritizeRequests, "always service demand misses first",
-                    false),
-    INIT_PARAM_DFLT(protocol, "coherence protocol to use in the cache", NULL),
-    INIT_PARAM_DFLT(trace_addr, "address to trace", 0),
-
-    INIT_PARAM_DFLT(hash_delay, "time in cycles of hash access",1),
-#if defined(USE_CACHE_IIC)
-    INIT_PARAM_DFLT(repl, "replacement policy",NULL),
-#endif
-    INIT_PARAM_DFLT(compressed_bus,
-                    "This cache connects to a compressed memory",
-                    false),
-    INIT_PARAM_DFLT(store_compressed, "Store compressed data in the cache",
-                    false),
-    INIT_PARAM_DFLT(adaptive_compression, "Use an adaptive compression scheme",
-                    false),
-    INIT_PARAM_DFLT(compression_latency,
-                    "Latency in cycles of compression algorithm",
-                    0),
-    INIT_PARAM_DFLT(subblock_size,
-                    "Size of subblock in IIC used for compression",
-                    0),
-    INIT_PARAM_DFLT(max_miss_count,
-                    "The number of misses to handle before calling exit",
-                    0),
-    INIT_PARAM_DFLT(addr_range, "The address range in bytes",
-                    vector<Range<Addr> >(1,RangeIn((Addr)0, MaxAddr))),
-//    INIT_PARAM_DFLT(mem_trace, "Memory trace to write accesses to", NULL),
-    INIT_PARAM_DFLT(split, "Whether this is a partitioned cache", false),
-    INIT_PARAM_DFLT(split_size, "the number of \"ways\" belonging to the LRU partition", 0),
-    INIT_PARAM_DFLT(lifo, "whether you are using a LIFO repl. policy", false),
-    INIT_PARAM_DFLT(two_queue, "whether the lifo should have two queue replacement", false),
-    INIT_PARAM_DFLT(prefetch_miss, "wheter you are using the hardware prefetcher from Miss stream", false),
-    INIT_PARAM_DFLT(prefetch_access, "wheter you are using the hardware prefetcher from Access stream", false),
-    INIT_PARAM_DFLT(prefetcher_size, "Number of entries in the harware prefetch queue", 100),
-    INIT_PARAM_DFLT(prefetch_past_page, "Allow prefetches to cross virtual page boundaries", false),
-    INIT_PARAM_DFLT(prefetch_serial_squash, "Squash prefetches with a later time on a subsequent miss", false),
-    INIT_PARAM_DFLT(prefetch_latency, "Latency of the prefetcher", 10),
-    INIT_PARAM_DFLT(prefetch_degree, "Degree of the prefetch depth", 1),
-    INIT_PARAM_DFLT(prefetch_policy, "Type of prefetcher to use", "none"),
-    INIT_PARAM_DFLT(prefetch_cache_check_push, "Check if in cash on push or pop of prefetch queue", true),
-    INIT_PARAM_DFLT(prefetch_use_cpu_id, "Use the CPU ID to seperate calculations of prefetches", true),
-    INIT_PARAM_DFLT(prefetch_data_accesses_only, "Only prefetch on data not on instruction accesses", false)
-END_INIT_SIM_OBJECT_PARAMS(BaseCache)
-
-
 #define BUILD_CACHE(TAGS, tags, c)                                      \
     do {                                                                \
-        BasePrefetcher *pf;                                           \
-        if (pf_policy == "tagged") {                                    \
+        BasePrefetcher *pf;                                             \
+        if (prefetch_policy == Enums::tagged) {                         \
             BUILD_TAGGED_PREFETCHER(TAGS);                              \
         }                                                               \
-        else if (pf_policy == "stride") {                               \
+        else if (prefetch_policy == Enums::stride) {                    \
             BUILD_STRIDED_PREFETCHER(TAGS);                             \
         }                                                               \
-        else if (pf_policy == "ghb") {                                  \
+        else if (prefetch_policy == Enums::ghb) {                       \
             BUILD_GHB_PREFETCHER(TAGS);                                 \
         }                                                               \
         else {                                                          \
             BUILD_NULL_PREFETCHER(TAGS);                                \
         }                                                               \
         Cache<TAGS, c>::Params params(tags, mq, coh, base_params,       \
-                                      pf, prefetch_access, latency, \
+                                      pf, prefetch_access, latency,     \
                                       true,                             \
                                       store_compressed,                 \
                                       adaptive_compression,             \
@@ -217,7 +117,7 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
                                       compAlg, compression_latency,     \
                                       prefetch_miss);                   \
         Cache<TAGS, c> *retval =                                        \
-            new Cache<TAGS, c>(getInstanceName(), params);              \
+            new Cache<TAGS, c>(name, params);                           \
         return retval;                                                  \
     } while (0)
 
@@ -365,11 +265,10 @@ END_INIT_SIM_OBJECT_PARAMS(BaseCache)
 #define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
 #endif
 
-CREATE_SIM_OBJECT(BaseCache)
+BaseCache *
+BaseCacheParams::create()
 {
-    string name = getInstanceName();
     int numSets = size / (assoc * block_size);
-    string pf_policy = prefetch_policy;
     if (subblock_size == 0) {
         subblock_size = block_size;
     }
@@ -379,24 +278,21 @@ CREATE_SIM_OBJECT(BaseCache)
                                   block_size, max_miss_count);
 
     //Warnings about prefetcher policy
-    if (pf_policy == "none" && (prefetch_miss || prefetch_access)) {
-        panic("With no prefetcher, you shouldn't prefetch from"
-              " either miss or access stream\n");
+    if (prefetch_policy == Enums::none) {
+        if (prefetch_miss || prefetch_access)
+            panic("With no prefetcher, you shouldn't prefetch from"
+                  " either miss or access stream\n");
     }
-    if ((pf_policy == "tagged" || pf_policy == "stride" ||
-         pf_policy == "ghb") && !(prefetch_miss || prefetch_access)) {
-        warn("With this prefetcher you should chose a prefetch"
-             " stream (miss or access)\nNo Prefetching will occur\n");
-    }
-    if ((pf_policy == "tagged" || pf_policy == "stride" ||
-         pf_policy == "ghb") && prefetch_miss && prefetch_access) {
-        panic("Can't do prefetches from both miss and access"
-              " stream\n");
-    }
-    if (pf_policy != "tagged" && pf_policy != "stride" &&
-        pf_policy != "ghb"    && pf_policy != "none") {
-        panic("Unrecognized form of a prefetcher: %s, try using"
-              "['none','stride','tagged','ghb']\n", pf_policy);
+
+    if (prefetch_policy == Enums::tagged || prefetch_policy == Enums::stride ||
+        prefetch_policy == Enums::ghb) {
+
+        if (!prefetch_miss && !prefetch_access)
+            warn("With this prefetcher you should chose a prefetch"
+                 " stream (miss or access)\nNo Prefetching will occur\n");
+
+        if (prefetch_miss && prefetch_access)
+            panic("Can't do prefetches from both miss and access stream");
     }
 
 #if defined(USE_CACHE_IIC)
@@ -424,8 +320,3 @@ CREATE_SIM_OBJECT(BaseCache)
     }
     return NULL;
 }
-
-REGISTER_SIM_OBJECT("BaseCache", BaseCache)
-
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS

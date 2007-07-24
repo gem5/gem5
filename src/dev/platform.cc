@@ -31,7 +31,6 @@
 
 #include "base/misc.hh"
 #include "dev/platform.hh"
-#include "sim/builder.hh"
 #include "sim/sim_exit.hh"
 
 using namespace std;
@@ -79,7 +78,3 @@ Platform::registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func, uint8_t intr
 
     intLines.set(intr);
 }
-
-
-DEFINE_SIM_OBJECT_CLASS_NAME("Platform", Platform)
-

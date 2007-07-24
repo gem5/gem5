@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,28 +25,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Nathan Binkert
  */
 
-#include "cpu/op_class.hh"
+%include "base/range.hh"
+%include "sim/host.hh"
 
-/** OpClass enum -> description string */
-const char *
-opClassStrings[Num_OpClasses] =
-{
-    "No_OpClass",
-    "IntAlu",
-    "IntMult",
-    "IntDiv",
-    "FloatAdd",
-    "FloatCmp",
-    "FloatCvt",
-    "FloatMult",
-    "FloatDiv",
-    "FloatSqrt",
-    "MemRead",
-    "MemWrite",
-    "IprAccess",
-    "InstPrefetch"
-};
-
+%template(AddrRange) Range<Addr>;
+%template(TickRange) Range<Tick>;

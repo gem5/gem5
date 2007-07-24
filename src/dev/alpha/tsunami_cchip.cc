@@ -47,14 +47,14 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
+#include "params/TsunamiCChip.hh"
 #include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiCChip::TsunamiCChip(Params *p)
+TsunamiCChip::TsunamiCChip(const Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami)
 {
     pioSize = 0x10000000;
@@ -522,36 +522,8 @@ TsunamiCChip::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(drir);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
-
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-    SimObjectParam<Tsunami *> tsunami;
-
-END_DECLARE_SIM_OBJECT_PARAMS(TsunamiCChip)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(tsunami, "Tsunami")
-
-END_INIT_SIM_OBJECT_PARAMS(TsunamiCChip)
-
-CREATE_SIM_OBJECT(TsunamiCChip)
+TsunamiCChip *
+TsunamiCChipParams::create()
 {
-    TsunamiCChip::Params *p = new TsunamiCChip::Params;
-    p->name = getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    p->tsunami = tsunami;
-    return new TsunamiCChip(p);
+    return new TsunamiCChip(this);
 }
-
-REGISTER_SIM_OBJECT("TsunamiCChip", TsunamiCChip)

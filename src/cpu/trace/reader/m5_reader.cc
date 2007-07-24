@@ -36,7 +36,7 @@
 #include "cpu/trace/reader/m5_reader.hh"
 #include "mem/trace/m5_format.hh"
 #include "mem/mem_cmd.hh"
-#include "sim/builder.hh"
+#include "params/M5Reader.hh"
 
 using namespace std;
 
@@ -77,23 +77,8 @@ M5Reader::getNextReq(MemReqPtr &req)
     return ref.cycle;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(M5Reader)
-
-    Param<string> filename;
-
-END_DECLARE_SIM_OBJECT_PARAMS(M5Reader)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(M5Reader)
-
-    INIT_PARAM(filename, "trace file")
-
-END_INIT_SIM_OBJECT_PARAMS(M5Reader)
-
-
-CREATE_SIM_OBJECT(M5Reader)
+M5Reader *
+M5ReaderParams::create()
 {
-    return new M5Reader(getInstanceName(), filename);
+    return new M5Reader(name, filename);
 }
-
-REGISTER_SIM_OBJECT("M5Reader", M5Reader)

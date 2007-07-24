@@ -45,6 +45,7 @@
 #include "dev/i8254xGBe_defs.hh"
 #include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
+#include "params/IGbE.hh"
 #include "sim/eventq.hh"
 
 class IGbEInt;
@@ -585,19 +586,14 @@ class IGbE : public PciDev
     TxDescCache txDescCache;
 
   public:
-    struct Params : public PciDev::Params
+    typedef IGbEParams Params;
+    const Params *
+    params() const
     {
-        Net::EthAddr hardware_address;
-        bool use_flow_control;
-        int rx_fifo_size;
-        int tx_fifo_size;
-        int rx_desc_cache_size;
-        int tx_desc_cache_size;
-        Tick clock;
-    };
-
+        return dynamic_cast<const Params *>(_params);
+    }
     IGbE(Params *params);
-    ~IGbE() {;}
+    ~IGbE() {}
 
     Tick clock;
     inline Tick cycles(int numCycles) const { return numCycles * clock; }
@@ -611,9 +607,6 @@ class IGbE : public PciDev
     void ethTxDone();
 
     void setEthInt(IGbEInt *i) { assert(!etherInt); etherInt = i; }
-
-
-    const Params *params() const {return (const Params *)_params; }
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

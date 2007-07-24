@@ -40,6 +40,7 @@
 #include <string>
 #include <vector>
 
+#include "base/time.hh"
 #include "base/trace.hh"
 #include "dev/pitreg.h"
 #include "dev/rtcreg.h"
@@ -50,27 +51,23 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, const vector<int> &t,
-                    bool bcd, Tick i)
-    : _name(n), event(tsunami, i), addr(0), year_is_bcd(bcd)
+TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami,
+                    const TsunamiIO::Params *p)
+    : _name(n), event(tsunami, p->frequency), addr(0)
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
     stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
 
-    struct tm tm;
-    parseTime(t, &tm);
+    year = p->time.tm_year;
 
-    year = tm.tm_year;
-
-    if (year_is_bcd) {
+    if (p->year_is_bcd) {
         // The datasheet says that the year field can be either BCD or
         // years since 1900.  Linux seems to be happy with years since
         // 1900.
@@ -81,16 +78,16 @@ TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami, const vector<int> &t,
     }
 
     // Unix is 0-11 for month, data seet says start at 1
-    mon = tm.tm_mon + 1;
-    mday = tm.tm_mday;
-    hour = tm.tm_hour;
-    min = tm.tm_min;
-    sec = tm.tm_sec;
+    mon = p->time.tm_mon + 1;
+    mday = p->time.tm_mday;
+    hour = p->time.tm_hour;
+    min = p->time.tm_min;
+    sec = p->time.tm_sec;
 
     // Datasheet says 1 is sunday
-    wday = tm.tm_wday + 1;
+    wday = p->time.tm_wday + 1;
 
-    DPRINTFN("Real-time clock set to %s", asctime(&tm));
+    DPRINTFN("Real-time clock set to %s", asctime(&p->time));
 }
 
 void
@@ -437,10 +434,9 @@ TsunamiIO::PITimer::Counter::CounterEvent::description()
     return "tsunami 8254 Interval timer";
 }
 
-TsunamiIO::TsunamiIO(Params *p)
+TsunamiIO::TsunamiIO(const Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(p->name + ".rtc", p->tsunami, p->init_time, p->year_is_bcd,
-          p->frequency)
+      rtc(p->name + ".rtc", p->tsunami, p)
 {
     pioSize = 0x100;
 
@@ -658,45 +654,8 @@ TsunamiIO::unserialize(Checkpoint *cp, const string &section)
     rtc.unserialize("rtc", cp, section);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
-
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    Param<Tick> frequency;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-    VectorParam<int> time;
-    Param<bool> year_is_bcd;
-    SimObjectParam<Tsunami *> tsunami;
-
-END_DECLARE_SIM_OBJECT_PARAMS(TsunamiIO)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(frequency, "clock interrupt frequency"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(time, "System time to use (0 for actual time"),
-    INIT_PARAM(year_is_bcd, ""),
-    INIT_PARAM(tsunami, "Tsunami")
-
-END_INIT_SIM_OBJECT_PARAMS(TsunamiIO)
-
-CREATE_SIM_OBJECT(TsunamiIO)
+TsunamiIO *
+TsunamiIOParams::create()
 {
-    TsunamiIO::Params *p = new TsunamiIO::Params;
-    p->frequency = frequency;
-    p->name = getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    p->init_time = time;
-    p->year_is_bcd = year_is_bcd;
-    p->tsunami = tsunami;
-    return new TsunamiIO(p);
+    return new TsunamiIO(this);
 }
-
-REGISTER_SIM_OBJECT("TsunamiIO", TsunamiIO)

@@ -29,10 +29,8 @@
 # Authors: Steve Reinhardt
 #          Nathan Binkert
 
-import os
 Import('*')
 
-Source('swig/init.cc')
 Source('swig/pyevent.cc')
 Source('swig/pyobject.cc')
 
@@ -45,12 +43,11 @@ PySource('m5', 'm5/main.py')
 PySource('m5', 'm5/multidict.py')
 PySource('m5', 'm5/params.py')
 PySource('m5', 'm5/proxy.py')
+PySource('m5', 'm5/simulate.py')
 PySource('m5', 'm5/smartdict.py')
 PySource('m5', 'm5/stats.py')
 PySource('m5', 'm5/ticks.py')
 PySource('m5', 'm5/util.py')
-
-PySource('m5', os.path.join(env['ROOT'], 'util/pbs/jobfile.py'))
 
 SwigSource('m5.internal', 'swig/core.i')
 SwigSource('m5.internal', 'swig/debug.i')

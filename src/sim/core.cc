@@ -98,7 +98,6 @@ setOutputDir(const string &dir)
 }
 
 ostream *outputStream;
-ostream *configStream;
 
 void
 setOutputFile(const string &file)

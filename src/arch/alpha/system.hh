@@ -35,25 +35,18 @@
 #include <string>
 #include <vector>
 
-#include "sim/system.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
+#include "params/AlphaSystem.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 class AlphaSystem : public System
 {
   public:
-    struct Params : public System::Params
-    {
-        std::string console_path;
-        std::string palcode;
-        uint64_t system_type;
-        uint64_t system_rev;
-    };
-
+    typedef AlphaSystemParams Params;
     AlphaSystem(Params *p);
-
     ~AlphaSystem();
 
 /**

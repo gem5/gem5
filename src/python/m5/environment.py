@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Ali Saidi
+# Authors: Nathan Binkert
+#          Steve Reinhardt
 
-from m5.SimObject import SimObject
-from m5.params import *
-class SparcTLB(SimObject):
-    type = 'SparcTLB'
-    abstract = True
-    size = Param.Int("TLB size")
+import os
 
-class SparcDTB(SparcTLB):
-    type = 'SparcDTB'
-    cxx_namespace = 'SparcISA'
-    cxx_class = 'DTB'
+# import the m5 compile options
+import defines
 
-    size = 64
+# make a SmartDict out of the build options for our local use
+import smartdict
+build_env = smartdict.SmartDict()
+build_env.update(defines.m5_build_env)
 
-class SparcITB(SparcTLB):
-    type = 'SparcITB'
-    cxx_namespace = 'SparcISA'
-    cxx_class = 'ITB'
+# make a SmartDict out of the OS environment too
+env = smartdict.SmartDict()
+env.update(os.environ)
 
-    size = 64

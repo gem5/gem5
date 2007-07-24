@@ -39,7 +39,8 @@
 #include "cpu/base.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "sim/builder.hh"
+#include "params/SparcDTB.hh"
+#include "params/SparcITB.hh"
 #include "sim/system.hh"
 
 /* @todo remove some of the magic constants.  -- ali
@@ -1386,46 +1387,14 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 
 /* end namespace SparcISA */ }
 
-using namespace SparcISA;
-
-DEFINE_SIM_OBJECT_CLASS_NAME("SparcTLB", TLB)
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(ITB)
-
-    Param<int> size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(ITB)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(ITB)
-
-    INIT_PARAM_DFLT(size, "TLB size", 48)
-
-END_INIT_SIM_OBJECT_PARAMS(ITB)
-
-
-CREATE_SIM_OBJECT(ITB)
+SparcISA::ITB *
+SparcITBParams::create()
 {
-    return new ITB(getInstanceName(), size);
+    return new SparcISA::ITB(name, size);
 }
 
-REGISTER_SIM_OBJECT("SparcITB", ITB)
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DTB)
-
-    Param<int> size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(DTB)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(DTB)
-
-    INIT_PARAM_DFLT(size, "TLB size", 64)
-
-END_INIT_SIM_OBJECT_PARAMS(DTB)
-
-
-CREATE_SIM_OBJECT(DTB)
+SparcISA::DTB *
+SparcDTBParams::create()
 {
-    return new DTB(getInstanceName(), size);
+    return new SparcISA::DTB(name, size);
 }
-
-REGISTER_SIM_OBJECT("SparcDTB", DTB)

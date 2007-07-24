@@ -32,21 +32,21 @@
 #include "config/full_system.hh"
 #include "config/use_checker.hh"
 
+#include "cpu/activity.hh"
+#include "cpu/simple_thread.hh"
+#include "cpu/thread_context.hh"
+#include "cpu/o3/isa_specific.hh"
+#include "cpu/o3/cpu.hh"
+#include "enums/MemoryMode.hh"
+#include "sim/core.hh"
+#include "sim/stat_control.hh"
+
 #if FULL_SYSTEM
 #include "cpu/quiesce_event.hh"
 #include "sim/system.hh"
 #else
 #include "sim/process.hh"
 #endif
-
-#include "cpu/activity.hh"
-#include "cpu/simple_thread.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/o3/isa_specific.hh"
-#include "cpu/o3/cpu.hh"
-
-#include "sim/core.hh"
-#include "sim/stat_control.hh"
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"
@@ -882,7 +882,7 @@ FullO3CPU<Impl>::resume()
         return;
 
 #if FULL_SYSTEM
-    assert(system->getMemoryMode() == System::Timing);
+    assert(system->getMemoryMode() == Enums::timing);
 #endif
 
     if (!tickEvent.scheduled())

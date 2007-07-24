@@ -30,12 +30,13 @@
 
 #include <string>
 
+#include "config/use_checker.hh"
 #include "cpu/base.hh"
 #include "cpu/o3/alpha/cpu.hh"
 #include "cpu/o3/alpha/impl.hh"
 #include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/fu_pool.hh"
-#include "sim/builder.hh"
+#include "params/DerivO3CPU.hh"
 
 class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
 {
@@ -45,245 +46,8 @@ class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
     { }
 };
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
-
-    Param<int> clock;
-    Param<int> phase;
-    Param<int> numThreads;
-Param<int> cpu_id;
-Param<int> activity;
-
-#if FULL_SYSTEM
-SimObjectParam<System *> system;
-SimObjectParam<AlphaISA::ITB *> itb;
-SimObjectParam<AlphaISA::DTB *> dtb;
-Param<Tick> profile;
-
-Param<bool> do_quiesce;
-Param<bool> do_checkpoint_insts;
-Param<bool> do_statistics_insts;
-#else
-SimObjectVectorParam<Process *> workload;
-#endif // FULL_SYSTEM
-
-SimObjectParam<BaseCPU *> checker;
-
-Param<Counter> max_insts_any_thread;
-Param<Counter> max_insts_all_threads;
-Param<Counter> max_loads_any_thread;
-Param<Counter> max_loads_all_threads;
-Param<Tick> progress_interval;
-
-Param<unsigned> cachePorts;
-
-Param<unsigned> decodeToFetchDelay;
-Param<unsigned> renameToFetchDelay;
-Param<unsigned> iewToFetchDelay;
-Param<unsigned> commitToFetchDelay;
-Param<unsigned> fetchWidth;
-
-Param<unsigned> renameToDecodeDelay;
-Param<unsigned> iewToDecodeDelay;
-Param<unsigned> commitToDecodeDelay;
-Param<unsigned> fetchToDecodeDelay;
-Param<unsigned> decodeWidth;
-
-Param<unsigned> iewToRenameDelay;
-Param<unsigned> commitToRenameDelay;
-Param<unsigned> decodeToRenameDelay;
-Param<unsigned> renameWidth;
-
-Param<unsigned> commitToIEWDelay;
-Param<unsigned> renameToIEWDelay;
-Param<unsigned> issueToExecuteDelay;
-Param<unsigned> dispatchWidth;
-Param<unsigned> issueWidth;
-Param<unsigned> wbWidth;
-Param<unsigned> wbDepth;
-SimObjectParam<FUPool *> fuPool;
-
-Param<unsigned> iewToCommitDelay;
-Param<unsigned> renameToROBDelay;
-Param<unsigned> commitWidth;
-Param<unsigned> squashWidth;
-Param<Tick> trapLatency;
-
-Param<unsigned> backComSize;
-Param<unsigned> forwardComSize;
-
-Param<std::string> predType;
-Param<unsigned> localPredictorSize;
-Param<unsigned> localCtrBits;
-Param<unsigned> localHistoryTableSize;
-Param<unsigned> localHistoryBits;
-Param<unsigned> globalPredictorSize;
-Param<unsigned> globalCtrBits;
-Param<unsigned> globalHistoryBits;
-Param<unsigned> choicePredictorSize;
-Param<unsigned> choiceCtrBits;
-
-Param<unsigned> BTBEntries;
-Param<unsigned> BTBTagSize;
-
-Param<unsigned> RASSize;
-
-Param<unsigned> LQEntries;
-Param<unsigned> SQEntries;
-Param<unsigned> LFSTSize;
-Param<unsigned> SSITSize;
-
-Param<unsigned> numPhysIntRegs;
-Param<unsigned> numPhysFloatRegs;
-Param<unsigned> numIQEntries;
-Param<unsigned> numROBEntries;
-
-Param<unsigned> smtNumFetchingThreads;
-Param<std::string>   smtFetchPolicy;
-Param<std::string>   smtLSQPolicy;
-Param<unsigned> smtLSQThreshold;
-Param<std::string>   smtIQPolicy;
-Param<unsigned> smtIQThreshold;
-Param<std::string>   smtROBPolicy;
-Param<unsigned> smtROBThreshold;
-Param<std::string>   smtCommitPolicy;
-
-Param<unsigned> instShiftAmt;
-
-Param<bool> defer_registration;
-
-Param<bool> function_trace;
-Param<Tick> function_trace_start;
-
-END_DECLARE_SIM_OBJECT_PARAMS(DerivO3CPU)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
-
-    INIT_PARAM(clock, "clock speed"),
-    INIT_PARAM_DFLT(phase, "clock phase", 0),
-    INIT_PARAM(numThreads, "number of HW thread contexts"),
-    INIT_PARAM(cpu_id, "processor ID"),
-    INIT_PARAM_DFLT(activity, "Initial activity count", 0),
-
-#if FULL_SYSTEM
-    INIT_PARAM(system, "System object"),
-    INIT_PARAM(itb, "Instruction translation buffer"),
-    INIT_PARAM(dtb, "Data translation buffer"),
-    INIT_PARAM(profile, ""),
-
-    INIT_PARAM(do_quiesce, ""),
-    INIT_PARAM(do_checkpoint_insts, ""),
-    INIT_PARAM(do_statistics_insts, ""),
-#else
-    INIT_PARAM(workload, "Processes to run"),
-#endif // FULL_SYSTEM
-
-    INIT_PARAM_DFLT(checker, "Checker CPU", NULL),
-
-    INIT_PARAM_DFLT(max_insts_any_thread,
-                    "Terminate when any thread reaches this inst count",
-                    0),
-    INIT_PARAM_DFLT(max_insts_all_threads,
-                    "Terminate when all threads have reached"
-                    "this inst count",
-                    0),
-    INIT_PARAM_DFLT(max_loads_any_thread,
-                    "Terminate when any thread reaches this load count",
-                    0),
-    INIT_PARAM_DFLT(max_loads_all_threads,
-                    "Terminate when all threads have reached this load"
-                    "count",
-                    0),
-    INIT_PARAM_DFLT(progress_interval, "Progress interval", 0),
-
-    INIT_PARAM_DFLT(cachePorts, "Cache Ports", 200),
-
-    INIT_PARAM(decodeToFetchDelay, "Decode to fetch delay"),
-    INIT_PARAM(renameToFetchDelay, "Rename to fetch delay"),
-    INIT_PARAM(iewToFetchDelay, "Issue/Execute/Writeback to fetch"
-               "delay"),
-    INIT_PARAM(commitToFetchDelay, "Commit to fetch delay"),
-    INIT_PARAM(fetchWidth, "Fetch width"),
-    INIT_PARAM(renameToDecodeDelay, "Rename to decode delay"),
-    INIT_PARAM(iewToDecodeDelay, "Issue/Execute/Writeback to decode"
-               "delay"),
-    INIT_PARAM(commitToDecodeDelay, "Commit to decode delay"),
-    INIT_PARAM(fetchToDecodeDelay, "Fetch to decode delay"),
-    INIT_PARAM(decodeWidth, "Decode width"),
-
-    INIT_PARAM(iewToRenameDelay, "Issue/Execute/Writeback to rename"
-               "delay"),
-    INIT_PARAM(commitToRenameDelay, "Commit to rename delay"),
-    INIT_PARAM(decodeToRenameDelay, "Decode to rename delay"),
-    INIT_PARAM(renameWidth, "Rename width"),
-
-    INIT_PARAM(commitToIEWDelay, "Commit to "
-               "Issue/Execute/Writeback delay"),
-    INIT_PARAM(renameToIEWDelay, "Rename to "
-               "Issue/Execute/Writeback delay"),
-    INIT_PARAM(issueToExecuteDelay, "Issue to execute delay (internal"
-               "to the IEW stage)"),
-    INIT_PARAM(dispatchWidth, "Dispatch width"),
-    INIT_PARAM(issueWidth, "Issue width"),
-    INIT_PARAM(wbWidth, "Writeback width"),
-    INIT_PARAM(wbDepth, "Writeback depth (number of cycles it can buffer)"),
-    INIT_PARAM_DFLT(fuPool, "Functional unit pool", NULL),
-
-    INIT_PARAM(iewToCommitDelay, "Issue/Execute/Writeback to commit "
-               "delay"),
-    INIT_PARAM(renameToROBDelay, "Rename to reorder buffer delay"),
-    INIT_PARAM(commitWidth, "Commit width"),
-    INIT_PARAM(squashWidth, "Squash width"),
-    INIT_PARAM_DFLT(trapLatency, "Number of cycles before the trap is handled", 6),
-
-    INIT_PARAM(backComSize, "Time buffer size for backwards communication"),
-    INIT_PARAM(forwardComSize, "Time buffer size for forward communication"),
-
-    INIT_PARAM(predType, "Type of branch predictor ('local', 'tournament')"),
-    INIT_PARAM(localPredictorSize, "Size of local predictor"),
-    INIT_PARAM(localCtrBits, "Bits per counter"),
-    INIT_PARAM(localHistoryTableSize, "Size of local history table"),
-    INIT_PARAM(localHistoryBits, "Bits for the local history"),
-    INIT_PARAM(globalPredictorSize, "Size of global predictor"),
-    INIT_PARAM(globalCtrBits, "Bits per counter"),
-    INIT_PARAM(globalHistoryBits, "Bits of history"),
-    INIT_PARAM(choicePredictorSize, "Size of choice predictor"),
-    INIT_PARAM(choiceCtrBits, "Bits of choice counters"),
-
-    INIT_PARAM(BTBEntries, "Number of BTB entries"),
-    INIT_PARAM(BTBTagSize, "Size of the BTB tags, in bits"),
-
-    INIT_PARAM(RASSize, "RAS size"),
-
-    INIT_PARAM(LQEntries, "Number of load queue entries"),
-    INIT_PARAM(SQEntries, "Number of store queue entries"),
-    INIT_PARAM(LFSTSize, "Last fetched store table size"),
-    INIT_PARAM(SSITSize, "Store set ID table size"),
-
-    INIT_PARAM(numPhysIntRegs, "Number of physical integer registers"),
-    INIT_PARAM(numPhysFloatRegs, "Number of physical floating point "
-               "registers"),
-    INIT_PARAM(numIQEntries, "Number of instruction queue entries"),
-    INIT_PARAM(numROBEntries, "Number of reorder buffer entries"),
-
-    INIT_PARAM_DFLT(smtNumFetchingThreads, "SMT Number of Fetching Threads", 1),
-    INIT_PARAM_DFLT(smtFetchPolicy, "SMT Fetch Policy", "SingleThread"),
-    INIT_PARAM_DFLT(smtLSQPolicy,   "SMT LSQ Sharing Policy",    "Partitioned"),
-    INIT_PARAM_DFLT(smtLSQThreshold,"SMT LSQ Threshold", 100),
-    INIT_PARAM_DFLT(smtIQPolicy,    "SMT IQ Policy",    "Partitioned"),
-    INIT_PARAM_DFLT(smtIQThreshold, "SMT IQ Threshold", 100),
-    INIT_PARAM_DFLT(smtROBPolicy,   "SMT ROB Sharing Policy", "Partitioned"),
-    INIT_PARAM_DFLT(smtROBThreshold,"SMT ROB Threshold", 100),
-    INIT_PARAM_DFLT(smtCommitPolicy,"SMT Commit Fetch Policy", "RoundRobin"),
-
-    INIT_PARAM(instShiftAmt, "Number of bits to shift instructions by"),
-    INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
-
-    INIT_PARAM(function_trace, "Enable function trace"),
-    INIT_PARAM(function_trace_start, "Cycle to start function trace")
-
-END_INIT_SIM_OBJECT_PARAMS(DerivO3CPU)
-
-CREATE_SIM_OBJECT(DerivO3CPU)
+DerivO3CPU *
+DerivO3CPUParams::create()
 {
     DerivO3CPU *cpu;
 
@@ -294,8 +58,7 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     // In non-full-system mode, we infer the number of threads from
     // the workload if it's not explicitly specified.
     int actual_num_threads =
-        (numThreads.isValid() && numThreads >= workload.size()) ?
-         numThreads : workload.size();
+        (numThreads >= workload.size()) ? numThreads : workload.size();
 
     if (workload.size() == 0) {
         fatal("Must specify at least one workload!");
@@ -307,7 +70,7 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->clock = clock;
     params->phase = phase;
 
-    params->name = getInstanceName();
+    params->name = name;
     params->numberOfThreads = actual_num_threads;
     params->cpu_id = cpu_id;
     params->activity = activity;
@@ -325,7 +88,9 @@ CREATE_SIM_OBJECT(DerivO3CPU)
     params->workload = workload;
 #endif // FULL_SYSTEM
 
+#if USE_CHECKER
     params->checker = checker;
+#endif
 
     params->max_insts_any_thread = max_insts_any_thread;
     params->max_insts_all_threads = max_insts_all_threads;
@@ -429,6 +194,3 @@ CREATE_SIM_OBJECT(DerivO3CPU)
 
     return cpu;
 }
-
-REGISTER_SIM_OBJECT("DerivO3CPU", DerivO3CPU)
-

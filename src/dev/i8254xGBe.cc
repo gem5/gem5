@@ -40,16 +40,17 @@
  * @todo really there are multiple dma engines.. we should implement them.
  */
 
+#include <algorithm>
+
 #include "base/inet.hh"
 #include "base/trace.hh"
 #include "dev/i8254xGBe.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/IGbE.hh"
+#include "params/IGbEInt.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
-
-#include <algorithm>
 
 using namespace iGbReg;
 using namespace Net;
@@ -1446,24 +1447,10 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     rxDescCache.unserialize(cp, csprintf("%s.RxDescCache", section));
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IGbEInt)
-
-    SimObjectParam<EtherInt *> peer;
-    SimObjectParam<IGbE *> device;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IGbEInt)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IGbEInt)
-
-    INIT_PARAM_DFLT(peer, "peer interface", NULL),
-    INIT_PARAM(device, "Ethernet device of this interface")
-
-END_INIT_SIM_OBJECT_PARAMS(IGbEInt)
-
-CREATE_SIM_OBJECT(IGbEInt)
+IGbEInt *
+IGbEIntParams::create()
 {
-    IGbEInt *dev_int = new IGbEInt(getInstanceName(), device);
+    IGbEInt *dev_int = new IGbEInt(name, device);
 
     EtherInt *p = (EtherInt *)peer;
     if (p) {
@@ -1474,80 +1461,8 @@ CREATE_SIM_OBJECT(IGbEInt)
     return dev_int;
 }
 
-REGISTER_SIM_OBJECT("IGbEInt", IGbEInt)
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IGbE)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> min_backoff_delay;
-    Param<Tick> max_backoff_delay;
-    SimObjectParam<PciConfigData *> configdata;
-    Param<uint32_t> pci_bus;
-    Param<uint32_t> pci_dev;
-    Param<uint32_t> pci_func;
-    Param<Tick> pio_latency;
-    Param<Tick> config_latency;
-    Param<std::string> hardware_address;
-    Param<bool> use_flow_control;
-    Param<int> rx_fifo_size;
-    Param<int> tx_fifo_size;
-    Param<int> rx_desc_cache_size;
-    Param<int> tx_desc_cache_size;
-    Param<Tick> clock;
-
-
-END_DECLARE_SIM_OBJECT_PARAMS(IGbE)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IGbE)
-
-    INIT_PARAM(system, "System pointer"),
-    INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
-    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
-    INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(pci_bus, "PCI bus ID"),
-    INIT_PARAM(pci_dev, "PCI device number"),
-    INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM(use_flow_control,"Should the device use xon/off packets"),
-    INIT_PARAM(rx_fifo_size,"Size of the RX FIFO"),
-    INIT_PARAM(tx_fifo_size,"Size of the TX FIFO"),
-    INIT_PARAM(rx_desc_cache_size,"Size of the RX descriptor cache"),
-    INIT_PARAM(tx_desc_cache_size,"Size of the TX descriptor cache"),
-    INIT_PARAM(clock,"Clock rate for the device to tick at")
-
-END_INIT_SIM_OBJECT_PARAMS(IGbE)
-
-
-CREATE_SIM_OBJECT(IGbE)
+IGbE *
+IGbEParams::create()
 {
-    IGbE::Params *params = new IGbE::Params;
-
-    params->name = getInstanceName();
-    params->platform = platform;
-    params->system = system;
-    params->min_backoff_delay = min_backoff_delay;
-    params->max_backoff_delay = max_backoff_delay;
-    params->configData = configdata;
-    params->busNum = pci_bus;
-    params->deviceNum = pci_dev;
-    params->functionNum = pci_func;
-    params->pio_delay = pio_latency;
-    params->config_delay = config_latency;
-    params->hardware_address = hardware_address;
-    params->use_flow_control = use_flow_control;
-    params->rx_fifo_size = rx_fifo_size;
-    params->tx_fifo_size = tx_fifo_size;
-    params->rx_desc_cache_size = rx_desc_cache_size;
-    params->tx_desc_cache_size = tx_desc_cache_size;
-    params->clock = clock;
-
-
-    return new IGbE(params);
+    return new IGbE(this);
 }
-
-REGISTER_SIM_OBJECT("IGbE", IGbE)

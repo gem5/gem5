@@ -46,7 +46,7 @@
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
-#include "sim/param.hh"
+#include "enums/OpClass.hh"
 #include "sim/system.hh"
 
 #if FULL_SYSTEM
@@ -355,7 +355,7 @@ Trace::InstRecord::dump()
         outs << " : ";
 
         if (IsOn(ExecOpClass)) {
-            outs << opClassStrings[staticInst->opClass()] << " : ";
+            outs << Enums::OpClassStrings[staticInst->opClass()] << " : ";
         }
 
         if (IsOn(ExecResult) && data_status != DataInvalid) {

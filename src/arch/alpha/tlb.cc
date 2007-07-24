@@ -41,7 +41,8 @@
 #include "base/trace.hh"
 #include "config/alpha_tlaser.hh"
 #include "cpu/thread_context.hh"
-#include "sim/builder.hh"
+#include "params/AlphaDTB.hh"
+#include "params/AlphaITB.hh"
 
 using namespace std;
 using namespace EV5;
@@ -600,44 +601,14 @@ TLB::index(bool advance)
 
 /* end namespace AlphaISA */ }
 
-DEFINE_SIM_OBJECT_CLASS_NAME("AlphaTLB", TLB)
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(ITB)
-
-    Param<int> size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(ITB)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(ITB)
-
-    INIT_PARAM_DFLT(size, "TLB size", 48)
-
-END_INIT_SIM_OBJECT_PARAMS(ITB)
-
-
-CREATE_SIM_OBJECT(ITB)
+AlphaISA::ITB *
+AlphaITBParams::create()
 {
-    return new ITB(getInstanceName(), size);
+    return new AlphaISA::ITB(name, size);
 }
 
-REGISTER_SIM_OBJECT("AlphaITB", ITB)
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DTB)
-
-    Param<int> size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(DTB)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(DTB)
-
-    INIT_PARAM_DFLT(size, "TLB size", 64)
-
-END_INIT_SIM_OBJECT_PARAMS(DTB)
-
-
-CREATE_SIM_OBJECT(DTB)
+AlphaISA::DTB *
+AlphaDTBParams::create()
 {
-    return new DTB(getInstanceName(), size);
+    return new AlphaISA::DTB(name, size);
 }
-
-REGISTER_SIM_OBJECT("AlphaDTB", DTB)

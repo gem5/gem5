@@ -35,7 +35,7 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
-#include "sim/builder.hh"
+#include "params/IntrControl.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
@@ -76,21 +76,8 @@ IntrControl::clear(int cpu_id, int int_num, int index)
     temp->clear_interrupt(int_num, index);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
-
-    SimObjectParam<System *> sys;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IntrControl)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IntrControl)
-
-    INIT_PARAM(sys, "the system we are part of")
-
-END_INIT_SIM_OBJECT_PARAMS(IntrControl)
-
-CREATE_SIM_OBJECT(IntrControl)
+IntrControl *
+IntrControlParams::create()
 {
-    return new IntrControl(getInstanceName(), sys);
+    return new IntrControl(name, sys);
 }
-
-REGISTER_SIM_OBJECT("IntrControl", IntrControl)

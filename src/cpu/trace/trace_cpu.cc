@@ -40,7 +40,7 @@
 #include "cpu/trace/reader/mem_trace_reader.hh"
 #include "mem/base_mem.hh" // For PARAM constructor
 #include "mem/mem_interface.hh"
-#include "sim/builder.hh"
+#include "params/TraceCPU.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;
@@ -151,31 +151,11 @@ TraceCPU::TickEvent::description()
     return "TraceCPU tick event";
 }
 
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(TraceCPU)
-
-    SimObjectParam<BaseMem *> icache;
-    SimObjectParam<BaseMem *> dcache;
-    SimObjectParam<MemTraceReader *> data_trace;
-
-END_DECLARE_SIM_OBJECT_PARAMS(TraceCPU)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(TraceCPU)
-
-    INIT_PARAM_DFLT(icache, "instruction cache", NULL),
-    INIT_PARAM_DFLT(dcache, "data cache", NULL),
-    INIT_PARAM_DFLT(data_trace, "data trace", NULL)
-
-END_INIT_SIM_OBJECT_PARAMS(TraceCPU)
-
-CREATE_SIM_OBJECT(TraceCPU)
+TraceCPU *
+TraceCPUParams::create()
 {
-    return new TraceCPU(getInstanceName(),
+    return new TraceCPU(name,
                         (icache) ? icache->getInterface() : NULL,
                         (dcache) ? dcache->getInterface() : NULL,
                         data_trace);
 }
-
-REGISTER_SIM_OBJECT("TraceCPU", TraceCPU)
-

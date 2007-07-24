@@ -44,7 +44,7 @@
 #include "dev/etherint.hh"
 #include "dev/etherlink.hh"
 #include "dev/etherpkt.hh"
-#include "sim/builder.hh"
+#include "params/EtherLink.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
 #include "sim/core.hh"
@@ -272,32 +272,8 @@ LinkDelayEvent::createForUnserialize(Checkpoint *cp, const string &section)
 
 REGISTER_SERIALIZEABLE("LinkDelayEvent", LinkDelayEvent)
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
-
-    SimObjectParam<EtherInt *> int1;
-    SimObjectParam<EtherInt *> int2;
-    Param<double> speed;
-    Param<Tick> delay;
-    Param<Tick> delay_var;
-    SimObjectParam<EtherDump *> dump;
-
-END_DECLARE_SIM_OBJECT_PARAMS(EtherLink)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(EtherLink)
-
-    INIT_PARAM(int1, "interface 1"),
-    INIT_PARAM(int2, "interface 2"),
-    INIT_PARAM(speed, "link speed in bits per second"),
-    INIT_PARAM(delay, "transmit delay of packets in us"),
-    INIT_PARAM(delay_var, "Difference in amount of time to traverse wire"),
-    INIT_PARAM(dump, "object to dump network packets to")
-
-END_INIT_SIM_OBJECT_PARAMS(EtherLink)
-
-CREATE_SIM_OBJECT(EtherLink)
+EtherLink *
+EtherLinkParams::create()
 {
-    return new EtherLink(getInstanceName(), int1, int2, speed, delay, delay_var,
-                         dump);
+    return new EtherLink(name, int1, int2, speed, delay, delay_var, dump);
 }
-
-REGISTER_SIM_OBJECT("EtherLink", EtherLink)

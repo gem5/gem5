@@ -34,6 +34,7 @@
 
 #include "arch/alpha/system.hh"
 #include "arch/isa_traits.hh"
+#include "params/Tru64AlphaSystem.hh"
 #include "sim/system.hh"
 
 class ThreadContext;
@@ -64,6 +65,7 @@ class Tru64AlphaSystem : public AlphaSystem
     DumpMbufEvent *dumpMbufEvent;
 
   public:
+    typedef Tru64AlphaSystemParams Params;
     Tru64AlphaSystem(Params *p);
     ~Tru64AlphaSystem();
 
