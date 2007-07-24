@@ -224,10 +224,6 @@ def macroop AND_P_R
 '''
 #let {{
 #microcodeString = '''
-#    def macroop OR
-#    {
-#	Or reg reg regm
-#    };
 #    def macroop NOT
 #    {
 #	Xor reg reg "0xFFFFFFFFFFFFFFFFULL"
