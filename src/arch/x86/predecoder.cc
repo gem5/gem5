@@ -311,9 +311,19 @@ namespace X86ISA
             else
                 displacementSize = 0;
         }
+
+        // The "test" instruction in group 3 needs an immediate, even though
+        // the other instructions with the same actual opcode don't.
+        if (emi.opcode.num == 1 && (modRM.reg & 0x6) == 0) {
+           if (emi.opcode.op == 0xF6)
+               immediateSize = 1;
+           else if (emi.opcode.op == 0xF7)
+               immediateSize = (emi.opSize == 8) ? 4 : emi.opSize;
+        }
+
         //If there's an SIB, get that next.
         //There is no SIB in 16 bit mode.
-        if(modRM.rm == 4 && modRM.mod != 3) {
+        if (modRM.rm == 4 && modRM.mod != 3) {
                 // && in 32/64 bit mode)
             nextState = SIBState;
         } else if(displacementSize) {
@@ -339,9 +349,9 @@ namespace X86ISA
         emi.sib = nextByte;
         DPRINTF(Predecoder, "Found SIB byte %#x.\n", nextByte);
         consumeByte();
-        if(emi.modRM.mod == 0 && emi.sib.base == 5)
+        if (emi.modRM.mod == 0 && emi.sib.base == 5)
             displacementSize = 4;
-        if(displacementSize) {
+        if (displacementSize) {
             nextState = DisplacementState;
         } else if(immediateSize) {
             nextState = ImmediateState;
