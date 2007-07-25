@@ -69,7 +69,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
         // still target's responsibility to delete packet
-        delete pkt->req;
         delete pkt;
         return true;
     }
