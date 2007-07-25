@@ -1230,7 +1230,7 @@ bool
 Cache<TagStore>::CpuSidePort::recvTiming(PacketPtr pkt)
 {
     // illegal to block responses... can lead to deadlock
-    if (pkt->isRequest() && blocked) {
+    if (pkt->isRequest() && !pkt->memInhibitAsserted() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
