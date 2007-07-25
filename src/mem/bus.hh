@@ -180,15 +180,6 @@ class Bus : public MemObject
      */
     int findPort(Addr addr);
 
-    /** Snoop all relevant ports functionally. */
-    void functionalSnoop(PacketPtr pkt, Port *responder);
-
-    /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
-     * the snoop to happen
-     * @return True if succeds.
-     */
-    bool timingSnoop(PacketPtr pkt, Port *responder);
-
     /** Process address range request.
      * @param resp addresses that we can respond to
      * @param snoop addresses that we would like to snoop
