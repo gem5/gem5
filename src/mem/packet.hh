@@ -256,7 +256,11 @@ class Packet : public FastAlloc
         MemInhibit,
         Shared,
         // Special control flags
+        /// Special timing-mode atomic snoop for multi-level coherence.
         ExpressSnoop,
+        /// Does supplier have exclusive copy?
+        /// Useful for multi-level coherence.
+        SupplyExclusive,
         NUM_PACKET_FLAGS
     };
 
@@ -315,13 +319,15 @@ class Packet : public FastAlloc
 
     // Snoop flags
     void assertMemInhibit()     { flags[MemInhibit] = true; }
-    void assertShared()         { flags[Shared] = true; }
     bool memInhibitAsserted()   { return flags[MemInhibit]; }
+    void assertShared()         { flags[Shared] = true; }
     bool sharedAsserted()       { return flags[Shared]; }
 
     // Special control flags
     void setExpressSnoop()      { flags[ExpressSnoop] = true; }
     bool isExpressSnoop()       { return flags[ExpressSnoop]; }
+    void setSupplyExclusive()   { flags[SupplyExclusive] = true; }
+    bool isSupplyExclusive()    { return flags[SupplyExclusive]; }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command

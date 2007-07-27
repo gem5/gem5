@@ -371,6 +371,17 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
                 pkt->getAddr());
         assert(!pkt->req->isUncacheable());
+        // Special tweak for multilevel coherence: snoop downward here
+        // on invalidates since there may be other caches below here
+        // that have shared copies.  Not necessary if we know that
+        // supplier had exclusive copy to begin with.
+        if (pkt->needsExclusive() && !pkt->isSupplyExclusive()) {
+            Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+            snoopPkt->setExpressSnoop();
+            snoopPkt->assertMemInhibit();
+            memSidePort->sendTiming(snoopPkt);
+            // main memory will delete snoopPkt
+        }
         return true;
     }
 
@@ -966,6 +977,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // we respond in atomic mode), so just figure out what to do now
     // and then do it later
     bool supply = blk->isDirty() && pkt->isRead() && !upperSupply;
+    bool have_exclusive = blk->isWritable();
     bool invalidate = pkt->isInvalidate();
 
     if (pkt->isRead() && !pkt->isInvalidate()) {
@@ -985,6 +997,9 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (supply) {
         assert(!pkt->memInhibitAsserted());
         pkt->assertMemInhibit();
+        if (have_exclusive) {
+            pkt->setSupplyExclusive();
+        }
         if (is_timing) {
             doTimingSupplyResponse(pkt, blk->data, is_deferred);
         } else {

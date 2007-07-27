@@ -257,6 +257,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
             // We're awaiting an exclusive copy, so ownership is pending.
             // It's up to us to respond once the data arrives.
             pkt->assertMemInhibit();
+            pkt->setSupplyExclusive();
         } else {
             // Someone else may respond before we get around to
             // processing this snoop, which means the copied request
