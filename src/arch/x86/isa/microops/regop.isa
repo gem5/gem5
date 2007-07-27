@@ -343,7 +343,7 @@ let {{
         immCode = matcher.sub("imm8", code)
 
         if subtract:
-            secondSrc = "-op2, true"
+            secondSrc = "~op2, true"
         else:
             secondSrc = "op2"
 
