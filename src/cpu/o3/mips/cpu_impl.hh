@@ -196,14 +196,16 @@ template <class Impl>
 TheISA::IntReg
 MipsO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
-    return this->readArchIntReg(MipsISA::ArgumentReg0 + i, tid);
+    assert(i < TheISA::NumArgumentRegs);
+    return this->readArchIntReg(MipsISA::ArgumentReg[i], tid);
 }
 
 template <class Impl>
 void
 MipsO3CPU<Impl>::setSyscallArg(int i, IntReg val, int tid)
 {
-    this->setArchIntReg(MipsISA::ArgumentReg0 + i, val, tid);
+    assert(i < TheISA::NumArgumentRegs);
+    this->setArchIntReg(MipsISA::ArgumentReg[i], val, tid);
 }
 
 template <class Impl>

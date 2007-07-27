@@ -74,10 +74,10 @@ namespace MipsISA
     const int ReturnValueReg = 2;
     const int ReturnValueReg1 = 2;
     const int ReturnValueReg2 = 3;
-    const int ArgumentReg0 = 4;
-    const int ArgumentReg1 = 5;
-    const int ArgumentReg2 = 6;
-    const int ArgumentReg3 = 7;
+
+    const int ArgumentReg[] = {4, 5, 6, 7};
+    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+
     const int KernelReg0 = 26;
     const int KernelReg1 = 27;
     const int GlobalPointerReg = 28;
@@ -87,7 +87,7 @@ namespace MipsISA
 
     const int SyscallNumReg = ReturnValueReg1;
     const int SyscallPseudoReturnReg = ReturnValueReg2;
-    const int SyscallSuccessReg = ArgumentReg3;
+    const int SyscallSuccessReg = ArgumentReg[3];
 
     const int LogVMPageSize = 13;	// 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);

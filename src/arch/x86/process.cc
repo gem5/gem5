@@ -338,8 +338,9 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     //Set up the thread context to start running the process
-    threadContexts[0]->setIntReg(ArgumentReg0, argc);
-    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    assert(NumArgumentRegs >= 2);
+    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
+    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();

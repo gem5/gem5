@@ -293,14 +293,16 @@ template <class Impl>
 TheISA::IntReg
 AlphaO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
-    return this->readArchIntReg(AlphaISA::ArgumentReg0 + i, tid);
+    assert(i < TheISA::NumArgumentRegs);
+    return this->readArchIntReg(AlphaISA::ArgumentReg[i], tid);
 }
 
 template <class Impl>
 void
 AlphaO3CPU<Impl>::setSyscallArg(int i, TheISA::IntReg val, int tid)
 {
-    this->setArchIntReg(AlphaISA::ArgumentReg0 + i, val, tid);
+    assert(i < TheISA::NumArgumentRegs);
+    this->setArchIntReg(AlphaISA::ArgumentReg[i], val, tid);
 }
 
 template <class Impl>

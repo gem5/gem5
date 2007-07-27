@@ -270,8 +270,9 @@ template <class Impl>
 TheISA::IntReg
 SparcO3CPU<Impl>::getSyscallArg(int i, int tid)
 {
+    assert(i < TheISA::NumArgumentRegs);
     TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
-            SparcISA::ArgumentReg0 + i);
+            SparcISA::ArgumentReg[i]);
     TheISA::IntReg val = this->readArchIntReg(idx, tid);
     if (bits(this->readMiscRegNoEffect(SparcISA::MISCREG_PSTATE, tid), 3, 3))
         val = bits(val, 31, 0);
@@ -282,8 +283,9 @@ template <class Impl>
 void
 SparcO3CPU<Impl>::setSyscallArg(int i, TheISA::IntReg val, int tid)
 {
+    assert(i < TheISA::NumArgumentRegs);
     TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
-            SparcISA::ArgumentReg0 + i);
+            SparcISA::ArgumentReg[i]);
     this->setArchIntReg(idx, val, tid);
 }
 

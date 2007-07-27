@@ -253,11 +253,17 @@ class OzoneCPU : public BaseCPU
 
 #if !FULL_SYSTEM
         TheISA::IntReg getSyscallArg(int i)
-        { return thread->renameTable[TheISA::ArgumentReg0 + i]->readIntResult(); }
+        {
+            assert(i < TheISA::NumArgumentRegs);
+            return thread->renameTable[TheISA::ArgumentReg[i]]->readIntResult();
+        }
 
         // used to shift args for indirect syscall
         void setSyscallArg(int i, TheISA::IntReg val)
-        { thread->renameTable[TheISA::ArgumentReg0 + i]->setIntResult(i); }
+        {
+            assert(i < TheISA::NumArgumentRegs);
+            thread->renameTable[TheISA::ArgumentReg[i]]->setIntResult(i);
+        }
 
         void setSyscallReturn(SyscallReturn return_value)
         { cpu->setSyscallReturn(return_value, thread->readTid()); }

@@ -156,14 +156,12 @@ namespace AlphaISA
     const int ReturnAddressReg = 26;
     const int ReturnValueReg = 0;
     const int FramePointerReg = 15;
-    const int ArgumentReg0 = 16;
-    const int ArgumentReg1 = 17;
-    const int ArgumentReg2 = 18;
-    const int ArgumentReg3 = 19;
-    const int ArgumentReg4 = 20;
-    const int ArgumentReg5 = 21;
+
+    const int ArgumentReg[] = {16, 17, 18, 19, 20, 21};
+    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+
     const int SyscallNumReg = ReturnValueReg;
-    const int SyscallPseudoReturnReg = ArgumentReg4;
+    const int SyscallPseudoReturnReg = ArgumentReg[4];
     const int SyscallSuccessReg = 19;
 
     const int LogVMPageSize = 13;	// 8K bytes
