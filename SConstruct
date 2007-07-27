@@ -436,6 +436,8 @@ all_cpu_list.sort()
 default_cpus.sort()
 
 def ExtraPathValidator(key, val, env):
+    if not val:
+        return
     paths = val.split(':')
     for path in paths:
         path = os.path.expanduser(path)
