@@ -77,9 +77,9 @@ def macroop ADD_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     add t1, t1, t2
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADD_M_R
@@ -92,9 +92,9 @@ def macroop ADD_M_R
 def macroop ADD_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     add t1, t1, reg
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADD_R_M
@@ -106,7 +106,7 @@ def macroop ADD_R_M
 def macroop ADD_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     add reg, reg, t1
 };
 
@@ -130,7 +130,7 @@ def macroop SUB_R_M
 def macroop SUB_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sub reg, reg, t1
 };
 
@@ -146,9 +146,9 @@ def macroop SUB_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sub t1, t1, t2
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SUB_M_R
@@ -161,9 +161,9 @@ def macroop SUB_M_R
 def macroop SUB_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sub t1, t1, reg
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_R_R
@@ -189,9 +189,9 @@ def macroop ADC_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     adc t1, t1, t2
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_M_R
@@ -204,9 +204,9 @@ def macroop ADC_M_R
 def macroop ADC_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     adc t1, t1, reg
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_R_M
@@ -218,7 +218,7 @@ def macroop ADC_R_M
 def macroop ADC_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     adc reg, reg, t1
 };
 
@@ -242,7 +242,7 @@ def macroop SBB_R_M
 def macroop SBB_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sbb reg, reg, t1
 };
 
@@ -258,9 +258,9 @@ def macroop SBB_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sbb t1, t1, t2
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SBB_M_R
@@ -273,9 +273,9 @@ def macroop SBB_M_R
 def macroop SBB_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     sbb t1, t1, reg
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop NEG_R
