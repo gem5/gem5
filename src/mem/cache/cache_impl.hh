@@ -943,7 +943,6 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // handle it.  save & restore packet src since it will get
     // rewritten to be relative to cpu-side bus (if any)
     bool alreadyResponded = pkt->memInhibitAsserted();
-    bool upperResponse = false;
     if (is_timing) {
         Packet *snoopPkt = new Packet(pkt, true);  // clear flags
         snoopPkt->setExpressSnoop();
@@ -978,7 +977,6 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
     // and then do it later
-    assert(!(blk->isDirty() && upperResponse));
     bool respond = blk->isDirty() && pkt->needsResponse();
     bool have_exclusive = blk->isWritable();
     bool invalidate = pkt->isInvalidate();
