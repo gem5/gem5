@@ -74,6 +74,26 @@ def macroop ROL_P_I
     st t1, ds, [0, t0, t7], disp
 };
 
+def macroop ROL_1_R
+{
+    roli reg, reg, 1
+};
+
+def macroop ROL_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    roli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROL_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    roli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
 def macroop ROL_R_R
 {
     rol reg, reg, regm
@@ -114,15 +134,35 @@ def macroop ROR_P_I
     st t1, ds, [0, t0, t7], disp
 };
 
+def macroop ROR_1_R
+{
+    rori reg, reg, 1
+};
+
+def macroop ROR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rori t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rori t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
 def macroop ROR_R_R
 {
-    rori reg, reg, regm
+    ror reg, reg, regm
 };
 
 def macroop ROR_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    rori t1, t1, reg
+    ror t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
 
@@ -130,7 +170,7 @@ def macroop ROR_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rori t1, t1, reg
+    ror t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
@@ -154,15 +194,35 @@ def macroop RCL_P_I
     st t1, ds, [0, t0, t7], disp
 };
 
+def macroop RCL_1_R
+{
+    rcli reg, reg, 1
+};
+
+def macroop RCL_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rcli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCL_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
 def macroop RCL_R_R
 {
-    rcli reg, reg, regm
+    rcl reg, reg, regm
 };
 
 def macroop RCL_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    rcli t1, t1, reg
+    rcl t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
 
@@ -170,7 +230,7 @@ def macroop RCL_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rcli t1, t1, reg
+    rcl t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
@@ -194,15 +254,35 @@ def macroop RCR_P_I
     st t1, ds, [0, t0, t7], disp
 };
 
+def macroop RCR_1_R
+{
+    rcri reg, reg, 1
+};
+
+def macroop RCR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rcri t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcri t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
 def macroop RCR_R_R
 {
-    rcri reg, reg, regm
+    rcr reg, reg, regm
 };
 
 def macroop RCR_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    rcri t1, t1, reg
+    rcr t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
 
@@ -210,7 +290,7 @@ def macroop RCR_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rcri t1, t1, reg
+    rcr t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 '''
