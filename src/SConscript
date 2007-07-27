@@ -151,7 +151,6 @@ env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 #
 # Walk the tree and execute all SConscripts
 #
-scripts = []
 srcdir = env['SRCDIR']
 for root, dirs, files in os.walk(srcdir, topdown=True):
     if root == srcdir:
@@ -163,6 +162,15 @@ for root, dirs, files in os.walk(srcdir, topdown=True):
         # script in the build directory
         base = root[len(srcdir) + 1:]
         SConscript(joinpath(base, 'SConscript'))
+
+for extra in env['EXTRAS'].split(':'):
+    extra = os.path.expanduser(extra)
+    env.Append(CPPPATH=[Dir(extra)])
+    for root, dirs, files in os.walk(extra, topdown=True):
+        if 'SConscript' in files:
+            subdir = root[len(os.path.dirname(extra))+1:]
+            build_dir = joinpath(env['BUILDDIR'], subdir)
+            SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 
 for opt in env.ExportOptions:
     env.ConfigFile(opt)
