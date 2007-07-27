@@ -197,7 +197,8 @@ Bus::recvTiming(PacketPtr pkt)
 
     if (dest == Packet::Broadcast) {
         dest_port_id = findPort(pkt->getAddr());
-        dest_port = interfaces[dest_port_id];
+        dest_port = (dest_port_id == defaultId) ?
+            defaultPort : interfaces[dest_port_id];
         for (SnoopIter s_iter = snoopPorts.begin();
              s_iter != snoopPorts.end();
              s_iter++) {
@@ -217,7 +218,8 @@ Bus::recvTiming(PacketPtr pkt)
         assert(dest >= 0 && dest < maxId);
         assert(dest != src); // catch infinite loops
         dest_port_id = dest;
-        dest_port = interfaces[dest_port_id];
+        dest_port = (dest_port_id == defaultId) ?
+            defaultPort : interfaces[dest_port_id];
     }
 
     if (dest_port_id == src) {
@@ -336,7 +338,8 @@ Bus::recvAtomic(PacketPtr pkt)
     int orig_src = pkt->getSrc();
 
     int target_port_id = findPort(pkt->getAddr());
-    Port *target_port = interfaces[target_port_id];
+    Port *target_port = (target_port_id == defaultId) ?
+        defaultPort : interfaces[target_port_id];
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
@@ -394,7 +397,7 @@ Bus::recvFunctional(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
 
     int port_id = findPort(pkt->getAddr());
-    Port *port = interfaces[port_id];
+    Port *port = (port_id == defaultId) ? defaultPort : interfaces[port_id];
     // The packet may be changed by another bus on snoops, restore the
     // id after each
     int src_id = pkt->getSrc();
