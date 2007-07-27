@@ -926,7 +926,9 @@ Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
     }
     pkt->allocate();
     pkt->makeTimingResponse();
-    pkt->setDataFromBlock(blk_data, blkSize);
+    if (pkt->isRead()) {
+        pkt->setDataFromBlock(blk_data, blkSize);
+    }
     memSidePort->respond(pkt, curTick + hitLatency);
 }
 
@@ -940,8 +942,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // first propagate snoop upward to see if anyone above us wants to
     // handle it.  save & restore packet src since it will get
     // rewritten to be relative to cpu-side bus (if any)
-    bool alreadySupplied = pkt->memInhibitAsserted();
-    bool upperSupply = false;
+    bool alreadyResponded = pkt->memInhibitAsserted();
+    bool upperResponse = false;
     if (is_timing) {
         Packet *snoopPkt = new Packet(pkt, true);  // clear flags
         snoopPkt->setExpressSnoop();
@@ -949,7 +951,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         cpuSidePort->sendTiming(snoopPkt);
         if (snoopPkt->memInhibitAsserted()) {
             // cache-to-cache response from some upper cache
-            assert(!alreadySupplied);
+            assert(!alreadyResponded);
             pkt->assertMemInhibit();
         } else {
             delete snoopPkt->senderState;
@@ -961,7 +963,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     } else {
         int origSrc = pkt->getSrc();
         cpuSidePort->sendAtomic(pkt);
-        if (!alreadySupplied && pkt->memInhibitAsserted()) {
+        if (!alreadyResponded && pkt->memInhibitAsserted()) {
             // cache-to-cache response from some upper cache:
             // forward response to original requester
             assert(pkt->isResponse());
@@ -976,7 +978,8 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // we may end up modifying both the block state and the packet (if
     // we respond in atomic mode), so just figure out what to do now
     // and then do it later
-    bool supply = blk->isDirty() && pkt->isRead() && !upperSupply;
+    assert(!(blk->isDirty() && upperResponse));
+    bool respond = blk->isDirty() && pkt->needsResponse();
     bool have_exclusive = blk->isWritable();
     bool invalidate = pkt->isInvalidate();
 
@@ -994,7 +997,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         blk->status &= ~bits_to_clear;
     }
 
-    if (supply) {
+    if (respond) {
         assert(!pkt->memInhibitAsserted());
         pkt->assertMemInhibit();
         if (have_exclusive) {
@@ -1016,7 +1019,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
 
     DPRINTF(Cache, "snooped a %s request for addr %x, %snew state is %i\n",
             pkt->cmdString(), blockAlign(pkt->getAddr()),
-            supply ? "supplying data, " : "", blk->status);
+            respond ? "responding, " : "", blk->status);
 }
 
 
@@ -1026,7 +1029,8 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
 {
     // Note that some deferred snoops don't have requests, since the
     // original access may have already completed
-    if (pkt->req && pkt->req->isUncacheable()) {
+    if ((pkt->req && pkt->req->isUncacheable()) ||
+        pkt->cmd == MemCmd::Writeback) {
         //Can't get a hit on an uncacheable address
         //Revisit this for multi level coherence
         return;
@@ -1061,19 +1065,17 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
             PacketPtr wb_pkt = mshr->getTarget()->pkt;
             assert(wb_pkt->cmd == MemCmd::Writeback);
 
-            if (pkt->isRead()) {
-                assert(!pkt->memInhibitAsserted());
-                pkt->assertMemInhibit();
-                if (!pkt->needsExclusive()) {
-                    pkt->assertShared();
-                } else {
-                    // if we're not asserting the shared line, we need to
-                    // invalidate our copy.  we'll do that below as long as
-                    // the packet's invalidate flag is set...
-                    assert(pkt->isInvalidate());
-                }
-                doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(), false);
+            assert(!pkt->memInhibitAsserted());
+            pkt->assertMemInhibit();
+            if (!pkt->needsExclusive()) {
+                pkt->assertShared();
+            } else {
+                // if we're not asserting the shared line, we need to
+                // invalidate our copy.  we'll do that below as long as
+                // the packet's invalidate flag is set...
+                assert(pkt->isInvalidate());
             }
+            doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(), false);
 
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
@@ -1097,7 +1099,7 @@ template<class TagStore>
 Tick
 Cache<TagStore>::snoopAtomic(PacketPtr pkt)
 {
-    if (pkt->req->isUncacheable()) {
+    if (pkt->req->isUncacheable() || pkt->cmd == MemCmd::Writeback) {
         // Can't get a hit on an uncacheable address
         // Revisit this for multi level coherence
         return hitLatency;
