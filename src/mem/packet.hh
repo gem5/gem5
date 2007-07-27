@@ -564,9 +564,6 @@ class Packet : public FastAlloc
     /** If there isn't data in the packet, allocate some. */
     void allocate();
 
-    /** Do the packet modify the same addresses. */
-    bool intersect(PacketPtr p);
-
     /**
      * Check a functional request against a memory value represented
      * by a base/size pair and an associated data array.  If the

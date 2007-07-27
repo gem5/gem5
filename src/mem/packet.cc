@@ -152,18 +152,6 @@ Packet::allocate()
     data = new uint8_t[getSize()];
 }
 
-/** Do the packet modify the same addresses. */
-bool
-Packet::intersect(PacketPtr p)
-{
-    Addr s1 = getAddr();
-    Addr e1 = getAddr() + getSize() - 1;
-    Addr s2 = p->getAddr();
-    Addr e2 = p->getAddr() + p->getSize() - 1;
-
-    return !(s1 > e2 || e1 < s2);
-}
-
 
 bool
 Packet::checkFunctional(Addr addr, int size, uint8_t *data)
