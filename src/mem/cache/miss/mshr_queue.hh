@@ -115,6 +115,8 @@ class MSHRQueue
      */
     MSHR *findPending(Addr addr, int size) const;
 
+    bool checkFunctional(PacketPtr pkt, Addr blk_addr);
+
     /**
      * Allocates a new MSHR for the request and size. This places the request
      * as the first target in the MSHR.

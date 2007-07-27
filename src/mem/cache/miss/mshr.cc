@@ -118,6 +118,20 @@ MSHR::TargetList::clearDownstreamPending()
 }
 
 
+bool
+MSHR::TargetList::checkFunctional(PacketPtr pkt)
+{
+    Iterator end_i = end();
+    for (Iterator i = begin(); i != end_i; ++i) {
+        if (pkt->checkFunctional(i->pkt)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 void
 MSHR::allocate(Addr _addr, int _size, PacketPtr target,
                Tick whenReady, Counter _order)

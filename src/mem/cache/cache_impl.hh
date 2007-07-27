@@ -641,33 +641,12 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
         return;
     }
 
-    // Need to check for outstanding misses and writes
-
-    // There can only be one matching outstanding miss.
-    MSHR *mshr = mshrQueue.findMatch(blk_addr);
-    if (mshr) {
-        MSHR::TargetList *targets = mshr->getTargetList();
-        MSHR::TargetList::iterator i = targets->begin();
-        MSHR::TargetList::iterator end = targets->end();
-        for (; i != end; ++i) {
-            PacketPtr targetPkt = i->pkt;
-            if (pkt->checkFunctional(targetPkt))
-                return;
-        }
+    // Need to check for outstanding misses and writes; if neither one
+    // satisfies, then forward to other side of cache.
+    if (!(mshrQueue.checkFunctional(pkt, blk_addr) ||
+          writeBuffer.checkFunctional(pkt, blk_addr))) {
+        otherSidePort->checkAndSendFunctional(pkt);
     }
-
-    // There can be many matching outstanding writes.
-    std::vector<MSHR*> writes;
-    assert(!writeBuffer.findMatches(blk_addr, writes));
-/*  Need to change this to iterate through targets in mshr??
-    for (int i = 0; i < writes.size(); ++i) {
-        MSHR *mshr = writes[i];
-        if (pkt->checkFunctional(mshr->addr, mshr->size, mshr->writeData))
-            return;
-    }
-*/
-
-    otherSidePort->checkAndSendFunctional(pkt);
 }
 
 

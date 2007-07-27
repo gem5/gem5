@@ -359,7 +359,6 @@ MemTest::tick()
 
         if (probe) {
             cachePort.sendFunctional(pkt);
-            pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
             sendPkt(pkt);
@@ -393,7 +392,6 @@ MemTest::tick()
 
         if (probe) {
             cachePort.sendFunctional(pkt);
-            pkt->makeAtomicResponse();
             completeRequest(pkt);
         } else {
             sendPkt(pkt);

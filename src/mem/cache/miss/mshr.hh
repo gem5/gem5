@@ -82,6 +82,7 @@ class MSHR : public Packet::SenderState
         void add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide);
         void replaceUpgrades();
         void clearDownstreamPending();
+        bool checkFunctional(PacketPtr pkt);
     };
 
     /** A list of MSHRs. */
@@ -229,6 +230,11 @@ public:
     bool promoteDeferredTargets();
 
     void handleFill(Packet *pkt, CacheBlk *blk);
+
+    bool checkFunctional(PacketPtr pkt) {
+        return (targets->checkFunctional(pkt) ||
+                deferredTargets->checkFunctional(pkt));
+    }
 
     /**
      * Prints the contents of this MSHR to stderr.

@@ -84,8 +84,23 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
         }
     }
     return retval;
-
 }
+
+
+bool
+MSHRQueue::checkFunctional(PacketPtr pkt, Addr blk_addr)
+{
+    MSHR::ConstIterator i = allocatedList.begin();
+    MSHR::ConstIterator end = allocatedList.end();
+    for (; i != end; ++i) {
+        MSHR *mshr = *i;
+        if (mshr->addr == blk_addr && mshr->checkFunctional(pkt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 MSHR *
 MSHRQueue::findPending(Addr addr, int size) const
