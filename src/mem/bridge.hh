@@ -45,6 +45,7 @@
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
+#include "params/Bridge.hh"
 #include "sim/eventq.hh"
 
 class Bridge : public MemObject
@@ -191,19 +192,7 @@ class Bridge : public MemObject
     bool ackWrites;
 
   public:
-    struct Params
-    {
-        std::string name;
-        int req_size_a;
-        int req_size_b;
-        int resp_size_a;
-        int resp_size_b;
-        Tick delay;
-        Tick nack_delay;
-        bool write_ack;
-        bool fix_partial_write_a;
-        bool fix_partial_write_b;
-    };
+    typedef BridgeParams Params;
 
   protected:
     Params *_params;

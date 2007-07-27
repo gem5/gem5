@@ -35,10 +35,10 @@
 #ifndef __TSUNAMI_CCHIP_HH__
 #define __TSUNAMI_CCHIP_HH__
 
-#include "dev/alpha/tsunami.hh"
 #include "base/range.hh"
+#include "dev/alpha/tsunami.hh"
 #include "dev/io_device.hh"
-
+#include "params/TsunamiCChip.hh"
 
 /**
  * Tsunami CChip CSR Emulation. This device includes all the interrupt
@@ -79,20 +79,19 @@ class TsunamiCChip : public BasicPioDevice
     uint64_t itint;
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        Tsunami *tsunami;
-    };
-  protected:
-    const Params *params() const {return (const Params *)_params; }
-
-  public:
+    typedef TsunamiCChipParams Params;
     /**
      * Initialize the Tsunami CChip by setting all of the
      * device register to 0.
      * @param p params struct
      */
-    TsunamiCChip(Params *p);
+    TsunamiCChip(const Params *p);
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual Tick read(PacketPtr pkt);
 

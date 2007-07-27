@@ -96,6 +96,62 @@ namespace X86ISA
 
         std::string generateDisassembly(Addr pc,
             const SymbolTable *symtab) const;
+
+        template<class Context, class MemType>
+        Fault read(Context *xc, Addr EA, MemType & Mem, unsigned flags) const
+        {
+            Fault fault = NoFault;
+            int size = dataSize;
+            Addr alignedEA = EA & ~(dataSize - 1);
+            if (EA != alignedEA)
+                size *= 2;
+            switch(size)
+            {
+              case 1:
+                fault = xc->read(alignedEA, (uint8_t&)Mem, flags);
+                break;
+              case 2:
+                fault = xc->read(alignedEA, (uint16_t&)Mem, flags);
+                break;
+              case 4:
+                fault = xc->read(alignedEA, (uint32_t&)Mem, flags);
+                break;
+              case 8:
+                fault = xc->read(alignedEA, (uint64_t&)Mem, flags);
+                break;
+              default:
+                panic("Bad operand size %d!\n", size);
+            }
+            return fault;
+        }
+
+        template<class Context, class MemType>
+        Fault write(Context *xc, MemType & Mem, Addr EA, unsigned flags) const
+        {
+            Fault fault = NoFault;
+            int size = dataSize;
+            Addr alignedEA = EA & ~(dataSize - 1);
+            if (EA != alignedEA)
+                size *= 2;
+            switch(size)
+            {
+              case 1:
+                fault = xc->write((uint8_t&)Mem, alignedEA, flags, 0);
+                break;
+              case 2:
+                fault = xc->write((uint16_t&)Mem, alignedEA, flags, 0);
+                break;
+              case 4:
+                fault = xc->write((uint32_t&)Mem, alignedEA, flags, 0);
+                break;
+              case 8:
+                fault = xc->write((uint64_t&)Mem, alignedEA, flags, 0);
+                break;
+              default:
+                panic("Bad operand size %d!\n", size);
+            }
+            return fault;
+        }
     };
 }
 

@@ -40,7 +40,7 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
-
+#include "params/DumbTOD.hh"
 
 /**
  * DumbTOD simply returns some idea of time when read.  Until we finish with
@@ -52,15 +52,14 @@ class DumbTOD : public BasicPioDevice
     uint64_t todTime;
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        std::vector<int> init_time;
-    };
-  protected:
-    const Params *params() const { return (const Params *)_params; }
+    typedef DumbTODParams Params;
+    DumbTOD(const Params *p);
 
-  public:
-    DumbTOD(Params *p);
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

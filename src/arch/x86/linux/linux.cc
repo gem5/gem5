@@ -59,7 +59,7 @@
 #include <fcntl.h>
 
 // open(2) flags translation table
-OpenFlagTransTable X86Linux::openFlagTable[] = {
+OpenFlagTransTable X86Linux64::openFlagTable[] = {
 #ifdef _MSC_VER
   { TGT_O_RDONLY, _O_RDONLY },
   { TGT_O_WRONLY, _O_WRONLY },
@@ -93,6 +93,7 @@ OpenFlagTransTable X86Linux::openFlagTable[] = {
 #endif /* _MSC_VER */
 };
 
-const int X86Linux::NUM_OPEN_FLAGS =
-        (sizeof(X86Linux::openFlagTable)/sizeof(X86Linux::openFlagTable[0]));
+const int X86Linux64::NUM_OPEN_FLAGS =
+        sizeof(X86Linux64::openFlagTable) /
+        sizeof(X86Linux64::openFlagTable[0]);
 

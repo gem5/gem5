@@ -37,13 +37,13 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "params/Uart.hh"
 
 class SimConsole;
 class Platform;
 
 const int RX_INT = 0x1;
 const int TX_INT = 0x2;
-
 
 class Uart : public BasicPioDevice
 {
@@ -54,28 +54,25 @@ class Uart : public BasicPioDevice
     SimConsole *cons;
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        SimConsole *cons;
-    };
+    typedef UartParams Params;
+    Uart(const Params *p);
 
-    Uart(Params *p);
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     /**
      * Inform the uart that there is data available.
      */
     virtual void dataAvailable() = 0;
 
-
     /**
      * Return if we have an interrupt pending
      * @return interrupt status
      */
     bool intStatus() { return status ? true : false; }
-
-  protected:
-    const Params *params() const {return (const Params *)_params; }
-
 };
 
 #endif // __UART_HH__

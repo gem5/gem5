@@ -60,7 +60,7 @@
 
 #include "kern/linux/linux.hh"
 
-class X86Linux : public Linux
+class X86Linux64 : public Linux
 {
   public:
 
@@ -104,6 +104,11 @@ class X86Linux : public Linux
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+
+    typedef struct {
+        uint64_t iov_base; // void *
+        uint64_t iov_len;  // size_t
+    } tgt_iovec;
 };
 
 #endif

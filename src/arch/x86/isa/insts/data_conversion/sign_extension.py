@@ -53,7 +53,18 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop CDQE_R {
+    sext reg, reg, "env.dataSize << 2"
+};
+
+def macroop CQO_R_R {
+    # A shift might be slower than, for example, an explicit sign extension,
+    # so it might be worthwhile to try to find an alternative.
+    mov regm, regm, reg
+    sra regm, regm, "env.dataSize * 8 - 1"
+};
+'''
 #let {{
 #    class CBW(Inst):
 #	"GenFault ${new UnimpInstFault}"

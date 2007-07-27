@@ -40,6 +40,7 @@
 #include "dev/pcidev.hh"
 #include "dev/pcireg.h"
 #include "dev/io_device.hh"
+#include "params/IdeController.hh"
 
 #define BMIC0    0x0  // Bus master IDE command register
 #define BMIS0    0x2  // Bus master IDE status register
@@ -193,14 +194,8 @@ class IdeController : public PciDev
     bool isDiskSelected(IdeDisk *diskPtr);
 
   public:
-    struct Params : public PciDev::Params
-    {
-        /** Array of disk objects */
-        std::vector<IdeDisk *> disks;
-    };
+    typedef IdeControllerParams Params;
     const Params *params() const { return (const Params *)_params; }
-
-  public:
     IdeController(Params *p);
     ~IdeController();
 

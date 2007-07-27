@@ -39,8 +39,8 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
+#include "params/AlphaSystem.hh"
 #include "sim/byteswap.hh"
-#include "sim/builder.hh"
 
 
 using namespace LittleEndianGuest;
@@ -56,14 +56,14 @@ AlphaSystem::AlphaSystem(Params *p)
      * Load the pal, and console code into memory
      */
     // Load Console Code
-    console = createObjectFile(params()->console_path);
+    console = createObjectFile(params()->console);
     if (console == NULL)
-        fatal("Could not load console file %s", params()->console_path);
+        fatal("Could not load console file %s", params()->console);
 
     // Load pal file
-    pal = createObjectFile(params()->palcode);
+    pal = createObjectFile(params()->pal);
     if (pal == NULL)
-        fatal("Could not load PALcode file %s", params()->palcode);
+        fatal("Could not load PALcode file %s", params()->pal);
 
 
     // Load program sections into memory
@@ -212,65 +212,8 @@ AlphaSystem::unserialize(Checkpoint *cp, const std::string &section)
     palSymtab->unserialize("pal_symtab", cp, section);
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
-
-    Param<Tick> boot_cpu_frequency;
-    SimObjectParam<PhysicalMemory *> physmem;
-    SimpleEnumParam<System::MemoryMode> mem_mode;
-
-    Param<std::string> kernel;
-    Param<std::string> console;
-    Param<std::string> pal;
-
-    Param<std::string> boot_osflags;
-    Param<std::string> readfile;
-    Param<std::string> symbolfile;
-    Param<unsigned int> init_param;
-
-    Param<uint64_t> system_type;
-    Param<uint64_t> system_rev;
-
-END_DECLARE_SIM_OBJECT_PARAMS(AlphaSystem)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
-
-    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM(physmem, "phsyical memory"),
-    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
-            System::MemoryModeStrings),
-    INIT_PARAM(kernel, "file that contains the kernel code"),
-    INIT_PARAM(console, "file that contains the console code"),
-    INIT_PARAM(pal, "file that contains palcode"),
-    INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
-                    "a"),
-    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
-    INIT_PARAM_DFLT(symbolfile, "file to read symbols from", ""),
-    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
-    INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
-
-END_INIT_SIM_OBJECT_PARAMS(AlphaSystem)
-
-CREATE_SIM_OBJECT(AlphaSystem)
+AlphaSystem *
+AlphaSystemParams::create()
 {
-    AlphaSystem::Params *p = new AlphaSystem::Params;
-    p->name = getInstanceName();
-    p->boot_cpu_frequency = boot_cpu_frequency;
-    p->physmem = physmem;
-    p->mem_mode = mem_mode;
-    p->kernel_path = kernel;
-    p->console_path = console;
-    p->palcode = pal;
-    p->boot_osflags = boot_osflags;
-    p->init_param = init_param;
-    p->readfile = readfile;
-    p->symbolfile = symbolfile;
-    p->system_type = system_type;
-    p->system_rev = system_rev;
-    return new AlphaSystem(p);
+    return new AlphaSystem(this);
 }
-
-REGISTER_SIM_OBJECT("AlphaSystem", AlphaSystem)
-
-

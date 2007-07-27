@@ -435,6 +435,15 @@ all_isa_list.sort()
 all_cpu_list.sort()
 default_cpus.sort()
 
+def ExtraPathValidator(key, val, env):
+    if not val:
+        return
+    paths = val.split(':')
+    for path in paths:
+        path = os.path.expanduser(path)
+        if not isdir(path):
+            raise AttributeError, "Invalid path: '%s'" % path
+
 sticky_opts.AddOptions(
     EnumOption('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
     BoolOption('FULL_SYSTEM', 'Full-system support', False),
@@ -461,7 +470,9 @@ sticky_opts.AddOptions(
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('PYTHONHOME',
      'Override the default PYTHONHOME for this system (use with caution)',
-     '%s:%s' % (sys.prefix, sys.exec_prefix))
+     '%s:%s' % (sys.prefix, sys.exec_prefix)),
+    ('EXTRAS', 'Add Extra directories to the compilation', '',
+     ExtraPathValidator)
     )
 
 nonsticky_opts.AddOptions(
@@ -613,6 +624,8 @@ base_env = env
 
 for build_path in build_paths:
     print "Building in", build_path
+    env['BUILDDIR'] = build_path
+
     # build_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'ALPHA_SE')
     (build_root, build_dir) = os.path.split(build_path)

@@ -114,7 +114,8 @@ let {{
             self.reg = match.group("reg")
             self.tag = match.group("tag")
             self.size = match.group("size")
-            self.rsize = match.group("rsize")
+            if not self.size:
+                self.size = match.group("rsize")
 
     ModRMRegIndex = "(MODRM_REG | (REX_R << 3))"
     ModRMRMIndex = "(MODRM_RM | (REX_B << 3))"
@@ -129,6 +130,10 @@ let {{
             opType = OpType(opTypes[0])
             opTypes.pop(0)
 
+            if opType.tag not in ("I", "J"):
+                if opType.size:
+                    env.setSize(opType.size)
+
             if opType.reg:
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
@@ -136,13 +141,6 @@ let {{
                     env.addReg("INTREG_R%sX | (REX_B << 3)" % opType.reg)
                 else:
                     env.addReg("INTREG_R%s | (REX_B << 3)" % opType.reg)
-                if opType.size:
-                    if opType.rsize in ("l", "h", "b"):
-                        print "byte"
-                    elif opType.rsize == "x":
-                        print "word"
-                    else:
-                        print "Didn't recognize fixed register size %s!" % opType.rsize
                 Name += "_R"
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of the opcode

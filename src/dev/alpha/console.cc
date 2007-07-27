@@ -51,15 +51,15 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
-#include "sim/builder.hh"
+#include "params/AlphaConsole.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-AlphaConsole::AlphaConsole(Params *p)
-    : BasicPioDevice(p), disk(p->disk),
-      console(params()->cons), system(params()->alpha_sys), cpu(params()->cpu)
+AlphaConsole::AlphaConsole(const Params *p)
+    : BasicPioDevice(p), disk(p->disk), console(p->sim_console),
+      system(p->system), cpu(p->cpu)
 {
 
     pioSize = sizeof(struct AlphaAccess);
@@ -303,43 +303,8 @@ AlphaConsole::unserialize(Checkpoint *cp, const std::string &section)
     alphaAccess->unserialize(cp, section);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
-
-    SimObjectParam<SimConsole *> sim_console;
-    SimObjectParam<SimpleDisk *> disk;
-    Param<Addr> pio_addr;
-    SimObjectParam<AlphaSystem *> system;
-    SimObjectParam<BaseCPU *> cpu;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> pio_latency;
-
-END_DECLARE_SIM_OBJECT_PARAMS(AlphaConsole)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
-
-    INIT_PARAM(sim_console, "The Simulator Console"),
-    INIT_PARAM(disk, "Simple Disk"),
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(cpu, "Processor"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000)
-
-END_INIT_SIM_OBJECT_PARAMS(AlphaConsole)
-
-CREATE_SIM_OBJECT(AlphaConsole)
+AlphaConsole *
+AlphaConsoleParams::create()
 {
-    AlphaConsole::Params *p = new AlphaConsole::Params;
-    p->name = getInstanceName();
-    p->platform = platform;
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->cons = sim_console;
-    p->disk = disk;
-    p->alpha_sys = system;
-    p->system = system;
-    p->cpu = cpu;
-    return new AlphaConsole(p);
+    return new AlphaConsole(this);
 }
-
-REGISTER_SIM_OBJECT("AlphaConsole", AlphaConsole)

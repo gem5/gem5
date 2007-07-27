@@ -39,7 +39,7 @@
 #include "dev/platform.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/PciConfigAll.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -95,27 +95,8 @@ PciConfigAll::addressRanges(AddrRangeList &range_list)
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
-
-    Param<Tick> pio_latency;
-    Param<int> bus;
-    Param<Addr> size;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-
-END_DECLARE_SIM_OBJECT_PARAMS(PciConfigAll)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
-
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(bus, "Bus that this object handles config space for"),
-    INIT_PARAM(size, "The size of config space"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object")
-
-END_INIT_SIM_OBJECT_PARAMS(PciConfigAll)
-
-CREATE_SIM_OBJECT(PciConfigAll)
+PciConfigAll *
+PciConfigAllParams::create()
 {
     PciConfigAll::Params *p = new PciConfigAll::Params;
     p->pio_delay = pio_latency;
@@ -126,7 +107,5 @@ CREATE_SIM_OBJECT(PciConfigAll)
 
     return new PciConfigAll(p);
 }
-
-REGISTER_SIM_OBJECT("PciConfigAll", PciConfigAll)
 
 #endif // DOXYGEN_SHOULD_SKIP_THIS

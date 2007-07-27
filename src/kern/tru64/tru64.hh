@@ -690,7 +690,7 @@ class Tru64 : public OperatingSystem
 
         tc->clearArchRegs();
 
-        tc->setIntReg(TheISA::ArgumentReg0, gtoh(attrp->registers.a0));
+        tc->setIntReg(TheISA::ArgumentReg[0], gtoh(attrp->registers.a0));
         tc->setIntReg(27/*t12*/, gtoh(attrp->registers.pc));
         tc->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
         tc->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ, uniq_val);

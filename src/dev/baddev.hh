@@ -38,7 +38,7 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
-
+#include "params/BadDevice.hh"
 
 /**
  * BadDevice
@@ -52,12 +52,14 @@ class BadDevice : public BasicPioDevice
     std::string devname;
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        std::string device_name;
-    };
+    typedef BadDeviceParams Params;
+
   protected:
-    const Params *params() const { return (const Params *)_params; }
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
   public:
      /**

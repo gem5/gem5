@@ -37,26 +37,25 @@
 #include <string>
 #include <vector>
 
+#include "base/time.hh"
 #include "base/trace.hh"
 #include "dev/sparc/dtod.hh"
 #include "dev/platform.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
-DumbTOD::DumbTOD(Params *p)
+DumbTOD::DumbTOD(const Params *p)
     : BasicPioDevice(p)
 {
-    struct tm tm;
+    struct tm tm = p->time;
     char *tz;
 
     pioSize = 0x08;
 
-    parseTime(p->init_time, &tm);
     tz = getenv("TZ");
     setenv("TZ", "", 1);
     tzset();
@@ -103,37 +102,8 @@ DumbTOD::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(todTime);
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DumbTOD)
-
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-    VectorParam<int> time;
-
-END_DECLARE_SIM_OBJECT_PARAMS(DumbTOD)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(DumbTOD)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(time, "")
-
-END_INIT_SIM_OBJECT_PARAMS(DumbTOD)
-
-CREATE_SIM_OBJECT(DumbTOD)
+DumbTOD *
+DumbTODParams::create()
 {
-    DumbTOD::Params *p = new DumbTOD::Params;
-    p->name =getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    p->init_time = time;
-    return new DumbTOD(p);
+    return new DumbTOD(this);
 }
-
-REGISTER_SIM_OBJECT("DumbTOD", DumbTOD)

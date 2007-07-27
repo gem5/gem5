@@ -377,15 +377,17 @@ class SimpleThread : public ThreadState
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)
     {
+        assert(i < TheISA::NumArgumentRegs);
         return regs.readIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg0 + i));
+                    TheISA::ArgumentReg[i]));
     }
 
     // used to shift args for indirect syscall
     void setSyscallArg(int i, TheISA::IntReg val)
     {
+        assert(i < TheISA::NumArgumentRegs);
         regs.setIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg0 + i), val);
+                    TheISA::ArgumentReg[i]), val);
     }
 
     void setSyscallReturn(SyscallReturn return_value)

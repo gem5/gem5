@@ -48,9 +48,8 @@
 #include "dev/alpha/tsunamireg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/PciConfigData.hh"
 #include "sim/byteswap.hh"
-#include "sim/param.hh"
 #include "sim/core.hh"
 
 using namespace std;
@@ -83,8 +82,8 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
 
 
 PciDev::PciDev(Params *p)
-    : DmaDevice(p), plat(p->platform), configData(p->configData),
-      pioDelay(p->pio_delay), configDelay(p->config_delay),
+    : DmaDevice(p), plat(p->platform), configData(p->configdata),
+      pioDelay(p->pio_latency), configDelay(p->config_latency),
       configPort(NULL)
 {
     // copy the config data from the PciConfigData object
@@ -96,7 +95,7 @@ PciDev::PciDev(Params *p)
 
     memset(BARAddrs, 0, sizeof(BARAddrs));
 
-    plat->registerPciDevice(0, p->deviceNum, p->functionNum,
+    plat->registerPciDevice(0, p->pci_dev, p->pci_func,
             letoh(configData->config.interruptLine));
 }
 
@@ -135,21 +134,21 @@ PciDev::readConfig(PacketPtr pkt)
         pkt->set<uint8_t>(config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
         pkt->set<uint16_t>(*(uint16_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
         pkt->set<uint32_t>(*(uint32_t*)&config.data[offset]);
         DPRINTF(PCIDEV,
             "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;
       default:
@@ -199,7 +198,7 @@ PciDev::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint8_t>());
         break;
       case sizeof(uint16_t):
@@ -216,7 +215,7 @@ PciDev::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
@@ -276,7 +275,7 @@ PciDev::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PCIDEV,
             "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            params()->deviceNum, params()->functionNum, offset,
+            params()->pci_dev, params()->pci_func, offset,
             (uint32_t)pkt->get<uint32_t>());
         break;
       default:
@@ -305,113 +304,38 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
-
-    Param<uint16_t> VendorID;
-    Param<uint16_t> DeviceID;
-    Param<uint16_t> Command;
-    Param<uint16_t> Status;
-    Param<uint8_t> Revision;
-    Param<uint8_t> ProgIF;
-    Param<uint8_t> SubClassCode;
-    Param<uint8_t> ClassCode;
-    Param<uint8_t> CacheLineSize;
-    Param<uint8_t> LatencyTimer;
-    Param<uint8_t> HeaderType;
-    Param<uint8_t> BIST;
-    Param<uint32_t> BAR0;
-    Param<uint32_t> BAR1;
-    Param<uint32_t> BAR2;
-    Param<uint32_t> BAR3;
-    Param<uint32_t> BAR4;
-    Param<uint32_t> BAR5;
-    Param<uint32_t> CardbusCIS;
-    Param<uint16_t> SubsystemVendorID;
-    Param<uint16_t> SubsystemID;
-    Param<uint32_t> ExpansionROM;
-    Param<uint8_t> InterruptLine;
-    Param<uint8_t> InterruptPin;
-    Param<uint8_t> MinimumGrant;
-    Param<uint8_t> MaximumLatency;
-    Param<uint32_t> BAR0Size;
-    Param<uint32_t> BAR1Size;
-    Param<uint32_t> BAR2Size;
-    Param<uint32_t> BAR3Size;
-    Param<uint32_t> BAR4Size;
-    Param<uint32_t> BAR5Size;
-
-END_DECLARE_SIM_OBJECT_PARAMS(PciConfigData)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(PciConfigData)
-
-    INIT_PARAM(VendorID, "Vendor ID"),
-    INIT_PARAM(DeviceID, "Device ID"),
-    INIT_PARAM_DFLT(Command, "Command Register", 0x00),
-    INIT_PARAM_DFLT(Status, "Status Register", 0x00),
-    INIT_PARAM_DFLT(Revision, "Device Revision", 0x00),
-    INIT_PARAM_DFLT(ProgIF, "Programming Interface", 0x00),
-    INIT_PARAM(SubClassCode, "Sub-Class Code"),
-    INIT_PARAM(ClassCode, "Class Code"),
-    INIT_PARAM_DFLT(CacheLineSize, "System Cacheline Size", 0x00),
-    INIT_PARAM_DFLT(LatencyTimer, "PCI Latency Timer", 0x00),
-    INIT_PARAM_DFLT(HeaderType, "PCI Header Type", 0x00),
-    INIT_PARAM_DFLT(BIST, "Built In Self Test", 0x00),
-    INIT_PARAM_DFLT(BAR0, "Base Address Register 0", 0x00),
-    INIT_PARAM_DFLT(BAR1, "Base Address Register 1", 0x00),
-    INIT_PARAM_DFLT(BAR2, "Base Address Register 2", 0x00),
-    INIT_PARAM_DFLT(BAR3, "Base Address Register 3", 0x00),
-    INIT_PARAM_DFLT(BAR4, "Base Address Register 4", 0x00),
-    INIT_PARAM_DFLT(BAR5, "Base Address Register 5", 0x00),
-    INIT_PARAM_DFLT(CardbusCIS, "Cardbus Card Information Structure", 0x00),
-    INIT_PARAM_DFLT(SubsystemVendorID, "Subsystem Vendor ID", 0x00),
-    INIT_PARAM_DFLT(SubsystemID, "Subsystem ID", 0x00),
-    INIT_PARAM_DFLT(ExpansionROM, "Expansion ROM Base Address Register", 0x00),
-    INIT_PARAM(InterruptLine, "Interrupt Line Register"),
-    INIT_PARAM(InterruptPin, "Interrupt Pin Register"),
-    INIT_PARAM_DFLT(MinimumGrant, "Minimum Grant", 0x00),
-    INIT_PARAM_DFLT(MaximumLatency, "Maximum Latency", 0x00),
-    INIT_PARAM_DFLT(BAR0Size, "Base Address Register 0 Size", 0x00),
-    INIT_PARAM_DFLT(BAR1Size, "Base Address Register 1 Size", 0x00),
-    INIT_PARAM_DFLT(BAR2Size, "Base Address Register 2 Size", 0x00),
-    INIT_PARAM_DFLT(BAR3Size, "Base Address Register 3 Size", 0x00),
-    INIT_PARAM_DFLT(BAR4Size, "Base Address Register 4 Size", 0x00),
-    INIT_PARAM_DFLT(BAR5Size, "Base Address Register 5 Size", 0x00)
-
-END_INIT_SIM_OBJECT_PARAMS(PciConfigData)
-
-CREATE_SIM_OBJECT(PciConfigData)
+PciConfigData *
+PciConfigDataParams::create()
 {
-    PciConfigData *data = new PciConfigData(getInstanceName());
+    PciConfigData *data = new PciConfigData(name);
 
-    data->config.vendor = htole(VendorID.returnValue());
-    data->config.device = htole(DeviceID.returnValue());
-    data->config.command = htole(Command.returnValue());
-    data->config.status = htole(Status.returnValue());
-    data->config.revision = htole(Revision.returnValue());
-    data->config.progIF = htole(ProgIF.returnValue());
-    data->config.subClassCode = htole(SubClassCode.returnValue());
-    data->config.classCode = htole(ClassCode.returnValue());
-    data->config.cacheLineSize = htole(CacheLineSize.returnValue());
-    data->config.latencyTimer = htole(LatencyTimer.returnValue());
-    data->config.headerType = htole(HeaderType.returnValue());
-    data->config.bist = htole(BIST.returnValue());
+    data->config.vendor = htole(VendorID);
+    data->config.device = htole(DeviceID);
+    data->config.command = htole(Command);
+    data->config.status = htole(Status);
+    data->config.revision = htole(Revision);
+    data->config.progIF = htole(ProgIF);
+    data->config.subClassCode = htole(SubClassCode);
+    data->config.classCode = htole(ClassCode);
+    data->config.cacheLineSize = htole(CacheLineSize);
+    data->config.latencyTimer = htole(LatencyTimer);
+    data->config.headerType = htole(HeaderType);
+    data->config.bist = htole(BIST);
 
-    data->config.baseAddr[0] = htole(BAR0.returnValue());
-    data->config.baseAddr[1] = htole(BAR1.returnValue());
-    data->config.baseAddr[2] = htole(BAR2.returnValue());
-    data->config.baseAddr[3] = htole(BAR3.returnValue());
-    data->config.baseAddr[4] = htole(BAR4.returnValue());
-    data->config.baseAddr[5] = htole(BAR5.returnValue());
-    data->config.cardbusCIS = htole(CardbusCIS.returnValue());
-    data->config.subsystemVendorID = htole(SubsystemVendorID.returnValue());
-    data->config.subsystemID = htole(SubsystemID.returnValue());
-    data->config.expansionROM = htole(ExpansionROM.returnValue());
-    data->config.interruptLine = htole(InterruptLine.returnValue());
-    data->config.interruptPin = htole(InterruptPin.returnValue());
-    data->config.minimumGrant = htole(MinimumGrant.returnValue());
-    data->config.maximumLatency = htole(MaximumLatency.returnValue());
+    data->config.baseAddr[0] = htole(BAR0);
+    data->config.baseAddr[1] = htole(BAR1);
+    data->config.baseAddr[2] = htole(BAR2);
+    data->config.baseAddr[3] = htole(BAR3);
+    data->config.baseAddr[4] = htole(BAR4);
+    data->config.baseAddr[5] = htole(BAR5);
+    data->config.cardbusCIS = htole(CardbusCIS);
+    data->config.subsystemVendorID = htole(SubsystemVendorID);
+    data->config.subsystemID = htole(SubsystemID);
+    data->config.expansionROM = htole(ExpansionROM);
+    data->config.interruptLine = htole(InterruptLine);
+    data->config.interruptPin = htole(InterruptPin);
+    data->config.minimumGrant = htole(MinimumGrant);
+    data->config.maximumLatency = htole(MaximumLatency);
 
     data->BARSize[0] = BAR0Size;
     data->BARSize[1] = BAR1Size;
@@ -424,13 +348,9 @@ CREATE_SIM_OBJECT(PciConfigData)
         uint32_t barsize = data->BARSize[i];
         if (barsize != 0 && !isPowerOf2(barsize)) {
             fatal("%s: BAR %d size %d is not a power of 2\n",
-                  getInstanceName(), i, data->BARSize[i]);
+                  name, i, data->BARSize[i]);
         }
     }
 
     return data;
 }
-
-REGISTER_SIM_OBJECT("PciConfigData", PciConfigData)
-
-#endif // DOXYGEN_SHOULD_SKIP_THIS

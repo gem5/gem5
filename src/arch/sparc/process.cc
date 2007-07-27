@@ -399,8 +399,9 @@ Sparc64LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(spillStart, (uint8_t*)spillHandler64, spillSize);
 
     //Set up the thread context to start running the process
-    threadContexts[0]->setIntReg(ArgumentReg0, argc);
-    threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    assert(NumArgumentRegs >= 2);
+    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
+    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
 
     Addr prog_entry = objFile->entryPoint();
@@ -627,8 +628,9 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(spillStart, (uint8_t*)spillHandler32, spillSize);
 
     //Set up the thread context to start running the process
-    //threadContexts[0]->setIntReg(ArgumentReg0, argc);
-    //threadContexts[0]->setIntReg(ArgumentReg1, argv_array_base);
+    //assert(NumArgumentRegs >= 2);
+    //threadContexts[0]->setIntReg(ArgumentReg[0], argc);
+    //threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     uint32_t prog_entry = objFile->entryPoint();

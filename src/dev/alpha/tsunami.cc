@@ -42,7 +42,7 @@
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami.hh"
-#include "sim/builder.hh"
+#include "params/Tsunami.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -114,23 +114,8 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(intr_sum_type, Tsunami::Max_CPUs);
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<IntrControl *> intrctrl;
-
-END_DECLARE_SIM_OBJECT_PARAMS(Tsunami)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(Tsunami)
-
-    INIT_PARAM(system, "system"),
-    INIT_PARAM(intrctrl, "interrupt controller")
-
-END_INIT_SIM_OBJECT_PARAMS(Tsunami)
-
-CREATE_SIM_OBJECT(Tsunami)
+Tsunami *
+TsunamiParams::create()
 {
-    return new Tsunami(getInstanceName(), system, intrctrl);
+    return new Tsunami(name, system, intrctrl);
 }
-
-REGISTER_SIM_OBJECT("Tsunami", Tsunami)

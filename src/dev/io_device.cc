@@ -32,7 +32,6 @@
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "dev/io_device.hh"
-#include "sim/builder.hh"
 #include "sim/system.hh"
 
 
@@ -54,6 +53,10 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
     device->addressRanges(resp);
 }
 
+
+PioDevice::PioDevice(const Params *p)
+    : MemObject(p), platform(p->platform), sys(p->system), pioPort(NULL)
+{}
 
 PioDevice::~PioDevice()
 {
@@ -81,6 +84,11 @@ PioDevice::drain(Event *de)
         changeState(Drained);
     return count;
 }
+
+BasicPioDevice::BasicPioDevice(const Params *p)
+    : PioDevice(p), pioAddr(p->pio_addr), pioSize(0),
+      pioDelay(p->pio_latency)
+{}
 
 void
 BasicPioDevice::addressRanges(AddrRangeList &range_list)
@@ -147,7 +155,7 @@ DmaPort::recvTiming(PacketPtr pkt)
     return true;
 }
 
-DmaDevice::DmaDevice(Params *p)
+DmaDevice::DmaDevice(const Params *p)
     : PioDevice(p), dmaPort(NULL), minBackoffDelay(p->min_backoff_delay),
       maxBackoffDelay(p->max_backoff_delay)
 { }
@@ -260,8 +268,8 @@ DmaPort::sendDma()
     assert(transmitList.size());
     PacketPtr pkt = transmitList.front();
 
-    System::MemoryMode state = sys->getMemoryMode();
-    if (state == System::Timing) {
+    Enums::MemoryMode state = sys->getMemoryMode();
+    if (state == Enums::timing) {
         if (backoffEvent.scheduled() || inRetry) {
             DPRINTF(DMA, "Can't send immediately, waiting for retry or backoff timer\n");
             return;
@@ -288,7 +296,7 @@ DmaPort::sendDma()
                     backoffTime+curTick);
             backoffEvent.schedule(backoffTime+curTick);
         }
-    } else if (state == System::Atomic) {
+    } else if (state == Enums::atomic) {
         transmitList.pop_front();
 
         Tick lat;
@@ -328,5 +336,3 @@ DmaDevice::~DmaDevice()
     if (dmaPort)
         delete dmaPort;
 }
-
-

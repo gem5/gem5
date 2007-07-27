@@ -34,9 +34,9 @@
  */
 #include <sstream>
 
-#include "cpu/trace/reader/itx_reader.hh"
-#include "sim/builder.hh"
 #include "base/misc.hh" // for fatal
+#include "cpu/trace/reader/itx_reader.hh"
+#include "params/ITXReader.hh"
 
 using namespace std;
 
@@ -186,23 +186,8 @@ ITXReader::getNextReq(MemReqPtr &req)
     return 0;
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(ITXReader)
-
-    Param<string> filename;
-
-END_DECLARE_SIM_OBJECT_PARAMS(ITXReader)
-
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(ITXReader)
-
-    INIT_PARAM(filename, "trace file")
-
-END_INIT_SIM_OBJECT_PARAMS(ITXReader)
-
-
-CREATE_SIM_OBJECT(ITXReader)
+ITXReader *
+ITXReaderParams::create()
 {
-    return new ITXReader(getInstanceName(), filename);
+    return new ITXReader(name, filename);
 }
-
-REGISTER_SIM_OBJECT("ITXReader", ITXReader)

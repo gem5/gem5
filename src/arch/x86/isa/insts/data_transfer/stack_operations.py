@@ -62,12 +62,40 @@ def macroop POP_R {
     addi rsp, rsp, dsz
 };
 
+def macroop POP_M {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    ld t1, ss, [0, t0, rsp]
+    addi rsp, rsp, dsz
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop POP_P {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    rdip t7
+    ld t1, ss, [0, t0, rsp]
+    addi rsp, rsp, dsz
+    st t1, ds, [0, t0, t7]
+};
+
 def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
     subi rsp, rsp, dsz
     st reg, ss, [0, t0, rsp]
+};
+
+def macroop PUSH_I {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    limm t1, imm
+    subi rsp, rsp, dsz
+    st t1, ss, [0, t0, rsp]
 };
 
 def macroop PUSH_M {
@@ -88,16 +116,32 @@ def macroop PUSH_P {
     subi rsp, rsp, dsz
     st t1, ss, [0, t0, rsp]
 };
+
+def macroop PUSHA {
+    st rax, ss, [0, t0, rsp], "-0 * env.dataSize"
+    st rcx, ss, [0, t0, rsp], "-1 * env.dataSize"
+    st rdx, ss, [0, t0, rsp], "-2 * env.dataSize"
+    st rbx, ss, [0, t0, rsp], "-3 * env.dataSize"
+    st rsp, ss, [0, t0, rsp], "-4 * env.dataSize"
+    st rbp, ss, [0, t0, rsp], "-5 * env.dataSize"
+    st rsi, ss, [0, t0, rsp], "-6 * env.dataSize"
+    st rdi, ss, [0, t0, rsp], "-7 * env.dataSize"
+    subi rsp, rsp, "8 * env.dataSize"
+};
+
+def macroop POPA {
+    st rdi, ss, [0, t0, rsp], "0 * env.dataSize"
+    st rsi, ss, [0, t0, rsp], "1 * env.dataSize"
+    st rbp, ss, [0, t0, rsp], "2 * env.dataSize"
+    st rsp, ss, [0, t0, rsp], "3 * env.dataSize"
+    st rbx, ss, [0, t0, rsp], "4 * env.dataSize"
+    st rdx, ss, [0, t0, rsp], "5 * env.dataSize"
+    st rcx, ss, [0, t0, rsp], "6 * env.dataSize"
+    st rax, ss, [0, t0, rsp], "7 * env.dataSize"
+    addi rsp, rsp, "8 * env.dataSize"
+};
 '''
 #let {{
-#    class POPA(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class POPAD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class PUSHA(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class PUSHAD(Inst):
-#	"GenFault ${new UnimpInstFault}"
 #    class ENTER(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class LEAVE(Inst):

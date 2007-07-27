@@ -39,6 +39,7 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/disk_image.hh"
+#include "params/Iob.hh"
 
 class IntrControl;
 
@@ -123,24 +124,22 @@ class Iob : public PioDevice
     void readIob(PacketPtr pkt);
     void readJBus(PacketPtr pkt);
 
-
   public:
-    struct Params : public PioDevice::Params
+    typedef IobParams Params;
+    Iob(const Params *p);
+
+    const Params *
+    params() const
     {
-        Tick pio_delay;
-    };
-  protected:
-    const Params *params() const { return (const Params*)_params; }
-
-  public:
-    Iob(Params *p);
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
     void generateIpi(Type type, int cpu_id, int vector);
     void receiveDeviceInterrupt(DeviceId devid);
-    bool receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1);
-
+    bool receiveJBusInterrupt(int cpu_id, int source, uint64_t d0,
+                              uint64_t d1);
 
     void addressRanges(AddrRangeList &range_list);
 

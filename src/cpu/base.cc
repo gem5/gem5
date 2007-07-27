@@ -42,7 +42,6 @@
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
 #include "sim/sim_exit.hh"
-#include "sim/param.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
 #include "sim/system.hh"
@@ -455,6 +454,3 @@ BaseCPU::traceFunctionsInternal(Addr pc)
         functionEntryTick = curTick;
     }
 }
-
-
-DEFINE_SIM_OBJECT_CLASS_NAME("BaseCPU", BaseCPU)

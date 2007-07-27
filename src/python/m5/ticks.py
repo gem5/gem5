@@ -28,14 +28,12 @@
 
 import sys
 
-import convert
-import internal
-
 tps = 1.0e12         # default to 1 THz (1 Tick == 1 ps)
 tps_fixed = False    # once set to true, can't be changed
 
 # fix the global frequency and tell C++ about it
 def fixGlobalFrequency():
+    import internal
     global tps, tps_fixed
     if not tps_fixed:
         tps_fixed = True
@@ -43,6 +41,8 @@ def fixGlobalFrequency():
         print "Global frequency set at %d ticks per second" % int(tps)
 
 def setGlobalFrequency(ticksPerSecond):
+    import convert
+
     global tps, tps_fixed
 
     if tps_fixed:

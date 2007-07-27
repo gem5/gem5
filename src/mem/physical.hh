@@ -34,13 +34,15 @@
 #ifndef __PHYSICAL_MEMORY_HH__
 #define __PHYSICAL_MEMORY_HH__
 
+#include <map>
+#include <string>
+
 #include "base/range.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"
+#include "params/PhysicalMemory.hh"
 #include "sim/eventq.hh"
-#include <map>
-#include <string>
 
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
@@ -149,24 +151,19 @@ class PhysicalMemory : public MemObject
 
   public:
     Addr new_page();
-    uint64_t size() { return params()->addrRange.size(); }
-    uint64_t start() { return params()->addrRange.start; }
-
-    struct Params
-    {
-        std::string name;
-        Range<Addr> addrRange;
-        Tick latency;
-        bool zero;
-    };
-
-  protected:
-    Params *_params;
+    uint64_t size() { return params()->range.size(); }
+    uint64_t start() { return params()->range.start; }
 
   public:
-    const Params *params() const { return _params; }
-    PhysicalMemory(Params *p);
+    typedef PhysicalMemoryParams Params;
+    PhysicalMemory(const Params *p);
     virtual ~PhysicalMemory();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
   public:
     int deviceBlockSize();

@@ -35,16 +35,15 @@
  *
  */
 
-#include "arch/alpha/system.hh"
 #include "arch/alpha/freebsd/system.hh"
+#include "arch/alpha/system.hh"
+#include "arch/isa_traits.hh"
+#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
-#include "arch/isa_traits.hh"
-#include "sim/builder.hh"
 #include "sim/byteswap.hh"
-#include "arch/vtophys.hh"
 
 #define TIMER_FREQUENCY 1193180
 
@@ -77,8 +76,9 @@ FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
     Addr ppc_vaddr = 0;
     Addr timer_vaddr = 0;
 
-    ppc_vaddr = (Addr)tc->readIntReg(ArgumentReg1);
-    timer_vaddr = (Addr)tc->readIntReg(ArgumentReg2);
+    assert(NumArgumentRegs >= 3);
+    ppc_vaddr = (Addr)tc->readIntReg(ArgumentReg[1]);
+    timer_vaddr = (Addr)tc->readIntReg(ArgumentReg[2]);
 
     virtPort.write(ppc_vaddr, (uint32_t)Clock::Frequency);
     virtPort.write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
@@ -92,64 +92,8 @@ FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ThreadContext *tc)
     ((FreebsdAlphaSystem *)tc->getSystemPtr())->doCalibrateClocks(tc);
 }
 
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
-
-    Param<Tick> boot_cpu_frequency;
-    SimObjectParam<PhysicalMemory *> physmem;
-    SimpleEnumParam<System::MemoryMode> mem_mode;
-
-    Param<string> kernel;
-    Param<string> console;
-    Param<string> pal;
-
-    Param<string> boot_osflags;
-    Param<string> readfile;
-    Param<string> symbolfile;
-    Param<unsigned int> init_param;
-
-    Param<uint64_t> system_type;
-    Param<uint64_t> system_rev;
-
-END_DECLARE_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
-
-    INIT_PARAM(boot_cpu_frequency, "Frequency of the boot CPU"),
-    INIT_PARAM(physmem, "phsyical memory"),
-    INIT_ENUM_PARAM(mem_mode, "Memory Mode, (1=atomic, 2=timing)",
-            System::MemoryModeStrings),
-    INIT_PARAM(kernel, "file that contains the kernel code"),
-    INIT_PARAM(console, "file that contains the console code"),
-    INIT_PARAM(pal, "file that contains palcode"),
-    INIT_PARAM_DFLT(boot_osflags, "flags to pass to the kernel during boot",
-                    "a"),
-    INIT_PARAM_DFLT(readfile, "file to read startup script from", ""),
-    INIT_PARAM_DFLT(symbolfile, "file to read symbols from", ""),
-    INIT_PARAM_DFLT(init_param, "numerical value to pass into simulator", 0),
-    INIT_PARAM_DFLT(system_type, "Type of system we are emulating", 34),
-    INIT_PARAM_DFLT(system_rev, "Revision of system we are emulating", 1<<10)
-
-END_INIT_SIM_OBJECT_PARAMS(FreebsdAlphaSystem)
-
-CREATE_SIM_OBJECT(FreebsdAlphaSystem)
+FreebsdAlphaSystem *
+FreebsdAlphaSystemParams::create()
 {
-    AlphaSystem::Params *p = new AlphaSystem::Params;
-    p->name = getInstanceName();
-    p->boot_cpu_frequency = boot_cpu_frequency;
-    p->physmem = physmem;
-    p->mem_mode = mem_mode;
-    p->kernel_path = kernel;
-    p->console_path = console;
-    p->palcode = pal;
-    p->boot_osflags = boot_osflags;
-    p->init_param = init_param;
-    p->readfile = readfile;
-    p->symbolfile = symbolfile;
-    p->system_type = system_type;
-    p->system_rev = system_rev;
-    return new FreebsdAlphaSystem(p);
+    return new FreebsdAlphaSystem(this);
 }
-
-REGISTER_SIM_OBJECT("FreebsdAlphaSystem", FreebsdAlphaSystem)
-

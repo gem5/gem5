@@ -56,13 +56,13 @@
 microcode = '''
 def macroop SAL_R_I
 {
-    sll reg, reg, imm
+    slli reg, reg, imm
 };
 
 def macroop SAL_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    sll t1, t1, imm
+    slli t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -70,19 +70,59 @@ def macroop SAL_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sll t1, t1, imm
+    slli t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SAL_1_R
+{
+    slli reg, reg, 1
+};
+
+def macroop SAL_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    slli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAL_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    slli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SAL_R_R
+{
+    sll reg, reg, regm
+};
+
+def macroop SAL_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    sll t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAL_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    sll t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SHR_R_I
 {
-    srl reg, reg, imm
+    srli reg, reg, imm
 };
 
 def macroop SHR_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    srl t1, t1, imm
+    srli t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -90,19 +130,59 @@ def macroop SHR_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    srl t1, t1, imm
+    srli t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SHR_1_R
+{
+    srli reg, reg, 1
+};
+
+def macroop SHR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    srli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SHR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    srli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SHR_R_R
+{
+    srl reg, reg, regm
+};
+
+def macroop SHR_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    srl t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SHR_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    srl t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SAR_R_I
 {
-    sra reg, reg, imm
+    srai reg, reg, imm
 };
 
 def macroop SAR_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    sra t1, t1, imm
+    srai t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -110,21 +190,47 @@ def macroop SAR_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sra t1, t1, imm
+    srai t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SAR_1_R
+{
+    srai reg, reg, 1
+};
+
+def macroop SAR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    srai t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    srai t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop SAR_R_R
+{
+    sra reg, reg, regm
+};
+
+def macroop SAR_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    sra t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop SAR_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    sra t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 '''
-#let {{
-#    class SAL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SAR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SHL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SHR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SHLD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SHRD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

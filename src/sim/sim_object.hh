@@ -41,6 +41,7 @@
 #include <vector>
 #include <iostream>
 
+#include "params/SimObject.hh"
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 
@@ -55,33 +56,19 @@ class Event;
 class SimObject : public Serializable, protected StartupCallback
 {
   public:
-    struct Params {
-        std::string name;
-    };
-
     enum State {
         Running,
         Draining,
         Drained
     };
 
-    enum MemoryMode {
-        Invalid=0,
-        Atomic,
-        Timing
-    };
-
   private:
     State state;
 
   protected:
-    Params *_params;
-
     void changeState(State new_state) { state = new_state; }
 
   public:
-    const Params *params() const { return _params; }
-
     State getState() { return state; }
 
   private:
@@ -90,10 +77,14 @@ class SimObject : public Serializable, protected StartupCallback
     // list of all instantiated simulation objects
     static SimObjectList simObjectList;
 
-  public:
-    SimObject(Params *_params);
-    SimObject(const std::string &_name);
+  protected:
+    const SimObjectParams *_params;
 
+  public:
+    typedef SimObjectParams Params;
+    const Params *params() const { return _params; }
+    SimObject(const Params *_params);
+    SimObject(const std::string &_name);
     virtual ~SimObject() {}
 
     virtual const std::string name() const { return params()->name; }

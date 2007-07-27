@@ -72,7 +72,7 @@
             default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
@@ -85,7 +85,7 @@
             default: MultiInst::OR(OPCODE_OP_BOTTOM3,
                                    [Eb,Gb], [Ev,Gv],
                                    [Gb,Eb], [Gv,Ev],
-                                   [rAl,Ib], [rAx,Iz]);
+                                   [rAb,Ib], [rAv,Iz]);
         }
         0x02: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
@@ -99,7 +99,7 @@
             default: MultiInst::ADC(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x03: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
@@ -113,7 +113,7 @@
             default: MultiInst::SBB(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x04: decode OPCODE_OP_BOTTOM3 {
             0x6: M5InternalError::error(
@@ -125,7 +125,7 @@
             default: MultiInst::AND(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x05: decode OPCODE_OP_BOTTOM3 {
             0x6: M5InternalError::error(
@@ -134,7 +134,7 @@
             default: MultiInst::SUB(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x06: decode OPCODE_OP_BOTTOM3 {
             0x6: M5InternalError::error(
@@ -146,7 +146,7 @@
             default: MultiInst::XOR(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         0x07: decode OPCODE_OP_BOTTOM3 {
             0x6: M5InternalError::error(
@@ -158,37 +158,40 @@
             default: MultiInst::CMP(OPCODE_OP_BOTTOM3,
                                     [Eb,Gb], [Ev,Gv],
                                     [Gb,Eb], [Gv,Ev],
-                                    [rAl,Ib], [rAx,Iz]);
-        }
-        0x08: decode MODE_SUBMODE {
-            0x0: M5InternalError::error (
-                {{"Tried to execute an REX prefix!"}});
-            default: Inst::INC(B);
-        }
-        0x09: decode MODE_SUBMODE {
-            0x0: M5InternalError::error (
-                {{"Tried to execute an REX prefix!"}});
-            default: Inst::DEC(B);
+                                    [rAb,Ib], [rAv,Iz]);
         }
         format Inst {
-            0x0A: PUSH(B);
-            0x0B: POP(B);
+            0x08: decode MODE_SUBMODE {
+                0x0: M5InternalError::error (
+                    {{"Tried to execute an REX prefix!"}});
+                default: INC(Bv);
+            }
+            0x09: decode MODE_SUBMODE {
+                0x0: M5InternalError::error (
+                    {{"Tried to execute an REX prefix!"}});
+                default: DEC(Bv);
+            }
+            0x0A: PUSH(Bv);
+            0x0B: POP(Bv);
         }
         0x0C: decode OPCODE_OP_BOTTOM3 {
             0x0: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: pusha();
+                default: Inst::PUSHA();
             }
             0x1: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
-                default: popa();
+                default: Inst::POPA();
             }
             0x2: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
                 default: bound_Gv_Ma();
             }
             0x3: decode MODE_SUBMODE {
-                0x0: Inst::MOVSXD(Gv,Ed);
+                //The second operand should really be of size "d", but it's
+                //set to "v" in order to have a consistent register size.
+                //This shouldn't affect behavior.
+                0x0: Inst::MOVSXD(Gv,Ev);
                 default: arpl_Ew_Gw();
             }
             0x4: M5InternalError::error(
@@ -201,10 +204,10 @@
                 {{"Tried to execute the DS address size override prefix!"}});
         }
         0x0D: decode OPCODE_OP_BOTTOM3 {
-            0x0: push_Iz();
-            0x1: imul_Gv_Ev_Iz();
-            0x2: push_Ib();
-            0x3: imul_Gv_Ev_Ib();
+            0x0: Inst::PUSH(Iz);
+            0x1: Inst::IMUL(Gv,Ev,Iz);
+            0x2: Inst::PUSH(Ib);
+            0x3: Inst::IMUL(Gv,Ev,Ib);
             0x4: ins_Yb_Dx();
             0x5: ins_Yz_Dx();
             0x6: outs_Dx_Xb();
@@ -302,8 +305,8 @@
             default: xchg_B_rAX();
         }
         0x13: decode OPCODE_OP_BOTTOM3 {
-            0x0: cbw_or_cwde_or_cdqe_rAX();
-            0x1: cwd_or_cdq_or_cqo_rAX_rDX();
+            0x0: Inst::CDQE(rAv);
+            0x1: Inst::CQO(rAv,rDv);
             0x2: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
                 default: call_far_Ap();
@@ -333,8 +336,8 @@
             0x7: cmps_Yv_Xv();
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
-            0x0: Inst::TEST(rAl,Ib);
-            0x1: Inst::TEST(rAX,Iz);
+            0x0: Inst::TEST(rAb,Ib);
+            0x1: Inst::TEST(rAv,Iz);
             0x2: stos_Yb_Al();
             0x3: stos_Yv_rAX();
             0x4: lods_Al_Xb();
@@ -343,8 +346,8 @@
             0x7: scas_Yv_rAX();
         }
         format Inst {
-            0x16: MOV(B,Ib);
-            0x17: MOV(B,Iv);
+            0x16: MOV(Bb,Ib);
+            0x17: MOV(Bv,Iv);
             0x18: decode OPCODE_OP_BOTTOM3 {
                 //0x0: group2_Eb_Ib();
                 0x0: decode MODRM_REG {
@@ -404,10 +407,55 @@
             0x7: iret();
         }
         0x1A: decode OPCODE_OP_BOTTOM3 {
-            0x0: group2_Eb_1();
-            0x1: group2_Ev_1();
-            0x2: group2_Eb_Cl();
-            0x3: group2_Ev_Cl();
+            format Inst {
+                //0x0: group2_Eb_1();
+                0x0: decode MODRM_REG {
+                    0x0: ROL_1(Eb);
+                    0x1: ROR_1(Eb);
+                    0x2: RCL_1(Eb);
+                    0x3: RCR_1(Eb);
+                    0x4: SAL_1(Eb);
+                    0x5: SHR_1(Eb);
+                    0x6: SAL_1(Eb);
+                    0x7: SAR_1(Eb);
+                }
+                //0x1: group2_Ev_1();
+                0x1: decode MODRM_REG {
+                    0x0: ROL_1(Ev);
+                    0x1: ROR_1(Ev);
+                    0x2: RCL_1(Ev);
+                    0x3: RCR_1(Ev);
+                    0x4: SAL_1(Ev);
+                    0x5: SHR_1(Ev);
+                    0x6: SAL_1(Ev);
+                    0x7: SAR_1(Ev);
+                }
+                //0x2: group2_Eb_Cl();
+                0x2: decode MODRM_REG {
+                    0x0: ROL(Eb,rCb);
+                    0x1: ROR(Eb,rCb);
+                    0x2: RCL(Eb,rCb);
+                    0x3: RCR(Eb,rCb);
+                    0x4: SAL(Eb,rCb);
+                    0x5: SHR(Eb,rCb);
+                    0x6: SAL(Eb,rCb);
+                    0x7: SAR(Eb,rCb);
+                }
+                //The second operand should have size "b", but to have
+                //consistent register sizes it's "v". This shouldn't have
+                //any affect on functionality.
+                //0x3: group2_Ev_Cl();
+                0x3: decode MODRM_REG {
+                    0x0: ROL(Ev,rCv);
+                    0x1: ROR(Ev,rCv);
+                    0x2: RCL(Ev,rCv);
+                    0x3: RCR(Ev,rCv);
+                    0x4: SAL(Ev,rCv);
+                    0x5: SHR(Ev,rCv);
+                    0x6: SAL(Ev,rCv);
+                    0x7: SAR(Ev,rCv);
+                }
+            }
             0x4: decode MODE_SUBMODE {
                 0x0: Inst::UD2();
                 default: aam_Ib();
@@ -465,8 +513,28 @@
                 {{"Tried to execute the rep/repe prefix!"}});
             0x4: hlt();
             0x5: cmc();
-            0x6: group3_Eb();
-            0x7: group3_Ev();
+            //0x6: group3_Eb();
+            0x6: decode MODRM_REG {
+                0x0: Inst::TEST(Eb,Iz);
+                0x1: Inst::TEST(Eb,Iz);
+                0x2: Inst::NOT(Eb);
+                0x3: Inst::NEG(Eb);
+                0x4: mul_Eb();
+                0x5: imul_Eb();
+                0x6: div_Eb();
+                0x7: idiv_Eb();
+            }
+            //0x7: group3_Ev();
+            0x7: decode MODRM_REG {
+                0x0: Inst::TEST(Ev,Iz);
+                0x1: Inst::TEST(Ev,Iz);
+                0x2: Inst::NOT(Ev);
+                0x3: Inst::NEG(Ev);
+                0x4: mul_Ev();
+                0x5: imul_Ev();
+                0x6: div_Ev();
+                0x7: idiv_Ev();
+            }
         }
         0x1F: decode OPCODE_OP_BOTTOM3 {
             0x0: clc();

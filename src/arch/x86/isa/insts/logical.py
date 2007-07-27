@@ -221,16 +221,27 @@ def macroop AND_P_R
     and t1, t1, reg
     st t1, ds, [scale, index, base], disp
 };
+
+def macroop NOT_R
+{
+    limm t1, -1
+    xor reg, reg, t1
+};
+
+def macroop NOT_M
+{
+    limm t1, -1
+    ld t2, ds, [scale, index, base], disp
+    xor t2, t2, t1
+    st t2, ds, [scale, index, base], disp
+};
+
+def macroop NOT_P
+{
+    limm t1, -1
+    rdip t7
+    ld t2, ds, [0, t0, t7], disp
+    xor t2, t2, t1
+    st t2, ds, [0, t0, t7], disp
+};
 '''
-#let {{
-#microcodeString = '''
-#    def macroop OR
-#    {
-#	Or reg reg regm
-#    };
-#    def macroop NOT
-#    {
-#	Xor reg reg "0xFFFFFFFFFFFFFFFFULL"
-#    };
-#'''
-#}};

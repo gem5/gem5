@@ -40,11 +40,10 @@
 #include "dev/platform.hh"
 #include "mem/port.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
-MmDisk::MmDisk(Params *p)
+MmDisk::MmDisk(const Params *p)
     : BasicPioDevice(p), image(p->image), curSector((off_t)-1), dirty(false)
 {
     std::memset(&diskData, 0, SectorSize);
@@ -171,39 +170,8 @@ MmDisk::serialize(std::ostream &os)
     }
 }
 
-
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(MmDisk)
-    Param<Addr> pio_addr;
-    Param<Tick> pio_latency;
-    Param<Addr> pio_size;
-    SimObjectParam<Platform *> platform;
-    SimObjectParam<System *> system;
-    SimObjectParam<DiskImage *> image;
-END_DECLARE_SIM_OBJECT_PARAMS(MmDisk)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(MmDisk)
-
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(pio_latency, "Programmed IO latency"),
-    INIT_PARAM(pio_size, "Size of address range"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(image, "disk image")
-
-END_INIT_SIM_OBJECT_PARAMS(MmDisk)
-
-CREATE_SIM_OBJECT(MmDisk)
+MmDisk *
+MmDiskParams::create()
 {
-    MmDisk::Params *p = new MmDisk::Params;
-    p->name = getInstanceName();
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    p->image = image;
-    return new MmDisk(p);
+    return new MmDisk(this);
 }
-
-REGISTER_SIM_OBJECT("MmDisk", MmDisk)

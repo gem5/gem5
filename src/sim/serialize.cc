@@ -46,7 +46,6 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "sim/eventq.hh"
-#include "sim/param.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -58,6 +57,101 @@
 using namespace std;
 
 extern SimObject *resolveSimObject(const string &);
+
+//
+// The base implementations use to_number for parsing and '<<' for
+// displaying, suitable for integer types.
+//
+template <class T>
+bool
+parseParam(const string &s, T &value)
+{
+    return to_number(s, value);
+}
+
+template <class T>
+void
+showParam(ostream &os, const T &value)
+{
+    os << value;
+}
+
+//
+// Template specializations:
+// - char (8-bit integer)
+// - floating-point types
+// - bool
+// - string
+//
+
+// Treat 8-bit ints (chars) as ints on output, not as chars
+template <>
+void
+showParam(ostream &os, const char &value)
+{
+    os << (int)value;
+}
+
+
+template <>
+void
+showParam(ostream &os, const unsigned char &value)
+{
+    os << (unsigned int)value;
+}
+
+
+// Use sscanf() for FP types as to_number() only handles integers
+template <>
+bool
+parseParam(const string &s, float &value)
+{
+    return (sscanf(s.c_str(), "%f", &value) == 1);
+}
+
+template <>
+bool
+parseParam(const string &s, double &value)
+{
+    return (sscanf(s.c_str(), "%lf", &value) == 1);
+}
+
+template <>
+bool
+parseParam(const string &s, bool &value)
+{
+    const string &ls = to_lower(s);
+
+    if (ls == "true") {
+        value = true;
+        return true;
+    }
+
+    if (ls == "false") {
+        value = false;
+        return true;
+    }
+
+    return false;
+}
+
+// Display bools as strings
+template <>
+void
+showParam(ostream &os, const bool &value)
+{
+    os << (value ? "true" : "false");
+}
+
+
+// String requires no processing to speak of
+template <>
+bool
+parseParam(const string &s, string &value)
+{
+    value = s;
+    return true;
+}
 
 int Serializable::ckptMaxCount = 0;
 int Serializable::ckptCount = 0;

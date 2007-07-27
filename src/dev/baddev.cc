@@ -40,14 +40,14 @@
 #include "dev/baddev.hh"
 #include "dev/platform.hh"
 #include "mem/port.hh"
-#include "sim/builder.hh"
+#include "params/BadDevice.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
 BadDevice::BadDevice(Params *p)
-    : BasicPioDevice(p), devname(p->device_name)
+    : BasicPioDevice(p), devname(p->devicename)
 {
     pioSize = 0x10;
 }
@@ -66,36 +66,8 @@ BadDevice::write(PacketPtr pkt)
     M5_DUMMY_RETURN
 }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
-
-    Param<string> devicename;
-    Param<Addr> pio_addr;
-    SimObjectParam<System *> system;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> pio_latency;
-
-END_DECLARE_SIM_OBJECT_PARAMS(BadDevice)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(BadDevice)
-
-    INIT_PARAM(devicename, "Name of device to error on"),
-    INIT_PARAM(pio_addr, "Device Address"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(platform, "platform"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency", 1000)
-
-END_INIT_SIM_OBJECT_PARAMS(BadDevice)
-
-CREATE_SIM_OBJECT(BadDevice)
+BadDevice *
+BadDeviceParams::create()
 {
-    BadDevice::Params *p = new BadDevice::Params;
-    p->name =getInstanceName();
-    p->platform = platform;
-    p->pio_addr = pio_addr;
-    p->pio_delay = pio_latency;
-    p->system = system;
-    p->device_name = devicename;
-    return new BadDevice(p);
+    return new BadDevice(this);
 }
-
-REGISTER_SIM_OBJECT("BadDevice", BadDevice)

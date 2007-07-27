@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,19 +25,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
- *          Nathan Binkert
+ * Authors: Nathan Binkert
  */
 
-/**
- * Definitions of the base replacement class.
- */
+%{
+#include <sys/time.h>
+%}
 
-#include "sim/param.hh"
-#include "mem/cache/tags/repl/repl.hh"
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-DEFINE_SIM_OBJECT_CLASS_NAME("Repl", Repl)
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
+struct tm {
+    int tm_sec;         /* seconds after the minute [0-60] */
+    int tm_min;         /* minutes after the hour [0-59] */
+    int tm_hour;        /* hours since midnight [0-23] */
+    int tm_mday;        /* day of the month [1-31] */
+    int tm_mon;         /* months since January [0-11] */
+    int tm_year;        /* years since 1900 */
+    int tm_wday;        /* days since Sunday [0-6] */
+    int tm_yday;        /* days since January 1 [0-365] */
+};

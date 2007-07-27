@@ -69,14 +69,12 @@ namespace SparcISA
     const int ReturnAddressReg = 31; // post call, precall is 15
     const int ReturnValueReg = 8; // Post return, 24 is pre-return.
     const int FramePointerReg = 30;
-    const int ArgumentReg0 = 8;
-    const int ArgumentReg1 = 9;
-    const int ArgumentReg2 = 10;
-    const int ArgumentReg3 = 11;
-    const int ArgumentReg4 = 12;
-    const int ArgumentReg5 = 13;
+
+    const int ArgumentReg[] = {8, 9, 10, 11, 12, 13};
+    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+
     // Some OS syscall use a second register (o1) to return a second value
-    const int SyscallPseudoReturnReg = ArgumentReg1;
+    const int SyscallPseudoReturnReg = ArgumentReg[1];
 
     //XXX These numbers are bogus
     const int MaxInstSrcRegs = 8;

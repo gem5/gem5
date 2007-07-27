@@ -44,7 +44,7 @@
 #include "dev/platform.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
+#include "params/IdeController.hh"
 #include "sim/sim_object.hh"
 #include "sim/byteswap.hh"
 
@@ -746,58 +746,8 @@ IdeController::unserialize(Checkpoint *cp, const std::string &section)
                       sizeof(cmd_in_progress) / sizeof(cmd_in_progress[0]));
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(IdeController)
-
-    SimObjectParam<System *> system;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> min_backoff_delay;
-    Param<Tick> max_backoff_delay;
-    SimObjectParam<PciConfigData *> configdata;
-    Param<uint32_t> pci_bus;
-    Param<uint32_t> pci_dev;
-    Param<uint32_t> pci_func;
-    Param<Tick> pio_latency;
-    Param<Tick> config_latency;
-    SimObjectVectorParam<IdeDisk *> disks;
-
-END_DECLARE_SIM_OBJECT_PARAMS(IdeController)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(IdeController)
-
-    INIT_PARAM(system, "System pointer"),
-    INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
-    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
-    INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(pci_bus, "PCI bus ID"),
-    INIT_PARAM(pci_dev, "PCI device number"),
-    INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
-    INIT_PARAM(disks, "IDE disks attached to this controller")
-
-END_INIT_SIM_OBJECT_PARAMS(IdeController)
-
-CREATE_SIM_OBJECT(IdeController)
+IdeController *
+IdeControllerParams::create()
 {
-    IdeController::Params *params = new IdeController::Params;
-    params->name = getInstanceName();
-    params->platform = platform;
-    params->system = system;
-    params->min_backoff_delay = min_backoff_delay;
-    params->max_backoff_delay = max_backoff_delay;
-    params->configData = configdata;
-    params->busNum = pci_bus;
-    params->deviceNum = pci_dev;
-    params->functionNum = pci_func;
-    params->pio_delay = pio_latency;
-    params->config_delay = config_latency;
-    params->disks = disks;
-    return new IdeController(params);
+    return new IdeController(this);
 }
-
-REGISTER_SIM_OBJECT("IdeController", IdeController)
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS

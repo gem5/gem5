@@ -43,7 +43,6 @@
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "mem/page_table.hh"
-#include "sim/builder.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 

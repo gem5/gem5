@@ -47,6 +47,7 @@
 import copy
 import datetime
 import inspect
+import re
 import sys
 import time
 
@@ -54,6 +55,17 @@ import convert
 import proxy
 import ticks
 from util import *
+
+import SimObject
+
+def isSimObject(*args, **kwargs):
+    return SimObject.isSimObject(*args, **kwargs)
+
+def isSimObjectSequence(*args, **kwargs):
+    return SimObject.isSimObjectSequence(*args, **kwargs)
+
+def isSimObjectClass(*args, **kwargs):
+    return SimObject.isSimObjectClass(*args, **kwargs)
 
 # Dummy base class to identify types that are legitimate for SimObject
 # parameters.
@@ -108,14 +120,15 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             try:
-                ptype = eval(self.ptype_str, objects.__dict__)
+                ptype = SimObject.allClasses[self.ptype_str]
                 if not isinstance(ptype, type):
                     raise NameError
                 self.ptype = ptype
                 return ptype
             except NameError:
-                raise TypeError, \
-                      "Param qualifier '%s' is not a type" % self.ptype_str
+                raise
+                #raise TypeError, \
+                #      "Param qualifier '%s' is not a type" % self.ptype_str
         raise AttributeError, "'%s' object has no attribute '%s'" % \
               (type(self).__name__, attr)
 
@@ -150,6 +163,9 @@ class VectorParamValue(list):
     def ini_str(self):
         return ' '.join([v.ini_str() for v in self])
 
+    def getValue(self):
+        return [ v.getValue() for v in self ]
+
     def unproxy(self, base):
         return [v.unproxy(base) for v in self]
 
@@ -165,20 +181,26 @@ class VectorParamDesc(ParamDesc):
         if isinstance(value, (list, tuple)):
             # list: coerce each element into new list
             tmp_list = [ ParamDesc.convert(self, v) for v in value ]
-            if isSimObjectSequence(tmp_list):
-                return SimObjVector(tmp_list)
-            else:
-                return VectorParamValue(tmp_list)
         else:
-            # singleton: leave it be (could coerce to a single-element
-            # list here, but for some historical reason we don't...
-            return ParamDesc.convert(self, value)
+            # singleton: coerce to a single-element list
+            tmp_list = [ ParamDesc.convert(self, value) ]
+
+        if isSimObjectSequence(tmp_list):
+            return SimObjVector(tmp_list)
+        else:
+            return VectorParamValue(tmp_list)
+
+    def swig_predecls(self):
+        return ['%%include "%s_vptype.i"' % self.ptype_str]
+
+    def swig_decl(self):
+        cxx_type = re.sub('std::', '', self.ptype.cxx_type)
+        vdecl = 'namespace std { %%template(vector_%s) vector< %s >; }' % \
+                (self.ptype_str, cxx_type)
+        return ['%include "std_vector.i"'] + self.ptype.swig_predecls + [vdecl]
 
     def cxx_predecls(self):
         return ['#include <vector>'] + self.ptype.cxx_predecls
-
-    def swig_predecls(self):
-        return ['%include "std_vector.i"'] + self.ptype.swig_predecls
 
     def cxx_decl(self):
         return 'std::vector< %s > %s;' % (self.ptype.cxx_type, self.name)
@@ -232,7 +254,10 @@ class String(ParamValue,str):
     cxx_predecls = ['#include <string>']
     swig_predecls = ['%include "std_string.i"\n' +
                      '%apply const std::string& {std::string *};']
-    pass
+    swig_predecls = ['%include "std_string.i"' ]
+
+    def getValue(self):
+        return self
 
 # superclass for "numeric" parameter values, to emulate math
 # operations in a type-safe way.  e.g., a Latency times an int returns
@@ -291,7 +316,7 @@ class CheckedIntType(type):
 
         if not cls.swig_predecls:
             # most derived types require this, so we just do it here once
-            cls.swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+            cls.swig_predecls = ['%import "stdint.i"\n' +
                                  '%import "sim/host.hh"']
 
         if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
@@ -328,6 +353,9 @@ class CheckedInt(NumericParamValue):
                   % type(value).__name__
         self._check()
 
+    def getValue(self):
+        return long(self.value)
+
 class Int(CheckedInt):      cxx_type = 'int';      size = 32; unsigned = False
 class Unsigned(CheckedInt): cxx_type = 'unsigned'; size = 32; unsigned = True
 
@@ -349,6 +377,9 @@ class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
 
 class Float(ParamValue, float):
     cxx_type = 'double'
+
+    def getValue(self):
+        return float(self.value)
 
 class MemorySize(CheckedInt):
     cxx_type = 'uint64_t'
@@ -374,7 +405,7 @@ class MemorySize32(CheckedInt):
 
 class Addr(CheckedInt):
     cxx_type = 'Addr'
-    cxx_predecls = ['#include "targetarch/isa_traits.hh"']
+    cxx_predecls = ['#include "arch/isa_traits.hh"']
     size = 64
     unsigned = True
     def __init__(self, value):
@@ -443,9 +474,27 @@ class Range(ParamValue):
 
 class AddrRange(Range):
     type = Addr
+    swig_predecls = ['%include "python/swig/range.i"']
+
+    def getValue(self):
+        from m5.objects.params import AddrRange
+
+        value = AddrRange()
+        value.start = long(self.first)
+        value.end = long(self.second)
+        return value
 
 class TickRange(Range):
     type = Tick
+    swig_predecls = ['%include "python/swig/range.i"']
+
+    def getValue(self):
+        from m5.objects.params import TickRange
+
+        value = TickRange()
+        value.start = long(self.first)
+        value.end = long(self.second)
+        return value
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and
@@ -457,6 +506,9 @@ class Bool(ParamValue):
             self.value = convert.toBool(value)
         except TypeError:
             self.value = bool(value)
+
+    def getValue(self):
+        return bool(self.value)
 
     def __str__(self):
         return str(self.value)
@@ -489,7 +541,7 @@ def NextEthernetAddr():
 class EthernetAddr(ParamValue):
     cxx_type = 'Net::EthAddr'
     cxx_predecls = ['#include "base/inet.hh"']
-    swig_predecls = ['class Net::EthAddr;']
+    swig_predecls = ['%include "python/swig/inet.i"']
     def __init__(self, value):
         if value == NextEthernetAddr:
             self.value = value
@@ -512,6 +564,10 @@ class EthernetAddr(ParamValue):
         if self.value == NextEthernetAddr:
             return EthernetAddr(self.value())
         return self
+
+    def getValue(self):
+        from m5.objects.params import EthAddr
+        return EthAddr(self.value)
 
     def ini_str(self):
         return self.value
@@ -555,13 +611,40 @@ def parse_time(value):
     raise ValueError, "Could not parse '%s' as a time" % value
 
 class Time(ParamValue):
-    cxx_type = 'time_t'
+    cxx_type = 'tm'
+    cxx_predecls = [ '#include <time.h>' ]
+    swig_predecls = [ '%include "python/swig/time.i"' ]
     def __init__(self, value):
         self.value = parse_time(value)
 
+    def getValue(self):
+        from m5.objects.params import tm
+
+        c_time = tm()
+        py_time = self.value
+
+        # UNIX is years since 1900
+        c_time.tm_year = py_time.tm_year - 1900;
+
+        # Python starts at 1, UNIX starts at 0
+        c_time.tm_mon =  py_time.tm_mon - 1;
+        c_time.tm_mday = py_time.tm_mday;
+        c_time.tm_hour = py_time.tm_hour;
+        c_time.tm_min = py_time.tm_min;
+        c_time.tm_sec = py_time.tm_sec;
+
+        # Python has 0 as Monday, UNIX is 0 as sunday
+        c_time.tm_wday = py_time.tm_wday + 1
+        if c_time.tm_wday > 6:
+            c_time.tm_wday -= 7;
+
+        # Python starts at 1, Unix starts at 0
+        c_time.tm_yday = py_time.tm_yday - 1;
+
+        return c_time
+
     def __str__(self):
-        tm = self.value
-        return ' '.join([ str(tm[i]) for i in xrange(8)])
+        return time.asctime(self.value)
 
     def ini_str(self):
         return str(self)
@@ -580,9 +663,16 @@ class Time(ParamValue):
 # classes (_ListEnum and _DictEnum) to serve as base classes, then
 # derive the new type from the appropriate base class on the fly.
 
-
+allEnums = {}
 # Metaclass for Enum types
 class MetaEnum(type):
+    def __new__(mcls, name, bases, dict):
+        assert name not in allEnums
+
+        cls = super(MetaEnum, mcls).__new__(mcls, name, bases, dict)
+        allEnums[name] = cls
+        return cls
+
     def __init__(cls, name, bases, init_dict):
         if init_dict.has_key('map'):
             if not isinstance(cls.map, dict):
@@ -603,18 +693,42 @@ class MetaEnum(type):
             raise TypeError, "Enum-derived class must define "\
                   "attribute 'map' or 'vals'"
 
-        cls.cxx_type = name + '::Enum'
+        cls.cxx_type = 'Enums::%s' % name
 
         super(MetaEnum, cls).__init__(name, bases, init_dict)
+
+    def __str__(cls):
+        return cls.__name__
 
     # Generate C++ class declaration for this enum type.
     # Note that we wrap the enum in a class/struct to act as a namespace,
     # so that the enum strings can be brief w/o worrying about collisions.
     def cxx_decl(cls):
-        s = 'struct %s {\n  enum Enum {\n    ' % cls.__name__
-        s += ',\n    '.join(['%s = %d' % (v,cls.map[v]) for v in cls.vals])
-        s += '\n  };\n};\n'
-        return s
+        code = "#ifndef __ENUM__%s\n" % cls
+        code += '#define __ENUM__%s\n' % cls
+        code += '\n'
+        code += 'namespace Enums {\n'
+        code += '    enum %s {\n' % cls
+        for val in cls.vals:
+            code += '        %s = %d,\n' % (val, cls.map[val])
+        code += '        Num_%s = %d,\n' % (cls, len(cls.vals))
+        code += '    };\n'
+        code += '    extern const char *%sStrings[Num_%s];\n' % (cls, cls)
+        code += '}\n'
+        code += '\n'
+        code += '#endif\n'
+        return code
+
+    def cxx_def(cls):
+        code = '#include "enums/%s.hh"\n' % cls
+        code += 'namespace Enums {\n'
+        code += '    const char *%sStrings[Num_%s] =\n' % (cls, cls)
+        code += '    {\n'
+        for val in cls.vals:
+            code += '        "%s",\n' % val
+        code += '    };\n'
+        code += '}\n'
+        return code
 
 # Base class for enum types.
 class Enum(ParamValue):
@@ -627,6 +741,9 @@ class Enum(ParamValue):
                   % (value, self.vals)
         self.value = value
 
+    def getValue(self):
+        return int(self.map[self.value])
+
     def __str__(self):
         return self.value
 
@@ -636,8 +753,11 @@ frequency_tolerance = 0.001  # 0.1%
 class TickParamValue(NumericParamValue):
     cxx_type = 'Tick'
     cxx_predecls = ['#include "sim/host.hh"']
-    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+    swig_predecls = ['%import "stdint.i"\n' +
                      '%import "sim/host.hh"']
+
+    def getValue(self):
+        return long(self.value)
 
 class Latency(TickParamValue):
     def __init__(self, value):
@@ -661,12 +781,16 @@ class Latency(TickParamValue):
             return Frequency(self)
         raise AttributeError, "Latency object has no attribute '%s'" % attr
 
+    def getValue(self):
+        if self.ticks or self.value == 0:
+            value = self.value
+        else:
+            value = ticks.fromSeconds(self.value)
+        return long(value)
+
     # convert latency to ticks
     def ini_str(self):
-        if self.ticks or self.value == 0:
-            return '%d' % self.value
-        else:
-            return '%d' % (ticks.fromSeconds(self.value))
+        return '%d' % self.getValue()
 
 class Frequency(TickParamValue):
     def __init__(self, value):
@@ -691,11 +815,15 @@ class Frequency(TickParamValue):
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
     # convert latency to ticks
-    def ini_str(self):
+    def getValue(self):
         if self.ticks or self.value == 0:
-            return '%d' % self.value
+            value = self.value
         else:
-            return '%d' % (ticks.fromSeconds(1.0 / self.value))
+            value = ticks.fromSeconds(1.0 / self.value)
+        return long(value)
+
+    def ini_str(self):
+        return '%d' % self.getValue()
 
 # A generic frequency and/or Latency value.  Value is stored as a latency,
 # but to avoid ambiguity this object does not support numeric ops (* or /).
@@ -703,7 +831,7 @@ class Frequency(TickParamValue):
 class Clock(ParamValue):
     cxx_type = 'Tick'
     cxx_predecls = ['#include "sim/host.hh"']
-    swig_predecls = ['%import "python/m5/swig/stdint.i"\n' +
+    swig_predecls = ['%import "stdint.i"\n' +
                      '%import "sim/host.hh"']
     def __init__(self, value):
         if isinstance(value, (Latency, Clock)):
@@ -726,6 +854,9 @@ class Clock(ParamValue):
             return Latency(self)
         raise AttributeError, "Frequency object has no attribute '%s'" % attr
 
+    def getValue(self):
+        return self.period.getValue()
+
     def ini_str(self):
         return self.period.ini_str()
 
@@ -739,11 +870,15 @@ class NetworkBandwidth(float,ParamValue):
     def __str__(self):
         return str(self.val)
 
-    def ini_str(self):
+    def getValue(self):
         # convert to seconds per byte
         value = 8.0 / float(self)
         # convert to ticks per byte
-        return '%f' % (ticks.fromSeconds(value))
+        value = ticks.fromSeconds(value)
+        return float(value)
+
+    def ini_str(self):
+        return '%f' % self.getValue()
 
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
@@ -755,11 +890,15 @@ class MemoryBandwidth(float,ParamValue):
     def __str__(self):
         return str(self.val)
 
-    def ini_str(self):
+    def getValue(self):
         # convert to seconds per byte
         value = 1.0 / float(self)
         # convert to ticks per byte
-        return '%f' % (ticks.fromSeconds(value))
+        value = ticks.fromSeconds(value)
+        return float(value)
+
+    def ini_str(self):
+        return '%f' % self.getValue()
 
 #
 # "Constants"... handy aliases for various values.
@@ -786,8 +925,12 @@ class NullSimObject(object):
 
     def set_path(self, parent, name):
         pass
+
     def __str__(self):
         return 'Null'
+
+    def getValue(self):
+        return None
 
 # The only instance you'll ever need...
 NULL = NullSimObject()
@@ -882,6 +1025,8 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
+        import internal
+
         if self.ccConnected: # already done this
             return
         peer = self.peer
@@ -1006,7 +1151,6 @@ class PortParamDesc(object):
     ptype_str = 'Port'
     ptype = Port
 
-
 __all__ = ['Param', 'VectorParam',
            'Enum', 'Bool', 'String', 'Float',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
@@ -1021,8 +1165,3 @@ __all__ = ['Param', 'VectorParam',
            'Time',
            'NextEthernetAddr', 'NULL',
            'Port', 'VectorPort']
-
-# see comment on imports at end of __init__.py.
-from SimObject import isSimObject, isSimObjectSequence, isSimObjectClass
-import objects
-import internal

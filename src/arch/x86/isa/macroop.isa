@@ -196,18 +196,34 @@ let {{
             self.regUsed = False
             self.regm = "0"
             self.regmUsed = False
+            self.size = None
             self.addressSize = "ADDRSIZE"
             self.dataSize = "OPSIZE"
             self.stackSize = "STACKSIZE"
             self.doModRM = False
 
         def getAllocator(self):
+            if self.size == 'b':
+                self.dataSize = 1
+            elif self.size == 'd':
+                self.dataSize = 4
+            elif self.size == 'q':
+                self.dataSize = 8
+            elif self.size == 'v':
+                self.dataSize = "OPSIZE"
+            elif self.size == 'w':
+                self.dataSize = 2
+            elif self.size == 'z':
+                self.dataSize = "((OPSIZE == 8) ? 4 : OPSIZE)"
+            elif self.size:
+                raise Exception, "Unrecognized size type %s!" % self.size
             return '''EmulEnv(%(reg)s,
                               %(regm)s,
                               %(dataSize)s,
                               %(addressSize)s,
                               %(stackSize)s)''' % \
                 self.__dict__
+
         def addReg(self, reg):
             if not self.regUsed:
                 self.reg = reg
@@ -217,6 +233,13 @@ let {{
                 self.regmUsed = True
             else:
                 raise Exception, "EmulEnv is out of register specialization spots."
+        def setSize(self, size):
+            if not self.size:
+                self.size = size
+            else:
+                if self.size is not size:
+                    raise Exception, "Conflicting register sizes %s and %s!" %\
+                        (self.size, size)
 }};
 
 let {{

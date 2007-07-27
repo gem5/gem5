@@ -34,7 +34,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/ozone_impl.hh"
-#include "sim/builder.hh"
+#include "params/OzoneChecker.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
 
@@ -59,73 +59,11 @@ class OzoneChecker :
 //
 //  CheckerCPU Simulation Object
 //
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
-
-    Param<Counter> max_insts_any_thread;
-    Param<Counter> max_insts_all_threads;
-    Param<Counter> max_loads_any_thread;
-    Param<Counter> max_loads_all_threads;
-    Param<Tick> progress_interval;
-
-#if FULL_SYSTEM
-    SimObjectParam<TheISA::ITB *> itb;
-    SimObjectParam<TheISA::DTB *> dtb;
-    SimObjectParam<System *> system;
-    Param<int> cpu_id;
-    Param<Tick> profile;
-#else
-    SimObjectParam<Process *> workload;
-#endif // FULL_SYSTEM
-    Param<int> clock;
-
-    Param<bool> defer_registration;
-    Param<bool> exitOnError;
-    Param<bool> updateOnError;
-    Param<bool> warnOnlyOnLoadError;
-    Param<bool> function_trace;
-    Param<Tick> function_trace_start;
-
-END_DECLARE_SIM_OBJECT_PARAMS(OzoneChecker)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
-
-    INIT_PARAM(max_insts_any_thread,
-               "terminate when any thread reaches this inst count"),
-    INIT_PARAM(max_insts_all_threads,
-               "terminate when all threads have reached this inst count"),
-    INIT_PARAM(max_loads_any_thread,
-               "terminate when any thread reaches this load count"),
-    INIT_PARAM(max_loads_all_threads,
-               "terminate when all threads have reached this load count"),
-    INIT_PARAM_DFLT(progress_interval, "CPU Progress Interval", 0),
-
-#if FULL_SYSTEM
-    INIT_PARAM(itb, "Instruction TLB"),
-    INIT_PARAM(dtb, "Data TLB"),
-    INIT_PARAM(system, "system object"),
-    INIT_PARAM(cpu_id, "processor ID"),
-    INIT_PARAM(profile, ""),
-#else
-    INIT_PARAM(workload, "processes to run"),
-#endif // FULL_SYSTEM
-
-    INIT_PARAM(clock, "clock speed"),
-
-    INIT_PARAM(defer_registration, "defer system registration (for sampling)"),
-    INIT_PARAM(exitOnError, "exit on error"),
-    INIT_PARAM(updateOnError, "Update the checker with the main CPU's state on error"),
-    INIT_PARAM_DFLT(warnOnlyOnLoadError, "warn, but don't exit, if a load "
-                    "result errors", false),
-    INIT_PARAM(function_trace, "Enable function trace"),
-    INIT_PARAM(function_trace_start, "Cycle to start function trace")
-
-END_INIT_SIM_OBJECT_PARAMS(OzoneChecker)
-
-
-CREATE_SIM_OBJECT(OzoneChecker)
+OzoneChecker *
+OzoneCheckerParams::create()
 {
     OzoneChecker::Params *params = new OzoneChecker::Params();
-    params->name = getInstanceName();
+    params->name = name;
     params->numberOfThreads = 1;
     params->max_insts_any_thread = 0;
     params->max_insts_all_threads = 0;
@@ -162,5 +100,3 @@ CREATE_SIM_OBJECT(OzoneChecker)
     OzoneChecker *cpu = new OzoneChecker(params);
     return cpu;
 }
-
-REGISTER_SIM_OBJECT("OzoneChecker", OzoneChecker)

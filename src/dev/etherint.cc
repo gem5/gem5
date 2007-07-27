@@ -30,7 +30,6 @@
 
 #include "dev/etherint.hh"
 #include "base/misc.hh"
-#include "sim/param.hh"
 #include "sim/sim_object.hh"
 
 void
@@ -42,6 +41,3 @@ EtherInt::setPeer(EtherInt *p)
 
     peer = p;
 }
-
-DEFINE_SIM_OBJECT_CLASS_NAME("EtherInt", EtherInt)
-

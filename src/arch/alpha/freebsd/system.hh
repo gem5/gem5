@@ -28,10 +28,13 @@
  * Authors: Ben Nash
  */
 
-#ifndef __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
-#define __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
+#ifndef __ARCH_ALPHA_FREEBSD_SYSTEM_HH__
+#define __ARCH_ALPHA_FREEBSD_SYSTEM_HH__
 
+#include "arch/alpha/system.hh"
 #include "kern/system_events.hh"
+#include "params/FreebsdAlphaSystem.hh"
+#include "sim/system.hh"
 
 class FreebsdAlphaSystem : public AlphaSystem
 {
@@ -49,10 +52,12 @@ class FreebsdAlphaSystem : public AlphaSystem
     SkipCalibrateClocksEvent *skipCalibrateClocks;
 
   public:
+    typedef FreebsdAlphaSystemParams Params;
     FreebsdAlphaSystem(Params *p);
     ~FreebsdAlphaSystem();
+
     void doCalibrateClocks(ThreadContext *tc);
 
 };
 
-#endif // __KERN_FREEBSD_FREEBSD_SYSTEM_HH__
+#endif // __ARCH_ALPHA_FREEBSD_SYSTEM_HH__

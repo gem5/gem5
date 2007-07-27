@@ -32,6 +32,7 @@
 #include <limits>
 #include <string>
 
+#include "arch/vtophys.hh"
 #include "base/inet.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
@@ -39,12 +40,10 @@
 #include "dev/sinic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/builder.hh"
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
-#include "arch/vtophys.hh"
 
 using namespace Net;
 using namespace TheISA;
@@ -754,7 +753,7 @@ Device::reset()
     regs.TxFifoSize = params()->tx_fifo_size;
     regs.RxFifoMark = params()->rx_fifo_threshold;
     regs.TxFifoMark = params()->tx_fifo_threshold;
-    regs.HwAddr = params()->eaddr;
+    regs.HwAddr = params()->hardware_address;
 
     rxList.clear();
     rxBusy.clear();
@@ -1596,172 +1595,23 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
 
 /* namespace Sinic */ }
 
-BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
-
-    SimObjectParam<EtherInt *> peer;
-    SimObjectParam<Sinic::Device *> device;
-END_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
-
-    INIT_PARAM_DFLT(peer, "peer interface", NULL),
-    INIT_PARAM(device, "Ethernet device of this interface")
-
-END_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicInterface)
-
-CREATE_SIM_OBJECT_WNS(Sinic, SinicInterface)
+Sinic::Interface *
+SinicIntParams::create()
 {
-    Sinic::Interface *dev_int = new Sinic::Interface(getInstanceName(), device);
+    using namespace Sinic;
 
-    EtherInt *p = (EtherInt *)peer;
-    if (p) {
-        dev_int->setPeer(p);
-        p->setPeer(dev_int);
+    Interface *dev_int = new Interface(name, device);
+
+    if (peer) {
+        dev_int->setPeer(peer);
+        peer->setPeer(dev_int);
     }
 
     return dev_int;
 }
 
-REGISTER_SIM_OBJECT_WNS(Sinic, "SinicInt", SinicInterface)
-
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
-
-
-    SimObjectParam<System *> system;
-    SimObjectParam<Platform *> platform;
-    Param<Tick> min_backoff_delay;
-    Param<Tick> max_backoff_delay;
-    SimObjectParam<PciConfigData *> configdata;
-    Param<uint32_t> pci_bus;
-    Param<uint32_t> pci_dev;
-    Param<uint32_t> pci_func;
-    Param<Tick> pio_latency;
-    Param<Tick> config_latency;
-    Param<Tick> intr_delay;
-
-    Param<Tick> clock;
-    Param<Tick> dma_read_delay;
-    Param<Tick> dma_read_factor;
-    Param<Tick> dma_write_delay;
-    Param<Tick> dma_write_factor;
-
-    Param<Tick> rx_delay;
-    Param<Tick> tx_delay;
-    Param<uint32_t> rx_max_copy;
-    Param<uint32_t> tx_max_copy;
-    Param<uint32_t> rx_max_intr;
-    Param<uint32_t> rx_fifo_size;
-    Param<uint32_t> tx_fifo_size;
-    Param<uint32_t> rx_fifo_threshold;
-    Param<uint32_t> rx_fifo_low_mark;
-    Param<uint32_t> tx_fifo_high_mark;
-    Param<uint32_t> tx_fifo_threshold;
-
-    Param<bool> rx_filter;
-    Param<std::string> hardware_address;
-    Param<bool> rx_thread;
-    Param<bool> tx_thread;
-    Param<bool> rss;
-    Param<uint32_t> virtual_count;
-    Param<bool> zero_copy;
-    Param<bool> delay_copy;
-    Param<bool> virtual_addr;
-
-END_DECLARE_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
-
-
-    INIT_PARAM(system, "System pointer"),
-    INIT_PARAM(platform, "Platform pointer"),
-    INIT_PARAM(min_backoff_delay, "Minimum delay after receving a nack packed"),
-    INIT_PARAM(max_backoff_delay, "Maximum delay after receving a nack packed"),
-    INIT_PARAM(configdata, "PCI Config data"),
-    INIT_PARAM(pci_bus, "PCI bus ID"),
-    INIT_PARAM(pci_dev, "PCI device number"),
-    INIT_PARAM(pci_func, "PCI function code"),
-    INIT_PARAM_DFLT(pio_latency, "Programmed IO latency in bus cycles", 1),
-    INIT_PARAM(config_latency, "Number of cycles for a config read or write"),
-    INIT_PARAM(intr_delay, "Interrupt Delay"),
-    INIT_PARAM(clock, "State machine cycle time"),
-
-    INIT_PARAM(dma_read_delay, "fixed delay for dma reads"),
-    INIT_PARAM(dma_read_factor, "multiplier for dma reads"),
-    INIT_PARAM(dma_write_delay, "fixed delay for dma writes"),
-    INIT_PARAM(dma_write_factor, "multiplier for dma writes"),
-
-    INIT_PARAM(rx_delay, "Receive Delay"),
-    INIT_PARAM(tx_delay, "Transmit Delay"),
-    INIT_PARAM(rx_max_copy, "rx max copy"),
-    INIT_PARAM(tx_max_copy, "rx max copy"),
-    INIT_PARAM(rx_max_intr, "rx max intr"),
-    INIT_PARAM(rx_fifo_size, "max size in bytes of rxFifo"),
-    INIT_PARAM(tx_fifo_size, "max size in bytes of txFifo"),
-    INIT_PARAM(rx_fifo_threshold, "max size in bytes of rxFifo"),
-    INIT_PARAM(rx_fifo_low_mark, "max size in bytes of rxFifo"),
-    INIT_PARAM(tx_fifo_high_mark, "max size in bytes of txFifo"),
-    INIT_PARAM(tx_fifo_threshold, "max size in bytes of txFifo"),
-
-    INIT_PARAM(rx_filter, "Enable Receive Filter"),
-    INIT_PARAM(hardware_address, "Ethernet Hardware Address"),
-    INIT_PARAM(rx_thread, ""),
-    INIT_PARAM(tx_thread, ""),
-    INIT_PARAM(rss, ""),
-    INIT_PARAM(virtual_count, ""),
-    INIT_PARAM(zero_copy, ""),
-    INIT_PARAM(delay_copy, ""),
-    INIT_PARAM(virtual_addr, "")
-
-END_INIT_SIM_OBJECT_PARAMS_WNS(Sinic, SinicDevice)
-
-
-CREATE_SIM_OBJECT_WNS(Sinic, SinicDevice)
+Sinic::Device *
+SinicParams::create()
 {
-    Sinic::Sinic::Device::Params *params = new Device::Params;
-    params->name = getInstanceName();
-    params->platform = platform;
-    params->system = system;
-    params->min_backoff_delay = min_backoff_delay;
-    params->max_backoff_delay = max_backoff_delay;
-    params->configData = configdata;
-    params->busNum = pci_bus;
-    params->deviceNum = pci_dev;
-    params->functionNum = pci_func;
-    params->pio_delay = pio_latency;
-    params->config_delay = config_latency;
-    params->intr_delay = intr_delay;
-    params->clock = clock;
-
-    params->dma_read_delay = dma_read_delay;
-    params->dma_read_factor = dma_read_factor;
-    params->dma_write_delay = dma_write_delay;
-    params->dma_write_factor = dma_write_factor;
-
-    params->tx_delay = tx_delay;
-    params->rx_delay = rx_delay;
-    params->rx_max_copy = rx_max_copy;
-    params->tx_max_copy = tx_max_copy;
-    params->rx_max_intr = rx_max_intr;
-    params->rx_fifo_size = rx_fifo_size;
-    params->tx_fifo_size = tx_fifo_size;
-    params->rx_fifo_threshold = rx_fifo_threshold;
-    params->rx_fifo_low_mark = rx_fifo_low_mark;
-    params->tx_fifo_high_mark = tx_fifo_high_mark;
-    params->tx_fifo_threshold = tx_fifo_threshold;
-
-    params->rx_filter = rx_filter;
-    params->eaddr = hardware_address;
-    params->rx_thread = rx_thread;
-    params->tx_thread = tx_thread;
-    params->rss = rss;
-    params->virtual_count = virtual_count;
-    params->zero_copy = zero_copy;
-    params->delay_copy = delay_copy;
-    params->virtual_addr = virtual_addr;
-
-    return new Sinic::Device(params);
+    return new Sinic::Device(this);
 }
-
-REGISTER_SIM_OBJECT_WNS(Sinic, "Sinic", SinicDevice)
-

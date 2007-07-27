@@ -56,13 +56,13 @@
 microcode = '''
 def macroop ROL_R_I
 {
-    rol reg, reg, imm
+    roli reg, reg, imm
 };
 
 def macroop ROL_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    rol t1, t1, imm
+    roli t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -70,19 +70,59 @@ def macroop ROL_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rol t1, t1, imm
+    roli t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop ROL_1_R
+{
+    roli reg, reg, 1
+};
+
+def macroop ROL_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    roli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROL_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    roli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop ROL_R_R
+{
+    rol reg, reg, regm
+};
+
+def macroop ROL_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    rol t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROL_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rol t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ROR_R_I
 {
-    ror reg, reg, imm
+    rori reg, reg, imm
 };
 
 def macroop ROR_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    ror t1, t1, imm
+    rori t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -90,19 +130,59 @@ def macroop ROR_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    ror t1, t1, imm
+    rori t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop ROR_1_R
+{
+    rori reg, reg, 1
+};
+
+def macroop ROR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rori t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rori t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop ROR_R_R
+{
+    ror reg, reg, regm
+};
+
+def macroop ROR_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    ror t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop ROR_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    ror t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop RCL_R_I
 {
-    rcl reg, reg, imm
+    rcli reg, reg, imm
 };
 
 def macroop RCL_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    rcl t1, t1, imm
+    rcli t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -110,19 +190,59 @@ def macroop RCL_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rcl t1, t1, imm
+    rcli t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop RCL_1_R
+{
+    rcli reg, reg, 1
+};
+
+def macroop RCL_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rcli t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCL_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcli t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop RCL_R_R
+{
+    rcl reg, reg, regm
+};
+
+def macroop RCL_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    rcl t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCL_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcl t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop RCR_R_I
 {
-    rcr reg, reg, imm
+    rcri reg, reg, imm
 };
 
 def macroop RCR_M_I
 {
     ld t1, ds, [scale, index, base], disp
-    rcr t1, t1, imm
+    rcri t1, t1, imm
     st t1, ds, [scale, index, base], disp
 };
 
@@ -130,13 +250,47 @@ def macroop RCR_P_I
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    rcr t1, t1, imm
+    rcri t1, t1, imm
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop RCR_1_R
+{
+    rcri reg, reg, 1
+};
+
+def macroop RCR_1_M
+{
+    ld t1, ds, [scale, index, base], disp
+    rcri t1, t1, 1
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCR_1_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcri t1, t1, 1
+    st t1, ds, [0, t0, t7], disp
+};
+
+def macroop RCR_R_R
+{
+    rcr reg, reg, regm
+};
+
+def macroop RCR_M_R
+{
+    ld t1, ds, [scale, index, base], disp
+    rcr t1, t1, reg
+    st t1, ds, [scale, index, base], disp
+};
+
+def macroop RCR_P_R
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    rcr t1, t1, reg
     st t1, ds, [0, t0, t7], disp
 };
 '''
-#let {{
-#    class RCL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class RCR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

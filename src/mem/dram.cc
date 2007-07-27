@@ -99,11 +99,10 @@ Kluwer Academic, pages 291-310, March, 2000.
  * Definition of a DRAM like main memory.
  */
 
+#include <cstdlib>
+#include <string>
 
 #include "mem/dram.hh"
-#include "sim/builder.hh"
-#include <stdlib.h>
-#include <string>
 
 extern int maxThreadsPerCPU;
 
@@ -174,7 +173,7 @@ extern int maxThreadsPerCPU;
 
 
 
-DRAMMemory::DRAMMemory(Params *p)
+DRAMMemory::DRAMMemory(const Params *p)
     : PhysicalMemory(p), cpu_ratio(p->cpu_ratio), bus_width(p->bus_width),
       mem_type(p->mem_type), mem_actpolicy(p->mem_actpolicy),
       memctrladdr_type(p->memctrladdr_type), act_lat(p->act_lat),
@@ -197,7 +196,7 @@ DRAMMemory::DRAMMemory(Params *p)
       memctrlpipe_enable(false), time_last_access(0)
 {
     warn("This DRAM module has not been tested with the new memory system at all!");
-        bank_size = (params()->addrRange.size() + 1) / num_banks;
+        bank_size = (p->range.size() + 1) / num_banks;
         num_rows = bank_size / SD_ROW_SIZE; /* 0x1000 size of row 4Kbtye */
         active_row = new int[num_banks];
         last_bank = num_banks+1;
@@ -2666,81 +2665,8 @@ else
 return precharge;
 }
 
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-BEGIN_DECLARE_SIM_OBJECT_PARAMS(DRAMMemory)
-
-    Param<std::string> file;
-    Param<Range<Addr> > range;
-    Param<Tick> latency;
-    /* additional params for dram protocol*/
-    Param<int> cpu_ratio;
-    Param<std::string> mem_type;
-    Param<std::string> mem_actpolicy;
-    Param<std::string> memctrladdr_type;
-    Param<int> bus_width;
-    Param<int> act_lat;
-    Param<int> cas_lat;
-    Param<int> war_lat;
-    Param<int> pre_lat;
-    Param<int> dpl_lat;
-    Param<int> trc_lat;
-    Param<int> num_banks;
-    Param<int> num_cpus;
-
-END_DECLARE_SIM_OBJECT_PARAMS(DRAMMemory)
-
-BEGIN_INIT_SIM_OBJECT_PARAMS(DRAMMemory)
-
-    INIT_PARAM_DFLT(file, "memory mapped file", ""),
-    INIT_PARAM(range, "Device Address Range"),
-    INIT_PARAM(latency, "Memory access latency"),
-
-    /* additional params for dram protocol*/
-    INIT_PARAM_DFLT(cpu_ratio,"ratio between CPU speed and memory bus speed",5),
-    INIT_PARAM_DFLT(mem_type,"type of DRAM","SDRAM"),
-    INIT_PARAM_DFLT(mem_actpolicy,"open / closed page policy","open"),
-    INIT_PARAM_DFLT(memctrladdr_type,"interleaved or direct mapping","interleaved"),
-    INIT_PARAM_DFLT(bus_width,"memory access bus width",16),
-    INIT_PARAM_DFLT(act_lat,"RAS to CAS delay",2),
-    INIT_PARAM_DFLT(cas_lat,"CAS delay",1),
-    INIT_PARAM_DFLT(war_lat,"write after read delay",2),
-    INIT_PARAM_DFLT(pre_lat,"precharge delay",2),
-    INIT_PARAM_DFLT(dpl_lat,"data in to precharge delay",2),
-    INIT_PARAM_DFLT(trc_lat,"row cycle delay",6),
-    INIT_PARAM_DFLT(num_banks,"Number of Banks",4),
-    INIT_PARAM_DFLT(num_cpus,"Number of CPUs connected to DRAM",4)
-
-END_INIT_SIM_OBJECT_PARAMS(DRAMMemory)
-
-CREATE_SIM_OBJECT(DRAMMemory)
+DRAMMemory *
+DRAMMemoryParams::create()
 {
-    DRAMMemory::Params *p = new DRAMMemory::Params;
-    p->name = getInstanceName();
-    p->addrRange = range;
-    p->latency = latency;
-
-    /* additional params for dram */
-    p->cpu_ratio = cpu_ratio;
-    p->bus_width = bus_width;
-    p->mem_type = mem_type;
-    p->mem_actpolicy = mem_actpolicy;
-    p->memctrladdr_type = memctrladdr_type;
-    p->act_lat = act_lat;
-    p->cas_lat = cas_lat;
-    p->war_lat = war_lat;
-    p->pre_lat = pre_lat;
-    p->dpl_lat = dpl_lat;
-    p->trc_lat = trc_lat;
-    p->num_banks = num_banks;
-    p->num_cpus = num_cpus;
-
-    return new DRAMMemory(p);
+    return new DRAMMemory(this);
 }
-
-REGISTER_SIM_OBJECT("DRAMMemory", DRAMMemory)
-
-#endif // DOXYGEN_SHOULD_SKIP_THIS
-
-

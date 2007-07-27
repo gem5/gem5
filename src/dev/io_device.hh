@@ -35,6 +35,9 @@
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"
+#include "params/BasicPioDevice.hh"
+#include "params/DmaDevice.hh"
+#include "params/PioDevice.hh"
 #include "sim/sim_object.hh"
 
 class Event;
@@ -186,28 +189,15 @@ class PioDevice : public MemObject
     virtual Tick write(PacketPtr pkt) = 0;
 
   public:
-    /** Params struct which is extended through each device based on
-     * the parameters it needs. Since we are re-writing everything, we
-     * might as well start from the bottom this time. */
-    struct Params
-    {
-        std::string name;
-        Platform *platform;
-        System *system;
-    };
-
-  protected:
-    Params *_params;
-
-  public:
-    const Params *params() const { return _params; }
-
-    PioDevice(Params *p)
-              : MemObject(p->name),  platform(p->platform), sys(p->system),
-              pioPort(NULL), _params(p)
-              {}
-
+    typedef PioDeviceParams Params;
+    PioDevice(const Params *p);
     virtual ~PioDevice();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual void init();
 
@@ -229,13 +219,6 @@ class PioDevice : public MemObject
 
 class BasicPioDevice : public PioDevice
 {
-  public:
-    struct Params :  public PioDevice::Params
-    {
-        Addr pio_addr;
-        Tick pio_delay;
-    };
-
   protected:
     /** Address that the device listens to. */
     Addr pioAddr;
@@ -247,10 +230,14 @@ class BasicPioDevice : public PioDevice
     Tick pioDelay;
 
   public:
-    BasicPioDevice(Params *p)
-        : PioDevice(p), pioAddr(p->pio_addr), pioSize(0),
-          pioDelay(p->pio_delay)
-    {}
+    typedef BasicPioDeviceParams Params;
+    BasicPioDevice(const Params *p);
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     /** return the address ranges that this device responds to.
      * @param range_list range list to populate with ranges
@@ -261,21 +248,21 @@ class BasicPioDevice : public PioDevice
 
 class DmaDevice : public PioDevice
 {
-  public:
-    struct Params :  public PioDevice::Params
-    {
-        Tick min_backoff_delay;
-        Tick max_backoff_delay;
-    };
-
    protected:
     DmaPort *dmaPort;
     Tick minBackoffDelay;
     Tick maxBackoffDelay;
 
   public:
-    DmaDevice(Params *p);
+    typedef DmaDeviceParams Params;
+    DmaDevice(const Params *p);
     virtual ~DmaDevice();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
     {

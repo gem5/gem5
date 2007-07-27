@@ -260,7 +260,7 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
         elif result == 'i':
             pass
         elif result == 'f':
-            fixwhite(name, tabsize, fixonly)
+            fixwhite(repo.wjoin(name), tabsize, fixonly)
         else:
             raise RepoError, "Invalid response: '%s'" % result
 

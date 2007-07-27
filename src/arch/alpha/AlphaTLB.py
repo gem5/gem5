@@ -35,8 +35,14 @@ class AlphaTLB(SimObject):
 
 class AlphaDTB(AlphaTLB):
     type = 'AlphaDTB'
+    cxx_namespace = 'AlphaISA'
+    cxx_class = 'DTB'
+
     size = 64
 
 class AlphaITB(AlphaTLB):
     type = 'AlphaITB'
+    cxx_namespace = 'AlphaISA'
+    cxx_class = 'ITB'
+
     size = 48

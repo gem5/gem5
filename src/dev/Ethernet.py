@@ -180,6 +180,8 @@ class SinicPciData(PciConfigData):
 
 class Sinic(EtherDevBase):
     type = 'Sinic'
+    cxx_namespace = 'Sinic'
+    cxx_class = 'Device'
 
     rx_max_copy = Param.MemorySize('1514B', "rx max copy")
     tx_max_copy = Param.MemorySize('16kB', "tx max copy")
@@ -197,4 +199,7 @@ class Sinic(EtherDevBase):
 
 class SinicInt(EtherInt):
     type = 'SinicInt'
+    cxx_namespace = 'Sinic'
+    cxx_class = 'Interface'
+
     device = Param.Sinic("Ethernet device of this interface")

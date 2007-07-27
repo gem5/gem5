@@ -39,6 +39,7 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "dev/disk_image.hh"
+#include "params/MmDisk.hh"
 
 class MmDisk : public BasicPioDevice
 {
@@ -49,15 +50,14 @@ class MmDisk : public BasicPioDevice
     uint8_t diskData[SectorSize];
 
   public:
-    struct Params : public BasicPioDevice::Params
-    {
-        DiskImage *image;
-    };
-  protected:
-    const Params *params() const { return (const Params*)_params; }
+    typedef MmDiskParams Params;
+    MmDisk(const Params *p);
 
-  public:
-    MmDisk(Params *p);
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
