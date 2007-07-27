@@ -407,9 +407,29 @@
             0x7: iret();
         }
         0x1A: decode OPCODE_OP_BOTTOM3 {
-            0x0: group2_Eb_1();
-            0x1: group2_Ev_1();
             format Inst {
+                //0x0: group2_Eb_1();
+                0x0: decode MODRM_REG {
+                    0x0: ROL_1(Eb);
+                    0x1: ROR_1(Eb);
+                    0x2: RCL_1(Eb);
+                    0x3: RCR_1(Eb);
+                    0x4: SAL_1(Eb);
+                    0x5: SHR_1(Eb);
+                    0x6: SAL_1(Eb);
+                    0x7: SAR_1(Eb);
+                }
+                //0x1: group2_Ev_1();
+                0x1: decode MODRM_REG {
+                    0x0: ROL_1(Ev);
+                    0x1: ROR_1(Ev);
+                    0x2: RCL_1(Ev);
+                    0x3: RCR_1(Ev);
+                    0x4: SAL_1(Ev);
+                    0x5: SHR_1(Ev);
+                    0x6: SAL_1(Ev);
+                    0x7: SAR_1(Ev);
+                }
                 //0x2: group2_Eb_Cl();
                 0x2: decode MODRM_REG {
                     0x0: ROL(Eb,rCb);
@@ -497,7 +517,7 @@
             0x6: decode MODRM_REG {
                 0x0: Inst::TEST(Eb,Iz);
                 0x1: Inst::TEST(Eb,Iz);
-                0x2: not_Eb();
+                0x2: Inst::NOT(Eb);
                 0x3: Inst::NEG(Eb);
                 0x4: mul_Eb();
                 0x5: imul_Eb();
@@ -508,7 +528,7 @@
             0x7: decode MODRM_REG {
                 0x0: Inst::TEST(Ev,Iz);
                 0x1: Inst::TEST(Ev,Iz);
-                0x2: not_Ev();
+                0x2: Inst::NOT(Ev);
                 0x3: Inst::NEG(Ev);
                 0x4: mul_Ev();
                 0x5: imul_Ev();
