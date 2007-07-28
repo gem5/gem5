@@ -85,7 +85,7 @@ def checkwhite_line(line):
     return True
 
 def checkwhite(filename):
-    if not whitespace_file(filename)
+    if not whitespace_file(filename):
         return
 
     try:
@@ -115,7 +115,7 @@ def fixwhite_line(line, tabsize):
     return line.rstrip() + '\n'
 
 def fixwhite(filename, tabsize, fixonly=None):
-    if not whitespace_file(filename)
+    if not whitespace_file(filename):
         return
 
     try:
@@ -390,9 +390,10 @@ if __name__ == '__main__':
             fixwhite(filename, tabsize)
     elif command == 'chkwhite':
         for filename in args:
-            line = checkwhite(filename)
-            if line:
-                print 'invalid whitespace at %s:%d' % (filename, line)
+            for line,num in checkwhite(filename):
+                print 'invalid whitespace: %s:%d' % (filename, num)
+                if verbose:
+                    print '>>%s<<' % line[:-1]
     elif command == 'chkformat':
         stats = ValidationStats()
         for filename in files:
