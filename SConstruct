@@ -86,7 +86,7 @@ except:
     print "Error checking current SCons version."
     print "SCons", ".".join(map(str,min_scons_version)), "or greater required."
     Exit(2)
-    
+
 
 # The absolute path to the current directory (where this file lives).
 ROOT = Dir('.').abspath
@@ -211,7 +211,7 @@ env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
 
-#Parse CC/CXX early so that we use the correct compiler for 
+#Parse CC/CXX early so that we use the correct compiler for
 # to test for dependencies/versions/libraries/includes
 if ARGUMENTS.get('CC', None):
     env['CC'] = ARGUMENTS.get('CC')
@@ -240,14 +240,14 @@ env.Append(ENV = { 'M5_PLY' : Dir('ext/ply') })
 env['GCC'] = False
 env['SUNCC'] = False
 env['ICC'] = False
-env['GCC'] = subprocess.Popen(env['CXX'] + ' --version', shell=True, 
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+env['GCC'] = subprocess.Popen(env['CXX'] + ' --version', shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         close_fds=True).communicate()[0].find('GCC') >= 0
-env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         close_fds=True).communicate()[0].find('Sun C++') >= 0
-env['ICC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True, 
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+env['ICC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         close_fds=True).communicate()[0].find('Intel') >= 0
 if env['GCC'] + env['SUNCC'] + env['ICC'] > 1:
     print 'Error: How can we have two at the same time?'
@@ -309,7 +309,7 @@ for scanner in env['SCANNERS']:
     skeys = scanner.skeys
     if skeys == '.i':
         continue
-    
+
     if isinstance(skeys, (list, tuple)) and '.i' in skeys:
         continue
 
@@ -528,7 +528,7 @@ def config_emitter(target, source, env):
         val = int(val)
     elif isinstance(val, str):
         val = '"' + val + '"'
-        
+
     # Sources are option name & value (packaged in SCons Value nodes)
     return ([target], [Value(option), Value(val)])
 
@@ -585,22 +585,22 @@ def make_switching_dir(dirname, switch_headers, env):
     # header to generate.  'source' is a dummy variable, since we get the
     # list of ISAs from env['ALL_ISA_LIST'].
     def gen_switch_hdr(target, source, env):
-	fname = str(target[0])
-	basename = os.path.basename(fname)
-	f = open(fname, 'w')
-	f.write('#include "arch/isa_specific.hh"\n')
-	cond = '#if'
-	for isa in all_isa_list:
-	    f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
-		    % (cond, isa.upper(), dirname, isa, basename))
-	    cond = '#elif'
-	f.write('#else\n#error "THE_ISA not set"\n#endif\n')
-	f.close()
-	return 0
+        fname = str(target[0])
+        basename = os.path.basename(fname)
+        f = open(fname, 'w')
+        f.write('#include "arch/isa_specific.hh"\n')
+        cond = '#if'
+        for isa in all_isa_list:
+            f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
+                    % (cond, isa.upper(), dirname, isa, basename))
+            cond = '#elif'
+        f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+        f.close()
+        return 0
 
     # String to print when generating header
     def gen_switch_hdr_string(target, source, env):
-	return "Generating switch header " + str(target[0])
+        return "Generating switch header " + str(target[0])
 
     # Build SCons Action object. 'varlist' specifies env vars that this
     # action depends on; when env['ALL_ISA_LIST'] changes these actions
