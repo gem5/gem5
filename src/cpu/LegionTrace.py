@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,33 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from InstTracer import InstTracer
 
-SimObject('Root.py')
-SimObject('System.py')
-SimObject('InstTracer.py')
-
-Source('async.cc')
-Source('core.cc')
-Source('debug.cc')
-Source('eventq.cc')
-Source('faults.cc')
-Source('main.cc')
-Source('root.cc')
-Source('serialize.cc')
-Source('sim_events.cc')
-Source('sim_object.cc')
-Source('simulate.cc')
-Source('startup.cc')
-Source('stat_control.cc')
-Source('system.cc')
-
-if env['FULL_SYSTEM']:
-    Source('pseudo_inst.cc')
-else:
-    SimObject('Process.py')
-
-    Source('process.cc')
-    Source('syscall_emul.cc')
+class LegionTrace(InstTracer):
+    type = 'LegionTrace'
+    cxx_namespace = 'Trace'
+    cxx_class = 'LegionTrace'

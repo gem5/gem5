@@ -214,6 +214,32 @@ class LiveProcess : public Process
 
   public:
 
+    enum AuxiliaryVectorType {
+        M5_AT_NULL = 0,
+        M5_AT_IGNORE = 1,
+        M5_AT_EXECFD = 2,
+        M5_AT_PHDR = 3,
+        M5_AT_PHENT = 4,
+        M5_AT_PHNUM = 5,
+        M5_AT_PAGESZ = 6,
+        M5_AT_BASE = 7,
+        M5_AT_FLAGS = 8,
+        M5_AT_ENTRY = 9,
+        M5_AT_NOTELF = 10,
+        M5_AT_UID = 11,
+        M5_AT_EUID = 12,
+        M5_AT_GID = 13,
+        M5_AT_EGID = 14,
+        // The following may be specific to Linux
+        M5_AT_PLATFORM = 15,
+        M5_AT_HWCAP = 16,
+        M5_AT_CLKTCK = 17,
+
+        M5_AT_SECURE = 23,
+
+        M5_AT_VECTOR_SIZE = 44
+    };
+
     inline uint64_t uid() {return __uid;}
     inline uint64_t euid() {return __euid;}
     inline uint64_t gid() {return __gid;}

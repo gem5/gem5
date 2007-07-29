@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,31 +25,60 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Steve Reinhardt
+ *          Nathan Binkert
  */
 
-#if defined __alpha__
-        #error "Alpha architecture not implemented"
-#elif defined __amd64__
-//        #error "AMD64 architecture not implemented"
-        #include "arch/tracechild_amd64.cc"
-#elif defined __hppa__
-        #error "Hppa architecture not implemented"
-#elif defined __i386__ || defined __i486__ || \
-                defined __i586__ || defined __i686
-        #include "arch/tracechild_i386.cc"
-#elif defined __ia64__
-        #error "IA64 architecture not implemented"
-#elif defined __mips__
-        #error "Mips architecture not implemented"
-#elif defined __powerpc__
-        #error "PowerPC architecture not implemented"
-#elif defined __sparc__
-        #include "arch/tracechild_sparc.cc"
-#elif defined __sh__
-        #include "SuperH architecture not implemented"
-#elif defined __s390__
-        #include "System/390 architecture not implemented"
-#else
-        #error "Couldn't determine architecture"
-#endif
+#ifndef __INTELTRACE_HH__
+#define __INTELTRACE_HH__
+
+#include "base/trace.hh"
+#include "cpu/static_inst.hh"
+#include "sim/host.hh"
+#include "sim/insttracer.hh"
+
+class ThreadContext;
+
+
+namespace Trace {
+
+class IntelTraceRecord : public InstRecord
+{
+  public:
+    IntelTraceRecord(Tick _when, ThreadContext *_thread,
+               const StaticInstPtr &_staticInst, Addr _pc, bool spec)
+        : InstRecord(_when, _thread, _staticInst, _pc, spec)
+    {
+    }
+
+    void dump();
+};
+
+class IntelTrace : public InstTracer
+{
+  public:
+
+    IntelTrace(const std::string & name) : InstTracer(name)
+    {}
+
+    IntelTraceRecord *
+    getInstRecord(Tick when, ThreadContext *tc,
+            const StaticInstPtr staticInst, Addr pc)
+    {
+        if (!IsOn(ExecEnable))
+            return NULL;
+
+        if (!Trace::enabled)
+            return NULL;
+
+        if (!IsOn(ExecSpeculative) && tc->misspeculating())
+            return NULL;
+
+        return new IntelTraceRecord(when, tc,
+                staticInst, pc, tc->misspeculating());
+    }
+};
+
+/* namespace Trace */ }
+
+#endif // __EXETRACE_HH__

@@ -417,7 +417,7 @@ BaseSimpleCPU::preExecute()
     if(curStaticInst)
     {
 #if TRACING_ON
-        traceData = Trace::getInstRecord(curTick, tc, curStaticInst,
+        traceData = tracer->getInstRecord(curTick, tc, curStaticInst,
                                          thread->readPC());
 
         DPRINTF(Decode,"Decode: Decoded %s instruction: 0x%x\n",

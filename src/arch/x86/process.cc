@@ -122,9 +122,10 @@ X86LiveProcess::X86LiveProcess(const std::string &nm, ObjectFile *objFile,
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
-    // Set up stack. On SPARC Linux, stack goes from the top of memory
-    // downward, less the hole for the kernel address space.
-    stack_base = (Addr)0x80000000000ULL;
+    // Set up stack. On X86_64 Linux, stack goes from the top of memory
+    // downward, less the hole for the kernel address space plus one page
+    // for undertermined purposes.
+    stack_base = (Addr)0x7FFFFFFFF000ULL;
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
@@ -165,29 +166,49 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     else
         filename = argv[0];
 
-    Addr alignmentMask = ~(intSize - 1);
+    //We want 16 byte alignment
+    Addr alignmentMask = ~mask(4);
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
-    //These are the auxilliary vector types
-    enum auxTypes
-    {
-        X86_AT_NULL = 0,
-        X86_AT_IGNORE = 1,
-        X86_AT_EXECFD = 2,
-        X86_AT_PHDR = 3,
-        X86_AT_PHENT = 4,
-        X86_AT_PHNUM = 5,
-        X86_AT_PAGESZ = 6,
-        X86_AT_BASE = 7,
-        X86_AT_FLAGS = 8,
-        X86_AT_ENTRY = 9,
-        X86_AT_NOTELF = 10,
-        X86_AT_UID = 11,
-        X86_AT_EUID = 12,
-        X86_AT_GID = 13,
-        X86_AT_EGID = 14
+    enum X86CpuFeature {
+        X86_OnboardFPU = 1 << 0,
+        X86_VirtualModeExtensions = 1 << 1,
+        X86_DebuggingExtensions = 1 << 2,
+        X86_PageSizeExtensions = 1 << 3,
+
+        X86_TimeStampCounter = 1 << 4,
+        X86_ModelSpecificRegisters = 1 << 5,
+        X86_PhysicalAddressExtensions = 1 << 6,
+        X86_MachineCheckExtensions = 1 << 7,
+
+        X86_CMPXCHG8Instruction = 1 << 8,
+        X86_OnboardAPIC = 1 << 9,
+        X86_SYSENTER_SYSEXIT = 1 << 11,
+
+        X86_MemoryTypeRangeRegisters = 1 << 12,
+        X86_PageGlobalEnable = 1 << 13,
+        X86_MachineCheckArchitecture = 1 << 14,
+        X86_CMOVInstruction = 1 << 15,
+
+        X86_PageAttributeTable = 1 << 16,
+        X86_36BitPSEs = 1 << 17,
+        X86_ProcessorSerialNumber = 1 << 18,
+        X86_CLFLUSHInstruction = 1 << 19,
+
+        X86_DebugTraceStore = 1 << 21,
+        X86_ACPIViaMSR = 1 << 22,
+        X86_MultimediaExtensions = 1 << 23,
+
+        X86_FXSAVE_FXRSTOR = 1 << 24,
+        X86_StreamingSIMDExtensions = 1 << 25,
+        X86_StreamingSIMDExtensions2 = 1 << 26,
+        X86_CPUSelfSnoop = 1 << 27,
+
+        X86_HyperThreading = 1 << 28,
+        X86_AutomaticClockControl = 1 << 29,
+        X86_IA64Processor = 1 << 30
     };
 
     //Setup the auxilliary vectors. These will already have endian conversion.
@@ -195,36 +216,71 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if(elfObject)
     {
-        /*
+        uint64_t features =
+            X86_OnboardFPU |
+            X86_VirtualModeExtensions |
+            X86_DebuggingExtensions |
+            X86_PageSizeExtensions |
+            X86_TimeStampCounter |
+            X86_ModelSpecificRegisters |
+            X86_PhysicalAddressExtensions |
+            X86_MachineCheckExtensions |
+            X86_CMPXCHG8Instruction |
+            X86_OnboardAPIC |
+            X86_SYSENTER_SYSEXIT |
+            X86_MemoryTypeRangeRegisters |
+            X86_PageGlobalEnable |
+            X86_MachineCheckArchitecture |
+            X86_CMOVInstruction |
+            X86_PageAttributeTable |
+            X86_36BitPSEs |
+//            X86_ProcessorSerialNumber |
+            X86_CLFLUSHInstruction |
+//            X86_DebugTraceStore |
+//            X86_ACPIViaMSR |
+            X86_MultimediaExtensions |
+            X86_FXSAVE_FXRSTOR |
+            X86_StreamingSIMDExtensions |
+            X86_StreamingSIMDExtensions2 |
+//            X86_CPUSelfSnoop |
+//            X86_HyperThreading |
+//            X86_AutomaticClockControl |
+//            X86_IA64Processor |
+            0;
+
         //Bits which describe the system hardware capabilities
-        auxv.push_back(auxv_t(SPARC_AT_HWCAP, hwcap));
+        //XXX Figure out what these should be
+        auxv.push_back(auxv_t(M5_AT_HWCAP, features));
         //The system page size
-        auxv.push_back(auxv_t(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
-        //Defined to be 100 in the kernel source.
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, X86ISA::VMPageSize));
         //Frequency at which times() increments
-        auxv.push_back(auxv_t(SPARC_AT_CLKTCK, 100));
+        auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
-        auxv.push_back(auxv_t(SPARC_AT_PHDR, elfObject->programHeaderTable()));
+        auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
         // This is the size of a program header entry from the elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHENT, elfObject->programHeaderSize()));
+        auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHNUM, elfObject->programHeaderCount()));
+        auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        //Defined to be 100 in the kernel source.
         //This is the address of the elf "interpreter", It should be set
         //to 0 for regular executables. It should be something else
         //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(SPARC_AT_BASE, 0));
-        //This is hardwired to 0 in the elf loading code in the kernel
-        auxv.push_back(auxv_t(SPARC_AT_FLAGS, 0));
+        auxv.push_back(auxv_t(M5_AT_BASE, 0));
+
+        //XXX Figure out what this should be.
+        auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
-        auxv.push_back(auxv_t(SPARC_AT_ENTRY, objFile->entryPoint()));
+        auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
-        auxv.push_back(auxv_t(SPARC_AT_UID, uid()));
-        auxv.push_back(auxv_t(SPARC_AT_EUID, euid()));
-        auxv.push_back(auxv_t(SPARC_AT_GID, gid()));
-        auxv.push_back(auxv_t(SPARC_AT_EGID, egid()));
+        auxv.push_back(auxv_t(M5_AT_UID, uid()));
+        auxv.push_back(auxv_t(M5_AT_EUID, euid()));
+        auxv.push_back(auxv_t(M5_AT_GID, gid()));
+        auxv.push_back(auxv_t(M5_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
-        auxv.push_back(auxv_t(SPARC_AT_SECURE, 0));*/
+        auxv.push_back(auxv_t(M5_AT_SECURE, 0));
+        //The string "x86_64" with unknown meaning
+        auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
     }
 
     //Figure out how big the initial stack needs to be
@@ -234,29 +290,39 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     //This is the name of the file which is present on the initial stack
     //It's purpose is to let the user space linker examine the original file.
-    int file_name_size = filename.size() + 1;
+    int file_name_size = filename.size();
+
+    string platform = "x86_64";
+    int aux_data_size = platform.size() + 1;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
-        env_data_size += envp[i].size() + 1;
+        env_data_size += envp[i].size();
     }
     int arg_data_size = 0;
     for (int i = 0; i < argv.size(); ++i) {
-        arg_data_size += argv[i].size() + 1;
+        arg_data_size += argv[i].size();
     }
+
+    //The auxiliary vector data needs to be padded so it's size is a multiple
+    //of the alignment mask.
+    int aux_padding =
+        ((aux_data_size + ~alignmentMask) & alignmentMask) - aux_data_size;
 
     //The info_block needs to be padded so it's size is a multiple of the
     //alignment mask. Also, it appears that there needs to be at least some
     //padding, so if the size is already a multiple, we need to increase it
     //anyway.
     int info_block_size =
-        (file_name_size +
+        (mysterious_size +
+        file_name_size +
         env_data_size +
         arg_data_size +
-        intSize) & alignmentMask;
+        ~alignmentMask) & alignmentMask;
 
     int info_block_padding =
         info_block_size -
+        mysterious_size -
         file_name_size -
         env_data_size -
         arg_data_size;
@@ -270,8 +336,9 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     int argc_size = intSize;
 
     int space_needed =
-        mysterious_size +
         info_block_size +
+        aux_data_size +
+        aux_padding +
         aux_array_size +
         envp_array_size +
         argv_array_size +
@@ -290,7 +357,8 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     Addr file_name_base = mysterious_base - file_name_size;
     Addr env_data_base = file_name_base - env_data_size;
     Addr arg_data_base = env_data_base - arg_data_size;
-    Addr auxv_array_base = arg_data_base - aux_array_size - info_block_padding;
+    Addr aux_data_base = arg_data_base - aux_data_size - info_block_padding;
+    Addr auxv_array_base = aux_data_base - aux_array_size - aux_padding;
     Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
@@ -299,6 +367,7 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     DPRINTF(X86, "0x%x - file name\n", file_name_base);
     DPRINTF(X86, "0x%x - env data\n", env_data_base);
     DPRINTF(X86, "0x%x - arg data\n", arg_data_base);
+    DPRINTF(X86, "0x%x - aux data\n", aux_data_base);
     DPRINTF(X86, "0x%x - auxv array\n", auxv_array_base);
     DPRINTF(X86, "0x%x - envp array\n", envp_array_base);
     DPRINTF(X86, "0x%x - argv array\n", argv_array_base);
@@ -319,6 +388,10 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     //Write the file name
     initVirtMem->writeString(file_name_base, filename.c_str());
 
+    //Fix up the aux vector which points to the "platform" string
+    assert(auxv[auxv.size() - 1].a_type = M5_AT_PLATFORM);
+    auxv[auxv.size() - 1].a_val = aux_data_base;
+
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
     {
@@ -332,15 +405,19 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
             (uint8_t*)&zero, 2 * intSize);
 
+    initVirtMem->writeString(aux_data_base, platform.c_str());
+
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     //Set up the thread context to start running the process
-    assert(NumArgumentRegs >= 2);
-    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
-    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
+    //Because of the peculiarities of how syscall works, I believe
+    //a process starts with r11 containing the value of eflags or maybe r11
+    //from before the call to execve. Empirically this value is 0x200.
+    threadContexts[0]->setIntReg(INTREG_R11, 0x200);
+    //Set the stack pointer register
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();

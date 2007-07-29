@@ -32,141 +32,52 @@
 #ifndef __EXETRACE_HH__
 #define __EXETRACE_HH__
 
-#include <cstring>
-#include <fstream>
-#include <vector>
-
 #include "base/trace.hh"
-#include "cpu/inst_seq.hh"	// for InstSeqNum
 #include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
 #include "sim/host.hh"
+#include "sim/insttracer.hh"
 
 class ThreadContext;
 
 
 namespace Trace {
 
-class InstRecord
+class ExeTracerRecord : public InstRecord
 {
-  protected:
-    typedef TheISA::IntRegFile IntRegFile;
-
-    Tick when;
-
-    // The following fields are initialized by the constructor and
-    // thus guaranteed to be valid.
-    ThreadContext *thread;
-    // need to make this ref-counted so it doesn't go away before we
-    // dump the record
-    StaticInstPtr staticInst;
-    Addr PC;
-    bool misspeculating;
-
-    // The remaining fields are only valid for particular instruction
-    // types (e.g, addresses for memory ops) or when particular
-    // options are enabled (e.g., tracing full register contents).
-    // Each data field has an associated valid flag to indicate
-    // whether the data field is valid.
-    Addr addr;
-    bool addr_valid;
-
-    union {
-        uint64_t as_int;
-        double as_double;
-    } data;
-    enum {
-        DataInvalid = 0,
-        DataInt8 = 1,	// set to equal number of bytes
-        DataInt16 = 2,
-        DataInt32 = 4,
-        DataInt64 = 8,
-        DataDouble = 3
-    } data_status;
-
-    InstSeqNum fetch_seq;
-    bool fetch_seq_valid;
-
-    InstSeqNum cp_seq;
-    bool cp_seq_valid;
-
-    struct iRegFile {
-        IntRegFile regs;
-    };
-    iRegFile *iregs;
-    bool regs_valid;
-
   public:
-    InstRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr &_staticInst,
-               Addr _pc, bool spec)
-        : when(_when), thread(_thread),
-          staticInst(_staticInst), PC(_pc),
-          misspeculating(spec)
+    ExeTracerRecord(Tick _when, ThreadContext *_thread,
+               const StaticInstPtr &_staticInst, Addr _pc, bool spec)
+        : InstRecord(_when, _thread, _staticInst, _pc, spec)
     {
-        data_status = DataInvalid;
-        addr_valid = false;
-        regs_valid = false;
-
-        fetch_seq_valid = false;
-        cp_seq_valid = false;
     }
-
-    ~InstRecord() { }
-
-    void setAddr(Addr a) { addr = a; addr_valid = true; }
-
-    void setData(Twin64_t d) { data.as_int = d.a; data_status = DataInt64; }
-    void setData(Twin32_t d) { data.as_int = d.a; data_status = DataInt32; }
-    void setData(uint64_t d) { data.as_int = d; data_status = DataInt64; }
-    void setData(uint32_t d) { data.as_int = d; data_status = DataInt32; }
-    void setData(uint16_t d) { data.as_int = d; data_status = DataInt16; }
-    void setData(uint8_t d) { data.as_int = d; data_status = DataInt8; }
-
-    void setData(int64_t d) { setData((uint64_t)d); }
-    void setData(int32_t d) { setData((uint32_t)d); }
-    void setData(int16_t d) { setData((uint16_t)d); }
-    void setData(int8_t d)  { setData((uint8_t)d); }
-
-    void setData(double d) { data.as_double = d; data_status = DataDouble; }
-
-    void setFetchSeq(InstSeqNum seq)
-    { fetch_seq = seq; fetch_seq_valid = true; }
-
-    void setCPSeq(InstSeqNum seq)
-    { cp_seq = seq; cp_seq_valid = true; }
-
-    void setRegs(const IntRegFile &regs);
 
     void dump();
 };
 
-
-inline void
-InstRecord::setRegs(const IntRegFile &regs)
+class ExeTracer : public InstTracer
 {
-    if (!iregs)
-      iregs = new iRegFile;
+  public:
 
-    std::memcpy(&iregs->regs, &regs, sizeof(IntRegFile));
-    regs_valid = true;
-}
+    ExeTracer(const std::string & name) : InstTracer(name)
+    {}
 
-inline InstRecord *
-getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
-              Addr pc)
-{
-    if (!IsOn(ExecEnable))
-        return NULL;
+    InstRecord *
+    getInstRecord(Tick when, ThreadContext *tc,
+            const StaticInstPtr staticInst, Addr pc)
+    {
+        if (!IsOn(ExecEnable))
+            return NULL;
 
-    if (!Trace::enabled)
-        return NULL;
+        if (!Trace::enabled)
+            return NULL;
 
-    if (!IsOn(ExecSpeculative) && tc->misspeculating())
-        return NULL;
+        if (!IsOn(ExecSpeculative) && tc->misspeculating())
+            return NULL;
 
-    return new InstRecord(when, tc, staticInst, pc, tc->misspeculating());
-}
+        return new ExeTracerRecord(when, tc,
+                staticInst, pc, tc->misspeculating());
+    }
+};
 
 /* namespace Trace */ }
 

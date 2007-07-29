@@ -33,13 +33,10 @@
 
 #include <iomanip>
 
-#include "base/loader/symtab.hh"
-#include "cpu/base.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/inteltrace.hh"
 #include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
-#include "enums/OpClass.hh"
-#include "params/ExeTracer.hh"
+#include "params/IntelTrace.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -47,63 +44,16 @@ using namespace TheISA;
 namespace Trace {
 
 void
-Trace::ExeTracerRecord::dump()
+Trace::IntelTraceRecord::dump()
 {
     ostream &outs = Trace::output();
-
-    if (IsOn(ExecTicks))
-        ccprintf(outs, "%7d: ", when);
-
-    outs << thread->getCpuPtr()->name() << " ";
-
-    if (IsOn(ExecSpeculative))
-        outs << (misspeculating ? "-" : "+") << " ";
-
-    if (IsOn(ExecThread))
-        outs << "T" << thread->getThreadNum() << " : ";
-
-
-    std::string sym_str;
-    Addr sym_addr;
-    if (debugSymbolTable
-        && IsOn(ExecSymbol)
-        && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
-        if (PC != sym_addr)
-            sym_str += csprintf("+%d", PC - sym_addr);
-        outs << "@" << sym_str << " : ";
+    ccprintf(outs, "%7d ) ", when);
+    outs << "0x" << hex << PC << ":\t";
+    if (staticInst->isLoad()) {
+        ccprintf(outs, "<RD %#x>", addr);
+    } else if (staticInst->isStore()) {
+        ccprintf(outs, "<WR %#x>", addr);
     }
-    else {
-        outs << "0x" << hex << PC << " : ";
-    }
-
-    //
-    //  Print decoded instruction
-    //
-
-    outs << setw(26) << left;
-    outs << staticInst->disassemble(PC, debugSymbolTable);
-    outs << " : ";
-
-    if (IsOn(ExecOpClass)) {
-        outs << Enums::OpClassStrings[staticInst->opClass()] << " : ";
-    }
-
-    if (IsOn(ExecResult) && data_status != DataInvalid) {
-        ccprintf(outs, " D=%#018x", data.as_int);
-    }
-
-    if (IsOn(ExecEffAddr) && addr_valid)
-        outs << " A=0x" << hex << addr;
-
-    if (IsOn(ExecFetchSeq) && fetch_seq_valid)
-        outs << "  FetchSeq=" << dec << fetch_seq;
-
-    if (IsOn(ExecCPSeq) && cp_seq_valid)
-        outs << "  CPSeq=" << dec << cp_seq;
-
-    //
-    //  End of line...
-    //
     outs << endl;
 }
 
@@ -113,8 +63,8 @@ Trace::ExeTracerRecord::dump()
 //
 //  ExeTracer Simulation Object
 //
-Trace::ExeTracer *
-ExeTracerParams::create()
+Trace::IntelTrace *
+IntelTraceParams::create()
 {
-    return new Trace::ExeTracer(name);
+    return new Trace::IntelTrace(name);
 };

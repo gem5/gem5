@@ -85,8 +85,10 @@ def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
+    # This needs to work slightly differently from the other versions of push
+    # because the -original- version of the stack pointer is what gets pushed
+    st reg, ss, [0, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st reg, ss, [0, t0, rsp]
 };
 
 def macroop PUSH_I {
@@ -130,14 +132,13 @@ def macroop PUSHA {
 };
 
 def macroop POPA {
-    st rdi, ss, [0, t0, rsp], "0 * env.dataSize"
-    st rsi, ss, [0, t0, rsp], "1 * env.dataSize"
-    st rbp, ss, [0, t0, rsp], "2 * env.dataSize"
-    st rsp, ss, [0, t0, rsp], "3 * env.dataSize"
-    st rbx, ss, [0, t0, rsp], "4 * env.dataSize"
-    st rdx, ss, [0, t0, rsp], "5 * env.dataSize"
-    st rcx, ss, [0, t0, rsp], "6 * env.dataSize"
-    st rax, ss, [0, t0, rsp], "7 * env.dataSize"
+    ld rdi, ss, [0, t0, rsp], "0 * env.dataSize"
+    ld rsi, ss, [0, t0, rsp], "1 * env.dataSize"
+    ld rbp, ss, [0, t0, rsp], "2 * env.dataSize"
+    ld rbx, ss, [0, t0, rsp], "4 * env.dataSize"
+    ld rdx, ss, [0, t0, rsp], "5 * env.dataSize"
+    ld rcx, ss, [0, t0, rsp], "6 * env.dataSize"
+    ld rax, ss, [0, t0, rsp], "7 * env.dataSize"
     addi rsp, rsp, "8 * env.dataSize"
 };
 '''

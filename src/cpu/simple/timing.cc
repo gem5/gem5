@@ -725,6 +725,7 @@ TimingSimpleCPUParams::create()
     params->functionTraceStart = function_trace_start;
     params->system = system;
     params->cpu_id = cpu_id;
+    params->tracer = tracer;
 
 #if FULL_SYSTEM
     params->itb = itb;

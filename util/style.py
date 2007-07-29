@@ -306,7 +306,7 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
         lines = mdiff.splitnewlines(file_data)
         mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
         if len(pctx) == 2:
-            m2 = modified_lines(pctx[1].data(), file_data)
+            m2 = modified_lines(pctx[1].data(), file_data, len(lines))
             mod_lines = mod_lines & m2 # only the lines that are new in both
 
         fixonly = set()

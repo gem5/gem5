@@ -142,12 +142,12 @@ def template MicroLimmOpConstructor {{
 
 let {{
     class LimmOp(X86Microop):
-        def __init__(self, dest, imm):
+        def __init__(self, dest, imm, dataSize="env.dataSize"):
             self.className = "Limm"
             self.mnemonic = "limm"
             self.dest = dest
             self.imm = imm
-            self.dataSize = "env.dataSize"
+            self.dataSize = dataSize
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, mnemonic
@@ -165,7 +165,7 @@ let {{
 let {{
     # Build up the all register version of this micro op
     iop = InstObjParams("limm", "Limm", 'X86MicroopBase',
-            {"code" : "DestReg = imm;"})
+            {"code" : "DestReg = merge(DestReg, imm, dataSize);"})
     header_output += MicroLimmOpDeclare.subst(iop)
     decoder_output += MicroLimmOpConstructor.subst(iop)
     decoder_output += MicroLimmOpDisassembly.subst(iop)

@@ -570,6 +570,7 @@ AtomicSimpleCPUParams::create()
     params->simulate_stalls = simulate_stalls;
     params->system = system;
     params->cpu_id = cpu_id;
+    params->tracer = tracer;
 
 #if FULL_SYSTEM
     params->itb = itb;

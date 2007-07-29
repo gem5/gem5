@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -181,7 +181,10 @@ bool NestingPrinter::configure(string config)
         lastEndPos = endPos;
         constStrings.push_back(prefix);
         string subConfig, subString;
-        int commaPos, lastCommaPos, childSwitchVar;
+        long int commaPos, lastCommaPos, childSwitchVar;
+        //Set up the register printer
+        RegPrinter * regPrinter = new RegPrinter(child);
+        NestingPrinter * nestingPrinter = new NestingPrinter(child);
         switch(type)
         {
             //If we found a plain register printer
@@ -189,8 +192,6 @@ bool NestingPrinter::configure(string config)
             numPrinters++;
             //Get the register name
             subConfig = config.substr(startPos + 2, endPos - startPos - 2);
-            //Set up the register printer
-            RegPrinter * regPrinter = new RegPrinter(child);
             if(!regPrinter->configure(subConfig))
             {
                 delete regPrinter;
@@ -203,7 +204,6 @@ bool NestingPrinter::configure(string config)
           case PRINTER_NESTING:
             numPrinters++;
             //Punt on reading in all the parameters of the nesting printer
-            NestingPrinter * nestingPrinter = new NestingPrinter(child);
             subConfig = config.substr(startPos + 2, endPos - startPos - 2);
             lastCommaPos = string::npos;
             commaPos = subConfig.find(",");

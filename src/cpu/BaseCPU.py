@@ -31,7 +31,11 @@ from m5.params import *
 from m5.proxy import *
 from m5 import build_env
 from Bus import Bus
+from InstTracer import InstTracer
+from ExeTracer import ExeTracer
 import sys
+
+default_tracer = ExeTracer()
 
 if build_env['FULL_SYSTEM']:
     if build_env['TARGET_ISA'] == 'alpha':
@@ -82,6 +86,8 @@ class BaseCPU(SimObject):
 
     clock = Param.Clock('1t', "clock speed")
     phase = Param.Latency('0ns', "clock phase")
+
+    tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
     _mem_ports = []
 
