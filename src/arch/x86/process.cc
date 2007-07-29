@@ -122,9 +122,10 @@ X86LiveProcess::X86LiveProcess(const std::string &nm, ObjectFile *objFile,
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
-    // Set up stack. On SPARC Linux, stack goes from the top of memory
-    // downward, less the hole for the kernel address space.
-    stack_base = (Addr)0x80000000000ULL;
+    // Set up stack. On X86_64 Linux, stack goes from the top of memory
+    // downward, less the hole for the kernel address space plus one page
+    // for undertermined purposes.
+    stack_base = (Addr)0x7FFFFFFF000ULL;
 
     // Set up region for mmaps.  Tru64 seems to start just above 0 and
     // grow up from there.
