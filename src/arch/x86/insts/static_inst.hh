@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_INSTS_STATICINST_HH__
 #define __ARCH_X86_INSTS_STATICINST_HH__
 
+#include "base/trace.hh"
 #include "cpu/static_inst.hh"
 
 namespace X86ISA
@@ -113,7 +114,7 @@ namespace X86ISA
               default:
                 panic("Tried to merge with unrecognized size %d.\n", size);
             }
-            return val;
+            return reg;
         }
 
         inline uint64_t pick(uint64_t from, int size)
