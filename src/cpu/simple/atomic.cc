@@ -293,6 +293,8 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         dcache_access = true;
         assert(!pkt.isError());
 
+        data = gtoh(data);
+
         if (req->isLocked()) {
             TheISA::handleLockedRead(thread, req);
         }
