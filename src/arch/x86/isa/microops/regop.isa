@@ -326,12 +326,24 @@ let {{
 
 
     checkCCFlagBits = "checkCondition(ccFlagBits)"
-    genCCFlagBits = "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, SrcReg1, %s);"
+    genCCFlagBits = \
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, SrcReg1, op2);"
+    genCCFlagBitsSub = \
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, SrcReg1, ~op2, true);"
+    genCCFlagBitsLogic = '''
+        //Don't have genFlags handle the OF or CF bits
+        uint64_t mask = CFBit | OFBit;
+        ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, SrcReg1, op2);
+        //If a logic microop wants to set these, it wants to set them to 0.
+        ccFlagBits &= ~(CFBit & ext);
+        ccFlagBits &= ~(OFBit & ext);
+    '''
 
 
     # This creates a python representations of a microop which are a cross
     # product of reg/immediate and flag/no flag versions.
-    def defineMicroRegOp(mnemonic, code, subtract = False, cc=False, elseCode=";"):
+    def defineMicroRegOp(mnemonic, code, flagCode=genCCFlagBits, \
+            cc=False, elseCode=";"):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -342,13 +354,7 @@ let {{
         regCode = matcher.sub("SrcReg2", code)
         immCode = matcher.sub("imm8", code)
 
-        if subtract:
-            secondSrc = "~op2, true"
-        else:
-            secondSrc = "op2"
-
         if not cc:
-            flagCode = genCCFlagBits % secondSrc
             condCode = "true"
         else:
             flagCode = ""
@@ -360,26 +366,30 @@ let {{
         class RegOpChild(RegOp):
             mnemonic = name
             className = Name
-            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
-                super(RegOpChild, self).__init__(dest, src1, src2, flags, dataSize)
+            def __init__(self, dest, src1, src2, \
+                    flags=None, dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__(dest, src1, src2, \
+                        flags, dataSize)
 
         microopClasses[name] = RegOpChild
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode);
         setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode,
-                flagCode = regFlagCode, condCheck = condCode, elseCode = elseCode);
+                flagCode=regFlagCode, condCheck=condCode, elseCode=elseCode);
 
         class RegOpChildImm(RegOpImm):
             mnemonic = name + 'i'
             className = Name + 'Imm'
-            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
-                super(RegOpChildImm, self).__init__(dest, src1, src2, flags, dataSize)
+            def __init__(self, dest, src1, src2, \
+                    flags=None, dataSize="env.dataSize"):
+                super(RegOpChildImm, self).__init__(dest, src1, src2, \
+                        flags, dataSize)
 
         microopClasses[name + 'i'] = RegOpChildImm
 
         setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", immCode);
         setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode,
-                flagCode = immFlagCode, condCheck = condCode, elseCode = elseCode);
+                flagCode=immFlagCode, condCheck=condCode, elseCode=elseCode);
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code, elseCode=";"):
@@ -447,7 +457,8 @@ let {{
         setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code);
 
     defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
-    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)',
+            flagCode = genCCFlagBitsLogic)
     defineMicroRegOp('Adc', '''
             CCFlagBits flags = ccFlagBits;
             DestReg = merge(DestReg, SrcReg1 + op2 + flags.CF, dataSize);
@@ -455,12 +466,18 @@ let {{
     defineMicroRegOp('Sbb', '''
             CCFlagBits flags = ccFlagBits;
             DestReg = merge(DestReg, SrcReg1 - op2 - flags.CF, dataSize);
-            ''', True)
-    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
-    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', True)
-    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
-    # defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', True)
-    defineMicroRegOp('Mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
+            ''', flagCode = genCCFlagBitsSub)
+    defineMicroRegOp('And', \
+            'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)', \
+            flagCode = genCCFlagBitsLogic)
+    defineMicroRegOp('Sub', \
+            'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', \
+            flagCode = genCCFlagBitsSub)
+    defineMicroRegOp('Xor', \
+            'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)', \
+            flagCode = genCCFlagBitsLogic)
+    defineMicroRegOp('Mul1s', \
+            'DestReg = merge(DestReg, DestReg * op2, dataSize)')
     defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
             elseCode='DestReg=DestReg;', cc=True)
 
