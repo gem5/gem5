@@ -68,6 +68,8 @@ class AMD64TraceChild : public TraceChild
     user_regs_struct oldregs;
     bool regDiffSinceUpdate[numregs];
 
+    uint64_t findSyscall();
+
   protected:
     bool update(int pid);
 
@@ -101,6 +103,8 @@ class AMD64TraceChild : public TraceChild
     std::ostream & outputStartState(std::ostream & output);
 
     char * printReg(int num);
+
+    bool step();
 };
 
 #endif

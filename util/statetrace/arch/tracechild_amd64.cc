@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <iomanip>
 #include <errno.h>
 #include <sys/ptrace.h>
 #include <stdint.h>
@@ -231,6 +232,88 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
         clearedInitialPadding = clearedInitialPadding || buf != 0;
     } while(!clearedInitialPadding || buf != 0);
     return os;
+}
+
+uint64_t AMD64TraceChild::findSyscall()
+{
+    uint64_t rip = getPC();
+    bool foundOpcode = false;
+    bool twoByteOpcode = false;
+    for(;;)
+    {
+        uint64_t buf = ptrace(PTRACE_PEEKDATA, pid, rip, 0);
+        for(int i = 0; i < sizeof(uint64_t); i++)
+        {
+            unsigned char byte = buf & 0xFF;
+            if(!foundOpcode)
+            {
+                if(!(byte == 0x66 || //operand override
+                     byte == 0x67 || //address override
+                     byte == 0x2E || //cs
+                     byte == 0x3E || //ds
+                     byte == 0x26 || //es
+                     byte == 0x64 || //fs
+                     byte == 0x65 || //gs
+                     byte == 0x36 || //ss
+                     byte == 0xF0 || //lock
+                     byte == 0xF2 || //repe
+                     byte == 0xF3 || //repne
+                     (byte >= 0x40 && byte <= 0x4F) // REX
+                    ))
+                {
+                    foundOpcode = true;
+                }
+            }
+            if(foundOpcode)
+            {
+                if(twoByteOpcode)
+                {
+                    //SYSCALL or SYSENTER
+                    if(byte == 0x05 || byte == 0x34)
+                        return rip + 1;
+                    else
+                        return 0;
+                }
+                if(!twoByteOpcode)
+                {
+                    if(byte == 0xCC) // INT3
+                        return rip + 1;
+                    else if(byte == 0xCD) // INT with byte immediate
+                        return rip + 2;
+                    else if(byte == 0x0F) // two byte opcode prefix
+                        twoByteOpcode = true;
+                    else
+                        return 0;
+                }
+            }
+            buf >>= 8;
+            rip++;
+        }
+    }
+}
+
+bool AMD64TraceChild::step()
+{
+    uint64_t ripAfterSyscall = findSyscall();
+    if(ripAfterSyscall)
+    {
+        //Get the original contents of memory
+        uint64_t buf = ptrace(PTRACE_PEEKDATA, pid, ripAfterSyscall, 0);
+        //Patch the first two bytes of the memory immediately after this with
+        //jmp -2. Either single stepping will take over before this
+        //instruction, leaving the rip where it should be, or it will take
+        //over after this instruction, -still- leaving the rip where it should
+        //be.
+        uint64_t newBuf = (buf & ~0xFFFF) | 0xFEEB;
+        //Write the patched memory to the processes address space
+        ptrace(PTRACE_POKEDATA, pid, ripAfterSyscall, newBuf);
+        //Step and hit it
+        ptraceSingleStep();
+        //Put things back to the way they started
+        ptrace(PTRACE_POKEDATA, pid, ripAfterSyscall, buf);
+    }
+    else
+        ptraceSingleStep();
 }
 
 TraceChild * genTraceChild()
