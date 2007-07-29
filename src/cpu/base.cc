@@ -106,13 +106,9 @@ BaseCPU::BaseCPU(Params *p)
 #endif
 {
 //    currentTick = curTick;
-    DPRINTF(FullCPU, "BaseCPU: Creating object, mem address %#x.\n", this);
 
     // add self to global list of CPUs
     cpuList.push_back(this);
-
-    DPRINTF(FullCPU, "BaseCPU: CPU added to cpuList, mem address %#x.\n",
-            this);
 
     if (number_of_threads > maxThreadsPerCPU)
         maxThreadsPerCPU = number_of_threads;
