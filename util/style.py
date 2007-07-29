@@ -51,13 +51,27 @@ lang_types = { 'c'   : "C",
                's'   : "asm",
                'S'   : "asm",
                'isa' : "isa" }
-whitespace_types = ('C', 'C++', 'swig', 'python', 'asm', 'isa')
-format_types = ( 'C', 'C++' )
-
 def file_type(filename):
     extension = filename.split('.')
     extension = len(extension) > 1 and extension[-1]
     return lang_types.get(extension, None)
+
+whitespace_types = ('C', 'C++', 'swig', 'python', 'asm', 'isa')
+def whitespace_file(filename):
+    if file_type(filename) in whitespace_types:
+        return True
+
+    if filename.startswith("SCons"):
+        return True
+
+    return False
+
+format_types = ( 'C', 'C++' )
+def format_file(filename):
+    if file_type(filename) in format_types:
+        return True
+
+    return False
 
 def checkwhite_line(line):
     match = lead.search(line)
@@ -71,7 +85,7 @@ def checkwhite_line(line):
     return True
 
 def checkwhite(filename):
-    if file_type(filename) not in whitespace_types:
+    if not whitespace_file(filename):
         return
 
     try:
@@ -101,7 +115,7 @@ def fixwhite_line(line, tabsize):
     return line.rstrip() + '\n'
 
 def fixwhite(filename, tabsize, fixonly=None):
-    if file_type(filename) not in whitespace_types:
+    if not whitespace_file(filename):
         return
 
     try:
@@ -159,7 +173,7 @@ class ValidationStats(object):
                self.trailwhite or self.badcontrol or self.cret
 
 def validate(filename, stats, verbose, exit_code):
-    if file_type(filename) not in format_types:
+    if not format_file(filename):
         return
 
     def msg(lineno, line, message):
@@ -376,9 +390,10 @@ if __name__ == '__main__':
             fixwhite(filename, tabsize)
     elif command == 'chkwhite':
         for filename in args:
-            line = checkwhite(filename)
-            if line:
-                print 'invalid whitespace at %s:%d' % (filename, line)
+            for line,num in checkwhite(filename):
+                print 'invalid whitespace: %s:%d' % (filename, num)
+                if verbose:
+                    print '>>%s<<' % line[:-1]
     elif command == 'chkformat':
         stats = ValidationStats()
         for filename in files:

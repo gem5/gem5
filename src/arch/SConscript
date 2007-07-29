@@ -43,23 +43,23 @@ Import('*')
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
-	arguments.hh
-	faults.hh
-	interrupts.hh
-	isa_traits.hh
-	kernel_stats.hh
+        arguments.hh
+        faults.hh
+        interrupts.hh
+        isa_traits.hh
+        kernel_stats.hh
         locked_mem.hh
         mmaped_ipr.hh
-	process.hh
-	predecoder.hh
-	regfile.hh
-	remote_gdb.hh
-	stacktrace.hh
-	syscallreturn.hh
-	tlb.hh
-	types.hh
-	utility.hh
-	vtophys.hh
+        process.hh
+        predecoder.hh
+        regfile.hh
+        remote_gdb.hh
+        stacktrace.hh
+        syscallreturn.hh
+        tlb.hh
+        types.hh
+        utility.hh
+        vtophys.hh
         ''')
 
 # Set up this directory to support switching headers

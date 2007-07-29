@@ -173,7 +173,7 @@ def test_builder(env, ref_dir):
                '-o', cmd_stdout, '-e', cmd_stderr, base_cmd]
     else:
         cmd = [base_cmd, '>', cmd_stdout, '2>', cmd_stderr]
-            
+
     env.Command([tgt('stdout'), tgt('stderr'), new_stats],
                 [env.M5Binary, 'run.py'], ' '.join(cmd))
 
@@ -202,7 +202,7 @@ if env['FULL_SYSTEM']:
                         'tsunami-simple-timing',
                         'tsunami-simple-atomic-dual',
                         'tsunami-simple-timing-dual',
-			'twosys-tsunami-simple-atomic']
+                        'twosys-tsunami-simple-atomic']
     if env['TARGET_ISA'] == 'sparc':
         configs += ['t1000-simple-atomic',
                     't1000-simple-timing']

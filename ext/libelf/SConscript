@@ -35,7 +35,7 @@ Import('env')
 elf_files = []
 def ElfFile(filename):
     elf_files.append(File(filename))
-    
+
 ElfFile('elf_begin.c')
 ElfFile('elf_cntl.c')
 ElfFile('elf_data.c')
