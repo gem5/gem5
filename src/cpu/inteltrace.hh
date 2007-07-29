@@ -29,8 +29,8 @@
  *          Nathan Binkert
  */
 
-#ifndef __EXETRACE_HH__
-#define __EXETRACE_HH__
+#ifndef __INTELTRACE_HH__
+#define __INTELTRACE_HH__
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -42,10 +42,10 @@ class ThreadContext;
 
 namespace Trace {
 
-class ExeTracerRecord : public InstRecord
+class IntelTraceRecord : public InstRecord
 {
   public:
-    ExeTracerRecord(Tick _when, ThreadContext *_thread,
+    IntelTraceRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr &_staticInst, Addr _pc, bool spec)
         : InstRecord(_when, _thread, _staticInst, _pc, spec)
     {
@@ -54,14 +54,14 @@ class ExeTracerRecord : public InstRecord
     void dump();
 };
 
-class ExeTracer : public InstTracer
+class IntelTrace : public InstTracer
 {
   public:
 
-    ExeTracer(const std::string & name) : InstTracer(name)
+    IntelTrace(const std::string & name) : InstTracer(name)
     {}
 
-    InstRecord *
+    IntelTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc,
             const StaticInstPtr staticInst, Addr pc)
     {
@@ -74,7 +74,7 @@ class ExeTracer : public InstTracer
         if (!IsOn(ExecSpeculative) && tc->misspeculating())
             return NULL;
 
-        return new ExeTracerRecord(when, tc,
+        return new IntelTraceRecord(when, tc,
                 staticInst, pc, tc->misspeculating());
     }
 };

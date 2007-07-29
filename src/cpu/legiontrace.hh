@@ -29,8 +29,8 @@
  *          Nathan Binkert
  */
 
-#ifndef __EXETRACE_HH__
-#define __EXETRACE_HH__
+#ifndef __LEGIONTRACE_HH__
+#define __LEGIONTRACE_HH__
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -39,13 +39,12 @@
 
 class ThreadContext;
 
-
 namespace Trace {
 
-class ExeTracerRecord : public InstRecord
+class LegionTraceRecord : public InstRecord
 {
   public:
-    ExeTracerRecord(Tick _when, ThreadContext *_thread,
+    LegionTraceRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr &_staticInst, Addr _pc, bool spec)
         : InstRecord(_when, _thread, _staticInst, _pc, spec)
     {
@@ -54,31 +53,25 @@ class ExeTracerRecord : public InstRecord
     void dump();
 };
 
-class ExeTracer : public InstTracer
+class LegionTrace : public InstTracer
 {
   public:
 
-    ExeTracer(const std::string & name) : InstTracer(name)
+    LegionTrace(const std::string & name) : InstTracer(name)
     {}
 
-    InstRecord *
+    LegionTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc,
             const StaticInstPtr staticInst, Addr pc)
     {
-        if (!IsOn(ExecEnable))
+        if (tc->misspeculating())
             return NULL;
 
-        if (!Trace::enabled)
-            return NULL;
-
-        if (!IsOn(ExecSpeculative) && tc->misspeculating())
-            return NULL;
-
-        return new ExeTracerRecord(when, tc,
+        return new LegionTraceRecord(when, tc,
                 staticInst, pc, tc->misspeculating());
     }
 };
 
 /* namespace Trace */ }
 
-#endif // __EXETRACE_HH__
+#endif // __LEGIONTRACE_HH__

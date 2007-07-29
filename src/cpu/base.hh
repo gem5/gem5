@@ -38,6 +38,7 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "sim/eventq.hh"
+#include "sim/insttracer.hh"
 #include "mem/mem_object.hh"
 
 #if FULL_SYSTEM
@@ -132,7 +133,12 @@ class BaseCPU : public MemObject
     std::vector<ThreadContext *> threadContexts;
     std::vector<TheISA::Predecoder *> predecoders;
 
+    Trace::InstTracer * tracer;
+
   public:
+
+    /// Provide access to the tracer pointer
+    Trace::InstTracer * getTracer() { return tracer; }
 
     /// Notify the CPU that the indicated context is now active.  The
     /// delay parameter indicates the number of ticks to wait before
@@ -169,6 +175,8 @@ class BaseCPU : public MemObject
         Tick functionTraceStart;
         System *system;
         int cpu_id;
+        Trace::InstTracer * tracer;
+
         Tick phase;
 #if FULL_SYSTEM
         Tick profile;

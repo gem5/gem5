@@ -188,6 +188,7 @@ BaseCPU::BaseCPU(Params *p)
     if (params->profile)
         profileEvent = new ProfileEvent(this, params->profile);
 #endif
+    tracer = params->tracer;
 }
 
 BaseCPU::Params::Params()
@@ -196,6 +197,7 @@ BaseCPU::Params::Params()
     profile = false;
 #endif
     checker = NULL;
+    tracer = NULL;
 }
 
 void

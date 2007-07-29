@@ -29,8 +29,8 @@
  *          Nathan Binkert
  */
 
-#ifndef __EXETRACE_HH__
-#define __EXETRACE_HH__
+#ifndef __NATIVETRACE_HH__
+#define __NATIVETRACE_HH__
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
@@ -42,41 +42,53 @@ class ThreadContext;
 
 namespace Trace {
 
-class ExeTracerRecord : public InstRecord
+class NativeTrace;
+
+class NativeTraceRecord : public InstRecord
 {
+  protected:
+    NativeTrace * parent;
+
+    bool
+    checkIntReg(const char * regName, int index, int size);
+
+    bool
+    checkPC(const char * regName, int size);
+
   public:
-    ExeTracerRecord(Tick _when, ThreadContext *_thread,
+    NativeTraceRecord(NativeTrace * _parent,
+               Tick _when, ThreadContext *_thread,
                const StaticInstPtr &_staticInst, Addr _pc, bool spec)
-        : InstRecord(_when, _thread, _staticInst, _pc, spec)
+        : InstRecord(_when, _thread, _staticInst, _pc, spec), parent(_parent)
     {
     }
 
     void dump();
 };
 
-class ExeTracer : public InstTracer
+class NativeTrace : public InstTracer
 {
+  protected:
+    int fd;
+
+    ListenSocket native_listener;
+
   public:
 
-    ExeTracer(const std::string & name) : InstTracer(name)
-    {}
+    NativeTrace(const std::string & name);
 
-    InstRecord *
+    NativeTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc,
             const StaticInstPtr staticInst, Addr pc)
     {
-        if (!IsOn(ExecEnable))
+        if (tc->misspeculating())
             return NULL;
 
-        if (!Trace::enabled)
-            return NULL;
-
-        if (!IsOn(ExecSpeculative) && tc->misspeculating())
-            return NULL;
-
-        return new ExeTracerRecord(when, tc,
+        return new NativeTraceRecord(this, when, tc,
                 staticInst, pc, tc->misspeculating());
     }
+
+    friend class NativeTraceRecord;
 };
 
 /* namespace Trace */ }
