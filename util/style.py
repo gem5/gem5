@@ -244,7 +244,7 @@ def validate(filename, stats, verbose, exit_code):
                     msg(i, line, 'improper spacing after %s' % match.group(1))
                 bad()
 
-def modified_lines(old_data, new_data):
+def modified_lines(old_data, new_data, max_lines):
     from itertools import count
     from mercurial import bdiff, mdiff
 
@@ -255,6 +255,8 @@ def modified_lines(old_data, new_data):
             if i < fbeg:
                 modified.add(i)
             elif i + 1 >= fend:
+                break
+            elif i > max_lines:
                 break
     return modified
 
@@ -301,13 +303,14 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
         assert len(pctx) in (1, 2)
 
         file_data = fctx.data()
-        mod_lines = modified_lines(pctx[0].data(), file_data)
+        lines = mdiff.splitnewlines(file_data)
+        mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
         if len(pctx) == 2:
             m2 = modified_lines(pctx[1].data(), file_data)
             mod_lines = mod_lines & m2 # only the lines that are new in both
 
         fixonly = set()
-        for i,line in enumerate(mdiff.splitnewlines(file_data)):
+        for i,line in enumerate(lines):
             if i not in mod_lines:
                 continue
 
