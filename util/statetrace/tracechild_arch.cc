@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,8 @@
 #if defined __alpha__
         #error "Alpha architecture not implemented"
 #elif defined __amd64__
-        #error "AMD64 architecture not implemented"
+//        #error "AMD64 architecture not implemented"
+        #include "arch/tracechild_amd64.cc"
 #elif defined __hppa__
         #error "Hppa architecture not implemented"
 #elif defined __i386__ || defined __i486__ || \
