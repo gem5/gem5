@@ -187,7 +187,14 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
         X86_AT_UID = 11,
         X86_AT_EUID = 12,
         X86_AT_GID = 13,
-        X86_AT_EGID = 14
+        X86_AT_EGID = 14,
+        X86_AT_PLATFORM = 15,
+        X86_AT_HWCAP = 16,
+        X86_AT_CLKTCK = 17,
+
+        X86_AT_SECURE = 13,
+
+        X86_AT_VECTOR_SIZE = 44
     };
 
     //Setup the auxilliary vectors. These will already have endian conversion.
@@ -195,36 +202,39 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if(elfObject)
     {
-        /*
         //Bits which describe the system hardware capabilities
-        auxv.push_back(auxv_t(SPARC_AT_HWCAP, hwcap));
+        //XXX Figure out what these should be
+        auxv.push_back(auxv_t(X86_AT_HWCAP, 0));
         //The system page size
-        auxv.push_back(auxv_t(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
-        //Defined to be 100 in the kernel source.
+        auxv.push_back(auxv_t(X86_AT_PAGESZ, X86ISA::VMPageSize));
         //Frequency at which times() increments
-        auxv.push_back(auxv_t(SPARC_AT_CLKTCK, 100));
+        auxv.push_back(auxv_t(X86_AT_CLKTCK, 100));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
-        auxv.push_back(auxv_t(SPARC_AT_PHDR, elfObject->programHeaderTable()));
+        auxv.push_back(auxv_t(X86_AT_PHDR, elfObject->programHeaderTable()));
         // This is the size of a program header entry from the elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHENT, elfObject->programHeaderSize()));
+        auxv.push_back(auxv_t(X86_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHNUM, elfObject->programHeaderCount()));
+        auxv.push_back(auxv_t(X86_AT_PHNUM, elfObject->programHeaderCount()));
+        //Defined to be 100 in the kernel source.
         //This is the address of the elf "interpreter", It should be set
         //to 0 for regular executables. It should be something else
         //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(SPARC_AT_BASE, 0));
-        //This is hardwired to 0 in the elf loading code in the kernel
-        auxv.push_back(auxv_t(SPARC_AT_FLAGS, 0));
+        auxv.push_back(auxv_t(X86_AT_BASE, 0));
+
+        //XXX Figure out what this should be.
+        auxv.push_back(auxv_t(X86_AT_FLAGS, 0));
         //The entry point to the program
-        auxv.push_back(auxv_t(SPARC_AT_ENTRY, objFile->entryPoint()));
+        auxv.push_back(auxv_t(X86_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
-        auxv.push_back(auxv_t(SPARC_AT_UID, uid()));
-        auxv.push_back(auxv_t(SPARC_AT_EUID, euid()));
-        auxv.push_back(auxv_t(SPARC_AT_GID, gid()));
-        auxv.push_back(auxv_t(SPARC_AT_EGID, egid()));
+        auxv.push_back(auxv_t(X86_AT_UID, uid()));
+        auxv.push_back(auxv_t(X86_AT_EUID, euid()));
+        auxv.push_back(auxv_t(X86_AT_GID, gid()));
+        auxv.push_back(auxv_t(X86_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
-        auxv.push_back(auxv_t(SPARC_AT_SECURE, 0));*/
+        auxv.push_back(auxv_t(X86_AT_SECURE, 0));
+        //The string "x86_64" with unknown meaning
+        auxv.push_back(auxv_t(X86_AT_PLATFORM, 0));
     }
 
     //Figure out how big the initial stack needs to be
@@ -338,9 +348,6 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     //Set up the thread context to start running the process
-    assert(NumArgumentRegs >= 2);
-    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
-    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
