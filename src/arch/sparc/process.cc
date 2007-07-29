@@ -194,25 +194,6 @@ Sparc64LiveProcess::argsInit(int intSize, int pageSize)
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
-    //These are the auxilliary vector types
-    enum auxTypes
-    {
-        SPARC_AT_HWCAP = 16,
-        SPARC_AT_PAGESZ = 6,
-        SPARC_AT_CLKTCK = 17,
-        SPARC_AT_PHDR = 3,
-        SPARC_AT_PHENT = 4,
-        SPARC_AT_PHNUM = 5,
-        SPARC_AT_BASE = 7,
-        SPARC_AT_FLAGS = 8,
-        SPARC_AT_ENTRY = 9,
-        SPARC_AT_UID = 11,
-        SPARC_AT_EUID = 12,
-        SPARC_AT_GID = 13,
-        SPARC_AT_EGID = 14,
-        SPARC_AT_SECURE = 23
-    };
-
     enum hardwareCaps
     {
         M5_HWCAP_SPARC_FLUSH = 1,
@@ -241,34 +222,34 @@ Sparc64LiveProcess::argsInit(int intSize, int pageSize)
     if(elfObject)
     {
         //Bits which describe the system hardware capabilities
-        auxv.push_back(auxv_t(SPARC_AT_HWCAP, hwcap));
+        auxv.push_back(auxv_t(M5_AT_HWCAP, hwcap));
         //The system page size
-        auxv.push_back(auxv_t(SPARC_AT_PAGESZ, SparcISA::VMPageSize));
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, SparcISA::VMPageSize));
         //Defined to be 100 in the kernel source.
         //Frequency at which times() increments
-        auxv.push_back(auxv_t(SPARC_AT_CLKTCK, 100));
+        auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
-        auxv.push_back(auxv_t(SPARC_AT_PHDR, elfObject->programHeaderTable()));
+        auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
         // This is the size of a program header entry from the elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHENT, elfObject->programHeaderSize()));
+        auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
-        auxv.push_back(auxv_t(SPARC_AT_PHNUM, elfObject->programHeaderCount()));
+        auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
         //This is the address of the elf "interpreter", It should be set
         //to 0 for regular executables. It should be something else
         //(not sure what) for dynamic libraries.
-        auxv.push_back(auxv_t(SPARC_AT_BASE, 0));
+        auxv.push_back(auxv_t(M5_AT_BASE, 0));
         //This is hardwired to 0 in the elf loading code in the kernel
-        auxv.push_back(auxv_t(SPARC_AT_FLAGS, 0));
+        auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
         //The entry point to the program
-        auxv.push_back(auxv_t(SPARC_AT_ENTRY, objFile->entryPoint()));
+        auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
         //Different user and group IDs
-        auxv.push_back(auxv_t(SPARC_AT_UID, uid()));
-        auxv.push_back(auxv_t(SPARC_AT_EUID, euid()));
-        auxv.push_back(auxv_t(SPARC_AT_GID, gid()));
-        auxv.push_back(auxv_t(SPARC_AT_EGID, egid()));
+        auxv.push_back(auxv_t(M5_AT_UID, uid()));
+        auxv.push_back(auxv_t(M5_AT_EUID, euid()));
+        auxv.push_back(auxv_t(M5_AT_GID, gid()));
+        auxv.push_back(auxv_t(M5_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
-        auxv.push_back(auxv_t(SPARC_AT_SECURE, 0));
+        auxv.push_back(auxv_t(M5_AT_SECURE, 0));
     }
 
     //Figure out how big the initial stack needs to be
