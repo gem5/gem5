@@ -67,7 +67,11 @@ namespace X86ISA
     static inline void setSyscallReturn(SyscallReturn return_value,
             ThreadContext * tc)
     {
-        tc->setIntReg(INTREG_RAX, return_value.value());
+        if (return_value.successful()) {
+            tc->setIntReg(INTREG_RAX, return_value.value());
+        } else {
+            tc->setIntReg(INTREG_RAX, -return_value.value());
+        }
     }
 };
 
