@@ -202,7 +202,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 8;
         sprintf(obuf, "0x%016llx: Auxiliary vector = {0x%016llx, 0x%016llx}\n",
-                sp - 8, auxType, auxVal);
+                sp - 16, auxType, auxVal);
         os << obuf;
     } while(auxType != 0 || auxVal != 0);
     //Print out the argument strings, environment strings, and file name.
