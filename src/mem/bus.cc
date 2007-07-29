@@ -180,7 +180,7 @@ Bus::recvTiming(PacketPtr pkt)
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
-    if (!(pkt->isResponse() || pkt->isExpressSnoop()) &&
+    if (!pkt->isExpressSnoop() &&
         (tickNextIdle > curTick ||
          (retryList.size() && (!inRetry || src_port != retryList.front()))))
     {
@@ -189,7 +189,9 @@ Bus::recvTiming(PacketPtr pkt)
         return false;
     }
 
-    occupyBus(pkt);
+    if (!pkt->isExpressSnoop()) {
+        occupyBus(pkt);
+    }
 
     short dest = pkt->getDest();
     int dest_port_id;
