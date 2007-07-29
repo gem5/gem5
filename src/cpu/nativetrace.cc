@@ -107,9 +107,9 @@ Trace::NativeTraceRecord::dump()
     if(!staticInst->isMicroop() || staticInst->isLastMicroop())
     {
         checkIntReg("rax", INTREG_RAX, sizeof(uint64_t));
-        checkIntReg("rbx", INTREG_RBX, sizeof(uint64_t));
         checkIntReg("rcx", INTREG_RCX, sizeof(uint64_t));
         checkIntReg("rdx", INTREG_RDX, sizeof(uint64_t));
+        checkIntReg("rbx", INTREG_RBX, sizeof(uint64_t));
         checkIntReg("rsp", INTREG_RSP, sizeof(uint64_t));
         checkIntReg("rbp", INTREG_RBP, sizeof(uint64_t));
         checkIntReg("rsi", INTREG_RSI, sizeof(uint64_t));
