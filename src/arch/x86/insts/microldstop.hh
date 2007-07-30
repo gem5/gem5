@@ -76,6 +76,7 @@ namespace X86ISA
         const RegIndex data;
         const uint8_t dataSize;
         const uint8_t addressSize;
+        RegIndex foldOBit, foldABit;
 
         //Constructor
         LdStOp(ExtMachInst _machInst,
@@ -92,7 +93,11 @@ namespace X86ISA
                 disp(_disp), segment(_segment),
                 data(_data),
                 dataSize(_dataSize), addressSize(_addressSize)
-        {}
+        {
+            foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
+            foldABit =
+                (addressSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
+        }
 
         std::string generateDisassembly(Addr pc,
             const SymbolTable *symtab) const;
