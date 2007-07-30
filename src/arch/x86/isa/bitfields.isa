@@ -60,6 +60,7 @@
 
 //REX prefix
 def bitfield REX rex;
+def bitfield REX_PRESENT rex.present;
 def bitfield REX_W rex.w;
 def bitfield REX_R rex.r;
 def bitfield REX_X rex.x;
