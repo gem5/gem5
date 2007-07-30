@@ -395,7 +395,7 @@
         }
         0x19: decode OPCODE_OP_BOTTOM3 {
             0x0: enter_Iw_Ib();
-            0x1: leave();
+            0x1: Inst::LEAVE();
             0x2: ret_far_Iw();
             0x3: ret_far();
             0x4: int3();
@@ -519,8 +519,8 @@
                 0x1: Inst::TEST(Eb,Iz);
                 0x2: Inst::NOT(Eb);
                 0x3: Inst::NEG(Eb);
-                0x4: mul_Eb();
-                0x5: imul_Eb();
+                0x4: Inst::MUL_B(Eb);
+                0x5: Inst::IMUL_B(Eb);
                 0x6: div_Eb();
                 0x7: idiv_Eb();
             }
@@ -530,8 +530,8 @@
                 0x1: Inst::TEST(Ev,Iz);
                 0x2: Inst::NOT(Ev);
                 0x3: Inst::NEG(Ev);
-                0x4: mul_Ev();
-                0x5: imul_Ev();
+                0x4: Inst::MUL(Ev);
+                0x5: Inst::IMUL(Ev);
                 0x6: div_Ev();
                 0x7: idiv_Ev();
             }

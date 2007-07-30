@@ -311,7 +311,7 @@
             0x14: decode OPCODE_OP_BOTTOM3 {
                 0x0: push_fs();
                 0x1: pop_fs();
-                0x2: cpuid();
+                0x2: Inst::CPUID(rAd);
                 0x3: bt_Ev_Gv();
                 0x4: shld_Ev_Gv_Ib();
                 0x5: shld_Ev_Gv_rCl();
