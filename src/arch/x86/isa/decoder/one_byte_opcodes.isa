@@ -521,7 +521,8 @@
                 0x3: Inst::NEG(Eb);
                 0x4: Inst::MUL_B(Eb);
                 0x5: Inst::IMUL_B(Eb);
-                0x6: div_Eb();
+                //This should be Eb, but it access the entire word value ax.
+                0x6: Inst::DIV_B(Ew);
                 0x7: idiv_Eb();
             }
             //0x7: group3_Ev();
@@ -532,7 +533,7 @@
                 0x3: Inst::NEG(Ev);
                 0x4: Inst::MUL(Ev);
                 0x5: Inst::IMUL(Ev);
-                0x6: div_Ev();
+                0x6: Inst::DIV(Ev);
                 0x7: idiv_Ev();
             }
         }
