@@ -1253,9 +1253,9 @@ template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    checkFunctional(pkt);
-    if (!pkt->isResponse())
+    if (!checkFunctional(pkt)) {
         myCache()->functionalAccess(pkt, cache->memSidePort);
+    }
 }
 
 
@@ -1327,9 +1327,9 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    checkFunctional(pkt);
-    if (!pkt->isResponse())
+    if (!checkFunctional(pkt)) {
         myCache()->functionalAccess(pkt, cache->cpuSidePort);
+    }
 }
 
 

@@ -99,7 +99,7 @@ class SimpleTimingPort : public Port
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    void checkFunctional(PacketPtr funcPkt);
+    bool checkFunctional(PacketPtr funcPkt);
 
     /** Check whether we have a packet ready to go on the transmit list. */
     bool deferredPacketReady()

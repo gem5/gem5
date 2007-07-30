@@ -400,12 +400,12 @@ PhysicalMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 void
 PhysicalMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
-    checkFunctional(pkt);
-
-    // Default implementation of SimpleTimingPort::recvFunctional()
-    // calls recvAtomic() and throws away the latency; we can save a
-    // little here by just not calculating the latency.
-    memory->doFunctionalAccess(pkt);
+    if (!checkFunctional(pkt)) {
+        // Default implementation of SimpleTimingPort::recvFunctional()
+        // calls recvAtomic() and throws away the latency; we can save a
+        // little here by just not calculating the latency.
+        memory->doFunctionalAccess(pkt);
+    }
 }
 
 unsigned int

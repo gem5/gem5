@@ -30,7 +30,7 @@
 
 #include "mem/tport.hh"
 
-void
+bool
 SimpleTimingPort::checkFunctional(PacketPtr pkt)
 {
     DeferredPacketIterator i = transmitList.begin();
@@ -41,19 +41,20 @@ SimpleTimingPort::checkFunctional(PacketPtr pkt)
         // If the target contains data, and it overlaps the
         // probed request, need to update data
         if (pkt->checkFunctional(target)) {
-            return;
+            return true;
         }
     }
+
+    return false;
 }
 
 void
 SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
-    checkFunctional(pkt);
-
-    // Just do an atomic access and throw away the returned latency
-    if (!pkt->isResponse())
+    if (!checkFunctional(pkt)) {
+        // Just do an atomic access and throw away the returned latency
         recvAtomic(pkt);
+    }
 }
 
 bool

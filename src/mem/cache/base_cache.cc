@@ -81,9 +81,9 @@ BaseCache::CachePort::deviceBlockSize()
 void
 BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
 {
-    checkFunctional(pkt);
-    if (!pkt->isResponse())
+    if (!checkFunctional(pkt)) {
         sendFunctional(pkt);
+    }
 }
 
 
