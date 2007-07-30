@@ -96,12 +96,12 @@ def operand_types {{
 }};
 
 def operands {{
-        'SrcReg1':       ('IntReg', 'uqw', '(((src1 & 0xC) == 4 ? foldOBit : 0) | src1)', 'IsInteger', 1),
-        'SrcReg2':       ('IntReg', 'uqw', '(((src2 & 0xC) == 4 ? foldOBit : 0) | src2)', 'IsInteger', 2),
-        'Base':          ('IntReg', 'uqw', '(((base & 0xC) == 4 ? foldABit : 0) | base)', 'IsInteger', 3),
-        'Index':         ('IntReg', 'uqw', '(((index & 0xC) == 4 ? foldABit : 0) | index)', 'IsInteger', 4),
-        'DestReg':       ('IntReg', 'uqw', '(((dest & 0xC) == 4 ? foldOBit : 0) | dest)', 'IsInteger', 5),
-        'Data':          ('IntReg', 'uqw', '(((data & 0xC) == 4 ? foldOBit : 0) | data)', 'IsInteger', 6),
+        'SrcReg1':       ('IntReg', 'uqw', '(((src1 & 0x1C) == 4 ? foldOBit : 0) | src1)', 'IsInteger', 1),
+        'SrcReg2':       ('IntReg', 'uqw', '(((src2 & 0x1C) == 4 ? foldOBit : 0) | src2)', 'IsInteger', 2),
+        'Index':         ('IntReg', 'uqw', '(((index & 0x1C) == 4 ? foldABit : 0) | index)', 'IsInteger', 3),
+        'Base':          ('IntReg', 'uqw', '(((base & 0x1C) == 4 ? foldABit : 0) | base)', 'IsInteger', 4),
+        'DestReg':       ('IntReg', 'uqw', '(((dest & 0x1C) == 4 ? foldOBit : 0) | dest)', 'IsInteger', 5),
+        'Data':          ('IntReg', 'uqw', '(((data & 0x1C) == 4 ? foldOBit : 0) | data)', 'IsInteger', 6),
         'rax':           ('IntReg', 'uqw', '(INTREG_RAX)', 'IsInteger', 7),
         'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 10),
         'ccFlagBits':       ('IntReg', 'uqw', 'NUM_INTREGS + NumMicroIntRegs', None, 20),
