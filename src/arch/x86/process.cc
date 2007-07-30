@@ -127,9 +127,9 @@ X86LiveProcess::X86LiveProcess(const std::string &nm, ObjectFile *objFile,
     // for undertermined purposes.
     stack_base = (Addr)0x7FFFFFFFF000ULL;
 
-    // Set up region for mmaps.  Tru64 seems to start just above 0 and
-    // grow up from there.
-    mmap_start = mmap_end = 0xfffff80000000000ULL;
+    // Set up region for mmaps. This was determined empirically and may not
+    // always be correct.
+    mmap_start = mmap_end = 0x2aaaaaaab000;
 }
 
 void X86LiveProcess::handleTrap(int trapNum, ThreadContext *tc)
