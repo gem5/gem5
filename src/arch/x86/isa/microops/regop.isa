@@ -328,24 +328,24 @@ let {{
 
     checkCCFlagBits = "checkCondition(ccFlagBits)"
     genCCFlagBits = \
-        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, src1, op2);"
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, op2);"
     genCCFlagBitsSub = \
-        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, src1, ~op2, true);"
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, ~op2, true);"
     genCCFlagBitsLogic = '''
         //Don't have genFlags handle the OF or CF bits
         uint64_t mask = CFBit | OFBit;
-        ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, src1, op2);
+        ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, psrc1, op2);
         //If a logic microop wants to set these, it wants to set them to 0.
         ccFlagBits &= ~(CFBit & ext);
         ccFlagBits &= ~(OFBit & ext);
     '''
 
     regPick = '''
-        IntReg src1 = pick(SrcReg1, 0, dataSize);
-        IntReg src2 = pick(SrcReg2, 1, dataSize);
+        IntReg psrc1 = pick(SrcReg1, 0, dataSize);
+        IntReg psrc2 = pick(SrcReg2, 1, dataSize);
     '''
     immPick = '''
-        IntReg src1 = pick(SrcReg1, 0, dataSize);
+        IntReg psrc1 = pick(SrcReg1, 0, dataSize);
     '''
 
 
@@ -360,7 +360,7 @@ let {{
         # of the code, one with an integer operand, and one with an immediate
         # operand.
         matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
-        regCode = regPick + matcher.sub("src2", code)
+        regCode = regPick + matcher.sub("psrc2", code)
         immCode = immPick + matcher.sub("imm8", code)
 
         if not cc:
@@ -369,7 +369,7 @@ let {{
             flagCode = ""
             condCode = checkCCFlagBits
 
-        regFlagCode = matcher.sub("src2", flagCode)
+        regFlagCode = matcher.sub("psrc2", flagCode)
         immFlagCode = matcher.sub("imm8", flagCode)
 
         class RegOpChild(RegOp):
@@ -411,7 +411,7 @@ let {{
         # of the code, one with an integer operand, and one with an immediate
         # operand.
         matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
-        regCode = regPick + matcher.sub("src2", code)
+        regCode = regPick + matcher.sub("psrc2", code)
         immCode = immPick + matcher.sub("imm8", code)
 
         class RegOpChild(RegOp):
@@ -468,66 +468,76 @@ let {{
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code);
 
-    defineMicroRegOp('Add', 'DestReg = merge(DestReg, src1 + op2, dataSize)')
-    defineMicroRegOp('Or', '''
-            DPRINTF(X86, "src1 = %#x\\n", src1);
-            DPRINTF(X86, "op2 = %#x\\n", op2);
-            DestReg = merge(DestReg, src1 | op2, dataSize);
-            ''',
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, psrc1 + op2, dataSize)')
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, psrc1 | op2, dataSize);',
             flagCode = genCCFlagBitsLogic)
     defineMicroRegOp('Adc', '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, src1 + op2 + flags.CF, dataSize);
+            DestReg = merge(DestReg, psrc1 + op2 + flags.CF, dataSize);
             ''')
     defineMicroRegOp('Sbb', '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, src1 - op2 - flags.CF, dataSize);
+            DestReg = merge(DestReg, psrc1 - op2 - flags.CF, dataSize);
             ''', flagCode = genCCFlagBitsSub)
     defineMicroRegOp('And', \
-            'DestReg = merge(DestReg, src1 & op2, dataSize)', \
+            'DestReg = merge(DestReg, psrc1 & op2, dataSize)', \
             flagCode = genCCFlagBitsLogic)
     defineMicroRegOp('Sub', \
-            'DestReg = merge(DestReg, src1 - op2, dataSize)', \
+            'DestReg = merge(DestReg, psrc1 - op2, dataSize)', \
             flagCode = genCCFlagBitsSub)
     defineMicroRegOp('Xor', \
-            'DestReg = merge(DestReg, src1 ^ op2, dataSize)', \
+            'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)', \
             flagCode = genCCFlagBitsLogic)
     defineMicroRegOp('Mul1s', '''
             int signPos = (dataSize * 8) / 2 - 1;
-            IntReg srcVal1 = src1 | (-bits(src1, signPos) << signPos);
-            IntReg srcVal2 = op2 | (-bits(src1, signPos) << signPos);
+            IntReg srcVal1 = psrc1 | (-bits(psrc1, signPos) << signPos);
+            IntReg srcVal2 = op2 | (-bits(psrc1, signPos) << signPos);
             DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
             ''')
     defineMicroRegOp('Mul1u', '''
             int halfSize = (dataSize * 8) / 2;
-            IntReg srcVal1 = src1 & mask(halfSize);
+            IntReg srcVal1 = psrc1 & mask(halfSize);
             IntReg srcVal2 = op2 & mask(halfSize);
             DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
             ''')
     defineMicroRegOp('Mulel', \
-            'DestReg = merge(DestReg, src1 * op2, dataSize)')
+            'DestReg = merge(DestReg, psrc1 * op2, dataSize)')
     defineMicroRegOp('Muleh', '''
             int halfSize = (dataSize * 8) / 2;
-            uint64_t src1_h = src1 >> halfSize;
-            uint64_t src1_l = src1 & mask(halfSize);
-            uint64_t src2_h = op2 >> halfSize;
-            uint64_t src2_l = op2 & mask(halfSize);
+            uint64_t psrc1_h = psrc1 >> halfSize;
+            uint64_t psrc1_l = psrc1 & mask(halfSize);
+            uint64_t psrc2_h = op2 >> halfSize;
+            uint64_t psrc2_l = op2 & mask(halfSize);
             uint64_t result =
-                ((src1_l * src2_h) >> halfSize) +
-                ((src1_h * src2_l) >> halfSize) +
-                src1_h * src2_h;
+                ((psrc1_l * psrc2_h) >> halfSize) +
+                ((psrc1_h * psrc2_l) >> halfSize) +
+                psrc1_h * psrc2_h;
             DestReg = merge(DestReg, result, dataSize);
             ''')
+    defineMicroRegOp('Div1', '''
+            int halfSize = (dataSize * 8) / 2;
+            IntReg quotient = (psrc1 / op2) & mask(halfSize);
+            IntReg remainder = (psrc1 % op2) & mask(halfSize);
+            IntReg result = quotient | (remainder << halfSize);
+            DestReg = merge(DestReg, result, dataSize);
+            ''')
+    defineMicroRegOp('Divq', '''
+            DestReg = merge(DestReg, psrc1 / op2, dataSize);
+            ''')
+    defineMicroRegOp('Divr', '''
+            DestReg = merge(DestReg, psrc1 % op2, dataSize);
+            ''')
+
     #
-    # HACK HACK HACK HACK - Put src1 in here but make it inert to shut up gcc.
+    # HACK HACK HACK HACK - Put psrc1 in here but make it inert to shut up gcc.
     #
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, src1 * 0 + op2, dataSize)',
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, psrc1 * 0 + op2, dataSize)',
             elseCode='DestReg=DestReg;', cc=True)
 
     # Shift instructions
     defineMicroRegOp('Sll', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            DestReg = merge(DestReg, src1 << shiftAmt, dataSize);
+            DestReg = merge(DestReg, psrc1 << shiftAmt, dataSize);
             ''')
     defineMicroRegOp('Srl', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -535,7 +545,7 @@ let {{
             // is not defined in the C/C++ standard, we have to mask them out
             // to be sure they're zero.
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (src1 >> shiftAmt) & logicalMask, dataSize);
+            DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask, dataSize);
             ''')
     defineMicroRegOp('Sra', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -544,15 +554,15 @@ let {{
             // them manually to be sure.
             uint64_t arithMask =
                 -bits(op2, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (src1 >> shiftAmt) | arithMask, dataSize);
+            DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
             ''')
     defineMicroRegOp('Ror', '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
-                uint64_t top = src1 << (dataSize * 8 - shiftAmt);
-                uint64_t bottom = bits(src1, dataSize * 8, shiftAmt);
+                uint64_t top = psrc1 << (dataSize * 8 - shiftAmt);
+                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -566,8 +576,8 @@ let {{
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = flags.CF << (dataSize * 8 - shiftAmt);
                 if(shiftAmt > 1)
-                    top |= src1 << (dataSize * 8 - shiftAmt - 1);
-                uint64_t bottom = bits(src1, dataSize * 8, shiftAmt);
+                    top |= psrc1 << (dataSize * 8 - shiftAmt - 1);
+                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -578,9 +588,9 @@ let {{
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
-                uint64_t top = src1 << shiftAmt;
+                uint64_t top = psrc1 << shiftAmt;
                 uint64_t bottom =
-                    bits(src1, dataSize * 8 - 1, dataSize * 8 - shiftAmt);
+                    bits(psrc1, dataSize * 8 - 1, dataSize * 8 - shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -592,11 +602,11 @@ let {{
             if(shiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
-                uint64_t top = src1 << shiftAmt;
+                uint64_t top = psrc1 << shiftAmt;
                 uint64_t bottom = flags.CF << (shiftAmt - 1);
                 if(shiftAmt > 1)
                     bottom |=
-                        bits(src1, dataSize * 8 - 1,
+                        bits(psrc1, dataSize * 8 - 1,
                                    dataSize * 8 - shiftAmt + 1);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
@@ -604,15 +614,15 @@ let {{
                 DestReg = DestReg;
             ''')
 
-    defineMicroRegOpWr('Wrip', 'RIP = src1 + op2', elseCode="RIP = RIP;")
+    defineMicroRegOpWr('Wrip', 'RIP = psrc1 + op2', elseCode="RIP = RIP;")
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
     defineMicroRegOpImm('Sext', '''
-            IntReg val = src1;
+            IntReg val = psrc1;
             int sign_bit = bits(val, imm8-1, imm8-1);
             val = sign_bit ? (val | ~mask(imm8)) : val;
             DestReg = merge(DestReg, val, dataSize);''')
 
-    defineMicroRegOpImm('Zext', 'DestReg = bits(src1, imm8-1, 0);')
+    defineMicroRegOpImm('Zext', 'DestReg = bits(psrc1, imm8-1, 0);')
 }};
