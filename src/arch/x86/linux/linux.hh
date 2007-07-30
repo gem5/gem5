@@ -71,7 +71,7 @@ class X86Linux64 : public Linux
         uint32_t st_mode;
         uint32_t st_uid;
         uint32_t st_gid;
-        uint32_t __pad0[4];
+        uint32_t __pad0;
         uint64_t st_rdev;
         int64_t st_size;
         int64_t st_blksize;
