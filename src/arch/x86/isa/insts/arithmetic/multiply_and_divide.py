@@ -196,6 +196,53 @@ def macroop IMUL_R_P_I
     ld t2, ds, [0, t0, t7]
     mulel reg, t2, t1
 };
+
+#
+# One byte version of unsigned division
+#
+
+def macroop DIV_B_R
+{
+    div1 rax, rax, reg
+};
+
+def macroop DIV_B_M
+{
+    ld t1, ds, [scale, index, base], disp
+    div1 rax, rax, t1
+};
+
+def macroop DIV_B_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    div1 rax, rax, t1
+};
+
+#
+# Unsigned division
+#
+
+def macroop DIV_R
+{
+    divr rdx, rax, reg
+    divq rax, rax, reg
+};
+
+def macroop DIV_M
+{
+    ld t1, ds, [scale, index, base], disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
+};
+
+def macroop DIV_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
+};
 '''
 #let {{
 #    class MUL(Inst):
