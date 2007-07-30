@@ -65,23 +65,25 @@ class X86Linux64 : public Linux
   public:
 
     typedef struct {
-        uint32_t st_dev;
-        char __pad1[4];
+        uint64_t st_dev;
         uint64_t st_ino;
+        uint64_t st_nlink;
         uint32_t st_mode;
-        uint16_t st_nlink;
         uint32_t st_uid;
         uint32_t st_gid;
-        uint32_t st_rdev;
-        char __pad2[4];
+        uint32_t __pad0[4];
+        uint64_t st_rdev;
         int64_t st_size;
-        int64_t st_atimeX;
-        int64_t st_mtimeX;
-        int64_t st_ctimeX;
         int64_t st_blksize;
         int64_t st_blocks;
-        uint64_t __unused4[2];
-    } tgt_stat;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        int64_t __unused[3];
+    } tgt_stat64;
 
     static OpenFlagTransTable openFlagTable[];
 
