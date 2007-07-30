@@ -82,7 +82,7 @@ namespace X86ISA
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
         //There are 16 microcode registers at the moment
-        FP_Base_DepTag = 32,
+        FP_Base_DepTag = 1 << 7,
         Ctrl_Base_DepTag =
             FP_Base_DepTag +
             //mmx/x87 registers
