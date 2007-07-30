@@ -149,8 +149,8 @@ let {{
             elif opType.tag == "M":
                 # This refers to memory. The macroop constructor sets up modrm
                 # addressing. Non memory modrm settings should cause an error.
-                Name += "_M"
                 env.doModRM = True
+                return doRipRelativeDecode(Name, opTypes, env)
             elif opType.tag == None or opType.size == None:
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
             elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
