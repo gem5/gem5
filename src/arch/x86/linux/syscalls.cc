@@ -71,7 +71,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "2.6.12");
+    strcpy(name->release, "2.6.16.19");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "x86_64");
 
@@ -81,12 +81,12 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 SyscallDesc X86LinuxProcess::syscallDescs[] = {
-    /*   0 */ SyscallDesc("read", unimplementedFunc),
+    /*   0 */ SyscallDesc("read", readFunc),
     /*   1 */ SyscallDesc("write", unimplementedFunc),
     /*   2 */ SyscallDesc("open", openFunc<X86Linux64>),
-    /*   3 */ SyscallDesc("close", unimplementedFunc),
+    /*   3 */ SyscallDesc("close", closeFunc),
     /*   4 */ SyscallDesc("stat", unimplementedFunc),
-    /*   5 */ SyscallDesc("fstat", unimplementedFunc),
+    /*   5 */ SyscallDesc("fstat", fstat64Func<X86Linux64>),
     /*   6 */ SyscallDesc("lstat", unimplementedFunc),
     /*   7 */ SyscallDesc("poll", unimplementedFunc),
     /*   8 */ SyscallDesc("lseek", unimplementedFunc),
