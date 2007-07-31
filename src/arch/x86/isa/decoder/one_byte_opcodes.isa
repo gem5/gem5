@@ -470,16 +470,7 @@
             }
             0x7: xlat();
         }
-        0x1B: decode OPCODE_OP_BOTTOM3 {
-            0x0: esc0();
-            0x1: esc1();
-            0x2: esc2();
-            0x3: esc3();
-            0x4: esc4();
-            0x5: esc5();
-            0x6: esc6();
-            0x7: esc7();
-        }
+        ##include "x87.isa"
         0x1C: decode OPCODE_OP_BOTTOM3 {
             0x0: loopne_Jb();
             0x1: loope_Jb();
