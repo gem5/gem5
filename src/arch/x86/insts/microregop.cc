@@ -173,11 +173,11 @@ namespace X86ISA
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest, dataSize);
+        printDestReg(response, 0, dataSize);
         response << ", ";
-        printReg(response, src1, dataSize);
+        printSrcReg(response, 0, dataSize);
         response << ", ";
-        printReg(response, src2, dataSize);
+        printSrcReg(response, 1, dataSize);
         return response.str();
     }
 
@@ -187,9 +187,9 @@ namespace X86ISA
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest, dataSize);
+        printDestReg(response, 0, dataSize);
         response << ", ";
-        printReg(response, src1, dataSize);
+        printSrcReg(response, 0, dataSize);
         ccprintf(response, ", %#x", imm8);
         return response.str();
     }

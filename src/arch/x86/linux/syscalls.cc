@@ -71,7 +71,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "2.6.12");
+    strcpy(name->release, "2.6.16.19");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "x86_64");
 
@@ -81,18 +81,18 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 SyscallDesc X86LinuxProcess::syscallDescs[] = {
-    /*   0 */ SyscallDesc("read", unimplementedFunc),
-    /*   1 */ SyscallDesc("write", unimplementedFunc),
+    /*   0 */ SyscallDesc("read", readFunc),
+    /*   1 */ SyscallDesc("write", writeFunc),
     /*   2 */ SyscallDesc("open", openFunc<X86Linux64>),
-    /*   3 */ SyscallDesc("close", unimplementedFunc),
+    /*   3 */ SyscallDesc("close", closeFunc),
     /*   4 */ SyscallDesc("stat", unimplementedFunc),
-    /*   5 */ SyscallDesc("fstat", unimplementedFunc),
+    /*   5 */ SyscallDesc("fstat", fstat64Func<X86Linux64>),
     /*   6 */ SyscallDesc("lstat", unimplementedFunc),
     /*   7 */ SyscallDesc("poll", unimplementedFunc),
     /*   8 */ SyscallDesc("lseek", unimplementedFunc),
     /*   9 */ SyscallDesc("mmap", mmapFunc<X86Linux64>),
     /*  10 */ SyscallDesc("mprotect", unimplementedFunc),
-    /*  11 */ SyscallDesc("munmap", unimplementedFunc),
+    /*  11 */ SyscallDesc("munmap", munmapFunc),
     /*  12 */ SyscallDesc("brk", obreakFunc),
     /*  13 */ SyscallDesc("rt_sigaction", unimplementedFunc),
     /*  14 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
@@ -141,7 +141,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*  57 */ SyscallDesc("fork", unimplementedFunc),
     /*  58 */ SyscallDesc("vfork", unimplementedFunc),
     /*  59 */ SyscallDesc("execve", unimplementedFunc),
-    /*  60 */ SyscallDesc("exit", unimplementedFunc),
+    /*  60 */ SyscallDesc("exit", exitFunc),
     /*  61 */ SyscallDesc("wait4", unimplementedFunc),
     /*  62 */ SyscallDesc("kill", unimplementedFunc),
     /*  63 */ SyscallDesc("uname", unameFunc),
@@ -312,7 +312,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /* 228 */ SyscallDesc("clock_gettime", unimplementedFunc),
     /* 229 */ SyscallDesc("clock_getres", unimplementedFunc),
     /* 230 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
-    /* 231 */ SyscallDesc("exit_group", unimplementedFunc),
+    /* 231 */ SyscallDesc("exit_group", exitFunc),
     /* 232 */ SyscallDesc("epoll_wait", unimplementedFunc),
     /* 233 */ SyscallDesc("epoll_ctl", unimplementedFunc),
     /* 234 */ SyscallDesc("tgkill", unimplementedFunc),

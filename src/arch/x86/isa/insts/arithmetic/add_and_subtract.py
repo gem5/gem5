@@ -56,20 +56,20 @@
 microcode = '''
 def macroop ADD_R_R
 {
-    add reg, reg, regm
+    add reg, reg, regm, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADD_R_I
 {
     limm t1, imm
-    add reg, reg, t1
+    add reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADD_M_I
 {
     limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    add t1, t1, t2
+    add t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -78,14 +78,14 @@ def macroop ADD_P_I
     rdip t7
     limm t2, imm
     ld t1, ds, [0, t0, t7], disp
-    add t1, t1, t2
+    add t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADD_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    add t1, t1, reg
+    add t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -93,52 +93,52 @@ def macroop ADD_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    add t1, t1, reg
+    add t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADD_R_M
 {
     ld t1, ds, [scale, index, base], disp
-    add reg, reg, t1
+    add reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADD_R_P
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    add reg, reg, t1
+    add reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SUB_R_R
 {
-    sub reg, reg, regm
+    sub reg, reg, regm, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SUB_R_I
 {
     limm t1, imm
-    sub reg, reg, t1
+    sub reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SUB_R_M
 {
     ld t1, ds, [scale, index, base], disp
-    sub reg, reg, t1
+    sub reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SUB_R_P
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sub reg, reg, t1
+    sub reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SUB_M_I
 {
     limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    sub t1, t1, t2
+    sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -147,14 +147,14 @@ def macroop SUB_P_I
     rdip t7
     limm t2, imm
     ld t1, ds, [0, t0, t7], disp
-    sub t1, t1, t2
+    sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SUB_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    sub t1, t1, reg
+    sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -162,26 +162,26 @@ def macroop SUB_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sub t1, t1, reg
+    sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_R_R
 {
-    adc reg, reg, regm
+    adc reg, reg, regm, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADC_R_I
 {
     limm t1, imm
-    adc reg, reg, t1
+    adc reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADC_M_I
 {
     limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    adc t1, t1, t2
+    adc t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -190,14 +190,14 @@ def macroop ADC_P_I
     rdip t7
     limm t2, imm
     ld t1, ds, [0, t0, t7], disp
-    adc t1, t1, t2
+    adc t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    adc t1, t1, reg
+    adc t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -205,52 +205,52 @@ def macroop ADC_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    adc t1, t1, reg
+    adc t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop ADC_R_M
 {
     ld t1, ds, [scale, index, base], disp
-    adc reg, reg, t1
+    adc reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop ADC_R_P
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    adc reg, reg, t1
+    adc reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SBB_R_R
 {
-    sbb reg, reg, regm
+    sbb reg, reg, regm, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SBB_R_I
 {
     limm t1, imm
-    sbb reg, reg, t1
+    sbb reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SBB_R_M
 {
     ld t1, ds, [scale, index, base], disp
-    sbb reg, reg, t1
+    sbb reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SBB_R_P
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sbb reg, reg, t1
+    sbb reg, reg, t1, flags=(OF,SF,ZF,AF,PF,CF)
 };
 
 def macroop SBB_M_I
 {
     limm t2, imm
     ld t1, ds, [scale, index, base], disp
-    sbb t1, t1, t2
+    sbb t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -259,14 +259,14 @@ def macroop SBB_P_I
     rdip t7
     limm t2, imm
     ld t1, ds, [0, t0, t7], disp
-    sbb t1, t1, t2
+    sbb t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 
 def macroop SBB_M_R
 {
     ld t1, ds, [scale, index, base], disp
-    sbb t1, t1, reg
+    sbb t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
 
@@ -274,7 +274,7 @@ def macroop SBB_P_R
 {
     rdip t7
     ld t1, ds, [0, t0, t7], disp
-    sbb t1, t1, reg
+    sbb t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, ds, [0, t0, t7], disp
 };
 

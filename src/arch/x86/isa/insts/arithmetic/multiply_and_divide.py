@@ -56,39 +56,137 @@
 microcode = '''
 
 #
+# Byte version of one operand unsigned multiply.
+#
+
+def macroop MUL_B_R
+{
+    mul1u rax, rax, reg, dataSize="2"
+};
+
+def macroop MUL_B_M
+{
+    ld t1, ds, [scale, index, base], disp
+    mul1u rax, rax, t1, dataSize="2"
+};
+
+def macroop MUL_B_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    mul1u rax, rax, t1, dataSize="2"
+};
+
+#
+# One operand unsigned multiply.
+#
+
+def macroop MUL_R
+{
+    muleh rdx, rax, reg
+    mulel rax, rax, reg
+};
+
+def macroop MUL_M
+{
+    ld t1, ds, [scale, index, base], disp
+    muleh rdx, rax, t1
+    mulel rax, rax, t1
+};
+
+def macroop MUL_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    muleh rdx, rax, t1
+    mulel rax, rax, t1
+};
+
+#
+# Byte version of one operand signed multiply.
+#
+
+def macroop IMUL_B_R
+{
+    mul1s rax, rax, reg, dataSize="2"
+};
+
+def macroop IMUL_B_M
+{
+    ld t1, ds, [scale, index, base], disp
+    mul1s rax, rax, t1, dataSize="2"
+};
+
+def macroop IMUL_B_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    mul1s rax, rax, t1, dataSize="2"
+};
+
+#
+# One operand signed multiply.
+#
+
+def macroop IMUL_R
+{
+    muleh rdx, rax, reg
+    mulel rax, rax, reg
+};
+
+def macroop IMUL_M
+{
+    ld t1, ds, [scale, index, base], disp
+    muleh rdx, rax, t1
+    mulel rax, rax, t1
+};
+
+def macroop IMUL_P
+{
+    rdip t7
+    ld t1, ds, [scale, index, base], disp
+    muleh rdx, rax, t1
+    mulel rax, rax, t1
+};
+
+#
 # Two operand signed multiply. These should set the CF and OF flags if the
 # result is too large for the destination register
 #
 
 def macroop IMUL_R_R
 {
-    mul1s reg, reg, regm
+    mulel reg, reg, regm
 };
 
 def macroop IMUL_R_M
 {
     ld t1, ds, [scale, index, base], disp
-    mul1s reg, reg, t1
+    mulel reg, reg, t1
 };
 
 def macroop IMUL_R_P
 {
     rdip t7
     ld t1, ds, [scale, index, base], disp
-    mul1s reg, reg, t1
+    mulel reg, reg, t1
 };
+
+#
+# Three operand signed multiply.
+#
 
 def macroop IMUL_R_R_I
 {
     limm t1, imm
-    mul1s reg, regm, t1
+    mulel reg, regm, t1
 };
 
 def macroop IMUL_R_M_I
 {
     limm t1, imm
     ld t2, ds, [scale, index, base], disp
-    mul1s reg, t2, t1
+    mulel reg, t2, t1
 };
 
 def macroop IMUL_R_P_I
@@ -96,7 +194,54 @@ def macroop IMUL_R_P_I
     rdip t7
     limm t1, imm
     ld t2, ds, [0, t0, t7]
-    mul1s reg, t2, t1
+    mulel reg, t2, t1
+};
+
+#
+# One byte version of unsigned division
+#
+
+def macroop DIV_B_R
+{
+    div1 rax, rax, reg
+};
+
+def macroop DIV_B_M
+{
+    ld t1, ds, [scale, index, base], disp
+    div1 rax, rax, t1
+};
+
+def macroop DIV_B_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    div1 rax, rax, t1
+};
+
+#
+# Unsigned division
+#
+
+def macroop DIV_R
+{
+    divr rdx, rax, reg
+    divq rax, rax, reg
+};
+
+def macroop DIV_M
+{
+    ld t1, ds, [scale, index, base], disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
+};
+
+def macroop DIV_P
+{
+    rdip t7
+    ld t1, ds, [0, t0, t7], disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
 };
 '''
 #let {{

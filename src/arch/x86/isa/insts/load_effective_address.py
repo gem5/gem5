@@ -60,6 +60,6 @@ def macroop LEA_R_M {
 
 def macroop LEA_R_P {
     rdip t7
-    lea reg, ds, [scale, index, base], disp
+    lea reg, ds, [0, t0, t7], disp
 };
 '''

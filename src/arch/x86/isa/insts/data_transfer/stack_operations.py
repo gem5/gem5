@@ -141,6 +141,15 @@ def macroop POPA {
     ld rax, ss, [0, t0, rsp], "7 * env.dataSize"
     addi rsp, rsp, "8 * env.dataSize"
 };
+
+def macroop LEAVE {
+    # Make the default data size of pops 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
+    mov rsp, rsp, rbp
+    ld rbp, ss, [0, t0, rsp]
+    addi rsp, rsp, dsz
+};
 '''
 #let {{
 #    class ENTER(Inst):

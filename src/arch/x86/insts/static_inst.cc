@@ -117,15 +117,27 @@ namespace X86ISA
     {
         assert(size == 1 || size == 2 || size == 4 || size == 8);
         static const char * abcdFormats[9] =
-            {"", "%sl",  "%sx",  "", "e%sx", "", "", "", "r%sx"};
+            {"", "%s",  "%sx",  "", "e%sx", "", "", "", "r%sx"};
         static const char * piFormats[9] =
-            {"", "%sl",  "%s",   "", "e%s",  "", "", "", "r%s"};
+            {"", "%s",  "%s",   "", "e%s",  "", "", "", "r%s"};
         static const char * longFormats[9] =
             {"", "r%sb", "r%sw", "", "r%sd", "", "", "", "r%s"};
         static const char * microFormats[9] =
             {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
 
         if (reg < FP_Base_DepTag) {
+            char * suffix = "";
+            bool fold = reg & (1 << 6);
+            reg &= ~(1 << 6);
+
+            if(fold)
+            {
+                suffix = "h";
+                reg -= 4;
+            }
+            else if(reg < 8 && size == 1)
+                suffix = "l";
+
             switch (reg) {
               case INTREG_RAX:
                 ccprintf(os, abcdFormats[size], "a");
@@ -178,6 +190,7 @@ namespace X86ISA
               default:
                 ccprintf(os, microFormats[size], reg - NUM_INTREGS);
             }
+            ccprintf(os, suffix);
         } else if (reg < Ctrl_Base_DepTag) {
             ccprintf(os, "%%f%d", reg - FP_Base_DepTag);
         } else {

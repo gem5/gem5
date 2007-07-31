@@ -65,6 +65,7 @@ output header {{
     class SyscallInst : public X86ISA::X86StaticInst
     {
       public:
+        static const RegIndex foldOBit = 0;
         /// Constructor
         SyscallInst(const char *_mnemonic, ExtMachInst _machInst,
                 OpClass __opClass) :

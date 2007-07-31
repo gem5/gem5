@@ -113,6 +113,7 @@ namespace X86ISA
         const RegIndex dest;
         const uint8_t dataSize;
         const uint16_t ext;
+        RegIndex foldOBit;
 
         // Constructor
         RegOpBase(ExtMachInst _machInst,
@@ -128,6 +129,7 @@ namespace X86ISA
             src1(_src1), dest(_dest),
             dataSize(_dataSize), ext(_ext)
         {
+            foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
         }
 
         //Figure out what the condition code flags should be.

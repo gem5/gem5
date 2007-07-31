@@ -78,6 +78,7 @@ def template MicroLimmOpDeclare {{
         const RegIndex dest;
         const uint64_t imm;
         const uint8_t dataSize;
+        RegIndex foldOBit;
         void buildMe();
 
         std::string generateDisassembly(Addr pc,
@@ -104,7 +105,7 @@ def template MicroLimmOpDisassembly {{
         std::stringstream response;
 
         printMnemonic(response, instMnem, mnemonic);
-        printReg(response, dest, dataSize);
+        printDestReg(response, 0, dataSize);
         response << ", ";
         ccprintf(response, "%#x", imm);
         return response.str();
@@ -115,6 +116,7 @@ def template MicroLimmOpConstructor {{
 
     inline void %(class_name)s::buildMe()
     {
+        foldOBit = (dataSize == 1 && !machInst.rex.present) ? 1 << 6 : 0;
         %(constructor)s;
     }
 

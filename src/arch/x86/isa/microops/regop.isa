@@ -65,6 +65,7 @@ def template MicroRegOpExecute {{
         {
             Fault fault = NoFault;
 
+            DPRINTF(X86, "The data size is %d\n", dataSize);
             %(op_decl)s;
             %(op_rd)s;
 
@@ -326,12 +327,32 @@ let {{
 
 
     checkCCFlagBits = "checkCondition(ccFlagBits)"
-    genCCFlagBits = "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, SrcReg1, %s);"
+    genCCFlagBits = \
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, op2);"
+    genCCFlagBitsSub = \
+        "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, ~op2, true);"
+    genCCFlagBitsLogic = '''
+        //Don't have genFlags handle the OF or CF bits
+        uint64_t mask = CFBit | OFBit;
+        ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, psrc1, op2);
+        //If a logic microop wants to set these, it wants to set them to 0.
+        ccFlagBits &= ~(CFBit & ext);
+        ccFlagBits &= ~(OFBit & ext);
+    '''
+
+    regPick = '''
+        IntReg psrc1 = pick(SrcReg1, 0, dataSize);
+        IntReg psrc2 = pick(SrcReg2, 1, dataSize);
+    '''
+    immPick = '''
+        IntReg psrc1 = pick(SrcReg1, 0, dataSize);
+    '''
 
 
     # This creates a python representations of a microop which are a cross
     # product of reg/immediate and flag/no flag versions.
-    def defineMicroRegOp(mnemonic, code, subtract = False, cc=False, elseCode=";"):
+    def defineMicroRegOp(mnemonic, code, flagCode=genCCFlagBits, \
+            cc=False, elseCode=";"):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -339,47 +360,47 @@ let {{
         # of the code, one with an integer operand, and one with an immediate
         # operand.
         matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
-        regCode = matcher.sub("SrcReg2", code)
-        immCode = matcher.sub("imm8", code)
-
-        if subtract:
-            secondSrc = "~op2, true"
-        else:
-            secondSrc = "op2"
+        regCode = regPick + matcher.sub("psrc2", code)
+        immCode = immPick + matcher.sub("imm8", code)
 
         if not cc:
-            flagCode = genCCFlagBits % secondSrc
             condCode = "true"
         else:
             flagCode = ""
             condCode = checkCCFlagBits
 
-        regFlagCode = matcher.sub("SrcReg2", flagCode)
+        regFlagCode = matcher.sub("psrc2", flagCode)
         immFlagCode = matcher.sub("imm8", flagCode)
 
         class RegOpChild(RegOp):
             mnemonic = name
             className = Name
-            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
-                super(RegOpChild, self).__init__(dest, src1, src2, flags, dataSize)
+            def __init__(self, dest, src1, src2, \
+                    flags=None, dataSize="env.dataSize"):
+                super(RegOpChild, self).__init__(dest, src1, src2, \
+                        flags, dataSize)
 
         microopClasses[name] = RegOpChild
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOp", regCode);
-        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp", regCode,
-                flagCode = regFlagCode, condCheck = condCode, elseCode = elseCode);
+        setUpMicroRegOp(name, Name + "Flags", "X86ISA::RegOp",
+                regCode, flagCode=regFlagCode,
+                condCheck=condCode, elseCode=elseCode);
 
         class RegOpChildImm(RegOpImm):
             mnemonic = name + 'i'
             className = Name + 'Imm'
-            def __init__(self, dest, src1, src2, flags=None, dataSize="env.dataSize"):
-                super(RegOpChildImm, self).__init__(dest, src1, src2, flags, dataSize)
+            def __init__(self, dest, src1, src2, \
+                    flags=None, dataSize="env.dataSize"):
+                super(RegOpChildImm, self).__init__(dest, src1, src2, \
+                        flags, dataSize)
 
         microopClasses[name + 'i'] = RegOpChildImm
 
         setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", immCode);
-        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm", immCode,
-                flagCode = immFlagCode, condCheck = condCode, elseCode = elseCode);
+        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm",
+                immCode, flagCode=immFlagCode,
+                condCheck=condCode, elseCode=elseCode);
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code, elseCode=";"):
@@ -390,8 +411,8 @@ let {{
         # of the code, one with an integer operand, and one with an immediate
         # operand.
         matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
-        regCode = matcher.sub("SrcReg2", code)
-        immCode = matcher.sub("imm8", code)
+        regCode = regPick + matcher.sub("psrc2", code)
+        immCode = immPick + matcher.sub("imm8", code)
 
         class RegOpChild(RegOp):
             mnemonic = name
@@ -435,6 +456,7 @@ let {{
     def defineMicroRegOpImm(mnemonic, code):
         Name = mnemonic
         name = mnemonic.lower()
+        code = immPick + code
 
         class RegOpChild(RegOpImm):
             def __init__(self, dest, src1, src2, dataSize="env.dataSize"):
@@ -446,28 +468,76 @@ let {{
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOpImm", code);
 
-    defineMicroRegOp('Add', 'DestReg = merge(DestReg, SrcReg1 + op2, dataSize)')
-    defineMicroRegOp('Or', 'DestReg = merge(DestReg, SrcReg1 | op2, dataSize)')
+    defineMicroRegOp('Add', 'DestReg = merge(DestReg, psrc1 + op2, dataSize)')
+    defineMicroRegOp('Or', 'DestReg = merge(DestReg, psrc1 | op2, dataSize);',
+            flagCode = genCCFlagBitsLogic)
     defineMicroRegOp('Adc', '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, SrcReg1 + op2 + flags.CF, dataSize);
+            DestReg = merge(DestReg, psrc1 + op2 + flags.CF, dataSize);
             ''')
     defineMicroRegOp('Sbb', '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, SrcReg1 - op2 - flags.CF, dataSize);
-            ''', True)
-    defineMicroRegOp('And', 'DestReg = merge(DestReg, SrcReg1 & op2, dataSize)')
-    defineMicroRegOp('Sub', 'DestReg = merge(DestReg, SrcReg1 - op2, dataSize)', True)
-    defineMicroRegOp('Xor', 'DestReg = merge(DestReg, SrcReg1 ^ op2, dataSize)')
-    # defineMicroRegOp('Cmp', 'DestReg = merge(DestReg, DestReg - op2, dataSize)', True)
-    defineMicroRegOp('Mul1s', 'DestReg = merge(DestReg, DestReg * op2, dataSize)')
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, op2, dataSize)',
+            DestReg = merge(DestReg, psrc1 - op2 - flags.CF, dataSize);
+            ''', flagCode = genCCFlagBitsSub)
+    defineMicroRegOp('And', \
+            'DestReg = merge(DestReg, psrc1 & op2, dataSize)', \
+            flagCode = genCCFlagBitsLogic)
+    defineMicroRegOp('Sub', \
+            'DestReg = merge(DestReg, psrc1 - op2, dataSize)', \
+            flagCode = genCCFlagBitsSub)
+    defineMicroRegOp('Xor', \
+            'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)', \
+            flagCode = genCCFlagBitsLogic)
+    defineMicroRegOp('Mul1s', '''
+            int signPos = (dataSize * 8) / 2 - 1;
+            IntReg srcVal1 = psrc1 | (-bits(psrc1, signPos) << signPos);
+            IntReg srcVal2 = op2 | (-bits(psrc1, signPos) << signPos);
+            DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
+            ''')
+    defineMicroRegOp('Mul1u', '''
+            int halfSize = (dataSize * 8) / 2;
+            IntReg srcVal1 = psrc1 & mask(halfSize);
+            IntReg srcVal2 = op2 & mask(halfSize);
+            DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
+            ''')
+    defineMicroRegOp('Mulel', \
+            'DestReg = merge(DestReg, psrc1 * op2, dataSize)')
+    defineMicroRegOp('Muleh', '''
+            int halfSize = (dataSize * 8) / 2;
+            uint64_t psrc1_h = psrc1 >> halfSize;
+            uint64_t psrc1_l = psrc1 & mask(halfSize);
+            uint64_t psrc2_h = op2 >> halfSize;
+            uint64_t psrc2_l = op2 & mask(halfSize);
+            uint64_t result =
+                ((psrc1_l * psrc2_h) >> halfSize) +
+                ((psrc1_h * psrc2_l) >> halfSize) +
+                psrc1_h * psrc2_h;
+            DestReg = merge(DestReg, result, dataSize);
+            ''')
+    defineMicroRegOp('Div1', '''
+            int halfSize = (dataSize * 8) / 2;
+            IntReg quotient = (psrc1 / op2) & mask(halfSize);
+            IntReg remainder = (psrc1 % op2) & mask(halfSize);
+            IntReg result = quotient | (remainder << halfSize);
+            DestReg = merge(DestReg, result, dataSize);
+            ''')
+    defineMicroRegOp('Divq', '''
+            DestReg = merge(DestReg, psrc1 / op2, dataSize);
+            ''')
+    defineMicroRegOp('Divr', '''
+            DestReg = merge(DestReg, psrc1 % op2, dataSize);
+            ''')
+
+    #
+    # HACK HACK HACK HACK - Put psrc1 in here but make it inert to shut up gcc.
+    #
+    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, psrc1 * 0 + op2, dataSize)',
             elseCode='DestReg=DestReg;', cc=True)
 
     # Shift instructions
     defineMicroRegOp('Sll', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            DestReg = merge(DestReg, SrcReg1 << shiftAmt, dataSize);
+            DestReg = merge(DestReg, psrc1 << shiftAmt, dataSize);
             ''')
     defineMicroRegOp('Srl', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -475,7 +545,7 @@ let {{
             // is not defined in the C/C++ standard, we have to mask them out
             // to be sure they're zero.
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (SrcReg1 >> shiftAmt) & logicalMask, dataSize);
+            DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask, dataSize);
             ''')
     defineMicroRegOp('Sra', '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -484,15 +554,15 @@ let {{
             // them manually to be sure.
             uint64_t arithMask =
                 -bits(op2, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
-            DestReg = merge(DestReg, (SrcReg1 >> shiftAmt) | arithMask, dataSize);
+            DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
             ''')
     defineMicroRegOp('Ror', '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
-                uint64_t top = SrcReg1 << (dataSize * 8 - shiftAmt);
-                uint64_t bottom = bits(SrcReg1, dataSize * 8, shiftAmt);
+                uint64_t top = psrc1 << (dataSize * 8 - shiftAmt);
+                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -506,8 +576,8 @@ let {{
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = flags.CF << (dataSize * 8 - shiftAmt);
                 if(shiftAmt > 1)
-                    top |= SrcReg1 << (dataSize * 8 - shiftAmt - 1);
-                uint64_t bottom = bits(SrcReg1, dataSize * 8, shiftAmt);
+                    top |= psrc1 << (dataSize * 8 - shiftAmt - 1);
+                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -518,9 +588,9 @@ let {{
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             if(shiftAmt)
             {
-                uint64_t top = SrcReg1 << shiftAmt;
+                uint64_t top = psrc1 << shiftAmt;
                 uint64_t bottom =
-                    bits(SrcReg1, dataSize * 8 - 1, dataSize * 8 - shiftAmt);
+                    bits(psrc1, dataSize * 8 - 1, dataSize * 8 - shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -532,27 +602,27 @@ let {{
             if(shiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
-                uint64_t top = SrcReg1 << shiftAmt;
+                uint64_t top = psrc1 << shiftAmt;
                 uint64_t bottom = flags.CF << (shiftAmt - 1);
                 if(shiftAmt > 1)
                     bottom |=
-                        bits(SrcReg1, dataSize * 8 - 1,
-                                      dataSize * 8 - shiftAmt + 1);
+                        bits(psrc1, dataSize * 8 - 1,
+                                   dataSize * 8 - shiftAmt + 1);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
                 DestReg = DestReg;
             ''')
 
-    defineMicroRegOpWr('Wrip', 'RIP = SrcReg1 + op2', elseCode="RIP = RIP;")
+    defineMicroRegOpWr('Wrip', 'RIP = psrc1 + op2', elseCode="RIP = RIP;")
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
 
     defineMicroRegOpImm('Sext', '''
-            IntReg val = SrcReg1;
+            IntReg val = psrc1;
             int sign_bit = bits(val, imm8-1, imm8-1);
             val = sign_bit ? (val | ~mask(imm8)) : val;
             DestReg = merge(DestReg, val, dataSize);''')
 
-    defineMicroRegOpImm('Zext', 'DestReg = bits(SrcReg1, imm8-1, 0);')
+    defineMicroRegOpImm('Zext', 'DestReg = bits(psrc1, imm8-1, 0);')
 }};

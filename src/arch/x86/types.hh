@@ -110,6 +110,9 @@ namespace X86ISA
     EndBitUnion(Sib)
 
     BitUnion8(Rex)
+        //This bit doesn't mean anything according to the ISA, but in
+        //this implementation, it being set means an REX prefix was present.
+        Bitfield<6> present;
         Bitfield<3> w;
         Bitfield<2> r;
         Bitfield<1> x;

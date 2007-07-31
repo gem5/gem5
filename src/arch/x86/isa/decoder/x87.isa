@@ -1,0 +1,346 @@
+// Copyright (c) 2007 The Hewlett-Packard Development Company
+// All rights reserved.
+//
+// Redistribution and use of this software in source and binary forms,
+// with or without modification, are permitted provided that the
+// following conditions are met:
+//
+// The software must be used only for Non-Commercial Use which means any
+// use which is NOT directed to receiving any direct monetary
+// compensation for, or commercial advantage from such use.  Illustrative
+// examples of non-commercial use are academic research, personal study,
+// teaching, education and corporate research & development.
+// Illustrative examples of commercial use are distributing products for
+// commercial advantage and providing services using the software for
+// commercial advantage.
+//
+// If you wish to use this software or functionality therein that may be
+// covered by patents for commercial use, please contact:
+//     Director of Intellectual Property Licensing
+//     Office of Strategy and Technology
+//     Hewlett-Packard Company
+//     1501 Page Mill Road
+//     Palo Alto, California  94304
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.  Redistributions
+// in binary form must reproduce the above copyright notice, this list of
+// conditions and the following disclaimer in the documentation and/or
+// other materials provided with the distribution.  Neither the name of
+// the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.  No right of
+// sublicense is granted herewith.  Derivatives of the software and
+// output created using the software may be prepared, but only for
+// Non-Commercial Uses.  Derivatives of the software may be shared with
+// others provided: (i) the others agree to abide by the list of
+// conditions herein which includes the Non-Commercial Use restrictions;
+// and (ii) such Derivatives of the software include the above copyright
+// notice to acknowledge the contribution from this software where
+// applicable, this list of conditions and the disclaimer below.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+0x1B: decode OPCODE_OP_BOTTOM3 {
+    //0x0: esc0();
+    0x0: decode MODRM_REG {
+        0x0: fadd();
+        0x1: fmul();
+        0x2: fcom();
+        0x3: fcomp();
+        0x4: fsub();
+        0x5: fsubr();
+        0x6: fdiv();
+        0x7: fdivr();
+    }
+    //0x1: esc1();
+    0x1: decode MODRM_REG {
+        0x0: fld();
+        0x1: decode MODRM_MOD {
+            0x3: fxch();
+            default: Inst::UD2();
+        }
+        0x2: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: fnop();
+                default: Inst::UD2();
+            }
+            default: fst();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fstp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: fchs();
+                0x1: fabs();
+                0x4: ftst();
+                0x5: fxam();
+                default: Inst::UD2();
+            }
+            default: fldenv();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: fld1();
+                0x1: fldl2t();
+                0x2: fldl2e();
+                0x3: fldpi();
+                0x4: fldlg2();
+                0x5: fldln2();
+                0x6: fldz();
+            }
+            default: fldcw();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: f2xm1();
+                0x1: fyl2x();
+                0x2: fptan();
+                0x3: fpatan();
+                0x4: fxtract();
+                0x5: fprem1();
+                0x6: fdecstp();
+                0x7: fincstp();
+            }
+            default: fnstenv();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: fprem();
+                0x1: fyl2xp1();
+                0x2: fsqrt();
+                0x3: fsincos();
+                0x4: frndint();
+                0x5: fscale();
+                0x6: fsin();
+                0x7: fcos();
+            }
+            default: fnstcw();
+        }
+    }
+    //0x2: esc2();
+    0x2: decode MODRM_REG {
+        0x0: decode MODRM_MOD {
+            0x3: fcmovb();
+            default: fiadd();
+        }
+        0x1: decode MODRM_MOD {
+            0x3: fcmove();
+            default: fimul();
+        }
+        0x2: decode MODRM_MOD {
+            0x3: fcmovbe();
+            default: ficom();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: fcmovu();
+            default: ficomp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fisub();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x1: fucompp();
+                default: Inst::UD2();
+            }
+            default: fisubr();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fidiv();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fidivr();
+        }
+    }
+    //0x3: esc3();
+    0x3: decode MODRM_REG {
+        0x0: decode MODRM_MOD {
+            0x3: fcmovnb();
+            default: fild();
+        }
+        0x1: decode MODRM_MOD {
+            0x3: fcmovne();
+            default: fisttp();
+        }
+        0x2: decode MODRM_MOD {
+            0x3: fcmovnbe();
+            default: fist();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: fcmovnu();
+            default: fistp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x2: fnclex();
+                0x3: fninit();
+                default: Inst::UD2();
+            }
+            default: Inst::UD2();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: fucomi();
+            default: fld();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: fcomi();
+            default: Inst::UD2();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fstp();
+        }
+    }
+    //0x4: esc4();
+    0x4: decode MODRM_REG {
+        0x0: fadd();
+        0x1: fmul();
+        0x2: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fcom();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fcomp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: fsubr();
+            default: fsub();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: fsub();
+            default: fsubr();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: fdivr();
+            default: fdiv();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: fdiv();
+            default: fdivr();
+        }
+    }
+    //0x5: esc5();
+    0x5: decode MODRM_REG {
+        0x0: decode MODRM_MOD {
+            0x3: ffree();
+            default: fld();
+        }
+        0x1: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fisttp();
+        }
+        0x2: fst();
+        0x3: fstp();
+        0x4: decode MODRM_MOD {
+            0x3: fucom();
+            default: frstor();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: fucomp();
+            default: Inst::UD2();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fnsave();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fnstsw();
+        }
+    }
+    //0x6: esc6();
+    0x6: decode MODRM_REG {
+        0x0: decode MODRM_MOD {
+            0x3: faddp();
+            default: fiadd();
+        }
+        0x1: decode MODRM_MOD {
+            0x3: fmulp();
+            default: fimul();
+        }
+        0x2: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: ficom();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x1: fcompp();
+                default: Inst::UD2();
+            }
+            default: ficomp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: fsubrp();
+            default: fisub();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: fsubp();
+            default: fisubr();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: fdivrp();
+            default: fidiv();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: fdivp();
+            default: fidivr();
+        }
+    }
+    //0x7: esc7();
+    0x7: decode MODRM_REG {
+        0x0: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fild();
+        }
+        0x1: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fisttp();
+        }
+        0x2: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fist();
+        }
+        0x3: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fistp();
+        }
+        0x4: decode MODRM_MOD {
+            0x3: decode MODRM_RM {
+                0x0: fnstsw();
+                default: Inst::UD2();
+            }
+            default: fbld();
+        }
+        0x5: decode MODRM_MOD {
+            0x3: fucomip();
+            default: fild();
+        }
+        0x6: decode MODRM_MOD {
+            0x3: fcomip();
+            default: fbstp();
+        }
+        0x7: decode MODRM_MOD {
+            0x3: Inst::UD2();
+            default: fistp();
+        }
+    }
+}

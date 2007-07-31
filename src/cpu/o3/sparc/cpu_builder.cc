@@ -71,6 +71,8 @@ DerivO3CPUParams::create()
     params->clock = clock;
     params->phase = phase;
 
+    params->tracer = tracer;
+
     params->name = name;
     params->numberOfThreads = actual_num_threads;
     params->cpu_id = cpu_id;

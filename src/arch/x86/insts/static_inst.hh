@@ -92,9 +92,12 @@ namespace X86ISA
 
         inline uint64_t merge(uint64_t into, uint64_t val, int size) const
         {
-            X86IntReg reg;
-            reg = into;
-            //FIXME This needs to be handle high bytes as well
+            X86IntReg reg = into;
+            if(_destRegIdx[0] & (1 << 6))
+            {
+                reg.H = val;
+                return reg;
+            }
             switch(size)
             {
               case 1:
@@ -117,18 +120,20 @@ namespace X86ISA
             return reg;
         }
 
-        inline uint64_t pick(uint64_t from, int size)
+        inline uint64_t pick(uint64_t from, int idx, int size) const
         {
-            X86IntReg reg;
-            reg = from;
+            X86IntReg reg = from;
+            DPRINTF(X86, "Picking with size %d\n", size);
+            if(_srcRegIdx[idx] & (1 << 6))
+                return reg.H;
             switch(size)
             {
               case 1:
                 return reg.L;
               case 2:
-                return reg.E;
-              case 4:
                 return reg.X;
+              case 4:
+                return reg.E;
               case 8:
                 return reg.R;
               default:

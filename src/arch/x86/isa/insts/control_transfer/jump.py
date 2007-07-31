@@ -226,17 +226,26 @@ def macroop JMP_I
 
 def macroop JMP_R
 {
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
     wripi reg, 0
 };
 
 def macroop JMP_M
 {
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
     ld t1, ds, [scale, index, base], disp
     wripi t1, 0
 };
 
 def macroop JMP_P
 {
+    # Make the default data size of jumps 64 bits in 64 bit mode
+    .adjust_env oszIn64Override
+
     rdip t7
     ld t1, ds, [0, t0, t7], disp
     wripi t1, 0

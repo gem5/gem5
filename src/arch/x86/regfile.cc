@@ -86,6 +86,7 @@
  */
 
 #include "arch/x86/regfile.hh"
+#include "base/trace.hh"
 #include "sim/serialize.hh"
 #include "cpu/thread_context.hh"
 
@@ -209,8 +210,12 @@ void RegFile::setIntReg(int intReg, const IntReg &val)
 
 int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
 {
-    //For right now, don't do any flattening
-    return reg;
+    //If we need to fold over the index to match byte semantics, do that.
+    //Otherwise, just strip off any extra bits and pass it through.
+    if (reg & (1 << 6))
+        return (reg & ~(1 << 6) - 0x4);
+    else
+        return (reg & ~(1 << 6));
 }
 
 void RegFile::serialize(std::ostream &os)

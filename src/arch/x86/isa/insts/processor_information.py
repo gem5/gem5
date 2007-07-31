@@ -53,7 +53,20 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop CPUID_R {
+    #
+    # For now, the CPUID function number will be hard wired to 0x8000_0000.
+    # Getting it to work more robustly will likely require microcode branching
+    # which probably doesn't work at the moment.
+    #
+
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+};
+'''
 #let {{
 #    class CPUID(Inst):
 #	"GenFault ${new UnimpInstFault}"
