@@ -50,6 +50,7 @@ Source('stat_control.cc')
 Source('system.cc')
 
 if env['FULL_SYSTEM']:
+    Source('arguments.cc')
     Source('pseudo_inst.cc')
 else:
     SimObject('Process.py')

@@ -31,18 +31,18 @@
 #include <sys/types.h>
 #include <algorithm>
 
+#include "arch/vtophys.hh"
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "sim/host.hh"
-#include "arch/arguments.hh"
-#include "arch/vtophys.hh"
+#include "sim/arguments.hh"
 
 using namespace std;
 
 namespace tru64 {
 
 void
-Printf(TheISA::Arguments args)
+Printf(Arguments args)
 {
     std::ostream &out = Trace::output();
 

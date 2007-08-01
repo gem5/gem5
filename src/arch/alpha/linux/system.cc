@@ -40,7 +40,6 @@
  * up boot time.
  */
 
-#include "arch/arguments.hh"
 #include "arch/vtophys.hh"
 #include "arch/alpha/idle_event.hh"
 #include "arch/alpha/linux/system.hh"
@@ -54,6 +53,7 @@
 #include "kern/linux/events.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
+#include "sim/arguments.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;

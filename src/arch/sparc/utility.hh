@@ -41,6 +41,9 @@
 namespace SparcISA
 {
 
+
+    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+
     static inline bool
     inUserMode(ThreadContext *tc)
     {
