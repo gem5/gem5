@@ -412,11 +412,6 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
-    //Set up the thread context to start running the process
-    //Because of the peculiarities of how syscall works, I believe
-    //a process starts with r11 containing the value of eflags or maybe r11
-    //from before the call to execve. Empirically this value is 0x200.
-    threadContexts[0]->setIntReg(INTREG_R11, 0x200);
     //Set the stack pointer register
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 

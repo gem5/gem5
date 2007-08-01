@@ -36,6 +36,7 @@
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
 #include "sim/insttracer.hh"
+#include "arch/x86/intregs.hh"
 
 class ThreadContext;
 
@@ -48,12 +49,6 @@ class NativeTraceRecord : public InstRecord
 {
   protected:
     NativeTrace * parent;
-
-    bool
-    checkIntReg(const char * regName, int index, int size);
-
-    bool
-    checkPC(const char * regName, int size);
 
   public:
     NativeTraceRecord(NativeTrace * _parent,
@@ -73,7 +68,108 @@ class NativeTrace : public InstTracer
 
     ListenSocket native_listener;
 
+    bool checkRcx;
+    bool checkR11;
+    uint64_t oldRcxVal, oldR11Val;
+    uint64_t oldRealRcxVal, oldRealR11Val;
+
+    struct ThreadState {
+        uint64_t rax;
+        uint64_t rcx;
+        uint64_t rdx;
+        uint64_t rbx;
+        uint64_t rsp;
+        uint64_t rbp;
+        uint64_t rsi;
+        uint64_t rdi;
+        uint64_t r8;
+        uint64_t r9;
+        uint64_t r10;
+        uint64_t r11;
+        uint64_t r12;
+        uint64_t r13;
+        uint64_t r14;
+        uint64_t r15;
+        uint64_t rip;
+
+        void update(int fd)
+        {
+            int bytesLeft = sizeof(ThreadState);
+            int bytesRead = 0;
+            do
+            {
+                int res = read(fd, ((char *)this) + bytesRead, bytesLeft);
+                if(res < 0)
+                    panic("Read call failed! %s\n", strerror(errno));
+                bytesLeft -= res;
+                bytesRead += res;
+            } while(bytesLeft);
+            rax = TheISA::gtoh(rax);
+            rcx = TheISA::gtoh(rcx);
+            rdx = TheISA::gtoh(rdx);
+            rbx = TheISA::gtoh(rbx);
+            rsp = TheISA::gtoh(rsp);
+            rbp = TheISA::gtoh(rbp);
+            rsi = TheISA::gtoh(rsi);
+            rdi = TheISA::gtoh(rdi);
+            r8 = TheISA::gtoh(r8);
+            r9 = TheISA::gtoh(r9);
+            r10 = TheISA::gtoh(r10);
+            r11 = TheISA::gtoh(r11);
+            r12 = TheISA::gtoh(r12);
+            r13 = TheISA::gtoh(r13);
+            r14 = TheISA::gtoh(r14);
+            r15 = TheISA::gtoh(r15);
+            rip = TheISA::gtoh(rip);
+        }
+
+        void update(ThreadContext * tc)
+        {
+            rax = tc->readIntReg(X86ISA::INTREG_RAX);
+            rcx = tc->readIntReg(X86ISA::INTREG_RCX);
+            rdx = tc->readIntReg(X86ISA::INTREG_RDX);
+            rbx = tc->readIntReg(X86ISA::INTREG_RBX);
+            rsp = tc->readIntReg(X86ISA::INTREG_RSP);
+            rbp = tc->readIntReg(X86ISA::INTREG_RBP);
+            rsi = tc->readIntReg(X86ISA::INTREG_RSI);
+            rdi = tc->readIntReg(X86ISA::INTREG_RDI);
+            r8 = tc->readIntReg(X86ISA::INTREG_R8);
+            r9 = tc->readIntReg(X86ISA::INTREG_R9);
+            r10 = tc->readIntReg(X86ISA::INTREG_R10);
+            r11 = tc->readIntReg(X86ISA::INTREG_R11);
+            r12 = tc->readIntReg(X86ISA::INTREG_R12);
+            r13 = tc->readIntReg(X86ISA::INTREG_R13);
+            r14 = tc->readIntReg(X86ISA::INTREG_R14);
+            r15 = tc->readIntReg(X86ISA::INTREG_R15);
+            rip = tc->readNextPC();
+        }
+
+    };
+
+    ThreadState nState;
+    ThreadState mState;
+
+
   public:
+
+    template<class T>
+    bool
+    checkReg(const char * regName, T &val, T &realVal)
+    {
+        if(val != realVal)
+        {
+            DPRINTFN("Register %s should be %#x but is %#x.\n",
+                    regName, realVal, val);
+            return false;
+        }
+        return true;
+    }
+
+    bool
+    checkRcxReg(const char * regName, uint64_t &, uint64_t &);
+
+    bool
+    checkR11Reg(const char * regName, uint64_t &, uint64_t &);
 
     NativeTrace(const std::string & name);
 
@@ -87,6 +183,9 @@ class NativeTrace : public InstTracer
         return new NativeTraceRecord(this, when, tc,
                 staticInst, pc, tc->misspeculating());
     }
+
+    void
+    check(ThreadContext *, bool syscall);
 
     friend class NativeTraceRecord;
 };

@@ -34,8 +34,9 @@ Import('*')
 
 if env['TARGET_ISA'] == 'mips':
     Source('faults.cc')
-    Source('isa_traits.cc')
+    Source('regfile/int_regfile.cc')
     Source('regfile/misc_regfile.cc')
+    Source('regfile/regfile.cc')
     Source('utility.cc')
     Source('dsp.cc')
 

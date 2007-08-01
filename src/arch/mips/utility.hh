@@ -74,8 +74,6 @@ namespace MipsISA {
 
     void startupCPU(ThreadContext *tc, int cpuId);
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
     // Instruction address compression hooks
     static inline Addr realPCToFetchPC(const Addr &addr) {
         return addr;

@@ -70,7 +70,7 @@
 #if FULL_SYSTEM
                 0x05: syscall();
 #else
-                0x05: SyscallInst::syscall('xc->syscall(rax)');
+                0x05: SyscallInst::syscall('xc->syscall(rax)', IsSyscall);
 #endif
                 0x06: clts();
                 //sandpile.org says (AMD) after sysret, so I might want to check

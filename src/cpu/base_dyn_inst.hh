@@ -498,6 +498,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool isQuiesce() const { return staticInst->isQuiesce(); }
     bool isIprAccess() const { return staticInst->isIprAccess(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
+    bool isSyscall() const { return staticInst->isSyscall(); }
     bool isMacroop() const { return staticInst->isMacroop(); }
     bool isMicroop() const { return staticInst->isMicroop(); }
     bool isDelayedCommit() const { return staticInst->isDelayedCommit(); }

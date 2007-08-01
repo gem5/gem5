@@ -103,7 +103,7 @@
                 0x5: fldln2();
                 0x6: fldz();
             }
-            default: fldcw();
+            default: fldcw_Mw();
         }
         0x6: decode MODRM_MOD {
             0x3: decode MODRM_RM {
@@ -129,7 +129,7 @@
                 0x6: fsin();
                 0x7: fcos();
             }
-            default: fnstcw();
+            default: fnstcw_Mw();
         }
     }
     //0x2: esc2();

@@ -134,7 +134,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
                     0x4: syscall({{ xc->syscall(R2); }},
-                                 IsSerializeAfter, IsNonSpeculative);
+                                 IsSerializeAfter, IsNonSpeculative,
+                                 IsSyscall);
                     0x7: sync({{ ; }}, IsMemBarrier);
                 }
 
