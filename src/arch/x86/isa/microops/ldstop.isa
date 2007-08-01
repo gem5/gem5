@@ -170,7 +170,7 @@ def template MicroLoadCompleteAcc {{
         %(op_rd)s;
 
         Mem = pkt->get<typeof(Mem)>();
-        int offset = pkt->flags;
+        int offset = pkt->req->getFlags();
         Mem = bits(Mem, (offset + dataSize) * 8 - 1,  offset * 8);
         %(code)s;
 
