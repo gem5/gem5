@@ -32,6 +32,7 @@
 #ifndef __INSTRECORD_HH__
 #define __INSTRECORD_HH__
 
+#include "base/bigint.hh"
 #include "base/trace.hh"
 #include "cpu/inst_seq.hh"	// for InstSeqNum
 #include "cpu/static_inst.hh"
