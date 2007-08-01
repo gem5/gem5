@@ -160,6 +160,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
 {
     uint64_t sp = getSP();
     uint64_t pc = getPC();
+    uint64_t highestInfo = 0;
     char obuf[1024];
     sprintf(obuf, "Initial stack pointer = 0x%016llx\n", sp);
     os << obuf;
@@ -180,6 +181,9 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n",
                 sp, argCount++, cargv);
+        if(cargv)
+            if(highestInfo < cargv)
+                highestInfo = cargv;
         os << obuf;
         sp += 8;
     } while(cargv);
@@ -230,7 +234,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
         }
         sp += 8;
         clearedInitialPadding = clearedInitialPadding || buf != 0;
-    } while(!clearedInitialPadding || buf != 0);
+    } while(!clearedInitialPadding || buf != 0 || sp <= highestInfo);
     return os;
 }
 
