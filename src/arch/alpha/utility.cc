@@ -26,45 +26,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Ali Saidi
  */
 
-#include "arch/alpha/arguments.hh"
+#include "arch/alpha/utility.hh"
+
+#if FULL_SYSTEM
 #include "arch/alpha/vtophys.hh"
-#include "cpu/thread_context.hh"
 #include "mem/vport.hh"
+#endif
 
-using namespace AlphaISA;
-
-Arguments::Data::~Data()
+namespace AlphaISA
 {
-    while (!data.empty()) {
-        delete [] data.front();
-        data.pop_front();
-    }
-}
 
-char *
-Arguments::Data::alloc(size_t size)
+uint64_t getArgument(ThreadContext *tc, int number, bool fp)
 {
-    char *buf = new char[size];
-    data.push_back(buf);
-    return buf;
-}
-
-uint64_t
-Arguments::getArg(bool fp)
-{
-    if (number < 6) {
+#if FULL_SYSTEM
+    if (number < NumArgumentRegs) {
         if (fp)
-            return tc->readFloatRegBits(16 + number);
+            return tc->readFloatRegBits(ArgumentReg[number]);
         else
-            return tc->readIntReg(16 + number);
+            return tc->readIntReg(ArgumentReg[number]);
     } else {
-        Addr sp = tc->readIntReg(30);
+        Addr sp = tc->readIntReg(StackPointerReg);
         VirtualPort *vp = tc->getVirtPort(tc);
-        uint64_t arg = vp->read<uint64_t>(sp + (number-6) * sizeof(uint64_t));
+        uint64_t arg = vp->read<uint64_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint64_t));
         tc->delVirtPort(vp);
         return arg;
     }
+#else
+    panic("getArgument() is Full system only\n");
+    M5_DUMMY_RETURN
+#endif
 }
+
+} // namespace AlphaISA
 

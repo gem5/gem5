@@ -31,10 +31,10 @@
 #ifndef __DUMP_MBUF_HH__
 #define __DUMP_MBUF_HH__
 
-#include "arch/arguments.hh"
+#include "sim/arguments.hh"
 
 namespace tru64 {
-    void DumpMbuf(TheISA::Arguments args);
+    void DumpMbuf(Arguments args);
 }
 
 #endif // __DUMP_MBUF_HH__

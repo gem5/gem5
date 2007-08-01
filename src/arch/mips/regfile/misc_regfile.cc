@@ -30,13 +30,13 @@
 
 #include "base/bitfield.hh"
 
-#include "arch/mips/regfile/misc_regfile.hh"
-#include "arch/mips/mt_constants.hh"
 #include "arch/mips/faults.hh"
+#include "arch/mips/mt.hh"
+#include "arch/mips/mt_constants.hh"
+#include "arch/mips/regfile/misc_regfile.hh"
 
-#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
-#include "cpu/exetrace.hh"
+#include "cpu/thread_context.hh"
 //#include "cpu/mixie/cpu.hh"
 
 using namespace std;

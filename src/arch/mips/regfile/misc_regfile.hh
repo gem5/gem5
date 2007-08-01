@@ -33,14 +33,12 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
-#include "arch/mips/mt.hh"
-#include "arch/mips/mt_constants.hh"
-#include "base/bitfield.hh"
-#include "cpu/base.hh"
+#include "sim/eventq.hh"
 #include "sim/faults.hh"
 #include <queue>
 
 class ThreadContext;
+class BaseCPU;
 
 namespace MipsISA
 {
@@ -76,7 +74,10 @@ namespace MipsISA
 
         void expandForMultithreading(unsigned num_threads, unsigned num_vpes);
 
-        void copyMiscRegs(ThreadContext *tc);
+        void copyMiscRegs(ThreadContext *tc)
+        {
+            panic("Copy Misc. Regs Not Implemented Yet\n");
+        }
 
         inline unsigned getVPENum(unsigned tid);
 

@@ -25,49 +25,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Gabe Black
+ *          Ali Saidi
  */
 
-#include "arch/sparc/arguments.hh"
+#include "arch/sparc/utility.hh"
+#if FULL_SYSTEM
 #include "arch/sparc/vtophys.hh"
-#include "cpu/thread_context.hh"
 #include "mem/vport.hh"
+#endif
 
-using namespace SparcISA;
+namespace SparcISA {
 
-Arguments::Data::~Data()
-{
-    while (!data.empty()) {
-        delete [] data.front();
-        data.pop_front();
-    }
-}
 
-char *
-Arguments::Data::alloc(size_t size)
-{
-    char *buf = new char[size];
-    data.push_back(buf);
-    return buf;
-}
-
-uint64_t
-Arguments::getArg(bool fp)
-{
-    //The caller uses %o0-%05 for the first 6 arguments even if their floating
-    //point. Double precision floating point values take two registers/args.
-    //Quads, structs, and unions are passed as pointers. All arguments beyond
-    //the sixth are passed on the stack past the 16 word window save area,
-    //space for the struct/union return pointer, and space reserved for the
-    //first 6 arguments which the caller may use but doesn't have to.
-    if (number < 6) {
-        return tc->readIntReg(8 + number);
+//The caller uses %o0-%05 for the first 6 arguments even if their floating
+//point. Double precision floating point values take two registers/args.
+//Quads, structs, and unions are passed as pointers. All arguments beyond
+//the sixth are passed on the stack past the 16 word window save area,
+//space for the struct/union return pointer, and space reserved for the
+//first 6 arguments which the caller may use but doesn't have to.
+uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
+#if FULL_SYSTEM
+    if (number < NumArgumentRegs) {
+        return tc->readIntReg(ArgumentReg[number]);
     } else {
-        Addr sp = tc->readIntReg(14);
+        Addr sp = tc->readIntReg(StackPointerReg);
         VirtualPort *vp = tc->getVirtPort(tc);
-        uint64_t arg = vp->read<uint64_t>(sp + 92 + (number-6) * sizeof(uint64_t));
+        uint64_t arg = vp->read<uint64_t>(sp + 92 +
+                            (number-NumArgumentRegs) * sizeof(uint64_t));
         tc->delVirtPort(vp);
         return arg;
     }
+#else
+    panic("getArgument() only implemented for FULL_SYSTEM\n");
+    M5_DUMMY_RETURN
+#endif
 }
-
+} //namespace SPARC_ISA

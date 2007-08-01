@@ -29,7 +29,7 @@
  *          Ali Saidi
  */
 
-#include "arch/arguments.hh"
+#include "sim/arguments.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
@@ -46,7 +46,7 @@ DebugPrintkEvent::process(ThreadContext *tc)
 {
     if (DTRACE(DebugPrintf)) {
         std::stringstream ss;
-        TheISA::Arguments args(tc);
+        Arguments args(tc);
         Printk(ss, args);
         StringWrap name(tc->getSystemPtr()->name() + ".dprintk");
         DPRINTFN("%s", ss.str());

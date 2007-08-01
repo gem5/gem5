@@ -38,12 +38,12 @@ if env['TARGET_ISA'] == 'alpha':
     Source('miscregfile.cc')
     Source('regfile.cc')
     Source('remote_gdb.cc')
+    Source('utility.cc')
 
     if env['FULL_SYSTEM']:
         SimObject('AlphaSystem.py')
         SimObject('AlphaTLB.py')
 
-        Source('arguments.cc')
         Source('ev5.cc')
         Source('idle_event.cc')
         Source('ipr.cc')

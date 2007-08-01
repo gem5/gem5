@@ -25,76 +25,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
- *          Korey Sewell
+ * Authors: Nathan Binkert
  */
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/regfile/regfile.hh"
-#include "sim/serialize.hh"
-#include "base/bitfield.hh"
+#include "sim/arguments.hh"
+#include "arch/utility.hh"
+#include "cpu/thread_context.hh"
 
-using namespace MipsISA;
-using namespace std;
+using namespace TheISA;
 
-void
-MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
+Arguments::Data::~Data()
 {
-    panic("Copy Regs Not Implemented Yet\n");
+    while (!data.empty()) {
+        delete [] data.front();
+        data.pop_front();
+    }
 }
 
-void
-MipsISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+char *
+Arguments::Data::alloc(size_t size)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    char *buf = new char[size];
+    data.push_back(buf);
+    return buf;
 }
 
-void
-MipsISA::MiscRegFile::copyMiscRegs(ThreadContext *tc)
+uint64_t
+Arguments::getArg(bool fp)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    return TheISA::getArgument(tc, number, fp);
 }
-
-void
-IntRegFile::serialize(std::ostream &os)
-{
-    SERIALIZE_ARRAY(regs, NumIntRegs);
-}
-
-void
-IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_ARRAY(regs, NumIntRegs);
-}
-
-void
-RegFile::serialize(std::ostream &os)
-{
-    intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    //SERIALZE_ARRAY(miscRegFile);
-    //SERIALIZE_SCALAR(miscRegs.fpcr);
-    //SERIALIZE_SCALAR(miscRegs.lock_flag);
-    //SERIALIZE_SCALAR(miscRegs.lock_addr);
-    SERIALIZE_SCALAR(pc);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
-}
-
-
-void
-RegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
-    //UNSERIALZE_ARRAY(miscRegFile);
-    //UNSERIALIZE_SCALAR(miscRegs.fpcr);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_flag);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_addr);
-    UNSERIALIZE_SCALAR(pc);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
-
-}
-
 

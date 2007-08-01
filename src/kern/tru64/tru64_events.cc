@@ -29,15 +29,15 @@
  *          Lisa Hsu
  */
 
+#include "arch/alpha/ev5.hh"
+#include "arch/isa_traits.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "kern/system_events.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/tru64/dump_mbuf.hh"
 #include "kern/tru64/printf.hh"
-#include "arch/alpha/ev5.hh"
-#include "arch/arguments.hh"
-#include "arch/isa_traits.hh"
+#include "sim/arguments.hh"
 #include "sim/system.hh"
 
 using namespace TheISA;

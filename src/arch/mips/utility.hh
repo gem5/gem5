@@ -48,6 +48,10 @@ class ThreadContext;
 
 namespace MipsISA {
 
+    uint64_t getArgument(ThreadContext *tc, bool fp) {
+        panic("getArgument() not implemented for MIPS\n");
+    }
+
     //Floating Point Utility Functions
     uint64_t fpConvert(ConvertType cvt_type, double fp_val);
     double roundFP(double val, int digits);
@@ -69,8 +73,6 @@ namespace MipsISA {
     void zeroRegisters(TC *tc);
 
     void startupCPU(ThreadContext *tc, int cpuId);
-
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     // Instruction address compression hooks
     static inline Addr realPCToFetchPC(const Addr &addr) {

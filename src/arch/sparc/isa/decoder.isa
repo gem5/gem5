@@ -1230,7 +1230,7 @@ decode OP default Unknown::unknown()
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
                     }
-                }}, IsSerializeAfter, IsNonSpeculative);
+                }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
                 0x2: Trap::tccx({{
                     if(passesCondition(Ccr<7:4>, COND2))
                     {
@@ -1238,7 +1238,7 @@ decode OP default Unknown::unknown()
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
                     }
-                }}, IsSerializeAfter, IsNonSpeculative);
+                }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
             }
             0x3B: Nop::flush({{/*Instruction memory flush*/}}, IsWriteBarrier,
                           MemWriteOp);

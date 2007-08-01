@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <algorithm>
 
-#include "arch/arguments.hh"
+#include "sim/arguments.hh"
 #include "base/trace.hh"
 #include "kern/linux/printk.hh"
 
@@ -40,7 +40,7 @@ using namespace std;
 
 
 void
-Printk(stringstream &out, TheISA::Arguments args)
+Printk(stringstream &out, Arguments args)
 {
     char *p = (char *)args++;
 
