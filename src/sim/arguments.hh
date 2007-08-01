@@ -28,19 +28,17 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __ARCH_ALPHA_ARGUMENTS_HH__
-#define __ARCH_ALPHA_ARGUMENTS_HH__
+#ifndef __SIM_ARGUMENTS_HH__
+#define __SIM_ARGUMENTS_HH__
 
 #include <assert.h>
 
-#include "arch/alpha/vtophys.hh"
+#include "arch/vtophys.hh"
 #include "base/refcnt.hh"
 #include "mem/vport.hh"
 #include "sim/host.hh"
 
 class ThreadContext;
-
-namespace AlphaISA {
 
 class Arguments
 {
@@ -80,6 +78,11 @@ class Arguments
         number = args.number;
         data = args.data;
         return *this;
+    }
+
+    // for checking if an argument is NULL
+    bool operator!() {
+        return getArg() == 0;
     }
 
     Arguments &operator++() {
@@ -145,6 +148,4 @@ class Arguments
     }
 };
 
-}; // namespace AlphaISA
-
-#endif // __ARCH_ALPHA_ARGUMENTS_HH__
+#endif // __SIM_ARGUMENTS_HH__

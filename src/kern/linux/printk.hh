@@ -36,8 +36,8 @@
 
 #include <sstream>
 
-class TheISA::Arguments;
+class Arguments;
 
-void Printk(std::stringstream &out, TheISA::Arguments args);
+void Printk(std::stringstream &out, Arguments args);
 
 #endif // __PRINTK_HH__

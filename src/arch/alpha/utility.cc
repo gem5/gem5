@@ -26,15 +26,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Ali Saidi
  */
 
-#ifndef __DUMP_MBUF_HH__
-#define __DUMP_MBUF_HH__
+#include "arch/alpha/utility.hh"
 
-#include "sim/arguments.hh"
+#if FULL_SYSTEM
+#include "arch/alpha/vtophys.hh"
+#include "mem/vport.hh"
+#endif
 
-namespace tru64 {
-    void DumpMbuf(Arguments args);
+namespace AlphaISA
+{
+
+uint64_t getArgument(ThreadContext *tc, int number, bool fp)
+{
+#if FULL_SYSTEM
+    if (number < NumArgumentRegs) {
+        if (fp)
+            return tc->readFloatRegBits(ArgumentReg[number]);
+        else
+            return tc->readIntReg(ArgumentReg[number]);
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        VirtualPort *vp = tc->getVirtPort(tc);
+        uint64_t arg = vp->read<uint64_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint64_t));
+        tc->delVirtPort(vp);
+        return arg;
+    }
+#else
+    panic("getArgument() is Full system only\n");
+    M5_DUMMY_RETURN
+#endif
 }
 
-#endif // __DUMP_MBUF_HH__
+} // namespace AlphaISA
+

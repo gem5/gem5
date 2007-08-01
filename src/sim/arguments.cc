@@ -28,12 +28,11 @@
  * Authors: Nathan Binkert
  */
 
-#include "arch/sparc/arguments.hh"
-#include "arch/sparc/vtophys.hh"
+#include "sim/arguments.hh"
+#include "arch/utility.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
 
-using namespace SparcISA;
+using namespace TheISA;
 
 Arguments::Data::~Data()
 {
@@ -54,20 +53,6 @@ Arguments::Data::alloc(size_t size)
 uint64_t
 Arguments::getArg(bool fp)
 {
-    //The caller uses %o0-%05 for the first 6 arguments even if their floating
-    //point. Double precision floating point values take two registers/args.
-    //Quads, structs, and unions are passed as pointers. All arguments beyond
-    //the sixth are passed on the stack past the 16 word window save area,
-    //space for the struct/union return pointer, and space reserved for the
-    //first 6 arguments which the caller may use but doesn't have to.
-    if (number < 6) {
-        return tc->readIntReg(8 + number);
-    } else {
-        Addr sp = tc->readIntReg(14);
-        VirtualPort *vp = tc->getVirtPort(tc);
-        uint64_t arg = vp->read<uint64_t>(sp + 92 + (number-6) * sizeof(uint64_t));
-        tc->delVirtPort(vp);
-        return arg;
-    }
+    return TheISA::getArgument(tc, number, fp);
 }
 

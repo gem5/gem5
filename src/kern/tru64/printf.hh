@@ -31,10 +31,10 @@
 #ifndef __PRINTF_HH__
 #define __PRINTF_HH__
 
-#include "arch/arguments.hh"
+#include "sim/arguments.hh"
 
 namespace tru64 {
-    void Printf(TheISA::Arguments args);
+    void Printf(Arguments args);
 }
 
 #endif // __PRINTF_HH__
