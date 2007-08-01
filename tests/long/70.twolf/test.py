@@ -32,7 +32,7 @@ import os
 
 workload = twolf(isa, opsys, 'smred')
 root.system.cpu.workload = workload.makeLiveProcess()
-cwd = root.system.cpu.workload.cwd
+cwd = root.system.cpu.workload[0].cwd
 
 #Remove two files who's presence or absence affects execution
 sav_file = os.path.join(cwd, workload.input_set + '.sav')
