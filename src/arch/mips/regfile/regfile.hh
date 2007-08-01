@@ -32,8 +32,6 @@
 #define __ARCH_MIPS_REGFILE_REGFILE_HH__
 
 #include "arch/mips/types.hh"
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/float_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
@@ -189,9 +187,11 @@ namespace MipsISA
         return reg;
     }
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
+    void
+    copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+    void
+    copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 } // namespace MipsISA
 
