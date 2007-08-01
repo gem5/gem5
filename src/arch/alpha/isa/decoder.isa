@@ -714,7 +714,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
             0x83: callsys({{
                 xc->syscall(R0);
-            }}, IsSerializeAfter, IsNonSpeculative);
+            }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
             // Read uniq reg into ABI return value register (r0)
             0x9e: rduniq({{ R0 = Runiq; }}, IsIprAccess);
             // Write uniq reg with value from ABI arg register (r16)

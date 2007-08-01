@@ -143,6 +143,9 @@ class StaticInstBase : public RefCounted
         IsIprAccess,    ///< Accesses IPRs
         IsUnverifiable, ///< Can't be verified by a checker
 
+        IsSyscall,      ///< Causes a system call to be emulated in syscall
+                        /// emulation mode.
+
         //Flags for microcode
         IsMacroop,      ///< Is a macroop containing microops
         IsMicroop,	///< Is a microop
@@ -243,6 +246,7 @@ class StaticInstBase : public RefCounted
     bool isQuiesce() const { return flags[IsQuiesce]; }
     bool isIprAccess() const { return flags[IsIprAccess]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
+    bool isSyscall() const { return flags[IsSyscall]; }
     bool isMacroop() const { return flags[IsMacroop]; }
     bool isMicroop() const { return flags[IsMicroop]; }
     bool isDelayedCommit() const { return flags[IsDelayedCommit]; }
