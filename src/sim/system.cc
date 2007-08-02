@@ -72,7 +72,8 @@ System::System(Params *p)
 
 #if FULL_SYSTEM
     kernelSymtab = new SymbolTable;
-    debugSymbolTable = new SymbolTable;
+    if (!debugSymbolTable)
+        debugSymbolTable = new SymbolTable;
 
 
     /**

@@ -87,7 +87,7 @@ OutputDirectory::resolve(const string &name)
 }
 
 ostream *
-OutputDirectory::create(const string &name)
+OutputDirectory::create(const string &name, bool binary)
 {
     if (name == "cerr" || name == "stderr")
         return &cerr;
@@ -95,7 +95,8 @@ OutputDirectory::create(const string &name)
     if (name == "cout" || name == "stdout")
         return &cout;
 
-    ofstream *file = new ofstream(resolve(name).c_str(), ios::trunc);
+    ofstream *file = new ofstream(resolve(name).c_str(),
+            ios::trunc | binary ?  ios::binary : (ios::openmode)0);
     if (!file->is_open())
         panic("Cannot open file %s", name);
 

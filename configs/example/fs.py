@@ -134,6 +134,9 @@ if len(bm) == 2:
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
+    if options.kernel is not None:
+        drive_sys.kernel = binary(options.kernel)
+
     root = makeDualRoot(test_sys, drive_sys, options.etherdump)
 elif len(bm) == 1:
     root = Root(system=test_sys)
