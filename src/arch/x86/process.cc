@@ -333,11 +333,8 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     //There needs to be padding after the auxiliary vector data so that the
     //very bottom of the stack is aligned properly.
     int partial_size = frame_size + aux_data_size;
-    warn("The partial size is %d.\n", partial_size);
     int aligned_partial_size = roundUp(partial_size, align);
-    warn("The aligned partial size is %d.\n", aligned_partial_size);
     int aux_padding = aligned_partial_size - partial_size;
-    warn("The padding is %d.\n", aux_padding);
 
     int space_needed =
         info_block_size +
