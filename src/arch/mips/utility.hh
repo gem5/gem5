@@ -48,7 +48,9 @@ class ThreadContext;
 
 namespace MipsISA {
 
-    uint64_t getArgument(ThreadContext *tc, bool fp) {
+    inline uint64_t
+    getArgument(ThreadContext *tc, bool fp)
+    {
         panic("getArgument() not implemented for MIPS\n");
     }
 

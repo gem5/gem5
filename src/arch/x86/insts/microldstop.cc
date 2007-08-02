@@ -64,16 +64,40 @@ namespace X86ISA
             const SymbolTable *symtab) const
     {
         std::stringstream response;
+        bool someAddr = false;
 
         printMnemonic(response, instMnem, mnemonic);
-        printDestReg(response, 0, dataSize);
+        if(flags[IsLoad])
+            printDestReg(response, 0, dataSize);
+        else
+            printSrcReg(response, 2, dataSize);
         response << ", ";
         printSegment(response, segment);
-        ccprintf(response, ":[%d*", scale);
-        printSrcReg(response, 0, addressSize);
-        response << " + ";
-        printSrcReg(response, 1, addressSize);
-        ccprintf(response, " + %#x]", disp);
+        response << ":[";
+        if(scale != 0 && _srcRegIdx[0] != ZeroReg)
+        {
+            if(scale != 1)
+                ccprintf(response, "%d*", scale);
+            printSrcReg(response, 0, addressSize);
+            someAddr = true;
+        }
+        if(_srcRegIdx[1] != ZeroReg)
+        {
+            if(someAddr)
+                response << " + ";
+            printSrcReg(response, 1, addressSize);
+            someAddr = true;
+        }
+        if(disp != 0)
+        {
+            if(someAddr)
+                response << " + ";
+            ccprintf(response, "%#x", disp);
+            someAddr = true;
+        }
+        if(!someAddr)
+            response << "0";
+        response << "]";
         return response.str();
     }
 }

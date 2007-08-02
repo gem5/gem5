@@ -36,6 +36,7 @@ import internal
 from main import options
 import SimObject
 import ticks
+import objects
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
