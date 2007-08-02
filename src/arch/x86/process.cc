@@ -290,18 +290,19 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     //This is the name of the file which is present on the initial stack
     //It's purpose is to let the user space linker examine the original file.
-    int file_name_size = filename.size();
+    int file_name_size = filename.size() + 1;
 
     string platform = "x86_64";
     int aux_data_size = platform.size() + 1;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
-        env_data_size += envp[i].size();
+        env_data_size += envp[i].size() + 1;
     }
     int arg_data_size = 0;
     for (int i = 0; i < argv.size(); ++i) {
-        arg_data_size += argv[i].size();
+        warn("Argv[%d] size is %d\n", i, argv[i].size() + 1);
+        arg_data_size += argv[i].size() + 1;
     }
 
     //The auxiliary vector data needs to be padded so it's size is a multiple
