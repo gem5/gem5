@@ -51,7 +51,7 @@ class OutputDirectory
     const std::string &directory();
 
     std::string resolve(const std::string &name);
-    std::ostream *create(const std::string &name);
+    std::ostream *create(const std::string &name, bool binary = false);
     std::ostream *find(const std::string &name);
 
     static bool isFile(const std::ostream *os);
