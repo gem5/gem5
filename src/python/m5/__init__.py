@@ -82,16 +82,16 @@ except ImportError:
     running_m5 = False
 
 if running_m5:
-    from event import *
-    from simulate import *
-    from main import options
-
-if running_m5:
     import defines
     build_env.update(defines.m5_build_env)
 else:
     import __scons
     build_env.update(__scons.m5_build_env)
+
+if running_m5:
+    from event import *
+    from simulate import *
+    from main import options
 
 import SimObject
 import params
