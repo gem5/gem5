@@ -102,6 +102,19 @@ def print_test(target, source, env):
 
 printAction = env.Action(print_test, strfunction = None)
 
+# Static vars for update_test:
+# - long-winded message about ignored sources
+ignore_msg = '''
+Note: The following file(s) will not be copied.  New non-standard
+      output files must be copied manually once before update_ref will
+      recognize them as outputs.  Otherwise they are assumed to be
+      inputs and are ignored.
+'''
+# - reference files always needed
+needed_files = set(['stdout', 'stderr', 'm5stats.txt', 'config.ini'])
+# - source files we always want to ignore
+known_ignores = set(['status', 'outdiff', 'statsdiff'])
+
 def update_test(target, source, env):
     """Update reference test outputs.
 
@@ -112,9 +125,21 @@ def update_test(target, source, env):
     """
     dest_dir = str(source[0].get_dir())
     src_dir = str(source[1].get_dir())
-    dest_files = os.listdir(dest_dir)
-    src_files = os.listdir(src_dir)
-    for f in ('stdout', 'stderr', 'm5stats.txt', 'config.ini'):
+    dest_files = set(os.listdir(dest_dir))
+    src_files = set(os.listdir(src_dir))
+    # Copy all of the required files plus any existing dest files.
+    wanted_files = needed_files | dest_files
+    missing_files = wanted_files - src_files
+    if len(missing_files) > 0:
+        print "  WARNING: the following file(s) are missing " \
+              "and will not be updated:"
+        print "    ", " ,".join(missing_files)
+    copy_files = wanted_files - missing_files
+    warn_ignored_files = (src_files - copy_files) - known_ignores
+    if len(warn_ignored_files) > 0:
+        print ignore_msg,
+        print "       ", ", ".join(warn_ignored_files)
+    for f in copy_files:
         if f in dest_files:
             print "  Replacing file", f
             dest_files.remove(f)
@@ -123,12 +148,6 @@ def update_test(target, source, env):
         copyAction = Copy(os.path.join(dest_dir, f), os.path.join(src_dir, f))
         copyAction.strfunction = None
         Execute(copyAction)
-    # warn about any files in dest not overwritten (other than SCCS dir)
-    if 'SCCS' in dest_files:
-        dest_files.remove('SCCS')
-    if dest_files:
-        print "Warning: file(s) in", dest_dir, "not updated:",
-        print ', '.join(dest_files)
     return 0
 
 def update_test_string(target, source, env):
