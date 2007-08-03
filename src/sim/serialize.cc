@@ -40,7 +40,6 @@
 #include <string>
 #include <vector>
 
-#include "base/annotate.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -409,7 +408,6 @@ Serializable::serializeAll(const std::string &cpt_dir)
     outstream << "// checkpoint generated: " << ctime(&t);
 
     globals.serialize(outstream);
-    Annotate::annotations.serialize(outstream);
     SimObject::serializeAll(outstream);
 }
 
@@ -425,7 +423,6 @@ Serializable::unserializeAll(const std::string &cpt_dir)
              dir);
     Checkpoint *cp = new Checkpoint(dir, section);
     unserializeGlobals(cp);
-    Annotate::annotations.unserialize(cp);
     SimObject::unserializeAll(cp);
 }
 
