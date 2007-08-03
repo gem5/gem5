@@ -6,8 +6,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 15 2007 12:54:05
-M5 started Tue May 15 12:54:07 2007
+M5 compiled Aug  3 2007 04:06:41
+M5 started Fri Aug  3 04:31:09 2007
 M5 executing on zizzer.eecs.umich.edu
 command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-atomic tests/run.py quick/00.hello/mips/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
