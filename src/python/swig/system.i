@@ -30,44 +30,14 @@
 
 %module sim_object
 
-%{
-#include "python/swig/pyobject.hh"
-%}
+%include "enums/MemoryMode.hh"
 
-// import these files for SWIG to wrap
-%include "stdint.i"
-%include "std_string.i"
-%include "sim/host.hh"
-
-class BaseCPU;
-
-class SimObject {
-  public:
-    enum State {
-      Running,
-      Draining,
-      Drained
-    };
-
-    unsigned int drain(Event *drain_event);
-    void resume();
-    void switchOut();
-    void takeOverFrom(BaseCPU *cpu);
-    SimObject(const std::string &_name);
+class System : public SimObject
+{
+    private:
+      System();
+    public:
+      Enums::MemoryMode getMemoryMode();
+      void setMemoryMode(Enums::MemoryMode mode);
 };
 
-int connectPorts(SimObject *o1, const std::string &name1, int i1,
-                 SimObject *o2, const std::string &name2, int i2);
-
-%wrapper %{
-// Convert a pointer to the Python object that SWIG wraps around a
-// C++ SimObject pointer back to the actual C++ pointer.
-SimObject *
-convertSwigSimObjectPtr(PyObject *pyObj)
-{
-    SimObject *so;
-    if (SWIG_ConvertPtr(pyObj, (void **) &so, SWIGTYPE_p_SimObject, 0) == -1)
-        return NULL;
-    return so;
-}
-%}

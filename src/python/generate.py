@@ -274,17 +274,29 @@ class Generate(object):
         print >>out
 
         for obj in ordered_objs:
-            code = 'class %s ' % obj.cxx_class
-            if str(obj) != 'SimObject':
-                code += ': public %s ' % obj.__bases__[0]
-            code += '{};'
+            if obj.swig_objdecls:
+                for decl in obj.swig_objdecls:
+                    print >>out, decl
+                continue
+
+            code = ''
+            base = obj.get_base()
+
+            code += '// stop swig from creating/wrapping default ctor/dtor\n'
+            code += '%%nodefault %s;\n' % obj.cxx_class
+            code += 'class %s ' % obj.cxx_class
+            if base:
+                code += ': public %s' % base
+            code += ' {};\n'
 
             klass = obj.cxx_class;
             if hasattr(obj, 'cxx_namespace'):
-                code = 'namespace %s { %s }' % (obj.cxx_namespace, code)
+                new_code = 'namespace %s {\n' % obj.cxx_namespace
+                new_code += code
+                new_code += '}\n'
+                code = new_code
                 klass = '%s::%s' % (obj.cxx_namespace, klass)
 
-            print >>out, '%%ignore %s;' % klass
             print >>out, code
 
         for obj in ordered_objs:

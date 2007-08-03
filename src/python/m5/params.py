@@ -1025,13 +1025,13 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
-        import internal
+        from m5.objects.params import connectPorts
 
         if self.ccConnected: # already done this
             return
         peer = self.peer
-        internal.sim_object.connectPorts(self.simobj.getCCObject(), self.name,
-            self.index, peer.simobj.getCCObject(), peer.name, peer.index)
+        connectPorts(self.simobj.getCCObject(), self.name, self.index,
+                     peer.simobj.getCCObject(), peer.name, peer.index)
         self.ccConnected = True
         peer.ccConnected = True
 
