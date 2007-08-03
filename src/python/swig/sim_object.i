@@ -31,7 +31,6 @@
 %module sim_object
 
 %{
-#include "enums/MemoryMode.hh"
 #include "python/swig/pyobject.hh"
 %}
 
@@ -57,31 +56,10 @@ class SimObject {
     SimObject(const std::string &_name);
 };
 
-class System {
-    private:
-      System();
-    public:
-      Enums::MemoryMode getMemoryMode();
-      void setMemoryMode(Enums::MemoryMode mode);
-};
-
 int connectPorts(SimObject *o1, const std::string &name1, int i1,
                  SimObject *o2, const std::string &name2, int i2);
 
-BaseCPU *convertToBaseCPUPtr(SimObject *obj);
-System *convertToSystemPtr(SimObject *obj);
-
-void serializeAll(const std::string &cpt_dir);
-void unserializeAll(const std::string &cpt_dir);
-
-void initAll();
-void regAllStats();
-
 %wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._sim_object"
-
 // Convert a pointer to the Python object that SWIG wraps around a
 // C++ SimObject pointer back to the actual C++ pointer.
 SimObject *

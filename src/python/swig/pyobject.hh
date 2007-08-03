@@ -47,26 +47,6 @@ void loadIniFile(PyObject *_resolveFunc);
 int connectPorts(SimObject *o1, const std::string &name1, int i1,
     SimObject *o2, const std::string &name2, int i2);
 
-inline BaseCPU *
-convertToBaseCPUPtr(SimObject *obj)
-{
-    BaseCPU *ptr = dynamic_cast<BaseCPU *>(obj);
-
-    if (ptr == NULL)
-        warn("Casting to BaseCPU pointer failed");
-    return ptr;
-}
-
-inline System *
-convertToSystemPtr(SimObject *obj)
-{
-    System *ptr = dynamic_cast<System *>(obj);
-
-    if (ptr == NULL)
-        warn("Casting to System pointer failed");
-    return ptr;
-}
-
 inline void
 initAll()
 {

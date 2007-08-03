@@ -36,6 +36,8 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
 class System(SimObject):
     type = 'System'
+    swig_objdecls = [ '%include "python/swig/system.i"' ]
+
     physmem = Param.PhysicalMemory(Parent.any, "phsyical memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
     if build_env['FULL_SYSTEM']:

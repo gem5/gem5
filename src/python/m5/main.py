@@ -26,9 +26,15 @@
 #
 # Authors: Nathan Binkert
 
-import code, optparse, os, socket, sys
-from datetime import datetime
+import code
+import datetime
+import optparse
+import os
+import socket
+import sys
+
 from attrdict import attrdict
+import defines
 import traceflags
 
 __all__ = [ 'options', 'arguments', 'main' ]
@@ -116,6 +122,8 @@ def bool_option(name, default, help):
 # Help options
 add_option('-A', "--authors", action="store_true", default=False,
     help="Show author information")
+add_option('-B', "--build-info", action="store_true", default=False,
+    help="Show build information")
 add_option('-C', "--copyright", action="store_true", default=False,
     help="Show full copyright information")
 add_option('-R', "--readme", action="store_true", default=False,
@@ -195,6 +203,22 @@ def main():
     parse_args()
 
     done = False
+
+    if options.build_info:
+        done = True
+        print 'Build information:'
+        print
+        print 'compiled %s' % internal.core.cvar.compileDate;
+        print 'started %s' % datetime.datetime.now().ctime()
+        print 'executing on %s' % socket.gethostname()
+        print 'build options:'
+        keys = defines.m5_build_env.keys()
+        keys.sort()
+        for key in keys:
+            val = defines.m5_build_env[key]
+            print '    %s = %s' % (key, val)
+        print
+
     if options.copyright:
         done = True
         print info.LICENSE
@@ -242,7 +266,7 @@ def main():
         print brief_copyright
         print
         print "M5 compiled %s" % internal.core.cvar.compileDate;
-        print "M5 started %s" % datetime.now().ctime()
+        print "M5 started %s" % datetime.datetime.now().ctime()
         print "M5 executing on %s" % socket.gethostname()
         print "command line:",
         for argv in sys.argv:

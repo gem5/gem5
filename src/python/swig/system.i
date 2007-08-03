@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,36 +28,16 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __BASE_OUTPUT_HH__
-#define __BASE_OUTPUT_HH__
+%module sim_object
 
-#include <iosfwd>
-#include <map>
-#include <string>
+%include "enums/MemoryMode.hh"
 
-class OutputDirectory
+class System : public SimObject
 {
-  private:
-    typedef std::map<std::string, std::ostream *> map_t;
-
-    map_t files;
-    std::string dir;
-
-  public:
-    OutputDirectory();
-    ~OutputDirectory();
-
-    void setDirectory(const std::string &dir);
-    const std::string &directory();
-
-    std::string resolve(const std::string &name);
-    std::ostream *create(const std::string &name, bool binary = false);
-    std::ostream *find(const std::string &name);
-
-    static bool isFile(const std::ostream *os);
-    static inline bool isFile(const std::ostream &os) { return isFile(&os); }
+    private:
+      System();
+    public:
+      Enums::MemoryMode getMemoryMode();
+      void setMemoryMode(Enums::MemoryMode mode);
 };
 
-extern OutputDirectory simout;
-
-#endif // __BASE_OUTPUT_HH__

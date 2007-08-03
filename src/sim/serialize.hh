@@ -39,6 +39,7 @@
 
 
 #include <list>
+#include <vector>
 #include <iostream>
 #include <map>
 
@@ -61,8 +62,16 @@ void arrayParamOut(std::ostream &os, const std::string &name,
                    const T *param, int size);
 
 template <class T>
+void arrayParamOut(std::ostream &os, const std::string &name,
+                   const std::vector<T> &param);
+
+template <class T>
 void arrayParamIn(Checkpoint *cp, const std::string &section,
                   const std::string &name, T *param, int size);
+
+template <class T>
+void arrayParamIn(Checkpoint *cp, const std::string &section,
+                  const std::string &name, std::vector<T> &param);
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,

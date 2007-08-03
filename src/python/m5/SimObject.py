@@ -128,6 +128,7 @@ class MetaSimObject(type):
                       'cxx_class' : types.StringType,
                       'cxx_type' : types.StringType,
                       'cxx_predecls' : types.ListType,
+                      'swig_objdecls' : types.ListType,
                       'swig_predecls' : types.ListType,
                       'type' : types.StringType }
     # Attributes that can be set any time
@@ -224,6 +225,9 @@ class MetaSimObject(type):
                 # just declaring a pointer.
                 cls._value_dict['swig_predecls'] = \
                     cls._value_dict['cxx_predecls']
+
+        if 'swig_objdecls' not in cls._value_dict:
+            cls._value_dict['swig_objdecls'] = []
 
         # Now process the _value_dict items.  They could be defining
         # new (or overriding existing) parameters or ports, setting
@@ -345,12 +349,13 @@ class MetaSimObject(type):
     def __str__(cls):
         return cls.__name__
 
-    def cxx_decl(cls):
-        if str(cls) != 'SimObject':
-            base = cls.__bases__[0].type
-        else:
-            base = None
+    def get_base(cls):
+        if str(cls) == 'SimObject':
+            return None
 
+        return  cls.__bases__[0].type
+
+    def cxx_decl(cls):
         code = "#ifndef __PARAMS__%s\n" % cls
         code += "#define __PARAMS__%s\n\n" % cls
 
@@ -380,6 +385,7 @@ class MetaSimObject(type):
         code += "\n".join(predecls2)
         code += "\n\n";
 
+        base = cls.get_base()
         if base:
             code += '#include "params/%s.hh"\n\n' % base
 
@@ -408,11 +414,7 @@ class MetaSimObject(type):
         return code
 
     def cxx_type_decl(cls):
-        if str(cls) != 'SimObject':
-            base = cls.__bases__[0]
-        else:
-            base = None
-
+        base = cls.get_base()
         code = ''
 
         if base:
@@ -427,16 +429,13 @@ class MetaSimObject(type):
         return code
 
     def swig_decl(cls):
+        base = cls.get_base()
+
         code = '%%module %s\n' % cls
 
         code += '%{\n'
         code += '#include "params/%s.hh"\n' % cls
         code += '%}\n\n'
-
-        if str(cls) != 'SimObject':
-            base = cls.__bases__[0]
-        else:
-            base = None
 
         # The 'dict' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
@@ -483,6 +482,7 @@ class SimObject(object):
     abstract = True
 
     name = Param.String("Object name")
+    swig_objdecls = [ '%include "python/swig/sim_object.i"' ]
 
     # Initialize new instance.  For objects with SimObject-valued
     # children, we need to recursively clone the classes represented
@@ -792,7 +792,6 @@ class SimObject(object):
     # necessary to construct it.  Does *not* recursively create
     # children.
     def getCCObject(self):
-        import internal
         params = self.getCCParams()
         if not self._ccObject:
             self._ccObject = -1 # flag to catch cycles in recursion
@@ -840,24 +839,19 @@ class SimObject(object):
         if not isinstance(self, m5.objects.System):
             return None
 
-        system_ptr = internal.sim_object.convertToSystemPtr(self._ccObject)
-        return system_ptr.getMemoryMode()
+        return self._ccObject.getMemoryMode()
 
     def changeTiming(self, mode):
-        import internal
         if isinstance(self, m5.objects.System):
             # i don't know if there's a better way to do this - calling
             # setMemoryMode directly from self._ccObject results in calling
             # SimObject::setMemoryMode, not the System::setMemoryMode
-            system_ptr = internal.sim_object.convertToSystemPtr(self._ccObject)
-            system_ptr.setMemoryMode(mode)
+            self._ccObject.setMemoryMode(mode)
         for child in self._children.itervalues():
             child.changeTiming(mode)
 
     def takeOverFrom(self, old_cpu):
-        import internal
-        cpu_ptr = internal.sim_object.convertToBaseCPUPtr(old_cpu._ccObject)
-        self._ccObject.takeOverFrom(cpu_ptr)
+        self._ccObject.takeOverFrom(old_cpu._ccObject)
 
     # generate output file for 'dot' to display as a pretty graph.
     # this code is currently broken.

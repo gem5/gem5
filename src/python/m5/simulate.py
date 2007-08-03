@@ -36,6 +36,7 @@ import internal
 from main import options
 import SimObject
 import ticks
+import objects
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
@@ -58,10 +59,10 @@ def instantiate(root):
     root.connectPorts()
 
     # Do a second pass to finish initializing the sim objects
-    internal.sim_object.initAll()
+    internal.core.initAll()
 
     # Do a third pass to initialize statistics
-    internal.sim_object.regAllStats()
+    internal.core.regAllStats()
 
     # Check to make sure that the stats package is properly initialized
     internal.stats.check()
@@ -135,32 +136,32 @@ def checkpoint(root, dir):
         raise TypeError, "Checkpoint must be called on a root object."
     doDrain(root)
     print "Writing checkpoint"
-    internal.sim_object.serializeAll(dir)
+    internal.core.serializeAll(dir)
     resume(root)
 
 def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
-    internal.sim_object.unserializeAll(dir)
+    internal.core.unserializeAll(dir)
     need_resume.append(root)
 
 def changeToAtomic(system):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
-    if system.getMemoryMode() != internal.sim_object.SimObject.Atomic:
+    if system.getMemoryMode() != objects.params.SimObject.Atomic:
         doDrain(system)
         print "Changing memory mode to atomic"
-        system.changeTiming(internal.sim_object.SimObject.Atomic)
+        system.changeTiming(objects.params.SimObject.Atomic)
 
 def changeToTiming(system):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
 
-    if system.getMemoryMode() != internal.sim_object.SimObject.Timing:
+    if system.getMemoryMode() != objects.params.SimObject.Timing:
         doDrain(system)
         print "Changing memory mode to timing"
-        system.changeTiming(internal.sim_object.SimObject.Timing)
+        system.changeTiming(objects.params.SimObject.Timing)
 
 def switchCpus(cpuList):
     print "switching cpus"

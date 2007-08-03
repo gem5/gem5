@@ -58,6 +58,12 @@ void setClockFrequency(Tick ticksPerSecond);
 %immutable curTick;
 Tick curTick;
 
+void serializeAll(const std::string &cpt_dir);
+void unserializeAll(const std::string &cpt_dir);
+
+void initAll();
+void regAllStats();
+
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package
 #undef SWIG_name

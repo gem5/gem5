@@ -73,7 +73,7 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
         if (machInst.sib.base == INTREG_RBP && machInst.modRM.mod == 0)
             base = NUM_INTREGS;
         //In -this- special case, we don't use an index.
-        if (machInst.sib.index == INTREG_RSP)
+        if (index == INTREG_RSP)
             index = NUM_INTREGS;
     } else {
         if (machInst.addrSize == 2) {
@@ -82,11 +82,9 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
             scale = 0;
             base = machInst.modRM.rm | (machInst.rex.b << 3);
             if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
-                base = NUM_INTREGS;
                 //Since we need to use a different encoding of this
                 //instruction anyway, just ignore the base in those cases
-//                if (machInst.mode.submode == SixtyFourBitMode)
-//                    base = NUM_INTREGS+7;
+                base = NUM_INTREGS;
             }
         }
     }

@@ -178,6 +178,22 @@ paramOut(ostream &os, const std::string &name, const T &param)
     os << "\n";
 }
 
+template <class T>
+void
+arrayParamOut(ostream &os, const std::string &name,
+              const std::vector<T> &param)
+{
+    int size = param.size();
+    os << name << "=";
+    if (size > 0)
+        showParam(os, param[0]);
+    for (int i = 1; i < size; ++i) {
+        os << " ";
+        showParam(os, param[i]);
+    }
+    os << "\n";
+}
+
 
 template <class T>
 void
@@ -251,6 +267,49 @@ arrayParamIn(Checkpoint *cp, const std::string &section,
     }
 }
 
+template <class T>
+void
+arrayParamIn(Checkpoint *cp, const std::string &section,
+             const std::string &name, std::vector<T> &param)
+{
+    std::string str;
+    if (!cp->find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+
+    // code below stolen from VectorParam<T>::parse().
+    // it would be nice to unify these somehow...
+
+    vector<string> tokens;
+
+    tokenize(tokens, str, ' ');
+
+    // Need this if we were doing a vector
+    // value.resize(tokens.size());
+
+    param.resize(tokens.size());
+
+    for (int i = 0; i < tokens.size(); i++) {
+        // need to parse into local variable to handle vector<bool>,
+        // for which operator[] returns a special reference class
+        // that's not the same as 'bool&', (since it's a packed
+        // vector)
+        T scalar_value;
+        if (!parseParam(tokens[i], scalar_value)) {
+            string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param[i] = scalar_value;
+    }
+}
+
+
 
 void
 objParamIn(Checkpoint *cp, const std::string &section,
@@ -273,7 +332,13 @@ arrayParamOut(ostream &os, const std::string &name,			\
               type const *param, int size);				\
 template void								\
 arrayParamIn(Checkpoint *cp, const std::string &section,		\
-             const std::string &name, type *param, int size);
+             const std::string &name, type *param, int size);           \
+template void								\
+arrayParamOut(ostream &os, const std::string &name,			\
+              const std::vector<type> &param);				\
+template void								\
+arrayParamIn(Checkpoint *cp, const std::string &section,		\
+             const std::string &name, std::vector<type> &param);
 
 INSTANTIATE_PARAM_TEMPLATES(signed char)
 INSTANTIATE_PARAM_TEMPLATES(unsigned char)
@@ -358,7 +423,6 @@ Serializable::unserializeAll(const std::string &cpt_dir)
              dir);
     Checkpoint *cp = new Checkpoint(dir, section);
     unserializeGlobals(cp);
-
     SimObject::unserializeAll(cp);
 }
 

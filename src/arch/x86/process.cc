@@ -167,7 +167,7 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
         filename = argv[0];
 
     //We want 16 byte alignment
-    Addr alignmentMask = ~mask(4);
+    uint64_t align = 16;
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);
@@ -285,47 +285,35 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     //Figure out how big the initial stack needs to be
 
-    // The unaccounted for 0 at the top of the stack
-    int mysterious_size = intSize;
+    // A sentry NULL void pointer at the top of the stack.
+    int sentry_size = intSize;
 
     //This is the name of the file which is present on the initial stack
     //It's purpose is to let the user space linker examine the original file.
-    int file_name_size = filename.size();
+    int file_name_size = filename.size() + 1;
 
     string platform = "x86_64";
     int aux_data_size = platform.size() + 1;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
-        env_data_size += envp[i].size();
+        env_data_size += envp[i].size() + 1;
     }
     int arg_data_size = 0;
     for (int i = 0; i < argv.size(); ++i) {
-        arg_data_size += argv[i].size();
+        arg_data_size += argv[i].size() + 1;
     }
-
-    //The auxiliary vector data needs to be padded so it's size is a multiple
-    //of the alignment mask.
-    int aux_padding =
-        ((aux_data_size + ~alignmentMask) & alignmentMask) - aux_data_size;
 
     //The info_block needs to be padded so it's size is a multiple of the
     //alignment mask. Also, it appears that there needs to be at least some
     //padding, so if the size is already a multiple, we need to increase it
     //anyway.
-    int info_block_size =
-        (mysterious_size +
-        file_name_size +
-        env_data_size +
-        arg_data_size +
-        ~alignmentMask) & alignmentMask;
+    int base_info_block_size =
+        sentry_size + file_name_size + env_data_size + arg_data_size;
 
-    int info_block_padding =
-        info_block_size -
-        mysterious_size -
-        file_name_size -
-        env_data_size -
-        arg_data_size;
+    int info_block_size = roundUp(base_info_block_size, align);
+
+    int info_block_padding = info_block_size - base_info_block_size;
 
     //Each auxilliary vector is two 8 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
@@ -335,17 +323,27 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     int argc_size = intSize;
 
-    int space_needed =
-        info_block_size +
-        aux_data_size +
-        aux_padding +
+    //Figure out the size of the contents of the actual initial frame
+    int frame_size =
         aux_array_size +
         envp_array_size +
         argv_array_size +
         argc_size;
 
+    //There needs to be padding after the auxiliary vector data so that the
+    //very bottom of the stack is aligned properly.
+    int partial_size = frame_size + aux_data_size;
+    int aligned_partial_size = roundUp(partial_size, align);
+    int aux_padding = aligned_partial_size - partial_size;
+
+    int space_needed =
+        info_block_size +
+        aux_data_size +
+        aux_padding +
+        frame_size;
+
     stack_min = stack_base - space_needed;
-    stack_min &= alignmentMask;
+    stack_min = roundDown(stack_min, align);
     stack_size = stack_base - stack_min;
 
     // map memory
@@ -353,11 +351,11 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
                      roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr mysterious_base = stack_base - mysterious_size;
-    Addr file_name_base = mysterious_base - file_name_size;
+    Addr sentry_base = stack_base - sentry_size;
+    Addr file_name_base = sentry_base - file_name_size;
     Addr env_data_base = file_name_base - env_data_size;
     Addr arg_data_base = env_data_base - arg_data_size;
-    Addr aux_data_base = arg_data_base - aux_data_size - info_block_padding;
+    Addr aux_data_base = arg_data_base - info_block_padding - aux_data_size;
     Addr auxv_array_base = aux_data_base - aux_array_size - aux_padding;
     Addr envp_array_base = auxv_array_base - envp_array_size;
     Addr argv_array_base = envp_array_base - argv_array_size;
@@ -380,10 +378,10 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     uint64_t argc = argv.size();
     uint64_t guestArgc = TheISA::htog(argc);
 
-    //Write out the mysterious 0
-    uint64_t mysterious_zero = 0;
-    initVirtMem->writeBlob(mysterious_base,
-            (uint8_t*)&mysterious_zero, mysterious_size);
+    //Write out the sentry void *
+    uint64_t sentry_NULL = 0;
+    initVirtMem->writeBlob(sentry_base,
+            (uint8_t*)&sentry_NULL, sentry_size);
 
     //Write the file name
     initVirtMem->writeString(file_name_base, filename.c_str());

@@ -30,6 +30,5 @@ import core
 import debug
 import event
 import random
-import sim_object
 import stats
 import trace

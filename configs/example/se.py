@@ -64,7 +64,7 @@ if args:
 
 process = LiveProcess()
 process.executable = options.cmd
-process.cmd = options.cmd + " " + options.options
+process.cmd = [options.cmd] + options.options.split()
 if options.input != "":
     process.input = options.input
 
