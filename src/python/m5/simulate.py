@@ -148,20 +148,20 @@ def changeToAtomic(system):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
-    if system.getMemoryMode() != objects.params.SimObject.Atomic:
+    if system.getMemoryMode() != objects.params.atomic:
         doDrain(system)
         print "Changing memory mode to atomic"
-        system.changeTiming(objects.params.SimObject.Atomic)
+        system.changeTiming(objects.params.atomic)
 
 def changeToTiming(system):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
               (type(system), objects.Root, objects.System)
 
-    if system.getMemoryMode() != objects.params.SimObject.Timing:
+    if system.getMemoryMode() != objects.params.timing:
         doDrain(system)
         print "Changing memory mode to timing"
-        system.changeTiming(objects.params.SimObject.Timing)
+        system.changeTiming(objects.params.timing)
 
 def switchCpus(cpuList):
     print "switching cpus"
