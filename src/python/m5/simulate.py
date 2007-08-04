@@ -167,34 +167,19 @@ def switchCpus(cpuList):
     print "switching cpus"
     if not isinstance(cpuList, list):
         raise RuntimeError, "Must pass a list to this function"
-    for i in cpuList:
-        if not isinstance(i, tuple):
+    for item in cpuList:
+        if not isinstance(item, tuple) or len(item) != 2:
             raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
 
-    [old_cpus, new_cpus] = zip(*cpuList)
+    for old_cpu, new_cpu in cpuList:
+        if not isinstance(old_cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU" % old_cpu
+        if not isinstance(new_cpu, objects.BaseCPU):
+            raise TypeError, "%s is not of type BaseCPU" % new_cpu
 
-    for cpu in old_cpus:
-        if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % cpu
-    for cpu in new_cpus:
-        if not isinstance(cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % cpu
-
-    # Drain all of the individual CPUs
-    drain_event = internal.event.createCountedDrain()
-    unready_cpus = 0
-    for old_cpu in old_cpus:
-        unready_cpus += old_cpu.startDrain(drain_event, False)
-    # If we've got some objects that can't drain immediately, then simulate
-    if unready_cpus > 0:
-        drain_event.setCount(unready_cpus)
-        simulate()
-    internal.event.cleanupCountedDrain(drain_event)
     # Now all of the CPUs are ready to be switched out
-    for old_cpu in old_cpus:
+    for old_cpu, new_cpu in cpuList:
         old_cpu._ccObject.switchOut()
-    index = 0
-    for new_cpu in new_cpus:
-        new_cpu.takeOverFrom(old_cpus[index])
-        new_cpu._ccObject.resume()
-        index += 1
+
+    for old_cpu, new_cpu in cpuList:
+        new_cpu.takeOverFrom(old_cpu)
