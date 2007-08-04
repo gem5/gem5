@@ -270,7 +270,7 @@ class Generate(object):
         enums = list(enums)
         enums.sort()
         for enum in enums:
-            print >>out, '%%import "enums/%s.hh"' % enum.__name__
+            print >>out, '%%include "enums/%s.hh"' % enum.__name__
         print >>out
 
         for obj in ordered_objs:
