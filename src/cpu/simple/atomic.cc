@@ -183,6 +183,7 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 void
 AtomicSimpleCPU::resume()
 {
+    DPRINTF(SimpleCPU, "Resume\n");
     if (_status != SwitchedOut && _status != Idle) {
         assert(system->getMemoryMode() == Enums::atomic);
 
@@ -231,6 +232,8 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 void
 AtomicSimpleCPU::activateContext(int thread_num, int delay)
 {
+    DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
+
     assert(thread_num == 0);
     assert(thread);
 
@@ -248,6 +251,8 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
 void
 AtomicSimpleCPU::suspendContext(int thread_num)
 {
+    DPRINTF(SimpleCPU, "SuspendContext %d\n", thread_num);
+
     assert(thread_num == 0);
     assert(thread);
 
@@ -483,6 +488,8 @@ AtomicSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 void
 AtomicSimpleCPU::tick()
 {
+    DPRINTF(SimpleCPU, "Tick\n");
+
     Tick latency = cycles(1); // instruction takes one cycle by default
 
     for (int i = 0; i < width; ++i) {
