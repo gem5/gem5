@@ -88,6 +88,10 @@ namespace AlphaISA
         // Checkpointing
         virtual void serialize(std::ostream &os);
         virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+        // Most recently used page table entries
+        PTE *PTECache[2];
+        inline void flushCache() { memset(PTECache, 0, 2 * sizeof(PTE*)); }
     };
 
     class ITB : public TLB
