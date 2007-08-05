@@ -123,9 +123,19 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, 0);
+        Twin64_t alignedMem;
+        fault = read(xc, EA, alignedMem, 0);
         int offset = EA & (dataSize - 1);
-        Mem = bits(Mem, (offset + dataSize) * 8 - 1,  offset * 8);
+        if(dataSize != 8 || !offset)
+        {
+            Mem = bits(alignedMem.a,
+                    (offset + dataSize) * 8 - 1,  offset * 8);
+        }
+        else
+        {
+            Mem = alignedMem.b << (dataSize - offset) * 8;
+            Mem |= bits(alignedMem.a, dataSize * 8 - 1, offset * 8);
+        }
 
         if(fault == NoFault)
         {
@@ -153,7 +163,8 @@ def template MicroLoadInitiateAcc {{
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
         int offset = EA & (dataSize - 1);
-        fault = read(xc, EA, Mem, offset);
+        Twin64_t alignedMem;
+        fault = read(xc, EA, alignedMem, offset);
 
         return fault;
     }
@@ -169,9 +180,18 @@ def template MicroLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        Mem = pkt->get<typeof(Mem)>();
+        Twin64_t alignedMem = pkt->get<Twin64_t>();
         int offset = pkt->req->getFlags();
-        Mem = bits(Mem, (offset + dataSize) * 8 - 1,  offset * 8);
+        if(dataSize != 8 || !offset)
+        {
+            Mem = bits(alignedMem.a,
+                    (offset + dataSize) * 8 - 1,  offset * 8);
+        }
+        else
+        {
+            Mem = alignedMem.b << (dataSize - offset) * 8;
+            Mem |= bits(alignedMem.a, dataSize * 8 - 1, offset * 8);
+        }
         %(code)s;
 
         if(fault == NoFault)
@@ -201,8 +221,14 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            Mem = Mem << ((EA & (dataSize - 1)) * 8);
-            fault = write(xc, Mem, EA, 0);
+            int offset = EA & (dataSize - 1);
+
+            Twin64_t alignedMem;
+            alignedMem.a = Mem << (offset * 8);
+            alignedMem.b =
+                bits(Mem, dataSize * 8 - 1, (dataSize - offset) * 8);
+
+            fault = write(xc, alignedMem, EA, 0);
             if(fault == NoFault)
             {
                 %(op_wb)s;
@@ -229,8 +255,14 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            Mem = Mem << ((EA & (dataSize - 1)) * 8);
-            fault = write(xc, Mem, EA, 0);
+            int offset = EA & (dataSize - 1);
+
+            Twin64_t alignedMem;
+            alignedMem.a = Mem << (offset * 8);
+            alignedMem.b =
+                bits(Mem, dataSize * 8 - 1, (dataSize - offset) * 8);
+
+            fault = write(xc, alignedMem, EA, 0);
             if(fault == NoFault)
             {
                 %(op_wb)s;
