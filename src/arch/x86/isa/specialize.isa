@@ -138,9 +138,9 @@ let {{
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
                 if opType.reg in ("A", "B", "C", "D"):
-                    env.addReg("INTREG_R%sX | (REX_B << 3)" % opType.reg)
+                    env.addReg("INTREG_R%sX" % opType.reg)
                 else:
-                    env.addReg("INTREG_R%s | (REX_B << 3)" % opType.reg)
+                    env.addReg("INTREG_R%s" % opType.reg)
                 Name += "_R"
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of the opcode
