@@ -615,8 +615,12 @@ let {{
             ''')
 
     defineMicroRegOpWr('Wrip', 'RIP = psrc1 + op2', elseCode="RIP = RIP;")
+    defineMicroRegOpWr('Wruflags', 'ccFlagBits = psrc1 ^ op2')
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
+    defineMicroRegOpRd('Ruflags', 'DestReg = ccFlagBits')
+    defineMicroRegOpImm('Ruflag', 'DestReg = bits(ccFlagBits, imm8);', \
+            flagCode = genCCFlagBitsLogic)
 
     defineMicroRegOpImm('Sext', '''
             IntReg val = psrc1;

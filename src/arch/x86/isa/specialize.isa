@@ -176,6 +176,10 @@ let {{
                 # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
                 Name += "_R"
+            elif opType.tag in ("X", "Y"):
+                # This type of memory addressing is for string instructions.
+                # They'll use the right index and segment internally.
+                Name += "_M"
             else:
                 raise Exception, "Unrecognized tag %s." % opType.tag
 

@@ -529,13 +529,13 @@
             }
         }
         0x1F: decode OPCODE_OP_BOTTOM3 {
-            0x0: clc();
-            0x1: stc();
-            0x2: cli();
-            0x3: sti();
-            0x4: cld();
-            0x5: std();
             format Inst {
+                0x0: CLC();
+                0x1: STC();
+                0x2: WarnUnimpl::cli();
+                0x3: WarnUnimpl::sti();
+                0x4: CLD();
+                0x5: STD();
                 //0x6: group4();
                 0x6: decode MODRM_REG {
                     0x0: INC(Eb);

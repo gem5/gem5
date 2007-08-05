@@ -53,18 +53,39 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop CLD {
+    ruflags t1
+    limm t2, "~((uint64_t)DFBit)"
+    and t1, t1, t2
+    wruflags t1, t0
+};
+
+def macroop STD {
+    ruflags t1
+    limm t2, "DFBit"
+    or t1, t1, t2
+    wruflags t1, t0
+};
+
+def macroop CLC {
+    ruflags t1
+    andi t2, t1, "CFBit"
+    wruflags t1, t2
+};
+
+def macroop STC {
+    ruflags t1
+    ori t1, t1, "CFBit"
+    wruflags t1, t0
+};
+
+def macroop CMC {
+    ruflags t1
+    wruflagsi t1, "CFBit"
+};
+'''
 #let {{
-#    class CLC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CMC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class STC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CLD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class STD(Inst):
-#	"GenFault ${new UnimpInstFault}"
 #    class CLI(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class STI(Inst):

@@ -70,6 +70,7 @@ namespace X86ISA
         EZFBit = 1 << 5,
         ZFBit = 1 << 6,
         SFBit = 1 << 7,
+        DFBit = 1 << 10,
         OFBit = 1 << 11
     };
 

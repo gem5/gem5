@@ -80,12 +80,6 @@ def macroop CMPXCHG_P_R {
 };
 '''
 #let {{
-#    class CMPXCHG(Inst):
-# 	"GenFault ${new UnimpInstFault}"
-#    class CMPXCHG8B(Inst):
-# 	"GenFault ${new UnimpInstFault}"
-#    class CMPXCHG16B(Inst):
-# 	"GenFault ${new UnimpInstFault}"
 #    class XADD(Inst):
 # 	"GenFault ${new UnimpInstFault}"
 #    class XCHG(Inst):
