@@ -77,7 +77,8 @@ namespace X86ISA
     {
         // Control registers
         // Most of these are invalid.
-        MISCREG_CR0,
+        MISCREG_CR_BASE,
+        MISCREG_CR0 = MISCREG_CR_BASE,
         MISCREG_CR1,
         MISCREG_CR2,
         MISCREG_CR3,
@@ -95,7 +96,8 @@ namespace X86ISA
         MISCREG_CR15,
 
         // Debug registers
-        MISCREG_DR0,
+        MISCREG_DR_BASE,
+        MISCREG_DR0 = MISCREG_DR_BASE,
         MISCREG_DR1,
         MISCREG_DR2,
         MISCREG_DR3,
@@ -108,7 +110,8 @@ namespace X86ISA
         MISCREG_RFLAGS,
 
         // Segment selectors
-        MISCREG_ES,
+        MISCREG_SEG_SEL_BASE,
+        MISCREG_ES = MISCREG_SEG_SEL_BASE,
         MISCREG_CS,
         MISCREG_SS,
         MISCREG_DS,
@@ -116,7 +119,8 @@ namespace X86ISA
         MISCREG_GS,
 
         // Hidden segment base field
-        MISCREG_ES_BASE,
+        MISCREG_SEG_BASE_BASE,
+        MISCREG_ES_BASE = MISCREG_SEG_BASE_BASE,
         MISCREG_CS_BASE,
         MISCREG_SS_BASE,
         MISCREG_DS_BASE,
@@ -124,7 +128,8 @@ namespace X86ISA
         MISCREG_GS_BASE,
 
         // Hidden segment limit field
-        MISCREG_ES_LIMIT,
+        MISCREG_SEG_LIMIT_BASE,
+        MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
         MISCREG_CS_LIMIT,
         MISCREG_SS_LIMIT,
         MISCREG_DS_LIMIT,
@@ -132,7 +137,8 @@ namespace X86ISA
         MISCREG_GS_LIMIT,
 
         // Hidden segment limit attributes
-        MISCREG_ES_ATTR,
+        MISCREG_SEG_ATTR_BASE,
+        MISCREG_ES_ATTR = MISCREG_SEG_ATTR_BASE,
         MISCREG_CS_ATTR,
         MISCREG_SS_ATTR,
         MISCREG_DS_ATTR,
@@ -140,23 +146,27 @@ namespace X86ISA
         MISCREG_GS_ATTR,
 
         // System segment selectors
-        MISCREG_LDTR,
+        MISCREG_SYSSEG_SEL_BASE,
+        MISCREG_LDTR = MISCREG_SYSSEG_SEL_BASE,
         MISCREG_TR,
 
         // Hidden system segment base field
-        MISCREG_LDTR_BASE,
+        MISCREG_SYSSEG_BASE_BASE,
+        MISCREG_LDTR_BASE = MISCREG_SYSSEG_BASE_BASE,
         MISCREG_TR_BASE,
         MISCREG_GDTR_BASE,
         MISCREG_IDTR_BASE,
 
         // Hidden system segment limit field
-        MISCREG_LDTR_LIMIT,
+        MISCREG_SYSSEG_LIMIT_BASE,
+        MISCREG_LDTR_LIMIT = MISCREG_SYSSEG_LIMIT_BASE,
         MISCREG_TR_LIMIT,
         MISCREG_GDTR_LIMIT,
         MISCREG_IDTR_LIMIT,
 
         // Hidden system segment attribute field
-        MISCREG_LDTR_ATTR,
+        MISCREG_SYSSEG_ATTR_BASE,
+        MISCREG_LDTR_ATTR = MISCREG_SYSSEG_ATTR_BASE,
         MISCREG_TR_ATTR,
 
         //XXX Add "Model-Specific Registers"
