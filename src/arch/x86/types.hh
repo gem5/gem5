@@ -71,12 +71,12 @@ namespace X86ISA
 
     enum Prefixes {
         NoOverride,
-        CSOverride,
-        DSOverride,
         ESOverride,
+        CSOverride,
+        SSOverride,
+        DSOverride,
         FSOverride,
         GSOverride,
-        SSOverride,
         RexPrefix,
         OperandSizeOverride,
         AddressSizeOverride,

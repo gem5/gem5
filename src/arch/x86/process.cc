@@ -88,6 +88,7 @@
 
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/process.hh"
+#include "arch/x86/segmentregs.hh"
 #include "arch/x86/types.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/elf_object.hh"
@@ -145,13 +146,8 @@ void
 X86LiveProcess::startup()
 {
     argsInit(sizeof(IntReg), VMPageSize);
-
-    //The AMD64 abi says that only rsp and rdx are defined at process
-    //startup. rsp will be set by argsInit, and I don't understand what
-    //rdx should be set to. The other floating point and integer registers
-    //will be zeroed by the register file constructors, but control registers
-    //should be initialized here. Since none of those are implemented, there
-    //isn't anything here.
+    for(int i = 0; i < NUM_SEGMENTREGS; i++)
+        threadContexts[0]->setMiscRegNoEffect(MISCREG_ES_BASE + i, 0);
 }
 
 void

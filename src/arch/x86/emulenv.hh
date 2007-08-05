@@ -58,8 +58,9 @@
 #ifndef __ARCH_X86_EMULENV_HH__
 #define __ARCH_X86_EMULENV_HH__
 
-#include "arch/x86/types.hh"
 #include "arch/x86/intregs.hh"
+#include "arch/x86/segmentregs.hh"
+#include "arch/x86/types.hh"
 
 namespace X86ISA
 {
@@ -67,6 +68,7 @@ namespace X86ISA
     {
         RegIndex reg;
         RegIndex regm;
+        SegmentRegIndex seg;
         uint8_t scale;
         RegIndex index;
         RegIndex base;
@@ -76,7 +78,7 @@ namespace X86ISA
 
         EmulEnv(RegIndex _reg, RegIndex _regm,
                 int _dataSize, int _addressSize, int _stackSize) :
-            reg(_reg), regm(_regm),
+            reg(_reg), regm(_regm), seg(SEGMENT_REG_DS),
             scale(0), index(NUM_INTREGS),
             base(NUM_INTREGS),
             dataSize(_dataSize), addressSize(_addressSize),

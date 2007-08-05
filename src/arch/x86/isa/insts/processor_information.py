@@ -67,7 +67,3 @@ def macroop CPUID_R {
     limm rcx, 0x444d4163, dataSize=4
 };
 '''
-#let {{
-#    class CPUID(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

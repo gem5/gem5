@@ -83,7 +83,7 @@ def macroop CALL_NEAR_M
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     subi rsp, rsp, dsz
     st t7, ss, [0, t0, rsp]
     wripi t1, 0
@@ -95,7 +95,7 @@ def macroop CALL_NEAR_P
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
     subi rsp, rsp, dsz
     st t7, ss, [0, t0, rsp]
     wripi t1, 0

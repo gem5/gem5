@@ -61,17 +61,17 @@ def macroop INC_R
 
 def macroop INC_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
-    st t1, ds, [scale, index, base], disp
+    st t1, seg, sib, disp
 };
 
 def macroop INC_P
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
-    addi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
-    st t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
+    addi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, seg, riprel, disp
 };
 
 def macroop DEC_R
@@ -81,16 +81,16 @@ def macroop DEC_R
 
 def macroop DEC_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
-    st t1, ds, [scale, index, base], disp
+    st t1, seg, sib, disp
 };
 
 def macroop DEC_P
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
-    subi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
-    st t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
+    subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    st t1, seg, riprel, disp
 };
 '''

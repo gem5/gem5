@@ -58,7 +58,7 @@ def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld reg, ss, [0, t0, rsp]
+    ld reg, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
 };
 
@@ -66,9 +66,9 @@ def macroop POP_M {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [0, t0, rsp]
+    ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
-    st t1, ds, [scale, index, base], disp
+    st t1, seg, sib, disp
 };
 
 def macroop POP_P {
@@ -76,9 +76,9 @@ def macroop POP_P {
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, ss, [0, t0, rsp]
+    ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
-    st t1, ds, [0, t0, t7]
+    st t1, seg, riprel, disp
 };
 
 def macroop PUSH_R {
@@ -87,7 +87,7 @@ def macroop PUSH_R {
 
     # This needs to work slightly differently from the other versions of push
     # because the -original- version of the stack pointer is what gets pushed
-    st reg, ss, [0, t0, rsp], "-env.dataSize"
+    st reg, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
 };
 
@@ -97,16 +97,16 @@ def macroop PUSH_I {
 
     limm t1, imm
     subi rsp, rsp, dsz
-    st t1, ss, [0, t0, rsp]
+    st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSH_M {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     subi rsp, rsp, dsz
-    st t1, ss, [0, t0, rsp]
+    st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSH_P {
@@ -114,31 +114,31 @@ def macroop PUSH_P {
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
     subi rsp, rsp, dsz
-    st t1, ss, [0, t0, rsp]
+    st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSHA {
-    st rax, ss, [0, t0, rsp], "-0 * env.dataSize"
-    st rcx, ss, [0, t0, rsp], "-1 * env.dataSize"
-    st rdx, ss, [0, t0, rsp], "-2 * env.dataSize"
-    st rbx, ss, [0, t0, rsp], "-3 * env.dataSize"
-    st rsp, ss, [0, t0, rsp], "-4 * env.dataSize"
-    st rbp, ss, [0, t0, rsp], "-5 * env.dataSize"
-    st rsi, ss, [0, t0, rsp], "-6 * env.dataSize"
-    st rdi, ss, [0, t0, rsp], "-7 * env.dataSize"
+    st rax, ss, [1, t0, rsp], "-0 * env.dataSize"
+    st rcx, ss, [1, t0, rsp], "-1 * env.dataSize"
+    st rdx, ss, [1, t0, rsp], "-2 * env.dataSize"
+    st rbx, ss, [1, t0, rsp], "-3 * env.dataSize"
+    st rsp, ss, [1, t0, rsp], "-4 * env.dataSize"
+    st rbp, ss, [1, t0, rsp], "-5 * env.dataSize"
+    st rsi, ss, [1, t0, rsp], "-6 * env.dataSize"
+    st rdi, ss, [1, t0, rsp], "-7 * env.dataSize"
     subi rsp, rsp, "8 * env.dataSize"
 };
 
 def macroop POPA {
-    ld rdi, ss, [0, t0, rsp], "0 * env.dataSize"
-    ld rsi, ss, [0, t0, rsp], "1 * env.dataSize"
-    ld rbp, ss, [0, t0, rsp], "2 * env.dataSize"
-    ld rbx, ss, [0, t0, rsp], "4 * env.dataSize"
-    ld rdx, ss, [0, t0, rsp], "5 * env.dataSize"
-    ld rcx, ss, [0, t0, rsp], "6 * env.dataSize"
-    ld rax, ss, [0, t0, rsp], "7 * env.dataSize"
+    ld rdi, ss, [1, t0, rsp], "0 * env.dataSize"
+    ld rsi, ss, [1, t0, rsp], "1 * env.dataSize"
+    ld rbp, ss, [1, t0, rsp], "2 * env.dataSize"
+    ld rbx, ss, [1, t0, rsp], "4 * env.dataSize"
+    ld rdx, ss, [1, t0, rsp], "5 * env.dataSize"
+    ld rcx, ss, [1, t0, rsp], "6 * env.dataSize"
+    ld rax, ss, [1, t0, rsp], "7 * env.dataSize"
     addi rsp, rsp, "8 * env.dataSize"
 };
 
@@ -147,13 +147,11 @@ def macroop LEAVE {
     .adjust_env oszIn64Override
 
     mov rsp, rsp, rbp
-    ld rbp, ss, [0, t0, rsp]
+    ld rbp, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
 };
 '''
 #let {{
 #    class ENTER(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class LEAVE(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #}};

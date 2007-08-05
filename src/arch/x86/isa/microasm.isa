@@ -84,6 +84,7 @@ let {{
         "regm" : "env.regm",
         "imm" : "IMMEDIATE",
         "disp" : "DISPLACEMENT",
+        "seg" : "env.seg",
         "scale" : "env.scale",
         "index" : "env.index",
         "base" : "env.base",
@@ -91,10 +92,16 @@ let {{
         "osz" : "env.operandSize",
         "ssz" : "env.stackSize"
     }
+    assembler.symbols.update(symbols)
+
+    # Short hand for common scale-index-base combinations.
+    assembler.symbols["sib"] = \
+        [symbols["scale"], symbols["index"], symbols["base"]]
+    assembler.symbols["riprel"] = \
+        ["1", assembler.symbols["t0"], assembler.symbols["t7"]]
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
-    assembler.symbols.update(symbols)
 
     for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF'):
         assembler.symbols[flag] = flag + "Bit"

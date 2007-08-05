@@ -55,11 +55,11 @@
 
 microcode = '''
 def macroop LEA_R_M {
-    lea reg, ds, [scale, index, base], disp
+    lea reg, seg, sib, disp
 };
 
 def macroop LEA_R_P {
     rdip t7
-    lea reg, ds, [0, t0, t7], disp
+    lea reg, seg, riprel, disp
 };
 '''

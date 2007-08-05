@@ -64,21 +64,21 @@ def macroop MOV_R_R {
 };
 
 def macroop MOV_M_R {
-    st reg, ds, [scale, index, base], disp
+    st reg, seg, sib, disp
 };
 
 def macroop MOV_P_R {
     rdip t7
-    st reg, ds, [0, t0, t7], disp
+    st reg, seg, riprel, disp
 };
 
 def macroop MOV_R_M {
-    ld reg, ds, [scale, index, base], disp
+    ld reg, seg, sib, disp
 };
 
 def macroop MOV_R_P {
     rdip t7
-    ld reg, ds, [0, t0, t7], disp
+    ld reg, seg, riprel, disp
 };
 
 def macroop MOV_R_I {
@@ -87,13 +87,13 @@ def macroop MOV_R_I {
 
 def macroop MOV_M_I {
     limm t1, imm
-    st t1, ds, [scale, index, base], disp
+    st t1, seg, sib, disp
 };
 
 def macroop MOV_P_I {
     rdip t7
     limm t1, imm
-    st t1, ds, [0, t0, t7], disp
+    st t1, seg, riprel, disp
 };
 
 #
@@ -105,13 +105,13 @@ def macroop MOVSXD_R_R {
 };
 
 def macroop MOVSXD_R_M {
-    ld t1, ds, [scale, index, base], disp, dataSize=4
+    ld t1, seg, sib, disp, dataSize=4
     sext reg, t1, 32
 };
 
 def macroop MOVSXD_R_P {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp, dataSize=4
+    ld t1, seg, riprel, disp, dataSize=4
     sext reg, t1, 32
 };
 
@@ -120,13 +120,13 @@ def macroop MOVSX_B_R_R {
 };
 
 def macroop MOVSX_B_R_M {
-    ld reg, ds, [scale, index, base], disp, dataSize=1
+    ld reg, seg, sib, disp, dataSize=1
     sext reg, reg, 8
 };
 
 def macroop MOVSX_B_R_P {
     rdip t7
-    ld reg, ds, [0, t0, t7], disp, dataSize=1
+    ld reg, seg, riprel, disp, dataSize=1
     sext reg, reg, 8
 };
 
@@ -135,13 +135,13 @@ def macroop MOVSX_W_R_R {
 };
 
 def macroop MOVSX_W_R_M {
-    ld reg, ds, [scale, index, base], disp, dataSize=2
+    ld reg, seg, sib, disp, dataSize=2
     sext reg, reg, 16
 };
 
 def macroop MOVSX_W_R_P {
     rdip t7
-    ld reg, ds, [0, t0, t7], disp, dataSize=2
+    ld reg, seg, riprel, disp, dataSize=2
     sext reg, reg, 16
 };
 
@@ -154,13 +154,13 @@ def macroop MOVZX_B_R_R {
 };
 
 def macroop MOVZX_B_R_M {
-    ld t1, ds, [scale, index, base], disp, dataSize=1
+    ld t1, seg, sib, disp, dataSize=1
     zext reg, t1, 8
 };
 
 def macroop MOVZX_B_R_P {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp, dataSize=1
+    ld t1, seg, riprel, disp, dataSize=1
     zext reg, t1, 8
 };
 
@@ -169,23 +169,17 @@ def macroop MOVZX_W_R_R {
 };
 
 def macroop MOVZX_W_R_M {
-    ld t1, ds, [scale, index, base], disp, dataSize=2
+    ld t1, seg, sib, disp, dataSize=2
     zext reg, t1, 16
 };
 
 def macroop MOVZX_W_R_P {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp, dataSize=2
+    ld t1, seg, riprel, disp, dataSize=2
     zext reg, t1, 16
 };
 '''
 #let {{
-#    class MOV(Inst):
-#	"Mov ^0 ^0 ^1"
-#    class MOVSX(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class MOVZX(Inst):
-#	"GenFault ${new UnimpInstFault}"
 #    class MOVD(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #    class MOVNTI(Inst):

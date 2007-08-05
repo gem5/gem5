@@ -196,6 +196,7 @@ let {{
             self.regUsed = False
             self.regm = "0"
             self.regmUsed = False
+            self.seg = "SEGMENT_REG_DS"
             self.size = None
             self.addressSize = "ADDRSIZE"
             self.dataSize = "OPSIZE"

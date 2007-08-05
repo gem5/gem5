@@ -65,17 +65,3 @@ def macroop CQO_R_R {
     sra regm, regm, "env.dataSize * 8 - 1"
 };
 '''
-#let {{
-#    class CBW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CWDE(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CDQE(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CWD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CDQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CQO(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

@@ -105,5 +105,6 @@ def operands {{
         'rax':           ('IntReg', 'uqw', '(INTREG_RAX)', 'IsInteger', 7),
         'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 10),
         'ccFlagBits':       ('IntReg', 'uqw', 'NUM_INTREGS + NumMicroIntRegs', None, 20),
+        'SegBase':       ('ControlReg', 'uqw', 'MISCREG_SEG_BASE_BASE + segment', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 50),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};

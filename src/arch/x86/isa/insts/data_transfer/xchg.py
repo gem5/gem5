@@ -68,31 +68,31 @@ def macroop XCHG_R_R
 
 def macroop XCHG_R_M
 {
-    ld t1, ds, [scale, index, base], disp
-    st reg, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
+    st reg, seg, sib, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_R_P
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
-    st reg, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
+    st reg, seg, riprel, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_M_R
 {
-    ld t1, ds, [scale, index, base], disp
-    st reg, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
+    st reg, seg, sib, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_P_R
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
-    st reg, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
+    st reg, seg, riprel, disp
     mov reg, reg, t1
 };
 '''

@@ -127,7 +127,6 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 
 MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 {
-    warn("No miscreg effects implemented yet!\n");
     return readRegNoEffect(miscReg);
 }
 
@@ -155,7 +154,6 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
 void MiscRegFile::setReg(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
-    warn("No miscreg effects implemented yet!\n");
     setRegNoEffect(miscReg, val);
 }
 

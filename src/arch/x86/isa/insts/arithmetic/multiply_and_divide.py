@@ -66,14 +66,14 @@ def macroop MUL_B_R
 
 def macroop MUL_B_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     mul1u rax, rax, t1, dataSize="2"
 };
 
 def macroop MUL_B_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, riprel, disp
     mul1u rax, rax, t1, dataSize="2"
 };
 
@@ -89,7 +89,7 @@ def macroop MUL_R
 
 def macroop MUL_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     muleh rdx, rax, t1
     mulel rax, rax, t1
 };
@@ -97,7 +97,7 @@ def macroop MUL_M
 def macroop MUL_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, riprel, disp
     muleh rdx, rax, t1
     mulel rax, rax, t1
 };
@@ -113,14 +113,14 @@ def macroop IMUL_B_R
 
 def macroop IMUL_B_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     mul1s rax, rax, t1, dataSize="2"
 };
 
 def macroop IMUL_B_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, riprel, disp
     mul1s rax, rax, t1, dataSize="2"
 };
 
@@ -136,7 +136,7 @@ def macroop IMUL_R
 
 def macroop IMUL_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     muleh rdx, rax, t1
     mulel rax, rax, t1
 };
@@ -144,7 +144,7 @@ def macroop IMUL_M
 def macroop IMUL_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, riprel, disp
     muleh rdx, rax, t1
     mulel rax, rax, t1
 };
@@ -161,14 +161,14 @@ def macroop IMUL_R_R
 
 def macroop IMUL_R_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     mulel reg, reg, t1
 };
 
 def macroop IMUL_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, riprel, disp
     mulel reg, reg, t1
 };
 
@@ -185,7 +185,7 @@ def macroop IMUL_R_R_I
 def macroop IMUL_R_M_I
 {
     limm t1, imm
-    ld t2, ds, [scale, index, base], disp
+    ld t2, seg, sib, disp
     mulel reg, t2, t1
 };
 
@@ -193,7 +193,7 @@ def macroop IMUL_R_P_I
 {
     rdip t7
     limm t1, imm
-    ld t2, ds, [0, t0, t7]
+    ld t2, seg, riprel
     mulel reg, t2, t1
 };
 
@@ -208,14 +208,14 @@ def macroop DIV_B_R
 
 def macroop DIV_B_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     div1 rax, rax, t1
 };
 
 def macroop DIV_B_P
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
     div1 rax, rax, t1
 };
 
@@ -231,7 +231,7 @@ def macroop DIV_R
 
 def macroop DIV_M
 {
-    ld t1, ds, [scale, index, base], disp
+    ld t1, seg, sib, disp
     divr rdx, rax, t1
     divq rax, rax, t1
 };
@@ -239,18 +239,12 @@ def macroop DIV_M
 def macroop DIV_P
 {
     rdip t7
-    ld t1, ds, [0, t0, t7], disp
+    ld t1, seg, riprel, disp
     divr rdx, rax, t1
     divq rax, rax, t1
 };
 '''
 #let {{
-#    class MUL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class IMUL(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class DIV(Inst):
-#	"GenFault ${new UnimpInstFault}"
 #    class IDIV(Inst):
 #	"GenFault ${new UnimpInstFault}"
 #}};

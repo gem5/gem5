@@ -59,7 +59,7 @@ def macroop RET_NEAR
     # Make the default data size of rets 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [0, t0, rsp]
+    ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
     wripi t1, 0
 };
@@ -70,7 +70,7 @@ def macroop RET_NEAR_I
     .adjust_env oszIn64Override
 
     limm t2, imm
-    ld t1, ss, [0, t0, rsp]
+    ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
     add rsp, rsp, t2
     wripi t1, 0

@@ -362,7 +362,7 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    calculateEA = "EA = scale * Index + Base + disp;"
+    calculateEA = "EA = SegBase + scale * Index + Base + disp;"
 
     def defineMicroLoadOp(mnemonic, code):
         global header_output
