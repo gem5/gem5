@@ -53,7 +53,32 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop CMPXCHG_R_R {
+    sub t0, rax, reg, flags=(OF, SF, ZF, AF, PF, CF)
+    mov reg, reg, regm, flags=(CZF,)
+    mov rax, rax, reg, flags=(nCZF,)
+};
+
+def macroop CMPXCHG_M_R {
+    ld t1, seg, sib, disp
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
+
+    mov t1, t1, reg, flags=(CZF,)
+    st t1, seg, sib, disp
+    mov rax, rax, t1, flags=(nCZF,)
+};
+
+def macroop CMPXCHG_P_R {
+    rdip t7
+    ld t1, seg, riprel, disp
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
+
+    mov t1, t1, reg, flags=(CZF,)
+    st t1, seg, riprel, disp
+    mov rax, rax, t1, flags=(nCZF,)
+};
+'''
 #let {{
 #    class CMPXCHG(Inst):
 # 	"GenFault ${new UnimpInstFault}"

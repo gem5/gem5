@@ -329,8 +329,8 @@
                 0x7: Inst::IMUL(Gv,Ev);
             }
             0x16: decode OPCODE_OP_BOTTOM3 {
-                0x0: cmpxchg_Eb_Gb();
-                0x1: cmpxchg_Ev_Gv();
+                0x0: Inst::CMPXCHG(Eb,Gb);
+                0x1: Inst::CMPXCHG(Ev,Gv);
                 0x2: lss_Gz_Mp();
                 0x3: btr_Ev_Gv();
                 0x4: lfs_Gz_Mp();
