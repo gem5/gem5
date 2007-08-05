@@ -57,6 +57,7 @@
 
 #include "arch/x86/linux/process.hh"
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/miscregs.hh"
 #include "kern/linux/linux.hh"
 #include "sim/syscall_emul.hh"
 
@@ -78,6 +79,45 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     name.copyOut(tc->getMemPort());
 
     return 0;
+}
+
+static SyscallReturn
+archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+              ThreadContext *tc)
+{
+    enum ArchPrctlCodes
+    {
+        SetFS = 0x1002,
+        GetFS = 0x1003,
+        SetGS = 0x1001,
+        GetGS = 0x1004
+    };
+
+    //First argument is the code, second is the address
+    int code = tc->getSyscallArg(0);
+    uint64_t addr = tc->getSyscallArg(1);
+    uint64_t fsBase, gsBase;
+    TranslatingPort *p = tc->getMemPort();
+    switch(code)
+    {
+      //Each of these valid options should actually check addr.
+      case SetFS:
+        tc->setMiscRegNoEffect(MISCREG_FS_BASE, addr);
+        return 0;
+      case GetFS:
+        fsBase = tc->readMiscRegNoEffect(MISCREG_FS_BASE);
+        p->write(addr, fsBase);
+        return 0;
+      case SetGS:
+        tc->setMiscRegNoEffect(MISCREG_GS_BASE, addr);
+        return 0;
+      case GetGS:
+        gsBase = tc->readMiscRegNoEffect(MISCREG_GS_BASE);
+        p->write(addr, gsBase);
+        return 0;
+      default:
+        return -EINVAL;
+    }
 }
 
 SyscallDesc X86LinuxProcess::syscallDescs[] = {
@@ -239,7 +279,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /* 155 */ SyscallDesc("pivot_root", unimplementedFunc),
     /* 156 */ SyscallDesc("_sysctl", unimplementedFunc),
     /* 157 */ SyscallDesc("prctl", unimplementedFunc),
-    /* 158 */ SyscallDesc("arch_prctl", unimplementedFunc),
+    /* 158 */ SyscallDesc("arch_prctl", archPrctlFunc),
     /* 159 */ SyscallDesc("adjtimex", unimplementedFunc),
     /* 160 */ SyscallDesc("setrlimit", unimplementedFunc),
     /* 161 */ SyscallDesc("chroot", unimplementedFunc),

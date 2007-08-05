@@ -133,9 +133,9 @@ def macroop XOR_P_I
 {
     limm t2, imm
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [1, t0, t7], disp
     xor t1, t1, t2, flags=(OF,SF,ZF,PF,CF)
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [1, t0, t7], disp
 };
 
 def macroop XOR_M_R
@@ -148,7 +148,7 @@ def macroop XOR_M_R
 def macroop XOR_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [1, t0, t7], disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, ds, [scale, index, base], disp
 };
@@ -162,7 +162,7 @@ def macroop XOR_R_M
 def macroop XOR_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [1, t0, t7], disp
     xor reg, reg, t1, flags=(OF,SF,ZF,PF,CF)
 };
 
@@ -180,7 +180,7 @@ def macroop AND_R_M
 def macroop AND_R_P
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [1, t0, t7], disp
     and reg, reg, t1, flags=(OF,SF,ZF,PF,CF)
 };
 
@@ -201,10 +201,10 @@ def macroop AND_M_I
 def macroop AND_P_I
 {
     rdip t7
-    ld t2, ds, [scale, index, base], disp
+    ld t2, ds, [0, t0, t7], disp
     limm t1, imm
     and t2, t2, t1, flags=(OF,SF,ZF,PF,CF)
-    st t2, ds, [scale, index, base], disp
+    st t2, ds, [0, t0, t7], disp
 };
 
 def macroop AND_M_R
@@ -217,9 +217,9 @@ def macroop AND_M_R
 def macroop AND_P_R
 {
     rdip t7
-    ld t1, ds, [scale, index, base], disp
+    ld t1, ds, [0, t0, t7], disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
-    st t1, ds, [scale, index, base], disp
+    st t1, ds, [0, t0, t7], disp
 };
 
 def macroop NOT_R
