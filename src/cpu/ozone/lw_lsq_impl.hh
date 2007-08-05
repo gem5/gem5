@@ -57,7 +57,7 @@ template<class Impl>
 const char *
 OzoneLWLSQ<Impl>::WritebackEvent::description()
 {
-    return "Store writeback event";
+    return "Store writeback";
 }
 
 template <class Impl>
@@ -587,7 +587,10 @@ OzoneLWLSQ<Impl>::writebackStores()
         memcpy(inst->memData, (uint8_t *)&(*sq_it).data,
                req->getSize());
 
-        PacketPtr data_pkt = new Packet(req, Packet::WriteReq, Packet::Broadcast);
+        MemCmd command =
+            req->isSwap() ? MemCmd::SwapReq :
+            (req->isLocked() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
+        PacketPtr data_pkt = new Packet(req, command, Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
 
         LSQSenderState *state = new LSQSenderState;
@@ -852,24 +855,6 @@ OzoneLWLSQ<Impl>::storePostSend(PacketPtr pkt, DynInstPtr &inst)
             cpu->checker->verify(inst);
         }
 #endif
-    }
-
-    if (pkt->result != Packet::Success) {
-        DPRINTF(OzoneLSQ,"D-Cache Write Miss!\n");
-
-        DPRINTF(Activity, "Active st accessing mem miss [sn:%lli]\n",
-                inst->seqNum);
-
-        //mshrSeqNums.push_back(storeQueue[storeWBIdx].inst->seqNum);
-
-        //DPRINTF(OzoneLWLSQ, "Added MSHR. count = %i\n",mshrSeqNums.size());
-
-        // @todo: Increment stat here.
-    } else {
-        DPRINTF(OzoneLSQ,"D-Cache: Write Hit!\n");
-
-        DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
-                inst->seqNum);
     }
 }
 

@@ -71,7 +71,6 @@ Iob::Iob(const Params *p)
 Tick
 Iob::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
 
     if (pkt->getAddr() >= iobManAddr && pkt->getAddr() < iobManAddr + iobManSize)
         readIob(pkt);
@@ -80,7 +79,7 @@ Iob::read(PacketPtr pkt)
     else
         panic("Invalid address reached Iob\n");
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -175,7 +174,7 @@ Iob::write(PacketPtr pkt)
         panic("Invalid address reached Iob\n");
 
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

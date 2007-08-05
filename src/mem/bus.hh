@@ -176,23 +176,9 @@ class Bus : public MemObject
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
      * @param addr Address to find port for.
-     * @param id Id of the port this packet was received from (to prevent
-     *             loops)
-     * @return pointer to port that the packet should be sent out of.
+     * @return id of port that the packet should be sent out of.
      */
-    Port *findPort(Addr addr, int id);
-
-    /** Snoop all relevant ports atomicly. */
-    Tick atomicSnoop(PacketPtr pkt, Port* responder);
-
-    /** Snoop all relevant ports functionally. */
-    void functionalSnoop(PacketPtr pkt, Port *responder);
-
-    /** Call snoop on caches, be sure to set SNOOP_COMMIT bit if you want
-     * the snoop to happen
-     * @return True if succeds.
-     */
-    bool timingSnoop(PacketPtr pkt, Port *responder);
+    int findPort(Addr addr);
 
     /** Process address range request.
      * @param resp addresses that we can respond to

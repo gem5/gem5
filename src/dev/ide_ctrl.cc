@@ -232,8 +232,10 @@ Tick
 IdeController::readConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC)
-        return  PciDev::readConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        return PciDev::readConfig(pkt);
+    }
+
     assert(offset >= IDE_CTRL_CONF_START && (offset + 1) <= IDE_CTRL_CONF_END);
 
     pkt->allocate();
@@ -295,9 +297,8 @@ IdeController::readConfig(PacketPtr pkt)
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return configDelay;
-
 }
 
 
@@ -361,6 +362,7 @@ IdeController::writeConfig(PacketPtr pkt)
           default:
             panic("invalid access size(?) for PCI configspace!\n");
         }
+        pkt->makeAtomicResponse();
     }
 
     /* Trap command register writes and enable IO/BM as appropriate as well as
@@ -403,7 +405,6 @@ IdeController::writeConfig(PacketPtr pkt)
             bm_enabled = false;
         break;
     }
-    pkt->result = Packet::Success;
     return configDelay;
 }
 
@@ -423,7 +424,7 @@ IdeController::read(PacketPtr pkt)
     parseAddr(pkt->getAddr(), offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt->result = Packet::Success;
+        pkt->makeAtomicResponse();
         return pioDelay;
     }
 
@@ -490,7 +491,7 @@ IdeController::read(PacketPtr pkt)
     DPRINTF(IdeCtrl, "read from offset: %#x size: %#x data: %#x\n",
             offset, pkt->getSize(), pkt->get<uint32_t>());
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -506,7 +507,7 @@ IdeController::write(PacketPtr pkt)
     parseAddr(pkt->getAddr(), offset, channel, reg_type);
 
     if (!io_enabled) {
-        pkt->result = Packet::Success;
+        pkt->makeAtomicResponse();
         DPRINTF(IdeCtrl, "io not enabled\n");
         return pioDelay;
     }
@@ -514,7 +515,7 @@ IdeController::write(PacketPtr pkt)
     switch (reg_type) {
       case BMI_BLOCK:
         if (!bm_enabled) {
-            pkt->result = Packet::Success;
+            pkt->makeAtomicResponse();
             return pioDelay;
         }
 
@@ -673,7 +674,7 @@ IdeController::write(PacketPtr pkt)
             offset, pkt->getSize(), pkt->get<uint32_t>());
 
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

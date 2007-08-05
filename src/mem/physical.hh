@@ -114,12 +114,12 @@ class PhysicalMemory : public MemObject
     // inline a quick check for an empty locked addr list (hopefully
     // the common case), and do the full list search (if necessary) in
     // this out-of-line function
-    bool checkLockedAddrList(Request *req);
+    bool checkLockedAddrList(PacketPtr pkt);
 
     // Record the address of a load-locked operation so that we can
     // clear the execution context's lock flag if a matching store is
     // performed
-    void trackLoadLocked(Request *req);
+    void trackLoadLocked(PacketPtr pkt);
 
     // Compare a store address with any locked addresses so we can
     // clear the lock flag appropriately.  Return value set to 'false'
@@ -128,17 +128,18 @@ class PhysicalMemory : public MemObject
     // requesting execution context), 'true' otherwise.  Note that
     // this method must be called on *all* stores since even
     // non-conditional stores must clear any matching lock addresses.
-    bool writeOK(Request *req) {
+    bool writeOK(PacketPtr pkt) {
+        Request *req = pkt->req;
         if (lockedAddrList.empty()) {
             // no locked addrs: nothing to check, store_conditional fails
-            bool isLocked = req->isLocked();
+            bool isLocked = pkt->isLocked();
             if (isLocked) {
                 req->setExtraData(0);
             }
             return !isLocked; // only do write if not an sc
         } else {
             // iterate over list...
-            return checkLockedAddrList(req);
+            return checkLockedAddrList(pkt);
         }
     }
 
@@ -172,6 +173,7 @@ class PhysicalMemory : public MemObject
     unsigned int drain(Event *de);
 
   protected:
+    Tick doAtomicAccess(PacketPtr pkt);
     void doFunctionalAccess(PacketPtr pkt);
     virtual Tick calculateLatency(PacketPtr pkt);
     void recvStatusChange(Port::Status status);

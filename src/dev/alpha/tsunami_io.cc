@@ -457,7 +457,6 @@ TsunamiIO::frequency() const
 Tick
 TsunamiIO::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
@@ -516,14 +515,13 @@ TsunamiIO::read(PacketPtr pkt)
     } else {
        panic("I/O Read - invalid size - va %#x size %d\n", pkt->getAddr(), pkt->getSize());
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
 Tick
 TsunamiIO::write(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;
 
@@ -596,7 +594,7 @@ TsunamiIO::write(PacketPtr pkt)
         panic("I/O Write - va%#x size %d data %#x\n", pkt->getAddr(), pkt->getSize(), pkt->get<uint8_t>());
     }
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

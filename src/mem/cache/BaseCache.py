@@ -34,15 +34,9 @@ class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
 
 class BaseCache(MemObject):
     type = 'BaseCache'
-    adaptive_compression = Param.Bool(False,
-        "Use an adaptive compression scheme")
     assoc = Param.Int("associativity")
     block_size = Param.Int("block size in bytes")
     latency = Param.Latency("Latency")
-    compressed_bus = Param.Bool(False,
-        "This cache connects to a compressed memory")
-    compression_latency = Param.Latency('0ns',
-        "Latency in cycles of compression algorithm")
     hash_delay = Param.Int(1, "time in cycles of hash access")
     lifo = Param.Bool(False,
         "whether this NIC partition should use LIFO repl. policy")
@@ -51,14 +45,11 @@ class BaseCache(MemObject):
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
     prioritizeRequests = Param.Bool(False,
         "always service demand misses first")
-    protocol = Param.CoherenceProtocol(NULL, "coherence protocol to use")
     repl = Param.Repl(NULL, "replacement policy")
     size = Param.MemorySize("capacity in bytes")
     split = Param.Bool(False, "whether or not this cache is split")
     split_size = Param.Int(0,
         "How many ways of the cache belong to CPU/LRU partition")
-    store_compressed = Param.Bool(False,
-        "Store compressed data in the cache")
     subblock_size = Param.Int(0,
         "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")

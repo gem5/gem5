@@ -488,7 +488,7 @@ NSGigE::writeConfig(PacketPtr pkt)
             ioEnable = false;
         break;
     }
-    pkt->result = Packet::Success;
+
     return configDelay;
 }
 
@@ -520,7 +520,7 @@ NSGigE::read(PacketPtr pkt)
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
         pkt->set<uint32_t>(0);
-        pkt->result = Packet::Success;
+        pkt->makeAtomicResponse();
         return pioDelay;
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
@@ -716,7 +716,7 @@ NSGigE::read(PacketPtr pkt)
         DPRINTF(EthernetPIO, "read from %#x: data=%d data=%#x\n",
                 daddr, reg, reg);
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -1123,7 +1123,7 @@ NSGigE::write(PacketPtr pkt)
     } else {
         panic("Invalid Request Size");
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

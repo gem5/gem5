@@ -58,12 +58,6 @@
 #include "mem/cache/tags/split_lifo.hh"
 #endif
 
-#include "mem/cache/miss/miss_queue.hh"
-#include "mem/cache/miss/blocking_buffer.hh"
-
-#include "mem/cache/coherence/uni_coherence.hh"
-#include "mem/cache/coherence/simple_coherence.hh"
-
 #include "mem/cache/cache_impl.hh"
 
 // Template Instantiations
@@ -71,28 +65,23 @@
 
 
 #if defined(USE_CACHE_FALRU)
-template class Cache<FALRU, SimpleCoherence>;
-template class Cache<FALRU, UniCoherence>;
+template class Cache<FALRU>;
 #endif
 
 #if defined(USE_CACHE_IIC)
-template class Cache<IIC, SimpleCoherence>;
-template class Cache<IIC, UniCoherence>;
+template class Cache<IIC>;
 #endif
 
 #if defined(USE_CACHE_LRU)
-template class Cache<LRU, SimpleCoherence>;
-template class Cache<LRU, UniCoherence>;
+template class Cache<LRU>;
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-template class Cache<Split, SimpleCoherence>;
-template class Cache<Split, UniCoherence>;
+template class Cache<Split>;
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-template class Cache<SplitLIFO, SimpleCoherence>;
-template class Cache<SplitLIFO, UniCoherence>;
+template class Cache<SplitLIFO>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

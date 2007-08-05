@@ -148,7 +148,7 @@ TraceCPU::TickEvent::process()
 const char *
 TraceCPU::TickEvent::description()
 {
-    return "TraceCPU tick event";
+    return "TraceCPU tick";
 }
 
 TraceCPU *

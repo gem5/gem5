@@ -32,71 +32,77 @@
  * Declaration of a structure to manage MSHRs.
  */
 
-#ifndef __MSHR_QUEUE_HH__
-#define __MSHR_QUEUE_HH__
+#ifndef __MEM__CACHE__MISS__MSHR_QUEUE_HH__
+#define __MEM__CACHE__MISS__MSHR_QUEUE_HH__
 
 #include <vector>
+
+#include "mem/packet.hh"
 #include "mem/cache/miss/mshr.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
  */
-class MSHRQueue {
+class MSHRQueue
+{
   private:
     /**  MSHR storage. */
-    MSHR* registers;
-    /** Holds pointers to all allocated MSHRs. */
+    MSHR *registers;
+    /** Holds pointers to all allocated entries. */
     MSHR::List allocatedList;
-    /** Holds pointers to MSHRs that haven't been sent to the bus. */
-    MSHR::List pendingList;
-    /** Holds non allocated MSHRs. */
+    /** Holds pointers to entries that haven't been sent to the bus. */
+    MSHR::List readyList;
+    /** Holds non allocated entries. */
     MSHR::List freeList;
 
     // Parameters
     /**
-     * The total number of MSHRs in this queue. This number is set as the
-     * number of MSHRs requested plus (numReserve - 1). This allows for
-     * the same number of effective MSHRs while still maintaining the reserve.
+     * The total number of entries in this queue. This number is set as the
+     * number of entries requested plus (numReserve - 1). This allows for
+     * the same number of effective entries while still maintaining the reserve.
      */
-    const int numMSHRs;
+    const int numEntries;
 
     /**
-     * The number of MSHRs to hold in reserve. This is needed because copy
-     * operations can allocate upto 4 MSHRs at one time.
+     * The number of entries to hold in reserve. This is needed because copy
+     * operations can allocate upto 4 entries at one time.
      */
     const int numReserve;
 
+    MSHR::Iterator addToReadyList(MSHR *mshr);
+
+
   public:
-    /** The number of allocated MSHRs. */
+    /** The number of allocated entries. */
     int allocated;
-    /** The number of MSHRs that have been forwarded to the bus. */
-    int inServiceMSHRs;
-    /** The number of targets waiting for response. */
-    int allocatedTargets;
+    /** The number of entries that have been forwarded to the bus. */
+    int inServiceEntries;
+    /** The index of this queue within the cache (MSHR queue vs. write
+     * buffer). */
+    const int index;
 
     /**
-     * Create a queue with a given number of MSHRs.
-     * @param num_mshrs The number of MSHRs in this queue.
-     * @param reserve The minimum number of MSHRs needed to satisfy any access.
+     * Create a queue with a given number of entries.
+     * @param num_entrys The number of entries in this queue.
+     * @param reserve The minimum number of entries needed to satisfy
+     * any access.
      */
-    MSHRQueue(int num_mshrs, int reserve = 1);
+    MSHRQueue(int num_entries, int reserve, int index);
 
     /** Destructor */
     ~MSHRQueue();
 
     /**
-     * Find the first MSHR that matches the provide address and asid.
+     * Find the first MSHR that matches the provided address.
      * @param addr The address to find.
-     * @param asid The address space id.
      * @return Pointer to the matching MSHR, null if not found.
      */
-    MSHR* findMatch(Addr addr) const;
+    MSHR *findMatch(Addr addr) const;
 
     /**
-     * Find and return all the matching MSHRs in the provided vector.
+     * Find and return all the matching entries in the provided vector.
      * @param addr The address to find.
-     * @param asid The address space ID.
-     * @param matches The vector to return pointers to the matching MSHRs.
+     * @param matches The vector to return pointers to the matching entries.
      * @return True if any matches are found, false otherwise.
      * @todo Typedef the vector??
      */
@@ -107,7 +113,9 @@ class MSHRQueue {
      * @param pkt The request to find.
      * @return A pointer to the earliest matching MSHR.
      */
-    MSHR* findPending(PacketPtr &pkt) const;
+    MSHR *findPending(Addr addr, int size) const;
+
+    bool checkFunctional(PacketPtr pkt, Addr blk_addr);
 
     /**
      * Allocates a new MSHR for the request and size. This places the request
@@ -116,76 +124,45 @@ class MSHRQueue {
      * @param size The number in bytes to fetch from memory.
      * @return The a pointer to the MSHR allocated.
      *
-     * @pre There are free MSHRs.
+     * @pre There are free entries.
      */
-    MSHR* allocate(PacketPtr &pkt, int size = 0);
-
-    /**
-     * Allocate a read request for the given address, and places the given
-     * target on the target list.
-     * @param addr The address to fetch.
-     * @param asid The address space for the fetch.
-     * @param size The number of bytes to request.
-     * @param target The first target for the request.
-     * @return Pointer to the new MSHR.
-     */
-    MSHR* allocateFetch(Addr addr, int size, PacketPtr &target);
-
-    /**
-     * Allocate a target list for the given address.
-     * @param addr The address to fetch.
-     * @param asid The address space for the fetch.
-     * @param size The number of bytes to request.
-     * @return Pointer to the new MSHR.
-     */
-    MSHR* allocateTargetList(Addr addr, int size);
+    MSHR *allocate(Addr addr, int size, PacketPtr &pkt,
+                   Tick when, Counter order);
 
     /**
      * Removes the given MSHR from the queue. This places the MSHR on the
      * free list.
      * @param mshr
      */
-    void deallocate(MSHR* mshr);
+    void deallocate(MSHR *mshr);
 
     /**
-     * Allocates a target to the given MSHR. Used to keep track of the number
-     * of outstanding targets.
-     * @param mshr The MSHR to allocate the target to.
-     * @param pkt The target request.
-     */
-    void allocateTarget(MSHR* mshr, PacketPtr &pkt)
-    {
-        mshr->allocateTarget(pkt);
-        allocatedTargets += 1;
-    }
-
-    /**
-     * Remove a MSHR from the queue. Returns an iterator into the allocatedList
-     * for faster squash implementation.
+     * Remove a MSHR from the queue. Returns an iterator into the
+     * allocatedList for faster squash implementation.
      * @param mshr The MSHR to remove.
      * @return An iterator to the next entry in the allocatedList.
      */
-    MSHR::Iterator deallocateOne(MSHR* mshr);
+    MSHR::Iterator deallocateOne(MSHR *mshr);
 
     /**
-     * Moves the MSHR to the front of the pending list if it is not in service.
-     * @param mshr The mshr to move.
+     * Moves the MSHR to the front of the pending list if it is not
+     * in service.
+     * @param mshr The entry to move.
      */
     void moveToFront(MSHR *mshr);
 
     /**
      * Mark the given MSHR as in service. This removes the MSHR from the
-     * pendingList. Deallocates the MSHR if it does not expect a response.
+     * readyList. Deallocates the MSHR if it does not expect a response.
      * @param mshr The MSHR to mark in service.
      */
-    void markInService(MSHR* mshr);
+    void markInService(MSHR *mshr);
 
     /**
-     * Mark an in service mshr as pending, used to resend a request.
+     * Mark an in service entry as pending, used to resend a request.
      * @param mshr The MSHR to resend.
-     * @param cmd The command to resend.
      */
-    void markPending(MSHR* mshr, MemCmd cmd);
+    void markPending(MSHR *mshr);
 
     /**
      * Squash outstanding requests with the given thread number. If a request
@@ -200,40 +177,34 @@ class MSHRQueue {
      */
     bool havePending() const
     {
-        return !pendingList.empty();
+        return !readyList.empty();
     }
 
     /**
-     * Returns true if there are no free MSHRs.
+     * Returns true if there are no free entries.
      * @return True if this queue is full.
      */
     bool isFull() const
     {
-        return (allocated > numMSHRs - numReserve);
+        return (allocated > numEntries - numReserve);
     }
 
     /**
-     * Returns the request at the head of the pendingList.
+     * Returns the MSHR at the head of the readyList.
      * @return The next request to service.
      */
-    PacketPtr getReq() const
+    MSHR *getNextMSHR() const
     {
-        if (pendingList.empty()) {
+        if (readyList.empty() || readyList.front()->readyTime > curTick) {
             return NULL;
         }
-        MSHR* mshr = pendingList.front();
-        return mshr->pkt;
+        return readyList.front();
     }
 
-    /**
-     * Returns the number of outstanding targets.
-     * @return the number of allocated targets.
-     */
-    int getAllocatedTargets() const
+    Tick nextMSHRReadyTime() const
     {
-        return allocatedTargets;
+        return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
-
 };
 
-#endif //__MSHR_QUEUE_HH__
+#endif //__MEM__CACHE__MISS__MSHR_QUEUE_HH__

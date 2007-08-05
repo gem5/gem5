@@ -212,20 +212,17 @@ class Split : public BaseTags
      * Find a replacement block for the address provided.
      * @param pkt The request to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
-     * @param compress_blocks List of blocks to compress, for adaptive comp.
      * @return The block to place the replacement in.
      */
-    SplitBlk* findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                            BlkList &compress_blocks);
+    SplitBlk* findReplacement(Addr addr, PacketList &writebacks);
 
 
     /**
      * Generate the tag from the given address.
      * @param addr The address to get the tag from.
-     * @param blk The block to find the partition it's in
      * @return The tag of the address.
      */
-    Addr extractTag(Addr addr, SplitBlk *blk) const;
+    Addr extractTag(Addr addr) const;
 
     /**
      * Calculate the set index from the address.

@@ -206,7 +206,7 @@ OptCPU::TickEvent::process()
 const char *
 OptCPU::TickEvent::description()
 {
-    return "OptCPU tick event";
+    return "OptCPU tick";
 }
 
 

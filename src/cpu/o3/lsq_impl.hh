@@ -84,9 +84,10 @@ LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
         lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
     }
     else {
-    //else it is a coherence request, maybe you need to do something
-        warn("Recieved a coherence request (Invalidate?), 03CPU doesn't"
-             "update LSQ for these\n");
+        // must be a snoop
+
+        // @TODO someday may need to process invalidations in LSQ here
+        // to provide stronger consistency model
     }
     return true;
 }

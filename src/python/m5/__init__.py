@@ -92,6 +92,7 @@ if running_m5:
     from event import *
     from simulate import *
     from main import options
+    import stats
 
 import SimObject
 import params

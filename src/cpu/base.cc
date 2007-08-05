@@ -90,7 +90,7 @@ CPUProgressEvent::process()
 const char *
 CPUProgressEvent::description()
 {
-    return "CPU Progress event";
+    return "CPU Progress";
 }
 
 #if FULL_SYSTEM
@@ -343,9 +343,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
     for (int i = 0; i < threadContexts.size(); ++i)
         threadContexts[i]->profileClear();
 
-    // The Sampler must take care of this!
-//    if (profileEvent)
-//        profileEvent->schedule(curTick);
+    if (profileEvent)
+        profileEvent->schedule(curTick);
 #endif
 
     // Connect new CPU to old CPU's memory only if new CPU isn't

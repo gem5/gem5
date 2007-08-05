@@ -303,11 +303,10 @@ IIC::findBlock(Addr addr) const
 
 
 IICTag*
-IIC::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                     BlkList &compress_blocks)
+IIC::findReplacement(Addr addr, PacketList &writebacks)
 {
-    DPRINTF(IIC, "Finding Replacement for %x\n", pkt->getAddr());
-    unsigned set = hash(pkt->getAddr());
+    DPRINTF(IIC, "Finding Replacement for %x\n", addr);
+    unsigned set = hash(addr);
     IICTag *tag_ptr;
     unsigned long *tmp_data = new unsigned long[numSub];
 
@@ -332,12 +331,14 @@ IIC::findReplacement(PacketPtr &pkt, PacketList &writebacks,
 
     list<unsigned long> tag_indexes;
     repl->doAdvance(tag_indexes);
+/*
     while (!tag_indexes.empty()) {
         if (!tagStore[tag_indexes.front()].isCompressed()) {
             compress_blocks.push_back(&tagStore[tag_indexes.front()]);
         }
         tag_indexes.pop_front();
     }
+*/
 
     tag_ptr->re = (void*)repl->add(tag_ptr-tagStore);
 
@@ -355,7 +356,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
 
     DPRINTF(Cache, "Replacing %x in IIC: %s\n",
             regenerateBlkAddr(tag_ptr->tag,0),
-            tag_ptr->isModified() ? "writeback" : "clean");
+            tag_ptr->isDirty() ? "writeback" : "clean");
     /* write back replaced block data */
     if (tag_ptr && (tag_ptr->isValid())) {
         replacements[0]++;
@@ -363,7 +364,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
         ++sampledRefs;
         tag_ptr->refCount = 0;
 
-        if (tag_ptr->isModified()) {
+        if (tag_ptr->isDirty()) {
 /*	    PacketPtr writeback =
                 buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
                                   tag_ptr->req->asid, tag_ptr->xc, blkSize,
@@ -619,24 +620,6 @@ IIC::secondaryChain(Addr tag, unsigned long chain_ptr,
 }
 
 void
-IIC::decompressBlock(unsigned long index)
-{
-    IICTag *tag_ptr = &tagStore[index];
-    if (tag_ptr->isCompressed()) {
-        // decompress the data here.
-    }
-}
-
-void
-IIC::compressBlock(unsigned long index)
-{
-    IICTag *tag_ptr = &tagStore[index];
-    if (!tag_ptr->isCompressed()) {
-        // Compress the data here.
-    }
-}
-
-void
 IIC::invalidateBlk(IIC::BlkType *tag_ptr)
 {
     if (tag_ptr) {
@@ -672,7 +655,6 @@ void
 IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
                PacketList & writebacks)
 {
-    assert(size < blkSize || !blk->isCompressed());
     DPRINTF(IIC, "Writing %d bytes to %x\n", size,
             blk->tag<<tagShift);
     // Find the number of subblocks needed, (round up)

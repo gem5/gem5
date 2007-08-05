@@ -33,7 +33,7 @@ from m5 import build_env
 
 class MemTest(SimObject):
     type = 'MemTest'
-    max_loads = Param.Counter("number of loads to execute")
+    max_loads = Param.Counter(0, "number of loads to execute")
     atomic = Param.Bool(False, "Execute tester in atomic mode? (or timing)\n")
     memory_size = Param.Int(65536, "memory size")
     percent_dest_unaligned = Param.Percent(50,

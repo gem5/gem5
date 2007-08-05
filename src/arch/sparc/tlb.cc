@@ -1024,7 +1024,7 @@ doMmuReadError:
         panic("need to impl DTB::doMmuRegRead() got asi=%#x, va=%#x\n",
             (uint32_t)asi, va);
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return tc->getCpuPtr()->cycles(1);
 }
 
@@ -1269,7 +1269,7 @@ doMmuWriteError:
         panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
             (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return tc->getCpuPtr()->cycles(1);
 }
 

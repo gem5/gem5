@@ -632,7 +632,11 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
     DPRINTF(OzoneLSQ, "Doing timing access for inst PC %#x\n",
             inst->readPC());
 
-    PacketPtr data_pkt = new Packet(req, Packet::ReadReq, Packet::Broadcast);
+    PacketPtr data_pkt =
+        new Packet(req,
+                   (req->isLocked() ?
+                    MemCmd::LoadLockedReq : Packet::ReadReq),
+                   Packet::Broadcast);
     data_pkt->dataStatic(inst->memData);
 
     LSQSenderState *state = new LSQSenderState;
@@ -659,16 +663,6 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 
     if (req->isLocked()) {
         cpu->lockFlag = true;
-    }
-
-    if (data_pkt->result != Packet::Success) {
-        DPRINTF(OzoneLSQ, "OzoneLSQ: D-cache miss!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
-                inst->seqNum);
-    } else {
-        DPRINTF(OzoneLSQ, "OzoneLSQ: D-cache hit!\n");
-        DPRINTF(Activity, "Activity: ld accessing mem hit [sn:%lli]\n",
-                inst->seqNum);
     }
 
     return NoFault;

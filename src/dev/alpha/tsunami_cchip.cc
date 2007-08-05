@@ -78,7 +78,6 @@ TsunamiCChip::read(PacketPtr pkt)
 {
     DPRINTF(Tsunami, "read  va=%#x size=%d\n", pkt->getAddr(), pkt->getSize());
 
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr regnum = (pkt->getAddr() - pioAddr) >> 6;
@@ -181,7 +180,7 @@ TsunamiCChip::read(PacketPtr pkt)
     DPRINTF(Tsunami, "Tsunami CChip: read  regnum=%#x size=%d data=%lld\n",
             regnum, pkt->getSize(), pkt->get<uint64_t>());
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -365,7 +364,7 @@ TsunamiCChip::write(PacketPtr pkt)
               panic("default in cchip read reached, accessing 0x%x\n");
         }  // swtich(regnum)
     } // not BIG_TSUNAMI write
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

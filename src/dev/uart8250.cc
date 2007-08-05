@@ -57,7 +57,7 @@ Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
 const char *
 Uart8250::IntrEvent::description()
 {
-    return "uart interrupt delay event";
+    return "uart interrupt delay";
 }
 
 void
@@ -109,7 +109,6 @@ Uart8250::Uart8250(const Params *p)
 Tick
 Uart8250::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 1);
 
@@ -184,7 +183,7 @@ Uart8250::read(PacketPtr pkt)
 /*    uint32_t d32 = *data;
     DPRINTF(Uart, "Register read to register %#x returned %#x\n", daddr, d32);
 */
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 
@@ -192,7 +191,6 @@ Tick
 Uart8250::write(PacketPtr pkt)
 {
 
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 1);
 
@@ -270,7 +268,7 @@ Uart8250::write(PacketPtr pkt)
             panic("Tried to access a UART port that doesn't exist\n");
             break;
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

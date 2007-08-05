@@ -60,7 +60,7 @@ template <class Impl>
 const char *
 InstructionQueue<Impl>::FUCompletion::description()
 {
-    return "Functional unit completion event";
+    return "Functional unit completion";
 }
 
 template <class Impl>

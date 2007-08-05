@@ -70,7 +70,6 @@ TsunamiPChip::TsunamiPChip(const Params *p)
 Tick
 TsunamiPChip::read(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     pkt->allocate();
@@ -144,7 +143,7 @@ TsunamiPChip::read(PacketPtr pkt)
       default:
           panic("Default in PChip Read reached reading 0x%x\n", daddr);
     }
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 
 }
@@ -152,7 +151,6 @@ TsunamiPChip::read(PacketPtr pkt)
 Tick
 TsunamiPChip::write(PacketPtr pkt)
 {
-    assert(pkt->result == Packet::Unknown);
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = (pkt->getAddr() - pioAddr) >> 6;
 
@@ -223,7 +221,7 @@ TsunamiPChip::write(PacketPtr pkt)
 
     } // uint64_t
 
-    pkt->result = Packet::Success;
+    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

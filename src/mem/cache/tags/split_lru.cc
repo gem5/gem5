@@ -213,10 +213,9 @@ SplitLRU::findBlock(Addr addr) const
 }
 
 SplitBlk*
-SplitLRU::findReplacement(PacketPtr &pkt, PacketList &writebacks,
-                     BlkList &compress_blocks)
+SplitLRU::findReplacement(Addr addr, PacketList &writebacks)
 {
-    unsigned set = extractSet(pkt->getAddr());
+    unsigned set = extractSet(addr);
     // grab a replacement candidate
     SplitBlk *blk = sets[set].blks[assoc-1];
     sets[set].moveToHead(blk);

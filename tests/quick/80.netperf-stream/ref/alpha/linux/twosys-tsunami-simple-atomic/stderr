@@ -1,6 +1,6 @@
-Listening for testsys connection on port 3456
-Listening for drivesys connection on port 3457
-0: testsys.remote_gdb.listener: listening for remote gdb #0 on port 7000
-0: drivesys.remote_gdb.listener: listening for remote gdb #1 on port 7001
+Listening for testsys connection on port 3457
+Listening for drivesys connection on port 3458
+0: testsys.remote_gdb.listener: listening for remote gdb on port 7001
+0: drivesys.remote_gdb.listener: listening for remote gdb on port 7002
 warn: Entering event queue @ 0.  Starting simulation...
 warn: Obsolete M5 instruction ivlb encountered.

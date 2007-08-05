@@ -76,6 +76,39 @@ abortHandler(int sigtype)
 }
 
 int
+python_main()
+{
+    PyObject *module;
+    PyObject *dict;
+    PyObject *result;
+
+    module = PyImport_AddModule("__main__");
+    if (module == NULL)
+        fatal("Could not import __main__");
+
+    dict = PyModule_GetDict(module);
+
+    result = PyRun_String("import m5.main", Py_file_input, dict, dict);
+    if (!result) {
+        PyErr_Print();
+        return 1;
+    }
+    Py_DECREF(result);
+
+    result = PyRun_String("m5.main.main()", Py_file_input, dict, dict);
+    if (!result) {
+        PyErr_Print();
+        return 1;
+    }
+    Py_DECREF(result);
+
+    if (Py_FlushLine())
+        PyErr_Clear();
+
+    return 0;
+}
+
+int
 main(int argc, char **argv)
 {
     signal(SIGFPE, SIG_IGN);		// may occur on misspeculated paths
@@ -114,9 +147,10 @@ main(int argc, char **argv)
     // initialize SWIG modules
     init_swig();
 
-    PyRun_SimpleString("import m5.main");
-    PyRun_SimpleString("m5.main.main()");
+    int ret = python_main();
 
     // clean up Python intepreter.
     Py_Finalize();
+
+    return ret;
 }

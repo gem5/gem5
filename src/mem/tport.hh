@@ -99,11 +99,29 @@ class SimpleTimingPort : public Port
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    void checkFunctional(PacketPtr funcPkt);
+    bool checkFunctional(PacketPtr funcPkt);
 
     /** Check whether we have a packet ready to go on the transmit list. */
     bool deferredPacketReady()
     { return !transmitList.empty() && transmitList.front().tick <= curTick; }
+
+    Tick deferredPacketReadyTime()
+    { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
+
+    void schedSendEvent(Tick when)
+    {
+        if (waitingOnRetry) {
+            assert(!sendEvent->scheduled());
+            return;
+        }
+
+        if (!sendEvent->scheduled()) {
+            sendEvent->schedule(when);
+        } else if (sendEvent->when() > when) {
+            sendEvent->reschedule(when);
+        }
+    }
+
 
     /** Schedule a sendTiming() event to be called in the future.
      * @param pkt packet to send

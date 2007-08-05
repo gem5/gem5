@@ -121,7 +121,7 @@ template <class Impl>
 const char *
 LWBackEnd<Impl>::TrapEvent::description()
 {
-    return "Trap event";
+    return "Trap";
 }
 
 template <class Impl>
