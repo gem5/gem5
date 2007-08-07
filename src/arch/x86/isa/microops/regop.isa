@@ -453,7 +453,7 @@ let {{
 
         setUpMicroRegOp(name, Name, "X86ISA::RegOp", code);
 
-    def defineMicroRegOpImm(mnemonic, code):
+    def defineMicroRegOpImm(mnemonic, code, flagCode=""):
         Name = mnemonic
         name = mnemonic.lower()
         code = immPick + code
@@ -615,11 +615,12 @@ let {{
             ''')
 
     defineMicroRegOpWr('Wrip', 'RIP = psrc1 + op2', elseCode="RIP = RIP;")
+    defineMicroRegOpWr('Br', 'nuIP = psrc1 + op2;', elseCode='nuIP = nuIP;')
     defineMicroRegOpWr('Wruflags', 'ccFlagBits = psrc1 ^ op2')
 
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
     defineMicroRegOpRd('Ruflags', 'DestReg = ccFlagBits')
-    defineMicroRegOpImm('Ruflag', 'DestReg = bits(ccFlagBits, imm8);', \
+    defineMicroRegOpImm('Ruflag', 'DestReg = bits(ccFlagBits, imm8 + 0*psrc1);', \
             flagCode = genCCFlagBitsLogic)
 
     defineMicroRegOpImm('Sext', '''

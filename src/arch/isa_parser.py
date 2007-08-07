@@ -1464,6 +1464,25 @@ class MemOperand(Operand):
     def makeAccSize(self):
         return self.size
 
+class UPCOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->readMicroPC();\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->setMicroPC(%s);\n' % self.base_name
+
+class NUPCOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->readNextMicroPC();\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->setNextMicroPC(%s);\n' % self.base_name
 
 class NPCOperand(Operand):
     def makeConstructor(self):
