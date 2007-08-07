@@ -89,7 +89,7 @@ let {{
         "index" : "env.index",
         "base" : "env.base",
         "dsz" : "env.dataSize",
-        "osz" : "env.operandSize",
+        "asz" : "env.addressSize",
         "ssz" : "env.stackSize"
     }
     assembler.symbols.update(symbols)
@@ -107,11 +107,13 @@ let {{
         assembler.symbols[flag] = flag + "Bit"
 
     for cond in ('True', 'False', 'ECF', 'EZF', 'SZnZF',
-                 'MSTRZ', 'STRZ', 'MSTRC', 'STRZnZF',
+                 'MSTRZ', 'STRZ', 'MSTRC',
                  'OF', 'CF', 'ZF', 'CvZF',
                  'SF', 'PF', 'SxOF', 'SxOvZF'):
         assembler.symbols["C%s" % cond] = "ConditionTests::%s" % cond
         assembler.symbols["nC%s" % cond] = "ConditionTests::Not%s" % cond
+    assembler.symbols["CSTRZnEZF"] = "ConditionTests::STRZnEZF"
+    assembler.symbols["CSTRnZnEZF"] = "ConditionTests::STRnZnEZF"
 
     assembler.symbols["CTrue"] = "ConditionTests::True"
     assembler.symbols["CFalse"] = "ConditionTests::False"

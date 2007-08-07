@@ -112,8 +112,9 @@ namespace X86ISA
             panic("This condition is not implemented!");
           case ConditionTests::MSTRC:
             panic("This condition is not implemented!");
-          case ConditionTests::STRZnZF:
-            panic("This condition is not implemented!");
+          case ConditionTests::STRZnEZF:
+            return !ccflags.EZF & ccflags.ZF;
+                //And no interrupts or debug traps are waiting
           case ConditionTests::OF:
             return ccflags.OF;
           case ConditionTests::CF:
@@ -144,8 +145,9 @@ namespace X86ISA
             panic("This condition is not implemented!");
           case ConditionTests::NotMSTRC:
             panic("This condition is not implemented!");
-          case ConditionTests::NotSTRZnZF:
-            panic("This condition is not implemented!");
+          case ConditionTests::STRnZnEZF:
+            return !ccflags.EZF & !ccflags.ZF;
+                //And no interrupts or debug traps are waiting
           case ConditionTests::NotOF:
             return !ccflags.OF;
           case ConditionTests::NotCF:
