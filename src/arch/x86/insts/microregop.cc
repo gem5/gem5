@@ -69,19 +69,23 @@ namespace X86ISA
         DPRINTF(Sparc, "flagMask = %#x\n", flagMask);
         uint64_t flags = oldFlags & ~flagMask;
         if(flagMask & CFBit)
+        {
             if(findCarry(dataSize*8, _dest, _src1, _src2))
                 flags |= CFBit;
             if(subtract)
                 flags ^= CFBit;
+        }
         if(flagMask & PFBit && findParity(dataSize*8, _dest))
             flags |= PFBit;
         if(flagMask & ECFBit && findCarry(dataSize*8, _dest, _src1, _src2))
             flags |= ECFBit;
         if(flagMask & AFBit)
+        {
             if(findCarry(4, _dest, _src1, _src2))
                 flags |= AFBit;
             if(subtract)
                 flags ^= AFBit;
+        }
         if(flagMask & EZFBit && findZero(dataSize*8, _dest))
             flags |= EZFBit;
         if(flagMask & ZFBit && findZero(dataSize*8, _dest))
