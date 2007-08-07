@@ -353,9 +353,7 @@ class StaticInst : public StaticInstBase
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
         : StaticInstBase(__opClass),
           machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
-    {
-        memset(&recentDecodes, 0, 2 * sizeof(cacheElement));
-    }
+    { }
 
   public:
 
@@ -459,6 +457,9 @@ class StaticInst : public StaticInstBase
     struct cacheElement {
         Addr page_addr;
         AddrDecodePage *decodePage;
+
+        cacheElement()
+          :decodePage(NULL) { }
     } ;
 
     /// An array of recently decoded instructions.

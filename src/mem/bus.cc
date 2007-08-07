@@ -84,6 +84,7 @@ Bus::deletePortRefs(Port *p)
     if (funcPort == bp)
         return;
     interfaces.erase(bp->getId());
+    clearBusCache();
     delete bp;
 }
 
@@ -176,7 +177,16 @@ Bus::recvTiming(PacketPtr pkt)
     DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
             src, pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
-    BusPort *src_port = (src == defaultId) ? defaultPort : interfaces[src];
+    BusPort *src_port;
+    if (src == defaultId)
+        src_port = defaultPort;
+    else {
+        src_port = checkBusCache(src);
+        if (src_port == NULL) {
+            src_port = interfaces[src];
+            updateBusCache(src, src_port);
+        }
+    }
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -220,6 +230,15 @@ Bus::recvTiming(PacketPtr pkt)
         assert(dest >= 0 && dest < maxId);
         assert(dest != src); // catch infinite loops
         dest_port_id = dest;
+        if (dest_port_id == defaultId)
+            dest_port = defaultPort;
+        else {
+            dest_port = checkBusCache(dest);
+            if (dest_port == NULL) {
+                dest_port = interfaces[dest_port_id];
+            // updateBusCache(dest_port_id, dest_port);
+            }
+        }
         dest_port = (dest_port_id == defaultId) ?
             defaultPort : interfaces[dest_port_id];
     }
@@ -291,9 +310,13 @@ Bus::findPort(Addr addr)
     /* An interval tree would be a better way to do this. --ali. */
     int dest_id = -1;
 
-    PortIter i = portMap.find(RangeSize(addr,1));
-    if (i != portMap.end())
-        dest_id = i->second;
+    dest_id = checkPortCache(addr);
+    if (dest_id == -1) {
+        PortIter i = portMap.find(RangeSize(addr,1));
+        if (i != portMap.end())
+          dest_id = i->second;
+        updatePortCache(dest_id, i->first.start, i->first.end);
+    }
 
     // Check if this matches the default range
     if (dest_id == -1) {
@@ -340,8 +363,16 @@ Bus::recvAtomic(PacketPtr pkt)
     int orig_src = pkt->getSrc();
 
     int target_port_id = findPort(pkt->getAddr());
-    Port *target_port = (target_port_id == defaultId) ?
-        defaultPort : interfaces[target_port_id];
+    BusPort *target_port;
+    if (target_port_id == defaultId)
+        target_port = defaultPort;
+    else {
+      target_port = checkBusCache(target_port_id);
+      if (target_port == NULL) {
+          target_port = interfaces[target_port_id];
+          updateBusCache(target_port_id, target_port);
+      }
+    }
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
@@ -438,6 +469,7 @@ Bus::recvStatusChange(Port::Status status, int id)
 
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
+    clearPortCache();
     if (id == defaultId) {
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.

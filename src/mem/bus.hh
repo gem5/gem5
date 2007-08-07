@@ -180,6 +180,58 @@ class Bus : public MemObject
      */
     int findPort(Addr addr);
 
+    // Cache for the findPort function storing recently used ports from portMap
+    struct PortCache {
+        bool valid;
+        int  id;
+        Addr start;
+        Addr end;
+    };
+
+    PortCache portCache[3];
+
+    // Checks the cache and returns the id of the port that has the requested
+    // address within its range
+    inline int checkPortCache(Addr addr) {
+        if (portCache[0].valid && addr >= portCache[0].start &&
+            addr < portCache[0].end) {
+            return portCache[0].id;
+        } else if (portCache[1].valid && addr >= portCache[1].start &&
+                   addr < portCache[1].end) {
+            return portCache[1].id;
+        } else if (portCache[2].valid && addr >= portCache[2].start &&
+                   addr < portCache[2].end) {
+            return portCache[2].id;
+        }
+
+        return -1;
+    }
+
+    // Clears the earliest entry of the cache and inserts a new port entry
+    inline void updatePortCache(short id, Addr start, Addr end) {
+        portCache[2].valid = portCache[1].valid;
+        portCache[2].id    = portCache[1].id;
+        portCache[2].start = portCache[1].start;
+        portCache[2].end   = portCache[1].end;
+
+        portCache[1].valid = portCache[0].valid;
+        portCache[1].id    = portCache[0].id;
+        portCache[1].start = portCache[0].start;
+        portCache[1].end   = portCache[0].end;
+
+        portCache[0].valid = true;
+        portCache[0].id    = id;
+        portCache[0].start = start;
+        portCache[0].end   = end;
+    }
+
+    // Clears the cache. Needs to be called in constructor.
+    inline void clearPortCache() {
+        portCache[2].valid = false;
+        portCache[1].valid = false;
+        portCache[0].valid = false;
+    }
+
     /** Process address range request.
      * @param resp addresses that we can respond to
      * @param snoop addresses that we would like to snoop
@@ -246,6 +298,53 @@ class Bus : public MemObject
     int cachedBlockSize;
     bool cachedBlockSizeValid;
 
+   // Cache for the peer port interfaces
+    struct BusCache {
+        bool  valid;
+        short id;
+        BusPort  *port;
+    };
+
+    BusCache busCache[3];
+
+    // Checks the peer port interfaces cache for the port id and returns
+    // a pointer to the matching port
+    inline BusPort* checkBusCache(short id) {
+        if (busCache[0].valid && id == busCache[0].id) {
+            return busCache[0].port;
+        } else if (busCache[1].valid && id == busCache[1].id) {
+            return busCache[1].port;
+        } else if (busCache[2].valid && id == busCache[2].id) {
+            return busCache[2].port;
+        }
+
+        return NULL;
+    }
+
+    // Replaces the earliest entry in the cache with a new entry
+    inline void updateBusCache(short id, BusPort *port) {
+        busCache[2].valid = busCache[1].valid;
+        busCache[2].id    = busCache[1].id;
+        busCache[2].port  = busCache[1].port;
+
+        busCache[1].valid = busCache[0].valid;
+        busCache[1].id    = busCache[0].id;
+        busCache[1].port  = busCache[0].port;
+
+        busCache[0].valid = true;
+        busCache[0].id    = id;
+        busCache[0].port  = port;
+    }
+
+    // Invalidates the cache. Needs to be called in constructor.
+    inline void clearBusCache() {
+        // memset(busCache, 0, 3 * sizeof(BusCache));
+        busCache[2].valid = false;
+        busCache[1].valid = false;
+        busCache[0].valid = false;
+    }
+
+
   public:
 
     /** A function used to return the port associated with this bus object. */
@@ -270,6 +369,8 @@ class Bus : public MemObject
             fatal("Bus width must be positive\n");
         if (clock <= 0)
             fatal("Bus clock period must be positive\n");
+        clearBusCache();
+        clearPortCache();
     }
 
 };
