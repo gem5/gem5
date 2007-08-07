@@ -317,7 +317,15 @@ bool AMD64TraceChild::step()
         ptrace(PTRACE_POKEDATA, pid, ripAfterSyscall, buf);
     }
     else
-        ptraceSingleStep();
+    {
+        //Get all the way past repe and repne string instructions in one shot.
+        uint64_t newPC, origPC = getPC();
+        do
+        {
+            ptraceSingleStep();
+            newPC = getPC();
+        } while(newPC == origPC);
+    }
 }
 
 TraceChild * genTraceChild()
