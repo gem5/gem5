@@ -597,20 +597,19 @@ StaticInst::decode(StaticInst::ExtMachInst mach_inst, Addr addr)
     Addr page_addr = addr & ~(TheISA::PageBytes - 1);
 
     // checks recently decoded addresses
-    if (recentDecodes[0].decodePage &&
-        page_addr == recentDecodes[0].page_addr) {
-        if (recentDecodes[0].decodePage->decoded(mach_inst, addr))
-            return recentDecodes[0].decodePage->getInst(addr);
+    if (recentDecodes[0].decodePage) {
+        if (page_addr == recentDecodes[0].page_addr) {
+            if (recentDecodes[0].decodePage->decoded(mach_inst, addr))
+                return recentDecodes[0].decodePage->getInst(addr);
 
-        return searchCache(mach_inst, addr, recentDecodes[0].decodePage);
-    }
+            return searchCache(mach_inst, addr, recentDecodes[0].decodePage);
+        } else if (recentDecodes[1].decodePage &&
+            page_addr == recentDecodes[1].page_addr) {
+            if (recentDecodes[1].decodePage->decoded(mach_inst, addr))
+                return recentDecodes[1].decodePage->getInst(addr);
 
-    if (recentDecodes[1].decodePage &&
-        page_addr == recentDecodes[1].page_addr) {
-        if (recentDecodes[1].decodePage->decoded(mach_inst, addr))
-            return recentDecodes[1].decodePage->getInst(addr);
-
-        return searchCache(mach_inst, addr, recentDecodes[1].decodePage);
+            return searchCache(mach_inst, addr, recentDecodes[1].decodePage);
+        }
     }
 
     // searches the page containing the address to decode
