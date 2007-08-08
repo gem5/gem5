@@ -193,17 +193,17 @@ class Bus : public MemObject
     // Checks the cache and returns the id of the port that has the requested
     // address within its range
     inline int checkPortCache(Addr addr) {
-        if (portCache[0].valid) {
-            if (addr >= portCache[0].start && addr < portCache[0].end) {
-                return portCache[0].id;
-            } else if (portCache[1].valid) {
-                if (addr >= portCache[1].start && addr < portCache[1].end) {
-                    return portCache[1].id;
-                } else if (portCache[2].valid && addr >= portCache[2].start &&
-                           addr < portCache[2].end) {
-                    return portCache[2].id;
-                }
-            }
+        if (portCache[0].valid && addr >= portCache[0].start &&
+            addr < portCache[0].end) {
+            return portCache[0].id;
+        }
+        if (portCache[1].valid && addr >= portCache[1].start &&
+                   addr < portCache[1].end) {
+            return portCache[1].id;
+        }
+        if (portCache[2].valid && addr >= portCache[2].start &&
+            addr < portCache[2].end) {
+            return portCache[2].id;
         }
 
         return -1;
@@ -312,17 +312,14 @@ class Bus : public MemObject
     // Checks the peer port interfaces cache for the port id and returns
     // a pointer to the matching port
     inline BusPort* checkBusCache(short id) {
-        if (busCache[0].valid) {
-            if (id == busCache[0].id) {
-                return busCache[0].port;
-                if (busCache[1].valid) {
-                    if (id == busCache[1].id) {
-                        return busCache[1].port;
-                        if (busCache[2].valid && id == busCache[2].id)
-                            return busCache[2].port;
-                    }
-                }
-            }
+        if (busCache[0].valid && id == busCache[0].id) {
+            return busCache[0].port;
+        }
+        if (busCache[1].valid && id == busCache[1].id) {
+            return busCache[1].port;
+        }
+        if (busCache[2].valid && id == busCache[2].id) {
+            return busCache[2].port;
         }
 
         return NULL;
@@ -345,7 +342,6 @@ class Bus : public MemObject
 
     // Invalidates the cache. Needs to be called in constructor.
     inline void clearBusCache() {
-        // memset(busCache, 0, 3 * sizeof(BusCache));
         busCache[2].valid = false;
         busCache[1].valid = false;
         busCache[0].valid = false;
