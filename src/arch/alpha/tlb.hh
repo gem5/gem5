@@ -61,7 +61,7 @@ namespace AlphaISA
         int nlu;			// not last used entry (for replacement)
 
         void nextnlu() { if (++nlu >= size) nlu = 0; }
-        PTE *lookup(Addr vpn, uint8_t asn) const;
+        PTE *lookup(Addr vpn, uint8_t asn);
 
       public:
         TLB(const std::string &name, int size);
@@ -92,6 +92,12 @@ namespace AlphaISA
         // Most recently used page table entries
         PTE *PTECache[3];
         inline void flushCache() { memset(PTECache, 0, 3 * sizeof(PTE*)); }
+        inline PTE* updateCache(PTE *pte) {
+            PTECache[2] = PTECache[1];
+            PTECache[1] = PTECache[0];
+            PTECache[0] = pte;
+            return pte;
+        }
     };
 
     class ITB : public TLB
@@ -106,7 +112,7 @@ namespace AlphaISA
         ITB(const std::string &name, int size);
         virtual void regStats();
 
-        Fault translate(RequestPtr &req, ThreadContext *tc) const;
+        Fault translate(RequestPtr &req, ThreadContext *tc);
     };
 
     class DTB : public TLB
@@ -129,7 +135,7 @@ namespace AlphaISA
         DTB(const std::string &name, int size);
         virtual void regStats();
 
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write) const;
+        Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
     };
 }
 

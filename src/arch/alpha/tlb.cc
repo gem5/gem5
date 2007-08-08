@@ -75,7 +75,7 @@ TLB::~TLB()
 
 // look up an entry in the TLB
 PTE *
-TLB::lookup(Addr vpn, uint8_t asn) const
+TLB::lookup(Addr vpn, uint8_t asn)
 {
     // assume not found...
     PTE *retval = NULL;
@@ -94,7 +94,7 @@ TLB::lookup(Addr vpn, uint8_t asn) const
         }
     }
 
-    if (retval == NULL)
+    if (retval == NULL) {
         PageTable::const_iterator i = lookupTable.find(vpn);
         if (i != lookupTable.end()) {
             while (i->first == vpn) {
@@ -102,10 +102,7 @@ TLB::lookup(Addr vpn, uint8_t asn) const
                 PTE *pte = &table[index];
                 assert(pte->valid);
                 if (vpn == pte->tag && (pte->asma || pte->asn == asn)) {
-                    retval = pte;
-                    PTECache[2] = PTECache[1];
-                    PTECache[1] = PTECache[0];
-                    PTECache[0] = pte;
+                    retval = updateCache(pte);
                     break;
                 }
 
@@ -315,7 +312,7 @@ ITB::regStats()
 
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc) const
+ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if(FULL_SYSTEM && PcPAL(req->getPC()))
@@ -477,7 +474,7 @@ DTB::regStats()
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write) const
+DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 
