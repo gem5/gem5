@@ -90,8 +90,8 @@ namespace AlphaISA
         virtual void unserialize(Checkpoint *cp, const std::string &section);
 
         // Most recently used page table entries
-        PTE *PTECache[2];
-        inline void flushCache() { memset(PTECache, 0, 2 * sizeof(PTE*)); }
+        PTE *PTECache[3];
+        inline void flushCache() { memset(PTECache, 0, 3 * sizeof(PTE*)); }
     };
 
     class ITB : public TLB
