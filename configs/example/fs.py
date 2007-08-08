@@ -132,6 +132,9 @@ for i in xrange(np):
     else:
         test_sys.cpu[i].connectMemPorts(test_sys.membus)
 
+    if options.fastmem:
+        test_sys.cpu[i].physmem_port = test_sys.physmem.port
+
 if len(bm) == 2:
     if m5.build_env['TARGET_ISA'] == 'alpha':
         drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
@@ -139,6 +142,8 @@ if len(bm) == 2:
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
+    if options.fastmem:
+        drive_sys.cpu.physmem_port = drive_sys.physmem.port
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
 

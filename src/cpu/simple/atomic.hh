@@ -121,12 +121,16 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     };
     DcachePort dcachePort;
 
+    CpuPort physmemPort;
+    bool hasPhysMemPort;
     Request ifetch_req;
     Request data_read_req;
     Request data_write_req;
 
     bool dcache_access;
     Tick dcache_latency;
+
+    Range<Addr> physMemAddr;
 
   public:
 

@@ -93,10 +93,11 @@ class BaseCPU(SimObject):
 
     def connectMemPorts(self, bus):
         for p in self._mem_ports:
-            exec('self.%s = bus.port' % p)
+            if p != 'physmem_port':
+                exec('self.%s = bus.port' % p)
 
     def addPrivateSplitL1Caches(self, ic, dc):
-        assert(len(self._mem_ports) == 2)
+        assert(len(self._mem_ports) == 2 or len(self._mem_ports) == 3)
         self.icache = ic
         self.dcache = dc
         self.icache_port = ic.cpu_side
