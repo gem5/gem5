@@ -40,11 +40,13 @@
 #define M5_ATTR_NORETURN  __attribute__((noreturn))
 #define M5_PRAGMA_NORETURN(x)
 #define M5_DUMMY_RETURN
+#define M5_VAR_USED __attribute__((unused))
 #elif defined(__SUNPRO_CC)
 // this doesn't do anything with sun cc, but why not
 #define M5_ATTR_NORETURN  __sun_attr__((__noreturn__))
 #define M5_DUMMY_RETURN return (0);
 #define DO_PRAGMA(x) _Pragma(#x)
+#define M5_VAR_USED
 #define M5_PRAGMA_NORETURN(x) DO_PRAGMA(does_not_return(x))
 #else
 #error "Need to define compiler options in base/compiler.hh"

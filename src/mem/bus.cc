@@ -211,19 +211,13 @@ Bus::recvTiming(PacketPtr pkt)
         dest_port_id = findPort(pkt->getAddr());
         dest_port = (dest_port_id == defaultId) ?
             defaultPort : interfaces[dest_port_id];
-        for (SnoopIter s_iter = snoopPorts.begin();
-             s_iter != snoopPorts.end();
-             s_iter++) {
+        SnoopIter s_end = snoopPorts.end();
+        for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
             BusPort *p = *s_iter;
             if (p != dest_port && p != src_port) {
-#ifndef NDEBUG
                 // cache is not allowed to refuse snoop
-                bool success = p->sendTiming(pkt);
+                bool success M5_VAR_USED = p->sendTiming(pkt);
                 assert(success);
-#else
-                // avoid unused variable warning
-                p->sendTiming(pkt);
-#endif
             }
         }
     } else {
@@ -320,9 +314,9 @@ Bus::findPort(Addr addr)
 
     // Check if this matches the default range
     if (dest_id == -1) {
-        for (AddrRangeIter iter = defaultRange.begin();
-             iter != defaultRange.end(); iter++) {
-            if (*iter == addr) {
+        AddrRangeIter a_end = defaultRange.end();
+        for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
+            if (*i == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
                 return defaultId;
             }
@@ -437,9 +431,8 @@ Bus::recvFunctional(PacketPtr pkt)
 
     assert(pkt->isRequest()); // hasn't already been satisfied
 
-    for (SnoopIter s_iter = snoopPorts.begin();
-         s_iter != snoopPorts.end();
-         s_iter++) {
+    SnoopIter s_end = snoopPorts.end();
+    for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
         BusPort *p = *s_iter;
         if (p != port && p->getId() != src_id) {
             p->sendFunctional(pkt);
@@ -589,14 +582,14 @@ Bus::findBlockSize(int id)
 
     int max_bs = -1;
 
-    for (PortIter portIter = portMap.begin();
-         portIter != portMap.end(); portIter++) {
-        int tmp_bs = interfaces[portIter->second]->peerBlockSize();
+    PortIter p_end = portMap.end();
+    for (PortIter p_iter = portMap.begin(); p_iter != p_end; p_iter++) {
+        int tmp_bs = interfaces[p_iter->second]->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }
-    for (SnoopIter s_iter = snoopPorts.begin();
-         s_iter != snoopPorts.end(); s_iter++) {
+    SnoopIter s_end = snoopPorts.end();
+    for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
         int tmp_bs = (*s_iter)->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
