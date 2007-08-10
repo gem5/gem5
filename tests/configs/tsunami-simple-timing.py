@@ -53,6 +53,19 @@ class L2(BaseCache):
     tgts_per_mshr = 16
     write_buffers = 8
 
+# ---------------------
+# I/O Cache
+# ---------------------
+class IOCache(BaseCache):
+    assoc = 8
+    block_size = 64
+    latency = '50ns'
+    mshrs = 20
+    size = '1kB'
+    tgts_per_mshr = 12
+    mem_side_filter_ranges=[AddrRange(0, Addr.max)]
+    cpu_side_filter_ranges=[AddrRange(0x8000000000, Addr.max)]
+
 #cpu
 cpu = TimingSimpleCPU(cpu_id=0)
 #the system
@@ -61,6 +74,12 @@ system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpu
 #create the l1/l2 bus
 system.toL2Bus = Bus()
+system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
+system.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
+system.iocache = IOCache()
+system.iocache.cpu_side = system.iobus.port
+system.iocache.mem_side = system.membus.port
+
 
 #connect up the l2 cache
 system.l2c = L2(size='4MB', assoc=8)

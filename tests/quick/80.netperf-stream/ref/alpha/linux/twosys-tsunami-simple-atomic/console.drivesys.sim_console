@@ -58,7 +58,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
 eth0: enabling optical transceiver
 eth0: using 64 bit addressing.
-eth0: ns83820 v0.22: DP83820 v1.3: 00:90:00:00:00:02 io=0x09000000 irq=30 f=h,sg
+eth0: ns83820 v0.22: DP83820 v1.3: 00:90:00:00:00:01 io=0x09000000 irq=30 f=h,sg
 tun: Universal TUN/TAP device driver, 1.6
 tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
 Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
@@ -72,7 +72,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 hdb: M5 IDE Disk, ATA DISK drive
 ide0 at 0x8410-0x8417,0x8422 on irq 31
 hda: max request size: 128KiB
-hda: 511056 sectors (261 MB), CHS=507/16/63, UDMA(33)
+hda: 101808 sectors (52 MB), CHS=101/16/63, UDMA(33)
 hda: cache flushes not supported
  hda: hda1
 hdb: max request size: 128KiB
@@ -99,9 +99,10 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 All bugs added by David S. Miller <davem@redhat.com>
 VFS: Mounted root (ext2 filesystem) readonly.
 Freeing unused kernel memory: 224k freed
-init started:  BusyBox v1.1.0 (2006.08.17-02:54+0000) multi-call binary
+init started:  BusyBox v1.1.0 (2007.03.04-01:07+0000) multi-call binary
 mounting filesystems...
-loading script...
+EXT2-fs warning: checktime reached, running e2fsck is recommended
+loading script...
 setting up network...
 eth0: link now 1000F mbps, full duplex and up.
 running netserver...

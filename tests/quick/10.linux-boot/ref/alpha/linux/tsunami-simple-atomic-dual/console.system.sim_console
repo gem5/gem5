@@ -77,7 +77,7 @@ SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb
 hdb: M5 IDE Disk, ATA DISK drive
 ide0 at 0x8410-0x8417,0x8422 on irq 31
 hda: max request size: 128KiB
-hda: 511056 sectors (261 MB), CHS=507/16/63, UDMA(33)
+hda: 101808 sectors (52 MB), CHS=101/16/63, UDMA(33)
 hda: cache flushes not supported
  hda: hda1
 hdb: max request size: 128KiB
@@ -104,6 +104,7 @@ SlaveCmd: restart FFFFFC0000310020 FFFFFC0000310020 vptb FFFFFFFE00000000 my_rpb
 All bugs added by David S. Miller <davem@redhat.com>
 VFS: Mounted root (ext2 filesystem) readonly.
 Freeing unused kernel memory: 224k freed
-init started:  BusyBox v1.1.0 (2006.08.17-02:54+0000) multi-call binary
+init started:  BusyBox v1.1.0 (2007.03.04-01:07+0000) multi-call binary
 mounting filesystems...
-loading script...
+EXT2-fs warning: checktime reached, running e2fsck is recommended
+loading script...
