@@ -39,6 +39,7 @@
 
 #include "sim/host.hh"
 #include "base/misc.hh"
+#include "base/range_ops.hh"
 
 #include "mem/cache/cache.hh"
 #include "mem/cache/cache_blk.hh"
@@ -61,8 +62,10 @@ Cache<TagStore>::Cache(const std::string &_name,
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
 
-    cpuSidePort = new CpuSidePort(_name + "-cpu_side_port", this);
-    memSidePort = new MemSidePort(_name + "-mem_side_port", this);
+    cpuSidePort = new CpuSidePort(_name + "-cpu_side_port", this,
+            params.baseParams.cpuSideFilterRanges);
+    memSidePort = new MemSidePort(_name + "-mem_side_port", this,
+            params.baseParams.memSideFilterRanges);
     cpuSidePort->setOtherPort(memSidePort);
     memSidePort->setOtherPort(cpuSidePort);
 
@@ -88,7 +91,8 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
     } else if (if_name == "mem_side") {
         return memSidePort;
     } else if (if_name == "functional") {
-        return new CpuSidePort(name() + "-cpu_side_funcport", this);
+        return new CpuSidePort(name() + "-cpu_side_funcport", this,
+                std::vector<Range<Addr> >());
     } else {
         panic("Port name %s unrecognized\n", if_name);
     }
@@ -1221,6 +1225,7 @@ getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
     // CPU side port doesn't snoop; it's a target only.
     bool dummy;
     otherPort->getPeerAddressRanges(resp, dummy);
+    FilterRangeList(filterRanges, resp);
     snoop = false;
 }
 
@@ -1262,8 +1267,9 @@ Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 template<class TagStore>
 Cache<TagStore>::
 CpuSidePort::CpuSidePort(const std::string &_name,
-                         Cache<TagStore> *_cache)
-    : BaseCache::CachePort(_name, _cache)
+                         Cache<TagStore> *_cache, std::vector<Range<Addr> >
+                         filterRanges)
+    : BaseCache::CachePort(_name, _cache, filterRanges)
 {
 }
 
@@ -1279,6 +1285,8 @@ Cache<TagStore>::MemSidePort::
 getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
+    FilterRangeList(filterRanges, resp);
+
     // Memory-side port always snoops, so unconditionally set flag for
     // caller.
     snoop = true;
@@ -1416,8 +1424,9 @@ Cache<TagStore>::MemSidePort::processSendEvent()
 
 template<class TagStore>
 Cache<TagStore>::
-MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache)
-    : BaseCache::CachePort(_name, _cache)
+MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
+        std::vector<Range<Addr> > filterRanges)
+    : BaseCache::CachePort(_name, _cache, filterRanges)
 {
     // override default send event from SimpleTimingPort
     delete sendEvent;

@@ -241,7 +241,8 @@ BaseCacheParams::create()
     // Build BaseCache param object
     BaseCache::Params base_params(latency, block_size,
                                   mshrs, tgts_per_mshr, write_buffers,
-                                  max_miss_count);
+                                  max_miss_count, cpu_side_filter_ranges,
+                                  mem_side_filter_ranges);
 
     //Warnings about prefetcher policy
     if (prefetch_policy == Enums::none) {

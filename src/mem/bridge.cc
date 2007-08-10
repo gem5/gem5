@@ -37,6 +37,7 @@
 
 #include <algorithm>
 
+#include "base/range_ops.hh"
 #include "base/trace.hh"
 #include "mem/bridge.hh"
 #include "params/Bridge.hh"
@@ -44,9 +45,10 @@
 Bridge::BridgePort::BridgePort(const std::string &_name,
                                Bridge *_bridge, BridgePort *_otherPort,
                                int _delay, int _nack_delay, int _req_limit,
-                               int _resp_limit, bool fix_partial_write)
+                               int _resp_limit,
+                               std::vector<Range<Addr> > filter_ranges)
     : Port(_name), bridge(_bridge), otherPort(_otherPort),
-      delay(_delay), nackDelay(_nack_delay), fixPartialWrite(fix_partial_write),
+      delay(_delay), nackDelay(_nack_delay), filterRanges(filter_ranges),
       outstandingResponses(0), queuedRequests(0), inRetry(false),
       reqQueueLimit(_req_limit), respQueueLimit(_resp_limit), sendEvent(this)
 {
@@ -55,9 +57,9 @@ Bridge::BridgePort::BridgePort(const std::string &_name,
 Bridge::Bridge(Params *p)
     : MemObject(p->name),
       portA(p->name + "-portA", this, &portB, p->delay, p->nack_delay,
-              p->req_size_a, p->resp_size_a, p->fix_partial_write_a),
+              p->req_size_a, p->resp_size_a, p->filter_ranges_a),
       portB(p->name + "-portB", this, &portA, p->delay, p->nack_delay,
-              p->req_size_b, p->resp_size_b, p->fix_partial_write_b),
+              p->req_size_b, p->resp_size_b, p->filter_ranges_b),
       ackWrites(p->write_ack), _params(p)
 {
     if (ackWrites)
@@ -243,17 +245,6 @@ Bridge::BridgePort::trySend()
 
     PacketPtr pkt = buf->pkt;
 
-    // Ugly! @todo When multilevel coherence works this will be removed
-    if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite &&
-            !pkt->wasNacked()) {
-        PacketPtr funcPkt = new Packet(pkt->req, MemCmd::WriteReq,
-                            Packet::Broadcast);
-        funcPkt->dataStatic(pkt->getPtr<uint8_t>());
-        sendFunctional(funcPkt);
-        pkt->cmd = MemCmd::WriteReq;
-        delete funcPkt;
-    }
-
     DPRINTF(BusBridge, "trySend: origSrc %d dest %d addr 0x%x\n",
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
@@ -313,17 +304,6 @@ Bridge::BridgePort::recvRetry()
 Tick
 Bridge::BridgePort::recvAtomic(PacketPtr pkt)
 {
-    // fix partial atomic writes... similar to the timing code that does the
-    // same... will be removed once our code gets this right
-    if (pkt->cmd == MemCmd::WriteInvalidateReq && fixPartialWrite) {
-
-        PacketPtr funcPkt = new Packet(pkt->req, MemCmd::WriteReq,
-                         Packet::Broadcast);
-        funcPkt->dataStatic(pkt->getPtr<uint8_t>());
-        otherPort->sendFunctional(funcPkt);
-        delete funcPkt;
-        pkt->cmd = MemCmd::WriteReq;
-    }
     return delay + otherPort->sendAtomic(pkt);
 }
 
@@ -355,6 +335,7 @@ Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
                                            bool &snoop)
 {
     otherPort->getPeerAddressRanges(resp, snoop);
+    FilterRangeList(filterRanges, resp);
     // we don't allow snooping across bridges
     snoop = false;
 }

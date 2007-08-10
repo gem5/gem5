@@ -38,6 +38,7 @@
 #define __MEM_BUS_HH__
 
 #include <string>
+#include <set>
 #include <list>
 #include <inttypes.h>
 
@@ -253,6 +254,7 @@ class Bus : public MemObject
     BusFreeEvent busIdle;
 
     bool inRetry;
+    std::set<int> inRecvStatusChange;
 
     /** max number of bus ids we've handed out so far */
     short maxId;

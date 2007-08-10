@@ -457,6 +457,10 @@ Bus::recvStatusChange(Port::Status status, int id)
     bool snoops;
     AddrRangeIter iter;
 
+    if (inRecvStatusChange.count(id))
+        return;
+    inRecvStatusChange.insert(id);
+
     assert(status == Port::RangeChange &&
            "The other statuses need to be implemented.");
 
@@ -524,6 +528,7 @@ Bus::recvStatusChange(Port::Status status, int id)
 
     if (id != defaultId && defaultPort)
         defaultPort->sendStatusChange(Port::RangeChange);
+    inRecvStatusChange.erase(id);
 }
 
 void
