@@ -148,10 +148,7 @@ void Bus::occupyBus(PacketPtr pkt)
 
     // The first word will be delivered after the current tick, the delivery
     // of the address if any, and one bus cycle to deliver the data
-    pkt->firstWordTime =
-        tickNextIdle +
-        pkt->isRequest() ? clock : 0 +
-        clock;
+    pkt->firstWordTime = tickNextIdle + (pkt->isRequest() ? clock : 0) + clock;
 
     //Advance it numCycles bus cycles.
     //XXX Should this use the repeated addition trick as well?

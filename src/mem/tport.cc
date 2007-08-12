@@ -95,6 +95,7 @@ void
 SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
 {
     assert(when > curTick);
+    assert(when < curTick + Clock::Int::ms);
 
     // Nothing is on the list: add it and schedule an event
     if (transmitList.empty() || when < transmitList.front().tick) {

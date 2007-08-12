@@ -263,7 +263,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     if (targets->needsExclusive || pkt->needsExclusive()) {
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
-        PacketPtr cp_pkt = new Packet(pkt);
+        PacketPtr cp_pkt = new Packet(pkt, true);
         targets->add(cp_pkt, curTick, _order, false);
         ++ntargets;
 
