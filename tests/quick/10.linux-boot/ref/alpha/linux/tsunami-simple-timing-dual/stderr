@@ -2,4 +2,4 @@ Listening for system connection on port 3456
 0: system.remote_gdb.listener: listening for remote gdb on port 7000
 0: system.remote_gdb.listener: listening for remote gdb on port 7001
 warn: Entering event queue @ 0.  Starting simulation...
-warn: 427086000: Trying to launch CPU number 1!
+warn: 470073000: Trying to launch CPU number 1!
