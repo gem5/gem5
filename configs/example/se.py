@@ -114,6 +114,9 @@ for i in xrange(np):
         system.cpu[i].connectMemPorts(system.membus)
     system.cpu[i].workload = process
 
+    if options.fastmem:
+        system.cpu[0].physmem_port = system.physmem.port
+
 root = Root(system = system)
 
 Simulation.run(options, root, system, FutureClass)

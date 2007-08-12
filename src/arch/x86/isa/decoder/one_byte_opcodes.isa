@@ -342,8 +342,8 @@
             0x3: stos_Yv_rAX();
             0x4: lods_Al_Xb();
             0x5: lods_rAX_Xv();
-            0x6: scas_Yb_Al();
-            0x7: scas_Yv_rAX();
+            0x6: StringInst::SCAS(Yb);
+            0x7: StringInst::SCAS(Yv);
         }
         format Inst {
             0x16: MOV(Bb,Ib);

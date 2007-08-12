@@ -266,8 +266,7 @@ class DmaDevice : public PioDevice
 
     void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
     {
-        dmaPort->dmaAction(MemCmd::WriteInvalidateReq,
-                           addr, size, event, data);
+        dmaPort->dmaAction(MemCmd::WriteReq, addr, size, event, data);
     }
 
     void dmaRead(Addr addr, int size, Event *event, uint8_t *data)

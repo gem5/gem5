@@ -67,6 +67,10 @@ AtomicSimpleCPU::getPort(const std::string &if_name, int idx)
         return &dcachePort;
     else if (if_name == "icache_port")
         return &icachePort;
+    else if (if_name == "physmem_port") {
+        hasPhysMemPort = true;
+        return &physmemPort;
+    }
     else
         panic("No Such Port\n");
 }
@@ -83,6 +87,12 @@ AtomicSimpleCPU::init()
         TheISA::initCPU(tc, tc->readCpuId());
     }
 #endif
+    if (hasPhysMemPort) {
+        bool snoop = false;
+        AddrRangeList pmAddrList;
+        physmemPort.getPeerAddressRanges(pmAddrList, snoop);
+        physMemAddr = *pmAddrList.begin();
+    }
 }
 
 bool
@@ -141,7 +151,8 @@ AtomicSimpleCPU::DcachePort::setPeer(Port *port)
 AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     : BaseSimpleCPU(p), tickEvent(this),
       width(p->width), simulate_stalls(p->simulate_stalls),
-      icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this)
+      icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
+      physmemPort(name() + "-iport", this), hasPhysMemPort(false)
 {
     _status = Idle;
 
@@ -293,8 +304,12 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
         if (req->isMmapedIpr())
             dcache_latency = TheISA::handleIprRead(thread->getTC(), &pkt);
-        else
-            dcache_latency = dcachePort.sendAtomic(&pkt);
+        else {
+            if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
+                dcache_latency = physmemPort.sendAtomic(&pkt);
+            else
+                dcache_latency = dcachePort.sendAtomic(&pkt);
+        }
         dcache_access = true;
         assert(!pkt.isError());
 
@@ -402,7 +417,10 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 dcache_latency = TheISA::handleIprWrite(thread->getTC(), &pkt);
             } else {
                 data = htog(data);
-                dcache_latency = dcachePort.sendAtomic(&pkt);
+                if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
+                    dcache_latency = physmemPort.sendAtomic(&pkt);
+                else
+                    dcache_latency = dcachePort.sendAtomic(&pkt);
             }
             dcache_access = true;
             assert(!pkt.isError());
@@ -513,7 +531,12 @@ AtomicSimpleCPU::tick()
                                            Packet::Broadcast);
                 ifetch_pkt.dataStatic(&inst);
 
-                icache_latency = icachePort.sendAtomic(&ifetch_pkt);
+                if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
+                    icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
+                else
+                    icache_latency = icachePort.sendAtomic(&ifetch_pkt);
+
+
                 // ifetch_req is initialized to read the instruction directly
                 // into the CPU object's inst field.
             //}

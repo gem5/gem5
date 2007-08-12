@@ -40,4 +40,5 @@ class AtomicSimpleCPU(BaseCPU):
         profile = Param.Latency('0ns', "trace the kernel stack")
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
-    _mem_ports = ['icache_port', 'dcache_port']
+    physmem_port = Port("Physical Memory Port")
+    _mem_ports = ['icache_port', 'dcache_port', 'physmem_port']

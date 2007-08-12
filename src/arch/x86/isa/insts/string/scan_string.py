@@ -53,16 +53,55 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class SCAS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SCASB(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SCASW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SCASD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class SCASQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop SCAS_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t2, t2, dsz, flags=(CEZF,), dataSize=asz
+    subi t3, t0, dsz, dataSize=asz
+    mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
+
+    ld t1, es, [1, t0, rdi]
+    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+
+    add rdi, rdi, t2, dataSize=asz
+};
+
+#
+# Versions which have the rep prefix. These could benefit from some loop
+# unrolling.
+#
+
+def macroop SCAS_E_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t2, t2, dsz, flags=(CEZF,), dataSize=asz
+    subi t3, t0, dsz, dataSize=asz
+    mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
+
+    ld t1, es, [1, t0, rdi]
+    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t2, dataSize=asz
+    bri t0, 4, flags=(CSTRZnEZF,)
+    fault "NoFault"
+};
+
+def macroop SCAS_N_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t2, t2, dsz, flags=(CEZF,), dataSize=asz
+    subi t3, t0, dsz, dataSize=asz
+    mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
+
+    ld t1, es, [1, t0, rdi]
+    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t2, dataSize=asz
+    bri t0, 4, flags=(CSTRnZnEZF,)
+    fault "NoFault"
+};
+
+'''

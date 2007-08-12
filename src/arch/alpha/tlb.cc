@@ -64,6 +64,7 @@ TLB::TLB(const string &name, int s)
 {
     table = new PTE[size];
     memset(table, 0, sizeof(PTE[size]));
+    flushCache();
 }
 
 TLB::~TLB()
@@ -74,23 +75,39 @@ TLB::~TLB()
 
 // look up an entry in the TLB
 PTE *
-TLB::lookup(Addr vpn, uint8_t asn) const
+TLB::lookup(Addr vpn, uint8_t asn)
 {
     // assume not found...
     PTE *retval = NULL;
 
-    PageTable::const_iterator i = lookupTable.find(vpn);
-    if (i != lookupTable.end()) {
-        while (i->first == vpn) {
-            int index = i->second;
-            PTE *pte = &table[index];
-            assert(pte->valid);
-            if (vpn == pte->tag && (pte->asma || pte->asn == asn)) {
-                retval = pte;
-                break;
-            }
+    if (PTECache[0]) {
+        if (vpn == PTECache[0]->tag &&
+            (PTECache[0]->asma || PTECache[0]->asn == asn))
+            retval = PTECache[0];
+        else if (PTECache[1]) {
+            if (vpn == PTECache[1]->tag &&
+                (PTECache[1]->asma || PTECache[1]->asn == asn))
+                retval = PTECache[1];
+            else if (PTECache[2] && vpn == PTECache[2]->tag &&
+                     (PTECache[2]->asma || PTECache[2]->asn == asn))
+                retval = PTECache[2];
+        }
+    }
 
-            ++i;
+    if (retval == NULL) {
+        PageTable::const_iterator i = lookupTable.find(vpn);
+        if (i != lookupTable.end()) {
+            while (i->first == vpn) {
+                int index = i->second;
+                PTE *pte = &table[index];
+                assert(pte->valid);
+                if (vpn == pte->tag && (pte->asma || pte->asn == asn)) {
+                    retval = updateCache(pte);
+                    break;
+                }
+
+                ++i;
+            }
         }
     }
 
@@ -142,6 +159,7 @@ TLB::checkCacheability(RequestPtr &req)
 void
 TLB::insert(Addr addr, PTE &pte)
 {
+    flushCache();
     VAddr vaddr = addr;
     if (table[nlu].valid) {
         Addr oldvpn = table[nlu].tag;
@@ -178,6 +196,7 @@ TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
     memset(table, 0, sizeof(PTE[size]));
+    flushCache();
     lookupTable.clear();
     nlu = 0;
 }
@@ -185,6 +204,7 @@ TLB::flushAll()
 void
 TLB::flushProcesses()
 {
+    flushCache();
     PageTable::iterator i = lookupTable.begin();
     PageTable::iterator end = lookupTable.end();
     while (i != end) {
@@ -208,6 +228,7 @@ TLB::flushProcesses()
 void
 TLB::flushAddr(Addr addr, uint8_t asn)
 {
+    flushCache();
     VAddr vaddr = addr;
 
     PageTable::iterator i = lookupTable.find(vaddr.vpn());
@@ -291,7 +312,7 @@ ITB::regStats()
 
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc) const
+ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if(FULL_SYSTEM && PcPAL(req->getPC()))
@@ -453,7 +474,7 @@ DTB::regStats()
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write) const
+DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 

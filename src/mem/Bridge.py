@@ -40,5 +40,7 @@ class Bridge(MemObject):
     delay = Param.Latency('0ns', "The latency of this bridge")
     nack_delay = Param.Latency('0ns', "The latency of this bridge")
     write_ack = Param.Bool(False, "Should this bridge ack writes")
-    fix_partial_write_a = Param.Bool(False, "Should this bridge fixup partial block writes")
-    fix_partial_write_b = Param.Bool(False, "Should this bridge fixup partial block writes")
+    filter_ranges_a = VectorParam.AddrRange([],
+            "What addresses shouldn't be passed through the side of the bridge")
+    filter_ranges_b = VectorParam.AddrRange([],
+            "What addresses shouldn't be passed through the side of the bridge")
