@@ -118,7 +118,7 @@ pretxncommit.style = python:style.check_whitespace
 """ % (ROOT)
         sys.exit(1)
 
-if ARGUMENTS['IGNORE_STYLE'] != 'True' and isdir(joinpath(ROOT, '.hg')):
+if ARGUMENTS.get('IGNORE_STYLE') != 'True' and isdir(joinpath(ROOT, '.hg')):
     try:
         from mercurial import ui
         check_style_hook(ui.ui())
