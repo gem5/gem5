@@ -46,8 +46,10 @@ class DictImporter(object):
         self.unload()
 
     def unload(self):
+        import sys
         for module in self.installed:
             del sys.modules[module]
+        self.installed = set()
 
     def find_module(self, fullname, path):
         if fullname == '__scons':
