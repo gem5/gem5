@@ -100,25 +100,6 @@ namespace SparcISA
         MISCREG_MMU_PART_ID,
         MISCREG_MMU_LSU_CTRL,
 
-        MISCREG_MMU_ITLB_C0_TSB_PS0,
-        MISCREG_MMU_ITLB_C0_TSB_PS1,
-        MISCREG_MMU_ITLB_C0_CONFIG,
-        MISCREG_MMU_ITLB_CX_TSB_PS0,
-        MISCREG_MMU_ITLB_CX_TSB_PS1,
-        MISCREG_MMU_ITLB_CX_CONFIG,
-        MISCREG_MMU_ITLB_SFSR,
-        MISCREG_MMU_ITLB_TAG_ACCESS, /* 50 */
-
-        MISCREG_MMU_DTLB_C0_TSB_PS0,
-        MISCREG_MMU_DTLB_C0_TSB_PS1,
-        MISCREG_MMU_DTLB_C0_CONFIG,
-        MISCREG_MMU_DTLB_CX_TSB_PS0,
-        MISCREG_MMU_DTLB_CX_TSB_PS1,
-        MISCREG_MMU_DTLB_CX_CONFIG,
-        MISCREG_MMU_DTLB_SFSR,
-        MISCREG_MMU_DTLB_SFAR,
-        MISCREG_MMU_DTLB_TAG_ACCESS,
-
         /** Scratchpad regiscers **/
         MISCREG_SCRATCHPAD_R0, /* 60 */
         MISCREG_SCRATCHPAD_R1,
@@ -240,25 +221,6 @@ namespace SparcISA
         uint16_t secContext;
         uint16_t partId;
         uint64_t lsuCtrlReg;
-
-        uint64_t iTlbC0TsbPs0;
-        uint64_t iTlbC0TsbPs1;
-        uint64_t iTlbC0Config;
-        uint64_t iTlbCXTsbPs0;
-        uint64_t iTlbCXTsbPs1;
-        uint64_t iTlbCXConfig;
-        uint64_t iTlbSfsr;
-        uint64_t iTlbTagAccess;
-
-        uint64_t dTlbC0TsbPs0;
-        uint64_t dTlbC0TsbPs1;
-        uint64_t dTlbC0Config;
-        uint64_t dTlbCXTsbPs0;
-        uint64_t dTlbCXTsbPs1;
-        uint64_t dTlbCXConfig;
-        uint64_t dTlbSfsr;
-        uint64_t dTlbSfar;
-        uint64_t dTlbTagAccess;
 
         uint64_t scratchPad[8];
 

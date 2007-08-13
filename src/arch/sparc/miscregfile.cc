@@ -54,11 +54,7 @@ string SparcISA::getMiscRegName(RegIndex index)
          "wstate",*/ "gl",
          "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
          "hstick_cmpr",
-         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg", "itbTsbC0Ps0",
-         "itbTsbC0Ps1", "iTlbC0Cnfg", "itbTsbCXPs0", "itbTsbCXPs1",
-         "iTlbCXCnfg","iTlbSfsr", "iTlbTagAcs", "dtbTsbC0Ps0",
-         "dtbTsbC0Ps1", "dTlbC0Cnfg", "dtbTsbCXPs0", "dtbTsbCXPs1",
-         "dTlbCXCnfg","dTlbSfsr", "dTlbSfar", "dTlbTagAcs",
+         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg",
          "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
          "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
          "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
@@ -112,25 +108,6 @@ void MiscRegFile::clear()
     secContext = 0;
     partId = 0;
     lsuCtrlReg = 0;
-
-    iTlbC0TsbPs0 = 0;
-    iTlbC0TsbPs1 = 0;
-    iTlbC0Config = 0;
-    iTlbCXTsbPs0 = 0;
-    iTlbCXTsbPs1 = 0;
-    iTlbCXConfig = 0;
-    iTlbSfsr = 0;
-    iTlbTagAccess = 0;
-
-    dTlbC0TsbPs0 = 0;
-    dTlbC0TsbPs1 = 0;
-    dTlbC0Config = 0;
-    dTlbCXTsbPs0 = 0;
-    dTlbCXTsbPs1 = 0;
-    dTlbCXConfig = 0;
-    dTlbSfsr = 0;
-    dTlbSfar = 0;
-    dTlbTagAccess = 0;
 
     memset(scratchPad, 0, sizeof(scratchPad));
 #if FULL_SYSTEM
@@ -261,42 +238,6 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
         return partId;
       case MISCREG_MMU_LSU_CTRL:
         return lsuCtrlReg;
-
-      case MISCREG_MMU_ITLB_C0_TSB_PS0:
-        return iTlbC0TsbPs0;
-      case MISCREG_MMU_ITLB_C0_TSB_PS1:
-        return iTlbC0TsbPs1;
-      case MISCREG_MMU_ITLB_C0_CONFIG:
-        return iTlbC0Config;
-      case MISCREG_MMU_ITLB_CX_TSB_PS0:
-        return iTlbCXTsbPs0;
-      case MISCREG_MMU_ITLB_CX_TSB_PS1:
-        return iTlbCXTsbPs1;
-      case MISCREG_MMU_ITLB_CX_CONFIG:
-        return iTlbCXConfig;
-      case MISCREG_MMU_ITLB_SFSR:
-        return iTlbSfsr;
-      case MISCREG_MMU_ITLB_TAG_ACCESS:
-        return iTlbTagAccess;
-
-      case MISCREG_MMU_DTLB_C0_TSB_PS0:
-        return dTlbC0TsbPs0;
-      case MISCREG_MMU_DTLB_C0_TSB_PS1:
-        return dTlbC0TsbPs1;
-      case MISCREG_MMU_DTLB_C0_CONFIG:
-        return dTlbC0Config;
-      case MISCREG_MMU_DTLB_CX_TSB_PS0:
-        return dTlbCXTsbPs0;
-      case MISCREG_MMU_DTLB_CX_TSB_PS1:
-        return dTlbCXTsbPs1;
-      case MISCREG_MMU_DTLB_CX_CONFIG:
-        return dTlbCXConfig;
-      case MISCREG_MMU_DTLB_SFSR:
-        return dTlbSfsr;
-      case MISCREG_MMU_DTLB_SFAR:
-        return dTlbSfar;
-      case MISCREG_MMU_DTLB_TAG_ACCESS:
-        return dTlbTagAccess;
 
       case MISCREG_SCRATCHPAD_R0:
         return scratchPad[0];
@@ -519,59 +460,6 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
         lsuCtrlReg = val;
         break;
 
-      case MISCREG_MMU_ITLB_C0_TSB_PS0:
-        iTlbC0TsbPs0 = val;
-        break;
-      case MISCREG_MMU_ITLB_C0_TSB_PS1:
-        iTlbC0TsbPs1 = val;
-        break;
-      case MISCREG_MMU_ITLB_C0_CONFIG:
-        iTlbC0Config = val;
-        break;
-      case MISCREG_MMU_ITLB_CX_TSB_PS0:
-        iTlbCXTsbPs0 = val;
-        break;
-      case MISCREG_MMU_ITLB_CX_TSB_PS1:
-        iTlbCXTsbPs1 = val;
-        break;
-      case MISCREG_MMU_ITLB_CX_CONFIG:
-        iTlbCXConfig = val;
-        break;
-      case MISCREG_MMU_ITLB_SFSR:
-        iTlbSfsr = val;
-        break;
-      case MISCREG_MMU_ITLB_TAG_ACCESS:
-        iTlbTagAccess = val;
-        break;
-
-      case MISCREG_MMU_DTLB_C0_TSB_PS0:
-        dTlbC0TsbPs0 = val;
-        break;
-      case MISCREG_MMU_DTLB_C0_TSB_PS1:
-        dTlbC0TsbPs1 = val;
-        break;
-      case MISCREG_MMU_DTLB_C0_CONFIG:
-        dTlbC0Config = val;
-        break;
-      case MISCREG_MMU_DTLB_CX_TSB_PS0:
-        dTlbCXTsbPs0 = val;
-        break;
-      case MISCREG_MMU_DTLB_CX_TSB_PS1:
-        dTlbCXTsbPs1 = val;
-        break;
-      case MISCREG_MMU_DTLB_CX_CONFIG:
-        dTlbCXConfig = val;
-        break;
-      case MISCREG_MMU_DTLB_SFSR:
-        dTlbSfsr = val;
-        break;
-      case MISCREG_MMU_DTLB_SFAR:
-        dTlbSfar = val;
-        break;
-      case MISCREG_MMU_DTLB_TAG_ACCESS:
-        dTlbTagAccess = val;
-        break;
-
       case MISCREG_SCRATCHPAD_R0:
         scratchPad[0] = val;
         break;
@@ -733,23 +621,6 @@ void MiscRegFile::serialize(std::ostream & os)
     SERIALIZE_SCALAR(secContext);
     SERIALIZE_SCALAR(partId);
     SERIALIZE_SCALAR(lsuCtrlReg);
-    SERIALIZE_SCALAR(iTlbC0TsbPs0);
-    SERIALIZE_SCALAR(iTlbC0TsbPs1);
-    SERIALIZE_SCALAR(iTlbC0Config);
-    SERIALIZE_SCALAR(iTlbCXTsbPs0);
-    SERIALIZE_SCALAR(iTlbCXTsbPs1);
-    SERIALIZE_SCALAR(iTlbCXConfig);
-    SERIALIZE_SCALAR(iTlbSfsr);
-    SERIALIZE_SCALAR(iTlbTagAccess);
-    SERIALIZE_SCALAR(dTlbC0TsbPs0);
-    SERIALIZE_SCALAR(dTlbC0TsbPs1);
-    SERIALIZE_SCALAR(dTlbC0Config);
-    SERIALIZE_SCALAR(dTlbCXTsbPs0);
-    SERIALIZE_SCALAR(dTlbCXTsbPs1);
-    SERIALIZE_SCALAR(dTlbCXConfig);
-    SERIALIZE_SCALAR(dTlbSfsr);
-    SERIALIZE_SCALAR(dTlbSfar);
-    SERIALIZE_SCALAR(dTlbTagAccess);
     SERIALIZE_ARRAY(scratchPad,8);
     SERIALIZE_SCALAR(cpu_mondo_head);
     SERIALIZE_SCALAR(cpu_mondo_tail);
@@ -827,23 +698,6 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
     UNSERIALIZE_SCALAR(secContext);
     UNSERIALIZE_SCALAR(partId);
     UNSERIALIZE_SCALAR(lsuCtrlReg);
-    UNSERIALIZE_SCALAR(iTlbC0TsbPs0);
-    UNSERIALIZE_SCALAR(iTlbC0TsbPs1);
-    UNSERIALIZE_SCALAR(iTlbC0Config);
-    UNSERIALIZE_SCALAR(iTlbCXTsbPs0);
-    UNSERIALIZE_SCALAR(iTlbCXTsbPs1);
-    UNSERIALIZE_SCALAR(iTlbCXConfig);
-    UNSERIALIZE_SCALAR(iTlbSfsr);
-    UNSERIALIZE_SCALAR(iTlbTagAccess);
-    UNSERIALIZE_SCALAR(dTlbC0TsbPs0);
-    UNSERIALIZE_SCALAR(dTlbC0TsbPs1);
-    UNSERIALIZE_SCALAR(dTlbC0Config);
-    UNSERIALIZE_SCALAR(dTlbCXTsbPs0);
-    UNSERIALIZE_SCALAR(dTlbCXTsbPs1);
-    UNSERIALIZE_SCALAR(dTlbCXConfig);
-    UNSERIALIZE_SCALAR(dTlbSfsr);
-    UNSERIALIZE_SCALAR(dTlbSfar);
-    UNSERIALIZE_SCALAR(dTlbTagAccess);
     UNSERIALIZE_ARRAY(scratchPad,8);
     UNSERIALIZE_SCALAR(cpu_mondo_head);
     UNSERIALIZE_SCALAR(cpu_mondo_tail);

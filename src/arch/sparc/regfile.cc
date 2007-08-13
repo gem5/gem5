@@ -326,42 +326,6 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     dest->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL,
             src->readMiscRegNoEffect(MISCREG_MMU_LSU_CTRL));
 
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS0,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS0));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS1,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_TSB_PS1));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_C0_CONFIG,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_C0_CONFIG));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS0,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS0));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS1,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_TSB_PS1));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_CX_CONFIG,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_CX_CONFIG));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_SFSR,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_SFSR));
-    dest->setMiscRegNoEffect(MISCREG_MMU_ITLB_TAG_ACCESS,
-            src->readMiscRegNoEffect(MISCREG_MMU_ITLB_TAG_ACCESS));
-
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS0,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS0));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS1,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_TSB_PS1));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_C0_CONFIG,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_C0_CONFIG));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS0,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS0));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS1,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_TSB_PS1));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_CX_CONFIG,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_CX_CONFIG));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_SFSR,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_SFSR));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_SFAR,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_SFAR));
-    dest->setMiscRegNoEffect(MISCREG_MMU_DTLB_TAG_ACCESS,
-            src->readMiscRegNoEffect(MISCREG_MMU_DTLB_TAG_ACCESS));
-
     // Scratchpad Registers
     dest->setMiscRegNoEffect(MISCREG_SCRATCHPAD_R0,
             src->readMiscRegNoEffect(MISCREG_SCRATCHPAD_R0));

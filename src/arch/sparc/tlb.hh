@@ -46,6 +46,17 @@ namespace SparcISA
 
 class TLB : public SimObject
 {
+    //TLB state
+  protected:
+    uint64_t c0_tsb_ps0;
+    uint64_t c0_tsb_ps1;
+    uint64_t c0_config;
+    uint64_t cx_tsb_ps0;
+    uint64_t cx_tsb_ps1;
+    uint64_t cx_config;
+    uint64_t sfsr;
+    uint64_t tag_access;
+
   protected:
     TlbMap lookupTable;;
     typedef TlbMap::iterator MapIter;
@@ -120,13 +131,13 @@ class TLB : public SimObject
     /** Checks if the virtual address provided is a valid one. */
     bool validVirtualAddress(Addr va, bool am);
 
-    void writeSfsr(ThreadContext *tc, int reg, bool write, ContextType ct,
+    void writeSfsr(bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
 
     void clearUsedBits();
 
 
-    void writeTagAccess(ThreadContext *tc, int reg, Addr va, int context);
+    void writeTagAccess(Addr va, int context);
 
   public:
     TLB(const std::string &name, int size);
@@ -152,18 +163,21 @@ class ITB : public TLB
 
     Fault translate(RequestPtr &req, ThreadContext *tc);
   private:
-    void writeSfsr(ThreadContext *tc, bool write, ContextType ct,
+    void writeSfsr(bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
-    void writeTagAccess(ThreadContext *tc, Addr va, int context);
     TlbEntry *cacheEntry;
     friend class DTB;
 };
 
 class DTB : public TLB
 {
+    //DTLB specific state
+  protected:
+    uint64_t sfar;
   public:
     DTB(const std::string &name, int size) : TLB(name, size)
     {
+        sfar = 0;
         cacheEntry[0] = NULL;
         cacheEntry[1] = NULL;
     }
@@ -173,10 +187,13 @@ class DTB : public TLB
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);
 
+    // Checkpointing
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
   private:
-    void writeSfr(ThreadContext *tc, Addr a, bool write, ContextType ct,
+    void writeSfsr(Addr a, bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
-    void writeTagAccess(ThreadContext *tc, Addr va, int context);
 
     uint64_t MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
         uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config);
