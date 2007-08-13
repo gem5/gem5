@@ -1238,7 +1238,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                                              fetch_PC, fetch_NPC, fetch_MicroPC,
                                              next_PC, next_NPC, next_MicroPC,
                                              inst_seq, cpu);
-        instruction->setPredTarg(next_PC, next_NPC, 1);
+        instruction->setPredTarg(next_NPC, next_NPC + instSize, 0);
         instruction->setTid(tid);
 
         instruction->setASID(tid);
