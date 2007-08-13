@@ -94,9 +94,9 @@ class FullO3CPU : public BaseO3CPU
   public:
     // Typedefs from the Impl here.
     typedef typename Impl::CPUPol CPUPolicy;
-    typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
+    typedef typename Impl::Params Params;
 
     typedef O3ThreadState<Impl> Thread;
 
@@ -264,6 +264,46 @@ class FullO3CPU : public BaseO3CPU
 
     /** Registers statistics. */
     void fullCPURegStats();
+
+#if FULL_SYSTEM
+    /** Translates instruction requestion. */
+    Fault translateInstReq(RequestPtr &req, Thread *thread)
+    {
+        return this->itb->translate(req, thread->getTC());
+    }
+
+    /** Translates data read request. */
+    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
+    {
+        return this->dtb->translate(req, thread->getTC(), false);
+    }
+
+    /** Translates data write request. */
+    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
+    {
+        return this->dtb->translate(req, thread->getTC(), true);
+    }
+
+#else
+    /** Translates instruction requestion in syscall emulation mode. */
+    Fault translateInstReq(RequestPtr &req, Thread *thread)
+    {
+        return thread->getProcessPtr()->pTable->translate(req);
+    }
+
+    /** Translates data read request in syscall emulation mode. */
+    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
+    {
+        return thread->getProcessPtr()->pTable->translate(req);
+    }
+
+    /** Translates data write request in syscall emulation mode. */
+    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
+    {
+        return thread->getProcessPtr()->pTable->translate(req);
+    }
+
+#endif
 
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);

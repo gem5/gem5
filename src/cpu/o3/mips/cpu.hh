@@ -68,24 +68,6 @@ class MipsO3CPU : public FullO3CPU<Impl>
     /** Registers statistics. */
     void regStats();
 
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
     /** Reads a miscellaneous register. */
     TheISA::MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
 

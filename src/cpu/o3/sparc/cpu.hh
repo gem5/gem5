@@ -66,45 +66,6 @@ class SparcO3CPU : public FullO3CPU<Impl>
     /** Registers statistics. */
     void regStats();
 
-#if FULL_SYSTEM
-    /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return this->itb->translate(req, thread->getTC());
-    }
-
-    /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), false);
-    }
-
-    /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), true);
-    }
-
-#else
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-#endif
     /** Reads a miscellaneous register. */
     TheISA::MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
 
