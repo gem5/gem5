@@ -44,7 +44,7 @@ const int numSpillInsts = 32;
 
 const MachInst fillHandler64[numFillInsts] =
 {
-    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0x87802016), //wr %g0, ASI_AIUP, %asi
     htog(0xe0dba7ff), //ldxa [%sp + BIAS + (0*8)] %asi, %l0
     htog(0xe2dba807), //ldxa [%sp + BIAS + (1*8)] %asi, %l1
     htog(0xe4dba80f), //ldxa [%sp + BIAS + (2*8)] %asi, %l2
@@ -80,7 +80,7 @@ const MachInst fillHandler64[numFillInsts] =
 
 const MachInst fillHandler32[numFillInsts] =
 {
-    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0x87802016), //wr %g0, ASI_AIUP, %asi
     htog(0xe083a000), //lduwa [%sp + (0*4)] %asi, %l0
     htog(0xe283a004), //lduwa [%sp + (1*4)] %asi, %l1
     htog(0xe483a008), //lduwa [%sp + (2*4)] %asi, %l2
@@ -116,7 +116,7 @@ const MachInst fillHandler32[numFillInsts] =
 
 const MachInst spillHandler64[numSpillInsts] =
 {
-    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0x87802016), //wr %g0, ASI_AIUP, %asi
     htog(0xe0f3a7ff), //stxa %l0, [%sp + BIAS + (0*8)] %asi
     htog(0xe2f3a807), //stxa %l1, [%sp + BIAS + (1*8)] %asi
     htog(0xe4f3a80f), //stxa %l2, [%sp + BIAS + (2*8)] %asi
@@ -152,7 +152,7 @@ const MachInst spillHandler64[numSpillInsts] =
 
 const MachInst spillHandler32[numSpillInsts] =
 {
-    htog(0x87802018), //wr %g0, ASI_AIUP, %asi
+    htog(0x87802016), //wr %g0, ASI_AIUP, %asi
     htog(0xe0a3a000), //stwa %l0, [%sp + (0*4)] %asi
     htog(0xe2a3a004), //stwa %l1, [%sp + (1*4)] %asi
     htog(0xe4a3a008), //stwa %l2, [%sp + (2*4)] %asi

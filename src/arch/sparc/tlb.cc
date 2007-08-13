@@ -600,9 +600,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 
 
 
-  if (cacheEntry[0]) {
+        if (cacheEntry[0]) {
             TlbEntry *ce = cacheEntry[0];
-           Addr ce_va = ce->range.va;
+            Addr ce_va = ce->range.va;
             if (cacheAsi[0] == asi &&
                 ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
                 (!write || ce->pte.writable())) {
@@ -688,8 +688,12 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     if (!implicit && asi != ASI_P && asi != ASI_S) {
         if (AsiIsLittle(asi))
             panic("Little Endian ASIs not supported\n");
-        if (AsiIsNoFault(asi))
-            panic("No Fault ASIs not supported\n");
+
+        //XXX It's unclear from looking at the documentation how a no fault
+        //load differs from a regular one, other than what happens concerning
+        //nfo and e bits in the TTE
+//        if (AsiIsNoFault(asi))
+//            panic("No Fault ASIs not supported\n");
 
         if (AsiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
@@ -709,7 +713,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             goto handleSparcErrorRegAccess;
 
         if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi) &&
-                !AsiIsTwin(asi) && !AsiIsBlock(asi))
+                !AsiIsTwin(asi) && !AsiIsBlock(asi) && !AsiIsNoFault(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
