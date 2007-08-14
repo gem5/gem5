@@ -70,7 +70,8 @@ class Bridge : public MemObject
         /** Min delay to respond to a nack. */
         Tick nackDelay;
 
-        bool fixPartialWrite;
+        /** Pass ranges from one side of the bridge to the other? */
+        std::vector<Range<Addr> > filterRanges;
 
         class PacketBuffer : public Packet::SenderState {
 
@@ -156,7 +157,8 @@ class Bridge : public MemObject
         /** Constructor for the BusPort.*/
         BridgePort(const std::string &_name, Bridge *_bridge,
                 BridgePort *_otherPort, int _delay, int _nack_delay,
-                int _req_limit, int _resp_limit, bool fix_partial_write);
+                int _req_limit, int _resp_limit,
+                std::vector<Range<Addr> > filter_ranges);
 
       protected:
 

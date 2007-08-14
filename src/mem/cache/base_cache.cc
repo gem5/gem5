@@ -40,9 +40,10 @@
 
 using namespace std;
 
-BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache)
+BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
+        std::vector<Range<Addr> > filter_ranges)
     : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
-      blocked(false), mustSendRetry(false)
+      blocked(false), mustSendRetry(false), filterRanges(filter_ranges)
 {
 }
 

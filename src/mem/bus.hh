@@ -38,6 +38,7 @@
 #define __MEM_BUS_HH__
 
 #include <string>
+#include <set>
 #include <list>
 #include <inttypes.h>
 
@@ -196,11 +197,13 @@ class Bus : public MemObject
         if (portCache[0].valid && addr >= portCache[0].start &&
             addr < portCache[0].end) {
             return portCache[0].id;
-        } else if (portCache[1].valid && addr >= portCache[1].start &&
+        }
+        if (portCache[1].valid && addr >= portCache[1].start &&
                    addr < portCache[1].end) {
             return portCache[1].id;
-        } else if (portCache[2].valid && addr >= portCache[2].start &&
-                   addr < portCache[2].end) {
+        }
+        if (portCache[2].valid && addr >= portCache[2].start &&
+            addr < portCache[2].end) {
             return portCache[2].id;
         }
 
@@ -251,6 +254,7 @@ class Bus : public MemObject
     BusFreeEvent busIdle;
 
     bool inRetry;
+    std::set<int> inRecvStatusChange;
 
     /** max number of bus ids we've handed out so far */
     short maxId;
@@ -312,9 +316,11 @@ class Bus : public MemObject
     inline BusPort* checkBusCache(short id) {
         if (busCache[0].valid && id == busCache[0].id) {
             return busCache[0].port;
-        } else if (busCache[1].valid && id == busCache[1].id) {
+        }
+        if (busCache[1].valid && id == busCache[1].id) {
             return busCache[1].port;
-        } else if (busCache[2].valid && id == busCache[2].id) {
+        }
+        if (busCache[2].valid && id == busCache[2].id) {
             return busCache[2].port;
         }
 
@@ -338,7 +344,6 @@ class Bus : public MemObject
 
     // Invalidates the cache. Needs to be called in constructor.
     inline void clearBusCache() {
-        // memset(busCache, 0, 3 * sizeof(BusCache));
         busCache[2].valid = false;
         busCache[1].valid = false;
         busCache[0].valid = false;

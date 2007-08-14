@@ -72,7 +72,8 @@ class Cache : public BaseCache
     {
       public:
         CpuSidePort(const std::string &_name,
-                    Cache<TagStore> *_cache);
+                    Cache<TagStore> *_cache,
+                    std::vector<Range<Addr> > filterRanges);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the
@@ -95,7 +96,8 @@ class Cache : public BaseCache
     {
       public:
         MemSidePort(const std::string &_name,
-                    Cache<TagStore> *_cache);
+                    Cache<TagStore> *_cache,
+                    std::vector<Range<Addr> > filterRanges);
 
         // BaseCache::CachePort just has a BaseCache *; this function
         // lets us get back the type info we lost when we stored the

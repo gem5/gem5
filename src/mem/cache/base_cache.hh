@@ -98,7 +98,8 @@ class BaseCache : public MemObject
         BaseCache *cache;
 
       protected:
-        CachePort(const std::string &_name, BaseCache *_cache);
+        CachePort(const std::string &_name, BaseCache *_cache,
+                std::vector<Range<Addr> > filter_ranges);
 
         virtual void recvStatusChange(Status status);
 
@@ -123,6 +124,9 @@ class BaseCache : public MemObject
         bool blocked;
 
         bool mustSendRetry;
+
+        /** filter ranges */
+        std::vector<Range<Addr> > filterRanges;
 
         void requestBus(RequestCause cause, Tick time)
         {
@@ -367,15 +371,21 @@ class BaseCache : public MemObject
          */
         Counter maxMisses;
 
+        std::vector<Range<Addr> > cpuSideFilterRanges;
+        std::vector<Range<Addr> > memSideFilterRanges;
         /**
          * Construct an instance of this parameter class.
          */
         Params(int _hitLatency, int _blkSize,
                int _numMSHRs, int _numTargets, int _numWriteBuffers,
-               Counter _maxMisses)
+               Counter _maxMisses,
+               std::vector<Range<Addr> > cpu_side_filter_ranges,
+               std::vector<Range<Addr> > mem_side_filter_ranges)
             : hitLatency(_hitLatency), blkSize(_blkSize),
               numMSHRs(_numMSHRs), numTargets(_numTargets),
-              numWriteBuffers(_numWriteBuffers), maxMisses(_maxMisses)
+              numWriteBuffers(_numWriteBuffers), maxMisses(_maxMisses),
+              cpuSideFilterRanges(cpu_side_filter_ranges),
+              memSideFilterRanges(mem_side_filter_ranges)
         {
         }
     };

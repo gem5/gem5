@@ -121,11 +121,19 @@ for i in xrange(np):
     if options.caches:
         test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                 L1Cache(size = '64kB'))
-
+        test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
+        test_sys.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
+        test_sys.iocache = IOCache(mem_side_filter_ranges=[AddrRange(0, Addr.max)],
+                           cpu_side_filter_ranges=[AddrRange(0x8000000000, Addr.max)])
+        test_sys.iocache.cpu_side = test_sys.iobus.port
+        test_sys.iocache.mem_side = test_sys.membus.port
     if options.l2cache:
         test_sys.cpu[i].connectMemPorts(test_sys.tol2bus)
     else:
         test_sys.cpu[i].connectMemPorts(test_sys.membus)
+
+    if options.fastmem:
+        test_sys.cpu[i].physmem_port = test_sys.physmem.port
 
 if len(bm) == 2:
     if m5.build_env['TARGET_ISA'] == 'alpha':
@@ -134,6 +142,8 @@ if len(bm) == 2:
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
+    if options.fastmem:
+        drive_sys.cpu.physmem_port = drive_sys.physmem.port
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
 

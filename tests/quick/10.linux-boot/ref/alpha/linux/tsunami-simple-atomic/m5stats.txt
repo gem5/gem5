@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1294756                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 255900                       # Number of bytes of host memory used
-host_seconds                                    46.35                       # Real time elapsed on the host
-host_tick_rate                            39449403667                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2322212                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 325356                       # Number of bytes of host memory used
+host_seconds                                    25.84                       # Real time elapsed on the host
+host_tick_rate                            70754225205                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    60007317                       # Number of instructions simulated
 sim_seconds                                  1.828355                       # Number of seconds simulated
@@ -249,6 +249,64 @@ system.disk2.dma_read_txs                           0                       # Nu
 system.disk2.dma_write_bytes                     8192                       # Number of bytes transfered via DMA writes.
 system.disk2.dma_write_full_pages                   1                       # Number of full page size DMA writes.
 system.disk2.dma_write_txs                          1                       # Number of DMA write transactions.
+system.iocache.ReadReq_accesses                   174                       # number of ReadReq accesses(hits+misses)
+system.iocache.ReadReq_miss_rate                    1                       # miss rate for ReadReq accesses
+system.iocache.ReadReq_misses                     174                       # number of ReadReq misses
+system.iocache.WriteReq_accesses                41552                       # number of WriteReq accesses(hits+misses)
+system.iocache.WriteReq_miss_rate                   1                       # miss rate for WriteReq accesses
+system.iocache.WriteReq_misses                  41552                       # number of WriteReq misses
+system.iocache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.iocache.avg_refs                             0                       # Average number of references to valid blocks.
+system.iocache.blocked_no_mshrs                     0                       # number of cycles access was blocked
+system.iocache.blocked_no_targets                   0                       # number of cycles access was blocked
+system.iocache.blocked_cycles_no_mshrs              0                       # number of cycles access was blocked
+system.iocache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.iocache.cache_copies                         0                       # number of cache copies performed
+system.iocache.demand_accesses                  41726                       # number of demand (read+write) accesses
+system.iocache.demand_avg_miss_latency              0                       # average overall miss latency
+system.iocache.demand_avg_mshr_miss_latency <err: div-0>                       # average overall mshr miss latency
+system.iocache.demand_hits                          0                       # number of demand (read+write) hits
+system.iocache.demand_miss_latency                  0                       # number of demand (read+write) miss cycles
+system.iocache.demand_miss_rate                     1                       # miss rate for demand accesses
+system.iocache.demand_misses                    41726                       # number of demand (read+write) misses
+system.iocache.demand_mshr_hits                     0                       # number of demand (read+write) MSHR hits
+system.iocache.demand_mshr_miss_latency             0                       # number of demand (read+write) MSHR miss cycles
+system.iocache.demand_mshr_miss_rate                0                       # mshr miss rate for demand accesses
+system.iocache.demand_mshr_misses                   0                       # number of demand (read+write) MSHR misses
+system.iocache.fast_writes                          0                       # number of fast writes performed
+system.iocache.mshr_cap_events                      0                       # number of times MSHR cap was activated
+system.iocache.no_allocate_misses                   0                       # Number of misses that were no-allocate
+system.iocache.overall_accesses                 41726                       # number of overall (read+write) accesses
+system.iocache.overall_avg_miss_latency             0                       # average overall miss latency
+system.iocache.overall_avg_mshr_miss_latency <err: div-0>                       # average overall mshr miss latency
+system.iocache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
+system.iocache.overall_hits                         0                       # number of overall hits
+system.iocache.overall_miss_latency                 0                       # number of overall miss cycles
+system.iocache.overall_miss_rate                    1                       # miss rate for overall accesses
+system.iocache.overall_misses                   41726                       # number of overall misses
+system.iocache.overall_mshr_hits                    0                       # number of overall MSHR hits
+system.iocache.overall_mshr_miss_latency            0                       # number of overall MSHR miss cycles
+system.iocache.overall_mshr_miss_rate               0                       # mshr miss rate for overall accesses
+system.iocache.overall_mshr_misses                  0                       # number of overall MSHR misses
+system.iocache.overall_mshr_uncacheable_latency            0                       # number of overall MSHR uncacheable cycles
+system.iocache.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
+system.iocache.prefetcher.num_hwpf_already_in_cache            0                       # number of hwpf that were already in the cache
+system.iocache.prefetcher.num_hwpf_already_in_mshr            0                       # number of hwpf that were already in mshr
+system.iocache.prefetcher.num_hwpf_already_in_prefetcher            0                       # number of hwpf that were already in the prefetch queue
+system.iocache.prefetcher.num_hwpf_evicted            0                       # number of hwpf removed due to no buffer left
+system.iocache.prefetcher.num_hwpf_identified            0                       # number of hwpf identified
+system.iocache.prefetcher.num_hwpf_issued            0                       # number of hwpf issued
+system.iocache.prefetcher.num_hwpf_removed_MSHR_hit            0                       # number of hwpf removed because MSHR allocated
+system.iocache.prefetcher.num_hwpf_span_page            0                       # number of hwpf spanning a virtual page
+system.iocache.prefetcher.num_hwpf_squashed_from_miss            0                       # number of hwpf that got squashed due to a miss aborting calculation time
+system.iocache.replacements                     41686                       # number of replacements
+system.iocache.sampled_refs                     41702                       # Sample count of references to valid blocks.
+system.iocache.soft_prefetch_mshr_full              0                       # number of mshr full events for SW prefetching instrutions
+system.iocache.tagsinuse                     1.226223                       # Cycle average of tags in use
+system.iocache.total_refs                           0                       # Total number of references to valid blocks.
+system.iocache.warmup_cycle              1684804097017                       # Cycle when the warmup percentage was hit.
+system.iocache.writebacks                       41512                       # number of writebacks
 system.l2c.ReadExReq_accesses                  304342                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_miss_rate                      1                       # miss rate for ReadExReq accesses
 system.l2c.ReadExReq_misses                    304342                       # number of ReadExReq misses

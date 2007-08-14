@@ -81,4 +81,8 @@ class BaseCache(MemObject):
          "Only prefetch on data not on instruction accesses")
     cpu_side = Port("Port on side closer to CPU")
     mem_side = Port("Port on side closer to MEM")
+    cpu_side_filter_ranges = VectorParam.AddrRange([],
+            "What addresses shouldn't be passed through the side of the bridge")
+    mem_side_filter_ranges = VectorParam.AddrRange([],
+            "What addresses shouldn't be passed through the side of the bridge")
     addr_range = VectorParam.AddrRange(AllMemory, "The address range in bytes")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,28 +28,28 @@
  * Authors: Ali Saidi
  */
 
-#ifndef __BASE_COMPILER_HH__
-#define __BASE_COMPILER_HH__
+#ifndef __BASE_RANGE_OPS_HH__
+#define __BASE_RANGE_OPS_HH__
+#include <list>
+#include <vector>
 
-//http://msdn2.microsoft.com/en-us/library/ms937669.aspx
-//http://msdn2.microsoft.com/en-us/library/aa448724.aspx
-//http://docs.sun.com/source/819-3688/sun.specific.html#marker-998278
-//http://gcc.gnu.org/onlinedocs/gcc-3.3.1/gcc/Function-Attributes.html#Function%20Attributes
+#include "base/range.hh"
 
-#if defined(__GNUC__)
-#define M5_ATTR_NORETURN  __attribute__((noreturn))
-#define M5_PRAGMA_NORETURN(x)
-#define M5_DUMMY_RETURN
-#define M5_VAR_USED __attribute__((unused))
-#elif defined(__SUNPRO_CC)
-// this doesn't do anything with sun cc, but why not
-#define M5_ATTR_NORETURN  __sun_attr__((__noreturn__))
-#define M5_DUMMY_RETURN return (0);
-#define DO_PRAGMA(x) _Pragma(#x)
-#define M5_VAR_USED
-#define M5_PRAGMA_NORETURN(x) DO_PRAGMA(does_not_return(x))
-#else
-#error "Need to define compiler options in base/compiler.hh"
-#endif
+template <class T>
+inline void
+FilterRangeList(std::vector<Range<T> > filter_list, std::list<Range<T> >
+        &range_list) {
+    typename std::list<Range<T> >::iterator i;
+    for (int x = 0; x < filter_list.size(); x++) {
+        for (i = range_list.begin(); i != range_list.end(); ) {
+            // Is the range within one of our filter ranges?
+            if (filter_list[x] == i->start || filter_list[x] == i->end)
+                range_list.erase(i++);
+            else
+                i++;
+        }
+    }
+}
 
-#endif // __BASE_COMPILER_HH__
+#endif //__BASE_RANGE_OPS_HH__
+
