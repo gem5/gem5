@@ -31,6 +31,7 @@ import sys
 import os
 import optparse
 import datetime
+from subprocess import call
 
 progname = os.path.basename(sys.argv[0])
 
@@ -60,14 +61,20 @@ variants = options.variants.split(',')
 
 # Call os.system() and raise exception if return status is non-zero
 def system(cmd):
-    if options.verbose:
-        print cmd
-    status = os.system(cmd)
-    if status != 0:
-        upper = (status & 0xff00) >> 8
-        lower = (status & 0xff)
-        raise OSError, "shell command '%s' failed, status %d:%d" \
-              % (cmd, upper, lower)
+    try:
+        retcode = call(cmd, shell=True)
+        if retcode < 0:
+            print >>sys.stderr, "Child was terminated by signal", -retcode
+            print >>sys.stderr, "When attemping to execute: %s" % cmd
+            sys.exit(1)
+        elif retcode > 0:
+            print >>sys.stderr, "Child returned", retcode
+            print >>sys.stderr, "When attemping to execute: %s" % cmd
+            sys.exit(1)
+    except OSError, e:
+        print >>sys.stderr, "Execution failed:", e
+        print >>sys.stderr, "When attemping to execute: %s" % cmd
+        sys.exit(1)
 
 # Quote string s so it can be passed as a shell arg
 def shellquote(s):
@@ -75,34 +82,29 @@ def shellquote(s):
         s = "'%s'" % s
     return s
 
-try:
-    if not tests:
-        print "No tests specified, just building binaries."
-        targets = ['build/%s/m5.%s' % (build, variant)
-		   for build in builds
-		   for variant in variants]
-    elif 'all' in tests:
-	targets = ['build/%s/tests/%s' % (build, variant)
-		   for build in builds
-		   for variant in variants]
-    else:
-        # Ugly! Since we don't have any quick SPARC_FS tests remove the SPARC_FS target
-        # If we ever get a quick SPARC_FS test, this code should be removed
-        if 'quick' in tests and 'SPARC_FS' in builds:
-            builds.remove('SPARC_FS')
-	targets = ['build/%s/tests/%s/%s' % (build, variant, test)
-		   for build in builds
-		   for variant in variants
-		   for test in tests]
+if not tests:
+    print "No tests specified, just building binaries."
+    targets = ['build/%s/m5.%s' % (build, variant)
+               for build in builds
+               for variant in variants]
+elif 'all' in tests:
+    targets = ['build/%s/tests/%s' % (build, variant)
+               for build in builds
+               for variant in variants]
+else:
+    # Ugly! Since we don't have any quick SPARC_FS tests remove the SPARC_FS target
+    # If we ever get a quick SPARC_FS test, this code should be removed
+    if 'quick' in tests and 'SPARC_FS' in builds:
+        builds.remove('SPARC_FS')
+    targets = ['build/%s/tests/%s/%s' % (build, variant, test)
+               for build in builds
+               for variant in variants
+               for test in tests]
 
-    scons_opts = options.scons_opts
-    if options.jobs != 1:
-        scons_opts += ' -j %d' % options.jobs
+scons_opts = options.scons_opts
+if options.jobs != 1:
+    scons_opts += ' -j %d' % options.jobs
 
-    system('scons IGNORE_STYLE=True %s %s' % (scons_opts, ' '.join(targets)))
+system('scons IGNORE_STYLE=True %s %s' % (scons_opts, ' '.join(targets)))
 
-    sys.exit(0)
-
-except OSError, exc:
-    print "%s: " % progname, exc
-    sys.exit(1)
+sys.exit(0)
