@@ -82,7 +82,6 @@ def shellquote(s):
         s = "'%s'" % s
     return s
 
-<<<<<<< /z/saidi/work/m5/util/regress
 if not tests:
     print "No tests specified, just building binaries."
     targets = ['build/%s/m5.%s' % (build, variant)
