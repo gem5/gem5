@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,10 @@ import os, sys
 
 # find path to directory containing this file
 tests_root = os.path.dirname(__file__)
-test_progs = os.path.join(tests_root, 'test-progs')
+if os.path.isdir('/dist/m5/regression/test-progs'):
+    test_progs = '/dist/m5/regression/test-progs'
+else:
+    test_progs = os.path.join(tests_root, 'test-progs')
 
 # generate path to binary file
 def binpath(app, file=None):
