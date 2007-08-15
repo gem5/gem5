@@ -298,6 +298,9 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
 
     wctx = repo.workingctx()
     for fname in modified:
+        if not whitespace_file(fname):
+            continue
+
         fctx = wctx.filectx(fname)
         pctx = fctx.parents()
         assert len(pctx) in (1, 2)
