@@ -34,6 +34,9 @@
 
 #include "base/inifile.hh"
 #include "base/output.hh"
+#include "dev/etherdevice.hh"
+#include "dev/etherobject.hh"
+#include "dev/etherint.hh"
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
@@ -58,6 +61,23 @@ lookupPort(SimObject *so, const std::string &name, int i)
     return p;
 }
 
+EtherInt *
+lookupEthPort(SimObject *so, const std::string &name, int i)
+{
+    EtherObject *eo = dynamic_cast<EtherObject *>(so);
+    EtherDevice *ed = dynamic_cast<EtherDevice *>(so);
+    if (eo == NULL && ed == NULL) {
+        warn("error casting SimObject %s", so->name());
+        return NULL;
+    }
+
+    EtherInt *p = NULL;
+    if (eo)
+        p = eo->getEthPort(name, i);
+    else
+        p = ed->getEthPort(name, i);
+    return p;
+}
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
@@ -67,6 +87,31 @@ int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
              SimObject *o2, const std::string &name2, int i2)
 {
+    EtherObject *eo1, *eo2;
+    EtherDevice *ed1, *ed2;
+    MemObject *mo1, *mo2;
+
+    eo1 = dynamic_cast<EtherObject*>(o1);
+    ed1 = dynamic_cast<EtherDevice*>(o1);
+    mo1 = dynamic_cast<MemObject*>(o1);
+
+    eo2 = dynamic_cast<EtherObject*>(o2);
+    ed2 = dynamic_cast<EtherDevice*>(o2);
+    mo2 = dynamic_cast<MemObject*>(o2);
+
+    if ((eo1 || ed1) && (eo2 || ed2)) {
+        EtherInt *p1 = lookupEthPort(o1, name1, i1);
+        EtherInt *p2 = lookupEthPort(o2, name2, i2);
+
+        if (p1 != NULL &&  p2 != NULL) {
+
+            p1->setPeer(p2);
+            p2->setPeer(p1);
+
+            return 1;
+        }
+    }
+
     Port *p1 = lookupPort(o1, name1, i1);
     Port *p2 = lookupPort(o2, name2, i2);
 

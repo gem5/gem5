@@ -81,7 +81,7 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
 }
 
 
-PciDev::PciDev(Params *p)
+PciDev::PciDev(const Params *p)
     : DmaDevice(p), plat(p->platform), configData(p->configdata),
       pioDelay(p->pio_latency), configDelay(p->config_latency),
       configPort(NULL)

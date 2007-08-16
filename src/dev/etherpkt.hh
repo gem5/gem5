@@ -69,11 +69,17 @@ class EthPacketData : public RefCounted
     int slack;
 
   public:
-    EthPacketData() : data(NULL), length(0), slack(0) { }
+    EthPacketData() : data(NULL), length(0), slack(0)
+    { }
+
     explicit EthPacketData(size_t size)
-        : data(new uint8_t[size]), length(0), slack(0) { }
+        : data(new uint8_t[size]), length(0), slack(0)
+    { }
+
     EthPacketData(std::auto_ptr<uint8_t> d, int l, int s = 0)
-        : data(d.release()), length(l), slack(s) { }
+        : data(d.release()), length(l), slack(s)
+    { }
+
     ~EthPacketData() { if (data) delete [] data; }
 
   public:

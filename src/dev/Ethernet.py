@@ -31,27 +31,26 @@ from m5.params import *
 from m5.proxy import *
 from Pci import PciDevice, PciConfigData
 
-class EtherInt(SimObject):
-    type = 'EtherInt'
+class EtherObject(SimObject):
+    type = 'EtherObject'
     abstract = True
-    peer = Param.EtherInt(NULL, "peer interface")
 
-class EtherLink(SimObject):
+class EtherLink(EtherObject):
     type = 'EtherLink'
-    int1 = Param.EtherInt("interface 1")
-    int2 = Param.EtherInt("interface 2")
+    int0 = Port("interface 0")
+    int1 = Port("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
     dump = Param.EtherDump(NULL, "dump object")
 
-class EtherBus(SimObject):
+class EtherBus(EtherObject):
     type = 'EtherBus'
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
 
-class EtherTap(EtherInt):
+class EtherTap(EtherObject):
     type = 'EtherTap'
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
@@ -62,7 +61,12 @@ class EtherDump(SimObject):
     file = Param.String("dump file")
     maxlen = Param.Int(96, "max portion of packet data to dump")
 
-class IGbE(PciDevice):
+class EtherDevice(PciDevice):
+    type = 'EtherDevice'
+    abstract = True
+    interface = Port("Ethernet Interrface")
+
+class IGbE(EtherDevice):
     type = 'IGbE'
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
@@ -97,11 +101,7 @@ class IGbEPciData(PciConfigData):
     InterruptPin = 0x01
     BAR0Size = '128kB'
 
-class IGbEInt(EtherInt):
-    type = 'IGbEInt'
-    device = Param.IGbE("Ethernet device of this interface")
-
-class EtherDevBase(PciDevice):
+class EtherDevBase(EtherDevice):
     type = 'EtherDevBase'
     abstract = True
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
@@ -155,10 +155,6 @@ class NSGigE(EtherDevBase):
     configdata = NSGigEPciData()
 
 
-class NSGigEInt(EtherInt):
-    type = 'NSGigEInt'
-    device = Param.NSGigE("Ethernet device of this interface")
-
 class SinicPciData(PciConfigData):
     VendorID = 0x1291
     DeviceID = 0x1293
@@ -197,9 +193,3 @@ class Sinic(EtherDevBase):
 
     configdata = SinicPciData()
 
-class SinicInt(EtherInt):
-    type = 'SinicInt'
-    cxx_namespace = 'Sinic'
-    cxx_class = 'Interface'
-
-    device = Param.Sinic("Ethernet device of this interface")

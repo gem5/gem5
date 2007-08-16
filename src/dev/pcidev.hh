@@ -222,7 +222,7 @@ class PciDev : public DmaDevice
      * config file object PCIConfigData and registers the device with
      * a PciConfigAll object.
      */
-    PciDev(Params *params);
+    PciDev(const Params *params);
 
     virtual void init();
 

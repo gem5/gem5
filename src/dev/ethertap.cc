@@ -50,7 +50,6 @@
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/ethertap.hh"
-#include "params/EtherTap.hh"
 
 using namespace std;
 
@@ -127,13 +126,14 @@ class TapEvent : public PollEvent
     virtual void process(int revent) { tap->process(revent); }
 };
 
-EtherTap::EtherTap(const string &name, EtherDump *d, int port, int bufsz)
-    : EtherInt(name), event(NULL), socket(-1), buflen(bufsz), dump(d),
-      txEvent(this)
+EtherTap::EtherTap(const Params *p)
+    : EtherObject(p), event(NULL), socket(-1), buflen(p->bufsz), dump(p->dump),
+      interface(NULL), txEvent(this)
 {
     buffer = new char[buflen];
-    listener = new TapListener(this, port);
+    listener = new TapListener(this, p->port);
     listener->listen();
+    interface = new EtherTapInt(name() + ".interface", this);
 }
 
 EtherTap::~EtherTap()
@@ -182,7 +182,7 @@ EtherTap::recvPacket(EthPacketPtr packet)
     write(socket, &len, sizeof(len));
     write(socket, packet->data, packet->length);
 
-    recvDone();
+    interface->recvDone();
 
     return true;
 }
@@ -235,7 +235,7 @@ EtherTap::process(int revent)
 
         DPRINTF(Ethernet, "EtherTap input len=%d\n", packet->length);
         DDUMP(EthernetData, packet->data, packet->length);
-        if (!sendPacket(packet)) {
+        if (!interface->sendPacket(packet)) {
             DPRINTF(Ethernet, "bus busy...buffer for retransmission\n");
             packetBuffer.push(packet);
             if (!txEvent.scheduled())
@@ -253,7 +253,7 @@ EtherTap::retransmit()
         return;
 
     EthPacketPtr packet = packetBuffer.front();
-    if (sendPacket(packet)) {
+    if (interface->sendPacket(packet)) {
         if (dump)
             dump->dump(packet);
         DPRINTF(Ethernet, "EtherTap retransmit\n");
@@ -264,6 +264,18 @@ EtherTap::retransmit()
     if (!packetBuffer.empty() && !txEvent.scheduled())
         txEvent.schedule(curTick + retryTime);
 }
+
+EtherInt*
+EtherTap::getEthPort(const std::string &if_name, int idx)
+{
+    if (if_name == "tap") {
+        if (interface->getPeer())
+            panic("Interface already connected to\n");
+        return interface;
+    }
+    return NULL;
+}
+
 
 //=====================================================================
 
@@ -316,12 +328,5 @@ EtherTap::unserialize(Checkpoint *cp, const std::string &section)
 EtherTap *
 EtherTapParams::create()
 {
-    EtherTap *tap = new EtherTap(name, dump, port, bufsz);
-
-    if (peer) {
-        tap->setPeer(peer);
-        peer->setPeer(tap);
-    }
-
-    return tap;
+    return new EtherTap(this);
 }

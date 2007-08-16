@@ -40,7 +40,6 @@
 #include "dev/pktfifo.hh"
 #include "dev/sinicreg.hh"
 #include "params/Sinic.hh"
-#include "params/SinicInt.hh"
 #include "sim/eventq.hh"
 
 namespace Sinic {
@@ -84,7 +83,7 @@ class Base : public PciDev
   public:
     typedef SinicParams Params;
     const Params *params() const { return (const Params *)_params; }
-    Base(Params *p);
+    Base(const Params *p);
 };
 
 class Device : public Base
@@ -231,7 +230,7 @@ class Device : public Base
   public:
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
-    void setInterface(Interface *i) { assert(!interface); interface = i; }
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
 /**
  * DMA parameters
@@ -312,7 +311,7 @@ class Device : public Base
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
   public:
-    Device(Params *p);
+    Device(const Params *p);
     ~Device();
 };
 
@@ -326,7 +325,8 @@ class Interface : public EtherInt
 
   public:
     Interface(const std::string &name, Device *d)
-        : EtherInt(name), dev(d) { dev->setInterface(this); }
+        : EtherInt(name), dev(d)
+    { }
 
     virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }

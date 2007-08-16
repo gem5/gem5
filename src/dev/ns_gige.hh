@@ -39,11 +39,11 @@
 
 #include "base/inet.hh"
 #include "base/statistics.hh"
+#include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/io_device.hh"
 #include "dev/ns_gige_reg.h"
-#include "dev/pcidev.hh"
 #include "dev/pktfifo.hh"
 #include "params/NSGigE.hh"
 #include "sim/eventq.hh"
@@ -119,7 +119,7 @@ class Packet;
 /**
  * NS DP83820 Ethernet device model
  */
-class NSGigE : public PciDev
+class NSGigE : public EtherDevice
 {
   public:
     /** Transmit State Machine states */
@@ -355,6 +355,8 @@ class NSGigE : public PciDev
     NSGigE(Params *params);
     ~NSGigE();
 
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+
     virtual Tick writeConfig(PacketPtr pkt);
 
     virtual Tick read(PacketPtr pkt);
@@ -365,8 +367,6 @@ class NSGigE : public PciDev
 
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
-
-    void setInterface(NSGigEInt *i) { assert(!interface); interface = i; }
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
@@ -438,7 +438,8 @@ class NSGigEInt : public EtherInt
 
   public:
     NSGigEInt(const std::string &name, NSGigE *d)
-        : EtherInt(name), dev(d) { dev->setInterface(this); }
+        : EtherInt(name), dev(d)
+    { }
 
     virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
     virtual void sendDone() { dev->transferDone(); }
