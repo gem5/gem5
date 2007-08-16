@@ -28,11 +28,20 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from Pci import PciDevice, PciConfigData
+from Pci import PciDevice
 
 class IdeID(Enum): vals = ['master', 'slave']
 
-class IdeControllerPciData(PciConfigData):
+class IdeDisk(SimObject):
+    type = 'IdeDisk'
+    delay = Param.Latency('1us', "Fixed disk delay in microseconds")
+    driveID = Param.IdeID('master', "Drive ID")
+    image = Param.DiskImage("Disk image")
+
+class IdeController(PciDevice):
+    type = 'IdeController'
+    disks = VectorParam.IdeDisk("IDE disks attached to this controller")
+
     VendorID = 0x8086
     DeviceID = 0x7111
     Command = 0x0
@@ -55,14 +64,3 @@ class IdeControllerPciData(PciConfigData):
     BAR3Size = '4B'
     BAR4Size = '16B'
 
-class IdeDisk(SimObject):
-    type = 'IdeDisk'
-    delay = Param.Latency('1us', "Fixed disk delay in microseconds")
-    driveID = Param.IdeID('master', "Drive ID")
-    image = Param.DiskImage("Disk image")
-
-class IdeController(PciDevice):
-    type = 'IdeController'
-    disks = VectorParam.IdeDisk("IDE disks attached to this controller")
-
-    configdata =IdeControllerPciData()

@@ -52,30 +52,6 @@
 #define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
 
 
-/**
- * This class encapulates the first 64 bytes of a singles PCI
- * devices config space that in configured by the configuration file.
- */
-class PciConfigData : public SimObject
-{
-  public:
-    /**
-     * Constructor to initialize the devices config space to 0.
-     */
-    PciConfigData(const std::string &name)
-        : SimObject(name)
-    {
-        std::memset(config.data, 0, sizeof(config.data));
-        std::memset(BARSize, 0, sizeof(BARSize));
-    }
-
-    /** The first 64 bytes */
-    PCIConfig config;
-
-    /** The size of the BARs */
-    uint32_t BARSize[6];
-};
-
 
 /**
  * PCI device, base implementation is only config space.
@@ -114,10 +90,7 @@ class PciDev : public DmaDevice
     }
 
   protected:
-    /** The current config space. Unlike the PciConfigData this is
-     * updated during simulation while continues to reflect what was
-     * in the config file.
-     */
+    /** The current config space.  */
     PCIConfig config;
 
     /** The size of the BARs */
@@ -174,7 +147,6 @@ class PciDev : public DmaDevice
 
   protected:
     Platform *plat;
-    PciConfigData *configData;
     Tick pioDelay;
     Tick configDelay;
     PciConfigPort *configPort;
@@ -202,15 +174,15 @@ class PciDev : public DmaDevice
 
     void
     intrPost()
-    { plat->postPciInt(letoh(configData->config.interruptLine)); }
+    { plat->postPciInt(letoh(config.interruptLine)); }
 
     void
     intrClear()
-    { plat->clearPciInt(letoh(configData->config.interruptLine)); }
+    { plat->clearPciInt(letoh(config.interruptLine)); }
 
     uint8_t
     interruptLine()
-    { return letoh(configData->config.interruptLine); }
+    { return letoh(config.interruptLine); }
 
     /** return the address ranges that this device responds to.
      * @params range_list range list to populate with ranges

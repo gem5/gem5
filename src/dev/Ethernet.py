@@ -29,7 +29,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Pci import PciDevice, PciConfigData
+from Pci import PciDevice
 
 class EtherObject(SimObject):
     type = 'EtherObject'
@@ -79,8 +79,6 @@ class IGbE(EtherDevice):
     tx_desc_cache_size = Param.Int(64,
         "Number of enteries in the rx descriptor cache")
     clock = Param.Clock('500MHz', "Clock speed of the device")
-
-class IGbEPciData(PciConfigData):
     VendorID = 0x8086
     DeviceID = 0x1075
     SubsystemID = 0x1008
@@ -125,7 +123,13 @@ class EtherDevBase(EtherDevice):
     tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
     rss = Param.Bool(False, "Receive Side Scaling")
 
-class NSGigEPciData(PciConfigData):
+class NSGigE(EtherDevBase):
+    type = 'NSGigE'
+
+    dma_data_free = Param.Bool(False, "DMA of Data is free")
+    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
+    dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
+
     VendorID = 0x100B
     DeviceID = 0x0022
     Status = 0x0290
@@ -145,34 +149,7 @@ class NSGigEPciData(PciConfigData):
     BAR0Size = '256B'
     BAR1Size = '4kB'
 
-class NSGigE(EtherDevBase):
-    type = 'NSGigE'
 
-    dma_data_free = Param.Bool(False, "DMA of Data is free")
-    dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
-    dma_no_allocate = Param.Bool(True, "Should we allocate cache on read")
-
-    configdata = NSGigEPciData()
-
-
-class SinicPciData(PciConfigData):
-    VendorID = 0x1291
-    DeviceID = 0x1293
-    Status = 0x0290
-    SubClassCode = 0x00
-    ClassCode = 0x02
-    ProgIF = 0x00
-    BAR0 = 0x00000000
-    BAR1 = 0x00000000
-    BAR2 = 0x00000000
-    BAR3 = 0x00000000
-    BAR4 = 0x00000000
-    BAR5 = 0x00000000
-    MaximumLatency = 0x34
-    MinimumGrant = 0xb0
-    InterruptLine = 0x1e
-    InterruptPin = 0x01
-    BAR0Size = '64kB'
 
 class Sinic(EtherDevBase):
     type = 'Sinic'
@@ -191,5 +168,22 @@ class Sinic(EtherDevBase):
     delay_copy = Param.Bool(False, "Delayed copy transmit")
     virtual_addr = Param.Bool(False, "Virtual addressing")
 
-    configdata = SinicPciData()
+    VendorID = 0x1291
+    DeviceID = 0x1293
+    Status = 0x0290
+    SubClassCode = 0x00
+    ClassCode = 0x02
+    ProgIF = 0x00
+    BAR0 = 0x00000000
+    BAR1 = 0x00000000
+    BAR2 = 0x00000000
+    BAR3 = 0x00000000
+    BAR4 = 0x00000000
+    BAR5 = 0x00000000
+    MaximumLatency = 0x34
+    MinimumGrant = 0xb0
+    InterruptLine = 0x1e
+    InterruptPin = 0x01
+    BAR0Size = '64kB'
+
 
