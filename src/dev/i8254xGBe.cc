@@ -48,21 +48,22 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/IGbE.hh"
-#include "params/IGbEInt.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
 
 using namespace iGbReg;
 using namespace Net;
 
-IGbE::IGbE(Params *p)
-    : PciDev(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
+IGbE::IGbE(const Params *p)
+    : EtherDevice(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
       txTick(false), txFifoTick(false), rdtrEvent(this), radvEvent(this),
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
       txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size), clock(p->clock)
 {
+    etherInt = new IGbEInt(name() + ".int", this);
+
     // Initialized internal registers per Intel documentation
     // All registers intialized to 0 by per register constructor
     regs.ctrl.fd(1);
@@ -108,6 +109,17 @@ IGbE::IGbE(Params *p)
     txFifo.clear();
 }
 
+EtherInt*
+IGbE::getEthPort(const std::string &if_name, int idx)
+{
+
+    if (if_name == "interface" && !etherInt) {
+        if (etherInt->getPeer())
+            panic("Port already connected to\n");
+        return etherInt;
+    }
+    return NULL;
+}
 
 Tick
 IGbE::writeConfig(PacketPtr pkt)
@@ -1445,20 +1457,6 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     txDescCache.unserialize(cp, csprintf("%s.TxDescCache", section));
 
     rxDescCache.unserialize(cp, csprintf("%s.RxDescCache", section));
-}
-
-IGbEInt *
-IGbEIntParams::create()
-{
-    IGbEInt *dev_int = new IGbEInt(name, device);
-
-    EtherInt *p = (EtherInt *)peer;
-    if (p) {
-        dev_int->setPeer(p);
-        p->setPeer(dev_int);
-    }
-
-    return dev_int;
 }
 
 IGbE *

@@ -51,21 +51,18 @@
 
 using namespace std;
 
-EtherLink::EtherLink(const string &name, EtherInt *peer0, EtherInt *peer1,
-                     double rate, Tick delay, Tick delayVar, EtherDump *dump)
-    : SimObject(name)
+EtherLink::EtherLink(const Params *p)
+    : EtherObject(p)
 {
-    link[0] = new Link(name + ".link0", this, 0, rate, delay, delayVar, dump);
-    link[1] = new Link(name + ".link1", this, 1, rate, delay, delayVar, dump);
+    link[0] = new Link(name() + ".link0", this, 0, params()->speed,
+            params()->delay, params()->delay_var, params()->dump);
+    link[1] = new Link(name() + ".link1", this, 1, params()->speed,
+            params()->delay, params()->delay_var, params()->dump);
 
-    interface[0] = new Interface(name + ".int0", link[0], link[1]);
-    interface[1] = new Interface(name + ".int1", link[1], link[0]);
-
-    interface[0]->setPeer(peer0);
-    peer0->setPeer(interface[0]);
-    interface[1]->setPeer(peer1);
-    peer1->setPeer(interface[1]);
+    interface[0] = new Interface(name() + ".int0", link[0], link[1]);
+    interface[1] = new Interface(name() + ".int1", link[1], link[0]);
 }
+
 
 EtherLink::~EtherLink()
 {
@@ -75,6 +72,23 @@ EtherLink::~EtherLink()
     delete interface[0];
     delete interface[1];
 }
+
+EtherInt*
+EtherLink::getEthPort(const std::string &if_name, int idx)
+{
+    Interface *i;
+    if (if_name == "int0")
+        i = interface[0];
+    else if (if_name == "int1")
+        i = interface[1];
+    else
+        return NULL;
+    if (i->getPeer())
+        panic("interface already connected to\n");
+
+    return i;
+}
+
 
 EtherLink::Interface::Interface(const string &name, Link *tx, Link *rx)
     : EtherInt(name), txlink(tx)
@@ -275,5 +289,5 @@ REGISTER_SERIALIZEABLE("LinkDelayEvent", LinkDelayEvent)
 EtherLink *
 EtherLinkParams::create()
 {
-    return new EtherLink(name, int1, int2, speed, delay, delay_var, dump);
+    return new EtherLink(this);
 }

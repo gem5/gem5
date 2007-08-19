@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
  */
 
-/* @file
- * Class representing the actual interface between two ethernet
- * components.
+/**
+ * @file
+ * Base Ethernet Device declaration.
  */
 
-#ifndef __DEV_ETHERINT_HH__
-#define __DEV_ETHERINT_HH__
+#ifndef __DEV_ETHERDEVICE_HH__
+#define __DEV_ETHERDEVICE_HH__
 
-#include <string>
+#include "dev/pcidev.hh"
+#include "params/EtherDevice.hh"
+#include "sim/sim_object.hh"
 
-#include "dev/etherpkt.hh"
+class EtherInt;
 
-/*
- * Class representing the actual interface between two ethernet
- * components.  These components are intended to attach to another
- * ethernet interface on one side and whatever device on the other.
+/**
+ * The base EtherObject class, allows for an accesor function to a
+ * simobj that returns the Port.
  */
-class EtherInt
+class EtherDevice : public PciDev
 {
-  protected:
-    mutable std::string portName;
-    EtherInt *peer;
+  public:
+    typedef EtherDeviceParams Params;
+    EtherDevice(const Params *params)
+        : PciDev(params)
+    {}
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
   public:
-    EtherInt(const std::string &name)
-        : portName(name), peer(NULL) {}
-    virtual ~EtherInt() {}
+    /** Additional function to return the Port of a memory object. */
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx = -1) = 0;
 
-    /** Return port name (for DPRINTF). */
-    const std::string &name() const { return portName; }
-
-    void setPeer(EtherInt *p);
-    EtherInt* getPeer() { return peer; }
-
-    void recvDone() { peer->sendDone(); }
-    virtual void sendDone() = 0;
-
-    bool sendPacket(EthPacketPtr packet)
-    { return peer ? peer->recvPacket(packet) : true; }
-    virtual bool recvPacket(EthPacketPtr packet) = 0;
-
-    bool askBusy() {return peer->isBusy(); }
-    virtual bool isBusy() { return false; }
 };
 
-#endif // __DEV_ETHERINT_HH__
+#endif //__DEV_ETHERDEVICE_HH__

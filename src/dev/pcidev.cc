@@ -48,7 +48,6 @@
 #include "dev/alpha/tsunamireg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "params/PciConfigData.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
@@ -81,22 +80,58 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
 }
 
 
-PciDev::PciDev(Params *p)
-    : DmaDevice(p), plat(p->platform), configData(p->configdata),
-      pioDelay(p->pio_latency), configDelay(p->config_latency),
-      configPort(NULL)
+PciDev::PciDev(const Params *p)
+    : DmaDevice(p), plat(p->platform), pioDelay(p->pio_latency),
+      configDelay(p->config_latency), configPort(NULL)
 {
-    // copy the config data from the PciConfigData object
-    if (configData) {
-        memcpy(config.data, configData->config.data, sizeof(config.data));
-        memcpy(BARSize, configData->BARSize, sizeof(BARSize));
-    } else
-        panic("NULL pointer to configuration data");
+    config.vendor = htole(p->VendorID);
+    config.device = htole(p->DeviceID);
+    config.command = htole(p->Command);
+    config.status = htole(p->Status);
+    config.revision = htole(p->Revision);
+    config.progIF = htole(p->ProgIF);
+    config.subClassCode = htole(p->SubClassCode);
+    config.classCode = htole(p->ClassCode);
+    config.cacheLineSize = htole(p->CacheLineSize);
+    config.latencyTimer = htole(p->LatencyTimer);
+    config.headerType = htole(p->HeaderType);
+    config.bist = htole(p->BIST);
+
+    config.baseAddr[0] = htole(p->BAR0);
+    config.baseAddr[1] = htole(p->BAR1);
+    config.baseAddr[2] = htole(p->BAR2);
+    config.baseAddr[3] = htole(p->BAR3);
+    config.baseAddr[4] = htole(p->BAR4);
+    config.baseAddr[5] = htole(p->BAR5);
+    config.cardbusCIS = htole(p->CardbusCIS);
+    config.subsystemVendorID = htole(p->SubsystemVendorID);
+    config.subsystemID = htole(p->SubsystemID);
+    config.expansionROM = htole(p->ExpansionROM);
+    config.reserved0 = 0;
+    config.reserved1 = 0;
+    config.interruptLine = htole(p->InterruptLine);
+    config.interruptPin = htole(p->InterruptPin);
+    config.minimumGrant = htole(p->MinimumGrant);
+    config.maximumLatency = htole(p->MaximumLatency);
+
+    BARSize[0] = p->BAR0Size;
+    BARSize[1] = p->BAR1Size;
+    BARSize[2] = p->BAR2Size;
+    BARSize[3] = p->BAR3Size;
+    BARSize[4] = p->BAR4Size;
+    BARSize[5] = p->BAR5Size;
+
+    for (int i = 0; i < 6; ++i) {
+        uint32_t barsize = BARSize[i];
+        if (barsize != 0 && !isPowerOf2(barsize)) {
+            fatal("BAR %d size %d is not a power of 2\n", i, BARSize[i]);
+        }
+    }
 
     memset(BARAddrs, 0, sizeof(BARAddrs));
 
     plat->registerPciDevice(0, p->pci_dev, p->pci_func,
-            letoh(configData->config.interruptLine));
+            letoh(config.interruptLine));
 }
 
 void
@@ -304,53 +339,3 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-PciConfigData *
-PciConfigDataParams::create()
-{
-    PciConfigData *data = new PciConfigData(name);
-
-    data->config.vendor = htole(VendorID);
-    data->config.device = htole(DeviceID);
-    data->config.command = htole(Command);
-    data->config.status = htole(Status);
-    data->config.revision = htole(Revision);
-    data->config.progIF = htole(ProgIF);
-    data->config.subClassCode = htole(SubClassCode);
-    data->config.classCode = htole(ClassCode);
-    data->config.cacheLineSize = htole(CacheLineSize);
-    data->config.latencyTimer = htole(LatencyTimer);
-    data->config.headerType = htole(HeaderType);
-    data->config.bist = htole(BIST);
-
-    data->config.baseAddr[0] = htole(BAR0);
-    data->config.baseAddr[1] = htole(BAR1);
-    data->config.baseAddr[2] = htole(BAR2);
-    data->config.baseAddr[3] = htole(BAR3);
-    data->config.baseAddr[4] = htole(BAR4);
-    data->config.baseAddr[5] = htole(BAR5);
-    data->config.cardbusCIS = htole(CardbusCIS);
-    data->config.subsystemVendorID = htole(SubsystemVendorID);
-    data->config.subsystemID = htole(SubsystemID);
-    data->config.expansionROM = htole(ExpansionROM);
-    data->config.interruptLine = htole(InterruptLine);
-    data->config.interruptPin = htole(InterruptPin);
-    data->config.minimumGrant = htole(MinimumGrant);
-    data->config.maximumLatency = htole(MaximumLatency);
-
-    data->BARSize[0] = BAR0Size;
-    data->BARSize[1] = BAR1Size;
-    data->BARSize[2] = BAR2Size;
-    data->BARSize[3] = BAR3Size;
-    data->BARSize[4] = BAR4Size;
-    data->BARSize[5] = BAR5Size;
-
-    for (int i = 0; i < 6; ++i) {
-        uint32_t barsize = data->BARSize[i];
-        if (barsize != 0 && !isPowerOf2(barsize)) {
-            fatal("%s: BAR %d size %d is not a power of 2\n",
-                  name, i, data->BARSize[i]);
-        }
-    }
-
-    return data;
-}

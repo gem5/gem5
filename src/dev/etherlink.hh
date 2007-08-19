@@ -35,8 +35,10 @@
 #ifndef __DEV_ETHERLINK_HH__
 #define __DEV_ETHERLINK_HH__
 
+#include "dev/etherobject.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
+#include "params/EtherLink.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
@@ -46,7 +48,7 @@ class Checkpoint;
 /*
  * Model for a fixed bandwidth full duplex ethernet link
  */
-class EtherLink : public SimObject
+class EtherLink : public EtherObject
 {
   protected:
     class Interface;
@@ -118,12 +120,20 @@ class EtherLink : public SimObject
     };
 
     Link *link[2];
-    EtherInt *interface[2];
+    Interface *interface[2];
 
   public:
-    EtherLink(const std::string &name, EtherInt *peer0, EtherInt *peer1,
-              double rate, Tick delay, Tick delayVar, EtherDump *dump);
+    typedef EtherLinkParams Params;
+    EtherLink(const Params *p);
     virtual ~EtherLink();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

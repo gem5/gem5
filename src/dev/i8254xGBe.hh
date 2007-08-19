@@ -40,6 +40,7 @@
 
 #include "base/inet.hh"
 #include "base/statistics.hh"
+#include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
 #include "dev/i8254xGBe_defs.hh"
@@ -50,7 +51,7 @@
 
 class IGbEInt;
 
-class IGbE : public PciDev
+class IGbE : public EtherDevice
 {
   private:
     IGbEInt *etherInt;
@@ -592,8 +593,10 @@ class IGbE : public PciDev
     {
         return dynamic_cast<const Params *>(_params);
     }
-    IGbE(Params *params);
+    IGbE(const Params *params);
     ~IGbE() {}
+
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
     Tick clock;
     inline Tick cycles(int numCycles) const { return numCycles * clock; }
@@ -605,8 +608,6 @@ class IGbE : public PciDev
 
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();
-
-    void setEthInt(IGbEInt *i) { assert(!etherInt); etherInt = i; }
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
@@ -623,7 +624,7 @@ class IGbEInt : public EtherInt
   public:
     IGbEInt(const std::string &name, IGbE *d)
         : EtherInt(name), dev(d)
-        { dev->setEthInt(this); }
+    { }
 
     virtual bool recvPacket(EthPacketPtr pkt) { return dev->ethRxPkt(pkt); }
     virtual void sendDone() { dev->ethTxDone(); }

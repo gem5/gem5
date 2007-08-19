@@ -38,19 +38,22 @@
 #include <queue>
 #include <string>
 
+#include "base/pollevent.hh"
+#include "dev/etherobject.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
+#include "params/EtherTap.hh"
 #include "sim/eventq.hh"
-#include "base/pollevent.hh"
 #include "sim/sim_object.hh"
 
 class TapEvent;
 class TapListener;
+class EtherTapInt;
 
 /*
  * Interface to connect a simulated ethernet device to the real world
  */
-class EtherTap : public EtherInt
+class EtherTap : public EtherObject
 {
   protected:
     friend class TapEvent;
@@ -73,6 +76,7 @@ class EtherTap : public EtherInt
   protected:
     std::string device;
     std::queue<EthPacketPtr> packetBuffer;
+    EtherTapInt *interface;
 
     void process(int revent);
     void enqueue(EthPacketData *packet);
@@ -96,8 +100,17 @@ class EtherTap : public EtherInt
     TxEvent txEvent;
 
   public:
-    EtherTap(const std::string &name, EtherDump *dump, int port, int bufsz);
+    typedef EtherTapParams Params;
+    EtherTap(const Params *p);
     virtual ~EtherTap();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
     virtual bool recvPacket(EthPacketPtr packet);
     virtual void sendDone();
@@ -105,5 +118,19 @@ class EtherTap : public EtherInt
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
+
+class EtherTapInt : public EtherInt
+{
+  private:
+    EtherTap *tap;
+  public:
+    EtherTapInt(const std::string &name, EtherTap *t)
+            : EtherInt(name), tap(t)
+    { }
+
+    virtual bool recvPacket(EthPacketPtr pkt) { return tap->recvPacket(pkt); }
+    virtual void sendDone() { tap->sendDone(); }
+};
+
 
 #endif // __ETHERTAP_HH__

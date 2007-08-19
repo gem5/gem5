@@ -40,9 +40,7 @@ class CowIdeDisk(IdeDisk):
 
 def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     class BaseTsunami(Tsunami):
-        ethernet = NSGigE(configdata=NSGigEPciData(),
-                          pci_bus=0, pci_dev=1, pci_func=0)
-        etherint = NSGigEInt(device=Parent.ethernet)
+        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                             pci_func=0, pci_dev=0, pci_bus=0)
 
@@ -125,8 +123,10 @@ def makeDualRoot(testSystem, driveSystem, dumpfile):
     self = Root()
     self.testsys = testSystem
     self.drivesys = driveSystem
-    self.etherlink = EtherLink(int1 = Parent.testsys.tsunami.etherint[0],
-                               int2 = Parent.drivesys.tsunami.etherint[0])
+    self.etherlink = EtherLink()
+    self.etherlink.int0 = Parent.testsys.tsunami.ethernet.interface
+    self.etherlink.int1 = Parent.drivesys.tsunami.ethernet.interface
+
     if dumpfile:
         self.etherdump = EtherDump(file=dumpfile)
         self.etherlink.dump = Parent.etherdump

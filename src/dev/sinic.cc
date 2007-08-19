@@ -73,14 +73,14 @@ const char *TxStateStrings[] =
 //
 // Sinic PCI Device
 //
-Base::Base(Params *p)
+Base::Base(const Params *p)
     : PciDev(p), rxEnable(false), txEnable(false), clock(p->clock),
       intrDelay(p->intr_delay), intrTick(0), cpuIntrEnable(false),
       cpuPendingIntr(false), intrEvent(0), interface(NULL)
 {
 }
 
-Device::Device(Params *p)
+Device::Device(const Params *p)
     : Base(p), rxUnique(0), txUnique(0),
       virtualRegs(p->virtual_count < 1 ? 1 : p->virtual_count),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
@@ -89,6 +89,7 @@ Device::Device(Params *p)
       dmaReadDelay(p->dma_read_delay), dmaReadFactor(p->dma_read_factor),
       dmaWriteDelay(p->dma_write_delay), dmaWriteFactor(p->dma_write_factor)
 {
+    interface = new Interface(name() + ".int0", this);
     reset();
 
 }
@@ -265,6 +266,19 @@ Device::regStats()
     txPacketRate = txPackets / simSeconds;
     rxPacketRate = rxPackets / simSeconds;
 }
+
+EtherInt*
+Device::getEthPort(const std::string &if_name, int idx)
+{
+    if (if_name == "interface") {
+        if (interface->getPeer())
+            panic("interface already connected to\n");
+
+        return interface;
+    }
+    return NULL;
+}
+
 
 void
 Device::prepareIO(int cpu, int index)
@@ -1594,21 +1608,6 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 /* namespace Sinic */ }
-
-Sinic::Interface *
-SinicIntParams::create()
-{
-    using namespace Sinic;
-
-    Interface *dev_int = new Interface(name, device);
-
-    if (peer) {
-        dev_int->setPeer(peer);
-        peer->setPeer(dev_int);
-    }
-
-    return dev_int;
-}
 
 Sinic::Device *
 SinicParams::create()

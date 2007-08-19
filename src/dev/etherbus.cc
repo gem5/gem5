@@ -47,10 +47,9 @@
 
 using namespace std;
 
-EtherBus::EtherBus(const string &name, double speed, bool loop,
-                   EtherDump *packet_dump)
-    : SimObject(name), ticksPerByte(speed), loopback(loop),
-      event(&mainEventQueue, this), sender(0), dump(packet_dump)
+EtherBus::EtherBus(const Params *p)
+    : EtherObject(p), ticksPerByte(p->speed), loopback(p->loopback),
+      event(&mainEventQueue, this), sender(0), dump(p->dump)
 {
 }
 
@@ -78,9 +77,11 @@ EtherBus::txDone()
     packet = 0;
 }
 
-void
-EtherBus::reg(EtherInt *dev)
-{ devlist.push_back(dev); }
+EtherInt*
+EtherBus::getEthPort(const std::string &if_name, int idx)
+{
+    panic("Etherbus doesn't work\n");
+}
 
 bool
 EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
@@ -106,5 +107,5 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 EtherBus *
 EtherBusParams::create()
 {
-    return new EtherBus(name, speed, loopback, dump);
+    return new EtherBus(this);
 }

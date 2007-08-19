@@ -44,7 +44,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
-#include "params/NSGigEInt.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
@@ -90,7 +89,7 @@ using namespace TheISA;
 // NSGigE PCI Device
 //
 NSGigE::NSGigE(Params *p)
-    : PciDev(p), ioEnable(false),
+    : EtherDevice(p), ioEnable(false),
       txFifo(p->tx_fifo_size), rxFifo(p->rx_fifo_size),
       txPacket(0), rxPacket(0), txPacketBufPtr(NULL), rxPacketBufPtr(NULL),
       txXferLen(0), rxXferLen(0), rxDmaFree(false), txDmaFree(false),
@@ -117,6 +116,8 @@ NSGigE::NSGigE(Params *p)
       intrEvent(0), interface(0)
 {
 
+
+    interface = new NSGigEInt(name() + ".int0", this);
 
     regsReset();
     memcpy(&rom.perfectMatch, p->hardware_address.bytes(), ETH_ADDR_LEN);
@@ -490,6 +491,17 @@ NSGigE::writeConfig(PacketPtr pkt)
     }
 
     return configDelay;
+}
+
+EtherInt*
+NSGigE::getEthPort(const std::string &if_name, int idx)
+{
+    if (if_name == "interface") {
+       if (interface->getPeer())
+           panic("interface already connected to\n");
+       return interface;
+    }
+    return NULL;
 }
 
 /**
@@ -2772,20 +2784,6 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     if (intrEventTick) {
         intrEvent = new IntrEvent(this, intrEventTick, true);
     }
-}
-
-NSGigEInt *
-NSGigEIntParams::create()
-{
-    NSGigEInt *dev_int = new NSGigEInt(name, device);
-
-    EtherInt *p = (EtherInt *)peer;
-    if (p) {
-        dev_int->setPeer(p);
-        p->setPeer(dev_int);
-    }
-
-    return dev_int;
 }
 
 NSGigE *

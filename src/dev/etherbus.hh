@@ -37,11 +37,13 @@
 
 #include "sim/eventq.hh"
 #include "dev/etherpkt.hh"
+#include "dev/etherobject.hh"
+#include "params/EtherBus.hh"
 #include "sim/sim_object.hh"
 
 class EtherDump;
 class EtherInt;
-class EtherBus : public SimObject
+class EtherBus : public EtherObject
 {
   protected:
     typedef std::list<EtherInt *> devlist_t;
@@ -68,14 +70,21 @@ class EtherBus : public SimObject
     EtherDump *dump;
 
   public:
-    EtherBus(const std::string &name, double speed, bool loopback,
-             EtherDump *dump);
+    typedef EtherBusParams Params;
+    EtherBus(const Params *p);
     virtual ~EtherBus() {}
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     void txDone();
     void reg(EtherInt *dev);
     bool busy() const { return (bool)packet; }
     bool send(EtherInt *sender, EthPacketPtr &packet);
+    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 };
 
 #endif // __ETHERBUS_H__
