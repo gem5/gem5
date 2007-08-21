@@ -101,10 +101,11 @@ LSQ<Impl>::DcachePort::recvRetry()
         //Squashed, so drop it
         return;
     }
-    lsq->thread[lsq->retryTid].recvRetry();
+    int curr_retry_tid = lsq->retryTid;
     // Speculatively clear the retry Tid.  This will get set again if
     // the LSQUnit was unable to complete its access.
     lsq->retryTid = -1;
+    lsq->thread[curr_retry_tid].recvRetry();
 }
 
 template <class Impl>
