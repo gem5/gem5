@@ -286,7 +286,7 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
 
     for fname in added:
         ok = True
-        for line,num in checkwhite(fname):
+        for line,num in checkwhite(repo.wjoin(fname)):
             ui.write("invalid whitespace in %s:%d\n" % (fname, num))
             if verbose:
                 ui.write(">>%s<<\n" % line[-1])

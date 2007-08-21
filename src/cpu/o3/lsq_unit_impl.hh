@@ -928,6 +928,7 @@ void
 LSQUnit<Impl>::recvRetry()
 {
     if (isStoreBlocked) {
+        DPRINTF(LSQUnit, "Receiving retry: store blocked\n");
         assert(retryPkt != NULL);
 
         if (dcachePort->sendTiming(retryPkt)) {
