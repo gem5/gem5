@@ -332,10 +332,11 @@ class Packet : public FastAlloc
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
     // field, etc.)
-    void setNacked()     { origCmd = cmd; cmd = MemCmd::NetworkNackError; }
-    void setBadAddress() { origCmd = cmd; cmd = MemCmd::BadAddressError; }
+    void setNacked()     { assert(isResponse()); cmd = MemCmd::NetworkNackError; }
+    void setBadAddress() { assert(isResponse()); cmd = MemCmd::BadAddressError; }
     bool wasNacked()     { return cmd == MemCmd::NetworkNackError; }
     bool hadBadAddress() { return cmd == MemCmd::BadAddressError; }
+    void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     bool nic_pkt() { panic("Unimplemented"); M5_DUMMY_RETURN }
 
@@ -431,6 +432,7 @@ class Packet : public FastAlloc
     {
         assert(needsResponse());
         assert(isRequest());
+        origCmd = cmd;
         cmd = cmd.responseCommand();
         dest = src;
         destValid = srcValid;

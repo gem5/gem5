@@ -606,7 +606,13 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
                 busPkt->cmdString(), busPkt->getAddr(), old_state);
 
-        if (isCacheFill) {
+        bool is_error = busPkt->isError();
+        assert(!busPkt->wasNacked());
+
+        if (is_error && pkt->needsResponse()) {
+            pkt->makeAtomicResponse();
+            pkt->copyError(busPkt);
+        } else if (isCacheFill && !is_error) {
             PacketList writebacks;
             blk = handleFill(busPkt, blk, writebacks);
             satisfyCpuSideRequest(pkt, blk);
@@ -667,6 +673,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 {
     Tick time = curTick + hitLatency;
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+    bool is_error = pkt->isError();
+
     assert(mshr);
 
     if (pkt->wasNacked()) {
@@ -675,7 +683,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
              "not implemented\n");
         return;
     }
-    assert(!pkt->isError());
+    if (is_error) {
+        DPRINTF(Cache, "Cache received packet with error for address %x, "
+                "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
+    }
+
     DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
 
     MSHRQueue *mq = mshr->queue;
@@ -702,7 +714,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             miss_latency;
     }
 
-    if (mshr->isCacheFill) {
+    if (mshr->isCacheFill && !is_error) {
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
 
@@ -744,13 +756,18 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             } else {
                 // not a cache fill, just forwarding response
                 completion_time = tags->getHitLatency() + pkt->finishTime;
-                if (pkt->isRead()) {
+                if (pkt->isRead() && !is_error) {
                     target->pkt->setData(pkt->getPtr<uint8_t>());
                 }
             }
             target->pkt->makeTimingResponse();
+            // if this packet is an error copy that to the new packet
+            if (is_error)
+                target->pkt->copyError(pkt);
             cpuSidePort->respond(target->pkt, completion_time);
         } else {
+            // I don't believe that a snoop can be in an error state
+            assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
             handleSnoop(target->pkt, blk, true, true);

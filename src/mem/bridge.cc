@@ -119,17 +119,17 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
 
     DPRINTF(BusBridge, "Local queue size: %d outreq: %d outresp: %d\n",
                     sendQueue.size(), queuedRequests, outstandingResponses);
-    DPRINTF(BusBridge, "Remove queue size: %d outreq: %d outresp: %d\n",
+    DPRINTF(BusBridge, "Remote queue size: %d outreq: %d outresp: %d\n",
                     otherPort->sendQueue.size(), otherPort->queuedRequests,
                     otherPort->outstandingResponses);
 
-    if (pkt->isRequest() && otherPort->reqQueueFull() && !pkt->wasNacked()) {
+    if (pkt->isRequest() && otherPort->reqQueueFull()) {
         DPRINTF(BusBridge, "Remote queue full, nacking\n");
         nackRequest(pkt);
         return true;
     }
 
-    if (pkt->needsResponse() && !pkt->wasNacked())
+    if (pkt->needsResponse())
         if (respQueueFull()) {
             DPRINTF(BusBridge, "Local queue full, no space for response, nacking\n");
             DPRINTF(BusBridge, "queue size: %d outreq: %d outstanding resp: %d\n",
@@ -150,8 +150,8 @@ void
 Bridge::BridgePort::nackRequest(PacketPtr pkt)
 {
     // Nack the packet
+    pkt->makeTimingResponse();
     pkt->setNacked();
-    pkt->setDest(pkt->getSrc());
 
     //put it on the list to send
     Tick readyTime = curTick + nackDelay;
@@ -195,27 +195,23 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
 void
 Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse() || pkt->wasNacked()) {
+    if (pkt->isResponse()) {
         // This is a response for a request we forwarded earlier.  The
         // corresponding PacketBuffer should be stored in the packet's
         // senderState field.
+
         PacketBuffer *buf = dynamic_cast<PacketBuffer*>(pkt->senderState);
         assert(buf != NULL);
         // set up new packet dest & senderState based on values saved
         // from original request
         buf->fixResponse(pkt);
 
-        // Check if this packet was expecting a response and it's a nacked
-        // packet, in which case we will never being seeing it
-        if (buf->expectResponse && pkt->wasNacked())
-            --outstandingResponses;
-
         DPRINTF(BusBridge, "response, new dest %d\n", pkt->getDest());
         delete buf;
     }
 
 
-    if (pkt->isRequest() && !pkt->wasNacked()) {
+    if (pkt->isRequest()) {
         ++queuedRequests;
     }
 
@@ -249,7 +245,15 @@ Bridge::BridgePort::trySend()
             buf->origSrc, pkt->getDest(), pkt->getAddr());
 
     bool wasReq = pkt->isRequest();
-    bool wasNacked = pkt->wasNacked();
+    bool was_nacked_here = buf->nackedHere;
+
+    // If the send was successful, make sure sender state was set to NULL
+    // otherwise we could get a NACK back of a packet that didn't expect a
+    // response and we would try to use freed memory.
+
+    Packet::SenderState *old_sender_state = pkt->senderState;
+    if (pkt->isRequest() && !buf->expectResponse)
+        pkt->senderState = NULL;
 
     if (sendTiming(pkt)) {
         // send successful
@@ -266,12 +270,10 @@ Bridge::BridgePort::trySend()
             delete buf;
         }
 
-        if (!wasNacked) {
-            if (wasReq)
-                --queuedRequests;
-            else
-                --outstandingResponses;
-        }
+        if (wasReq)
+            --queuedRequests;
+        else if (!was_nacked_here)
+            --outstandingResponses;
 
         // If there are more packets to send, schedule event to try again.
         if (!sendQueue.empty()) {
@@ -281,8 +283,10 @@ Bridge::BridgePort::trySend()
         }
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
+        pkt->senderState = old_sender_state;
         inRetry = true;
     }
+
     DPRINTF(BusBridge, "trySend: queue size: %d outreq: %d outstanding resp: %d\n",
                     sendQueue.size(), queuedRequests, outstandingResponses);
 }

@@ -78,17 +78,19 @@ class Bridge : public MemObject
           public:
             Tick ready;
             PacketPtr pkt;
+            bool nackedHere;
             Packet::SenderState *origSenderState;
             short origSrc;
             bool expectResponse;
 
             PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
-                : ready(t), pkt(_pkt),
-                  origSenderState(_pkt->senderState), origSrc(_pkt->getSrc()),
+                : ready(t), pkt(_pkt), nackedHere(nack),
+                  origSenderState(_pkt->senderState),
+                  origSrc(nack ? _pkt->getDest() : _pkt->getSrc() ),
                   expectResponse(_pkt->needsResponse() && !nack)
 
             {
-                if (!pkt->isResponse() && !nack && !pkt->wasNacked())
+                if (!pkt->isResponse() && !nack)
                     pkt->senderState = this;
             }
 
