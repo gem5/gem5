@@ -147,9 +147,10 @@ class IGbE : public EtherDevice
 
     /** Send an interrupt to the cpu
      */
+    void delayIntEvent();
     void cpuPostInt();
     // Event to moderate interrupts
-    EventWrapper<IGbE, &IGbE::cpuPostInt> interEvent;
+    EventWrapper<IGbE, &IGbE::delayIntEvent> interEvent;
 
     /** Clear the interupt line to the cpu
      */
@@ -177,6 +178,7 @@ class IGbE : public EtherDevice
         virtual void updateHead(long h) = 0;
         virtual void enableSm() = 0;
         virtual void intAfterWb() const {}
+        virtual void fetchAfterWb() = 0;
 
         std::deque<T*> usedCache;
         std::deque<T*> unusedCache;
@@ -283,12 +285,6 @@ class IGbE : public EtherDevice
             for (int x = 0; x < wbOut; x++)
                 memcpy(&wbBuf[x], usedCache[x], sizeof(T));
 
-            for (int x = 0; x < wbOut; x++) {
-                assert(usedCache.size());
-                delete usedCache[0];
-                usedCache.pop_front();
-            };
-
 
             assert(wbOut);
             igbe->dmaWrite(igbe->platform->pciToDma(descBase() + curHead * sizeof(T)),
@@ -306,7 +302,6 @@ class IGbE : public EtherDevice
                 max_to_fetch = descTail() - cachePnt;
             else
                 max_to_fetch = descLen() - cachePnt;
-
 
             max_to_fetch = std::min(max_to_fetch, (size - usedCache.size() -
                         unusedCache.size()));
@@ -369,10 +364,16 @@ class IGbE : public EtherDevice
          */
         void wbComplete()
         {
+
             long  curHead = descHead();
 #ifndef NDEBUG
             long oldHead = curHead;
 #endif
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                delete usedCache[0];
+                usedCache.pop_front();
+            };
 
             curHead += wbOut;
             wbOut = 0;
@@ -387,12 +388,17 @@ class IGbE : public EtherDevice
                     oldHead, curHead);
 
             // If we still have more to wb, call wb now
+            bool oldMoreToWb = moreToWb;
             if (moreToWb) {
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
                 writeback(wbAlignment);
             }
+
             intAfterWb();
-            igbe->checkDrain();
+            if (!oldMoreToWb) {
+                igbe->checkDrain();
+            }
+            fetchAfterWb();
         }
 
 
@@ -502,6 +508,10 @@ class IGbE : public EtherDevice
         virtual long descTail() const { return igbe->regs.rdt(); }
         virtual void updateHead(long h) { igbe->regs.rdh(h); }
         virtual void enableSm();
+        virtual void fetchAfterWb() {
+            if (!igbe->rxTick && igbe->getState() == SimObject::Running)
+                fetchDescriptors();
+        }
 
         bool pktDone;
 
@@ -544,7 +554,13 @@ class IGbE : public EtherDevice
         virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
         virtual void updateHead(long h) { igbe->regs.tdh(h); }
         virtual void enableSm();
-        virtual void intAfterWb() const { igbe->postInterrupt(iGbReg::IT_TXDW);}
+        virtual void intAfterWb() const {
+            igbe->postInterrupt(iGbReg::IT_TXDW);
+        }
+        virtual void fetchAfterWb() {
+            if (!igbe->txTick && igbe->getState() == SimObject::Running)
+                fetchDescriptors();
+        }
 
         bool pktDone;
         bool isTcp;
