@@ -139,11 +139,10 @@ extendedStart:
 #               EBX: BrandId Identifier
 #               ECX: Feature Identifiers
 #               EDX: Feature Identifiers
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0x00020f51, dataSize=4
+    limm rbx, 0x00000405, dataSize=4
+    limm rdx, 0xe3d3fbff, dataSize=4
+    limm rcx, 0x00000001, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
@@ -183,22 +182,20 @@ extendedStart:
     fault "NoFault"
 
 # 0x80000005 -- L1 Cache and TLB Identifiers
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0xff08ff08, dataSize=4
+    limm rbx, 0xff20ff20, dataSize=4
+    limm rdx, 0x40020140, dataSize=4
+    limm rcx, 0x40020140, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
     fault "NoFault"
 
 # 0x80000006 -- L2/L3 Cache and L2 TLB Identifiers
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0x00000000, dataSize=4
+    limm rbx, 0x42004200, dataSize=4
+    limm rdx, 0x00000000, dataSize=4
+    limm rcx, 0x04008140, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
