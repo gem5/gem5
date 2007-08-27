@@ -618,13 +618,17 @@ AtomicSimpleCPU::tick()
 
             preExecute();
 
-            if(curStaticInst)
-            {
+            if (curStaticInst) {
                 fault = curStaticInst->execute(this, traceData);
 
                 // keep an instruction count
                 if (fault == NoFault)
                     countInst();
+                else if (traceData) {
+                    // If there was a fault, we should trace this instruction.
+                    delete traceData;
+                    traceData = NULL;
+                }
 
                 postExecute();
             }

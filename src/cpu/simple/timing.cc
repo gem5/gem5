@@ -544,6 +544,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
                 // keep an instruction count
                 if (fault == NoFault)
                     countInst();
+            } else if (traceData) {
+                // If there was a fault, we shouldn't trace this instruction.
+                delete traceData;
+                traceData = NULL;
             }
 
             postExecute();
@@ -556,6 +560,11 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         // keep an instruction count
         if (fault == NoFault)
             countInst();
+        else if (traceData) {
+            // If there was a fault, we shouldn't trace this instruction.
+            delete traceData;
+            traceData = NULL;
+        }
 
         postExecute();
         advanceInst(fault);
@@ -628,6 +637,11 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     // keep an instruction count
     if (fault == NoFault)
         countInst();
+    else if (traceData) {
+        // If there was a fault, we shouldn't trace this instruction.
+        delete traceData;
+        traceData = NULL;
+    }
 
     if (pkt->isRead() && pkt->isLocked()) {
         TheISA::handleLockedRead(thread, pkt->req);
