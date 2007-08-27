@@ -285,46 +285,81 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     // use the CPU's statically allocated read request and packet objects
     Request *req = &data_read_req;
-    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
-    // translate to physical address
-    Fault fault = thread->translateDataReadReq(req);
+    //The block size of our peer.
+    int blockSize = dcachePort.peerBlockSize();
+    //The size of the data we're trying to read.
+    int dataSize = sizeof(T);
 
-    // Now do the access.
-    if (fault == NoFault) {
-        Packet pkt =
-            Packet(req,
-                   req->isLocked() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
-                   Packet::Broadcast);
-        pkt.dataStatic(&data);
+    uint8_t * dataPtr = (uint8_t *)&data;
 
-        if (req->isMmapedIpr())
-            dcache_latency = TheISA::handleIprRead(thread->getTC(), &pkt);
-        else {
-            if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
-                dcache_latency = physmemPort.sendAtomic(&pkt);
-            else
-                dcache_latency = dcachePort.sendAtomic(&pkt);
+    //The address of the second part of this access if it needs to be split
+    //across a cache line boundary.
+    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+
+    if(secondAddr > addr)
+        dataSize = secondAddr - addr;
+
+    dcache_latency = 0;
+
+    while(1) {
+        req->setVirt(0, addr, dataSize, flags, thread->readPC());
+
+        // translate to physical address
+        Fault fault = thread->translateDataReadReq(req);
+
+        // Now do the access.
+        if (fault == NoFault) {
+            Packet pkt = Packet(req,
+                    req->isLocked() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
+                    Packet::Broadcast);
+            pkt.dataStatic(dataPtr);
+
+            if (req->isMmapedIpr())
+                dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
+            else {
+                if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
+                    dcache_latency += physmemPort.sendAtomic(&pkt);
+                else
+                    dcache_latency += dcachePort.sendAtomic(&pkt);
+            }
+            dcache_access = true;
+            assert(!pkt.isError());
+
+            if (req->isLocked()) {
+                TheISA::handleLockedRead(thread, req);
+            }
         }
-        dcache_access = true;
-        assert(!pkt.isError());
 
-        data = gtoh(data);
+        // This will need a new way to tell if it has a dcache attached.
+        if (req->isUncacheable())
+            recordEvent("Uncached Read");
 
-        if (req->isLocked()) {
-            TheISA::handleLockedRead(thread, req);
+        //If there's a fault, return it
+        if (fault != NoFault)
+            return fault;
+        //If we don't need to access a second cache line, stop now.
+        if (secondAddr <= addr)
+        {
+            data = gtoh(data);
+            return fault;
         }
+
+        /*
+         * Set up for accessing the second cache line.
+         */
+
+        //Move the pointer we're reading into to the correct location.
+        dataPtr += dataSize;
+        //Adjust the size to get the remaining bytes.
+        dataSize = addr + sizeof(T) - secondAddr;
+        //And access the right address.
+        addr = secondAddr;
     }
-
-    // This will need a new way to tell if it has a dcache attached.
-    if (req->isUncacheable())
-        recordEvent("Uncached Read");
-
-    return fault;
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -384,65 +419,105 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
     Request *req = &data_write_req;
-    req->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
-    // translate to physical address
-    Fault fault = thread->translateDataWriteReq(req);
+    //The block size of our peer.
+    int blockSize = dcachePort.peerBlockSize();
+    //The size of the data we're trying to read.
+    int dataSize = sizeof(T);
 
-    // Now do the access.
-    if (fault == NoFault) {
-        MemCmd cmd = MemCmd::WriteReq; // default
-        bool do_access = true;  // flag to suppress cache access
+    uint8_t * dataPtr = (uint8_t *)&data;
 
-        if (req->isLocked()) {
-            cmd = MemCmd::StoreCondReq;
-            do_access = TheISA::handleLockedWrite(thread, req);
-        } else if (req->isSwap()) {
-            cmd = MemCmd::SwapReq;
-            if (req->isCondSwap()) {
-                assert(res);
-                req->setExtraData(*res);
+    //The address of the second part of this access if it needs to be split
+    //across a cache line boundary.
+    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+
+    if(secondAddr > addr)
+        dataSize = secondAddr - addr;
+
+    dcache_latency = 0;
+
+    while(1) {
+        req->setVirt(0, addr, dataSize, flags, thread->readPC());
+
+        // translate to physical address
+        Fault fault = thread->translateDataWriteReq(req);
+
+        // Now do the access.
+        if (fault == NoFault) {
+            MemCmd cmd = MemCmd::WriteReq; // default
+            bool do_access = true;  // flag to suppress cache access
+
+            if (req->isLocked()) {
+                cmd = MemCmd::StoreCondReq;
+                do_access = TheISA::handleLockedWrite(thread, req);
+            } else if (req->isSwap()) {
+                cmd = MemCmd::SwapReq;
+                if (req->isCondSwap()) {
+                    assert(res);
+                    req->setExtraData(*res);
+                }
+            }
+
+            if (do_access) {
+                Packet pkt = Packet(req, cmd, Packet::Broadcast);
+                pkt.dataStatic(dataPtr);
+
+                if (req->isMmapedIpr()) {
+                    dcache_latency +=
+                        TheISA::handleIprWrite(thread->getTC(), &pkt);
+                } else {
+                    //XXX This needs to be outside of the loop in order to
+                    //work properly for cache line boundary crossing
+                    //accesses in transendian simulations.
+                    data = htog(data);
+                    if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
+                        dcache_latency += physmemPort.sendAtomic(&pkt);
+                    else
+                        dcache_latency += dcachePort.sendAtomic(&pkt);
+                }
+                dcache_access = true;
+                assert(!pkt.isError());
+
+                if (req->isSwap()) {
+                    assert(res);
+                    *res = pkt.get<T>();
+                }
+            }
+
+            if (res && !req->isSwap()) {
+                *res = req->getExtraData();
             }
         }
 
-        if (do_access) {
-            Packet pkt = Packet(req, cmd, Packet::Broadcast);
-            pkt.dataStatic(&data);
+        // This will need a new way to tell if it's hooked up to a cache or not.
+        if (req->isUncacheable())
+            recordEvent("Uncached Write");
 
-            if (req->isMmapedIpr()) {
-                dcache_latency = TheISA::handleIprWrite(thread->getTC(), &pkt);
-            } else {
-                data = htog(data);
-                if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
-                    dcache_latency = physmemPort.sendAtomic(&pkt);
-                else
-                    dcache_latency = dcachePort.sendAtomic(&pkt);
-            }
-            dcache_access = true;
-            assert(!pkt.isError());
-
-            if (req->isSwap()) {
-                assert(res);
-                *res = pkt.get<T>();
-            }
+        //If there's a fault or we don't need to access a second cache line,
+        //stop now.
+        if (fault != NoFault || secondAddr <= addr)
+        {
+            // If the write needs to have a fault on the access, consider
+            // calling changeStatus() and changing it to "bad addr write"
+            // or something.
+            return fault;
         }
 
-        if (res && !req->isSwap()) {
-            *res = req->getExtraData();
-        }
+        /*
+         * Set up for accessing the second cache line.
+         */
+
+        //Move the pointer we're reading into to the correct location.
+        dataPtr += dataSize;
+        //Adjust the size to get the remaining bytes.
+        dataSize = addr + sizeof(T) - secondAddr;
+        //And access the right address.
+        addr = secondAddr;
     }
-
-    // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->isUncacheable())
-        recordEvent("Uncached Write");
-
-    // If the write needs to have a fault on the access, consider calling
-    // changeStatus() and changing it to "bad addr write" or something.
-    return fault;
 }
 
 
