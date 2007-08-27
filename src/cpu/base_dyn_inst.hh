@@ -847,12 +847,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->readCpuId(), threadNumber);
 
-    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
-        TheISA::VMPageSize) {
-        delete req;
-        return TheISA::genAlignmentFault();
-    }
-
     fault = cpu->translateDataReadReq(req, thread);
 
     if (req->isUncacheable())
@@ -908,12 +902,6 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->readCpuId(), threadNumber);
-
-    if ((req->getVaddr() & (TheISA::VMPageSize - 1)) + req->getSize() >
-        TheISA::VMPageSize) {
-        delete req;
-        return TheISA::genAlignmentFault();
-    }
 
     fault = cpu->translateDataWriteReq(req, thread);
 
