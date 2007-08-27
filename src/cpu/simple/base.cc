@@ -357,12 +357,6 @@ BaseSimpleCPU::preExecute()
     thread->setFloatReg(ZeroReg, 0.0);
 #endif // ALPHA_ISA
 
-    // keep an instruction count
-    numInst++;
-    numInsts++;
-
-    thread->funcExeInst++;
-
     // check for instruction-count-based events
     comInstEventQueue[0]->serviceEvents(numInst);
 

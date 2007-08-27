@@ -546,6 +546,11 @@ AtomicSimpleCPU::tick()
             if(curStaticInst)
             {
                 fault = curStaticInst->execute(this, traceData);
+
+                // keep an instruction count
+                if (fault == NoFault)
+                    countInst();
+
                 postExecute();
             }
 

@@ -540,13 +540,23 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
                 delete dcache_pkt->req;
                 delete dcache_pkt;
                 dcache_pkt = NULL;
+
+                // keep an instruction count
+                if (fault == NoFault)
+                    countInst();
             }
+
             postExecute();
             advanceInst(fault);
         }
     } else {
         // non-memory instruction: execute completely now
         Fault fault = curStaticInst->execute(this, traceData);
+
+        // keep an instruction count
+        if (fault == NoFault)
+            countInst();
+
         postExecute();
         advanceInst(fault);
     }
@@ -614,6 +624,10 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     previousTick = curTick;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
+
+    // keep an instruction count
+    if (fault == NoFault)
+        countInst();
 
     if (pkt->isRead() && pkt->isLocked()) {
         TheISA::handleLockedRead(thread, pkt->req);

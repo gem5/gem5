@@ -157,6 +157,14 @@ class BaseSimpleCPU : public BaseCPU
     Counter startNumInst;
     Stats::Scalar<> numInsts;
 
+    void countInst()
+    {
+        numInst++;
+        numInsts++;
+
+        thread->funcExeInst++;
+    }
+
     virtual Counter totalInstructions() const
     {
         return numInst - startNumInst;
