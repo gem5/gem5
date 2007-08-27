@@ -1,18 +1,34 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  34280                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 147884                       # Number of bytes of host memory used
-host_seconds                                     0.08                       # Real time elapsed on the host
-host_tick_rate                               17043200                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 124133                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 171628                       # Number of bytes of host memory used
+host_seconds                                     0.02                       # Real time elapsed on the host
+host_tick_rate                               61574601                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                        2578                       # Number of instructions simulated
+sim_insts                                        2577                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
-sim_ticks                                     1288500                       # Number of ticks simulated
+sim_ticks                                     1297500                       # Number of ticks simulated
+system.cpu.dtb.accesses                           717                       # DTB accesses
+system.cpu.dtb.acv                                  0                       # DTB access violations
+system.cpu.dtb.hits                               709                       # DTB hits
+system.cpu.dtb.misses                               8                       # DTB misses
+system.cpu.dtb.read_accesses                      419                       # DTB read accesses
+system.cpu.dtb.read_acv                             0                       # DTB read access violations
+system.cpu.dtb.read_hits                          415                       # DTB read hits
+system.cpu.dtb.read_misses                          4                       # DTB read misses
+system.cpu.dtb.write_accesses                     298                       # DTB write accesses
+system.cpu.dtb.write_acv                            0                       # DTB write access violations
+system.cpu.dtb.write_hits                         294                       # DTB write hits
+system.cpu.dtb.write_misses                         4                       # DTB write misses
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.itb.accesses                          2596                       # ITB accesses
+system.cpu.itb.acv                                  0                       # ITB acv
+system.cpu.itb.hits                              2585                       # ITB hits
+system.cpu.itb.misses                              11                       # ITB misses
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                             2578                       # number of cpu cycles simulated
-system.cpu.num_insts                             2578                       # Number of instructions executed
-system.cpu.num_refs                               710                       # Number of memory references
+system.cpu.numCycles                             2596                       # number of cpu cycles simulated
+system.cpu.num_insts                             2577                       # Number of instructions executed
+system.cpu.num_refs                               717                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls               4                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

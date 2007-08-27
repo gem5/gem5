@@ -1,18 +1,34 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 855891                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 151228                       # Number of bytes of host memory used
-host_seconds                                  2347.25                       # Real time elapsed on the host
-host_tick_rate                              427945543                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2579952                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 180972                       # Number of bytes of host memory used
+host_seconds                                   778.69                       # Real time elapsed on the host
+host_tick_rate                             1290253991                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                  2008987607                       # Number of instructions simulated
-sim_seconds                                  1.004494                       # Number of seconds simulated
-sim_ticks                                1004493803000                       # Number of ticks simulated
+sim_insts                                  2008987605                       # Number of instructions simulated
+sim_seconds                                  1.004711                       # Number of seconds simulated
+sim_ticks                                1004710587000                       # Number of ticks simulated
+system.cpu.dtb.accesses                     722298387                       # DTB accesses
+system.cpu.dtb.acv                                  0                       # DTB access violations
+system.cpu.dtb.hits                         721864922                       # DTB hits
+system.cpu.dtb.misses                          433465                       # DTB misses
+system.cpu.dtb.read_accesses                511488910                       # DTB read accesses
+system.cpu.dtb.read_acv                             0                       # DTB read access violations
+system.cpu.dtb.read_hits                    511070026                       # DTB read hits
+system.cpu.dtb.read_misses                     418884                       # DTB read misses
+system.cpu.dtb.write_accesses               210809477                       # DTB write accesses
+system.cpu.dtb.write_acv                            0                       # DTB write access violations
+system.cpu.dtb.write_hits                   210794896                       # DTB write hits
+system.cpu.dtb.write_misses                     14581                       # DTB write misses
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
+system.cpu.itb.accesses                    2009421175                       # ITB accesses
+system.cpu.itb.acv                                  0                       # ITB acv
+system.cpu.itb.hits                        2009421070                       # ITB hits
+system.cpu.itb.misses                             105                       # ITB misses
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                       2008987607                       # number of cpu cycles simulated
-system.cpu.num_insts                       2008987607                       # Number of instructions executed
-system.cpu.num_refs                         722390435                       # Number of memory references
+system.cpu.numCycles                       2009421175                       # number of cpu cycles simulated
+system.cpu.num_insts                       2008987605                       # Number of instructions executed
+system.cpu.num_refs                         722823898                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls              39                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

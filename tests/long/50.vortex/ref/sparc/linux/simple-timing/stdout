@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 12 2007 12:23:15
-M5 started Sun Aug 12 16:52:13 2007
-M5 executing on zeep
+M5 compiled Aug 14 2007 22:48:17
+M5 started Tue Aug 14 23:34:32 2007
+M5 executing on nacho
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/50.vortex/sparc/linux/simple-timing tests/run.py long/50.vortex/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 200267857000 because target called exit()
+Exiting @ tick 200316584000 because target called exit()

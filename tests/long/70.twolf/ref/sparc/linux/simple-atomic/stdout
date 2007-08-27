@@ -18,11 +18,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 15 2007 13:02:31
-M5 started Tue May 15 16:48:51 2007
-M5 executing on zizzer.eecs.umich.edu
+M5 compiled Aug 14 2007 22:48:17
+M5 started Tue Aug 14 23:36:54 2007
+M5 executing on nacho
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic tests/run.py long/70.twolf/sparc/linux/simple-atomic
 Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic/smred.sav
 Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 96717986000 because target called exit()
+Exiting @ tick 96718067000 because target called exit()

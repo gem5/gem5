@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 15 2007 17:08:10
-M5 started Tue May 15 17:08:12 2007
-M5 executing on zizzer.eecs.umich.edu
+M5 compiled Aug 21 2007 14:42:25
+M5 started Tue Aug 21 14:44:56 2007
+M5 executing on nacho
 command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
 Exiting @ tick 2233777512 because m5_exit instruction encountered
