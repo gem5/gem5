@@ -89,9 +89,14 @@ namespace AlphaISA {
         Addr paddr() const { return _pfn() << PageShift; }
     };
 
-    // ITB/DTB page table entry
-    struct PTE
+    // ITB/DTB table entry
+    struct TlbEntry
     {
+        //Construct an entry that maps to physical address addr.
+        TlbEntry(Addr addr)
+        {
+        }
+
         Addr tag;			// virtual page number tag
         Addr ppn;			// physical page number
         uint8_t xre;		// read permissions - VMEM_PERM_* mask

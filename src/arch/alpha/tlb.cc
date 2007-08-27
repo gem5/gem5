@@ -62,8 +62,8 @@ bool uncacheBit40 = false;
 TLB::TLB(const string &name, int s)
     : SimObject(name), size(s), nlu(0)
 {
-    table = new PTE[size];
-    memset(table, 0, sizeof(PTE[size]));
+    table = new TlbEntry[size];
+    memset(table, 0, sizeof(TlbEntry[size]));
     flushCache();
 }
 
@@ -74,23 +74,23 @@ TLB::~TLB()
 }
 
 // look up an entry in the TLB
-PTE *
+TlbEntry *
 TLB::lookup(Addr vpn, uint8_t asn)
 {
     // assume not found...
-    PTE *retval = NULL;
+    TlbEntry *retval = NULL;
 
-    if (PTECache[0]) {
-        if (vpn == PTECache[0]->tag &&
-            (PTECache[0]->asma || PTECache[0]->asn == asn))
-            retval = PTECache[0];
-        else if (PTECache[1]) {
-            if (vpn == PTECache[1]->tag &&
-                (PTECache[1]->asma || PTECache[1]->asn == asn))
-                retval = PTECache[1];
-            else if (PTECache[2] && vpn == PTECache[2]->tag &&
-                     (PTECache[2]->asma || PTECache[2]->asn == asn))
-                retval = PTECache[2];
+    if (EntryCache[0]) {
+        if (vpn == EntryCache[0]->tag &&
+            (EntryCache[0]->asma || EntryCache[0]->asn == asn))
+            retval = EntryCache[0];
+        else if (EntryCache[1]) {
+            if (vpn == EntryCache[1]->tag &&
+                (EntryCache[1]->asma || EntryCache[1]->asn == asn))
+                retval = EntryCache[1];
+            else if (EntryCache[2] && vpn == EntryCache[2]->tag &&
+                     (EntryCache[2]->asma || EntryCache[2]->asn == asn))
+                retval = EntryCache[2];
         }
     }
 
@@ -99,10 +99,10 @@ TLB::lookup(Addr vpn, uint8_t asn)
         if (i != lookupTable.end()) {
             while (i->first == vpn) {
                 int index = i->second;
-                PTE *pte = &table[index];
-                assert(pte->valid);
-                if (vpn == pte->tag && (pte->asma || pte->asn == asn)) {
-                    retval = updateCache(pte);
+                TlbEntry *entry = &table[index];
+                assert(entry->valid);
+                if (vpn == entry->tag && (entry->asma || entry->asn == asn)) {
+                    retval = updateCache(entry);
                     break;
                 }
 
@@ -157,7 +157,7 @@ TLB::checkCacheability(RequestPtr &req)
 
 // insert a new TLB entry
 void
-TLB::insert(Addr addr, PTE &pte)
+TLB::insert(Addr addr, TlbEntry &entry)
 {
     flushCache();
     VAddr vaddr = addr;
@@ -181,9 +181,9 @@ TLB::insert(Addr addr, PTE &pte)
         lookupTable.erase(i);
     }
 
-    DPRINTF(TLB, "insert @%d: %#x -> %#x\n", nlu, vaddr.vpn(), pte.ppn);
+    DPRINTF(TLB, "insert @%d: %#x -> %#x\n", nlu, vaddr.vpn(), entry.ppn);
 
-    table[nlu] = pte;
+    table[nlu] = entry;
     table[nlu].tag = vaddr.vpn();
     table[nlu].valid = true;
 
@@ -195,7 +195,7 @@ void
 TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
-    memset(table, 0, sizeof(PTE[size]));
+    memset(table, 0, sizeof(TlbEntry[size]));
     flushCache();
     lookupTable.clear();
     nlu = 0;
@@ -209,17 +209,17 @@ TLB::flushProcesses()
     PageTable::iterator end = lookupTable.end();
     while (i != end) {
         int index = i->second;
-        PTE *pte = &table[index];
-        assert(pte->valid);
+        TlbEntry *entry = &table[index];
+        assert(entry->valid);
 
         // we can't increment i after we erase it, so save a copy and
         // increment it to get the next entry now
         PageTable::iterator cur = i;
         ++i;
 
-        if (!pte->asma) {
-            DPRINTF(TLB, "flush @%d: %#x -> %#x\n", index, pte->tag, pte->ppn);
-            pte->valid = false;
+        if (!entry->asma) {
+            DPRINTF(TLB, "flush @%d: %#x -> %#x\n", index, entry->tag, entry->ppn);
+            entry->valid = false;
             lookupTable.erase(cur);
         }
     }
@@ -237,15 +237,15 @@ TLB::flushAddr(Addr addr, uint8_t asn)
 
     while (i != lookupTable.end() && i->first == vaddr.vpn()) {
         int index = i->second;
-        PTE *pte = &table[index];
-        assert(pte->valid);
+        TlbEntry *entry = &table[index];
+        assert(entry->valid);
 
-        if (vaddr.vpn() == pte->tag && (pte->asma || pte->asn == asn)) {
+        if (vaddr.vpn() == entry->tag && (entry->asma || entry->asn == asn)) {
             DPRINTF(TLB, "flushaddr @%d: %#x -> %#x\n", index, vaddr.vpn(),
-                    pte->ppn);
+                    entry->ppn);
 
             // invalidate this entry
-            pte->valid = false;
+            entry->valid = false;
 
             lookupTable.erase(i++);
         } else {
@@ -262,7 +262,7 @@ TLB::serialize(ostream &os)
     SERIALIZE_SCALAR(nlu);
 
     for (int i = 0; i < size; i++) {
-        nameOut(os, csprintf("%s.PTE%d", name(), i));
+        nameOut(os, csprintf("%s.Entry%d", name(), i));
         table[i].serialize(os);
     }
 }
@@ -274,7 +274,7 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(nlu);
 
     for (int i = 0; i < size; i++) {
-        table[i].unserialize(cp, csprintf("%s.PTE%d", section, i));
+        table[i].unserialize(cp, csprintf("%s.Entry%d", section, i));
         if (table[i].valid) {
             lookupTable.insert(make_pair(table[i].tag, i));
         }
@@ -364,20 +364,20 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         } else {
             // not a physical address: need to look up pte
             int asn = DTB_ASN_ASN(tc->readMiscRegNoEffect(IPR_DTB_ASN));
-            PTE *pte = lookup(VAddr(req->getVaddr()).vpn(),
+            TlbEntry *entry = lookup(VAddr(req->getVaddr()).vpn(),
                               asn);
 
-            if (!pte) {
+            if (!entry) {
                 misses++;
                 return new ItbPageFault(req->getVaddr());
             }
 
-            req->setPaddr((pte->ppn << PageShift) +
+            req->setPaddr((entry->ppn << PageShift) +
                           (VAddr(req->getVaddr()).offset()
                            & ~3));
 
             // check permissions for this access
-            if (!(pte->xre &
+            if (!(entry->xre &
                   (1 << ICM_CM(tc->readMiscRegNoEffect(IPR_ICM))))) {
                 // instruction access fault
                 acv++;
@@ -548,10 +548,9 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             int asn = DTB_ASN_ASN(tc->readMiscRegNoEffect(IPR_DTB_ASN));
 
             // not a physical address: need to look up pte
-            PTE *pte = lookup(VAddr(req->getVaddr()).vpn(),
-                              asn);
+            TlbEntry *entry = lookup(VAddr(req->getVaddr()).vpn(), asn);
 
-            if (!pte) {
+            if (!entry) {
                 // page fault
                 if (write) { write_misses++; } else { read_misses++; }
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
@@ -563,32 +562,32 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                                               flags));
             }
 
-            req->setPaddr((pte->ppn << PageShift) +
+            req->setPaddr((entry->ppn << PageShift) +
                           VAddr(req->getVaddr()).offset());
 
             if (write) {
-                if (!(pte->xwe & MODE2MASK(mode))) {
+                if (!(entry->xwe & MODE2MASK(mode))) {
                     // declare the instruction access fault
                     write_acv++;
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_ACV_MASK |
-                        (pte->fonw ? MM_STAT_FONW_MASK : 0);
+                        (entry->fonw ? MM_STAT_FONW_MASK : 0);
                     return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
                 }
-                if (pte->fonw) {
+                if (entry->fonw) {
                     write_acv++;
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_FONW_MASK;
                     return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
                 }
             } else {
-                if (!(pte->xre & MODE2MASK(mode))) {
+                if (!(entry->xre & MODE2MASK(mode))) {
                     read_acv++;
                     uint64_t flags = MM_STAT_ACV_MASK |
-                        (pte->fonr ? MM_STAT_FONR_MASK : 0);
+                        (entry->fonr ? MM_STAT_FONR_MASK : 0);
                     return new DtbAcvFault(req->getVaddr(), req->getFlags(), flags);
                 }
-                if (pte->fonr) {
+                if (entry->fonr) {
                     read_acv++;
                     uint64_t flags = MM_STAT_FONR_MASK;
                     return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
@@ -609,15 +608,15 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     return checkCacheability(req);
 }
 
-PTE &
+TlbEntry &
 TLB::index(bool advance)
 {
-    PTE *pte = &table[nlu];
+    TlbEntry *entry = &table[nlu];
 
     if (advance)
         nextnlu();
 
-    return *pte;
+    return *entry;
 }
 
 /* end namespace AlphaISA */ }

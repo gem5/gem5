@@ -58,21 +58,37 @@
 #ifndef __ARCH_X86_TLB_HH__
 #define __ARCH_X86_TLB_HH__
 
+#include <iostream>
+#include <string>
+
+#include "sim/host.hh"
 #include "sim/tlb.hh"
+
+class Checkpoint;
 
 namespace X86ISA
 {
-    class ITB : public GenericITB
+    struct TlbEntry
+    {
+        Addr pageStart;
+        TlbEntry() {}
+        TlbEntry(Addr paddr) : pageStart(paddr) {}
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
+    class ITB : public GenericITB<false, false>
     {
       public:
-        ITB(const std::string &name) : GenericITB(name)
+        ITB(const std::string &name) : GenericITB<false, false>(name)
         {}
     };
 
-    class DTB : public GenericDTB
+    class DTB : public GenericDTB<false, false>
     {
       public:
-        DTB(const std::string &name) : GenericDTB(name)
+        DTB(const std::string &name) : GenericDTB<false, false>(name)
         {}
     };
 };

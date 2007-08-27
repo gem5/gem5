@@ -63,32 +63,6 @@ PageTable::~PageTable()
 {
 }
 
-Fault
-PageTable::page_check(Addr addr, int64_t size) const
-{
-    if (size < sizeof(uint64_t)) {
-        if (!isPowerOf2(size)) {
-            panic("Invalid request size!\n");
-            return genMachineCheckFault();
-        }
-
-        if ((size - 1) & addr)
-            return genAlignmentFault();
-    }
-    else {
-        if ((addr & (VMPageSize - 1)) + size > VMPageSize) {
-            panic("Invalid request size!\n");
-            return genMachineCheckFault();
-        }
-
-        if ((sizeof(uint64_t) - 1) & addr)
-            return genAlignmentFault();
-    }
-
-    return NoFault;
-}
-
-
 void
 PageTable::allocate(Addr vaddr, int64_t size)
 {
@@ -98,62 +72,73 @@ PageTable::allocate(Addr vaddr, int64_t size)
     DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        m5::hash_map<Addr,Addr>::iterator iter = pTable.find(vaddr);
+        PTableItr iter = pTable.find(vaddr);
 
         if (iter != pTable.end()) {
             // already mapped
-            fatal("PageTable::allocate: address 0x%x already mapped", vaddr);
+            fatal("PageTable::allocate: address 0x%x already mapped",
+                    vaddr);
         }
 
-        pTable[vaddr] = system->new_page();
+        pTable[vaddr] = TheISA::TlbEntry(system->new_page());
         updateCache(vaddr, pTable[vaddr]);
     }
 }
 
-
-
 bool
-PageTable::translate(Addr vaddr, Addr &paddr)
+PageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
 {
     Addr page_addr = pageAlign(vaddr);
-    paddr = 0;
 
     if (pTableCache[0].vaddr == page_addr) {
-        paddr = pTableCache[0].paddr + pageOffset(vaddr);
+        entry = pTableCache[0].entry;
         return true;
     }
     if (pTableCache[1].vaddr == page_addr) {
-        paddr = pTableCache[1].paddr + pageOffset(vaddr);
+        entry = pTableCache[1].entry;
         return true;
     }
     if (pTableCache[2].vaddr == page_addr) {
-        paddr = pTableCache[2].paddr + pageOffset(vaddr);
+        entry = pTableCache[2].entry;
         return true;
     }
 
-    m5::hash_map<Addr,Addr>::iterator iter = pTable.find(page_addr);
+    PTableItr iter = pTable.find(page_addr);
 
     if (iter == pTable.end()) {
         return false;
     }
 
     updateCache(page_addr, iter->second);
-    paddr = iter->second + pageOffset(vaddr);
+    entry = iter->second;
     return true;
 }
 
+bool
+PageTable::translate(Addr vaddr, Addr &paddr)
+{
+    TheISA::TlbEntry entry;
+    if (!lookup(vaddr, entry))
+        return false;
+    paddr = pageOffset(vaddr) + entry.pageStart;
+    return true;
+}
 
 Fault
-PageTable::translate(RequestPtr &req)
+PageTable::translate(RequestPtr req)
 {
     Addr paddr;
     assert(pageAlign(req->getVaddr() + req->getSize() - 1)
            == pageAlign(req->getVaddr()));
     if (!translate(req->getVaddr(), paddr)) {
-        return Fault(new PageTableFault(req->getVaddr()));
+        return Fault(new GenericPageTableFault(req->getVaddr()));
     }
     req->setPaddr(paddr);
-    return page_check(req->getPaddr(), req->getSize());
+    if ((paddr & (pageSize - 1)) + req->getSize() > pageSize) {
+        panic("Request spans page boundaries!\n");
+        return NoFault;
+    }
+    return NoFault;
 }
 
 void
@@ -163,11 +148,11 @@ PageTable::serialize(std::ostream &os)
 
     int count = 0;
 
-    m5::hash_map<Addr,Addr>::iterator iter = pTable.begin();
-    m5::hash_map<Addr,Addr>::iterator end = pTable.end();
+    PTableItr iter = pTable.begin();
+    PTableItr end = pTable.end();
     while (iter != end) {
         paramOut(os, csprintf("ptable.entry%dvaddr", count), iter->first);
-        paramOut(os, csprintf("ptable.entry%dpaddr", count), iter->second);
+        iter->second.serialize(os);
 
         ++iter;
         ++count;
@@ -180,16 +165,16 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
 {
     int i = 0, count;
     paramIn(cp, section, "ptable.size", count);
-    Addr vaddr, paddr;
+    Addr vaddr;
+    TheISA::TlbEntry entry;
 
     pTable.clear();
 
     while(i < count) {
         paramIn(cp, section, csprintf("ptable.entry%dvaddr", i), vaddr);
-        paramIn(cp, section, csprintf("ptable.entry%dpaddr", i), paddr);
-        pTable[vaddr] = paddr;
+        entry.unserialize(cp, section);
+        pTable[vaddr] = entry;
         ++i;
    }
-
 }
 

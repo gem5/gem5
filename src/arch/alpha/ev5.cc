@@ -245,15 +245,16 @@ AlphaISA::MiscRegFile::readIpr(int idx, ThreadContext *tc)
 
       case AlphaISA::IPR_DTB_PTE:
         {
-            AlphaISA::PTE &pte = tc->getDTBPtr()->index(!tc->misspeculating());
+            AlphaISA::TlbEntry &entry
+                = tc->getDTBPtr()->index(!tc->misspeculating());
 
-            retval |= ((uint64_t)pte.ppn & ULL(0x7ffffff)) << 32;
-            retval |= ((uint64_t)pte.xre & ULL(0xf)) << 8;
-            retval |= ((uint64_t)pte.xwe & ULL(0xf)) << 12;
-            retval |= ((uint64_t)pte.fonr & ULL(0x1)) << 1;
-            retval |= ((uint64_t)pte.fonw & ULL(0x1))<< 2;
-            retval |= ((uint64_t)pte.asma & ULL(0x1)) << 4;
-            retval |= ((uint64_t)pte.asn & ULL(0x7f)) << 57;
+            retval |= ((uint64_t)entry.ppn & ULL(0x7ffffff)) << 32;
+            retval |= ((uint64_t)entry.xre & ULL(0xf)) << 8;
+            retval |= ((uint64_t)entry.xwe & ULL(0xf)) << 12;
+            retval |= ((uint64_t)entry.fonr & ULL(0x1)) << 1;
+            retval |= ((uint64_t)entry.fonw & ULL(0x1))<< 2;
+            retval |= ((uint64_t)entry.asma & ULL(0x1)) << 4;
+            retval |= ((uint64_t)entry.asn & ULL(0x7f)) << 57;
         }
         break;
 
@@ -480,7 +481,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         break;
 
       case AlphaISA::IPR_DTB_TAG: {
-          struct AlphaISA::PTE pte;
+          struct AlphaISA::TlbEntry entry;
 
           // FIXME: granularity hints NYI...
           if (EV5::DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
@@ -490,21 +491,21 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
           ipr[idx] = val;
 
           // construct PTE for new entry
-          pte.ppn = EV5::DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xre = EV5::DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xwe = EV5::DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonr = EV5::DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonw = EV5::DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asma = EV5::DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asn = EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
+          entry.ppn = EV5::DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.xre = EV5::DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.xwe = EV5::DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.fonr = EV5::DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.fonw = EV5::DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.asma = EV5::DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.asn = EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          tc->getDTBPtr()->insert(val, pte);
+          tc->getDTBPtr()->insert(val, entry);
       }
         break;
 
       case AlphaISA::IPR_ITB_PTE: {
-          struct AlphaISA::PTE pte;
+          struct AlphaISA::TlbEntry entry;
 
           // FIXME: granularity hints NYI...
           if (EV5::ITB_PTE_GH(val) != 0)
@@ -514,16 +515,16 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
           ipr[idx] = val;
 
           // construct PTE for new entry
-          pte.ppn = EV5::ITB_PTE_PPN(val);
-          pte.xre = EV5::ITB_PTE_XRE(val);
-          pte.xwe = 0;
-          pte.fonr = EV5::ITB_PTE_FONR(val);
-          pte.fonw = EV5::ITB_PTE_FONW(val);
-          pte.asma = EV5::ITB_PTE_ASMA(val);
-          pte.asn = EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
+          entry.ppn = EV5::ITB_PTE_PPN(val);
+          entry.xre = EV5::ITB_PTE_XRE(val);
+          entry.xwe = 0;
+          entry.fonr = EV5::ITB_PTE_FONR(val);
+          entry.fonw = EV5::ITB_PTE_FONW(val);
+          entry.asma = EV5::ITB_PTE_ASMA(val);
+          entry.asn = EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
-          tc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], pte);
+          tc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], entry);
       }
         break;
 

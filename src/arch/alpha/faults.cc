@@ -185,18 +185,18 @@ void ItbPageFault::invoke(ThreadContext * tc)
         VAddr vaddr(pc);
         VAddr paddr(physaddr);
 
-        PTE pte;
-        pte.tag = vaddr.vpn();
-        pte.ppn = paddr.vpn();
-        pte.xre = 15; //This can be read in all modes.
-        pte.xwe = 1; //This can be written only in kernel mode.
-        pte.asn = p->M5_pid; //Address space number.
-        pte.asma = false; //Only match on this ASN.
-        pte.fonr = false; //Don't fault on read.
-        pte.fonw = false; //Don't fault on write.
-        pte.valid = true; //This entry is valid.
+        TlbEntry entry;
+        entry.tag = vaddr.vpn();
+        entry.ppn = paddr.vpn();
+        entry.xre = 15; //This can be read in all modes.
+        entry.xwe = 1; //This can be written only in kernel mode.
+        entry.asn = p->M5_pid; //Address space number.
+        entry.asma = false; //Only match on this ASN.
+        entry.fonr = false; //Don't fault on read.
+        entry.fonw = false; //Don't fault on write.
+        entry.valid = true; //This entry is valid.
 
-        tc->getITBPtr()->insert(vaddr.page(), pte);
+        tc->getITBPtr()->insert(vaddr.page(), entry);
     }
 }
 
@@ -214,18 +214,18 @@ void NDtbMissFault::invoke(ThreadContext * tc)
     } else {
         VAddr paddr(physaddr);
 
-        PTE pte;
-        pte.tag = vaddr.vpn();
-        pte.ppn = paddr.vpn();
-        pte.xre = 15; //This can be read in all modes.
-        pte.xwe = 15; //This can be written in all modes.
-        pte.asn = p->M5_pid; //Address space number.
-        pte.asma = false; //Only match on this ASN.
-        pte.fonr = false; //Don't fault on read.
-        pte.fonw = false; //Don't fault on write.
-        pte.valid = true; //This entry is valid.
+        TlbEntry entry;
+        entry.tag = vaddr.vpn();
+        entry.ppn = paddr.vpn();
+        entry.xre = 15; //This can be read in all modes.
+        entry.xwe = 15; //This can be written in all modes.
+        entry.asn = p->M5_pid; //Address space number.
+        entry.asma = false; //Only match on this ASN.
+        entry.fonr = false; //Don't fault on read.
+        entry.fonw = false; //Don't fault on write.
+        entry.valid = true; //This entry is valid.
 
-        tc->getDTBPtr()->insert(vaddr.page(), pte);
+        tc->getDTBPtr()->insert(vaddr.page(), entry);
     }
 }
 

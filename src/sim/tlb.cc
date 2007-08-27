@@ -34,21 +34,17 @@
 #include "sim/tlb.hh"
 
 Fault
-GenericITB::translate(RequestPtr &req, ThreadContext *tc)
+GenericTLBBase::translate(RequestPtr req, ThreadContext * tc)
 {
 #if FULL_SYSTEM
-    panic("Generic ITB translation shouldn't be used in full system mode.\n");
+        panic("Generic translation shouldn't be used in full system mode.\n");
 #else
-    return tc->getProcessPtr()->pTable->translate(req);
+        Process * p = tc->getProcessPtr();
+
+        Fault fault = p->pTable->translate(req);
+        if(fault != NoFault)
+            return fault;
+
+        return NoFault;
 #endif
 }
-
-Fault
-GenericDTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
-{
-#if FULL_SYSTEM
-    panic("Generic DTB translation shouldn't be used in full system mode.\n");
-#else
-    return tc->getProcessPtr()->pTable->translate(req);
-#endif
-};

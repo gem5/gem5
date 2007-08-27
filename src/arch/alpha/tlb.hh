@@ -48,20 +48,20 @@ class ThreadContext;
 
 namespace AlphaISA
 {
-    class PTE;
+    class TlbEntry;
 
     class TLB : public SimObject
     {
       protected:
         typedef std::multimap<Addr, int> PageTable;
-        PageTable lookupTable;	// Quick lookup into page table
+        PageTable lookupTable;  // Quick lookup into page table
 
-        PTE *table;	// the Page Table
-        int size;			// TLB Size
-        int nlu;			// not last used entry (for replacement)
+        TlbEntry *table;        // the Page Table
+        int size;               // TLB Size
+        int nlu;                // not last used entry (for replacement)
 
         void nextnlu() { if (++nlu >= size) nlu = 0; }
-        PTE *lookup(Addr vpn, uint8_t asn);
+        TlbEntry *lookup(Addr vpn, uint8_t asn);
 
       public:
         TLB(const std::string &name, int size);
@@ -69,8 +69,8 @@ namespace AlphaISA
 
         int getsize() const { return size; }
 
-        PTE &index(bool advance = true);
-        void insert(Addr vaddr, PTE &pte);
+        TlbEntry &index(bool advance = true);
+        void insert(Addr vaddr, TlbEntry &entry);
 
         void flushAll();
         void flushProcesses();
@@ -90,13 +90,17 @@ namespace AlphaISA
         virtual void unserialize(Checkpoint *cp, const std::string &section);
 
         // Most recently used page table entries
-        PTE *PTECache[3];
-        inline void flushCache() { memset(PTECache, 0, 3 * sizeof(PTE*)); }
-        inline PTE* updateCache(PTE *pte) {
-            PTECache[2] = PTECache[1];
-            PTECache[1] = PTECache[0];
-            PTECache[0] = pte;
-            return pte;
+        TlbEntry *EntryCache[3];
+        inline void flushCache()
+        {
+            memset(EntryCache, 0, 3 * sizeof(TlbEntry*));
+        }
+
+        inline TlbEntry* updateCache(TlbEntry *entry) {
+            EntryCache[2] = EntryCache[1];
+            EntryCache[1] = EntryCache[0];
+            EntryCache[0] = entry;
+            return entry;
         }
     };
 

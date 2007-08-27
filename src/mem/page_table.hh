@@ -40,11 +40,11 @@
 
 #include "sim/faults.hh"
 #include "arch/isa_traits.hh"
+#include "arch/tlb.hh"
 #include "base/hashmap.hh"
-#include "base/trace.hh"
 #include "mem/request.hh"
-#include "mem/packet.hh"
-#include "sim/sim_object.hh"
+#include "sim/host.hh"
+#include "sim/serialize.hh"
 
 class System;
 
@@ -54,12 +54,14 @@ class System;
 class PageTable
 {
   protected:
-    m5::hash_map<Addr,Addr> pTable;
+    typedef m5::hash_map<Addr, TheISA::TlbEntry> PTable;
+    typedef PTable::iterator PTableItr;
+    PTable pTable;
 
     struct cacheElement {
-        Addr paddr;
         Addr vaddr;
-    } ;
+        TheISA::TlbEntry entry;
+    };
 
     struct cacheElement pTableCache[3];
 
@@ -77,9 +79,14 @@ class PageTable
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    Fault page_check(Addr addr, int64_t size) const;
-
     void allocate(Addr vaddr, int64_t size);
+
+    /**
+     * Lookup function
+     * @param vaddr The virtual address.
+     * @return entry The page table entry corresponding to vaddr.
+     */
+    bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
 
     /**
      * Translate function
@@ -90,28 +97,29 @@ class PageTable
 
     /**
      * Perform a translation on the memory request, fills in paddr
-     * field of mem_req.
+     * field of req.
      * @param req The memory request.
      */
-    Fault translate(RequestPtr &req);
+    Fault translate(RequestPtr req);
 
     /**
      * Update the page table cache.
      * @param vaddr virtual address (page aligned) to check
-     * @param paddr physical address (page aligned) to return
+     * @param pte page table entry to return
      */
-    inline void updateCache(Addr vaddr, Addr paddr)
+    inline void updateCache(Addr vaddr, TheISA::TlbEntry entry)
     {
-        pTableCache[2].paddr = pTableCache[1].paddr;
+        pTableCache[2].entry = pTableCache[1].entry;
         pTableCache[2].vaddr = pTableCache[1].vaddr;
-        pTableCache[1].paddr = pTableCache[0].paddr;
+        pTableCache[1].entry = pTableCache[0].entry;
         pTableCache[1].vaddr = pTableCache[0].vaddr;
-        pTableCache[0].paddr = paddr;
+        pTableCache[0].entry = entry;
         pTableCache[0].vaddr = vaddr;
     }
 
 
     void serialize(std::ostream &os);
+
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 

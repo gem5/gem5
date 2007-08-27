@@ -56,13 +56,19 @@ void UnimpFault::invoke(ThreadContext * tc)
 {
     panic("Unimpfault: %s\n", panicStr.c_str());
 }
+
 #if !FULL_SYSTEM
-void PageTableFault::invoke(ThreadContext *tc)
+void GenericPageTableFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
 
     if (!p->checkAndAllocNextPage(vaddr))
         panic("Page table fault when accessing virtual address %#x\n", vaddr);
 
+}
+
+void GenericAlignmentFault::invoke(ThreadContext *tc)
+{
+    panic("Alignment fault when accessing virtual address %#x\n", vaddr);
 }
 #endif

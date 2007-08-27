@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 namespace AlphaISA
 {
     void
-    PTE::serialize(std::ostream &os)
+    TlbEntry::serialize(std::ostream &os)
     {
         SERIALIZE_SCALAR(tag);
         SERIALIZE_SCALAR(ppn);
@@ -48,7 +48,7 @@ namespace AlphaISA
     }
 
     void
-    PTE::unserialize(Checkpoint *cp, const std::string &section)
+    TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
     {
         UNSERIALIZE_SCALAR(tag);
         UNSERIALIZE_SCALAR(ppn);

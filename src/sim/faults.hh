@@ -77,13 +77,23 @@ class UnimpFault : public FaultBase
 };
 
 #if !FULL_SYSTEM
-class PageTableFault : public FaultBase
+class GenericPageTableFault : public FaultBase
 {
   private:
     Addr vaddr;
   public:
-    FaultName name() const {return "M5 page table fault";}
-    PageTableFault(Addr va) : vaddr(va) {}
+    FaultName name() const {return "Generic page table fault";}
+    GenericPageTableFault(Addr va) : vaddr(va) {}
+    void invoke(ThreadContext * tc);
+};
+
+class GenericAlignmentFault : public FaultBase
+{
+  private:
+    Addr vaddr;
+  public:
+    FaultName name() const {return "Generic alignment fault";}
+    GenericAlignmentFault(Addr va) : vaddr(va) {}
     void invoke(ThreadContext * tc);
 };
 #endif

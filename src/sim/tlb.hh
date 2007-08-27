@@ -31,36 +31,64 @@
 #ifndef __SIM_TLB_HH__
 #define __SIM_TLB_HH__
 
+#include "base/misc.hh"
 #include "mem/request.hh"
-#include "sim/sim_object.hh"
 #include "sim/faults.hh"
+#include "sim/sim_object.hh"
 
 class ThreadContext;
 class Packet;
 
-class GenericTLB : public SimObject
+class GenericTLBBase : public SimObject
+{
+  protected:
+    GenericTLBBase(const std::string &name) : SimObject(name)
+    {}
+
+    Fault translate(RequestPtr req, ThreadContext *tc);
+};
+
+template <bool doSizeCheck=true, bool doAlignmentCheck=true>
+class GenericTLB : public GenericTLBBase
 {
   public:
-    GenericTLB(const std::string &name) : SimObject(name)
+    GenericTLB(const std::string &name) : GenericTLBBase(name)
+    {}
+
+    Fault translate(RequestPtr req, ThreadContext *tc, bool=false)
+    {
+        Fault fault = GenericTLBBase::translate(req, tc);
+        if (fault != NoFault)
+            return fault;
+
+        typeof(req->getSize()) size = req->getSize();
+        Addr paddr = req->getPaddr();
+
+        if(doSizeCheck && !isPowerOf2(size))
+            panic("Invalid request size!\n");
+        if (doAlignmentCheck && ((size - 1) & paddr))
+            return Fault(new GenericAlignmentFault(paddr));
+
+        return NoFault;
+    }
+};
+
+template <bool doSizeCheck=true, bool doAlignmentCheck=true>
+class GenericITB : public GenericTLB<doSizeCheck, doAlignmentCheck>
+{
+  public:
+    GenericITB(const std::string &name) :
+        GenericTLB<doSizeCheck, doAlignmentCheck>(name)
     {}
 };
 
-class GenericITB : public GenericTLB
+template <bool doSizeCheck=true, bool doAlignmentCheck=true>
+class GenericDTB : public GenericTLB<doSizeCheck, doAlignmentCheck>
 {
   public:
-    GenericITB(const std::string &name) : GenericTLB(name)
+    GenericDTB(const std::string &name) :
+        GenericTLB<doSizeCheck, doAlignmentCheck>(name)
     {}
-
-    Fault translate(RequestPtr &req, ThreadContext *tc);
-};
-
-class GenericDTB : public GenericTLB
-{
-  public:
-    GenericDTB(const std::string &name) : GenericTLB(name)
-    {}
-
-    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

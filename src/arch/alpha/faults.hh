@@ -88,11 +88,6 @@ static inline Fault genMachineCheckFault()
     return new MachineCheckFault;
 }
 
-static inline Fault genAlignmentFault()
-{
-    return new AlignmentFault;
-}
-
 class ResetFault : public AlphaFault
 {
   private:

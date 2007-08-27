@@ -33,6 +33,7 @@
 
 #include <inttypes.h>
 #include "base/bigint.hh"
+#include "mem/page_table.hh"
 
 namespace SparcISA
 {
@@ -60,6 +61,8 @@ namespace SparcISA
     typedef int RegContextVal;
 
     typedef uint16_t RegIndex;
+
+    typedef ::PageTable<> PageTable;
 }
 
 #endif

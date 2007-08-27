@@ -283,11 +283,6 @@ static inline Fault genMachineCheckFault()
     return new InternalProcessorError;
 }
 
-static inline Fault genAlignmentFault()
-{
-    return new MemAddressNotAligned;
-}
-
 
 } // SparcISA namespace
 

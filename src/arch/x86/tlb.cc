@@ -60,8 +60,20 @@
 #include "arch/x86/tlb.hh"
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
+#include "sim/serialize.hh"
 
 namespace X86ISA {
+    void
+    TlbEntry::serialize(std::ostream &os)
+    {
+        SERIALIZE_SCALAR(pageStart);
+    }
+
+    void
+    TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_SCALAR(pageStart);
+    }
 };
 
 X86ISA::ITB *
