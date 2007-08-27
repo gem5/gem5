@@ -332,8 +332,8 @@
             0x3: mov_Ov_rAX();
             0x4: movs_Yb_Xb();
             0x5: movs_Yv_Xv();
-            0x6: cmps_Yb_Xb();
-            0x7: cmps_Yv_Xv();
+            0x6: StringInst::CMPS(Yb,Xb);
+            0x7: StringInst::CMPS(Yv,Xv);
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::TEST(rAb,Ib);

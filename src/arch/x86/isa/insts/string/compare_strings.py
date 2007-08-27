@@ -53,16 +53,60 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class CMPS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CMPSB(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CMPSW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CMPSD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class CMPSQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop CMPS_M_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    ld t1, seg, [1, t0, rsi]
+    ld t2, es, [1, t0, rdi]
+    sub t0, t1, t2, flags=(OF, SF, ZF, AF, PF, CF)
+
+    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
+};
+
+#
+# Versions which have the rep prefix. These could benefit from some loop
+# unrolling.
+#
+
+def macroop CMPS_E_M_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    ld t1, seg, [1, t0, rsi]
+    ld t2, es, [1, t0, rdi]
+    sub t0, t1, t2, flags=(OF, SF, ZF, AF, PF, CF)
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
+    bri t0, 4, flags=(CSTRZnEZF,)
+    fault "NoFault"
+};
+
+def macroop CMPS_N_M_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    ld t1, seg, [1, t0, rsi]
+    ld t2, es, [1, t0, rdi]
+    sub t0, t1, t2, flags=(OF, SF, ZF, AF, PF, CF)
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
+    bri t0, 4, flags=(CSTRnZnEZF,)
+    fault "NoFault"
+};
+'''
