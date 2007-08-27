@@ -121,6 +121,12 @@ Sparc32LiveProcess::startup()
     threadContexts[0]->setMiscRegNoEffect(MISCREG_TL, 0);
     //Set the ASI register to something fixed
     threadContexts[0]->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
+
+    /*
+     * T1 specific registers
+     */
+    //Turn on the icache, dcache, dtb translation, and itb translation.
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL, 15);
 }
 
 void
@@ -137,7 +143,7 @@ Sparc64LiveProcess::startup()
     threadContexts[0]->setMiscRegNoEffect(MISCREG_FSR, 0);
 
     threadContexts[0]->setMiscRegNoEffect(MISCREG_TICK, 0);
-    //
+
     /*
      * Register window management registers
      */
@@ -163,6 +169,12 @@ Sparc64LiveProcess::startup()
     threadContexts[0]->setMiscRegNoEffect(MISCREG_TL, 0);
     //Set the ASI register to something fixed
     threadContexts[0]->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
+
+    /*
+     * T1 specific registers
+     */
+    //Turn on the icache, dcache, dtb translation, and itb translation.
+    threadContexts[0]->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL, 15);
 }
 
 M5_32_auxv_t::M5_32_auxv_t(int32_t type, int32_t val)

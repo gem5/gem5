@@ -29,13 +29,13 @@
  *          Kevin Lim
  */
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/faults.hh"
+#include "arch/alpha/tlb.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
-#if FULL_SYSTEM
-#include "arch/alpha/ev5.hh"
-#else
+#if !FULL_SYSTEM
 #include "sim/process.hh"
 #include "mem/page_table.hh"
 #endif
@@ -82,10 +82,6 @@ FaultStat DtbAcvFault::_count;
 FaultName DtbAlignmentFault::_name = "unalign";
 FaultVect DtbAlignmentFault::_vect = 0x0301;
 FaultStat DtbAlignmentFault::_count;
-
-FaultName ItbMissFault::_name = "itbmiss";
-FaultVect ItbMissFault::_vect = 0x0181;
-FaultStat ItbMissFault::_count;
 
 FaultName ItbPageFault::_name = "itbmiss";
 FaultVect ItbPageFault::_vect = 0x0181;
@@ -174,6 +170,63 @@ void ItbFault::invoke(ThreadContext * tc)
     }
 
     AlphaFault::invoke(tc);
+}
+
+#else
+
+void ItbPageFault::invoke(ThreadContext * tc)
+{
+    Process *p = tc->getProcessPtr();
+    Addr physaddr;
+    bool success = p->pTable->translate(pc, physaddr);
+    if(!success) {
+        panic("Tried to execute unmapped address %#x.\n", pc);
+    } else {
+        VAddr vaddr(pc);
+        VAddr paddr(physaddr);
+
+        PTE pte;
+        pte.tag = vaddr.vpn();
+        pte.ppn = paddr.vpn();
+        pte.xre = 15; //This can be read in all modes.
+        pte.xwe = 1; //This can be written only in kernel mode.
+        pte.asn = p->M5_pid; //Address space number.
+        pte.asma = false; //Only match on this ASN.
+        pte.fonr = false; //Don't fault on read.
+        pte.fonw = false; //Don't fault on write.
+        pte.valid = true; //This entry is valid.
+
+        tc->getITBPtr()->insert(vaddr.page(), pte);
+    }
+}
+
+void NDtbMissFault::invoke(ThreadContext * tc)
+{
+    Process *p = tc->getProcessPtr();
+    Addr physaddr;
+    bool success = p->pTable->translate(vaddr, physaddr);
+    if(!success) {
+        p->checkAndAllocNextPage(vaddr);
+        success = p->pTable->translate(vaddr, physaddr);
+    }
+    if(!success) {
+        panic("Tried to access unmapped address %#x.\n", (Addr)vaddr);
+    } else {
+        VAddr paddr(physaddr);
+
+        PTE pte;
+        pte.tag = vaddr.vpn();
+        pte.ppn = paddr.vpn();
+        pte.xre = 15; //This can be read in all modes.
+        pte.xwe = 15; //This can be written in all modes.
+        pte.asn = p->M5_pid; //Address space number.
+        pte.asma = false; //Only match on this ASN.
+        pte.fonr = false; //Don't fault on read.
+        pte.fonw = false; //Don't fault on write.
+        pte.valid = true; //This entry is valid.
+
+        tc->getDTBPtr()->insert(vaddr.page(), pte);
+    }
 }
 
 #endif

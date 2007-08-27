@@ -150,10 +150,8 @@ FullO3CPU<Impl>::DeallocateContextEvent::description()
 template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
     : BaseO3CPU(params),
-#if FULL_SYSTEM
       itb(params->itb),
       dtb(params->dtb),
-#endif
       tickEvent(this),
       removeInstsThisCycle(false),
       fetch(o3_cpu, params),

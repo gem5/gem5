@@ -137,6 +137,10 @@ class Process : public SimObject
   public:
     PageTable *pTable;
 
+    //This id is assigned by m5 and is used to keep process' tlb entries
+    //separated.
+    uint64_t M5_pid;
+
   private:
     // file descriptor remapping support
     static const int MAX_FD = 256;	// max legal fd value

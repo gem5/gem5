@@ -125,6 +125,15 @@ class System : public SimObject
 
     int page_ptr;
 
+  protected:
+    uint64_t next_PID;
+
+  public:
+    uint64_t allocatePID()
+    {
+        return next_PID++;
+    }
+
 
 #endif // FULL_SYSTEM
 

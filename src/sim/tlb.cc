@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,34 +28,27 @@
  * Authors: Gabe Black
  */
 
-#ifndef __CPU_O3_SPARC_PARAMS_HH__
-#define __CPU_O3_SPARC_PARAMS_HH__
+#include "cpu/thread_context.hh"
+#include "mem/page_table.hh"
+#include "sim/process.hh"
+#include "sim/tlb.hh"
 
-#include "cpu/o3/cpu.hh"
-#include "cpu/o3/params.hh"
-
-//Forward declarations
-namespace SparcISA
+Fault
+GenericITB::translate(RequestPtr &req, ThreadContext *tc)
 {
-    class DTB;
-    class ITB;
+#if FULL_SYSTEM
+    panic("Generic ITB translation shouldn't be used in full system mode.\n");
+#else
+    return tc->getProcessPtr()->pTable->translate(req);
+#endif
 }
-class MemObject;
-class Process;
-class System;
 
-/**
- * This file defines the parameters that will be used for the AlphaO3CPU.
- * This must be defined externally so that the Impl can have a params class
- * defined that it can pass to all of the individual stages.
- */
-
-class SparcSimpleParams : public O3Params
+Fault
+GenericDTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
-  public:
-
-    SparcISA::ITB *itb;
-    SparcISA::DTB *dtb;
+#if FULL_SYSTEM
+    panic("Generic DTB translation shouldn't be used in full system mode.\n");
+#else
+    return tc->getProcessPtr()->pTable->translate(req);
+#endif
 };
-
-#endif // __CPU_O3_SPARC_PARAMS_HH__

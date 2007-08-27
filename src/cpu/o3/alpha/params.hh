@@ -54,10 +54,8 @@ class AlphaSimpleParams : public O3Params
 {
   public:
 
-#if FULL_SYSTEM
     AlphaISA::ITB *itb;
     AlphaISA::DTB *dtb;
-#endif
 };
 
 #endif // __CPU_O3_ALPHA_PARAMS_HH__

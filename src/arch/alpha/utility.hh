@@ -115,7 +115,6 @@ namespace AlphaISA
     inline void startupCPU(ThreadContext *tc, int cpuId) {
         tc->activate(0);
     }
-#if FULL_SYSTEM
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -142,8 +141,9 @@ namespace AlphaISA
     RoundPage(Addr addr)
     { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
-    void initCPU(ThreadContext *tc, int cpuId);
     void initIPRs(ThreadContext *tc, int cpuId);
+#if FULL_SYSTEM
+    void initCPU(ThreadContext *tc, int cpuId);
 
     /**
      * Function to check for and process any interrupts.

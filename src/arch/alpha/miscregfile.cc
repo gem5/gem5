@@ -43,9 +43,7 @@ namespace AlphaISA
         SERIALIZE_SCALAR(uniq);
         SERIALIZE_SCALAR(lock_flag);
         SERIALIZE_SCALAR(lock_addr);
-#if FULL_SYSTEM
         SERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-#endif
     }
 
     void
@@ -55,9 +53,7 @@ namespace AlphaISA
         UNSERIALIZE_SCALAR(uniq);
         UNSERIALIZE_SCALAR(lock_flag);
         UNSERIALIZE_SCALAR(lock_addr);
-#if FULL_SYSTEM
         UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-#endif
     }
 
     MiscReg
@@ -74,15 +70,9 @@ namespace AlphaISA
             return lock_addr;
           case MISCREG_INTR:
             return intr_flag;
-#if FULL_SYSTEM
           default:
             assert(misc_reg < NumInternalProcRegs);
             return ipr[misc_reg];
-#else
-          default:
-            panic("Attempt to read an invalid misc register!");
-            return 0;
-#endif
         }
     }
 
@@ -100,14 +90,8 @@ namespace AlphaISA
             return lock_addr;
           case MISCREG_INTR:
             return intr_flag;
-#if FULL_SYSTEM
           default:
             return readIpr(misc_reg, tc);
-#else
-          default:
-            panic("No faulting misc regs in SE mode!");
-            return 0;
-#endif
         }
     }
 
@@ -130,15 +114,10 @@ namespace AlphaISA
           case MISCREG_INTR:
             intr_flag = val;
             return;
-#if FULL_SYSTEM
           default:
             assert(misc_reg < NumInternalProcRegs);
             ipr[misc_reg] = val;
             return;
-#else
-          default:
-            panic("Attempt to write to an invalid misc register!");
-#endif
         }
     }
 
@@ -163,11 +142,7 @@ namespace AlphaISA
             intr_flag = val;
             return;
           default:
-#if FULL_SYSTEM
             setIpr(misc_reg, val, tc);
-#else
-            panic("No registers with side effects in SE mode!");
-#endif
             return;
         }
     }

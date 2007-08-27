@@ -79,11 +79,12 @@ DerivOzoneCPUParams::create()
     params->name = name;
     params->numberOfThreads = actual_num_threads;
 
+    params->itb = itb;
+    params->dtb = dtb;
+
 #if FULL_SYSTEM
     params->system = system;
     params->cpu_id = cpu_id;
-    params->itb = itb;
-    params->dtb = dtb;
     params->profile = profile;
     params->do_quiesce = do_quiesce;
     params->do_checkpoint_insts = do_checkpoint_insts;

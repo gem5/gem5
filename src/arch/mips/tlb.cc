@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,34 +28,23 @@
  * Authors: Gabe Black
  */
 
-#ifndef __CPU_O3_SPARC_PARAMS_HH__
-#define __CPU_O3_SPARC_PARAMS_HH__
+#include <cstring>
 
-#include "cpu/o3/cpu.hh"
-#include "cpu/o3/params.hh"
+#include "arch/mips/tlb.hh"
+#include "params/MipsDTB.hh"
+#include "params/MipsITB.hh"
 
-//Forward declarations
-namespace SparcISA
-{
-    class DTB;
-    class ITB;
-}
-class MemObject;
-class Process;
-class System;
-
-/**
- * This file defines the parameters that will be used for the AlphaO3CPU.
- * This must be defined externally so that the Impl can have a params class
- * defined that it can pass to all of the individual stages.
- */
-
-class SparcSimpleParams : public O3Params
-{
-  public:
-
-    SparcISA::ITB *itb;
-    SparcISA::DTB *dtb;
+namespace MipsISA {
 };
 
-#endif // __CPU_O3_SPARC_PARAMS_HH__
+MipsISA::ITB *
+MipsITBParams::create()
+{
+    return new MipsISA::ITB(name);
+}
+
+MipsISA::DTB *
+MipsDTBParams::create()
+{
+    return new MipsISA::DTB(name);
+}

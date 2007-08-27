@@ -55,26 +55,23 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_TLB_HH__
-#define __ARCH_X86_TLB_HH__
+#include <cstring>
 
-#include "sim/tlb.hh"
+#include "arch/x86/tlb.hh"
+#include "params/X86DTB.hh"
+#include "params/X86ITB.hh"
 
-namespace X86ISA
-{
-    class ITB : public GenericITB
-    {
-      public:
-        ITB(const std::string &name) : GenericITB(name)
-        {}
-    };
-
-    class DTB : public GenericDTB
-    {
-      public:
-        DTB(const std::string &name) : GenericDTB(name)
-        {}
-    };
+namespace X86ISA {
 };
 
-#endif // __ARCH_X86_TLB_HH__
+X86ISA::ITB *
+X86ITBParams::create()
+{
+    return new X86ISA::ITB(name);
+}
+
+X86ISA::DTB *
+X86DTBParams::create()
+{
+    return new X86ISA::DTB(name);
+}

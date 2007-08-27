@@ -620,6 +620,70 @@ void PowerOnReset::invoke(ThreadContext * tc)
 
 #else // !FULL_SYSTEM
 
+void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+    Addr paddr;
+    bool success = p->pTable->translate(vaddr, paddr);
+    if(!success) {
+        panic("Tried to execute unmapped address %#x.\n", vaddr);
+    } else {
+
+        uint64_t entry = 0;
+        entry |= 0ULL << 1; // Not writable
+        entry |= 0ULL << 2; // Available in nonpriveleged mode
+        entry |= 0ULL << 3; // No side effects
+        entry |= 1ULL << 4; // Virtually cachable
+        entry |= 1ULL << 5; // Physically cachable
+        entry |= 0ULL << 6; // Not locked
+        entry |= mbits(paddr, 39, 13); // Physical address
+        entry |= 0ULL << 48; // size = 8k
+        entry |= 0uLL << 59; // Endianness not inverted
+        entry |= 0ULL << 60; // Not no fault only
+        entry |= 0ULL << 61; // size = 8k
+        entry |= 1ULL << 63; // valid
+        PageTableEntry PTE(entry);
+
+        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+        tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                p->M5_pid /*context id*/, false, PTE);
+    }
+}
+
+void FastDataAccessMMUMiss::invoke(ThreadContext *tc)
+{
+    Process *p = tc->getProcessPtr();
+    Addr paddr;
+    bool success = p->pTable->translate(vaddr, paddr);
+    if(!success) {
+        p->checkAndAllocNextPage(vaddr);
+        success = p->pTable->translate(vaddr, paddr);
+    }
+    if(!success) {
+        panic("Tried to access unmapped address %#x.\n", vaddr);
+    } else {
+
+        uint64_t entry = 0;
+        entry |= 1ULL << 1; // Writable
+        entry |= 0ULL << 2; // Available in nonpriveleged mode
+        entry |= 0ULL << 3; // No side effects
+        entry |= 1ULL << 4; // Virtually cachable
+        entry |= 1ULL << 5; // Physically cachable
+        entry |= 0ULL << 6; // Not locked
+        entry |= mbits(paddr, 39, 13); // Physical address
+        entry |= 0ULL << 48; // size = 8k
+        entry |= 0uLL << 59; // Endianness not inverted
+        entry |= 0ULL << 60; // Not no fault only
+        entry |= 0ULL << 61; // size = 8k
+        entry |= 1ULL << 63; // valid
+        PageTableEntry PTE(entry);
+
+        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+        tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                p->M5_pid /*context id*/, false, PTE);
+    }
+}
+
 void SpillNNormal::invoke(ThreadContext *tc)
 {
     doNormalFault(tc, trapType(), false);

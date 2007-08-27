@@ -100,10 +100,9 @@ class BaseSimpleCPU : public BaseCPU
   public:
     struct Params : public BaseCPU::Params
     {
-#if FULL_SYSTEM
         TheISA::ITB *itb;
         TheISA::DTB *dtb;
-#else
+#if !FULL_SYSTEM
         Process *process;
 #endif
     };

@@ -36,8 +36,11 @@
 #include "cpu/o3/params.hh"
 
 //Forward declarations
-//class MipsDTB;
-//class MipsITB;
+namespace MipsISA
+{
+    class MipsDTB;
+    class MipsITB;
+}
 class MemObject;
 class Process;
 class System;
@@ -53,11 +56,9 @@ class MipsSimpleParams : public O3Params
   public:
     MipsSimpleParams() {}
 
-#if FULL_SYSTEM
     //Full System Paramater Objects place here
-    MipsITB *itb;
-    MipsDTB *dtb;
-#endif
+    MipsISA::ITB *itb;
+    MipsISA::DTB *dtb;
 };
 
 #endif // __CPU_O3_MIPS_PARAMS_HH__

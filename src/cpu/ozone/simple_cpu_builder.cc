@@ -82,11 +82,12 @@ SimpleOzoneCPUParams::create()
     params->name = name;
     params->numberOfThreads = actual_num_threads;
 
+    params->itb = itb;
+    params->dtb = dtb;
+
 #if FULL_SYSTEM
     params->system = system;
     params->cpu_id = cpu_id;
-    params->itb = itb;
-    params->dtb = dtb;
 #else
     params->workload = workload;
 //    params->pTable = page_table;

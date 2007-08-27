@@ -87,9 +87,9 @@ OzoneCheckerParams::create()
     temp2++;
     params->progress_interval = 0;
 
-#if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
+#if FULL_SYSTEM
     params->system = system;
     params->cpu_id = cpu_id;
     params->profile = profile;

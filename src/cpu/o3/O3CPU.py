@@ -52,8 +52,8 @@ class DerivO3CPU(BaseCPU):
         else:
             checker = Param.BaseCPU(O3Checker(exitOnError=False, updateOnError=True,
                                               warnOnlyOnLoadError=False), "checker")
-            checker.itb = Parent.itb
-            checker.dtb = Parent.dtb
+        checker.itb = Parent.itb
+        checker.dtb = Parent.dtb
 
     cachePorts = Param.Unsigned(200, "Cache Ports")
     icache_port = Port("Instruction Port")

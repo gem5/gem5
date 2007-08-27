@@ -120,14 +120,14 @@ class OzoneCPU : public BaseCPU
 
         int readCpuId() { return thread->readCpuId(); }
 
+        TheISA::ITB *getITBPtr() { return cpu->itb; }
+
+        TheISA::DTB * getDTBPtr() { return cpu->dtb; }
+
 #if FULL_SYSTEM
         System *getSystemPtr() { return cpu->system; }
 
         PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
-
-        TheISA::ITB *getITBPtr() { return cpu->itb; }
-
-        TheISA::DTB * getDTBPtr() { return cpu->dtb; }
 
         TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }

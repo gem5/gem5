@@ -93,10 +93,10 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     }
 }
 #else
-SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num,
-                         Process *_process, int _asid)
+SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
+                           TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid)
     : ThreadState(_cpu, -1, _thread_num, _process, _asid),
-      cpu(_cpu)
+      cpu(_cpu), itb(_itb), dtb(_dtb)
 {
     regs.clear();
     tc = new ProxyThreadContext<SimpleThread>(this);

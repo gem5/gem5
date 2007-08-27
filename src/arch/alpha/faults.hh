@@ -35,9 +35,7 @@
 #include "config/full_system.hh"
 #include "sim/faults.hh"
 
-#if FULL_SYSTEM
 #include "arch/alpha/pagetable.hh"
-#endif
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
@@ -140,8 +138,7 @@ class InterruptFault : public AlphaFault
 
 class DtbFault : public AlphaFault
 {
-#if FULL_SYSTEM
-  private:
+  protected:
     AlphaISA::VAddr vaddr;
     uint32_t reqFlags;
     uint64_t flags;
@@ -149,7 +146,6 @@ class DtbFault : public AlphaFault
     DtbFault(AlphaISA::VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
         : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
     { }
-#endif
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
@@ -165,14 +161,15 @@ class NDtbMissFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-#if FULL_SYSTEM
     NDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
-#endif
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
+#if !FULL_SYSTEM
+    void invoke(ThreadContext * tc);
+#endif
 };
 
 class PDtbMissFault : public DtbFault
@@ -182,11 +179,9 @@ class PDtbMissFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-#if FULL_SYSTEM
     PDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
-#endif
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -199,11 +194,9 @@ class DtbPageFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-#if FULL_SYSTEM
     DtbPageFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
-#endif
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -216,11 +209,9 @@ class DtbAcvFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-#if FULL_SYSTEM
     DtbAcvFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
-#endif
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -233,11 +224,9 @@ class DtbAlignmentFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-#if FULL_SYSTEM
     DtbAlignmentFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
-#endif
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -245,7 +234,7 @@ class DtbAlignmentFault : public DtbFault
 
 class ItbFault : public AlphaFault
 {
-  private:
+  protected:
     Addr pc;
   public:
     ItbFault(Addr _pc)
@@ -257,21 +246,6 @@ class ItbFault : public AlphaFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-};
-
-class ItbMissFault : public ItbFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    ItbMissFault(Addr pc)
-        : ItbFault(pc)
-    { }
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 };
 
 class ItbPageFault : public ItbFault
@@ -287,6 +261,9 @@ class ItbPageFault : public ItbFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
+#if !FULL_SYSTEM
+    void invoke(ThreadContext * tc);
+#endif
 };
 
 class ItbAcvFault : public ItbFault

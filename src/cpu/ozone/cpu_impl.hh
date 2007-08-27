@@ -129,6 +129,8 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.inSyscall = false;
 
     thread.setStatus(ThreadContext::Suspended);
+    itb = p->itb;
+    dtb = p->dtb;
 #if FULL_SYSTEM
     // Setup thread state stuff.
     thread.cpu = this;
@@ -137,8 +139,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     thread.quiesceEvent = new EndQuiesceEvent(tc);
 
     system = p->system;
-    itb = p->itb;
-    dtb = p->dtb;
     physmem = p->system->physmem;
 
     if (p->profile) {

@@ -119,12 +119,12 @@ class ThreadContext
 
     virtual int readCpuId() = 0;
 
-#if FULL_SYSTEM
-    virtual System *getSystemPtr() = 0;
-
     virtual TheISA::ITB *getITBPtr() = 0;
 
     virtual TheISA::DTB *getDTBPtr() = 0;
+
+#if FULL_SYSTEM
+    virtual System *getSystemPtr() = 0;
 
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
@@ -298,12 +298,12 @@ class ProxyThreadContext : public ThreadContext
 
     int readCpuId() { return actualTC->readCpuId(); }
 
-#if FULL_SYSTEM
-    System *getSystemPtr() { return actualTC->getSystemPtr(); }
-
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+
+#if FULL_SYSTEM
+    System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }

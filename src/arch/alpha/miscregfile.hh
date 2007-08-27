@@ -34,7 +34,6 @@
 
 #include "arch/alpha/ipr.hh"
 #include "arch/alpha/types.hh"
-#include "config/full_system.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 
@@ -70,9 +69,7 @@ namespace AlphaISA
       public:
         MiscRegFile()
         {
-#if FULL_SYSTEM
             initializeIprTable();
-#endif
         }
 
         MiscReg readRegNoEffect(int misc_reg);
@@ -100,7 +97,6 @@ namespace AlphaISA
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
-#if FULL_SYSTEM
       protected:
         typedef uint64_t InternalProcReg;
 
@@ -110,13 +106,10 @@ namespace AlphaISA
         InternalProcReg readIpr(int idx, ThreadContext *tc);
 
         void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
-#endif
         friend class RegFile;
     };
 
-#if FULL_SYSTEM
     void copyIprs(ThreadContext *src, ThreadContext *dest);
-#endif
 
 }
 

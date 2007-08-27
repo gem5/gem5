@@ -55,9 +55,8 @@ class SimpleParams : public BaseCPU::Params
 {
   public:
 
-#if FULL_SYSTEM
     TheISA::ITB *itb; TheISA::DTB *dtb;
-#else
+#if !FULL_SYSTEM
     std::vector<Process *> workload;
 #endif // FULL_SYSTEM
 

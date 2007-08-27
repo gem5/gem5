@@ -77,10 +77,11 @@ DerivO3CPUParams::create()
     params->cpu_id = cpu_id;
     params->activity = activity;
 
-#if FULL_SYSTEM
-    params->system = system;
     params->itb = itb;
     params->dtb = dtb;
+
+#if FULL_SYSTEM
+    params->system = system;
     params->profile = profile;
 
     params->do_quiesce = do_quiesce;

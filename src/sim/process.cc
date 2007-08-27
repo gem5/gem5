@@ -90,6 +90,7 @@ Process::Process(const string &nm,
                  int stderr_fd)
     : SimObject(nm), system(_system)
 {
+    M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)
     fd_map[STDIN_FILENO] = stdin_fd;
     fd_map[STDOUT_FILENO] = stdout_fd;

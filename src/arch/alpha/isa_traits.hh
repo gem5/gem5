@@ -63,14 +63,13 @@ namespace AlphaISA
     const Addr PageMask = ~(PageBytes - 1);
     const Addr PageOffset = PageBytes - 1;
 
-#if FULL_SYSTEM
 
     ////////////////////////////////////////////////////////////////////////
     //
     //  Translation stuff
     //
 
-   const Addr PteShift = 3;
+    const Addr PteShift = 3;
     const Addr NPtePageShift = PageShift - PteShift;
     const Addr NPtePage = ULL(1) << NPtePageShift;
     const Addr PteMask = NPtePage - 1;
@@ -89,6 +88,8 @@ namespace AlphaISA
 
     // For loading... XXX This maybe could be USegEnd?? --ali
     const Addr LoadAddrMask = ULL(0xffffffffff);
+
+#if FULL_SYSTEM
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -114,6 +115,8 @@ namespace AlphaISA
         NumInterruptLevels = INTLEVEL_EXTERNAL_MAX
     };
 
+#endif
+
     // EV5 modes
     enum mode_type
     {
@@ -123,8 +126,6 @@ namespace AlphaISA
         mode_user = 3,		// user mode
         mode_number			// number of modes
     };
-
-#endif
 
     // Constants Related to the number of registers
 

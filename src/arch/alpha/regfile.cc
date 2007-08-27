@@ -94,8 +94,6 @@ namespace AlphaISA
         dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR,
                 src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR));
 
-#if FULL_SYSTEM
         copyIprs(src, dest);
-#endif
     }
 }

@@ -113,10 +113,8 @@ class FullO3CPU : public BaseO3CPU
         SwitchedOut
     };
 
-#if FULL_SYSTEM
     TheISA::ITB * itb;
     TheISA::DTB * dtb;
-#endif
 
     /** Overall CPU status. */
     Status _status;
@@ -265,7 +263,6 @@ class FullO3CPU : public BaseO3CPU
     /** Registers statistics. */
     void fullCPURegStats();
 
-#if FULL_SYSTEM
     /** Translates instruction requestion. */
     Fault translateInstReq(RequestPtr &req, Thread *thread)
     {
@@ -283,27 +280,6 @@ class FullO3CPU : public BaseO3CPU
     {
         return this->dtb->translate(req, thread->getTC(), true);
     }
-
-#else
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-#endif
 
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);

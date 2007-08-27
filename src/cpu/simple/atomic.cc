@@ -602,9 +602,9 @@ AtomicSimpleCPUParams::create()
     params->cpu_id = cpu_id;
     params->tracer = tracer;
 
-#if FULL_SYSTEM
     params->itb = itb;
     params->dtb = dtb;
+#if FULL_SYSTEM
     params->profile = profile;
     params->do_quiesce = do_quiesce;
     params->do_checkpoint_insts = do_checkpoint_insts;

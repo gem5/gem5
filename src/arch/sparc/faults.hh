@@ -32,6 +32,7 @@
 #ifndef __SPARC_FAULTS_HH__
 #define __SPARC_FAULTS_HH__
 
+#include "config/full_system.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
@@ -41,6 +42,8 @@ namespace SparcISA
 
 typedef uint32_t TrapType;
 typedef uint32_t FaultPriority;
+
+class ITB;
 
 class SparcFaultBase : public FaultBase
 {
@@ -199,9 +202,29 @@ class PAWatchpoint : public SparcFault<PAWatchpoint> {};
 class VAWatchpoint : public SparcFault<VAWatchpoint> {};
 
 class FastInstructionAccessMMUMiss :
-    public SparcFault<FastInstructionAccessMMUMiss> {};
+    public SparcFault<FastInstructionAccessMMUMiss>
+{
+#if !FULL_SYSTEM
+  protected:
+    Addr vaddr;
+  public:
+    FastInstructionAccessMMUMiss(Addr addr) : vaddr(addr)
+    {}
+    void invoke(ThreadContext * tc);
+#endif
+};
 
-class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss> {};
+class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
+{
+#if !FULL_SYSTEM
+  protected:
+    Addr vaddr;
+  public:
+    FastDataAccessMMUMiss(Addr addr) : vaddr(addr)
+    {}
+    void invoke(ThreadContext * tc);
+#endif
+};
 
 class FastDataAccessProtection : public SparcFault<FastDataAccessProtection> {};
 

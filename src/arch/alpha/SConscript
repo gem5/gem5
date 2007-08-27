@@ -32,27 +32,28 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'alpha':
+    Source('ev5.cc')
     Source('faults.cc')
     Source('floatregfile.cc')
     Source('intregfile.cc')
+    Source('ipr.cc')
     Source('miscregfile.cc')
+    Source('pagetable.cc')
     Source('regfile.cc')
     Source('remote_gdb.cc')
+    Source('tlb.cc')
     Source('utility.cc')
+
+    SimObject('AlphaTLB.py')
 
     if env['FULL_SYSTEM']:
         SimObject('AlphaSystem.py')
-        SimObject('AlphaTLB.py')
 
-        Source('ev5.cc')
         Source('idle_event.cc')
-        Source('ipr.cc')
         Source('kernel_stats.cc')
         Source('osfpal.cc')
-        Source('pagetable.cc')
         Source('stacktrace.cc')
         Source('system.cc')
-        Source('tlb.cc')
         Source('vtophys.cc')
 
         Source('freebsd/system.cc')

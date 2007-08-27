@@ -68,22 +68,6 @@ AlphaISA::initCPU(ThreadContext *tc, int cpuId)
     delete reset;
 }
 
-////////////////////////////////////////////////////////////////////////
-//
-//
-//
-void
-AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
-{
-    for (int i = 0; i < NumInternalProcRegs; ++i) {
-        tc->setMiscRegNoEffect(i, 0);
-    }
-
-    tc->setMiscRegNoEffect(IPR_PAL_BASE, PalBase);
-    tc->setMiscRegNoEffect(IPR_MCSR, 0x6);
-    tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
-}
-
 
 template <class CPU>
 void
@@ -169,6 +153,24 @@ int
 AlphaISA::MiscRegFile::getDataAsid()
 {
     return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
+}
+
+#endif
+
+////////////////////////////////////////////////////////////////////////
+//
+//
+//
+void
+AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
+{
+    for (int i = 0; i < NumInternalProcRegs; ++i) {
+        tc->setMiscRegNoEffect(i, 0);
+    }
+
+    tc->setMiscRegNoEffect(IPR_PAL_BASE, EV5::PalBase);
+    tc->setMiscRegNoEffect(IPR_MCSR, 0x6);
+    tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
 }
 
 AlphaISA::MiscReg
@@ -340,8 +342,10 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
+#if FULL_SYSTEM
         if (tc->getKernelStats())
             tc->getKernelStats()->context(old, val, tc);
+#endif
         break;
 
       case AlphaISA::IPR_DTB_PTE:
@@ -368,11 +372,14 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
+#if FULL_SYSTEM
         if (tc->getKernelStats())
             tc->getKernelStats()->swpipl(ipr[idx]);
+#endif
         break;
 
       case AlphaISA::IPR_DTB_CM:
+#if FULL_SYSTEM
         if (val & 0x18) {
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(TheISA::Kernel::user, tc);
@@ -380,6 +387,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(TheISA::Kernel::kernel, tc);
         }
+#endif
 
       case AlphaISA::IPR_ICM:
         // only write two mode bits - processor mode
@@ -468,27 +476,27 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         ipr[idx] = val;
 
         tc->getDTBPtr()->flushAddr(val,
-                                   DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
         break;
 
       case AlphaISA::IPR_DTB_TAG: {
           struct AlphaISA::PTE pte;
 
           // FIXME: granularity hints NYI...
-          if (DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
+          if (EV5::DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
               panic("PTE GH field != 0");
 
           // write entire quad
           ipr[idx] = val;
 
           // construct PTE for new entry
-          pte.ppn = DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xre = DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.xwe = DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonr = DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.fonw = DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asma = DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
-          pte.asn = DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
+          pte.ppn = EV5::DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.xre = EV5::DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.xwe = EV5::DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.fonr = EV5::DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.fonw = EV5::DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.asma = EV5::DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
+          pte.asn = EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
           tc->getDTBPtr()->insert(val, pte);
@@ -499,20 +507,20 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
           struct AlphaISA::PTE pte;
 
           // FIXME: granularity hints NYI...
-          if (ITB_PTE_GH(val) != 0)
+          if (EV5::ITB_PTE_GH(val) != 0)
               panic("PTE GH field != 0");
 
           // write entire quad
           ipr[idx] = val;
 
           // construct PTE for new entry
-          pte.ppn = ITB_PTE_PPN(val);
-          pte.xre = ITB_PTE_XRE(val);
+          pte.ppn = EV5::ITB_PTE_PPN(val);
+          pte.xre = EV5::ITB_PTE_XRE(val);
           pte.xwe = 0;
-          pte.fonr = ITB_PTE_FONR(val);
-          pte.fonw = ITB_PTE_FONW(val);
-          pte.asma = ITB_PTE_ASMA(val);
-          pte.asn = ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
+          pte.fonr = EV5::ITB_PTE_FONR(val);
+          pte.fonw = EV5::ITB_PTE_FONW(val);
+          pte.asma = EV5::ITB_PTE_ASMA(val);
+          pte.asn = EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
           tc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], pte);
@@ -538,7 +546,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         ipr[idx] = val;
 
         tc->getITBPtr()->flushAddr(val,
-                                   ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
+                EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
         break;
 
       default:
@@ -558,6 +566,7 @@ AlphaISA::copyIprs(ThreadContext *src, ThreadContext *dest)
     }
 }
 
+#if FULL_SYSTEM
 
 /**
  * Check for special simulator handling of specific PAL calls.

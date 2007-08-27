@@ -64,6 +64,7 @@ System::System(Params *p)
       virtPort(p->name + "-vport"),
 #else
       page_ptr(0),
+      next_PID(0),
 #endif
       memoryMode(p->mem_mode), _params(p)
 {

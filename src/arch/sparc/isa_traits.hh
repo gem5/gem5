@@ -98,18 +98,18 @@ namespace SparcISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
-#if FULL_SYSTEM
-    // I don't know what it's for, so I don't
-    // know what SPARC's value should be
-    // For loading... XXX This maybe could be USegEnd?? --ali
-    const Addr LoadAddrMask = ULL(0xffffffffff);
-
     /////////// TLB Stuff ////////////
     const Addr StartVAddrHole = ULL(0x0000800000000000);
     const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
     const Addr VAddrAMask = ULL(0xFFFFFFFF);
     const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
     const Addr BytesInPageMask = ULL(0x1FFF);
+
+#if FULL_SYSTEM
+    // I don't know what it's for, so I don't
+    // know what SPARC's value should be
+    // For loading... XXX This maybe could be USegEnd?? --ali
+    const Addr LoadAddrMask = ULL(0xffffffffff);
 
     enum InterruptTypes
     {

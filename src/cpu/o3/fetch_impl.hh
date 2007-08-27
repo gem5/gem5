@@ -1226,7 +1226,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // Send the fault to commit.  This thread will not do anything
         // until commit handles the fault.  The only other way it can
         // wake up is if a squash comes along and changes the PC.
-#if FULL_SYSTEM
         assert(numInst < fetchWidth);
         // Get a sequence number.
         inst_seq = cpu->getAndIncrementInstSeq();
@@ -1258,11 +1257,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         fetchStatus[tid] = TrapPending;
         status_change = true;
-#else // !FULL_SYSTEM
-        fetchStatus[tid] = TrapPending;
-        status_change = true;
 
-#endif // FULL_SYSTEM
         DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %08p",
                 tid, fault->name(), PC[tid]);
     }

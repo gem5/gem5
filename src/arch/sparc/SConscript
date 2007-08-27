@@ -37,18 +37,19 @@ if env['TARGET_ISA'] == 'sparc':
     Source('floatregfile.cc')
     Source('intregfile.cc')
     Source('miscregfile.cc')
+    Source('pagetable.cc')
     Source('regfile.cc')
     Source('remote_gdb.cc')
+    Source('tlb.cc')
     Source('utility.cc')
+
+    SimObject('SparcTLB.py')
 
     if env['FULL_SYSTEM']:
         SimObject('SparcSystem.py')
-        SimObject('SparcTLB.py')
 
-        Source('pagetable.cc')
         Source('stacktrace.cc')
         Source('system.cc')
-        Source('tlb.cc')
         Source('ua2005.cc')
         Source('vtophys.cc')
     else:

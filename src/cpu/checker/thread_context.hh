@@ -84,14 +84,14 @@ class CheckerThreadContext : public ThreadContext
 
     int readCpuId() { return actualTC->readCpuId(); }
 
+    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
+
+    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
     PhysicalMemory *getPhysMemPtr() { return actualTC->getPhysMemPtr(); }
-
-    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
-
-    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }

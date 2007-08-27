@@ -535,7 +535,11 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         if (real)
             return new InstructionRealTranslationMiss;
         else
+#if FULL_SYSTEM
             return new FastInstructionAccessMMUMiss;
+#else
+            return new FastInstructionAccessMMUMiss(req->getVaddr());
+#endif
     }
 
     // were not priviledged accesing priv page
@@ -744,7 +748,11 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (real)
             return new DataRealTranslationMiss;
         else
+#if FULL_SYSTEM
             return new FastDataAccessMMUMiss;
+#else
+            return new FastDataAccessMMUMiss(req->getVaddr());
+#endif
 
     }
 
@@ -852,6 +860,8 @@ handleMmuRegAccess:
     req->setPaddr(req->getVaddr());
     return NoFault;
 };
+
+#if FULL_SYSTEM
 
 Tick
 DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
@@ -1274,6 +1284,8 @@ doMmuWriteError:
     pkt->makeAtomicResponse();
     return tc->getCpuPtr()->cycles(1);
 }
+
+#endif
 
 void
 DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)

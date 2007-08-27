@@ -35,6 +35,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/regfile.hh"
 #include "arch/syscallreturn.hh"
+#include "arch/tlb.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
@@ -49,7 +50,6 @@ class BaseCPU;
 #if FULL_SYSTEM
 
 #include "sim/system.hh"
-#include "arch/tlb.hh"
 
 class FunctionProfile;
 class ProfileNode;
@@ -109,10 +109,8 @@ class SimpleThread : public ThreadState
 
     System *system;
 
-#if FULL_SYSTEM
     TheISA::ITB *itb;
     TheISA::DTB *dtb;
-#endif
 
     // constructor: initialize SimpleThread from given process structure
 #if FULL_SYSTEM
@@ -120,7 +118,8 @@ class SimpleThread : public ThreadState
                  TheISA::ITB *_itb, TheISA::DTB *_dtb,
                  bool use_kernel_stats = true);
 #else
-    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process, int _asid);
+    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
+                 TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid);
 #endif
 
     SimpleThread();
@@ -149,10 +148,6 @@ class SimpleThread : public ThreadState
      */
     ThreadContext *getTC() { return tc; }
 
-#if FULL_SYSTEM
-    int getInstAsid() { return regs.instAsid(); }
-    int getDataAsid() { return regs.dataAsid(); }
-
     Fault translateInstReq(RequestPtr &req)
     {
         return itb->translate(req, tc);
@@ -168,27 +163,16 @@ class SimpleThread : public ThreadState
         return dtb->translate(req, tc, true);
     }
 
+#if FULL_SYSTEM
+    int getInstAsid() { return regs.instAsid(); }
+    int getDataAsid() { return regs.dataAsid(); }
+
     void dumpFuncProfile();
 
     Fault hwrei();
 
     bool simPalCheck(int palFunc);
-#else
 
-    Fault translateInstReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
-
-    Fault translateDataReadReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
-
-    Fault translateDataWriteReq(RequestPtr &req)
-    {
-        return process->pTable->translate(req);
-    }
 #endif
 
     /*******************************************
@@ -199,12 +183,12 @@ class SimpleThread : public ThreadState
 
     int getThreadNum() { return tid; }
 
-#if FULL_SYSTEM
-    System *getSystemPtr() { return system; }
-
     TheISA::ITB *getITBPtr() { return itb; }
 
     TheISA::DTB *getDTBPtr() { return dtb; }
+
+#if FULL_SYSTEM
+    System *getSystemPtr() { return system; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 

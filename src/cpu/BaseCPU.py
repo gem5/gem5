@@ -37,12 +37,14 @@ import sys
 
 default_tracer = ExeTracer()
 
-if build_env['FULL_SYSTEM']:
-    if build_env['TARGET_ISA'] == 'alpha':
-        from AlphaTLB import AlphaDTB, AlphaITB
-
-    if build_env['TARGET_ISA'] == 'sparc':
-        from SparcTLB import SparcDTB, SparcITB
+if build_env['TARGET_ISA'] == 'alpha':
+    from AlphaTLB import AlphaDTB, AlphaITB
+elif build_env['TARGET_ISA'] == 'sparc':
+    from SparcTLB import SparcDTB, SparcITB
+elif build_env['TARGET_ISA'] == 'x86':
+    from X86TLB import X86DTB, X86ITB
+elif build_env['TARGET_ISA'] == 'mips':
+    from MipsTLB import MipsDTB, MipsITB
 
 class BaseCPU(SimObject):
     type = 'BaseCPU'
@@ -57,18 +59,25 @@ class BaseCPU(SimObject):
             "enable checkpoint pseudo instructions")
         do_statistics_insts = Param.Bool(True,
             "enable statistics pseudo instructions")
-
-        if build_env['TARGET_ISA'] == 'sparc':
-            dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
-            itb = Param.SparcITB(SparcITB(), "Instruction TLB")
-        elif build_env['TARGET_ISA'] == 'alpha':
-            dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
-            itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
-        else:
-            print "Unknown architecture, can't pick TLBs"
-            sys.exit(1)
     else:
         workload = VectorParam.Process("processes to run")
+
+    if build_env['TARGET_ISA'] == 'sparc':
+        dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
+        itb = Param.SparcITB(SparcITB(), "Instruction TLB")
+    elif build_env['TARGET_ISA'] == 'alpha':
+        dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
+        itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
+    elif build_env['TARGET_ISA'] == 'x86':
+        dtb = Param.X86DTB(X86DTB(), "Data TLB")
+        itb = Param.X86ITB(X86ITB(), "Instruction TLB")
+    elif build_env['TARGET_ISA'] == 'mips':
+        dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
+        itb = Param.MipsITB(MipsITB(), "Instruction TLB")
+    else:
+        print "Don't know what TLB to use for ISA %s" % \
+            build_env['TARGET_ISA']
+        sys.exit(1)
 
     max_insts_all_threads = Param.Counter(0,
         "terminate when all threads have reached this inst count")
