@@ -569,6 +569,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     asi = (ASI)req->getAsi();
     bool implicit = false;
     bool hpriv = bits(tlbdata,0,0);
+    bool unaligned = (vaddr & size-1);
 
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
@@ -579,43 +580,47 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     if (asi == ASI_IMPLICIT)
         implicit = true;
 
-    if (hpriv && implicit) {
-        req->setPaddr(vaddr & PAddrImplMask);
-        return NoFault;
+    // Only use the fast path here if there doesn't need to be an unaligned
+    // trap later
+    if (!unaligned) {
+        if (hpriv && implicit) {
+            req->setPaddr(vaddr & PAddrImplMask);
+            return NoFault;
+        }
+
+        // Be fast if we can!
+        if (cacheValid &&  cacheState == tlbdata) {
+
+
+
+            if (cacheEntry[0]) {
+                TlbEntry *ce = cacheEntry[0];
+                Addr ce_va = ce->range.va;
+                if (cacheAsi[0] == asi &&
+                    ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                    (!write || ce->pte.writable())) {
+                        req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
+                        if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                            req->setFlags(req->getFlags() | UNCACHEABLE);
+                        DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                        return NoFault;
+                } // if matched
+            } // if cache entry valid
+            if (cacheEntry[1]) {
+                TlbEntry *ce = cacheEntry[1];
+                Addr ce_va = ce->range.va;
+                if (cacheAsi[1] == asi &&
+                    ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
+                    (!write || ce->pte.writable())) {
+                        req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
+                        if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                            req->setFlags(req->getFlags() | UNCACHEABLE);
+                        DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                        return NoFault;
+                } // if matched
+            } // if cache entry valid
+        }
     }
-
-    // Be fast if we can!
-    if (cacheValid &&  cacheState == tlbdata) {
-
-
-
-        if (cacheEntry[0]) {
-            TlbEntry *ce = cacheEntry[0];
-            Addr ce_va = ce->range.va;
-            if (cacheAsi[0] == asi &&
-                ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
-                (!write || ce->pte.writable())) {
-                    req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
-                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(req->getFlags() | UNCACHEABLE);
-                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
-                    return NoFault;
-            } // if matched
-        } // if cache entry valid
-        if (cacheEntry[1]) {
-            TlbEntry *ce = cacheEntry[1];
-            Addr ce_va = ce->range.va;
-            if (cacheAsi[1] == asi &&
-                ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
-                (!write || ce->pte.writable())) {
-                    req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
-                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(req->getFlags() | UNCACHEABLE);
-                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
-                    return NoFault;
-            } // if matched
-        } // if cache entry valid
-     }
 
     bool red = bits(tlbdata,1,1);
     bool priv = bits(tlbdata,2,2);
@@ -707,7 +712,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
     // If the asi is unaligned trap
-    if (vaddr & size-1) {
+    if (unaligned) {
         writeSfsr(vaddr, false, ct, false, OtherFault, asi);
         return new MemAddressNotAligned;
     }
