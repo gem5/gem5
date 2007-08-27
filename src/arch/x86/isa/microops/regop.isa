@@ -661,8 +661,10 @@ let {{
     defineMicroRegOpImm('Sext', '''
             IntReg val = psrc1;
             int sign_bit = bits(val, imm8-1, imm8-1);
-            val = sign_bit ? (val | ~mask(imm8)) : val;
-            DestReg = merge(DestReg, val, dataSize);''')
+            uint64_t maskVal = mask(imm8);
+            val = sign_bit ? (val | ~maskVal) : (val & maskVal);
+            DestReg = merge(DestReg, val, dataSize);
+            ''')
 
     defineMicroRegOpImm('Zext', 'DestReg = bits(psrc1, imm8-1, 0);')
 }};
