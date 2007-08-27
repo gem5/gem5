@@ -106,29 +106,22 @@ namespace X86ISA
         Fault read(Context *xc, Addr EA, MemType & Mem, unsigned flags) const
         {
             Fault fault = NoFault;
-            int size = dataSize;
-            Addr alignedEA = EA & ~(dataSize - 1);
-            if (EA != alignedEA)
-                size *= 2;
-            switch(size)
+            switch(dataSize)
             {
               case 1:
-                fault = xc->read(alignedEA, (uint8_t&)(Mem.a), flags);
+                fault = xc->read(EA, (uint8_t&)Mem, flags);
                 break;
               case 2:
-                fault = xc->read(alignedEA, (uint16_t&)(Mem.a), flags);
+                fault = xc->read(EA, (uint16_t&)Mem, flags);
                 break;
               case 4:
-                fault = xc->read(alignedEA, (uint32_t&)(Mem.a), flags);
+                fault = xc->read(EA, (uint32_t&)Mem, flags);
                 break;
               case 8:
-                fault = xc->read(alignedEA, (uint64_t&)(Mem.a), flags);
-                break;
-              case 16:
-                fault = xc->read(alignedEA, Mem, flags);
+                fault = xc->read(EA, (uint64_t&)Mem, flags);
                 break;
               default:
-                panic("Bad operand size %d for read at %#x.\n", size, EA);
+                panic("Bad operand size %d for read at %#x.\n", dataSize, EA);
             }
             return fault;
         }
@@ -137,29 +130,22 @@ namespace X86ISA
         Fault write(Context *xc, MemType & Mem, Addr EA, unsigned flags) const
         {
             Fault fault = NoFault;
-            int size = dataSize;
-            Addr alignedEA = EA & ~(dataSize - 1);
-            if (EA != alignedEA)
-                size *= 2;
-            switch(size)
+            switch(dataSize)
             {
               case 1:
-                fault = xc->write((uint8_t&)(Mem.a), alignedEA, flags, 0);
+                fault = xc->write((uint8_t&)Mem, EA, flags, 0);
                 break;
               case 2:
-                fault = xc->write((uint16_t&)(Mem.a), alignedEA, flags, 0);
+                fault = xc->write((uint16_t&)Mem, EA, flags, 0);
                 break;
               case 4:
-                fault = xc->write((uint32_t&)(Mem.a), alignedEA, flags, 0);
+                fault = xc->write((uint32_t&)Mem, EA, flags, 0);
                 break;
               case 8:
-                fault = xc->write((uint64_t&)(Mem.a), alignedEA, flags, 0);
-                break;
-              case 16:
-                fault = xc->write(Mem, alignedEA, flags, 0);
+                fault = xc->write((uint64_t&)Mem, EA, flags, 0);
                 break;
               default:
-                panic("Bad operand size %d for write at %#x.\n", size, EA);
+                panic("Bad operand size %d for write at %#x.\n", dataSize, EA);
             }
             return fault;
         }
