@@ -125,5 +125,10 @@ let {{
         env.dataSize = 8;
     '''
 
+    def labeler(labelStr):
+        return "label_%s" % labelStr
+
+    assembler.symbols["label"] = labeler
+
     macroopDict = assembler.assemble(microcode)
 }};

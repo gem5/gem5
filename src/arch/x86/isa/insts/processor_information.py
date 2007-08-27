@@ -55,15 +55,351 @@
 
 microcode = '''
 def macroop CPUID_R {
-    #
-    # For now, the CPUID function number will be hard wired to 0x8000_0000.
-    # Getting it to work more robustly will likely require microcode branching
-    # which probably doesn't work at the moment.
-    #
 
+#
+# Find which type of cpuid function it is by checking bit 31. Also clear that
+# bit to form an offset into the functions of that type.
+#
+    limm t1, 0x80000000, dataSize=4
+    and t2, t1, rax, flags=(EZF,)
+    # clear the bit
+    xor t1, t2, rax
+
+#
+# Do range checking on the offset
+#
+    # If EZF is set, the function is standard and the max is 0x1.
+    movi t2, t2, 0x1, flags=(CEZF,)
+    # If EZF is cleared, the function is extended and the max is 0x18.
+    movi t2, t2, 0x18, flags=(nCEZF,)
+    subi t0, t1, t2, flags=(ECF,)
+    # ECF will be set if the offset is too large.
+    bri t0, label("end"), flags=(CECF,)
+
+
+#
+# Jump to the right portion
+#
+    movi t2, t2, label("standardStart"), flags=(CEZF,)
+    movi t2, t2, label("extendedStart"), flags=(nCEZF,)
+    # This gives each function 8 microops to use. It's wasteful because only
+    # 5 will be needed, but a multiply would be expensive. In the system
+    # described in the RISC86 patent, the fifth instruction would really be
+    # the sequencing field on an op quad, so each function would be implemented
+    # by -exactly- one op quad. Since we're approximating, this should be ok.
+    slli t1, t1, 3
+    br t2, t1
+
+#############################################################################
+#############################################################################
+
+#
+# Standard functions.
+#
+
+
+# 0x00000000 -- Processor Vendor and Largest Standard Function Number
+standardStart: limm rax, 0x00000001, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x00000001 -- Family, Model, Stepping Identifiers
+    limm rax, 0x00020f51, dataSize=4
+    limm rbx, 0x00000405, dataSize=4
+    limm rdx, 0xe3d3fbff, dataSize=4
+    limm rcx, 0x00000001, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+#
+# Extended functions.
+#
+
+# 0x80000000 -- Processor Vendor and Largest Extended Function Number
+
+extendedStart: limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000001 -- EAX: AMD Family, Model, Stepping
+#               EBX: BrandId Identifier
+#               ECX: Feature Identifiers
+#               EDX: Feature Identifiers
+    # JUNK VALUES
     limm rax, 0x80000018, dataSize=4
     limm rbx, 0x68747541, dataSize=4
     limm rdx, 0x69746e65, dataSize=4
     limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000002 -- Processor Name String Identifier
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000003 -- Processor Name String Identifier
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000004 -- Processor Name String Identifier
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000005 -- L1 Cache and TLB Identifiers
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000006 -- L2/L3 Cache and L2 TLB Identifiers
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000007 -- Advanced Power Management Information
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000008 -- Long Mode Address Size Identification
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000009 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000A -- SVM Revision and Feature Identification
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000B -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000C -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000D -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000E -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x8000000F -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000010 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000011 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000012 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000013 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000014 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000015 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000016 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000017 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+# 0x80000018 -- Reserved
+    # JUNK VALUES
+    limm rax, 0x80000018, dataSize=4
+    limm rbx, 0x68747541, dataSize=4
+    limm rdx, 0x69746e65, dataSize=4
+    limm rcx, 0x444d4163, dataSize=4
+    bri t0, label("end")
+    fault "NoFault"
+    fault "NoFault"
+    fault "NoFault"
+
+end: fault "NoFault"
 };
 '''
