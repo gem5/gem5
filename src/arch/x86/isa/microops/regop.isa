@@ -652,10 +652,10 @@ let {{
     defineMicroRegOpRd('Rdip', 'DestReg = RIP')
     defineMicroRegOpRd('Ruflags', 'DestReg = ccFlagBits')
     defineMicroRegOpRdImm('Ruflag', '''
-            int flag = bits(ccFlagBits, (1 << imm8) + 0*psrc1);
+            int flag = bits(ccFlagBits, imm8 + 0*psrc1);
             DestReg = merge(DestReg, flag, dataSize);
-            ccFlagBits = ccFlagBits & ~EZFBit;
-            ccFlagBits = ccFlagBits | ((flag == 0) ? EZFBit : 0);
+            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
+                                       (ccFlagBits & ~EZFBit);
             ''')
 
     defineMicroRegOpImm('Sext', '''
