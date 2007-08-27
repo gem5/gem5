@@ -583,7 +583,7 @@ TimingSimpleCPU::IcachePort::ITickEvent::process()
 bool
 TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse()) {
+    if (pkt->isResponse() && !pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick);
 
@@ -686,7 +686,7 @@ TimingSimpleCPU::DcachePort::setPeer(Port *port)
 bool
 TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
-    if (pkt->isResponse()) {
+    if (pkt->isResponse() && !pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick);
 

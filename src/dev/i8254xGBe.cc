@@ -57,7 +57,7 @@ using namespace Net;
 IGbE::IGbE(const Params *p)
     : EtherDevice(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
-      txTick(false), txFifoTick(false), rdtrEvent(this), radvEvent(this),
+      txTick(false), txFifoTick(false), rxDmaPacket(false), rdtrEvent(this), radvEvent(this),
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
       txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size), clock(p->clock)
@@ -113,7 +113,7 @@ EtherInt*
 IGbE::getEthPort(const std::string &if_name, int idx)
 {
 
-    if (if_name == "interface" && !etherInt) {
+    if (if_name == "interface") {
         if (etherInt->getPeer())
             panic("Port already connected to\n");
         return etherInt;
@@ -504,8 +504,13 @@ IGbE::write(PacketPtr pkt)
         break;
       case REG_RDT:
         regs.rdt = val;
-        rxTick = true;
-        restartClock();
+        DPRINTF(EthernetSM, "RXS: RDT Updated.\n");
+        if (getState() == SimObject::Running) {
+            DPRINTF(EthernetSM, "RXS: RDT Fetching Descriptors!\n");
+            rxDescCache.fetchDescriptors();
+        } else {
+            DPRINTF(EthernetSM, "RXS: RDT NOT Fetching Desc b/c draining!\n");
+        }
         break;
       case REG_RDTR:
         regs.rdtr = val;
@@ -531,8 +536,13 @@ IGbE::write(PacketPtr pkt)
         break;
       case REG_TDT:
         regs.tdt = val;
-        txTick = true;
-        restartClock();
+        DPRINTF(EthernetSM, "TXS: TX Tail pointer updated\n");
+        if (getState() == SimObject::Running) {
+            DPRINTF(EthernetSM, "TXS: TDT Fetching Descriptors!\n");
+            txDescCache.fetchDescriptors();
+        } else {
+            DPRINTF(EthernetSM, "TXS: TDT NOT Fetching Desc b/c draining!\n");
+        }
         break;
       case REG_TIDV:
         regs.tidv = val;
@@ -566,33 +576,47 @@ IGbE::postInterrupt(IntTypes t, bool now)
     assert(t);
 
     // Interrupt is already pending
-    if (t & regs.icr())
+    if (t & regs.icr() && !now)
         return;
 
-    if (regs.icr() & regs.imr)
-    {
-        regs.icr = regs.icr() | t;
-        if (!interEvent.scheduled())
-            interEvent.schedule(curTick + Clock::Int::ns * 256 *
-                    regs.itr.interval());
-    } else {
-        regs.icr = regs.icr() | t;
-        if (regs.itr.interval() == 0 || now) {
-            if (interEvent.scheduled())
-                interEvent.deschedule();
-            cpuPostInt();
-        } else {
-           DPRINTF(EthernetIntr, "EINT: Scheduling timer interrupt for %d ticks\n",
-                    Clock::Int::ns * 256 * regs.itr.interval());
-           if (!interEvent.scheduled())
-               interEvent.schedule(curTick + Clock::Int::ns * 256 * regs.itr.interval());
+    regs.icr = regs.icr() | t;
+    if (regs.itr.interval() == 0 || now) {
+        if (interEvent.scheduled()) {
+            interEvent.deschedule();
         }
+        cpuPostInt();
+    } else {
+       DPRINTF(EthernetIntr, "EINT: Scheduling timer interrupt for %d ticks\n",
+                Clock::Int::ns * 256 * regs.itr.interval());
+       if (!interEvent.scheduled()) {
+           interEvent.schedule(curTick + Clock::Int::ns * 256 * regs.itr.interval());
+       }
     }
 }
 
 void
+IGbE::delayIntEvent()
+{
+    cpuPostInt();
+}
+
+
+void
 IGbE::cpuPostInt()
 {
+
+    if (!(regs.icr() & regs.imr)) {
+        DPRINTF(Ethernet, "Interrupt Masked. Not Posting\n");
+        return;
+    }
+
+    DPRINTF(Ethernet, "Posting Interrupt\n");
+
+
+    if (interEvent.scheduled()) {
+        interEvent.deschedule();
+    }
+
     if (rdtrEvent.scheduled()) {
         regs.icr.rxt0(1);
         rdtrEvent.deschedule();
@@ -613,7 +637,9 @@ IGbE::cpuPostInt()
     regs.icr.int_assert(1);
     DPRINTF(EthernetIntr, "EINT: Posting interrupt to CPU now. Vector %#x\n",
             regs.icr());
+
     intrPost();
+
 }
 
 void
@@ -630,20 +656,28 @@ IGbE::cpuClearInt()
 void
 IGbE::chkInterrupt()
 {
+    DPRINTF(Ethernet, "Checking interrupts icr: %#x imr: %#x\n", regs.icr(),
+            regs.imr);
     // Check if we need to clear the cpu interrupt
     if (!(regs.icr() & regs.imr)) {
+        DPRINTF(Ethernet, "Mask cleaned all interrupts\n");
         if (interEvent.scheduled())
            interEvent.deschedule();
         if (regs.icr.int_assert())
             cpuClearInt();
     }
+    DPRINTF(Ethernet, "ITR = %#X itr.interval = %#X\n", regs.itr(), regs.itr.interval());
 
     if (regs.icr() & regs.imr) {
         if (regs.itr.interval() == 0)  {
             cpuPostInt();
         } else {
-            if (!interEvent.scheduled())
+            DPRINTF(Ethernet, "Possibly scheduling interrupt because of imr write\n");
+            if (!interEvent.scheduled()) {
+               DPRINTF(Ethernet, "Scheduling for %d\n", curTick + Clock::Int::ns
+                       * 256 * regs.itr.interval());
                interEvent.schedule(curTick + Clock::Int::ns * 256 * regs.itr.interval());
+            }
         }
     }
 
@@ -681,6 +715,7 @@ IGbE::RxDescCache::pktComplete()
     assert(unusedCache.size());
     RxDesc *desc;
     desc = unusedCache.front();
+
 
     uint16_t crcfixup = igbe->regs.rctl.secrc() ? 0 : 4 ;
     desc->len = htole((uint16_t)(pktPtr->length + crcfixup));
@@ -754,9 +789,10 @@ IGbE::RxDescCache::pktComplete()
     if (igbe->regs.radv.idv() && igbe->regs.rdtr.delay()) {
         DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n",
                 igbe->regs.radv.idv() * igbe->intClock());
-        if (!igbe->radvEvent.scheduled())
+        if (!igbe->radvEvent.scheduled()) {
             igbe->radvEvent.schedule(curTick + igbe->regs.radv.idv() *
                     igbe->intClock());
+        }
     }
 
     // if neither radv or rdtr, maybe itr is set...
@@ -775,10 +811,13 @@ IGbE::RxDescCache::pktComplete()
     DPRINTF(EthernetDesc, "Processing of this descriptor complete\n");
     unusedCache.pop_front();
     usedCache.push_back(desc);
+
+
     pktPtr = NULL;
     enableSm();
     pktDone = true;
     igbe->checkDrain();
+
 }
 
 void
@@ -843,11 +882,13 @@ IGbE::TxDescCache::getPacketSize()
 
         // I think we can just ignore these for now?
         desc = unusedCache.front();
+        DPRINTF(EthernetDesc, "Descriptor upper: %#x lower: %#X\n", desc->d1,
+                desc->d2);
         // is this going to be a tcp or udp packet?
         isTcp = TxdOp::tcp(desc) ? true : false;
 
         // make sure it's ipv4
-        assert(TxdOp::ip(desc));
+        //assert(TxdOp::ip(desc));
 
         TxdOp::setDd(desc);
         unusedCache.pop_front();
@@ -893,7 +934,6 @@ IGbE::TxDescCache::pktComplete()
     assert(pktPtr);
 
     DPRINTF(EthernetDesc, "DMA of packet complete\n");
-
 
     desc = unusedCache.front();
     assert((TxdOp::isLegacy(desc) || TxdOp::isData(desc)) && TxdOp::getLen(desc));
@@ -951,20 +991,21 @@ IGbE::TxDescCache::pktComplete()
             ip->sum(cksum(ip));
             DPRINTF(EthernetDesc, "Calculated IP checksum\n");
         }
-       if (TxdOp::txsm(desc)) {
-           if (isTcp) {
-                TcpPtr tcp(ip);
-                assert(tcp);
-                tcp->sum(0);
-                tcp->sum(cksum(tcp));
-                DPRINTF(EthernetDesc, "Calculated TCP checksum\n");
-           } else {
-                UdpPtr udp(ip);
-                assert(udp);
-                udp->sum(0);
-                udp->sum(cksum(udp));
-                DPRINTF(EthernetDesc, "Calculated UDP checksum\n");
-           }
+        if (TxdOp::txsm(desc)) {
+            TcpPtr tcp(ip);
+            UdpPtr udp(ip);
+            if (tcp) {
+                 tcp->sum(0);
+                 tcp->sum(cksum(tcp));
+                 DPRINTF(EthernetDesc, "Calculated TCP checksum\n");
+            } else if (udp) {
+                 assert(udp);
+                 udp->sum(0);
+                 udp->sum(cksum(udp));
+                 DPRINTF(EthernetDesc, "Calculated UDP checksum\n");
+            } else {
+                panic("Told to checksum, but don't know how\n");
+            }
         }
     }
 
@@ -979,9 +1020,10 @@ IGbE::TxDescCache::pktComplete()
 
         if (igbe->regs.tadv.idv() && igbe->regs.tidv.idv()) {
             DPRINTF(EthernetDesc, "setting tadv\n");
-            if (!igbe->tadvEvent.scheduled())
+            if (!igbe->tadvEvent.scheduled()) {
                 igbe->tadvEvent.schedule(curTick + igbe->regs.tadv.idv() *
                         igbe->intClock());
+            }
         }
     }
 
@@ -1103,8 +1145,11 @@ IGbE::checkDrain()
     if (!drainEvent)
         return;
 
-    if (rxDescCache.hasOutstandingEvents() ||
-            txDescCache.hasOutstandingEvents()) {
+    txFifoTick = false;
+    txTick = false;
+    rxTick = false;
+    if (!rxDescCache.hasOutstandingEvents() &&
+            !txDescCache.hasOutstandingEvents()) {
         drainEvent->process();
         drainEvent = NULL;
     }
@@ -1124,6 +1169,7 @@ IGbE::txStateMachine()
     // iteration we'll get the rest of the data
     if (txPacket && txDescCache.packetAvailable() && txPacket->length) {
         bool success;
+
         DPRINTF(EthernetSM, "TXS: packet placed in TX FIFO\n");
         success = txFifo.push(txPacket);
         txFifoTick = true;
@@ -1146,11 +1192,12 @@ IGbE::txStateMachine()
 
     if (!txDescCache.packetWaiting()) {
         if (txDescCache.descLeft() == 0) {
+            postInterrupt(IT_TXQE);
+            txDescCache.writeback(0);
             DPRINTF(EthernetSM, "TXS: No descriptors left in ring, forcing "
                     "writeback stopping ticking and posting TXQE\n");
-            txDescCache.writeback(0);
+            txDescCache.fetchDescriptors();
             txTick = false;
-            postInterrupt(IT_TXQE, true);
             return;
         }
 
@@ -1170,12 +1217,13 @@ IGbE::txStateMachine()
             txFifo.reserve(size);
             txDescCache.getPacketData(txPacket);
         } else if (size <= 0) {
+            DPRINTF(EthernetSM, "TXS: getPacketSize returned: %d\n", size);
             DPRINTF(EthernetSM, "TXS: No packets to get, writing back used descriptors\n");
             txDescCache.writeback(0);
         } else {
+            txDescCache.writeback((cacheBlockSize()-1)>>4);
             DPRINTF(EthernetSM, "TXS: FIFO full, stopping ticking until space "
                     "available in FIFO\n");
-            txDescCache.writeback((cacheBlockSize()-1)>>4);
             txTick = false;
         }
 
@@ -1190,6 +1238,7 @@ bool
 IGbE::ethRxPkt(EthPacketPtr pkt)
 {
     DPRINTF(Ethernet, "RxFIFO: Receiving pcakte from wire\n");
+
     if (!regs.rctl.en()) {
         DPRINTF(Ethernet, "RxFIFO: RX not enabled, dropping\n");
         return true;
@@ -1235,8 +1284,6 @@ IGbE::rxStateMachine()
         }
 
         if (descLeft == 0) {
-            DPRINTF(EthernetSM, "RXS: No descriptors left in ring, forcing"
-                    " writeback and stopping ticking\n");
             rxDescCache.writeback(0);
             rxTick = false;
         }
@@ -1310,16 +1357,26 @@ IGbE::txWire()
         return;
     }
 
+    if (etherInt->askBusy()) {
+        // We'll get woken up when the packet ethTxDone() gets called
+        txFifoTick = false;
+    } else {
+        if (DTRACE(EthernetSM)) {
+            IpPtr ip(txFifo.front());
+            if (ip)
+                DPRINTF(EthernetSM, "Transmitting Ip packet with Id=%d\n",
+                        ip->id());
+            else
+                DPRINTF(EthernetSM, "Transmitting Non-Ip packet\n");
+        }
 
-    if (etherInt->sendPacket(txFifo.front())) {
+        bool r = etherInt->sendPacket(txFifo.front());
+        assert(r);
+        r += 1;
         DPRINTF(EthernetSM, "TxFIFO: Successful transmit, bytes available in fifo: %d\n",
                 txFifo.avail());
         txFifo.pop();
-    } else {
-        // We'll get woken up when the packet ethTxDone() gets called
-        txFifoTick = false;
     }
-
 }
 
 void
@@ -1348,7 +1405,8 @@ IGbE::ethTxDone()
     // fifo to send another packet
     // tx sm to put more data into the fifo
     txFifoTick = true;
-    txTick = true;
+    if (txDescCache.descLeft() != 0)
+        txTick = true;
 
     restartClock();
     DPRINTF(EthernetSM, "TxFIFO: Transmission complete\n");
@@ -1387,15 +1445,15 @@ IGbE::serialize(std::ostream &os)
     SERIALIZE_SCALAR(radv_time);
 
     if (tidvEvent.scheduled())
-       rdtr_time = tidvEvent.when();
+       tidv_time = tidvEvent.when();
     SERIALIZE_SCALAR(tidv_time);
 
     if (tadvEvent.scheduled())
-       rdtr_time = tadvEvent.when();
+       tadv_time = tadvEvent.when();
     SERIALIZE_SCALAR(tadv_time);
 
     if (interEvent.scheduled())
-       rdtr_time = interEvent.when();
+       inter_time = interEvent.when();
     SERIALIZE_SCALAR(inter_time);
 
     nameOut(os, csprintf("%s.TxDescCache", name()));

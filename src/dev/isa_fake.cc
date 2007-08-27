@@ -56,6 +56,7 @@ Tick
 IsaFake::read(PacketPtr pkt)
 {
 
+    pkt->makeAtomicResponse();
     if (params()->warn_access != "")
         warn("Device %s accessed by read to address %#x size=%d\n",
                 name(), pkt->getAddr(), pkt->getSize());
@@ -83,7 +84,6 @@ IsaFake::read(PacketPtr pkt)
           default:
             panic("invalid access size!\n");
         }
-        pkt->makeAtomicResponse();
     }
     return pioDelay;
 }
@@ -91,6 +91,7 @@ IsaFake::read(PacketPtr pkt)
 Tick
 IsaFake::write(PacketPtr pkt)
 {
+    pkt->makeAtomicResponse();
     if (params()->warn_access != "") {
         uint64_t data;
         switch (pkt->getSize()) {
@@ -138,7 +139,6 @@ IsaFake::write(PacketPtr pkt)
                 panic("invalid access size!\n");
             }
         }
-        pkt->makeAtomicResponse();
     }
     return pioDelay;
 }

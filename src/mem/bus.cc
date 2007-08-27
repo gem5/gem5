@@ -237,6 +237,7 @@ Bus::recvTiming(PacketPtr pkt)
     if (dest_port_id == src) {
         // Must be forwarded snoop up from below...
         assert(dest == Packet::Broadcast);
+        assert(src != defaultId); // catch infinite loops
     } else {
         // send to actual target
         if (!dest_port->sendTiming(pkt))  {

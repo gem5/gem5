@@ -328,6 +328,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
                     dcache_latency += dcachePort.sendAtomic(&pkt);
             }
             dcache_access = true;
+
             assert(!pkt.isError());
 
             if (req->isLocked()) {
@@ -611,6 +612,7 @@ AtomicSimpleCPU::tick()
                 else
                     icache_latency = icachePort.sendAtomic(&ifetch_pkt);
 
+                assert(!ifetch_pkt.isError());
 
                 // ifetch_req is initialized to read the instruction directly
                 // into the CPU object's inst field.

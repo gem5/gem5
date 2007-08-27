@@ -107,6 +107,7 @@ AlphaConsole::read(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
 
     pkt->allocate();
+    pkt->makeAtomicResponse();
 
     switch (pkt->getSize())
     {
@@ -188,7 +189,6 @@ AlphaConsole::read(PacketPtr pkt)
         default:
           pkt->setBadAddress();
     }
-    pkt->makeAtomicResponse();
     return pioDelay;
 }
 

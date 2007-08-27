@@ -117,11 +117,11 @@ MemCmd::commandInfo[] =
     { SET5(IsRead, IsWrite, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "SwapResp" },
     /* NetworkNackError  -- nacked at network layer (not by protocol) */
-    { SET2(IsRequest, IsError), InvalidCmd, "NetworkNackError" },
+    { SET2(IsResponse, IsError), InvalidCmd, "NetworkNackError" },
     /* InvalidDestError  -- packet dest field invalid */
-    { SET2(IsRequest, IsError), InvalidCmd, "InvalidDestError" },
+    { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
-    { SET2(IsRequest, IsError), InvalidCmd, "BadAddressError" }
+    { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" }
 };
 
 

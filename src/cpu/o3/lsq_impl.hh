@@ -80,6 +80,8 @@ template <class Impl>
 bool
 LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
 {
+    if (pkt->isError())
+        DPRINTF(LSQ, "Got error packet back for address: %#X\n", pkt->getAddr());
     if (pkt->isResponse()) {
         lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
     }
