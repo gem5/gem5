@@ -126,6 +126,8 @@ def template MacroDeclare {{
              */
             class %(class_name)s : public %(base_class)s
             {
+              private:
+                %(declareLabels)s
               public:
                 // Constructor.
                 %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv env);
@@ -151,6 +153,9 @@ def template MacroConstructor {{
 let {{
     from micro_asm import Combinational_Macroop, Rom_Macroop
     class X86Macroop(Combinational_Macroop):
+        def add_microop(self, microop):
+            microop.micropc = len(self.microops)
+            self.microops.append(microop)
         def setAdjustEnv(self, val):
             self.adjust_env = val
         def __init__(self, name):
@@ -166,7 +171,14 @@ let {{
         def getDeclaration(self):
             #FIXME This first parameter should be the mnemonic. I need to
             #write some code which pulls that out
-            iop = InstObjParams(self.name, self.name, "Macroop", {"code" : ""})
+            declareLabels = ""
+            for (label, microop) in self.labels.items():
+                declareLabels += "const static uint64_t label_%s = %d;\n" \
+                                  % (label, microop.micropc)
+            iop = InstObjParams(self.name, self.name, "Macroop",
+                    {"code" : "",
+                     "declareLabels" : declareLabels
+                    })
             return MacroDeclare.subst(iop);
         def getDefinition(self):
             #FIXME This first parameter should be the mnemonic. I need to

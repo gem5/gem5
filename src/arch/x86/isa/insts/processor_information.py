@@ -97,9 +97,10 @@ def macroop CPUID_R {
 # Standard functions.
 #
 
+standardStart:
 
 # 0x00000000 -- Processor Vendor and Largest Standard Function Number
-standardStart: limm rax, 0x00000001, dataSize=4
+    limm rax, 0x00000001, dataSize=4
     limm rbx, 0x68747541, dataSize=4
     limm rdx, 0x69746e65, dataSize=4
     limm rcx, 0x444d4163, dataSize=4
@@ -122,9 +123,10 @@ standardStart: limm rax, 0x00000001, dataSize=4
 # Extended functions.
 #
 
-# 0x80000000 -- Processor Vendor and Largest Extended Function Number
+extendedStart:
 
-extendedStart: limm rax, 0x80000018, dataSize=4
+# 0x80000000 -- Processor Vendor and Largest Extended Function Number
+    limm rax, 0x80000018, dataSize=4
     limm rbx, 0x68747541, dataSize=4
     limm rdx, 0x69746e65, dataSize=4
     limm rcx, 0x444d4163, dataSize=4
@@ -400,6 +402,7 @@ extendedStart: limm rax, 0x80000018, dataSize=4
     fault "NoFault"
     fault "NoFault"
 
-end: fault "NoFault"
+end:
+    fault "NoFault"
 };
 '''

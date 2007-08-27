@@ -140,9 +140,9 @@ def handle_statement(parser, container, statement):
             raise
         try:
             for label in statement.labels:
-                container.labels[label.name] = microop
+                container.labels[label.text] = microop
                 if label.extern:
-                    container.externs[label.name] = microop
+                    container.externs[label.text] = microop
             container.add_microop(microop)
         except:
             print_error("Error adding microop.")
@@ -437,6 +437,11 @@ def p_labels_0(t):
 def p_labels_1(t):
     'labels : labels label'
     t[1].append(t[2])
+    t[0] = t[1]
+
+# labels on lines by themselves are attached to the following instruction.
+def p_labels_2(t):
+    'labels : labels NEWLINE'
     t[0] = t[1]
 
 def p_label_0(t):
