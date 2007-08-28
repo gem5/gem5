@@ -39,56 +39,14 @@
 class ThreadContext;
 class Packet;
 
-class GenericTLBBase : public SimObject
+class GenericTLB : public SimObject
 {
   protected:
-    GenericTLBBase(const std::string &name) : SimObject(name)
+    GenericTLB(const std::string &name) : SimObject(name)
     {}
 
-    Fault translate(RequestPtr req, ThreadContext *tc);
-};
-
-template <bool doSizeCheck=true, bool doAlignmentCheck=true>
-class GenericTLB : public GenericTLBBase
-{
   public:
-    GenericTLB(const std::string &name) : GenericTLBBase(name)
-    {}
-
-    Fault translate(RequestPtr req, ThreadContext *tc, bool=false)
-    {
-        Fault fault = GenericTLBBase::translate(req, tc);
-        if (fault != NoFault)
-            return fault;
-
-        typeof(req->getSize()) size = req->getSize();
-        Addr paddr = req->getPaddr();
-
-        if(doSizeCheck && !isPowerOf2(size))
-            panic("Invalid request size!\n");
-        if (doAlignmentCheck && ((size - 1) & paddr))
-            return new GenericAlignmentFault(paddr);
-
-        return NoFault;
-    }
-};
-
-template <bool doSizeCheck=true, bool doAlignmentCheck=true>
-class GenericITB : public GenericTLB<doSizeCheck, doAlignmentCheck>
-{
-  public:
-    GenericITB(const std::string &name) :
-        GenericTLB<doSizeCheck, doAlignmentCheck>(name)
-    {}
-};
-
-template <bool doSizeCheck=true, bool doAlignmentCheck=true>
-class GenericDTB : public GenericTLB<doSizeCheck, doAlignmentCheck>
-{
-  public:
-    GenericDTB(const std::string &name) :
-        GenericTLB<doSizeCheck, doAlignmentCheck>(name)
-    {}
+    Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

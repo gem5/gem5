@@ -45,17 +45,26 @@ namespace MipsISA
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
-    class ITB : public GenericITB<>
+    class TLB : public GenericTLB
     {
       public:
-        ITB(const std::string &name) : GenericITB<>(name)
+        TLB(const std::string &name) : GenericTLB(name)
+        {}
+
+        Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
+    };
+
+    class ITB : public TLB
+    {
+      public:
+        ITB(const std::string &name) : TLB(name)
         {}
     };
 
-    class DTB : public GenericDTB<>
+    class DTB : public TLB
     {
       public:
-        DTB(const std::string &name) : GenericDTB<>(name)
+        DTB(const std::string &name) : TLB(name)
         {}
     };
 };

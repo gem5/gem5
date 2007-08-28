@@ -34,7 +34,7 @@
 #include "sim/tlb.hh"
 
 Fault
-GenericTLBBase::translate(RequestPtr req, ThreadContext * tc)
+GenericTLB::translate(RequestPtr req, ThreadContext * tc, bool)
 {
 #if FULL_SYSTEM
         panic("Generic translation shouldn't be used in full system mode.\n");

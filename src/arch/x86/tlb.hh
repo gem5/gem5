@@ -78,17 +78,17 @@ namespace X86ISA
         void unserialize(Checkpoint *cp, const std::string &section);
     };
 
-    class ITB : public GenericITB<false, false>
+    class ITB : public GenericTLB
     {
       public:
-        ITB(const std::string &name) : GenericITB<false, false>(name)
+        ITB(const std::string &name) : GenericTLB(name)
         {}
     };
 
-    class DTB : public GenericDTB<false, false>
+    class DTB : public GenericTLB
     {
       public:
-        DTB(const std::string &name) : GenericDTB<false, false>(name)
+        DTB(const std::string &name) : GenericTLB(name)
         {}
     };
 };

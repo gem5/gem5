@@ -35,6 +35,24 @@
 #include "params/MipsITB.hh"
 
 namespace MipsISA {
+    Fault
+    TLB::translate(RequestPtr req, ThreadContext *tc, bool)
+    {
+        Fault fault = GenericTLB::translate(req, tc);
+        if (fault != NoFault)
+            return fault;
+
+        typeof(req->getSize()) size = req->getSize();
+        Addr paddr = req->getPaddr();
+
+        if (!isPowerOf2(size))
+            panic("Invalid request size!\n");
+        if ((size - 1) & paddr)
+            return new GenericAlignmentFault(paddr);
+
+        return NoFault;
+    }
+
     void
     TlbEntry::serialize(std::ostream &os)
     {
