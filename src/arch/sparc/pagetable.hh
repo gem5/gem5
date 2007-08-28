@@ -190,6 +190,11 @@ struct TlbRange {
 
 
 struct TlbEntry {
+    Addr pageStart;
+    TlbEntry()
+    {}
+    TlbEntry(Addr addr) : pageStart(addr)
+    {}
     TlbRange range;
     PageTableEntry pte;
     bool used;
