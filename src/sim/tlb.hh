@@ -67,7 +67,7 @@ class GenericTLB : public GenericTLBBase
         if(doSizeCheck && !isPowerOf2(size))
             panic("Invalid request size!\n");
         if (doAlignmentCheck && ((size - 1) & paddr))
-            return Fault(new GenericAlignmentFault(paddr));
+            return new GenericAlignmentFault(paddr);
 
         return NoFault;
     }

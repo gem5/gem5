@@ -48,12 +48,12 @@ Source('simulate.cc')
 Source('startup.cc')
 Source('stat_control.cc')
 Source('system.cc')
-Source('tlb.cc')
 
 if env['FULL_SYSTEM']:
     Source('arguments.cc')
     Source('pseudo_inst.cc')
 else:
+    Source('tlb.cc')
     SimObject('Process.py')
 
     Source('process.cc')
