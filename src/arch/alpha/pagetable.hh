@@ -92,10 +92,12 @@ namespace AlphaISA {
     // ITB/DTB table entry
     struct TlbEntry
     {
+        Addr pageStart;
         //Construct an entry that maps to physical address addr.
-        TlbEntry(Addr addr)
-        {
-        }
+        TlbEntry(Addr addr) : pageStart(addr)
+        {}
+        TlbEntry()
+        {}
 
         Addr tag;			// virtual page number tag
         Addr ppn;			// physical page number
