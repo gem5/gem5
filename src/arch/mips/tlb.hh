@@ -35,17 +35,27 @@
 
 namespace MipsISA
 {
-    class ITB : public GenericITB
+    struct TlbEntry
+    {
+        Addr pageStart;
+        TlbEntry() {}
+        TlbEntry(Addr paddr) : pageStart(paddr) {}
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
+    class ITB : public GenericITB<>
     {
       public:
-        ITB(const std::string &name) : GenericITB(name)
+        ITB(const std::string &name) : GenericITB<>(name)
         {}
     };
 
-    class DTB : public GenericDTB
+    class DTB : public GenericDTB<>
     {
       public:
-        DTB(const std::string &name) : GenericDTB(name)
+        DTB(const std::string &name) : GenericDTB<>(name)
         {}
     };
 };

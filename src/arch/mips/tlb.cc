@@ -35,6 +35,17 @@
 #include "params/MipsITB.hh"
 
 namespace MipsISA {
+    void
+    TlbEntry::serialize(std::ostream &os)
+    {
+        SERIALIZE_SCALAR(pageStart);
+    }
+
+    void
+    TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_SCALAR(pageStart);
+    }
 };
 
 MipsISA::ITB *

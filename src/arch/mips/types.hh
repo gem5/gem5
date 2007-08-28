@@ -31,7 +31,6 @@
 #ifndef __ARCH_MIPS_TYPES_HH__
 #define __ARCH_MIPS_TYPES_HH__
 
-#include "mem/types.hh"
 #include "sim/host.hh"
 
 namespace MipsISA
@@ -95,8 +94,6 @@ namespace MipsISA
         RND_UP,
         RND_NEAREST
     };
-
-    typedef ::PageTable<> PageTable;
 
 } // namespace MipsISA
 
