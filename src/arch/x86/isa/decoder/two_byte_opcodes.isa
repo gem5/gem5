@@ -637,15 +637,40 @@
                 }
                 default: Inst::UD2();
             }
-            0x1C: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x1C: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pavgb_Pq_Qq();
+                    0x1: psraw_Pq_Qq();
+                    0x2: psrad_Pq_Qq();
+                    0x3: pavgw_Pq_Qq();
+                    0x4: pmulhuw_Pq_Qq();
+                    0x5: pmulhw_Pq_Qq();
+                    0x7: movntq_Mq_Pq();
+                    default: Inst::UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: cvtdq2pd_Vo_Wq();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pavgb_Vo_Wo();
+                    0x1: psraw_Vo_Wo();
+                    0x2: psrad_Vo_Wo();
+                    0x3: pavgw_Vo_Wo();
+                    0x4: pmulhuw_Vo_Wo();
+                    0x5: pmulhw_Vo_Wo();
+                    0x6: cvttpd2dq_Vo_Wo();
+                    0x7: movntdq_Mo_Vo();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x6: cvtpd2dq_Vo_Wo();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
             0x1D: decode LEGACY_DECODEVAL {
                 // no prefix
@@ -673,14 +698,34 @@
                 default: Inst::UD2();
             }
             0x1E: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x1: psllw_Pq_Qq();
+                    0x2: pslld_Pq_Qq();
+                    0x3: psllq_Pq_Qq();
+                    0x4: pmuludq_Pq_Qq();
+                    0x5: pmaddwd_Pq_Qq();
+                    0x6: psadbw_Pq_Qq();
+                    0x7: maskmovq_Pq_PRq();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x1: psllw_Vo_Wo();
+                    0x2: pslld_Vo_Wo();
+                    0x3: psllq_Vo_Wo();
+                    0x4: pmuludq_Vo_Wo();
+                    0x5: pmaddwd_Vo_Wo();
+                    0x6: psadbw_Vo_Wo();
+                    0x7: maskmovdqu_Vo_VRo();
+                    default: Inst::UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: lddqu_Vo_Mo();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
             0x1F: decode LEGACY_DECODEVAL {
                 // no prefix
