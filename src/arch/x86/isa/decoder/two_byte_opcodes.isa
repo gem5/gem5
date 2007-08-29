@@ -90,47 +90,46 @@
             0x02: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: holder();
-                    0x1: holder();
-                    0x2: holder();
-                    0x3: holder();
-                    0x4: holder();
-                    0x5: holder();
-                    0x6: holder();
-                    0x7: holder();
+                    0x0: movups_Vo_Wo();
+                    0x1: movups_Wo_Vo();
+                    0x2: decode MODRM_MOD {
+                        0x3: movhlps_Vq_VRq();
+                        default: movlps_Vq_Mq();
+                    }
+                    0x3: movlps_Mq_Vq();
+                    0x4: unpcklps();
+                    0x5: unpckhps();
+                    0x6: decode MODRM_MOD {
+                        0x3: movlhps_Vq_VRq();
+                        default: movhps_Vq_Mq();
+                    }
+                    0x7: movhps_Mq_Vq();
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x0: holder();
-                    0x1: holder();
-                    0x2: holder();
-                    0x3: holder();
-                    0x4: holder();
-                    0x5: holder();
-                    0x6: holder();
-                    0x7: holder();
+                    0x0: movss_Vd_Wd();
+                    0x1: movss_Wd_Vd();
+                    0x2: movsldup_Vo_Wo();
+                    0x6: movshdup_Vo_Wo();
+                    default: Inst::UD2();
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: holder();
-                    0x1: holder();
-                    0x2: holder();
-                    0x3: holder();
-                    0x4: holder();
-                    0x5: holder();
-                    0x6: holder();
-                    0x7: holder();
+                    0x0: movupd_Vo_Wo();
+                    0x1: movupd_Wo_Vo();
+                    0x2: movlpd_Vq_Mq();
+                    0x3: movlpd_Mq_Vq();
+                    0x4: unpcklpd_Vo_Wq();
+                    0x5: unpckhpd_Vo_Wo();
+                    0x6: movhpd_Vq_Mq();
+                    0x7: movhpd_Mq_Vq();
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x0: holder();
-                    0x1: holder();
-                    0x2: holder();
-                    0x3: holder();
-                    0x4: holder();
-                    0x5: holder();
-                    0x6: holder();
-                    0x7: holder();
+                    0x0: movsd_Vq_Wq();
+                    0x1: movsd_Wq_Vq();
+                    0x2: movddup_Vo_Wq();
+                    default: Inst::UD2();
                 }
                 default: Inst::UD2();
             }
@@ -144,25 +143,68 @@
                 0x6: group17();
                 0x7: group17();
             }
-            0x04: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x04: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: mov_Rd_Cd();
+                    0x1: mov_Rd_Dd();
+                    0x2: mov_Cd_Rd();
+                    0x3: mov_Dd_Rd();
+                    0x4: mov_Rd_Td();
+                    0x6: mov_Td_Rd();
+                    default: Inst::UD2();
+                }
+                // lock prefix (0xF0)
+                0x2: decode OPCODE_OP_BOTTOM3 {
+                    0x0: mov_Rd_CR8D();
+                    0x2: mov_CR8D_Rd();
+                }
+                default: Inst::UD2();
             }
-            0x05: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x05: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: movaps_Vo_Wo();
+                    0x1: movaps_Wo_Vo();
+                    0x2: decode MODRM_MOD {
+                        0x3: cvtpi2pS_Vq_Pq();
+                        default: cvtpi2ps_Vq_Mq();
+                    }
+                    0x3: movntps_Mo_Vo();
+                    0x4: cvttps2pi_Pq_Wq();
+                    0x5: cvtpS2pi_Pq_Wq();
+                    0x6: ucomiss_Vd_Wd();
+                    0x7: comiss_Vd_Wd();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x2: cvtsi2ss_Vd_Ed();
+                    0x4: cvttss2si_Gd_Wd();
+                    0x5: cvtss2si_Gd_Wd();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: movapd_Vo_Wo();
+                    0x1: movapd_Wo_Vo();
+                    0x2: decode MODRM_MOD {
+                        0x3: cvtpi2pd_Vo_Pq();
+                        default: cvtpi2pd_Vo_Mq();
+                    }
+                    0x3: movntpd_Mo_Vo();
+                    0x4: cvttpd2pi_Pq_Wo();
+                    0x5: cvtpd2pi_Pq_Wo();
+                    0x6: ucomisd_Vq_Wq();
+                    0x7: comisd_Vq_Wq();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x2: cvtsi2sd_Vq_Ed();
+                    0x4: cvttsd2si_Gd_Wq();
+                    0x5: cvtsd2si_Gd_Wq();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
             0x06: decode OPCODE_OP_BOTTOM3 {
                 0x0: wrmsr();
@@ -206,65 +248,208 @@
                     0x7: CMOVNLE(Gv,Ev);
                 }
             }
-            0x0A: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0A: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: movmskps_Gd_VRo();
+                    0x1: sqrtps_Vo_Wo();
+                    0x2: rqsrtps_Vo_Wo();
+                    0x3: rcpps_Vo_Wo();
+                    0x4: andps_Vo_Wo();
+                    0x5: andnps_Vo_Wo();
+                    0x6: orps_Vo_Wo();
+                    0x7: xorps_Vo_Wo();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x1: sqrtss_Vd_Wd();
+                    0x2: rsqrtss_Vd_Wd();
+                    0x3: rcpss_Vd_Wd();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: movmskpd_Gd_VRo();
+                    0x1: sqrtpd_Vo_Wo();
+                    0x4: andpd_Vo_Wo();
+                    0x5: andnpd_Vo_Wo();
+                    0x6: orpd_Vo_Wo();
+                    0x7: xorpd_Vo_Wo();
+                    default: Inst::UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x1: sqrtsd_Vq_Wq();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
-            0x0B: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0B: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addps_Vo_Wo();
+                    0x1: mulps_Vo_Wo();
+                    0x2: cvtps2pd_Vo_Wq();
+                    0x3: cvtdq2ps_Vo_Wo();
+                    0x4: subps_Vo_Wo();
+                    0x5: minps_Vo_Wo();
+                    0x6: divps_Vo_Wo();
+                    0x7: maxps_Vo_Wo();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addss_Vd_Wd();
+                    0x1: mulss_Vd_Wd();
+                    0x2: cvtss2sd_Vq_Wd();
+                    0x3: cvttps2dq_Vo_Wo();
+                    0x4: subss_Vd_Wd();
+                    0x5: minss_Vd_Wd();
+                    0x6: divss_Vd_Wd();
+                    0x7: maxss_Vd_Wd();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addpd_Vo_Wo();
+                    0x1: mulpd_Vo_Wo();
+                    0x2: cvtpd2ps_Vo_Wo();
+                    0x3: cvtps2dq_Vo_Wo();
+                    0x4: subpd_Vo_Wo();
+                    0x5: minpd_Vo_Wo();
+                    0x6: divpd_Vo_Wo();
+                    0x7: maxpd_Vo_Wo();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addsd_Vq_Wq();
+                    0x1: mulsd_Vq_Wq();
+                    0x2: cvtsd2ss_Vd_Wq();
+                    0x4: subsd_Vq_Wq();
+                    0x5: minsd_Vq_Wq();
+                    0x6: divsd_Vq_Wq();
+                    0x7: maxsd_Vq_Wq();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
-            0x0C: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0C: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: punpcklbw_Pq_Qd();
+                    0x1: punpcklwd_Pq_Qd();
+                    0x2: punpckldq_Pq_Qd();
+                    0x3: packsswb_Pq_Qq();
+                    0x4: pcmpgtb_Pq_Qq();
+                    0x5: pcmpgtw_Pq_Qq();
+                    0x6: pcmpgtd_Pq_Qq();
+                    0x7: packuswb_Pq_Qq();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: punpcklbw_Vo_Wq();
+                    0x1: punpcklwd_Vo_Wq();
+                    0x2: punpckldq_Vo_Wq();
+                    0x3: packsswb_Vo_Wo();
+                    0x4: pcmpgtb_Vo_Wo();
+                    0x5: pcmpgtw_Vo_Wo();
+                    0x6: pcmpgtd_Vo_Wo();
+                    0x7: packuswb_Vo_Wo();
+                }
+                default: Inst::UD2();
             }
-            0x0D: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0D: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: punpckhbw_Pq_Qq();
+                    0x1: punpckhwd_Pq_Qq();
+                    0x2: punpckhdq_Pq_Qq();
+                    0x3: packssdw_Pq_Qq();
+                    0x6: movd_Pq_Ed();
+                    0x7: movq_Pq_Qq();
+                    default: Inst::UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x7: movdqu_Vo_Wo();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: punpckhbw_Vo_Wo();
+                    0x1: punpckhwd_Vo_Wo();
+                    0x2: punpckhdq_Vo_Wo();
+                    0x3: packssdw_Vo_Wo();
+                    0x4: punpcklqdq_Vo_Wq();
+                    0x5: punpcklqdq_Vo_Wq();
+                    0x6: movd_Vo_Ed();
+                    0x7: movdqa_Vo_Wo();
+                }
+                default: Inst::UD2();
             }
-            0x0E: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0E: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pshufw_Pq_Qq_Ib();
+                    0x1: group13_pshimw();
+                    0x2: group14_pshimd();
+                    0x3: group15_pshimq();
+                    0x4: pcmpeqb_Pq_Qq();
+                    0x5: pcmpeqw_Pq_Qq();
+                    0x6: pcmpeqd_Pq_Qq();
+                    0x7: emms();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pshufhw_Vo_Wo_Ib();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pshufd_Vo_Wo_Ib();
+                    0x1: group13_pshimw();
+                    0x2: group14_pshimd();
+                    0x3: group15_pshimq_dq();
+                    0x4: pcmpeqb_Vo_Wo();
+                    0x5: pcmpeqw_Vo_Wo();
+                    0x6: pcmpeqd_Vo_Wo();
+                    default: Inst::UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: pshuflw_Vo_Wo_Ib();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
-            0x0F: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x0F: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: vmread_Ed_or_Eq_Gd_or_Gq();
+                    0x1: vmwrite_Gd_or_Gq_Ed_or_Eq();
+                    0x6: mov_Ed_Pd();
+                    0x7: mov_Qq_Pq();
+                    default: Inst::UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: movq_Vo_Mq_or_Vq_Vq();
+                    0x7: movdqu_Wo_Vo();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x4: haddpd_Vo_Wo();
+                    0x5: hsubpd_Vo_Wo();
+                    0x6: movd_Ed_Vd();
+                    0x7: movdqa_Wo_Vo();
+                    default: Inst::UD2();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x4: haddps_Vo_Wo();
+                    0x5: hsubps_Vo_Wo();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
             format Inst {
                 0x10: decode OPCODE_OP_BOTTOM3 {
@@ -355,35 +540,102 @@
                 0x7: Inst::MOVSX_W(Gv,Ev);
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+                0x0: xadd_Eb_Gb();
+                0x1: xadd_Ev_Gv();
+                0x7: group9();
+                default: decode LEGACY_DECODEVAL {
+                    // no prefix
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x2: cmpccps_Vo_Wo_Ib();
+                        0x3: cvtdq2ps_Vo_Wo();
+                        0x4: subps_Vo_Wo();
+                        0x5: minps_Vo_Wo();
+                        0x6: divps_Vo_Wo();
+                    }
+                    // repe (0xF3)
+                    0x4: decode OPCODE_OP_BOTTOM3 {
+                        0x2: cmpccss_Vd_Wd_Ib();
+                        default: Inst::UD2();
+                    }
+                    // operand size (0x66)
+                    0x1: decode OPCODE_OP_BOTTOM3 {
+                        0x2: cmpccpd_Vo_Wo_Ib();
+                        0x4: subpd_Vo_Wo();
+                        0x5: minpd_Vo_Wo();
+                        0x6: divpd_Vo_Wo();
+                        default: Inst::UD2();
+                    }
+                    // repne (0xF2)
+                    0x8: decode OPCODE_OP_BOTTOM3 {
+                        0x2: cmpccsd_Vq_Wq_Ib();
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
             }
             0x19: bswap_B();
-            0x1A: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x1A: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x1: psrlw_Pq_Qq();
+                    0x2: psrld_Pq_Qq();
+                    0x3: psrlq_Pq_Qq();
+                    0x4: paddq_Pq_Qq();
+                    0x5: pmullw_Pq_Qq();
+                    0x7: pmovmskb_Gd_PRq();
+                    default: Inst::UD2();
+                }
+                // repe (0xF3)
+                0x4: decode OPCODE_OP_BOTTOM3 {
+                    0x6: movq2dq_Vo_PRq();
+                    default: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addsubpd_Vo_Wo();
+                    0x1: psrlw_Vo_Wo();
+                    0x2: psrld_Vo_Wo();
+                    0x3: psrlq_Vo_Wo();
+                    0x4: paddq_Vo_Wo();
+                    0x5: pmullw_Vo_Wo();
+                    0x6: decode MODRM_MOD {
+                        0x3: movq_Vq_Vq();
+                        default: movq_Mq_Vq();
+                    }
+                    0x7: pmovmskb_Gd_VRo();
+                }
+                // repne (0xF2)
+                0x8: decode OPCODE_OP_BOTTOM3 {
+                    0x0: addsubps_Vo_Wo();
+                    0x6: movdq2q_Pq_VRq();
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
-            0x1B: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x1B: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubusb_Pq_Qq();
+                    0x1: psubusw_Pq_Qq();
+                    0x2: pminub_Pq_Qq();
+                    0x3: pand_Pq_Qq();
+                    0x4: paddusb_Pq_Qq();
+                    0x5: paddusw_Pq_Qq();
+                    0x6: pmaxub_Pq_Qq();
+                    0x7: pandn_Pq_Qq();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubusb_Vo_Wo();
+                    0x1: psubusw_Vo_Wo();
+                    0x2: pminub_Vo_Wo();
+                    0x3: pand_Vo_Wo();
+                    0x4: paddusb_Vo_Wo();
+                    0x5: paddusw_Vo_Wo();
+                    0x6: pmaxub_Vo_Wo();
+                    0x7: pandn_Vo_Wo();
+                }
+                default: Inst::UD2();
             }
             0x1C: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -395,15 +647,30 @@
                 0x6: holder();
                 0x7: holder();
             }
-            0x1D: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x1D: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubsb_Pq_Qq();
+                    0x1: psubsw_Pq_Qq();
+                    0x2: pminsw_Pq_Qq();
+                    0x3: por_Pq_Qq();
+                    0x4: paddsb_Pq_Qq();
+                    0x5: paddsw_Pq_Qq();
+                    0x6: pmaxsw_Pq_Qq();
+                    0x7: pxor_Pq_Qq();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubsb_Vo_Wo();
+                    0x1: psubsw_Vo_Wo();
+                    0x2: pminsw_Vo_Wo();
+                    0x3: por_Vo_Wo();
+                    0x4: paddsb_Vo_Wo();
+                    0x5: paddsw_Vo_Wo();
+                    0x6: pmaxsw_Vo_Wo();
+                    0x7: pxor_Vo_Wo();
+                }
+                default: Inst::UD2();
             }
             0x1E: decode OPCODE_OP_BOTTOM3 {
                 0x0: holder();
@@ -415,15 +682,30 @@
                 0x6: holder();
                 0x7: holder();
             }
-            0x1F: decode OPCODE_OP_BOTTOM3 {
-                0x0: holder();
-                0x1: holder();
-                0x2: holder();
-                0x3: holder();
-                0x4: holder();
-                0x5: holder();
-                0x6: holder();
-                0x7: holder();
+            0x1F: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubb_Pq_Qq();
+                    0x1: psubw_Pq_Qq();
+                    0x2: psubd_Pq_Qq();
+                    0x3: psubq_Pq_Qq();
+                    0x4: paddb_Pq_Qq();
+                    0x5: paddw_Pq_Qq();
+                    0x6: paddd_Pq_Qq();
+                    0x7: Inst::UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: psubb_Vo_Wo();
+                    0x1: psubw_Vo_Wo();
+                    0x2: psubd_Vo_Wo();
+                    0x3: psubq_Vo_Wo();
+                    0x4: paddb_Vo_Wo();
+                    0x5: paddw_Vo_Wo();
+                    0x6: paddd_Vo_Wo();
+                    0x7: Inst::UD2();
+                }
+                default: Inst::UD2();
             }
             default: FailUnimpl::twoByteOps();
         }
