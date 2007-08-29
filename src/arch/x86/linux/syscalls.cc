@@ -129,7 +129,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*   5 */ SyscallDesc("fstat", fstat64Func<X86Linux64>),
     /*   6 */ SyscallDesc("lstat", unimplementedFunc),
     /*   7 */ SyscallDesc("poll", unimplementedFunc),
-    /*   8 */ SyscallDesc("lseek", unimplementedFunc),
+    /*   8 */ SyscallDesc("lseek", lseekFunc),
     /*   9 */ SyscallDesc("mmap", mmapFunc<X86Linux64>),
     /*  10 */ SyscallDesc("mprotect", unimplementedFunc),
     /*  11 */ SyscallDesc("munmap", munmapFunc),
