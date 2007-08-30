@@ -386,6 +386,7 @@ let {{
         microopClasses[name] = LoadOp
 
     defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);')
+    defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
 
     def defineMicroStoreOp(mnemonic, code):
         global header_output
@@ -415,6 +416,7 @@ let {{
         microopClasses[name] = StoreOp
 
     defineMicroStoreOp('St', 'Mem = Data;')
+    defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);", "ea_code": calculateEA})
