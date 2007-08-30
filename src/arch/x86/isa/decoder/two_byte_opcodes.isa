@@ -164,8 +164,10 @@
             0x05: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: movaps_Vo_Wo();
-                    0x1: movaps_Wo_Vo();
+                    //These moves should really use size o (octword), but
+                    //because they are split in two, they use q (quadword).
+                    0x0: Inst::MOVAPS(Vq,Wq);
+                    0x1: Inst::MOVAPS(Wq,Vq);
                     0x2: decode MODRM_MOD {
                         0x3: cvtpi2pS_Vq_Pq();
                         default: cvtpi2ps_Vq_Mq();

@@ -99,4 +99,31 @@ def macroop MOVSD_P_R {
 def macroop MOVSD_R_R {
     movfp xmml, xmml, xmmlm, dataSize=8
 };
+
+def macroop MOVAPS_R_M {
+    ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVAPS_R_P {
+    rdip t7
+    ldfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVAPS_M_R {
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVAPS_P_R {
+    rdip t7
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVAPS_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+    movfp xmmh, xmmh, xmmhm, dataSize=8
+};
 '''
