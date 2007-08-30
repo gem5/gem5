@@ -111,22 +111,24 @@ void FloatRegFile::clear()
 
 FloatReg FloatRegFile::readReg(int floatReg, int width)
 {
-    panic("Floating point not implemented for x86!\n");
+    return d[floatReg];
 }
 
 FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
 {
-    panic("Floating point not implemented for x86!\n");
+    return q[floatReg];
 }
 
 Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
 {
-    panic("Floating point not implemented for x86!\n");
+    d[floatReg] = val;
+    return NoFault;
 }
 
 Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
 {
-    panic("Floating point not implemented for x86!\n");
+    q[floatReg] = val;
+    return NoFault;
 }
 
 void FloatRegFile::serialize(std::ostream &os)
