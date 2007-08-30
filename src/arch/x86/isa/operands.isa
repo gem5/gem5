@@ -92,7 +92,6 @@ def operand_types {{
     'uqw' : ('unsigned int', 64),
     'sf' : ('float', 32),
     'df' : ('float', 64),
-    'qf' : ('float', 128)
 }};
 
 def operands {{
@@ -103,10 +102,14 @@ def operands {{
         'DestReg':       ('IntReg', 'uqw', '(((dest & 0x1C) == 4 ? foldOBit : 0) | dest)', 'IsInteger', 5),
         'Data':          ('IntReg', 'uqw', '(((data & 0x1C) == 4 ? foldOBit : 0) | data)', 'IsInteger', 6),
         'rax':           ('IntReg', 'uqw', '(INTREG_RAX)', 'IsInteger', 7),
-        'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 10),
-        'uIP':           ('UPC', 'uqw', None, (None, None, 'IsControl'), 11),
-        'nuIP':          ('NUPC', 'uqw', None, (None, None, 'IsControl'), 12),
-        'ccFlagBits':    ('IntReg', 'uqw', 'NUM_INTREGS + NumMicroIntRegs', None, 20),
-        'SegBase':       ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(segment)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 50),
+        'FpSrcReg1':     ('FloatReg', 'df', 'src1', 'IsFloating', 20),
+        'FpSrcReg2':     ('FloatReg', 'df', 'src2', 'IsFloating', 21),
+        'FpDestReg':     ('FloatReg', 'df', 'dest', 'IsFloating', 22),
+        'FpData':        ('FloatReg', 'df', 'data', 'IsFloating', 23),
+        'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 50),
+        'uIP':           ('UPC', 'uqw', None, (None, None, 'IsControl'), 51),
+        'nuIP':          ('NUPC', 'uqw', None, (None, None, 'IsControl'), 52),
+        'ccFlagBits':    ('IntReg', 'uqw', 'NUM_INTREGS + NumMicroIntRegs', None, 60),
+        'SegBase':       ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(segment)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 70),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};
