@@ -75,4 +75,28 @@ def macroop MOVLPD_P_R {
 def macroop MOVLPD_R_R {
     movfp xmml, xmml, xmmlm, dataSize=8
 };
+
+def macroop MOVSD_R_M {
+    # Zero xmmh
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVSD_R_P {
+    rdip t7
+    # Zero xmmh
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVSD_M_R {
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVSD_P_R {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVSD_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+};
 '''

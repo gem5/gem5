@@ -126,8 +126,8 @@
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x0: movsd_Vq_Wq();
-                    0x1: movsd_Wq_Vq();
+                    0x0: Inst::MOVSD(Vq,Wq);
+                    0x1: Inst::MOVSD(Wq,Vq);
                     0x2: movddup_Vo_Wq();
                     default: Inst::UD2();
                 }
