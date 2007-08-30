@@ -53,29 +53,26 @@
 #
 # Authors: Gabe Black
 
-categories = ["arithmetic",
-              "cache_and_memory_management",
-              "compare_and_test",
-              "control_transfer",
-              "data_conversion",
-              "data_transfer",
-              "flags",
-              "input_output",
-              "load_effective_address",
-              "load_segment_registers",
-              "logical",
-              "no_operation",
-              "processor_information",
-              "rotate_and_shift",
-              "semaphores",
-              "sse",
-              "string",
-              "system_calls",
-              "system"]
-
 microcode = '''
-# X86 microcode
+def macroop MOVLPD_R_M {
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVLPD_R_P {
+    rdip t7
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVLPD_M_R {
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVLPD_P_R {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVLPD_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

@@ -81,7 +81,11 @@ let {{
     # Miscellaneous symbols
     symbols = {
         "reg" : "env.reg",
+        "xmml" : "FLOATREG_XMM_LOW(env.reg)",
+        "xmmh" : "FLOATREG_XMM_HIGH(env.reg)",
         "regm" : "env.regm",
+        "xmmlm" : "FLOATREG_XMM_LOW(env.regm)",
+        "xmmhm" : "FLOATREG_XMM_HIGH(env.regm)",
         "imm" : "IMMEDIATE",
         "disp" : "DISPLACEMENT",
         "seg" : "env.seg",

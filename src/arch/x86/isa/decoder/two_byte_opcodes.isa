@@ -117,8 +117,8 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: movupd_Vo_Wo();
                     0x1: movupd_Wo_Vo();
-                    0x2: movlpd_Vq_Mq();
-                    0x3: movlpd_Mq_Vq();
+                    0x2: Inst::MOVLPD(Vq,Mq);
+                    0x3: Inst::MOVLPD(Mq,Vq);
                     0x4: unpcklpd_Vo_Wq();
                     0x5: unpckhpd_Vo_Wo();
                     0x6: movhpd_Vq_Mq();
