@@ -35,13 +35,12 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
-#include "params/IntrControl.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 
-IntrControl::IntrControl(const string &name, System *s)
-    : SimObject(name), sys(s)
+IntrControl::IntrControl(const Params *p)
+    : SimObject(p), sys(p->sys)
 {}
 
 void
@@ -79,5 +78,5 @@ IntrControl::clear(int cpu_id, int int_num, int index)
 IntrControl *
 IntrControlParams::create()
 {
-    return new IntrControl(name, sys);
+    return new IntrControl(this);
 }

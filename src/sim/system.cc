@@ -57,7 +57,7 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p->name), physmem(p->physmem), numcpus(0),
+    : SimObject(p), physmem(p->physmem), numcpus(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
       functionalPort(p->name + "-fport"),

@@ -31,8 +31,6 @@
 #include <cstring>
 
 #include "arch/mips/tlb.hh"
-#include "params/MipsDTB.hh"
-#include "params/MipsITB.hh"
 
 namespace MipsISA {
     Fault
@@ -69,11 +67,11 @@ namespace MipsISA {
 MipsISA::ITB *
 MipsITBParams::create()
 {
-    return new MipsISA::ITB(name);
+    return new MipsISA::ITB(this);
 }
 
 MipsISA::DTB *
 MipsDTBParams::create()
 {
-    return new MipsISA::DTB(name);
+    return new MipsISA::DTB(this);
 }

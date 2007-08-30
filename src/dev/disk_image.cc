@@ -45,8 +45,6 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
-#include "params/CowDiskImage.hh"
-#include "params/RawDiskImage.hh"
 #include "sim/sim_exit.hh"
 #include "sim/byteswap.hh"
 
@@ -56,10 +54,9 @@ using namespace std;
 //
 // Raw Disk image
 //
-RawDiskImage::RawDiskImage(const string &name, const string &filename,
-                           bool rd_only)
-    : DiskImage(name), disk_size(0)
-{ open(filename, rd_only); }
+RawDiskImage::RawDiskImage(const Params* p)
+    : DiskImage(p), disk_size(0)
+{ open(p->image_file, p->read_only); }
 
 RawDiskImage::~RawDiskImage()
 { close(); }
@@ -147,7 +144,7 @@ RawDiskImage::write(const uint8_t *data, off_t offset)
 RawDiskImage *
 RawDiskImageParams::create()
 {
-    return new RawDiskImage(name, image_file, read_only);
+    return new RawDiskImage(this);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -156,10 +153,6 @@ RawDiskImageParams::create()
 //
 const int CowDiskImage::VersionMajor = 1;
 const int CowDiskImage::VersionMinor = 0;
-
-CowDiskImage::CowDiskImage(const string &name, DiskImage *kid, int hash_size)
-    : DiskImage(name), child(kid), table(NULL)
-{ init(hash_size); }
 
 class CowDiskCallback : public Callback
 {
@@ -171,17 +164,20 @@ class CowDiskCallback : public Callback
     void process() { image->save(); delete this; }
 };
 
-CowDiskImage::CowDiskImage(const string &name, DiskImage *kid, int hash_size,
-                           const string &file, bool read_only)
-    : DiskImage(name), filename(file), child(kid), table(NULL)
+CowDiskImage::CowDiskImage(const Params *p)
+    : DiskImage(p), filename(p->image_file), child(p->child), table(NULL)
 {
-    if (!open(filename)) {
-        assert(!read_only && "why have a non-existent read only file?");
-        init(hash_size);
-    }
+    if (filename.empty()) {
+        init(p->table_size);
+    } else {
+        if (!open(filename)) {
+            assert(!p->read_only && "why have a non-existent read only file?");
+            init(p->table_size);
+        }
 
-    if (!read_only)
-        registerExitCallback(new CowDiskCallback(this));
+        if (!p->read_only)
+            registerExitCallback(new CowDiskCallback(this));
+    }
 }
 
 CowDiskImage::~CowDiskImage()
@@ -426,9 +422,5 @@ CowDiskImage::unserialize(Checkpoint *cp, const string &section)
 CowDiskImage *
 CowDiskImageParams::create()
 {
-    if (((string)image_file).empty())
-        return new CowDiskImage(name, child, table_size);
-    else
-        return new CowDiskImage(name, child, table_size,
-                                image_file, read_only);
+    return new CowDiskImage(this);
 }

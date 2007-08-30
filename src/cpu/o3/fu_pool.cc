@@ -32,7 +32,6 @@
 
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/func_unit.hh"
-#include "params/FUPool.hh"
 
 using namespace std;
 
@@ -69,8 +68,8 @@ FUPool::~FUPool()
 
 
 // Constructor
-FUPool::FUPool(string name, vector<FUDesc *> paramList)
-    : SimObject(name)
+FUPool::FUPool(const Params *p)
+    : SimObject(p)
 {
     numFU = 0;
 
@@ -84,6 +83,7 @@ FUPool::FUPool(string name, vector<FUDesc *> paramList)
     //
     //  Iterate through the list of FUDescData structures
     //
+    const vector<FUDesc *> &paramList =  p->FUList;
     for (FUDDiterator i = paramList.begin(); i != paramList.end(); ++i) {
 
         //
@@ -278,5 +278,5 @@ FUPool::takeOverFrom()
 FUPool *
 FUPoolParams::create()
 {
-    return new FUPool(name, FUList);
+    return new FUPool(this);
 }

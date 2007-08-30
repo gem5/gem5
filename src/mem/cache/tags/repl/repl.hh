@@ -58,12 +58,8 @@ class Repl : public SimObject
     /** Pointer to the IIC using this policy. */
     IIC *iic;
 
-    /**
-     * Construct and initialize this polixy.
-     * @param name The instance name of this policy.
-     */
-    Repl (const std::string &name)
-        : SimObject(name)
+    Repl (const Params *params)
+        : SimObject(params)
     {
         iic = NULL;
     }

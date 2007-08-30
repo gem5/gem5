@@ -70,23 +70,11 @@ SimObject::SimObject(const Params *p)
 }
 
 SimObjectParams *
-makeParams(const string &name)
+SimObject::makeParams(const std::string &name)
 {
     SimObjectParams *params = new SimObjectParams;
     params->name = name;
-
     return params;
-}
-
-SimObject::SimObject(const string &_name)
-    : _params(makeParams(_name))
-{
-#ifdef DEBUG
-    doDebugBreak = false;
-#endif
-
-    simObjectList.push_back(this);
-    state = Running;
 }
 
 void

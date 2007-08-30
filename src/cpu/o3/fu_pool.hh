@@ -38,6 +38,7 @@
 
 #include "base/sched_list.hh"
 #include "cpu/op_class.hh"
+#include "params/FUPool.hh"
 #include "sim/sim_object.hh"
 
 class FUDesc;
@@ -116,9 +117,9 @@ class FUPool : public SimObject
     typedef std::vector<FuncUnit *>::iterator fuListIterator;
 
   public:
-
+    typedef FUPoolParams Params;
     /** Constructs a FU pool. */
-    FUPool(std::string name, std::vector<FUDesc *> l);
+    FUPool(const Params *p);
     ~FUPool();
 
     /** Annotates units that provide memory operations. Included only because

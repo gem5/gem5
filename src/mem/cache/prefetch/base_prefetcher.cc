@@ -39,10 +39,11 @@
 #include "mem/request.hh"
 #include <list>
 
-BasePrefetcher::BasePrefetcher(int size, bool pageStop, bool serialSquash,
-                               bool cacheCheckPush, bool onlyData)
-    :size(size), pageStop(pageStop), serialSquash(serialSquash),
-     cacheCheckPush(cacheCheckPush), only_data(onlyData)
+BasePrefetcher::BasePrefetcher(const BaseCacheParams *p)
+    : size(p->prefetcher_size), pageStop(!p->prefetch_past_page),
+      serialSquash(p->prefetch_serial_squash),
+      cacheCheckPush(p->prefetch_cache_check_push),
+      only_data(p->prefetch_data_accesses_only)
 {
 }
 

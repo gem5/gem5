@@ -129,7 +129,7 @@ class InstRecord
 class InstTracer : public SimObject
 {
   public:
-    InstTracer(const std::string & name) : SimObject(name)
+    InstTracer(const Params *p) : SimObject(p)
     {}
 
     virtual ~InstTracer()

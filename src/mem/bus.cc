@@ -39,7 +39,6 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/bus.hh"
-#include "params/Bus.hh"
 
 Port *
 Bus::getPort(const std::string &if_name, int idx)
@@ -632,5 +631,5 @@ Bus::startup()
 Bus *
 BusParams::create()
 {
-    return new Bus(name, bus_id, clock, width, responder_set, block_size);
+    return new Bus(this);
 }

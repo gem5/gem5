@@ -54,10 +54,10 @@ using namespace std;
 EtherLink::EtherLink(const Params *p)
     : EtherObject(p)
 {
-    link[0] = new Link(name() + ".link0", this, 0, params()->speed,
-            params()->delay, params()->delay_var, params()->dump);
-    link[1] = new Link(name() + ".link1", this, 1, params()->speed,
-            params()->delay, params()->delay_var, params()->dump);
+    link[0] = new Link(name() + ".link0", this, 0, p->speed,
+                       p->delay, p->delay_var, p->dump);
+    link[1] = new Link(name() + ".link1", this, 1, p->speed,
+                       p->delay, p->delay_var, p->dump);
 
     interface[0] = new Interface(name() + ".int0", link[0], link[1]);
     interface[1] = new Interface(name() + ".int1", link[1], link[0]);

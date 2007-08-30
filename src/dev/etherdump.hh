@@ -38,6 +38,7 @@
 #include <fstream>
 #include "dev/etherpkt.hh"
 #include "sim/sim_object.hh"
+#include "params/EtherDump.hh"
 
 /*
  * Simple object for creating a simple pcap style packet trace
@@ -53,7 +54,8 @@ class EtherDump : public SimObject
     Tick curtime;
 
   public:
-    EtherDump(const std::string &name, const std::string &file, int max);
+    typedef EtherDumpParams Params;
+    EtherDump(const Params *p);
 
     inline void dump(EthPacketPtr &pkt) { dumpPacket(pkt); }
 };

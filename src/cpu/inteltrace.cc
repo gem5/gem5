@@ -36,7 +36,6 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inteltrace.hh"
 #include "cpu/static_inst.hh"
-#include "params/IntelTrace.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -66,5 +65,5 @@ Trace::IntelTraceRecord::dump()
 Trace::IntelTrace *
 IntelTraceParams::create()
 {
-    return new Trace::IntelTrace(name);
+    return new Trace::IntelTrace(this);
 };

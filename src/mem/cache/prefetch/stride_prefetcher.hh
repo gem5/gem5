@@ -68,12 +68,9 @@ class StridePrefetcher : public BasePrefetcher
 
   public:
 
-    StridePrefetcher(int size, bool pageStop, bool serialSquash,
-                     bool cacheCheckPush, bool onlyData,
-                     Tick latency, int degree, bool useCPUId)
-        : BasePrefetcher(size, pageStop, serialSquash,
-                         cacheCheckPush, onlyData),
-          latency(latency), degree(degree), useCPUId(useCPUId)
+    StridePrefetcher(const BaseCacheParams *p)
+        : BasePrefetcher(p), latency(p->prefetch_latency),
+          degree(p->prefetch_degree), useCPUId(p->prefetch_use_cpu_id)
     {
     }
 

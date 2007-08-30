@@ -36,13 +36,9 @@
 #include "arch/isa_traits.hh"
 #include "mem/cache/prefetch/tagged_prefetcher.hh"
 
-TaggedPrefetcher::
-TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                 bool cacheCheckPush, bool onlyData,
-                 Tick latency, int degree)
-    : BasePrefetcher(size, pageStop, serialSquash,
-                     cacheCheckPush, onlyData),
-      latency(latency), degree(degree)
+TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)
+    : BasePrefetcher(p),
+      latency(p->prefetch_latency), degree(p->prefetch_degree)
 {
 }
 

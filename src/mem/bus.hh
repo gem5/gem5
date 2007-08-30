@@ -50,6 +50,7 @@
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "params/Bus.hh"
 
 class Bus : public MemObject
 {
@@ -361,12 +362,11 @@ class Bus : public MemObject
 
     unsigned int drain(Event *de);
 
-    Bus(const std::string &n, int bus_id, int _clock, int _width,
-        bool responder_set, int dflt_blk_size)
-        : MemObject(n), busId(bus_id), clock(_clock), width(_width),
+    Bus(const BusParams *p)
+        : MemObject(p), busId(p->bus_id), clock(p->clock), width(p->width),
           tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
           maxId(0), defaultPort(NULL), funcPort(NULL), funcPortId(-4),
-          responderSet(responder_set), defaultBlockSize(dflt_blk_size),
+          responderSet(p->responder_set), defaultBlockSize(p->block_size),
           cachedBlockSize(0), cachedBlockSizeValid(false)
     {
         //Both the width and clock period must be positive

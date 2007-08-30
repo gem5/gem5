@@ -45,13 +45,12 @@
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
 #include "mem/port.hh"
-#include "params/SimpleDisk.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
-SimpleDisk::SimpleDisk(const string &name, System *sys, DiskImage *img)
-    : SimObject(name), system(sys), image(img)
+SimpleDisk::SimpleDisk(const Params *p)
+    : SimObject(p), system(p->system), image(p->disk)
 {}
 
 SimpleDisk::~SimpleDisk()
@@ -94,5 +93,5 @@ SimpleDisk::write(Addr addr, baddr_t block, int count)
 SimpleDisk *
 SimpleDiskParams::create()
 {
-    return new SimpleDisk(name, system, disk);
+    return new SimpleDisk(this);
 }

@@ -40,6 +40,7 @@
 
 #include "base/statistics.hh"
 #include "mem/packet.hh"
+#include "params/BaseCache.hh"
 
 class BaseCache;
 
@@ -89,8 +90,7 @@ class BasePrefetcher
     void regStats(const std::string &name);
 
   public:
-    BasePrefetcher(int numMSHRS, bool pageStop, bool serialSquash,
-                   bool cacheCheckPush, bool onlyData);
+    BasePrefetcher(const BaseCacheParams *p);
 
     virtual ~BasePrefetcher() {}
 

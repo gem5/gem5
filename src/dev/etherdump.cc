@@ -40,13 +40,13 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "dev/etherdump.hh"
-#include "params/EtherDump.hh"
 #include "sim/core.hh"
 
 using std::string;
 
-EtherDump::EtherDump(const string &name, const string &file, int max)
-    : SimObject(name), stream(file.c_str()), maxlen(max)
+EtherDump::EtherDump(const Params *p)
+    : SimObject(p), stream(simout.resolve(p->file).c_str()),
+      maxlen(p->maxlen)
 {
 }
 
@@ -119,5 +119,5 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
 EtherDump *
 EtherDumpParams::create()
 {
-    return new EtherDump(name, simout.resolve(file), maxlen);
+    return new EtherDump(this);
 }

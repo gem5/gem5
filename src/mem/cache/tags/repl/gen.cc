@@ -44,19 +44,11 @@
 
 using namespace std;
 
-GenRepl::GenRepl(const string &_name,
-                 int _num_pools,
-                 int _fresh_res,
-                 int _pool_res) // fix this, should be set by cache
-    : Repl(_name)
+GenRepl::GenRepl(const Params *p) // fix this, should be set by cache
+    : Repl(p), num_pools(p->num_pools), fresh_res(p->fresh_res),
+      pool_res(p->pool_res), num_entries(0), num_pool_entries(0), misses(0),
+      pools(pools = new GenPool[num_pools+1])
 {
-    num_pools = _num_pools;
-    fresh_res = _fresh_res;
-    pool_res = _pool_res;
-    num_entries = 0;
-    num_pool_entries = 0;
-    misses = 0;
-    pools = new GenPool[num_pools+1];
 }
 
 GenRepl::~GenRepl()
@@ -250,5 +242,5 @@ GenRepl::findTagPtr(unsigned long index)
 GenRepl *
 GenReplParams::create()
 {
-    return new GenRepl(name, num_pools, fresh_res, pool_res);
+    return new GenRepl(this);
 }

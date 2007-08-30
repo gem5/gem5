@@ -55,7 +55,7 @@ Bridge::BridgePort::BridgePort(const std::string &_name,
 }
 
 Bridge::Bridge(Params *p)
-    : MemObject(p->name),
+    : MemObject(p),
       portA(p->name + "-portA", this, &portB, p->delay, p->nack_delay,
               p->req_size_a, p->resp_size_a, p->filter_ranges_a),
       portB(p->name + "-portB", this, &portA, p->delay, p->nack_delay,

@@ -39,16 +39,14 @@
 #include "cpu/base.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "params/SparcDTB.hh"
-#include "params/SparcITB.hh"
 #include "sim/system.hh"
 
 /* @todo remove some of the magic constants.  -- ali
  * */
 namespace SparcISA {
 
-TLB::TLB(const std::string &name, int s)
-    : SimObject(name), size(s), usedEntries(0), lastReplaced(0),
+TLB::TLB(const Params *p)
+    : SimObject(p), size(p->size), usedEntries(0), lastReplaced(0),
       cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
@@ -1437,11 +1435,11 @@ DTB::unserialize(Checkpoint *cp, const std::string &section)
 SparcISA::ITB *
 SparcITBParams::create()
 {
-    return new SparcISA::ITB(name, size);
+    return new SparcISA::ITB(this);
 }
 
 SparcISA::DTB *
 SparcDTBParams::create()
 {
-    return new SparcISA::DTB(name, size);
+    return new SparcISA::DTB(this);
 }

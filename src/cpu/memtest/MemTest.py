@@ -26,12 +26,12 @@
 #
 # Authors: Nathan Binkert
 
-from m5.SimObject import SimObject
+from MemObject import MemObject
 from m5.params import *
 from m5.proxy import *
 from m5 import build_env
 
-class MemTest(SimObject):
+class MemTest(MemObject):
     type = 'MemTest'
     max_loads = Param.Counter(0, "number of loads to execute")
     atomic = Param.Bool(False, "Execute tester in atomic mode? (or timing)\n")

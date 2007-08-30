@@ -38,6 +38,7 @@
 #define __DEV_T1000_HH__
 
 #include "dev/platform.hh"
+#include "params/T1000.hh"
 
 class IdeController;
 class System;
@@ -49,13 +50,14 @@ class T1000 : public Platform
     System *system;
 
   public:
+    typedef T1000Params Params;
     /**
      * Constructor for the Tsunami Class.
      * @param name name of the object
      * @param s system the object belongs to
      * @param intctrl pointer to the interrupt controller
      */
-    T1000(const std::string &name, System *s, IntrControl *intctrl);
+    T1000(const Params *p);
 
     /**
      * Return the interrupting frequency to AlphaAccess

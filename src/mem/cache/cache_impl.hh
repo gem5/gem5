@@ -50,22 +50,21 @@
 
 
 template<class TagStore>
-Cache<TagStore>::Cache(const std::string &_name,
-                       Cache<TagStore>::Params &params)
-    : BaseCache(_name, params.baseParams),
-      prefetchAccess(params.prefetchAccess),
-      tags(params.tags),
-      prefetcher(params.prefetcher),
-      doFastWrites(params.doFastWrites),
-      prefetchMiss(params.prefetchMiss)
+Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
+    : BaseCache(p),
+      prefetchAccess(p->prefetch_access),
+      tags(tags),
+      prefetcher(pf),
+      doFastWrites(true),
+      prefetchMiss(p->prefetch_miss)
 {
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
 
-    cpuSidePort = new CpuSidePort(_name + "-cpu_side_port", this,
-            params.baseParams.cpuSideFilterRanges);
-    memSidePort = new MemSidePort(_name + "-mem_side_port", this,
-            params.baseParams.memSideFilterRanges);
+    cpuSidePort = new CpuSidePort(p->name + "-cpu_side_port", this,
+            p->cpu_side_filter_ranges);
+    memSidePort = new MemSidePort(p->name + "-mem_side_port", this,
+            p->mem_side_filter_ranges);
     cpuSidePort->setOtherPort(memSidePort);
     memSidePort->setOtherPort(cpuSidePort);
 

@@ -35,9 +35,12 @@ MemObject::MemObject(const Params *params)
 {
 }
 
-MemObject::MemObject(const std::string &name)
-    : SimObject(name)
+MemObjectParams *
+MemObject::makeParams(const std::string &name)
 {
+    MemObjectParams *params = new MemObjectParams;
+    params->name = name;
+    return params;
 }
 
 void

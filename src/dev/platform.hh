@@ -42,6 +42,7 @@
 
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"
+#include "params/Platform.hh"
 
 class PciConfigAll;
 class IntrControl;
@@ -59,7 +60,8 @@ class Platform : public SimObject
     System *system;
 
   public:
-    Platform(const std::string &name, IntrControl *intctrl);
+    typedef PlatformParams Params;
+    Platform(const Params *p);
     virtual ~Platform();
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;

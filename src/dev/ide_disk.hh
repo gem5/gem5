@@ -42,6 +42,8 @@
 #include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
 #include "sim/eventq.hh"
+#include "params/IdeDisk.hh"
+
 
 class ChunkGenerator;
 
@@ -248,14 +250,8 @@ class IdeDisk : public SimObject
     Stats::Formula totBytes;
 
   public:
-    /**
-     * Create and initialize this Disk.
-     * @param name The name of this disk.
-     * @param img The disk image of this disk.
-     * @param id The disk ID (master=0/slave=1)
-     * @param disk_delay The disk delay in milliseconds
-     */
-    IdeDisk(const std::string &name, DiskImage *img, int id, Tick disk_delay);
+    typedef IdeDiskParams Params;
+    IdeDisk(const Params *p);
 
     /**
      * Delete the data buffer.

@@ -41,6 +41,8 @@
 #include "arch/alpha/vtophys.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
+#include "params/AlphaDTB.hh"
+#include "params/AlphaITB.hh"
 #include "sim/faults.hh"
 #include "sim/sim_object.hh"
 
@@ -64,7 +66,8 @@ namespace AlphaISA
         TlbEntry *lookup(Addr vpn, uint8_t asn);
 
       public:
-        TLB(const std::string &name, int size);
+        typedef AlphaTLBParams Params;
+        TLB(const Params *p);
         virtual ~TLB();
 
         int getsize() const { return size; }
@@ -113,7 +116,8 @@ namespace AlphaISA
         mutable Stats::Formula accesses;
 
       public:
-        ITB(const std::string &name, int size);
+        typedef AlphaITBParams Params;
+        ITB(const Params *p);
         virtual void regStats();
 
         Fault translate(RequestPtr &req, ThreadContext *tc);
@@ -136,7 +140,8 @@ namespace AlphaISA
         Stats::Formula accesses;
 
       public:
-        DTB(const std::string &name, int size);
+        typedef AlphaDTBParams Params;
+        DTB(const Params *p);
         virtual void regStats();
 
         Fault translate(RequestPtr &req, ThreadContext *tc, bool write);

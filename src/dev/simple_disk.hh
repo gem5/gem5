@@ -37,6 +37,7 @@
 
 #include "sim/sim_object.hh"
 #include "arch/isa_traits.hh"
+#include "params/SimpleDisk.hh"
 
 class DiskImage;
 class System;
@@ -54,7 +55,8 @@ class SimpleDisk : public SimObject
     DiskImage *image;
 
   public:
-    SimpleDisk(const std::string &name, System *sys, DiskImage *img);
+    typedef SimpleDiskParams Params;
+    SimpleDisk(const Params *p);
     ~SimpleDisk();
 
     void read(Addr addr, baddr_t block, int count) const;

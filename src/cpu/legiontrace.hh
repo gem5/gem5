@@ -34,6 +34,7 @@
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "params/LegionTrace.hh"
 #include "sim/host.hh"
 #include "sim/insttracer.hh"
 
@@ -56,8 +57,8 @@ class LegionTraceRecord : public InstRecord
 class LegionTrace : public InstTracer
 {
   public:
-
-    LegionTrace(const std::string & name) : InstTracer(name)
+    typedef LegionTraceParams Params;
+    LegionTrace(const Params *p) : InstTracer(p)
     {}
 
     LegionTraceRecord *

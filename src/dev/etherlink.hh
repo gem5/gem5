@@ -42,6 +42,7 @@
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
+#include "params/EtherLink.hh"
 
 class EtherDump;
 class Checkpoint;

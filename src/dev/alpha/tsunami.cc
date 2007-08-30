@@ -42,15 +42,14 @@
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami.hh"
-#include "params/Tsunami.hh"
 #include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-Tsunami::Tsunami(const string &name, System *s, IntrControl *ic)
-    : Platform(name, ic), system(s)
+Tsunami::Tsunami(const Params *p)
+    : Platform(p), system(p->system)
 {
     // set the back pointer from the system to myself
     system->platform = this;
@@ -117,5 +116,5 @@ Tsunami::unserialize(Checkpoint *cp, const std::string &section)
 Tsunami *
 TsunamiParams::create()
 {
-    return new Tsunami(name, system, intrctrl);
+    return new Tsunami(this);
 }

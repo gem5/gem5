@@ -38,6 +38,7 @@
 #define __DEV_TSUNAMI_HH__
 
 #include "dev/platform.hh"
+#include "params/Tsunami.hh"
 
 class IdeController;
 class TsunamiCChip;
@@ -80,13 +81,8 @@ class Tsunami : public Platform
     int ipi_pending[Tsunami::Max_CPUs];
 
   public:
-    /**
-     * Constructor for the Tsunami Class.
-     * @param name name of the object
-     * @param s system the object belongs to
-     * @param intctrl pointer to the interrupt controller
-     */
-    Tsunami(const std::string &name, System *s, IntrControl *intctrl);
+    typedef TsunamiParams Params;
+    Tsunami(const Params *p);
 
     /**
      * Return the interrupting frequency to AlphaAccess

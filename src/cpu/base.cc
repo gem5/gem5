@@ -95,12 +95,12 @@ CPUProgressEvent::description()
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p->name), clock(p->clock), instCnt(0),
+    : MemObject(makeParams(p->name)), clock(p->clock), instCnt(0),
       params(p), number_of_threads(p->numberOfThreads), system(p->system),
       phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p->name), clock(p->clock), params(p),
+    : MemObject(makeParams(p->name)), clock(p->clock), params(p),
       number_of_threads(p->numberOfThreads), system(p->system),
       phase(p->phase)
 #endif

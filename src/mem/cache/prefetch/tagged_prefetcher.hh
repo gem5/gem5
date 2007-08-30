@@ -47,9 +47,7 @@ class TaggedPrefetcher : public BasePrefetcher
 
   public:
 
-    TaggedPrefetcher(int size, bool pageStop, bool serialSquash,
-                     bool cacheCheckPush, bool onlyData,
-                     Tick latency, int degree);
+    TaggedPrefetcher(const BaseCacheParams *p);
 
     ~TaggedPrefetcher() {}
 

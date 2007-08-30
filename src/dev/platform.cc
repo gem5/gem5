@@ -36,8 +36,8 @@
 using namespace std;
 using namespace TheISA;
 
-Platform::Platform(const string &name, IntrControl *intctrl)
-    : SimObject(name), intrctrl(intctrl)
+Platform::Platform(const Params *p)
+    : SimObject(p), intrctrl(p->intrctrl)
 {
 }
 

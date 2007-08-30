@@ -53,7 +53,6 @@
 #include "cpu/legiontrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "params/LegionTrace.hh"
 #include "sim/system.hh"
 
 #if FULL_SYSTEM
@@ -596,5 +595,5 @@ Trace::LegionTraceRecord::dump()
 Trace::LegionTrace *
 LegionTraceParams::create()
 {
-    return new Trace::LegionTrace(name);
+    return new Trace::LegionTrace(this);
 };

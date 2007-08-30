@@ -40,6 +40,7 @@
 #include "dev/etherobject.hh"
 #include "params/EtherBus.hh"
 #include "sim/sim_object.hh"
+#include "params/EtherBus.hh"
 
 class EtherDump;
 class EtherInt;

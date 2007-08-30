@@ -43,6 +43,7 @@
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "sim/sim_object.hh"
+#include "params/SimConsole.hh"
 
 class ConsoleListener;
 class Uart;
@@ -84,7 +85,8 @@ class SimConsole : public SimObject
     int data_fd;
 
   public:
-    SimConsole(const std::string &name, std::ostream *os, int num, int port);
+    typedef SimConsoleParams Params;
+    SimConsole(const Params *p);
     ~SimConsole();
 
   protected:

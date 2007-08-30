@@ -95,12 +95,8 @@ using namespace TheISA;
         else {                                                          \
             BUILD_NULL_PREFETCHER(TAGS);                                \
         }                                                               \
-        Cache<TAGS>::Params params(tags, base_params,       \
-                                   pf, prefetch_access, latency,        \
-                                   true,                                \
-                                   prefetch_miss);                      \
-        Cache<TAGS> *retval =                                        \
-            new Cache<TAGS>(name, params);                              \
+        Cache<TAGS> *retval =                                           \
+            new Cache<TAGS>(this, tags, pf);                            \
         return retval;                                                  \
     } while (0)
 
@@ -178,54 +174,28 @@ using namespace TheISA;
 
 #if defined(USE_TAGGED)
 #define BUILD_TAGGED_PREFETCHER(t)                              \
-    pf = new TaggedPrefetcher(prefetcher_size,                  \
-                              !prefetch_past_page,              \
-                              prefetch_serial_squash,           \
-                              prefetch_cache_check_push,        \
-                              prefetch_data_accesses_only,      \
-                              prefetch_latency,                 \
-                              prefetch_degree)
+    pf = new TaggedPrefetcher(this)
 #else
 #define BUILD_TAGGED_PREFETCHER(t) BUILD_CACHE_PANIC("Tagged Prefetcher")
 #endif
 
 #if defined(USE_STRIDED)
 #define BUILD_STRIDED_PREFETCHER(t)                             \
-    pf = new StridePrefetcher(prefetcher_size,                  \
-                              !prefetch_past_page,              \
-                              prefetch_serial_squash,           \
-                              prefetch_cache_check_push,        \
-                              prefetch_data_accesses_only,      \
-                              prefetch_latency,                 \
-                              prefetch_degree,                  \
-                              prefetch_use_cpu_id)
+    pf = new StridePrefetcher(this)
 #else
 #define BUILD_STRIDED_PREFETCHER(t) BUILD_CACHE_PANIC("Stride Prefetcher")
 #endif
 
 #if defined(USE_GHB)
 #define BUILD_GHB_PREFETCHER(t)                         \
-    pf = new GHBPrefetcher(prefetcher_size,             \
-                           !prefetch_past_page,         \
-                           prefetch_serial_squash,      \
-                           prefetch_cache_check_push,   \
-                           prefetch_data_accesses_only, \
-                           prefetch_latency,            \
-                           prefetch_degree,             \
-                           prefetch_use_cpu_id)
+    pf = new GHBPrefetcher(this)
 #else
 #define BUILD_GHB_PREFETCHER(t) BUILD_CACHE_PANIC("GHB Prefetcher")
 #endif
 
 #if defined(USE_TAGGED)
 #define BUILD_NULL_PREFETCHER(t)                                \
-    pf = new TaggedPrefetcher(prefetcher_size,                  \
-                              !prefetch_past_page,              \
-                              prefetch_serial_squash,           \
-                              prefetch_cache_check_push,        \
-                              prefetch_data_accesses_only,      \
-                              prefetch_latency,                 \
-                              prefetch_degree)
+    pf = new TaggedPrefetcher(this)
 #else
 #define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")
 #endif
@@ -237,12 +207,6 @@ BaseCacheParams::create()
     if (subblock_size == 0) {
         subblock_size = block_size;
     }
-
-    // Build BaseCache param object
-    BaseCache::Params base_params(latency, block_size,
-                                  mshrs, tgts_per_mshr, write_buffers,
-                                  max_miss_count, cpu_side_filter_ranges,
-                                  mem_side_filter_ranges);
 
     //Warnings about prefetcher policy
     if (prefetch_policy == Enums::none) {

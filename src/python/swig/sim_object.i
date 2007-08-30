@@ -53,7 +53,7 @@ class SimObject {
     void resume();
     void switchOut();
     void takeOverFrom(BaseCPU *cpu);
-    SimObject(const std::string &_name);
+    SimObject(const SimObjectParams *p);
 };
 
 int connectPorts(SimObject *o1, const std::string &name1, int i1,

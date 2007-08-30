@@ -36,6 +36,7 @@
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
 #include "sim/insttracer.hh"
+#include "params/ExeTracer.hh"
 
 class ThreadContext;
 
@@ -57,8 +58,8 @@ class ExeTracerRecord : public InstRecord
 class ExeTracer : public InstTracer
 {
   public:
-
-    ExeTracer(const std::string & name) : InstTracer(name)
+    typedef ExeTracerParams Params;
+    ExeTracer(const Params *params) : InstTracer(params)
     {}
 
     InstRecord *

@@ -41,8 +41,6 @@
 #include "base/trace.hh"
 #include "config/alpha_tlaser.hh"
 #include "cpu/thread_context.hh"
-#include "params/AlphaDTB.hh"
-#include "params/AlphaITB.hh"
 
 using namespace std;
 using namespace EV5;
@@ -59,8 +57,8 @@ bool uncacheBit40 = false;
 
 #define MODE2MASK(X)			(1 << (X))
 
-TLB::TLB(const string &name, int s)
-    : SimObject(name), size(s), nlu(0)
+TLB::TLB(const Params *p)
+    : SimObject(p), size(p->size), nlu(0)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry[size]));
@@ -286,8 +284,8 @@ TLB::unserialize(Checkpoint *cp, const string &section)
 //
 //  Alpha ITB
 //
-ITB::ITB(const std::string &name, int size)
-    : TLB(name, size)
+ITB::ITB(const Params *p)
+    : TLB(p)
 {}
 
 
@@ -400,8 +398,8 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 //
 //  Alpha DTB
 //
- DTB::DTB(const std::string &name, int size)
-     : TLB(name, size)
+ DTB::DTB(const Params *p)
+     : TLB(p)
 {}
 
 void
@@ -624,11 +622,11 @@ TLB::index(bool advance)
 AlphaISA::ITB *
 AlphaITBParams::create()
 {
-    return new AlphaISA::ITB(name, size);
+    return new AlphaISA::ITB(this);
 }
 
 AlphaISA::DTB *
 AlphaDTBParams::create()
 {
-    return new AlphaISA::DTB(name, size);
+    return new AlphaISA::DTB(this);
 }

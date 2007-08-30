@@ -45,22 +45,20 @@
 #include "dev/disk_image.hh"
 #include "dev/ide_ctrl.hh"
 #include "dev/ide_disk.hh"
-#include "params/IdeDisk.hh"
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 using namespace TheISA;
 
-IdeDisk::IdeDisk(const string &name, DiskImage *img,
-                 int id, Tick delay)
-    : SimObject(name), ctrl(NULL), image(img), diskDelay(delay),
+IdeDisk::IdeDisk(const Params *p)
+    : SimObject(p), ctrl(NULL), image(p->image), diskDelay(p->delay),
       dmaTransferEvent(this), dmaReadCG(NULL), dmaReadWaitEvent(this),
       dmaWriteCG(NULL), dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
       dmaReadEvent(this), dmaWriteEvent(this)
 {
     // Reset the device state
-    reset(id);
+    reset(p->driveID);
 
     // fill out the drive ID structure
     memset(&driveID, 0, sizeof(struct ataparams));
@@ -1117,5 +1115,5 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
 IdeDisk *
 IdeDiskParams::create()
 {
-    return new IdeDisk(name, image, driveID, delay);
+    return new IdeDisk(this);
 }

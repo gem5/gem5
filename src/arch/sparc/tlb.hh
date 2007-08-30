@@ -36,6 +36,8 @@
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
+#include "params/SparcDTB.hh"
+#include "params/SparcITB.hh"
 #include "sim/faults.hh"
 #include "sim/sim_object.hh"
 
@@ -147,7 +149,8 @@ class TLB : public SimObject
     void writeTagAccess(Addr va, int context);
 
   public:
-    TLB(const std::string &name, int size);
+    typedef SparcTLBParams Params;
+    TLB(const Params *p);
 
     void dumpAll();
 
@@ -163,7 +166,8 @@ class TLB : public SimObject
 class ITB : public TLB
 {
   public:
-    ITB(const std::string &name, int size) : TLB(name, size)
+    typedef SparcITBParams Params;
+    ITB(const Params *p) : TLB(p)
     {
         cacheEntry = NULL;
     }
@@ -182,7 +186,8 @@ class DTB : public TLB
   protected:
     uint64_t sfar;
   public:
-    DTB(const std::string &name, int size) : TLB(name, size)
+    typedef SparcDTBParams Params;
+    DTB(const Params *p) : TLB(p)
     {
         sfar = 0;
         cacheEntry[0] = NULL;

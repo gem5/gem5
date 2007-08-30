@@ -40,6 +40,7 @@
 #include "dev/pcireg.h"
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "params/PciConfigAll.hh"
 
 
 /**
@@ -52,19 +53,14 @@
 class PciConfigAll : public PioDevice
 {
   public:
-    struct Params :  public PioDevice::Params
-    {
-        Tick pio_delay;
-        Addr size;
-        int bus;
-    };
+    typedef PciConfigAllParams Params;
     const Params *params() const { return (const Params *)_params; }
 
     /**
      * Constructor for PCIConfigAll
      * @param p parameters structure
      */
-    PciConfigAll(Params *p);
+    PciConfigAll(const Params *p);
 
     /**
      * Read something in PCI config space. If the device does not exist

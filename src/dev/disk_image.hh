@@ -39,6 +39,9 @@
 
 #include "base/hashmap.hh"
 #include "sim/sim_object.hh"
+#include "params/DiskImage.hh"
+#include "params/CowDiskImage.hh"
+#include "params/RawDiskImage.hh"
 
 #define SectorSize (512)
 
@@ -51,7 +54,8 @@ class DiskImage : public SimObject
     bool initialized;
 
   public:
-    DiskImage(const std::string &name) : SimObject(name), initialized(false) {}
+    typedef DiskImageParams Params;
+    DiskImage(const Params *p) : SimObject(p), initialized(false) {}
     virtual ~DiskImage() {}
 
     virtual off_t size() const = 0;
@@ -72,8 +76,8 @@ class RawDiskImage : public DiskImage
     mutable off_t disk_size;
 
   public:
-    RawDiskImage(const std::string &name, const std::string &filename,
-                 bool rd_only);
+    typedef RawDiskImageParams Params;
+    RawDiskImage(const Params *p);
     ~RawDiskImage();
 
     void close();
@@ -113,9 +117,8 @@ class CowDiskImage : public DiskImage
     SectorTable *table;
 
   public:
-    CowDiskImage(const std::string &name, DiskImage *kid, int hash_size);
-    CowDiskImage(const std::string &name, DiskImage *kid, int hash_size,
-                 const std::string &filename, bool read_only);
+    typedef CowDiskImageParams Params;
+    CowDiskImage(const Params *p);
     ~CowDiskImage();
 
     void init(int hash_size);

@@ -34,6 +34,7 @@
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "params/IntelTrace.hh"
 #include "sim/host.hh"
 #include "sim/insttracer.hh"
 
@@ -58,7 +59,7 @@ class IntelTrace : public InstTracer
 {
   public:
 
-    IntelTrace(const std::string & name) : InstTracer(name)
+    IntelTrace(const IntelTraceParams *p) : InstTracer(p)
     {}
 
     IntelTraceRecord *

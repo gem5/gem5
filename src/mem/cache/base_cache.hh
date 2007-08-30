@@ -52,6 +52,7 @@
 #include "mem/packet.hh"
 #include "mem/tport.hh"
 #include "mem/request.hh"
+#include "params/BaseCache.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 
@@ -354,54 +355,9 @@ class BaseCache : public MemObject
     virtual void regStats();
 
   public:
-
-    class Params
-    {
-      public:
-        /** The hit latency for this cache. */
-        int hitLatency;
-        /** The block size of this cache. */
-        int blkSize;
-        int numMSHRs;
-        int numTargets;
-        int numWriteBuffers;
-        /**
-         * The maximum number of misses this cache should handle before
-         * ending the simulation.
-         */
-        Counter maxMisses;
-
-        std::vector<Range<Addr> > cpuSideFilterRanges;
-        std::vector<Range<Addr> > memSideFilterRanges;
-        /**
-         * Construct an instance of this parameter class.
-         */
-        Params(int _hitLatency, int _blkSize,
-               int _numMSHRs, int _numTargets, int _numWriteBuffers,
-               Counter _maxMisses,
-               std::vector<Range<Addr> > cpu_side_filter_ranges,
-               std::vector<Range<Addr> > mem_side_filter_ranges)
-            : hitLatency(_hitLatency), blkSize(_blkSize),
-              numMSHRs(_numMSHRs), numTargets(_numTargets),
-              numWriteBuffers(_numWriteBuffers), maxMisses(_maxMisses),
-              cpuSideFilterRanges(cpu_side_filter_ranges),
-              memSideFilterRanges(mem_side_filter_ranges)
-        {
-        }
-    };
-
-    /**
-     * Create and initialize a basic cache object.
-     * @param name The name of this cache.
-     * @param hier_params Pointer to the HierParams object for this hierarchy
-     * of this cache.
-     * @param params The parameter object for this BaseCache.
-     */
-    BaseCache(const std::string &name, Params &params);
-
-    ~BaseCache()
-    {
-    }
+    typedef BaseCacheParams Params;
+    BaseCache(const Params *p);
+    ~BaseCache() {}
 
     virtual void init();
 

@@ -39,7 +39,7 @@
 
 #include "base/range.hh"
 #include "dev/io_device.hh"
-#include "dev/alpha/tsunami.hh"
+// #include "dev/alpha/tsunami.hh"
 #include "params/IsaFake.hh"
 #include "mem/packet.hh"
 

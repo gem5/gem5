@@ -46,7 +46,6 @@
 #include "mem/packet.hh"
 //#include "mem/physical.hh"
 #include "mem/request.hh"
-#include "params/MemTest.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
 
@@ -119,37 +118,24 @@ MemTest::sendPkt(PacketPtr pkt) {
 
 }
 
-MemTest::MemTest(const string &name,
-//		 MemInterface *_cache_interface,
-//		 PhysicalMemory *main_mem,
-//		 PhysicalMemory *check_mem,
-                 unsigned _memorySize,
-                 unsigned _percentReads,
-                 unsigned _percentFunctional,
-                 unsigned _percentUncacheable,
-                 unsigned _progressInterval,
-                 unsigned _percentSourceUnaligned,
-                 unsigned _percentDestUnaligned,
-                 Addr _traceAddr,
-                 Counter _max_loads,
-                 bool _atomic)
-    : MemObject(name),
+MemTest::MemTest(const Params *p)
+    : MemObject(p),
       tickEvent(this),
       cachePort("test", this),
       funcPort("functional", this),
       retryPkt(NULL),
 //      mainMem(main_mem),
 //      checkMem(check_mem),
-      size(_memorySize),
-      percentReads(_percentReads),
-      percentFunctional(_percentFunctional),
-      percentUncacheable(_percentUncacheable),
-      progressInterval(_progressInterval),
-      nextProgressMessage(_progressInterval),
-      percentSourceUnaligned(_percentSourceUnaligned),
-      percentDestUnaligned(percentDestUnaligned),
-      maxLoads(_max_loads),
-      atomic(_atomic)
+      size(p->memory_size),
+      percentReads(p->percent_reads),
+      percentFunctional(p->percent_functional),
+      percentUncacheable(p->percent_uncacheable),
+      progressInterval(p->progress_interval),
+      nextProgressMessage(p->progress_interval),
+      percentSourceUnaligned(p->percent_source_unaligned),
+      percentDestUnaligned(p->percent_dest_unaligned),
+      maxLoads(p->max_loads),
+      atomic(p->atomic)
 {
     vector<string> cmd;
     cmd.push_back("/bin/ls");
@@ -161,7 +147,7 @@ MemTest::MemTest(const string &name,
     funcPort.snoopRangeSent = true;
 
     // Needs to be masked off once we know the block size.
-    traceBlockAddr = _traceAddr;
+    traceBlockAddr = p->trace_addr;
     baseAddr1 = 0x100000;
     baseAddr2 = 0x400000;
     uncacheAddr = 0x800000;
@@ -411,12 +397,5 @@ MemTest::doRetry()
 MemTest *
 MemTestParams::create()
 {
-    return new MemTest(name,
-#if 0
-                       cache->getInterface(), main_mem, check_mem,
-#endif
-                       memory_size, percent_reads, percent_functional,
-                       percent_uncacheable, progress_interval,
-                       percent_source_unaligned, percent_dest_unaligned,
-                       trace_addr, max_loads, atomic);
+    return new MemTest(this);
 }

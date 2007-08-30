@@ -39,7 +39,6 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "enums/OpClass.hh"
-#include "params/ExeTracer.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -116,5 +115,5 @@ Trace::ExeTracerRecord::dump()
 Trace::ExeTracer *
 ExeTracerParams::create()
 {
-    return new Trace::ExeTracer(name);
+    return new Trace::ExeTracer(this);
 };

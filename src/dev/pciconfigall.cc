@@ -44,7 +44,7 @@
 
 using namespace std;
 
-PciConfigAll::PciConfigAll(Params *p)
+PciConfigAll::PciConfigAll(const Params *p)
     : PioDevice(p)
 {
     pioAddr = p->platform->calcConfigAddr(params()->bus,0,0);
@@ -74,7 +74,7 @@ PciConfigAll::read(PacketPtr pkt)
         panic("invalid access size(?) for PCI configspace!\n");
     }
     pkt->makeAtomicResponse();
-    return params()->pio_delay;
+    return params()->pio_latency;
 }
 
 Tick
@@ -98,14 +98,7 @@ PciConfigAll::addressRanges(AddrRangeList &range_list)
 PciConfigAll *
 PciConfigAllParams::create()
 {
-    PciConfigAll::Params *p = new PciConfigAll::Params;
-    p->pio_delay = pio_latency;
-    p->platform = platform;
-    p->system = system;
-    p->bus = bus;
-    p->size = size;
-
-    return new PciConfigAll(p);
+    return new PciConfigAll(this);
 }
 
 #endif // DOXYGEN_SHOULD_SKIP_THIS

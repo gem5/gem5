@@ -36,6 +36,8 @@
 #include <vector>
 
 #include "cpu/op_class.hh"
+#include "params/OpDesc.hh"
+#include "params/FUDesc.hh"
 #include "sim/sim_object.hh"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -51,8 +53,9 @@ struct OpDesc : public SimObject
     unsigned    opLat;
     unsigned    issueLat;
 
-    OpDesc(std::string name, OpClass c, unsigned o, unsigned i)
-        : SimObject(name), opClass(c), opLat(o), issueLat(i) {};
+    OpDesc(const OpDescParams *p)
+        : SimObject(p), opClass(p->opClass), opLat(p->opLat),
+          issueLat(p->issueLat) {};
 };
 
 struct FUDesc : public SimObject
@@ -60,12 +63,12 @@ struct FUDesc : public SimObject
     std::vector<OpDesc *> opDescList;
     unsigned         number;
 
-    FUDesc(std::string name, std::vector<OpDesc *> l, unsigned n)
-        : SimObject(name), opDescList(l), number(n) {};
+    FUDesc(const FUDescParams *p)
+        : SimObject(p), opDescList(p->opList), number(p->count) {};
 };
 
-typedef std::vector<OpDesc *>::iterator OPDDiterator;
-typedef std::vector<FUDesc *>::iterator FUDDiterator;
+typedef std::vector<OpDesc *>::const_iterator OPDDiterator;
+typedef std::vector<FUDesc *>::const_iterator FUDDiterator;
 
 
 

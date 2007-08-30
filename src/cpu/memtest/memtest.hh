@@ -35,6 +35,7 @@
 #include <set>
 
 #include "base/statistics.hh"
+#include "params/MemTest.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -46,18 +47,8 @@ class Packet;
 class MemTest : public MemObject
 {
   public:
-
-    MemTest(const std::string &name,
-            unsigned _memorySize,
-            unsigned _percentReads,
-            unsigned _percentFunctional,
-            unsigned _percentUncacheable,
-            unsigned _progressInterval,
-            unsigned _percentSourceUnaligned,
-            unsigned _percentDestUnaligned,
-            Addr _traceAddr,
-            Counter _max_loads,
-            bool _atomic);
+    typedef MemTestParams Params;
+    MemTest(const Params *p);
 
     virtual void init();
 

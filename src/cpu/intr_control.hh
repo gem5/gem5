@@ -35,6 +35,7 @@
 #include <vector>
 #include "base/misc.hh"
 #include "cpu/base.hh"
+#include "params/IntrControl.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
@@ -43,7 +44,8 @@ class IntrControl : public SimObject
 {
   public:
     System *sys;
-    IntrControl(const std::string &name, System *s);
+    typedef IntrControlParams Params;
+    IntrControl(const Params *p);
 
     void clear(int int_num, int index = 0);
     void post(int int_num, int index = 0);

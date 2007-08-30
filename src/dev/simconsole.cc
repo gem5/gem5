@@ -52,7 +52,6 @@
 #include "dev/platform.hh"
 #include "dev/simconsole.hh"
 #include "dev/uart.hh"
-#include "params/SimConsole.hh"
 
 using namespace std;
 
@@ -91,18 +90,24 @@ SimConsole::DataEvent::process(int revent)
 /*
  * SimConsole code
  */
-SimConsole::SimConsole(const string &name, ostream *os, int num, int port)
-    : SimObject(name), listenEvent(NULL), dataEvent(NULL), number(num),
-      data_fd(-1), txbuf(16384), rxbuf(16384), outfile(os)
+SimConsole::SimConsole(const Params *p)
+    : SimObject(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
+      data_fd(-1), txbuf(16384), rxbuf(16384), outfile(NULL)
 #if TRACING_ON == 1
       , linebuf(16384)
 #endif
 {
-    if (outfile)
-        outfile->setf(ios::unitbuf);
+    if (!p->output.empty()) {
+        if (p->append_name)
+            outfile = simout.find(p->output + "." + p->name);
+        else
+            outfile = simout.find(p->output);
 
-    if (port)
-        listen(port);
+        outfile->setf(ios::unitbuf);
+    }
+
+    if (p->port)
+        listen(p->port);
 }
 
 SimConsole::~SimConsole()
@@ -328,14 +333,5 @@ SimConsole::out(char c)
 SimConsole *
 SimConsoleParams::create()
 {
-    string filename = output;
-    ostream *stream = NULL;
-
-    if (!filename.empty()) {
-        if (append_name)
-            filename += "." + name;
-        stream = simout.find(filename);
-    }
-
-    return new SimConsole(name, stream, number, port);
+    return new SimConsole(this);
 }

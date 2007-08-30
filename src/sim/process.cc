@@ -88,7 +88,7 @@ Process::Process(const string &nm,
                  int stdin_fd, 	// initial I/O descriptors
                  int stdout_fd,
                  int stderr_fd)
-    : SimObject(nm), system(_system)
+    : SimObject(makeParams(nm)), system(_system)
 {
     M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)

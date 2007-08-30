@@ -202,34 +202,8 @@ class Cache : public BaseCache
     PacketPtr writebackBlk(BlkType *blk);
 
   public:
-
-    class Params
-    {
-      public:
-        TagStore *tags;
-        BaseCache::Params baseParams;
-        BasePrefetcher*prefetcher;
-        bool prefetchAccess;
-        const bool doFastWrites;
-        const bool prefetchMiss;
-
-        Params(TagStore *_tags,
-               BaseCache::Params params,
-               BasePrefetcher *_prefetcher,
-               bool prefetch_access, int hit_latency,
-               bool do_fast_writes,
-               bool prefetch_miss)
-            : tags(_tags),
-              baseParams(params),
-              prefetcher(_prefetcher), prefetchAccess(prefetch_access),
-              doFastWrites(do_fast_writes),
-              prefetchMiss(prefetch_miss)
-        {
-        }
-    };
-
     /** Instantiates a basic cache object. */
-    Cache(const std::string &_name, Params &params);
+    Cache(const Params *p, TagStore *tags, BasePrefetcher *prefetcher);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     virtual void deletePortRefs(Port *p);

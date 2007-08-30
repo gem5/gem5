@@ -48,21 +48,20 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
 }
 
 
-BaseCache::BaseCache(const std::string &name, Params &params)
-    : MemObject(name),
-      mshrQueue(params.numMSHRs, 4, MSHRQueue_MSHRs),
-      writeBuffer(params.numWriteBuffers, params.numMSHRs+1000,
+BaseCache::BaseCache(const Params *p)
+    : MemObject(p),
+      mshrQueue(p->mshrs, 4, MSHRQueue_MSHRs),
+      writeBuffer(p->write_buffers, p->mshrs+1000,
                   MSHRQueue_WriteBuffer),
-      blkSize(params.blkSize),
-      hitLatency(params.hitLatency),
-      numTarget(params.numTargets),
+      blkSize(p->block_size),
+      hitLatency(p->latency),
+      numTarget(p->tgts_per_mshr),
       blocked(0),
       noTargetMSHR(NULL),
-      missCount(params.maxMisses),
+      missCount(p->max_miss_count),
       drainEvent(NULL)
 {
 }
-
 
 void
 BaseCache::CachePort::recvStatusChange(Port::Status status)

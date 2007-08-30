@@ -40,6 +40,7 @@
 
 #include "base/statistics.hh"
 #include "mem/cache/tags/repl/repl.hh"
+#include "params/GenRepl.hh"
 
 /**
  * Generational Replacement entry.
@@ -139,8 +140,6 @@ class GenPool
 class GenRepl : public Repl
 {
   public:
-    /** The array of pools. */
-    GenPool *pools;
     /** The number of pools. */
     int num_pools;
     /** The amount of time to stay in the fresh pool. */
@@ -153,6 +152,8 @@ class GenRepl : public Repl
     int num_pool_entries;
     /** The number of misses. Used as the internal time. */
     Tick misses;
+    /** The array of pools. */
+    GenPool *pools;
 
     // Statistics
 
@@ -170,15 +171,8 @@ class GenRepl : public Repl
      * @}
      */
 
-    /**
-     * Constructs and initializes this replacement policy.
-     * @param name The name of the policy.
-     * @param num_pools The number of pools to use.
-     * @param fresh_res The amount of time to wait in the fresh pool.
-     * @param pool_res The amount of time to wait in the normal pools.
-     */
-    GenRepl(const std::string &name, int num_pools,
-            int fresh_res, int pool_res);
+    typedef GenReplParams Params;
+    GenRepl(const Params *p);
 
     /**
      * Destructor.

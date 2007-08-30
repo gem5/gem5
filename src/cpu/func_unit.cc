@@ -32,8 +32,6 @@
 
 #include "base/misc.hh"
 #include "cpu/func_unit.hh"
-#include "params/OpDesc.hh"
-#include "params/FUDesc.hh"
 
 using namespace std;
 
@@ -120,7 +118,7 @@ FuncUnit::issueLatency(OpClass capability)
 OpDesc *
 OpDescParams::create()
 {
-    return new OpDesc(name, opClass, opLat, issueLat);
+    return new OpDesc(this);
 }
 
 //
@@ -129,5 +127,5 @@ OpDescParams::create()
 FUDesc *
 FUDescParams::create()
 {
-    return new FUDesc(name, opList, count);
+    return new FUDesc(this);
 }

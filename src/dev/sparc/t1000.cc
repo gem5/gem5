@@ -39,15 +39,14 @@
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
 #include "dev/sparc/t1000.hh"
-#include "params/T1000.hh"
 #include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-T1000::T1000(const string &name, System *s, IntrControl *ic)
-    : Platform(name, ic), system(s)
+T1000::T1000(const Params *p)
+    : Platform(p), system(p->system)
 {
     // set the back pointer from the system to myself
     system->platform = this;
@@ -104,5 +103,5 @@ T1000::calcConfigAddr(int bus, int dev, int func)
 T1000 *
 T1000Params::create()
 {
-    return new T1000(name, system, intrctrl);
+    return new T1000(this);
 }

@@ -42,7 +42,7 @@ class Packet;
 class GenericTLB : public SimObject
 {
   protected:
-    GenericTLB(const std::string &name) : SimObject(name)
+    GenericTLB(const Params *p) : SimObject(p)
     {}
 
   public:

@@ -31,6 +31,8 @@
 #ifndef __ARCH_MIPS_TLB_HH__
 #define __ARCH_MIPS_TLB_HH__
 
+#include "params/MipsDTB.hh"
+#include "params/MipsITB.hh"
 #include "sim/tlb.hh"
 
 namespace MipsISA
@@ -48,7 +50,8 @@ namespace MipsISA
     class TLB : public GenericTLB
     {
       public:
-        TLB(const std::string &name) : GenericTLB(name)
+        typedef MipsTLBParams Params;
+        TLB(const Params *p) : GenericTLB(p)
         {}
 
         Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
@@ -57,14 +60,16 @@ namespace MipsISA
     class ITB : public TLB
     {
       public:
-        ITB(const std::string &name) : TLB(name)
+        typedef MipsITBParams Params;
+        ITB(const Params *p) : TLB(p)
         {}
     };
 
     class DTB : public TLB
     {
       public:
-        DTB(const std::string &name) : TLB(name)
+        typedef MipsDTBParams Params;
+        DTB(const Params *p) : TLB(p)
         {}
     };
 };
