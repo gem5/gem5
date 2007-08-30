@@ -32,4 +32,4 @@ from m5.proxy import *
 class SimpleDisk(SimObject):
     type = 'SimpleDisk'
     disk = Param.DiskImage("Disk Image")
-    system = Param.System(Parent.any, "Sysetm Pointer")
+    system = Param.System(Parent.any, "System Pointer")
