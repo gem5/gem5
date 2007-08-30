@@ -176,9 +176,9 @@ class VectorParamValue(list):
         return [v.unproxy(base) for v in self]
 
 class SimObjVector(VectorParamValue):
-    def print_ini(self):
+    def print_ini(self, ini_file):
         for v in self:
-            v.print_ini()
+            v.print_ini(ini_file)
 
 class VectorParamDesc(ParamDesc):
     # Convert assigned value to appropriate type.  If the RHS is not a

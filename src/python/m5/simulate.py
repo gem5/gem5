@@ -45,11 +45,10 @@ def instantiate(root):
     ticks.fixGlobalFrequency()
 
     root.unproxy_all()
-    # ugly temporary hack to get output to config.ini
-    sys.stdout = file(os.path.join(options.outdir, 'config.ini'), 'w')
-    root.print_ini()
-    sys.stdout.close() # close config.ini
-    sys.stdout = sys.__stdout__ # restore to original
+
+    ini_file = file(os.path.join(options.outdir, 'config.ini'), 'w')
+    root.print_ini(ini_file)
+    ini_file.close() # close config.ini
 
     # Initialize the global statistics
     internal.stats.initSimStats()

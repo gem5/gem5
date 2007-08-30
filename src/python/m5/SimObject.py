@@ -721,37 +721,38 @@ class SimObject(object):
         for child in child_names:
             self._children[child].unproxy_all()
 
-    def print_ini(self):
-        print '[' + self.path() + ']'	# .ini section header
+    def print_ini(self, ini_file):
+        print >>ini_file, '[' + self.path() + ']'	# .ini section header
 
         instanceDict[self.path()] = self
 
         if hasattr(self, 'type'):
-            print 'type=%s' % self.type
+            print >>ini_file, 'type=%s' % self.type
 
         child_names = self._children.keys()
         child_names.sort()
         if len(child_names):
-            print 'children=%s' % ' '.join(child_names)
+            print >>ini_file, 'children=%s' % ' '.join(child_names)
 
         param_names = self._params.keys()
         param_names.sort()
         for param in param_names:
             value = self._values.get(param)
             if value != None:
-                print '%s=%s' % (param, self._values[param].ini_str())
+                print >>ini_file, '%s=%s' % (param,
+                                             self._values[param].ini_str())
 
         port_names = self._ports.keys()
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
             if port != None:
-                print '%s=%s' % (port_name, port.ini_str())
+                print >>ini_file, '%s=%s' % (port_name, port.ini_str())
 
-        print	# blank line between objects
+        print >>ini_file	# blank line between objects
 
         for child in child_names:
-            self._children[child].print_ini()
+            self._children[child].print_ini(ini_file)
 
     def getCCParams(self):
         if self._ccParams:
