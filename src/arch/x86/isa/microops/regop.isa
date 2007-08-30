@@ -357,7 +357,7 @@ let {{
     # This creates a python representations of a microop which are a cross
     # product of reg/immediate and flag/no flag versions.
     def defineMicroRegOp(mnemonic, code, flagCode=genCCFlagBits, \
-            cc=False, elseCode=";"):
+            cc=False, doImm=True, elseCode=";"):
         Name = mnemonic
         name = mnemonic.lower()
 
@@ -392,21 +392,22 @@ let {{
                 regCode, flagCode=regFlagCode,
                 condCheck=condCode, elseCode=elseCode);
 
-        class RegOpChildImm(RegOpImm):
-            mnemonic = name + 'i'
-            className = Name + 'Imm'
-            def __init__(self, dest, src1, src2, \
-                    flags=None, dataSize="env.dataSize"):
-                super(RegOpChildImm, self).__init__(dest, src1, src2, \
-                        flags, dataSize)
+        if doImm:
+            class RegOpChildImm(RegOpImm):
+                mnemonic = name + 'i'
+                className = Name + 'Imm'
+                def __init__(self, dest, src1, src2, \
+                        flags=None, dataSize="env.dataSize"):
+                    super(RegOpChildImm, self).__init__(dest, src1, src2, \
+                            flags, dataSize)
 
-        microopClasses[name + 'i'] = RegOpChildImm
+            microopClasses[name + 'i'] = RegOpChildImm
 
-        setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
-                immCode, imm=True);
-        setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm",
-                immCode, flagCode=immFlagCode,
-                condCheck=condCode, elseCode=elseCode, imm=True);
+            setUpMicroRegOp(name + "i", Name + "Imm", "X86ISA::RegOpImm", \
+                    immCode, imm=True);
+            setUpMicroRegOp(name + "i", Name + "ImmFlags", "X86ISA::RegOpImm",
+                    immCode, flagCode=immFlagCode,
+                    condCheck=condCode, elseCode=elseCode, imm=True);
 
     # This has it's own function because Wr ops have implicit destinations
     def defineMicroRegOpWr(mnemonic, code, elseCode=";"):
@@ -562,8 +563,13 @@ let {{
     #
     # HACK HACK HACK HACK - Put psrc1 in here but make it inert to shut up gcc.
     #
-    defineMicroRegOp('Mov', 'DestReg = merge(SrcReg1, psrc1 * 0 + op2, dataSize)',
+    defineMicroRegOp('Mov',
+            'DestReg = merge(SrcReg1, psrc1 * 0 + op2, dataSize)',
             elseCode='DestReg=DestReg;', cc=True)
+
+    defineMicroRegOp('Movfp',
+            'FpDestReg = FpSrcReg2 + psrc1 * 0 + psrc2 * 0',
+            elseCode='FpDestReg=FpDestReg;', cc=True, doImm=False)
 
     # Shift instructions
     defineMicroRegOp('Sll', '''
