@@ -65,6 +65,12 @@ namespace X86ISA
 
     const int NumMMXRegs = 8;
     const int NumXMMRegs = 16;
+
+    const int NumCRegs = 16;
+    const int NumDRegs = 8;
+
+    const int NumSegments = 6;
+    const int NumSysSegments = 4;
 }
 
 #endif //__ARCH_X86_X86TRAITS_HH__

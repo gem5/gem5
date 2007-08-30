@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_MISCREGS_HH__
 #define __ARCH_X86_MISCREGS_HH__
 
+#include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 
 namespace X86ISA
@@ -97,7 +98,7 @@ namespace X86ISA
         MISCREG_CR15,
 
         // Debug registers
-        MISCREG_DR_BASE,
+        MISCREG_DR_BASE = MISCREG_CR_BASE + NumCRegs,
         MISCREG_DR0 = MISCREG_DR_BASE,
         MISCREG_DR1,
         MISCREG_DR2,
@@ -108,7 +109,7 @@ namespace X86ISA
         MISCREG_DR7,
 
         // Flags register
-        MISCREG_RFLAGS,
+        MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
 
         // Segment selectors
         MISCREG_SEG_SEL_BASE,
@@ -120,7 +121,7 @@ namespace X86ISA
         MISCREG_GS,
 
         // Hidden segment base field
-        MISCREG_SEG_BASE_BASE,
+        MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + NumSegments,
         MISCREG_ES_BASE = MISCREG_SEG_BASE_BASE,
         MISCREG_CS_BASE,
         MISCREG_SS_BASE,
@@ -129,7 +130,7 @@ namespace X86ISA
         MISCREG_GS_BASE,
 
         // Hidden segment limit field
-        MISCREG_SEG_LIMIT_BASE,
+        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_BASE_BASE + NumSegments,
         MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
         MISCREG_CS_LIMIT,
         MISCREG_SS_LIMIT,
@@ -138,7 +139,7 @@ namespace X86ISA
         MISCREG_GS_LIMIT,
 
         // Hidden segment limit attributes
-        MISCREG_SEG_ATTR_BASE,
+        MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + NumSegments,
         MISCREG_ES_ATTR = MISCREG_SEG_ATTR_BASE,
         MISCREG_CS_ATTR,
         MISCREG_SS_ATTR,
@@ -147,33 +148,93 @@ namespace X86ISA
         MISCREG_GS_ATTR,
 
         // System segment selectors
-        MISCREG_SYSSEG_SEL_BASE,
+        MISCREG_SYSSEG_SEL_BASE = MISCREG_SEG_ATTR_BASE + NumSegments,
         MISCREG_LDTR = MISCREG_SYSSEG_SEL_BASE,
         MISCREG_TR,
 
         // Hidden system segment base field
-        MISCREG_SYSSEG_BASE_BASE,
+        MISCREG_SYSSEG_BASE_BASE = MISCREG_SYSSEG_SEL_BASE + NumSysSegments,
         MISCREG_LDTR_BASE = MISCREG_SYSSEG_BASE_BASE,
         MISCREG_TR_BASE,
         MISCREG_GDTR_BASE,
         MISCREG_IDTR_BASE,
 
         // Hidden system segment limit field
-        MISCREG_SYSSEG_LIMIT_BASE,
+        MISCREG_SYSSEG_LIMIT_BASE = MISCREG_SYSSEG_BASE_BASE + NumSysSegments,
         MISCREG_LDTR_LIMIT = MISCREG_SYSSEG_LIMIT_BASE,
         MISCREG_TR_LIMIT,
         MISCREG_GDTR_LIMIT,
         MISCREG_IDTR_LIMIT,
 
         // Hidden system segment attribute field
-        MISCREG_SYSSEG_ATTR_BASE,
+        MISCREG_SYSSEG_ATTR_BASE = MISCREG_SYSSEG_LIMIT_BASE + NumSysSegments,
         MISCREG_LDTR_ATTR = MISCREG_SYSSEG_ATTR_BASE,
         MISCREG_TR_ATTR,
 
         //XXX Add "Model-Specific Registers"
 
-        NUM_MISCREGS
+        NUM_MISCREGS = MISCREG_SYSSEG_ATTR_BASE + NumSysSegments
     };
+
+    static inline MiscRegIndex
+    MISCREG_CR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_CR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_DR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_DR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SEG_SEL(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SEG_SEL_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SEG_BASE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SEG_BASE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SEG_LIMIT(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SEG_LIMIT_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SEG_ATTR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SYSSEG_SEL(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SYSSEG_SEL_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SYSSEG_BASE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SYSSEG_BASE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SYSSEG_LIMIT(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SYSSEG_LIMIT_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SYSSEG_ATTR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SYSSEG_ATTR_BASE + index);
+    }
 
     /**
      * A type to describe the condition code bits of the RFLAGS register,
