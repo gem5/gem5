@@ -46,7 +46,6 @@
 
 import copy
 import datetime
-import inspect
 import re
 import sys
 import time
@@ -67,9 +66,20 @@ def isSimObjectSequence(*args, **kwargs):
 def isSimObjectClass(*args, **kwargs):
     return SimObject.isSimObjectClass(*args, **kwargs)
 
+allParams = {}
+
+class MetaParamValue(type):
+    def __new__(mcls, name, bases, dct):
+        cls = super(MetaParamValue, mcls).__new__(mcls, name, bases, dct)
+        assert name not in allParams
+        allParams[name] = cls
+        return cls
+
+
 # Dummy base class to identify types that are legitimate for SimObject
 # parameters.
 class ParamValue(object):
+    __metaclass__ = MetaParamValue
 
     cxx_predecls = []
     swig_predecls = []
@@ -119,16 +129,11 @@ class ParamDesc(object):
 
     def __getattr__(self, attr):
         if attr == 'ptype':
-            try:
-                ptype = SimObject.allClasses[self.ptype_str]
-                if not isinstance(ptype, type):
-                    raise NameError
-                self.ptype = ptype
-                return ptype
-            except NameError:
-                raise
-                #raise TypeError, \
-                #      "Param qualifier '%s' is not a type" % self.ptype_str
+            ptype = SimObject.allClasses[self.ptype_str]
+            assert issubclass(ptype, SimObject.SimObject)
+            self.ptype = ptype
+            return ptype
+
         raise AttributeError, "'%s' object has no attribute '%s'" % \
               (type(self).__name__, attr)
 
@@ -160,6 +165,7 @@ class ParamDesc(object):
 # single value.
 
 class VectorParamValue(list):
+    __metaclass__ = MetaParamValue
     def ini_str(self):
         return ' '.join([v.ini_str() for v in self])
 
@@ -217,15 +223,10 @@ class ParamFactory(object):
 
     # E.g., Param.Int(5, "number of widgets")
     def __call__(self, *args, **kwargs):
-        caller_frame = inspect.currentframe().f_back
         ptype = None
         try:
-            ptype = eval(self.ptype_str,
-                         caller_frame.f_globals, caller_frame.f_locals)
-            if not isinstance(ptype, type):
-                raise TypeError, \
-                      "Param qualifier is not a type: %s" % ptype
-        except NameError:
+            ptype = allParams[self.ptype_str]
+        except KeyError:
             # if name isn't defined yet, assume it's a SimObject, and
             # try to resolve it later
             pass
@@ -300,7 +301,7 @@ class NumericParamValue(ParamValue):
         return newobj
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
-class CheckedIntType(type):
+class CheckedIntType(MetaParamValue):
     def __init__(cls, name, bases, dict):
         super(CheckedIntType, cls).__init__(name, bases, dict)
 
@@ -424,7 +425,7 @@ class Addr(CheckedInt):
             return self.value + other
 
 
-class MetaRange(type):
+class MetaRange(MetaParamValue):
     def __init__(cls, name, bases, dict):
         super(MetaRange, cls).__init__(name, bases, dict)
         if name == 'Range':
@@ -665,7 +666,7 @@ class Time(ParamValue):
 
 allEnums = {}
 # Metaclass for Enum types
-class MetaEnum(type):
+class MetaEnum(MetaParamValue):
     def __new__(mcls, name, bases, dict):
         assert name not in allEnums
 

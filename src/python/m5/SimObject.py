@@ -757,7 +757,7 @@ class SimObject(object):
         if self._ccParams:
             return self._ccParams
 
-        cc_params_struct = eval('m5.objects.params.%sParams' % self.type)
+        cc_params_struct = getattr(m5.objects.params, '%sParams' % self.type)
         cc_params = cc_params_struct()
         cc_params.object = self
         cc_params.name = str(self)
