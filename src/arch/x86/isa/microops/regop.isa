@@ -590,7 +590,7 @@ let {{
             // is not defined in the C/C++ standard, we have to sign extend
             // them manually to be sure.
             uint64_t arithMask =
-                -bits(op2, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
+                -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
             ''')
     defineMicroRegOp('Ror', '''
