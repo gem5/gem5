@@ -171,7 +171,8 @@ CowDiskImage::CowDiskImage(const Params *p)
         init(p->table_size);
     } else {
         if (!open(filename)) {
-            assert(!p->read_only && "why have a non-existent read only file?");
+            if (p->read_only)
+                fatal("could not open read-only file");
             init(p->table_size);
         }
 
