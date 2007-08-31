@@ -171,7 +171,7 @@ class NativeTrace : public InstTracer
     bool
     checkR11Reg(const char * regName, uint64_t &, uint64_t &);
 
-    NativeTrace(const std::string & name);
+    NativeTrace(const Params *p);
 
     NativeTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc,

@@ -79,11 +79,11 @@ namespace X86ISA {
 X86ISA::ITB *
 X86ITBParams::create()
 {
-    return new X86ISA::ITB(name);
+    return new X86ISA::ITB(this);
 }
 
 X86ISA::DTB *
 X86DTBParams::create()
 {
-    return new X86ISA::DTB(name);
+    return new X86ISA::DTB(this);
 }

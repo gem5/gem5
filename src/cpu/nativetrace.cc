@@ -50,7 +50,7 @@ using namespace TheISA;
 
 namespace Trace {
 
-NativeTrace::NativeTrace(const std::string & _name) : InstTracer(_name)
+NativeTrace::NativeTrace(const Params *p) : InstTracer(p)
 {
     int port = 8000;
     while(!native_listener.listen(port, true))
@@ -187,5 +187,5 @@ Trace::NativeTrace::check(ThreadContext * tc, bool isSyscall)
 Trace::NativeTrace *
 NativeTraceParams::create()
 {
-    return new Trace::NativeTrace(name);
+    return new Trace::NativeTrace(this);
 };

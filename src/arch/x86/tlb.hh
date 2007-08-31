@@ -59,7 +59,6 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <iostream>
-#include <string>
 
 #include "sim/host.hh"
 #include "sim/tlb.hh"
@@ -81,14 +80,14 @@ namespace X86ISA
     class ITB : public GenericTLB
     {
       public:
-        ITB(const std::string &name) : GenericTLB(name)
+        ITB(const Params *p) : GenericTLB(p)
         {}
     };
 
     class DTB : public GenericTLB
     {
       public:
-        DTB(const std::string &name) : GenericTLB(name)
+        DTB(const Params *p) : GenericTLB(p)
         {}
     };
 };
