@@ -55,7 +55,7 @@ class Micro_Container(object):
         self.micro_classes = {}
         self.labels = {}
 
-    def add_microop(self, microop):
+    def add_microop(self, mnemonic, microop):
         self.microops.append(microop)
 
     def __str__(self):
@@ -143,7 +143,7 @@ def handle_statement(parser, container, statement):
                 container.labels[label.text] = microop
                 if label.extern:
                     container.externs[label.text] = microop
-            container.add_microop(microop)
+            container.add_microop(statement.mnemonic, microop)
         except:
             print_error("Error adding microop.")
             raise
