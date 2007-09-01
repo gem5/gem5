@@ -69,6 +69,7 @@ let {{
 
 let {{
     class X86Microop(object):
+
         def __init__(self, name):
             self.name = name
 
@@ -88,7 +89,8 @@ let {{
             return text
 
         def getAllocator(self, mnemonic, *microFlags):
-            return 'new %s(machInst, %s)' % (self.className, mnemonic, self.microFlagsText(microFlags))
+            return 'new %s(machInst, %s)' % \
+                (self.className, mnemonic, self.microFlagsText(microFlags))
 }};
 
 //////////////////////////////////////////////////////////////////////////
