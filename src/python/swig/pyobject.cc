@@ -142,11 +142,6 @@ inifile()
 }
 
 /**
- * Pointer to the Python function that maps names to SimObjects.
- */
-PyObject *resolveFunc = NULL;
-
-/**
  * Convert a pointer to the Python object that SWIG wraps around a C++
  * SimObject pointer back to the actual C++ pointer.  See main.i.
  */
@@ -155,16 +150,29 @@ extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 SimObject *
 resolveSimObject(const string &name)
 {
-    PyObject *pyPtr = PyEval_CallFunction(resolveFunc, "(s)", name.c_str());
-    if (pyPtr == NULL) {
+    PyObject *module = PyImport_ImportModule("m5.SimObject");
+    if (module == NULL)
+        panic("Could not import m5.SimObject");
+
+    PyObject *resolver = PyObject_GetAttrString(module, "resolveSimObject");
+    if (resolver == NULL) {
+        PyErr_Print();
+        panic("resolveSimObject: failed to find resolveSimObject");
+    }
+
+    PyObject *ptr = PyObject_CallFunction(resolver, "(s)", name.c_str());
+    if (ptr == NULL) {
         PyErr_Print();
         panic("resolveSimObject: failure on call to Python for %s", name);
     }
 
-    SimObject *simObj = convertSwigSimObjectPtr(pyPtr);
-    if (simObj == NULL)
+    SimObject *obj = convertSwigSimObjectPtr(ptr);
+    if (obj == NULL)
         panic("resolveSimObject: failure on pointer conversion for %s", name);
 
-    return simObj;
-}
+    Py_DECREF(module);
+    Py_DECREF(resolver);
+    Py_DECREF(ptr);
 
+    return obj;
+}
