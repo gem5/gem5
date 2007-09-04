@@ -168,16 +168,3 @@ resolveSimObject(const string &name)
     return simObj;
 }
 
-/**
- * Load config.ini into C++ database.  Exported to Python via SWIG;
- * invoked from m5.instantiate().
- */
-void
-loadIniFile(PyObject *_resolveFunc)
-{
-    resolveFunc = _resolveFunc;
-
-    // The configuration database is now complete; start processing it.
-    inifile().load(simout.resolve("config.ini"));
-}
-
