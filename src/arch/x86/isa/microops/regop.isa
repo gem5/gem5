@@ -453,7 +453,7 @@ let {{
             '''
 
     class Mulel(FlagRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 * op2, dataSize)'
+        code = 'DestReg = merge(DestReg, psrc1 * op2, dataSize);'
 
     class Muleh(FlagRegOp):
         code = '''
