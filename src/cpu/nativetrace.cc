@@ -84,6 +84,19 @@ NativeTrace::checkR11Reg(const char * name, uint64_t &mVal, uint64_t &nVal)
     return true;
 }
 
+bool
+NativeTrace::checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[])
+{
+    if (mXmmBuf[num * 2]     != nXmmBuf[num * 2] ||
+        mXmmBuf[num * 2 + 1] != nXmmBuf[num * 2 + 1]) {
+        DPRINTFN("Register xmm%d should be 0x%016x%016x but is 0x%016x%016x.\n",
+                num, nXmmBuf[num * 2 + 1], nXmmBuf[num * 2],
+                     mXmmBuf[num * 2 + 1], mXmmBuf[num * 2]);
+        return false;
+    }
+    return true;
+}
+
 void
 Trace::NativeTraceRecord::dump()
 {
@@ -127,6 +140,22 @@ Trace::NativeTrace::check(ThreadContext * tc, bool isSyscall)
     checkReg("r14", mState.r14, nState.r14);
     checkReg("r15", mState.r15, nState.r15);
     checkReg("rip", mState.rip, nState.rip);
+    checkXMM(0, mState.xmm, nState.xmm);
+    checkXMM(1, mState.xmm, nState.xmm);
+    checkXMM(2, mState.xmm, nState.xmm);
+    checkXMM(3, mState.xmm, nState.xmm);
+    checkXMM(4, mState.xmm, nState.xmm);
+    checkXMM(5, mState.xmm, nState.xmm);
+    checkXMM(6, mState.xmm, nState.xmm);
+    checkXMM(7, mState.xmm, nState.xmm);
+    checkXMM(8, mState.xmm, nState.xmm);
+    checkXMM(9, mState.xmm, nState.xmm);
+    checkXMM(10, mState.xmm, nState.xmm);
+    checkXMM(11, mState.xmm, nState.xmm);
+    checkXMM(12, mState.xmm, nState.xmm);
+    checkXMM(13, mState.xmm, nState.xmm);
+    checkXMM(14, mState.xmm, nState.xmm);
+    checkXMM(15, mState.xmm, nState.xmm);
 #if THE_ISA == SPARC_ISA
     /*for(int f = 0; f <= 62; f+=2)
     {

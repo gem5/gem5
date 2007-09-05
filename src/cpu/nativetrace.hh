@@ -37,6 +37,7 @@
 #include "sim/host.hh"
 #include "sim/insttracer.hh"
 #include "arch/x86/intregs.hh"
+#include "arch/x86/floatregs.hh"
 
 class ThreadContext;
 
@@ -91,6 +92,9 @@ class NativeTrace : public InstTracer
         uint64_t r14;
         uint64_t r15;
         uint64_t rip;
+        //This should be expanded to 16 if x87 registers are considered
+        uint64_t mmx[8];
+        uint64_t xmm[32];
 
         void update(int fd)
         {
@@ -121,6 +125,11 @@ class NativeTrace : public InstTracer
             r14 = TheISA::gtoh(r14);
             r15 = TheISA::gtoh(r15);
             rip = TheISA::gtoh(rip);
+            //This should be expanded if x87 registers are considered
+            for (int i = 0; i < 8; i++)
+                mmx[i] = TheISA::gtoh(mmx[i]);
+            for (int i = 0; i < 32; i++)
+                xmm[i] = TheISA::gtoh(xmm[i]);
         }
 
         void update(ThreadContext * tc)
@@ -142,6 +151,11 @@ class NativeTrace : public InstTracer
             r14 = tc->readIntReg(X86ISA::INTREG_R14);
             r15 = tc->readIntReg(X86ISA::INTREG_R15);
             rip = tc->readNextPC();
+            //This should be expanded if x87 registers are considered
+            for (int i = 0; i < 8; i++)
+                mmx[i] = tc->readFloatRegBits(X86ISA::FLOATREG_MMX(i));
+            for (int i = 0; i < 32; i++)
+                xmm[i] = tc->readFloatRegBits(X86ISA::FLOATREG_XMM_BASE + i);
         }
 
     };
@@ -170,6 +184,9 @@ class NativeTrace : public InstTracer
 
     bool
     checkR11Reg(const char * regName, uint64_t &, uint64_t &);
+
+    bool
+    checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[]);
 
     NativeTrace(const Params *p);
 
