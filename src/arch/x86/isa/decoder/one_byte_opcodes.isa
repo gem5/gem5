@@ -504,28 +504,30 @@
                 {{"Tried to execute the rep/repe prefix!"}});
             0x4: hlt();
             0x5: cmc();
-            //0x6: group3_Eb();
-            0x6: decode MODRM_REG {
-                0x0: Inst::TEST(Eb,Iz);
-                0x1: Inst::TEST(Eb,Iz);
-                0x2: Inst::NOT(Eb);
-                0x3: Inst::NEG(Eb);
-                0x4: Inst::MUL_B(Eb);
-                0x5: Inst::IMUL_B(Eb);
-                //This should be Eb, but it access the entire word value ax.
-                0x6: Inst::DIV_B(Ew);
-                0x7: idiv_Eb();
-            }
-            //0x7: group3_Ev();
-            0x7: decode MODRM_REG {
-                0x0: Inst::TEST(Ev,Iz);
-                0x1: Inst::TEST(Ev,Iz);
-                0x2: Inst::NOT(Ev);
-                0x3: Inst::NEG(Ev);
-                0x4: Inst::MUL(Ev);
-                0x5: Inst::IMUL(Ev);
-                0x6: Inst::DIV(Ev);
-                0x7: idiv_Ev();
+            format Inst {
+                //0x6: group3_Eb();
+                0x6: decode MODRM_REG {
+                    0x0: TEST(Eb,Iz);
+                    0x1: TEST(Eb,Iz);
+                    0x2: NOT(Eb);
+                    0x3: NEG(Eb);
+                    0x4: MUL_B(Eb);
+                    0x5: IMUL_B(Eb);
+                    //This should be Eb, but it access the entire word value ax.
+                    0x6: DIV_B(Ew);
+                    0x7: IDIV(Eb);
+                }
+                //0x7: group3_Ev();
+                0x7: decode MODRM_REG {
+                    0x0: TEST(Ev,Iz);
+                    0x1: TEST(Ev,Iz);
+                    0x2: NOT(Ev);
+                    0x3: NEG(Ev);
+                    0x4: MUL(Ev);
+                    0x5: IMUL(Ev);
+                    0x6: DIV(Ev);
+                    0x7: IDIV(Ev);
+                }
             }
         }
         0x1F: decode OPCODE_OP_BOTTOM3 {

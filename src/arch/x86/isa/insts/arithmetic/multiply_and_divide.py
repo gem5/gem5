@@ -134,8 +134,9 @@ def macroop IMUL_B_P
 
 def macroop IMUL_R
 {
-    muleh rdx, rax, reg
+    muleh t1, rax, reg
     mulel rax, rax, reg
+    mov rdx, rdx, t1
 };
 
 def macroop IMUL_M
@@ -229,8 +230,9 @@ def macroop DIV_B_P
 
 def macroop DIV_R
 {
-    divr rdx, rax, reg
+    divr t1, rax, reg
     divq rax, rax, reg
+    mov rdx, rdx, t1
 };
 
 def macroop DIV_M
@@ -241,6 +243,32 @@ def macroop DIV_M
 };
 
 def macroop DIV_P
+{
+    rdip t7
+    ld t1, seg, riprel, disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
+};
+
+#
+# Signed division
+#
+
+def macroop IDIV_R
+{
+    divr t1, rax, reg
+    divq rax, rax, reg
+    mov rdx, rdx, t1
+};
+
+def macroop IDIV_M
+{
+    ld t1, seg, sib, disp
+    divr rdx, rax, t1
+    divq rax, rax, t1
+};
+
+def macroop IDIV_P
 {
     rdip t7
     ld t1, seg, riprel, disp
