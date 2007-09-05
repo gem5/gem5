@@ -101,7 +101,7 @@ namespace X86ISA
     std::string getFloatRegName(RegIndex);
 
     //Each 128 bit xmm register is broken into two effective 64 bit registers.
-    const int NumFloatArchRegs = NumMMXRegs + 2 * NumXMMRegs;
+    const int NumFloatArchRegs = NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs;
     const int NumFloatRegs = NumFloatArchRegs;
 
     class FloatRegFile

@@ -120,7 +120,17 @@ namespace X86ISA
         FLOATREG_XMM15_LOW,
         FLOATREG_XMM15_HIGH,
 
-        NUM_FLOATREGS = FLOATREG_XMM_BASE + 2 * NumXMMRegs
+        FLOATREG_MICROFP_BASE = FLOATREG_XMM_BASE + 2 * NumXMMRegs,
+        FLOATREG_MICROFP0 = FLOATREG_MICROFP_BASE,
+        FLOATREG_MICROFP1,
+        FLOATREG_MICROFP2,
+        FLOATREG_MICROFP3,
+        FLOATREG_MICROFP4,
+        FLOATREG_MICROFP5,
+        FLOATREG_MICROFP6,
+        FLOATREG_MICROFP7,
+
+        NUM_FLOATREGS = FLOATREG_MICROFP_BASE + NumMicroFpRegs
     };
 
     static inline FloatRegIndex
@@ -145,6 +155,12 @@ namespace X86ISA
     FLOATREG_XMM_HIGH(int index)
     {
         return (FloatRegIndex)(FLOATREG_XMM_BASE + 2 * index + 1);
+    }
+
+    static inline FloatRegIndex
+    FLOATREG_MICROFP(int index)
+    {
+        return (FloatRegIndex)(FLOATREG_MICROFP_BASE + index);
     }
 };
 
