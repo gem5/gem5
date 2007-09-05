@@ -278,7 +278,9 @@
                     0x4: andpd_Vo_Wo();
                     0x5: andnpd_Vo_Wo();
                     0x6: orpd_Vo_Wo();
-                    0x7: xorpd_Vo_Wo();
+                    //This really should be type o, but it works on q sized
+                    //chunks at a time.
+                    0x7: Inst::XORPD(Vq,Wq);
                     default: Inst::UD2();
                 }
                 // repne (0xF2)

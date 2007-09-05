@@ -53,15 +53,24 @@
 #
 # Authors: Gabe Black
 
-categories = ["move",
-              "convert",
-              "add_and_subtract",
-              "multiply_and_divide",
-              "logical"]
-
 microcode = '''
-# SSE instructions
+def macroop XORPD_R_R {
+    xorfp xmml, xmml, xmmlm
+    xorfp xmmh, xmmh, xmmhm
+};
+
+def macroop XORPD_R_M {
+    ldfp ufp1, seg, sib, disp
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8"
+    xorfp xmml, xmml, ufp1
+    xorfp xmmh, xmmh, ufp2
+};
+
+def macroop XORPD_R_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8"
+    xorfp xmml, xmml, ufp1
+    xorfp xmmh, xmmh, ufp2
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
