@@ -636,4 +636,23 @@ let {{
 
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, imm8-1, 0);'
+
+    # Conversion microops
+    class ConvOp(RegOp):
+        abstract = True
+        def __init__(self, dest, src1):
+            super(ConvOp, self).__init__(dest, src1, "NUM_INTREGS")
+
+    #FIXME This needs to always use 32 bits unless REX.W is present
+    class cvtf_i2d(ConvOp):
+        code = 'FpDestReg = psrc1;'
+
+    class cvtf_i2d_hi(ConvOp):
+        code = 'FpDestReg = bits(SrcReg1, 63, 32);'
+
+    class cvtf_d2i(ConvOp):
+        code = '''
+        int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
+        DestReg = merge(DestReg, intSrcReg1, dataSize);
+        '''
 }};

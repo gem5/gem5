@@ -201,8 +201,10 @@
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x2: cvtsi2sd_Vq_Ed();
-                    0x4: cvttsd2si_Gd_Wq();
+                    // The size of the V operand should be q, not dp
+                    0x2: Inst::CVTSI2SD(Vdp,Edp);
+                    // The size of the W operand should be q, not dp
+                    0x4: Inst::CVTTSD2SI(Gdp,Wdp);
                     0x5: cvtsd2si_Gd_Wq();
                     default: Inst::UD2();
                 }

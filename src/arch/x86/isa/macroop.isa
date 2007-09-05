@@ -221,6 +221,11 @@ let {{
                 self.dataSize = 1
             elif self.size == 'd':
                 self.dataSize = 4
+            #This is for "double plus" which is normally a double word unless
+            #the REX W bit is set, in which case it's a quad word. It's used
+            #for some SSE instructions.
+            elif self.size == 'dp':
+                self.dataSize = "(REX_W ? 8 : 4)"
             elif self.size == 'q':
                 self.dataSize = 8
             elif self.size == 'v':
@@ -251,7 +256,7 @@ let {{
             if not self.size:
                 self.size = size
             else:
-                if self.size is not size:
+                if self.size != size:
                     raise Exception, "Conflicting register sizes %s and %s!" %\
                         (self.size, size)
 }};
