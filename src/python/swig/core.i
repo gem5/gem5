@@ -47,7 +47,6 @@ extern const char *compileDate;
 
 void setOutputDir(const std::string &dir);
 void setOutputFile(const std::string &file);
-void loadIniFile(PyObject *);
 void SimStartup();
 void doExitCleanup();
 

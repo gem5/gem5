@@ -38,8 +38,6 @@
 
 extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 SimObject *resolveSimObject(const std::string &name);
-void loadIniFile(PyObject *_resolveFunc);
-
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
