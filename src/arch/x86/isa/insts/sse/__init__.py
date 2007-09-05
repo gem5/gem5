@@ -54,7 +54,9 @@
 # Authors: Gabe Black
 
 categories = ["move",
-              "convert"]
+              "convert",
+              "add_and_subtract",
+              "multiply_and_divide"]
 
 microcode = '''
 # SSE instructions
