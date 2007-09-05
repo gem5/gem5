@@ -655,4 +655,18 @@ let {{
         int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
         DestReg = merge(DestReg, intSrcReg1, dataSize);
         '''
+
+    # These need to consider size at some point. They'll always use doubles
+    # for the moment.
+    class addfp(RegOp):
+        code = 'FpDestReg = FpSrcReg1 + FpSrcReg2;'
+
+    class mulfp(RegOp):
+        code = 'FpDestReg = FpSrcReg1 * FpSrcReg2;'
+
+    class divfp(RegOp):
+        code = 'FpDestReg = FpSrcReg1 / FpSrcReg2;'
+
+    class subfp(RegOp):
+        code = 'FpDestReg = FpSrcReg1 - FpSrcReg2;'
 }};

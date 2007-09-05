@@ -324,12 +324,12 @@
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addsd_Vq_Wq();
-                    0x1: mulsd_Vq_Wq();
+                    0x0: Inst::ADDSD(Vq,Wq);
+                    0x1: Inst::MULSD(Vq,Wq);
                     0x2: cvtsd2ss_Vd_Wq();
-                    0x4: subsd_Vq_Wq();
+                    0x4: Inst::SUBSD(Vq,Wq);
                     0x5: minsd_Vq_Wq();
-                    0x6: divsd_Vq_Wq();
+                    0x6: Inst::DIVSD(Vq,Wq);
                     0x7: maxsd_Vq_Wq();
                     default: Inst::UD2();
                 }
