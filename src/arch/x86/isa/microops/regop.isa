@@ -489,8 +489,8 @@ let {{
         else_code = 'DestReg=DestReg;'
 
     class Movfp(CondRegOp):
-        code = 'FpDestReg = FpSrcReg2'
-        else_code = 'FpDestReg = FpDestReg;'
+        code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
+        else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
 
     # Shift instructions
 
