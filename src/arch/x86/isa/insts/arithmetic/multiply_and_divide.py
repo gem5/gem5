@@ -134,7 +134,7 @@ def macroop IMUL_B_P
 
 def macroop IMUL_R
 {
-    muleh t1, rax, reg
+    mulehs t1, rax, reg
     mulel rax, rax, reg
     mov rdx, rdx, t1
 };
@@ -142,7 +142,7 @@ def macroop IMUL_R
 def macroop IMUL_M
 {
     ld t1, seg, sib, disp
-    muleh rdx, rax, t1
+    mulehs rdx, rax, t1
     mulel rax, rax, t1
 };
 
@@ -150,7 +150,7 @@ def macroop IMUL_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    muleh rdx, rax, t1
+    mulehs rdx, rax, t1
     mulel rax, rax, t1
 };
 

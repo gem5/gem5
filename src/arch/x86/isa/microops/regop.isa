@@ -258,13 +258,18 @@ let {{
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
-            matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
-            if matcher.search(allCode):
+            matcher = re.compile("(?<!\\w)(?P<prefix>s?)op2(?P<typeQual>\\.\\w+)?")
+            match = matcher.search(allCode)
+            if match:
+                typeQual = ""
+                if match.group("typeQual"):
+                    typeQual = match.group("typeQual")
+                src2_name = "%spsrc2%s" % (match.group("prefix"), typeQual)
                 self.buildCppClasses(name, Name, suffix,
-                        matcher.sub("psrc2", code),
-                        matcher.sub("psrc2", flag_code),
-                        matcher.sub("psrc2", cond_check),
-                        matcher.sub("psrc2", else_code))
+                        matcher.sub(src2_name, code),
+                        matcher.sub(src2_name, flag_code),
+                        matcher.sub(src2_name, cond_check),
+                        matcher.sub(src2_name, else_code))
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub("imm8", code),
                         matcher.sub("imm8", flag_code),
@@ -462,6 +467,11 @@ let {{
     class Mulel(FlagRegOp):
         code = 'DestReg = merge(DestReg, psrc1 * op2, dataSize);'
 
+    # Neither of these is quite correct because it assumes that right shifting
+    # a signed or unsigned value does sign or zero extension respectively.
+    # The C standard says that what happens on a right shift with a 1 in the
+    # MSB position is undefined. On x86 and under likely most compilers the
+    # "right thing" happens, but this isn't a guarantee.
     class Muleh(FlagRegOp):
         code = '''
             int halfSize = (dataSize * 8) / 2;
@@ -473,6 +483,20 @@ let {{
                 ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
                  ((psrc1_l * psrc2_l) >> halfSize)) >> halfSize) +
                 psrc1_h * psrc2_h;
+            DestReg = merge(DestReg, result, dataSize);
+            '''
+
+    class Mulehs(FlagRegOp):
+        code = '''
+            int halfSize = (dataSize * 8) / 2;
+            int64_t spsrc1_h = spsrc1 >> halfSize;
+            int64_t spsrc1_l = spsrc1 & mask(halfSize);
+            int64_t spsrc2_h = sop2 >> halfSize;
+            int64_t spsrc2_l = sop2 & mask(halfSize);
+            int64_t result =
+                ((spsrc1_l * spsrc2_h + spsrc1_h * spsrc2_l +
+                 ((spsrc1_l * spsrc2_l) >> halfSize)) >> halfSize) +
+                spsrc1_h * spsrc2_h;
             DestReg = merge(DestReg, result, dataSize);
             '''
 
