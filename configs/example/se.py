@@ -100,15 +100,17 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 
 system.physmem.port = system.membus.port
 
+if options.l2cache:
+    system.l2 = L2Cache(size='2MB')
+    system.tol2bus = Bus()
+    system.l2.cpu_side = system.tol2bus.port
+    system.l2.mem_side = system.membus.port
+
 for i in xrange(np):
     if options.caches:
         system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                               L1Cache(size = '64kB'))
     if options.l2cache:
-        system.l2 = L2Cache(size='2MB')
-        system.tol2bus = Bus()
-        system.l2.cpu_side = system.tol2bus.port
-        system.l2.mem_side = system.membus.port
         system.cpu[i].connectMemPorts(system.tol2bus)
     else:
         system.cpu[i].connectMemPorts(system.membus)

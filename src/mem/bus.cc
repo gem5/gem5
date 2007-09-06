@@ -613,12 +613,11 @@ Bus::drain(Event * de)
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
-    if (curTick >= tickNextIdle && retryList.size() == 0) {
-        return 0;
-    } else {
+    if (retryList.size() || (curTick < tickNextIdle && busIdle.scheduled())) {
         drainEvent = de;
         return 1;
     }
+    return 0;
 }
 
 void
