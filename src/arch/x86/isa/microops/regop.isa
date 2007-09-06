@@ -488,13 +488,6 @@ let {{
         code = 'DestReg = merge(SrcReg1, op2, dataSize)'
         else_code = 'DestReg=DestReg;'
 
-    class Xorfp(RegOp):
-        code = 'FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;'
-
-    class Movfp(CondRegOp):
-        code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
-        else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
-
     # Shift instructions
 
     class Sll(FlagRegOp):
@@ -639,6 +632,33 @@ let {{
 
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, imm8-1, 0);'
+
+    class Compfp(WrRegOp):
+        # This class sets the condition codes in rflags according to the
+        # rules for comparing floating point.
+        code = '''
+            //               ZF PF CF
+            // Unordered      1  1  1
+            // Greater than   0  0  0
+            // Less than      0  0  1
+            // Equal          1  0  0
+            //           OF = SF = AF = 0
+            ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
+                                        ZFBit | PFBit | CFBit);
+            if (isnan(FpSrcReg1) || isnan(FpSrcReg2))
+                ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
+            else if(FpSrcReg1 < FpSrcReg2)
+                ccFlagBits = ccFlagBits | CFBit;
+            else if(FpSrcReg1 == FpSrcReg2)
+                ccFlagBits = ccFlagBits | ZFBit;
+        '''
+
+    class Xorfp(RegOp):
+        code = 'FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;'
+
+    class Movfp(CondRegOp):
+        code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
+        else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
 
     # Conversion microops
     class ConvOp(RegOp):

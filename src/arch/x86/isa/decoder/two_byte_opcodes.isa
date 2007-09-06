@@ -196,7 +196,7 @@
                     0x3: movntpd_Mo_Vo();
                     0x4: cvttpd2pi_Pq_Wo();
                     0x5: cvtpd2pi_Pq_Wo();
-                    0x6: ucomisd_Vq_Wq();
+                    0x6: Inst::UCOMISD(Vq,Wq);
                     0x7: comisd_Vq_Wq();
                 }
                 // repne (0xF2)

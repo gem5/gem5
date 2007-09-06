@@ -143,6 +143,7 @@ output exec {{
 #include <limits>
 
 #include <cmath>
+#include "arch/x86/miscregs.hh"
 #include "base/bigint.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
