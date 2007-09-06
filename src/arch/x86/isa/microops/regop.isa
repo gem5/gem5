@@ -463,8 +463,8 @@ let {{
             uint64_t psrc2_h = op2 >> halfSize;
             uint64_t psrc2_l = op2 & mask(halfSize);
             uint64_t result =
-                ((psrc1_l * psrc2_h) >> halfSize) +
-                ((psrc1_h * psrc2_l) >> halfSize) +
+                ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
+                 ((psrc1_l * psrc2_l) >> halfSize)) >> halfSize) +
                 psrc1_h * psrc2_h;
             DestReg = merge(DestReg, result, dataSize);
             '''
