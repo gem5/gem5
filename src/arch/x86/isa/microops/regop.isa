@@ -283,10 +283,17 @@ let {{
             # compute it.
             matcher = re.compile("(?<!\w)psrc1(?!\w)")
             if matcher.search(allCode):
-                code = "IntReg psrc1 = pick(SrcReg1, 0, dataSize);" + code
+                code = "uint64_t psrc1 = pick(SrcReg1, 0, dataSize);" + code
             matcher = re.compile("(?<!\w)psrc2(?!\w)")
             if matcher.search(allCode):
-                code = "IntReg psrc2 = pick(SrcReg2, 1, dataSize);" + code
+                code = "uint64_t psrc2 = pick(SrcReg2, 1, dataSize);" + code
+            # Also make available versions which do sign extension
+            matcher = re.compile("(?<!\w)spsrc1(?!\w)")
+            if matcher.search(allCode):
+                code = "int64_t spsrc1 = signedPick(SrcReg1, 0, dataSize);" + code
+            matcher = re.compile("(?<!\w)spsrc2(?!\w)")
+            if matcher.search(allCode):
+                code = "int64_t spsrc2 = signedPick(SrcReg2, 1, dataSize);" + code
 
             base = "X86ISA::RegOp"
 
@@ -671,7 +678,7 @@ let {{
 
     #FIXME This needs to always use 32 bits unless REX.W is present
     class cvtf_i2d(ConvOp):
-        code = 'FpDestReg = psrc1;'
+        code = 'FpDestReg = spsrc1;'
 
     class cvtf_i2d_hi(ConvOp):
         code = 'FpDestReg = bits(SrcReg1, 63, 32);'

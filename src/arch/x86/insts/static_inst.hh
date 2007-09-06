@@ -140,6 +140,27 @@ namespace X86ISA
                 panic("Tried to pick with unrecognized size %d.\n", size);
             }
         }
+
+        inline int64_t signedPick(uint64_t from, int idx, int size) const
+        {
+            X86IntReg reg = from;
+            DPRINTF(X86, "Picking with size %d\n", size);
+            if(_srcRegIdx[idx] & (1 << 6))
+                return reg.SH;
+            switch(size)
+            {
+              case 1:
+                return reg.SL;
+              case 2:
+                return reg.SX;
+              case 4:
+                return reg.SE;
+              case 8:
+                return reg.SR;
+              default:
+                panic("Tried to pick with unrecognized size %d.\n", size);
+            }
+        }
     };
 }
 

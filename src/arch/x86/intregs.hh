@@ -64,10 +64,15 @@ namespace X86ISA
 {
     BitUnion64(X86IntReg)
         Bitfield<63,0> R;
+        SignedBitfield<63,0> SR;
         Bitfield<31,0> E;
+        SignedBitfield<31,0> SE;
         Bitfield<15,0> X;
+        SignedBitfield<15,0> SX;
         Bitfield<15,8> H;
+        SignedBitfield<15,8> SH;
         Bitfield<7, 0> L;
+        SignedBitfield<7, 0> SL;
     EndBitUnion(X86IntReg)
 
     enum IntRegIndex
