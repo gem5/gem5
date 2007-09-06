@@ -283,12 +283,14 @@
                     0x7: Inst::XORPD(Vq,Wq);
                     default: Inst::UD2();
                 }
-                // repne (0xF2)
-                0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x1: sqrtsd_Vq_Wq();
-                    default: Inst::UD2();
+                format Inst {
+                    // repne (0xF2)
+                    0x8: decode OPCODE_OP_BOTTOM3 {
+                        0x1: SQRTSD(Vq,Wq);
+                        default: UD2();
+                    }
+                    default: UD2();
                 }
-                default: Inst::UD2();
             }
             0x0B: decode LEGACY_DECODEVAL {
                 // no prefix

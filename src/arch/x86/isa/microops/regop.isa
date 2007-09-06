@@ -656,6 +656,9 @@ let {{
     class Xorfp(RegOp):
         code = 'FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;'
 
+    class Sqrtfp(RegOp):
+        code = 'FpDestReg = sqrt(FpSrcReg2);'
+
     class Movfp(CondRegOp):
         code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
         else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
