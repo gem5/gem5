@@ -61,20 +61,29 @@ microcode = '''
 
 def macroop MUL_B_R
 {
-    mul1u rax, rax, reg, dataSize="2"
+    mul1u rax, reg
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 def macroop MUL_B_M
 {
     ld t1, seg, sib, disp
-    mul1u rax, rax, t1, dataSize="2"
+    mul1u rax, t1
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 def macroop MUL_B_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1u rax, rax, t1, dataSize="2"
+    mul1u rax, t1
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 #
@@ -83,27 +92,26 @@ def macroop MUL_B_P
 
 def macroop MUL_R
 {
-    # We need to store the result of the multiplication in a temporary
-    # and then move it later because reg may be rdx. If it is, we can't
-    # clobber its old value yet.
-    muleh t1, rax, reg
-    mulel rax, rax, reg
-    mov rdx, rdx, t1
+    mul1u rax, reg
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
 
 def macroop MUL_M
 {
     ld t1, seg, sib, disp
-    muleh rdx, rax, t1
-    mulel rax, rax, t1
+    mul1u rax, t1
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
 
 def macroop MUL_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    muleh rdx, rax, t1
-    mulel rax, rax, t1
+    mul1u rax, t1
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
 
 #
@@ -112,20 +120,29 @@ def macroop MUL_P
 
 def macroop IMUL_B_R
 {
-    mul1s rax, rax, reg, dataSize="2"
+    mul1s rax, reg
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 def macroop IMUL_B_M
 {
     ld t1, seg, sib, disp
-    mul1s rax, rax, t1, dataSize="2"
+    mul1s rax, t1
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 def macroop IMUL_B_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1s rax, rax, t1, dataSize="2"
+    mul1s rax, t1
+    mulel rax
+    # Really ah
+    muleh rsi, flags=(OF,CF)
 };
 
 #
@@ -134,47 +151,50 @@ def macroop IMUL_B_P
 
 def macroop IMUL_R
 {
-    mulehs t1, rax, reg
-    mulel rax, rax, reg
-    mov rdx, rdx, t1
+    mul1s rax, reg
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
 
 def macroop IMUL_M
 {
     ld t1, seg, sib, disp
-    mulehs rdx, rax, t1
-    mulel rax, rax, t1
+    mul1s rax, t1
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
 
 def macroop IMUL_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mulehs rdx, rax, t1
-    mulel rax, rax, t1
+    mul1s rax, t1
+    mulel rax
+    muleh rdx, flags=(OF,CF)
 };
-
-#
-# Two operand signed multiply. These should set the CF and OF flags if the
-# result is too large for the destination register
-#
 
 def macroop IMUL_R_R
 {
-    mulel reg, reg, regm
+    mul1s reg, regm
+    mulel reg
+    muleh t0, flags=(CF,OF)
 };
 
 def macroop IMUL_R_M
 {
     ld t1, seg, sib, disp
-    mulel reg, reg, t1
+    mul1s reg, t1
+    mulel reg
+    muleh t0, flags=(CF,OF)
 };
 
 def macroop IMUL_R_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mulel reg, reg, t1
+    mul1s reg, t1
+    mulel reg
+    muleh t0, flags=(CF,OF)
 };
 
 #
@@ -184,14 +204,18 @@ def macroop IMUL_R_P
 def macroop IMUL_R_R_I
 {
     limm t1, imm
-    mulel reg, regm, t1
+    mul1s regm, t1
+    mulel reg
+    muleh t0, flags=(OF,CF)
 };
 
 def macroop IMUL_R_M_I
 {
     limm t1, imm
     ld t2, seg, sib, disp
-    mulel reg, t2, t1
+    mul1s t2, t1
+    mulel reg
+    muleh t0, flags=(OF,CF)
 };
 
 def macroop IMUL_R_P_I
@@ -199,7 +223,9 @@ def macroop IMUL_R_P_I
     rdip t7
     limm t1, imm
     ld t2, seg, riprel
-    mulel reg, t2, t1
+    mul1s t2, t1
+    mulel reg
+    muleh t0, flags=(OF,CF)
 };
 
 #

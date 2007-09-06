@@ -421,6 +421,18 @@ let {{
         abstract = True
         cond_check = "checkCondition(ccFlagBits)"
 
+    class RdRegOp(RegOp):
+        abstract = True
+        def __init__(self, dest, src1=None, dataSize="env.dataSize"):
+            if not src1:
+                src1 = dest
+            super(RdRegOp, self).__init__(dest, src1, "NUM_INTREGS", None, dataSize)
+
+    class WrRegOp(RegOp):
+        abstract = True
+        def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
+            super(WrRegOp, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
+
     class Add(FlagRegOp):
         code = 'DestReg = merge(DestReg, psrc1 + op2, dataSize);'
 
@@ -448,57 +460,52 @@ let {{
     class Xor(LogicRegOp):
         code = 'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)'
 
-    class Mul1s(FlagRegOp):
+    class Mul1s(WrRegOp):
         code = '''
-            int signPos = (dataSize * 8) / 2 - 1;
-            IntReg srcVal1 = psrc1 | (-bits(psrc1, signPos) << signPos);
-            IntReg srcVal2 = op2 | (-bits(psrc1, signPos) << signPos);
-            DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
-            '''
-
-    class Mul1u(FlagRegOp):
-        code = '''
+            ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            IntReg srcVal1 = psrc1 & mask(halfSize);
-            IntReg srcVal2 = op2 & mask(halfSize);
-            DestReg = merge(DestReg, srcVal1 * srcVal2, dataSize)
+            int64_t spsrc1_h = spsrc1 >> halfSize;
+            int64_t spsrc1_l = spsrc1 & mask(halfSize);
+            int64_t spsrc2_h = sop2 >> halfSize;
+            int64_t spsrc2_l = sop2 & mask(halfSize);
+            ProdHi = ((spsrc1_l * spsrc2_h + spsrc1_h * spsrc2_l +
+                      ((spsrc1_l * spsrc2_l) >> halfSize)) >> halfSize) +
+                     spsrc1_h * spsrc2_h;
             '''
 
-    class Mulel(FlagRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 * op2, dataSize);'
+    class Mul1u(WrRegOp):
+        code = '''
+            ProdLow = psrc1 * op2;
+            int halfSize = (dataSize * 8) / 2;
+            uint64_t psrc1_h = psrc1 >> halfSize;
+            uint64_t psrc1_l = psrc1 & mask(halfSize);
+            uint64_t psrc2_h = op2 >> halfSize;
+            uint64_t psrc2_l = op2 & mask(halfSize);
+            ProdHi = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
+                      ((psrc1_l * psrc2_l) >> halfSize)) >> halfSize) +
+                     psrc1_h * psrc2_h;
+            '''
+
+    class Mulel(RdRegOp):
+        code = 'DestReg = merge(SrcReg1, ProdLow, dataSize);'
 
     # Neither of these is quite correct because it assumes that right shifting
     # a signed or unsigned value does sign or zero extension respectively.
     # The C standard says that what happens on a right shift with a 1 in the
     # MSB position is undefined. On x86 and under likely most compilers the
     # "right thing" happens, but this isn't a guarantee.
-    class Muleh(FlagRegOp):
-        code = '''
-            int halfSize = (dataSize * 8) / 2;
-            uint64_t psrc1_h = psrc1 >> halfSize;
-            uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = op2 >> halfSize;
-            uint64_t psrc2_l = op2 & mask(halfSize);
-            uint64_t result =
-                ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
-                 ((psrc1_l * psrc2_l) >> halfSize)) >> halfSize) +
-                psrc1_h * psrc2_h;
-            DestReg = merge(DestReg, result, dataSize);
-            '''
-
-    class Mulehs(FlagRegOp):
-        code = '''
-            int halfSize = (dataSize * 8) / 2;
-            int64_t spsrc1_h = spsrc1 >> halfSize;
-            int64_t spsrc1_l = spsrc1 & mask(halfSize);
-            int64_t spsrc2_h = sop2 >> halfSize;
-            int64_t spsrc2_l = sop2 & mask(halfSize);
-            int64_t result =
-                ((spsrc1_l * spsrc2_h + spsrc1_h * spsrc2_l +
-                 ((spsrc1_l * spsrc2_l) >> halfSize)) >> halfSize) +
-                spsrc1_h * spsrc2_h;
-            DestReg = merge(DestReg, result, dataSize);
-            '''
+    class Muleh(RdRegOp):
+        def __init__(self, dest, src1=None, flags=None, dataSize="env.dataSize"):
+            if not src1:
+                src1 = dest
+            super(RdRegOp, self).__init__(dest, src1, "NUM_INTREGS", flags, dataSize)
+        code = 'DestReg = merge(SrcReg1, ProdHi, dataSize);'
+        flag_code = '''
+            if (ProdHi)
+                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
+            else
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
+        '''
 
     class Div1(FlagRegOp):
         code = '''
@@ -613,11 +620,6 @@ let {{
                 DestReg = DestReg;
             '''
 
-    class WrRegOp(RegOp):
-        abstract = True
-        def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
-            super(WrRegOp, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
-
     class Wrip(WrRegOp, CondRegOp):
         code = 'RIP = psrc1 + op2'
         else_code="RIP = RIP;"
@@ -628,11 +630,6 @@ let {{
 
     class Wruflags(WrRegOp):
         code = 'ccFlagBits = psrc1 ^ op2'
-
-    class RdRegOp(RegOp):
-        abstract = True
-        def __init__(self, dest, src1 = "NUM_INTREGS", dataSize="env.dataSize"):
-            super(RdRegOp, self).__init__(dest, src1, "NUM_INTREGS", None, dataSize)
 
     class Rdip(RdRegOp):
         code = 'DestReg = RIP'

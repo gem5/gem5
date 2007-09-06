@@ -105,7 +105,8 @@ namespace X86ISA
 
     const int NumIntArchRegs = NUM_INTREGS;
     const int NumIntRegs =
-        NumIntArchRegs + NumMicroIntRegs + NumPseudoIntRegs;
+        NumIntArchRegs + NumMicroIntRegs +
+        NumPseudoIntRegs + NumImplicitIntRegs;
 
     class IntRegFile
     {

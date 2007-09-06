@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_INTREGS_HH__
 #define __ARCH_X86_INTREGS_HH__
 
+#include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 
 namespace X86ISA
@@ -163,6 +164,31 @@ namespace X86ISA
 
         NUM_INTREGS
     };
+
+    inline static IntRegIndex
+    INTREG_MICRO(int index)
+    {
+        return (IntRegIndex)(NUM_INTREGS + index);
+    }
+
+    inline static IntRegIndex
+    INTREG_PSEUDO(int index)
+    {
+        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs + index);
+    }
+
+    inline static IntRegIndex
+    INTREG_IMPLICIT(int index)
+    {
+        return (IntRegIndex)(NUM_INTREGS + NumMicroIntRegs +
+                             NumPseudoIntRegs + index);
+    }
+
+    inline static IntRegIndex
+    INTREG_FOLDED(int index, int foldBit)
+    {
+        return (IntRegIndex)(((index & 0x1C) == 4 ? foldBit : 0) | index);
+    }
 };
 
 #endif // __ARCH_X86_INTREGS_HH__
