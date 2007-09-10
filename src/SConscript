@@ -165,6 +165,7 @@ for root, dirs, files in os.walk(srcdir, topdown=True):
 
 for extra in env['EXTRAS'].split(':'):
     extra = os.path.expanduser(extra)
+    extra = os.path.normpath(extra)
     env.Append(CPPPATH=[Dir(extra)])
     for root, dirs, files in os.walk(extra, topdown=True):
         if 'SConscript' in files:
