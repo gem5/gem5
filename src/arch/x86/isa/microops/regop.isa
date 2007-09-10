@@ -460,6 +460,11 @@ let {{
     class Xor(LogicRegOp):
         code = 'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)'
 
+    # Neither of these is quite correct because it assumes that right shifting
+    # a signed or unsigned value does sign or zero extension respectively.
+    # The C standard says that what happens on a right shift with a 1 in the
+    # MSB position is undefined. On x86 and under likely most compilers the
+    # "right thing" happens, but this isn't a guarantee.
     class Mul1s(WrRegOp):
         code = '''
             ProdLow = psrc1 * op2;
@@ -489,11 +494,6 @@ let {{
     class Mulel(RdRegOp):
         code = 'DestReg = merge(SrcReg1, ProdLow, dataSize);'
 
-    # Neither of these is quite correct because it assumes that right shifting
-    # a signed or unsigned value does sign or zero extension respectively.
-    # The C standard says that what happens on a right shift with a 1 in the
-    # MSB position is undefined. On x86 and under likely most compilers the
-    # "right thing" happens, but this isn't a guarantee.
     class Muleh(RdRegOp):
         def __init__(self, dest, src1=None, flags=None, dataSize="env.dataSize"):
             if not src1:
