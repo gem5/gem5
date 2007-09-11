@@ -85,7 +85,8 @@ class ObjectFile
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max()) = 0;
 
-    virtual bool  isDynamic();
+    virtual bool isDynamic() { return false; }
+    virtual bool hasTLS() { return false; }
 
     Arch  getArch()  const { return arch; }
     OpSys getOpSys() const { return opSys; }

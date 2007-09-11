@@ -32,6 +32,7 @@
 #define __ELF_OBJECT_HH__
 
 #include "base/loader/object_file.hh"
+#include <set>
 
 class ElfObject : public ObjectFile
 {
@@ -42,6 +43,7 @@ class ElfObject : public ObjectFile
     Addr _programHeaderTable;
     uint16_t _programHeaderSize;
     uint16_t _programHeaderCount;
+    std::set<std::string> sectionNames;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding);
@@ -49,6 +51,9 @@ class ElfObject : public ObjectFile
     ElfObject(const std::string &_filename, int _fd,
               size_t _len, uint8_t *_data,
               Arch _arch, OpSys _opSys);
+
+    void getSections();
+    bool sectionExists(std::string sec);
 
   public:
     virtual ~ElfObject() {}
@@ -58,7 +63,8 @@ class ElfObject : public ObjectFile
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());
 
-    virtual bool isDynamic();
+    virtual bool isDynamic() { return sectionExists(".interp"); }
+    virtual bool hasTLS() { return sectionExists(".tbss"); }
 
     static ObjectFile *tryFile(const std::string &fname, int fd,
                                size_t len, uint8_t *data);

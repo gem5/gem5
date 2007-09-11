@@ -343,8 +343,8 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
     return loadSomeSymbols(symtab, STB_LOCAL);
 }
 
-bool
-ElfObject::isDynamic()
+void
+ElfObject::getSections()
 {
     Elf *elf;
     int sec_idx = 1; // there is a 0 but it is nothing, go figure
@@ -352,6 +352,8 @@ ElfObject::isDynamic()
     GElf_Shdr shdr;
 
     GElf_Ehdr ehdr;
+
+    assert(!sectionNames.size());
 
     // check that header matches library version
     if (elf_version(EV_CURRENT) == EV_NONE)
@@ -372,11 +374,17 @@ ElfObject::isDynamic()
     // While there are no more sections
     while (section != NULL) {
         gelf_getshdr(section, &shdr);
-        if (!strcmp(".interp", elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name)))
-            return true;
+        sectionNames.insert(elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name));
         section = elf_getscn(elf, ++sec_idx);
     } // while sections
-    return false;
+}
+
+bool
+ElfObject::sectionExists(string sec)
+{
+    if (!sectionNames.size())
+        getSections();
+    return sectionNames.find(sec) != sectionNames.end();
 }
 
 
