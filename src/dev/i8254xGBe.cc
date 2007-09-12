@@ -699,8 +699,9 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
             packet->length, igbe->regs.rctl.descSize());
     assert(packet->length < igbe->regs.rctl.descSize());
 
-    if (!unusedCache.size())
-        return false;
+    assert(unusedCache.size());
+    //if (!unusedCache.size())
+    //    return false;
 
     pktPtr = packet;
     pktDone = false;
@@ -823,8 +824,10 @@ IGbE::RxDescCache::pktComplete()
 void
 IGbE::RxDescCache::enableSm()
 {
-    igbe->rxTick = true;
-    igbe->restartClock();
+    if (!igbe->drainEvent) {
+        igbe->rxTick = true;
+        igbe->restartClock();
+    }
 }
 
 bool
@@ -952,6 +955,7 @@ IGbE::TxDescCache::pktComplete()
 
         DPRINTF(EthernetDesc, "Partial Packet Descriptor Done\n");
         enableSm();
+        igbe->checkDrain();
         return;
     }
 
@@ -1079,8 +1083,10 @@ IGbE::TxDescCache::packetAvailable()
 void
 IGbE::TxDescCache::enableSm()
 {
-    igbe->txTick = true;
-    igbe->restartClock();
+    if (!igbe->drainEvent) {
+        igbe->txTick = true;
+        igbe->restartClock();
+    }
 }
 
 bool
@@ -1172,7 +1178,7 @@ IGbE::txStateMachine()
 
         DPRINTF(EthernetSM, "TXS: packet placed in TX FIFO\n");
         success = txFifo.push(txPacket);
-        txFifoTick = true;
+        txFifoTick = true && !drainEvent;
         assert(success);
         txPacket = NULL;
         txDescCache.writeback((cacheBlockSize()-1)>>4);
@@ -1194,18 +1200,18 @@ IGbE::txStateMachine()
         if (txDescCache.descLeft() == 0) {
             postInterrupt(IT_TXQE);
             txDescCache.writeback(0);
+            txDescCache.fetchDescriptors();
             DPRINTF(EthernetSM, "TXS: No descriptors left in ring, forcing "
                     "writeback stopping ticking and posting TXQE\n");
-            txDescCache.fetchDescriptors();
             txTick = false;
             return;
         }
 
 
         if (!(txDescCache.descUnused())) {
+            txDescCache.fetchDescriptors();
             DPRINTF(EthernetSM, "TXS: No descriptors available in cache, fetching and stopping ticking\n");
             txTick = false;
-            txDescCache.fetchDescriptors();
             return;
         }
 
@@ -1221,7 +1227,6 @@ IGbE::txStateMachine()
             DPRINTF(EthernetSM, "TXS: No packets to get, writing back used descriptors\n");
             txDescCache.writeback(0);
         } else {
-            txDescCache.writeback((cacheBlockSize()-1)>>4);
             DPRINTF(EthernetSM, "TXS: FIFO full, stopping ticking until space "
                     "available in FIFO\n");
             txTick = false;
@@ -1245,7 +1250,7 @@ IGbE::ethRxPkt(EthPacketPtr pkt)
     }
 
     // restart the state machines if they are stopped
-    rxTick = true;
+    rxTick = true && !drainEvent;
     if ((rxTick || txTick) && !tickEvent.scheduled()) {
         DPRINTF(EthernetSM, "RXS: received packet into fifo, starting ticking\n");
         restartClock();
@@ -1306,10 +1311,10 @@ IGbE::rxStateMachine()
         }
 
         if (rxDescCache.descUnused() == 0) {
+            rxDescCache.fetchDescriptors();
             DPRINTF(EthernetSM, "RXS: No descriptors available in cache, "
                     "fetching descriptors and stopping ticking\n");
             rxTick = false;
-            rxDescCache.fetchDescriptors();
         }
         return;
     }
@@ -1321,10 +1326,10 @@ IGbE::rxStateMachine()
     }
 
     if (!rxDescCache.descUnused()) {
+        rxDescCache.fetchDescriptors();
         DPRINTF(EthernetSM, "RXS: No descriptors available in cache, stopping ticking\n");
         rxTick = false;
         DPRINTF(EthernetSM, "RXS: No descriptors available, fetching\n");
-        rxDescCache.fetchDescriptors();
         return;
     }
 
@@ -1338,15 +1343,15 @@ IGbE::rxStateMachine()
     pkt = rxFifo.front();
 
     DPRINTF(EthernetSM, "RXS: Writing packet into memory\n");
-    if (!rxDescCache.writePacket(pkt)) {
+    if (rxDescCache.writePacket(pkt)) {
+        DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
+        rxFifo.pop();
+        DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
+        rxTick = false;
+        rxDmaPacket = true;
         return;
     }
 
-    DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
-    rxFifo.pop();
-    DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
-    rxTick = false;
-    rxDmaPacket = true;
 }
 
 void
@@ -1404,8 +1409,8 @@ IGbE::ethTxDone()
     // restart the tx state machines if they are stopped
     // fifo to send another packet
     // tx sm to put more data into the fifo
-    txFifoTick = true;
-    if (txDescCache.descLeft() != 0)
+    txFifoTick = true && !drainEvent;
+    if (txDescCache.descLeft() != 0 && !drainEvent)
         txTick = true;
 
     restartClock();
