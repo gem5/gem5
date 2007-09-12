@@ -130,7 +130,7 @@ def run(options, root, testsys, cpu_class):
             m5.panic("checkpoint dir %s does not exist!" % cptdir)
 
         dirs = listdir(cptdir)
-        expr = re.compile('cpt.([0-9]*)')
+        expr = re.compile('cpt\.([0-9]*)')
         cpts = []
         for dir in dirs:
             match = expr.match(dir)
