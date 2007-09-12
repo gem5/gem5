@@ -166,7 +166,9 @@ def run(options, root, testsys, cpu_class):
 
         if options.standard_switch:
             exit_event = m5.simulate(options.warmup)
+            m5.drain(testsys)
             m5.switchCpus(switch_cpu_list1)
+            m5.resume(testsys)
 
     num_checkpoints = 0
     exit_cause = ''
