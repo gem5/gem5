@@ -612,13 +612,34 @@ let {{
 
     # Shift instructions
 
-    class Sll(FlagRegOp):
+    class Sll(RegOp):
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             DestReg = merge(DestReg, psrc1 << shiftAmt, dataSize);
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                int CFBits = 0;
+                //Figure out if we -would- set the CF bits if requested.
+                if (bits(SrcReg1, dataSize * 8 - shiftAmt))
+                    CFBits = 1;
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && CFBits)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (CFBits ^ bits(DestReg, dataSize * 8 - 1)))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Srl(FlagRegOp):
+    class Srl(RegOp):
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             // Because what happens to the bits shift -in- on a right shift
@@ -627,8 +648,25 @@ let {{
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask, dataSize);
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && bits(SrcReg1, dataSize * 8 - 1))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Sra(FlagRegOp):
+    class Sra(RegOp):
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             // Because what happens to the bits shift -in- on a right shift
@@ -638,8 +676,22 @@ let {{
                 -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Ror(FlagRegOp):
+    class Ror(RegOp):
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -652,8 +704,28 @@ let {{
             else
                 DestReg = DestReg;
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                //Find the most and second most significant bits of the result.
+                int msb = bits(DestReg, dataSize * 8 - 1);
+                int smsb = bits(DestReg, dataSize * 8 - 2);
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && msb)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (msb ^ smsb))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Rcr(FlagRegOp):
+    class Rcr(RegOp):
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -669,8 +741,26 @@ let {{
             else
                 DestReg = DestReg;
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && ((ccFlagBits & CFBit) ^
+                                      bits(SrcReg1, dataSize * 8 - 1)))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Rol(FlagRegOp):
+    class Rol(RegOp):
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -684,8 +774,28 @@ let {{
             else
                 DestReg = DestReg;
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                //The CF bits, if set, would be set to the lsb of the result.
+                int lsb = DestReg & 0x1;
+                int msb = bits(DestReg, dataSize * 8 - 1);
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && lsb)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (msb ^ lsb))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
-    class Rcl(FlagRegOp):
+    class Rcl(RegOp):
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
@@ -703,6 +813,25 @@ let {{
             else
                 DestReg = DestReg;
             '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                int msb = bits(DestReg, dataSize * 8 - 1);
+                int CFBits = bits(SrcReg1, dataSize * 8 - shiftAmt);
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && CFBits)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (msb ^ CFBits))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
 
     class Wrip(WrRegOp, CondRegOp):
         code = 'RIP = psrc1 + op2'
