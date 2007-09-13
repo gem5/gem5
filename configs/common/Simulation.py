@@ -130,7 +130,7 @@ def run(options, root, testsys, cpu_class):
             m5.panic("checkpoint dir %s does not exist!" % cptdir)
 
         dirs = listdir(cptdir)
-        expr = re.compile('cpt.([0-9]*)')
+        expr = re.compile('cpt\.([0-9]*)')
         cpts = []
         for dir in dirs:
             match = expr.match(dir)
@@ -166,7 +166,9 @@ def run(options, root, testsys, cpu_class):
 
         if options.standard_switch:
             exit_event = m5.simulate(options.warmup)
+            m5.drain(testsys)
             m5.switchCpus(switch_cpu_list1)
+            m5.resume(testsys)
 
     num_checkpoints = 0
     exit_cause = ''

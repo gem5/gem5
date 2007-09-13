@@ -388,14 +388,13 @@ class IGbE : public EtherDevice
                     oldHead, curHead);
 
             // If we still have more to wb, call wb now
-            bool oldMoreToWb = moreToWb;
+            intAfterWb();
             if (moreToWb) {
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
                 writeback(wbAlignment);
             }
 
-            intAfterWb();
-            if (!oldMoreToWb) {
+            if (!wbOut) {
                 igbe->checkDrain();
             }
             fetchAfterWb();

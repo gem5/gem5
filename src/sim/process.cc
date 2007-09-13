@@ -453,8 +453,14 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
 
     if (objFile->isDynamic())
        fatal("Object file is a dynamic executable however only static "
-             "executables are supported!\n        Please recompile your "
+             "executables are supported!\n       Please recompile your "
              "executable as a static binary and try again.\n");
+
+    if (objFile->hasTLS())
+        fatal("Object file has a TLS section and loading of TLS sections "
+              "are not currently supported!\n       Please recompile your "
+              "executable with a non-TLS toolchain or add TLS support to "
+              "M5 and try again\n");
 
 #if THE_ISA == ALPHA_ISA
     if (objFile->getArch() != ObjectFile::Alpha)
