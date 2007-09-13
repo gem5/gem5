@@ -549,7 +549,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 422 */ SyscallDesc("clock_nanosleep", unimplementedFunc),
     /* 423 */ SyscallDesc("semtimedop", unimplementedFunc),
     /* 424 */ SyscallDesc("tgkill", unimplementedFunc),
-    /* 425 */ SyscallDesc("stat64", unimplementedFunc),
+    /* 425 */ SyscallDesc("stat64", stat64Func<AlphaLinux>),
     /* 426 */ SyscallDesc("lstat64", lstat64Func<AlphaLinux>),
     /* 427 */ SyscallDesc("fstat64", fstat64Func<AlphaLinux>),
     /* 428 */ SyscallDesc("vserver", unimplementedFunc),

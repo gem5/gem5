@@ -604,6 +604,32 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 }
 
 
+/// Target stat64() handler.
+template <class OS>
+SyscallReturn
+stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
+           ThreadContext *tc)
+{
+    std::string path;
+
+    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+        return -EFAULT;
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
+    struct stat64 hostBuf;
+    int result = stat64(path.c_str(), &hostBuf);
+
+    if (result < 0)
+        return -errno;
+
+    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+
+    return 0;
+}
+
+
 /// Target fstat64() handler.
 template <class OS>
 SyscallReturn
