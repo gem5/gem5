@@ -64,11 +64,12 @@ namespace X86ISA
 
     const int NumPseudoIntRegs = 1;
     //1. The condition code bits of the rflags register.
-    const int NumImplicitIntRegs = 4;
+    const int NumImplicitIntRegs = 5;
     //1. The lower part of the result of multiplication.
     //2. The upper part of the result of multiplication.
     //3. The quotient from division
     //4. The remainder from division
+    //5. The divisor for division
 
     const int NumMMXRegs = 8;
     const int NumXMMRegs = 16;
