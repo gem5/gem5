@@ -74,7 +74,7 @@ def macroop CPUID_R {
     movi t2, t2, 0x18, flags=(nCEZF,)
     subi t0, t1, t2, flags=(ECF,)
     # ECF will be set if the offset is too large.
-    bri t0, label("end"), flags=(CECF,)
+    bri t0, label("end"), flags=(nCECF,)
 
 
 #

@@ -68,17 +68,15 @@ namespace X86ISA
     {
         DPRINTF(Sparc, "flagMask = %#x\n", flagMask);
         uint64_t flags = oldFlags & ~flagMask;
-        if(flagMask & CFBit)
+        if(flagMask & (ECFBit | CFBit))
         {
             if(findCarry(dataSize*8, _dest, _src1, _src2))
-                flags |= CFBit;
+                flags |= (flagMask & (ECFBit | CFBit));
             if(subtract)
-                flags ^= CFBit;
+                flags ^= (flagMask & (ECFBit | CFBit));
         }
         if(flagMask & PFBit && findParity(dataSize*8, _dest))
             flags |= PFBit;
-        if(flagMask & ECFBit && findCarry(dataSize*8, _dest, _src1, _src2))
-            flags |= ECFBit;
         if(flagMask & AFBit)
         {
             if(findCarry(4, _dest, _src1, _src2))
@@ -86,10 +84,8 @@ namespace X86ISA
             if(subtract)
                 flags ^= AFBit;
         }
-        if(flagMask & EZFBit && findZero(dataSize*8, _dest))
-            flags |= EZFBit;
-        if(flagMask & ZFBit && findZero(dataSize*8, _dest))
-            flags |= ZFBit;
+        if(flagMask & (EZFBit | ZFBit) && findZero(dataSize*8, _dest))
+            flags |= (flagMask & (EZFBit | ZFBit));
         if(flagMask & SFBit && findNegative(dataSize*8, _dest))
             flags |= SFBit;
         if(flagMask & OFBit && findOverflow(dataSize*8, _dest, _src1, _src2))
