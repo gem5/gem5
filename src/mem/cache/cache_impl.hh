@@ -994,6 +994,10 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
         blk->status &= ~bits_to_clear;
     }
 
+    DPRINTF(Cache, "snooped a %s request for addr %x, %snew state is %i\n",
+            pkt->cmdString(), blockAlign(pkt->getAddr()),
+            respond ? "responding, " : "", invalidate ? 0 : blk->status);
+
     if (respond) {
         assert(!pkt->memInhibitAsserted());
         pkt->assertMemInhibit();
@@ -1013,10 +1017,6 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     if (invalidate) {
         tags->invalidateBlk(blk);
     }
-
-    DPRINTF(Cache, "snooped a %s request for addr %x, %snew state is %i\n",
-            pkt->cmdString(), blockAlign(pkt->getAddr()),
-            respond ? "responding, " : "", blk->status);
 }
 
 
@@ -1384,9 +1384,6 @@ Cache<TagStore>::MemSidePort::sendPacket()
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
 
             bool success = sendTiming(pkt);
-            DPRINTF(CachePort,
-                    "Address %x was %s in sending the timing request\n",
-                    pkt->getAddr(), success ? "successful" : "unsuccessful");
 
             waitingOnRetry = !success;
             if (waitingOnRetry) {
