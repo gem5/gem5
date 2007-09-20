@@ -53,14 +53,12 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["compare_and_write_mask",
+              "compare_and_write_minimum_or_maximum",
+              "compare_and_write_rflags"]
 
 microcode = '''
-# X86 microcode
+# SSE instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

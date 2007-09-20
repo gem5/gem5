@@ -53,11 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["load_0_1_or_pi",
+              "load_logarithm"]
 
 microcode = '''
 # X86 microcode

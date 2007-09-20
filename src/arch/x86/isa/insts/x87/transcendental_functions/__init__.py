@@ -53,11 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["trigonometric_functions",
+              "logarithmic_functions"]
 
 microcode = '''
 # X86 microcode

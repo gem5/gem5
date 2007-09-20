@@ -53,14 +53,13 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["convert_floating_point_to_floating_point",
+              "convert_floating_point_to_xmm_integer",
+              "convert_floating_point_to_mmx_integer",
+              "convert_floating_point_to_gpr_integer"]
 
 microcode = '''
-# X86 microcode
+# SSE instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

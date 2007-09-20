@@ -53,11 +53,12 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["load_or_store_floating_point",
+              "convert_and_load_or_store_integer",
+              "convert_and_load_or_store_bcd",
+              "conditional_move",
+              "exchange",
+              "extract"]
 
 microcode = '''
 # X86 microcode

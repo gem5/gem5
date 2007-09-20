@@ -53,11 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["stack_control",
+              "clear_state"]
 
 microcode = '''
 # X86 microcode

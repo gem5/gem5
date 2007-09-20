@@ -53,15 +53,23 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+# ADDPS
+# ADDPD
+# ADDSS
+
+def macroop ADDSD_R_R {
+    addfp xmml, xmml, xmmlm
+};
+
+def macroop ADDSD_R_M {
+    ldfp ufp1, seg, sib, disp
+    addfp xmml, xmml, ufp1
+};
+
+def macroop ADDSD_R_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    addfp xmml, xmml, ufp1
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

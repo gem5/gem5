@@ -53,14 +53,19 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["addition",
+              "horizontal_addition",
+              "subtraction",
+              "horizontal_subtraction",
+              "simultaneous_addition_and_subtraction",
+              "multiplication",
+              "division",
+              "square_root",
+              "reciprocal_square_root",
+              "reciprocal_estimation"]
 
 microcode = '''
-# X86 microcode
+# SSE instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

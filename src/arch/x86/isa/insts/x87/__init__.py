@@ -53,11 +53,14 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["data_transfer_and_conversion",
+              "load_constants",
+              "arithmetic",
+              "transcendental_functions",
+              "compare_and_test",
+              "stack_management",
+              "no_operation",
+              "control"]
 
 microcode = '''
 # X86 microcode

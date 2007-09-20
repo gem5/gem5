@@ -53,15 +53,23 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+# DIVPS
+# DIVPD
+# DIVSS
+
+def macroop DIVSD_R_R {
+    divfp xmml, xmml, xmmlm
+};
+
+def macroop DIVSD_R_M {
+    ldfp ufp1, seg, sib, disp
+    divfp xmml, xmml, ufp1
+};
+
+def macroop DIVSD_R_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    divfp xmml, xmml, ufp1
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

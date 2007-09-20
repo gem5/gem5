@@ -53,15 +53,23 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+# CVTSS2SI
+# CVTSD2SI
+# CVTTSS2SI
+
+def macroop CVTTSD2SI_R_R {
+    cvtf_d2i reg, xmmlm
+};
+
+def macroop CVTTSD2SI_R_M {
+    ldfp ufp1, seg, sib, disp
+    cvtf_d2i reg, ufp1
+};
+
+def macroop CVTTSD2SI_R_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    cvtf_d2i reg, ufp1
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

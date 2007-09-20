@@ -53,11 +53,14 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["addition",
+              "subtraction",
+              "multiplication",
+              "division",
+              "change_sign",
+              "round",
+              "partial_remainder",
+              "square_root"]
 
 microcode = '''
 # X86 microcode

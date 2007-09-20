@@ -53,14 +53,15 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["data_transfer",
+              "data_conversion",
+              "data_reordering",
+              "arithmetic",
+              "compare",
+              "logical"]
 
 microcode = '''
-# X86 microcode
+# SSE instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

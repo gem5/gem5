@@ -53,11 +53,11 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["floating_point_ordered_compare",
+              "floating_point_unordered_compare",
+              "integer_compare",
+              "test",
+              "classify"]
 
 microcode = '''
 # X86 microcode

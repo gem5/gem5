@@ -53,14 +53,12 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["move",
+              "move_non_temporal",
+              "move_mask"]
 
 microcode = '''
-# X86 microcode
+# 64 bit multimedia instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

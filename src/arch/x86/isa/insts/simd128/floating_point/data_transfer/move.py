@@ -53,15 +53,88 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+def macroop MOVAPS_R_M {
+    ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVAPS_R_P {
+    rdip t7
+    ldfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVAPS_M_R {
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVAPS_P_R {
+    rdip t7
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVAPS_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+    movfp xmmh, xmmh, xmmhm, dataSize=8
+};
+
+# MOVAPD
+# MOVUPS
+# MOVUPD
+# MOVHPS
+# MOVHPD
+# MOVLPS
+
+def macroop MOVLPD_R_M {
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVLPD_R_P {
+    rdip t7
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVLPD_M_R {
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVLPD_P_R {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVLPD_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+};
+
+# MOVHLPS
+# MOVLHPS
+# MOVSS
+
+def macroop MOVSD_R_M {
+    # Zero xmmh
+    ldfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVSD_R_P {
+    rdip t7
+    # Zero xmmh
+    ldfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVSD_M_R {
+    stfp xmml, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVSD_P_R {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=8
+};
+
+def macroop MOVSD_R_R {
+    movfp xmml, xmml, xmmlm, dataSize=8
+};
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

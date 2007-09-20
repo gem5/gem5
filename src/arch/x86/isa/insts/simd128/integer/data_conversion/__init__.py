@@ -53,14 +53,12 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["convert_integer_to_floating_point",
+              "convert_mmx_integer_to_floating_point",
+              "convert_gpr_integer_to_floating_point"]
 
 microcode = '''
-# X86 microcode
+# 128 bit multimedia and scientific conversion instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

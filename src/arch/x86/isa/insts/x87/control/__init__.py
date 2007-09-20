@@ -53,11 +53,12 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["initialize",
+              "wait_for_exceptions",
+              "clear_exceptions",
+              "save_and_restore_x87_control_word",
+              "save_x87_status_word",
+              "save_and_restore_x87_environment"]
 
 microcode = '''
 # X86 microcode

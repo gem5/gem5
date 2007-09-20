@@ -53,15 +53,7 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+# MOVNTQ
+# MASKMOVQ
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

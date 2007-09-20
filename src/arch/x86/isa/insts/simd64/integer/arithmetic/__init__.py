@@ -53,14 +53,15 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["addition",
+              "subtraction",
+              "multiplication",
+              "multiply_add",
+              "average",
+              "sum_of_absolute_differences"]
 
 microcode = '''
-# X86 microcode
+# 64 bit multimedia instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

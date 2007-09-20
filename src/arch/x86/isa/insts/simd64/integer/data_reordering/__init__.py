@@ -53,14 +53,13 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["pack_with_saturation",
+              "unpack_and_interleave",
+              "extract_and_insert",
+              "shuffle_and_swap"]
 
 microcode = '''
-# X86 microcode
+# 64 bit multimedia instructions
 '''
 for category in categories:
     exec "import %s as cat" % category

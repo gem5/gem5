@@ -53,15 +53,9 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
-
 microcode = '''
-# X86 microcode
+# CVTPI2PS
+# CVTPI2PD
+# PI2FW
+# PI2FD
 '''
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode

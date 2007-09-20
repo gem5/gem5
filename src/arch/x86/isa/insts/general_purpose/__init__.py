@@ -53,14 +53,26 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
-              "simd128",
-              "simd64",
-              "system",
-              "x87"]
+categories = ["arithmetic",
+              "cache_and_memory_management",
+              "compare_and_test",
+              "control_transfer",
+              "data_conversion",
+              "data_transfer",
+              "flags",
+              "input_output",
+              "load_effective_address",
+              "load_segment_registers",
+              "logical",
+              "no_operation",
+              "processor_information",
+              "rotate_and_shift",
+              "semaphores",
+              "string",
+              "system_calls"]
 
 microcode = '''
-# X86 microcode
+# Microcode for general purpose instructions
 '''
 for category in categories:
     exec "import %s as cat" % category
