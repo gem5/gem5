@@ -115,6 +115,9 @@ def operands {{
         'uIP':           ('UPC', 'uqw', None, (None, None, 'IsControl'), 51),
         'nuIP':          ('NUPC', 'uqw', None, (None, None, 'IsControl'), 52),
         'ccFlagBits':    ('IntReg', 'uqw', 'INTREG_PSEUDO(0)', None, 60),
+        # The TOP register should needs to be more protected so that later
+        # instructions don't map their indexes with an old value.
+        'TOP':           ('ControlReg', 'ub', 'MISCREG_X87_TOP', None, 61),
         'SegBase':       ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(segment)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 70),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};

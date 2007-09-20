@@ -136,5 +136,10 @@ let {{
 
     assembler.symbols["label"] = labeler
 
+    def stack_index(index):
+        return "(NUM_FLOATREGS + (%s))" % index
+
+    assembler.symbols["st"] = stack_index
+
     macroopDict = assembler.assemble(microcode)
 }};

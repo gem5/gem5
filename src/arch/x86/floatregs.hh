@@ -162,6 +162,12 @@ namespace X86ISA
     {
         return (FloatRegIndex)(FLOATREG_MICROFP_BASE + index);
     }
+
+    static inline FloatRegIndex
+    FLOATREG_STACK(int index, int top)
+    {
+        return (FloatRegIndex)(NUM_FLOATREGS + ((top - index + 8) % 8));
+    }
 };
 
 #endif // __ARCH_X86_FLOATREGS_HH__

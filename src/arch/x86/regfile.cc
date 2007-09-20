@@ -85,6 +85,7 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/floatregs.hh"
 #include "arch/x86/regfile.hh"
 #include "base/trace.hh"
 #include "sim/serialize.hh"
@@ -216,6 +217,15 @@ int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
         return (reg & ~(1 << 6) - 0x4);
     else
         return (reg & ~(1 << 6));
+}
+
+int X86ISA::flattenFloatIndex(ThreadContext * tc, int reg)
+{
+    if (reg > NUM_FLOATREGS) {
+        int top = tc->readMiscRegNoEffect(MISCREG_X87_TOP);
+        reg = FLOATREG_STACK(reg - NUM_FLOATREGS, top);
+    }
+    return reg;
 }
 
 void RegFile::serialize(std::ostream &os)

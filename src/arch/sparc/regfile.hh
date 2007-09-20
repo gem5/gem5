@@ -122,6 +122,11 @@ namespace SparcISA
 
     int flattenIntIndex(ThreadContext * tc, int reg);
 
+    int flattenFloatIndex(ThreadContext * tc, int reg)
+    {
+        return reg;
+    }
+
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

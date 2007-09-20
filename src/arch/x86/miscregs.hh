@@ -171,9 +171,12 @@ namespace X86ISA
         MISCREG_LDTR_ATTR = MISCREG_SYSSEG_ATTR_BASE,
         MISCREG_TR_ATTR,
 
+        // Floating point control registers
+        MISCREG_X87_TOP = MISCREG_SYSSEG_ATTR_BASE + NumSysSegments,
+
         //XXX Add "Model-Specific Registers"
 
-        NUM_MISCREGS = MISCREG_SYSSEG_ATTR_BASE + NumSysSegments
+        NUM_MISCREGS
     };
 
     static inline MiscRegIndex

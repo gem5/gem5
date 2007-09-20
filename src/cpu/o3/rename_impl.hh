@@ -959,9 +959,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
         if (src_reg < TheISA::FP_Base_DepTag) {
             flat_src_reg = TheISA::flattenIntIndex(inst->tcBase(), src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
+        } else if (src_reg < TheISA::Ctrl_Base_DepTag) {
+            src_reg = src_reg - TheISA::FP_Base_DepTag;
+            flat_src_reg = TheISA::flattenFloatIndex(inst->tcBase(), src_reg);
+            flat_src_reg += TheISA::NumIntRegs;
         } else {
-            // Floating point and Miscellaneous registers need their indexes
-            // adjusted to account for the expanded number of flattened int regs.
             flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", src_reg, flat_src_reg);
         }

@@ -89,7 +89,9 @@ namespace X86ISA
             //mmx/x87 registers
             8 +
             //xmm registers
-            16
+            16 +
+            //The indices that are mapped over the fp stack
+            8
     };
 
     // semantically meaningful register indices

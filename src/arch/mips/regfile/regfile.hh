@@ -187,6 +187,11 @@ namespace MipsISA
         return reg;
     }
 
+    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
+    {
+        return reg;
+    }
+
     void
     copyRegs(ThreadContext *src, ThreadContext *dest);
 

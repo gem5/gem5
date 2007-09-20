@@ -235,52 +235,62 @@ class SimpleThread : public ThreadState
     //
     uint64_t readIntReg(int reg_idx)
     {
-        return regs.readIntReg(TheISA::flattenIntIndex(getTC(), reg_idx));
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        return regs.readIntReg(flatIndex);
     }
 
     FloatReg readFloatReg(int reg_idx, int width)
     {
-        return regs.readFloatReg(reg_idx, width);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        return regs.readFloatReg(flatIndex, width);
     }
 
     FloatReg readFloatReg(int reg_idx)
     {
-        return regs.readFloatReg(reg_idx);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        return regs.readFloatReg(flatIndex);
     }
 
     FloatRegBits readFloatRegBits(int reg_idx, int width)
     {
-        return regs.readFloatRegBits(reg_idx, width);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        return regs.readFloatRegBits(flatIndex, width);
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     {
-        return regs.readFloatRegBits(reg_idx);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        return regs.readFloatRegBits(flatIndex);
     }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
-        regs.setIntReg(TheISA::flattenIntIndex(getTC(), reg_idx), val);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        regs.setIntReg(flatIndex, val);
     }
 
     void setFloatReg(int reg_idx, FloatReg val, int width)
     {
-        regs.setFloatReg(reg_idx, val, width);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        regs.setFloatReg(flatIndex, val, width);
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
-        regs.setFloatReg(reg_idx, val);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        regs.setFloatReg(flatIndex, val);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
     {
-        regs.setFloatRegBits(reg_idx, val, width);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        regs.setFloatRegBits(flatIndex, val, width);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
-        regs.setFloatRegBits(reg_idx, val);
+        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
+        regs.setFloatRegBits(flatIndex, val);
     }
 
     uint64_t readPC()

@@ -192,6 +192,11 @@ namespace AlphaISA
         return reg;
     }
 
+    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
+    {
+        return reg;
+    }
+
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
