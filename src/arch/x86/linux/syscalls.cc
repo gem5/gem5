@@ -208,7 +208,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*  84 */ SyscallDesc("rmdir", unimplementedFunc),
     /*  85 */ SyscallDesc("creat", unimplementedFunc),
     /*  86 */ SyscallDesc("link", unimplementedFunc),
-    /*  87 */ SyscallDesc("unlink", unimplementedFunc),
+    /*  87 */ SyscallDesc("unlink", unlinkFunc),
     /*  88 */ SyscallDesc("symlink", unimplementedFunc),
     /*  89 */ SyscallDesc("readlink", unimplementedFunc),
     /*  90 */ SyscallDesc("chmod", unimplementedFunc),
