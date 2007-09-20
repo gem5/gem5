@@ -203,7 +203,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*  79 */ SyscallDesc("getcwd", unimplementedFunc),
     /*  80 */ SyscallDesc("chdir", unimplementedFunc),
     /*  81 */ SyscallDesc("fchdir", unimplementedFunc),
-    /*  82 */ SyscallDesc("rename", unimplementedFunc),
+    /*  82 */ SyscallDesc("rename", renameFunc),
     /*  83 */ SyscallDesc("mkdir", unimplementedFunc),
     /*  84 */ SyscallDesc("rmdir", unimplementedFunc),
     /*  85 */ SyscallDesc("creat", unimplementedFunc),
