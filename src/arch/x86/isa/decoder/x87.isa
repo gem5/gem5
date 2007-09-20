@@ -242,14 +242,14 @@
     0x5: decode MODRM_REG {
         0x0: decode MODRM_MOD {
             0x3: ffree();
-            default: fld();
+            default: Inst::FLD(Mq);
         }
         0x1: decode MODRM_MOD {
             0x3: Inst::UD2();
             default: fisttp();
         }
-        0x2: fst();
-        0x3: fstp();
+        0x2: Inst::FST(Mq);
+        0x3: Inst::FSTP(Mq);
         0x4: decode MODRM_MOD {
             0x3: fucom();
             default: frstor();

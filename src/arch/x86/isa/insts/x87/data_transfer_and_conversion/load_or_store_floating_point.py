@@ -54,7 +54,36 @@
 # Authors: Gabe Black
 
 microcode = '''
-# FLD
-# FST
-# FSTP
+def macroop FLD_M {
+    ldfp ufp1, seg, sib, disp
+    movfp st(1), ufp1, spm=-1
+};
+
+def macroop FLD_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp
+    movfp st(1), ufp1, spm=-1
+};
+
+def macroop FST_M {
+    movfp st(0), ufp1
+    stfp ufp1, seg, sib, disp
+};
+
+def macroop FST_P {
+    movfp st(0), ufp1
+    rdip t7
+    stfp ufp1, seg, riprel, disp
+};
+
+def macroop FSTP_M {
+    movfp st(0), ufp1, spm=1
+    stfp ufp1, seg, sib, disp
+};
+
+def macroop FSTP_P {
+    movfp st(0), ufp1, spm=1
+    rdip t7
+    stfp ufp1, seg, riprel, disp
+};
 '''
