@@ -122,7 +122,8 @@ namespace SparcISA
 
     int flattenIntIndex(ThreadContext * tc, int reg);
 
-    int flattenFloatIndex(ThreadContext * tc, int reg)
+    static inline int
+    flattenFloatIndex(ThreadContext * tc, int reg)
     {
         return reg;
     }
