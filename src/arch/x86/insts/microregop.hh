@@ -62,47 +62,6 @@
 
 namespace X86ISA
 {
-    namespace ConditionTests
-    {
-        enum CondTest {
-            True,
-            NotFalse = True,
-            ECF,
-            EZF,
-            SZnZF,
-            MSTRZ,
-            STRZ,
-            MSTRC,
-            STRZnEZF,
-            OF,
-            CF,
-            ZF,
-            CvZF,
-            SF,
-            PF,
-            SxOF,
-            SxOvZF,
-
-            False,
-            NotTrue = False,
-            NotECF,
-            NotEZF,
-            NotSZnZF,
-            NotMSTRZ,
-            NotSTRZ,
-            NotMSTRC,
-            STRnZnEZF,
-            NotOF,
-            NotCF,
-            NotZF,
-            NotCvZF,
-            NotSF,
-            NotPF,
-            NotSxOF,
-            NotSxOvZF
-        };
-    }
-
     /**
      * Base classes for RegOps which provides a generateDisassembly method.
      */
@@ -136,7 +95,6 @@ namespace X86ISA
         uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
                 uint64_t _dest, uint64_t _src1, uint64_t _src2,
                 bool subtract = false) const;
-        bool checkCondition(uint64_t flags) const;
     };
 
     class RegOp : public RegOpBase

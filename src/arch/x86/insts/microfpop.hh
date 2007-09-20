@@ -55,89 +55,50 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INSTS_MICROOP_HH__
-#define __ARCH_X86_INSTS_MICROOP_HH__
+#ifndef __ARCH_X86_INSTS_MICROFPOP_HH__
+#define __ARCH_X86_INSTS_MICROFPOP_HH__
 
-#include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/insts/microop.hh"
 
 namespace X86ISA
 {
-    namespace ConditionTests
-    {
-        enum CondTest {
-            True,
-            NotFalse = True,
-            ECF,
-            EZF,
-            SZnZF,
-            MSTRZ,
-            STRZ,
-            MSTRC,
-            STRZnEZF,
-            OF,
-            CF,
-            ZF,
-            CvZF,
-            SF,
-            PF,
-            SxOF,
-            SxOvZF,
 
-            False,
-            NotTrue = False,
-            NotECF,
-            NotEZF,
-            NotSZnZF,
-            NotMSTRZ,
-            NotSTRZ,
-            NotMSTRC,
-            STRnZnEZF,
-            NotOF,
-            NotCF,
-            NotZF,
-            NotCvZF,
-            NotSF,
-            NotPF,
-            NotSxOF,
-            NotSxOvZF
-        };
-    }
-
-    //A class which is the base of all x86 micro ops. It provides a function to
-    //set necessary flags appropriately.
-    class X86MicroopBase : public X86StaticInst
+    /**
+     * Base classes for FpOps which provides a generateDisassembly method.
+     */
+    class FpOp : public X86MicroopBase
     {
       protected:
-        const char * instMnem;
-        uint8_t opSize;
-        uint8_t addrSize;
+        const RegIndex src1;
+        const RegIndex src2;
+        const RegIndex dest;
+        const uint8_t dataSize;
+        const int8_t spm;
 
-        X86MicroopBase(ExtMachInst _machInst,
+        // Constructor
+        FpOp(ExtMachInst _machInst,
                 const char *mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
+                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                uint8_t _dataSize, int8_t _spm,
                 OpClass __opClass) :
-            X86ISA::X86StaticInst(mnem, _machInst, __opClass),
-            instMnem(_instMnem)
-        {
-            flags[IsMicroop] = isMicro;
-            flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroop] = isFirst;
-            flags[IsLastMicroop] = isLast;
-        }
+            X86MicroopBase(_machInst, mnem, _instMnem,
+                    isMicro, isDelayed, isFirst, isLast,
+                    __opClass),
+            src1(_src1), src2(_src2), dest(_dest),
+            dataSize(_dataSize), spm(_spm)
+        {}
+/*
+        //Figure out what the condition code flags should be.
+        uint64_t genFlags(uint64_t oldFlags, uint64_t flagMask,
+                uint64_t _dest, uint64_t _src1, uint64_t _src2,
+                bool subtract = false) const;
+        bool checkCondition(uint64_t flags) const;*/
 
         std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "\t%s.%s", instMnem, mnemonic);
-
-            return ss.str();
-        }
-
-        bool checkCondition(uint64_t flags, int condition) const;
+            const SymbolTable *symtab) const;
     };
 }
 
-#endif //__ARCH_X86_INSTS_MICROOP_HH__
+#endif //__ARCH_X86_INSTS_MICROFPOP_HH__

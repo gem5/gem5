@@ -55,89 +55,31 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INSTS_MICROOP_HH__
-#define __ARCH_X86_INSTS_MICROOP_HH__
-
-#include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/insts/microfpop.hh"
+#include "arch/x86/miscregs.hh"
+#include <string>
 
 namespace X86ISA
 {
-    namespace ConditionTests
+    /*
+    uint64_t FpOp::genFlags(uint64_t oldFlags, uint64_t flagMask,
+            uint64_t _dest, uint64_t _src1, uint64_t _src2,
+            bool subtract) const
     {
-        enum CondTest {
-            True,
-            NotFalse = True,
-            ECF,
-            EZF,
-            SZnZF,
-            MSTRZ,
-            STRZ,
-            MSTRC,
-            STRZnEZF,
-            OF,
-            CF,
-            ZF,
-            CvZF,
-            SF,
-            PF,
-            SxOF,
-            SxOvZF,
-
-            False,
-            NotTrue = False,
-            NotECF,
-            NotEZF,
-            NotSZnZF,
-            NotMSTRZ,
-            NotSTRZ,
-            NotMSTRC,
-            STRnZnEZF,
-            NotOF,
-            NotCF,
-            NotZF,
-            NotCvZF,
-            NotSF,
-            NotPF,
-            NotSxOF,
-            NotSxOvZF
-        };
     }
+    */
 
-    //A class which is the base of all x86 micro ops. It provides a function to
-    //set necessary flags appropriately.
-    class X86MicroopBase : public X86StaticInst
+    std::string FpOp::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
     {
-      protected:
-        const char * instMnem;
-        uint8_t opSize;
-        uint8_t addrSize;
+        std::stringstream response;
 
-        X86MicroopBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                OpClass __opClass) :
-            X86ISA::X86StaticInst(mnem, _machInst, __opClass),
-            instMnem(_instMnem)
-        {
-            flags[IsMicroop] = isMicro;
-            flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroop] = isFirst;
-            flags[IsLastMicroop] = isLast;
-        }
-
-        std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "\t%s.%s", instMnem, mnemonic);
-
-            return ss.str();
-        }
-
-        bool checkCondition(uint64_t flags, int condition) const;
-    };
+        printMnemonic(response, instMnem, mnemonic);
+        printDestReg(response, 0, dataSize);
+        response << ", ";
+        printSrcReg(response, 0, dataSize);
+        response << ", ";
+        printSrcReg(response, 1, dataSize);
+        return response.str();
+    }
 }
-
-#endif //__ARCH_X86_INSTS_MICROOP_HH__

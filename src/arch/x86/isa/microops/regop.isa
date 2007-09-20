@@ -458,7 +458,7 @@ let {{
 
     class CondRegOp(RegOp):
         abstract = True
-        cond_check = "checkCondition(ccFlagBits)"
+        cond_check = "checkCondition(ccFlagBits, ext)"
 
     class RdRegOp(RegOp):
         abstract = True
@@ -873,67 +873,4 @@ let {{
 
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, imm8-1, 0);'
-
-    class Compfp(WrRegOp):
-        # This class sets the condition codes in rflags according to the
-        # rules for comparing floating point.
-        code = '''
-            //               ZF PF CF
-            // Unordered      1  1  1
-            // Greater than   0  0  0
-            // Less than      0  0  1
-            // Equal          1  0  0
-            //           OF = SF = AF = 0
-            ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
-                                        ZFBit | PFBit | CFBit);
-            if (isnan(FpSrcReg1) || isnan(FpSrcReg2))
-                ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
-            else if(FpSrcReg1 < FpSrcReg2)
-                ccFlagBits = ccFlagBits | CFBit;
-            else if(FpSrcReg1 == FpSrcReg2)
-                ccFlagBits = ccFlagBits | ZFBit;
-        '''
-
-    class Xorfp(RegOp):
-        code = 'FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;'
-
-    class Sqrtfp(RegOp):
-        code = 'FpDestReg = sqrt(FpSrcReg2);'
-
-    class Movfp(CondRegOp):
-        code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
-        else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
-
-    # Conversion microops
-    class ConvOp(RegOp):
-        abstract = True
-        def __init__(self, dest, src1):
-            super(ConvOp, self).__init__(dest, src1, "NUM_INTREGS")
-
-    #FIXME This needs to always use 32 bits unless REX.W is present
-    class cvtf_i2d(ConvOp):
-        code = 'FpDestReg = spsrc1;'
-
-    class cvtf_i2d_hi(ConvOp):
-        code = 'FpDestReg = bits(SrcReg1, 63, 32);'
-
-    class cvtf_d2i(ConvOp):
-        code = '''
-        int64_t intSrcReg1 = static_cast<int64_t>(FpSrcReg1);
-        DestReg = merge(DestReg, intSrcReg1, dataSize);
-        '''
-
-    # These need to consider size at some point. They'll always use doubles
-    # for the moment.
-    class addfp(RegOp):
-        code = 'FpDestReg = FpSrcReg1 + FpSrcReg2;'
-
-    class mulfp(RegOp):
-        code = 'FpDestReg = FpSrcReg1 * FpSrcReg2;'
-
-    class divfp(RegOp):
-        code = 'FpDestReg = FpSrcReg1 / FpSrcReg2;'
-
-    class subfp(RegOp):
-        code = 'FpDestReg = FpSrcReg1 - FpSrcReg2;'
 }};

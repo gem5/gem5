@@ -56,6 +56,9 @@
 //Common microop stuff
 ##include "base.isa"
 
+//Floating point definitions
+##include "fpop.isa"
+
 //Register microop definitions
 ##include "regop.isa"
 

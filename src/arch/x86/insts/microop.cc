@@ -55,89 +55,85 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INSTS_MICROOP_HH__
-#define __ARCH_X86_INSTS_MICROOP_HH__
-
-#include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/insts/microop.hh"
+#include "arch/x86/miscregs.hh"
 
 namespace X86ISA
 {
-    namespace ConditionTests
-    {
-        enum CondTest {
-            True,
-            NotFalse = True,
-            ECF,
-            EZF,
-            SZnZF,
-            MSTRZ,
-            STRZ,
-            MSTRC,
-            STRZnEZF,
-            OF,
-            CF,
-            ZF,
-            CvZF,
-            SF,
-            PF,
-            SxOF,
-            SxOvZF,
 
-            False,
-            NotTrue = False,
-            NotECF,
-            NotEZF,
-            NotSZnZF,
-            NotMSTRZ,
-            NotSTRZ,
-            NotMSTRC,
-            STRnZnEZF,
-            NotOF,
-            NotCF,
-            NotZF,
-            NotCvZF,
-            NotSF,
-            NotPF,
-            NotSxOF,
-            NotSxOvZF
-        };
+    bool X86MicroopBase::checkCondition(uint64_t flags, int condition) const
+    {
+        CCFlagBits ccflags = flags;
+        switch(condition)
+        {
+          case ConditionTests::True:
+            return true;
+          case ConditionTests::ECF:
+            return ccflags.ECF;
+          case ConditionTests::EZF:
+            return ccflags.EZF;
+          case ConditionTests::SZnZF:
+            return !(!ccflags.EZF & ccflags.ZF);
+          case ConditionTests::MSTRZ:
+            panic("This condition is not implemented!");
+          case ConditionTests::STRZ:
+            panic("This condition is not implemented!");
+          case ConditionTests::MSTRC:
+            panic("This condition is not implemented!");
+          case ConditionTests::STRZnEZF:
+            return !ccflags.EZF & ccflags.ZF;
+                //And no interrupts or debug traps are waiting
+          case ConditionTests::OF:
+            return ccflags.OF;
+          case ConditionTests::CF:
+            return ccflags.CF;
+          case ConditionTests::ZF:
+            return ccflags.ZF;
+          case ConditionTests::CvZF:
+            return ccflags.CF | ccflags.ZF;
+          case ConditionTests::SF:
+            return ccflags.SF;
+          case ConditionTests::PF:
+            return ccflags.PF;
+          case ConditionTests::SxOF:
+            return ccflags.SF ^ ccflags.OF;
+          case ConditionTests::SxOvZF:
+            return ccflags.SF ^ ccflags.OF | ccflags.ZF;
+          case ConditionTests::False:
+            return false;
+          case ConditionTests::NotECF:
+            return !ccflags.ECF;
+          case ConditionTests::NotEZF:
+            return !ccflags.EZF;
+          case ConditionTests::NotSZnZF:
+            return !ccflags.EZF & ccflags.ZF;
+          case ConditionTests::NotMSTRZ:
+            panic("This condition is not implemented!");
+          case ConditionTests::NotSTRZ:
+            panic("This condition is not implemented!");
+          case ConditionTests::NotMSTRC:
+            panic("This condition is not implemented!");
+          case ConditionTests::STRnZnEZF:
+            return !ccflags.EZF & !ccflags.ZF;
+                //And no interrupts or debug traps are waiting
+          case ConditionTests::NotOF:
+            return !ccflags.OF;
+          case ConditionTests::NotCF:
+            return !ccflags.CF;
+          case ConditionTests::NotZF:
+            return !ccflags.ZF;
+          case ConditionTests::NotCvZF:
+            return !(ccflags.CF | ccflags.ZF);
+          case ConditionTests::NotSF:
+            return !ccflags.SF;
+          case ConditionTests::NotPF:
+            return !ccflags.PF;
+          case ConditionTests::NotSxOF:
+            return !(ccflags.SF ^ ccflags.OF);
+          case ConditionTests::NotSxOvZF:
+            return !(ccflags.SF ^ ccflags.OF | ccflags.ZF);
+        }
+        panic("Unknown condition: %d\n", condition);
+        return true;
     }
-
-    //A class which is the base of all x86 micro ops. It provides a function to
-    //set necessary flags appropriately.
-    class X86MicroopBase : public X86StaticInst
-    {
-      protected:
-        const char * instMnem;
-        uint8_t opSize;
-        uint8_t addrSize;
-
-        X86MicroopBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                OpClass __opClass) :
-            X86ISA::X86StaticInst(mnem, _machInst, __opClass),
-            instMnem(_instMnem)
-        {
-            flags[IsMicroop] = isMicro;
-            flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroop] = isFirst;
-            flags[IsLastMicroop] = isLast;
-        }
-
-        std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream ss;
-
-            ccprintf(ss, "\t%s.%s", instMnem, mnemonic);
-
-            return ss.str();
-        }
-
-        bool checkCondition(uint64_t flags, int condition) const;
-    };
 }
-
-#endif //__ARCH_X86_INSTS_MICROOP_HH__
