@@ -57,6 +57,83 @@
 
 #include <cstring>
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
+
+#include "arch/x86/tlb.hh"
+#include "base/bitfield.hh"
+#include "base/trace.hh"
+#include "cpu/thread_context.hh"
+#include "cpu/base.hh"
+#include "mem/packet_access.hh"
+#include "mem/request.hh"
+#include "sim/system.hh"
+
+namespace X86ISA {
+
+TLB::TLB(const Params *p) : SimObject(p)
+{
+}
+
+Fault
+ITB::translate(RequestPtr &req, ThreadContext *tc)
+{
+    return NoFault;
+}
+
+
+
+Fault
+DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+{
+    return NoFault;
+};
+
+#if FULL_SYSTEM
+
+Tick
+DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
+{
+    return tc->getCpuPtr()->cycles(1);
+}
+
+Tick
+DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
+{
+    return tc->getCpuPtr()->cycles(1);
+}
+
+#endif
+
+void
+TLB::serialize(std::ostream &os)
+{
+}
+
+void
+TLB::unserialize(Checkpoint *cp, const std::string &section)
+{
+}
+
+void
+DTB::serialize(std::ostream &os)
+{
+    TLB::serialize(os);
+}
+
+void
+DTB::unserialize(Checkpoint *cp, const std::string &section)
+{
+    TLB::unserialize(cp, section);
+}
+
+/* end namespace X86ISA */ }
+
+#else
+
+#include <cstring>
+
 #include "arch/x86/tlb.hh"
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
@@ -75,6 +152,8 @@ namespace X86ISA {
         UNSERIALIZE_SCALAR(pageStart);
     }
 };
+
+#endif
 
 X86ISA::ITB *
 X86ITBParams::create()

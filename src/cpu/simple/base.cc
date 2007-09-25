@@ -428,11 +428,10 @@ void
 BaseSimpleCPU::postExecute()
 {
 #if FULL_SYSTEM
-    if (thread->profile) {
+    if (thread->profile && curStaticInst) {
         bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : thread->readPC();
-        StaticInstPtr si(inst, thread->readPC());
-        ProfileNode *node = thread->profile->consume(tc, si);
+        ProfileNode *node = thread->profile->consume(tc, curStaticInst);
         if (node)
             thread->profileNode = node;
     }

@@ -58,10 +58,33 @@
 #ifndef __ARCH_X86_KERNELSTATS_HH__
 #define __ARCH_X86_KERNELSTATS_HH__
 
-#error X86 is not yet supported!
+#include "kern/kernel_stats.hh"
 
-namespace X86ISA
-{
+namespace X86ISA {
+namespace Kernel {
+
+enum cpu_mode {
+    ring0,
+    ring1,
+    ring2,
+    ring3,
+    kernel = ring0,
+    user = ring3,
+    idle,
+    //What is this next one for?
+    cpu_mode_num
 };
+
+extern const char *modestr[];
+
+class Statistics : public ::Kernel::Statistics
+{
+  public:
+    Statistics(System * system) : ::Kernel::Statistics(system)
+    {}
+};
+
+}
+}
 
 #endif // __ARCH_X86_KERNELSTATS_HH__

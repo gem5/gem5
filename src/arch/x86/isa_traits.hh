@@ -61,6 +61,7 @@
 #include "arch/x86/intregs.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
+#include "sim/host.hh"
 
 class StaticInstPtr;
 
@@ -132,6 +133,8 @@ namespace X86ISA
     const int BranchPredAddrShiftAmt = 0;
 
     StaticInstPtr decodeInst(ExtMachInst);
+
+    const Addr LoadAddrMask = ULL(0xffffffffff);
 };
 
 #endif // __ARCH_X86_ISATRAITS_HH__

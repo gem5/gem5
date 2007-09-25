@@ -61,6 +61,12 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 
+//These get defined in some system headers (at least termbits.h). That confuses
+//things here significantly.
+#undef CR0
+#undef CR2
+#undef CR3
+
 namespace X86ISA
 {
     enum CondFlagBit {

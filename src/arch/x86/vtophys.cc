@@ -55,40 +55,21 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_MMAPEDIPR_HH__
-#define __ARCH_X86_MMAPEDIPR_HH__
+#include <string>
 
-/**
- * @file
- *
- * ISA-specific helper functions for memory mapped IPR accesses.
- */
+#include "arch/x86/vtophys.hh"
 
-#include "config/full_system.hh"
-#include "cpu/thread_context.hh"
-#include "mem/packet.hh"
+using namespace std;
 
 namespace X86ISA
 {
-    inline Tick
-    handleIprRead(ThreadContext *xc, Packet *pkt)
+    Addr vtophys(Addr vaddr)
     {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
-#else
-        panic("Memory mapped registers aren't implemented for x86!\n");
-#endif
+        return vaddr;
     }
 
-    inline Tick
-    handleIprWrite(ThreadContext *xc, Packet *pkt)
+    Addr vtophys(ThreadContext *tc, Addr addr)
     {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
-#else
-        panic("Memory mapped registers aren't implemented for x86!\n");
-#endif
+        return addr;
     }
-};
-
-#endif // __ARCH_X86_MMAPEDIPR_HH__
+}
