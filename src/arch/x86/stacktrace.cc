@@ -154,12 +154,15 @@ namespace X86ISA
     bool
     StackTrace::decodeStack(MachInst inst, int &disp)
     {
+        disp = 0;
         return true;
     }
 
     bool
     StackTrace::decodeSave(MachInst inst, int &reg, int &disp)
     {
+        reg = 0;
+        disp = 0;
         return true;
     }
 
