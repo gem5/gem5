@@ -105,7 +105,9 @@ if env['TARGET_ISA'] == 'x86':
 
     if env['FULL_SYSTEM']:
         # Full-system sources
-        pass
+        Source('stacktrace.cc')
+        Source('utility.cc')
+        Source('vtophys.cc')
     else:
         Source('process.cc')
 

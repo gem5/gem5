@@ -58,10 +58,75 @@
 #ifndef __ARCH_X86_INTERRUPTS_HH__
 #define __ARCH_X86_INTERRUPTS_HH__
 
-#error X86 is not yet supported!
+#include "arch/x86/faults.hh"
+#include "cpu/thread_context.hh"
 
 namespace X86ISA
 {
+
+class Interrupts
+{
+  public:
+    Interrupts()
+    {
+        clear_all();
+    }
+
+    int InterruptLevel(uint64_t softint)
+    {
+        panic("Interrupts don't work on x86!\n");
+        return 0;
+    }
+
+    void post(int int_num, int index)
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+
+    void clear(int int_num, int index)
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+
+    void clear_all()
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+
+    bool check_interrupts(ThreadContext * tc) const
+    {
+        panic("Interrupts don't work on x86!\n");
+        return false;
+    }
+
+    Fault getInterrupt(ThreadContext * tc)
+    {
+        panic("Interrupts don't work on x86!\n");
+        return NoFault;
+    }
+
+    void updateIntrInfo(ThreadContext * tc)
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+
+    uint64_t get_vec(int int_num)
+    {
+        panic("Interrupts don't work on x86!\n");
+        return 0;
+    }
+
+    void serialize(std::ostream & os)
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+
+    void unserialize(Checkpoint * cp, const std::string & section)
+    {
+        panic("Interrupts don't work on x86!\n");
+    }
+};
+
 };
 
 #endif // __ARCH_X86_INTERRUPTS_HH__

@@ -58,6 +58,80 @@
 #ifndef __ARCH_X86_TLB_HH__
 #define __ARCH_X86_TLB_HH__
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
+
+#include "mem/request.hh"
+#include "params/X86DTB.hh"
+#include "params/X86ITB.hh"
+#include "sim/faults.hh"
+#include "sim/sim_object.hh"
+
+class ThreadContext;
+class Packet;
+
+namespace X86ISA
+{
+    struct TlbEntry
+    {
+        Addr pageStart;
+        TlbEntry() {}
+        TlbEntry(Addr paddr) : pageStart(paddr) {}
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+    };
+
+class TLB : public SimObject
+{
+  public:
+    typedef X86TLBParams Params;
+    TLB(const Params *p);
+
+    void dumpAll();
+
+    // Checkpointing
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+class ITB : public TLB
+{
+  public:
+    typedef X86ITBParams Params;
+    ITB(const Params *p) : TLB(p)
+    {
+    }
+
+    Fault translate(RequestPtr &req, ThreadContext *tc);
+
+    friend class DTB;
+};
+
+class DTB : public TLB
+{
+  public:
+    typedef X86DTBParams Params;
+    DTB(const Params *p) : TLB(p)
+    {
+    }
+
+    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+#if FULL_SYSTEM
+    Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
+    Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
+#endif
+
+    // Checkpointing
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+}
+
+#else
+
 #include <iostream>
 
 #include "sim/host.hh"
@@ -91,5 +165,7 @@ namespace X86ISA
         {}
     };
 };
+
+#endif
 
 #endif // __ARCH_X86_TLB_HH__

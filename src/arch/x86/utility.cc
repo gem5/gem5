@@ -55,40 +55,16 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_MMAPEDIPR_HH__
-#define __ARCH_X86_MMAPEDIPR_HH__
+#include "arch/x86/utility.hh"
 
-/**
- * @file
- *
- * ISA-specific helper functions for memory mapped IPR accesses.
- */
+namespace X86ISA {
 
-#include "config/full_system.hh"
-#include "cpu/thread_context.hh"
-#include "mem/packet.hh"
-
-namespace X86ISA
-{
-    inline Tick
-    handleIprRead(ThreadContext *xc, Packet *pkt)
-    {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
+uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
+#if FULL_SYSTEM
+    panic("getArgument() not implemented for x86!\n");
 #else
-        panic("Memory mapped registers aren't implemented for x86!\n");
+    panic("getArgument() only implemented for FULL_SYSTEM\n");
+    M5_DUMMY_RETURN
 #endif
-    }
-
-    inline Tick
-    handleIprWrite(ThreadContext *xc, Packet *pkt)
-    {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
-#else
-        panic("Memory mapped registers aren't implemented for x86!\n");
-#endif
-    }
-};
-
-#endif // __ARCH_X86_MMAPEDIPR_HH__
+}
+} //namespace X86_ISA
