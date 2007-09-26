@@ -63,7 +63,7 @@ findOverflow(int width, uint64_t dest, uint64_t src1, uint64_t src2) {
 inline
 bool
 findParity(int width, uint64_t dest) {
-    dest &= width;
+    dest &= mask(width);
     dest ^= (dest >> 32);
     dest ^= (dest >> 16);
     dest ^= (dest >> 8);
