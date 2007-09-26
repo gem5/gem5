@@ -287,10 +287,10 @@ let {{
         _iz = ((Rd & 0xFFFFFFFF) == 0);
         _xn = (Rd >> 63) & 1;
         _xz = (Rd == 0);
-        _iv = %(ivValue)s & 1;
-        _ic = %(icValue)s & 1;
-        _xv = %(xvValue)s & 1;
-        _xc = %(xcValue)s & 1;
+        _iv = %(iv)s & 1;
+        _ic = %(ic)s & 1;
+        _xv = %(xv)s & 1;
+        _xc = %(xc)s & 1;
 
         Ccr =  _ic << 0 | _iv << 1 | _iz << 2 | _in << 3 |
                _xc << 4 | _xv << 5 | _xz << 6 | _xn << 7;
@@ -305,6 +305,15 @@ let {{
         DPRINTF(Sparc, "xv = %%d\\n", _xv);
         DPRINTF(Sparc, "xc = %%d\\n", _xc);
         '''
+
+    default_ic = "findCarry(32, res, op1, op2)"
+    default_iv = "findOverflow(32, res, op1, op2)"
+    default_xc = "findCarry(64, res, op1, op2)"
+    default_xv = "findOverflow(64, res, op1, op2)"
+    default_sub_ic = "!findCarry(32, res, op1, ~op2)"
+    default_sub_iv = "findOverflow(32, res, op1, ~op2)"
+    default_sub_xc = "!findCarry(64, res, op1, ~op2)"
+    default_sub_xv = "findOverflow(64, res, op1, ~op2)"
 }};
 
 // Primary format for integer operate instructions:
@@ -318,7 +327,24 @@ def format IntOp(code, *opt_flags) {{
 }};
 
 // Primary format for integer operate instructions:
-def format IntOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
+def format IntOpCc(code, ic=default_ic, iv=default_iv,
+                         xc=default_xc, xv=default_xv,
+                         sub=False, *opt_flags) {{
+
+    if sub == "False":
+        (def_ic, def_iv, def_xc, def_xv) = \
+            (default_ic, default_iv, default_xc, default_xv)
+    else:
+        (def_ic, def_iv, def_xc, def_xv) = \
+            (default_sub_ic, default_sub_iv, default_sub_xc, default_sub_xv)
+    if ic == "default_ic":
+        ic = def_ic
+    if iv == "default_iv":
+        iv = def_iv
+    if xc == "default_xc":
+        xc = def_xc
+    if xv == "default_xv":
+        xv = def_xv
     ccCode = calcCcCode % vars()
     (header_output,
      decoder_output,
@@ -328,11 +354,8 @@ def format IntOpCc(code, icValue, ivValue, xcValue, xvValue, *opt_flags) {{
 }};
 
 // Primary format for integer operate instructions:
-def format IntOpCcRes(code, *opt_flags) {{
-    ccCode = calcCcCode % {"icValue":"0",
-                        "ivValue":"0",
-                        "xcValue":"0",
-                        "xvValue":"0"}
+def format IntOpCcRes(code, ic=0, iv=0, xc=0, xv=0, *opt_flags) {{
+    ccCode = calcCcCode % {"ic" : ic, "iv" : iv, "xc" : xc, "xv" : xv}
     (header_output,
      decoder_output,
      exec_output,

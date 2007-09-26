@@ -193,37 +193,23 @@ decode OP default Unknown::unknown()
         }
         format IntOpCc {
             0x10: addcc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;}},
-                {{(Rs1<31:0> + val2<31:0>)<32:>}},
-                {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                {{(Rs1<63:1> + val2<63:1> + (Rs1 & val2)<0:>)<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 + op2;
+                }});
             0x11: IntOpCcRes::andcc({{Rd = Rs1 & Rs2_or_imm13;}});
             0x12: IntOpCcRes::orcc({{Rd = Rs1 | Rs2_or_imm13;}});
             0x13: IntOpCcRes::xorcc({{Rd = Rs1 ^ Rs2_or_imm13;}});
             0x14: subcc({{
-                int64_t val2 = Rs2_or_imm13;
-                Rd = Rs1 - val2;}},
-                {{(~(Rs1<31:0> + (~val2)<31:0> + 1))<32:>}},
-                {{(Rs1<31:> != val2<31:>) && (Rs1<31:> != Rd<31:>)}},
-                {{(~(Rs1<63:1> + (~val2)<63:1> +
-                    (Rs1 | ~val2)<0:>))<63:>}},
-                {{Rs1<63:> != val2<63:> && Rs1<63:> != Rd<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 - op2;
+                }}, sub=True);
             0x15: IntOpCcRes::andncc({{Rd = Rs1 & ~Rs2_or_imm13;}});
             0x16: IntOpCcRes::orncc({{Rd = Rs1 | ~Rs2_or_imm13;}});
             0x17: IntOpCcRes::xnorcc({{Rd = ~(Rs1 ^ Rs2_or_imm13);}});
             0x18: addccc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                int64_t carryin = Ccr<0:0>;
-                Rd = resTemp = Rs1 + val2 + carryin;}},
-                {{(Rs1<31:0> + val2<31:0> + carryin)<32:>}},
-                {{Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>}},
-                {{((Rs1 & val2) | (~resTemp & (Rs1 | val2)))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 + op2 + Ccr<0:>;
+                }});
             0x1A: IntOpCcRes::umulcc({{
                 uint64_t resTemp;
                 Rd = resTemp = Rs1.udw<31:0> * Rs2_or_imm13.udw<31:0>;
@@ -233,107 +219,80 @@ decode OP default Unknown::unknown()
                 Rd = resTemp = sext<32>(Rs1.sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
                 Y = resTemp<63:32>;}});
             0x1C: subccc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                int64_t carryin = Ccr<0:0>;
-                Rd = resTemp = Rs1 + ~val2 + 1 - carryin;}},
-                {{((~Rs1 & val2) | (resTemp & (~Rs1 | val2)))<31:>}},
-                {{Rs1<31:> != val2<31:> && Rs1<31:> != resTemp<31:>}},
-                {{((~Rs1 & val2) | (resTemp & (~Rs1 | val2)))<63:>}},
-                {{Rs1<63:> != val2<63:> && Rs1<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 - op2 - Ccr<0:>;
+                }}, sub=True);
             0x1D: IntOpCcRes::udivxcc({{
                 if(Rs2_or_imm13.udw == 0) fault = new DivisionByZero;
                 else Rd = Rs1.udw / Rs2_or_imm13.udw;}});
-            0x1E: udivcc({{
-                uint32_t resTemp, val2 = Rs2_or_imm13.udw;
-                int32_t overflow = 0;
-                if(val2 == 0) fault = new DivisionByZero;
-                else
-                {
-                    resTemp = (uint64_t)((Y << 32) | Rs1.udw<31:0>) / val2;
-                    overflow = (resTemp<63:32> != 0);
-                    if(overflow) Rd = resTemp = 0xFFFFFFFF;
-                    else Rd = resTemp;
-                } }},
-                {{0}},
-                {{overflow}},
-                {{0}},
-                {{0}}
-            );
-            0x1F: sdivcc({{
-                int64_t val2 = Rs2_or_imm13.sdw<31:0>;
-                bool overflow = false, underflow = false;
-                if(val2 == 0) fault = new DivisionByZero;
-                else
-                {
-                    Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
-                    overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
-                    underflow = ((int64_t)Rd <= std::numeric_limits<int32_t>::min());
-                    if(overflow) Rd = 0x7FFFFFFF;
-                    else if(underflow) Rd = ULL(0xFFFFFFFF80000000);
-                } }},
-                {{0}},
-                {{overflow || underflow}},
-                {{0}},
-                {{0}}
-            );
+            0x1E: IntOpCcRes::udivcc({{
+                    uint32_t resTemp, val2 = Rs2_or_imm13.udw;
+                    int32_t overflow = 0;
+                    if(val2 == 0) fault = new DivisionByZero;
+                    else
+                    {
+                        resTemp = (uint64_t)((Y << 32) | Rs1.udw<31:0>) / val2;
+                        overflow = (resTemp<63:32> != 0);
+                        if(overflow) Rd = resTemp = 0xFFFFFFFF;
+                        else Rd = resTemp;
+                    }
+                }}, iv={{overflow}});
+            0x1F: IntOpCcRes::sdivcc({{
+                    int64_t val2 = Rs2_or_imm13.sdw<31:0>;
+                    bool overflow = false, underflow = false;
+                    if(val2 == 0) fault = new DivisionByZero;
+                    else
+                    {
+                        Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
+                        overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
+                        underflow = ((int64_t)Rd <= std::numeric_limits<int32_t>::min());
+                        if(overflow) Rd = 0x7FFFFFFF;
+                        else if(underflow) Rd = ULL(0xFFFFFFFF80000000);
+                    }
+                }}, iv={{overflow || underflow}});
             0x20: taddcc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;
-                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
-                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
-                {{overflow}},
-                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = Rs1 + op2;
+                }}, iv={{
+                    (op1 & mask(2)) || (op2 & mask(2)) ||
+                    findOverflow(32, res, op1, op2)
+                }});
             0x21: tsubcc({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;
-                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);}},
-                {{(Rs1<31:0> + val2<31:0>)<32:0>}},
-                {{overflow}},
-                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = Rs1 - op2;
+                }}, iv={{
+                    (op1 & mask(2)) || (op2 & mask(2)) ||
+                    findOverflow(32, res, op1, ~op2)
+                }}, sub=True);
             0x22: taddcctv({{
-                int64_t val2 = Rs2_or_imm13;
-                Rd = Rs1 + val2;
-                int32_t overflow = Rs1<1:0> || val2<1:0> ||
-                        (Rs1<31:> == val2<31:> && val2<31:> != Rd<31:>);
-                if(overflow) fault = new TagOverflow;}},
-                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
-                {{overflow}},
-                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != Rd<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 + op2;
+                    bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
+                        findOverflow(32, res, op1, op2);
+                    if(overflow) fault = new TagOverflow;
+                }}, iv={{overflow}});
             0x23: tsubcctv({{
-                int64_t resTemp, val2 = Rs2_or_imm13;
-                Rd = resTemp = Rs1 + val2;
-                int32_t overflow = Rs1<1:0> || val2<1:0> || (Rs1<31:> == val2<31:> && val2<31:> != resTemp<31:>);
-                if(overflow) fault = new TagOverflow;}},
-                {{((Rs1<31:0> + val2<31:0>)<32:0>)}},
-                {{overflow}},
-                {{((Rs1 >> 1) + (val2 >> 1) + (Rs1 & val2 & 0x1))<63:>}},
-                {{Rs1<63:> == val2<63:> && val2<63:> != resTemp<63:>}}
-            );
+                    int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
+                    Rd = res = op1 - op2;
+                    bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
+                        findOverflow(32, res, op1, ~op2);
+                    if(overflow) fault = new TagOverflow;
+                }}, iv={{overflow}}, sub=True);
             0x24: mulscc({{
-                int32_t savedLSB = Rs1<0:>;
+                    int32_t savedLSB = Rs1<0:>;
 
-                //Step 1
-                int64_t multiplicand = Rs2_or_imm13;
-                //Step 2
-                int32_t partialP = Rs1<31:1> |
-                    ((Ccr<3:3> ^ Ccr<1:1>) << 31);
-                //Step 3
-                int32_t added = Y<0:> ? multiplicand : 0;
-                Rd = partialP + added;
-                //Steps 4 & 5
-                Y = Y<31:1> | (savedLSB << 31);}},
-                {{((partialP<31:0> + added<31:0>)<32:0>)}},
-                {{partialP<31:> == added<31:> && added<31:> != Rd<31:>}},
-                {{((partialP >> 1) + (added >> 1) + (partialP & added & 0x1))<63:>}},
-                {{partialP<63:> == added<63:> && partialP<63:> != Rd<63:>}}
-            );
+                    //Step 1
+                    int64_t multiplicand = Rs2_or_imm13;
+                    //Step 2
+                    int32_t partialP = Rs1<31:1> |
+                        ((Ccr<3:3> ^ Ccr<1:1>) << 31);
+                    //Step 3
+                    int32_t added = Y<0:> ? multiplicand : 0;
+                    int64_t res, op1 = partialP, op2 = added;
+                    Rd = res = partialP + added;
+                    //Steps 4 & 5
+                    Y = Y<31:1> | (savedLSB << 31);
+                }});
         }
         format IntOp
         {
