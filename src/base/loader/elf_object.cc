@@ -216,50 +216,76 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
     entry = ehdr.e_entry;
 
-
     // initialize segment sizes to 0 in case they're not present
     text.size = data.size = bss.size = 0;
 
+    int secIdx = 1;
+    Elf_Scn *section;
+    GElf_Shdr shdr;
+
+    // The first address of some important sections.
+    Addr textSecStart = 0;
+    Addr dataSecStart = 0;
+    Addr bssSecStart = 0;
+
+    // Get the first section
+    section = elf_getscn(elf, secIdx);
+
+    // Find the beginning of the most interesting sections.
+    while (section != NULL) {
+        gelf_getshdr(section, &shdr);
+        char * secName = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
+
+        if (!strcmp(".text", secName)) {
+            textSecStart = shdr.sh_addr;
+        } else if (!strcmp(".data", secName)) {
+            dataSecStart = shdr.sh_addr;
+        } else if (!strcmp(".bss", secName)) {
+            bssSecStart = shdr.sh_addr;
+        }
+
+        section = elf_getscn(elf, ++secIdx);
+    }
+
+    // Go through all the segments in the program, record them, and scrape
+    // out information about the text, data, and bss areas needed by other
+    // code.
     for (int i = 0; i < ehdr.e_phnum; ++i) {
         GElf_Phdr phdr;
         if (gelf_getphdr(elf, i, &phdr) == 0) {
-            panic("gelf_getphdr failed for section %d", i);
+            panic("gelf_getphdr failed for segment %d.", i);
         }
 
         // for now we don't care about non-loadable segments
         if (!(phdr.p_type & PT_LOAD))
             continue;
 
-        // the headers don't explicitly distinguish text from data,
-        // but empirically the text segment comes first.
-        if (text.size == 0) {  // haven't seen text segment yet
+        // Check to see if this segment contains the bss section.
+        if (phdr.p_vaddr <= bssSecStart &&
+                phdr.p_vaddr + phdr.p_memsz > bssSecStart &&
+                phdr.p_memsz - phdr.p_filesz > 0) {
+            bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
+            bss.size = phdr.p_memsz - phdr.p_filesz;
+            bss.fileImage = NULL;
+        }
+
+        // Check to see if this is the text or data segment
+        if (phdr.p_vaddr <= textSecStart &&
+                phdr.p_vaddr + phdr.p_filesz > textSecStart) {
             text.baseAddr = phdr.p_vaddr;
             text.size = phdr.p_filesz;
             text.fileImage = fileData + phdr.p_offset;
-            // if there's any padding at the end that's not in the
-            // file, call it the bss.  This happens in the "text"
-            // segment if there's only one loadable segment (as for
-            // kernel images).
-            bss.size = phdr.p_memsz - phdr.p_filesz;
-            bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
-            bss.fileImage = NULL;
-        } else if (data.size == 0) { // have text, this must be data
+        } else if (phdr.p_vaddr <= dataSecStart &&
+                phdr.p_vaddr + phdr.p_filesz > dataSecStart) {
             data.baseAddr = phdr.p_vaddr;
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
-            // if there's any padding at the end that's not in the
-            // file, call it the bss.  Warn if this happens for both
-            // the text & data segments (should only have one bss).
-            if (phdr.p_memsz - phdr.p_filesz > 0 && bss.size != 0) {
-                warn("Two implied bss segments in file!\n");
-            }
-            bss.size = phdr.p_memsz - phdr.p_filesz;
-            bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
-            bss.fileImage = NULL;
         } else {
-            warn("More than two loadable segments in ELF object.");
-            warn("Ignoring segment @ 0x%x length 0x%x.",
-                 phdr.p_vaddr, phdr.p_filesz);
+            Segment extra;
+            extra.baseAddr = phdr.p_vaddr;
+            extra.size = phdr.p_filesz;
+            extra.fileImage = fileData + phdr.p_offset;
+            extraSegments.push_back(extra);
         }
     }
 
@@ -341,6 +367,22 @@ bool
 ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
     return loadSomeSymbols(symtab, STB_LOCAL);
+}
+
+bool
+ElfObject::loadSections(Port *memPort, Addr addrMask)
+{
+    if (!ObjectFile::loadSections(memPort, addrMask))
+        return false;
+
+    vector<Segment>::iterator extraIt;
+    for (extraIt = extraSegments.begin();
+            extraIt != extraSegments.end(); extraIt++) {
+        if (!loadSection(&(*extraIt), memPort, addrMask)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void

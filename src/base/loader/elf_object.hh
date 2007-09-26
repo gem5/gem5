@@ -33,10 +33,14 @@
 
 #include "base/loader/object_file.hh"
 #include <set>
+#include <vector>
 
 class ElfObject : public ObjectFile
 {
   protected:
+
+    //The global definition of a "Section" is closest to elf's segments.
+    typedef ObjectFile::Section Segment;
 
     //These values are provided to a linux process by the kernel, so we
     //need to keep them around.
@@ -55,9 +59,13 @@ class ElfObject : public ObjectFile
     void getSections();
     bool sectionExists(std::string sec);
 
+    std::vector<Segment> extraSegments;
+
   public:
     virtual ~ElfObject() {}
 
+    bool loadSections(Port *memPort,
+            Addr addrMask = std::numeric_limits<Addr>::max());
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max());
     virtual bool loadLocalSymbols(SymbolTable *symtab, Addr addrMask =
