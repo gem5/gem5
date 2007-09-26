@@ -456,13 +456,12 @@ LiveProcess::create(const std::string &nm, System *system, int stdin_fd,
              "executables are supported!\n       Please recompile your "
              "executable as a static binary and try again.\n");
 
-    if (objFile->hasTLS())
-        fatal("Object file has a TLS section and loading of TLS sections "
-              "are not currently supported!\n       Please recompile your "
-              "executable with a non-TLS toolchain or add TLS support to "
-              "M5 and try again\n");
-
 #if THE_ISA == ALPHA_ISA
+    if (objFile->hasTLS())
+        fatal("Object file has a TLS section and single threaded TLS is not\n"
+              "       currently supported for Alpha! Please recompile your "
+              "executable with \n       a non-TLS toolchain.\n");
+
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
     switch (objFile->getOpSys()) {
