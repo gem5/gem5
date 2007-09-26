@@ -1,4 +1,4 @@
-// Copyright (c) 2006 The Regents of The University of Michigan
+// Copyright (c) 2006-2007 The Regents of The University of Michigan
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -207,6 +207,9 @@ def template PrivExecute {{
         if(%(check)s)
             return new PrivilegedAction;
 
+        if(%(tlCheck)s)
+            return new IllegalInstruction;
+
         Fault fault = NoFault;
         %(code)s;
         %(op_wb)s;
@@ -215,7 +218,7 @@ def template PrivExecute {{
 }};
 
 let {{
-    def doPrivFormat(code, checkCode, name, Name, opt_flags):
+    def doPrivFormat(code, checkCode, name, Name, tlCheck, opt_flags):
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
         #If these are rd, rdpr, rdhpr, wr, wrpr, or wrhpr instructions,
@@ -236,7 +239,8 @@ let {{
                 regBase = 'WrPriv'
                 break
         iop = InstObjParams(name, Name, regBase,
-                {"code": code, "check": checkCode, "reg_name": regName},
+                {"code": code, "check": checkCode,
+                 "tlCheck": tlCheck, "reg_name": regName},
                 opt_flags)
         header_output = BasicDeclare.subst(iop)
         if regName == '':
@@ -246,7 +250,8 @@ let {{
         exec_output = PrivExecute.subst(iop)
         if usesImm:
             imm_iop = InstObjParams(name, Name + 'Imm', regBase + 'Imm',
-                    {"code": immCode, "check": checkCode, "reg_name": regName},
+                    {"code": immCode, "check": checkCode,
+                     "tlCheck": tlCheck, "reg_name": regName},
                     opt_flags)
             header_output += BasicDeclare.subst(imm_iop)
             if regName == '':
@@ -260,34 +265,39 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-def format Priv(code, *opt_flags) {{
-        checkCode = "!(Pstate<2:> || Hpstate<2:>)"
+def format Priv(code, extraCond=true, checkTl=false, *opt_flags) {{
+        checkCode = "(%s) && !(Pstate<2:> || Hpstate<2:>)" % extraCond
+        if checkTl != "false":
+            tlCheck = "Tl == 0"
+        else:
+            tlCheck = "false"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
+             checkCode, name, Name, tlCheck, opt_flags)
 }};
 
-def format NoPriv(code, *opt_flags) {{
+def format NoPriv(code, checkTl=false, *opt_flags) {{
         #Instructions which use this format don't really check for
         #any particular mode, but the disassembly is performed
         #using the control registers actual name
         checkCode = "false"
+        if checkTl != "false":
+            tlCheck = "Tl == 0"
+        else:
+            tlCheck = "false"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
+             checkCode, name, Name, tlCheck, opt_flags)
 }};
 
-def format PrivCheck(code, extraCheckCode, *opt_flags) {{
-        checkCode = "(%s) && !(Pstate<2:> || Hpstate<2:>)" % extraCheckCode
-        (header_output, decoder_output,
-         exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
-}};
-
-def format HPriv(code, *opt_flags) {{
+def format HPriv(code, checkTl=false, *opt_flags) {{
         checkCode = "!Hpstate<2:2>"
+        if checkTl != "false":
+            tlCheck = "Tl == 0"
+        else:
+            tlCheck = "false"
         (header_output, decoder_output,
          exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, opt_flags)
+             checkCode, name, Name, tlCheck, opt_flags)
 }};
 
