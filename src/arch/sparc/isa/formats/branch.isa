@@ -183,7 +183,7 @@ output decoder {{
         }
 }};
 
-def template BranchExecute {{
+def template JumpExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
@@ -206,65 +206,135 @@ def template BranchExecute {{
         }
 }};
 
-let {{
-    handle_annul = '''
-    {
-        if(A)
+def template BranchExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
         {
-            NNPC = NPC + 8;
-            NPC = NPC + 4;
+            //Attempt to execute the instruction
+            Fault fault = NoFault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+
+            if (%(cond)s) {
+                %(code)s;
+            } else {
+                %(fail)s;
+            }
+
+            if(fault == NoFault)
+            {
+                //Write the resulting state to the execution context
+                %(op_wb)s;
+            }
+
+            return fault;
         }
-        else
-        {
-            NPC = NPC;
-            NNPC = NNPC;
-        }
-    }'''
+}};
+
+def template BranchDecode {{
+    if (A)
+        return new %(class_name)sAnnul("%(mnemonic)s,a", machInst);
+    else
+        return new %(class_name)s("%(mnemonic)s", machInst);
 }};
 
 // Primary format for branch instructions:
 def format Branch(code, *opt_flags) {{
-        (usesImm, code, immCode,
-         rString, iString) = splitOutImm(code)
-        iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
+    (usesImm, code, immCode,
+     rString, iString) = splitOutImm(code)
+    iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    exec_output = JumpExecute.subst(iop)
+    if usesImm:
+        imm_iop = InstObjParams(name, Name + 'Imm', 'BranchImm' + iString,
+                immCode, opt_flags)
+        header_output += BasicDeclare.subst(imm_iop)
+        decoder_output += BasicConstructor.subst(imm_iop)
+        exec_output += JumpExecute.subst(imm_iop)
+        decode_block = ROrImmDecode.subst(iop)
+    else:
+        decode_block = BasicDecode.subst(iop)
+}};
+
+let {{
+    def doBranch(name, Name, base, cond,
+            code, annul_code, fail, annul_fail, opt_flags):
+        iop = InstObjParams(name, Name, base,
+                {"code": code,
+                 "fail": fail,
+                 "cond": cond
+                },
+                opt_flags)
+        header_output = BasicDeclareWithMnemonic.subst(iop)
+        decoder_output = BasicConstructorWithMnemonic.subst(iop)
         exec_output = BranchExecute.subst(iop)
-        if usesImm:
-            imm_iop = InstObjParams(name, Name + 'Imm', 'BranchImm' + iString,
-                    immCode, opt_flags)
-            header_output += BasicDeclare.subst(imm_iop)
-            decoder_output += BasicConstructor.subst(imm_iop)
-            exec_output += BranchExecute.subst(imm_iop)
-            decode_block = ROrImmDecode.subst(iop)
+        if annul_code == "None":
+            decode_block = BasicDecodeWithMnemonic.subst(iop)
         else:
-            decode_block = BasicDecode.subst(iop)
+            decode_block = BranchDecode.subst(iop)
+
+        if annul_code != "None":
+            iop = InstObjParams(name + ',a', Name + 'Annul', base,
+                    {"code": annul_code,
+                     "fail": annul_fail,
+                     "cond": cond
+                    },
+                    opt_flags)
+            header_output += BasicDeclareWithMnemonic.subst(iop)
+            decoder_output += BasicConstructorWithMnemonic.subst(iop)
+            exec_output += BranchExecute.subst(iop)
+        return (header_output, decoder_output, exec_output, decode_block)
+
+    def doCondBranch(name, Name, base, cond, code, opt_flags):
+        return doBranch(name, Name, base, cond, code, code,
+                'NPC = NPC; NNPC = NNPC;',
+                'NNPC = NPC + 8; NPC = NPC + 4',
+                opt_flags)
+
+    def doUncondBranch(name, Name, base, code, annul_code, opt_flags):
+        return doBranch(name, Name, base, "true", code, annul_code,
+                ";", ";", opt_flags)
+
+    default_branch_code = "NNPC = xc->readPC() + disp;"
 }};
 
-// Primary format for branch instructions:
-def format BranchN(bits, code, *opt_flags) {{
-        code = re.sub(r'handle_annul', handle_annul, code)
-        new_opt_flags = []
-        for flag in opt_flags:
-            if flag == ',a':
-                name += ',a'
-                Name += 'Annul'
-            else:
-                new_opt_flags += flag
-        iop = InstObjParams(name, Name, "BranchNBits<%d>" % bits, code, new_opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        exec_output = BranchExecute.subst(iop)
-        decode_block = BasicDecode.subst(iop)
+// Format for branch instructions with n bit displacements:
+def format BranchN(bits, code=default_branch_code,
+        test=None, annul_code=None, *opt_flags) {{
+    if code == "default_branch_code":
+        code = default_branch_code
+    if test != "None":
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doCondBranch(name, Name,
+             "BranchNBits<%d>" % bits, test, code, opt_flags)
+    else:
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doUncondBranch(name, Name,
+             "BranchNBits<%d>" % bits, code, annul_code, opt_flags)
 }};
 
-// Primary format for branch instructions:
-def format BranchSplit(code, *opt_flags) {{
-        code = re.sub(r'handle_annul', handle_annul, code)
-        iop = InstObjParams(name, Name, 'BranchSplit', code, opt_flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        exec_output = BranchExecute.subst(iop)
-        decode_block = BasicDecode.subst(iop)
+// Format for branch instructions with split displacements:
+def format BranchSplit(code=default_branch_code,
+        test=None, annul_code=None, *opt_flags) {{
+    if code == "default_branch_code":
+        code = default_branch_code
+    if test != "None":
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doCondBranch(name, Name,
+             "BranchSplit", test, code, opt_flags)
+    else:
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doUncondBranch(name, Name,
+             "BranchSplit", code, annul_code, opt_flags)
 }};
 

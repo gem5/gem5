@@ -45,116 +45,49 @@ decode OP default Unknown::unknown()
             0x1: decode COND2
             {
                 //Branch Always
-                0x8: decode A
-                {
-                    0x0: bpa(19, {{
-                        NNPC = xc->readPC() + disp;
-                    }});
-                    0x1: bpa(19, {{
-                        NPC = xc->readPC() + disp;
-                        NNPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x8: bpa(19, annul_code={{
+                                 NPC = xc->readPC() + disp;
+                                 NNPC = NPC + 4;
+                             }});
                 //Branch Never
-                0x0: decode A
-                {
-                    0x0: bpn(19, {{
-                        NNPC = NNPC;//Don't do anything
-                    }});
-                    0x1: bpn(19, {{
-                        NNPC = NPC + 8;
-                        NPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x0: bpn(19, {{;}},
+                             annul_code={{
+                                 NNPC = NPC + 8;
+                                 NPC = NPC + 4;
+                             }});
                 default: decode BPCC
                 {
-                    0x0: bpcci(19, {{
-                        if(passesCondition(Ccr<3:0>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
-                    0x2: bpccx(19, {{
-                        if(passesCondition(Ccr<7:4>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
+                    0x0: bpcci(19, test={{passesCondition(Ccr<3:0>, COND2)}});
+                    0x2: bpccx(19, test={{passesCondition(Ccr<7:4>, COND2)}});
                 }
             }
             //bicc
             0x2: decode COND2
             {
                 //Branch Always
-                0x8: decode A
-                {
-                    0x0: ba(22, {{
-                        NNPC = xc->readPC() + disp;
-                    }});
-                    0x1: ba(22, {{
-                        NPC = xc->readPC() + disp;
-                        NNPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x8: ba(22, annul_code={{
+                                NPC = xc->readPC() + disp;
+                                NNPC = NPC + 4;
+                            }});
                 //Branch Never
-                0x0: decode A
-                {
-                    0x0: bn(22, {{
-                        NNPC = NNPC;//Don't do anything
-                    }});
-                    0x1: bn(22, {{
-                        NNPC = NPC + 8;
-                        NPC = NPC + 4;
-                    }}, ',a');
-                }
-                default: bicc(22, {{
-                    if(passesCondition(Ccr<3:0>, COND2))
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
+                0x0: bn(22, {{;}},
+                            annul_code={{
+                                NNPC = NPC + 8;
+                                NPC = NPC + 4;
+                            }});
+                default: bicc(22, test={{passesCondition(Ccr<3:0>, COND2)}});
             }
         }
         0x3: decode RCOND2
         {
             format BranchSplit
             {
-                0x1: bpreq({{
-                    if(Rs1.sdw == 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
-                0x2: bprle({{
-                    if(Rs1.sdw <= 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
-                0x3: bprl({{
-                    if(Rs1.sdw < 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
-                0x5: bprne({{
-                    if(Rs1.sdw != 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
-                0x6: bprg({{
-                    if(Rs1.sdw > 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
-                0x7: bprge({{
-                    if(Rs1.sdw >= 0)
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
+                0x1: bpreq(test={{Rs1.sdw == 0}});
+                0x2: bprle(test={{Rs1.sdw <= 0}});
+                0x3: bprl(test={{Rs1.sdw < 0}});
+                0x5: bprne(test={{Rs1.sdw != 0}});
+                0x6: bprg(test={{Rs1.sdw > 0}});
+                0x7: bprge(test={{Rs1.sdw >= 0}});
             }
         }
         //SETHI (or NOP if rd == 0 and imm == 0)
@@ -163,52 +96,25 @@ decode OP default Unknown::unknown()
         0x5: decode COND2 {
             format BranchN {
                 //Branch Always
-                0x8: decode A
-                {
-                    0x0: fbpa(22, {{
-                        NNPC = xc->readPC() + disp;
-                    }});
-                    0x1: fbpa(22, {{
-                        NPC = xc->readPC() + disp;
-                        NNPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x8: fbpa(22, annul_code={{
+                                  NPC = xc->readPC() + disp;
+                                  NNPC = NPC + 4;
+                              }});
                 //Branch Never
-                0x0: decode A
-                {
-                    0x0: fbpn(22, {{
-                        NNPC = NNPC;//Don't do anything
-                    }});
-                    0x1: fbpn(22, {{
-                        NNPC = NPC + 8;
-                        NPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x0: fbpn(22, {{;}},
+                             annul_code={{
+                                 NNPC = NPC + 8;
+                                 NPC = NPC + 4;
+                             }});
                 default: decode BPCC {
-                    0x0: fbpfcc0(19, {{
-                        if(passesFpCondition(Fsr<11:10>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
-                    0x1: fbpfcc1(19, {{
-                        if(passesFpCondition(Fsr<33:32>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
-                    0x2: fbpfcc2(19, {{
-                        if(passesFpCondition(Fsr<35:34>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
-                    0x3: fbpfcc3(19, {{
-                        if(passesFpCondition(Fsr<37:36>, COND2))
-                            NNPC = xc->readPC() + disp;
-                        else
-                            handle_annul
-                    }});
+                    0x0: fbpfcc0(19, test=
+                                 {{passesFpCondition(Fsr<11:10>, COND2)}});
+                    0x1: fbpfcc1(19, test=
+                                 {{passesFpCondition(Fsr<33:32>, COND2)}});
+                    0x2: fbpfcc2(19, test=
+                                 {{passesFpCondition(Fsr<35:34>, COND2)}});
+                    0x3: fbpfcc3(19, test=
+                                 {{passesFpCondition(Fsr<37:36>, COND2)}});
                 }
             }
         }
@@ -216,33 +122,18 @@ decode OP default Unknown::unknown()
         0x6: decode COND2 {
             format BranchN {
                 //Branch Always
-                0x8: decode A
-                {
-                    0x0: fba(22, {{
-                        NNPC = xc->readPC() + disp;
-                    }});
-                    0x1: fba(22, {{
-                        NPC = xc->readPC() + disp;
-                        NNPC = NPC + 4;
-                    }}, ',a');
-                }
+                0x8: fba(22, annul_code={{
+                                 NPC = xc->readPC() + disp;
+                                 NNPC = NPC + 4;
+                             }});
                 //Branch Never
-                0x0: decode A
-                {
-                    0x0: fbn(22, {{
-                        NNPC = NNPC;//Don't do anything
-                    }});
-                    0x1: fbn(22, {{
-                        NNPC = NPC + 8;
-                        NPC = NPC + 4;
-                    }}, ',a');
-                }
-                default: fbfcc(22, {{
-                    if(passesFpCondition(Fsr<11:10>, COND2))
-                        NNPC = xc->readPC() + disp;
-                    else
-                        handle_annul
-                }});
+                0x0: fbn(22, {{;}},
+                             annul_code={{
+                                 NNPC = NPC + 8;
+                                 NPC = NPC + 4;
+                             }});
+                default: fbfcc(22, test=
+                               {{passesFpCondition(Fsr<11:10>, COND2)}});
             }
         }
     }

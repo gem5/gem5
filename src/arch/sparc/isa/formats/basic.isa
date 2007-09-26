@@ -56,10 +56,34 @@ def template BasicDeclare {{
         };
 }};
 
+// Basic instruction class declaration template.
+def template BasicDeclareWithMnemonic {{
+        /**
+         * Static instruction class for "%(mnemonic)s".
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+            // Constructor.
+            %(class_name)s(const char * mnemonic, ExtMachInst machInst);
+            %(BasicExecDeclare)s
+        };
+}};
+
 // Basic instruction class constructor template.
 def template BasicConstructor {{
         inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+                %(constructor)s;
+        }
+}};
+
+// Basic instruction class constructor template.
+def template BasicConstructorWithMnemonic {{
+        inline %(class_name)s::%(class_name)s(const char * mnemonic,
+                ExtMachInst machInst)
+            : %(base_class)s(mnemonic, machInst, %(op_class)s)
         {
                 %(constructor)s;
         }
