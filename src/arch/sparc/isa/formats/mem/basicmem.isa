@@ -72,22 +72,22 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-def format LoadAlt(code, asi, *opt_flags) {{
+def format LoadAlt(code, *opt_flags) {{
         code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, LoadFuncs,
-            AlternateASIPrivFaultCheck, name, Name, asi, opt_flags)
+            AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
 }};
 
-def format StoreAlt(code, asi, *opt_flags) {{
+def format StoreAlt(code, *opt_flags) {{
         code = filterDoubles(code)
         (header_output,
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, StoreFuncs,
-            AlternateASIPrivFaultCheck, name, Name, asi, opt_flags)
+            AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
 }};
 
 def format Load(code, *opt_flags) {{
@@ -108,12 +108,12 @@ def format Store(code, *opt_flags) {{
              StoreFuncs, '', name, Name, 0, opt_flags)
 }};
 
-def format TwinLoad(code, asi, *opt_flags) {{
+def format TwinLoad(code, *opt_flags) {{
         (header_output,
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, LoadFuncs,
             AlternateASIPrivFaultCheck + TwinAlignmentFaultCheck,
-            name, Name, asi, opt_flags)
+            name, Name, "EXT_ASI", opt_flags)
 }};
 

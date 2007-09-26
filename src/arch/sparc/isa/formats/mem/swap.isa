@@ -142,9 +142,9 @@ def format Swap(code, postacc_code, mem_flags, *opt_flags) {{
          ["IsStoreConditional"], postacc_code)
 }};
 
-def format SwapAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
+def format SwapAlt(code, postacc_code, mem_flags, *opt_flags) {{
     mem_flags = makeList(mem_flags)
-    mem_flags.append(asi)
+    mem_flags.append("EXT_ASI")
     flags = string.join(mem_flags, '|')
     (header_output,
      decoder_output,
@@ -155,7 +155,7 @@ def format SwapAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
 
 
 let {{
-    def doCasFormat(code, execute, faultCode, name, Name, asi, opt_flags, postacc_code = ''):
+    def doCasFormat(code, execute, faultCode, name, Name, mem_flags, opt_flags, postacc_code = ''):
         addrCalcReg = 'EA = Rs1;'
         iop = InstObjParams(name, Name, 'Mem',
                 {"code": code, "postacc_code" : postacc_code,
@@ -167,15 +167,15 @@ let {{
         microParams = {"code": code, "postacc_code" : postacc_code,
             "ea_code" : addrCalcReg, "fault_check" : faultCode,
             "EA_trunc" : TruncateEA}
-        exec_output = doSplitExecute(execute, name, Name, asi,
+        exec_output = doSplitExecute(execute, name, Name, mem_flags,
                 ["IsStoreConditional"], microParams);
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
 
-def format CasAlt(code, postacc_code, asi, mem_flags, *opt_flags) {{
+def format CasAlt(code, postacc_code, mem_flags, *opt_flags) {{
     mem_flags = makeList(mem_flags)
-    mem_flags.append(asi)
+    mem_flags.append("EXT_ASI")
     flags = string.join(mem_flags, '|')
     (header_output,
      decoder_output,

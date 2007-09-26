@@ -273,7 +273,7 @@ def template BlockMemMicroConstructor {{
 
 let {{
 
-    def doBlockMemFormat(code, faultCode, execute, name, Name, asi, opt_flags):
+    def doBlockMemFormat(code, faultCode, execute, name, Name, opt_flags):
         # XXX Need to take care of pstate.hpriv as well. The lower ASIs
         # are split into ones that are available in priv and hpriv, and
         # those that are only available in hpriv
@@ -313,12 +313,12 @@ let {{
                     makeMicroName(name + "Imm", microPc),
                     makeMicroName(Name, microPc),
                     makeMicroName(Name + "Imm", microPc),
-                    asi, opt_flags);
+                    "EXT_ASI", opt_flags);
             faultCode = ''
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-def format BlockLoad(code, asi, *opt_flags) {{
+def format BlockLoad(code, *opt_flags) {{
         code = filterDoubles(code)
         # We need to make sure to check the highest priority fault last.
         # That way, if other faults have been detected, they'll be overwritten
@@ -328,10 +328,10 @@ def format BlockLoad(code, asi, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doBlockMemFormat(code, faultCode,
-             LoadFuncs, name, Name, asi, opt_flags)
+             LoadFuncs, name, Name, opt_flags)
 }};
 
-def format BlockStore(code, asi, *opt_flags) {{
+def format BlockStore(code, *opt_flags) {{
         code = filterDoubles(code)
         # We need to make sure to check the highest priority fault last.
         # That way, if other faults have been detected, they'll be overwritten
@@ -341,5 +341,5 @@ def format BlockStore(code, asi, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doBlockMemFormat(code, faultCode,
-             StoreFuncs, name, Name, asi, opt_flags)
+             StoreFuncs, name, Name, opt_flags)
 }};
