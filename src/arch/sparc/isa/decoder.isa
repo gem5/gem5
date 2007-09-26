@@ -529,44 +529,14 @@ decode OP default Unknown::unknown()
             }
             0x34: decode OPF{
                 format FpBasic{
-                    0x01: fmovs({{
-                        Frds.uw = Frs2s.uw;
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
-                    0x02: fmovd({{
-                        Frd.udw = Frs2.udw;
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
+                    0x01: fmovs({{Frds.uw = Frs2s.uw;}});
+                    0x02: fmovd({{Frd.udw = Frs2.udw;}});
                     0x03: FpUnimpl::fmovq();
-                    0x05: fnegs({{
-                        Frds.uw = Frs2s.uw ^ (1UL << 31);
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
-                    0x06: fnegd({{
-                        Frd.udw = Frs2.udw ^ (1ULL << 63);
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
+                    0x05: fnegs({{Frds.uw = Frs2s.uw ^ (1UL << 31);}});
+                    0x06: fnegd({{Frd.udw = Frs2.udw ^ (1ULL << 63);}});
                     0x07: FpUnimpl::fnegq();
-                    0x09: fabss({{
-                        Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
-                    0x0A: fabsd({{
-                        Frd.udw = ((1ULL << 63) - 1) & Frs2.udw;
-                        //fsr.ftt = fsr.cexc = 0
-                        Fsr &= ~(7 << 14);
-                        Fsr &= ~(0x1F);
-                    }});
+                    0x09: fabss({{Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;}});
+                    0x0A: fabsd({{Frd.udw = ((1ULL << 63) - 1) & Frs2.udw;}});
                     0x0B: FpUnimpl::fabsq();
                     0x29: fsqrts({{Frds.sf = std::sqrt(Frs2s.sf);}});
                     0x2A: fsqrtd({{Frd.df = std::sqrt(Frs2.df);}});
@@ -585,28 +555,16 @@ decode OP default Unknown::unknown()
                     0x4F: FpUnimpl::fdivq();
                     0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
                     0x6E: FpUnimpl::fdmulq();
-                    0x81: fstox({{
-                            Frd.sdw = static_cast<int64_t>(Frs2s.sf);
-                    }});
-                    0x82: fdtox({{
-                            Frd.sdw = static_cast<int64_t>(Frs2.df);
-                    }});
+                    0x81: fstox({{Frd.sdw = static_cast<int64_t>(Frs2s.sf);}});
+                    0x82: fdtox({{Frd.sdw = static_cast<int64_t>(Frs2.df);}});
                     0x83: FpUnimpl::fqtox();
-                    0x84: fxtos({{
-                            Frds.sf = static_cast<float>(Frs2.sdw);
-                    }});
-                    0x88: fxtod({{
-                            Frd.df = static_cast<double>(Frs2.sdw);
-                    }});
+                    0x84: fxtos({{Frds.sf = static_cast<float>(Frs2.sdw);}});
+                    0x88: fxtod({{Frd.df = static_cast<double>(Frs2.sdw);}});
                     0x8C: FpUnimpl::fxtoq();
-                    0xC4: fitos({{
-                            Frds.sf = static_cast<float>(Frs2s.sw);
-                    }});
+                    0xC4: fitos({{Frds.sf = static_cast<float>(Frs2s.sw);}});
                     0xC6: fdtos({{Frds.sf = Frs2.df;}});
                     0xC7: FpUnimpl::fqtos();
-                    0xC8: fitod({{
-                            Frd.df = static_cast<double>(Frs2s.sw);
-                    }});
+                    0xC8: fitod({{Frd.df = static_cast<double>(Frs2s.sw);}});
                     0xC9: fstod({{Frd.df = Frs2s.sf;}});
                     0xCB: FpUnimpl::fqtod();
                     0xCC: FpUnimpl::fitoq();
