@@ -45,7 +45,7 @@ LWBackEnd<Impl>::generateTrapEvent(Tick latency)
 
     TrapEvent *trap = new TrapEvent(this);
 
-    trap->schedule(curTick + cpu->cycles(latency));
+    trap->schedule(curTick + cpu->ticks(latency));
 
     thread->trapPending = true;
 }

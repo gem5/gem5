@@ -325,7 +325,7 @@ DefaultCommit<Impl>::initStage()
     cpu->activateStage(O3CPU::CommitIdx);
 
     cpu->activityThisCycle();
-    trapLatency = cpu->cycles(trapLatency);
+    trapLatency = cpu->ticks(trapLatency);
 }
 
 template <class Impl>

@@ -1211,7 +1211,7 @@ Device::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    txEvent.reschedule(curTick + cycles(1), true);
+    txEvent.reschedule(curTick + ticks(1), true);
 }
 
 bool

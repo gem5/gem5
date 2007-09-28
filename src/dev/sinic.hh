@@ -51,7 +51,7 @@ class Base : public PciDev
     bool rxEnable;
     bool txEnable;
     Tick clock;
-    inline Tick cycles(int numCycles) const { return numCycles * clock; }
+    inline Tick ticks(int numCycles) const { return numCycles * clock; }
 
   protected:
     Tick intrDelay;

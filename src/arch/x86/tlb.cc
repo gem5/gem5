@@ -95,13 +95,13 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 Tick
 DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
-    return tc->getCpuPtr()->cycles(1);
+    return tc->getCpuPtr()->ticks(1);
 }
 
 Tick
 DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
-    return tc->getCpuPtr()->cycles(1);
+    return tc->getCpuPtr()->ticks(1);
 }
 
 #endif

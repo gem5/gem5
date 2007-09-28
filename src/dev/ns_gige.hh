@@ -199,7 +199,7 @@ class NSGigE : public EtherDevice
 
     /* state machine cycle time */
     Tick clock;
-    inline Tick cycles(int numCycles) const { return numCycles * clock; }
+    inline Tick ticks(int numCycles) const { return numCycles * clock; }
 
     /* tx State Machine */
     TxState txState;

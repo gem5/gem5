@@ -304,7 +304,7 @@ MiscRegFile::scheduleCP0Update(int delay)
 
         //schedule UPDATE
         CP0Event *cp0_event = new CP0Event(this, cpu, UpdateCP0);
-        cp0_event->schedule(curTick + cpu->cycles(delay));
+        cp0_event->schedule(curTick + cpu->ticks(delay));
     }
 }
 
@@ -364,9 +364,9 @@ void
 MiscRegFile::CP0Event::scheduleEvent(int delay)
 {
     if (squashed())
-        reschedule(curTick + cpu->cycles(delay));
+        reschedule(curTick + cpu->ticks(delay));
     else if (!scheduled())
-        schedule(curTick + cpu->cycles(delay));
+        schedule(curTick + cpu->ticks(delay));
 }
 
 void

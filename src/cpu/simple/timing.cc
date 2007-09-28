@@ -222,7 +222,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    fetchEvent = new FetchEvent(this, nextCycle(curTick + cycles(delay)));
+    fetchEvent = new FetchEvent(this, nextCycle(curTick + ticks(delay)));
 }
 
 
