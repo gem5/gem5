@@ -1409,7 +1409,8 @@ FullO3CPU<Impl>::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    idleCycles += (curTick - 1) - lastRunningCycle;
+    idleCycles += tickToCycles((curTick - 1) - lastRunningCycle);
+    numCycles += tickToCycles((curTick - 1) - lastRunningCycle);
 
     tickEvent.schedule(nextCycle());
 }

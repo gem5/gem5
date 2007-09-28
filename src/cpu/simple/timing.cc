@@ -180,7 +180,7 @@ TimingSimpleCPU::switchOut()
 {
     assert(status() == Running || status() == Idle);
     _status = SwitchedOut;
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
@@ -483,7 +483,7 @@ TimingSimpleCPU::fetch()
         advanceInst(fault);
     }
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 }
 
@@ -512,7 +512,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 
     if (getState() == SimObject::Draining) {
@@ -629,7 +629,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);

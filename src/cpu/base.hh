@@ -84,6 +84,7 @@ class BaseCPU : public MemObject
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick cycles(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
+    inline Tick tickToCycles(Tick val) const { return val / clock; }
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
 
