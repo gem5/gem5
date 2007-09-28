@@ -172,7 +172,6 @@ TimingSimpleCPU::resume()
     }
 
     changeState(SimObject::Running);
-    previousTick = curTick;
 }
 
 void
@@ -207,6 +206,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     if (_status != Running) {
         _status = Idle;
     }
+    previousTick = curTick;
 }
 
 
