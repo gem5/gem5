@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2191272                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 308228                       # Number of bytes of host memory used
-host_seconds                                    27.38                       # Real time elapsed on the host
-host_tick_rate                            66777888282                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2454439                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 324968                       # Number of bytes of host memory used
+host_seconds                                    24.44                       # Real time elapsed on the host
+host_tick_rate                            74797977378                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    59995479                       # Number of instructions simulated
 sim_seconds                                  1.828355                       # Number of seconds simulated
@@ -234,7 +234,7 @@ system.cpu.kern.syscall_132                         4      1.23%     98.77% # nu
 system.cpu.kern.syscall_144                         2      0.61%     99.39% # number of syscalls executed
 system.cpu.kern.syscall_147                         2      0.61%    100.00% # number of syscalls executed
 system.cpu.not_idle_fraction                 0.016412                       # Percentage of non-idle cycles
-system.cpu.numCycles                         60012507                       # number of cpu cycles simulated
+system.cpu.numCycles                       3656710843                       # number of cpu cycles simulated
 system.cpu.num_insts                         59995479                       # Number of instructions executed
 system.cpu.num_refs                          16302129                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).

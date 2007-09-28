@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                 455902                       # Nu
 global.BPredUnit.condPredicted               10551273                       # Number of conditional branches predicted
 global.BPredUnit.lookups                     16246333                       # Number of BP lookups
 global.BPredUnit.usedRAS                      1941036                       # Number of times the RAS was used to get a target.
-host_inst_rate                                 173213                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 193376                       # Number of bytes of host memory used
-host_seconds                                   459.50                       # Real time elapsed on the host
-host_tick_rate                               54150958                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 178455                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 211564                       # Number of bytes of host memory used
+host_seconds                                   446.00                       # Real time elapsed on the host
+host_tick_rate                               55789781                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads           12304370                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores          10964244                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads              22974359                       # Number of loads inserted to the mem dependence unit.
@@ -49,8 +49,8 @@ system.cpu.commit.commitNonSpecStalls            4583                       # Th
 system.cpu.commit.commitSquashedInsts         8051078                       # The number of squashed insts skipped by commit
 system.cpu.committedInsts                    79591756                       # Number of Instructions Simulated
 system.cpu.committedInsts_total              79591756                       # Number of Instructions Simulated
-system.cpu.cpi                               0.625230                       # CPI: Cycles Per Instruction
-system.cpu.cpi_total                         0.625230                       # CPI: Total CPI of All Threads
+system.cpu.cpi                               0.625252                       # CPI: Cycles Per Instruction
+system.cpu.cpi_total                         0.625252                       # CPI: Total CPI of All Threads
 system.cpu.dcache.LoadLockedReq_accesses           44                       # number of LoadLockedReq accesses(hits+misses)
 system.cpu.dcache.LoadLockedReq_hits               44                       # number of LoadLockedReq hits
 system.cpu.dcache.ReadReq_accesses           20377695                       # number of ReadReq accesses(hits+misses)
@@ -154,10 +154,10 @@ system.cpu.fetch.Cycles                      33194597                       # Nu
 system.cpu.fetch.IcacheSquashes                152184                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.Insts                      103251284                       # Number of instructions fetch has processed
 system.cpu.fetch.SquashCycles                  572846                       # Number of cycles fetch has spent squashing
-system.cpu.fetch.branchRate                  0.326473                       # Number of branch fetches per cycle
+system.cpu.fetch.branchRate                  0.326461                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles           13375683                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.predictedBranches            9942709                       # Number of branches that fetch has predicted taken
-system.cpu.fetch.rate                        2.074854                       # Number of inst fetches per cycle
+system.cpu.fetch.rate                        2.074780                       # Number of inst fetches per cycle
 system.cpu.fetch.rateDist.start_dist                           # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist.samples            49763148                      
 system.cpu.fetch.rateDist.min_value                 0                      
@@ -236,10 +236,10 @@ system.cpu.icache.tagsinuse               1922.769682                       # Cy
 system.cpu.icache.total_refs                 13289333                       # Total number of references to valid blocks.
 system.cpu.icache.warmup_cycle            21643859000                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
-system.cpu.idleCycles                         1231826                       # Total number of cycles that the CPU has spent unscheduled due to idling
+system.cpu.idleCycles                            1791                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.iew.EXEC:branches                 14739683                       # Number of branches executed
 system.cpu.iew.EXEC:nop                       9380523                       # number of nop insts executed
-system.cpu.iew.EXEC:rate                     1.704450                       # Inst execution rate
+system.cpu.iew.EXEC:rate                     1.704389                       # Inst execution rate
 system.cpu.iew.EXEC:refs                     36969776                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                   15295559                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
@@ -249,7 +249,7 @@ system.cpu.iew.WB:fanout                     0.765386                       # av
 system.cpu.iew.WB:penalized                         0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.WB:penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu.iew.WB:producers                  32456867                       # num instructions producing a value
-system.cpu.iew.WB:rate                       1.694688                       # insts written-back per cycle
+system.cpu.iew.WB:rate                       1.694627                       # insts written-back per cycle
 system.cpu.iew.WB:sent                       84566644                       # cumulative count of insts sent to commit
 system.cpu.iew.branchMispredicts               400717                       # Number of branch mispredicts detected at execute
 system.cpu.iew.iewBlockCycles                   20492                       # Number of cycles IEW is blocking
@@ -279,8 +279,8 @@ system.cpu.iew.lsq.thread.0.squashedStores      1453767                       # 
 system.cpu.iew.memOrderViolationEvents          19531                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect       108348                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect         292369                       # Number of branches that were predicted taken incorrectly
-system.cpu.ipc                               1.599412                       # IPC: Instructions Per Cycle
-system.cpu.ipc_total                         1.599412                       # IPC: Total IPC of All Threads
+system.cpu.ipc                               1.599354                       # IPC: Instructions Per Cycle
+system.cpu.ipc_total                         1.599354                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0                85364731                       # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0.start_dist
                       No_OpClass            0      0.00%            # Type of FU issued
@@ -331,7 +331,7 @@ system.cpu.iq.ISSUE:issued_per_cycle.min_value            0
 system.cpu.iq.ISSUE:issued_per_cycle.max_value            8                      
 system.cpu.iq.ISSUE:issued_per_cycle.end_dist
 
-system.cpu.iq.ISSUE:rate                     1.715421                       # Inst issue rate
+system.cpu.iq.ISSUE:rate                     1.715359                       # Inst issue rate
 system.cpu.iq.iqInstsAdded                   89442204                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                  85364731                       # Number of instructions issued
 system.cpu.iq.iqNonSpecInstsAdded                4987                       # Number of non-speculative instructions added to the IQ
@@ -428,7 +428,7 @@ system.cpu.l2cache.tagsinuse              4581.530519                       # Cy
 system.cpu.l2cache.total_refs                  102503                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
-system.cpu.numCycles                         49763148                       # number of cpu cycles simulated
+system.cpu.numCycles                         49764939                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles           263435                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps       52546881                       # Number of HB maps that are committed
 system.cpu.rename.RENAME:IQFullEvents           34724                       # Number of times rename has blocked due to IQ full

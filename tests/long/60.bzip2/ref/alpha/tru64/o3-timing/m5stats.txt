@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect               19407214                       # Nu
 global.BPredUnit.condPredicted              254124044                       # Number of conditional branches predicted
 global.BPredUnit.lookups                    329654644                       # Number of BP lookups
 global.BPredUnit.usedRAS                     23321143                       # Number of times the RAS was used to get a target.
-host_inst_rate                                 153530                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 182552                       # Number of bytes of host memory used
-host_seconds                                 11307.49                       # Real time elapsed on the host
-host_tick_rate                               57851122                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 162413                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 200732                       # Number of bytes of host memory used
+host_seconds                                 10689.07                       # Real time elapsed on the host
+host_tick_rate                               61198134                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads           71970991                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores          36581423                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads             594992654                       # Number of loads inserted to the mem dependence unit.
@@ -244,10 +244,10 @@ system.cpu.icache.tagsinuse                710.981871                       # Cy
 system.cpu.icache.total_refs                338458990                       # Total number of references to valid blocks.
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
-system.cpu.idleCycles                          287621                       # Total number of cycles that the CPU has spent unscheduled due to idling
+system.cpu.idleCycles                             197                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.iew.EXEC:branches                270496646                       # Number of branches executed
 system.cpu.iew.EXEC:nop                     123104849                       # number of nop insts executed
-system.cpu.iew.EXEC:rate                     1.690527                       # Inst execution rate
+system.cpu.iew.EXEC:rate                     1.690526                       # Inst execution rate
 system.cpu.iew.EXEC:refs                    759555990                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                  199980185                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
@@ -436,7 +436,7 @@ system.cpu.l2cache.tagsinuse             18802.772660                       # Cy
 system.cpu.l2cache.total_refs                 5868601                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle          505903232000                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
-system.cpu.numCycles                       1308302031                       # number of cpu cycles simulated
+system.cpu.numCycles                       1308302228                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles          9337867                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps     1376202963                       # Number of HB maps that are committed
 system.cpu.rename.RENAME:IQFullEvents         3445352                       # Number of times rename has blocked due to IQ full

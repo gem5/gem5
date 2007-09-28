@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2322076                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 309268                       # Number of bytes of host memory used
-host_seconds                                    27.18                       # Real time elapsed on the host
-host_tick_rate                            68811889767                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2182924                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 325992                       # Number of bytes of host memory used
+host_seconds                                    28.91                       # Real time elapsed on the host
+host_tick_rate                            64688316336                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    63114079                       # Number of instructions simulated
 sim_seconds                                  1.870335                       # Number of seconds simulated
@@ -239,7 +239,7 @@ system.cpu0.kern.syscall_132                        2      0.88%     98.23% # nu
 system.cpu0.kern.syscall_144                        2      0.88%     99.12% # number of syscalls executed
 system.cpu0.kern.syscall_147                        2      0.88%    100.00% # number of syscalls executed
 system.cpu0.not_idle_fraction                0.015290                       # Percentage of non-idle cycles
-system.cpu0.numCycles                        57193784                       # number of cpu cycles simulated
+system.cpu0.numCycles                      3740670091                       # number of cpu cycles simulated
 system.cpu0.num_insts                        57182116                       # Number of instructions executed
 system.cpu0.num_refs                         15322419                       # Number of memory references
 system.cpu1.dcache.LoadLockedReq_accesses        16418                       # number of LoadLockedReq accesses(hits+misses)
@@ -456,7 +456,7 @@ system.cpu1.kern.syscall_74                         8      8.00%     97.00% # nu
 system.cpu1.kern.syscall_90                         1      1.00%     98.00% # number of syscalls executed
 system.cpu1.kern.syscall_132                        2      2.00%    100.00% # number of syscalls executed
 system.cpu1.not_idle_fraction                0.001587                       # Percentage of non-idle cycles
-system.cpu1.numCycles                         5937367                       # number of cpu cycles simulated
+system.cpu1.numCycles                      3740248039                       # number of cpu cycles simulated
 system.cpu1.num_insts                         5931963                       # Number of instructions executed
 system.cpu1.num_refs                          1926645                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).
