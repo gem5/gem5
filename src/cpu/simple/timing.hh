@@ -203,6 +203,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
     typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
     FetchEvent *fetchEvent;
 
+    struct IprEvent : Event {
+        Packet *pkt;
+        TimingSimpleCPU *cpu;
+        IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu, Tick t);
+        virtual void process();
+        virtual const char *description();
+    };
+
     void completeDrain();
 };
 
