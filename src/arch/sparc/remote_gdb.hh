@@ -55,7 +55,7 @@ namespace SparcISA
             /*RegState contains data in same format as tstate */
             Reg32Y = 64, Reg32Psr = 65, Reg32Tbr = 66, Reg32Pc = 67,
             Reg32Npc = 68, Reg32Fsr = 69, Reg32Csr = 70,
-            NumGDBRegs = RegY
+            NumGDBRegs
         };
 
       public:
