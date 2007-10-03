@@ -330,8 +330,8 @@
             0x1: mov_rAX_Ov();
             0x2: mov_Ob_Al();
             0x3: mov_Ov_rAX();
-            0x4: movs_Yb_Xb();
-            0x5: movs_Yv_Xv();
+            0x4: StringInst::MOVS(Yb,Xb);
+            0x5: StringInst::MOVS(Yv,Xv);
             0x6: StringInst::CMPS(Yb,Xb);
             0x7: StringInst::CMPS(Yv,Xv);
         }
