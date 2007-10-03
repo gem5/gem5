@@ -56,13 +56,13 @@
 microcode = '''
 def macroop FLD_M {
     ldfp ufp1, seg, sib, disp
-    movfp st(1), ufp1, spm=-1
+    movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FLD_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
-    movfp st(1), ufp1, spm=-1
+    movfp st(-1), ufp1, spm=-1
 };
 
 def macroop FST_M {

@@ -166,7 +166,7 @@ namespace X86ISA
     static inline FloatRegIndex
     FLOATREG_STACK(int index, int top)
     {
-        return (FloatRegIndex)(NUM_FLOATREGS + ((top - index + 8) % 8));
+        return (FloatRegIndex)(NUM_FLOATREGS + ((top + index + 8) % 8));
     }
 };
 

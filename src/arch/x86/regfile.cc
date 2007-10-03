@@ -221,7 +221,7 @@ int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
 
 int X86ISA::flattenFloatIndex(ThreadContext * tc, int reg)
 {
-    if (reg > NUM_FLOATREGS) {
+    if (reg >= NUM_FLOATREGS) {
         int top = tc->readMiscRegNoEffect(MISCREG_X87_TOP);
         reg = FLOATREG_STACK(reg - NUM_FLOATREGS, top);
     }

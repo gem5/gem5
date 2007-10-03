@@ -198,13 +198,18 @@ namespace X86ISA
                 return;
             }
             fpindex -= NumMMXRegs;
-            if(fpindex < NumXMMRegs) {
+            if(fpindex < NumXMMRegs * 2) {
                 ccprintf(os, "%%xmm%d_%s", fpindex / 2,
                         (fpindex % 2) ? "high": "low");
                 return;
             }
-            fpindex -= NumXMMRegs;
-            ccprintf(os, "%%ufp%d", fpindex);
+            fpindex -= NumXMMRegs * 2;
+            if(fpindex < NumMicroFpRegs) {
+                ccprintf(os, "%%ufp%d", fpindex);
+                return;
+            }
+            fpindex -= NumMicroFpRegs;
+            ccprintf(os, "%%st(%d)", fpindex);
         } else {
             switch (reg - Ctrl_Base_DepTag) {
               default:
