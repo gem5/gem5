@@ -614,7 +614,7 @@ class IGbE : public EtherDevice
     virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
     Tick clock;
-    inline Tick cycles(int numCycles) const { return numCycles * clock; }
+    inline Tick ticks(int numCycles) const { return numCycles * clock; }
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

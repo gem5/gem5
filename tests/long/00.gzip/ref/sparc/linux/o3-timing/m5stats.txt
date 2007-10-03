@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect               84447535                       # Nu
 global.BPredUnit.condPredicted              256528366                       # Number of conditional branches predicted
 global.BPredUnit.lookups                    256528366                       # Number of BP lookups
 global.BPredUnit.usedRAS                            0                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  94020                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 184848                       # Number of bytes of host memory used
-host_seconds                                 14950.16                       # Real time elapsed on the host
-host_tick_rate                               73409017                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 101903                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 202864                       # Number of bytes of host memory used
+host_seconds                                 13793.57                       # Real time elapsed on the host
+host_tick_rate                               79564409                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads          458856790                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores         141228058                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads             745627925                       # Number of loads inserted to the mem dependence unit.
@@ -229,7 +229,7 @@ system.cpu.icache.tagsinuse               1042.348080                       # Cy
 system.cpu.icache.total_refs                355014725                       # Total number of references to valid blocks.
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
-system.cpu.idleCycles                           94965                       # Total number of cycles that the CPU has spent unscheduled due to idling
+system.cpu.idleCycles                             155                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.iew.EXEC:branches                128778452                       # Number of branches executed
 system.cpu.iew.EXEC:nop                     354384689                       # number of nop insts executed
 system.cpu.iew.EXEC:rate                     0.865881                       # Inst execution rate
@@ -242,7 +242,7 @@ system.cpu.iew.WB:fanout                     0.963032                       # av
 system.cpu.iew.WB:penalized                         0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.WB:penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu.iew.WB:producers                1442442170                       # num instructions producing a value
-system.cpu.iew.WB:rate                       0.850638                       # insts written-back per cycle
+system.cpu.iew.WB:rate                       0.850637                       # insts written-back per cycle
 system.cpu.iew.WB:sent                     1877161076                       # cumulative count of insts sent to commit
 system.cpu.iew.branchMispredicts             91327681                       # Number of branch mispredicts detected at execute
 system.cpu.iew.iewBlockCycles                  454443                       # Number of cycles IEW is blocking
@@ -417,7 +417,7 @@ system.cpu.l2cache.tagsinuse              8527.413561                       # Cy
 system.cpu.l2cache.total_refs                   96715                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
-system.cpu.numCycles                       2194953627                       # number of cpu cycles simulated
+system.cpu.numCycles                       2194953782                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles         13000888                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps     1244771057                       # Number of HB maps that are committed
 system.cpu.rename.RENAME:FullRegisterEvents            9                       # Number of times there has been no free registers

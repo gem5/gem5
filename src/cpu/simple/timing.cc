@@ -29,6 +29,7 @@
  */
 
 #include "arch/locked_mem.hh"
+#include "arch/mmaped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
 #include "cpu/exetrace.hh"
@@ -172,7 +173,6 @@ TimingSimpleCPU::resume()
     }
 
     changeState(SimObject::Running);
-    previousTick = curTick;
 }
 
 void
@@ -180,7 +180,7 @@ TimingSimpleCPU::switchOut()
 {
     assert(status() == Running || status() == Idle);
     _status = SwitchedOut;
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
@@ -207,6 +207,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     if (_status != Running) {
         _status = Idle;
     }
+    previousTick = curTick;
 }
 
 
@@ -222,7 +223,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    fetchEvent = new FetchEvent(this, nextCycle(curTick + cycles(delay)));
+    fetchEvent = new FetchEvent(this, nextCycle(curTick + ticks(delay)));
 }
 
 
@@ -266,7 +267,13 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
                        Packet::Broadcast);
         pkt->dataDynamic<T>(new T);
 
-        if (!dcachePort.sendTiming(pkt)) {
+        if (req->isMmapedIpr()) {
+            Tick delay;
+            delay = TheISA::handleIprRead(thread->getTC(), pkt);
+            new IprEvent(pkt, this, nextCycle(curTick + delay));
+            _status = DcacheWaitResponse;
+            dcache_pkt = NULL;
+        } else if (!dcachePort.sendTiming(pkt)) {
             _status = DcacheRetry;
             dcache_pkt = pkt;
         } else {
@@ -375,7 +382,14 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         dcache_pkt->set(data);
 
         if (do_access) {
-            if (!dcachePort.sendTiming(dcache_pkt)) {
+            if (req->isMmapedIpr()) {
+                Tick delay;
+                dcache_pkt->set(htog(data));
+                delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
+                new IprEvent(dcache_pkt, this, nextCycle(curTick + delay));
+                _status = DcacheWaitResponse;
+                dcache_pkt = NULL;
+            } else if (!dcachePort.sendTiming(dcache_pkt)) {
                 _status = DcacheRetry;
             } else {
                 _status = DcacheWaitResponse;
@@ -483,7 +497,7 @@ TimingSimpleCPU::fetch()
         advanceInst(fault);
     }
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 }
 
@@ -512,7 +526,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 
     if (getState() == SimObject::Draining) {
@@ -551,6 +565,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
             }
 
             postExecute();
+            // @todo remove me after debugging with legion done
+            if (curStaticInst && (!curStaticInst->isMicroop() ||
+                        curStaticInst->isFirstMicroop()))
+                instCnt++;
             advanceInst(fault);
         }
     } else {
@@ -567,6 +585,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         }
 
         postExecute();
+        // @todo remove me after debugging with legion done
+        if (curStaticInst && (!curStaticInst->isMicroop() ||
+                    curStaticInst->isFirstMicroop()))
+            instCnt++;
         advanceInst(fault);
     }
 
@@ -629,7 +651,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse);
     _status = Running;
 
-    numCycles += curTick - previousTick;
+    numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
@@ -728,6 +750,24 @@ TimingSimpleCPU::DcachePort::recvRetry()
         // memory system takes ownership of packet
         cpu->dcache_pkt = NULL;
     }
+}
+
+TimingSimpleCPU::IprEvent::IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu, Tick t)
+    : Event(&mainEventQueue), pkt(_pkt), cpu(_cpu)
+{
+    schedule(t);
+}
+
+void
+TimingSimpleCPU::IprEvent::process()
+{
+    cpu->completeDataAccess(pkt);
+}
+
+const char *
+TimingSimpleCPU::IprEvent::description()
+{
+    return "Timing Simple CPU Delay IPR event";
 }
 
 

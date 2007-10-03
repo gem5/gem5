@@ -1033,7 +1033,7 @@ doMmuReadError:
             (uint32_t)asi, va);
     }
     pkt->makeAtomicResponse();
-    return tc->getCpuPtr()->cycles(1);
+    return tc->getCpuPtr()->ticks(1);
 }
 
 Tick
@@ -1280,7 +1280,7 @@ doMmuWriteError:
             (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
     }
     pkt->makeAtomicResponse();
-    return tc->getCpuPtr()->cycles(1);
+    return tc->getCpuPtr()->ticks(1);
 }
 
 #endif

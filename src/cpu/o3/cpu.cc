@@ -464,7 +464,7 @@ FullO3CPU<Impl>::tick()
             lastRunningCycle = curTick;
             timesIdled++;
         } else {
-            tickEvent.schedule(nextCycle(curTick + cycles(1)));
+            tickEvent.schedule(nextCycle(curTick + ticks(1)));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -558,7 +558,7 @@ FullO3CPU<Impl>::activateContext(int tid, int delay)
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
-                "on cycle %d\n", tid, curTick + cycles(delay));
+                "on cycle %d\n", tid, curTick + ticks(delay));
         scheduleActivateThreadEvent(tid, delay);
     } else {
         activateThread(tid);
@@ -585,7 +585,7 @@ FullO3CPU<Impl>::deallocateContext(int tid, bool remove, int delay)
     // Schedule removal of thread data from CPU
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to deallocate "
-                "on cycle %d\n", tid, curTick + cycles(delay));
+                "on cycle %d\n", tid, curTick + ticks(delay));
         scheduleDeallocateContextEvent(tid, remove, delay);
         return false;
     } else {
@@ -1409,7 +1409,8 @@ FullO3CPU<Impl>::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    idleCycles += (curTick - 1) - lastRunningCycle;
+    idleCycles += tickToCycles((curTick - 1) - lastRunningCycle);
+    numCycles += tickToCycles((curTick - 1) - lastRunningCycle);
 
     tickEvent.schedule(nextCycle());
 }

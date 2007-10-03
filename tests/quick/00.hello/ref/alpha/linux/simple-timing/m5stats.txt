@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 243703                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 179944                       # Number of bytes of host memory used
+host_inst_rate                                 341217                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 196644                       # Number of bytes of host memory used
 host_seconds                                     0.02                       # Real time elapsed on the host
-host_tick_rate                              781539770                       # Simulator tick rate (ticks/s)
+host_tick_rate                             1094407052                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                        5641                       # Number of instructions simulated
 sim_seconds                                  0.000018                       # Number of seconds simulated
@@ -240,7 +240,7 @@ system.cpu.l2cache.total_refs                       1                       # To
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                         18374000                       # number of cpu cycles simulated
+system.cpu.numCycles                            36748                       # number of cpu cycles simulated
 system.cpu.num_insts                             5641                       # Number of instructions executed
 system.cpu.num_refs                              1801                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls              17                       # Number of system calls

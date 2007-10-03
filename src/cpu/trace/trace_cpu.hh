@@ -107,7 +107,7 @@ class TraceCPU : public SimObject
              MemInterface *dcache_interface,
              MemTraceReader *data_trace);
 
-    inline Tick cycles(int numCycles) { return numCycles; }
+    inline Tick ticks(int numCycles) { return numCycles; }
 
     /**
      * Perform all the accesses for one cycle.

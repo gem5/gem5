@@ -105,7 +105,7 @@ namespace PseudoInst
 
         EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-        Tick resume = curTick + tc->getCpuPtr()->cycles(cycles);
+        Tick resume = curTick + tc->getCpuPtr()->ticks(cycles);
 
         quiesceEvent->reschedule(resume, true);
 

@@ -613,7 +613,7 @@ OzoneCPU<Impl>::tick()
     comInstEventQueue[0]->serviceEvents(numInst);
 
     if (!tickEvent.scheduled() && _status == Running)
-        tickEvent.schedule(curTick + cycles(1));
+        tickEvent.schedule(curTick + ticks(1));
 }
 
 template <class Impl>

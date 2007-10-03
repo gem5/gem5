@@ -85,10 +85,9 @@ SimpleOzoneCPUParams::create()
     params->itb = itb;
     params->dtb = dtb;
 
-#if FULL_SYSTEM
     params->system = system;
     params->cpu_id = cpu_id;
-#else
+#if !FULL_SYSTEM
     params->workload = workload;
 //    params->pTable = page_table;
 #endif // FULL_SYSTEM

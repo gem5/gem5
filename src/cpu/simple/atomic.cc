@@ -252,9 +252,10 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     assert(!tickEvent.scheduled());
 
     notIdleFraction++;
+    numCycles += tickToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    tickEvent.schedule(nextCycle(curTick + cycles(delay)));
+    tickEvent.schedule(nextCycle(curTick + ticks(delay)));
     _status = Running;
 }
 
@@ -584,7 +585,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    Tick latency = cycles(1); // instruction takes one cycle by default
+    Tick latency = ticks(1); // instruction takes one cycle by default
 
     for (int i = 0; i < width; ++i) {
         numCycles++;
@@ -642,14 +643,14 @@ AtomicSimpleCPU::tick()
 
             if (simulate_stalls) {
                 Tick icache_stall =
-                    icache_access ? icache_latency - cycles(1) : 0;
+                    icache_access ? icache_latency - ticks(1) : 0;
                 Tick dcache_stall =
-                    dcache_access ? dcache_latency - cycles(1) : 0;
-                Tick stall_cycles = (icache_stall + dcache_stall) / cycles(1);
-                if (cycles(stall_cycles) < (icache_stall + dcache_stall))
-                    latency += cycles(stall_cycles+1);
+                    dcache_access ? dcache_latency - ticks(1) : 0;
+                Tick stall_cycles = (icache_stall + dcache_stall) / ticks(1);
+                if (ticks(stall_cycles) < (icache_stall + dcache_stall))
+                    latency += ticks(stall_cycles+1);
                 else
-                    latency += cycles(stall_cycles);
+                    latency += ticks(stall_cycles);
             }
 
         }

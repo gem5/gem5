@@ -110,10 +110,10 @@ TraceCPU::tick()
         if (mainEventQueue.empty()) {
             exitSimLoop("end of memory trace reached");
         } else {
-            tickEvent.schedule(mainEventQueue.nextEventTime() + cycles(1));
+            tickEvent.schedule(mainEventQueue.nextEventTime() + ticks(1));
         }
     } else {
-        tickEvent.schedule(max(curTick + cycles(1), nextCycle));
+        tickEvent.schedule(max(curTick + ticks(1), nextCycle));
     }
 }
 

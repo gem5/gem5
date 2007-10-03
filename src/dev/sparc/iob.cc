@@ -56,6 +56,9 @@ Iob::Iob(const Params *p)
     iobJBusAddr = ULL(0x9F00000000);
     iobJBusSize = ULL(0x0100000000);
     assert (params()->system->threadContexts.size() <= MaxNiagaraProcs);
+
+    pioDelay = p->pio_latency;
+
     // Get the interrupt controller from the platform
     ic = platform->intrctrl;
 

@@ -85,7 +85,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
                 tickCompare->deschedule();
-            tickCompare->schedule(time * tc->getCpuPtr()->cycles(1));
+            tickCompare->schedule(time * tc->getCpuPtr()->ticks(1));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -101,7 +101,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
                 sTickCompare->deschedule();
-            sTickCompare->schedule(time * tc->getCpuPtr()->cycles(1) + curTick);
+            sTickCompare->schedule(time * tc->getCpuPtr()->ticks(1) + curTick);
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -171,7 +171,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
                 hSTickCompare->deschedule();
-            hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->cycles(1));
+            hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->ticks(1));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -315,7 +315,7 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
             setReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else
-        sTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
+        sTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
 }
 
 void
@@ -341,6 +341,6 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else
-        hSTickCompare->schedule(ticks * tc->getCpuPtr()->cycles(1) + curTick);
+        hSTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
 }
 

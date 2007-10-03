@@ -461,8 +461,6 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     port->readBlob(vaddr, (uint8_t*)data, size);
 #if FULL_SYSTEM
     context->delVirtPort(port);
-#else
-    delete port;
 #endif
 
 #if TRACING_ON

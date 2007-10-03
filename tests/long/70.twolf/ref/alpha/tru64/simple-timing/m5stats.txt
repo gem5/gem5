@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1574277                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 186464                       # Number of bytes of host memory used
-host_seconds                                    58.38                       # Real time elapsed on the host
-host_tick_rate                             2031398471                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1354641                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 204632                       # Number of bytes of host memory used
+host_seconds                                    67.84                       # Real time elapsed on the host
+host_tick_rate                             1747991543                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    91903056                       # Number of instructions simulated
 sim_seconds                                  0.118590                       # Number of seconds simulated
@@ -245,7 +245,7 @@ system.cpu.l2cache.total_refs                    5916                       # To
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                     118589630000                       # number of cpu cycles simulated
+system.cpu.numCycles                        237179260                       # number of cpu cycles simulated
 system.cpu.num_insts                         91903056                       # Number of instructions executed
 system.cpu.num_refs                          26537141                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls             389                       # Number of system calls
