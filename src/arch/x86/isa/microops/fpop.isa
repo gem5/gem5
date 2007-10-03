@@ -260,7 +260,7 @@ let {{
                 SetStatus=False, dataSize="env.dataSize"):
             super(Movfp, self).__init__(dest, src1, flags, \
                     spm, SetStatus, dataSize)
-        code = 'FpDestReg.uqw = FpSrcReg2.uqw;'
+        code = 'FpDestReg.uqw = FpSrcReg1.uqw;'
         else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
         cond_check = "checkCondition(ccFlagBits, src2)"
 
