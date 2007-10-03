@@ -64,6 +64,9 @@ namespace MipsISA
         {
         }
 
+        void reset()
+        {}
+
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
         void moreBytes(Addr pc, Addr fetchPC, MachInst inst)

@@ -463,6 +463,7 @@ BaseSimpleCPU::advancePC(Fault fault)
     fetchOffset = 0;
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
+        predecoder.reset();
         fault->invoke(tc);
         thread->setMicroPC(0);
         thread->setNextMicroPC(1);

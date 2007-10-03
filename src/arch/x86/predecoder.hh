@@ -134,7 +134,7 @@ namespace X86ISA
                 outOfBytes = true;
         }
 
-        void reset();
+        void doReset();
 
         //State machine state
       protected:
@@ -180,6 +180,11 @@ namespace X86ISA
         {
             emi.mode.mode = LongMode;
             emi.mode.submode = SixtyFourBitMode;
+        }
+
+        void reset()
+        {
+            state = ResetState;
         }
 
         ThreadContext * getTC()
