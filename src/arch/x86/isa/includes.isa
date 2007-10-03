@@ -145,6 +145,7 @@ output exec {{
 
 #include <cmath>
 #include "arch/x86/miscregs.hh"
+#include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

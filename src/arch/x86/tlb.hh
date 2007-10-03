@@ -62,6 +62,7 @@
 
 #if FULL_SYSTEM
 
+#include "arch/segmentregs.hh"
 #include "mem/request.hh"
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
@@ -73,6 +74,8 @@ class Packet;
 
 namespace X86ISA
 {
+    static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
+
     struct TlbEntry
     {
         Addr pageStart;
@@ -134,6 +137,7 @@ class DTB : public TLB
 
 #include <iostream>
 
+#include "arch/x86/segmentregs.hh"
 #include "sim/host.hh"
 #include "sim/tlb.hh"
 
@@ -141,6 +145,8 @@ class Checkpoint;
 
 namespace X86ISA
 {
+    static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
+
     struct TlbEntry
     {
         Addr pageStart;
