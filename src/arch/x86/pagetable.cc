@@ -55,96 +55,20 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_TLB_HH__
-#define __ARCH_X86_TLB_HH__
-
-#include <list>
-
 #include "arch/x86/pagetable.hh"
-#include "arch/x86/segmentregs.hh"
-#include "config/full_system.hh"
-#include "mem/request.hh"
-#include "params/X86DTB.hh"
-#include "params/X86ITB.hh"
-#include "sim/faults.hh"
-#include "sim/sim_object.hh"
-
-class ThreadContext;
-class Packet;
+#include "sim/serialize.hh"
 
 namespace X86ISA
 {
-    static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
 
-    class TLB : public SimObject
-    {
-#if !FULL_SYSTEM
-      protected:
-        friend class FakeITLBFault;
-        friend class FakeDTLBFault;
-#endif
-      public:
-        typedef X86TLBParams Params;
-        TLB(const Params *p);
-
-        void dumpAll();
-
-        TlbEntry *lookup(Addr va, bool update_lru = true);
-
-      protected:
-        int size;
-
-        TlbEntry * tlb;
-
-        typedef std::list<TlbEntry *> EntryList;
-        EntryList freeList;
-        EntryList entryList;
-
-        void insert(Addr vpn, TlbEntry &entry);
-
-        void invalidateAll();
-
-        void invalidateNonGlobal();
-
-        void demapPage(Addr va);
-
-      public:
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-    };
-
-    class ITB : public TLB
-    {
-      public:
-        typedef X86ITBParams Params;
-        ITB(const Params *p) : TLB(p)
-        {
-        }
-
-        Fault translate(RequestPtr &req, ThreadContext *tc);
-
-        friend class DTB;
-    };
-
-    class DTB : public TLB
-    {
-      public:
-        typedef X86DTBParams Params;
-        DTB(const Params *p) : TLB(p)
-        {
-        }
-
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
-#if FULL_SYSTEM
-        Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
-        Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
-#endif
-
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-    };
+void
+TlbEntry::serialize(std::ostream &os)
+{
 }
 
-#endif // __ARCH_X86_TLB_HH__
+void
+TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
+{
+}
+
+}

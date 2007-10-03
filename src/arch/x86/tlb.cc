@@ -59,8 +59,7 @@
 
 #include "config/full_system.hh"
 
-#if FULL_SYSTEM
-
+#include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
@@ -72,21 +71,114 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p) : SimObject(p)
+TLB::TLB(const Params *p) : SimObject(p), size(p->size)
+{
+    tlb = new TlbEntry[size];
+    std::memset(tlb, 0, sizeof(TlbEntry) * size);
+
+    for (int x = 0; x < size; x++)
+        freeList.push_back(&tlb[x]);
+}
+
+void
+TLB::insert(Addr vpn, TlbEntry &entry)
+{
+    //TODO Deal with conflicting entries
+
+    TlbEntry *newEntry = NULL;
+    if (!freeList.empty()) {
+        newEntry = freeList.front();
+        freeList.pop_front();
+    } else {
+        newEntry = entryList.back();
+        entryList.pop_back();
+    }
+    *newEntry = entry;
+    newEntry->vaddr = vpn;
+    entryList.push_front(newEntry);
+}
+
+TlbEntry *
+TLB::lookup(Addr va, bool update_lru)
+{
+    //TODO make this smarter at some point
+    EntryList::iterator entry;
+    for (entry = entryList.begin(); entry != entryList.end(); entry++) {
+        if ((*entry)->vaddr <= va && (*entry)->vaddr + (*entry)->size > va) {
+            DPRINTF(TLB, "Matched vaddr %#x to entry starting at %#x "
+                    "with size %#x.\n", va, (*entry)->vaddr, (*entry)->size);
+            TlbEntry *e = *entry;
+            if (update_lru) {
+                entryList.erase(entry);
+                entryList.push_front(e);
+            }
+            return e;
+        }
+    }
+    return NULL;
+}
+
+void
+TLB::invalidateAll()
+{
+}
+
+void
+TLB::invalidateNonGlobal()
+{
+}
+
+void
+TLB::demapPage(Addr va)
 {
 }
 
 Fault
 ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
+    Addr vaddr = req->getVaddr();
+    // Check against the limit of the CS segment, and permissions.
+    // The vaddr already has the segment base applied.
+    TlbEntry *entry = lookup(vaddr);
+    if (!entry) {
+#if FULL_SYSTEM
+        return new FakeITLBFault();
+#else
+        return new FakeITLBFault(vaddr);
+#endif
+    } else {
+        Addr paddr = entry->pageStart | (vaddr & mask(12));
+        DPRINTF(TLB, "Translated %#x to %#x\n", vaddr, paddr);
+        req->setPaddr(paddr);
+    }
+
     return NoFault;
 }
-
-
 
 Fault
 DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
+    Addr vaddr = req->getVaddr();
+    uint32_t flags = req->getFlags();
+    bool storeCheck = flags & StoreCheck;
+    int seg = flags & (mask(NUM_SEGMENTREGS));
+
+    //XXX Junk code to surpress the warning
+    if (storeCheck) seg = seg;
+
+    // Check the limit of the segment "seg", and permissions.
+    // The vaddr already has the segment base applied.
+    TlbEntry *entry = lookup(vaddr);
+    if (!entry) {
+#if FULL_SYSTEM
+        return new FakeDTLBFault();
+#else
+        return new FakeDTLBFault(vaddr);
+#endif
+    } else {
+        Addr paddr = entry->pageStart | (vaddr & mask(12));
+        req->setPaddr(paddr);
+    }
     return NoFault;
 };
 
@@ -129,31 +221,6 @@ DTB::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 /* end namespace X86ISA */ }
-
-#else
-
-#include <cstring>
-
-#include "arch/x86/tlb.hh"
-#include "params/X86DTB.hh"
-#include "params/X86ITB.hh"
-#include "sim/serialize.hh"
-
-namespace X86ISA {
-    void
-    TlbEntry::serialize(std::ostream &os)
-    {
-        SERIALIZE_SCALAR(pageStart);
-    }
-
-    void
-    TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_SCALAR(pageStart);
-    }
-};
-
-#endif
 
 X86ISA::ITB *
 X86ITBParams::create()

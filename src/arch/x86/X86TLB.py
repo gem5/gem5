@@ -58,18 +58,18 @@ from m5.params import *
 class X86TLB(SimObject):
     type = 'X86TLB'
     abstract = True
-    #size = Param.Int("TLB size")
+    size = Param.Int("TLB size")
 
 class X86DTB(X86TLB):
     type = 'X86DTB'
     cxx_namespace = 'X86ISA'
     cxx_class = 'DTB'
 
-    #size = 64
+    size = 64
 
 class X86ITB(X86TLB):
     type = 'X86ITB'
     cxx_namespace = 'X86ISA'
     cxx_class = 'ITB'
 
-    #size = 64
+    size = 64

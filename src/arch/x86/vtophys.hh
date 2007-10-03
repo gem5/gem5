@@ -68,9 +68,6 @@ class FunctionalPort;
 namespace X86ISA
 {
 
-PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, X86ISA::VAddr vaddr);
-
 Addr vtophys(Addr vaddr);
 Addr vtophys(ThreadContext *tc, Addr vaddr);
 
