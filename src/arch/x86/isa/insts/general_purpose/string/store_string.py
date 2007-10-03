@@ -78,23 +78,7 @@ topOfLoop:
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t3, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(CSTRZnEZF,)
-    fault "NoFault"
-};
-
-def macroop STOS_N_M {
-    # Find the constant we need to either add or subtract from rdi
-    ruflag t0, 10
-    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
-    subi t4, t0, dsz, dataSize=asz
-    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
-
-topOfLoop:
-    st rax, es, [1, t0, rdi]
-
-    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
-    add rdi, rdi, t3, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(CSTRnZnEZF,)
+    bri t0, label("topOfLoop"), flags=(nCEZF,)
     fault "NoFault"
 };
 '''

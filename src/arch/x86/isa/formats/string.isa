@@ -61,7 +61,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-def format StringInst(*opTypeSet) {{
+def format StringTestInst(*opTypeSet) {{
     allBlocks = OutputBlocks()
 
     regBlocks = specializeInst(Name, list(opTypeSet), EmulEnv())
@@ -82,6 +82,32 @@ def format StringInst(*opTypeSet) {{
             %s
         }
     ''' % (eBlocks.decode_block, nBlocks.decode_block, regBlocks.decode_block)
+
+    (header_output, decoder_output,
+     decode_block, exec_output) = allBlocks.makeList()
+}};
+
+def format StringInst(*opTypeSet) {{
+    allBlocks = OutputBlocks()
+
+    regBlocks = specializeInst(Name, list(opTypeSet), EmulEnv())
+    eBlocks = specializeInst(Name + "_E", list(opTypeSet), EmulEnv())
+
+    for blocks in (regBlocks, eBlocks):
+        allBlocks.header_output += blocks.header_output
+        allBlocks.decoder_output += blocks.decoder_output
+        allBlocks.exec_output += blocks.exec_output
+
+    allBlocks.decode_block = '''
+        if (LEGACY_REP) {
+            %s
+        } else if (LEGACY_REPNE) {
+            // The repne prefix is illegal
+            return new MicroFault(machInst, "illprefix", new InvalidOpcode);
+        } else {
+            %s
+        }
+    ''' % (eBlocks.decode_block, regBlocks.decode_block)
 
     (header_output, decoder_output,
      decode_block, exec_output) = allBlocks.makeList()

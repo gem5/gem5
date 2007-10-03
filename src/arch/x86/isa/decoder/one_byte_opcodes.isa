@@ -332,8 +332,8 @@
             0x3: mov_Ov_rAX();
             0x4: StringInst::MOVS(Yb,Xb);
             0x5: StringInst::MOVS(Yv,Xv);
-            0x6: StringInst::CMPS(Yb,Xb);
-            0x7: StringInst::CMPS(Yv,Xv);
+            0x6: StringTestInst::CMPS(Yb,Xb);
+            0x7: StringTestInst::CMPS(Yv,Xv);
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::TEST(rAb,Ib);
@@ -342,8 +342,8 @@
             0x3: StringInst::STOS(Yv);
             0x4: lods_Al_Xb();
             0x5: lods_rAX_Xv();
-            0x6: StringInst::SCAS(Yb);
-            0x7: StringInst::SCAS(Yv);
+            0x6: StringTestInst::SCAS(Yb);
+            0x7: StringTestInst::SCAS(Yv);
         }
         format Inst {
             0x16: MOV(Bb,Ib);
