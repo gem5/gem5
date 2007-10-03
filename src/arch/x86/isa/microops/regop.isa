@@ -853,7 +853,7 @@ let {{
 
     class Ruflag(RegOp):
         code = '''
-            int flag = bits(ccFlagBits, imm8 + 0*psrc1);
+            int flag = bits(ccFlagBits, imm8);
             DestReg = merge(DestReg, flag, dataSize);
             ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
                                        (ccFlagBits & ~EZFBit);
