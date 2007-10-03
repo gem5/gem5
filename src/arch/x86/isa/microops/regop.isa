@@ -439,10 +439,11 @@ let {{
         abstract = True
         flag_code = '''
             //Don't have genFlags handle the OF or CF bits
-            uint64_t mask = CFBit | OFBit;
+            uint64_t mask = CFBit | ECFBit | OFBit;
             ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, psrc1, op2);
             //If a logic microop wants to set these, it wants to set them to 0.
             ccFlagBits &= ~(CFBit & ext);
+            ccFlagBits &= ~(ECFBit & ext);
             ccFlagBits &= ~(OFBit & ext);
         '''
 
