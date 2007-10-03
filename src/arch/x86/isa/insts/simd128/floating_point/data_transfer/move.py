@@ -82,8 +82,8 @@ def macroop MOVAPS_P_R {
 
 def macroop MOVAPS_R_R {
     # Check low address.
-    movfp xmml, xmml, xmmlm, dataSize=8
-    movfp xmmh, xmmh, xmmhm, dataSize=8
+    movfp xmml, xmmlm, dataSize=8
+    movfp xmmh, xmmhm, dataSize=8
 };
 
 # MOVAPD
@@ -112,7 +112,7 @@ def macroop MOVLPD_P_R {
 };
 
 def macroop MOVLPD_R_R {
-    movfp xmml, xmml, xmmlm, dataSize=8
+    movfp xmml, xmmlm, dataSize=8
 };
 
 # MOVHLPS
@@ -140,6 +140,6 @@ def macroop MOVSD_P_R {
 };
 
 def macroop MOVSD_R_R {
-    movfp xmml, xmml, xmmlm, dataSize=8
+    movfp xmml, xmmlm, dataSize=8
 };
 '''
