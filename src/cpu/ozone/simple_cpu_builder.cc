@@ -85,8 +85,8 @@ SimpleOzoneCPUParams::create()
     params->itb = itb;
     params->dtb = dtb;
 
-#if FULL_SYSTEM
     params->system = system;
+#if FULL_SYSTEM
     params->cpu_id = cpu_id;
 #else
     params->workload = workload;

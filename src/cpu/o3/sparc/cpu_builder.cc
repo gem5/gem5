@@ -81,8 +81,8 @@ DerivO3CPUParams::create()
     params->itb = itb;
     params->dtb = dtb;
 
-#if FULL_SYSTEM
     params->system = system;
+#if FULL_SYSTEM
     params->profile = profile;
 
     params->do_quiesce = do_quiesce;
