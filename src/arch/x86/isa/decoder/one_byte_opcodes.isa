@@ -338,8 +338,8 @@
         0x15: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::TEST(rAb,Ib);
             0x1: Inst::TEST(rAv,Iz);
-            0x2: stos_Yb_Al();
-            0x3: stos_Yv_rAX();
+            0x2: StringInst::STOS(Yb);
+            0x3: StringInst::STOS(Yv);
             0x4: lods_Al_Xb();
             0x5: lods_rAX_Xv();
             0x6: StringInst::SCAS(Yb);
