@@ -56,6 +56,6 @@
 microcode = '''
 def macroop UD2
 {
-    fault "new X86Fault"
+    fault "new InvalidOpcode()"
 };
 '''
