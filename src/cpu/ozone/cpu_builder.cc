@@ -83,8 +83,8 @@ DerivOzoneCPUParams::create()
     params->dtb = dtb;
 
     params->system = system;
-#if FULL_SYSTEM
     params->cpu_id = cpu_id;
+#if FULL_SYSTEM
     params->profile = profile;
     params->do_quiesce = do_quiesce;
     params->do_checkpoint_insts = do_checkpoint_insts;
