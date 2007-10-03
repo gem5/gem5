@@ -302,7 +302,7 @@
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::NOP(); //XXX repe makes this a "pause"
-            default: xchg_B_rAX();
+            default: Inst::XCHG(Bv,rAv);
         }
         0x13: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::CDQE(rAv);
