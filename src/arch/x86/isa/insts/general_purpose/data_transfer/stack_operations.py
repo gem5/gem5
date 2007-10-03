@@ -67,6 +67,7 @@ def macroop POP_M {
     .adjust_env oszIn64Override
 
     ld t1, ss, [1, t0, rsp]
+    # Check stack address
     addi rsp, rsp, dsz
     st t1, seg, sib, disp
 };
@@ -77,6 +78,7 @@ def macroop POP_P {
 
     rdip t7
     ld t1, ss, [1, t0, rsp]
+    # Check stack address
     addi rsp, rsp, dsz
     st t1, seg, riprel, disp
 };
@@ -96,8 +98,8 @@ def macroop PUSH_I {
     .adjust_env oszIn64Override
 
     limm t1, imm
+    st t1, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSH_M {
@@ -105,8 +107,8 @@ def macroop PUSH_M {
     .adjust_env oszIn64Override
 
     ld t1, seg, sib, disp
+    st t1, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSH_P {
@@ -115,11 +117,13 @@ def macroop PUSH_P {
 
     rdip t7
     ld t1, seg, riprel, disp
+    # Check stack address
     subi rsp, rsp, dsz
     st t1, ss, [1, t0, rsp]
 };
 
 def macroop PUSHA {
+    # Check all the stack addresses.
     st rax, ss, [1, t0, rsp], "-0 * env.dataSize"
     st rcx, ss, [1, t0, rsp], "-1 * env.dataSize"
     st rdx, ss, [1, t0, rsp], "-2 * env.dataSize"
@@ -132,6 +136,7 @@ def macroop PUSHA {
 };
 
 def macroop POPA {
+    # Check all the stack addresses.
     ld rdi, ss, [1, t0, rsp], "0 * env.dataSize"
     ld rsi, ss, [1, t0, rsp], "1 * env.dataSize"
     ld rbp, ss, [1, t0, rsp], "2 * env.dataSize"
@@ -146,8 +151,9 @@ def macroop LEAVE {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    mov rsp, rsp, rbp
-    ld rbp, ss, [1, t0, rsp]
+    mov t1, t1, rbp
+    ld rbp, ss, [1, t0, t1]
+    mov rsp, rsp, t1
     addi rsp, rsp, dsz
 };
 '''

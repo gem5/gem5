@@ -62,7 +62,7 @@ def macroop OR_R_R
 def macroop OR_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     or t1, t1, t2, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -71,14 +71,14 @@ def macroop OR_P_I
 {
     limm t2, imm
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     or t1, t1, t2, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop OR_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     or t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -86,7 +86,7 @@ def macroop OR_M_R
 def macroop OR_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     or t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -124,7 +124,7 @@ def macroop XOR_R_I
 def macroop XOR_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     xor t1, t1, t2, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -133,14 +133,14 @@ def macroop XOR_P_I
 {
     limm t2, imm
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     xor t1, t1, t2, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop XOR_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -148,7 +148,7 @@ def macroop XOR_M_R
 def macroop XOR_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     xor t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -192,7 +192,7 @@ def macroop AND_R_I
 
 def macroop AND_M_I
 {
-    ld t2, seg, sib, disp
+    ldst t2, seg, sib, disp
     limm t1, imm
     and t2, t2, t1, flags=(OF,SF,ZF,PF,CF)
     st t2, seg, sib, disp
@@ -201,7 +201,7 @@ def macroop AND_M_I
 def macroop AND_P_I
 {
     rdip t7
-    ld t2, seg, riprel, disp
+    ldst t2, seg, riprel, disp
     limm t1, imm
     and t2, t2, t1, flags=(OF,SF,ZF,PF,CF)
     st t2, seg, riprel, disp
@@ -209,7 +209,7 @@ def macroop AND_P_I
 
 def macroop AND_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -217,7 +217,7 @@ def macroop AND_M_R
 def macroop AND_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -231,7 +231,7 @@ def macroop NOT_R
 def macroop NOT_M
 {
     limm t1, -1
-    ld t2, seg, sib, disp
+    ldst t2, seg, sib, disp
     xor t2, t2, t1
     st t2, seg, sib, disp
 };
@@ -240,7 +240,7 @@ def macroop NOT_P
 {
     limm t1, -1
     rdip t7
-    ld t2, seg, riprel, disp
+    ldst t2, seg, riprel, disp
     xor t2, t2, t1
     st t2, seg, riprel, disp
 };

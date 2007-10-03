@@ -68,7 +68,7 @@ def macroop ADD_R_I
 def macroop ADD_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     add t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -77,14 +77,14 @@ def macroop ADD_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     add t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop ADD_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     add t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -92,7 +92,7 @@ def macroop ADD_M_R
 def macroop ADD_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     add t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -137,7 +137,7 @@ def macroop SUB_R_P
 def macroop SUB_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -146,14 +146,14 @@ def macroop SUB_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop SUB_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -161,7 +161,7 @@ def macroop SUB_M_R
 def macroop SUB_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -180,7 +180,7 @@ def macroop ADC_R_I
 def macroop ADC_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     adc t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -189,14 +189,14 @@ def macroop ADC_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     adc t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop ADC_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     adc t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -204,7 +204,7 @@ def macroop ADC_M_R
 def macroop ADC_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     adc t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -249,7 +249,7 @@ def macroop SBB_R_P
 def macroop SBB_M_I
 {
     limm t2, imm
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sbb t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -258,14 +258,14 @@ def macroop SBB_P_I
 {
     rdip t7
     limm t2, imm
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sbb t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop SBB_M_R
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sbb t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, sib, disp
 };
@@ -273,7 +273,7 @@ def macroop SBB_M_R
 def macroop SBB_P_R
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sbb t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
 };
@@ -285,7 +285,7 @@ def macroop NEG_R
 
 def macroop NEG_M
 {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
     st t1, seg, sib, disp
 };
@@ -293,7 +293,7 @@ def macroop NEG_M
 def macroop NEG_P
 {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
     st t1, seg, riprel, disp
 };

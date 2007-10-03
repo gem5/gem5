@@ -61,7 +61,7 @@ def macroop CMPXCHG_R_R {
 };
 
 def macroop CMPXCHG_M_R {
-    ld t1, seg, sib, disp
+    ldst t1, seg, sib, disp
     sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     mov t1, t1, reg, flags=(CZF,)
@@ -71,7 +71,7 @@ def macroop CMPXCHG_M_R {
 
 def macroop CMPXCHG_P_R {
     rdip t7
-    ld t1, seg, riprel, disp
+    ldst t1, seg, riprel, disp
     sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     mov t1, t1, reg, flags=(CZF,)

@@ -61,8 +61,9 @@ def macroop CALL_NEAR_I
 
     limm t1, imm
     rdip t7
+    # Check target of call
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t7, ss, [0, t0, rsp]
     wrip t7, t1
 };
 
@@ -72,8 +73,9 @@ def macroop CALL_NEAR_R
     .adjust_env oszIn64Override
 
     rdip t1
+    # Check target of call
+    st t1, ss, [0, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t1, ss, [0, t0, rsp]
     wripi reg, 0
 };
 
@@ -84,8 +86,9 @@ def macroop CALL_NEAR_M
 
     rdip t7
     ld t1, seg, sib, disp
+    # Check target of call
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t7, ss, [0, t0, rsp]
     wripi t1, 0
 };
 
@@ -96,8 +99,9 @@ def macroop CALL_NEAR_P
 
     rdip t7
     ld t1, seg, riprel, disp
+    # Check target of call
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
     subi rsp, rsp, dsz
-    st t7, ss, [0, t0, rsp]
     wripi t1, 0
 };
 '''
