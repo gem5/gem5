@@ -910,25 +910,21 @@ DefaultCommit<Impl>::commitInsts()
                 microPC[tid] = nextMicroPC[tid];
                 nextMicroPC[tid] = microPC[tid] + 1;
 
-#if FULL_SYSTEM
                 int count = 0;
                 Addr oldpc;
+                // Debug statement.  Checks to make sure we're not
+                // currently updating state while handling PC events.
+                assert(!thread[tid]->inSyscall && !thread[tid]->trapPending);
                 do {
-                    // Debug statement.  Checks to make sure we're not
-                    // currently updating state while handling PC events.
-                    if (count == 0)
-                        assert(!thread[tid]->inSyscall &&
-                               !thread[tid]->trapPending);
                     oldpc = PC[tid];
-                    cpu->system->pcEventQueue.service(
-                        thread[tid]->getTC());
+                    cpu->system->pcEventQueue.service(thread[tid]->getTC());
                     count++;
                 } while (oldpc != PC[tid]);
                 if (count > 1) {
-                    DPRINTF(Commit, "PC skip function event, stopping commit\n");
+                    DPRINTF(Commit,
+                            "PC skip function event, stopping commit\n");
                     break;
                 }
-#endif
             } else {
                 DPRINTF(Commit, "Unable to commit head instruction PC:%#x "
                         "[tid:%i] [sn:%i].\n",

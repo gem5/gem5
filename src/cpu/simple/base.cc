@@ -493,12 +493,10 @@ BaseSimpleCPU::advancePC(Fault fault)
         }
     }
 
-#if FULL_SYSTEM
     Addr oldpc;
     do {
         oldpc = thread->readPC();
         system->pcEventQueue.service(tc);
     } while (oldpc != thread->readPC());
-#endif
 }
 
