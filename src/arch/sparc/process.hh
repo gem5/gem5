@@ -66,6 +66,7 @@ class SparcLiveProcess : public LiveProcess
     Addr readSpillStart()
     { return spillStart; }
 
+    virtual void flushWindows(ThreadContext *tc) = 0;
 };
 
 struct M5_32_auxv_t
@@ -116,6 +117,7 @@ class Sparc32LiveProcess : public SparcLiveProcess
 
     void argsInit(int intSize, int pageSize);
 
+    void flushWindows(ThreadContext *tc);
 };
 
 struct M5_64_auxv_t
@@ -169,6 +171,7 @@ class Sparc64LiveProcess : public SparcLiveProcess
 
     void argsInit(int intSize, int pageSize);
 
+    void flushWindows(ThreadContext *tc);
 };
 
 #endif // __SPARC_PROCESS_HH__

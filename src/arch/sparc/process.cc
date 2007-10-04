@@ -73,8 +73,39 @@ void SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
     switch(trapNum)
     {
+      case 0x01: //Software breakpoint
+        warn("Software breakpoint encountered at pc %#x.\n", tc->readPC());
+        break;
+      case 0x02: //Division by zero
+        warn("Software signaled a division by zero at pc %#x.\n",
+                tc->readPC());
+        break;
       case 0x03: //Flush window trap
-        warn("Ignoring request to flush register windows.\n");
+        flushWindows(tc);
+        break;
+      case 0x04: //Clean windows
+        warn("Ignoring process request for clean register "
+                "windows at pc %#x.\n", tc->readPC());
+        break;
+      case 0x05: //Range check
+        warn("Software signaled a range check at pc %#x.\n",
+                tc->readPC());
+        break;
+      case 0x06: //Fix alignment
+        warn("Ignoring process request for os assisted unaligned accesses "
+                "at pc %#x.\n", tc->readPC());
+        break;
+      case 0x07: //Integer overflow
+        warn("Software signaled an integer overflow at pc %#x.\n",
+                tc->readPC());
+        break;
+      case 0x32: //Get integer condition codes
+        warn("Ignoring process request to get the integer condition codes "
+                "at pc %#x.\n", tc->readPC());
+        break;
+      case 0x33: //Set integer condition codes
+        warn("Ignoring process request to set the integer condition codes "
+                "at pc %#x.\n", tc->readPC());
         break;
       default:
         panic("Unimplemented trap to operating system: trap number %#x.\n", trapNum);
@@ -635,4 +666,74 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     stack_min = roundDown(stack_min, pageSize);
 
 //    num_processes++;
+}
+
+void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
+{
+    IntReg Cansave = tc->readIntReg(NumIntArchRegs + 3);
+    IntReg Canrestore = tc->readIntReg(NumIntArchRegs + 4);
+    IntReg Otherwin = tc->readIntReg(NumIntArchRegs + 6);
+    MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
+    MiscReg origCWP = CWP;
+    CWP = (CWP + Cansave + 2) % NWindows;
+    while(NWindows - 2 - Cansave != 0)
+    {
+        if (Otherwin) {
+            panic("Otherwin non-zero.\n");
+        } else {
+            tc->setMiscReg(MISCREG_CWP, CWP);
+            //Do the stores
+            IntReg sp = tc->readIntReg(StackPointerReg);
+            for (int index = 16; index < 32; index++) {
+                IntReg regVal = tc->readIntReg(index);
+                regVal = htog(regVal);
+                if (!tc->getMemPort()->tryWriteBlob(
+                        sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
+                    warn("Failed to save register to the stack when "
+                            "flushing windows.\n");
+                }
+            }
+            Canrestore--;
+            Cansave++;
+            CWP = (CWP + 1) % NWindows;
+        }
+    }
+    tc->setIntReg(NumIntArchRegs + 3, Cansave);
+    tc->setIntReg(NumIntArchRegs + 4, Canrestore);
+    tc->setMiscReg(MISCREG_CWP, origCWP);
+}
+
+void Sparc64LiveProcess::flushWindows(ThreadContext *tc)
+{
+    IntReg Cansave = tc->readIntReg(NumIntArchRegs + 3);
+    IntReg Canrestore = tc->readIntReg(NumIntArchRegs + 4);
+    IntReg Otherwin = tc->readIntReg(NumIntArchRegs + 6);
+    MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
+    MiscReg origCWP = CWP;
+    CWP = (CWP + Cansave + 2) % NWindows;
+    while(NWindows - 2 - Cansave != 0)
+    {
+        if (Otherwin) {
+            panic("Otherwin non-zero.\n");
+        } else {
+            tc->setMiscReg(MISCREG_CWP, CWP);
+            //Do the stores
+            IntReg sp = tc->readIntReg(StackPointerReg);
+            for (int index = 16; index < 32; index++) {
+                IntReg regVal = tc->readIntReg(index);
+                regVal = htog(regVal);
+                if (!tc->getMemPort()->tryWriteBlob(
+                        sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
+                    warn("Failed to save register to the stack when "
+                            "flushing windows.\n");
+                }
+            }
+            Canrestore--;
+            Cansave++;
+            CWP = (CWP + 1) % NWindows;
+        }
+    }
+    tc->setIntReg(NumIntArchRegs + 3, Cansave);
+    tc->setIntReg(NumIntArchRegs + 4, Canrestore);
+    tc->setMiscReg(MISCREG_CWP, origCWP);
 }
