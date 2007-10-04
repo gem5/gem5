@@ -129,7 +129,7 @@ namespace X86ISA
     const int LogVMPageSize = 12;
     const int VMPageSize = (1 << LogVMPageSize);
 
-    const int PageShift = 13;
+    const int PageShift = 12;
     const int PageBytes = 1ULL << PageShift;
 
     const int BranchPredAddrShiftAmt = 0;
