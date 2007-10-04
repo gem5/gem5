@@ -38,7 +38,7 @@
 namespace SparcISA {
 
 /// A process with emulated SPARC/Solaris syscalls.
-class SparcSolarisProcess : public SparcLiveProcess
+class SparcSolarisProcess : public Sparc64LiveProcess
 {
   public:
     /// Constructor.
@@ -66,4 +66,4 @@ class SparcSolarisProcess : public SparcLiveProcess
 
 
 } // namespace SparcISA
-#endif // __ALPHA_SOLARIS_PROCESS_HH__
+#endif // __SPARC_SOLARIS_PROCESS_HH__
