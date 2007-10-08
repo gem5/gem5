@@ -133,54 +133,97 @@ TLB::demapPage(Addr va)
 {
 }
 
+template<class TlbFault>
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
 {
     Addr vaddr = req->getVaddr();
-    // Check against the limit of the CS segment, and permissions.
-    // The vaddr already has the segment base applied.
-    TlbEntry *entry = lookup(vaddr);
-    if (!entry) {
-#if FULL_SYSTEM
-        return new FakeITLBFault();
-#else
-        return new FakeITLBFault(vaddr);
-#endif
-    } else {
-        Addr paddr = entry->pageStart | (vaddr & mask(12));
-        DPRINTF(TLB, "Translated %#x to %#x\n", vaddr, paddr);
-        req->setPaddr(paddr);
-    }
-
-    return NoFault;
-}
-
-Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
-{
-    Addr vaddr = req->getVaddr();
+    DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
     uint32_t flags = req->getFlags();
     bool storeCheck = flags & StoreCheck;
+
     int seg = flags & (mask(NUM_SEGMENTREGS));
 
     //XXX Junk code to surpress the warning
     if (storeCheck) seg = seg;
 
-    // Check the limit of the segment "seg", and permissions.
-    // The vaddr already has the segment base applied.
-    TlbEntry *entry = lookup(vaddr);
-    if (!entry) {
+    // Get cr0. This will tell us how to do translation. We'll assume it was
+    // verified to be correct and consistent when set.
+    CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
+
+    // If protected mode has been enabled...
+    if (cr0.pe) {
+        Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
+        SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
+        // If we're not in 64-bit mode, do protection/limit checks
+        if (!efer.lma || !csAttr.longMode) {
+            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
+            if (!attr.writable && write)
+                return new GeneralProtection(0);
+            if (!attr.readable && !write && !execute)
+                return new GeneralProtection(0);
+            Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
+            Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
+            if (!attr.expandDown) {
+                // We don't have to worry about the access going around the
+                // end of memory because accesses will be broken up into
+                // pieces at boundaries aligned on sizes smaller than an
+                // entire address space. We do have to worry about the limit
+                // being less than the base.
+                if (limit < base) {
+                    if (limit < vaddr + req->getSize() && vaddr < base)
+                        return new GeneralProtection(0);
+                } else {
+                    if (limit < vaddr + req->getSize())
+                        return new GeneralProtection(0);
+                }
+            } else {
+                if (limit < base) {
+                    if (vaddr <= limit || vaddr + req->getSize() >= base)
+                        return new GeneralProtection(0);
+                } else {
+                    if (vaddr <= limit && vaddr + req->getSize() >= base)
+                        return new GeneralProtection(0);
+                }
+            }
+        }
+        // If paging is enabled, do the translation.
+        if (cr0.pg) {
+            // The vaddr already has the segment base applied.
+            TlbEntry *entry = lookup(vaddr);
+            if (!entry) {
 #if FULL_SYSTEM
-        return new FakeDTLBFault();
+                return new TlbFault();
 #else
-        return new FakeDTLBFault(vaddr);
+                return new TlbFault(vaddr);
 #endif
+            } else {
+                // Do paging protection checks.
+                Addr paddr = entry->pageStart | (vaddr & mask(12));
+                req->setPaddr(paddr);
+            }
+        } else {
+            //Use the address which already has segmentation applied.
+            req->setPaddr(vaddr);
+        }
     } else {
-        Addr paddr = entry->pageStart | (vaddr & mask(12));
-        req->setPaddr(paddr);
+        // Real mode
+        req->setPaddr(vaddr);
     }
     return NoFault;
 };
+
+Fault
+DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+{
+    return TLB::translate<FakeDTLBFault>(req, tc, write, false);
+}
+
+Fault
+ITB::translate(RequestPtr &req, ThreadContext *tc)
+{
+    return TLB::translate<FakeITLBFault>(req, tc, false, true);
+}
 
 #if FULL_SYSTEM
 

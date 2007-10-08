@@ -108,6 +108,10 @@ namespace X86ISA
 
         void demapPage(Addr va);
 
+        template<class TlbFault>
+        Fault translate(RequestPtr &req, ThreadContext *tc,
+                bool write, bool execute);
+
       public:
         // Checkpointing
         virtual void serialize(std::ostream &os);
@@ -134,7 +138,6 @@ namespace X86ISA
         DTB(const Params *p) : TLB(p)
         {
         }
-
         Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
 #if FULL_SYSTEM
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);

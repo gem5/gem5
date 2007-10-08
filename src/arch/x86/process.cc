@@ -147,8 +147,60 @@ void
 X86LiveProcess::startup()
 {
     argsInit(sizeof(IntReg), VMPageSize);
-    for(int i = 0; i < NUM_SEGMENTREGS; i++)
-        threadContexts[0]->setMiscRegNoEffect(MISCREG_ES_BASE + i, 0);
+
+    for (int i = 0; i < threadContexts.size(); i++) {
+        ThreadContext * tc = threadContexts[i];
+
+        SegAttr dataAttr = 0;
+        dataAttr.writable = 1;
+        dataAttr.readable = 1;
+        dataAttr.expandDown = 0;
+        dataAttr.dpl = 3;
+        dataAttr.defaultSize = 0;
+        dataAttr.longMode = 1;
+
+        //Initialize the segment registers.
+        for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+            tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
+            tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
+        }
+
+        SegAttr csAttr = 0;
+        csAttr.writable = 0;
+        csAttr.readable = 1;
+        csAttr.expandDown = 0;
+        csAttr.dpl = 3;
+        csAttr.defaultSize = 0;
+        csAttr.longMode = 1;
+
+        tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
+
+        //Set up the registers that describe the operating mode.
+        CR0 cr0 = 0;
+        cr0.pg = 1; // Turn on paging.
+        cr0.cd = 0; // Don't disable caching.
+        cr0.nw = 0; // This is bit is defined to be ignored.
+        cr0.am = 0; // No alignment checking
+        cr0.wp = 0; // Supervisor mode can write read only pages
+        cr0.ne = 1;
+        cr0.et = 1; // This should always be 1
+        cr0.ts = 0; // We don't do task switching, so causing fp exceptions
+                    // would be pointless.
+        cr0.em = 0; // Allow x87 instructions to execute natively.
+        cr0.mp = 1; // This doesn't really matter, but the manual suggests
+                    // setting it to one.
+        cr0.pe = 1; // We're definitely in protected mode.
+        tc->setMiscReg(MISCREG_CR0, cr0);
+
+        Efer efer = 0;
+        efer.sce = 1; // Enable system call extensions.
+        efer.lme = 1; // Enable long mode.
+        efer.lma = 1; // Activate long mode.
+        efer.nxe = 1; // Enable nx support.
+        efer.svme = 0; // Disable svm support for now. It isn't implemented.
+        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
+        tc->setMiscReg(MISCREG_EFER, efer);
+    }
 }
 
 void
