@@ -482,13 +482,13 @@ let {{
     class Adc(FlagRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 + op2 + flags.CF, dataSize);
+            DestReg = merge(DestReg, psrc1 + op2 + flags.cf, dataSize);
             '''
 
     class Sbb(SubRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 - op2 - flags.CF, dataSize);
+            DestReg = merge(DestReg, psrc1 - op2 - flags.cf, dataSize);
             '''
 
     class And(LogicRegOp):
@@ -733,7 +733,7 @@ let {{
             if(shiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
-                uint64_t top = flags.CF << (dataSize * 8 - shiftAmt);
+                uint64_t top = flags.cf << (dataSize * 8 - shiftAmt);
                 if(shiftAmt > 1)
                     top |= psrc1 << (dataSize * 8 - shiftAmt - 1);
                 uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
@@ -804,7 +804,7 @@ let {{
             {
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = psrc1 << shiftAmt;
-                uint64_t bottom = flags.CF << (shiftAmt - 1);
+                uint64_t bottom = flags.cf << (shiftAmt - 1);
                 if(shiftAmt > 1)
                     bottom |=
                         bits(psrc1, dataSize * 8 - 1,

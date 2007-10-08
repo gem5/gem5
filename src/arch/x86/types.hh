@@ -257,7 +257,7 @@ namespace X86ISA
 
     typedef int RegContextVal;
 
-    typedef uint8_t RegIndex;
+    typedef uint16_t RegIndex;
 };
 
 #endif // __ARCH_X86_TYPES_HH__

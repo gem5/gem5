@@ -117,9 +117,139 @@ namespace X86ISA
         // Flags register
         MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
 
+        /*
+         * Model Specific Registers
+         */
+        // Time stamp counter
+        MISCREG_TSC,
+
+        MISCREG_MTRRCAP,
+
+        MISCREG_SYSENTER_CS,
+        MISCREG_SYSENTER_ESP,
+        MISCREG_SYSENTER_EIP,
+
+        MISCREG_MCG_CAP,
+        MISCREG_MCG_STATUS,
+        MISCREG_MCG_CTL,
+
+        MISCREG_DEBUG_CTL_MSR,
+
+        MISCREG_LAST_BRANCH_FROM_IP,
+        MISCREG_LAST_BRANCH_TO_IP,
+        MISCREG_LAST_EXCEPTION_FROM_IP,
+        MISCREG_LAST_EXCEPTION_TO_IP,
+
+        MISCREG_MTRR_PHYS_BASE_BASE,
+        MISCREG_MTRR_PHYS_BASE_0 = MISCREG_MTRR_PHYS_BASE_BASE,
+        MISCREG_MTRR_PHYS_BASE_1,
+        MISCREG_MTRR_PHYS_BASE_2,
+        MISCREG_MTRR_PHYS_BASE_3,
+        MISCREG_MTRR_PHYS_BASE_4,
+        MISCREG_MTRR_PHYS_BASE_5,
+        MISCREG_MTRR_PHYS_BASE_6,
+        MISCREG_MTRR_PHYS_BASE_7,
+
+        MISCREG_MTRR_PHYS_MASK_BASE,
+        MISCREG_MTRR_PHYS_MASK_0 = MISCREG_MTRR_PHYS_MASK_BASE,
+        MISCREG_MTRR_PHYS_MASK_1,
+        MISCREG_MTRR_PHYS_MASK_2,
+        MISCREG_MTRR_PHYS_MASK_3,
+        MISCREG_MTRR_PHYS_MASK_4,
+        MISCREG_MTRR_PHYS_MASK_5,
+        MISCREG_MTRR_PHYS_MASK_6,
+        MISCREG_MTRR_PHYS_MASK_7,
+
+        MISCREG_MTRR_FIX_64K_00000,
+        MISCREG_MTRR_FIX_16K_80000,
+        MISCREG_MTRR_FIX_16K_A0000,
+        MISCREG_MTRR_FIX_4K_C0000,
+        MISCREG_MTRR_FIX_4k_C8000,
+        MISCREG_MTRR_FIX_4K_D0000,
+        MISCREG_MTRR_FIX_4K_D8000,
+        MISCREG_MTRR_FIX_4K_E0000,
+        MISCREG_MTRR_FIX_4K_E8000,
+        MISCREG_MTRR_FIX_4K_F0000,
+        MISCREG_MTRR_FIX_4K_F8000,
+
+        MISCREG_PAT,
+
+        MISCREG_DEF_TYPE,
+
+        MISCREG_MC_CTL_BASE,
+        MISCREG_MC0_CTL = MISCREG_MC_CTL_BASE,
+        MISCREG_MC1_CTL,
+        MISCREG_MC2_CTL,
+        MISCREG_MC3_CTL,
+        MISCREG_MC4_CTL,
+
+        MISCREG_MC_STATUS_BASE,
+        MISCREG_MC0_STATUS = MISCREG_MC_STATUS_BASE,
+        MISCREG_MC1_STATUS,
+        MISCREG_MC2_STATUS,
+        MISCREG_MC3_STATUS,
+        MISCREG_MC4_STATUS,
+
+        MISCREG_MC_ADDR_BASE,
+        MISCREG_MC0_ADDR = MISCREG_MC_ADDR_BASE,
+        MISCREG_MC1_ADDR,
+        MISCREG_MC2_ADDR,
+        MISCREG_MC3_ADDR,
+        MISCREG_MC4_ADDR,
+
+        MISCREG_MC_MISC_BASE,
+        MISCREG_MC0_MISC = MISCREG_MC_MISC_BASE,
+        MISCREG_MC1_MISC,
+        MISCREG_MC2_MISC,
+        MISCREG_MC3_MISC,
+        MISCREG_MC4_MISC,
+
         // Extended feature enable register
         MISCREG_EFER,
 
+        MISCREG_STAR,
+        MISCREG_LSTAR,
+        MISCREG_CSTAR,
+
+        MISCREG_SF_MASK,
+
+        MISCREG_KERNEL_GS_BASE,
+
+        MISCREG_TSC_AUX,
+
+        MISCREG_PERF_EVT_SEL_BASE,
+        MISCREG_PERF_EVT_SEL0 = MISCREG_PERF_EVT_SEL_BASE,
+        MISCREG_PERF_EVT_SEL1,
+        MISCREG_PERF_EVT_SEL2,
+        MISCREG_PERF_EVT_SEL3,
+
+        MISCREG_PERF_EVT_CTR_BASE,
+        MISCREG_PERF_EVT_CTR0 = MISCREG_PERF_EVT_CTR_BASE,
+        MISCREG_PERF_EVT_CTR1,
+        MISCREG_PERF_EVT_CTR2,
+        MISCREG_PERF_EVT_CTR3,
+
+        MISCREG_SYSCFG,
+
+        MISCREG_IORR_BASE_BASE,
+        MISCREG_IORR_BASE0 = MISCREG_IORR_BASE_BASE,
+        MISCREG_IORR_BASE1,
+
+        MISCREG_IORR_MASK_BASE,
+        MISCREG_IORR_MASK0 = MISCREG_IORR_MASK_BASE,
+        MISCREG_IORR_MASK1,
+
+        MISCREG_TOP_MEM,
+        MISCREG_TOP_MEM2,
+
+        MISCREG_VM_CR,
+        MISCREG_IGNNE,
+        MISCREG_SMM_CTL,
+        MISCREG_VM_HSAVE_PA,
+
+        /*
+         * Segment registers
+         */
         // Segment selectors
         MISCREG_SEG_SEL_BASE,
         MISCREG_ES = MISCREG_SEG_SEL_BASE,
@@ -201,6 +331,66 @@ namespace X86ISA
     }
 
     static inline MiscRegIndex
+    MISCREG_MTRR_PHYS_BASE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MTRR_PHYS_BASE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_MTRR_PHYS_MASK(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MTRR_PHYS_MASK_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_MC_CTL(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MC_CTL_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_MC_STATUS(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MC_STATUS_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_MC_ADDR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MC_ADDR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_MC_MISC(int index)
+    {
+        return (MiscRegIndex)(MISCREG_MC_MISC_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_PERF_EVT_SEL(int index)
+    {
+        return (MiscRegIndex)(MISCREG_PERF_EVT_SEL_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_PERF_EVT_CTR(int index)
+    {
+        return (MiscRegIndex)(MISCREG_PERF_EVT_CTR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_IORR_BASE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_IORR_BASE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_IORR_MASK(int index)
+    {
+        return (MiscRegIndex)(MISCREG_IORR_MASK_BASE + index);
+    }
+
+    static inline MiscRegIndex
     MISCREG_SEG_SEL(int index)
     {
         return (MiscRegIndex)(MISCREG_SEG_SEL_BASE + index);
@@ -253,54 +443,54 @@ namespace X86ISA
      * plus two flags, EZF and ECF, which are only visible to microcode.
      */
     BitUnion64(CCFlagBits)
-        Bitfield<11> OF;
-        Bitfield<7> SF;
-        Bitfield<6> ZF;
-        Bitfield<5> EZF;
-        Bitfield<4> AF;
-        Bitfield<3> ECF;
-        Bitfield<2> PF;
-        Bitfield<0> CF;
+        Bitfield<11> of;
+        Bitfield<7> sf;
+        Bitfield<6> zf;
+        Bitfield<5> ezf;
+        Bitfield<4> af;
+        Bitfield<3> ecf;
+        Bitfield<2> pf;
+        Bitfield<0> cf;
     EndBitUnion(CCFlagBits)
 
     /**
      * RFLAGS
      */
     BitUnion64(RFLAGS)
-        Bitfield<21> ID; // ID Flag
-        Bitfield<20> VIP; // Virtual Interrupt Pending
-        Bitfield<19> VIF; // Virtual Interrupt Flag
-        Bitfield<18> AC; // Alignment Check
-        Bitfield<17> VM; // Virtual-8086 Mode
-        Bitfield<16> RF; // Resume Flag
-        Bitfield<14> NT; // Nested Task
-        Bitfield<13, 12> IOPL; // I/O Privilege Level
-        Bitfield<11> OF; // Overflow Flag
-        Bitfield<10> DF; // Direction Flag
-        Bitfield<9> IF; // Interrupt Flag
-        Bitfield<8> TF; // Trap Flag
-        Bitfield<7> SF; // Sign Flag
-        Bitfield<6> ZF; // Zero Flag
-        Bitfield<4> AF; // Auxiliary Flag
-        Bitfield<2> PF; // Parity Flag
-        Bitfield<0> CF; // Carry Flag
+        Bitfield<21> id; // ID Flag
+        Bitfield<20> vip; // Virtual Interrupt Pending
+        Bitfield<19> vif; // Virtual Interrupt Flag
+        Bitfield<18> ac; // Alignment Check
+        Bitfield<17> vm; // Virtual-8086 Mode
+        Bitfield<16> rf; // Resume Flag
+        Bitfield<14> nt; // Nested Task
+        Bitfield<13, 12> iopl; // I/O Privilege Level
+        Bitfield<11> of; // Overflow Flag
+        Bitfield<10> df; // Direction Flag
+        Bitfield<9> intf; // Interrupt Flag
+        Bitfield<8> tf; // Trap Flag
+        Bitfield<7> sf; // Sign Flag
+        Bitfield<6> zf; // Zero Flag
+        Bitfield<4> af; // Auxiliary Flag
+        Bitfield<2> pf; // Parity Flag
+        Bitfield<0> cf; // Carry Flag
     EndBitUnion(RFLAGS)
 
     /**
      * Control registers
      */
     BitUnion64(CR0)
-        Bitfield<31> PG; // Paging
-        Bitfield<30> CD; // Cache Disable
-        Bitfield<29> NW; // Not Writethrough
-        Bitfield<18> AM; // Alignment Mask
-        Bitfield<16> WP; // Write Protect
-        Bitfield<5> NE; // Numeric Error
-        Bitfield<4> ET; // Extension Type
-        Bitfield<3> TS; // Task Switched
-        Bitfield<2> EM; // Emulation
-        Bitfield<1> MP; // Monitor Coprocessor
-        Bitfield<0> PE; // Protection Enabled
+        Bitfield<31> pg; // Paging
+        Bitfield<30> cd; // Cache Disable
+        Bitfield<29> nw; // Not Writethrough
+        Bitfield<18> am; // Alignment Mask
+        Bitfield<16> wp; // Write Protect
+        Bitfield<5> ne; // Numeric Error
+        Bitfield<4> et; // Extension Type
+        Bitfield<3> ts; // Task Switched
+        Bitfield<2> em; // Emulation
+        Bitfield<1> mp; // Monitor Coprocessor
+        Bitfield<0> pe; // Protection Enabled
     EndBitUnion(CR0)
 
     // Page Fault Virtual Address
@@ -309,42 +499,217 @@ namespace X86ISA
     EndBitUnion(CR2)
 
     BitUnion64(CR3)
-        Bitfield<51, 12> longPDTB; // Long Mode Page-Directory-Table
+        Bitfield<51, 12> longPdtb; // Long Mode Page-Directory-Table
                                    // Base Address
-        Bitfield<31, 12> PDTB; // Non-PAE Addressing Page-Directory-Table
+        Bitfield<31, 12> pdtb; // Non-PAE Addressing Page-Directory-Table
                                // Base Address
-        Bitfield<31, 5> PAEPDTB; // PAE Addressing Page-Directory-Table
+        Bitfield<31, 5> paePdtb; // PAE Addressing Page-Directory-Table
                                  // Base Address
-        Bitfield<4> PCD; // Page-Level Cache Disable
-        Bitfield<3> PWT; // Page-Level Writethrough
+        Bitfield<4> pcd; // Page-Level Cache Disable
+        Bitfield<3> pwt; // Page-Level Writethrough
     EndBitUnion(CR3)
 
     BitUnion64(CR4)
-        Bitfield<10> OSXMMEXCPT; // Operating System Unmasked
+        Bitfield<10> osxmmexcpt; // Operating System Unmasked
                                  // Exception Support
-        Bitfield<9> OSFXSR; // Operating System FXSave/FSRSTOR Support
-        Bitfield<8> PCE; // Performance-Monitoring Counter Enable
-        Bitfield<7> PGE; // Page-Global Enable
-        Bitfield<6> MCE; // Machine Check Enable
-        Bitfield<5> PAE; // Physical-Address Extension
-        Bitfield<4> PSE; // Page Size Extensions
-        Bitfield<3> DE; // Debugging Extensions
-        Bitfield<2> TSD; // Time Stamp Disable
-        Bitfield<1> PVI; // Protected-Mode Virtual Interrupts
-        Bitfield<0> VME; // Virtual-8086 Mode Extensions
+        Bitfield<9> osfxsr; // Operating System FXSave/FSRSTOR Support
+        Bitfield<8> pce; // Performance-Monitoring Counter Enable
+        Bitfield<7> pge; // Page-Global Enable
+        Bitfield<6> mce; // Machine Check Enable
+        Bitfield<5> pae; // Physical-Address Extension
+        Bitfield<4> pse; // Page Size Extensions
+        Bitfield<3> de; // Debugging Extensions
+        Bitfield<2> tsd; // Time Stamp Disable
+        Bitfield<1> pvi; // Protected-Mode Virtual Interrupts
+        Bitfield<0> vme; // Virtual-8086 Mode Extensions
     EndBitUnion(CR4)
 
     BitUnion64(CR8)
-        Bitfield<3, 0> TPR; // Task Priority Register
-    EndBitUnion(CR4)
+        Bitfield<3, 0> tpr; // Task Priority Register
+    EndBitUnion(CR8)
+
+    // MTRR capabilities
+    BitUnion64(MTRRcap)
+        Bitfield<7, 0> vcnt; // Variable-Range Register Count
+        Bitfield<8> fix; // Fixed-Range Registers
+        Bitfield<10> wc; // Write-Combining
+    EndBitUnion(MTRRcap)
+
+    /**
+     * SYSENTER configuration registers
+     */
+    BitUnion64(SysenterCS)
+        Bitfield<15, 0> targetCS;
+    EndBitUnion(SysenterCS)
+
+    BitUnion64(SysenterESP)
+        Bitfield<31, 0> targetESP;
+    EndBitUnion(SysenterESP)
+
+    BitUnion64(SysenterEIP)
+        Bitfield<31, 0> targetEIP;
+    EndBitUnion(SysenterEIP)
+
+    /**
+     * Global machine check registers
+     */
+    BitUnion64(McgCap)
+        Bitfield<7, 0> count; // Number of error reporting register banks
+        Bitfield<8> MCGCP; // MCG_CTL register present.
+    EndBitUnion(McgCap)
+
+    BitUnion64(McgStatus)
+        Bitfield<0> ripv; // Restart-IP valid
+        Bitfield<1> eipv; // Error-IP valid
+        Bitfield<2> mcip; // Machine check in-progress
+    EndBitUnion(McgStatus)
+
+    BitUnion64(DebugCtlMsr)
+        Bitfield<0> lbr; // Last-branch record
+        Bitfield<1> btf; // Branch single step
+        Bitfield<2> pb0; // Performance monitoring pin control 0
+        Bitfield<3> pb1; // Performance monitoring pin control 1
+        Bitfield<4> pb2; // Performance monitoring pin control 2
+        Bitfield<5> pb3; // Performance monitoring pin control 3
+        /*uint64_t pb(int index)
+        {
+            return bits(__data, index + 2);
+        }*/
+    EndBitUnion(DebugCtlMsr)
+
+    BitUnion64(MtrrPhysBase)
+        Bitfield<7, 0> type; // Default memory type
+        Bitfield<51, 12> physbase; // Range physical base address
+    EndBitUnion(MtrrPhysBase)
+
+    BitUnion64(MtrrPhysMask)
+        Bitfield<11> valid; // MTRR pair enable
+        Bitfield<51, 12> physmask; // Range physical mask
+    EndBitUnion(MtrrPhysMask)
+
+    BitUnion64(MtrrFixed)
+        /*uint64_t type(int index)
+        {
+            return bits(__data, index * 8 + 7, index * 8);
+        }*/
+    EndBitUnion(MtrrFixed)
+
+    BitUnion64(Pat)
+        /*uint64_t pa(int index)
+        {
+            return bits(__data, index * 8 + 2, index * 8);
+        }*/
+    EndBitUnion(Pat)
+
+    BitUnion64(MtrrDefType)
+        Bitfield<7, 0> type; // Default type
+        Bitfield<10> fe; // Fixed range enable
+        Bitfield<11> e; // MTRR enable
+    EndBitUnion(MtrrDefType)
+
+    /**
+     * Machine check
+     */
+    BitUnion64(McStatus)
+        Bitfield<15,0> mcaErrorCode;
+        Bitfield<31,16> modelSpecificCode;
+        Bitfield<56,32> otherInfo;
+        Bitfield<57> pcc; // Processor-context corrupt
+        Bitfield<58> addrv; // Error-address register valid
+        Bitfield<59> miscv; // Miscellaneous-error register valid
+        Bitfield<60> en; // Error condition enabled
+        Bitfield<61> uc; // Uncorrected error
+        Bitfield<62> over; // Status register overflow
+        Bitfield<63> val; // Valid
+    EndBitUnion(McStatus)
+
+    BitUnion64(McCtl)
+        /*uint64_t en(int index)
+        {
+            return bits(__data, index);
+        }*/
+    EndBitUnion(McCtl)
+
+    // Extended feature enable register
+    BitUnion64(Efer)
+        Bitfield<0> sce; // System call extensions
+        Bitfield<8> lme; // Long mode enable
+        Bitfield<10> lma; // Long mode active
+        Bitfield<11> nxe; // No-execute enable
+        Bitfield<12> svme; // Secure virtual machine enable
+        Bitfield<14> ffxsr; // Fast fxsave/fxrstor
+    EndBitUnion(Efer)
+
+    BitUnion64(Star)
+        Bitfield<31,0> targetEip;
+        Bitfield<47,32> syscallCsAndSs;
+        Bitfield<63,48> sysretCsAndSs;
+    EndBitUnion(Star)
+
+    BitUnion64(SfMask)
+        Bitfield<31,0> mask;
+    EndBitUnion(SfMask)
+
+    BitUnion64(PerfEvtSel)
+        Bitfield<7,0> eventMask;
+        Bitfield<15,8> unitMask;
+        Bitfield<16> usr; // User mode
+        Bitfield<17> os; // Operating-system mode
+        Bitfield<18> e; // Edge detect
+        Bitfield<19> pc; // Pin control
+        Bitfield<20> intEn; // Interrupt enable
+        Bitfield<22> en; // Counter enable
+        Bitfield<23> inv; // Invert mask
+        Bitfield<31,24> counterMask;
+    EndBitUnion(PerfEvtSel)
+
+    BitUnion32(Syscfg)
+        Bitfield<18> mfde; // MtrrFixDramEn
+        Bitfield<19> mfdm; // MtrrFixDramModEn
+        Bitfield<20> mvdm; // MtrrVarDramEn
+        Bitfield<21> tom2; // MtrrTom2En
+    EndBitUnion(Syscfg)
+
+    BitUnion64(IorrBase)
+        Bitfield<3> wr; // WrMem Enable
+        Bitfield<4> rd; // RdMem Enable
+        Bitfield<51,12> physbase; // Range physical base address
+    EndBitUnion(IorrBase)
+
+    BitUnion64(IorrMask)
+        Bitfield<11> v; // I/O register pair enable (valid)
+        Bitfield<51,12> physmask; // Range physical mask
+    EndBitUnion(IorrMask)
+
+    BitUnion64(Tom)
+        Bitfield<51,23> physAddr; // Top of memory physical address
+    EndBitUnion(Tom)
+
+    BitUnion64(VmCrMsr)
+        Bitfield<0> dpd;
+        Bitfield<1> rInit;
+        Bitfield<2> disA20M;
+    EndBitUnion(VmCrMsr)
+
+    BitUnion64(IgnneMsr)
+        Bitfield<0> ignne;
+    EndBitUnion(IgnneMsr)
+
+    BitUnion64(SmmCtlMsr)
+        Bitfield<0> dismiss;
+        Bitfield<1> enter;
+        Bitfield<2> smiCycle;
+        Bitfield<3> exit;
+        Bitfield<4> rsmCycle;
+    EndBitUnion(SmmCtlMsr)
 
     /**
      * Segment Selector
      */
     BitUnion64(SegSelector)
-        Bitfield<15, 3> SI; // Selector Index
-        Bitfield<2> TI; // Table Indicator
-        Bitfield<1, 0> RPL; // Requestor Privilege Level
+        Bitfield<15, 3> si; // Selector Index
+        Bitfield<2> ti; // Table Indicator
+        Bitfield<1, 0> rpl; // Requestor Privilege Level
     EndBitUnion(SegSelector)
 
     /**
@@ -354,39 +719,48 @@ namespace X86ISA
     BitUnion64(SegDescriptor)
         Bitfield<63, 56> baseHigh;
         Bitfield<39, 16> baseLow;
-        Bitfield<55> G; // Granularity
-        Bitfield<54> D; // Default Operand Size
-        Bitfield<54> B; // Default Operand Size
-        Bitfield<53> L; // Long Attribute Bit
-        Bitfield<52> AVL; // Available To Software
+        Bitfield<55> g; // Granularity
+        Bitfield<54> d; // Default Operand Size
+        Bitfield<54> b; // Default Operand Size
+        Bitfield<53> l; // Long Attribute Bit
+        Bitfield<52> avl; // Available To Software
         Bitfield<51, 48> limitHigh;
         Bitfield<15, 0> limitLow;
-        Bitfield<47> P; // Present
-        Bitfield<46, 45> DPL; // Descriptor Privilege-Level
-        Bitfield<44> S; // System
+        Bitfield<47> p; // Present
+        Bitfield<46, 45> dpl; // Descriptor Privilege-Level
+        Bitfield<44> s; // System
         SubBitUnion(type, 43, 40)
             // Specifies whether this descriptor is for code or data.
             Bitfield<43> codeOrData;
 
             // These bit fields are for code segments
-            Bitfield<42> C; // Conforming
-            Bitfield<41> R; // Readable
+            Bitfield<42> c; // Conforming
+            Bitfield<41> r; // Readable
 
             // These bit fields are for data segments
-            Bitfield<42> E; // Expand-Down
-            Bitfield<41> W; // Writable
+            Bitfield<42> e; // Expand-Down
+            Bitfield<41> w; // Writable
 
             // This is used for both code and data segments.
-            Bitfield<40> A; // Accessed
+            Bitfield<40> a; // Accessed
         EndSubBitUnion(type)
     EndBitUnion(SegDescriptor)
+
+    BitUnion64(SegAttr)
+        Bitfield<0> writable;
+        Bitfield<1> readable;
+        Bitfield<2> expandDown;
+        Bitfield<4, 3> dpl;
+        Bitfield<5> defaultSize;
+        Bitfield<6> longMode;
+    EndBitUnion(SegAttr)
 
     BitUnion64(GateDescriptor)
         Bitfield<63, 48> offsetHigh; // Target Code-Segment Offset
         Bitfield<15, 0> offsetLow; // Target Code-Segment Offset
         Bitfield<31, 16> selector; // Target Code-Segment Selector
-        Bitfield<47> P; // Present
-        Bitfield<46, 45> DPL; // Descriptor Privilege-Level
+        Bitfield<47> p; // Present
+        Bitfield<46, 45> dpl; // Descriptor Privilege-Level
         Bitfield<43, 40> type;
         Bitfield<36, 32> count; // Parameter Count
     EndBitUnion(GateDescriptor)

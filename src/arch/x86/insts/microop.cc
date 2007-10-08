@@ -69,11 +69,11 @@ namespace X86ISA
           case ConditionTests::True:
             return true;
           case ConditionTests::ECF:
-            return ccflags.ECF;
+            return ccflags.ecf;
           case ConditionTests::EZF:
-            return ccflags.EZF;
+            return ccflags.ezf;
           case ConditionTests::SZnZF:
-            return !(!ccflags.EZF & ccflags.ZF);
+            return !(!ccflags.ezf & ccflags.zf);
           case ConditionTests::MSTRZ:
             panic("This condition is not implemented!");
           case ConditionTests::STRZ:
@@ -81,32 +81,32 @@ namespace X86ISA
           case ConditionTests::MSTRC:
             panic("This condition is not implemented!");
           case ConditionTests::STRZnEZF:
-            return !ccflags.EZF & ccflags.ZF;
+            return !ccflags.ezf & ccflags.zf;
                 //And no interrupts or debug traps are waiting
           case ConditionTests::OF:
-            return ccflags.OF;
+            return ccflags.of;
           case ConditionTests::CF:
-            return ccflags.CF;
+            return ccflags.cf;
           case ConditionTests::ZF:
-            return ccflags.ZF;
+            return ccflags.zf;
           case ConditionTests::CvZF:
-            return ccflags.CF | ccflags.ZF;
+            return ccflags.cf | ccflags.zf;
           case ConditionTests::SF:
-            return ccflags.SF;
+            return ccflags.sf;
           case ConditionTests::PF:
-            return ccflags.PF;
+            return ccflags.pf;
           case ConditionTests::SxOF:
-            return ccflags.SF ^ ccflags.OF;
+            return ccflags.sf ^ ccflags.of;
           case ConditionTests::SxOvZF:
-            return ccflags.SF ^ ccflags.OF | ccflags.ZF;
+            return ccflags.sf ^ ccflags.of | ccflags.zf;
           case ConditionTests::False:
             return false;
           case ConditionTests::NotECF:
-            return !ccflags.ECF;
+            return !ccflags.ecf;
           case ConditionTests::NotEZF:
-            return !ccflags.EZF;
+            return !ccflags.ezf;
           case ConditionTests::NotSZnZF:
-            return !ccflags.EZF & ccflags.ZF;
+            return !ccflags.ezf & ccflags.zf;
           case ConditionTests::NotMSTRZ:
             panic("This condition is not implemented!");
           case ConditionTests::NotSTRZ:
@@ -114,24 +114,24 @@ namespace X86ISA
           case ConditionTests::NotMSTRC:
             panic("This condition is not implemented!");
           case ConditionTests::STRnZnEZF:
-            return !ccflags.EZF & !ccflags.ZF;
+            return !ccflags.ezf & !ccflags.zf;
                 //And no interrupts or debug traps are waiting
           case ConditionTests::NotOF:
-            return !ccflags.OF;
+            return !ccflags.of;
           case ConditionTests::NotCF:
-            return !ccflags.CF;
+            return !ccflags.cf;
           case ConditionTests::NotZF:
-            return !ccflags.ZF;
+            return !ccflags.zf;
           case ConditionTests::NotCvZF:
-            return !(ccflags.CF | ccflags.ZF);
+            return !(ccflags.cf | ccflags.zf);
           case ConditionTests::NotSF:
-            return !ccflags.SF;
+            return !ccflags.sf;
           case ConditionTests::NotPF:
-            return !ccflags.PF;
+            return !ccflags.pf;
           case ConditionTests::NotSxOF:
-            return !(ccflags.SF ^ ccflags.OF);
+            return !(ccflags.sf ^ ccflags.of);
           case ConditionTests::NotSxOvZF:
-            return !(ccflags.SF ^ ccflags.OF | ccflags.ZF);
+            return !(ccflags.sf ^ ccflags.of | ccflags.zf);
         }
         panic("Unknown condition: %d\n", condition);
         return true;
