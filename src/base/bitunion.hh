@@ -193,7 +193,7 @@ namespace BitfieldBackend
     class BitUnionOperators : public Base
     {
       public:
-        BitUnionOperators(Type & _data)
+        BitUnionOperators(Type const & _data)
         {
             Base::__data = _data;
         }
@@ -206,20 +206,20 @@ namespace BitfieldBackend
         }
 
         Type
-        operator=(const Type & _data)
+        operator=(Type const & _data)
         {
             Base::__data = _data;
             return _data;
         }
 
         bool
-        operator<(const Base & base) const
+        operator<(Base const & base) const
         {
             return Base::__data < base.__data;
         }
 
         bool
-        operator==(const Base & base) const
+        operator==(Base const & base) const
         {
             return Base::__data == base.__data;
         }
