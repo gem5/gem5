@@ -106,7 +106,10 @@ if env['TARGET_ISA'] == 'x86':
     SimObject('X86TLB.py')
 
     if env['FULL_SYSTEM']:
+        SimObject('X86System.py')
+
         # Full-system sources
+        Source('system.cc')
         Source('stacktrace.cc')
         Source('utility.cc')
         Source('vtophys.cc')
