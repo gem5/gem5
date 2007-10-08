@@ -61,6 +61,7 @@
 #include "arch/x86/types.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "sim/host.hh"
 
@@ -140,15 +141,13 @@ namespace X86ISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    inline void initCPU(ThreadContext *tc, int cpuId)
-    {
-        panic("initCPU not implemented!\n");
-    }
+#if FULL_SYSTEM
 
-    inline void startupCPU(ThreadContext *tc, int cpuId)
-    {
-        tc->activate(0);
-    }
+    void initCPU(ThreadContext *tc, int cpuId);
+
+#endif
+
+    void startupCPU(ThreadContext *tc, int cpuId);
 };
 
 #endif // __ARCH_X86_UTILITY_HH__

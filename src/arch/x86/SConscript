@@ -102,6 +102,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('regfile.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
+    Source('utility.cc')
 
     SimObject('X86TLB.py')
 
@@ -111,7 +112,6 @@ if env['TARGET_ISA'] == 'x86':
         # Full-system sources
         Source('system.cc')
         Source('stacktrace.cc')
-        Source('utility.cc')
         Source('vtophys.cc')
     else:
         Source('process.cc')

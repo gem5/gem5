@@ -117,6 +117,9 @@ namespace X86ISA
         // Flags register
         MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
 
+        // Extended feature enable register
+        MISCREG_EFER,
+
         // Segment selectors
         MISCREG_SEG_SEL_BASE,
         MISCREG_ES = MISCREG_SEG_SEL_BASE,
