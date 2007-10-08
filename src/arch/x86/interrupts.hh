@@ -74,56 +74,56 @@ class Interrupts
 
     int InterruptLevel(uint64_t softint)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::InterruptLevel unimplemented!\n");
         return 0;
     }
 
     void post(int int_num, int index)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::post unimplemented!\n");
     }
 
     void clear(int int_num, int index)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::clear unimplemented!\n");
     }
 
     void clear_all()
     {
-        panic("Interrupts don't work on x86!\n");
+        warn("Interrupts::clear_all unimplemented!\n");
     }
 
     bool check_interrupts(ThreadContext * tc) const
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::check_interrupts unimplemented!\n");
         return false;
     }
 
     Fault getInterrupt(ThreadContext * tc)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::getInterrupt unimplemented!\n");
         return NoFault;
     }
 
     void updateIntrInfo(ThreadContext * tc)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::updateIntrInfo unimplemented!\n");
     }
 
     uint64_t get_vec(int int_num)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::get_vec unimplemented!\n");
         return 0;
     }
 
     void serialize(std::ostream & os)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::serialize unimplemented!\n");
     }
 
     void unserialize(Checkpoint * cp, const std::string & section)
     {
-        panic("Interrupts don't work on x86!\n");
+        panic("Interrupts::unserialize unimplemented!\n");
     }
 };
 

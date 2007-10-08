@@ -99,6 +99,8 @@ if m5.build_env['TARGET_ISA'] == "alpha":
     test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 elif m5.build_env['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
+elif m5.build_env['TARGET_ISA'] == "x86":
+    test_sys = makeX86System(test_mem_mode, bm[0])
 else:
     m5.panic("incapable of building non-alpha or non-sparc full system!")
 
@@ -140,6 +142,8 @@ if len(bm) == 2:
         drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
     elif m5.build_env['TARGET_ISA'] == 'sparc':
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
+    elif m5.build.env['TARGET_ISA'] == 'x86':
+        drive_sys = makeX86System(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
     if options.fastmem:
