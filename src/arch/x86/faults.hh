@@ -69,9 +69,11 @@ namespace X86ISA
       protected:
         const char * faultName;
         const char * mnem;
+        uint64_t errorCode;
 
-        X86FaultBase(const char * _faultName, const char * _mnem) :
-            faultName(_faultName), mnem(_mnem)
+        X86FaultBase(const char * _faultName, const char * _mnem,
+                uint64_t _errorCode = 0) :
+            faultName(_faultName), mnem(_mnem), errorCode(_errorCode)
         {
         }
 
@@ -96,8 +98,9 @@ namespace X86ISA
     class X86Fault : public X86FaultBase
     {
       protected:
-        X86Fault(const char * name, const char * mnem) :
-            X86FaultBase(name, mnem)
+        X86Fault(const char * name, const char * mnem,
+                uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, _errorCode)
         {}
     };
 
@@ -106,8 +109,9 @@ namespace X86ISA
     class X86Trap : public X86FaultBase
     {
       protected:
-        X86Trap(const char * name, const char * mnem) :
-            X86FaultBase(name, mnem)
+        X86Trap(const char * name, const char * mnem,
+                uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -119,8 +123,9 @@ namespace X86ISA
     class X86Abort : public X86FaultBase
     {
       protected:
-        X86Abort(const char * name, const char * mnem) :
-            X86FaultBase(name, mnem)
+        X86Abort(const char * name, const char * mnem,
+                uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -132,8 +137,9 @@ namespace X86ISA
     class X86Interrupt : public X86FaultBase
     {
       protected:
-        X86Interrupt(const char * name, const char * mnem) :
-            X86FaultBase(name, mnem)
+        X86Interrupt(const char * name, const char * mnem,
+                uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -290,8 +296,8 @@ namespace X86ISA
     class GeneralProtection : public X86Fault
     {
       public:
-        GeneralProtection() :
-            X86Fault("General-Protection", "#GP")
+        GeneralProtection(uint64_t _errorCode) :
+            X86Fault("General-Protection", "#GP", _errorCode)
         {}
     };
 
