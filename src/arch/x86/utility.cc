@@ -75,10 +75,6 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
 # if FULL_SYSTEM
 void initCPU(ThreadContext *tc, int cpuId)
 {
-    // TODO Figure out what the attribute registers should be set to. How this
-    // information is stored isn't specified, but it's values are in table
-    // 14.2.
-
     // The otherwise unmodified integer registers should be set to 0.
     for (int index = 0; index < NUM_INTREGS; index++) {
         tc->setIntReg(index, 0);
@@ -111,18 +107,32 @@ void initCPU(ThreadContext *tc, int cpuId)
 
     tc->setMiscReg(MISCREG_EFER, 0);
 
+    SegAttr dataAttr = 0;
+    dataAttr.writable = 1;
+    dataAttr.readable = 1;
+    dataAttr.expandDown = 0;
+    dataAttr.dpl = 0;
+    dataAttr.defaultSize = 0;
+
     for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
         tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
         tc->setMiscReg(MISCREG_SEG_BASE(seg), 0);
         tc->setMiscReg(MISCREG_SEG_LIMIT(seg), 0xffff);
-        tc->setMiscReg(MISCREG_SEG_ATTR(seg), 0);
+        tc->setMiscReg(MISCREG_SEG_ATTR(seg), dataAttr);
     }
+
+    SegAttr codeAttr = 0;
+    codeAttr.writable = 0;
+    codeAttr.readable = 1;
+    codeAttr.expandDown = 0;
+    codeAttr.dpl = 0;
+    codeAttr.defaultSize = 0;
 
     tc->setMiscReg(MISCREG_CS, 0xf000);
     tc->setMiscReg(MISCREG_CS_BASE, 0x00000000ffff0000);
     // This has the base value pre-added.
     tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
-    tc->setMiscReg(MISCREG_CS_ATTR, 0);
+    tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);
 
     tc->setPC(0x000000000000fff0 +
             tc->readMiscReg(MISCREG_CS_BASE));
@@ -151,9 +161,35 @@ void initCPU(ThreadContext *tc, int cpuId)
 
     // TODO initialize x87, 64 bit, and 128 bit media state
 
-    // TODO Set up MTRRs (page 512)
+    tc->setMiscReg(MISCREG_MTRRCAP, 0x0508);
+    for (int i = 0; i < 8; i++) {
+        tc->setMiscReg(MISCREG_MTRR_PHYS_BASE(i), 0);
+        tc->setMiscReg(MISCREG_MTRR_PHYS_MASK(i), 0);
+    }
+    tc->setMiscReg(MISCREG_MTRR_FIX_64K_00000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_16K_80000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_16K_A0000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_C0000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4k_C8000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_D0000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_D8000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_E0000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_E8000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_F0000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_F8000, 0);
 
-    // TODO Set up machine check registers (page 515)
+    tc->setMiscReg(MISCREG_DEF_TYPE, 0);
+
+    tc->setMiscReg(MISCREG_MCG_CAP, 0x104);
+    tc->setMiscReg(MISCREG_MCG_STATUS, 0);
+    tc->setMiscReg(MISCREG_MCG_CTL, 0);
+
+    for (int i = 0; i < 5; i++) {
+        tc->setMiscReg(MISCREG_MC_CTL(i), 0);
+        tc->setMiscReg(MISCREG_MC_STATUS(i), 0);
+        tc->setMiscReg(MISCREG_MC_ADDR(i), 0);
+        tc->setMiscReg(MISCREG_MC_MISC(i), 0);
+    }
 
     tc->setMiscReg(MISCREG_DR0, 0);
     tc->setMiscReg(MISCREG_DR1, 0);
@@ -163,18 +199,56 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0);
     tc->setMiscReg(MISCREG_DR7, 0x0000000000000400);
 
-    // TODO Set time stamp counter to 0
+    tc->setMiscReg(MISCREG_TSC, 0);
+    tc->setMiscReg(MISCREG_TSC_AUX, 0);
 
-    // TODO Set up performance monitoring registers (page 517)
+    for (int i = 0; i < 4; i++) {
+        tc->setMiscReg(MISCREG_PERF_EVT_SEL(i), 0);
+        tc->setMiscReg(MISCREG_PERF_EVT_CTR(i), 0);
+    }
 
-    // TODO Set up the rest of the MSRs (page 507)
+    tc->setMiscReg(MISCREG_STAR, 0);
+    tc->setMiscReg(MISCREG_LSTAR, 0);
+    tc->setMiscReg(MISCREG_CSTAR, 0);
+
+    tc->setMiscReg(MISCREG_SF_MASK, 0);
+
+    tc->setMiscReg(MISCREG_KERNEL_GS_BASE, 0);
+
+    tc->setMiscReg(MISCREG_SYSENTER_CS, 0);
+    tc->setMiscReg(MISCREG_SYSENTER_ESP, 0);
+    tc->setMiscReg(MISCREG_SYSENTER_EIP, 0);
+
+    tc->setMiscReg(MISCREG_PAT, 0x0007040600070406);
+
+    tc->setMiscReg(MISCREG_SYSCFG, 0x20601);
+
+    tc->setMiscReg(MISCREG_IORR_BASE0, 0);
+    tc->setMiscReg(MISCREG_IORR_BASE1, 0);
+
+    tc->setMiscReg(MISCREG_IORR_MASK0, 0);
+    tc->setMiscReg(MISCREG_IORR_MASK1, 0);
+
+    tc->setMiscReg(MISCREG_TOP_MEM, 0x4000000);
+    tc->setMiscReg(MISCREG_TOP_MEM2, 0x0);
+
+    tc->setMiscReg(MISCREG_DEBUG_CTL_MSR, 0);
+    tc->setMiscReg(MISCREG_LAST_BRANCH_FROM_IP, 0);
+    tc->setMiscReg(MISCREG_LAST_BRANCH_TO_IP, 0);
+    tc->setMiscReg(MISCREG_LAST_EXCEPTION_FROM_IP, 0);
+    tc->setMiscReg(MISCREG_LAST_EXCEPTION_TO_IP, 0);
 
     // Invalidate the caches (this should already be done for us)
 
     // TODO Turn on the APIC. This should be handled elsewhere but it isn't
     // currently being handled at all.
 
-    // Set the SMRAM base address (SMBASE) to 0x00030000
+    // TODO Set the SMRAM base address (SMBASE) to 0x00030000
+
+    tc->setMiscReg(MISCREG_VM_CR, 0);
+    tc->setMiscReg(MISCREG_IGNNE, 0);
+    tc->setMiscReg(MISCREG_SMM_CTL, 0);
+    tc->setMiscReg(MISCREG_VM_HSAVE_PA, 0);
 }
 
 #endif
