@@ -98,17 +98,17 @@
 namespace X86ISA
 {
 #if FULL_SYSTEM
-    void X86Trap::invoke(TheeadContext * tc)
+    void X86Trap::invoke(ThreadContext * tc)
     {
         panic("X86 faults are not implemented!");
     }
 
-    void X86Abort::invoke(TheeadContext * tc)
+    void X86Abort::invoke(ThreadContext * tc)
     {
         panic("X86 faults are not implemented!");
     }
 
-    void X86Interrupt::invoke(TheeadContext * tc)
+    void X86Interrupt::invoke(ThreadContext * tc)
     {
         panic("X86 faults are not implemented!");
     }
