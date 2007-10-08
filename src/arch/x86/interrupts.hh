@@ -85,7 +85,7 @@ class Interrupts
 
     void clear(int int_num, int index)
     {
-        panic("Interrupts::clear unimplemented!\n");
+        warn("Interrupts::clear unimplemented!\n");
     }
 
     void clear_all()
@@ -95,13 +95,11 @@ class Interrupts
 
     bool check_interrupts(ThreadContext * tc) const
     {
-        panic("Interrupts::check_interrupts unimplemented!\n");
         return false;
     }
 
     Fault getInterrupt(ThreadContext * tc)
     {
-        panic("Interrupts::getInterrupt unimplemented!\n");
         return NoFault;
     }
 
