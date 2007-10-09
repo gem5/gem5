@@ -176,7 +176,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
                 if(phdr.p_offset <= e_phoff &&
                         phdr.p_offset + phdr.p_filesz > e_phoff)
                 {
-                    result->_programHeaderTable = phdr.p_vaddr + e_phoff;
+                    result->_programHeaderTable = phdr.p_paddr + e_phoff;
                     break;
                 }
             }
@@ -261,28 +261,28 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             continue;
 
         // Check to see if this segment contains the bss section.
-        if (phdr.p_vaddr <= bssSecStart &&
-                phdr.p_vaddr + phdr.p_memsz > bssSecStart &&
+        if (phdr.p_paddr <= bssSecStart &&
+                phdr.p_paddr + phdr.p_memsz > bssSecStart &&
                 phdr.p_memsz - phdr.p_filesz > 0) {
-            bss.baseAddr = phdr.p_vaddr + phdr.p_filesz;
+            bss.baseAddr = phdr.p_paddr + phdr.p_filesz;
             bss.size = phdr.p_memsz - phdr.p_filesz;
             bss.fileImage = NULL;
         }
 
         // Check to see if this is the text or data segment
-        if (phdr.p_vaddr <= textSecStart &&
-                phdr.p_vaddr + phdr.p_filesz > textSecStart) {
-            text.baseAddr = phdr.p_vaddr;
+        if (phdr.p_paddr <= textSecStart &&
+                phdr.p_paddr + phdr.p_filesz > textSecStart) {
+            text.baseAddr = phdr.p_paddr;
             text.size = phdr.p_filesz;
             text.fileImage = fileData + phdr.p_offset;
-        } else if (phdr.p_vaddr <= dataSecStart &&
-                phdr.p_vaddr + phdr.p_filesz > dataSecStart) {
-            data.baseAddr = phdr.p_vaddr;
+        } else if (phdr.p_paddr <= dataSecStart &&
+                phdr.p_paddr + phdr.p_filesz > dataSecStart) {
+            data.baseAddr = phdr.p_paddr;
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
         } else {
             Segment extra;
-            extra.baseAddr = phdr.p_vaddr;
+            extra.baseAddr = phdr.p_paddr;
             extra.size = phdr.p_filesz;
             extra.fileImage = fileData + phdr.p_offset;
             extraSegments.push_back(extra);
