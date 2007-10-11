@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2004-2005, 2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Steve Reinhardt
+#          Ali Saidi
+
+# Important!
+# This script expects a simple $ prompt, if you are using a shell other than 
+# sh which defaults to this you'll need to add something like the following
+# to your bashrc/bash_profile script:
+#if [ "$OAR_USER" = "xxxx" ]; then
+#   PS1='$ '
+
 
 import sys
 import os
@@ -46,13 +55,13 @@ optparser.add_option('-e', dest='stderr_file',
 optparser.add_option('-o', dest='stdout_file',
                      help='command stdout output file')
 optparser.add_option('-l', dest='save_log', action='store_true',
-                     help='save qsub output log file')
+                     help='save oarsub output log file')
 optparser.add_option('-N', dest='job_name',
-                     help='qsub job name')
+                     help='oarsub job name')
 optparser.add_option('-q', dest='dest_queue',
-                     help='qsub destination queue')
-optparser.add_option('--qwait', dest='qsub_timeout', type='int',
-                     help='qsub queue wait timeout', default=30*60)
+                     help='oarsub destination queue')
+optparser.add_option('--qwait', dest='oarsub_timeout', type='int',
+                     help='oarsub queue wait timeout', default=30*60)
 optparser.add_option('-t', dest='cmd_timeout', type='int',
                      help='command execution timeout', default=600*60)
 
@@ -63,7 +72,7 @@ if cmd == []:
     sys.exit(1)
 
 # If we want to do this, need to add check here to make sure cmd[0] is
-# a valid PBS job name, else qsub will die on us.
+# a valid PBS job name, else oarsub will die on us.
 #
 #if not options.job_name:
 #    options.job_name = cmd[0]
@@ -98,11 +107,11 @@ class Shell(pexpect.spawn):
         self.quick_timeout = 15
         # wait for a prompt, then change it
         try:
-            self.expect('\$ ', options.qsub_timeout)
+            self.expect('\$ ', options.oarsub_timeout)
         except pexpect.TIMEOUT:
-            print >>sys.stderr, "%s: qsub timed out." % progname
+            print >>sys.stderr, "%s: oarsub timed out." % progname
             self.kill(9)
-            self.close(wait=True)
+            self.safe_close()
             sys.exit(1)
         self.do_command('unset PROMPT_COMMAND; PS1="qdo$ "')
 
@@ -137,8 +146,17 @@ class Shell(pexpect.spawn):
         (output, status) = shell.do_command('[ -d %s ]' % dirname,
                                             self.quick_timeout)
         return status == 0
-
-
+    
+    # Don't actually try to close it.. just wait until it closes by itself
+    # We can't actually kill the pid which is what it's trying to do, and if 
+    # we call wait we could be in an unfortunate situation of it printing input 
+    # right as we call wait, so the input is never read and the process never ends
+    def safe_close(self):
+        count = 0
+        while self.isalive() and count < 10:
+            time.sleep(1)
+        self.close(force=False)
+        
 # Spawn the interactive pool job.
 
 # Hack to do link on poolfs... disabled for now since
@@ -148,11 +166,12 @@ if False and len(cmd) > 50:
     shell_cmd = 'ssh -t poolfs /bin/sh -l'
     print "%s: running %s on poolfs" % (progname, cmd[0])
 else:
-    shell_cmd = 'qsub -I -S /bin/sh'
+    shell_cmd = 'oarsub -I'
     if options.job_name:
-        shell_cmd += ' -N "%s"' % options.job_name
+        shell_cmd += ' -n "%s"' % options.job_name
     if options.dest_queue:
         shell_cmd += ' -q ' + options.dest_queue
+    shell_cmd += ' -d %s' % cwd
 
 shell = Shell(shell_cmd)
 
@@ -197,25 +216,23 @@ try:
     except pexpect.TIMEOUT:
             print >>sys.stderr, "%s: command timed out after %d seconds." \
                   % (progname, options.cmd_timeout)
-            shell.sendline('~.') # qsub/ssh termination escape sequence
-            shell.close(wait=True)
+            shell.sendline('~.') # oarsub/ssh termination escape sequence
+            shell.safe_close()
             status = 3
     if output:
         print output
-
 finally:
     # end job
     if shell.isalive():
         shell.sendline('exit')
-        shell.expect('qsub: job .* completed\r\n')
-        shell.close(wait=True)
+        shell.expect('Disconnected from OAR job .*')
+        shell.safe_close()
 
     # if there was an error, log the output even if not requested
     if status != 0 or options.save_log:
         log = file('qdo-log.' + str(os.getpid()), 'w')
         log.write(shell.full_output)
         log.close()
-
 del shell
 
 sys.exit(status)
