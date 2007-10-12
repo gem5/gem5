@@ -1,0 +1,14 @@
+Hello world!
+M5 Simulator System
+
+Copyright (c) 2001-2006
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Oct 12 2007 09:55:57
+M5 started Fri Oct 12 09:56:08 2007
+M5 executing on nacho
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-atomic tests/run.py quick/00.hello/x86/linux/simple-atomic
+Global frequency set at 1000000000000 ticks per second
+Exiting @ tick 4986500 because target called exit()

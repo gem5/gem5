@@ -1,0 +1,5 @@
+0: system.remote_gdb.listener: listening for remote gdb on port 7000
+warn: Entering event queue @ 0.  Starting simulation...
+warn: instruction 'fnstcw_Mw' unimplemented
+warn: instruction 'fldcw_Mw' unimplemented
+warn: instruction 'rdtsc' unimplemented
