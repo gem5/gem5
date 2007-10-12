@@ -76,7 +76,7 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        panic("Memory mapped registers aren't implemented for x86!\n");
+        pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
 #endif
     }
 
@@ -86,7 +86,8 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        panic("Memory mapped registers aren't implemented for x86!\n");
+        xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
+                gtoh(pkt->get<uint64_t>()));
 #endif
     }
 };

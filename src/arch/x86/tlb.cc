@@ -61,6 +61,7 @@
 
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
+#include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -142,10 +143,304 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     uint32_t flags = req->getFlags();
     bool storeCheck = flags & StoreCheck;
 
-    int seg = flags & (mask(NUM_SEGMENTREGS));
+    int seg = flags & mask(3);
 
     //XXX Junk code to surpress the warning
-    if (storeCheck) seg = seg;
+    if (storeCheck);
+
+    // If this is true, we're dealing with a request to read an internal
+    // value.
+    if (seg == NUM_SEGMENTREGS) {
+        Addr prefix = vaddr & IntAddrPrefixMask;
+        if (prefix == IntAddrPrefixCPUID) {
+            panic("CPUID memory space not yet implemented!\n");
+        } else if (prefix == IntAddrPrefixMSR) {
+            req->setMmapedIpr(true);
+            Addr regNum = 0;
+            switch (vaddr & ~IntAddrPrefixMask) {
+              case 0x10:
+                regNum = MISCREG_TSC;
+                break;
+              case 0xFE:
+                regNum = MISCREG_MTRRCAP;
+                break;
+              case 0x174:
+                regNum = MISCREG_SYSENTER_CS;
+                break;
+              case 0x175:
+                regNum = MISCREG_SYSENTER_ESP;
+                break;
+              case 0x176:
+                regNum = MISCREG_SYSENTER_EIP;
+                break;
+              case 0x179:
+                regNum = MISCREG_MCG_CAP;
+                break;
+              case 0x17A:
+                regNum = MISCREG_MCG_STATUS;
+                break;
+              case 0x17B:
+                regNum = MISCREG_MCG_CTL;
+                break;
+              case 0x1D9:
+                regNum = MISCREG_DEBUG_CTL_MSR;
+                break;
+              case 0x1DB:
+                regNum = MISCREG_LAST_BRANCH_FROM_IP;
+                break;
+              case 0x1DC:
+                regNum = MISCREG_LAST_BRANCH_TO_IP;
+                break;
+              case 0x1DD:
+                regNum = MISCREG_LAST_EXCEPTION_FROM_IP;
+                break;
+              case 0x1DE:
+                regNum = MISCREG_LAST_EXCEPTION_TO_IP;
+                break;
+              case 0x200:
+                regNum = MISCREG_MTRR_PHYS_BASE_0;
+                break;
+              case 0x201:
+                regNum = MISCREG_MTRR_PHYS_MASK_0;
+                break;
+              case 0x202:
+                regNum = MISCREG_MTRR_PHYS_BASE_1;
+                break;
+              case 0x203:
+                regNum = MISCREG_MTRR_PHYS_MASK_1;
+                break;
+              case 0x204:
+                regNum = MISCREG_MTRR_PHYS_BASE_2;
+                break;
+              case 0x205:
+                regNum = MISCREG_MTRR_PHYS_MASK_2;
+                break;
+              case 0x206:
+                regNum = MISCREG_MTRR_PHYS_BASE_3;
+                break;
+              case 0x207:
+                regNum = MISCREG_MTRR_PHYS_MASK_3;
+                break;
+              case 0x208:
+                regNum = MISCREG_MTRR_PHYS_BASE_4;
+                break;
+              case 0x209:
+                regNum = MISCREG_MTRR_PHYS_MASK_4;
+                break;
+              case 0x20A:
+                regNum = MISCREG_MTRR_PHYS_BASE_5;
+                break;
+              case 0x20B:
+                regNum = MISCREG_MTRR_PHYS_MASK_5;
+                break;
+              case 0x20C:
+                regNum = MISCREG_MTRR_PHYS_BASE_6;
+                break;
+              case 0x20D:
+                regNum = MISCREG_MTRR_PHYS_MASK_6;
+                break;
+              case 0x20E:
+                regNum = MISCREG_MTRR_PHYS_BASE_7;
+                break;
+              case 0x20F:
+                regNum = MISCREG_MTRR_PHYS_MASK_7;
+                break;
+              case 0x250:
+                regNum = MISCREG_MTRR_FIX_64K_00000;
+                break;
+              case 0x258:
+                regNum = MISCREG_MTRR_FIX_16K_80000;
+                break;
+              case 0x259:
+                regNum = MISCREG_MTRR_FIX_16K_A0000;
+                break;
+              case 0x268:
+                regNum = MISCREG_MTRR_FIX_4K_C0000;
+                break;
+              case 0x269:
+                regNum = MISCREG_MTRR_FIX_4K_C8000;
+                break;
+              case 0x26A:
+                regNum = MISCREG_MTRR_FIX_4K_D0000;
+                break;
+              case 0x26B:
+                regNum = MISCREG_MTRR_FIX_4K_D8000;
+                break;
+              case 0x26C:
+                regNum = MISCREG_MTRR_FIX_4K_E0000;
+                break;
+              case 0x26D:
+                regNum = MISCREG_MTRR_FIX_4K_E8000;
+                break;
+              case 0x26E:
+                regNum = MISCREG_MTRR_FIX_4K_F0000;
+                break;
+              case 0x26F:
+                regNum = MISCREG_MTRR_FIX_4K_F8000;
+                break;
+              case 0x277:
+                regNum = MISCREG_PAT;
+                break;
+              case 0x2FF:
+                regNum = MISCREG_DEF_TYPE;
+                break;
+              case 0x400:
+                regNum = MISCREG_MC0_CTL;
+                break;
+              case 0x404:
+                regNum = MISCREG_MC1_CTL;
+                break;
+              case 0x408:
+                regNum = MISCREG_MC2_CTL;
+                break;
+              case 0x40C:
+                regNum = MISCREG_MC3_CTL;
+                break;
+              case 0x410:
+                regNum = MISCREG_MC4_CTL;
+                break;
+              case 0x401:
+                regNum = MISCREG_MC0_STATUS;
+                break;
+              case 0x405:
+                regNum = MISCREG_MC1_STATUS;
+                break;
+              case 0x409:
+                regNum = MISCREG_MC2_STATUS;
+                break;
+              case 0x40D:
+                regNum = MISCREG_MC3_STATUS;
+                break;
+              case 0x411:
+                regNum = MISCREG_MC4_STATUS;
+                break;
+              case 0x402:
+                regNum = MISCREG_MC0_ADDR;
+                break;
+              case 0x406:
+                regNum = MISCREG_MC1_ADDR;
+                break;
+              case 0x40A:
+                regNum = MISCREG_MC2_ADDR;
+                break;
+              case 0x40E:
+                regNum = MISCREG_MC3_ADDR;
+                break;
+              case 0x412:
+                regNum = MISCREG_MC4_ADDR;
+                break;
+              case 0x403:
+                regNum = MISCREG_MC0_MISC;
+                break;
+              case 0x407:
+                regNum = MISCREG_MC1_MISC;
+                break;
+              case 0x40B:
+                regNum = MISCREG_MC2_MISC;
+                break;
+              case 0x40F:
+                regNum = MISCREG_MC3_MISC;
+                break;
+              case 0x413:
+                regNum = MISCREG_MC4_MISC;
+                break;
+              case 0xC0000080:
+                regNum = MISCREG_EFER;
+                break;
+              case 0xC0000081:
+                regNum = MISCREG_STAR;
+                break;
+              case 0xC0000082:
+                regNum = MISCREG_LSTAR;
+                break;
+              case 0xC0000083:
+                regNum = MISCREG_CSTAR;
+                break;
+              case 0xC0000084:
+                regNum = MISCREG_SF_MASK;
+                break;
+              case 0xC0000100:
+                regNum = MISCREG_FS_BASE;
+                break;
+              case 0xC0000101:
+                regNum = MISCREG_GS_BASE;
+                break;
+              case 0xC0000102:
+                regNum = MISCREG_KERNEL_GS_BASE;
+                break;
+              case 0xC0000103:
+                regNum = MISCREG_TSC_AUX;
+                break;
+              case 0xC0010000:
+                regNum = MISCREG_PERF_EVT_SEL0;
+                break;
+              case 0xC0010001:
+                regNum = MISCREG_PERF_EVT_SEL1;
+                break;
+              case 0xC0010002:
+                regNum = MISCREG_PERF_EVT_SEL2;
+                break;
+              case 0xC0010003:
+                regNum = MISCREG_PERF_EVT_SEL3;
+                break;
+              case 0xC0010004:
+                regNum = MISCREG_PERF_EVT_CTR0;
+                break;
+              case 0xC0010005:
+                regNum = MISCREG_PERF_EVT_CTR1;
+                break;
+              case 0xC0010006:
+                regNum = MISCREG_PERF_EVT_CTR2;
+                break;
+              case 0xC0010007:
+                regNum = MISCREG_PERF_EVT_CTR3;
+                break;
+              case 0xC0010010:
+                regNum = MISCREG_SYSCFG;
+                break;
+              case 0xC0010016:
+                regNum = MISCREG_IORR_BASE0;
+                break;
+              case 0xC0010017:
+                regNum = MISCREG_IORR_BASE1;
+                break;
+              case 0xC0010018:
+                regNum = MISCREG_IORR_MASK0;
+                break;
+              case 0xC0010019:
+                regNum = MISCREG_IORR_MASK1;
+                break;
+              case 0xC001001A:
+                regNum = MISCREG_TOP_MEM;
+                break;
+              case 0xC001001D:
+                regNum = MISCREG_TOP_MEM2;
+                break;
+              case 0xC0010114:
+                regNum = MISCREG_VM_CR;
+                break;
+              case 0xC0010115:
+                regNum = MISCREG_IGNNE;
+                break;
+              case 0xC0010116:
+                regNum = MISCREG_SMM_CTL;
+                break;
+              case 0xC0010117:
+                regNum = MISCREG_VM_HSAVE_PA;
+                break;
+              default:
+                return new GeneralProtection(0);
+            }
+            //The index is multiplied by the size of a MiscReg so that
+            //any memory dependence calculations will not see these as
+            //overlapping.
+            req->setPaddr(regNum * sizeof(MiscReg));
+            return NoFault;
+        } else {
+            panic("Access to unrecognized internal address space %#x.\n",
+                    prefix);
+        }
+    }
 
     // Get cr0. This will tell us how to do translation. We'll assume it was
     // verified to be correct and consistent when set.

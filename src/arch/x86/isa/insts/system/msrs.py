@@ -53,11 +53,22 @@
 #
 # Authors: Gabe Black
 
-categories = ["undefined_operation",
-              "msrs"]
+microcode = '''
+def macroop WRMSR
+{
+    limm t1, "IntAddrPrefixMSR >> 3"
+    ld t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
+    mov rax, rax, t2, dataSize=4
+    srli t2, t2, 32, dataSize=8
+    mov rdx, rdx, t2, dataSize=4
+};
 
-microcode = ""
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
-
+def macroop RDMSR
+{
+    limm t1, "IntAddrPrefixMSR >> 3"
+    mov t2, t2, rdx, dataSize=4
+    slli t2, t2, 32, dataSize=8
+    mov t2, t2, rax, dataSize=4
+    st t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
+};
+'''

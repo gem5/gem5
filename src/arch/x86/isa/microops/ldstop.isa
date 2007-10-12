@@ -325,13 +325,13 @@ def template MicroLdStOpConstructor {{
 
 let {{
     class LdStOp(X86Microop):
-        def __init__(self, data, segment, addr, disp, dataSize):
+        def __init__(self, data, segment, addr, disp, dataSize, addressSize):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
             self.segment = segment
             self.dataSize = dataSize
-            self.addressSize = "env.addressSize"
+            self.addressSize = addressSize
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, mnemonic
@@ -378,10 +378,10 @@ let {{
         exec_output += MicroLoadCompleteAcc.subst(iop)
 
         class LoadOp(LdStOp):
-            def __init__(self, data, segment, addr,
-                    disp = 0, dataSize="env.dataSize"):
+            def __init__(self, data, segment, addr, disp = 0,
+                    dataSize="env.dataSize", addressSize="env.addressSize"):
                 super(LoadOp, self).__init__(data, segment,
-                        addr, disp, dataSize)
+                        addr, disp, dataSize, addressSize)
                 self.className = Name
                 self.mnemonic = name
 
@@ -411,10 +411,10 @@ let {{
         exec_output += MicroStoreCompleteAcc.subst(iop)
 
         class StoreOp(LdStOp):
-            def __init__(self, data, segment, addr,
-                    disp = 0, dataSize="env.dataSize"):
+            def __init__(self, data, segment, addr, disp = 0,
+                    dataSize="env.dataSize", addressSize="env.addressSize"):
                 super(StoreOp, self).__init__(data, segment,
-                        addr, disp, dataSize)
+                        addr, disp, dataSize, addressSize)
                 self.className = Name
                 self.mnemonic = name
 
@@ -432,10 +432,10 @@ let {{
     exec_output += MicroLeaExecute.subst(iop)
 
     class LeaOp(LdStOp):
-        def __init__(self, data, segment, addr,
-                disp = 0, dataSize="env.dataSize"):
+        def __init__(self, data, segment, addr, disp = 0,
+                dataSize="env.dataSize", addressSize="env.addressSize"):
             super(LeaOp, self).__init__(data, segment,
-                    addr, disp, dataSize)
+                    addr, disp, dataSize, addressSize)
             self.className = "Lea"
             self.mnemonic = "lea"
 
