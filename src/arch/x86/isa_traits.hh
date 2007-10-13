@@ -136,7 +136,7 @@ namespace X86ISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
-    const Addr LoadAddrMask = ULL(0xffffffffff);
+    const Addr LoadAddrMask = ULL(-1);
 };
 
 #endif // __ARCH_X86_ISATRAITS_HH__

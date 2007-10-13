@@ -270,13 +270,13 @@ ElfObject::ElfObject(const string &_filename, int _fd,
         }
 
         // Check to see if this is the text or data segment
-        if (phdr.p_paddr <= textSecStart &&
-                phdr.p_paddr + phdr.p_filesz > textSecStart) {
+        if (phdr.p_vaddr <= textSecStart &&
+                phdr.p_vaddr + phdr.p_filesz > textSecStart) {
             text.baseAddr = phdr.p_paddr;
             text.size = phdr.p_filesz;
             text.fileImage = fileData + phdr.p_offset;
-        } else if (phdr.p_paddr <= dataSecStart &&
-                phdr.p_paddr + phdr.p_filesz > dataSecStart) {
+        } else if (phdr.p_vaddr <= dataSecStart &&
+                phdr.p_vaddr + phdr.p_filesz > dataSecStart) {
             data.baseAddr = phdr.p_paddr;
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
