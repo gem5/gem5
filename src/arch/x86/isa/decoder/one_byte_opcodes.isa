@@ -325,17 +325,17 @@
                 default: lahf();
             }
         }
-        0x14: decode OPCODE_OP_BOTTOM3 {
-            0x0: mov_Al_Ob();
-            0x1: mov_rAX_Ov();
-            0x2: mov_Ob_Al();
-            0x3: mov_Ov_rAX();
-            0x4: StringInst::MOVS(Yb,Xb);
-            0x5: StringInst::MOVS(Yv,Xv);
-            0x6: StringTestInst::CMPS(Yb,Xb);
-            0x7: StringTestInst::CMPS(Yv,Xv);
-        }
         format Inst {
+            0x14: decode OPCODE_OP_BOTTOM3 {
+                0x0: MOV(rAb, Ob);
+                0x1: MOV(rAv, Ov);
+                0x2: MOV(Ob, rAb);
+                0x3: MOV(Ov, rAv);
+                0x4: StringInst::MOVS(Yb,Xb);
+                0x5: StringInst::MOVS(Yv,Xv);
+                0x6: StringTestInst::CMPS(Yb,Xb);
+                0x7: StringTestInst::CMPS(Yv,Xv);
+            }
             0x15: decode OPCODE_OP_BOTTOM3 {
                 0x0: TEST(rAb,Ib);
                 0x1: TEST(rAv,Iz);

@@ -59,6 +59,16 @@ microcode = '''
 # Regular moves
 #
 
+def macroop MOV_R_MI {
+    limm t1, imm
+    ld reg, seg, [1, t0, t1]
+};
+
+def macroop MOV_MI_R {
+    limm t1, imm
+    st reg, seg, [1, t0, t1]
+};
+
 def macroop MOV_R_R {
     mov reg, reg, regm
 };

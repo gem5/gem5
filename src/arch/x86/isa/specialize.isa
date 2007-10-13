@@ -172,6 +172,9 @@ let {{
             elif opType.tag in ("I", "J"):
                 # Immediates
                 Name += "_I"
+            elif opType.tag == "O":
+                # Immediate containing a memory offset
+                Name += "_MI"
             elif opType.tag in ("PR", "R", "VR"):
                 # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
