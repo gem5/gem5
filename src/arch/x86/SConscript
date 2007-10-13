@@ -179,6 +179,7 @@ if env['TARGET_ISA'] == 'x86':
         'general_purpose/system_calls.py',
         'system/__init__.py',
         'system/undefined_operation.py',
+        'system/msrs.py',
         'simd128/__init__.py',
         'simd128/integer/__init__.py',
         'simd128/integer/data_transfer/__init__.py',

@@ -53,7 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["undefined_operation"]
+categories = ["undefined_operation",
+              "msrs"]
 
 microcode = ""
 for category in categories:

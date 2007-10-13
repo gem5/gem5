@@ -54,144 +54,21 @@
 # Authors: Gabe Black
 
 microcode = '''
-
-#
-# Regular moves
-#
-
-def macroop MOV_R_MI {
-    limm t1, imm
-    ld reg, seg, [1, t0, t1]
+def macroop WRMSR
+{
+    limm t1, "IntAddrPrefixMSR >> 3"
+    ld t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
+    mov rax, rax, t2, dataSize=4
+    srli t2, t2, 32, dataSize=8
+    mov rdx, rdx, t2, dataSize=4
 };
 
-def macroop MOV_MI_R {
-    limm t1, imm
-    st reg, seg, [1, t0, t1]
-};
-
-def macroop MOV_R_R {
-    mov reg, reg, regm
-};
-
-def macroop MOV_M_R {
-    st reg, seg, sib, disp
-};
-
-def macroop MOV_P_R {
-    rdip t7
-    st reg, seg, riprel, disp
-};
-
-def macroop MOV_R_M {
-    ld reg, seg, sib, disp
-};
-
-def macroop MOV_R_P {
-    rdip t7
-    ld reg, seg, riprel, disp
-};
-
-def macroop MOV_R_I {
-    limm reg, imm
-};
-
-def macroop MOV_M_I {
-    limm t1, imm
-    st t1, seg, sib, disp
-};
-
-def macroop MOV_P_I {
-    rdip t7
-    limm t1, imm
-    st t1, seg, riprel, disp
-};
-
-#
-# Sign extending moves
-#
-
-def macroop MOVSXD_R_R {
-    sext reg, regm, 32
-};
-
-def macroop MOVSXD_R_M {
-    ld t1, seg, sib, disp, dataSize=4
-    sext reg, t1, 32
-};
-
-def macroop MOVSXD_R_P {
-    rdip t7
-    ld t1, seg, riprel, disp, dataSize=4
-    sext reg, t1, 32
-};
-
-def macroop MOVSX_B_R_R {
-    sext reg, regm, 8
-};
-
-def macroop MOVSX_B_R_M {
-    ld reg, seg, sib, disp, dataSize=1
-    sext reg, reg, 8
-};
-
-def macroop MOVSX_B_R_P {
-    rdip t7
-    ld reg, seg, riprel, disp, dataSize=1
-    sext reg, reg, 8
-};
-
-def macroop MOVSX_W_R_R {
-    sext reg, regm, 16
-};
-
-def macroop MOVSX_W_R_M {
-    ld reg, seg, sib, disp, dataSize=2
-    sext reg, reg, 16
-};
-
-def macroop MOVSX_W_R_P {
-    rdip t7
-    ld reg, seg, riprel, disp, dataSize=2
-    sext reg, reg, 16
-};
-
-#
-# Zero extending moves
-#
-
-def macroop MOVZX_B_R_R {
-    zext reg, regm, 8
-};
-
-def macroop MOVZX_B_R_M {
-    ld t1, seg, sib, disp, dataSize=1
-    zext reg, t1, 8
-};
-
-def macroop MOVZX_B_R_P {
-    rdip t7
-    ld t1, seg, riprel, disp, dataSize=1
-    zext reg, t1, 8
-};
-
-def macroop MOVZX_W_R_R {
-    zext reg, regm, 16
-};
-
-def macroop MOVZX_W_R_M {
-    ld t1, seg, sib, disp, dataSize=2
-    zext reg, t1, 16
-};
-
-def macroop MOVZX_W_R_P {
-    rdip t7
-    ld t1, seg, riprel, disp, dataSize=2
-    zext reg, t1, 16
+def macroop RDMSR
+{
+    limm t1, "IntAddrPrefixMSR >> 3"
+    mov t2, t2, rdx, dataSize=4
+    slli t2, t2, 32, dataSize=8
+    mov t2, t2, rax, dataSize=4
+    st t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
 };
 '''
-#let {{
-#    class MOVD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class MOVNTI(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

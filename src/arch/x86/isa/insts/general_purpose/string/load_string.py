@@ -53,16 +53,32 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class LODS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class LODSB(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class LODSW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class LODSD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class LODSQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop LODS_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    ld rax, seg, [1, t0, rdi]
+
+    add rdi, rdi, t3, dataSize=asz
+};
+
+def macroop LODS_E_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+topOfLoop:
+    ld rax, seg, [1, t0, rdi]
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t3, dataSize=asz
+    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    fault "NoFault"
+};
+'''

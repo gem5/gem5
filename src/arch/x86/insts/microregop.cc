@@ -66,7 +66,7 @@ namespace X86ISA
             uint64_t _dest, uint64_t _src1, uint64_t _src2,
             bool subtract) const
     {
-        DPRINTF(Sparc, "flagMask = %#x\n", flagMask);
+        DPRINTF(X86, "flagMask = %#x\n", flagMask);
         uint64_t flags = oldFlags & ~flagMask;
         if(flagMask & (ECFBit | CFBit))
         {
