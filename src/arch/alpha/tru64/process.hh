@@ -39,16 +39,8 @@ class AlphaTru64Process : public AlphaLiveProcess
 {
   public:
     /// Constructor.
-    AlphaTru64Process(const std::string &name,
-                      ObjectFile *objFile,
-                      System *system,
-                      int stdin_fd, int stdout_fd, int stderr_fd,
-                      std::vector<std::string> &argv,
-                      std::vector<std::string> &envp,
-                      const std::string &cwd,
-                      uint64_t _uid, uint64_t _euid,
-                      uint64_t _gid, uint64_t _egid,
-                      uint64_t _pid, uint64_t _ppid);
+    AlphaTru64Process(LiveProcessParams * params,
+                      ObjectFile *objFile);
 
     /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];

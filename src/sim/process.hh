@@ -48,12 +48,14 @@
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 
-class ThreadContext;
-class SyscallDesc;
-class PageTable;
-class TranslatingPort;
-class System;
 class GDBListener;
+class PageTable;
+class ProcessParams;
+class LiveProcessParams;
+class SyscallDesc;
+class System;
+class ThreadContext;
+class TranslatingPort;
 namespace TheISA
 {
     class RemoteGDB;
@@ -103,6 +105,9 @@ class Process : public SimObject
     unsigned stack_size;	// initial stack size
     Addr stack_min;		// lowest address accessed on the stack
 
+    // The maximum size allowed for the stack.
+    Addr max_stack_size;
+
     // addr to use for next stack region (for multithreaded apps)
     Addr next_thread_stack_base;
 
@@ -121,11 +126,7 @@ class Process : public SimObject
 
   protected:
     // constructor
-    Process(const std::string &nm,
-            System *_system,
-            int stdin_fd, 	// initial I/O descriptors
-            int stdout_fd,
-            int stderr_fd);
+    Process(ProcessParams * params);
 
     // post initialization startup
     virtual void startup();
@@ -195,14 +196,7 @@ class LiveProcess : public Process
     std::vector<std::string> envp;
     std::string cwd;
 
-    LiveProcess(const std::string &nm, ObjectFile *objFile,
-                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-                std::vector<std::string> &argv,
-                std::vector<std::string> &envp,
-                const std::string &cwd,
-                uint64_t _uid, uint64_t _euid,
-                uint64_t _gid, uint64_t _egid,
-                uint64_t _pid, uint64_t _ppid);
+    LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
     virtual void argsInit(int intSize, int pageSize);
 
@@ -272,16 +266,7 @@ class LiveProcess : public Process
     // this function is used to create the LiveProcess object, since
     // we can't tell which subclass of LiveProcess to use until we
     // open and look at the object file.
-    static LiveProcess *create(const std::string &nm,
-                               System *_system,
-                               int stdin_fd, int stdout_fd, int stderr_fd,
-                               std::string executable,
-                               std::vector<std::string> &argv,
-                               std::vector<std::string> &envp,
-                               const std::string &cwd,
-                               uint64_t _uid, uint64_t _euid,
-                               uint64_t _gid, uint64_t _egid,
-                               uint64_t _pid, uint64_t _ppid);
+    static LiveProcess *create(LiveProcessParams * params);
 };
 
 

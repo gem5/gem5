@@ -77,21 +77,9 @@ X86LinuxProcess::getDesc(int callnum)
     return &syscallDescs[callnum];
 }
 
-X86LinuxProcess::X86LinuxProcess(const std::string &name,
-                                       ObjectFile *objFile,
-                                       System * system,
-                                       int stdin_fd,
-                                       int stdout_fd,
-                                       int stderr_fd,
-                                       std::vector<std::string> &argv,
-                                       std::vector<std::string> &envp,
-                                       const std::string &cwd,
-                                       uint64_t _uid, uint64_t _euid,
-                                       uint64_t _gid, uint64_t _egid,
-                                       uint64_t _pid, uint64_t _ppid)
-    : X86LiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
-            _uid, _euid, _gid, _egid, _pid, _ppid),
+X86LinuxProcess::X86LinuxProcess(LiveProcessParams * params,
+        ObjectFile *objFile)
+    : X86LiveProcess(params, objFile),
     Num_Syscall_Descs(273)
 {}
 

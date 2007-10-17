@@ -573,20 +573,9 @@ AlphaTru64Process::getDesc(int callnum)
 }
 
 
-AlphaTru64Process::AlphaTru64Process(const std::string &name,
-                                     ObjectFile *objFile,
-                                     System *system,
-                                     int stdin_fd,
-                                     int stdout_fd,
-                                     int stderr_fd,
-                                     std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp,
-                                     const std::string &cwd,
-                                     uint64_t _uid, uint64_t _euid,
-                                     uint64_t _gid, uint64_t _egid,
-                                     uint64_t _pid, uint64_t _ppid)
-    : AlphaLiveProcess(name, objFile, system, stdin_fd, stdout_fd,
-            stderr_fd, argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid),
+AlphaTru64Process::AlphaTru64Process(LiveProcessParams * params,
+                                     ObjectFile *objFile)
+    : AlphaLiveProcess(params, objFile),
       Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
       Num_Mach_Syscall_Descs(sizeof(machSyscallDescs) / sizeof(SyscallDesc))
 {

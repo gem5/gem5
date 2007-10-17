@@ -40,14 +40,9 @@
 using namespace AlphaISA;
 using namespace std;
 
-AlphaLiveProcess::AlphaLiveProcess(const std::string &nm, ObjectFile *objFile,
-        System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-        std::vector<std::string> &argv, std::vector<std::string> &envp,
-        const std::string &cwd,
-        uint64_t _uid, uint64_t _euid, uint64_t _gid, uint64_t _egid,
-        uint64_t _pid, uint64_t _ppid)
-    : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
-        argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid)
+AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams * params,
+        ObjectFile *objFile)
+    : LiveProcess(params, objFile)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
     brk_point = roundUp(brk_point, VMPageSize);

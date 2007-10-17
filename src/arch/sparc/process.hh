@@ -46,14 +46,7 @@ class SparcLiveProcess : public LiveProcess
     //The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
-    SparcLiveProcess(const std::string &nm, ObjectFile *objFile,
-                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-                std::vector<std::string> &argv,
-                std::vector<std::string> &envp,
-                const std::string &cwd,
-                uint64_t _uid, uint64_t _euid,
-                uint64_t _gid, uint64_t _egid,
-                uint64_t _pid, uint64_t _ppid);
+    SparcLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
   public:
 
@@ -90,18 +83,8 @@ class Sparc32LiveProcess : public SparcLiveProcess
 
     std::vector<M5_32_auxv_t> auxv;
 
-    Sparc32LiveProcess(const std::string &nm, ObjectFile *objFile,
-                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-                std::vector<std::string> &argv,
-                std::vector<std::string> &envp,
-                const std::string &cwd,
-                uint64_t _uid, uint64_t _euid,
-                uint64_t _gid, uint64_t _egid,
-                uint64_t _pid, uint64_t _ppid) :
-            SparcLiveProcess(nm, objFile, _system,
-                         stdin_fd, stdout_fd, stderr_fd,
-                         argv, envp, cwd,
-                         _uid, _euid, _gid, _egid, _pid, _ppid)
+    Sparc32LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
+            SparcLiveProcess(params, objFile)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
@@ -143,18 +126,8 @@ class Sparc64LiveProcess : public SparcLiveProcess
 
     std::vector<M5_64_auxv_t> auxv;
 
-    Sparc64LiveProcess(const std::string &nm, ObjectFile *objFile,
-                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-                std::vector<std::string> &argv,
-                std::vector<std::string> &envp,
-                const std::string &cwd,
-                uint64_t _uid, uint64_t _euid,
-                uint64_t _gid, uint64_t _egid,
-                uint64_t _pid, uint64_t _ppid) :
-            SparcLiveProcess(nm, objFile, _system,
-                         stdin_fd, stdout_fd, stderr_fd,
-                         argv, envp, cwd,
-                         _uid, _euid, _gid, _egid, _pid, _ppid)
+    Sparc64LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
+            SparcLiveProcess(params, objFile)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.

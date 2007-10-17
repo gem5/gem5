@@ -41,14 +41,9 @@
 using namespace std;
 using namespace MipsISA;
 
-MipsLiveProcess::MipsLiveProcess(const std::string &nm, ObjectFile *objFile,
-        System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-        std::vector<std::string> &argv, std::vector<std::string> &envp,
-        const std::string &cwd,
-        uint64_t _uid, uint64_t _euid, uint64_t _gid, uint64_t _egid,
-        uint64_t _pid, uint64_t _ppid)
-    : LiveProcess(nm, objFile, _system, stdin_fd, stdout_fd, stderr_fd,
-        argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid)
+MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
+        ObjectFile *objFile)
+    : LiveProcess(params, objFile)
 {
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here

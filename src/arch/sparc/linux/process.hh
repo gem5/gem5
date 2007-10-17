@@ -65,16 +65,7 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
 {
   public:
     /// Constructor.
-    Sparc32LinuxProcess(const std::string &name,
-                      ObjectFile *objFile,
-                      System * system,
-                      int stdin_fd, int stdout_fd, int stderr_fd,
-                      std::vector<std::string> &argv,
-                      std::vector<std::string> &envp,
-                      const std::string &cwd,
-                      uint64_t _uid, uint64_t _euid,
-                      uint64_t _gid, uint64_t _egid,
-                      uint64_t _pid, uint64_t _ppid);
+    Sparc32LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 
     SyscallDesc* getDesc(int callnum)
     {
@@ -89,16 +80,7 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64LiveProcess
 {
   public:
     /// Constructor.
-    Sparc64LinuxProcess(const std::string &name,
-                      ObjectFile *objFile,
-                      System * system,
-                      int stdin_fd, int stdout_fd, int stderr_fd,
-                      std::vector<std::string> &argv,
-                      std::vector<std::string> &envp,
-                      const std::string &cwd,
-                      uint64_t _uid, uint64_t _euid,
-                      uint64_t _gid, uint64_t _egid,
-                      uint64_t _pid, uint64_t _ppid);
+    Sparc64LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 
     SyscallDesc* getDesc(int callnum)
     {

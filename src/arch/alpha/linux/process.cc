@@ -568,23 +568,9 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 441 */ SyscallDesc("keyctl", unimplementedFunc)
 };
 
-AlphaLinuxProcess::AlphaLinuxProcess(const std::string &name,
-                                     ObjectFile *objFile,
-                                     System *system,
-                                     int stdin_fd,
-                                     int stdout_fd,
-                                     int stderr_fd,
-                                     std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp,
-                                     const std::string &cwd,
-                                     uint64_t _uid,
-                                     uint64_t _euid,
-                                     uint64_t _gid,
-                                     uint64_t _egid,
-                                     uint64_t _pid,
-                                     uint64_t _ppid)
-    : AlphaLiveProcess(name, objFile, system, stdin_fd, stdout_fd,
-           stderr_fd, argv, envp, cwd, _uid, _euid, _gid, _egid, _pid, _ppid),
+AlphaLinuxProcess::AlphaLinuxProcess(LiveProcessParams * params,
+                                     ObjectFile *objFile)
+    : AlphaLiveProcess(params, objFile),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     //init_regs->intRegFile[0] = 0;

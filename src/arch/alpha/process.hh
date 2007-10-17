@@ -43,14 +43,7 @@ class System;
 class AlphaLiveProcess : public LiveProcess
 {
   protected:
-    AlphaLiveProcess(const std::string &nm, ObjectFile *objFile,
-                System *_system, int stdin_fd, int stdout_fd, int stderr_fd,
-                std::vector<std::string> &argv,
-                std::vector<std::string> &envp,
-                const std::string &cwd,
-                uint64_t _uid, uint64_t _euid,
-                uint64_t _gid, uint64_t _egid,
-                uint64_t _pid, uint64_t _ppid);
+    AlphaLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
     void startup();
 };

@@ -72,21 +72,9 @@ SparcLinuxProcess::SparcLinuxProcess() :
     assert(Num_Syscall_Descs <= 299);
 }
 
-Sparc32LinuxProcess::Sparc32LinuxProcess(const std::string &name,
-                                         ObjectFile *objFile,
-                                         System * system,
-                                         int stdin_fd,
-                                         int stdout_fd,
-                                         int stderr_fd,
-                                         std::vector<std::string> &argv,
-                                         std::vector<std::string> &envp,
-                                         const std::string &cwd,
-                                         uint64_t _uid, uint64_t _euid,
-                                         uint64_t _gid, uint64_t _egid,
-                                         uint64_t _pid, uint64_t _ppid)
-    : Sparc32LiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
-            _uid, _euid, _gid, _egid, _pid, _ppid)
+Sparc32LinuxProcess::Sparc32LinuxProcess(LiveProcessParams * params,
+                                         ObjectFile *objFile)
+    : Sparc32LiveProcess(params, objFile)
 {}
 
 void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
@@ -101,21 +89,9 @@ void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
     }
 }
 
-Sparc64LinuxProcess::Sparc64LinuxProcess(const std::string &name,
-                                         ObjectFile *objFile,
-                                         System * system,
-                                         int stdin_fd,
-                                         int stdout_fd,
-                                         int stderr_fd,
-                                         std::vector<std::string> &argv,
-                                         std::vector<std::string> &envp,
-                                         const std::string &cwd,
-                                         uint64_t _uid, uint64_t _euid,
-                                         uint64_t _gid, uint64_t _egid,
-                                         uint64_t _pid, uint64_t _ppid)
-    : Sparc64LiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
-            _uid, _euid, _gid, _egid, _pid, _ppid)
+Sparc64LinuxProcess::Sparc64LinuxProcess(LiveProcessParams * params,
+                                         ObjectFile *objFile)
+    : Sparc64LiveProcess(params, objFile)
 {}
 
 void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)

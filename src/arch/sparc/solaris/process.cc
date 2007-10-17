@@ -321,24 +321,9 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 255 */ SyscallDesc("umount2", unimplementedFunc)
 };
 
-SparcSolarisProcess::SparcSolarisProcess(const std::string &name,
-                                     ObjectFile *objFile,
-                                     System * system,
-                                     int stdin_fd,
-                                     int stdout_fd,
-                                     int stderr_fd,
-                                     std::vector<std::string> &argv,
-                                     std::vector<std::string> &envp,
-                                     const std::string &cwd,
-                                     uint64_t _uid,
-                                     uint64_t _euid,
-                                     uint64_t _gid,
-                                     uint64_t _egid,
-                                     uint64_t _pid,
-                                     uint64_t _ppid)
-    : Sparc64LiveProcess(name, objFile, system,
-            stdin_fd, stdout_fd, stderr_fd, argv, envp, cwd,
-            _uid, _euid, _gid, _egid, _pid, _ppid),
+SparcSolarisProcess::SparcSolarisProcess(LiveProcessParams * params,
+                                     ObjectFile *objFile)
+    : Sparc64LiveProcess(params, objFile),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {
     // The sparc syscall table must be <= 284 entries because that is all there
