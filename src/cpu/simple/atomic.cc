@@ -159,9 +159,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     icachePort.snoopRangeSent = false;
     dcachePort.snoopRangeSent = false;
 
-    ifetch_req.setThreadContext(p->cpu_id, 0); // Add thread ID if we add MT
-    data_read_req.setThreadContext(p->cpu_id, 0); // Add thread ID here too
-    data_write_req.setThreadContext(p->cpu_id, 0); // Add thread ID here too
+    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
+    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
 }
 
 
@@ -237,6 +237,8 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     if (_status != Running) {
         _status = Idle;
     }
+    assert(threadContexts.size() == 1);
+    cpuId = tc->readCpuId();
 }
 
 

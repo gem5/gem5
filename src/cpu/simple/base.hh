@@ -117,6 +117,10 @@ class BaseSimpleCPU : public BaseCPU
      * objects to modify this thread's state.
      */
     ThreadContext *tc;
+  protected:
+    int cpuId;
+
+  public:
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
