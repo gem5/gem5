@@ -156,8 +156,51 @@ def macroop LEAVE {
     mov rsp, rsp, t1
     addi rsp, rsp, dsz
 };
+
+def macroop ENTER_I_I {
+    # This needs to check all the addresses it writes to before it actually
+    # writes any values.
+
+    # Pull the different components out of the immediate
+    limm t1, imm
+    zext t2, t1, 16, dataSize=2
+    srl t1, t1, 16
+    zext t1, t1, 6
+    # t1 is now the masked nesting level, and t2 is the amount of storage.
+
+    # Push rbp.
+    st rbp, ss, [1, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, dsz
+
+    # Save the stack pointer for later
+    mov t6, t6, rsp
+
+    # If the nesting level is zero, skip all this stuff.
+    subi t0, t1, t0, flags=(EZF,), dataSize=2
+    bri t0, label("skipLoop"), flags=(CEZF,)
+
+    # If the level was 1, only push the saved rbp
+    subi t0, t1, 1, flags=(EZF,)
+    bri t0, label("bottomOfLoop"), flags=(CEZF,)
+
+    limm t4, "ULL(-1)", dataSize=8
+topOfLoop:
+    ld t5, ss, [dsz, t4, rbp]
+    st t5, ss, [1, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, dsz
+
+    # If we're not done yet, loop
+    subi t4, t4, 1, dataSize=8
+    add t0, t4, t1, flags=(EZF,)
+    bri t0, label("topOfLoop"), flags=(nCEZF,)
+
+bottomOfLoop:
+    # Push the old rbp onto the stack
+    st t6, ss, [1, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, dsz
+
+skipLoop:
+    sub rsp, rsp, t2
+    mov rbp, rbp, t6
+};
 '''
-#let {{
-#    class ENTER(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

@@ -394,7 +394,10 @@
         }
         format WarnUnimpl {
             0x19: decode OPCODE_OP_BOTTOM3 {
-                0x0: enter_Iw_Ib();
+                // The second parameter here should be of size b, but
+                // immediate sizes are determined elsewhere and this would
+                // confuse the instruction type specialization code.
+                0x0: Inst::ENTER(Iw,Iw);
                 0x1: Inst::LEAVE();
                 0x2: ret_far_Iw();
                 0x3: ret_far();
