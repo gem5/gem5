@@ -295,7 +295,11 @@
             0x4: WarnUnimpl::mov_MwRv_Sw(); //What to do with this one?
             0x5: LEA(Gv,M);
             0x6: WarnUnimpl::mov_Sw_MwRv();
-            0x7: WarnUnimpl::group10_Ev(); //Make sure this is Ev
+            //0x7: group10_Ev();
+            0x7: decode MODRM_REG {
+                0x0: POP(Ev);
+                default: UD2();
+            }
         }
         0x12: decode OPCODE_OP_BOTTOM3 {
             0x0: NOP(); //XXX repe makes this a "pause"
