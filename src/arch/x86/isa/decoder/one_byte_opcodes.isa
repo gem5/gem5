@@ -461,7 +461,7 @@
             }
             0x6: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::salc();
+                default: SALC(rAb);
             }
             0x7: XLAT();
         }

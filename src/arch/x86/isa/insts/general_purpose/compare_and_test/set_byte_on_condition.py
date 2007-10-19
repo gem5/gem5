@@ -54,6 +54,11 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop SALC_R
+{
+    sbb reg, reg, reg, dataSize=1
+};
+
 def macroop SETZ_R
 {
     movi reg, reg, 1, flags=(CZF,)
