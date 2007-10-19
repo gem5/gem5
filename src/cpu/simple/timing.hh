@@ -168,7 +168,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
     PacketPtr ifetch_pkt;
     PacketPtr dcache_pkt;
 
-    int cpu_id;
     Tick previousTick;
 
   public:

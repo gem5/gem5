@@ -91,6 +91,8 @@ BaseSimpleCPU::BaseSimpleCPU(Params *p)
 
     threadContexts.push_back(tc);
 
+    cpuId = tc->readCpuId();
+
     fetchOffset = 0;
     stayAtPC = false;
 }

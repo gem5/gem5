@@ -104,8 +104,7 @@ TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 }
 
 TimingSimpleCPU::TimingSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock),
-      cpu_id(p->cpu_id)
+    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
 {
     _status = Idle;
 
@@ -207,6 +206,8 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     if (_status != Running) {
         _status = Idle;
     }
+    assert(threadContexts.size() == 1);
+    cpuId = tc->readCpuId();
     previousTick = curTick;
 }
 
@@ -249,7 +250,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    cpu_id, /* thread ID */ 0);
+                    cpuId, /* thread ID */ 0);
 
     if (traceData) {
         traceData->setAddr(req->getVaddr());
@@ -349,7 +350,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    cpu_id, /* thread ID */ 0);
+                    cpuId, /* thread ID */ 0);
 
     if (traceData) {
         traceData->setAddr(req->getVaddr());
@@ -474,7 +475,7 @@ TimingSimpleCPU::fetch()
         checkForInterrupts();
 
     Request *ifetch_req = new Request();
-    ifetch_req->setThreadContext(cpu_id, /* thread ID */ 0);
+    ifetch_req->setThreadContext(cpuId, /* thread ID */ 0);
     Fault fault = setupFetchRequest(ifetch_req);
 
     ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
