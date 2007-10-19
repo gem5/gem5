@@ -77,6 +77,25 @@ output header {{
         std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
     };
+
+    class MicroHalt : public X86ISA::X86MicroopBase
+    {
+      public:
+        MicroHalt(ExtMachInst _machInst, const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast) :
+            X86MicroopBase(_machInst, "halt", instMnem,
+                    isMicro, isDelayed, isFirst, isLast, No_OpClass)
+        {
+        }
+
+        MicroHalt(ExtMachInst _machInst, const char * instMnem) :
+            X86MicroopBase(_machInst, "halt", instMnem,
+                    false, false, false, false, No_OpClass)
+        {
+        }
+
+        %(BasicExecDeclare)s
+    };
 }};
 
 def template MicroFaultDeclare {{
@@ -109,6 +128,16 @@ def template MicroFaultExecute {{
                 return NoFault;
             }
         }
+}};
+
+output exec {{
+    Fault
+    MicroHalt::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord * traceData) const
+    {
+        xc->suspend();
+        return NoFault;
+    }
 }};
 
 output decoder {{
@@ -209,4 +238,14 @@ let {{
     header_output += MicroFaultDeclare.subst(iop)
     decoder_output += MicroFaultConstructor.subst(iop)
     microopClasses["fault"] = Fault
+
+    class Halt(X86Microop):
+        def __init__(self):
+            pass
+
+        def getAllocator(self, *microFlags):
+            return "new MicroHalt(machInst, mnemonic %(flags)s)" % \
+                    self.microFlagsText(microFlags)
+
+    microopClasses["halt"] = Halt
 }};
