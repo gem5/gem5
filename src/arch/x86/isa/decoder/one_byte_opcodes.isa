@@ -503,8 +503,8 @@
             0x3: M5InternalError::error(
                 {{"Tried to execute the rep/repe prefix!"}});
             0x4: hlt();
-            0x5: cmc();
             format Inst {
+                0x5: CMC();
                 //0x6: group3_Eb();
                 0x6: decode MODRM_REG {
                     0x0: TEST(Eb,Iz);
