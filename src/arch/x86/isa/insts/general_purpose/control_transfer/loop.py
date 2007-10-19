@@ -53,8 +53,22 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class LOOPcc(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop LOOP_I {
+    rdip t1
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    wripi t1, imm, flags=(nCEZF,)
+};
+
+def macroop LOOPNE_I {
+    rdip t1
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    wripi t1, imm, flags=(CSTRnZnEZF,)
+};
+
+def macroop LOOPE_I {
+    rdip t1
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    wripi t1, imm, flags=(CSTRZnEZF,)
+};
+'''

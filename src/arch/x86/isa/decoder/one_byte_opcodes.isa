@@ -472,9 +472,9 @@
         }
         ##include "x87.isa"
         0x1C: decode OPCODE_OP_BOTTOM3 {
-            0x0: loopne_Jb();
-            0x1: loope_Jb();
-            0x2: loop_Jb();
+            0x0: Inst::LOOPNE(Jb);
+            0x1: Inst::LOOPE(Jb);
+            0x2: Inst::LOOP(Jb);
             0x3: Inst::JRCX(Jb);
             0x4: in_Al_Ib();
             0x5: in_eAX_Ib();
