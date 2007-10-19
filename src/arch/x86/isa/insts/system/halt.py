@@ -53,12 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["halt",
-              "undefined_operation",
-              "msrs"]
-
-microcode = ""
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
-
+microcode = '''
+def macroop HLT {
+    halt
+};
+'''

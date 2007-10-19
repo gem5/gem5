@@ -135,7 +135,7 @@ output exec {{
     MicroHalt::execute(%(CPU_exec_context)s *xc,
             Trace::InstRecord * traceData) const
     {
-        xc->suspend();
+        xc->tcBase()->suspend();
         return NoFault;
     }
 }};
@@ -244,7 +244,7 @@ let {{
             pass
 
         def getAllocator(self, *microFlags):
-            return "new MicroHalt(machInst, mnemonic %(flags)s)" % \
+            return "new MicroHalt(machInst, mnemonic %s)" % \
                     self.microFlagsText(microFlags)
 
     microopClasses["halt"] = Halt

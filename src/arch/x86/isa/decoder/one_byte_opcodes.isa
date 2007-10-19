@@ -504,7 +504,7 @@
                 {{"Tried to execute the repne prefix!"}});
             0x3: M5InternalError::error(
                 {{"Tried to execute the rep/repe prefix!"}});
-            0x4: WarnUnimpl::hlt();
+            0x4: HLT();
             0x5: CMC();
             //0x6: group3_Eb();
             0x6: decode MODRM_REG {
