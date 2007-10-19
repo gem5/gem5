@@ -835,7 +835,7 @@ let {{
         '''
 
     class Wrip(WrRegOp, CondRegOp):
-        code = 'RIP = psrc1 + op2'
+        code = 'RIP = psrc1 + sop2'
         else_code="RIP = RIP;"
 
     class Br(WrRegOp, CondRegOp):
