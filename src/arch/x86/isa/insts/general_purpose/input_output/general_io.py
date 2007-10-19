@@ -53,10 +53,28 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class IN(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUT(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+    def macroop IN_R_I {
+        .adjust_imm trimImm(8)
+        limm t1, "IntAddrPrefixIO"
+        ld reg, intseg, [1, t1, t0], imm, addressSize=2
+    };
+
+    def macroop IN_R_R {
+        limm t1, "IntAddrPrefixIO"
+        zext t2, regm, 16, dataSize=2
+        ld reg, intseg, [1, t1, t2], addressSize=8
+    };
+
+    def macroop OUT_I_R {
+        .adjust_imm trimImm(8)
+        limm t1, "IntAddrPrefixIO"
+        st reg, intseg, [1, t1, t0], imm, addressSize=8
+    };
+
+    def macroop OUT_R_R {
+        limm t1, "IntAddrPrefixIO"
+        zext t2, reg, 16, dataSize=2
+        st regm, intseg, [1, t1, t2], addressSize=8
+    };
+'''

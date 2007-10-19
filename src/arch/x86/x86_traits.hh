@@ -86,6 +86,7 @@ namespace X86ISA
     const Addr IntAddrPrefixMask = ULL(0xffffffff00000000);
     const Addr IntAddrPrefixCPUID = ULL(0x100000000);
     const Addr IntAddrPrefixMSR = ULL(0x200000000);
+    const Addr IntAddrPrefixIO = ULL(0x300000000);
 }
 
 #endif //__ARCH_X86_X86TRAITS_HH__

@@ -476,10 +476,10 @@
             0x1: Inst::LOOPE(Jb);
             0x2: Inst::LOOP(Jb);
             0x3: Inst::JRCX(Jb);
-            0x4: in_Al_Ib();
-            0x5: in_eAX_Ib();
-            0x6: out_Ib_Al();
-            0x7: out_Ib_eAX();
+            0x4: Inst::IN(rAb,Ib);
+            0x5: Inst::IN(rAv,Iv);
+            0x6: Inst::OUT(Ib,rAb);
+            0x7: Inst::OUT(Iv,rAv);
         }
         0x1D: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::CALL_NEAR(Jz);
@@ -489,10 +489,10 @@
                 default: jmp_far_Ap();
             }
             0x3: Inst::JMP(Jb);
-            0x4: in_Al_Dx();
-            0x5: in_eAX_Dx();
-            0x6: out_Dx_Al();
-            0x7: out_Dx_eAX();
+            0x4: Inst::IN(rAb,rD);
+            0x5: Inst::IN(rAv,rD);
+            0x6: Inst::OUT(rD,rAb);
+            0x7: Inst::OUT(rD,rAv);
         }
         0x1E: decode OPCODE_OP_BOTTOM3 {
             0x0: M5InternalError::error(

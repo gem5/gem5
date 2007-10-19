@@ -88,8 +88,8 @@ let {{
         "regm" : "env.regm",
         "xmmlm" : "FLOATREG_XMM_LOW(env.regm)",
         "xmmhm" : "FLOATREG_XMM_HIGH(env.regm)",
-        "imm" : "IMMEDIATE",
-        "disp" : "DISPLACEMENT",
+        "imm" : "adjustedImm",
+        "disp" : "adjustedDisp",
         "seg" : "env.seg",
         "scale" : "env.scale",
         "index" : "env.index",
@@ -134,6 +134,11 @@ let {{
             env.dataSize == 4)
         env.dataSize = 8;
     '''
+
+    def trimImm(width):
+        return "adjustedImm = adjustedImm & mask(%s);" % width
+
+    assembler.symbols["trimImm"] = trimImm
 
     def labeler(labelStr):
         return "label_%s" % labelStr

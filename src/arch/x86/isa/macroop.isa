@@ -142,6 +142,8 @@ def template MacroConstructor {{
             : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s)
         {
             %(adjust_env)s;
+            %(adjust_imm)s;
+            %(adjust_disp)s;
             %(do_modrm)s;
             %(constructor)s;
             //alloc_microops is the code that sets up the microops
@@ -159,14 +161,30 @@ let {{
             self.microops.append(microop)
         def setAdjustEnv(self, val):
             self.adjust_env = val
+        def adjustImm(self, val):
+            self.adjust_imm += val
+        def adjustDisp(self, val):
+            self.adjust_disp += val
         def __init__(self, name):
             super(X86Macroop, self).__init__(name)
             self.directives = {
-                "adjust_env" : self.setAdjustEnv
+                "adjust_env" : self.setAdjustEnv,
+                "adjust_imm" : self.adjustImm,
+                "adjust_disp" : self.adjustDisp
             }
             self.declared = False
             self.adjust_env = ""
             self.doModRM = ""
+            self.adjust_imm = '''
+                uint64_t adjustedImm = IMMEDIATE;
+                //This is to pacify gcc in case the immediate isn't used.
+                adjustedImm = adjustedImm;
+            '''
+            self.adjust_disp = '''
+                uint64_t adjustedDisp = DISPLACEMENT;
+                //This is to pacify gcc in case the displacement isn't used.
+                adjustedDisp = adjustedDisp;
+            '''
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % (self.name, env.getAllocator())
         def getDeclaration(self):
@@ -198,6 +216,8 @@ let {{
                                 {"code" : "", "num_microops" : numMicroops,
                                  "alloc_microops" : allocMicroops,
                                  "adjust_env" : self.adjust_env,
+                                 "adjust_imm" : self.adjust_imm,
+                                 "adjust_disp" : self.adjust_disp,
                                  "do_modrm" : self.doModRM})
             return MacroConstructor.subst(iop);
 }};
