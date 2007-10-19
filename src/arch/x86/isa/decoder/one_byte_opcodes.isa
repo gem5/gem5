@@ -186,7 +186,7 @@
             }
             0x2: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::bound_Gv_Ma();
+                default: BOUND(Gv,Mv);
             }
             0x3: decode MODE_SUBMODE {
                 //The second operand should really be of size "d", but it's
