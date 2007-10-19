@@ -475,7 +475,7 @@
             0x0: loopne_Jb();
             0x1: loope_Jb();
             0x2: loop_Jb();
-            0x3: jcxz_or_jecx_or_jrcx();
+            0x3: Inst::JRCX(Jb);
             0x4: in_Al_Ib();
             0x5: in_eAX_Ib();
             0x6: out_Ib_Al();

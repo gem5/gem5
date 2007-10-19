@@ -213,4 +213,11 @@ def macroop JNO_I
     limm t2, imm
     wrip t1, t2, flags=(nCOF,)
 };
+
+def macroop JRCX_I
+{
+    rdip t1
+    add t0, t0, rcx, flags=(EZF,), dataSize=asz
+    wripi t1, imm, flags=(CEZF,)
+};
 '''
