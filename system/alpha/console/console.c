@@ -60,7 +60,7 @@
 #include <sys/types.h>
 
 #define CONSOLE
-#include "alpha_access.h"
+#include "access.h"
 #include "cserve.h"
 #include "rpb.h"
 
@@ -89,7 +89,6 @@
 #define KPTE(x) ((ulong)((((ulong)(x)) << 32) | 0x1101))
 
 #define HWRPB_PAGES 16
-#define MDT_BITMAP_PAGES  4
 
 #define NUM_KERNEL_THIRD (4)
 
@@ -403,10 +402,12 @@ unixBoot(int argc, char **argv)
     unsigned char *mdt_bitmap;
     long *lp1, *lp2, sum;
     int i, cl;
-    int kern_first_page;
-    int mem_size = m5Conf.mem_size;
+    ulong kern_first_page;
+    ulong mem_size = m5Conf.mem_size;
 
-    int mem_pages = mem_size / PAGE_SIZE, cons_pages;
+    ulong mem_pages = mem_size / PAGE_SIZE, cons_pages;
+    ulong mdt_bitmap_pages = mem_pages / (PAGE_SIZE*8);
+
     ulong kernel_bytes, ksp, kernel_end, *unix_kernel_stack, bss,
         ksp_bottom, ksp_top;
     struct rpb_ctb *rpb_ctb;
@@ -443,7 +444,7 @@ unixBoot(int argc, char **argv)
 
     rpb = (struct rpb *)unix_boot_alloc(HWRPB_PAGES);
 
-    mdt_bitmap =  (unsigned char *)unix_boot_alloc(MDT_BITMAP_PAGES);
+    mdt_bitmap = (unsigned char *)unix_boot_alloc(mdt_bitmap_pages); 
     first = (ulong *)unix_boot_alloc(1);
     second = (ulong *)unix_boot_alloc(1);
     third_rpb = (ulong *)unix_boot_alloc(1);
@@ -503,13 +504,13 @@ unixBoot(int argc, char **argv)
         third_rpb[i] = KPTE(PFN(rpb) + i);
 
     /* Map the MDT bitmap table */
-    for (i = 0; i < MDT_BITMAP_PAGES; i++) {
+    for (i = 0; i < mdt_bitmap_pages; i++) {
         third_rpb[HWRPB_PAGES + i] = KPTE(PFN(mdt_bitmap) + i);
     }
 
     /* Protect the PAL pages */
     for (i = 1; i < PFN(first); i++)
-        third_rpb[HWRPB_PAGES + MDT_BITMAP_PAGES + i] = KPTE(i);
+        third_rpb[HWRPB_PAGES + mdt_bitmap_pages + i] = KPTE(i);
 
    /* Set up third_kernel after it's loaded, when we know where it is */
     kern_first_page = (KSEG_TO_PHYS(m5Conf.kernStart)/PAGE_SIZE);
@@ -678,7 +679,7 @@ unixBoot(int argc, char **argv)
     rpb_mdt->rpb_checksum = sum;
 
     /* XXX should checksum the cluster descriptors */
-    bzero((char *)mdt_bitmap, MDT_BITMAP_PAGES * PAGE_SIZE);
+    bzero((char *)mdt_bitmap, mdt_bitmap_pages * PAGE_SIZE);
     for (i = 0; i < mem_pages/8; i++)
         ((unsigned char *)mdt_bitmap)[i] = 0xff;
 
