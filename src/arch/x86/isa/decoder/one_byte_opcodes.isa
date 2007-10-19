@@ -463,7 +463,7 @@
                 0x0: UD2();
                 default: WarnUnimpl::salc();
             }
-            0x7: WarnUnimpl::xlat();
+            0x7: XLAT();
         }
         ##include "x87.isa"
         0x1C: decode OPCODE_OP_BOTTOM3 {

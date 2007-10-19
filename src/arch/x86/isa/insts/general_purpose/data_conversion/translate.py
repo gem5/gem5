@@ -53,8 +53,12 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class XLAT(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop XLAT {
+    zext t1, rax, 8
+    # Here, t1 can be used directly. The value of al is supposed to be treated
+    # as unsigned. Since we zero extended it from 8 bits above and the address
+    # size has to be at least 16 bits, t1 will not be sign extended.
+    ld rax, seg, [1, rbx, t1], dataSize=1
+};
+'''
