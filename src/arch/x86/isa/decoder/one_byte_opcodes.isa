@@ -209,10 +209,10 @@
             0x1: IMUL(Gv,Ev,Iz);
             0x2: PUSH(Ib);
             0x3: IMUL(Gv,Ev,Ib);
-            0x4: WarnUnimpl::ins_Yb_Dx();
-            0x5: WarnUnimpl::ins_Yz_Dx();
-            0x6: WarnUnimpl::outs_Dx_Xb();
-            0x7: WarnUnimpl::outs_Dx_Xz();
+            0x4: StringInst::INS(Yb,rD);
+            0x5: StringInst::INS(Yz,rD);
+            0x6: StringInst::OUTS(rD,Xb);
+            0x7: StringInst::OUTS(rD,Xz);
         }
         0x0E: decode OPCODE_OP_BOTTOM3 {
             0x0: JO(Jb);

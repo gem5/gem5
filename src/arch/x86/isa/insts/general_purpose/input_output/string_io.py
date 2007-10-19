@@ -53,26 +53,76 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class INS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class INSB(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class INSW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class INSD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class INSQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUTS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUTSB(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUTSW(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUTSD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class OUTSQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop INS_M_R {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    limm t1, "IntAddrPrefixIO"
+    zext t2, reg, 16, dataSize=2
+
+    ld t6, intseg, [1, t1, t2], addressSize=8
+    st t6, es, [1, t0, rdi]
+
+    add rdi, rdi, t3, dataSize=asz
+};
+
+def macroop INS_E_M_R {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    limm t1, "IntAddrPrefixIO"
+    zext t2, reg, 16, dataSize=2
+
+topOfLoop:
+    ld t6, intseg, [1, t1, t2], addressSize=8
+    st t6, es, [1, t0, rdi]
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rdi, rdi, t3, dataSize=asz
+    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    fault "NoFault"
+};
+
+def macroop OUTS_R_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    limm t1, "IntAddrPrefixIO"
+    zext t2, reg, 16, dataSize=2
+
+    ld t6, ds, [1, t0, rsi]
+    st t6, intseg, [1, t1, t2], addressSize=8
+
+    add rsi, rsi, t3, dataSize=asz
+};
+
+def macroop OUTS_E_R_M {
+    # Find the constant we need to either add or subtract from rdi
+    ruflag t0, 10
+    movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
+    subi t4, t0, dsz, dataSize=asz
+    mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
+
+    limm t1, "IntAddrPrefixIO"
+    zext t2, reg, 16, dataSize=2
+
+topOfLoop:
+    ld t6, ds, [1, t0, rsi]
+    st t6, intseg, [1, t1, t2], addressSize=8
+
+    subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
+    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    fault "NoFault"
+};
+'''
