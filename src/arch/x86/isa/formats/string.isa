@@ -103,7 +103,7 @@ def format StringInst(*opTypeSet) {{
             %s
         } else if (LEGACY_REPNE) {
             // The repne prefix is illegal
-            return new MicroFault(machInst, "illprefix", new InvalidOpcode);
+            return new MicroFault(machInst, "illprefix", new InvalidOpcode, 0);
         } else {
             %s
         }

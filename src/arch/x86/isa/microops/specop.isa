@@ -60,57 +60,106 @@
 //////////////////////////////////////////////////////////////////////////
 
 output header {{
-    class MicroFault : public X86ISA::X86MicroopBase
+    class MicroFaultBase : public X86ISA::X86MicroopBase
     {
       protected:
         Fault fault;
-        void buildMe();
+        uint8_t cc;
 
       public:
-        MicroFault(ExtMachInst _machInst, const char * instMnem,
+        MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                Fault _fault);
+                Fault _fault, uint8_t _cc);
 
-        MicroFault(ExtMachInst _machInst, const char * instMnem,
-                Fault _fault);
-
-        %(BasicExecDeclare)s
+        MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
+                Fault _fault, uint8_t _cc);
 
         std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
     };
 }};
 
-output decoder {{
-        Fault MicroFault::execute(%(CPU_exec_context)s *xc,
+def template MicroFaultDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        void buildMe();
+      public:
+        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                Fault _fault, uint8_t _cc);
+
+        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
+                Fault _fault, uint8_t _cc);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroFaultExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
-            //Return the fault we were constructed with
-            return fault;
+            %(op_decl)s;
+            %(op_rd)s;
+            if (%(cond_test)s) {
+                //Return the fault we were constructed with
+                return fault;
+            } else {
+                return NoFault;
+            }
         }
 }};
 
 output decoder {{
-    inline MicroFault::MicroFault(
-            ExtMachInst machInst, const char * instMnem, Fault _fault) :
+    inline MicroFaultBase::MicroFaultBase(
+            ExtMachInst machInst, const char * instMnem,
+            Fault _fault, uint8_t _cc) :
         X86MicroopBase(machInst, "fault", instMnem,
-                false, false, false, false, No_OpClass), fault(_fault)
+                false, false, false, false, No_OpClass),
+        fault(_fault), cc(_cc)
     {
     }
 
-    inline MicroFault::MicroFault(
+    inline MicroFaultBase::MicroFaultBase(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            Fault _fault) :
+            Fault _fault, uint8_t _cc) :
         X86MicroopBase(machInst, "fault", instMnem,
                 isMicro, isDelayed, isFirst, isLast, No_OpClass),
-                fault(_fault)
+                fault(_fault), cc(_cc)
     {
     }
 }};
 
+def template MicroFaultConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            Fault _fault, uint8_t _cc) :
+        %(base_class)s(machInst, instMnem, _fault, _cc)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            Fault _fault, uint8_t _cc) :
+        %(base_class)s(machInst, instMnem,
+                isMicro, isDelayed, isFirst, isLast, _fault, _cc)
+    {
+        buildMe();
+    }
+}};
+
 output decoder {{
-    std::string MicroFault::generateDisassembly(Addr pc,
+    std::string MicroFaultBase::generateDisassembly(Addr pc,
             const SymbolTable *symtab) const
     {
         std::stringstream response;
@@ -127,14 +176,37 @@ output decoder {{
 
 let {{
     class Fault(X86Microop):
-        def __init__(self, fault):
+        className = "MicroFault"
+        def __init__(self, fault, flags=None):
             self.fault = fault
+            if flags:
+                if not isinstance(flags, (list, tuple)):
+                    raise Exception, "flags must be a list or tuple of flags"
+                self.cond = " | ".join(flags)
+                self.className += "Flags"
+            else:
+                self.cond = "0"
 
         def getAllocator(self, *microFlags):
-            allocator = '''new MicroFault(machInst, mnemonic
-                    %(flags)s, %(fault)s)''' % {
+            allocator = '''new %(class_name)s(machInst, mnemonic
+                    %(flags)s, %(fault)s, %(cc)s)''' % {
+                "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
-                "fault" : self.fault}
+                "fault" : self.fault,
+                "cc" : self.cond}
             return allocator
+
+    iop = InstObjParams("fault", "MicroFault", "MicroFaultBase",
+            {"code": "",
+             "cond_test": "checkCondition(ccFlagBits, cc)"})
+    exec_output = MicroFaultExecute.subst(iop)
+    header_output = MicroFaultDeclare.subst(iop)
+    decoder_output = MicroFaultConstructor.subst(iop)
+    iop = InstObjParams("fault", "MicroFaultFlags", "MicroFaultBase",
+            {"code": "",
+             "cond_test": "true"})
+    exec_output += MicroFaultExecute.subst(iop)
+    header_output += MicroFaultDeclare.subst(iop)
+    decoder_output += MicroFaultConstructor.subst(iop)
     microopClasses["fault"] = Fault
 }};
