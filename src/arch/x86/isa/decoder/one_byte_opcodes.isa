@@ -313,17 +313,18 @@
                 default: WarnUnimpl::call_far_Ap();
             }
             0x3: WarnUnimpl::fwait(); //aka wait
-            0x4: WarnUnimpl::pushf_Fv();
-            0x5: WarnUnimpl::popf_Fv();
-            //Both of these should be illegal only if CPUID.AHF64=0,
-            //according to sandpile.org
+            0x4: PUSHF();
+            0x5: POPF();
+            //The 64 bit versions of both of these should be illegal only
+            //if CPUID says it isn't supported. For now, we'll just assume
+            //that it's supported.
             0x6: decode MODE_SUBMODE {
-                0x0: UD2();
-                default: WarnUnimpl::sahf();
+                0x0: SAHF_64();
+                default: SAHF();
             }
             0x7: decode MODE_SUBMODE {
-                0x0: UD2();
-                default: WarnUnimpl::lahf();
+                0x0: LAHF_64();
+                default: LAHF();
             }
         }
         0x14: decode OPCODE_OP_BOTTOM3 {

@@ -53,18 +53,22 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class POPF(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class POPFD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class POPFQ(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class PUSHF(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class PUSHFD(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class pushfq(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop PUSHF {
+    .adjust_env oszIn64Override
+
+    # This should really read the whole flags register, not just user flags.
+    ruflags t1
+    st t1, ss, [1, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, dsz
+};
+
+def macroop POPF {
+    .adjust_env oszIn64Override
+
+    ld t1, ss, [1, t0, rsp]
+    addi rsp, rsp, dsz
+    # This should really write the whole flags register, not just user flags.
+    wruflags t1, t0
+};
+'''
