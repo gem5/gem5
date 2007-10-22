@@ -445,5 +445,27 @@ let {{
             self.mnemonic = "lea"
 
     microopClasses["lea"] = LeaOp
+
+
+    iop = InstObjParams("cda", "Cda", 'X86ISA::LdStOp',
+            {"code": '''
+            Addr paddr;
+            fault = xc->translateDataWriteAddr(EA, paddr,
+                dataSize, (1 << segment));
+            ''',
+            "ea_code": calculateEA})
+    header_output += MicroLeaDeclare.subst(iop)
+    decoder_output += MicroLdStOpConstructor.subst(iop)
+    exec_output += MicroLeaExecute.subst(iop)
+
+    class CdaOp(LdStOp):
+        def __init__(self, segment, addr, disp = 0,
+                dataSize="env.dataSize", addressSize="env.addressSize"):
+            super(CdaOp, self).__init__("NUM_INTREGS", segment,
+                    addr, disp, dataSize, addressSize)
+            self.className = "Cda"
+            self.mnemonic = "cda"
+
+    microopClasses["cda"] = CdaOp
 }};
 
