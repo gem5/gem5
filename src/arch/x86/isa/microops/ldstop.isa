@@ -422,6 +422,11 @@ let {{
 
     defineMicroStoreOp('St', 'Mem = Data;')
     defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
+    defineMicroStoreOp('Stupd', '''
+            Mem = Data;
+            Base = merge(Base, EA - SegBase, addressSize);
+            ''');
+
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);",

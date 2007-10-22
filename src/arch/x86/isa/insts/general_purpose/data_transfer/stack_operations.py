@@ -169,8 +169,7 @@ def macroop ENTER_I_I {
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
     # Push rbp.
-    st rbp, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd rbp, ss, [1, t0, rsp], "-env.dataSize"
 
     # Save the stack pointer for later
     mov t6, t6, rsp
@@ -186,8 +185,7 @@ def macroop ENTER_I_I {
     limm t4, "ULL(-1)", dataSize=8
 topOfLoop:
     ld t5, ss, [dsz, t4, rbp]
-    st t5, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd t5, ss, [1, t0, rsp], "-env.dataSize"
 
     # If we're not done yet, loop
     subi t4, t4, 1, dataSize=8
@@ -196,8 +194,7 @@ topOfLoop:
 
 bottomOfLoop:
     # Push the old rbp onto the stack
-    st t6, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd t6, ss, [1, t0, rsp], "-env.dataSize"
 
 skipLoop:
     sub rsp, rsp, t2
