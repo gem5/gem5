@@ -102,6 +102,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    Fault translateDataReadAddr(Addr vaddr, Addr &paddr,
+            int size, unsigned flags);
+
     /**
      * Does a write to a given address.
      * @param data The data to be written.
@@ -113,6 +116,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
+
+    Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
+            int size, unsigned flags);
 
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
@@ -838,6 +844,29 @@ class BaseDynInst : public FastAlloc, public RefCounted
 };
 
 template<class Impl>
+Fault
+BaseDynInst<Impl>::translateDataReadAddr(Addr vaddr, Addr &paddr,
+        int size, unsigned flags)
+{
+    if (traceData) {
+        traceData->setAddr(vaddr);
+    }
+
+    reqMade = true;
+    Request *req = new Request();
+    req->setVirt(asid, vaddr, size, flags, PC);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
+
+    fault = cpu->translateDataReadReq(req, thread);
+
+    if (fault == NoFault)
+        paddr = req->getPaddr();
+
+    delete req;
+    return fault;
+}
+
+template<class Impl>
 template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
@@ -885,6 +914,29 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
         traceData->setData(data);
     }
 
+    return fault;
+}
+
+template<class Impl>
+Fault
+BaseDynInst<Impl>::translateDataWriteAddr(Addr vaddr, Addr &paddr,
+        int size, unsigned flags)
+{
+    if (traceData) {
+        traceData->setAddr(vaddr);
+    }
+
+    reqMade = true;
+    Request *req = new Request();
+    req->setVirt(asid, vaddr, size, flags, PC);
+    req->setThreadContext(thread->readCpuId(), threadNumber);
+
+    fault = cpu->translateDataWriteReq(req, thread);
+
+    if (fault == NoFault)
+        paddr = req->getPaddr();
+
+    delete req;
     return fault;
 }
 

@@ -293,6 +293,26 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     return fault;
 }
 
+Fault
+TimingSimpleCPU::translateDataReadAddr(Addr vaddr, Addr &paddr,
+        int size, unsigned flags)
+{
+    Request *req =
+        new Request(0, vaddr, size, flags, thread->readPC(), cpuId, 0);
+
+    if (traceData) {
+        traceData->setAddr(vaddr);
+    }
+
+    Fault fault = thread->translateDataWriteReq(req);
+
+    if (fault == NoFault)
+        paddr = req->getPaddr();
+
+    delete req;
+    return fault;
+}
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 template
@@ -408,6 +428,26 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
+    return fault;
+}
+
+Fault
+TimingSimpleCPU::translateDataWriteAddr(Addr vaddr, Addr &paddr,
+        int size, unsigned flags)
+{
+    Request *req =
+        new Request(0, vaddr, size, flags, thread->readPC(), cpuId, 0);
+
+    if (traceData) {
+        traceData->setAddr(vaddr);
+    }
+
+    Fault fault = thread->translateDataWriteReq(req);
+
+    if (fault == NoFault)
+        paddr = req->getPaddr();
+
+    delete req;
     return fault;
 }
 

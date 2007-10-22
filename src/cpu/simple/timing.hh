@@ -189,8 +189,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    Fault translateDataReadAddr(Addr vaddr, Addr &paddr,
+            int size, unsigned flags);
+
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+
+    Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
+            int size, unsigned flags);
 
     void fetch();
     void completeIfetch(PacketPtr );
