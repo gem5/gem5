@@ -89,8 +89,7 @@ def macroop PUSH_R {
 
     # This needs to work slightly differently from the other versions of push
     # because the -original- version of the stack pointer is what gets pushed
-    st reg, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd reg, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop PUSH_I {
@@ -98,8 +97,7 @@ def macroop PUSH_I {
     .adjust_env oszIn64Override
 
     limm t1, imm
-    st t1, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop PUSH_M {
@@ -107,8 +105,7 @@ def macroop PUSH_M {
     .adjust_env oszIn64Override
 
     ld t1, seg, sib, disp
-    st t1, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop PUSH_P {
@@ -117,22 +114,19 @@ def macroop PUSH_P {
 
     rdip t7
     ld t1, seg, riprel, disp
-    # Check stack address
-    subi rsp, rsp, dsz
-    st t1, ss, [1, t0, rsp]
+    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop PUSHA {
     # Check all the stack addresses.
-    st rax, ss, [1, t0, rsp], "-0 * env.dataSize"
-    st rcx, ss, [1, t0, rsp], "-1 * env.dataSize"
-    st rdx, ss, [1, t0, rsp], "-2 * env.dataSize"
-    st rbx, ss, [1, t0, rsp], "-3 * env.dataSize"
-    st rsp, ss, [1, t0, rsp], "-4 * env.dataSize"
-    st rbp, ss, [1, t0, rsp], "-5 * env.dataSize"
-    st rsi, ss, [1, t0, rsp], "-6 * env.dataSize"
-    st rdi, ss, [1, t0, rsp], "-7 * env.dataSize"
-    subi rsp, rsp, "8 * env.dataSize"
+    stupd rax, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rcx, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rdx, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rbx, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rsp, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rbp, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rsi, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rdi, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop POPA {

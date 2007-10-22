@@ -59,8 +59,7 @@ def macroop PUSHF {
 
     # This should really read the whole flags register, not just user flags.
     ruflags t1
-    st t1, ss, [1, t0, rsp], "-env.dataSize"
-    subi rsp, rsp, dsz
+    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
 };
 
 def macroop POPF {

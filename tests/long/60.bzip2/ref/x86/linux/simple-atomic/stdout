@@ -19,9 +19,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 15 2007 20:49:03
-M5 started Tue Oct 16 16:42:54 2007
+M5 compiled Oct 19 2007 16:48:38
+M5 started Fri Oct 19 16:59:11 2007
 M5 executing on nacho
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/60.bzip2/x86/linux/simple-atomic tests/run.py long/60.bzip2/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 2823203650000 because target called exit()
+Exiting @ tick 2806436396000 because target called exit()
