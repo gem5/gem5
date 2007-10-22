@@ -58,8 +58,9 @@ def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld reg, ss, [1, t0, rsp]
+    ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
+    mov reg, reg, t1
 };
 
 def macroop POP_M {
@@ -67,7 +68,7 @@ def macroop POP_M {
     .adjust_env oszIn64Override
 
     ld t1, ss, [1, t0, rsp]
-    # Check stack address
+    cda seg, sib, disp
     addi rsp, rsp, dsz
     st t1, seg, sib, disp
 };
@@ -78,7 +79,7 @@ def macroop POP_P {
 
     rdip t7
     ld t1, ss, [1, t0, rsp]
-    # Check stack address
+    cda seg, sib, disp
     addi rsp, rsp, dsz
     st t1, seg, riprel, disp
 };
@@ -87,8 +88,6 @@ def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    # This needs to work slightly differently from the other versions of push
-    # because the -original- version of the stack pointer is what gets pushed
     stupd reg, ss, [1, t0, rsp], "-env.dataSize"
 };
 
@@ -118,7 +117,10 @@ def macroop PUSH_P {
 };
 
 def macroop PUSHA {
-    # Check all the stack addresses.
+    # Check all the stack addresses. We'll assume that if the beginning and
+    # end are ok, then the stuff in the middle should be as well.
+    cda ss, [1, t0, rsp], "-env.dataSize"
+    cda ss, [1, t0, rsp], "-8 * env.dataSize"
     stupd rax, ss, [1, t0, rsp], "-env.dataSize"
     stupd rcx, ss, [1, t0, rsp], "-env.dataSize"
     stupd rdx, ss, [1, t0, rsp], "-env.dataSize"
@@ -130,14 +132,17 @@ def macroop PUSHA {
 };
 
 def macroop POPA {
-    # Check all the stack addresses.
-    ld rdi, ss, [1, t0, rsp], "0 * env.dataSize"
+    # Check all the stack addresses. We'll assume that if the beginning and
+    # end are ok, then the stuff in the middle should be as well.
+    ld t1, ss, [1, t0, rsp], "0 * env.dataSize"
+    ld t2, ss, [1, t0, rsp], "7 * env.dataSize"
+    mov rdi, rdi, t1
     ld rsi, ss, [1, t0, rsp], "1 * env.dataSize"
     ld rbp, ss, [1, t0, rsp], "2 * env.dataSize"
     ld rbx, ss, [1, t0, rsp], "4 * env.dataSize"
     ld rdx, ss, [1, t0, rsp], "5 * env.dataSize"
     ld rcx, ss, [1, t0, rsp], "6 * env.dataSize"
-    ld rax, ss, [1, t0, rsp], "7 * env.dataSize"
+    mov rax, rax, t2
     addi rsp, rsp, "8 * env.dataSize"
 };
 

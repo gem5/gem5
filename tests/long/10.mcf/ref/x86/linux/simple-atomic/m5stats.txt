@@ -1,17 +1,17 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1133815                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 310268                       # Number of bytes of host memory used
-host_seconds                                   237.78                       # Real time elapsed on the host
-host_tick_rate                              696782714                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1168424                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 310284                       # Number of bytes of host memory used
+host_seconds                                   230.78                       # Real time elapsed on the host
+host_tick_rate                              718029499                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   269599525                       # Number of instructions simulated
-sim_seconds                                  0.165682                       # Number of seconds simulated
-sim_ticks                                165681894000                       # Number of ticks simulated
+sim_insts                                   269642969                       # Number of instructions simulated
+sim_seconds                                  0.165704                       # Number of seconds simulated
+sim_ticks                                165703616000                       # Number of ticks simulated
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                        331363789                       # number of cpu cycles simulated
-system.cpu.num_insts                        269599525                       # Number of instructions executed
+system.cpu.numCycles                        331407233                       # number of cpu cycles simulated
+system.cpu.num_insts                        269642969                       # Number of instructions executed
 system.cpu.num_refs                         124052668                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls             429                       # Number of system calls
 
