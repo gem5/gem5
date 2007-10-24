@@ -170,7 +170,7 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_MTRR_FIX_16K_80000, 0);
     tc->setMiscReg(MISCREG_MTRR_FIX_16K_A0000, 0);
     tc->setMiscReg(MISCREG_MTRR_FIX_4K_C0000, 0);
-    tc->setMiscReg(MISCREG_MTRR_FIX_4k_C8000, 0);
+    tc->setMiscReg(MISCREG_MTRR_FIX_4K_C8000, 0);
     tc->setMiscReg(MISCREG_MTRR_FIX_4K_D0000, 0);
     tc->setMiscReg(MISCREG_MTRR_FIX_4K_D8000, 0);
     tc->setMiscReg(MISCREG_MTRR_FIX_4K_E0000, 0);
