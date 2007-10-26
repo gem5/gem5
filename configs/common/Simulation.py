@@ -192,7 +192,7 @@ def run(options, root, testsys, cpu_class):
         sim_ticks = when
         exit_cause = "maximum %d checkpoints dropped" % max_checkpoints
         while num_checkpoints < max_checkpoints and \
-                exit_event.getCause() != "user interrupt received":
+                exit_event.getCause() == "simulate() limit reached":
             if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
@@ -206,7 +206,7 @@ def run(options, root, testsys, cpu_class):
                     m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
                     num_checkpoints += 1
 
-        if exit_event.getCause() == "user interrupt received":
+        if exit_event.getCause() != "simulate() limit reached":
             exit_cause = exit_event.getCause();
 
 
