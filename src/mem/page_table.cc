@@ -118,9 +118,12 @@ bool
 PageTable::translate(Addr vaddr, Addr &paddr)
 {
     TheISA::TlbEntry entry;
-    if (!lookup(vaddr, entry))
+    if (!lookup(vaddr, entry)) {
+        DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
         return false;
+    }
     paddr = pageOffset(vaddr) + entry.pageStart;
+    DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
     return true;
 }
 
@@ -151,7 +154,9 @@ PageTable::serialize(std::ostream &os)
     PTableItr iter = pTable.begin();
     PTableItr end = pTable.end();
     while (iter != end) {
-        paramOut(os, csprintf("ptable.entry%dvaddr", count), iter->first);
+        os << "\n[" << csprintf("%s.Entry%d", name(), count) << "]\n";
+
+        paramOut(os, "vaddr", iter->first);
         iter->second.serialize(os);
 
         ++iter;
@@ -166,14 +171,15 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
     int i = 0, count;
     paramIn(cp, section, "ptable.size", count);
     Addr vaddr;
-    TheISA::TlbEntry entry;
+    TheISA::TlbEntry *entry;
 
     pTable.clear();
 
     while(i < count) {
-        paramIn(cp, section, csprintf("ptable.entry%dvaddr", i), vaddr);
-        entry.unserialize(cp, section);
-        pTable[vaddr] = entry;
+        paramIn(cp, csprintf("%s.Entry%d", name(), i), "vaddr", vaddr);
+        entry = new TheISA::TlbEntry();
+        entry->unserialize(cp, csprintf("%s.Entry%d", name(), i));
+        pTable[vaddr] = *entry;
         ++i;
    }
 }

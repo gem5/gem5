@@ -240,7 +240,9 @@ System::serialize(ostream &os)
 {
 #if FULL_SYSTEM
     kernelSymtab->serialize("kernel_symtab", os);
-#endif // FULL_SYSTEM
+#else // !FULL_SYSTEM
+    SERIALIZE_SCALAR(page_ptr);
+#endif
 }
 
 
@@ -249,7 +251,9 @@ System::unserialize(Checkpoint *cp, const string &section)
 {
 #if FULL_SYSTEM
     kernelSymtab->unserialize("kernel_symtab", cp, section);
-#endif // FULL_SYSTEM
+#else // !FULL_SYSTEM
+    UNSERIALIZE_SCALAR(page_ptr);
+#endif
 }
 
 void

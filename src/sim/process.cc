@@ -85,7 +85,7 @@ using namespace TheISA;
 int num_processes = 0;
 
 Process::Process(ProcessParams * params)
-    : SimObject(params), system(params->system),
+    : SimObject(params), system(params->system), checkpointRestored(false),
     max_stack_size(params->max_stack_size)
 {
     string in = params->input;
@@ -335,6 +335,10 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(fd_map, MAX_FD);
 
     pTable->unserialize(cp, section);
+
+
+    checkpointRestored = true;
+
 }
 
 

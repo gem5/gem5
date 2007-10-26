@@ -141,6 +141,9 @@ void X86LiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 void
 X86LiveProcess::startup()
 {
+    if (checkpointRestored)
+        return;
+
     argsInit(sizeof(IntReg), VMPageSize);
 
     for (int i = 0; i < threadContexts.size(); i++) {

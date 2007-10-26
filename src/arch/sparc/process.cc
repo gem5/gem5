@@ -110,6 +110,9 @@ void SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 void
 Sparc32LiveProcess::startup()
 {
+    if (checkpointRestored)
+        return;
+
     argsInit(32 / 8, VMPageSize);
 
     //From the SPARC ABI

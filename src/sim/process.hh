@@ -74,6 +74,8 @@ class Process : public SimObject
     // created threads and are not initialized.
     bool initialContextLoaded;
 
+    bool checkpointRestored;
+
     // thread contexts associated with this process
     std::vector<ThreadContext *> threadContexts;
 

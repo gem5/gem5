@@ -63,5 +63,8 @@ MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
 void
 MipsLiveProcess::startup()
 {
+    if (checkpointRestored)
+        return;
+
     argsInit(MachineBytes, VMPageSize);
 }

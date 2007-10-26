@@ -63,6 +63,9 @@ AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams * params,
 void
 AlphaLiveProcess::startup()
 {
+    if (checkpointRestored)
+        return;
+
     argsInit(MachineBytes, VMPageSize);
 
     threadContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
