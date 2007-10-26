@@ -125,7 +125,7 @@ Process::Process(ProcessParams * params)
 
     mmap_start = mmap_end = 0;
     nxm_start = nxm_end = 0;
-    pTable = new PageTable(system);
+    pTable = new PageTable(this);
     // other parameters will be initialized when the program is loaded
 }
 

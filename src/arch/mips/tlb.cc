@@ -54,13 +54,13 @@ namespace MipsISA {
     void
     TlbEntry::serialize(std::ostream &os)
     {
-        SERIALIZE_SCALAR(pageStart);
+        SERIALIZE_SCALAR(_pageStart);
     }
 
     void
     TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
     {
-        UNSERIALIZE_SCALAR(pageStart);
+        UNSERIALIZE_SCALAR(_pageStart);
     }
 };
 

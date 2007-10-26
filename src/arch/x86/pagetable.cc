@@ -55,11 +55,17 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
 #include "sim/serialize.hh"
 
 namespace X86ISA
 {
+
+TlbEntry::TlbEntry(Addr asn, Addr _vaddr, Addr _paddr) :
+    paddr(_paddr), vaddr(_vaddr), size(PageBytes), writable(true), user(true),
+    uncacheable(false), global(false), patBit(0), noExec(false)
+{}
 
 void
 TlbEntry::serialize(std::ostream &os)

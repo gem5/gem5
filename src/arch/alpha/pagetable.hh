@@ -92,10 +92,21 @@ namespace AlphaISA {
     // ITB/DTB table entry
     struct TlbEntry
     {
-        Addr pageStart;
         //Construct an entry that maps to physical address addr.
-        TlbEntry(Addr addr) : pageStart(addr)
-        {}
+        TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr)
+        {
+            VAddr vaddr(_vaddr);
+            VAddr paddr(_paddr);
+            tag = vaddr.vpn();
+            ppn = paddr.vpn();
+            xre = 15;
+            xwe = 15;
+            asn = _asn;
+            asma = false;
+            fonr = false;
+            fonw = false;
+            valid = true;
+        }
         TlbEntry()
         {}
 
@@ -108,6 +119,11 @@ namespace AlphaISA {
         bool fonr;			// fault on read
         bool fonw;			// fault on write
         bool valid;			// valid page table entry
+
+        Addr pageStart()
+        {
+            return ppn << PageShift;
+        }
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

@@ -43,15 +43,16 @@
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
-PageTable::PageTable(System *_system, Addr _pageSize)
+PageTable::PageTable(Process *_process, Addr _pageSize)
     : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-      system(_system)
+      process(_process)
 {
     assert(isPowerOf2(pageSize));
     pTableCache[0].vaddr = 0;
@@ -80,7 +81,8 @@ PageTable::allocate(Addr vaddr, int64_t size)
                     vaddr);
         }
 
-        pTable[vaddr] = TheISA::TlbEntry(system->new_page());
+        pTable[vaddr] = TheISA::TlbEntry(process->M5_pid, vaddr,
+                process->system->new_page());
         updateCache(vaddr, pTable[vaddr]);
     }
 }
@@ -122,7 +124,7 @@ PageTable::translate(Addr vaddr, Addr &paddr)
         DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
         return false;
     }
-    paddr = pageOffset(vaddr) + entry.pageStart;
+    paddr = pageOffset(vaddr) + entry.pageStart();
     DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
     return true;
 }

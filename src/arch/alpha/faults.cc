@@ -177,25 +177,12 @@ void ItbFault::invoke(ThreadContext * tc)
 void ItbPageFault::invoke(ThreadContext * tc)
 {
     Process *p = tc->getProcessPtr();
-    Addr physaddr;
-    bool success = p->pTable->translate(pc, physaddr);
+    TlbEntry entry;
+    bool success = p->pTable->lookup(pc, entry);
     if(!success) {
         panic("Tried to execute unmapped address %#x.\n", pc);
     } else {
         VAddr vaddr(pc);
-        VAddr paddr(physaddr);
-
-        TlbEntry entry;
-        entry.tag = vaddr.vpn();
-        entry.ppn = paddr.vpn();
-        entry.xre = 15; //This can be read in all modes.
-        entry.xwe = 1; //This can be written only in kernel mode.
-        entry.asn = p->M5_pid; //Address space number.
-        entry.asma = false; //Only match on this ASN.
-        entry.fonr = false; //Don't fault on read.
-        entry.fonw = false; //Don't fault on write.
-        entry.valid = true; //This entry is valid.
-
         tc->getITBPtr()->insert(vaddr.page(), entry);
     }
 }
@@ -203,28 +190,15 @@ void ItbPageFault::invoke(ThreadContext * tc)
 void NDtbMissFault::invoke(ThreadContext * tc)
 {
     Process *p = tc->getProcessPtr();
-    Addr physaddr;
-    bool success = p->pTable->translate(vaddr, physaddr);
+    TlbEntry entry;
+    bool success = p->pTable->lookup(vaddr, entry);
     if(!success) {
         p->checkAndAllocNextPage(vaddr);
-        success = p->pTable->translate(vaddr, physaddr);
+        success = p->pTable->lookup(vaddr, entry);
     }
     if(!success) {
         panic("Tried to access unmapped address %#x.\n", (Addr)vaddr);
     } else {
-        VAddr paddr(physaddr);
-
-        TlbEntry entry;
-        entry.tag = vaddr.vpn();
-        entry.ppn = paddr.vpn();
-        entry.xre = 15; //This can be read in all modes.
-        entry.xwe = 15; //This can be written in all modes.
-        entry.asn = p->M5_pid; //Address space number.
-        entry.asma = false; //Only match on this ASN.
-        entry.fonr = false; //Don't fault on read.
-        entry.fonw = false; //Don't fault on write.
-        entry.valid = true; //This entry is valid.
-
         tc->getDTBPtr()->insert(vaddr.page(), entry);
     }
 }

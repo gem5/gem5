@@ -118,20 +118,11 @@ namespace X86ISA
         DPRINTF(TLB, "Invoking an ITLB fault for address %#x at pc %#x.\n",
                 vaddr, tc->readPC());
         Process *p = tc->getProcessPtr();
-        Addr paddr;
-        bool success = p->pTable->translate(vaddr, paddr);
+        TlbEntry entry;
+        bool success = p->pTable->lookup(vaddr, entry);
         if(!success) {
             panic("Tried to execute unmapped address %#x.\n", vaddr);
         } else {
-            TlbEntry entry;
-            entry.pageStart = p->pTable->pageAlign(paddr);
-            entry.writeable = false;
-            entry.user = true;
-            entry.uncacheable = false;
-            entry.global = false;
-            entry.patBit = 0;
-            entry.noExec = false;
-            entry.size = PageBytes;
             Addr alignedVaddr = p->pTable->pageAlign(vaddr);
             DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr, entry.pageStart);
             tc->getITBPtr()->insert(alignedVaddr, entry);
@@ -143,24 +134,15 @@ namespace X86ISA
         DPRINTF(TLB, "Invoking an DTLB fault for address %#x at pc %#x.\n",
                 vaddr, tc->readPC());
         Process *p = tc->getProcessPtr();
-        Addr paddr;
-        bool success = p->pTable->translate(vaddr, paddr);
+        TlbEntry entry;
+        bool success = p->pTable->lookup(vaddr, entry);
         if(!success) {
             p->checkAndAllocNextPage(vaddr);
-            success = p->pTable->translate(vaddr, paddr);
+            success = p->pTable->lookup(vaddr, entry);
         }
         if(!success) {
             panic("Tried to access unmapped address %#x.\n", vaddr);
         } else {
-            TlbEntry entry;
-            entry.pageStart = p->pTable->pageAlign(paddr);
-            entry.writeable = true;
-            entry.user = true;
-            entry.uncacheable = false;
-            entry.global = false;
-            entry.patBit = 0;
-            entry.noExec = true;
-            entry.size = PageBytes;
             Addr alignedVaddr = p->pTable->pageAlign(vaddr);
             DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr, entry.pageStart);
             tc->getDTBPtr()->insert(alignedVaddr, entry);

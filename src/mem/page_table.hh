@@ -46,7 +46,7 @@
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 
-class System;
+class Process;
 
 /**
  * Page Table Declaration.
@@ -68,11 +68,11 @@ class PageTable
     const Addr pageSize;
     const Addr offsetMask;
 
-    System *system;
+    Process *process;
 
   public:
 
-    PageTable(System *_system, Addr _pageSize = TheISA::VMPageSize);
+    PageTable(Process *_process, Addr _pageSize = TheISA::VMPageSize);
 
     ~PageTable();
 

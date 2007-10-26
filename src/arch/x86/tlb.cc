@@ -494,7 +494,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
 #endif
             } else {
                 // Do paging protection checks.
-                Addr paddr = entry->pageStart | (vaddr & mask(12));
+                Addr paddr = entry->paddr | (vaddr & mask(12));
                 req->setPaddr(paddr);
             }
         } else {

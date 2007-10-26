@@ -39,9 +39,14 @@ namespace MipsISA
 {
     struct TlbEntry
     {
-        Addr pageStart;
+        Addr _pageStart;
         TlbEntry() {}
-        TlbEntry(Addr paddr) : pageStart(paddr) {}
+        TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
+
+        Addr pageStart()
+        {
+            return _pageStart;
+        }
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

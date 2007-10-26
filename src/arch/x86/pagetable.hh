@@ -76,10 +76,16 @@ namespace X86ISA
     struct TlbEntry
     {
         // The base of the physical page.
-        Addr pageStart;
+        Addr paddr;
+
+        // The beginning of the virtual page this entry maps.
+        Addr vaddr;
+        // The size of the page this entry represents.
+        Addr size;
+
         // Read permission is always available, assuming it isn't blocked by
         // other mechanisms.
-        bool writeable;
+        bool writable;
         // Whether this page is accesible without being in supervisor mode.
         bool user;
         // Whether to use write through or write back. M5 ignores this and
@@ -94,13 +100,13 @@ namespace X86ISA
         // Whether or not memory on this page can be executed.
         bool noExec;
 
-        // The beginning of the virtual page this entry maps.
-        Addr vaddr;
-        // The size of the page this entry represents.
-        Addr size;
-
+        TlbEntry(Addr asn, Addr _vaddr, Addr _paddr);
         TlbEntry() {}
-        TlbEntry(Addr paddr) : pageStart(paddr) {}
+
+        Addr pageStart()
+        {
+            return paddr;
+        }
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
