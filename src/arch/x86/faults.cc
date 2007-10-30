@@ -124,7 +124,8 @@ namespace X86ISA
             panic("Tried to execute unmapped address %#x.\n", vaddr);
         } else {
             Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr, entry.pageStart);
+            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+                    entry.pageStart());
             tc->getITBPtr()->insert(alignedVaddr, entry);
         }
     }
@@ -144,7 +145,8 @@ namespace X86ISA
             panic("Tried to access unmapped address %#x.\n", vaddr);
         } else {
             Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr, entry.pageStart);
+            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+                    entry.pageStart());
             tc->getDTBPtr()->insert(alignedVaddr, entry);
         }
     }

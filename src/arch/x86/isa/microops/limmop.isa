@@ -148,6 +148,8 @@ let {{
             self.className = "Limm"
             self.mnemonic = "limm"
             self.dest = dest
+            if isinstance(imm, (int, long)):
+                imm = "ULL(%d)" % imm
             self.imm = imm
             self.dataSize = dataSize
 

@@ -126,7 +126,7 @@ X86LiveProcess::X86LiveProcess(LiveProcessParams * params,
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
-    mmap_start = mmap_end = 0x2aaaaaaab000;
+    mmap_start = mmap_end = (Addr)0x2aaaaaaab000ULL;
 }
 
 void X86LiveProcess::handleTrap(int trapNum, ThreadContext *tc)
