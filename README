@@ -1,4 +1,4 @@
-This is release 2.0_beta (patch 1) of the M5 simulator.
+This is release 2.0_beta4 of the M5 simulator.
 
 For detailed information about building the simulator and getting
 started please refer to http://www.m5sim.org.
@@ -29,7 +29,6 @@ The basic source release includes these subdirectories:
    - src: source code of the m5 simulator
    - tests: regression tests
    - ext: less-common external packages needed to build m5
-   - system/alpha: source for Alpha console and PALcode
 
 To run full-system simulations, you will need compiled console,
 PALcode, and kernel binaries and one or more disk images.  These files
@@ -40,4 +39,4 @@ M5 supports Linux 2.4/2.6, FreeBSD, and the proprietary Compaq/HP
 Tru64 version of Unix. We are able to distribute Linux and FreeBSD
 bootdisks, but we are unable to distribute bootable disk images of
 Tru64 Unix. If you have a Tru64 license and are interested in
-obtaining disk images, contact us at m5-dev@eecs.umich.edu.
+obtaining disk images, contact us at m5-users@m5sim.org

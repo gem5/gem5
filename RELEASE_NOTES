@@ -1,17 +1,30 @@
 Outstanding issues for 2.0 release:
 --------------------
-1. Fix multi-level coherence/dma issues
-2. Fix O3 CPU bug in SE 40.perlbmk fails
-3. Fix O3 processing nacks/coherence messages
-4. Better statistics for the caches.
-5. Clean up more SimObject parameter stuff
-6. Checkpoint/switchover testing
-7. FS mode doesn't work under Cygwin
-8. memtest regression crashes under Cygwin
-9. Make repository public
-10. Testing
-11. Validation
-12. Testing 
+1. Fix O3 CPU bug in SE 40.perlbmk fails
+2. Fix O3 processing nacks/coherence messages
+3. Better statistics for the caches.
+4. FS mode doesn't work under Cygwin
+5. memtest regression crashes under Cygwin
+6. Make repository public
+7. Testing
+8. Validation
+9. Testing 
+
+Nov XX, 2007: m5_2.0_beta4
+--------------------
+New Features
+1. New cache 
+2. Ability to include compiled code with EXTRAS=
+3. Python creation of params structures for initialization
+4. Ability to remotely debug in SE 
+
+Bug fixes:
+1. Fix SE serialization
+2. SPARC_FS booting with TimingSimpleCPU
+3. Rename cycles() to ticks()
+4. Various SPARC ISA fixes
+5. Draining code for checkpointing
+6. Various performance improvements
 
 May 16, 2007: m5_2.0_beta3
 --------------------

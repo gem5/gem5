@@ -20,6 +20,7 @@ Steven K. Reinhardt
 * ISA parsing
 * SWIG intergration
 * New memory system
+* New Caches
 * Simple CPU
 * Instruction tracing
 * PC sampling
