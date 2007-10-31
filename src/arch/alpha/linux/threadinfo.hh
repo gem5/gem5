@@ -32,9 +32,8 @@
 #ifndef __ARCH_ALPHA_LINUX_LINUX_TREADNIFO_HH__
 #define __ARCH_ALPHA_LINUX_LINUX_TREADNIFO_HH__
 
-#include "arch/alpha/linux/thread_info.hh"
 #include "cpu/thread_context.hh"
-#include "kern/linux/sched.hh"
+#include "sim/system.hh"
 #include "sim/vptr.hh"
 
 namespace Linux {
@@ -43,47 +42,108 @@ class ThreadInfo
 {
   private:
     ThreadContext *tc;
+    System *sys;
+    Addr pcbb;
+
+    template <typename T>
+    bool
+    get_data(const char *symbol, T &data)
+    {
+        Addr addr = 0;
+        if (!sys->kernelSymtab->findAddress(symbol, addr))
+            return false;
+
+        CopyOut(tc, &data, addr, sizeof(T));
+
+        data = TheISA::gtoh(data);
+
+        return true;
+    }
 
   public:
-    ThreadInfo(ThreadContext *_tc) : tc(_tc) {}
-    ~ThreadInfo() {}
+    ThreadInfo(ThreadContext *_tc, Addr _pcbb = 0)
+        : tc(_tc), sys(tc->getSystemPtr()), pcbb(_pcbb)
+    {
 
-    inline VPtr<thread_info>
+    }
+    ~ThreadInfo()
+    {}
+
+    inline Addr
     curThreadInfo()
     {
-        Addr current;
+        Addr addr = pcbb;
+        Addr sp;
 
-        /* Each kernel stack is only 2 pages, the start of which is the
-         * thread_info struct. So we can get the address by masking off
-         * the lower 14 bits.
-         */
-        current = tc->readIntReg(TheISA::StackPointerReg) & ~ULL(0x3fff);
-        return VPtr<thread_info>(tc, current);
+        if (!addr)
+            addr = tc->readMiscRegNoEffect(TheISA::IPR_PALtemp23);
+
+        FunctionalPort *p = tc->getPhysPort();
+        p->readBlob(addr, (uint8_t *)&sp, sizeof(Addr));
+
+        return sp & ~ULL(0x3fff);
     }
 
-    inline VPtr<task_struct>
-    curTaskInfo()
+    inline Addr
+    curTaskInfo(Addr thread_info = 0)
     {
-        Addr task = curThreadInfo()->task;
-        return VPtr<task_struct>(tc, task);
-    }
+        int32_t offset;
+        if (!get_data("thread_info_task", offset))
+            return 0;
 
-    std::string
-    curTaskName()
-    {
-        return curTaskInfo()->name;
+        if (!thread_info)
+            thread_info = curThreadInfo();
+
+        Addr addr;
+        CopyOut(tc, &addr, thread_info + offset, sizeof(addr));
+
+        return addr;
     }
 
     int32_t
-    curTaskPID()
+    curTaskPID(Addr thread_info = 0)
     {
-        return curTaskInfo()->pid;
+        Addr offset;
+        if (!get_data("task_struct_pid", offset))
+            return -1;
+
+        int32_t pid;
+        CopyOut(tc, &pid, curTaskInfo(thread_info) + offset, sizeof(pid));
+
+        return pid;
     }
 
-    uint64_t
-    curTaskStart()
+    int64_t
+    curTaskStart(Addr thread_info = 0)
     {
-        return curTaskInfo()->start;
+        Addr offset;
+        if (!get_data("task_struct_start_time", offset))
+            return -1;
+
+        int64_t data;
+        // start_time is actually of type timespec, but if we just
+        // grab the first long, we'll get the seconds out of it
+        CopyOut(tc, &data, curTaskInfo(thread_info) + offset, sizeof(data));
+
+        return data;
+    }
+
+    std::string
+    curTaskName(Addr thread_info = 0)
+    {
+        int32_t offset;
+        int32_t size;
+
+        if (!get_data("task_struct_comm", offset))
+            return "FailureIn_curTaskName";
+
+        if (!get_data("task_struct_comm_size", size))
+            return "FailureIn_curTaskName";
+
+        char buffer[size + 1];
+        CopyStringOut(tc, buffer, curTaskInfo(thread_info) + offset, size);
+
+        return buffer;
     }
 };
 

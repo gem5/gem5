@@ -33,6 +33,7 @@
 
 #include "arch/vtophys.hh"
 #include "arch/isa_traits.hh"
+#include "mem/vport.hh"
 
 class ThreadContext;
 
@@ -42,82 +43,95 @@ class VPtr
   public:
     typedef T Type;
 
-  private:
+  protected:
     ThreadContext *tc;
     Addr ptr;
+    Addr buffer[(sizeof(T)-1)/sizeof(Addr) + 1];
 
   public:
-    ThreadContext *GetTC() const { return tc; }
-    Addr GetPointer() const { return ptr; }
+    explicit VPtr(ThreadContext *_tc, Addr p = 0)
+        : tc(_tc), ptr(p)
+    {
+        refresh();
+    }
 
-  public:
-    explicit VPtr(ThreadContext *_tc, Addr p = 0) : tc(_tc), ptr(p) { }
     template <class U>
-    VPtr(const VPtr<U> &vp) : tc(vp.GetTC()), ptr(vp.GetPointer()) {}
-    ~VPtr() {}
+    VPtr(const VPtr<U> &vp)
+        : tc(vp.tc), ptr(vp.ptr)
+    {
+        refresh();
+    }
 
-    bool operator!() const
+    ~VPtr()
+    {}
+
+    void
+    refresh()
+    {
+        if (!ptr)
+            return;
+
+        VirtualPort *port = tc->getVirtPort(tc);
+        port->readBlob(ptr, buffer, sizeof(T));
+        tc->delVirtPort(port);
+    }
+
+    bool
+    operator!() const
     {
         return ptr == 0;
     }
 
-    VPtr<T> operator+(int offset)
+    VPtr<T>
+    operator+(int offset)
     {
-        VPtr<T> ptr(*this);
-        ptr += offset;
-
-        return ptr;
+        return VPtr<T>(tc, ptr + offset);
     }
 
-    const VPtr<T> &operator+=(int offset)
+    const VPtr<T> &
+    operator+=(int offset)
     {
         ptr += offset;
-        assert((ptr & (TheISA::PageBytes - 1)) + sizeof(T)
-               < TheISA::PageBytes);
+        refresh();
 
         return *this;
     }
 
-    const VPtr<T> &operator=(Addr p)
+    const VPtr<T> &
+    operator=(Addr p)
     {
-        assert((p & (TheISA::PageBytes - 1)) + sizeof(T)
-               < TheISA::PageBytes);
         ptr = p;
+        refresh();
 
         return *this;
     }
 
     template <class U>
-    const VPtr<T> &operator=(const VPtr<U> &vp)
+    const VPtr<T> &
+    operator=(const VPtr<U> &vp)
     {
-        tc = vp.GetTC();
-        ptr = vp.GetPointer();
+        tc = vp.tc;
+        ptr = vp.ptr;
+        refresh();
 
         return *this;
     }
 
     operator T *()
     {
-        panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(tc, ptr, sizeof(T));
-        return (T *)addr;
-        */
+        return (T *)buffer;
     }
 
-    T *operator->()
+    T *
+    operator->()
     {
-        panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(tc, ptr, sizeof(T));
-        return (T *)addr;
-        */
+        return (T *)buffer;
     }
 
-    T &operator*()
+    T &
+    operator*()
     {
-        panic("Needs to be rewritten\n");
-/*	void *addr = vtomem(tc, ptr, sizeof(T));
-        return *(T *)addr;
-        */
+        return *(T *)buffer;
     }
 };
 

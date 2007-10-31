@@ -33,6 +33,7 @@
 #include <stack>
 #include <string>
 
+#include "arch/alpha/linux/threadinfo.hh"
 #include "arch/alpha/kernel_stats.hh"
 #include "arch/alpha/osfpal.hh"
 #include "base/trace.hh"
@@ -137,8 +138,9 @@ Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
     if (newmode == themode)
         return;
 
-    DPRINTF(Context, "old mode=%-8s new mode=%-8s\n",
-            modestr[themode], modestr[newmode]);
+    DPRINTF(Context, "old mode=%s new mode=%s pid=%d\n",
+            modestr[themode], modestr[newmode],
+            Linux::ThreadInfo(tc).curTaskPID());
 
     _modeGood[newmode]++;
     _modeTicks[themode] += curTick - lastModeTick;
@@ -165,6 +167,10 @@ Statistics::context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc)
 
     _swap_context++;
     changeMode(newpcbb == idleProcess ? idle : kernel, tc);
+
+    DPRINTF(Context, "Context Switch old pid=%d new pid=%d\n",
+            Linux::ThreadInfo(tc, oldpcbb).curTaskPID(),
+            Linux::ThreadInfo(tc, newpcbb).curTaskPID());
 }
 
 void
