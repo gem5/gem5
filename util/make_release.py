@@ -72,7 +72,7 @@ def movedir(srcdir, destdir, dir):
     os.makedirs(dirname(dest))
     shutil.move(src, dest)
 
-if not isdir('BitKeeper'):
+if not isdir('.hg'):
     sys.exit('Not in the top level of an m5 tree!')
 
 usage = '%s <destdir> <release name>' % sys.argv[0]
@@ -83,9 +83,9 @@ if len(sys.argv) != 3:
 destdir = sys.argv[1]
 releasename = sys.argv[2]
 release_dest = joinpath(destdir, 'release')
-encumbered_dest = joinpath(destdir, 'encumbered')
+#encumbered_dest = joinpath(destdir, 'encumbered')
 release_dir = joinpath(release_dest, releasename)
-encumbered_dir = joinpath(encumbered_dest, releasename)
+#encumbered_dir = joinpath(encumbered_dest, releasename)
 
 if exists(destdir):
     if not isdir(destdir):
@@ -99,42 +99,49 @@ if exists(release_dest):
               '%s exists, but is not a directory' % release_dest
     rmtree(release_dest)
 
-if exists(encumbered_dest):
-    if not isdir(encumbered_dest):
-        raise AttributeError, \
-              '%s exists, but is not a directory' % encumbered_dest
-    rmtree(encumbered_dest)
+#if exists(encumbered_dest):
+#    if not isdir(encumbered_dest):
+#       raise AttributeError, \
+#             '%s exists, but is not a directory' % encumbered_dest
+#   rmtree(encumbered_dest)
 
 mkdir(release_dest)
-mkdir(encumbered_dest)
+#mkdir(encumbered_dest)
 mkdir(release_dir)
-mkdir(encumbered_dir)
+#mkdir(encumbered_dir)
 
-system('bk export -tplain -w -r+ %s' % release_dir)
-
-
+system('hg update')
+system('rsync -av --exclude ".hg*" --exclude build . %s' % release_dir)
 # move the time forward on some files by a couple of minutes so we can
 # avoid building things unnecessarily
 when = int(time.time()) + 120
 
 # make sure scons doesn't try to run flex unnecessarily
-touch(release_dir, 'src/encumbered/eio/exolex.cc', when=(when, when))
+#touch(release_dir, 'src/encumbered/eio/exolex.cc', when=(when, when))
 
 # get rid of non-shipping code
-rmtree(release_dir, 'src/encumbered/dev')
+#rmtree(release_dir, 'src/encumbered/dev')
 rmtree(release_dir, 'src/cpu/ozone')
-rmtree(release_dir, 'src/mem/cache/tags/split*.cc')
-rmtree(release_dir, 'src/mem/cache/tags/split*.hh')
-rmtree(release_dir, 'src/mem/cache/prefetch/ghb_*.cc')
-rmtree(release_dir, 'src/mem/cache/prefetch/ghb_*.hh')
-rmtree(release_dir, 'src/mem/cache/prefetch/stride_*.cc')
-rmtree(release_dir, 'src/mem/cache/prefetch/stride_*.hh')
+rmtree(release_dir, 'src/arch/x86')
+#rmtree(release_dir, 'src/mem/cache/tags/split*.cc')
+#rmtree(release_dir, 'src/mem/cache/tags/split*.hh')
+#rmtree(release_dir, 'src/mem/cache/prefetch/ghb_*.cc')
+#rmtree(release_dir, 'src/mem/cache/prefetch/ghb_*.hh')
+#rmtree(release_dir, 'src/mem/cache/prefetch/stride_*.cc')
+#rmtree(release_dir, 'src/mem/cache/prefetch/stride_*.hh')
 rmtree(release_dir, 'configs/fullsys')
 rmtree(release_dir, 'configs/test')
 rmtree(release_dir, 'configs/splash2')
 rmtree(release_dir, 'tests/long/*/ref')
 rmtree(release_dir, 'tests/old')
-rmtree(release_dir, 'src/dev/i8*')
+rmtree(release_dir, 'tests/quick/00.hello/ref/x86')
+rmtree(release_dir, 'tests/test-progs/hello/bin/x86')
+rmtree(release_dir, 'src/dev/x86')
+
+remove(release_dir, 'src/cpu/nativetrace.hh')
+remove(release_dir, 'src/cpu/nativetrace.cc')
+remove(release_dir, 'build_opts/X86_SE')
+remove(release_dir, 'build_opts/X86_FS')
 
 # get rid of some of private scripts
 remove(release_dir, 'util/chgcopyright')
@@ -153,19 +160,66 @@ def remove_sources(regex, subdir):
         outscript.write(line)
     outscript.close()
 
-# fix up the SConscript to deal with files we've removed
-remove_sources(r'.*split.*\.cc', 'src/mem/cache/tags')
-remove_sources(r'.*(ghb|stride)_prefetcher\.cc', 'src/mem/cache/prefetch')
-remove_sources(r'.*i8254xGBe.*', 'src/dev')
+def remove_lines(s_regex, e_regex, f):
+    f = joinpath(release_dir, f)
+    if isinstance(s_regex, str):
+        s_regex = re.compile(s_regex)
+    if isinstance(e_regex, str):
+        e_regex = re.compile(e_regex)
+    inscript = file(f, 'r').readlines()
+    outscript = file(f, 'w')
+    skipping = False
+    for line in inscript:
+        if (not skipping and s_regex.match(line)) or \
+                (e_regex and skipping and not e_regex.match(line)):
+            skipping = True
+            continue
+        skipping = False
+        outscript.write(line)
+    outscript.close()
 
+def replace_line(s_regex, f, rl):
+    f = joinpath(release_dir, f)
+    if isinstance(s_regex, str):
+        s_regex = re.compile(s_regex)
+    inscript = file(f, 'r').readlines()
+    outscript = file(f, 'w')
+    for line in inscript:
+        if s_regex.match(line):
+            outscript.write(rl)
+            continue
+        outscript.write(line)
+    outscript.close()
+
+
+# fix up the SConscript to deal with files we've removed
+#remove_sources(r'.*split.*\.cc', 'src/mem/cache/tags')
+#remove_sources(r'.*(ghb|stride)_prefetcher\.cc', 'src/mem/cache/prefetch')
+remove_sources(r'.*nativetrace.*', 'src/cpu')
+
+remove_lines(r'.*X86.*', None,  'src/arch/isa_specific.hh')
+remove_lines(r'.*X86.*', None,  'src/base/traceflags.py')
+remove_lines(r'.*X86.*', None,  'src/base/loader/object_file.hh')
+remove_lines(r'.*_X86_.*', '.*else.*', 'src/base/loader/elf_object.cc')
+remove_lines(r'.*X86_ISA.*', r'^.el.*','src/sim/process.cc')
+remove_lines(r'.*x86.*', r'.*mips.*','src/cpu/BaseCPU.py')
+remove_lines(r'.*X86_ISA.*', r'^.*else.*','src/cpu/o3/dyn_inst.hh')
+remove_lines(r'.*X86_ISA.*', r'.*stay.*','src/cpu/simple/base.cc')
+remove_lines(r'.*x86.*', r'^if.*','src/cpu/SConscript')
+
+remove_lines(r'.*makeX86System.*', r'.*makeDualRoot.*','configs/common/FSConfig.py')
+remove_lines(r'.*X86.*', None,  'configs/example/fs.py')
+remove_lines(r'.*x86.*', None,  'configs/example/fs.py')
+
+replace_line(r'.*X86_SE.*', 'util/regress', "                     'SPARC_SE,SPARC_FS',")
 benches = [ 'bzip2', 'eon', 'gzip', 'mcf', 'parser', 'perlbmk',
             'twolf', 'vortex' ]
 for bench in benches:
     rmtree(release_dir, 'tests', 'test-progs', bench)
 
-movedir(release_dir, encumbered_dir, 'src/encumbered')
-movedir(release_dir, encumbered_dir, 'tests/test-progs/anagram')
-movedir(release_dir, encumbered_dir, 'tests/quick/20.eio-short')
+#movedir(release_dir, encumbered_dir, 'src/encumbered')
+rmtree(release_dir, 'tests/test-progs/anagram')
+rmtree(release_dir, 'tests/quick/20.eio-short')
 
 def taritup(directory, destdir, filename):
     basedir = dirname(directory)
@@ -175,8 +229,7 @@ def taritup(directory, destdir, filename):
     system('cd %s; tar cfj %s %s' % (basedir, tarball, tardir))
 
 taritup(release_dir, destdir, '%s.tar.bz2' % releasename)
-taritup(encumbered_dir, destdir, '%s-encumbered.tar.bz2' % releasename)
+#taritup(encumbered_dir, destdir, '%s-encumbered.tar.bz2' % releasename)
 
 print "release created in %s" % destdir
-print "don't forget to tag the repository! The following command will do it:"
-print "bk tag %s" % releasename
+print "don't forget to tag the repository!"
