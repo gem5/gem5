@@ -172,7 +172,8 @@ def remove_lines(s_regex, e_regex, f):
     for line in inscript:
         if (not skipping and s_regex.match(line)) or \
                 (e_regex and skipping and not e_regex.match(line)):
-            skipping = True
+            if e_regex:
+                skipping = True
             continue
         skipping = False
         outscript.write(line)
