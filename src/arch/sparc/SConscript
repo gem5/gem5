@@ -44,6 +44,7 @@ if env['TARGET_ISA'] == 'sparc':
     Source('utility.cc')
 
     SimObject('SparcTLB.py')
+    TraceFlag('Sparc')
 
     if env['FULL_SYSTEM']:
         SimObject('SparcSystem.py')

@@ -66,7 +66,7 @@ class IsaFake : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
     /**
-      * The constructor for Tsunmami Fake just registers itself with the MMU.
+      * The constructor for Isa Fake just registers itself with the MMU.
       * @param p params structure
       */
     IsaFake(Params *p);

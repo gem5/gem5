@@ -40,3 +40,7 @@ Source('split_lru.cc')
 
 SimObject('Repl.py')
 Source('repl/gen.cc')
+
+TraceFlag('IIC')
+TraceFlag('IICMore')
+TraceFlag('Split')

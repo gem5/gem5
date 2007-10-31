@@ -40,3 +40,7 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
     Source('tsunami_cchip.cc')
     Source('tsunami_io.cc')
     Source('tsunami_pchip.cc')
+
+    TraceFlag('AlphaConsole')
+    TraceFlag('MC146818')
+    TraceFlag('Tsunami')

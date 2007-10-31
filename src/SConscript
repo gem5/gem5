@@ -135,6 +135,38 @@ Export('SwigSource')
 
 ########################################################################
 #
+# Trace Flags
+#
+all_flags = {}
+trace_flags = []
+def TraceFlag(name, desc=''):
+    if name in all_flags:
+        raise AttributeError, "Flag %s already specified" % name
+    flag = (name, (), desc)
+    trace_flags.append(flag)
+    all_flags[name] = ()
+
+def CompoundFlag(name, flags, desc=''):
+    if name in all_flags:
+        raise AttributeError, "Flag %s already specified" % name
+
+    compound = tuple(flags)
+    for flag in compound:
+        if flag not in all_flags:
+            raise AttributeError, "Trace flag %s not found" % flag
+        if all_flags[flag]:
+            raise AttributeError, \
+                "Compound flag can't point to another compound flag"
+
+    flag = (name, compound, desc)
+    trace_flags.append(flag)
+    all_flags[name] = compound
+
+Export('TraceFlag')
+Export('CompoundFlag')
+
+########################################################################
+#
 # Set some compiler variables
 #
 
@@ -306,6 +338,15 @@ for source,package in swig_sources:
 # Generate the main swig init file
 env.Command('swig/init.cc', swig_modules, generate.makeSwigInit)
 Source('swig/init.cc')
+
+# Generate traceflags.py
+flags = [ Value(f) for f in trace_flags ]
+env.Command('base/traceflags.py', flags, generate.traceFlagsPy)
+PySource('m5', 'base/traceflags.py')
+
+env.Command('base/traceflags.hh', flags, generate.traceFlagsHH)
+env.Command('base/traceflags.cc', flags, generate.traceFlagsCC)
+Source('base/traceflags.cc')
 
 # Build the zip file
 py_compiled = []

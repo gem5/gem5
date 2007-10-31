@@ -66,3 +66,35 @@ if env['FULL_SYSTEM']:
     Source('sinic.cc')
     Source('uart.cc')
     Source('uart8250.cc')
+
+    TraceFlag('Console')
+    TraceFlag('ConsoleVerbose')
+    TraceFlag('DiskImageRead')
+    TraceFlag('DiskImageWrite')
+    TraceFlag('DMA')
+    TraceFlag('Ethernet')
+    TraceFlag('EthernetCksum')
+    TraceFlag('EthernetDMA')
+    TraceFlag('EthernetData')
+    TraceFlag('EthernetDesc')
+    TraceFlag('EthernetEEPROM')
+    TraceFlag('EthernetIntr')
+    TraceFlag('EthernetPIO')
+    TraceFlag('EthernetSM')
+    TraceFlag('IdeCtrl')
+    TraceFlag('IdeDisk')
+    TraceFlag('IsaFake')
+    TraceFlag('PCIDEV')
+    TraceFlag('PciConfigAll')
+    TraceFlag('SimpleDisk')
+    TraceFlag('SimpleDiskData')
+    TraceFlag('Uart')
+
+    CompoundFlag('DiskImageAll', [ 'DiskImageRead', 'DiskImageWrite' ])
+    CompoundFlag('EthernetAll', [ 'Ethernet', 'EthernetPIO', 'EthernetDMA',
+        'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM',
+        'EthernetCksum' ])
+    CompoundFlag('EthernetNoData', [ 'Ethernet', 'EthernetPIO', 'EthernetDesc',
+        'EthernetIntr', 'EthernetSM', 'EthernetCksum' ])
+    CompoundFlag('IdeAll', [ 'IdeCtrl', 'IdeDisk' ])
+

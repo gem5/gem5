@@ -58,3 +58,18 @@ else:
 
     Source('process.cc')
     Source('syscall_emul.cc')
+
+TraceFlag('Config')
+TraceFlag('Event')
+TraceFlag('Fault')
+TraceFlag('Flow')
+TraceFlag('IPI')
+TraceFlag('IPR')
+TraceFlag('Interrupt')
+TraceFlag('Loader')
+TraceFlag('Stack')
+TraceFlag('SyscallVerbose')
+TraceFlag('TLB')
+TraceFlag('Thread')
+TraceFlag('Timer')
+TraceFlag('VtoPhys')

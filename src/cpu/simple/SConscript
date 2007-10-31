@@ -41,5 +41,9 @@ if 'TimingSimpleCPU' in env['CPU_MODELS']:
     SimObject('TimingSimpleCPU.py')
     Source('timing.cc')
 
+if 'AtomicSimpleCPU' in env['CPU_MODELS'] or \
+       'TimingSimpleCPU' in env['CPU_MODELS']:
+    TraceFlag('SimpleCPU')
+
 if need_simple_base:
     Source('base.cc')

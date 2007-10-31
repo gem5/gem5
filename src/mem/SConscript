@@ -49,3 +49,10 @@ if env['FULL_SYSTEM']:
 else:
     Source('page_table.cc')
     Source('translating_port.cc')
+
+TraceFlag('Bus')
+TraceFlag('BusAddrRanges')
+TraceFlag('BusBridge')
+TraceFlag('LLSC')
+TraceFlag('MMU')
+TraceFlag('MemoryAccess')

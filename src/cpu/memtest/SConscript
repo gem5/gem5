@@ -34,3 +34,5 @@ if 'O3CPU' in env['CPU_MODELS']:
     SimObject('MemTest.py')
 
     Source('memtest.cc')
+
+    TraceFlag('MemTest')

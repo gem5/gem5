@@ -105,6 +105,8 @@ if env['TARGET_ISA'] == 'x86':
     Source('utility.cc')
 
     SimObject('X86TLB.py')
+    TraceFlag('Predecoder')
+    TraceFlag('X86')
 
     if env['FULL_SYSTEM']:
         SimObject('X86System.py')

@@ -43,6 +43,8 @@ if env['TARGET_ISA'] == 'mips':
 
     SimObject('MipsTLB.py')
 
+    TraceFlag('MipsPRA')
+
     if env['FULL_SYSTEM']:
         #Insert Full-System Files Here
         pass

@@ -30,27 +30,6 @@
 
 Import('*')
 
-def make_cc(target, source, env):
-    assert(len(source) == 1)
-    assert(len(target) == 1)
-
-    traceflags = {}
-    execfile(str(source[0]), traceflags)
-    func = traceflags['gen_cc']
-    func(str(target[0]))
-
-def make_hh(target, source, env):
-    assert(len(source) == 1)
-    assert(len(target) == 1)
-
-    traceflags = {}
-    execfile(str(source[0]), traceflags)
-    func = traceflags['gen_hh']
-    func(str(target[0]))
-
-env.Command('traceflags.hh', 'traceflags.py', make_hh)
-env.Command('traceflags.cc', 'traceflags.py', make_cc)
-
 Source('annotate.cc')
 Source('bigint.cc')
 Source('circlebuf.cc')
@@ -79,7 +58,6 @@ Source('statistics.cc')
 Source('str.cc')
 Source('time.cc')
 Source('trace.cc')
-Source('traceflags.cc')
 Source('userinfo.cc')
 
 Source('compression/lzss_compression.cc')
@@ -101,4 +79,16 @@ if env['USE_MYSQL']:
     Source('mysql.cc')
     Source('stats/mysql.cc')
 
-PySource('m5', 'traceflags.py')
+TraceFlag('Annotate')
+TraceFlag('GDBAcc')
+TraceFlag('GDBExtra')
+TraceFlag('GDBMisc')
+TraceFlag('GDBRead')
+TraceFlag('GDBRecv')
+TraceFlag('GDBSend')
+TraceFlag('GDBWrite')
+TraceFlag('SQL')
+TraceFlag('StatEvents')
+
+CompoundFlag('GDBAll', [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend',
+    'GDBRecv', 'GDBExtra' ])

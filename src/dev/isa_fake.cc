@@ -61,12 +61,12 @@ IsaFake::read(PacketPtr pkt)
         warn("Device %s accessed by read to address %#x size=%d\n",
                 name(), pkt->getAddr(), pkt->getSize());
     if (params()->ret_bad_addr) {
-        DPRINTF(Tsunami, "read to bad address va=%#x size=%d\n",
+        DPRINTF(IsaFake, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
         assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
-        DPRINTF(Tsunami, "read  va=%#x size=%d\n",
+        DPRINTF(IsaFake, "read  va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
         switch (pkt->getSize()) {
           case sizeof(uint64_t):
@@ -114,11 +114,11 @@ IsaFake::write(PacketPtr pkt)
                 name(), pkt->getAddr(), pkt->getSize(), data);
     }
     if (params()->ret_bad_addr) {
-        DPRINTF(Tsunami, "write to bad address va=%#x size=%d \n",
+        DPRINTF(IsaFake, "write to bad address va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
         pkt->setBadAddress();
     } else {
-        DPRINTF(Tsunami, "write - va=%#x size=%d \n",
+        DPRINTF(IsaFake, "write - va=%#x size=%d \n",
                 pkt->getAddr(), pkt->getSize());
 
         if (params()->update_data) {
