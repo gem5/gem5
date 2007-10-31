@@ -2030,6 +2030,39 @@ class ConstNode : public Node
     virtual std::string str() const { return to_string(vresult[0]); }
 };
 
+template <class T>
+class ConstVectorNode : public Node
+{
+  private:
+    VResult vresult;
+
+  public:
+    ConstVectorNode(const T &s) : vresult(s.begin(), s.end()) {}
+    const VResult &result() const { return vresult; }
+    virtual Result total() const
+    {
+        int size = this->size();
+        Result tmp = 0;
+        for (int i = 0; i < size; i++)
+        {
+            tmp += vresult[i];
+        }
+        return tmp;
+    }
+    virtual size_t size() const { return vresult.size(); }
+    virtual std::string str() const
+    {
+        int size = this->size();
+        std::string tmp = "(";
+        for (int i = 0; i < size; i++)
+        {
+            tmp += csprintf("%s ",to_string(vresult[i]));
+        }
+        tmp += ")";
+        return tmp;
+    }
+};
+
 template <class Op>
 struct OpString;
 
@@ -2886,6 +2919,13 @@ inline Temp
 constant(T val)
 {
     return NodePtr(new ConstNode<T>(val));
+}
+
+template <typename T>
+inline Temp
+constantVector(T val)
+{
+    return NodePtr(new ConstVectorNode<T>(val));
 }
 
 inline Temp
