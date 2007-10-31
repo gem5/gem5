@@ -236,7 +236,7 @@ if False:
     env.TargetSignatures('content')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
-env.Append(ENV = { 'M5_PLY' : Dir('ext/ply') })
+env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
 env['GCC'] = False
 env['SUNCC'] = False
 env['ICC'] = False
