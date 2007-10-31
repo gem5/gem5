@@ -276,7 +276,7 @@ else:
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
-env.Append(CPPPATH=[str(Dir('ext/dnet'))])
+env.Append(CPPPATH=[Dir('ext/dnet')])
 
 # Check for SWIG
 if not env.has_key('SWIG'):
