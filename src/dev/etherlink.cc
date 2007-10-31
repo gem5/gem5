@@ -177,10 +177,9 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
 
     packet = pkt;
     Tick delay = (Tick)ceil(((double)pkt->length * ticksPerByte) + 1.0);
-    if (delayVar != 0) {
-        Random<Tick> var;
-        delay +=  var.uniform(0, delayVar);
-    }
+    if (delayVar != 0)
+        delay += random_mt.random<Tick>(0, delayVar);
+
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
     doneEvent.schedule(curTick + delay);

@@ -32,99 +32,211 @@
 #ifndef __BASE_RANDOM_HH__
 #define __BASE_RANDOM_HH__
 
+#include <ios>
+#include <string>
+
+#include "base/range.hh"
 #include "sim/host.hh"
 
-uint32_t getUInt32();
-double getDouble();
-double m5random(double r);
-uint64_t getUniformPos(uint64_t min, uint64_t max);
-int64_t getUniform(int64_t min, int64_t max);
+class Checkpoint;
 
-template <typename T>
-struct Random;
-
-template<> struct Random<int8_t>
+class Random
 {
-    static int8_t get()
-    { return getUInt32() & (int8_t)-1; }
+  protected:
+    static const int N = 624;
+    static const int M = 397;
+    static const uint32_t MATRIX_A = (uint32_t)0x9908b0df;
+    static const uint32_t UPPER_MASK = (uint32_t)0x80000000;
+    static const uint32_t LOWER_MASK = (uint32_t)0x7fffffff;
 
-    static int8_t uniform(int8_t min, int8_t max)
-    { return getUniform(min, max); }
+    uint32_t mt[N];
+    int mti;
+
+    uint32_t genrand();
+    uint32_t genrand(uint32_t max);
+    uint64_t genrand(uint64_t max);
+
+    void
+    _random(int8_t &value)
+    {
+        value = genrand() & (int8_t)-1;
+    }
+
+    void
+    _random(int16_t &value)
+    {
+        value = genrand() & (int16_t)-1;
+    }
+
+    void
+    _random(int32_t &value)
+    {
+        value = (int32_t)genrand();
+    }
+
+    void
+    _random(int64_t &value)
+    {
+        value = (int64_t)genrand() << 32 | (int64_t)genrand();
+    }
+
+    void
+    _random(uint8_t &value)
+    {
+        value = genrand() & (uint8_t)-1;
+    }
+
+    void
+    _random(uint16_t &value)
+    {
+        value = genrand() & (uint16_t)-1;
+    }
+
+    void
+    _random(uint32_t &value)
+    {
+        value = genrand();
+    }
+
+    void
+    _random(uint64_t &value)
+    {
+        value = (uint64_t)genrand() << 32 | (uint64_t)genrand();
+    }
+
+    // [0,1]
+    void
+    _random(float &value)
+    {
+        // ieee floats have 23 bits of mantissa
+        value = (genrand() >> 9) / 8388608.0;
+    }
+
+    // [0,1]
+    void
+    _random(double &value)
+    {
+        double number = genrand() * 2097152.0 + (genrand() >> 11);
+        value = number / 9007199254740992.0;
+    }
+
+
+    // Range based versions of the random number generator
+    int8_t
+    _random(int8_t min, int8_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<int8_t>(min + genrand(diff));
+    }
+
+    int16_t
+    _random(int16_t min, int16_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<int16_t>(min + genrand(diff));
+    }
+
+    int32_t
+    _random(int32_t min, int32_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<int32_t>(min + genrand(diff));
+    }
+
+    int64_t
+    _random(int64_t min, int64_t max)
+    {
+        uint64_t diff = max - min;
+        return static_cast<int64_t>(min + genrand(diff));
+    }
+
+    uint8_t
+    _random(uint8_t min, uint8_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<uint8_t>(min + genrand(diff));
+    }
+
+    uint16_t
+    _random(uint16_t min, uint16_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<uint16_t>(min + genrand(diff));
+    }
+
+    uint32_t
+    _random(uint32_t min, uint32_t max)
+    {
+        uint32_t diff = max - min;
+        return static_cast<uint32_t>(min + genrand(diff));
+    }
+
+    uint64_t
+    _random(uint64_t min, uint64_t max)
+    {
+        uint64_t diff = max - min;
+        return static_cast<uint64_t>(min + genrand(diff));
+    }
+
+  public:
+    Random();
+    Random(uint32_t s);
+    Random(uint32_t init_key[], int key_length);
+    ~Random();
+
+    void init(uint32_t s);
+    void init(uint32_t init_key[], int key_length);
+
+    template <typename T>
+    T
+    random()
+    {
+        T value;
+        _random(value);
+        return value;
+    }
+
+    template <typename T>
+    T
+    random(T min, T max)
+    {
+        return _random(min, max);
+    }
+
+    template <typename T>
+    T
+    random(const Range<T> &range)
+    {
+        return _random(range.start, range.end);
+    }
+
+    // [0,1]
+    double
+    gen_real1()
+    {
+        return genrand() / 4294967296.0;
+    }
+
+    // [0,1)
+    double
+    gen_real2()
+    {
+        return genrand() / 4294967295.0;
+    }
+
+    // (0,1)
+    double
+    gen_real3()
+    {
+        return ((double)genrand() + 0.5) / 4294967296.0;
+    }
+
+  public:
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+                     const std::string &section);
 };
 
-template<> struct Random<uint8_t>
-{
-    static uint8_t get()
-    { return getUInt32() & (uint8_t)-1; }
-
-    static uint8_t uniform(uint8_t min, uint8_t max)
-    { return getUniformPos(min, max); }
-};
-
-template<> struct Random<int16_t>
-{
-    static int16_t get()
-    { return getUInt32() & (int16_t)-1; }
-
-    static int16_t uniform(int16_t min, int16_t max)
-    { return getUniform(min, max); }
-};
-
-template<> struct Random<uint16_t>
-{
-    static uint16_t get()
-    { return getUInt32() & (uint16_t)-1; }
-
-    static uint16_t uniform(uint16_t min, uint16_t max)
-    { return getUniformPos(min, max); }
-};
-
-template<> struct Random<int32_t>
-{
-    static int32_t get()
-    { return (int32_t)getUInt32(); }
-
-    static int32_t uniform(int32_t min, int32_t max)
-    { return getUniform(min, max); }
-};
-
-template<> struct Random<uint32_t>
-{
-    static uint32_t get()
-    { return (uint32_t)getUInt32(); }
-
-    static uint32_t uniform(uint32_t min, uint32_t max)
-    { return getUniformPos(min, max); }
-};
-
-template<> struct Random<int64_t>
-{
-    static int64_t get()
-    { return (int64_t)getUInt32() << 32 || (uint64_t)getUInt32(); }
-
-    static int64_t uniform(int64_t min, int64_t max)
-    { return getUniform(min, max); }
-};
-
-template<> struct Random<uint64_t>
-{
-    static uint64_t get()
-    { return (uint64_t)getUInt32() << 32 || (uint64_t)getUInt32(); }
-
-    static uint64_t uniform(uint64_t min, uint64_t max)
-    { return getUniformPos(min, max); }
-};
-
-template<> struct Random<float>
-{
-    static float get()
-    { return getDouble(); }
-};
-
-template<> struct Random<double>
-{
-    static double get()
-    { return getDouble(); }
-};
+extern Random random_mt;
 
 #endif // __BASE_RANDOM_HH__

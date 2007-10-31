@@ -29,60 +29,88 @@
  *          Ali Saidi
  */
 
-#ifdef __SUNPRO_CC
-#include <stdlib.h>
-#include <math.h>
-#endif
-
-#include <cstdlib>
-#include <cmath>
-
 #include "base/fenv.hh"
+#include "base/intmath.hh"
+#include "base/misc.hh"
 #include "base/random.hh"
+#include "sim/serialize.hh"
 
 using namespace std;
 
+Random::Random()
+{
+    // default random seed taken from original source
+    init(5489);
+}
+
+Random::Random(uint32_t s)
+{
+    init(s);
+}
+
+Random::Random(uint32_t init_key[], int key_length)
+{
+    init(init_key, key_length);
+}
+
+Random::~Random()
+{
+}
+
+// To preserve the uniform random distribution between min and max,
+// and allow all numbers to be represented, we generate a uniform
+// random number to the nearest power of two greater than max.  If
+// this number doesn't fall between 0 and max, we try again.  Anything
+// else would skew the distribution.
 uint32_t
-getInt32()
+Random::genrand(uint32_t max)
 {
-    return mrand48() & 0xffffffff;
-}
+    int log = ceilLog2(max);
+    int shift = (sizeof(uint32_t) * 8 - log);
+    uint32_t random;
 
-double
-getDouble()
-{
-    return drand48();
-}
+    do {
+        random = genrand() >> shift;
+    } while (random > max);
 
-double
-m5round(double r)
-{
-#if defined(__sun)
-    double val;
-    int oldrnd = m5_fegetround();
-    m5_fesetround(M5_FE_TONEAREST);
-    val = rint(r);
-    m5_fesetround(oldrnd);
-    return val;
-#else
-    return round(r);
-#endif
-}
-
-int64_t
-getUniform(int64_t min, int64_t max)
-{
-    double r;
-    r = drand48() * (max-min) + min;
-
-    return (int64_t)m5round(r);
+    return random;
 }
 
 uint64_t
-getUniformPos(uint64_t min, uint64_t max)
+Random::genrand(uint64_t max)
 {
-    double r;
-    r = drand48() * (max-min) + min;
+    int log = ceilLog2(max);
+    int shift = (sizeof(uint64_t) * 8 - log);
+    uint64_t random;
 
-    return (uint64_t)m5round(r);
+    do {
+        random = (uint64_t)genrand() << 32 | (uint64_t)genrand();
+        random = random >> shift;
+    } while (random > max);
+
+    return random;
 }
+
+void
+Random::serialize(const string &base, ostream &os)
+{
+    int length = N;
+    paramOut(os, base + ".mti", mti);
+    paramOut(os, base + ".length", length);
+    arrayParamOut(os, base + ".data", mt, length);
+}
+
+void
+Random::unserialize(const string &base, Checkpoint *cp, const string &section)
+{
+    int length;
+
+    paramIn(cp, section, base + ".mti", mti);
+    paramIn(cp, section, base + ".length", length);
+    if (length != N)
+        panic("cant unserialize random number data. length != %d\n", length);
+
+    arrayParamIn(cp, section, base + ".data", mt, length);
+}
+
+Random random_mt;
