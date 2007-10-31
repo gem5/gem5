@@ -170,8 +170,6 @@ bool
 Bus::recvTiming(PacketPtr pkt)
 {
     short src = pkt->getSrc();
-    DPRINTF(Bus, "recvTiming: packet src %d dest %d addr 0x%x cmd %s\n",
-            src, pkt->getDest(), pkt->getAddr(), pkt->cmdString());
 
     BusPort *src_port;
     if (src == defaultId)
@@ -191,9 +189,13 @@ Bus::recvTiming(PacketPtr pkt)
          (retryList.size() && (!inRetry || src_port != retryList.front()))))
     {
         addToRetryList(src_port);
-        DPRINTF(Bus, "recvTiming: Bus is busy, returning false\n");
+        DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x BUSY\n",
+                src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
+
+    DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x\n",
+            src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
 
     if (!pkt->isExpressSnoop()) {
         occupyBus(pkt);
@@ -243,7 +245,8 @@ Bus::recvTiming(PacketPtr pkt)
             // Packet not successfully sent. Leave or put it on the retry list.
             // illegal to block responses... can lead to deadlock
             assert(!pkt->isResponse());
-            DPRINTF(Bus, "Adding2 a retry to RETRY list %d\n", src);
+            DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
+                    src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
             addToRetryList(src_port);
             return false;
         }
