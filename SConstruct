@@ -236,7 +236,7 @@ if False:
     env.TargetSignatures('content')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
-env.Append(ENV = { 'M5_PLY' : Dir('ext/ply') })
+env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
 env['GCC'] = False
 env['SUNCC'] = False
 env['ICC'] = False
@@ -276,7 +276,7 @@ else:
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
-env.Append(CPPPATH=[Dir('ext/dnet')])
+env.Append(CPPPATH=[str(Dir('ext/dnet'))])
 
 # Check for SWIG
 if not env.has_key('SWIG'):
