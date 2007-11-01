@@ -329,6 +329,25 @@ conf = Configure(env,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'))
 
+# Recent versions of scons substitute a "Null" object for Configure()
+# when configuration isn't necessary, e.g., if the "--help" option is
+# present.  Unfortuantely this Null object always returns false,
+# breaking all our configuration checks.  We replace it with our own
+# more optimistic null object that returns True instead.
+if not conf:
+    def NullCheck(*args, **kwargs):
+        return True
+
+    class NullConf:
+        def __init__(self, env):
+            self.env = env
+        def Finish(self):
+            return self.env
+        def __getattr__(self, mname):
+            return NullCheck
+
+    conf = NullConf(env)
+
 # Find Python include and library directories for embedding the
 # interpreter.  For consistency, we will use the same Python
 # installation used to run scons (and thus this script).  If you want
