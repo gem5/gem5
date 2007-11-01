@@ -62,8 +62,14 @@ Gabriel Black
 -----------------------
 * Multiple ISA support
 * SPARC ISA support
+* X86 ISA support
 * Alpha support reorganization
 * SPARC SE support
+* X86 SE support
+* Remote GDB in SE support
+* TLB based translation in SE
+* Statetrace debugging tool
+* Microcode system
 
 Korey L. Sewell
 -----------------------
