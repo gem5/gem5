@@ -60,7 +60,7 @@ hostname()
 }
 
 uint64_t
-procInfo(char *filename, char *target)
+procInfo(const char *filename, const char *target)
 {
     int  done = 0;
     char line[80];

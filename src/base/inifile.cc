@@ -111,7 +111,7 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
 
         int arg_count = cppArgs.size();
 
-        char **args = new char *[arg_count + 20];
+        const char **args = new const char *[arg_count + 20];
 
         int nextArg = 0;
         args[nextArg++] = "g++";
@@ -136,7 +136,9 @@ IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
         if (dup2(tmp_fd, STDOUT_FILENO) == -1)
             exit(1);
 
-        execvp("g++", args);
+        // execvp signature is intentionally broken wrt const-ness for
+        // backwards compatibility... see man page
+        execvp("g++", const_cast<char * const *>(args));
 
         exit(0);
     }

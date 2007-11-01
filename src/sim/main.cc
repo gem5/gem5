@@ -82,7 +82,7 @@ python_main()
     PyObject *dict;
     PyObject *result;
 
-    module = PyImport_AddModule("__main__");
+    module = PyImport_AddModule(const_cast<char*>("__main__"));
     if (module == NULL)
         fatal("Could not import __main__");
 
@@ -135,10 +135,10 @@ main(int argc, char **argv)
     if (setenv("PYTHONPATH", pythonpath.c_str(), true) == -1)
         fatal("setenv: %s\n", strerror(errno));
 
-    char *python_home = getenv("PYTHONHOME");
+    const char *python_home = getenv("PYTHONHOME");
     if (!python_home)
         python_home = PYTHONHOME;
-    Py_SetPythonHome(python_home);
+    Py_SetPythonHome(const_cast<char*>(python_home));
 
     // initialize embedded Python interpreter
     Py_Initialize();

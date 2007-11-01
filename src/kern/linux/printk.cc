@@ -168,7 +168,7 @@ Printk(stringstream &out, Arguments args)
                   break;
 
                 case 's': {
-                    char *s = (char *)args;
+                    const char *s = (const char *)args;
                     if (!s)
                         s = "<NULL>";
 

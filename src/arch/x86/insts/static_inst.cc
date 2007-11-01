@@ -126,7 +126,7 @@ namespace X86ISA
             {"", "t%db", "t%dw", "", "t%dd", "", "", "", "t%d"};
 
         if (reg < FP_Base_DepTag) {
-            char * suffix = "";
+            const char * suffix = "";
             bool fold = reg & (1 << 6);
             reg &= ~(1 << 6);
 

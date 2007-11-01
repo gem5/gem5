@@ -82,7 +82,7 @@ output decoder {{
         // Need to find standard way to not print
         // this info. Maybe add bool variable to
         // class?
-        if (mnemonic != "syscall") {
+        if (strcmp(mnemonic, "syscall") != 0) {
             if(_numDestRegs > 0){
                 printReg(ss, _destRegIdx[0]);
             }
@@ -100,7 +100,7 @@ output decoder {{
 
         // Should we define a separate inst. class
         // just for two insts?
-        if(mnemonic == "sll" || mnemonic == "sra"){
+        if (strcmp(mnemonic, "sll") == 0 || strcmp(mnemonic, "sra") == 0) {
             ccprintf(ss,", %d",SA);
         }
 

@@ -147,20 +147,28 @@ inifile()
  */
 extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 
+// Python.h is notoriously not const-correct (for 2.4, anyway)... make
+// a little define here to reduce the noise and make it easier to
+// #ifdef away if Python.h gets fixed.  Note there are a couple of
+// these in sim/main.cc as well that are handled without this define.
+#define PCC(s)  const_cast<char *>(s)
+
+
 SimObject *
 resolveSimObject(const string &name)
 {
-    PyObject *module = PyImport_ImportModule("m5.SimObject");
+    PyObject *module = PyImport_ImportModule(PCC("m5.SimObject"));
     if (module == NULL)
         panic("Could not import m5.SimObject");
 
-    PyObject *resolver = PyObject_GetAttrString(module, "resolveSimObject");
+    PyObject *resolver =
+        PyObject_GetAttrString(module, PCC("resolveSimObject"));
     if (resolver == NULL) {
         PyErr_Print();
         panic("resolveSimObject: failed to find resolveSimObject");
     }
 
-    PyObject *ptr = PyObject_CallFunction(resolver, "(s)", name.c_str());
+    PyObject *ptr = PyObject_CallFunction(resolver, PCC("(s)"), name.c_str());
     if (ptr == NULL) {
         PyErr_Print();
         panic("resolveSimObject: failure on call to Python for %s", name);

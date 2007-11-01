@@ -100,7 +100,7 @@ setupSharedData()
 //  Utility methods for pretty printing a report about a difference
 //
 
-inline char * genCenteredLabel(int length, char * buffer, char * label)
+inline char * genCenteredLabel(int length, char * buffer, const char * label)
 {
     int labelLength = strlen(label);
     assert(labelLength <= length);
@@ -127,7 +127,7 @@ inline void printColumnLabels(ostream & os)
     ccprintf(os, "--------------------+-----------------------+-----------------------\n");
 }
 
-inline void printSectionHeader(ostream & os, char * name)
+inline void printSectionHeader(ostream & os, const char * name)
 {
     char sectionString[70];
     genCenteredLabel(69, sectionString, name);

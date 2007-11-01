@@ -196,7 +196,7 @@ output decoder {{
 
         ccprintf(ss, "%-10s ", mnemonic);
 
-        if ( mnemonic == "jal" ) {
+        if (strcmp(mnemonic, "jal") == 0) {
             Addr npc = pc + 4;
             ccprintf(ss,"0x%x",(npc & 0xF0000000) | disp);
         } else if (_numSrcRegs == 0) {

@@ -72,9 +72,9 @@ output decoder {{
     {
         std::stringstream ss;
 
-        if (mnemonic == "mttc0" || mnemonic == "mftc0") {
+        if (strcmp(mnemonic, "mttc0") == 0 || strcmp(mnemonic, "mftc0") == 0) {
             ccprintf(ss, "%-10s r%d, r%d, %d", mnemonic, RT, RD, SEL);
-        } else if (mnemonic == "mftgpr") {
+        } else if (strcmp(mnemonic, "mftgpr") == 0) {
             ccprintf(ss, "%-10s r%d, r%d", mnemonic, RD, RT);
         } else {
             ccprintf(ss, "%-10s r%d, r%d", mnemonic, RT, RD);

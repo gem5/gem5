@@ -87,7 +87,7 @@ output header {{
             FOrdered=0xF
         };
 
-        extern char * CondTestAbbrev[];
+        extern const char *CondTestAbbrev[];
 
         /**
          * Base class for all SPARC static instructions.
@@ -126,7 +126,7 @@ output header {{
 
 output decoder {{
 
-        char * CondTestAbbrev[] =
+        const char *CondTestAbbrev[] =
         {
             "nev", //Never
             "e", //Equal
