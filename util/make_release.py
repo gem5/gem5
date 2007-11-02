@@ -224,6 +224,11 @@ for bench in benches:
 rmtree(release_dir, 'tests/test-progs/anagram')
 rmtree(release_dir, 'tests/quick/20.eio-short')
 
+f = open('src/cpu/SConsopts', 'w+')
+f.writelines(("Import('*')\n", "all_cpu_list.append('DummyCPUMakeSconsHappy')\n"))
+f.close()
+
+
 def taritup(directory, destdir, filename):
     basedir = dirname(directory)
     tarball = joinpath(destdir, filename)
