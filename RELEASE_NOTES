@@ -35,8 +35,8 @@ Possible Incompatibilities:
    To see how to add your sources take a look at one of them.
 3. Python is now used to created the parameter structs that were created
    manually before. The parameters listed in a py file are turned into 
-   a header file with the same name (e.g. BadDevice.py -> BadDevice.h). 
-   With this change the structs can be populate automatically and the 
+   a header file with the same name (e.g. BadDevice.py -> BadDevice.hh). 
+   With this change the structs can be populated automatically and the 
    ugly macros to define and create SimObjects at the bottem of source
    files are gone. The parameter structs also automatically inherit 
    parameters from their parents. 
