@@ -618,8 +618,13 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     // Adjust path for current working directory
     path = process->fullPath(path);
 
+#if NO_STAT64
+    struct stat  hostBuf;
+    int result = stat(path.c_str(), &hostBuf);
+#else
     struct stat64 hostBuf;
     int result = stat64(path.c_str(), &hostBuf);
+#endif
 
     if (result < 0)
         return -errno;
