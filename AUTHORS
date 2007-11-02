@@ -36,6 +36,7 @@ Ali G. Saidi
 * I/O <-> memory interface
 * PCI device interface
 * Multiple ISA support
+* Ethernet (Intel NIC) device model
 * Memory bridge, bus, packet, port interfaces
 
 Kevin T. Lim

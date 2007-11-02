@@ -8,15 +8,15 @@ Outstanding issues for 2.0 release:
 6. Make repository public
 7. Testing
 8. Validation
-9. Testing 
 
-Nov XX, 2007: m5_2.0_beta4
+Nov 4, 2007: m5_2.0_beta4
 --------------------
 New Features
-1. New cache 
-2. Ability to include compiled code with EXTRAS=
-3. Python creation of params structures for initialization
-4. Ability to remotely debug in SE 
+1. New cache model
+2. Use of a I/O cache between devices and memory 
+3. Ability to include compiled code with EXTRAS=
+4. Python creation of params structures for initialization
+5. Ability to remotely debug in SE 
 
 Bug fixes:
 1. Fix SE serialization
@@ -25,6 +25,21 @@ Bug fixes:
 4. Various SPARC ISA fixes
 5. Draining code for checkpointing
 6. Various performance improvements
+
+Possible Incompatibilities:
+1. Real TLBs are now used in SE mode. This is more accurate however it could
+   cause some problems if you've modified the way page handling is done in
+   SE mode.
+2. There have been many changes to the way the SCons files work. SimObjects,
+   sources files, and trace flags are all specified in the SConscript files.
+   To see how to add your sources take a look at one of them.
+3. Python is now used to created the parameter structs that were created
+   manually before. The parameters listed in a py file are turned into 
+   a header file with the same name (e.g. BadDevice.py -> BadDevice.h). 
+   With this change the structs can be populate automatically and the 
+   ugly macros to define and create SimObjects at the bottem of source
+   files are gone. The parameter structs also automatically inherit 
+   parameters from their parents. 
 
 May 16, 2007: m5_2.0_beta3
 --------------------

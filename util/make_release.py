@@ -200,6 +200,7 @@ remove_sources(r'.*nativetrace.*', 'src/cpu')
 
 remove_lines(r'.*X86.*', None,  'src/arch/isa_specific.hh')
 remove_lines(r'.*X86.*', None,  'src/base/traceflags.py')
+remove_lines(r'.*X86.*', None,  'AUTHORS')
 remove_lines(r'.*X86.*', None,  'src/base/loader/object_file.hh')
 remove_lines(r'.*_X86_.*', '.*else.*', 'src/base/loader/elf_object.cc')
 remove_lines(r'.*X86_ISA.*', r'^.el.*','src/sim/process.cc')
