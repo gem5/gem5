@@ -135,6 +135,7 @@ rmtree(release_dir, 'configs/splash2')
 rmtree(release_dir, 'tests/long/*/ref')
 rmtree(release_dir, 'tests/old')
 rmtree(release_dir, 'tests/quick/00.hello/ref/x86')
+rmtree(release_dir, 'tests/quick/02.insttest')
 rmtree(release_dir, 'tests/test-progs/hello/bin/x86')
 rmtree(release_dir, 'src/dev/x86')
 
