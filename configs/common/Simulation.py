@@ -72,6 +72,8 @@ def run(options, root, testsys, cpu_class):
 
     if options.checkpoint_dir:
         cptdir = options.checkpoint_dir
+    elif m5.options.outdir:
+        cptdir = m5.options.outdir
     else:
         cptdir = getcwd()
 
