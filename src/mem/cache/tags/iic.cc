@@ -233,7 +233,7 @@ IIC::findBlock(Addr addr, int &lat)
     unsigned set = hash(addr);
     int set_lat;
 
-    unsigned long chain_ptr;
+    unsigned long chain_ptr = tagNull;
 
     if (PROFILE_IIC)
         setAccess.sample(set);
@@ -291,7 +291,7 @@ IIC::findBlock(Addr addr) const
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
 
-    unsigned long chain_ptr;
+    unsigned long chain_ptr = tagNull;
 
     IICTag *tag_ptr = sets[set].findTag(tag, chain_ptr);
     if (tag_ptr == NULL && chain_ptr != tagNull) {
