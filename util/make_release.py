@@ -148,6 +148,13 @@ remove(release_dir, 'build_opts/X86_FS')
 remove(release_dir, 'util/chgcopyright')
 remove(release_dir, 'util/make_release.py')
 
+#state trace
+remove(release_dir, 'util/statetrace/x86.format')
+remove(release_dir, 'util/statetrace/arch/tracechild_amd64.cc')
+remove(release_dir, 'util/statetrace/arch/tracechild_amd64.hh')
+remove(release_dir, 'util/statetrace/arch/tracechild_i386.cc')
+remove(release_dir, 'util/statetrace/arch/tracechild_i386.hh')
+
 def remove_sources(regex, subdir):
     script = joinpath(release_dir, subdir, 'SConscript')
     if isinstance(regex, str):
