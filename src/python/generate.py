@@ -418,7 +418,7 @@ const char *Trace::flagStrings[] =
 
         print >>f, '};'
         print >>f
-        print >>f, 'const int Trace::numFlagStrings = %d;' % len(allFlags)
+        print >>f, 'const int Trace::numFlagStrings = %d;' % (len(allFlags) + 1)
         print >>f
 
         #
