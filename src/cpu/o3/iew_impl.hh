@@ -929,7 +929,7 @@ DefaultIEW<Impl>::dispatch(unsigned tid)
 
         ++iewUnblockCycles;
 
-        if (validInstsFromRename() && dispatchedAllInsts) {
+        if (validInstsFromRename()) {
             // Add the current inputs to the skid buffer so they can be
             // reprocessed when this stage unblocks.
             skidInsert(tid);
@@ -943,8 +943,6 @@ template <class Impl>
 void
 DefaultIEW<Impl>::dispatchInsts(unsigned tid)
 {
-    dispatchedAllInsts = true;
-
     // Obtain instructions from skid buffer if unblocking, or queue from rename
     // otherwise.
     std::queue<DynInstPtr> &insts_to_dispatch =
@@ -1011,8 +1009,6 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             // get full in the IQ.
             toRename->iewUnblock[tid] = false;
 
-            dispatchedAllInsts = false;
-
             ++iewIQFullEvents;
             break;
         } else if (ldstQueue.isFull(tid)) {
@@ -1025,8 +1021,6 @@ DefaultIEW<Impl>::dispatchInsts(unsigned tid)
             // skidbuffer (unblocking) instructions but then we still
             // get full in the IQ.
             toRename->iewUnblock[tid] = false;
-
-            dispatchedAllInsts = false;
 
             ++iewLSQFullEvents;
             break;

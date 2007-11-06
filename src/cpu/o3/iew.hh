@@ -402,13 +402,6 @@ class DefaultIEW
     /** Records if there is a fetch redirect on this cycle for each thread. */
     bool fetchRedirect[Impl::MaxThreads];
 
-    /** Used to track if all instructions have been dispatched this cycle.
-     * If they have not, then blocking must have occurred, and the instructions
-     * would already be added to the skid buffer.
-     * @todo: Fix this hack.
-     */
-    bool dispatchedAllInsts;
-
     /** Records if the queues have been changed (inserted or issued insts),
      * so that IEW knows to broadcast the updated amount of free entries.
      */
