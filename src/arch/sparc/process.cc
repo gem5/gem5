@@ -161,6 +161,9 @@ Sparc32LiveProcess::startup()
 void
 Sparc64LiveProcess::startup()
 {
+    if (checkpointRestored)
+        return;
+
     argsInit(sizeof(IntReg), VMPageSize);
 
     //From the SPARC ABI
