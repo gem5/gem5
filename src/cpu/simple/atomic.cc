@@ -194,15 +194,16 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 void
 AtomicSimpleCPU::resume()
 {
-    DPRINTF(SimpleCPU, "Resume\n");
-    if (_status != SwitchedOut && _status != Idle) {
-        assert(system->getMemoryMode() == Enums::atomic);
+    if (_status == Idle || _status == SwitchedOut)
+        return;
 
-        changeState(SimObject::Running);
-        if (thread->status() == ThreadContext::Active) {
-            if (!tickEvent.scheduled()) {
-                tickEvent.schedule(nextCycle());
-            }
+    DPRINTF(SimpleCPU, "Resume\n");
+    assert(system->getMemoryMode() == Enums::atomic);
+
+    changeState(SimObject::Running);
+    if (thread->status() == ThreadContext::Active) {
+        if (!tickEvent.scheduled()) {
+            tickEvent.schedule(nextCycle());
         }
     }
 }
