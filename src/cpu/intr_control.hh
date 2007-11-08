@@ -47,10 +47,20 @@ class IntrControl : public SimObject
     typedef IntrControlParams Params;
     IntrControl(const Params *p);
 
-    void clear(int int_num, int index = 0);
-    void post(int int_num, int index = 0);
     void clear(int cpu_id, int int_num, int index);
     void post(int cpu_id, int int_num, int index);
+
+    void
+    clear(int int_num, int index = 0)
+    {
+        clear(0, int_num, index);
+    }
+
+    void
+    post(int int_num, int index = 0)
+    {
+        post(0, int_num, index);
+    }
 };
 
 #endif // __INTR_CONTROL_HH__
