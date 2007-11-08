@@ -457,6 +457,9 @@ class Range(ParamValue):
             elif isinstance(args[0], Range):
                 self.first = self.type(args[0].first)
                 self.second = self.type(args[0].second)
+            elif isinstance(args[0], (list, tuple)):
+                self.first = self.type(args[0][0])
+                self.second = self.type(args[0][1])
             else:
                 self.first = self.type(0)
                 self.second = self.type(args[0]) - 1
