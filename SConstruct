@@ -65,7 +65,6 @@
 
 import sys
 import os
-import subprocess
 
 from os.path import isdir, join as joinpath
 
@@ -76,6 +75,10 @@ from os.path import isdir, join as joinpath
 # first or (2) explicitly invoking an alternative interpreter on the
 # scons script, e.g., "/usr/local/bin/python2.4 `which scons` [args]".
 EnsurePythonVersion(2,4)
+
+# Import subprocess after we check the version since it doesn't exist in
+# Python < 2.4.
+import subprocess
 
 # Ironically, SCons 0.96 dies if you give EnsureSconsVersion a
 # 3-element version number.
@@ -328,6 +331,21 @@ env['SCANNERS'] = scanners
 conf = Configure(env,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'))
+
+# Check if we should compile a 64 bit binary on Mac OS X/Darwin
+try:
+    import platform
+    uname = platform.uname()
+    if uname[0] == 'Darwin' and compare_versions(uname[2], '9.0.0') >= 0:
+        if int(subprocess.Popen('sysctl -n hw.cpu64bit_capable', shell=True,
+               stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+               close_fds=True).communicate()[0][0]):
+            env.Append(CCFLAGS='-arch x86_64')
+            env.Append(CFLAGS='-arch x86_64')
+            env.Append(LINKFLAGS='-arch x86_64')
+            env.Append(ASFLAGS='-arch x86_64')
+except:
+    pass
 
 # Recent versions of scons substitute a "Null" object for Configure()
 # when configuration isn't necessary, e.g., if the "--help" option is
