@@ -157,6 +157,7 @@ TimingSimpleCPU::drain(Event *drain_event)
 void
 TimingSimpleCPU::resume()
 {
+    DPRINTF(SimpleCPU, "Resume\n");
     if (_status != SwitchedOut && _status != Idle) {
         assert(system->getMemoryMode() == Enums::timing);
 
@@ -215,6 +216,8 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 void
 TimingSimpleCPU::activateContext(int thread_num, int delay)
 {
+    DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
+
     assert(thread_num == 0);
     assert(thread);
 
@@ -231,6 +234,8 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
 void
 TimingSimpleCPU::suspendContext(int thread_num)
 {
+    DPRINTF(SimpleCPU, "SuspendContext %d\n", thread_num);
+
     assert(thread_num == 0);
     assert(thread);
 
@@ -511,6 +516,8 @@ TimingSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 void
 TimingSimpleCPU::fetch()
 {
+    DPRINTF(SimpleCPU, "Fetch\n");
+
     if (!curStaticInst || !curStaticInst->isDelayedCommit())
         checkForInterrupts();
 
@@ -560,6 +567,8 @@ TimingSimpleCPU::advanceInst(Fault fault)
 void
 TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
+    DPRINTF(SimpleCPU, "Complete ICache Fetch\n");
+
     // received a response from the icache: execute the received
     // instruction
     assert(!pkt->isError());
