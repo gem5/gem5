@@ -334,7 +334,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
 #endif
 
-//    TheISA::compareXCs(oldXC, newXC);
+        if (DTRACE(Context))
+            ThreadContext::compare(oldTC, newTC);
     }
 
 #if FULL_SYSTEM

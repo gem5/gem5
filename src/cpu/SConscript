@@ -118,6 +118,7 @@ Source('pc_event.cc')
 Source('quiesce_event.cc')
 Source('static_inst.cc')
 Source('simple_thread.cc')
+Source('thread_context.cc')
 Source('thread_state.cc')
 
 if env['FULL_SYSTEM']:
@@ -150,6 +151,7 @@ if env['USE_CHECKER']:
 
 TraceFlag('Activity')
 TraceFlag('Commit')
+TraceFlag('Context')
 TraceFlag('Decode')
 TraceFlag('DynInst')
 TraceFlag('ExecEnable')

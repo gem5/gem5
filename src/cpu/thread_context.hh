@@ -268,6 +268,9 @@ class ThreadContext
 
     virtual void changeRegFileContext(TheISA::RegContextParam param,
             TheISA::RegContextVal val) = 0;
+
+    /** function to compare two thread contexts (for debugging) */
+    static void compare(ThreadContext *one, ThreadContext *two);
 };
 
 /**

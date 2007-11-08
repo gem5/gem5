@@ -75,5 +75,3 @@ if env['TARGET_ISA'] == 'alpha':
     for f in isa_desc_files:
         if not f.path.endswith('.hh'):
             Source(f)
-
-    TraceFlag('Context')
