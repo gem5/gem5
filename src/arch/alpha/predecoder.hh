@@ -74,8 +74,7 @@ namespace AlphaISA
         {
             ext_inst = inst;
 #if FULL_SYSTEM
-            if (pc && 0x1)
-                ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+            ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
 #endif
         }
 
