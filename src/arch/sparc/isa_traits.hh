@@ -33,6 +33,7 @@
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
 #include "arch/sparc/types.hh"
+#include "arch/sparc/max_inst_regs.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
@@ -49,6 +50,8 @@ namespace SparcISA
 
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
+    using SparcISAInst::MaxInstSrcRegs;
+    using SparcISAInst::MaxInstDestRegs;
 
     // SPARC has a delay slot
     #define ISA_HAS_DELAY_SLOT 1
@@ -75,10 +78,6 @@ namespace SparcISA
 
     // Some OS syscall use a second register (o1) to return a second value
     const int SyscallPseudoReturnReg = ArgumentReg[1];
-
-    //XXX These numbers are bogus
-    const int MaxInstSrcRegs = 8;
-    const int MaxInstDestRegs = 9;
 
     //8K. This value is implmentation specific; and should probably
     //be somewhere else.

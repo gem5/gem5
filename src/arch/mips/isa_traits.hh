@@ -32,6 +32,7 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
+#include "arch/mips/max_inst_regs.hh"
 #include "arch/mips/types.hh"
 #include "sim/host.hh"
 
@@ -44,6 +45,8 @@ class StaticInstPtr;
 namespace MipsISA
 {
     using namespace LittleEndianGuest;
+    using MipsISAInst::MaxInstSrcRegs;
+    using MipsISAInst::MaxInstDestRegs;
 
     StaticInstPtr decodeInst(ExtMachInst);
 
@@ -63,10 +66,6 @@ namespace MipsISA
     const int NumIntSpecialRegs = 9;
     const int NumFloatArchRegs = 32;
     const int NumFloatSpecialRegs = 5;
-
-    // Static instruction parameters
-    const int MaxInstSrcRegs = 5;
-    const int MaxInstDestRegs = 4;
 
     // semantically meaningful register indices
     const int ZeroReg = 0;

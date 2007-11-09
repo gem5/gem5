@@ -35,6 +35,7 @@
 namespace LittleEndianGuest {}
 
 #include "arch/alpha/ipr.hh"
+#include "arch/alpha/max_inst_regs.hh"
 #include "arch/alpha/types.hh"
 #include "config/full_system.hh"
 #include "sim/host.hh"
@@ -44,6 +45,8 @@ class StaticInstPtr;
 namespace AlphaISA
 {
     using namespace LittleEndianGuest;
+    using AlphaISAInst::MaxInstSrcRegs;
+    using AlphaISAInst::MaxInstDestRegs;
 
     // These enumerate all the registers for dependence tracking.
     enum DependenceTags {
@@ -143,10 +146,6 @@ namespace AlphaISA
         NumMiscRegs + NumInternalProcRegs;
 
     const int TotalDataRegs = NumIntRegs + NumFloatRegs;
-
-    // Static instruction parameters
-    const int MaxInstSrcRegs = 3;
-    const int MaxInstDestRegs = 2;
 
     // semantically meaningful register indices
     const int ZeroReg = 31;	// architecturally meaningful
