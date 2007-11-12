@@ -154,7 +154,30 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
 void MiscRegFile::setReg(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
-    setRegNoEffect(miscReg, val);
+    MiscReg newVal = val;
+    switch(miscReg)
+    {
+      case MISCREG_CR0:
+        CR0 toggled = regVal[miscReg] ^ val;
+        CR0 newCR0 = val;
+        Efer efer = regVal[MISCREG_EFER];
+        if (toggled.pg && efer.lme) {
+            if (newCR0.pg) {
+                //Turning on long mode
+                efer.lma = 1;
+                regVal[MISCREG_EFER] = efer;
+            } else {
+                //Turning off long mode
+                efer.lma = 0;
+                regVal[MISCREG_EFER] = efer;
+            }
+        }
+        //This must always be 1.
+        newCR0.et = 1;
+        newVal = newCR0;
+        break;
+    }
+    setRegNoEffect(miscReg, newVal);
 }
 
 void MiscRegFile::serialize(std::ostream & os)
