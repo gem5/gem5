@@ -59,6 +59,7 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <list>
+#include <vector>
 #include <string>
 
 #include "arch/x86/pagetable.hh"
@@ -88,6 +89,8 @@ namespace X86ISA
 
         System * sys;
 
+        bool allowNX;
+
       public:
         typedef X86TLBParams Params;
         TLB(const Params *p);
@@ -116,65 +119,55 @@ namespace X86ISA
                 PTE
             };
 
-            // Act on the current state and determine what to do next. If the
-            // walker has finished updating the TLB, this will return false.
-            bool doNext(PacketPtr read, PacketPtr &write);
-
-            // This does an actual load to feed the walker. If we're in
-            // atomic mode, this will drive the state machine itself until
-            // the TLB is filled. If we're in timing mode, the port getting
-            // a reply will drive the machine using this function which will
-            // return after starting the memory operation.
-            void doMemory(Addr addr);
+            // Act on the current state and determine what to do next. read
+            // should be the packet that just came back from a read and write
+            // should be NULL. When the function returns, read is either NULL
+            // if the machine is finished, or points to a packet to initiate
+            // the next read. If any write is required to update an "accessed"
+            // bit, write will point to a packet to do the write. Otherwise it
+            // will be NULL.
+            void doNext(PacketPtr &read, PacketPtr &write);
 
             // Kick off the state machine.
-            void start(bool _uncachable, Addr _vaddr, Addr cr3, State next)
-            {
-                assert(state == Ready);
-                state = Waiting;
-                nextState = next;
-                // If PAE isn't being used, entries are 4 bytes. Otherwise
-                // they're 8.
-                if (next == PSEPD || next == PD || next == PTE)
-                    size = 4;
-                else
-                    size = 8;
-                vaddr = _vaddr;
-                uncachable = _uncacheable;
-                buildPacket(cr3);
-                if (state == Enums::timing) {
-                    port->sendTiming(&packet);
-                } else if (state == Enums::atomic) {
-                    port->sendAtomic(&packet);
-                    Addr addr;
-                    while(doNext(packet.get<uint64_t>(), addr)) {
-                        buildPacket(addr);
-                        port->sendAtomic(&packet);
-                    }
-                } else {
-                    panic("Unrecognized memory system mode.\n");
-                }
-            };
+            void start(ThreadContext * _tc, Addr vaddr);
 
           protected:
             friend class TLB;
 
+            /*
+             * State having to do with sending packets.
+             */
+            PacketPtr read;
+            std::vector<PacketPtr> writes;
+
+            // How many memory operations are in flight.
+            unsigned inflight;
+
+            bool retrying;
+
+            /*
+             * Functions for dealing with packets.
+             */
+            bool recvTiming(PacketPtr pkt);
+            void recvRetry();
+
+            void sendPackets();
+
+            /*
+             * Port for accessing memory
+             */
             class WalkerPort : public Port
             {
               public:
                 WalkerPort(const std::string &_name, Walker * _walker) :
                       Port(_name, _walker->tlb), walker(_walker),
-                      packet(NULL), snoopRangeSent(false), retrying(false)
+                      snoopRangeSent(false)
                 {}
 
               protected:
                 Walker * walker;
 
-                PacketPtr packet;
-                vector<PacketPtr> writes;
-
                 bool snoopRangeSent;
-                bool retrying;
 
                 bool recvTiming(PacketPtr pkt);
                 Tick recvAtomic(PacketPtr pkt);
@@ -187,45 +180,40 @@ namespace X86ISA
                     resp.clear();
                     snoop = true;
                 }
-
-              public:
-                bool sendTiming(PacketPtr pkt)
-                {
-                    retrying = !Port::sendTiming(pkt);
-                    return !retrying;
-                }
-
-                bool blocked() { return retrying; }
             };
 
             friend class WalkerPort;
 
             WalkerPort port;
 
-            Packet packet;
-            Request request;
-
+            // The TLB we're supposed to load.
             TLB * tlb;
 
+            /*
+             * State machine state.
+             */
+            ThreadContext * tc;
             State state;
             State nextState;
             int size;
-
-            Addr vaddr;
+            bool enableNX;
+            TlbEntry entry;
 
           public:
             Walker(const std::string &_name, TLB * _tlb) :
+                read(NULL), inflight(0), retrying(false),
                 port(_name + "-walker_port", this),
-                packet(&request, ReadExReq, Broadcast),
-                tlb(_tlb), state(Ready), nextState(Ready)
+                tlb(_tlb),
+                tc(NULL), state(Ready), nextState(Ready)
             {
             }
-
-
         };
 
         Walker walker;
+
 #endif
+
+        Port *getPort(const std::string &if_name, int idx = -1);
 
       protected:
         int size;
@@ -235,8 +223,6 @@ namespace X86ISA
         typedef std::list<TlbEntry *> EntryList;
         EntryList freeList;
         EntryList entryList;
-
-        Port *getPort(const std::string &if_name, int idx = -1);
 
         void insert(Addr vpn, TlbEntry &entry);
 
@@ -262,6 +248,8 @@ namespace X86ISA
         typedef X86ITBParams Params;
         ITB(const Params *p) : TLB(p)
         {
+            sys = p->system;
+            allowNX = false;
         }
 
         Fault translate(RequestPtr &req, ThreadContext *tc);
@@ -275,6 +263,8 @@ namespace X86ISA
         typedef X86DTBParams Params;
         DTB(const Params *p) : TLB(p)
         {
+            sys = p->system;
+            allowNX = true;
         }
         Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
 #if FULL_SYSTEM

@@ -55,6 +55,7 @@
 
 from MemObject import MemObject
 from m5.params import *
+from m5.proxy import *
 
 class X86TLB(MemObject):
     type = 'X86TLB'

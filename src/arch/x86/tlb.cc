@@ -64,6 +64,7 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "mem/packet_access.hh"
@@ -72,7 +73,11 @@
 
 namespace X86ISA {
 
+#if FULL_SYSTEM
 TLB::TLB(const Params *p) : MemObject(p), walker(name(), this), size(p->size)
+#else
+TLB::TLB(const Params *p) : MemObject(p), size(p->size)
+#endif
 {
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
@@ -81,91 +86,377 @@ TLB::TLB(const Params *p) : MemObject(p), walker(name(), this), size(p->size)
         freeList.push_back(&tlb[x]);
 }
 
-bool
-TLB::Walker::doNext(uint64_t data, PacketPtr &write)
+#if FULL_SYSTEM
+
+// Unfortunately, the placement of the base field in a page table entry is
+// very erratic and would make a mess here. It might be moved here at some
+// point in the future.
+BitUnion64(PageTableEntry)
+    Bitfield<63> nx;
+    Bitfield<11, 9> avl;
+    Bitfield<8> g;
+    Bitfield<7> ps;
+    Bitfield<6> d;
+    Bitfield<5> a;
+    Bitfield<4> pcd;
+    Bitfield<3> pwt;
+    Bitfield<2> u;
+    Bitfield<1> w;
+    Bitfield<0> p;
+EndBitUnion(PageTableEntry)
+
+void
+TLB::Walker::doNext(PacketPtr &read, PacketPtr &write)
 {
     assert(state != Ready && state != Waiting);
     write = NULL;
+    PageTableEntry pte;
+    if (size == 8)
+        pte = read->get<uint64_t>();
+    else
+        pte = read->get<uint32_t>();
+    VAddr vaddr = entry.vaddr;
+    bool uncacheable = pte.pcd;
+    Addr nextRead = 0;
+    bool doWrite = false;
+    bool badNX = pte.nx && (!tlb->allowNX || !enableNX);
     switch(state) {
       case LongPML4:
+        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl3 * size;
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = pte.w;
+        entry.user = pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        entry.noExec = pte.nx;
+        if (!pte.p)
+            panic("Page not present!\n");
         nextState = LongPDP;
         break;
       case LongPDP:
+        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl2 * size;
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = entry.writable && pte.w;
+        entry.user = entry.user && pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        if (!pte.p)
+            panic("Page not present!\n");
         nextState = LongPD;
         break;
       case LongPD:
-        nextState = LongPTE;
-        break;
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = entry.writable && pte.w;
+        entry.user = entry.user && pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        if (!pte.p)
+            panic("Page not present!\n");
+        if (!pte.ps) {
+            // 4 KB page
+            entry.size = 4 * (1 << 10);
+            nextRead =
+                ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl1 * size;
+            nextState = LongPTE;
+            break;
+        } else {
+            // 2 MB page
+            entry.size = 2 * (1 << 20);
+            entry.paddr = (uint64_t)pte & (mask(31) << 21);
+            entry.uncacheable = uncacheable;
+            entry.global = pte.g;
+            entry.patBit = bits(pte, 12);
+            entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
+            tlb->insert(entry.vaddr, entry);
+            nextState = Ready;
+            delete read->req;
+            delete read;
+            read = NULL;
+            return;
+        }
       case LongPTE:
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = entry.writable && pte.w;
+        entry.user = entry.user && pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        if (!pte.p)
+            panic("Page not present!\n");
+        entry.paddr = (uint64_t)pte & (mask(40) << 12);
+        entry.uncacheable = uncacheable;
+        entry.global = pte.g;
+        entry.patBit = bits(pte, 12);
+        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        tlb->insert(entry.vaddr, entry);
         nextState = Ready;
-        return false;
+        delete read->req;
+        delete read;
+        read = NULL;
+        return;
       case PAEPDP:
+        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael2 * size;
+        if (!pte.p)
+            panic("Page not present!\n");
         nextState = PAEPD;
         break;
       case PAEPD:
-        break;
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = pte.w;
+        entry.user = pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        if (!pte.p)
+            panic("Page not present!\n");
+        if (!pte.ps) {
+            // 4 KB page
+            entry.size = 4 * (1 << 10);
+            nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael1 * size;
+            nextState = PAEPTE;
+            break;
+        } else {
+            // 2 MB page
+            entry.size = 2 * (1 << 20);
+            entry.paddr = (uint64_t)pte & (mask(31) << 21);
+            entry.uncacheable = uncacheable;
+            entry.global = pte.g;
+            entry.patBit = bits(pte, 12);
+            entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
+            tlb->insert(entry.vaddr, entry);
+            nextState = Ready;
+            delete read->req;
+            delete read;
+            read = NULL;
+            return;
+        }
       case PAEPTE:
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = entry.writable && pte.w;
+        entry.user = entry.user && pte.u;
+        if (badNX)
+            panic("NX violation!\n");
+        if (!pte.p)
+            panic("Page not present!\n");
+        entry.paddr = (uint64_t)pte & (mask(40) << 12);
+        entry.uncacheable = uncacheable;
+        entry.global = pte.g;
+        entry.patBit = bits(pte, 7);
+        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        tlb->insert(entry.vaddr, entry);
         nextState = Ready;
-        return false;
+        delete read->req;
+        delete read;
+        read = NULL;
+        return;
       case PSEPD:
-        break;
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = pte.w;
+        entry.user = pte.u;
+        if (!pte.p)
+            panic("Page not present!\n");
+        if (!pte.ps) {
+            // 4 KB page
+            entry.size = 4 * (1 << 10);
+            nextRead =
+                ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * size;
+            nextState = PTE;
+            break;
+        } else {
+            // 4 MB page
+            entry.size = 4 * (1 << 20);
+            entry.paddr = bits(pte, 20, 13) << 32 | bits(pte, 31, 22) << 22;
+            entry.uncacheable = uncacheable;
+            entry.global = pte.g;
+            entry.patBit = bits(pte, 12);
+            entry.vaddr = entry.vaddr & ~((4 * (1 << 20)) - 1);
+            tlb->insert(entry.vaddr, entry);
+            nextState = Ready;
+            delete read->req;
+            delete read;
+            read = NULL;
+            return;
+        }
       case PD:
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = pte.w;
+        entry.user = pte.u;
+        if (!pte.p)
+            panic("Page not present!\n");
+        // 4 KB page
+        entry.size = 4 * (1 << 10);
+        nextRead = ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * size;
+        nextState = PTE;
+        break;
         nextState = PTE;
         break;
       case PTE:
+        doWrite = !pte.a;
+        pte.a = 1;
+        entry.writable = pte.w;
+        entry.user = pte.u;
+        if (!pte.p)
+            panic("Page not present!\n");
+        entry.paddr = (uint64_t)pte & (mask(20) << 12);
+        entry.uncacheable = uncacheable;
+        entry.global = pte.g;
+        entry.patBit = bits(pte, 7);
+        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        tlb->insert(entry.vaddr, entry);
         nextState = Ready;
-        return false;
+        delete read->req;
+        delete read;
+        read = NULL;
+        return;
       default:
         panic("Unknown page table walker state %d!\n");
     }
-    return true;
+    PacketPtr oldRead = read;
+    //If we didn't return, we're setting up another read.
+    uint32_t flags = oldRead->req->getFlags();
+    if (uncacheable)
+        flags |= UNCACHEABLE;
+    else
+        flags &= ~UNCACHEABLE;
+    RequestPtr request =
+        new Request(nextRead, oldRead->getSize(), flags);
+    read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
+    read->allocate();
+    //If we need to write, adjust the read packet to write the modified value
+    //back to memory.
+    if (doWrite) {
+        write = oldRead;
+        write->set<uint64_t>(pte);
+        write->cmd = MemCmd::WriteReq;
+        write->setDest(Packet::Broadcast);
+    } else {
+        write = NULL;
+        delete oldRead->req;
+        delete oldRead;
+    }
 }
 
 void
-TLB::Walker::buildReadPacket(Addr addr)
+TLB::Walker::start(ThreadContext * _tc, Addr vaddr)
 {
-    readRequest.setPhys(addr, size, PHYSICAL | uncachable ? UNCACHEABLE : 0);
-    readPacket.reinitFromRequest();
-}
+    assert(state == Ready);
+    assert(!tc);
+    tc = _tc;
 
-TLB::walker::buildWritePacket(Addr addr)
-{
-    writeRequest.setPhys(addr, size, PHYSICAL | uncachable ? UNCACHEABLE : 0);
-    writePacket.reinitFromRequest();
+    VAddr addr = vaddr;
+
+    //Figure out what we're doing.
+    CR3 cr3 = tc->readMiscRegNoEffect(MISCREG_CR3);
+    Addr top = 0;
+    // Check if we're in long mode or not
+    Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
+    size = 8;
+    if (efer.lma) {
+        // Do long mode.
+        state = LongPML4;
+        top = (cr3.longPdtb << 12) + addr.longl4 * size;
+    } else {
+        // We're in some flavor of legacy mode.
+        CR4 cr4 = tc->readMiscRegNoEffect(MISCREG_CR4);
+        if (cr4.pae) {
+            // Do legacy PAE.
+            state = PAEPDP;
+            top = (cr3.paePdtb << 5) + addr.pael3 * size;
+        } else {
+            size = 4;
+            top = (cr3.pdtb << 12) + addr.norml2 * size;
+            if (cr4.pse) {
+                // Do legacy PSE.
+                state = PSEPD;
+            } else {
+                // Do legacy non PSE.
+                state = PD;
+            }
+        }
+    }
+    nextState = Ready;
+    entry.vaddr = vaddr;
+
+    enableNX = efer.nxe;
+
+    RequestPtr request =
+        new Request(top, size, PHYSICAL | cr3.pcd ? UNCACHEABLE : 0);
+    read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
+    read->allocate();
+    Enums::MemoryMode memMode = tlb->sys->getMemoryMode();
+    if (memMode == Enums::timing) {
+        tc->suspend();
+        port.sendTiming(read);
+    } else if (memMode == Enums::atomic) {
+        do {
+            port.sendAtomic(read);
+            PacketPtr write = NULL;
+            doNext(read, write);
+            state = nextState;
+            nextState = Ready;
+            if (write)
+                port.sendAtomic(write);
+        } while(read);
+        tc = NULL;
+        state = Ready;
+        nextState = Waiting;
+    } else {
+        panic("Unrecognized memory system mode.\n");
+    }
+}
 
 bool
 TLB::Walker::WalkerPort::recvTiming(PacketPtr pkt)
 {
+    return walker->recvTiming(pkt);
+}
+
+bool
+TLB::Walker::recvTiming(PacketPtr pkt)
+{
+    inflight--;
     if (pkt->isResponse() && !pkt->wasNacked()) {
         if (pkt->isRead()) {
-            assert(packet);
-            assert(walker->state == Waiting);
-            packet = NULL;
-            walker->state = walker->nextState;
-            walker->nextState = Ready;
-            PacketPtr write;
-            if (walker->doNext(pkt, write)) {
-                packet = &walker->packet;
-                port->sendTiming(packet);
-            }
+            assert(inflight);
+            assert(state == Waiting);
+            assert(!read);
+            state = nextState;
+            nextState = Ready;
+            PacketPtr write = NULL;
+            doNext(pkt, write);
+            state = Waiting;
+            read = pkt;
             if (write) {
                 writes.push_back(write);
             }
-            while (!port->blocked() && writes.size()) {
-                if (port->sendTiming(writes.front())) {
-                    writes.pop_front();
-                    outstandingWrites++;
-                }
-            }
+            sendPackets();
         } else {
-            outstandingWrites--;
+            sendPackets();
+        }
+        if (inflight == 0 && read == NULL && writes.size() == 0) {
+            tc->activate(0);
+            tc = NULL;
+            state = Ready;
+            nextState = Waiting;
         }
     } else if (pkt->wasNacked()) {
         pkt->reinitNacked();
-        if (!sendTiming(pkt)) {
+        if (!port.sendTiming(pkt)) {
+            retrying = true;
             if (pkt->isWrite()) {
-                writes.push_front(pkt);
+                writes.push_back(pkt);
+            } else {
+                assert(!read);
+                read = pkt;
             }
+        } else {
+            inflight++;
         }
     }
     return true;
@@ -200,9 +491,47 @@ TLB::Walker::WalkerPort::recvStatusChange(Status status)
 void
 TLB::Walker::WalkerPort::recvRetry()
 {
+    walker->recvRetry();
+}
+
+void
+TLB::Walker::recvRetry()
+{
     retrying = false;
-    if (!sendTiming(packet)) {
-        retrying = true;
+    sendPackets();
+}
+
+void
+TLB::Walker::sendPackets()
+{
+    //If we're already waiting for the port to become available, just return.
+    if (retrying)
+        return;
+
+    //Reads always have priority
+    if (read) {
+        if (!port.sendTiming(read)) {
+            retrying = true;
+            return;
+        } else {
+            inflight++;
+            delete read->req;
+            delete read;
+            read = NULL;
+        }
+    }
+    //Send off as many of the writes as we can.
+    while (writes.size()) {
+        PacketPtr write = writes.back();
+        if (!port.sendTiming(write)) {
+            retrying = true;
+            return;
+        } else {
+            inflight++;
+            delete write->req;
+            delete write;
+            writes.pop_back();
+        }
     }
 }
 
@@ -214,6 +543,16 @@ TLB::getPort(const std::string &if_name, int idx)
     else
         panic("No tlb port named %s!\n", if_name);
 }
+
+#else
+
+Port *
+TLB::getPort(const std::string &if_name, int idx)
+{
+    panic("No tlb ports in se!\n", if_name);
+}
+
+#endif
 
 void
 TLB::insert(Addr vpn, TlbEntry &entry)
@@ -582,10 +921,12 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
 
     // If protected mode has been enabled...
     if (cr0.pe) {
+        DPRINTF(TLB, "In protected mode.\n");
         Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
         SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
         // If we're not in 64-bit mode, do protection/limit checks
         if (!efer.lma || !csAttr.longMode) {
+            DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (!attr.writable && write)
                 return new GeneralProtection(0);
@@ -594,6 +935,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
             if (!attr.expandDown) {
+                DPRINTF(TLB, "Checking an expand down segment.\n");
                 // We don't have to worry about the access going around the
                 // end of memory because accesses will be broken up into
                 // pieces at boundaries aligned on sizes smaller than an
@@ -618,25 +960,28 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         }
         // If paging is enabled, do the translation.
         if (cr0.pg) {
+            DPRINTF(TLB, "Paging enabled.\n");
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-#if FULL_SYSTEM
-                return new TlbFault();
-#else
                 return new TlbFault(vaddr);
-#endif
             } else {
                 // Do paging protection checks.
-                Addr paddr = entry->paddr | (vaddr & mask(12));
+                DPRINTF(TLB, "Entry found with paddr %#x, doing protection checks.\n", entry->paddr);
+                Addr paddr = entry->paddr | (vaddr & (entry->size-1));
+                DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
                 req->setPaddr(paddr);
             }
         } else {
             //Use the address which already has segmentation applied.
+            DPRINTF(TLB, "Paging disabled.\n");
+            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
             req->setPaddr(vaddr);
         }
     } else {
         // Real mode
+        DPRINTF(TLB, "In real mode.\n");
+        DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
         req->setPaddr(vaddr);
     }
     return NoFault;

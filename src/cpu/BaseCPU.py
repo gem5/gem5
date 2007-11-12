@@ -100,7 +100,7 @@ class BaseCPU(SimObject):
 
     _mem_ports = []
 
-    if build_env['TARGET_ISA'] == 'x86':
+    if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
         itb.walker_port = Port("ITB page table walker port")
         dtb.walker_port = Port("ITB page table walker port")
         _mem_ports = ["itb.walker_port", "dtb.walker_port"]
@@ -117,7 +117,7 @@ class BaseCPU(SimObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
-        if build_env['TARGET_ISA'] == 'x86':
+        if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
             self._mem_ports += ["itb.walker_port", "dtb.walker_port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):

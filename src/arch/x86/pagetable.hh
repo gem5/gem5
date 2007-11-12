@@ -62,16 +62,26 @@
 #include <string>
 
 #include "sim/host.hh"
+#include "base/bitunion.hh"
 #include "base/misc.hh"
 
 class Checkpoint;
 
 namespace X86ISA
 {
-    struct VAddr
-    {
-        VAddr(Addr a) { panic("not implemented yet."); }
-    };
+    BitUnion64(VAddr)
+        Bitfield<20, 12> longl1;
+        Bitfield<29, 21> longl2;
+        Bitfield<38, 30> longl3;
+        Bitfield<47, 39> longl4;
+
+        Bitfield<20, 12> pael1;
+        Bitfield<29, 21> pael2;
+        Bitfield<31, 30> pael3;
+
+        Bitfield<21, 12> norml1;
+        Bitfield<31, 22> norml2;
+    EndBitUnion(VAddr)
 
     struct TlbEntry
     {
