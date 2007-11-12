@@ -72,13 +72,147 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p) : SimObject(p), size(p->size)
+TLB::TLB(const Params *p) : MemObject(p), walker(name(), this), size(p->size)
 {
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
 
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
+}
+
+bool
+TLB::Walker::doNext(uint64_t data, PacketPtr &write)
+{
+    assert(state != Ready && state != Waiting);
+    write = NULL;
+    switch(state) {
+      case LongPML4:
+        nextState = LongPDP;
+        break;
+      case LongPDP:
+        nextState = LongPD;
+        break;
+      case LongPD:
+        nextState = LongPTE;
+        break;
+      case LongPTE:
+        nextState = Ready;
+        return false;
+      case PAEPDP:
+        nextState = PAEPD;
+        break;
+      case PAEPD:
+        break;
+      case PAEPTE:
+        nextState = Ready;
+        return false;
+      case PSEPD:
+        break;
+      case PD:
+        nextState = PTE;
+        break;
+      case PTE:
+        nextState = Ready;
+        return false;
+      default:
+        panic("Unknown page table walker state %d!\n");
+    }
+    return true;
+}
+
+void
+TLB::Walker::buildReadPacket(Addr addr)
+{
+    readRequest.setPhys(addr, size, PHYSICAL | uncachable ? UNCACHEABLE : 0);
+    readPacket.reinitFromRequest();
+}
+
+TLB::walker::buildWritePacket(Addr addr)
+{
+    writeRequest.setPhys(addr, size, PHYSICAL | uncachable ? UNCACHEABLE : 0);
+    writePacket.reinitFromRequest();
+
+bool
+TLB::Walker::WalkerPort::recvTiming(PacketPtr pkt)
+{
+    if (pkt->isResponse() && !pkt->wasNacked()) {
+        if (pkt->isRead()) {
+            assert(packet);
+            assert(walker->state == Waiting);
+            packet = NULL;
+            walker->state = walker->nextState;
+            walker->nextState = Ready;
+            PacketPtr write;
+            if (walker->doNext(pkt, write)) {
+                packet = &walker->packet;
+                port->sendTiming(packet);
+            }
+            if (write) {
+                writes.push_back(write);
+            }
+            while (!port->blocked() && writes.size()) {
+                if (port->sendTiming(writes.front())) {
+                    writes.pop_front();
+                    outstandingWrites++;
+                }
+            }
+        } else {
+            outstandingWrites--;
+        }
+    } else if (pkt->wasNacked()) {
+        pkt->reinitNacked();
+        if (!sendTiming(pkt)) {
+            if (pkt->isWrite()) {
+                writes.push_front(pkt);
+            }
+        }
+    }
+    return true;
+}
+
+Tick
+TLB::Walker::WalkerPort::recvAtomic(PacketPtr pkt)
+{
+    return 0;
+}
+
+void
+TLB::Walker::WalkerPort::recvFunctional(PacketPtr pkt)
+{
+    return;
+}
+
+void
+TLB::Walker::WalkerPort::recvStatusChange(Status status)
+{
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
+        return;
+    }
+
+    panic("Unexpected recvStatusChange.\n");
+}
+
+void
+TLB::Walker::WalkerPort::recvRetry()
+{
+    retrying = false;
+    if (!sendTiming(packet)) {
+        retrying = true;
+    }
+}
+
+Port *
+TLB::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "walker_port")
+        return &walker.port;
+    else
+        panic("No tlb port named %s!\n", if_name);
 }
 
 void

@@ -100,18 +100,25 @@ class BaseCPU(SimObject):
 
     _mem_ports = []
 
+    if build_env['TARGET_ISA'] == 'x86':
+        itb.walker_port = Port("ITB page table walker port")
+        dtb.walker_port = Port("ITB page table walker port")
+        _mem_ports = ["itb.walker_port", "dtb.walker_port"]
+
     def connectMemPorts(self, bus):
         for p in self._mem_ports:
             if p != 'physmem_port':
                 exec('self.%s = bus.port' % p)
 
     def addPrivateSplitL1Caches(self, ic, dc):
-        assert(len(self._mem_ports) == 2 or len(self._mem_ports) == 3)
+        assert(len(self._mem_ports) < 6)
         self.icache = ic
         self.dcache = dc
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
+        if build_env['TARGET_ISA'] == 'x86':
+            self._mem_ports += ["itb.walker_port", "dtb.walker_port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)

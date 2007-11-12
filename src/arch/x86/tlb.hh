@@ -59,10 +59,12 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <list>
+#include <string>
 
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/segmentregs.hh"
 #include "config/full_system.hh"
+#include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
@@ -76,13 +78,16 @@ namespace X86ISA
 {
     static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
 
-    class TLB : public SimObject
+    class TLB;
+
+    class TLB : public MemObject
     {
-#if !FULL_SYSTEM
       protected:
         friend class FakeITLBFault;
         friend class FakeDTLBFault;
-#endif
+
+        System * sys;
+
       public:
         typedef X86TLBParams Params;
         TLB(const Params *p);
@@ -90,6 +95,137 @@ namespace X86ISA
         void dumpAll();
 
         TlbEntry *lookup(Addr va, bool update_lru = true);
+
+#if FULL_SYSTEM
+      protected:
+        class Walker
+        {
+          public:
+            enum State {
+                Ready,
+                Waiting,
+                LongPML4,
+                LongPDP,
+                LongPD,
+                LongPTE,
+                PAEPDP,
+                PAEPD,
+                PAEPTE,
+                PSEPD,
+                PD,
+                PTE
+            };
+
+            // Act on the current state and determine what to do next. If the
+            // walker has finished updating the TLB, this will return false.
+            bool doNext(PacketPtr read, PacketPtr &write);
+
+            // This does an actual load to feed the walker. If we're in
+            // atomic mode, this will drive the state machine itself until
+            // the TLB is filled. If we're in timing mode, the port getting
+            // a reply will drive the machine using this function which will
+            // return after starting the memory operation.
+            void doMemory(Addr addr);
+
+            // Kick off the state machine.
+            void start(bool _uncachable, Addr _vaddr, Addr cr3, State next)
+            {
+                assert(state == Ready);
+                state = Waiting;
+                nextState = next;
+                // If PAE isn't being used, entries are 4 bytes. Otherwise
+                // they're 8.
+                if (next == PSEPD || next == PD || next == PTE)
+                    size = 4;
+                else
+                    size = 8;
+                vaddr = _vaddr;
+                uncachable = _uncacheable;
+                buildPacket(cr3);
+                if (state == Enums::timing) {
+                    port->sendTiming(&packet);
+                } else if (state == Enums::atomic) {
+                    port->sendAtomic(&packet);
+                    Addr addr;
+                    while(doNext(packet.get<uint64_t>(), addr)) {
+                        buildPacket(addr);
+                        port->sendAtomic(&packet);
+                    }
+                } else {
+                    panic("Unrecognized memory system mode.\n");
+                }
+            };
+
+          protected:
+            friend class TLB;
+
+            class WalkerPort : public Port
+            {
+              public:
+                WalkerPort(const std::string &_name, Walker * _walker) :
+                      Port(_name, _walker->tlb), walker(_walker),
+                      packet(NULL), snoopRangeSent(false), retrying(false)
+                {}
+
+              protected:
+                Walker * walker;
+
+                PacketPtr packet;
+                vector<PacketPtr> writes;
+
+                bool snoopRangeSent;
+                bool retrying;
+
+                bool recvTiming(PacketPtr pkt);
+                Tick recvAtomic(PacketPtr pkt);
+                void recvFunctional(PacketPtr pkt);
+                void recvStatusChange(Status status);
+                void recvRetry();
+                void getDeviceAddressRanges(AddrRangeList &resp,
+                        bool &snoop)
+                {
+                    resp.clear();
+                    snoop = true;
+                }
+
+              public:
+                bool sendTiming(PacketPtr pkt)
+                {
+                    retrying = !Port::sendTiming(pkt);
+                    return !retrying;
+                }
+
+                bool blocked() { return retrying; }
+            };
+
+            friend class WalkerPort;
+
+            WalkerPort port;
+
+            Packet packet;
+            Request request;
+
+            TLB * tlb;
+
+            State state;
+            State nextState;
+            int size;
+
+            Addr vaddr;
+
+          public:
+            Walker(const std::string &_name, TLB * _tlb) :
+                port(_name + "-walker_port", this),
+                packet(&request, ReadExReq, Broadcast),
+                tlb(_tlb), state(Ready), nextState(Ready)
+            {
+            }
+
+
+        };
+
+        Walker walker;
+#endif
 
       protected:
         int size;
@@ -99,6 +235,8 @@ namespace X86ISA
         typedef std::list<TlbEntry *> EntryList;
         EntryList freeList;
         EntryList entryList;
+
+        Port *getPort(const std::string &if_name, int idx = -1);
 
         void insert(Addr vpn, TlbEntry &entry);
 
