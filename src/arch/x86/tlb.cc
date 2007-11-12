@@ -641,6 +641,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     // If this is true, we're dealing with a request to read an internal
     // value.
     if (seg == SEGMENT_REG_INT) {
+        DPRINTF(TLB, "Addresses references internal memory.\n");
         Addr prefix = vaddr & IntAddrPrefixMask;
         if (prefix == IntAddrPrefixCPUID) {
             panic("CPUID memory space not yet implemented!\n");
