@@ -53,14 +53,242 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class BT(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class BTC(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class BTR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class BTS(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop BT_R_I {
+    sexti t0, reg, imm, flags=(CF,)
+};
+
+def macroop BT_M_I {
+    limm t1, imm
+    # This fudges just a tiny bit, but it's reasonable to expect the
+    # microcode generation logic to have the log of the various sizes
+    # floating around as well.
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    ld t1, seg, [scale, index, t2], disp
+    sexti t0, t1, imm, flags=(CF,)
+};
+
+def macroop BT_P_I {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    ld t1, seg, [1, t2, t7]
+    sexti t0, t1, imm, flags=(CF,)
+};
+
+def macroop BT_R_R {
+    sext t0, reg, regm, flags=(CF,)
+};
+
+def macroop BT_M_R {
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    ld t1, seg, [scale, index, t2], disp
+    sext t0, t1, reg, flags=(CF,)
+};
+
+def macroop BT_P_R {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    ld t1, seg, [1, t2, t7]
+    sext t0, t1, reg, flags=(CF,)
+};
+
+def macroop BTC_R_I {
+    sexti t0, reg, imm, flags=(CF,)
+    limm t1, 1
+    roli t1, t1, imm
+    xor reg, reg, t1
+};
+
+def macroop BTC_M_I {
+    limm t1, imm
+    # This fudges just a tiny bit, but it's reasonable to expect the
+    # microcode generation logic to have the log of the various sizes
+    # floating around as well.
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, 1
+    roli t3, t3, imm
+    ldst t1, seg, [scale, index, t2], disp
+    sexti t0, t1, imm, flags=(CF,)
+    xor t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTC_P_I {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, 1
+    roli t3, t3, imm
+    ldst t1, seg, [1, t2, t7]
+    sexti t0, t1, imm, flags=(CF,)
+    xor t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTC_R_R {
+    sext t0, reg, regm, flags=(CF,)
+    limm t1, 1
+    rol t1, t1, regm
+    xor reg, reg, t1
+};
+
+def macroop BTC_M_R {
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, 1
+    rol t3, t3, reg
+    ldst t1, seg, [scale, index, t2], disp
+    sext t0, t1, reg, flags=(CF,)
+    xor t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTC_P_R {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, 1
+    rol t3, t3, reg
+    ldst t1, seg, [1, t2, t7]
+    sext t0, t1, reg, flags=(CF,)
+    xor t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTR_R_I {
+    sexti t0, reg, imm, flags=(CF,)
+    limm t1, "(uint64_t(-(2ULL)))"
+    roli t1, t1, imm
+    and reg, reg, t1
+};
+
+def macroop BTR_M_I {
+    limm t1, imm
+    # This fudges just a tiny bit, but it's reasonable to expect the
+    # microcode generation logic to have the log of the various sizes
+    # floating around as well.
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, "(uint64_t(-(2ULL)))"
+    roli t3, t3, imm
+    ldst t1, seg, [scale, index, t2], disp
+    sexti t0, t1, imm, flags=(CF,)
+    and t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTR_P_I {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, "(uint64_t(-(2ULL)))"
+    roli t3, t3, imm
+    ldst t1, seg, [1, t2, t7]
+    sexti t0, t1, imm, flags=(CF,)
+    and t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTR_R_R {
+    sext t0, reg, regm, flags=(CF,)
+    limm t1, "(uint64_t(-(2ULL)))"
+    rol t1, t1, regm
+    and reg, reg, t1
+};
+
+def macroop BTR_M_R {
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, "(uint64_t(-(2ULL)))"
+    rol t3, t3, reg
+    ldst t1, seg, [scale, index, t2], disp
+    sext t0, t1, reg, flags=(CF,)
+    and t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTR_P_R {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, "(uint64_t(-(2ULL)))"
+    rol t3, t3, reg
+    ldst t1, seg, [1, t2, t7]
+    sext t0, t1, reg, flags=(CF,)
+    and t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTS_R_I {
+    sexti t0, reg, imm, flags=(CF,)
+    limm t1, 1
+    roli t1, t1, imm
+    or reg, reg, t1
+};
+
+def macroop BTS_M_I {
+    limm t1, imm
+    # This fudges just a tiny bit, but it's reasonable to expect the
+    # microcode generation logic to have the log of the various sizes
+    # floating around as well.
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, 1
+    roli t3, t3, imm
+    ldst t1, seg, [scale, index, t2], disp
+    sexti t0, t1, imm, flags=(CF,)
+    or t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTS_P_I {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, 1
+    roli t3, t3, imm
+    ldst t1, seg, [1, t2, t7]
+    sexti t0, t1, imm, flags=(CF,)
+    or t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTS_R_R {
+    sext t0, reg, regm, flags=(CF,)
+    limm t1, 1
+    rol t1, t1, regm
+    or reg, reg, t1
+};
+
+def macroop BTS_M_R {
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    add t2, t2, base
+    limm t3, 1
+    rol t3, t3, reg
+    ldst t1, seg, [scale, index, t2], disp
+    sext t0, t1, reg, flags=(CF,)
+    or t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+
+def macroop BTS_P_R {
+    rdip t7
+    limm t1, imm
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t3, 1
+    rol t3, t3, reg
+    ldst t1, seg, [1, t2, t7]
+    sext t0, t1, reg, flags=(CF,)
+    or t1, t1, t3
+    st t1, seg, [scale, index, t2], disp
+};
+'''

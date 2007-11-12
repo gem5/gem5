@@ -657,7 +657,7 @@
                 0x0: push_fs();
                 0x1: pop_fs();
                 0x2: Inst::CPUID(rAd);
-                0x3: bt_Ev_Gv();
+                0x3: Inst::BT(Ev,Gv);
                 0x4: shld_Ev_Gv_Ib();
                 0x5: shld_Ev_Gv_rCl();
                 0x6: xbts_and_cmpxchg();
@@ -667,7 +667,7 @@
                 0x0: push_gs();
                 0x1: pop_gs();
                 0x2: rsm_smm();
-                0x3: bts_Ev_Gv();
+                0x3: Inst::BTS(Ev,Gv);
                 0x4: shrd_Ev_Gv_Ib();
                 0x5: shrd_Ev_Gv_rCl();
                 //0x6: group16();
@@ -691,7 +691,7 @@
                 0x0: Inst::CMPXCHG(Eb,Gb);
                 0x1: Inst::CMPXCHG(Ev,Gv);
                 0x2: lss_Gz_Mp();
-                0x3: btr_Ev_Gv();
+                0x3: Inst::BTR(Ev,Gv);
                 0x4: lfs_Gz_Mp();
                 0x5: lgs_Gz_Mp();
                 //The size of the second operand in these instructions should
@@ -702,17 +702,19 @@
             }
             0x17: decode OPCODE_OP_BOTTOM3 {
                 0x0: jmpe_Jz(); // IA-64?
-                //0x1: group11_UD2();
-                0x1: Inst::UD2();
-                //0x2: group8_Ev_Ib();
-                0x2: decode MODRM_REG {
-                    0x4: bt_Ev_Ib();
-                    0x5: bts_Ev_Ib();
-                    0x6: btr_Ev_Ib();
-                    0x7: btc_Ev_Ib();
-                    default: Inst::UD2();
+                format Inst {
+                    //0x1: group11_UD2();
+                    0x1: UD2();
+                    //0x2: group8_Ev_Ib();
+                    0x2: decode MODRM_REG {
+                        0x4: BT(Ev,Ib);
+                        0x5: BTS(Ev,Ib);
+                        0x6: BTR(Ev,Ib);
+                        0x7: BTC(Ev,Ib);
+                        default: UD2();
+                    }
+                    0x3: BTC(Ev,Gv);
                 }
-                0x3: btc_Ev_Gv();
                 0x4: bsf_Gv_Ev();
                 0x5: bsr_Gv_Ev();
                 //The size of the second operand in these instructions should
