@@ -56,6 +56,7 @@
  */
 
 #include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/segmentregs.hh"
 
 namespace X86ISA
 {
@@ -75,23 +76,26 @@ namespace X86ISA
     {
         switch (segment)
         {
-          case 0:
+          case SEGMENT_REG_ES:
             ccprintf(os, "ES");
             break;
-          case 1:
+          case SEGMENT_REG_CS:
             ccprintf(os, "CS");
             break;
-          case 2:
+          case SEGMENT_REG_SS:
             ccprintf(os, "SS");
             break;
-          case 3:
+          case SEGMENT_REG_DS:
             ccprintf(os, "DS");
             break;
-          case 4:
+          case SEGMENT_REG_FS:
             ccprintf(os, "FS");
             break;
-          case 5:
+          case SEGMENT_REG_GS:
             ccprintf(os, "GS");
+            break;
+          case SEGMENT_REG_INT:
+            ccprintf(os, "INT");
             break;
           default:
             panic("Unrecognized segment %d\n", segment);

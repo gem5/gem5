@@ -108,7 +108,7 @@ let {{
 
     # This segment selects an internal address space mapped to MSRs,
     # CPUID info, etc.
-    assembler.symbols["intseg"] = "NUM_SEGMENTREGS"
+    assembler.symbols["intseg"] = "SEGMENT_REG_INT"
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()

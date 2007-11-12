@@ -68,6 +68,7 @@ namespace X86ISA
         SEGMENT_REG_DS,
         SEGMENT_REG_FS,
         SEGMENT_REG_GS,
+        SEGMENT_REG_INT,
 
         NUM_SEGMENTREGS
     };

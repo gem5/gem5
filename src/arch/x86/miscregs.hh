@@ -258,6 +258,7 @@ namespace X86ISA
         MISCREG_DS,
         MISCREG_FS,
         MISCREG_GS,
+        MISCREG_INT, // This isn't actually used.
 
         // Hidden segment base field
         MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + NumSegments,
@@ -267,6 +268,7 @@ namespace X86ISA
         MISCREG_DS_BASE,
         MISCREG_FS_BASE,
         MISCREG_GS_BASE,
+        MISCREG_INT_BASE,
 
         // Hidden segment limit field
         MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_BASE_BASE + NumSegments,
@@ -276,6 +278,7 @@ namespace X86ISA
         MISCREG_DS_LIMIT,
         MISCREG_FS_LIMIT,
         MISCREG_GS_LIMIT,
+        MISCREG_INT_LIMIT, // This isn't actually used.
 
         // Hidden segment limit attributes
         MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + NumSegments,
@@ -285,6 +288,7 @@ namespace X86ISA
         MISCREG_DS_ATTR,
         MISCREG_FS_ATTR,
         MISCREG_GS_ATTR,
+        MISCREG_INT_ATTR, // This isn't actually used.
 
         // System segment selectors
         MISCREG_SYSSEG_SEL_BASE = MISCREG_SEG_ATTR_BASE + NumSegments,
