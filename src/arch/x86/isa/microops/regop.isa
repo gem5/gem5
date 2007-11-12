@@ -884,4 +884,56 @@ let {{
 
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, op2, 0);'
+
+    class Wrcr(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrcr, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
+                fault = new InvalidOpcode();
+            } else {
+                // There are *s in the line below so it doesn't confuse the
+                // parser. They may be unnecessary.
+                //Mis*cReg old*Val = pick(Cont*rolDest, 0, dat*aSize);
+                MiscReg newVal = psrc1;
+
+                // Check for any modifications that would cause a fault.
+                switch(dest) {
+                  case 0:
+                    {
+                        Efer efer = EferOp;
+                        CR0 cr0 = newVal;
+                        CR4 oldCr4 = CR4Op;
+                        if (bits(newVal, 63, 32) ||
+                                (!cr0.pe && cr0.pg) ||
+                                (!cr0.cd && cr0.nw) ||
+                                (cr0.pg && efer.lme && !oldCr4.pae))
+                            fault = new GeneralProtection(0);
+                    }
+                    break;
+                  case 2:
+                    break;
+                  case 3:
+                    break;
+                  case 4:
+                    {
+                        CR4 cr4 = newVal;
+                        // PAE can't be disabled in long mode.
+                        if (bits(newVal, 63, 11) ||
+                                (machInst.mode.mode == LongMode && !cr4.pae))
+                            fault = new GeneralProtection(0);
+                    }
+                    break;
+                  case 8:
+                    {
+                        if (bits(newVal, 63, 4))
+                            fault = new GeneralProtection(0);
+                    }
+                  default:
+                    panic("Unrecognized control register %d.\\n", dest);
+                }
+                ControlDest = newVal;
+            }
+            '''
 }};

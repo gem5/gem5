@@ -188,6 +188,10 @@ def macroop MOVZX_W_R_P {
     ld t1, seg, riprel, disp, dataSize=2
     zexti reg, t1, 15
 };
+
+def macroop MOV_C_R {
+    wrcr reg, regm
+};
 '''
 #let {{
 #    class MOVD(Inst):

@@ -106,22 +106,15 @@ void MiscRegFile::clear()
 
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 {
-    switch(miscReg)
-    {
-      case MISCREG_CR1:
-      case MISCREG_CR5:
-      case MISCREG_CR6:
-      case MISCREG_CR7:
-      case MISCREG_CR9:
-      case MISCREG_CR10:
-      case MISCREG_CR11:
-      case MISCREG_CR12:
-      case MISCREG_CR13:
-      case MISCREG_CR14:
-      case MISCREG_CR15:
-        panic("Tried to read invalid control register %d\n", miscReg);
-        break;
-    }
+    // Make sure we're not dealing with an illegal control register.
+    // Instructions should filter out these indexes, and nothing else should
+    // attempt to read them directly.
+    assert( miscReg != MISCREG_CR1 &&
+            !(miscReg > MISCREG_CR4 &&
+              miscReg < MISCREG_CR8) &&
+            !(miscReg > MISCREG_CR8 &&
+              miscReg <= MISCREG_CR15));
+
     return regVal[miscReg];
 }
 
@@ -132,22 +125,14 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 
 void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
 {
-    switch(miscReg)
-    {
-      case MISCREG_CR1:
-      case MISCREG_CR5:
-      case MISCREG_CR6:
-      case MISCREG_CR7:
-      case MISCREG_CR9:
-      case MISCREG_CR10:
-      case MISCREG_CR11:
-      case MISCREG_CR12:
-      case MISCREG_CR13:
-      case MISCREG_CR14:
-      case MISCREG_CR15:
-        panic("Tried to write invalid control register %d\n", miscReg);
-        break;
-    }
+    // Make sure we're not dealing with an illegal control register.
+    // Instructions should filter out these indexes, and nothing else should
+    // attempt to write to them directly.
+    assert( miscReg != MISCREG_CR1 &&
+            !(miscReg > MISCREG_CR4 &&
+              miscReg < MISCREG_CR8) &&
+            !(miscReg > MISCREG_CR8 &&
+              miscReg <= MISCREG_CR15));
     regVal[miscReg] = val;
 }
 
@@ -158,23 +143,33 @@ void MiscRegFile::setReg(int miscReg,
     switch(miscReg)
     {
       case MISCREG_CR0:
-        CR0 toggled = regVal[miscReg] ^ val;
-        CR0 newCR0 = val;
-        Efer efer = regVal[MISCREG_EFER];
-        if (toggled.pg && efer.lme) {
-            if (newCR0.pg) {
-                //Turning on long mode
-                efer.lma = 1;
-                regVal[MISCREG_EFER] = efer;
-            } else {
-                //Turning off long mode
-                efer.lma = 0;
-                regVal[MISCREG_EFER] = efer;
+        {
+            CR0 toggled = regVal[miscReg] ^ val;
+            CR0 newCR0 = val;
+            Efer efer = regVal[MISCREG_EFER];
+            if (toggled.pg && efer.lme) {
+                if (newCR0.pg) {
+                    //Turning on long mode
+                    efer.lma = 1;
+                    regVal[MISCREG_EFER] = efer;
+                } else {
+                    //Turning off long mode
+                    efer.lma = 0;
+                    regVal[MISCREG_EFER] = efer;
+                }
             }
+            //This must always be 1.
+            newCR0.et = 1;
+            newVal = newCR0;
         }
-        //This must always be 1.
-        newCR0.et = 1;
-        newVal = newCR0;
+        break;
+      case MISCREG_CR2:
+        break;
+      case MISCREG_CR3:
+        break;
+      case MISCREG_CR4:
+        break;
+      case MISCREG_CR8:
         break;
     }
     setRegNoEffect(miscReg, newVal);

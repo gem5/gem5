@@ -153,7 +153,13 @@ let {{
                 return doRipRelativeDecode(Name, opTypes, env)
             elif opType.tag == None or opType.size == None:
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
-            elif opType.tag in ("C", "D", "G", "P", "S", "T", "V"):
+            elif opType.tag == "C":
+                env.addReg(ModRMRegIndex)
+                Name += "_C"
+            elif opType.tag == "D":
+                env.addReg(ModRMRegIndex)
+                Name += "_D"
+            elif opType.tag in ("G", "P", "S", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
                 env.addReg(ModRMRegIndex)
                 Name += "_R"

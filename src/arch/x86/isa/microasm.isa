@@ -113,6 +113,9 @@ let {{
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
 
+    for reg in range(15):
+        assembler.symbols["cr%d" % reg] = "MISCREG_CR%d" % reg
+
     for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF'):
         assembler.symbols[flag] = flag + "Bit"
 
