@@ -380,6 +380,7 @@ TLB::Walker::start(ThreadContext * _tc, Addr vaddr)
             }
         }
     }
+
     nextState = Ready;
     entry.vaddr = vaddr;
 
@@ -595,11 +596,27 @@ TLB::lookup(Addr va, bool update_lru)
 void
 TLB::invalidateAll()
 {
+    DPRINTF(TLB, "Invalidating all entries.\n");
+    while (!entryList.empty()) {
+        TlbEntry *entry = entryList.front();
+        entryList.pop_front();
+        freeList.push_back(entry);
+    }
 }
 
 void
 TLB::invalidateNonGlobal()
 {
+    DPRINTF(TLB, "Invalidating all non global entries.\n");
+    EntryList::iterator entryIt;
+    for (entryIt = entryList.begin(); entryIt != entryList.end();) {
+        if (!(*entryIt)->global) {
+            freeList.push_back(*entryIt);
+            entryList.erase(entryIt++);
+        } else {
+            entryIt++;
+        }
+    }
 }
 
 void

@@ -86,6 +86,8 @@
  */
 
 #include "arch/x86/miscregfile.hh"
+#include "arch/x86/tlb.hh"
+#include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
 using namespace X86ISA;
@@ -158,6 +160,10 @@ void MiscRegFile::setReg(int miscReg,
                     regVal[MISCREG_EFER] = efer;
                 }
             }
+            if (toggled.pg) {
+                tc->getITBPtr()->invalidateAll();
+                tc->getDTBPtr()->invalidateAll();
+            }
             //This must always be 1.
             newCR0.et = 1;
             newVal = newCR0;
@@ -166,8 +172,17 @@ void MiscRegFile::setReg(int miscReg,
       case MISCREG_CR2:
         break;
       case MISCREG_CR3:
+        tc->getITBPtr()->invalidateNonGlobal();
+        tc->getDTBPtr()->invalidateNonGlobal();
         break;
       case MISCREG_CR4:
+        {
+            CR4 toggled = regVal[miscReg] ^ val;
+            if (toggled.pae || toggled.pse || toggled.pge) {
+                tc->getITBPtr()->invalidateAll();
+                tc->getDTBPtr()->invalidateAll();
+            }
+        }
         break;
       case MISCREG_CR8:
         break;

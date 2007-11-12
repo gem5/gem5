@@ -215,6 +215,13 @@ namespace X86ISA
 
         Port *getPort(const std::string &if_name, int idx = -1);
 
+      public:
+        void invalidateAll();
+
+        void invalidateNonGlobal();
+
+        void demapPage(Addr va);
+
       protected:
         int size;
 
@@ -225,12 +232,6 @@ namespace X86ISA
         EntryList entryList;
 
         void insert(Addr vpn, TlbEntry &entry);
-
-        void invalidateAll();
-
-        void invalidateNonGlobal();
-
-        void demapPage(Addr va);
 
         template<class TlbFault>
         Fault translate(RequestPtr &req, ThreadContext *tc,
