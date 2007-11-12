@@ -62,7 +62,7 @@ microcode = '''
 
     def macroop IN_R_R {
         limm t1, "IntAddrPrefixIO"
-        zext t2, regm, 16, dataSize=2
+        zexti t2, regm, 15, dataSize=2
         ld reg, intseg, [1, t1, t2], addressSize=8
     };
 
@@ -74,7 +74,7 @@ microcode = '''
 
     def macroop OUT_R_R {
         limm t1, "IntAddrPrefixIO"
-        zext t2, reg, 16, dataSize=2
+        zexti t2, reg, 15, dataSize=2
         st regm, intseg, [1, t1, t2], addressSize=8
     };
 '''

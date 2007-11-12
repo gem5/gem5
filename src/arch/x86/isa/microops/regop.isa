@@ -318,7 +318,7 @@ let {{
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
-            if flag_code is not "" or cond_check is not "true":
+            if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
                         code, "", "true", else_code)
                 suffix = "Flags" + suffix
@@ -866,12 +866,22 @@ let {{
     class Sext(RegOp):
         code = '''
             IntReg val = psrc1;
-            int sign_bit = bits(val, imm8-1, imm8-1);
-            uint64_t maskVal = mask(imm8);
+            // Mask the bit position so that it wraps.
+            int bitPos = op2 & (dataSize * 8 - 1);
+            int sign_bit = bits(val, bitPos, bitPos);
+            uint64_t maskVal = mask(bitPos+1);
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
             DestReg = merge(DestReg, val, dataSize);
             '''
+        flag_code = '''
+            if (!sign_bit)
+                ccFlagBits = ccFlagBits &
+                    ~(ext & (CFBit | ECFBit | ZFBit | EZFBit));
+            else
+                ccFlagBits = ccFlagBits |
+                    (ext & (CFBit | ECFBit | ZFBit | EZFBit));
+            '''
 
     class Zext(RegOp):
-        code = 'DestReg = bits(psrc1, imm8-1, 0);'
+        code = 'DestReg = bits(psrc1, op2, 0);'
 }};

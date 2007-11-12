@@ -111,48 +111,48 @@ def macroop MOV_P_I {
 #
 
 def macroop MOVSXD_R_R {
-    sext reg, regm, 32
+    sexti reg, regm, 31
 };
 
 def macroop MOVSXD_R_M {
     ld t1, seg, sib, disp, dataSize=4
-    sext reg, t1, 32
+    sexti reg, t1, 31
 };
 
 def macroop MOVSXD_R_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=4
-    sext reg, t1, 32
+    sexti reg, t1, 31
 };
 
 def macroop MOVSX_B_R_R {
-    sext reg, regm, 8
+    sexti reg, regm, 7
 };
 
 def macroop MOVSX_B_R_M {
     ld reg, seg, sib, disp, dataSize=1
-    sext reg, reg, 8
+    sexti reg, reg, 7
 };
 
 def macroop MOVSX_B_R_P {
     rdip t7
     ld reg, seg, riprel, disp, dataSize=1
-    sext reg, reg, 8
+    sexti reg, reg, 7
 };
 
 def macroop MOVSX_W_R_R {
-    sext reg, regm, 16
+    sexti reg, regm, 15
 };
 
 def macroop MOVSX_W_R_M {
     ld reg, seg, sib, disp, dataSize=2
-    sext reg, reg, 16
+    sexti reg, reg, 15
 };
 
 def macroop MOVSX_W_R_P {
     rdip t7
     ld reg, seg, riprel, disp, dataSize=2
-    sext reg, reg, 16
+    sexti reg, reg, 15
 };
 
 #
@@ -160,33 +160,33 @@ def macroop MOVSX_W_R_P {
 #
 
 def macroop MOVZX_B_R_R {
-    zext reg, regm, 8
+    zexti reg, regm, 7
 };
 
 def macroop MOVZX_B_R_M {
     ld t1, seg, sib, disp, dataSize=1
-    zext reg, t1, 8
+    zexti reg, t1, 7
 };
 
 def macroop MOVZX_B_R_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=1
-    zext reg, t1, 8
+    zexti reg, t1, 7
 };
 
 def macroop MOVZX_W_R_R {
-    zext reg, regm, 16
+    zexti reg, regm, 15
 };
 
 def macroop MOVZX_W_R_M {
     ld t1, seg, sib, disp, dataSize=2
-    zext reg, t1, 16
+    zexti reg, t1, 15
 };
 
 def macroop MOVZX_W_R_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    zext reg, t1, 16
+    zexti reg, t1, 15
 };
 '''
 #let {{
