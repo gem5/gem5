@@ -101,9 +101,7 @@ class BaseCPU(SimObject):
     _mem_ports = []
 
     if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
-        itb.walker_port = Port("ITB page table walker port")
-        dtb.walker_port = Port("ITB page table walker port")
-        _mem_ports = ["itb.walker_port", "dtb.walker_port"]
+        _mem_ports = ["itb.walker.port", "dtb.walker.port"]
 
     def connectMemPorts(self, bus):
         for p in self._mem_ports:
