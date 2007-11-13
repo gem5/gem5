@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,136 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Jaidev Patwardhan
  */
 
 #ifndef __ARCH_MIPS_TLB_HH__
 #define __ARCH_MIPS_TLB_HH__
 
+#include <map>
+
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/utility.hh"
+#include "arch/mips/vtophys.hh"
+#include "arch/mips/pagetable.hh"
+#include "base/statistics.hh"
+#include "mem/request.hh"
 #include "params/MipsDTB.hh"
 #include "params/MipsITB.hh"
+#include "sim/faults.hh"
 #include "sim/tlb.hh"
+#include "sim/sim_object.hh"
 
-namespace MipsISA
+class ThreadContext;
+
+/* MIPS does not distinguish between a DTLB and an ITLB -> unified TLB
+   However, to maintain compatibility with other architectures, we'll
+   simply create an ITLB and DTLB that will point to the real TLB */
+namespace MipsISA {
+
+// WARN: This particular TLB entry is not necessarily conformed to MIPS ISA
+// We just need this to make compiler happy. Use "PTE" type for real entry.
+struct TlbEntry
 {
-    struct TlbEntry
+    Addr _pageStart;
+    TlbEntry() {}
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
+
+    Addr pageStart()
     {
-        Addr _pageStart;
-        TlbEntry() {}
-        TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
+        return _pageStart;
+    }
 
-        Addr pageStart()
-        {
-            return _pageStart;
-        }
-
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-    };
-
-    class TLB : public GenericTLB
+    void serialize(std::ostream &os)
     {
-      public:
-        typedef MipsTLBParams Params;
-        TLB(const Params *p) : GenericTLB(p)
-        {}
+        SERIALIZE_SCALAR(_pageStart);
+    }
 
-        Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
-    };
-
-    class ITB : public TLB
+    void unserialize(Checkpoint *cp, const std::string &section)
     {
-      public:
-        typedef MipsITBParams Params;
-        ITB(const Params *p) : TLB(p)
-        {}
-    };
+        UNSERIALIZE_SCALAR(_pageStart);
+    }
 
-    class DTB : public TLB
-    {
-      public:
-        typedef MipsDTBParams Params;
-        DTB(const Params *p) : TLB(p)
-        {}
-    };
 };
 
-#endif // __ARCH_MIPS_TLB_HH__
+class TLB : public SimObject
+{
+  protected:
+    typedef std::multimap<Addr, int> PageTable;
+    PageTable lookupTable;	// Quick lookup into page table
+
+    MipsISA::PTE *table;	// the Page Table
+    int size;			// TLB Size
+    int nlu;			// not last used entry (for replacement)
+
+    void nextnlu() { if (++nlu >= size) nlu = 0; }
+    MipsISA::PTE *lookup(Addr vpn, uint8_t asn) const;
+
+    mutable Stats::Scalar<> read_hits;
+    mutable Stats::Scalar<> read_misses;
+    mutable Stats::Scalar<> read_acv;
+    mutable Stats::Scalar<> read_accesses;
+    mutable Stats::Scalar<> write_hits;
+    mutable Stats::Scalar<> write_misses;
+    mutable Stats::Scalar<> write_acv;
+    mutable Stats::Scalar<> write_accesses;
+    Stats::Formula hits;
+    Stats::Formula misses;
+    Stats::Formula invalids;
+    Stats::Formula accesses;
+
+  public:
+    typedef MipsTLBParams Params;
+    TLB(const Params *p);
+
+    int probeEntry(Addr vpn,uint8_t) const;
+    MipsISA::PTE *getEntry(unsigned) const;
+    virtual ~TLB();
+    int smallPages;
+    int getsize() const { return size; }
+
+    MipsISA::PTE &index(bool advance = true);
+    void insert(Addr vaddr, MipsISA::PTE &pte);
+    void insertAt(MipsISA::PTE &pte, unsigned Index, int _smallPages);
+    void flushAll();
+
+    // static helper functions... really
+    static bool validVirtualAddress(Addr vaddr);
+
+    static Fault checkCacheability(RequestPtr &req);
+
+    // Checkpointing
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+
+    void regStats();
+};
+
+class ITB : public TLB {
+  public:
+    typedef MipsTLBParams Params;
+    ITB(const Params *p);
+
+    Fault translate(RequestPtr &req, ThreadContext *tc);
+};
+
+class DTB : public TLB {
+  public:
+    typedef MipsTLBParams Params;
+    DTB(const Params *p);
+
+    Fault translate(RequestPtr &req, ThreadContext *tc, bool write = false);
+};
+
+class UTB : public ITB, public DTB {
+  public:
+    typedef MipsTLBParams Params;
+    UTB(const Params *p);
+
+};
+
+}
+
+
+
+#endif // __MIPS_MEMORY_HH__

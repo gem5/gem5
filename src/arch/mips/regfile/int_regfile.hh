@@ -34,10 +34,10 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ThreadContext;
 
 namespace MipsISA
 {
@@ -47,7 +47,7 @@ namespace MipsISA
     }
 
     enum MiscIntRegNums {
-       LO = NumIntArchRegs,
+       LO = NumIntArchRegs*NumShadowRegSets,
        HI,
        DSPACX0,
        DSPLo1,
@@ -68,26 +68,14 @@ namespace MipsISA
     {
       protected:
         IntReg regs[NumIntRegs];
-
+        int currShadowSet;
       public:
-        void clear() { bzero(&regs, sizeof(regs)); }
-
-        IntReg readReg(int intReg)
-        {
-            return regs[intReg];
-        }
-
-        Fault setReg(int intReg, const IntReg &val)
-        {
-            if (intReg != ZeroReg) {
-                regs[intReg] = val;
-            }
-
-            return NoFault;
-        }
+        void clear();
+        void setShadowSet(int css);
+        IntReg readReg(int intReg);
+        Fault setReg(int intReg, const IntReg &val);
 
         void serialize(std::ostream &os);
-
         void unserialize(Checkpoint *cp, const std::string &section);
 
     };

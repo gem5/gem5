@@ -32,8 +32,165 @@
 #include "arch/mips/regfile/regfile.hh"
 #include "sim/serialize.hh"
 
-using namespace MipsISA;
 using namespace std;
+
+namespace MipsISA
+{
+
+void
+RegFile::clear()
+{
+    intRegFile.clear();
+    floatRegFile.clear();
+    miscRegFile.clear();
+}
+
+void
+RegFile::reset(std::string core_name, unsigned num_threads, unsigned num_vpes, BaseCPU *_cpu)
+{
+    bzero(&intRegFile, sizeof(intRegFile));
+    bzero(&floatRegFile, sizeof(floatRegFile));
+    miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
+}
+
+IntReg
+RegFile::readIntReg(int intReg)
+{
+    return intRegFile.readReg(intReg);
+}
+
+Fault
+RegFile::setIntReg(int intReg, const IntReg &val)
+{
+    return intRegFile.setReg(intReg, val);
+}
+
+MiscReg
+RegFile::readMiscRegNoEffect(int miscReg, unsigned tid)
+{
+    return miscRegFile.readRegNoEffect(miscReg, tid);
+}
+
+MiscReg
+RegFile::readMiscReg(int miscReg, ThreadContext *tc,
+                    unsigned tid)
+{
+    return miscRegFile.readReg(miscReg, tc, tid);
+}
+
+void
+RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid)
+{
+    miscRegFile.setRegNoEffect(miscReg, val, tid);
+}
+
+void
+RegFile::setMiscReg(int miscReg, const MiscReg &val,
+                ThreadContext * tc, unsigned tid)
+{
+    miscRegFile.setReg(miscReg, val, tc, tid);
+}
+
+FloatRegVal
+RegFile::readFloatReg(int floatReg)
+{
+    return floatRegFile.readReg(floatReg,SingleWidth);
+}
+
+FloatRegVal
+RegFile::readFloatReg(int floatReg, int width)
+{
+    return floatRegFile.readReg(floatReg,width);
+}
+
+FloatRegBits
+RegFile::readFloatRegBits(int floatReg)
+{
+    return floatRegFile.readRegBits(floatReg,SingleWidth);
+}
+
+FloatRegBits
+RegFile::readFloatRegBits(int floatReg, int width)
+{
+    return floatRegFile.readRegBits(floatReg,width);
+}
+
+Fault
+RegFile::setFloatReg(int floatReg, const FloatRegVal &val)
+{
+    return floatRegFile.setReg(floatReg, val, SingleWidth);
+}
+
+Fault
+RegFile::setFloatReg(int floatReg, const FloatRegVal &val, int width)
+{
+    return floatRegFile.setReg(floatReg, val, width);
+}
+
+Fault
+RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
+{
+    return floatRegFile.setRegBits(floatReg, val, SingleWidth);
+}
+
+Fault
+RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+{
+    return floatRegFile.setRegBits(floatReg, val, width);
+}
+
+void
+RegFile::setShadowSet(int css){
+    intRegFile.setShadowSet(css);
+}
+
+int
+RegFile::instAsid()
+{
+    return miscRegFile.getInstAsid();
+}
+
+int
+RegFile::dataAsid()
+{
+    return miscRegFile.getDataAsid();
+}
+
+Addr
+RegFile::readPC()
+{
+    return pc;
+}
+
+void
+RegFile::setPC(Addr val)
+{
+    pc = val;
+}
+
+Addr
+RegFile::readNextPC()
+{
+    return npc;
+}
+
+void
+RegFile::setNextPC(Addr val)
+{
+    npc = val;
+}
+
+Addr
+RegFile::readNextNPC()
+{
+    return nnpc;
+}
+
+void
+RegFile::setNextNPC(Addr val)
+{
+    nnpc = val;
+}
 
 void
 RegFile::serialize(std::ostream &os)
@@ -64,14 +221,4 @@ RegFile::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-void
-MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Regs Not Implemented Yet\n");
-}
-
-void
-MipsISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
+} // namespace MipsISA

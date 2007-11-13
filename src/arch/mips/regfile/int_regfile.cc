@@ -35,6 +35,61 @@
 using namespace MipsISA;
 using namespace std;
 
+
+void
+IntRegFile::clear()
+{
+    bzero(&regs, sizeof(regs));
+    currShadowSet=0;
+}
+
+void
+IntRegFile::setShadowSet(int css)
+{
+    DPRINTF(MipsPRA,"Setting Shadow Set to :%d (%s)\n",css,currShadowSet);
+    currShadowSet = css;
+}
+
+IntReg
+IntRegFile::readReg(int intReg)
+{
+    if(intReg < NumIntRegs)
+    { // Regular GPR Read
+        DPRINTF(MipsPRA,"Reading Reg: %d, CurrShadowSet: %d\n",intReg,currShadowSet);
+        if(intReg >= NumIntArchRegs*NumShadowRegSets){
+            return regs[intReg+NumIntRegs*currShadowSet];
+        }
+        else {
+            return regs[(intReg + NumIntArchRegs*currShadowSet) % NumIntArchRegs];
+        }
+    }
+    else
+    { // Read from shadow GPR .. probably called by RDPGPR
+        return regs[intReg];
+    }
+}
+
+Fault
+IntRegFile::setReg(int intReg, const IntReg &val)
+{
+    if (intReg != ZeroReg) {
+
+        if(intReg < NumIntRegs)
+        {
+            if(intReg >= NumIntArchRegs*NumShadowRegSets){
+                regs[intReg] = val;
+            }
+            else{
+                regs[intReg+NumIntRegs*currShadowSet] = val;
+            }
+        }
+        else{
+            regs[intReg] = val;
+        }
+    }
+    return NoFault;
+}
+
 void
 IntRegFile::serialize(std::ostream &os)
 {
@@ -46,3 +101,4 @@ IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(regs, NumIntRegs);
 }
+

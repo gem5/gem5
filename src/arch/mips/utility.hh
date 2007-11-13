@@ -1,39 +1,42 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * All rights reserved.
+ * Copyright N) 2007 MIPS Technologies, Inc.  All Rights Reserved
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ * This software is part of the M5 simulator.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS IS A LEGAL AGREEMENT.  BY DOWNLOADING, USING, COPYING, CREATING
+ * DERIVATIVE WORKS, AND/OR DISTRIBUTING THIS SOFTWARE YOU ARE AGREEING
+ * TO THESE TERMS AND CONDITIONS.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
- *          Korey Sewell
+ * Permission is granted to use, copy, create derivative works and
+ * distribute this software and such derivative works for any purpose,
+ * so long as (1) the copyright notice above, this grant of permission,
+ * and the disclaimer below appear in all copies and derivative works
+ * made, (2) the copyright notice above is augmented as appropriate to
+ * reflect the addition of any new copyrightable work in a derivative
+ * work (e.g., Copyright N) <Publication Year> Copyright Owner), and (3)
+ * the name of MIPS Technologies, Inc. ($(B!H(BMIPS$(B!I(B) is not used in any
+ * advertising or publicity pertaining to the use or distribution of
+ * this software without specific, written prior authorization.
+ *
+ * THIS SOFTWARE IS PROVIDED $(B!H(BAS IS.$(B!I(B  MIPS MAKES NO WARRANTIES AND
+ * DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
+ * OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+ * NON-INFRINGEMENT OF THIRD PARTY RIGHTS, REGARDING THIS SOFTWARE.
+ * IN NO EVENT SHALL MIPS BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT,
+ * INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES OF
+ * ANY KIND OR NATURE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT,
+ * THIS SOFTWARE AND/OR THE USE OF THIS SOFTWARE, WHETHER SUCH LIABILITY
+ * IS ASSERTED ON THE BASIS OF CONTRACT, TORT (INCLUDING NEGLIGENCE OR
+ * STRICT LIABILITY), OR OTHERWISE, EVEN IF MIPS HAS BEEN WARNED OF THE
+ * POSSIBILITY OF ANY SUCH LOSS OR DAMAGE IN ADVANCE.
+ *
+ * Authors: Korey L. Sewell
  */
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
 #define __ARCH_MIPS_UTILITY_HH__
-
+#include "config/full_system.hh"
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
@@ -48,11 +51,7 @@ class ThreadContext;
 
 namespace MipsISA {
 
-    inline uint64_t
-    getArgument(ThreadContext *tc, bool fp)
-    {
-        panic("getArgument() not implemented for MIPS\n");
-    }
+    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
     //Floating Point Utility Functions
     uint64_t fpConvert(ConvertType cvt_type, double fp_val);
@@ -67,14 +66,23 @@ namespace MipsISA {
     bool isQnan(void *val_ptr, int size);
     bool isSnan(void *val_ptr, int size);
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
-
     void startupCPU(ThreadContext *tc, int cpuId);
+
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        MiscReg Stat = tc->readMiscReg(MipsISA::Status);
+        MiscReg Dbg = tc->readMiscReg(MipsISA::Debug);
+
+        if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
+           && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
+           && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
+            // Unable to use Status_CU0, etc directly, using bitfields & masks
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     // Instruction address compression hooks
     static inline Addr realPCToFetchPC(const Addr &addr) {
@@ -96,18 +104,61 @@ namespace MipsISA {
         return 0;
     }
 
-    static inline ExtMachInst
-    makeExtMI(MachInst inst, ThreadContext * xc) {
-#if FULL_SYSTEM
-        ExtMachInst ext_inst = inst;
-        if (xc->readPC() && 0x1)
-            return ext_inst|=(static_cast<ExtMachInst>(xc->readPC() & 0x1) << 32);
-        else
-            return ext_inst;
-#else
-        return ExtMachInst(inst);
-#endif
+    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
+    {
+        return reg;
     }
+
+    int flattenIntIndex(ThreadContext * tc, int reg);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
+
+    template <class CPU>
+    void zeroRegisters(CPU *cpu);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    //  Translation stuff
+    //
+
+    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
+
+    // User Virtual
+    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
+
+    inline bool IsKSeg0(Addr a) { return KSeg0Base <= a && a <= KSeg0End; }
+
+    inline Addr KSeg02Phys(Addr addr) { return addr & KSeg0Mask; }
+
+    inline Addr KSeg12Phys(Addr addr) { return addr & KSeg1Mask; }
+
+    inline bool IsKSeg1(Addr a) { return KSeg1Base <= a && a <= KSeg1End; }
+
+    inline bool IsKSSeg(Addr a) { return KSSegBase <= a && a <= KSSegEnd; }
+
+    inline bool IsKSeg3(Addr a) { return KSeg3Base <= a && a <= KSeg3End; }
+
+    inline Addr
+    TruncPage(Addr addr)
+    { return addr & ~(PageBytes - 1); }
+
+    inline Addr
+    RoundPage(Addr addr)
+    { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
+
+    void initCPU(ThreadContext *tc, int cpuId);
+    void initIPRs(ThreadContext *tc, int cpuId);
+
+    /**
+     * Function to check for and process any interrupts.
+     * @param tc The thread context.
+     */
+    template <class TC>
+    void processInterrupts(TC *tc);
+
 };
 
 

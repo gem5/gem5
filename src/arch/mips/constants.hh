@@ -32,7 +32,6 @@
 #define __ARCH_MIPS_CONSTANTS_HH__
 
 #include "arch/mips/types.hh"
-//#include "config/full_system.hh"
 
 namespace MipsISA
 {

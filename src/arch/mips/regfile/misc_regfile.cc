@@ -26,18 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Korey Sewell
+ *          Jaidev Patwardhan
  */
 
 #include "base/bitfield.hh"
 
-#include "arch/mips/faults.hh"
-#include "arch/mips/mt.hh"
-#include "arch/mips/mt_constants.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
+#include "arch/mips/mt_constants.hh"
+#include "arch/mips/pra_constants.hh"
 
-#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-//#include "cpu/mixie/cpu.hh"
+#include "cpu/base.hh"
+#include "cpu/exetrace.hh"
 
 using namespace std;
 
@@ -99,6 +99,11 @@ MiscRegFile::init()
         bankType[i] = perProcessor;
     }
 
+    miscRegFile_WriteMask.resize(NumMiscRegs);
+
+    for (int i=0; i < NumMiscRegs; i++) {
+      miscRegFile_WriteMask[i].push_back(0);
+    }
     clear(0);
 }
 
@@ -107,6 +112,7 @@ MiscRegFile::clear(unsigned tid_or_vpn)
 {
     for(int i = 0; i < NumMiscRegs; i++) {
         miscRegFile[i][tid_or_vpn] = 0;
+        miscRegFile_WriteMask[i][tid_or_vpn] = (long unsigned int)(-1);
     }
 }
 
@@ -147,39 +153,195 @@ MiscRegFile::expandForMultithreading(unsigned num_threads, unsigned num_vpes)
     }
 
 }
+int MiscRegFile::getInstAsid()
+{
+  MiscReg Entry_Hi = readRegNoEffect(EntryHi);
+  return bits(Entry_Hi,EntryHi_ASID_HI,EntryHi_ASID_LO);
+}
 
+int MiscRegFile:: getDataAsid()
+{
+  MiscReg EHi = readRegNoEffect(EntryHi);
+  return bits(EHi,EntryHi_ASID_HI,EntryHi_ASID_LO);
+}
 //@TODO: Use MIPS STYLE CONSTANTS (e.g. TCHALT_H instead of TCH_H)
 void
 MiscRegFile::reset(std::string core_name, unsigned num_threads,
-                   unsigned num_vpes)
+                   unsigned num_vpes, BaseCPU *_cpu)
 {
+
     DPRINTF(MipsPRA, "Resetting CP0 State with %i TCs and %i VPEs\n",
             num_threads, num_vpes);
-
+    cpu = _cpu;
+    const BaseCPU::Params *p = _cpu->params;
     // Do Default CP0 initialization HERE
 
     // Do Initialization for MT cores here (eventually use
     // core_name parameter to toggle this initialization)
     // ===================================================
+    DPRINTF(MipsPRA, "Initializing CP0 State.... ");
+
+    MiscReg ProcID = readRegNoEffect(PRId);
+    replaceBits(ProcID,PRIdCoOp_HI,PRIdCoOp_LO,p->CP0_PRId_CompanyOptions);
+    replaceBits(ProcID,PRIdCoID_HI,PRIdCoID_LO,p->CP0_PRId_CompanyID);
+    replaceBits(ProcID,PRIdProc_ID_HI,PRIdProc_ID_LO,p->CP0_PRId_ProcessorID);
+    replaceBits(ProcID,PRIdRev_HI,PRIdRev_LO,p->CP0_PRId_Revision);
+    setRegNoEffect(PRId,ProcID);
+    // Now, create Write Mask for ProcID register
+    MiscReg ProcID_Mask = 0; // Read-Only register
+    replaceBits(ProcID_Mask,0,32,0);
+    setRegMask(PRId,ProcID_Mask);
+
     // Config
     MiscReg cfg = readRegNoEffect(Config);
-    replaceBits(cfg, CFG_M, 1);
+    replaceBits(cfg, Config_BE_HI, Config_BE_LO, p->CP0_Config_BE);
+    replaceBits(cfg, Config_AT_HI, Config_AT_LO, p->CP0_Config_AT);
+    replaceBits(cfg, Config_AR_HI, Config_AR_LO, p->CP0_Config_AR);
+    replaceBits(cfg, Config_MT_HI, Config_MT_LO, p->CP0_Config_MT);
+    replaceBits(cfg, Config_VI_HI, Config_VI_LO, p->CP0_Config_VI);
+    replaceBits(cfg, Config_M, 1);
     setRegNoEffect(Config, cfg);
+    // Now, create Write Mask for Config register
+    MiscReg cfg_Mask = 0x7FFF0007;
+    replaceBits(cfg_Mask,0,32,0);
+    setRegMask(Config,cfg_Mask);
 
     // Config1
     MiscReg cfg1 = readRegNoEffect(Config1);
-    replaceBits(cfg1, CFG1_M, 1);
+    replaceBits(cfg1, Config1_MMUSize_HI, Config1_MMUSize_LO, p->CP0_Config1_MMU);
+    replaceBits(cfg1, Config1_IS_HI, Config1_IS_LO, p->CP0_Config1_IS);
+    replaceBits(cfg1, Config1_IL_HI, Config1_IL_LO, p->CP0_Config1_IL);
+    replaceBits(cfg1, Config1_IA_HI, Config1_IA_LO, p->CP0_Config1_IA);
+    replaceBits(cfg1, Config1_DS_HI, Config1_DS_LO, p->CP0_Config1_DS);
+    replaceBits(cfg1, Config1_DL_HI, Config1_DL_LO, p->CP0_Config1_DL);
+    replaceBits(cfg1, Config1_DA_HI, Config1_DA_LO, p->CP0_Config1_DA);
+    replaceBits(cfg1, Config1_FP_HI, Config1_FP_LO, p->CP0_Config1_FP);
+    replaceBits(cfg1, Config1_EP_HI, Config1_EP_LO, p->CP0_Config1_EP);
+    replaceBits(cfg1, Config1_WR_HI, Config1_WR_LO, p->CP0_Config1_WR);
+    replaceBits(cfg1, Config1_MD_HI, Config1_MD_LO, p->CP0_Config1_MD);
+    replaceBits(cfg1, Config1_C2_HI, Config1_C2_LO, p->CP0_Config1_C2);
+    replaceBits(cfg1, Config1_PC_HI, Config1_PC_LO, p->CP0_Config1_PC);
+    replaceBits(cfg1, Config1_M, p->CP0_Config1_M);
     setRegNoEffect(Config1, cfg1);
+    // Now, create Write Mask for Config register
+    MiscReg cfg1_Mask = 0; // Read Only Register
+    replaceBits(cfg1_Mask,0,32,0);
+    setRegMask(Config1,cfg1_Mask);
 
     // Config2
     MiscReg cfg2 = readRegNoEffect(Config2);
-    replaceBits(cfg2, CFG2_M, 1);
+    replaceBits(cfg2, Config2_TU_HI, Config2_TU_LO, p->CP0_Config2_TU);
+    replaceBits(cfg2, Config2_TS_HI, Config2_TS_LO, p->CP0_Config2_TS);
+    replaceBits(cfg2, Config2_TL_HI, Config2_TL_LO, p->CP0_Config2_TL);
+    replaceBits(cfg2, Config2_TA_HI, Config2_TA_LO, p->CP0_Config2_TA);
+    replaceBits(cfg2, Config2_SU_HI, Config2_SU_LO, p->CP0_Config2_SU);
+    replaceBits(cfg2, Config2_SS_HI, Config2_SS_LO, p->CP0_Config2_SS);
+    replaceBits(cfg2, Config2_SL_HI, Config2_SL_LO, p->CP0_Config2_SL);
+    replaceBits(cfg2, Config2_SA_HI, Config2_SA_LO, p->CP0_Config2_SA);
+    replaceBits(cfg2, Config2_M, p->CP0_Config2_M);
     setRegNoEffect(Config2, cfg2);
+    // Now, create Write Mask for Config register
+    MiscReg cfg2_Mask = 0x7000F000; // Read Only Register
+    replaceBits(cfg2_Mask,0,32,0);
+    setRegMask(Config2,cfg2_Mask);
 
     // Config3
     MiscReg cfg3 = readRegNoEffect(Config3);
-    replaceBits(cfg3, CFG3_MT, 1);
+    replaceBits(cfg3, Config3_DSPP_HI, Config3_DSPP_LO, p->CP0_Config3_DSPP);
+    replaceBits(cfg3, Config3_LPA_HI, Config3_LPA_LO, p->CP0_Config3_LPA);
+    replaceBits(cfg3, Config3_VEIC_HI, Config3_VEIC_LO, p->CP0_Config3_VEIC);
+    replaceBits(cfg3, Config3_VINT_HI, Config3_VINT_LO, p->CP0_Config3_VInt);
+    replaceBits(cfg3, Config3_SP_HI, Config3_SP_LO, p->CP0_Config3_SP);
+    replaceBits(cfg3, Config3_MT_HI, Config3_MT_LO, p->CP0_Config3_MT);
+    replaceBits(cfg3, Config3_SM_HI, Config3_SM_LO, p->CP0_Config3_SM);
+    replaceBits(cfg3, Config3_TL_HI, Config3_TL_LO, p->CP0_Config3_TL);
     setRegNoEffect(Config3, cfg3);
+    // Now, create Write Mask for Config register
+    MiscReg cfg3_Mask = 0; // Read Only Register
+    replaceBits(cfg3_Mask,0,32,0);
+    setRegMask(Config3,cfg3_Mask);
+
+    // EBase - CPUNum
+    MiscReg EB = readRegNoEffect(EBase);
+    replaceBits(EB, EBase_CPUNum_HI, EBase_CPUNum_LO, p->CP0_EBase_CPUNum);
+    replaceBits(EB, 31, 31, 1);
+    setRegNoEffect(EBase, EB);
+    // Now, create Write Mask for Config register
+    MiscReg EB_Mask = 0x3FFFF000;// Except Exception Base, the
+                                 // entire register is read only
+    replaceBits(EB_Mask,0,32,0);
+    setRegMask(EBase,EB_Mask);
+
+    // SRS Control - HSS (Highest Shadow Set)
+    MiscReg SC = readRegNoEffect(SRSCtl);
+    replaceBits(SC, SRSCtl_HSS_HI,SRSCtl_HSS_LO,p->CP0_SrsCtl_HSS);
+    setRegNoEffect(SRSCtl, SC);
+    // Now, create Write Mask for the SRS Ctl register
+    MiscReg SC_Mask = 0x0000F3C0;
+    replaceBits(SC_Mask,0,32,0);
+    setRegMask(SRSCtl,SC_Mask);
+
+    // IntCtl - IPTI, IPPCI
+    MiscReg IC = readRegNoEffect(IntCtl);
+    replaceBits(IC, IntCtl_IPTI_HI,IntCtl_IPTI_LO,p->CP0_IntCtl_IPTI);
+    replaceBits(IC, IntCtl_IPPCI_HI,IntCtl_IPPCI_LO,p->CP0_IntCtl_IPPCI);
+    setRegNoEffect(IntCtl, IC);
+    // Now, create Write Mask for the IntCtl register
+    MiscReg IC_Mask = 0x000003E0;
+    replaceBits(IC_Mask,0,32,0);
+    setRegMask(IntCtl,IC_Mask);
+
+    // Watch Hi - M - FIXME (More than 1 Watch register)
+    MiscReg WHi = readRegNoEffect(WatchHi0);
+    replaceBits(WHi, WatchHi_M, p->CP0_WatchHi_M);
+    setRegNoEffect(WatchHi0, WHi);
+    // Now, create Write Mask for the IntCtl register
+    MiscReg wh_Mask = 0x7FFF0FFF;
+    replaceBits(wh_Mask,0,32,0);
+    setRegMask(WatchHi0,wh_Mask);
+
+    // Perf Ctr - M - FIXME (More than 1 PerfCnt Pair)
+    MiscReg PCtr = readRegNoEffect(PerfCnt0);
+    replaceBits(PCtr, PerfCntCtl_M, p->CP0_PerfCtr_M);
+    replaceBits(PCtr, PerfCntCtl_W, p->CP0_PerfCtr_W);
+    setRegNoEffect(PerfCnt0, PCtr);
+    // Now, create Write Mask for the IntCtl register
+    MiscReg pc_Mask = 0x00007FF;
+    replaceBits(pc_Mask,0,32,0);
+    setRegMask(PerfCnt0,pc_Mask);
+
+    // Random
+    MiscReg random = readRegNoEffect(CP0_Random);
+    random = 63;
+    setRegNoEffect(CP0_Random, random);
+    // Now, create Write Mask for the IntCtl register
+    MiscReg random_Mask = 0;
+    replaceBits(random_Mask,0,32,0);
+    setRegMask(CP0_Random,random_Mask);
+
+    // PageGrain
+    MiscReg pagegrain = readRegNoEffect(PageGrain);
+    replaceBits(pagegrain,PageGrain_ESP,p->CP0_Config3_SP);
+    setRegNoEffect(PageGrain, pagegrain);
+    // Now, create Write Mask for the IntCtl register
+    MiscReg pg_Mask = 0x10000000;
+    replaceBits(pg_Mask,0,32,0);
+    setRegMask(PageGrain,pg_Mask);
+
+    // Status
+    MiscReg stat = readRegNoEffect(Status);
+    // Only CU0 and IE are modified on a reset - everything else needs to be controlled
+       // on a per CPU model basis
+    //    replaceBits(stat, Status_CU0_HI,Status_CU0_LO, 1); // Enable CP0 on reset
+
+    replaceBits(stat, Status_ERL_HI, Status_ERL_LO, 1); // Enable ERL bit on a reset
+    replaceBits(stat, Status_BEV_HI, Status_BEV_LO, 1); // Enable BEV bit on a reset
+    setRegNoEffect(Status, stat);
+    // Now, create Write Mask for the Status register
+    MiscReg stat_Mask = 0xFF78FF17;
+    replaceBits(stat_Mask,0,32,0);
+    setRegMask(Status,stat_Mask);
+
 
     // MVPConf0
     MiscReg mvp_conf0 = readRegNoEffect(MVPConf0);
@@ -199,7 +361,6 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
         replaceBits(tc_bind, TCB_CUR_TC_HI, TCB_CUR_TC_LO, tid);
         setRegNoEffect(TCBind, tc_bind, tid);
     }
-
     // TCHalt
     MiscReg tc_halt = readRegNoEffect(TCHalt);
     replaceBits(tc_halt, TCH_H, 0);
@@ -218,11 +379,41 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
     setRegNoEffect(TCStatus, tc_status);
 
     // Set Dynamically Allocatable bit to 1 for all other threads
-    for (int tid = 0; tid < num_threads; tid++) {
+    for (int tid = 1; tid < num_threads; tid++) {
         tc_status = readRegNoEffect(TCStatus, tid);
         replaceBits(tc_status, TCSTATUS_DA, 1);
         setRegNoEffect(TCStatus, tc_status, tid);
     }
+
+
+    MiscReg Mask = 0x7FFFFFFF;
+
+    // Now, create Write Mask for the Index register
+    replaceBits(Mask,0,32,0);
+    setRegMask(Index,Mask);
+
+    Mask = 0x3FFFFFFF;
+    replaceBits(Mask,0,32,0);
+    setRegMask(EntryLo0,Mask);
+    setRegMask(EntryLo1,Mask);
+
+    Mask = 0xFF800000;
+    replaceBits(Mask,0,32,0);
+    setRegMask(Context,Mask);
+
+    Mask = 0x1FFFF800;
+    replaceBits(Mask,0,32,0);
+    setRegMask(PageMask,Mask);
+
+    Mask = 0x0;
+    replaceBits(Mask,0,32,0);
+    setRegMask(BadVAddr,Mask);
+    setRegMask(LLAddr,Mask);
+
+    Mask = 0x08C00300;
+    replaceBits(Mask,0,32,0);
+    setRegMask(Cause,Mask);
+
 }
 
 inline std::string
@@ -234,30 +425,34 @@ MipsISA::getMiscRegName(unsigned reg_idx)
 inline unsigned
 MiscRegFile::getVPENum(unsigned tid)
 {
-    unsigned tc_bind = miscRegFile[TCBind][tid];
+    unsigned tc_bind = miscRegFile[TCBind - Ctrl_Base_DepTag][tid];
     return bits(tc_bind, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO);
 }
 
 MiscReg
-MiscRegFile::readRegNoEffect(int misc_reg, unsigned tid)
+MiscRegFile::readRegNoEffect(int reg_idx, unsigned tid)
 {
+    int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
-
+    DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) (%lx).\n",
+            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),miscRegFile[misc_reg][reg_sel]);
     return miscRegFile[misc_reg][reg_sel];
 }
 
 //@TODO: MIPS MT's register view automatically connects
 //       Status to TCStatus depending on current thread
+//template <class TC>
 MiscReg
-MiscRegFile::readReg(int misc_reg,
+MiscRegFile::readReg(int reg_idx,
                                ThreadContext *tc,  unsigned tid)
 {
-    DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) with effect.\n",
-            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg));
-
+    int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
+    DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
+            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),miscRegFile[misc_reg][reg_sel]);
+
 
     switch (misc_reg)
     {
@@ -267,35 +462,61 @@ MiscRegFile::readReg(int misc_reg,
 }
 
 void
-MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
+MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, unsigned tid)
 {
+    int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
+    DPRINTF(MipsPRA, "[tid:%i]: Setting (direct set) CP0 Register:%u Select:%u (%s) to %#x.\n",
+            tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
 
     miscRegFile[misc_reg][reg_sel] = val;
+}
+void
+MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, unsigned tid)
+{
+  //  return;
+  int misc_reg = reg_idx - Ctrl_Base_DepTag;
+    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+        ? tid : getVPENum(tid);
+    DPRINTF(MipsPRA,"[tid:%i]: Setting CP0 Register: %u Select: %u (%s) to %#x\n",tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
+    miscRegFile_WriteMask[misc_reg][reg_sel] = val;
 }
 
 // PROGRAMMER'S NOTES:
 // (1) Some CP0 Registers have fields that cannot
 // be overwritten. Make sure to handle those particular registers
 // with care!
+//template <class TC>
 void
-MiscRegFile::setReg(int misc_reg, const MiscReg &val,
+MiscRegFile::setReg(int reg_idx, const MiscReg &val,
                               ThreadContext *tc, unsigned tid)
 {
-    unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
+    int misc_reg = reg_idx - Ctrl_Base_DepTag;
+    int reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
 
     DPRINTF(MipsPRA, "[tid:%i]: Setting CP0 Register:%u Select:%u (%s) to %#x, with effect.\n",
             tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
 
-    MiscReg cp0_val = filterCP0Write(misc_reg, val);
+    MiscReg cp0_val = filterCP0Write(misc_reg, reg_sel, val);
 
     miscRegFile[misc_reg][reg_sel] = cp0_val;
 
-    scheduleCP0Update();
+    scheduleCP0Update(1);
 }
-
+/** This method doesn't need to adjust the Control Register Offset since
+    it has already been done in the calling method (setRegWithEffect) */
+MiscReg MiscRegFile::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
+{
+  MiscReg retVal = val;
+  retVal &= miscRegFile_WriteMask[misc_reg][reg_sel]; // Mask off read-only regions
+  MiscReg curVal = miscRegFile[misc_reg][reg_sel];
+  curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]); // Mask off current alue with inverse mask (clear writeable bits)
+  retVal |= curVal; // Combine the two
+  DPRINTF(MipsPRA,"filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, current val: %lx, written val: %x\n",miscRegFile_WriteMask[misc_reg][reg_sel],~miscRegFile_WriteMask[misc_reg][reg_sel],val,miscRegFile[misc_reg][reg_sel],retVal);
+  return retVal;
+}
 void
 MiscRegFile::scheduleCP0Update(int delay)
 {
@@ -357,7 +578,7 @@ MiscRegFile::CP0Event::process()
 const char *
 MiscRegFile::CP0Event::description()
 {
-    return "Coprocessor-0";
+    return "Coprocessor-0 event";
 }
 
 void

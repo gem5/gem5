@@ -378,6 +378,12 @@ class BaseSimpleCPU : public BaseCPU
               "register access.\n");
      }
 
+    void setShadowSet(int css) {
+        panic("Simple CPU models do not support Shadow Sets");
+        //tc->setShadowSet(css);
+    }
+
+    Fault CacheOp(uint8_t Op, Addr EA);
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }

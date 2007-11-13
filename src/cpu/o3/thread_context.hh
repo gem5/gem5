@@ -236,6 +236,7 @@ class O3ThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     virtual bool misspeculating() { return false; }
 
+    virtual void setShadowSet(int ss) { };
 #if !FULL_SYSTEM
     /** Gets a syscall argument by index. */
     virtual IntReg getSyscallArg(int i);

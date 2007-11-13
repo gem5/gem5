@@ -1,36 +1,41 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright N) 2007 MIPS Technologies, Inc.  All Rights Reserved
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ * This software is part of the M5 simulator.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS IS A LEGAL AGREEMENT.  BY DOWNLOADING, USING, COPYING, CREATING
+ * DERIVATIVE WORKS, AND/OR DISTRIBUTING THIS SOFTWARE YOU ARE AGREEING
+ * TO THESE TERMS AND CONDITIONS.
  *
- * Authors: Korey Sewell
+ * Permission is granted to use, copy, create derivative works and
+ * distribute this software and such derivative works for any purpose,
+ * so long as (1) the copyright notice above, this grant of permission,
+ * and the disclaimer below appear in all copies and derivative works
+ * made, (2) the copyright notice above is augmented as appropriate to
+ * reflect the addition of any new copyrightable work in a derivative
+ * work (e.g., Copyright N) <Publication Year> Copyright Owner), and (3)
+ * the name of MIPS Technologies, Inc. ($(B!H(BMIPS$(B!I(B) is not used in any
+ * advertising or publicity pertaining to the use or distribution of
+ * this software without specific, written prior authorization.
+ *
+ * THIS SOFTWARE IS PROVIDED $(B!H(BAS IS.$(B!I(B  MIPS MAKES NO WARRANTIES AND
+ * DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
+ * OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+ * NON-INFRINGEMENT OF THIRD PARTY RIGHTS, REGARDING THIS SOFTWARE.
+ * IN NO EVENT SHALL MIPS BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT,
+ * INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES OF
+ * ANY KIND OR NATURE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT,
+ * THIS SOFTWARE AND/OR THE USE OF THIS SOFTWARE, WHETHER SUCH LIABILITY
+ * IS ASSERTED ON THE BASIS OF CONTRACT, TORT (INCLUDING NEGLIGENCE OR
+ * STRICT LIABILITY), OR OTHERWISE, EVEN IF MIPS HAS BEEN WARNED OF THE
+ * POSSIBILITY OF ANY SUCH LOSS OR DAMAGE IN ADVANCE.
+ *
+ * Authors: Korey L. Sewell
  */
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"
-#include "arch/mips/constants.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
@@ -38,11 +43,42 @@
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 
+#if FULL_SYSTEM
+#include "arch/mips/vtophys.hh"
+#include "mem/vport.hh"
+#endif
+
+
 using namespace MipsISA;
 using namespace std;
 
+namespace MipsISA {
+
 uint64_t
-MipsISA::fpConvert(ConvertType cvt_type, double fp_val)
+getArgument(ThreadContext *tc, int number, bool fp)
+{
+#if FULL_SYSTEM
+    if (number < NumArgumentRegs) {
+        if (fp)
+            return tc->readFloatRegBits(ArgumentReg[number]);
+        else
+            return tc->readIntReg(ArgumentReg[number]);
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        VirtualPort *vp = tc->getVirtPort(tc);
+        uint64_t arg = vp->read<uint64_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint64_t));
+        tc->delVirtPort(vp);
+        return arg;
+    }
+#else
+    panic("getArgument() is Full system only\n");
+    M5_DUMMY_RETURN
+#endif
+}
+
+uint64_t
+fpConvert(ConvertType cvt_type, double fp_val)
 {
 
     switch (cvt_type)
@@ -86,7 +122,7 @@ MipsISA::fpConvert(ConvertType cvt_type, double fp_val)
 }
 
 double
-MipsISA::roundFP(double val, int digits)
+roundFP(double val, int digits)
 {
     double digit_offset = pow(10.0,digits);
     val = val * digit_offset;
@@ -97,14 +133,14 @@ MipsISA::roundFP(double val, int digits)
 }
 
 double
-MipsISA::truncFP(double val)
+truncFP(double val)
 {
     int trunc_val = (int) val;
     return (double) trunc_val;
 }
 
 bool
-MipsISA::getCondCode(uint32_t fcsr, int cc_idx)
+getCondCode(uint32_t fcsr, int cc_idx)
 {
     int shift = (cc_idx == 0) ? 23 : cc_idx + 24;
     bool cc_val = (fcsr >> shift) & 0x00000001;
@@ -112,7 +148,7 @@ MipsISA::getCondCode(uint32_t fcsr, int cc_idx)
 }
 
 uint32_t
-MipsISA::genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
+genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 {
     int cc_idx = (cc_num == 0) ? 23 : cc_num + 24;
 
@@ -124,7 +160,7 @@ MipsISA::genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 }
 
 uint32_t
-MipsISA::genInvalidVector(uint32_t fcsr_bits)
+genInvalidVector(uint32_t fcsr_bits)
 {
     //Set FCSR invalid in "flag" field
     int invalid_offset = Invalid + Flag_Field;
@@ -138,7 +174,7 @@ MipsISA::genInvalidVector(uint32_t fcsr_bits)
 }
 
 bool
-MipsISA::isNan(void *val_ptr, int size)
+isNan(void *val_ptr, int size)
 {
     switch (size)
     {
@@ -161,7 +197,7 @@ MipsISA::isNan(void *val_ptr, int size)
 
 
 bool
-MipsISA::isQnan(void *val_ptr, int size)
+isQnan(void *val_ptr, int size)
 {
     switch (size)
     {
@@ -183,7 +219,7 @@ MipsISA::isQnan(void *val_ptr, int size)
 }
 
 bool
-MipsISA::isSnan(void *val_ptr, int size)
+isSnan(void *val_ptr, int size)
 {
     switch (size)
     {
@@ -204,8 +240,40 @@ MipsISA::isSnan(void *val_ptr, int size)
     }
 }
 
-void
-MipsISA::startupCPU(ThreadContext *tc, int cpuId)
+int
+flattenIntIndex(ThreadContext * tc, int reg)
 {
-        tc->activate(0);
+    return reg;
 }
+
+
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Regs Not Implemented Yet\n");
+}
+
+void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Misc. Regs Not Implemented Yet\n");
+}
+
+template <class CPU>
+void
+zeroRegisters(CPU *cpu)
+{
+    // Insure ISA semantics
+    // (no longer very clean due to the change in setIntReg() in the
+    // cpu model.  Consider changing later.)
+    cpu->thread->setIntReg(ZeroReg, 0);
+    cpu->thread->setFloatReg(ZeroReg, 0.0);
+}
+
+void
+startupCPU(ThreadContext *tc, int cpuId)
+{
+    tc->activate(0/*tc->getThreadNum()*/);
+}
+
+} // namespace MipsISA

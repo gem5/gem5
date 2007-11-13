@@ -1,33 +1,39 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2006 The Regents of The University of Michigan
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met: redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer;
-// redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution;
-// neither the name of the copyright holders nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Authors: Steve Reinhardt
-//          Korey Sewell
+// Copyright © 2007 MIPS Technologies, Inc.  All Rights Reserved
+
+//  This software is part of the M5 simulator.
+
+//  THIS IS A LEGAL AGREEMENT.  BY DOWNLOADING, USING, COPYING, CREATING
+//  DERIVATIVE WORKS, AND/OR DISTRIBUTING THIS SOFTWARE YOU ARE AGREEING
+//  TO THESE TERMS AND CONDITIONS.
+
+//  Permission is granted to use, copy, create derivative works and
+//  distribute this software and such derivative works for any purpose,
+//  so long as (1) the copyright notice above, this grant of permission,
+//  and the disclaimer below appear in all copies and derivative works
+//  made, (2) the copyright notice above is augmented as appropriate to
+//  reflect the addition of any new copyrightable work in a derivative
+//  work (e.g., Copyright © <Publication Year> Copyright Owner), and (3)
+//  the name of MIPS Technologies, Inc. (“MIPS”) is not used in any
+//  advertising or publicity pertaining to the use or distribution of
+//  this software without specific, written prior authorization.
+
+//  THIS SOFTWARE IS PROVIDED “AS IS.”  MIPS MAKES NO WARRANTIES AND
+//  DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
+//  OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+//  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+//  NON-INFRINGEMENT OF THIRD PARTY RIGHTS, REGARDING THIS SOFTWARE.
+//  IN NO EVENT SHALL MIPS BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT,
+//  INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES OF
+//  ANY KIND OR NATURE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT,
+//  THIS SOFTWARE AND/OR THE USE OF THIS SOFTWARE, WHETHER SUCH LIABILITY
+//  IS ASSERTED ON THE BASIS OF CONTRACT, TORT (INCLUDING NEGLIGENCE OR
+//  STRICT LIABILITY), OR OTHERWISE, EVEN IF MIPS HAS BEEN WARNED OF THE
+//  POSSIBILITY OF ANY SUCH LOSS OR DAMAGE IN ADVANCE.
+
+//Authors: Steve Reinhardt
+//         Korey L. Sewell
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -117,19 +123,19 @@ output exec {{
     /** return data in cases where there the size of data is only
         known in the packet
     */
-    uint64_t getStoreData(%(CPU_exec_context)s *xc, Packet *packet) {
+    uint64_t getMemData(%(CPU_exec_context)s *xc, Packet *packet) {
         switch (packet->getSize())
         {
-          case 8:
+          case 1:
             return packet->get<uint8_t>();
 
-          case 16:
+          case 2:
             return packet->get<uint16_t>();
 
-          case 32:
+          case 4:
             return packet->get<uint32_t>();
 
-          case 864:
+          case 8:
             return packet->get<uint64_t>();
 
           default:
@@ -204,6 +210,15 @@ def template MemAccSizeDeclare {{
     int memAccSize(%(CPU_exec_context)s *xc);
 }};
 
+
+def template MiscMemAccSize {{
+    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
+    {
+        panic("Misc instruction does not support split access method!");
+        return 0;
+    }
+}};
+
 def template EACompConstructor {{
     /** TODO: change op_class to AddrGenOp or something (requires
      * creating new member of OpClass enum in op_class.hh, updating
@@ -243,7 +258,13 @@ def template EACompExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
+        if (this->isFloating()) {
+            %(fp_enable_check)s;
+
+            if(fault != NoFault)
+                return fault;
+        }
+
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -257,13 +278,46 @@ def template EACompExecute {{
     }
 }};
 
+def template LoadStoreFPEACompExecute {{
+    Fault
+    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        if(fault != NoFault)
+          return fault;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        // NOTE: Trace Data is written using execute or completeAcc templates
+        if (fault == NoFault) {
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+
 def template LoadMemAccExecute {{
     Fault
     %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
                                    Trace::InstRecord *traceData) const
     {
         Addr EA;
+
         Fault fault = NoFault;
+
+        if (this->isFloating()) {
+            %(fp_enable_check)s;
+
+            if(fault != NoFault)
+                return fault;
+        }
 
         %(op_decl)s;
         %(op_rd)s;
@@ -288,7 +342,13 @@ def template LoadExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
+        if (this->isFloating()) {
+            %(fp_enable_check)s;
+
+            if(fault != NoFault)
+                return fault;
+        }
+
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -314,7 +374,13 @@ def template LoadInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
+        if (this->isFloating()) {
+            %(fp_enable_check)s;
+
+            if(fault != NoFault)
+                return fault;
+        }
+
         %(op_src_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -334,7 +400,13 @@ def template LoadCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
+        if (this->isFloating()) {
+            %(fp_enable_check)s;
+
+            if(fault != NoFault)
+                return fault;
+        }
+
         %(op_decl)s;
         %(op_rd)s;
 
@@ -351,7 +423,6 @@ def template LoadCompleteAcc {{
         return fault;
     }
 }};
-
 
 
 def template LoadStoreMemAccSize {{
@@ -461,6 +532,43 @@ def template StoreExecute {{
     }
 }};
 
+
+def template StoreFPExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        if(fault != NoFault)
+          return fault;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                              memAccessFlags, NULL);
+            if (traceData) { traceData->setData(Mem); }
+        }
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
 def template StoreCondExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
@@ -540,7 +648,31 @@ def template StoreCompleteAcc {{
         if (fault == NoFault) {
             %(op_wb)s;
 
-            if (traceData) { traceData->setData(getStoreData(xc, pkt)); }
+            if (traceData) { traceData->setData(getMemData(xc, pkt)); }
+        }
+
+        return fault;
+    }
+}};
+
+
+def template StoreCompleteAcc {{
+    Fault %(class_name)s::completeAcc(Packet *pkt,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_dest_decl)s;
+
+        if (fault == NoFault) {
+            %(postacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+
+            if (traceData) { traceData->setData(getMemData(xc, pkt)); }
         }
 
         return fault;
@@ -650,6 +782,7 @@ def format LoadMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                       exec_template_base = 'Load')
 }};
 
+
 def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
                      mem_flags = [], inst_flags = []) {{
     (header_output, decoder_output, decode_block, exec_output) = \
@@ -659,6 +792,7 @@ def format StoreMemory(memacc_code, ea_code = {{ EA = Rs + disp; }},
 
 def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
+    inst_flags += ['IsIndexed']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       decode_template = ImmNopCheckDecode,
@@ -667,10 +801,29 @@ def format LoadIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 
 def format StoreIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
                      mem_flags = [], inst_flags = []) {{
+    inst_flags += ['IsIndexed']
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                       exec_template_base = 'Store')
 }};
+
+def format LoadFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
+                     mem_flags = [], inst_flags = []) {{
+    inst_flags += ['IsIndexed', 'IsFloating']
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      decode_template = ImmNopCheckDecode,
+                      exec_template_base = 'Load')
+}};
+
+def format StoreFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
+                     mem_flags = [], inst_flags = []) {{
+    inst_flags += ['IsIndexed', 'IsFloating']
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                      exec_template_base = 'Store')
+}};
+
 
 def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
                      mem_flags = [], inst_flags = []) {{

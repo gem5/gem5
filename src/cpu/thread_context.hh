@@ -238,6 +238,8 @@ class ThreadContext
 
     virtual void setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid) { };
 
+    virtual void setShadowSet(int css) = 0;
+
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() = 0;
@@ -406,6 +408,10 @@ class ProxyThreadContext : public ThreadContext
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
+
+    void setShadowSet(int css){
+      return actualTC->setShadowSet(css);
+    }
 
     uint64_t readPC() { return actualTC->readPC(); }
 

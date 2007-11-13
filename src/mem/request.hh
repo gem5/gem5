@@ -75,6 +75,8 @@ const uint32_t INST_READ        = 0x80000;
 /** This request is for a memory swap. */
 const uint32_t MEM_SWAP         = 0x100000;
 const uint32_t MEM_SWAP_COND    = 0x200000;
+/** The request should ignore unaligned access faults */
+const uint32_t NO_HALF_WORD_ALIGN_FAULT = 0x400000;
 
 
 class Request : public FastAlloc
@@ -272,6 +274,10 @@ class Request : public FastAlloc
 
     bool isCondSwap() { return (getFlags() & MEM_SWAP_COND) != 0; }
 
+    bool inline isMisaligned() {return (!(getFlags() & NO_ALIGN_FAULT) &&
+                                        ((vaddr & 1)  ||
+                                         (!(getFlags() & NO_HALF_WORD_ALIGN_FAULT)
+                                          && (vaddr & 0x2))));}
 
     friend class Packet;
 };

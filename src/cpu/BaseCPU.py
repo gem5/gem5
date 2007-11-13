@@ -44,7 +44,7 @@ elif build_env['TARGET_ISA'] == 'sparc':
 elif build_env['TARGET_ISA'] == 'x86':
     from X86TLB import X86DTB, X86ITB
 elif build_env['TARGET_ISA'] == 'mips':
-    from MipsTLB import MipsDTB, MipsITB
+    from MipsTLB import MipsTLB,MipsDTB, MipsITB, MipsUTB
 
 class BaseCPU(SimObject):
     type = 'BaseCPU'
@@ -72,8 +72,10 @@ class BaseCPU(SimObject):
         dtb = Param.X86DTB(X86DTB(), "Data TLB")
         itb = Param.X86ITB(X86ITB(), "Instruction TLB")
     elif build_env['TARGET_ISA'] == 'mips':
+        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
         itb = Param.MipsITB(MipsITB(), "Instruction TLB")
+        tlb = Param.MipsUTB(MipsUTB(), "Unified TLB")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             build_env['TARGET_ISA']
@@ -120,3 +122,59 @@ class BaseCPU(SimObject):
         self.l2cache = l2c
         self.l2cache.cpu_side = self.toL2Bus.port
         self._mem_ports = ['l2cache.mem_side']
+
+    if build_env['TARGET_ISA'] == 'mips':
+        CP0_IntCtl_IPTI = Param.Unsigned(0,"No Description")
+        CP0_IntCtl_IPPCI = Param.Unsigned(0,"No Description")
+        CP0_SrsCtl_HSS = Param.Unsigned(0,"No Description")
+        CP0_EBase_CPUNum = Param.Unsigned(0,"No Description")
+        CP0_PRId_CompanyOptions = Param.Unsigned(0,"Company Options in Processor ID Register")
+        CP0_PRId_CompanyID = Param.Unsigned(0,"Company Identifier in Processor ID Register")
+        CP0_PRId_ProcessorID = Param.Unsigned(1,"Processor ID (0=>Not MIPS32/64 Processor, 1=>MIPS, 2-255 => Other Company")
+        CP0_PRId_Revision = Param.Unsigned(0,"Processor Revision Number in Processor ID Register")
+        CP0_Config_BE = Param.Unsigned(0,"Big Endian?")
+        CP0_Config_AT = Param.Unsigned(0,"No Description")
+        CP0_Config_AR = Param.Unsigned(0,"No Description")
+        CP0_Config_MT = Param.Unsigned(0,"No Description")
+        CP0_Config_VI = Param.Unsigned(0,"No Description")
+        CP0_Config1_M = Param.Unsigned(0,"Config2 Implemented?")
+        CP0_Config1_MMU = Param.Unsigned(0,"MMU Type")
+        CP0_Config1_IS = Param.Unsigned(0,"No Description")
+        CP0_Config1_IL = Param.Unsigned(0,"No Description")
+        CP0_Config1_IA = Param.Unsigned(0,"No Description")
+        CP0_Config1_DS = Param.Unsigned(0,"No Description")
+        CP0_Config1_DL = Param.Unsigned(0,"No Description")
+        CP0_Config1_DA = Param.Unsigned(0,"No Description")
+        CP0_Config1_C2 = Param.Bool(False,"No Description")
+        CP0_Config1_MD = Param.Bool(False,"No Description")
+        CP0_Config1_PC = Param.Bool(False,"No Description")
+        CP0_Config1_WR = Param.Bool(False,"No Description")
+        CP0_Config1_CA = Param.Bool(False,"No Description")
+        CP0_Config1_EP = Param.Bool(False,"No Description")
+        CP0_Config1_FP = Param.Bool(False,"FPU Implemented?")
+        CP0_Config2_M = Param.Bool(False,"Config3 Implemented?")
+        CP0_Config2_TU = Param.Unsigned(0,"No Description")
+        CP0_Config2_TS = Param.Unsigned(0,"No Description")
+        CP0_Config2_TL = Param.Unsigned(0,"No Description")
+        CP0_Config2_TA = Param.Unsigned(0,"No Description")
+        CP0_Config2_SU = Param.Unsigned(0,"No Description")
+        CP0_Config2_SS = Param.Unsigned(0,"No Description")
+        CP0_Config2_SL = Param.Unsigned(0,"No Description")
+        CP0_Config2_SA = Param.Unsigned(0,"No Description")
+        CP0_Config3_M = Param.Bool(False,"Config4 Implemented?")
+        CP0_Config3_DSPP = Param.Bool(False,"DSP Extensions Present?")
+        CP0_Config3_LPA = Param.Bool(False,"No Description")
+        CP0_Config3_VEIC = Param.Bool(False,"No Description")
+        CP0_Config3_VInt = Param.Bool(False,"No Description")
+        CP0_Config3_SP = Param.Bool(False,"No Description")
+        CP0_Config3_MT = Param.Bool(False,"Multithreading Extensions Present?")
+        CP0_Config3_SM = Param.Bool(False,"No Description")
+        CP0_Config3_TL = Param.Bool(False,"No Description")
+        CP0_WatchHi_M = Param.Bool(False,"No Description")
+        CP0_PerfCtr_M = Param.Bool(False,"No Description")
+        CP0_PerfCtr_W = Param.Bool(False,"No Description")
+        CP0_PRId = Param.Unsigned(0,"CP0 Status Register")
+        CP0_Config = Param.Unsigned(0,"CP0 Config Register")
+        CP0_Config1 = Param.Unsigned(0,"CP0 Config1 Register")
+        CP0_Config2 = Param.Unsigned(0,"CP0 Config2 Register")
+        CP0_Config3 = Param.Unsigned(0,"CP0 Config3 Register")

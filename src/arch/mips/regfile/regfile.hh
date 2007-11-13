@@ -32,147 +32,71 @@
 #define __ARCH_MIPS_REGFILE_REGFILE_HH__
 
 #include "arch/mips/types.hh"
+#include "arch/mips/isa_traits.hh"
+//#include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/float_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
+//#include "cpu/base.hh"
 #include "sim/faults.hh"
 
 class Checkpoint;
-class ThreadContext;
+class BaseCPU;
 
 namespace MipsISA
 {
     class RegFile {
       protected:
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
-
-      public:
-        void clear()
-        {
-            intRegFile.clear();
-            floatRegFile.clear();
-            miscRegFile.clear();
-        }
-
-        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes)
-        {
-            bzero(&intRegFile, sizeof(intRegFile));
-            bzero(&floatRegFile, sizeof(floatRegFile));
-            miscRegFile.reset(core_name, num_threads, num_vpes);
-        }
-
-        IntReg readIntReg(int intReg)
-        {
-            return intRegFile.readReg(intReg);
-        }
-
-        Fault setIntReg(int intReg, const IntReg &val)
-        {
-            return intRegFile.setReg(intReg, val);
-        }
-
-        MiscReg readMiscRegNoEffect(int miscReg, unsigned tid = 0)
-        {
-            return miscRegFile.readRegNoEffect(miscReg, tid);
-        }
-
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc,
-                                      unsigned tid = 0)
-        {
-            return miscRegFile.readReg(miscReg, tc, tid);
-        }
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid = 0)
-        {
-            miscRegFile.setRegNoEffect(miscReg, val, tid);
-        }
-
-        void setMiscReg(int miscReg, const MiscReg &val,
-                ThreadContext * tc, unsigned tid = 0)
-        {
-            miscRegFile.setReg(miscReg, val, tc, tid);
-        }
-
-        FloatRegVal readFloatReg(int floatReg)
-        {
-            return floatRegFile.readReg(floatReg,SingleWidth);
-        }
-
-        FloatRegVal readFloatReg(int floatReg, int width)
-        {
-            return floatRegFile.readReg(floatReg,width);
-        }
-
-        FloatRegBits readFloatRegBits(int floatReg)
-        {
-            return floatRegFile.readRegBits(floatReg,SingleWidth);
-        }
-
-        FloatRegBits readFloatRegBits(int floatReg, int width)
-        {
-            return floatRegFile.readRegBits(floatReg,width);
-        }
-
-        Fault setFloatReg(int floatReg, const FloatRegVal &val)
-        {
-            return floatRegFile.setReg(floatReg, val, SingleWidth);
-        }
-
-        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width)
-        {
-            return floatRegFile.setReg(floatReg, val, width);
-        }
-
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val)
-        {
-            return floatRegFile.setRegBits(floatReg, val, SingleWidth);
-        }
-
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-        {
-            return floatRegFile.setRegBits(floatReg, val, width);
-        }
-
-      protected:
-
         Addr pc;			// program counter
         Addr npc;			// next-cycle program counter
         Addr nnpc;			// next-next-cycle program counter
                                         // used to implement branch delay slot
                                         // not real register
 
+        IntRegFile intRegFile;		// (signed) integer register file
+        FloatRegFile floatRegFile;	// floating point register file
+        MiscRegFile miscRegFile;	// control register file
+
       public:
-        Addr readPC()
-        {
-            return pc;
-        }
+        void clear();
+        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes, BaseCPU *_cpu);
+        MiscRegFile *getMiscRegFilePtr();
 
-        void setPC(Addr val)
-        {
-            pc = val;
-        }
+        IntReg readIntReg(int intReg);
+        Fault setIntReg(int intReg, const IntReg &val);
 
-        Addr readNextPC()
-        {
-            return npc;
-        }
 
-        void setNextPC(Addr val)
-        {
-            npc = val;
-        }
+        MiscReg readMiscRegNoEffect(int miscReg, unsigned tid = 0);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc,
+                            unsigned tid = 0);
+        void setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid = 0);
+        void setMiscReg(int miscReg, const MiscReg &val,
+                        ThreadContext * tc, unsigned tid = 0);
 
-        Addr readNextNPC()
-        {
-            return nnpc;
-        }
+        FloatRegVal readFloatReg(int floatReg);
+        FloatRegVal readFloatReg(int floatReg, int width);
+        FloatRegBits readFloatRegBits(int floatReg);
+        FloatRegBits readFloatRegBits(int floatReg, int width);
+        Fault setFloatReg(int floatReg, const FloatRegVal &val);
+        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width);
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val);
+        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
 
-        void setNextNPC(Addr val)
-        {
-            nnpc = val;
-        }
+
+        void setShadowSet(int css);
+
+        int instAsid();
+        int dataAsid();
+
+      public:
+        Addr readPC();
+        void setPC(Addr val);
+
+        Addr readNextPC();
+        void setNextPC(Addr val);
+
+        Addr readNextNPC();
+        void setNextNPC(Addr val);
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
@@ -180,23 +104,8 @@ namespace MipsISA
         void changeContext(RegContextParam param, RegContextVal val)
         {
         }
+
     };
-
-    static inline int flattenIntIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
-
-    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
-
-    void
-    copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    void
-    copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 } // namespace MipsISA
 

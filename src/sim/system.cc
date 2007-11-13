@@ -99,6 +99,8 @@ System::System(Params *p)
     } else {
         // Load kernel code
         kernel = createObjectFile(params()->kernel);
+        warn("kernel located at: %s", params()->kernel);
+
         if (kernel == NULL)
             fatal("Could not load kernel file %s", params()->kernel);
 

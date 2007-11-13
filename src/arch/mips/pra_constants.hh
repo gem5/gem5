@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,18 +63,24 @@ namespace MipsISA
   const unsigned EntryLo0_PFN_LO  =  6;
   const unsigned EntryLo0_C_HI    =  5; // Coherency attribute of a Page (see Table 8-8, ARM Vol III)
   const unsigned EntryLo0_C_LO    =  3;
-  const unsigned EntryLo0_D       =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
-  const unsigned EntryLo0_V       =  1; // Valid Bit
-  const unsigned EntryLo0_G       =  0; // Global Bit. From the ARM Vol-III, Table 8-5:
+  const unsigned EntryLo0_D_HI    =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
+  const unsigned EntryLo0_D_LO    =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
+  const unsigned EntryLo0_V_HI    =  1; // Valid Bit
+  const unsigned EntryLo0_V_LO    =  1; // Valid Bit
+  const unsigned EntryLo0_G_HI    =  0; // Global Bit. From the ARM Vol-III, Table 8-5:
+  const unsigned EntryLo0_G_LO    =  0; // Global Bit. From the ARM Vol-III, Table 8-5:
                                         // On a TLB write, the logical AND of the G bits from EntryLo0 and EntryLo1
                                         // becomes the G bit in the TLB entry. If the TLB entry G bit is 1, ASID comparisons are
                                         // ignored during TLB matches. On a read from a TLB entry, the G bits of both Lo0 and Lo1
                                         // reflect the state of the TLB G bit.
 
   // EntryLo1 - CP0 Reg3, Sel 0
-  const unsigned EntryLo1_G       =  0;
-  const unsigned EntryLo1_V       =  1; // Valid Bit
-  const unsigned EntryLo1_D       =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
+  const unsigned EntryLo1_G_HI       =  0;
+  const unsigned EntryLo1_G_LO       =  0;
+  const unsigned EntryLo1_V_HI       =  1; // Valid Bit
+  const unsigned EntryLo1_V_LO       =  1; // Valid Bit
+  const unsigned EntryLo1_D_HI       =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
+  const unsigned EntryLo1_D_LO       =  2; // Dirty Bit, if D=1, page is writable. If D=0, a write causes a TLB Modified Exception
   const unsigned EntryLo1_C_HI    =  5; // Coherency attribute of a Page (see Table 8-8, ARM Vol III)
   const unsigned EntryLo1_C_LO    =  3;
   const unsigned EntryLo1_PFN_HI  = 29; //PFN defines the Page Frame Number (see Table 8-7, ARM Vol III)
@@ -104,6 +110,8 @@ namespace MipsISA
   const unsigned PageGrain_ASE_UP_LO = 30; //
   const unsigned PageGrain_ELPA = 29; // Used to enable support for large physical addresses in MIPS64 processors, unused in MIPS32
   const unsigned PageGrain_ESP = 28; // Enables support for 1KB pages (1==enabled,0==disabled), See ARM Vol-III, Table 8-12
+  const unsigned PageGrain_ESP_HI = 28; // Enables support for 1KB pages (1==enabled,0==disabled), See ARM Vol-III, Table 8-12
+  const unsigned PageGrain_ESP_LO = 28; // Enables support for 1KB pages (1==enabled,0==disabled), See ARM Vol-III, Table 8-12
   const unsigned PageGrain_ASE_DN_HI = 12;
   const unsigned PageGrain_ASE_DN_LO = 8;
   // Bits 27-13, 7-0 are zeros
@@ -130,12 +138,12 @@ namespace MipsISA
   const unsigned Count_LO = 0;
 
   // EntryHI Register - CP0 Reg 10, Sel 0
-  const unsigned Entry_HI_VPN2_HI = 31;  // This field is written by hardware on a TLB exception or on a TLB read
-  const unsigned Entry_HI_VPN2_LO = 13;  // and is written by software before a TLB write
-  const unsigned Entry_HI_VPN2X_HI = 12; // Extension to support 1KB pages
-  const unsigned Entry_HI_VPN2X_LO = 11;
-  const unsigned Entry_HI_ASID_HI = 7; // Address space identifier
-  const unsigned Entry_HI_ASID_LO = 0;
+  const unsigned EntryHi_VPN2_HI = 31;  // This field is written by hardware on a TLB exception or on a TLB read
+  const unsigned EntryHi_VPN2_LO = 13;  // and is written by software before a TLB write
+  const unsigned EntryHi_VPN2X_HI = 12; // Extension to support 1KB pages
+  const unsigned EntryHi_VPN2X_LO = 11;
+  const unsigned EntryHi_ASID_HI = 7; // Address space identifier
+  const unsigned EntryHi_ASID_LO = 0;
 
   // Compare Register - CP0 Reg 11, Sel 0
   const unsigned Compare_HI = 31; // Used in conjunction with Count
@@ -145,6 +153,7 @@ namespace MipsISA
   const unsigned Status_IE_HI = 0;
   const unsigned Status_IE_LO = 0;
 
+  const unsigned Status_EXL = 1;
   const unsigned Status_EXL_HI = 1;
   const unsigned Status_EXL_LO = 1;
   const unsigned Status_ERL_HI = 2;
@@ -172,6 +181,8 @@ namespace MipsISA
   const unsigned Status_SR = 20;
   const unsigned Status_TS = 21;
   const unsigned Status_BEV = 22;
+  const unsigned Status_BEV_HI = 22;
+  const unsigned Status_BEV_LO = 22;
   const unsigned Status_PX = 23;
   const unsigned Status_MX = 24;
   const unsigned Status_RE = 25;
@@ -229,8 +240,10 @@ namespace MipsISA
   const unsigned SRSMap_SSV0_LO = 20;
 
   // Cause Register - CP0 Reg 13, Sel 0
-  const unsigned Cause_BD = 31;
-  const unsigned Cause_TI = 30;
+  const unsigned Cause_BD_HI = 31;
+  const unsigned Cause_BD_LO = 31;
+  const unsigned Cause_TI_HI = 30;
+  const unsigned Cause_TI_LO = 30;
   const unsigned Cause_CE_HI = 29;
   const unsigned Cause_CE_LO = 28;
   const unsigned Cause_DC = 27;
@@ -286,14 +299,16 @@ namespace MipsISA
   const unsigned Config_KU_LO = 25;
   const unsigned Config_IMPL_HI = 24;
   const unsigned Config_IMPL_LO = 16;
-  const unsigned Config_BE = 15;
+  const unsigned Config_BE_HI = 15;
+  const unsigned Config_BE_LO = 15;
   const unsigned Config_AT_HI = 14;
   const unsigned Config_AT_LO = 13;
   const unsigned Config_AR_HI = 12;
   const unsigned Config_AR_LO = 10;
   const unsigned Config_MT_HI = 9;
   const unsigned Config_MT_LO = 7;
-  const unsigned Config_VI = 3;
+  const unsigned Config_VI_HI = 3;
+  const unsigned Config_VI_LO = 3;
   const unsigned Config_K0_HI = 2;
   const unsigned Config_K0_LO = 0;
 
@@ -313,13 +328,20 @@ namespace MipsISA
   const unsigned Config1_DL_LO = 10;
   const unsigned Config1_DA_HI = 9;
   const unsigned Config1_DA_LO = 7;
-  const unsigned Config1_C2 = 6;
-  const unsigned Config1_MD = 5;
-  const unsigned Config1_PC = 4;
-  const unsigned Config1_WR = 3;
-  const unsigned Config1_CA = 2;
-  const unsigned Config1_EP = 1;
-  const unsigned Config1_FP = 0;
+  const unsigned Config1_C2_HI = 6;
+  const unsigned Config1_C2_LO = 6;
+  const unsigned Config1_MD_HI = 5;
+  const unsigned Config1_MD_LO = 5;
+  const unsigned Config1_PC_HI = 4;
+  const unsigned Config1_PC_LO = 4;
+  const unsigned Config1_WR_HI = 3;
+  const unsigned Config1_WR_LO = 3;
+  const unsigned Config1_CA_HI = 2;
+  const unsigned Config1_CA_LO = 2;
+  const unsigned Config1_EP_HI = 1;
+  const unsigned Config1_EP_LO = 1;
+  const unsigned Config1_FP_HI = 0;
+  const unsigned Config1_FP_LO = 0;
 
 
   // Config2 Register - CP0 Reg 16, Sel 2
@@ -343,14 +365,23 @@ namespace MipsISA
 
   // Config3 Register - CP0 Reg 16, Sel 3
   const unsigned Config3_M = 31;
-  const unsigned Config3_DSPP = 10;
-  const unsigned Config3_LPA=7;
-  const unsigned Config3_VEIC=6;
-  const unsigned Config3_VINT=5;
+  const unsigned Config3_DSPP_HI = 10;
+  const unsigned Config3_DSPP_LO = 10;
+  const unsigned Config3_LPA_HI=7;
+  const unsigned Config3_LPA_LO=7;
+  const unsigned Config3_VEIC_HI=6;
+  const unsigned Config3_VEIC_LO=6;
+  const unsigned Config3_VINT_HI=5;
+  const unsigned Config3_VINT_LO=5;
   const unsigned Config3_SP=4;
-  const unsigned Config3_MT=2;
-  const unsigned Config3_SM=1;
-  const unsigned Config3_TL=0;
+  const unsigned Config3_SP_HI=4;
+  const unsigned Config3_SP_LO=4;
+  const unsigned Config3_MT_HI=2;
+  const unsigned Config3_MT_LO=2;
+  const unsigned Config3_SM_HI=1;
+  const unsigned Config3_SM_LO=1;
+  const unsigned Config3_TL_HI=0;
+  const unsigned Config3_TL_LO=0;
 
 
   // LLAddr Register - CP0 Reg 17, Sel 0

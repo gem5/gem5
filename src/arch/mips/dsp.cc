@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,6 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/dsp.hh"
-#include "arch/mips/constants.hh"
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"

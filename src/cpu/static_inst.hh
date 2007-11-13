@@ -114,6 +114,7 @@ class StaticInstBase : public RefCounted
         IsLoad,		///< Reads from memory (load or prefetch).
         IsStore,	///< Writes to memory.
         IsStoreConditional,    ///< Store conditional instruction.
+        IsIndexed,      ///< Accesses memory with an indexed address computation
         IsInstPrefetch,	///< Instruction-cache prefetch.
         IsDataPrefetch,	///< Data-cache prefetch.
         IsCopy,         ///< Fast Cache block copy
@@ -136,6 +137,7 @@ class StaticInstBase : public RefCounted
         IsSerializeAfter,
         IsMemBarrier,	///< Is a memory barrier
         IsWriteBarrier,	///< Is a write barrier
+        IsERET, /// <- Causes the IFU to stall (MIPS ISA)
 
         IsNonSpeculative, ///< Should not be executed speculatively
         IsQuiesce,      ///< Is a quiesce instruction
@@ -154,6 +156,7 @@ class StaticInstBase : public RefCounted
         IsFirstMicroop,	///< This microop begins a microop sequence
         //This flag doesn't do anything yet
         IsMicroBranch,	///< This microop branches within the microcode for a macroop
+        IsDspOp,
 
         NumFlags
     };

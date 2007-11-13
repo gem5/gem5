@@ -52,7 +52,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.iobus = Bus(bus_id=0)
     self.membus = Bus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self.physmem = PhysicalMemory(range = AddrRange('64MB'))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port
@@ -115,6 +115,43 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.nvram_bin = binary('nvram1')
     self.hypervisor_desc_bin = binary('1up-hv.bin')
     self.partition_desc_bin = binary('1up-md.bin')
+
+    return self
+
+def makeLinuxMipsSystem(mem_mode, mdesc = None):
+    class BaseMalta(Malta):
+        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
+        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
+                            pci_func=0, pci_dev=0, pci_bus=0)
+
+    self = LinuxMipsSystem()
+    if not mdesc:
+        # generic system
+        mdesc = SysConfig()
+    self.readfile = mdesc.script()
+    self.iobus = Bus(bus_id=0)
+    self.membus = Bus(bus_id=1)
+    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.physmem = PhysicalMemory(range = AddrRange('1GB'))
+    self.bridge.side_a = self.iobus.port
+    self.bridge.side_b = self.membus.port
+    self.physmem.port = self.membus.port
+    self.disk0 = CowIdeDisk(driveID='master')
+    self.disk2 = CowIdeDisk(driveID='master')
+    self.disk0.childImage(mdesc.disk())
+    self.disk2.childImage(disk('linux-bigswap2.img'))
+    self.malta = BaseMalta()
+    self.malta.attachIO(self.iobus)
+    self.malta.ide.pio = self.iobus.port
+    self.malta.ethernet.pio = self.iobus.port
+    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
+                                               read_only = True))
+    self.intrctrl = IntrControl()
+    self.mem_mode = mem_mode
+    self.sim_console = SimConsole()
+    self.kernel = binary('mips/vmlinux')
+    self.console = binary('mips/console')
+    self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 
     return self
 

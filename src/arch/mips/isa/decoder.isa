@@ -1,33 +1,40 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2006 The Regents of The University of Michigan
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met: redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer;
-// redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution;
-// neither the name of the copyright holders nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Authors: Korey Sewell
-//          Brett Miller
+// Copyright N) 2007 MIPS Technologies, Inc.  All Rights Reserved
+
+//  This software is part of the M5 simulator.
+
+//  THIS IS A LEGAL AGREEMENT.  BY DOWNLOADING, USING, COPYING, CREATING
+//  DERIVATIVE WORKS, AND/OR DISTRIBUTING THIS SOFTWARE YOU ARE AGREEING
+//  TO THESE TERMS AND CONDITIONS.
+
+//  Permission is granted to use, copy, create derivative works and
+//  distribute this software and such derivative works for any purpose,
+//  so long as (1) the copyright notice above, this grant of permission,
+//  and the disclaimer below appear in all copies and derivative works
+//  made, (2) the copyright notice above is augmented as appropriate to
+//  reflect the addition of any new copyrightable work in a derivative
+//  work (e.g., Copyright N) <Publication Year> Copyright Owner), and (3)
+//  the name of MIPS Technologies, Inc. ($(B!H(BMIPS$(B!I(B) is not used in any
+//  advertising or publicity pertaining to the use or distribution of
+//  this software without specific, written prior authorization.
+
+//  THIS SOFTWARE IS PROVIDED $(B!H(BAS IS.$(B!I(B  MIPS MAKES NO WARRANTIES AND
+//  DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
+//  OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+//  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+//  NON-INFRINGEMENT OF THIRD PARTY RIGHTS, REGARDING THIS SOFTWARE.
+//  IN NO EVENT SHALL MIPS BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT,
+//  INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES OF
+//  ANY KIND OR NATURE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT,
+//  THIS SOFTWARE AND/OR THE USE OF THIS SOFTWARE, WHETHER SUCH LIABILITY
+//  IS ASSERTED ON THE BASIS OF CONTRACT, TORT (INCLUDING NEGLIGENCE OR
+//  STRICT LIABILITY), OR OTHERWISE, EVEN IF MIPS HAS BEEN WARNED OF THE
+//  POSSIBILITY OF ANY SUCH LOSS OR DAMAGE IN ADVANCE.
+
+//Authors: Korey L. Sewell
+//         Brett Miller
+//         Jaidev Patwardhan
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -57,8 +64,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode RS  {
                         0x0: decode RT_RD {
                             0x0: decode SA default Nop::nop() {
-                                0x1: WarnUnimpl::ssnop();
-                                0x3: WarnUnimpl::ehb();
+                                 0x1: ssnop({{;}});
+                                 0x3: ehb({{;}});
                             }
                             default: sll({{ Rd = Rt.uw << SA; }});
                         }
@@ -119,8 +126,8 @@ decode OPCODE_HI default Unknown::unknown() {
                 //used to distinguish JR from JR.HB and JALR from JALR.HB"
                 format Jump {
                     0x0: decode HINT {
-                        0x1: jr_hb({{ NNPC = Rs & ~1; }}, IsReturn, ClearHazards);
-                        default: jr({{ NNPC = Rs & ~1; }}, IsReturn);
+                        0x1: jr_hb({{ if(Config1_CA == 0){NNPC = Rs;}else{panic("MIPS16e not supported\n");}; }}, IsReturn, ClearHazards);
+                        default: jr({{ if(Config1_CA == 0){NNPC = Rs;}else{panic("MIPS16e not supported\n");};}}, IsReturn);
                     }
 
                     0x1: decode HINT {
@@ -133,28 +140,31 @@ decode OPCODE_HI default Unknown::unknown() {
                 format BasicOp {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
+#if FULL_SYSTEM
+                  0x4: syscall({{
+                                   fault = new SystemCallFault();
+                                 }});
+#else
                     0x4: syscall({{ xc->syscall(R2); }},
-                                 IsSerializeAfter, IsNonSpeculative,
-                                 IsSyscall);
+                                 IsSerializing, IsNonSpeculative);
+#endif
                     0x7: sync({{ ; }}, IsMemBarrier);
+                    0x5: break({{fault = new BreakpointFault();}});
                 }
 
-                format FailUnimpl {
-                    0x5: break();
-                }
             }
 
             0x2: decode FUNCTION_LO {
-                0x0: HiLoRsSelOp::mfhi({{ Rd = HI_RS_SEL; }});
+                0x0: HiLoRsSelOp::mfhi({{ Rd = HI_RS_SEL; }}, IntMultOp, IsIprAccess);
                 0x1: HiLoRdSelOp::mthi({{ HI_RD_SEL = Rs; }});
-                0x2: HiLoRsSelOp::mflo({{ Rd = LO_RS_SEL; }});
+                0x2: HiLoRsSelOp::mflo({{ Rd = LO_RS_SEL; }}, IntMultOp, IsIprAccess);
                 0x3: HiLoRdSelOp::mtlo({{ LO_RD_SEL = Rs; }});
             }
 
             0x3: decode FUNCTION_LO {
                 format HiLoRdSelValOp {
-                    0x0: mult({{ val = Rs.sd * Rt.sd; }});
-                    0x1: multu({{ val = Rs.ud * Rt.ud; }});
+                    0x0: mult({{ val = Rs.sd * Rt.sd; }}, IntMultOp);
+                    0x1: multu({{ val = Rs.ud * Rt.ud; }}, IntMultOp);
                 }
 
                 format HiLoOp {
@@ -162,21 +172,55 @@ decode OPCODE_HI default Unknown::unknown() {
                         HI0 = Rs.sd % Rt.sd;
                         LO0 = Rs.sd / Rt.sd;
                     }
-                    }});
+                    }}, IntDivOp);
+
                     0x3: divu({{ if (Rt.ud != 0) {
                         HI0 = Rs.ud % Rt.ud;
                         LO0 = Rs.ud / Rt.ud;
                     }
-                    }});
+                    }}, IntDivOp);
                 }
             }
 
             0x4: decode HINT {
                 0x0: decode FUNCTION_LO {
                     format IntOp {
-                        0x0: add({{  Rd.sw = Rs.sw + Rt.sw; /*Trap on Overflow*/}});
+                      0x0: add({{  /* More complicated since an ADD can cause an arithmetic overflow exception */
+                                     int64_t Src1 = Rs.sw;
+                                     int64_t Src2 = Rt.sw;
+                                     int64_t temp_result;
+#if  FULL_SYSTEM
+                                     if(((Src1 >> 31) & 1) == 1)
+                                       Src1 |= 0x100000000LL;
+#endif
+                                     temp_result = Src1 + Src2;
+#if  FULL_SYSTEM
+                                     if(((temp_result >> 31) & 1) == ((temp_result >> 32) & 1)){
+#endif
+                                       Rd.sw = temp_result;
+#if  FULL_SYSTEM
+                                     } else{
+                                       fault = new ArithmeticFault();
+                                     }
+#endif
+
+                                   }});
                         0x1: addu({{ Rd.sw = Rs.sw + Rt.sw;}});
-                        0x2: sub({{ Rd.sw = Rs.sw - Rt.sw;  /*Trap on Overflow*/}});
+                        0x2: sub({{
+                                     /* More complicated since an SUB can cause an arithmetic overflow exception */
+                                     int64_t Src1 = Rs.sw;
+                                     int64_t Src2 = Rt.sw;
+                                     int64_t temp_result = Src1 - Src2;
+#if  FULL_SYSTEM
+                                     if(((temp_result >> 31) & 1) == ((temp_result>>32) & 1)){
+#endif
+                                       Rd.sw = temp_result;
+#if  FULL_SYSTEM
+                                     } else{
+                                       fault = new ArithmeticFault();
+                                     }
+#endif
+                                   }});
                         0x3: subu({{ Rd.sw = Rs.sw - Rt.sw;}});
                         0x4: and({{ Rd = Rs & Rt;}});
                         0x5: or({{ Rd = Rs | Rt;}});
@@ -200,7 +244,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: tge({{  cond = (Rs.sw >= Rt.sw); }});
                     0x1: tgeu({{ cond = (Rs.uw >= Rt.uw); }});
                     0x2: tlt({{ cond = (Rs.sw < Rt.sw); }});
-                    0x3: tltu({{ cond = (Rs.uw >= Rt.uw); }});
+                    0x3: tltu({{ cond = (Rs.uw < Rt.uw); }});
                     0x4: teq({{ cond = (Rs.sw == Rt.sw); }});
                     0x6: tne({{ cond = (Rs.sw != Rt.sw); }});
                 }
@@ -218,13 +262,13 @@ decode OPCODE_HI default Unknown::unknown() {
             }
 
             0x1: decode REGIMM_LO {
-                format Trap {
-                    0x0: tgei( {{ cond = (Rs.sw >= INTIMM); }});
-                    0x1: tgeiu({{ cond = (Rs.uw >= INTIMM); }});
-                    0x2: tlti( {{ cond = (Rs.sw < INTIMM); }});
-                    0x3: tltiu({{ cond = (Rs.uw < INTIMM); }});
-                    0x4: teqi( {{ cond = (Rs.sw == INTIMM);}});
-                    0x6: tnei( {{ cond = (Rs.sw != INTIMM);}});
+                format TrapImm {
+                    0x0: tgei( {{ cond = (Rs.sw >= (int16_t)INTIMM); }});
+                    0x1: tgeiu({{ cond = (Rs.uw >= (uint32_t)((int32_t)((int16_t)INTIMM))); }});
+                    0x2: tlti( {{ cond = (Rs.sw < (int16_t)INTIMM); }});
+                    0x3: tltiu({{ cond = (Rs.uw < (uint32_t)((int32_t)((int16_t)INTIMM))); }});
+                    0x4: teqi( {{ cond = (Rs.sw == (int16_t)INTIMM);}});
+                    0x6: tnei( {{ cond = (Rs.sw != (int16_t)INTIMM);}});
                 }
             }
 
@@ -268,7 +312,25 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x1: decode OPCODE_LO {
         format IntImmOp {
-            0x0: addi({{ Rt.sw = Rs.sw + imm; /*Trap If Overflow*/}});
+            0x0: addi({{
+                          int64_t Src1 = Rs.sw;
+                          int64_t Src2 = imm;
+                          int64_t temp_result;
+#if  FULL_SYSTEM
+                          if(((Src1 >> 31) & 1) == 1)
+                            Src1 |= 0x100000000LL;
+#endif
+                          temp_result = Src1 + Src2;
+#if  FULL_SYSTEM
+                          if(((temp_result >> 31) & 1) == ((temp_result >> 32) & 1)){
+#endif
+                            Rt.sw = temp_result;
+#if  FULL_SYSTEM
+                          } else{
+                            fault = new ArithmeticFault();
+                          }
+#endif
+                        }});
             0x1: addiu({{ Rt.sw = Rs.sw + imm;}});
             0x2: slti({{ Rt.sw = ( Rs.sw < imm) ? 1 : 0 }});
 
@@ -294,12 +356,32 @@ decode OPCODE_HI default Unknown::unknown() {
         //Table A-11 MIPS32 COP0 Encoding of rs Field
         0x0: decode RS_MSB {
             0x0: decode RS {
-                format CP0Control {
-                    0x0: mfc0({{  Rt = CP0_RD_SEL; }});
-                    0x4: mtc0({{  CP0_RD_SEL = Rt; }});
-                }
+                 format CP0Control {
+                  0x0: mfc0({{  Rt = CP0_RD_SEL;
+                                /* Hack for PageMask */
+                                if(RD == 5) // PageMask
+                                  if(Config3_SP == 0 || PageGrain_ESP == 0)
+                                    Rt &= 0xFFFFE7FF;
+                              }});
+                  0x4: mtc0({{  CP0_RD_SEL = Rt;
 
+                                if(RD == 11) // Compare{
+                                  if(Cause_TI == 1){
+                                    Cause_TI = 0;
+                                    MiscReg cause = xc->readMiscRegNoEffect(MipsISA::Cause);
+                                    int Offset = 10; // corresponding to Cause_IP0
+                                    Offset += ((IntCtl_IPTI) - 2);
+                                    replaceBits(cause,Offset,Offset,0);
+                                    xc->setMiscRegNoEffect(MipsISA::Cause,cause);
+                                  }
 
+                              }});
+                 }
+                 format CP0Unimpl {
+                   0x1: dmfc0();
+                   0x5: dmtc0();
+                   default: unknown();
+                 }
                 format MT_MFTR { // Decode MIPS MT MFTR instruction into sub-instructions
                     0x8: decode MT_U {
                         0x0: mftc0({{ data = xc->readRegOtherThread((RT << 3 | SEL) +
@@ -321,6 +403,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x13: mfthi_dsp3({{ data = xc->readRegOtherThread(MipsISA::DSPHi3); }});
                                 0x14: mftacx_dsp3({{ data = xc->readRegOtherThread(MipsISA::DSPACX3); }});
                                 0x16: mftdsp({{ data = xc->readRegOtherThread(MipsISA::DSPControl); }});
+                               default: CP0Unimpl::unknown();
                             }
                             0x2: decode MT_H {
                                 0x0: mftc1({{ data = xc->readRegOtherThread(RT +
@@ -329,7 +412,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x1: mfthc1({{ data = xc->readRegOtherThread(RT +
                                                                              FP_Base_DepTag);
                                            }});
-                            }
+                               }
                             0x3: cftc1({{ uint32_t fcsr_val = xc->readRegOtherThread(MipsISA::FCSR +
                                                                             FP_Base_DepTag);
                                           switch (RT)
@@ -357,8 +440,9 @@ decode OPCODE_HI default Unknown::unknown() {
                                                  fatal("FP Control Value (%d) Not Valid");
                                           }
                                         }});
+                           default: CP0Unimpl::unknown();
                         }
-                    }
+                  }
                 }
 
                 format MT_MTTR { // Decode MIPS MT MTTR instruction into sub-instructions
@@ -404,6 +488,8 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x14: mttacx_dsp3({{ xc->setRegOtherThread(MipsISA::DSPACX3, Rt);
                                                   }});
                                 0x16: mttdsp({{ xc->setRegOtherThread(MipsISA::DSPControl, Rt); }});
+                               default: CP0Unimpl::unknown();
+
                             }
                             0x2: mttc1({{ uint64_t data = xc->readRegOtherThread(RD +
                                                                                 FP_Base_DepTag);
@@ -446,6 +532,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                           }
                                           xc->setRegOtherThread(FCSR, data);
                                        }});
+                               default: CP0Unimpl::unknown();
                         }
                     }
                 }
@@ -466,9 +553,12 @@ decode OPCODE_HI default Unknown::unknown() {
                                                      MVPControl = insertBits(MVPControl, MVPC_EVP, 1);
                                                  }
                                               }});
+                                   default:CP0Unimpl::unknown();
                                 }
+                               default:CP0Unimpl::unknown();
                             }
-                        }
+                        default:CP0Unimpl::unknown();
+                      }
 
                         0x1: decode POS {
                             0xF: decode SEL {
@@ -479,9 +569,11 @@ decode OPCODE_HI default Unknown::unknown() {
                                     0x1: emt({{ Rt = VPEControl;
                                                 VPEControl = insertBits(VPEControl, VPEC_TE, 1);
                                          }});
-
+                                   default:CP0Unimpl::unknown();
                                 }
+                               default:CP0Unimpl::unknown();
                             }
+                            default:CP0Unimpl::unknown();
                         }
                     }
                     0xC: decode POS {
@@ -508,15 +600,16 @@ decode OPCODE_HI default Unknown::unknown() {
                                 fault = new ReservedInstructionFault();
                               }
                           }});
+                        default:CP0Unimpl::unknown();
                       }
                     }
+                default: CP0Unimpl::unknown();
                 }
-
                 format CP0Control {
                     0xA: rdpgpr({{
                       if(Config_AR >= 1)
                         { // Rev 2 of the architecture
-                          Rd = xc->tcBase()->readIntReg(Rt + NumIntRegs * SRSCtl_PSS);
+                          Rd = xc->tcBase()->readIntReg(RT + NumIntRegs * SRSCtl_PSS);
                         }
                       else
                         {
@@ -526,7 +619,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     0xE: wrpgpr({{
                       if(Config_AR >= 1)
                         { // Rev 2 of the architecture
-                          xc->tcBase()->setIntReg(Rd + NumIntRegs * SRSCtl_PSS,Rt);
+                          xc->tcBase()->setIntReg(RD + NumIntRegs * SRSCtl_PSS,Rt);
+                          //			  warn("Writing %d to %d, PSS: %d, SRS: %x\n",Rt,RD + NumIntRegs * SRSCtl_PSS, SRSCtl_PSS,SRSCtl);
                         }
                       else
                         {
@@ -534,48 +628,210 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
 
                          }});
-
                 }
 
-            }
+               }
 
             //Table A-12 MIPS32 COP0 Encoding of Function Field When rs=CO
             0x1: decode FUNCTION {
               format CP0Control {
                 0x18: eret({{
+                               DPRINTF(MipsPRA,"Restoring PC - %x\n",EPC);
+                               // Ugly hack to get the value of Status_EXL
+                               if(Status_EXL == 1){
+                                 DPRINTF(MipsPRA,"ERET EXL Hack\n");
+                               }
                   if(Status_ERL == 1){
                     Status_ERL = 0;
                     NPC = ErrorEPC;
+                    NNPC = ErrorEPC + sizeof(MachInst); // Need to adjust NNPC, otherwise things break
                   }
-                  else{
+                  else {
                     NPC = EPC;
+                    NNPC = EPC + sizeof(MachInst); // Need to adjust NNPC, otherwise things break
                     Status_EXL = 0;
-                    if(Config_AR >= 1 && SRSCtl_HSS > 0 && Status_BEV == 0){
+                    if(Config_AR >=1 && SRSCtl_HSS > 0 && Status_BEV == 0){
                       SRSCtl_CSS = SRSCtl_PSS;
+                      xc->setShadowSet(SRSCtl_PSS);
                     }
                   }
-                  //		  LLFlag = 0;
-                  // ClearHazards(); ?
-                }});
+                  LLFlag = 0;
+                 }},IsReturn,IsSerializing,IsERET);
 
                 0x1F: deret({{
-                    //if(Debug_DM == 1){
-                    //Debug_DM = 1;
-                    //Debug_IEXI = 0;
-                    //NPC = DEPC;
-                    //}
-                    panic("deret not implemented");
-                }});
+                  // if(EJTagImplemented()) {
+                  if(Debug_DM == 1){
+                    Debug_DM = 1;
+                    Debug_IEXI = 0;
+                    NPC = DEPC;
+                  }
+                  else
+                    {
+                      // Undefined;
+                    }
+                  //} // EJTag Implemented
+                  //else {
+                  // Reserved Instruction Exception
+                  //}
+                 }},IsReturn,IsSerializing,IsERET);
               }
+              format CP0TLB {
+                0x01: tlbr({{
+                    MipsISA::PTE *PTEntry = xc->tcBase()->getITBPtr()->getEntry(Index & 0x7FFFFFFF);
+                    if(PTEntry == NULL)
+                      {
+                        fatal("Invalid PTE Entry received on a TLBR instruction\n");
+                      }
+                    /* Setup PageMask */
+                    PageMask = (PTEntry->Mask << 11); // If 1KB pages are not enabled, a read of PageMask must return 0b00 in bits 12, 11
+                    /* Setup EntryHi */
+                    EntryHi = ((PTEntry->VPN << 11) | (PTEntry->asid));
+                    /* Setup Entry Lo0 */
+                    EntryLo0 = ((PTEntry->PFN0 << 6) | (PTEntry->C0 << 3) | (PTEntry->D0 << 2) | (PTEntry->V0 << 1) | PTEntry->G);
+                    /* Setup Entry Lo1 */
+                    EntryLo1 = ((PTEntry->PFN1 << 6) | (PTEntry->C1 << 3) | (PTEntry->D1 << 2) | (PTEntry->V1 << 1) | PTEntry->G);
+                }}); // Need to hook up to TLB
 
-              format FailUnimpl {
-                  0x01: tlbr(); // Need to hook up to TLB
-                  0x02: tlbwi(); // Need to hook up to TLB
-                    0x06: tlbwr();// Need to hook up to TLB
-                    0x08: tlbp();// Need to hook up to TLB
+                0x02: tlbwi({{
+                                //Create PTE
+                                MipsISA::PTE NewEntry;
+                                //Write PTE
+                                NewEntry.Mask = (Addr)(PageMask >> 11);
+                                NewEntry.VPN = (Addr)(EntryHi >> 11);
+                                /*  PageGrain _ ESP                    Config3 _ SP */
+                                if(((PageGrain>>28) & 1) == 0 || ((Config3>>4)&1) ==0) {
+                                  NewEntry.Mask |= 0x3; // If 1KB pages are *NOT* enabled, lowest bits of the mask are 0b11 for TLB writes
+                                  NewEntry.VPN &= 0xFFFFFFFC; // Reset bits 0 and 1 if 1KB pages are not enabled
+                                }
+                                NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
 
-                    0x20: wait();
-                }
+                                NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
+                                NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
+                                NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
+                                NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
+                                NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
+                                NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
+                                NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
+                                NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
+                                NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
+                                /* Now, compute the AddrShiftAmount and OffsetMask - TLB optimizations */
+                                /* Addr Shift Amount for 1KB or larger pages */
+                                //	    warn("PTE->Mask: %x\n",pte->Mask);
+                                if((NewEntry.Mask & 0xFFFF) == 3){
+                                  NewEntry.AddrShiftAmount = 12;
+                                } else if((NewEntry.Mask & 0xFFFF) == 0x0000){
+                                  NewEntry.AddrShiftAmount = 10;
+                                } else if((NewEntry.Mask & 0xFFFC) == 0x000C){
+                                  NewEntry.AddrShiftAmount = 14;
+                                } else if((NewEntry.Mask & 0xFFF0) == 0x0030){
+                                  NewEntry.AddrShiftAmount = 16;
+                                } else if((NewEntry.Mask & 0xFFC0) == 0x00C0){
+                                  NewEntry.AddrShiftAmount = 18;
+                                } else if((NewEntry.Mask & 0xFF00) == 0x0300){
+                                  NewEntry.AddrShiftAmount = 20;
+                                } else if((NewEntry.Mask & 0xFC00) == 0x0C00){
+                                  NewEntry.AddrShiftAmount = 22;
+                                } else if((NewEntry.Mask & 0xF000) == 0x3000){
+                                  NewEntry.AddrShiftAmount = 24;
+                                } else if((NewEntry.Mask & 0xC000) == 0xC000){
+                                  NewEntry.AddrShiftAmount = 26;
+                                } else if((NewEntry.Mask & 0x30000) == 0x30000){
+                                  NewEntry.AddrShiftAmount = 28;
+                                } else {
+                                  fatal("Invalid Mask Pattern Detected!\n");
+                                }
+                                NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
+
+                                MipsISA::TLB *Ptr=xc->tcBase()->getITBPtr();
+                                MiscReg c3=xc->readMiscReg(MipsISA::Config3);
+                                MiscReg pg=xc->readMiscReg(MipsISA::PageGrain);
+                                int SP=0;
+                                if(bits(c3,Config3_SP)==1 && bits(pg,PageGrain_ESP)==1){
+                                  SP=1;
+                                }
+                                Ptr->insertAt(NewEntry,Index & 0x7FFFFFFF,SP);
+              }});
+                0x06: tlbwr({{
+                                //Create PTE
+                                MipsISA::PTE NewEntry;
+                                //Write PTE
+                                NewEntry.Mask = (Addr)(PageMask >> 11);
+                                NewEntry.VPN = (Addr)(EntryHi >> 11);
+                                /*  PageGrain _ ESP                    Config3 _ SP */
+                                if(((PageGrain>>28) & 1) == 0 || ((Config3>>4)&1) ==0) {
+                                  NewEntry.Mask |= 0x3; // If 1KB pages are *NOT* enabled, lowest bits of the mask are 0b11 for TLB writes
+                                  NewEntry.VPN &= 0xFFFFFFFC; // Reset bits 0 and 1 if 1KB pages are not enabled
+                                }
+                                NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
+
+                                NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
+                                NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
+                                NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
+                                NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
+                                NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
+                                NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
+                                NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
+                                NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
+                                NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
+                                /* Now, compute the AddrShiftAmount and OffsetMask - TLB optimizations */
+                                /* Addr Shift Amount for 1KB or larger pages */
+                                //	    warn("PTE->Mask: %x\n",pte->Mask);
+                                if((NewEntry.Mask & 0xFFFF) == 3){
+                                  NewEntry.AddrShiftAmount = 12;
+                                } else if((NewEntry.Mask & 0xFFFF) == 0x0000){
+                                  NewEntry.AddrShiftAmount = 10;
+                                } else if((NewEntry.Mask & 0xFFFC) == 0x000C){
+                                  NewEntry.AddrShiftAmount = 14;
+                                } else if((NewEntry.Mask & 0xFFF0) == 0x0030){
+                                  NewEntry.AddrShiftAmount = 16;
+                                } else if((NewEntry.Mask & 0xFFC0) == 0x00C0){
+                                  NewEntry.AddrShiftAmount = 18;
+                                } else if((NewEntry.Mask & 0xFF00) == 0x0300){
+                                  NewEntry.AddrShiftAmount = 20;
+                                } else if((NewEntry.Mask & 0xFC00) == 0x0C00){
+                                  NewEntry.AddrShiftAmount = 22;
+                                } else if((NewEntry.Mask & 0xF000) == 0x3000){
+                                  NewEntry.AddrShiftAmount = 24;
+                                } else if((NewEntry.Mask & 0xC000) == 0xC000){
+                                  NewEntry.AddrShiftAmount = 26;
+                                } else if((NewEntry.Mask & 0x30000) == 0x30000){
+                                  NewEntry.AddrShiftAmount = 28;
+                                } else {
+                                  fatal("Invalid Mask Pattern Detected!\n");
+                                }
+                                NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
+
+                                MipsISA::TLB *Ptr=xc->tcBase()->getITBPtr();
+                                MiscReg c3=xc->readMiscReg(MipsISA::Config3);
+                                MiscReg pg=xc->readMiscReg(MipsISA::PageGrain);
+                                int SP=0;
+                                if(bits(c3,Config3_SP)==1 && bits(pg,PageGrain_ESP)==1){
+                                  SP=1;
+                                }
+                                Ptr->insertAt(NewEntry,Random,SP);
+                }});
+
+                0x08: tlbp({{
+                               int TLB_Index;
+                               Addr VPN;
+                               if(PageGrain_ESP == 1 && Config3_SP ==1){
+                                 VPN = EntryHi >> 11;
+                               } else {
+                                 VPN = ((EntryHi >> 11) & 0xFFFFFFFC); // Mask off lower 2 bits
+                               }
+                               TLB_Index = xc->tcBase()->getITBPtr()->probeEntry(VPN,EntryHi_ASID);
+                               if(TLB_Index != -1){  // Check TLB for entry matching EntryHi
+                                 Index=TLB_Index;
+                                 //			    warn("\ntlbp: Match Found!\n");
+                               } else {// else, set Index = 1<<31
+                                 Index = (1<<31);
+                               }
+                        }});
+              }
+              format CP0Unimpl {
+                0x20: wait();
+              }
+               default: CP0Unimpl::unknown();
 
             }
         }
@@ -607,8 +863,9 @@ decode OPCODE_HI default Unknown::unknown() {
                                 Rt = FCSR;
                                 break;
                               default:
-                                panic("FP Control Value (%d) Not Valid");
+                                warn("FP Control Value (%d) Not Valid");
                             }
+                            //			    warn("FCSR: %x, FS: %d, FIR: %x, Rt: %x\n",FCSR, FS, FIR, Rt);
                         }});
 
                         0x3: mfhc1({{ Rt.uw = Fs.ud<63:32>;}});
@@ -658,24 +915,37 @@ decode OPCODE_HI default Unknown::unknown() {
                         }});
 
                     }
-                }
-
-                0x1: decode ND {
-                    format Branch {
-                        0x0: decode TF {
-                            0x0: bc1f({{ cond = getCondCode(FCSR, BRANCH_CC) == 0;
-                                      }});
-                            0x1: bc1t({{ cond = getCondCode(FCSR, BRANCH_CC) == 1;
-                                      }});
-                        }
-                        0x1: decode TF {
-                            0x0: bc1fl({{ cond = getCondCode(FCSR, BRANCH_CC) == 0;
-                                       }}, Likely);
-                            0x1: bc1tl({{ cond = getCondCode(FCSR, BRANCH_CC) == 1;
-                                       }}, Likely);
-                        }
+                    format CP1Unimpl {
+                      0x1: dmfc1();
+                      0x5: dmtc1();
                     }
-                }
+                   }
+
+                0x1:
+                   decode RS_LO {
+                     0x0:
+                     decode ND {
+                       format Branch {
+                         0x0: decode TF {
+                           0x0: bc1f({{ cond = getCondCode(FCSR, BRANCH_CC) == 0;
+                                       }});
+                           0x1: bc1t({{ cond = getCondCode(FCSR, BRANCH_CC) == 1;
+                                       }});
+                         }
+                         0x1: decode TF {
+                           0x0: bc1fl({{ cond = getCondCode(FCSR, BRANCH_CC) == 0;
+                                        }}, Likely);
+                           0x1: bc1tl({{ cond = getCondCode(FCSR, BRANCH_CC) == 1;
+                                        }}, Likely);
+                         }
+                       }
+                     }
+                   format CP1Unimpl {
+                     0x1: bc1any2();
+                     0x2: bc1any4();
+                     default: unknown();
+                   }
+                   }
             }
 
             0x1: decode RS_HI {
@@ -735,7 +1005,11 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x5: recip_s({{ Fd = 1 / Fs; }});
                                 0x6: rsqrt_s({{ Fd = 1 / sqrt(Fs);}});
                             }
+                            format CP1Unimpl {
+                              default: unknown();
+                            }
                         }
+                        0x3: CP1Unimpl::unknown();
 
                         0x4: decode FUNCTION_LO {
                             format FloatConvertOp {
@@ -748,7 +1022,11 @@ decode OPCODE_HI default Unknown::unknown() {
                                     Fd.ud = (uint64_t) Fs.uw << 32 |
                                             (uint64_t) Ft.uw;
                                 }});
+                            format CP1Unimpl {
+                              default: unknown();
+                            }
                         }
+                        0x5: CP1Unimpl::unknown();
 
                         0x6: decode FUNCTION_LO {
                             format FloatCompareOp {
@@ -851,14 +1129,18 @@ decode OPCODE_HI default Unknown::unknown() {
                                 0x5: recip_d({{ Fd.df = 1 / Fs.df }});
                                 0x6: rsqrt_d({{ Fd.df = 1 / sqrt(Fs.df) }});
                             }
-                        }
+                            format CP1Unimpl {
+                              default: unknown();
+                            }
 
+                        }
                         0x4: decode FUNCTION_LO {
                             format FloatConvertOp {
                                 0x0: cvt_s_d({{ val = Fs.df; }}, ToSingle);
                                 0x4: cvt_w_d({{ val = Fs.df; }}, ToWord);
                                 0x5: cvt_l_d({{ val = Fs.df; }}, ToLong);
                             }
+                           default: CP1Unimpl::unknown();
                         }
 
                         0x6: decode FUNCTION_LO {
@@ -902,15 +1184,20 @@ decode OPCODE_HI default Unknown::unknown() {
                                              UnorderedTrue, QnanException);
                             }
                         }
+                       default: CP1Unimpl::unknown();
                     }
+                    0x2: CP1Unimpl::unknown();
+                    0x3: CP1Unimpl::unknown();
+                    0x7: CP1Unimpl::unknown();
 
                     //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=W
                     0x4: decode FUNCTION {
                         format FloatConvertOp {
                             0x20: cvt_s_w({{ val = Fs.uw; }}, ToSingle);
                             0x21: cvt_d_w({{ val = Fs.uw; }}, ToDouble);
-                            0x26: FailUnimpl::cvt_ps_w();
+                            0x26: CP1Unimpl::cvt_ps_w();
                         }
+                       default: CP1Unimpl::unknown();
                     }
 
                     //Table A-16 MIPS32 COP1 Encoding of Function Field When rs=L1
@@ -920,8 +1207,9 @@ decode OPCODE_HI default Unknown::unknown() {
                         format FloatConvertOp {
                             0x20: cvt_s_l({{ val = Fs.ud; }}, ToSingle);
                             0x21: cvt_d_l({{ val = Fs.ud; }}, ToDouble);
-                            0x26: FailUnimpl::cvt_ps_l();
+                            0x26: CP1Unimpl::cvt_ps_l();
                         }
+                       default: CP1Unimpl::unknown();
                     }
 
                     //Table A-17 MIPS64 COP1 Encoding of Function Field When rs=PS1
@@ -954,9 +1242,10 @@ decode OPCODE_HI default Unknown::unknown() {
                                     Fd1.sf = -(Fs1.sf);
                                     Fd2.sf = -(Fs2.sf);
                                 }});
+                            default: CP1Unimpl::unknown();
                             }
                         }
-
+                        0x1: CP1Unimpl::unknown();
                         0x2: decode FUNCTION_LO {
                             0x1: decode MOVCF {
                                 format Float64Op {
@@ -989,11 +1278,13 @@ decode OPCODE_HI default Unknown::unknown() {
                                         Fs2 : Fd2;
                                 }});
                             }
+                           default: CP1Unimpl::unknown();
 
                         }
-
+                        0x3: CP1Unimpl::unknown();
                         0x4: decode FUNCTION_LO {
                             0x0: FloatOp::cvt_s_pu({{ Fd.sf = Fs2.sf; }});
+                            default: CP1Unimpl::unknown();
                         }
 
                         0x5: decode FUNCTION_LO {
@@ -1013,6 +1304,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                                     Ft2.uw;
                                          }});
                             }
+                            default: CP1Unimpl::unknown();
                         }
 
                         0x6: decode FUNCTION_LO {
@@ -1071,12 +1363,13 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
                     }
                 }
+               default: CP1Unimpl::unknown();
             }
         }
 
         //Table A-19 MIPS32 COP2 Encoding of rs Field
         0x2: decode RS_MSB {
-            format FailUnimpl {
+            format CP2Unimpl {
                 0x0: decode RS_HI {
                     0x0: decode RS_LO {
                         0x0: mfc2();
@@ -1085,20 +1378,28 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x4: mtc2();
                         0x6: ctc2();
                         0x7: mftc2();
+                       default: unknown();
                     }
 
                     0x1: decode ND {
                         0x0: decode TF {
                             0x0: bc2f();
                             0x1: bc2t();
+                           default: unknown();
                         }
 
                         0x1: decode TF {
                             0x0: bc2fl();
                             0x1: bc2tl();
+                           default: unknown();
                         }
-                    }
-                }
+                       default: unknown();
+
+                       }
+              default: unknown();
+
+              }
+            default: unknown();
             }
         }
 
@@ -1197,13 +1498,13 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 0x2: IntOp::mul({{ int64_t temp1 = Rs.sd * Rt.sd;
                                    Rd.sw = temp1<31:0>;
-                                }});
+                                }}, IntMultOp);
 
                 format HiLoRdSelValOp {
-                    0x0: madd({{ val = ((int64_t)HI_RD_SEL << 32 | LO_RD_SEL) + (Rs.sd * Rt.sd); }});
-                    0x1: maddu({{ val = ((uint64_t)HI_RD_SEL << 32 | LO_RD_SEL) + (Rs.ud * Rt.ud); }});
-                    0x4: msub({{ val = ((int64_t)HI_RD_SEL << 32 | LO_RD_SEL) - (Rs.sd * Rt.sd); }});
-                    0x5: msubu({{ val = ((uint64_t)HI_RD_SEL << 32 | LO_RD_SEL) - (Rs.ud * Rt.ud); }});
+                  0x0: madd({{ val = ((int64_t)HI_RD_SEL << 32 | LO_RD_SEL) + (Rs.sd * Rt.sd); }}, IntMultOp);
+                    0x1: maddu({{ val = ((uint64_t)HI_RD_SEL << 32 | LO_RD_SEL) + (Rs.ud * Rt.ud); }}, IntMultOp);
+                    0x4: msub({{ val = ((int64_t)HI_RD_SEL << 32 | LO_RD_SEL) - (Rs.sd * Rt.sd); }}, IntMultOp);
+                    0x5: msubu({{ val = ((uint64_t)HI_RD_SEL << 32 | LO_RD_SEL) - (Rs.ud * Rt.ud); }}, IntMultOp);
                 }
             }
 
@@ -1286,9 +1587,9 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x5: subu_s_qb({{ Rd.uw = dspSub( Rs.uw, Rt.uw, SIMD_FMT_QB,
                                                               SATURATE, UNSIGNED, &dspctl ); }});
                             0x6: muleu_s_ph_qbl({{ Rd.uw = dspMuleu( Rs.uw, Rt.uw,
-                                                                     MODE_L, &dspctl ); }});
+                                                                     MODE_L, &dspctl ); }}, IntMultOp);
                             0x7: muleu_s_ph_qbr({{ Rd.uw = dspMuleu( Rs.uw, Rt.uw,
-                                                                     MODE_R, &dspctl ); }});
+                                                                     MODE_R, &dspctl ); }}, IntMultOp);
                         }
                     }
                     0x1: decode OP_LO {
@@ -1335,13 +1636,13 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x3: decode OP_LO {
                         format DspIntOp {
                             0x4: muleq_s_w_phl({{ Rd.sw = dspMuleq( Rs.sw, Rt.sw,
-                                                                    MODE_L, &dspctl ); }});
+                                                                    MODE_L, &dspctl ); }}, IntMultOp);
                             0x5: muleq_s_w_phr({{ Rd.sw = dspMuleq( Rs.sw, Rt.sw,
-                                                                    MODE_R, &dspctl ); }});
+                                                                    MODE_R, &dspctl ); }}, IntMultOp);
                             0x6: mulq_s_ph({{ Rd.sw = dspMulq( Rs.sw, Rt.sw, SIMD_FMT_PH,
-                                                               SATURATE, NOROUND, &dspctl ); }});
+                                                               SATURATE, NOROUND, &dspctl ); }}, IntMultOp);
                             0x7: mulq_rs_ph({{ Rd.sw = dspMulq( Rs.sw, Rt.sw, SIMD_FMT_PH,
-                                                                SATURATE, ROUND, &dspctl ); }});
+                                                                SATURATE, ROUND, &dspctl ); }}, IntMultOp);
                         }
                     }
                 }
@@ -1559,9 +1860,10 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x3: subqh_r_ph({{ Rd.uw = dspSubh( Rs.sw, Rt.sw, SIMD_FMT_PH,
                                                                 ROUND, SIGNED ); }});
                             0x4: mul_ph({{ Rd.sw = dspMul( Rs.sw, Rt.sw, SIMD_FMT_PH,
-                                                           NOSATURATE, &dspctl ); }});
+                                                           NOSATURATE, &dspctl ); }}, IntMultOp);
                             0x6: mul_s_ph({{ Rd.sw = dspMul( Rs.sw, Rt.sw, SIMD_FMT_PH,
-                                                             SATURATE, &dspctl ); }});
+                                                             SATURATE, &dspctl ); }}, IntMultOp);
+
                         }
                     }
                     0x2: decode OP_LO {
@@ -1575,9 +1877,9 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x3: subqh_r_w({{ Rd.uw = dspSubh( Rs.sw, Rt.sw, SIMD_FMT_W,
                                                                ROUND, SIGNED ); }});
                             0x6: mulq_s_w({{ Rd.sw = dspMulq( Rs.sw, Rt.sw, SIMD_FMT_W,
-                                                              SATURATE, NOROUND, &dspctl ); }});
+                                                              SATURATE, NOROUND, &dspctl ); }}, IntMultOp);
                             0x7: mulq_rs_w({{ Rd.sw = dspMulq( Rs.sw, Rt.sw, SIMD_FMT_W,
-                                                               SATURATE, ROUND, &dspctl ); }});
+                                                               SATURATE, ROUND, &dspctl ); }}, IntMultOp);
                         }
                     }
                 }
@@ -1603,61 +1905,61 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspHiLoOp {
                             0x0: dpa_w_ph({{ dspac = dspDpa( dspac, Rs.sw, Rt.sw, ACDST,
-                                                             SIMD_FMT_PH, SIGNED, MODE_L ); }});
+                                                             SIMD_FMT_PH, SIGNED, MODE_L ); }}, IntMultOp);
                             0x1: dps_w_ph({{ dspac = dspDps( dspac, Rs.sw, Rt.sw, ACDST,
-                                                             SIMD_FMT_PH, SIGNED, MODE_L ); }});
+                                                             SIMD_FMT_PH, SIGNED, MODE_L ); }}, IntMultOp);
                             0x2: mulsa_w_ph({{ dspac = dspMulsa( dspac, Rs.sw, Rt.sw,
-                                                                 ACDST, SIMD_FMT_PH ); }});
+                                                                 ACDST, SIMD_FMT_PH ); }}, IntMultOp);
                             0x3: dpau_h_qbl({{ dspac = dspDpa( dspac, Rs.sw, Rt.sw, ACDST,
-                                                               SIMD_FMT_QB, UNSIGNED, MODE_L ); }});
+                                                               SIMD_FMT_QB, UNSIGNED, MODE_L ); }}, IntMultOp);
                             0x4: dpaq_s_w_ph({{ dspac = dspDpaq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                 SIMD_FMT_W, NOSATURATE, MODE_L, &dspctl ); }});
+                                                                 SIMD_FMT_W, NOSATURATE, MODE_L, &dspctl ); }}, IntMultOp);
                             0x5: dpsq_s_w_ph({{ dspac = dspDpsq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                 SIMD_FMT_W, NOSATURATE, MODE_L, &dspctl ); }});
+                                                                 SIMD_FMT_W, NOSATURATE, MODE_L, &dspctl ); }}, IntMultOp);
                             0x6: mulsaq_s_w_ph({{ dspac = dspMulsaq( dspac, Rs.sw, Rt.sw,
-                                                                     ACDST, SIMD_FMT_PH, &dspctl ); }});
+                                                                     ACDST, SIMD_FMT_PH, &dspctl ); }}, IntMultOp);
                             0x7: dpau_h_qbr({{ dspac = dspDpa( dspac, Rs.sw, Rt.sw, ACDST,
-                                                               SIMD_FMT_QB, UNSIGNED, MODE_R ); }});
+                                                               SIMD_FMT_QB, UNSIGNED, MODE_R ); }}, IntMultOp);
                         }
                     }
                     0x1: decode OP_LO {
                         format DspHiLoOp {
                             0x0: dpax_w_ph({{ dspac = dspDpa( dspac, Rs.sw, Rt.sw, ACDST,
-                                                              SIMD_FMT_PH, SIGNED, MODE_X ); }});
+                                                              SIMD_FMT_PH, SIGNED, MODE_X ); }}, IntMultOp);
                             0x1: dpsx_w_ph({{ dspac = dspDps( dspac, Rs.sw, Rt.sw, ACDST,
-                                                              SIMD_FMT_PH, SIGNED, MODE_X ); }});
+                                                              SIMD_FMT_PH, SIGNED, MODE_X ); }}, IntMultOp);
                             0x3: dpsu_h_qbl({{ dspac = dspDps( dspac, Rs.sw, Rt.sw, ACDST,
-                                                               SIMD_FMT_QB, UNSIGNED, MODE_L ); }});
+                                                               SIMD_FMT_QB, UNSIGNED, MODE_L ); }}, IntMultOp);
                             0x4: dpaq_sa_l_w({{ dspac = dspDpaq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_W,
-                                                                 SIMD_FMT_L, SATURATE, MODE_L, &dspctl ); }});
+                                                                 SIMD_FMT_L, SATURATE, MODE_L, &dspctl ); }}, IntMultOp);
                             0x5: dpsq_sa_l_w({{ dspac = dspDpsq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_W,
-                                                                 SIMD_FMT_L, SATURATE, MODE_L, &dspctl ); }});
+                                                                 SIMD_FMT_L, SATURATE, MODE_L, &dspctl ); }}, IntMultOp);
                             0x7: dpsu_h_qbr({{ dspac = dspDps( dspac, Rs.sw, Rt.sw, ACDST,
-                                                               SIMD_FMT_QB, UNSIGNED, MODE_R ); }});
+                                                               SIMD_FMT_QB, UNSIGNED, MODE_R ); }}, IntMultOp);
                         }
                     }
                     0x2: decode OP_LO {
                         format DspHiLoOp {
                             0x0: maq_sa_w_phl({{ dspac = dspMaq( dspac, Rs.uw, Rt.uw, ACDST, SIMD_FMT_PH,
-                                                                 MODE_L, SATURATE, &dspctl ); }});
+                                                                 MODE_L, SATURATE, &dspctl ); }}, IntMultOp);
                             0x2: maq_sa_w_phr({{ dspac = dspMaq( dspac, Rs.uw, Rt.uw, ACDST, SIMD_FMT_PH,
-                                                                 MODE_R, SATURATE, &dspctl ); }});
+                                                                 MODE_R, SATURATE, &dspctl ); }}, IntMultOp);
                             0x4: maq_s_w_phl({{ dspac = dspMaq( dspac, Rs.uw, Rt.uw, ACDST, SIMD_FMT_PH,
-                                                                 MODE_L, NOSATURATE, &dspctl ); }});
+                                                                 MODE_L, NOSATURATE, &dspctl ); }}, IntMultOp);
                             0x6: maq_s_w_phr({{ dspac = dspMaq( dspac, Rs.uw, Rt.uw, ACDST, SIMD_FMT_PH,
-                                                                 MODE_R, NOSATURATE, &dspctl ); }});
+                                                                 MODE_R, NOSATURATE, &dspctl ); }}, IntMultOp);
                         }
                     }
                     0x3: decode OP_LO {
                         format DspHiLoOp {
                             0x0: dpaqx_s_w_ph({{ dspac = dspDpaq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                  SIMD_FMT_W, NOSATURATE, MODE_X, &dspctl ); }});
+                                                                  SIMD_FMT_W, NOSATURATE, MODE_X, &dspctl ); }}, IntMultOp);
                             0x1: dpsqx_s_w_ph({{ dspac = dspDpsq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                  SIMD_FMT_W, NOSATURATE, MODE_X, &dspctl ); }});
+                                                                  SIMD_FMT_W, NOSATURATE, MODE_X, &dspctl ); }}, IntMultOp);
                             0x2: dpaqx_sa_w_ph({{ dspac = dspDpaq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                   SIMD_FMT_W, SATURATE, MODE_X, &dspctl ); }});
+                                                                   SIMD_FMT_W, SATURATE, MODE_X, &dspctl ); }}, IntMultOp);
                             0x3: dpsqx_sa_w_ph({{ dspac = dspDpsq( dspac, Rs.sw, Rt.sw, ACDST, SIMD_FMT_PH,
-                                                                   SIMD_FMT_W, SATURATE, MODE_X, &dspctl ); }});
+                                                                   SIMD_FMT_W, SATURATE, MODE_X, &dspctl ); }}, IntMultOp);
                         }
                     }
                 }
@@ -1677,9 +1979,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     }
                 }
 
-                0x7: FailUnimpl::rdhwr();
             }
-
             0x7: decode FUNCTION_LO {
 
                 //Table 5-11 MIPS32 EXTR.W Encoding of the op Field (DSP ASE MANUAL)
@@ -1735,35 +2035,40 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
                     }
                 }
+                0x3: decode OP_HI {
+                    0x2: decode OP_LO {
+                        0x3: FailUnimpl::rdhwr();
+                    }
+                }
             }
         }
     }
 
     0x4: decode OPCODE_LO {
         format LoadMemory {
-            0x0: lb({{ Rt.sw = Mem.sb; }});
-            0x1: lh({{ Rt.sw = Mem.sh; }});
+          0x0: lb({{ Rt.sw = Mem.sb; }}, mem_flags = NO_ALIGN_FAULT);
+          0x1: lh({{ Rt.sw = Mem.sh; }}, mem_flags = NO_HALF_WORD_ALIGN_FAULT);
             0x3: lw({{ Rt.sw = Mem.sw; }});
-            0x4: lbu({{ Rt.uw = Mem.ub; }});
-            0x5: lhu({{ Rt.uw = Mem.uh; }});
+            0x4: lbu({{ Rt.uw = Mem.ub;}}, mem_flags = NO_ALIGN_FAULT);
+            0x5: lhu({{ Rt.uw = Mem.uh; }}, mem_flags = NO_HALF_WORD_ALIGN_FAULT);
         }
 
         format LoadUnalignedMemory {
             0x2: lwl({{ uint32_t mem_shift = 24 - (8 * byte_offset);
                         Rt.uw = mem_word << mem_shift |
-                            Rt.uw & mask(mem_shift);
+                        Rt.uw & mask(mem_shift);
                      }});
             0x6: lwr({{ uint32_t mem_shift = 8 * byte_offset;
                         Rt.uw = Rt.uw & (mask(mem_shift) << (32 - mem_shift)) |
-                            mem_word >> mem_shift;
+                        mem_word >> mem_shift;
                      }});
       }
     }
 
     0x5: decode OPCODE_LO {
         format StoreMemory {
-            0x0: sb({{ Mem.ub = Rt<7:0>; }});
-            0x1: sh({{ Mem.uh = Rt<15:0>; }});
+            0x0: sb({{ Mem.ub = Rt<7:0>; }}, mem_flags = NO_ALIGN_FAULT);
+            0x1: sh({{ Mem.uh = Rt<15:0>; }}, mem_flags = NO_HALF_WORD_ALIGN_FAULT);
             0x3: sw({{ Mem.uw = Rt<31:0>; }});
         }
 
@@ -1778,8 +2083,12 @@ decode OPCODE_HI default Unknown::unknown() {
                                    mem_word & (mask(reg_shift));
                      }});
         }
-
-        0x7: FailUnimpl::cache();
+        format CP0Control {
+            0x7: cache({{
+                           Addr CacheEA = Rs.uw + OFFSET;
+                           fault = xc->CacheOp((uint8_t)CACHE_OP,(Addr) CacheEA);
+                         }});
+        }
     }
 
     0x6: decode OPCODE_LO {
@@ -1788,7 +2097,8 @@ decode OPCODE_HI default Unknown::unknown() {
             0x1: lwc1({{ Ft.uw = Mem.uw; }});
             0x5: ldc1({{ Ft.ud = Mem.ud; }});
         }
-
+        0x2: CP2Unimpl::lwc2();
+        0x6: CP2Unimpl::ldc2();
         0x3: Prefetch::pref();
     }
 
@@ -1800,9 +2110,13 @@ decode OPCODE_HI default Unknown::unknown() {
                            }}, mem_flags=LOCKED, inst_flags = IsStoreConditional);
 
         format StoreMemory {
-            0x1: swc1({{ Mem.uw = Ft.uw; }});
-            0x5: sdc1({{ Mem.ud = Ft.ud; }});
+          0x1: swc1({{ Mem.uw = Ft.uw;}});
+          0x5: sdc1({{ Mem.ud = Ft.ud;}});
         }
+
+        0x2: CP2Unimpl::swc2();
+        0x6: CP2Unimpl::sdc2();
+
     }
 }
 

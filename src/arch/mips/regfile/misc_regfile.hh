@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Korey Sewell
+ *          Jaidev Patwardhan
  */
 
 #ifndef __ARCH_MIPS_REGFILE_MISC_REGFILE_HH__
@@ -33,11 +34,13 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
+#include "arch/mips/mt.hh"
+#include "arch/mips/mt_constants.hh"
+#include "base/bitfield.hh"
 #include "sim/eventq.hh"
-#include "sim/faults.hh"
 #include <queue>
 
-class ThreadContext;
+class Params;
 class BaseCPU;
 
 namespace MipsISA
@@ -58,6 +61,7 @@ namespace MipsISA
         };
 
         std::vector<std::vector<MiscReg> > miscRegFile;
+        std::vector<std::vector<MiscReg> > miscRegFile_WriteMask;
         std::vector<BankType> bankType;
 
         BaseCPU *cpu;
@@ -70,14 +74,9 @@ namespace MipsISA
 
         void clear(unsigned tid_or_vpn = 0);
 
-        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes);
+        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes, BaseCPU *_cpu);
 
         void expandForMultithreading(unsigned num_threads, unsigned num_vpes);
-
-        void copyMiscRegs(ThreadContext *tc)
-        {
-            panic("Copy Misc. Regs Not Implemented Yet\n");
-        }
 
         inline unsigned getVPENum(unsigned tid);
 
@@ -91,13 +90,21 @@ namespace MipsISA
         //       Status to TCStatus depending on current thread
         void updateCP0ReadView(int misc_reg, unsigned tid) { }
         MiscReg readRegNoEffect(int misc_reg, unsigned tid = 0);
+
+        //template <class TC>
         MiscReg readReg(int misc_reg,
                         ThreadContext *tc,  unsigned tid = 0);
 
-        MiscReg filterCP0Write(int misc_reg, MiscReg val) { return val; }
+        MiscReg filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val);
+        void setRegMask(int misc_reg, const MiscReg &val, unsigned tid = 0);
         void setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
+
+        //template <class TC>
         void setReg(int misc_reg, const MiscReg &val,
                      ThreadContext *tc, unsigned tid = 0);
+
+        int getInstAsid();
+        int getDataAsid();
 
         //////////////////////////////////////////////////////////
         //

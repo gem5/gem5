@@ -368,6 +368,10 @@ class SimpleThread : public ThreadState
     void setStCondFailures(unsigned sc_failures)
     { storeCondFailures = sc_failures; }
 
+    void setShadowSet(int css, int tid=0) {
+      regs.setShadowSet(css);
+    }
+
 #if !FULL_SYSTEM
     TheISA::IntReg getSyscallArg(int i)
     {
