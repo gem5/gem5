@@ -126,5 +126,6 @@ def operands {{
         'ControlSrc1':   ('ControlReg', 'uqw', 'MISCREG_CR(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 72),
         'EferOp':        ('ControlReg', 'uqw', 'MISCREG_EFER', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 73),
         'CR4Op':         ('ControlReg', 'uqw', 'MISCREG_CR4', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 74),
+        'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 80),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};

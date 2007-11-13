@@ -835,7 +835,7 @@ let {{
         '''
 
     class Wrip(WrRegOp, CondRegOp):
-        code = 'RIP = psrc1 + sop2'
+        code = 'RIP = psrc1 + sop2 + CSBase'
         else_code="RIP = RIP;"
 
     class Br(WrRegOp, CondRegOp):
@@ -846,7 +846,7 @@ let {{
         code = 'ccFlagBits = psrc1 ^ op2'
 
     class Rdip(RdRegOp):
-        code = 'DestReg = RIP'
+        code = 'DestReg = RIP - CSBase'
 
     class Ruflags(RdRegOp):
         code = 'DestReg = ccFlagBits'
