@@ -71,7 +71,6 @@ ObjectFile::loadSection(Section *sec, Port *memPort, Addr addrMask)
 {
     if (sec->size != 0) {
         Addr addr = sec->baseAddr & addrMask;
-        warn("attempting load @ section addr: %#x", addr);
         if (sec->fileImage) {
             memPort->writeBlob(addr, sec->fileImage, sec->size);
         }

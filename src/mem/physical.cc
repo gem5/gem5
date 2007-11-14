@@ -304,9 +304,6 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
 void
 PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 {
-    warn("addr %#x >= %#x AND %#x <= %#x",
-         pkt->getAddr(), start(), pkt->getAddr() + pkt->getSize(), start() + size());
-
     assert(pkt->getAddr() >= start() &&
            pkt->getAddr() + pkt->getSize() <= start() + size());
 
