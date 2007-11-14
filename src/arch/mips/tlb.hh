@@ -53,7 +53,6 @@ class ThreadContext;
 namespace MipsISA {
 
 // WARN: This particular TLB entry is not necessarily conformed to MIPS ISA
-// We just need this to make compiler happy. Use "PTE" type for real entry.
 struct TlbEntry
 {
     Addr _pageStart;
