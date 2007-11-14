@@ -40,7 +40,7 @@
 #if !FULL_SYSTEM
 void FaultBase::invoke(ThreadContext * tc)
 {
-    fatal("fault (%s) detected @ PC %p", name(), tc->readPC());
+    panic("fault (%s) detected @ PC %p", name(), tc->readPC());
 }
 #else
 void FaultBase::invoke(ThreadContext * tc)

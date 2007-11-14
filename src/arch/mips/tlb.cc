@@ -47,6 +47,8 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "sim/process.hh"
+#include "mem/page_table.hh"
 #include "params/MipsDTB.hh"
 #include "params/MipsITB.hh"
 #include "params/MipsTLB.hh"
@@ -314,6 +316,15 @@ TLB::regStats()
 Fault
 ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
+#if !FULL_SYSTEM
+    Process * p = tc->getProcessPtr();
+
+    Fault fault = p->pTable->translate(req);
+    if(fault != NoFault)
+        return fault;
+
+    return NoFault;
+#else
   if(MipsISA::IsKSeg0(req->getVaddr()))
     {
       // Address will not be translated through TLB, set response, and go!
@@ -416,11 +427,21 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         }
     }
   return checkCacheability(req);
+#endif
 }
 
 Fault
 DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 {
+#if !FULL_SYSTEM
+    Process * p = tc->getProcessPtr();
+
+    Fault fault = p->pTable->translate(req);
+    if(fault != NoFault)
+        return fault;
+
+    return NoFault;
+#else
   if(MipsISA::IsKSeg0(req->getVaddr()))
     {
       // Address will not be translated through TLB, set response, and go!
@@ -544,6 +565,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         }
     }
     return checkCacheability(req);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////

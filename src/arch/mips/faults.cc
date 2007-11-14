@@ -57,7 +57,7 @@ FaultName AlignmentFault::_name = "Alignment";
 FaultVect AlignmentFault::_vect = 0x0301;
 FaultStat AlignmentFault::_count;
 
-FaultName ResetFault::_name = "reset";
+FaultName ResetFault::_name = "Reset Fault";
 #if  FULL_SYSTEM
 FaultVect ResetFault::_vect = 0xBFC00000;
 #else
@@ -78,15 +78,15 @@ FaultName SystemCallFault::_name = "Syscall";
 FaultVect SystemCallFault::_vect = 0x0180;
 FaultStat SystemCallFault::_count;
 
-FaultName CoprocessorUnusableFault::_name = "Coprocessor Unusable";
+FaultName CoprocessorUnusableFault::_name = "Coprocessor Unusable Fault";
 FaultVect CoprocessorUnusableFault::_vect = 0x180;
 FaultStat CoprocessorUnusableFault::_count;
 
-FaultName ReservedInstructionFault::_name = "Reserved Instruction";
+FaultName ReservedInstructionFault::_name = "Reserved Instruction Fault";
 FaultVect ReservedInstructionFault::_vect = 0x0180;
 FaultStat ReservedInstructionFault::_count;
 
-FaultName ThreadFault::_name = "thread";
+FaultName ThreadFault::_name = "Thread Fault";
 FaultVect ThreadFault::_vect = 0x00F1;
 FaultStat ThreadFault::_count;
 
@@ -459,12 +459,17 @@ void InterruptFault::invoke(ThreadContext *tc)
 
 void ResetFault::invoke(ThreadContext *tc)
 {
+#if FULL_SYSTEM
   DPRINTF(MipsPRA,"%s encountered.\n", name());
   /* All reset activity must be invoked from here */
   tc->setPC(vect());
   tc->setNextPC(vect()+sizeof(MachInst));
   tc->setNextNPC(vect()+sizeof(MachInst)+sizeof(MachInst));
   DPRINTF(MipsPRA,"(%x)  -  ResetFault::invoke : PC set to %x",(unsigned)tc,(unsigned)tc->readPC());
+#endif
+
+  // Set Coprocessor 1 (Floating Point) To Usable
+  tc->setMiscReg(MipsISA::Status, MipsISA::Status | 0x20000000);
 }
 
 void ReservedInstructionFault::invoke(ThreadContext *tc)
@@ -509,7 +514,7 @@ void CoprocessorUnusableFault::invoke(ThreadContext *tc)
 
   //      warn("Status: %x, Cause: %x\n",tc->readMiscReg(MipsISA::Status),tc->readMiscReg(MipsISA::Cause));
 #else
-    panic("%s encountered.\n", name());
+    warn("%s (CP%d) encountered.\n", name(), coProcID);
 #endif
 }
 

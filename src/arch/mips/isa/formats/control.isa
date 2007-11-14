@@ -183,22 +183,22 @@ output decoder {{
 output exec {{
         bool isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)
         {
+#if !FULL_SYSTEM
+            return true;
+#else
           MiscReg Stat = xc->readMiscReg(MipsISA::Status);
           switch(cop_num)
             {
             case 0:
               {
-#if FULL_SYSTEM
-              MiscReg Dbg = xc->readMiscReg(MipsISA::Debug);
-              if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
-                 && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
-                 && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
-                // Unable to use Status_CU0, etc directly, using bitfields & masks
-                  return false;
-              }
-#else
-              //printf("Syscall Emulation Mode: CP0 Enable Check defaults to TRUE\n");
-#endif
+                  MiscReg Dbg = xc->readMiscReg(MipsISA::Debug);
+                  if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
+                     && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
+                     && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
+                      // Unable to use Status_CU0, etc directly, using bitfields & masks
+                      return false;
+                  }
+
               }
               break;
             case 1:
@@ -217,6 +217,7 @@ output exec {{
               break;
             }
             return true;
+#endif
         }
         bool inline isCoprocessor0Enabled(%(CPU_exec_context)s *xc)
         {

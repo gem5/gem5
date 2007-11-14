@@ -39,19 +39,19 @@ class MipsTLB(SimObject):
     size = Param.Int("TLB size")
 
 class MipsDTB(MipsTLB):
-    type = 'DTB'
+    type = 'MipsDTB'
     cxx_namespace = 'MipsISA'
     cxx_class = 'DTB'
     size = 64
 
 class MipsITB(MipsTLB):
-    type = 'ITB'
+    type = 'MipsITB'
     cxx_namespace = 'MipsISA'
     cxx_class = 'ITB'
     size = 64
 
 class MipsUTB(MipsTLB):
-    type = 'UTB'
+    type = 'MipsUTB'
     cxx_namespace = 'MipsISA'
     cxx_class = 'UTB'
     size = 64
