@@ -369,44 +369,28 @@ namespace X86ISA
     // the tlb on a miss and are to take the place of a hardware table walker.
     class FakeITLBFault : public X86Fault
     {
-#if !FULL_SYSTEM
       protected:
         Addr vaddr;
       public:
         FakeITLBFault(Addr _vaddr) :
             X86Fault("fake instruction tlb fault", "itlb"),
             vaddr(_vaddr)
-#else
-      public:
-        FakeITLBFault() :
-            X86Fault("fake instruction tlb fault", "itlb")
-#endif
         {}
 
-#if !FULL_SYSTEM
         void invoke(ThreadContext * tc);
-#endif
     };
 
     class FakeDTLBFault : public X86Fault
     {
-#if !FULL_SYSTEM
       protected:
         Addr vaddr;
       public:
         FakeDTLBFault(Addr _vaddr) :
             X86Fault("fake data tlb fault", "dtlb"),
             vaddr(_vaddr)
-#else
-      public:
-        FakeDTLBFault() :
-            X86Fault("fake data tlb fault", "dtlb")
-#endif
         {}
 
-#if !FULL_SYSTEM
         void invoke(ThreadContext * tc);
-#endif
     };
 };
 

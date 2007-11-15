@@ -289,9 +289,13 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
     // Copy the misc regs.
     TheISA::copyMiscRegs(tc, this);
 
-    // Then finally set the PC and the next PC.
+    // Then finally set the PC, the next PC, the nextNPC, the micropc, and the
+    // next micropc.
     cpu->setPC(tc->readPC(), tid);
     cpu->setNextPC(tc->readNextPC(), tid);
+    cpu->setNextNPC(tc->readNextNPC(), tid);
+    cpu->setMicroPC(tc->readMicroPC(), tid);
+    cpu->setNextMicroPC(tc->readNextMicroPC(), tid);
 #if !FULL_SYSTEM
     this->thread->funcExeInst = tc->readFuncExeInst();
 #endif
@@ -441,6 +445,30 @@ void
 O3ThreadContext<Impl>::setNextPC(uint64_t val)
 {
     cpu->setNextPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromTC(thread->readTid());
+    }
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setMicroPC(uint64_t val)
+{
+    cpu->setMicroPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromTC(thread->readTid());
+    }
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setNextMicroPC(uint64_t val)
+{
+    cpu->setNextMicroPC(val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {

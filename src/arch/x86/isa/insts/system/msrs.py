@@ -54,7 +54,7 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop WRMSR
+def macroop RDMSR
 {
     limm t1, "IntAddrPrefixMSR >> 3"
     ld t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
@@ -63,7 +63,7 @@ def macroop WRMSR
     mov rdx, rdx, t2, dataSize=4
 };
 
-def macroop RDMSR
+def macroop WRMSR
 {
     limm t1, "IntAddrPrefixMSR >> 3"
     mov t2, t2, rdx, dataSize=4

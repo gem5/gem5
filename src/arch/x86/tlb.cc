@@ -64,11 +64,15 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "sim/system.hh"
+
+#if FULL_SYSTEM
+#include "arch/x86/pagetable_walker.hh"
+#endif
 
 namespace X86ISA {
 
@@ -79,6 +83,11 @@ TLB::TLB(const Params *p) : SimObject(p), size(p->size)
 
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
+
+#if FULL_SYSTEM
+    walker = p->walker;
+    walker->setTLB(this);
+#endif
 }
 
 void
@@ -119,14 +128,38 @@ TLB::lookup(Addr va, bool update_lru)
     return NULL;
 }
 
+#if FULL_SYSTEM
+void
+TLB::walk(ThreadContext * _tc, Addr vaddr)
+{
+    walker->start(_tc, vaddr);
+}
+#endif
+
 void
 TLB::invalidateAll()
 {
+    DPRINTF(TLB, "Invalidating all entries.\n");
+    while (!entryList.empty()) {
+        TlbEntry *entry = entryList.front();
+        entryList.pop_front();
+        freeList.push_back(entry);
+    }
 }
 
 void
 TLB::invalidateNonGlobal()
 {
+    DPRINTF(TLB, "Invalidating all non global entries.\n");
+    EntryList::iterator entryIt;
+    for (entryIt = entryList.begin(); entryIt != entryList.end();) {
+        if (!(*entryIt)->global) {
+            freeList.push_back(*entryIt);
+            entryList.erase(entryIt++);
+        } else {
+            entryIt++;
+        }
+    }
 }
 
 void
@@ -150,7 +183,8 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
 
     // If this is true, we're dealing with a request to read an internal
     // value.
-    if (seg == NUM_SEGMENTREGS) {
+    if (seg == SEGMENT_REG_INT) {
+        DPRINTF(TLB, "Addresses references internal memory.\n");
         Addr prefix = vaddr & IntAddrPrefixMask;
         if (prefix == IntAddrPrefixCPUID) {
             panic("CPUID memory space not yet implemented!\n");
@@ -448,10 +482,12 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
 
     // If protected mode has been enabled...
     if (cr0.pe) {
+        DPRINTF(TLB, "In protected mode.\n");
         Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
         SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
         // If we're not in 64-bit mode, do protection/limit checks
         if (!efer.lma || !csAttr.longMode) {
+            DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (!attr.writable && write)
                 return new GeneralProtection(0);
@@ -460,6 +496,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
             if (!attr.expandDown) {
+                DPRINTF(TLB, "Checking an expand down segment.\n");
                 // We don't have to worry about the access going around the
                 // end of memory because accesses will be broken up into
                 // pieces at boundaries aligned on sizes smaller than an
@@ -484,25 +521,28 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         }
         // If paging is enabled, do the translation.
         if (cr0.pg) {
+            DPRINTF(TLB, "Paging enabled.\n");
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-#if FULL_SYSTEM
-                return new TlbFault();
-#else
                 return new TlbFault(vaddr);
-#endif
             } else {
                 // Do paging protection checks.
-                Addr paddr = entry->paddr | (vaddr & mask(12));
+                DPRINTF(TLB, "Entry found with paddr %#x, doing protection checks.\n", entry->paddr);
+                Addr paddr = entry->paddr | (vaddr & (entry->size-1));
+                DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
                 req->setPaddr(paddr);
             }
         } else {
             //Use the address which already has segmentation applied.
+            DPRINTF(TLB, "Paging disabled.\n");
+            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
             req->setPaddr(vaddr);
         }
     } else {
         // Real mode
+        DPRINTF(TLB, "In real mode.\n");
+        DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
         req->setPaddr(vaddr);
     }
     return NoFault;

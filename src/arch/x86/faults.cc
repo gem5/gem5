@@ -93,6 +93,8 @@
 #include "arch/x86/isa_traits.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
+#else
+#include "arch/x86/tlb.hh"
 #endif
 
 namespace X86ISA
@@ -112,6 +114,19 @@ namespace X86ISA
     {
         panic("X86 faults are not implemented!");
     }
+
+    void FakeITLBFault::invoke(ThreadContext * tc)
+    {
+        // Start the page table walker.
+        tc->getITBPtr()->walk(tc, vaddr);
+    }
+
+    void FakeDTLBFault::invoke(ThreadContext * tc)
+    {
+        // Start the page table walker.
+        tc->getDTBPtr()->walk(tc, vaddr);
+    }
+
 #else // !FULL_SYSTEM
     void FakeITLBFault::invoke(ThreadContext * tc)
     {

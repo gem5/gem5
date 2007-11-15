@@ -318,7 +318,7 @@ let {{
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
-            if flag_code is not "" or cond_check is not "true":
+            if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
                         code, "", "true", else_code)
                 suffix = "Flags" + suffix
@@ -835,7 +835,7 @@ let {{
         '''
 
     class Wrip(WrRegOp, CondRegOp):
-        code = 'RIP = psrc1 + sop2'
+        code = 'RIP = psrc1 + sop2 + CSBase'
         else_code="RIP = RIP;"
 
     class Br(WrRegOp, CondRegOp):
@@ -846,7 +846,7 @@ let {{
         code = 'ccFlagBits = psrc1 ^ op2'
 
     class Rdip(RdRegOp):
-        code = 'DestReg = RIP'
+        code = 'DestReg = RIP - CSBase'
 
     class Ruflags(RdRegOp):
         code = 'DestReg = ccFlagBits'
@@ -866,12 +866,74 @@ let {{
     class Sext(RegOp):
         code = '''
             IntReg val = psrc1;
-            int sign_bit = bits(val, imm8-1, imm8-1);
-            uint64_t maskVal = mask(imm8);
+            // Mask the bit position so that it wraps.
+            int bitPos = op2 & (dataSize * 8 - 1);
+            int sign_bit = bits(val, bitPos, bitPos);
+            uint64_t maskVal = mask(bitPos+1);
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
             DestReg = merge(DestReg, val, dataSize);
             '''
+        flag_code = '''
+            if (!sign_bit)
+                ccFlagBits = ccFlagBits &
+                    ~(ext & (CFBit | ECFBit | ZFBit | EZFBit));
+            else
+                ccFlagBits = ccFlagBits |
+                    (ext & (CFBit | ECFBit | ZFBit | EZFBit));
+            '''
 
     class Zext(RegOp):
-        code = 'DestReg = bits(psrc1, imm8-1, 0);'
+        code = 'DestReg = bits(psrc1, op2, 0);'
+
+    class Wrcr(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrcr, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
+                fault = new InvalidOpcode();
+            } else {
+                // There are *s in the line below so it doesn't confuse the
+                // parser. They may be unnecessary.
+                //Mis*cReg old*Val = pick(Cont*rolDest, 0, dat*aSize);
+                MiscReg newVal = psrc1;
+
+                // Check for any modifications that would cause a fault.
+                switch(dest) {
+                  case 0:
+                    {
+                        Efer efer = EferOp;
+                        CR0 cr0 = newVal;
+                        CR4 oldCr4 = CR4Op;
+                        if (bits(newVal, 63, 32) ||
+                                (!cr0.pe && cr0.pg) ||
+                                (!cr0.cd && cr0.nw) ||
+                                (cr0.pg && efer.lme && !oldCr4.pae))
+                            fault = new GeneralProtection(0);
+                    }
+                    break;
+                  case 2:
+                    break;
+                  case 3:
+                    break;
+                  case 4:
+                    {
+                        CR4 cr4 = newVal;
+                        // PAE can't be disabled in long mode.
+                        if (bits(newVal, 63, 11) ||
+                                (machInst.mode.mode == LongMode && !cr4.pae))
+                            fault = new GeneralProtection(0);
+                    }
+                    break;
+                  case 8:
+                    {
+                        if (bits(newVal, 63, 4))
+                            fault = new GeneralProtection(0);
+                    }
+                  default:
+                    panic("Unrecognized control register %d.\\n", dest);
+                }
+                ControlDest = newVal;
+            }
+            '''
 }};

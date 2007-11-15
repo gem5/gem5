@@ -61,8 +61,62 @@
     0x0F: decode OPCODE_OP_TOP5 {
         format WarnUnimpl {
             0x00: decode OPCODE_OP_BOTTOM3 {
-                0x00: group6();
-                0x01: group7();
+                //0x00: group6();
+                0x00: decode MODRM_REG {
+                    0x0: sldt_Mw_or_Rv();
+                    0x1: str_Mw_or_Rv();
+                    0x2: lldt_Mw_or_Rv();
+                    0x3: ltr_Mw_or_Rv();
+                    0x4: verr_Mw_or_Rv();
+                    0x5: verw_Mw_or_Rv();
+                    //0x6: jmpe_Ev(); // IA-64
+                    default: Inst::UD2();
+                }
+                //0x01: group7(); // Ugly, ugly, ugly...
+                0x01: decode MODRM_MOD {
+                    0x3: decode MODRM_REG {
+                        0x0: decode MODRM_RM {
+                            0x1: vmcall();
+                            0x2: vmlaunch();
+                            0x3: vmresume();
+                            0x4: vmxoff();
+                            default: Inst::UD2();
+                        }
+                        0x1: decode MODRM_RM {
+                            0x0: monitor();
+                            0x1: mwait();
+                            default: Inst::UD2();
+                        }
+                        0x3: decode MODRM_RM {
+                            0x0: vmrun();
+                            0x1: vmmcall();
+                            0x2: vmload();
+                            0x3: vmsave();
+                            0x4: stgi();
+                            0x5: clgi();
+                            0x6: skinit();
+                            0x7: invlpga();
+                        }
+                        0x4: smsw_Rv();
+                        0x6: lmsw_Rv();
+                        0x7: decode MODRM_RM {
+                            0x0: swapgs();
+                            0x1: rdtscp();
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: decode MODRM_REG {
+                        0x0: sgdt_Ms();
+                        0x1: sidt_Ms();
+                        0x2: lgdt_Ms();
+                        0x3: lidt_Ms();
+                        0x4: smsw_Mw();
+                        0x6: lmsw_Mw();
+                        0x7: invlpg_M();
+                        default: Inst::UD2();
+                    }
+                }
                 0x02: lar_Gv_Ew();
                 0x03: lsl_Gv_Ew();
                 //sandpile.org doesn't seem to know what this is... ?
@@ -148,7 +202,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: mov_Rd_Cd();
                     0x1: mov_Rd_Dd();
-                    0x2: mov_Cd_Rd();
+                    0x2: Inst::MOV(Cd,Rd);
                     0x3: mov_Dd_Rd();
                     0x4: mov_Rd_Td();
                     0x6: mov_Td_Rd();
@@ -397,9 +451,58 @@
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: pshufw_Pq_Qq_Ib();
-                    0x1: group13_pshimw();
-                    0x2: group14_pshimd();
-                    0x3: group15_pshimq();
+                    //0x1: group13_pshimw();
+                    0x1: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrlw_PRq_Ib();
+                            0x1: psrlw_VRo_Ib();
+                        }
+                        0x4: decode LEGACY_OP {
+                            0x0: psraw_PRq_Ib();
+                            0x1: psraw_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: psllw_PRq_Ib();
+                            0x1: psllw_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
+                    //0x2: group14_pshimd();
+                    0x2: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrld_PRq_Ib();
+                            0x1: psrld_VRo_Ib();
+                        }
+                        0x4: decode LEGACY_OP {
+                            0x0: psrad_PRq_Ib();
+                            0x1: psrad_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: pslld_PRq_Ib();
+                            0x1: pslld_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
+                    //0x3: group15_pshimq();
+                    0x3: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrlq_PRq_Ib();
+                            0x1: psrlq_VRo_Ib();
+                        }
+                        0x3: decode LEGACY_OP {
+                            0x0: Inst::UD2();
+                            0x1: psrldq_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: psllq_PRq_Ib();
+                            0x1: psllq_VRo_Ib();
+                        }
+                        0x7: decode LEGACY_OP {
+                            0x0: Inst::UD2();
+                            0x1: pslldq_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
                     0x4: pcmpeqb_Pq_Qq();
                     0x5: pcmpeqw_Pq_Qq();
                     0x6: pcmpeqd_Pq_Qq();
@@ -413,9 +516,58 @@
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: pshufd_Vo_Wo_Ib();
-                    0x1: group13_pshimw();
-                    0x2: group14_pshimd();
-                    0x3: group15_pshimq_dq();
+                    //0x1: group13_pshimw();
+                    0x1: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrlw_PRq_Ib();
+                            0x1: psrlw_VRo_Ib();
+                        }
+                        0x4: decode LEGACY_OP {
+                            0x0: psraw_PRq_Ib();
+                            0x1: psraw_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: psllw_PRq_Ib();
+                            0x1: psllw_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
+                    //0x2: group14_pshimd();
+                    0x2: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrld_PRq_Ib();
+                            0x1: psrld_VRo_Ib();
+                        }
+                        0x4: decode LEGACY_OP {
+                            0x0: psrad_PRq_Ib();
+                            0x1: psrad_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: pslld_PRq_Ib();
+                            0x1: pslld_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
+                    //0x3: group15_pshimq();
+                    0x3: decode MODRM_REG {
+                        0x2: decode LEGACY_OP {
+                            0x0: psrlq_PRq_Ib();
+                            0x1: psrlq_VRo_Ib();
+                        }
+                        0x3: decode LEGACY_OP {
+                            0x0: Inst::UD2();
+                            0x1: psrldq_VRo_Ib();
+                        }
+                        0x6: decode LEGACY_OP {
+                            0x0: psllq_PRq_Ib();
+                            0x1: psllq_VRo_Ib();
+                        }
+                        0x7: decode LEGACY_OP {
+                            0x0: Inst::UD2();
+                            0x1: pslldq_VRo_Ib();
+                        }
+                        default: Inst::UD2();
+                    }
                     0x4: pcmpeqb_Vo_Wo();
                     0x5: pcmpeqw_Vo_Wo();
                     0x6: pcmpeqd_Vo_Wo();
@@ -505,7 +657,7 @@
                 0x0: push_fs();
                 0x1: pop_fs();
                 0x2: Inst::CPUID(rAd);
-                0x3: bt_Ev_Gv();
+                0x3: Inst::BT(Ev,Gv);
                 0x4: shld_Ev_Gv_Ib();
                 0x5: shld_Ev_Gv_rCl();
                 0x6: xbts_and_cmpxchg();
@@ -515,17 +667,31 @@
                 0x0: push_gs();
                 0x1: pop_gs();
                 0x2: rsm_smm();
-                0x3: bts_Ev_Gv();
+                0x3: Inst::BTS(Ev,Gv);
                 0x4: shrd_Ev_Gv_Ib();
                 0x5: shrd_Ev_Gv_rCl();
-                0x6: group16();
+                //0x6: group16();
+                0x6: decode MODRM_MOD {
+                    0x3: decode MODRM_REG {
+                        0x5: lfence();
+                        0x6: mfence();
+                        0x7: sfence();
+                        default: Inst::UD2();
+                    }
+                    default: decode MODRM_REG {
+                        0x0: fxsave();
+                        0x1: fxrstor();
+                        0x7: clflush();
+                        default: Inst::UD2();
+                    }
+                }
                 0x7: Inst::IMUL(Gv,Ev);
             }
             0x16: decode OPCODE_OP_BOTTOM3 {
                 0x0: Inst::CMPXCHG(Eb,Gb);
                 0x1: Inst::CMPXCHG(Ev,Gv);
                 0x2: lss_Gz_Mp();
-                0x3: btr_Ev_Gv();
+                0x3: Inst::BTR(Ev,Gv);
                 0x4: lfs_Gz_Mp();
                 0x5: lgs_Gz_Mp();
                 //The size of the second operand in these instructions should
@@ -536,9 +702,19 @@
             }
             0x17: decode OPCODE_OP_BOTTOM3 {
                 0x0: jmpe_Jz(); // IA-64?
-                0x1: group11_UD2();
-                0x2: group8_Ev_Ib();
-                0x3: btc_Ev_Gv();
+                format Inst {
+                    //0x1: group11_UD2();
+                    0x1: UD2();
+                    //0x2: group8_Ev_Ib();
+                    0x2: decode MODRM_REG {
+                        0x4: BT(Ev,Ib);
+                        0x5: BTS(Ev,Ib);
+                        0x6: BTR(Ev,Ib);
+                        0x7: BTC(Ev,Ib);
+                        default: UD2();
+                    }
+                    0x3: BTC(Ev,Gv);
+                }
                 0x4: bsf_Gv_Ev();
                 0x5: bsr_Gv_Ev();
                 //The size of the second operand in these instructions should
@@ -550,7 +726,19 @@
             0x18: decode OPCODE_OP_BOTTOM3 {
                 0x0: xadd_Eb_Gb();
                 0x1: xadd_Ev_Gv();
-                0x7: group9();
+                //0x7: group9();
+                0x7: decode MODRM_REG {
+                    0x1: cmpxchg_Mq();
+                    0x6: decode LEGACY_OP {
+                        0x1: vmclear_Mq();
+                        default: decode LEGACY_REP {
+                            0x1: vmxon_Mq();
+                            0x0: vmptrld_Mq();
+                        }
+                    }
+                    0x7: vmptrst_Mq();
+                    default: Inst::UD2();
+                }
                 default: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {

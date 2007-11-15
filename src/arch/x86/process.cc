@@ -461,6 +461,8 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
+    // There doesn't need to be any segment base added in since we're dealing
+    // with the flat segmentation model.
     threadContexts[0]->setPC(prog_entry);
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
 

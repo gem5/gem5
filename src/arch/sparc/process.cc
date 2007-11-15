@@ -429,6 +429,10 @@ Sparc64LiveProcess::argsInit(int intSize, int pageSize)
     threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min - StackBias);
 
+    // %g1 is a pointer to a function that should be run at exit. Since we
+    // don't have anything like that, it should be set to 0.
+    threadContexts[0]->setIntReg(1, 0);
+
     Addr prog_entry = objFile->entryPoint();
     threadContexts[0]->setPC(prog_entry);
     threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
@@ -657,6 +661,10 @@ Sparc32LiveProcess::argsInit(int intSize, int pageSize)
     //threadContexts[0]->setIntReg(ArgumentReg[0], argc);
     //threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
     threadContexts[0]->setIntReg(StackPointerReg, stack_min);
+
+    // %g1 is a pointer to a function that should be run at exit. Since we
+    // don't have anything like that, it should be set to 0.
+    threadContexts[0]->setIntReg(1, 0);
 
     uint32_t prog_entry = objFile->entryPoint();
     threadContexts[0]->setPC(prog_entry);

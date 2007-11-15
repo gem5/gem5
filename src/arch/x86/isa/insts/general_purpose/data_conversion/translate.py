@@ -55,7 +55,7 @@
 
 microcode = '''
 def macroop XLAT {
-    zext t1, rax, 8
+    zexti t1, rax, 7
     # Here, t1 can be used directly. The value of al is supposed to be treated
     # as unsigned. Since we zero extended it from 8 bits above and the address
     # size has to be at least 16 bits, t1 will not be sign extended.

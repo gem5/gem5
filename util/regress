@@ -52,6 +52,8 @@ optparser.add_option('--scons-opts', dest='scons_opts', default='',
                      help='scons options', metavar='OPTS')
 optparser.add_option('-j', '--jobs', type='int', default=1,
                      help='number of parallel jobs to use')
+optparser.add_option('-k', '--keep-going', action='store_true',
+                     help='keep going after errors')
 
 (options, tests) = optparser.parse_args()
 
@@ -105,6 +107,8 @@ else:
 scons_opts = options.scons_opts
 if options.jobs != 1:
     scons_opts += ' -j %d' % options.jobs
+if options.keep_going:
+    scons_opts += ' -k'
 
 system('scons IGNORE_STYLE=True %s %s' % (scons_opts, ' '.join(targets)))
 

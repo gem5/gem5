@@ -793,12 +793,14 @@ class SimObject(object):
     # necessary to construct it.  Does *not* recursively create
     # children.
     def getCCObject(self):
-        params = self.getCCParams()
         if not self._ccObject:
-            self._ccObject = -1 # flag to catch cycles in recursion
+            # Cycles in the configuration heirarchy are not supported. This
+            # will catch the resulting recursion and stop.
+            self._ccObject = -1
+            params = self.getCCParams()
             self._ccObject = params.create()
         elif self._ccObject == -1:
-            raise RuntimeError, "%s: recursive call to getCCObject()" \
+            raise RuntimeError, "%s: Cycle found in configuration heirarchy." \
                   % self.path()
         return self._ccObject
 

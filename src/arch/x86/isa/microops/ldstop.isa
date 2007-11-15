@@ -123,7 +123,7 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, (%(mem_flags)s) | (1 << segment));
+        fault = read(xc, EA, Mem, (%(mem_flags)s) | segment);
 
         if(fault == NoFault)
         {
@@ -150,7 +150,7 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, (%(mem_flags)s) | (1 << segment));
+        fault = read(xc, EA, Mem, (%(mem_flags)s) | segment);
 
         return fault;
     }
@@ -197,7 +197,7 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            fault = write(xc, Mem, EA, (%(mem_flags)s) | (1 << segment));
+            fault = write(xc, Mem, EA, (%(mem_flags)s) | segment);
             if(fault == NoFault)
             {
                 %(op_wb)s;
@@ -224,7 +224,7 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            fault = write(xc, Mem, EA, (%(mem_flags)s) | (1 << segment));
+            fault = write(xc, Mem, EA, (%(mem_flags)s) | segment);
             if(fault == NoFault)
             {
                 %(op_wb)s;

@@ -55,124 +55,135 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_TLB_HH__
-#define __ARCH_X86_TLB_HH__
+#ifndef __ARCH_X86_PAGE_TABLE_WALKER_HH__
+#define __ARCH_X86_PAGE_TABLE_WALKER_HH__
 
-#include <list>
 #include <vector>
-#include <string>
 
 #include "arch/x86/pagetable.hh"
-#include "arch/x86/segmentregs.hh"
-#include "config/full_system.hh"
+#include "arch/x86/tlb.hh"
 #include "mem/mem_object.hh"
-#include "mem/request.hh"
-#include "params/X86DTB.hh"
-#include "params/X86ITB.hh"
-#include "sim/faults.hh"
-#include "sim/sim_object.hh"
+#include "mem/packet.hh"
+#include "params/X86PagetableWalker.hh"
+#include "sim/host.hh"
 
 class ThreadContext;
-class Packet;
 
 namespace X86ISA
 {
-    class Walker;
-
-    static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
-
-    class TLB;
-
-    class TLB : public SimObject
+    class Walker : public MemObject
     {
-      protected:
-        friend class FakeITLBFault;
-        friend class FakeDTLBFault;
-
-        bool _allowNX;
-
       public:
-        bool allowNX() const
+        enum State {
+            Ready,
+            Waiting,
+            // Long mode
+            LongPML4, LongPDP, LongPD, LongPTE,
+            // PAE legacy mode
+            PAEPDP, PAEPD, PAEPTE,
+            // Non PAE legacy mode with and without PSE
+            PSEPD, PD, PTE
+        };
+
+        // Act on the current state and determine what to do next. read
+        // should be the packet that just came back from a read and write
+        // should be NULL. When the function returns, read is either NULL
+        // if the machine is finished, or points to a packet to initiate
+        // the next read. If any write is required to update an "accessed"
+        // bit, write will point to a packet to do the write. Otherwise it
+        // will be NULL.
+        void doNext(PacketPtr &read, PacketPtr &write);
+
+        // Kick off the state machine.
+        void start(ThreadContext * _tc, Addr vaddr);
+
+      protected:
+
+        /*
+         * State having to do with sending packets.
+         */
+        PacketPtr read;
+        std::vector<PacketPtr> writes;
+
+        // How many memory operations are in flight.
+        unsigned inflight;
+
+        bool retrying;
+
+        /*
+         * Functions for dealing with packets.
+         */
+        bool recvTiming(PacketPtr pkt);
+        void recvRetry();
+
+        void sendPackets();
+
+        /*
+         * Port for accessing memory
+         */
+        class WalkerPort : public Port
         {
-            return _allowNX;
-        }
+          public:
+            WalkerPort(const std::string &_name, Walker * _walker) :
+                  Port(_name, _walker), walker(_walker),
+                  snoopRangeSent(false)
+            {}
 
-        typedef X86TLBParams Params;
-        TLB(const Params *p);
+          protected:
+            Walker * walker;
 
-        void dumpAll();
+            bool snoopRangeSent;
 
-        TlbEntry *lookup(Addr va, bool update_lru = true);
+            bool recvTiming(PacketPtr pkt);
+            Tick recvAtomic(PacketPtr pkt);
+            void recvFunctional(PacketPtr pkt);
+            void recvStatusChange(Status status);
+            void recvRetry();
+            void getDeviceAddressRanges(AddrRangeList &resp,
+                    bool &snoop)
+            {
+                resp.clear();
+                snoop = true;
+            }
+        };
 
-#if FULL_SYSTEM
-      protected:
+        Port *getPort(const std::string &if_name, int idx = -1);
 
-        Walker * walker;
+        friend class WalkerPort;
 
-        void walk(ThreadContext * _tc, Addr vaddr);
-#endif
+        WalkerPort port;
 
-      public:
-        void invalidateAll();
+        // The TLB we're supposed to load.
+        TLB * tlb;
+        System * sys;
 
-        void invalidateNonGlobal();
-
-        void demapPage(Addr va);
-
-      protected:
+        /*
+         * State machine state.
+         */
+        ThreadContext * tc;
+        State state;
+        State nextState;
         int size;
-
-        TlbEntry * tlb;
-
-        typedef std::list<TlbEntry *> EntryList;
-        EntryList freeList;
-        EntryList entryList;
-
-        template<class TlbFault>
-        Fault translate(RequestPtr &req, ThreadContext *tc,
-                bool write, bool execute);
+        bool enableNX;
+        TlbEntry entry;
 
       public:
 
-        void insert(Addr vpn, TlbEntry &entry);
-
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-    };
-
-    class ITB : public TLB
-    {
-      public:
-        typedef X86ITBParams Params;
-        ITB(const Params *p) : TLB(p)
+        void setTLB(TLB * _tlb)
         {
-            _allowNX = false;
+            tlb = _tlb;
         }
 
-        Fault translate(RequestPtr &req, ThreadContext *tc);
+        typedef X86PagetableWalkerParams Params;
 
-        friend class DTB;
-    };
-
-    class DTB : public TLB
-    {
-      public:
-        typedef X86DTBParams Params;
-        DTB(const Params *p) : TLB(p)
+        Walker(const Params *params) :
+            MemObject(params),
+            read(NULL), inflight(0), retrying(false),
+            port(name() + ".port", this),
+            tlb(NULL), sys(params->system),
+            tc(NULL), state(Ready), nextState(Ready)
         {
-            _allowNX = true;
         }
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
-#if FULL_SYSTEM
-        Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
-        Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
-#endif
-
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
     };
 }
-
-#endif // __ARCH_X86_TLB_HH__
+#endif // __ARCH_X86_PAGE_TABLE_WALKER_HH__

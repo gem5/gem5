@@ -59,6 +59,7 @@
 #define __ARCH_X86_ISATRAITS_HH__
 
 #include "arch/x86/intregs.hh"
+#include "arch/x86/max_inst_regs.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 #include "sim/host.hh"
@@ -72,6 +73,8 @@ namespace X86ISA
     //This makes sure the little endian version of certain functions
     //are used.
     using namespace LittleEndianGuest;
+    using X86ISAInst::MaxInstSrcRegs;
+    using X86ISAInst::MaxInstDestRegs;
 
     // X86 does not have a delay slot
 #define ISA_HAS_DELAY_SLOT 0
@@ -120,10 +123,6 @@ namespace X86ISA
     // Some OS syscalls use a second register (rdx) to return a second
     // value
     const int SyscallPseudoReturnReg = INTREG_RDX;
-
-    //XXX These numbers are bogus
-    const int MaxInstSrcRegs = 10;
-    const int MaxInstDestRegs = 10;
 
     //4k. This value is not constant on x86.
     const int LogVMPageSize = 12;
