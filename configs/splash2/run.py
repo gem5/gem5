@@ -51,11 +51,11 @@ parser.add_option("-f", "--frequency",
 parser.add_option("--l1size",
                   default = "32kB")
 parser.add_option("--l1latency",
-                  default = 1)
+                  default = "1ns")
 parser.add_option("--l2size",
                   default = "256kB")
 parser.add_option("--l2latency",
-                  default = 10)
+                  default = "10ns")
 parser.add_option("--rootdir",
                   help="Root directory of Splash2",
                   default="/dist/splash2/codes")
@@ -78,38 +78,38 @@ if not options.numcpus:
 class Cholesky(LiveProcess):
     cwd = options.rootdir + '/kernels/cholesky'
     executable = options.rootdir + '/kernels/cholesky/CHOLESKY'
-    cmd = 'CHOLESKY -p' + str(options.numcpus) + ' '\
-          + options.rootdir + '/kernels/cholesky/inputs/tk23.O'
+    cmd = ['CHOLESKY', '-p' +  str(options.numcpus),
+            options.rootdir + '/kernels/cholesky/inputs/tk23.O']
 
 class FFT(LiveProcess):
     cwd = options.rootdir + '/kernels/fft'
     executable = options.rootdir + '/kernels/fft/FFT'
-    cmd = 'FFT -p' + str(options.numcpus) + ' -m18'
+    cmd = ['FFT', '-p', str(options.numcpus), '-m18']
 
 class LU_contig(LiveProcess):
     executable = options.rootdir + '/kernels/lu/contiguous_blocks/LU'
-    cmd = 'LU -p' + str(options.numcpus)
+    cmd = ['LU', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/lu/contiguous_blocks'
 
 class LU_noncontig(LiveProcess):
     executable = options.rootdir + '/kernels/lu/non_contiguous_blocks/LU'
-    cmd = 'LU -p' + str(options.numcpus)
+    cmd = ['LU', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/lu/non_contiguous_blocks'
 
 class Radix(LiveProcess):
     executable = options.rootdir + '/kernels/radix/RADIX'
-    cmd = 'RADIX -n524288 -p' + str(options.numcpus)
+    cmd = ['RADIX', '-n524288', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/kernels/radix'
 
 class Barnes(LiveProcess):
     executable = options.rootdir + '/apps/barnes/BARNES'
-    cmd = 'BARNES'
+    cmd = ['BARNES']
     input = options.rootdir + '/apps/barnes/input.p' + str(options.numcpus)
     cwd = options.rootdir + '/apps/barnes'
 
 class FMM(LiveProcess):
     executable = options.rootdir + '/apps/fmm/FMM'
-    cmd = 'FMM'
+    cmd = ['FMM']
     if str(options.numcpus) == '1':
         input = options.rootdir + '/apps/fmm/inputs/input.2048'
     else:
@@ -118,23 +118,23 @@ class FMM(LiveProcess):
 
 class Ocean_contig(LiveProcess):
     executable = options.rootdir + '/apps/ocean/contiguous_partitions/OCEAN'
-    cmd = 'OCEAN -p' + str(options.numcpus)
+    cmd = ['OCEAN', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/apps/ocean/contiguous_partitions'
 
 class Ocean_noncontig(LiveProcess):
     executable = options.rootdir + '/apps/ocean/non_contiguous_partitions/OCEAN'
-    cmd = 'OCEAN -p' + str(options.numcpus)
+    cmd = ['OCEAN', '-p', str(options.numcpus)]
     cwd = options.rootdir + '/apps/ocean/non_contiguous_partitions'
 
 class Raytrace(LiveProcess):
     executable = options.rootdir + '/apps/raytrace/RAYTRACE'
-    cmd = 'RAYTRACE -p' + str(options.numcpus) + ' ' \
-          + options.rootdir + '/apps/raytrace/inputs/teapot.env'
+    cmd = ['RAYTRACE', '-p' + str(options.numcpus),
+           options.rootdir + '/apps/raytrace/inputs/teapot.env']
     cwd = options.rootdir + '/apps/raytrace'
 
 class Water_nsquared(LiveProcess):
     executable = options.rootdir + '/apps/water-nsquared/WATER-NSQUARED'
-    cmd = 'WATER-NSQUARED'
+    cmd = ['WATER-NSQUARED']
     if options.numcpus==1:
         input = options.rootdir + '/apps/water-nsquared/input'
     else:
@@ -143,7 +143,7 @@ class Water_nsquared(LiveProcess):
 
 class Water_spatial(LiveProcess):
     executable = options.rootdir + '/apps/water-spatial/WATER-SPATIAL'
-    cmd = 'WATER-SPATIAL'
+    cmd = ['WATER-SPATIAL']
     if options.numcpus==1:
         input = options.rootdir + '/apps/water-spatial/input'
     else:
@@ -252,10 +252,10 @@ elif options.benchmark == 'WaterNSquared':
 elif options.benchmark == 'WaterSpatial':
     root.workload = Water_spatial()
 else:
-    panic("The --benchmark environment variable was set to something" \
-          +" improper.\nUse Cholesky, FFT, LUContig, LUNoncontig, Radix" \
-          +", Barnes, FMM, OceanContig,\nOceanNoncontig, Raytrace," \
-          +" WaterNSquared, or WaterSpatial\n")
+    print >> sys.stderr, """The --benchmark environment variable was set to something improper.
+Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
+OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial"""
+    sys.exit(1)
 
 # --------------------
 # Assign the workload to the cpus
