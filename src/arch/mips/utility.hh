@@ -1,37 +1,34 @@
 /*
- * Copyright N) 2007 MIPS Technologies, Inc.  All Rights Reserved
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
+ * All rights reserved.
  *
- * This software is part of the M5 simulator.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
  *
- * THIS IS A LEGAL AGREEMENT.  BY DOWNLOADING, USING, COPYING, CREATING
- * DERIVATIVE WORKS, AND/OR DISTRIBUTING THIS SOFTWARE YOU ARE AGREEING
- * TO THESE TERMS AND CONDITIONS.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Permission is granted to use, copy, create derivative works and
- * distribute this software and such derivative works for any purpose,
- * so long as (1) the copyright notice above, this grant of permission,
- * and the disclaimer below appear in all copies and derivative works
- * made, (2) the copyright notice above is augmented as appropriate to
- * reflect the addition of any new copyrightable work in a derivative
- * work (e.g., Copyright N) <Publication Year> Copyright Owner), and (3)
- * the name of MIPS Technologies, Inc. ($(B!H(BMIPS$(B!I(B) is not used in any
- * advertising or publicity pertaining to the use or distribution of
- * this software without specific, written prior authorization.
- *
- * THIS SOFTWARE IS PROVIDED $(B!H(BAS IS.$(B!I(B  MIPS MAKES NO WARRANTIES AND
- * DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
- * OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
- * NON-INFRINGEMENT OF THIRD PARTY RIGHTS, REGARDING THIS SOFTWARE.
- * IN NO EVENT SHALL MIPS BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT,
- * INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES OF
- * ANY KIND OR NATURE, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT,
- * THIS SOFTWARE AND/OR THE USE OF THIS SOFTWARE, WHETHER SUCH LIABILITY
- * IS ASSERTED ON THE BASIS OF CONTRACT, TORT (INCLUDING NEGLIGENCE OR
- * STRICT LIABILITY), OR OTHERWISE, EVEN IF MIPS HAS BEEN WARNED OF THE
- * POSSIBILITY OF ANY SUCH LOSS OR DAMAGE IN ADVANCE.
- *
- * Authors: Korey L. Sewell
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
@@ -53,7 +50,10 @@ namespace MipsISA {
 
     uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
-    //Floating Point Utility Functions
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Floating Point Utility Functions
+    //
     uint64_t fpConvert(ConvertType cvt_type, double fp_val);
     double roundFP(double val, int digits);
     double truncFP(double val);
@@ -65,8 +65,6 @@ namespace MipsISA {
     bool isNan(void *val_ptr, int size);
     bool isQnan(void *val_ptr, int size);
     bool isSnan(void *val_ptr, int size);
-
-    void startupCPU(ThreadContext *tc, int cpuId);
 
     static inline bool
     inUserMode(ThreadContext *tc)
@@ -99,17 +97,25 @@ namespace MipsISA {
         return sizeof(MachInst);
     }
 
-    static inline MachInst makeRegisterCopy(int dest, int src) {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
-
+    ////////////////////////////////////////////////////////////////////////
+    //
+    //  Register File Utility Functions
+    //
     static inline int flattenFloatIndex(ThreadContext * tc, int reg)
     {
         return reg;
     }
 
-    int flattenIntIndex(ThreadContext * tc, int reg);
+    static inline int flattenIntIndex(ThreadContext * tc, int reg)
+    {
+        // Implement Shadow Sets Stuff Here;
+        return reg;
+    }
+
+    static inline MachInst makeRegisterCopy(int dest, int src) {
+        panic("makeRegisterCopy not implemented");
+        return 0;
+    }
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
@@ -123,24 +129,6 @@ namespace MipsISA {
     //
     //  Translation stuff
     //
-
-    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
-
-    // User Virtual
-    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
-
-    inline bool IsKSeg0(Addr a) { return KSeg0Base <= a && a <= KSeg0End; }
-
-    inline Addr KSeg02Phys(Addr addr) { return addr & KSeg0Mask; }
-
-    inline Addr KSeg12Phys(Addr addr) { return addr & KSeg1Mask; }
-
-    inline bool IsKSeg1(Addr a) { return KSeg1Base <= a && a <= KSeg1End; }
-
-    inline bool IsKSSeg(Addr a) { return KSSegBase <= a && a <= KSSegEnd; }
-
-    inline bool IsKSeg3(Addr a) { return KSeg3Base <= a && a <= KSeg3End; }
-
     inline Addr
     TruncPage(Addr addr)
     { return addr & ~(PageBytes - 1); }
@@ -149,8 +137,11 @@ namespace MipsISA {
     RoundPage(Addr addr)
     { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // CPU Utility
+    //
     void initCPU(ThreadContext *tc, int cpuId);
-    void initIPRs(ThreadContext *tc, int cpuId);
 
     /**
      * Function to check for and process any interrupts.
@@ -159,6 +150,7 @@ namespace MipsISA {
     template <class TC>
     void processInterrupts(TC *tc);
 
+    void startupCPU(ThreadContext *tc, int cpuId);
 };
 
 

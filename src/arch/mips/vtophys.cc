@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Ali Saidi
+ *          Jaidev Patwardhan
  */
 
 #include <string>
@@ -37,6 +38,7 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/vport.hh"
+
 using namespace std;
 using namespace MipsISA;
 

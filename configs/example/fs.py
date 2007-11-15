@@ -143,74 +143,7 @@ for i in xrange(np):
         test_sys.cpu[i].physmem_port = test_sys.physmem.port
 
 if m5.build_env['TARGET_ISA'] == 'mips':
-        #CP0 Configuration
-        TestCPUClass.CP0_PRId_CompanyOptions = 0
-        TestCPUClass.CP0_PRId_CompanyID = 1
-        TestCPUClass.CP0_PRId_ProcessorID = 147
-        TestCPUClass.CP0_PRId_Revision = 0
-
-        #CP0 Interrupt Control
-        TestCPUClass.CP0_IntCtl_IPTI = 7
-        TestCPUClass.CP0_IntCtl_IPPCI = 7
-
-        # Config Register
-        #TestCPUClass.CP0_Config_K23 = 0 # Since TLB
-        #TestCPUClass.CP0_Config_KU = 0 # Since TLB
-        TestCPUClass.CP0_Config_BE = 0 # Little Endian
-        TestCPUClass.CP0_Config_AR = 1 # Architecture Revision 2
-        TestCPUClass.CP0_Config_AT = 0 # MIPS32
-        TestCPUClass.CP0_Config_MT = 1 # TLB MMU
-        #TestCPUClass.CP0_Config_K0 = 2 # Uncached
-
-        #Config 1 Register
-        TestCPUClass.CP0_Config1_M = 1 # Config2 Implemented
-        TestCPUClass.CP0_Config1_MMU = 63 # TLB Size
-        # ***VERY IMPORTANT***
-        # Remember to modify CP0_Config1 according to cache specs
-        # Examine file ../common/Cache.py
-        TestCPUClass.CP0_Config1_IS = 1 # I-Cache Sets Per Way, 16KB cache, i.e., 1 (128)
-        TestCPUClass.CP0_Config1_IL = 5 # I-Cache Line Size, default in Cache.py is 64, i.e 5
-        TestCPUClass.CP0_Config1_IA = 1 # I-Cache Associativity, default in Cache.py is 2, i.e, a value of 1
-        TestCPUClass.CP0_Config1_DS = 2 # D-Cache Sets Per Way (see below), 32KB cache, i.e., 2
-        TestCPUClass.CP0_Config1_DL = 5 # D-Cache Line Size, default is 64, i.e., 5
-        TestCPUClass.CP0_Config1_DA = 1 # D-Cache Associativity, default is 2, i.e. 1
-        TestCPUClass.CP0_Config1_C2 = 0 # Coprocessor 2 not implemented(?)
-        TestCPUClass.CP0_Config1_MD = 0 # MDMX ASE not implemented in Mips32
-        TestCPUClass.CP0_Config1_PC = 1 # Performance Counters Implemented
-        TestCPUClass.CP0_Config1_WR = 0 # Watch Registers Implemented
-        TestCPUClass.CP0_Config1_CA = 0 # Mips16e NOT implemented
-        TestCPUClass.CP0_Config1_EP = 0 # EJTag Not Implemented
-        TestCPUClass.CP0_Config1_FP = 0 # FPU Implemented
-
-        #Config 2 Register
-        TestCPUClass.CP0_Config2_M = 1 # Config3 Implemented
-        TestCPUClass.CP0_Config2_TU = 0 # Tertiary Cache Control
-        TestCPUClass.CP0_Config2_TS = 0 # Tertiary Cache Sets Per Way
-        TestCPUClass.CP0_Config2_TL = 0 # Tertiary Cache Line Size
-        TestCPUClass.CP0_Config2_TA = 0 # Tertiary Cache Associativity
-        TestCPUClass.CP0_Config2_SU = 0 # Secondary Cache Control
-        TestCPUClass.CP0_Config2_SS = 0 # Secondary Cache Sets Per Way
-        TestCPUClass.CP0_Config2_SL = 0 # Secondary Cache Line Size
-        TestCPUClass.CP0_Config2_SA = 0 # Secondary Cache Associativity
-
-
-        #Config 3 Register
-        TestCPUClass.CP0_Config3_M = 0 # Config4 Not Implemented
-        TestCPUClass.CP0_Config3_DSPP = 1 # DSP ASE Present
-        TestCPUClass.CP0_Config3_LPA = 0 # Large Physical Addresses Not supported in Mips32
-        TestCPUClass.CP0_Config3_VEIC = 0 # EIC Supported
-        TestCPUClass.CP0_Config3_VInt = 0 # Vectored Interrupts Implemented
-        TestCPUClass.CP0_Config3_SP = 0 # Small Pages Supported (PageGrain reg. exists)
-        TestCPUClass.CP0_Config3_MT = 0 # MT Not present
-        TestCPUClass.CP0_Config3_SM = 0 # SmartMIPS ASE Not implemented
-        TestCPUClass.CP0_Config3_TL = 0 # TraceLogic Not implemented
-
-        #SRS Ctl - HSS
-        TestCPUClass.CP0_SrsCtl_HSS = 3 # Four shadow register sets implemented
-
-
-        #TestCPUClass.tlb = TLB()
-        #TestCPUClass.UnifiedTLB = 1
+    setMipsOptions(TestCPUClass)
 
 if len(bm) == 2:
     if m5.build_env['TARGET_ISA'] == 'alpha':

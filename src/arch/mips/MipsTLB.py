@@ -55,3 +55,4 @@ class MipsUTB(MipsTLB):
     cxx_namespace = 'MipsISA'
     cxx_class = 'UTB'
     size = 64
+

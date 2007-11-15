@@ -182,10 +182,10 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
     DPRINTF(MipsPRA, "Initializing CP0 State.... ");
 
     MiscReg ProcID = readRegNoEffect(PRId);
-    replaceBits(ProcID,PRIdCoOp_HI,PRIdCoOp_LO,p->CP0_PRId_CompanyOptions);
-    replaceBits(ProcID,PRIdCoID_HI,PRIdCoID_LO,p->CP0_PRId_CompanyID);
-    replaceBits(ProcID,PRIdProc_ID_HI,PRIdProc_ID_LO,p->CP0_PRId_ProcessorID);
-    replaceBits(ProcID,PRIdRev_HI,PRIdRev_LO,p->CP0_PRId_Revision);
+    replaceBits(ProcID,PRIdCoOp_HI,PRIdCoOp_LO,p->coreParams.CP0_PRId_CompanyOptions);
+    replaceBits(ProcID,PRIdCoID_HI,PRIdCoID_LO,p->coreParams.CP0_PRId_CompanyID);
+    replaceBits(ProcID,PRIdProc_ID_HI,PRIdProc_ID_LO,p->coreParams.CP0_PRId_ProcessorID);
+    replaceBits(ProcID,PRIdRev_HI,PRIdRev_LO,p->coreParams.CP0_PRId_Revision);
     setRegNoEffect(PRId,ProcID);
     // Now, create Write Mask for ProcID register
     MiscReg ProcID_Mask = 0; // Read-Only register
@@ -194,11 +194,11 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Config
     MiscReg cfg = readRegNoEffect(Config);
-    replaceBits(cfg, Config_BE_HI, Config_BE_LO, p->CP0_Config_BE);
-    replaceBits(cfg, Config_AT_HI, Config_AT_LO, p->CP0_Config_AT);
-    replaceBits(cfg, Config_AR_HI, Config_AR_LO, p->CP0_Config_AR);
-    replaceBits(cfg, Config_MT_HI, Config_MT_LO, p->CP0_Config_MT);
-    replaceBits(cfg, Config_VI_HI, Config_VI_LO, p->CP0_Config_VI);
+    replaceBits(cfg, Config_BE_HI, Config_BE_LO, p->coreParams.CP0_Config_BE);
+    replaceBits(cfg, Config_AT_HI, Config_AT_LO, p->coreParams.CP0_Config_AT);
+    replaceBits(cfg, Config_AR_HI, Config_AR_LO, p->coreParams.CP0_Config_AR);
+    replaceBits(cfg, Config_MT_HI, Config_MT_LO, p->coreParams.CP0_Config_MT);
+    replaceBits(cfg, Config_VI_HI, Config_VI_LO, p->coreParams.CP0_Config_VI);
     replaceBits(cfg, Config_M, 1);
     setRegNoEffect(Config, cfg);
     // Now, create Write Mask for Config register
@@ -208,20 +208,20 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Config1
     MiscReg cfg1 = readRegNoEffect(Config1);
-    replaceBits(cfg1, Config1_MMUSize_HI, Config1_MMUSize_LO, p->CP0_Config1_MMU);
-    replaceBits(cfg1, Config1_IS_HI, Config1_IS_LO, p->CP0_Config1_IS);
-    replaceBits(cfg1, Config1_IL_HI, Config1_IL_LO, p->CP0_Config1_IL);
-    replaceBits(cfg1, Config1_IA_HI, Config1_IA_LO, p->CP0_Config1_IA);
-    replaceBits(cfg1, Config1_DS_HI, Config1_DS_LO, p->CP0_Config1_DS);
-    replaceBits(cfg1, Config1_DL_HI, Config1_DL_LO, p->CP0_Config1_DL);
-    replaceBits(cfg1, Config1_DA_HI, Config1_DA_LO, p->CP0_Config1_DA);
-    replaceBits(cfg1, Config1_FP_HI, Config1_FP_LO, p->CP0_Config1_FP);
-    replaceBits(cfg1, Config1_EP_HI, Config1_EP_LO, p->CP0_Config1_EP);
-    replaceBits(cfg1, Config1_WR_HI, Config1_WR_LO, p->CP0_Config1_WR);
-    replaceBits(cfg1, Config1_MD_HI, Config1_MD_LO, p->CP0_Config1_MD);
-    replaceBits(cfg1, Config1_C2_HI, Config1_C2_LO, p->CP0_Config1_C2);
-    replaceBits(cfg1, Config1_PC_HI, Config1_PC_LO, p->CP0_Config1_PC);
-    replaceBits(cfg1, Config1_M, p->CP0_Config1_M);
+    replaceBits(cfg1, Config1_MMUSize_HI, Config1_MMUSize_LO, p->coreParams.CP0_Config1_MMU);
+    replaceBits(cfg1, Config1_IS_HI, Config1_IS_LO, p->coreParams.CP0_Config1_IS);
+    replaceBits(cfg1, Config1_IL_HI, Config1_IL_LO, p->coreParams.CP0_Config1_IL);
+    replaceBits(cfg1, Config1_IA_HI, Config1_IA_LO, p->coreParams.CP0_Config1_IA);
+    replaceBits(cfg1, Config1_DS_HI, Config1_DS_LO, p->coreParams.CP0_Config1_DS);
+    replaceBits(cfg1, Config1_DL_HI, Config1_DL_LO, p->coreParams.CP0_Config1_DL);
+    replaceBits(cfg1, Config1_DA_HI, Config1_DA_LO, p->coreParams.CP0_Config1_DA);
+    replaceBits(cfg1, Config1_FP_HI, Config1_FP_LO, p->coreParams.CP0_Config1_FP);
+    replaceBits(cfg1, Config1_EP_HI, Config1_EP_LO, p->coreParams.CP0_Config1_EP);
+    replaceBits(cfg1, Config1_WR_HI, Config1_WR_LO, p->coreParams.CP0_Config1_WR);
+    replaceBits(cfg1, Config1_MD_HI, Config1_MD_LO, p->coreParams.CP0_Config1_MD);
+    replaceBits(cfg1, Config1_C2_HI, Config1_C2_LO, p->coreParams.CP0_Config1_C2);
+    replaceBits(cfg1, Config1_PC_HI, Config1_PC_LO, p->coreParams.CP0_Config1_PC);
+    replaceBits(cfg1, Config1_M, p->coreParams.CP0_Config1_M);
     setRegNoEffect(Config1, cfg1);
     // Now, create Write Mask for Config register
     MiscReg cfg1_Mask = 0; // Read Only Register
@@ -230,15 +230,15 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Config2
     MiscReg cfg2 = readRegNoEffect(Config2);
-    replaceBits(cfg2, Config2_TU_HI, Config2_TU_LO, p->CP0_Config2_TU);
-    replaceBits(cfg2, Config2_TS_HI, Config2_TS_LO, p->CP0_Config2_TS);
-    replaceBits(cfg2, Config2_TL_HI, Config2_TL_LO, p->CP0_Config2_TL);
-    replaceBits(cfg2, Config2_TA_HI, Config2_TA_LO, p->CP0_Config2_TA);
-    replaceBits(cfg2, Config2_SU_HI, Config2_SU_LO, p->CP0_Config2_SU);
-    replaceBits(cfg2, Config2_SS_HI, Config2_SS_LO, p->CP0_Config2_SS);
-    replaceBits(cfg2, Config2_SL_HI, Config2_SL_LO, p->CP0_Config2_SL);
-    replaceBits(cfg2, Config2_SA_HI, Config2_SA_LO, p->CP0_Config2_SA);
-    replaceBits(cfg2, Config2_M, p->CP0_Config2_M);
+    replaceBits(cfg2, Config2_TU_HI, Config2_TU_LO, p->coreParams.CP0_Config2_TU);
+    replaceBits(cfg2, Config2_TS_HI, Config2_TS_LO, p->coreParams.CP0_Config2_TS);
+    replaceBits(cfg2, Config2_TL_HI, Config2_TL_LO, p->coreParams.CP0_Config2_TL);
+    replaceBits(cfg2, Config2_TA_HI, Config2_TA_LO, p->coreParams.CP0_Config2_TA);
+    replaceBits(cfg2, Config2_SU_HI, Config2_SU_LO, p->coreParams.CP0_Config2_SU);
+    replaceBits(cfg2, Config2_SS_HI, Config2_SS_LO, p->coreParams.CP0_Config2_SS);
+    replaceBits(cfg2, Config2_SL_HI, Config2_SL_LO, p->coreParams.CP0_Config2_SL);
+    replaceBits(cfg2, Config2_SA_HI, Config2_SA_LO, p->coreParams.CP0_Config2_SA);
+    replaceBits(cfg2, Config2_M, p->coreParams.CP0_Config2_M);
     setRegNoEffect(Config2, cfg2);
     // Now, create Write Mask for Config register
     MiscReg cfg2_Mask = 0x7000F000; // Read Only Register
@@ -247,14 +247,14 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Config3
     MiscReg cfg3 = readRegNoEffect(Config3);
-    replaceBits(cfg3, Config3_DSPP_HI, Config3_DSPP_LO, p->CP0_Config3_DSPP);
-    replaceBits(cfg3, Config3_LPA_HI, Config3_LPA_LO, p->CP0_Config3_LPA);
-    replaceBits(cfg3, Config3_VEIC_HI, Config3_VEIC_LO, p->CP0_Config3_VEIC);
-    replaceBits(cfg3, Config3_VINT_HI, Config3_VINT_LO, p->CP0_Config3_VInt);
-    replaceBits(cfg3, Config3_SP_HI, Config3_SP_LO, p->CP0_Config3_SP);
-    replaceBits(cfg3, Config3_MT_HI, Config3_MT_LO, p->CP0_Config3_MT);
-    replaceBits(cfg3, Config3_SM_HI, Config3_SM_LO, p->CP0_Config3_SM);
-    replaceBits(cfg3, Config3_TL_HI, Config3_TL_LO, p->CP0_Config3_TL);
+    replaceBits(cfg3, Config3_DSPP_HI, Config3_DSPP_LO, p->coreParams.CP0_Config3_DSPP);
+    replaceBits(cfg3, Config3_LPA_HI, Config3_LPA_LO, p->coreParams.CP0_Config3_LPA);
+    replaceBits(cfg3, Config3_VEIC_HI, Config3_VEIC_LO, p->coreParams.CP0_Config3_VEIC);
+    replaceBits(cfg3, Config3_VINT_HI, Config3_VINT_LO, p->coreParams.CP0_Config3_VInt);
+    replaceBits(cfg3, Config3_SP_HI, Config3_SP_LO, p->coreParams.CP0_Config3_SP);
+    replaceBits(cfg3, Config3_MT_HI, Config3_MT_LO, p->coreParams.CP0_Config3_MT);
+    replaceBits(cfg3, Config3_SM_HI, Config3_SM_LO, p->coreParams.CP0_Config3_SM);
+    replaceBits(cfg3, Config3_TL_HI, Config3_TL_LO, p->coreParams.CP0_Config3_TL);
     setRegNoEffect(Config3, cfg3);
     // Now, create Write Mask for Config register
     MiscReg cfg3_Mask = 0; // Read Only Register
@@ -263,7 +263,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // EBase - CPUNum
     MiscReg EB = readRegNoEffect(EBase);
-    replaceBits(EB, EBase_CPUNum_HI, EBase_CPUNum_LO, p->CP0_EBase_CPUNum);
+    replaceBits(EB, EBase_CPUNum_HI, EBase_CPUNum_LO, p->coreParams.CP0_EBase_CPUNum);
     replaceBits(EB, 31, 31, 1);
     setRegNoEffect(EBase, EB);
     // Now, create Write Mask for Config register
@@ -274,7 +274,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // SRS Control - HSS (Highest Shadow Set)
     MiscReg SC = readRegNoEffect(SRSCtl);
-    replaceBits(SC, SRSCtl_HSS_HI,SRSCtl_HSS_LO,p->CP0_SrsCtl_HSS);
+    replaceBits(SC, SRSCtl_HSS_HI,SRSCtl_HSS_LO,p->coreParams.CP0_SrsCtl_HSS);
     setRegNoEffect(SRSCtl, SC);
     // Now, create Write Mask for the SRS Ctl register
     MiscReg SC_Mask = 0x0000F3C0;
@@ -283,8 +283,8 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // IntCtl - IPTI, IPPCI
     MiscReg IC = readRegNoEffect(IntCtl);
-    replaceBits(IC, IntCtl_IPTI_HI,IntCtl_IPTI_LO,p->CP0_IntCtl_IPTI);
-    replaceBits(IC, IntCtl_IPPCI_HI,IntCtl_IPPCI_LO,p->CP0_IntCtl_IPPCI);
+    replaceBits(IC, IntCtl_IPTI_HI,IntCtl_IPTI_LO,p->coreParams.CP0_IntCtl_IPTI);
+    replaceBits(IC, IntCtl_IPPCI_HI,IntCtl_IPPCI_LO,p->coreParams.CP0_IntCtl_IPPCI);
     setRegNoEffect(IntCtl, IC);
     // Now, create Write Mask for the IntCtl register
     MiscReg IC_Mask = 0x000003E0;
@@ -293,7 +293,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Watch Hi - M - FIXME (More than 1 Watch register)
     MiscReg WHi = readRegNoEffect(WatchHi0);
-    replaceBits(WHi, WatchHi_M, p->CP0_WatchHi_M);
+    replaceBits(WHi, WatchHi_M, p->coreParams.CP0_WatchHi_M);
     setRegNoEffect(WatchHi0, WHi);
     // Now, create Write Mask for the IntCtl register
     MiscReg wh_Mask = 0x7FFF0FFF;
@@ -302,8 +302,8 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Perf Ctr - M - FIXME (More than 1 PerfCnt Pair)
     MiscReg PCtr = readRegNoEffect(PerfCnt0);
-    replaceBits(PCtr, PerfCntCtl_M, p->CP0_PerfCtr_M);
-    replaceBits(PCtr, PerfCntCtl_W, p->CP0_PerfCtr_W);
+    replaceBits(PCtr, PerfCntCtl_M, p->coreParams.CP0_PerfCtr_M);
+    replaceBits(PCtr, PerfCntCtl_W, p->coreParams.CP0_PerfCtr_W);
     setRegNoEffect(PerfCnt0, PCtr);
     // Now, create Write Mask for the IntCtl register
     MiscReg pc_Mask = 0x00007FF;
@@ -321,7 +321,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // PageGrain
     MiscReg pagegrain = readRegNoEffect(PageGrain);
-    replaceBits(pagegrain,PageGrain_ESP,p->CP0_Config3_SP);
+    replaceBits(pagegrain,PageGrain_ESP,p->coreParams.CP0_Config3_SP);
     setRegNoEffect(PageGrain, pagegrain);
     // Now, create Write Mask for the IntCtl register
     MiscReg pg_Mask = 0x10000000;

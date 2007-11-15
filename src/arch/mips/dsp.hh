@@ -13,7 +13,7 @@
  * and the disclaimer below appear in all copies and derivative works
  * made, (2) the copyright notice above is augmented as appropriate to
  * reflect the addition of any new copyrightable work in a derivative
- * work (e.g., Copyright N) <Publication Year> Copyright Owner), and (3)
+ * work (e.g., Copyright (c) <Publication Year> Copyright Owner), and (3)
  * the name of MIPS Technologies, Inc. ($(B!H(BMIPS$(B!I(B) is not used in any
  * advertising or publicity pertaining to the use or distribution of
  * this software without specific, written prior authorization.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2007 MIPS Technologies, Inc.  All Rights Reserved
+ * Copyright © 2007 MIPS Technologies, Inc.  All Rights Reserved
  *
  * This software is part of the M5 simulator.
  *
@@ -13,12 +13,12 @@
  * and the disclaimer below appear in all copies and derivative works
  * made, (2) the copyright notice above is augmented as appropriate to
  * reflect the addition of any new copyrightable work in a derivative
- * work (e.g., Copyright © <Publication Year> Copyright Owner), and (3)
- * the name of MIPS Technologies, Inc. (“MIPS”) is not used in any
+ * work (e.g., Copyright (c) <Publication Year> Copyright Owner), and (3)
+ * the name of MIPS Technologies, Inc. (“MIPS”) is not used in any
  * advertising or publicity pertaining to the use or distribution of
  * this software without specific, written prior authorization.
  *
- * THIS SOFTWARE IS PROVIDED “AS IS.”  MIPS MAKES NO WARRANTIES AND
+ * THIS SOFTWARE IS PROVIDED “AS IS.”  MIPS MAKES NO WARRANTIES AND
  * DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, STATUTORY, IMPLIED OR
  * OTHERWISE, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
