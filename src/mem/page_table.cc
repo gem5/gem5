@@ -156,7 +156,7 @@ PageTable::serialize(std::ostream &os)
     PTableItr iter = pTable.begin();
     PTableItr end = pTable.end();
     while (iter != end) {
-        os << "\n[" << csprintf("%s.Entry%d", name(), count) << "]\n";
+        os << "\n[" << csprintf("%s.Entry%d", process->name(), count) << "]\n";
 
         paramOut(os, "vaddr", iter->first);
         iter->second.serialize(os);
@@ -178,9 +178,9 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
     pTable.clear();
 
     while(i < count) {
-        paramIn(cp, csprintf("%s.Entry%d", name(), i), "vaddr", vaddr);
+        paramIn(cp, csprintf("%s.Entry%d", process->name(), i), "vaddr", vaddr);
         entry = new TheISA::TlbEntry();
-        entry->unserialize(cp, csprintf("%s.Entry%d", name(), i));
+        entry->unserialize(cp, csprintf("%s.Entry%d", process->name(), i));
         pTable[vaddr] = *entry;
         ++i;
    }
