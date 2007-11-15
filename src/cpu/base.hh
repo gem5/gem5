@@ -189,76 +189,7 @@ class BaseCPU : public MemObject
         Tick progress_interval;
         BaseCPU *checker;
 
-#if THE_ISA == MIPS_ISA
-      /* Note: It looks like it will be better to allow simulator users
-         to specify the values of individual variables instead of requiring
-         users to define the values of entire registers
-         Especially since a lot of these variables can be created from other
-         user parameters  (cache descriptions)
-                                               -jpp
-      */
-      // MIPS CP0 State - First individual variables
-      // Page numbers refer to revision 2.50 (July 2005) of the MIPS32 ARM, Volume III (PRA)
-      unsigned CP0_IntCtl_IPTI; // Page 93, IP Timer Interrupt
-      unsigned CP0_IntCtl_IPPCI; // Page 94, IP Performance Counter Interrupt
-      unsigned CP0_SrsCtl_HSS; // Page 95, Highest Implemented Shadow Set
-      unsigned CP0_PRId_CompanyOptions; // Page 105, Manufacture options
-      unsigned CP0_PRId_CompanyID; // Page 105, Company ID - (0-255, 1=>MIPS)
-      unsigned CP0_PRId_ProcessorID; // Page 105
-      unsigned CP0_PRId_Revision; // Page 105
-      unsigned CP0_EBase_CPUNum; // Page 106, CPU Number in a multiprocessor system
-      unsigned CP0_Config_BE; // Page 108, Big/Little Endian mode
-      unsigned CP0_Config_AT; //Page 109
-      unsigned CP0_Config_AR; //Page 109
-      unsigned CP0_Config_MT; //Page 109
-      unsigned CP0_Config_VI; //Page 109
-      unsigned CP0_Config1_M; // Page 110
-      unsigned CP0_Config1_MMU; // Page 110
-      unsigned CP0_Config1_IS; // Page 110
-      unsigned CP0_Config1_IL; // Page 111
-      unsigned CP0_Config1_IA; // Page 111
-      unsigned CP0_Config1_DS; // Page 111
-      unsigned CP0_Config1_DL; // Page 112
-      unsigned CP0_Config1_DA; // Page 112
-      bool CP0_Config1_C2; // Page 112
-      bool CP0_Config1_MD;// Page 112 - Technically not used in MIPS32
-      bool CP0_Config1_PC;// Page 112
-      bool CP0_Config1_WR;// Page 113
-      bool CP0_Config1_CA;// Page 113
-      bool CP0_Config1_EP;// Page 113
-      bool CP0_Config1_FP;// Page 113
-      bool CP0_Config2_M; // Page 114
-      unsigned CP0_Config2_TU;// Page 114
-      unsigned CP0_Config2_TS;// Page 114
-      unsigned CP0_Config2_TL;// Page 115
-      unsigned CP0_Config2_TA;// Page 115
-      unsigned CP0_Config2_SU;// Page 115
-      unsigned CP0_Config2_SS;// Page 115
-      unsigned CP0_Config2_SL;// Page 116
-      unsigned CP0_Config2_SA;// Page 116
-      bool CP0_Config3_M; //// Page 117
-      bool CP0_Config3_DSPP;// Page 117
-      bool CP0_Config3_LPA;// Page 117
-      bool CP0_Config3_VEIC;// Page 118
-      bool CP0_Config3_VInt; // Page 118
-      bool CP0_Config3_SP;// Page 118
-      bool CP0_Config3_MT;// Page 119
-      bool CP0_Config3_SM;// Page 119
-      bool CP0_Config3_TL;// Page 119
-
-      bool CP0_WatchHi_M; // Page 124
-      bool CP0_PerfCtr_M; // Page 130
-      bool CP0_PerfCtr_W; // Page 130
-
-
-      // Then, whole registers
-      unsigned CP0_PRId;
-      unsigned CP0_Config;
-      unsigned CP0_Config1;
-      unsigned CP0_Config2;
-      unsigned CP0_Config3;
-
-#endif
+        TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
 
         Params();
     };
