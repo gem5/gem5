@@ -117,13 +117,13 @@ class O3ThreadContext : public ThreadContext
     virtual void activate(int delay = 1);
 
     /** Set the status to Suspended. */
-    virtual void suspend();
+    virtual void suspend(int delay = 0);
 
     /** Set the status to Unallocated. */
     virtual void deallocate(int delay = 0);
 
     /** Set the status to Halted. */
-    virtual void halt();
+    virtual void halt(int delay = 0);
 
 #if FULL_SYSTEM
     /** Dumps the function profiling information.
@@ -236,7 +236,6 @@ class O3ThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     virtual bool misspeculating() { return false; }
 
-    virtual void setShadowSet(int ss) { };
 #if !FULL_SYSTEM
     /** Gets a syscall argument by index. */
     virtual IntReg getSyscallArg(int i);

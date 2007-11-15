@@ -652,7 +652,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     Status_EXL = 0;
                     if(Config_AR >=1 && SRSCtl_HSS > 0 && Status_BEV == 0){
                       SRSCtl_CSS = SRSCtl_PSS;
-                      xc->setShadowSet(SRSCtl_PSS);
+                      //xc->setShadowSet(SRSCtl_PSS);
                     }
                   }
                   LLFlag = 0;
@@ -2086,7 +2086,7 @@ decode OPCODE_HI default Unknown::unknown() {
         format CP0Control {
             0x7: cache({{
                            Addr CacheEA = Rs.uw + OFFSET;
-                           fault = xc->CacheOp((uint8_t)CACHE_OP,(Addr) CacheEA);
+                           //fault = xc->CacheOp((uint8_t)CACHE_OP,(Addr) CacheEA);
                          }});
         }
     }

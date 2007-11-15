@@ -503,7 +503,7 @@ BaseSimpleCPU::advancePC(Fault fault)
     } while (oldpc != thread->readPC());
 }
 
-Fault
+/*Fault
 BaseSimpleCPU::CacheOp(uint8_t Op, Addr EffAddr)
 {
     // translate to physical address
@@ -536,4 +536,4 @@ BaseSimpleCPU::CacheOp(uint8_t Op, Addr EffAddr)
           }
       }
     return fault;
-}
+}*/

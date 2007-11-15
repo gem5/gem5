@@ -177,9 +177,6 @@ namespace AlphaISA
             intRegFile.setReg(intReg, val);
         }
 
-        void setShadowSet(int css)
-        { }
-
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
 

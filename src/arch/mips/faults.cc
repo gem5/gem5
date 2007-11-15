@@ -196,7 +196,7 @@ void MipsFault::setExceptionState(ThreadContext *tc,uint8_t ExcCode)
       // Move ESS to CSS
       replaceBits(srs,SRSCtl_CSS_HI,SRSCtl_CSS_LO,ESS);
       tc->setMiscRegNoEffect(MipsISA::SRSCtl,srs);
-      tc->setShadowSet(ESS);
+      //tc->setShadowSet(ESS);
     }
 
   // set EXL bit (don't care if it is already set!)

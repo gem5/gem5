@@ -150,13 +150,13 @@ class ThreadContext
     virtual void activate(int delay = 1) = 0;
 
     /// Set the status to Suspended.
-    virtual void suspend() = 0;
+    virtual void suspend(int delay = 0) = 0;
 
     /// Set the status to Unallocated.
     virtual void deallocate(int delay = 0) = 0;
 
     /// Set the status to Halted.
-    virtual void halt() = 0;
+    virtual void halt(int delay = 0) = 0;
 
 #if FULL_SYSTEM
     virtual void dumpFuncProfile() = 0;
@@ -237,8 +237,6 @@ class ThreadContext
     virtual uint64_t readRegOtherThread(int misc_reg, unsigned tid) { return 0; }
 
     virtual void setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid) { };
-
-    virtual void setShadowSet(int css) = 0;
 
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
@@ -335,13 +333,13 @@ class ProxyThreadContext : public ThreadContext
     void activate(int delay = 1) { actualTC->activate(delay); }
 
     /// Set the status to Suspended.
-    void suspend() { actualTC->suspend(); }
+    void suspend(int delay = 0) { actualTC->suspend(); }
 
     /// Set the status to Unallocated.
     void deallocate(int delay = 0) { actualTC->deallocate(); }
 
     /// Set the status to Halted.
-    void halt() { actualTC->halt(); }
+    void halt(int delay = 0) { actualTC->halt(); }
 
 #if FULL_SYSTEM
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
@@ -408,10 +406,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
-
-    void setShadowSet(int css){
-      return actualTC->setShadowSet(css);
-    }
 
     uint64_t readPC() { return actualTC->readPC(); }
 
