@@ -78,7 +78,7 @@ if not options.numcpus:
 class Cholesky(LiveProcess):
     cwd = options.rootdir + '/kernels/cholesky'
     executable = options.rootdir + '/kernels/cholesky/CHOLESKY'
-    cmd = ['CHOLESKY', '-p', str(options.numcpus),
+    cmd = ['CHOLESKY', '-p' +  str(options.numcpus),
             options.rootdir + '/kernels/cholesky/inputs/tk23.O']
 
 class FFT(LiveProcess):
@@ -128,7 +128,7 @@ class Ocean_noncontig(LiveProcess):
 
 class Raytrace(LiveProcess):
     executable = options.rootdir + '/apps/raytrace/RAYTRACE'
-    cmd = ['RAYTRACE', '-p', str(options.numcpus),
+    cmd = ['RAYTRACE', '-p' + str(options.numcpus),
            options.rootdir + '/apps/raytrace/inputs/teapot.env']
     cwd = options.rootdir + '/apps/raytrace'
 
@@ -252,10 +252,10 @@ elif options.benchmark == 'WaterNSquared':
 elif options.benchmark == 'WaterSpatial':
     root.workload = Water_spatial()
 else:
-    panic("The --benchmark environment variable was set to something" \
-          +" improper.\nUse Cholesky, FFT, LUContig, LUNoncontig, Radix" \
-          +", Barnes, FMM, OceanContig,\nOceanNoncontig, Raytrace," \
-          +" WaterNSquared, or WaterSpatial\n")
+    print >> sys.stderr, """The --benchmark environment variable was set to something improper.
+Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
+OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial"""
+    sys.exit(1)
 
 # --------------------
 # Assign the workload to the cpus
