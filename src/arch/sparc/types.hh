@@ -60,6 +60,10 @@ namespace SparcISA
     typedef int RegContextVal;
 
     typedef uint16_t RegIndex;
+
+    struct CoreSpecific {
+        int core_type;
+    };
 }
 
 #endif

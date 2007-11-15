@@ -258,6 +258,10 @@ namespace X86ISA
     typedef int RegContextVal;
 
     typedef uint16_t RegIndex;
+
+    struct CoreSpecific {
+        int core_type;
+    };
 };
 
 #endif // __ARCH_X86_TYPES_HH__

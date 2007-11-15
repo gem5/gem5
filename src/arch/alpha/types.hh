@@ -70,6 +70,9 @@ namespace AlphaISA
         ITOUCH_ANNOTE = 0xffffffff,
     };
 
+    struct CoreSpecific {
+        int core_type;
+    };
 } // namespace AlphaISA
 
 #endif
