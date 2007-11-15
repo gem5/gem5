@@ -289,9 +289,13 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
     // Copy the misc regs.
     TheISA::copyMiscRegs(tc, this);
 
-    // Then finally set the PC and the next PC.
+    // Then finally set the PC, the next PC, the nextNPC, the micropc, and the
+    // next micropc.
     cpu->setPC(tc->readPC(), tid);
     cpu->setNextPC(tc->readNextPC(), tid);
+    cpu->setNextNPC(tc->readNextNPC(), tid);
+    cpu->setMicroPC(tc->readMicroPC(), tid);
+    cpu->setNextMicroPC(tc->readNextMicroPC(), tid);
 #if !FULL_SYSTEM
     this->thread->funcExeInst = tc->readFuncExeInst();
 #endif
@@ -314,6 +318,7 @@ template <class Impl>
 TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx, int width)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     switch(width) {
       case 32:
         return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
@@ -329,6 +334,7 @@ template <class Impl>
 TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
 }
 
@@ -337,6 +343,7 @@ TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx, int width)
 {
     DPRINTF(Fault, "Reading floatint register through the TC!\n");
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
 }
 
@@ -344,6 +351,7 @@ template <class Impl>
 TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
 }
 
@@ -364,6 +372,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val, int width)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     switch(width) {
       case 32:
         cpu->setArchFloatRegSingle(reg_idx, val, thread->readTid());
@@ -383,6 +392,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     cpu->setArchFloatRegSingle(reg_idx, val, thread->readTid());
 
     if (!thread->trapPending && !thread->inSyscall) {
@@ -396,6 +406,7 @@ O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val,
                                              int width)
 {
     DPRINTF(Fault, "Setting floatint register through the TC!\n");
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
@@ -408,6 +419,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
+    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
@@ -433,6 +445,30 @@ void
 O3ThreadContext<Impl>::setNextPC(uint64_t val)
 {
     cpu->setNextPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromTC(thread->readTid());
+    }
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setMicroPC(uint64_t val)
+{
+    cpu->setMicroPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromTC(thread->readTid());
+    }
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setNextMicroPC(uint64_t val)
+{
+    cpu->setNextMicroPC(val, thread->readTid());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {

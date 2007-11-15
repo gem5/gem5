@@ -40,7 +40,7 @@
 #if !FULL_SYSTEM
 void FaultBase::invoke(ThreadContext * tc)
 {
-    panic("fault (%s) detected @ PC %p", name(), tc->readPC());
+    fatal("fault (%s) detected @ PC %p", name(), tc->readPC());
 }
 #else
 void FaultBase::invoke(ThreadContext * tc)
@@ -54,7 +54,7 @@ void FaultBase::invoke(ThreadContext * tc)
 
 void UnimpFault::invoke(ThreadContext * tc)
 {
-    panic("Unimpfault: %s\n", panicStr.c_str());
+    fatal("Unimpfault: %s\n", panicStr.c_str());
 }
 
 #if !FULL_SYSTEM
