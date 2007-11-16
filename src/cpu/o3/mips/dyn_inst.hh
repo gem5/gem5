@@ -99,7 +99,8 @@ class MipsDynInst : public BaseDynInst<Impl>
 
   public:
     /** Reads a miscellaneous register. */
-    MiscReg readMiscRegNoEffect(int misc_reg)
+    /** TODO: Use thread number from argument if given, will probably not work for MIPS MT as is */
+    MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid = 0)
     {
         return this->cpu->readMiscRegNoEffect(misc_reg, this->threadNumber);
     }
@@ -113,7 +114,7 @@ class MipsDynInst : public BaseDynInst<Impl>
     }
 
     /** Sets a misc. register. */
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0)
     {
         this->instResult.integer = val;
         this->cpu->setMiscRegNoEffect(misc_reg, val, this->threadNumber);
