@@ -226,6 +226,14 @@ class ThreadContext
 
     virtual void setNextNPC(uint64_t val) = 0;
 
+    virtual uint64_t readMicroPC() = 0;
+
+    virtual void setMicroPC(uint64_t val) = 0;
+
+    virtual uint64_t readNextMicroPC() = 0;
+
+    virtual void setNextMicroPC(uint64_t val) = 0;
+
     virtual MiscReg readMiscRegNoEffect(int misc_reg) = 0;
 
     virtual MiscReg readMiscReg(int misc_reg) = 0;
@@ -418,6 +426,14 @@ class ProxyThreadContext : public ThreadContext
     uint64_t readNextNPC() { return actualTC->readNextNPC(); }
 
     void setNextNPC(uint64_t val) { actualTC->setNextNPC(val); }
+
+    uint64_t readMicroPC() { return actualTC->readMicroPC(); }
+
+    void setMicroPC(uint64_t val) { actualTC->setMicroPC(val); }
+
+    uint64_t readNextMicroPC() { return actualTC->readMicroPC(); }
+
+    void setNextMicroPC(uint64_t val) { actualTC->setMicroPC(val); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     { return actualTC->readMiscRegNoEffect(misc_reg); }
