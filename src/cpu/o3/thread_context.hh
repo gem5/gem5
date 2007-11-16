@@ -203,6 +203,16 @@ class O3ThreadContext : public ThreadContext
     /** Sets this thread's next PC. */
     virtual void setNextPC(uint64_t val);
 
+    virtual uint64_t readMicroPC()
+    { return cpu->readMicroPC(thread->readTid()); }
+
+    virtual void setMicroPC(uint64_t val);
+
+    virtual uint64_t readNextMicroPC()
+    { return cpu->readNextMicroPC(thread->readTid()); }
+
+    virtual void setNextMicroPC(uint64_t val);
+
     /** Reads a miscellaneous register. */
     virtual MiscReg readMiscRegNoEffect(int misc_reg)
     { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
