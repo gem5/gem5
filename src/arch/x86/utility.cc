@@ -98,13 +98,13 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setIntReg(INTREG_RAX, 0);
 
     //The following values are dictated by the architecture for after a RESET#
-    tc->setMiscReg(MISCREG_CR0, 0x0000000060000010);
+    tc->setMiscReg(MISCREG_CR0, 0x0000000060000010ULL);
     tc->setMiscReg(MISCREG_CR2, 0);
     tc->setMiscReg(MISCREG_CR3, 0);
     tc->setMiscReg(MISCREG_CR4, 0);
     tc->setMiscReg(MISCREG_CR8, 0);
 
-    tc->setMiscReg(MISCREG_RFLAGS, 0x0000000000000002);
+    tc->setMiscReg(MISCREG_RFLAGS, 0x0000000000000002ULL);
 
     tc->setMiscReg(MISCREG_EFER, 0);
 
@@ -130,12 +130,12 @@ void initCPU(ThreadContext *tc, int cpuId)
     codeAttr.defaultSize = 0;
 
     tc->setMiscReg(MISCREG_CS, 0xf000);
-    tc->setMiscReg(MISCREG_CS_BASE, 0x00000000ffff0000);
+    tc->setMiscReg(MISCREG_CS_BASE, 0x00000000ffff0000ULL);
     // This has the base value pre-added.
     tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
     tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);
 
-    tc->setPC(0x000000000000fff0 +
+    tc->setPC(0x000000000000fff0ULL +
             tc->readMiscReg(MISCREG_CS_BASE));
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 
@@ -197,8 +197,8 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_DR2, 0);
     tc->setMiscReg(MISCREG_DR3, 0);
 
-    tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0);
-    tc->setMiscReg(MISCREG_DR7, 0x0000000000000400);
+    tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0ULL);
+    tc->setMiscReg(MISCREG_DR7, 0x0000000000000400ULL);
 
     tc->setMiscReg(MISCREG_TSC, 0);
     tc->setMiscReg(MISCREG_TSC_AUX, 0);
@@ -220,7 +220,7 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_SYSENTER_ESP, 0);
     tc->setMiscReg(MISCREG_SYSENTER_EIP, 0);
 
-    tc->setMiscReg(MISCREG_PAT, 0x0007040600070406);
+    tc->setMiscReg(MISCREG_PAT, 0x0007040600070406ULL);
 
     tc->setMiscReg(MISCREG_SYSCFG, 0x20601);
 
