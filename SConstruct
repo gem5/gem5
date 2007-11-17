@@ -68,6 +68,8 @@ import os
 
 from os.path import isdir, join as joinpath
 
+import SCons
+
 # Check for recent-enough Python and SCons versions.  If your system's
 # default installation of Python is not recent enough, you can use a
 # non-default installation of the Python interpreter by either (1)
@@ -472,14 +474,19 @@ all_isa_list.sort()
 all_cpu_list.sort()
 default_cpus.sort()
 
-def ExtraPathValidator(key, val, env):
+def PathListMakeAbsolute(val):
+    if not val:
+        return val
+    f = lambda p: os.path.abspath(os.path.expanduser(p))
+    return ':'.join(map(f, val.split(':')))
+
+def PathListAllExist(key, val, env):
     if not val:
         return
     paths = val.split(':')
     for path in paths:
-        path = os.path.expanduser(path)
         if not isdir(path):
-            raise AttributeError, "Invalid path: '%s'" % path
+            raise SCons.Errors.UserError("Path does not exist: '%s'" % path)
 
 sticky_opts.AddOptions(
     EnumOption('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
@@ -509,7 +516,7 @@ sticky_opts.AddOptions(
      'Override the default PYTHONHOME for this system (use with caution)',
      '%s:%s' % (sys.prefix, sys.exec_prefix)),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
-     ExtraPathValidator)
+     PathListAllExist, PathListMakeAbsolute)
     )
 
 nonsticky_opts.AddOptions(
