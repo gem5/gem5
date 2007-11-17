@@ -881,9 +881,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         assert(pkt->isRead() || blk->isValid());
     }
 
-    if (pkt->needsExclusive() || !pkt->sharedAsserted()) {
+    if (!pkt->sharedAsserted()) {
         blk->status = BlkValid | BlkWritable;
     } else {
+        assert(!pkt->needsExclusive());
         blk->status = BlkValid;
     }
 
