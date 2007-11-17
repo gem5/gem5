@@ -189,7 +189,7 @@ def makeDualRoot(testSystem, driveSystem, dumpfile):
 
     return self
 
-def setMipsOptions(TestCPUClass.CoreParams)
+def setMipsOptions(TestCPUClass):
         #CP0 Configuration
         TestCPUClass.CoreParams.CP0_PRId_CompanyOptions = 0
         TestCPUClass.CoreParams.CP0_PRId_CompanyID = 1
