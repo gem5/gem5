@@ -330,6 +330,23 @@ MSHR::handleFill(Packet *pkt, CacheBlk *blk)
         // service... assert shared line on its behalf
         pkt->assertShared();
     }
+
+    if (!pkt->sharedAsserted() && !pendingInvalidate
+        && deferredTargets->needsExclusive) {
+        // We got an exclusive response, but we have deferred targets
+        // which are waiting to request an exclusive copy (not because
+        // of a pending invalidate).  This can happen if the original
+        // request was for a read-only (non-exclusive) block, but we
+        // got an exclusive copy anyway because of the E part of the
+        // MOESI/MESI protocol.  Since we got the exclusive copy
+        // there's no need to defer the targets, so move them up to
+        // the regular target list.
+        assert(!targets->needsExclusive);
+        targets->needsExclusive = true;
+        // this clears out deferredTargets too
+        targets->splice(targets->end(), *deferredTargets);
+        deferredTargets->resetFlags();
+    }
 }
 
 
