@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Gabe Black
  *          Korey Sewell
+ *          Jaidev Patwardhan
  */
 
 #include "arch/mips/regfile/int_regfile.hh"

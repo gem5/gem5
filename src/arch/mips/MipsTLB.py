@@ -27,6 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Jaidev Patwardhan
+#          Korey Sewell
 
 from m5.SimObject import SimObject
 from m5.params import *
