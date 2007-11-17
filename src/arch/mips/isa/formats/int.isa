@@ -119,7 +119,7 @@ output header {{
                 {
                     //If Bit 15 is 1 then Sign Extend
                     int32_t temp = sextImm & 0x00008000;
-                    if (temp > 0 && mnemonic != "lui") {
+                    if (temp > 0 && strcmp(mnemonic,"lui") != 0) {
                         sextImm |= 0xFFFF0000;
                     }
                 }
@@ -313,7 +313,7 @@ output decoder {{
                 ss << ", ";
             }
 
-            if( mnemonic == "lui")
+            if(strcmp(mnemonic,"lui") == 0)
                 ccprintf(ss, "0x%x ", sextImm);
             else
                 ss << (int) sextImm;
