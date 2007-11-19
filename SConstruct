@@ -346,6 +346,7 @@ try:
             env.Append(CFLAGS='-arch x86_64')
             env.Append(LINKFLAGS='-arch x86_64')
             env.Append(ASFLAGS='-arch x86_64')
+            env['OSX64bit'] = True
 except:
     pass
 
