@@ -609,7 +609,7 @@ AtomicSimpleCPU::translateDataWriteAddr(Addr vaddr, Addr &paddr,
     dcache_latency = 0;
 
     while(1) {
-        req->setVirt(0, vaddr, flags, flags, thread->readPC());
+        req->setVirt(0, vaddr, dataSize, flags, thread->readPC());
 
         // translate to physical address
         Fault fault = thread->translateDataWriteReq(req);
