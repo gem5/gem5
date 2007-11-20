@@ -141,15 +141,6 @@ namespace MipsISA {
     //
     // CPU Utility
     //
-    void initCPU(ThreadContext *tc, int cpuId);
-
-    /**
-     * Function to check for and process any interrupts.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void processInterrupts(TC *tc);
-
     void startupCPU(ThreadContext *tc, int cpuId);
 };
 

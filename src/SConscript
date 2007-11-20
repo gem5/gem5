@@ -198,12 +198,12 @@ for root, dirs, files in os.walk(srcdir, topdown=True):
 extra_string = env['EXTRAS']
 if extra_string and extra_string != '' and not extra_string.isspace():
     for extra in extra_string.split(':'):
-        extra = os.path.expanduser(extra)
-        extra = os.path.normpath(extra)
+        print 'Adding', extra, 'to source directory list'
         env.Append(CPPPATH=[Dir(extra)])
         for root, dirs, files in os.walk(extra, topdown=True):
             if 'SConscript' in files:
                 subdir = root[len(os.path.dirname(extra))+1:]
+                print '  Found SConscript in', subdir
                 build_dir = joinpath(env['BUILDDIR'], subdir)
                 SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 

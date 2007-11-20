@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -25,7 +26,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Jaidev Patwardhan
+ * Authors: Nathan Binkert
+ *          Steve Reinhardt
+ *          Jaidev Patwardhan
  */
 
 #include "arch/mips/pagetable.hh"

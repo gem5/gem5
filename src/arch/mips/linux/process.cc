@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
@@ -25,7 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Korey Sewell
+ * Authors: Gabe Black
+ *          Korey Sewell
  */
 
 #include "arch/mips/linux/linux.hh"

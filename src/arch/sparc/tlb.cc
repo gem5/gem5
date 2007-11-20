@@ -1363,11 +1363,6 @@ TLB::serialize(std::ostream &os)
     SERIALIZE_SCALAR(cntr);
     SERIALIZE_ARRAY(free_list,  cntr);
 
-    for (int x = 0; x < size; x++) {
-        nameOut(os, csprintf("%s.PTE%d", name(), x));
-        tlb[x].serialize(os);
-    }
-
     SERIALIZE_SCALAR(c0_tsb_ps0);
     SERIALIZE_SCALAR(c0_tsb_ps1);
     SERIALIZE_SCALAR(c0_config);
@@ -1376,6 +1371,11 @@ TLB::serialize(std::ostream &os)
     SERIALIZE_SCALAR(cx_config);
     SERIALIZE_SCALAR(sfsr);
     SERIALIZE_SCALAR(tag_access);
+
+    for (int x = 0; x < size; x++) {
+        nameOut(os, csprintf("%s.PTE%d", name(), x));
+        tlb[x].serialize(os);
+    }
 }
 
 void
@@ -1398,14 +1398,6 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
     for (int x = 0; x < cntr; x++)
         freeList.push_back(&tlb[free_list[x]]);
 
-    lookupTable.clear();
-    for (int x = 0; x < size; x++) {
-        tlb[x].unserialize(cp, csprintf("%s.PTE%d", section, x));
-        if (tlb[x].valid)
-            lookupTable.insert(tlb[x].range, &tlb[x]);
-
-    }
-
     UNSERIALIZE_SCALAR(c0_tsb_ps0);
     UNSERIALIZE_SCALAR(c0_tsb_ps1);
     UNSERIALIZE_SCALAR(c0_config);
@@ -1414,6 +1406,14 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(cx_config);
     UNSERIALIZE_SCALAR(sfsr);
     UNSERIALIZE_SCALAR(tag_access);
+
+    lookupTable.clear();
+    for (int x = 0; x < size; x++) {
+        tlb[x].unserialize(cp, csprintf("%s.PTE%d", section, x));
+        if (tlb[x].valid)
+            lookupTable.insert(tlb[x].range, &tlb[x]);
+
+    }
 }
 
 void

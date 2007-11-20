@@ -27,7 +27,6 @@
  *
  * Authors: Gabe Black
  *          Ali Saidi
- *          Korey Sewell
  */
 
 #ifndef __MIPS_PROCESS_HH__

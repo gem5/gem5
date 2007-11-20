@@ -70,6 +70,10 @@ PhysicalMemory::PhysicalMemory(const Params *p)
         memset(pmemAddr, 0, p->range.size());
 
     pagePtr = 0;
+
+    cachedSize = params()->range.size();
+    cachedStart = params()->range.start;
+
 }
 
 void

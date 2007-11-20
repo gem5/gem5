@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
