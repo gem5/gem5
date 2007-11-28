@@ -88,9 +88,7 @@ class Port
 
   public:
 
-    Port()
-        : peer(NULL), owner(NULL)
-    { }
+    Port();
 
     /**
      * Constructor.
@@ -100,9 +98,7 @@ class Port
      * @param _owner Pointer to the MemObject that owns this port.
      * Will not necessarily be set.
      */
-    Port(const std::string &_name, MemObject *_owner = NULL)
-        : portName(_name), peer(NULL), owner(_owner)
-    { }
+    Port(const std::string &_name, MemObject *_owner = NULL);
 
     /** Return port name (for DPRINTF). */
     const std::string &name() const { return portName; }
@@ -135,6 +131,7 @@ class Port
      * demise. */
     void removeConn();
 
+    virtual bool isDefaultPort() { return false; }
 
   protected:
 

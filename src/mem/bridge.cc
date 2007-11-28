@@ -78,8 +78,9 @@ Bridge::getPort(const std::string &if_name, int idx)
     else
         return NULL;
 
-    if (port->getPeer() != NULL)
-        panic("bridge side %s already connected to.", if_name);
+    if (port->getPeer() != NULL && !port->getPeer()->isDefaultPort())
+        panic("bridge side %s already connected to %s.",
+                if_name, port->getPeer()->name());
     return port;
 }
 
