@@ -34,6 +34,7 @@
 
 #include <string>
 #include <vector>
+#include "sim/byteswap.hh"
 #include "sim/process.hh"
 
 class ObjectFile;
@@ -43,10 +44,18 @@ class SparcLiveProcess : public LiveProcess
 {
   protected:
 
+    const Addr StackBias;
+
     //The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
-    SparcLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    SparcLiveProcess(LiveProcessParams * params,
+            ObjectFile *objFile, Addr _StackBias);
+
+    void startup();
+
+    template<class IntType>
+    void argsInit(int pageSize);
 
   public:
 
@@ -62,29 +71,32 @@ class SparcLiveProcess : public LiveProcess
     virtual void flushWindows(ThreadContext *tc) = 0;
 };
 
-struct M5_32_auxv_t
+template<class IntType>
+struct M5_auxv_t
 {
-    int32_t a_type;
+    IntType a_type;
     union {
-        int32_t a_val;
-        int32_t a_ptr;
-        int32_t a_fcn;
+        IntType a_val;
+        IntType a_ptr;
+        IntType a_fcn;
     };
 
-    M5_32_auxv_t()
+    M5_auxv_t()
     {}
 
-    M5_32_auxv_t(int32_t type, int32_t val);
+    M5_auxv_t(IntType type, IntType val)
+    {
+        a_type = SparcISA::htog(type);
+        a_val = SparcISA::htog(val);
+    }
 };
 
 class Sparc32LiveProcess : public SparcLiveProcess
 {
   protected:
 
-    std::vector<M5_32_auxv_t> auxv;
-
     Sparc32LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
-            SparcLiveProcess(params, objFile)
+            SparcLiveProcess(params, objFile, 0)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
@@ -103,31 +115,12 @@ class Sparc32LiveProcess : public SparcLiveProcess
     void flushWindows(ThreadContext *tc);
 };
 
-struct M5_64_auxv_t
-{
-    int64_t a_type;
-    union {
-        int64_t a_val;
-        int64_t a_ptr;
-        int64_t a_fcn;
-    };
-
-    M5_64_auxv_t()
-    {}
-
-    M5_64_auxv_t(int64_t type, int64_t val);
-};
-
 class Sparc64LiveProcess : public SparcLiveProcess
 {
   protected:
 
-    static const Addr StackBias = 2047;
-
-    std::vector<M5_64_auxv_t> auxv;
-
     Sparc64LiveProcess(LiveProcessParams * params, ObjectFile *objFile) :
-            SparcLiveProcess(params, objFile)
+            SparcLiveProcess(params, objFile, 2047)
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.

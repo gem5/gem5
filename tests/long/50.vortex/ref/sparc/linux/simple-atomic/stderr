@@ -1,5 +1,5 @@
+0: system.remote_gdb.listener: listening for remote gdb on port 7004
 warn: Entering event queue @ 0.  Starting simulation...
-warn: Ignoring request to flush register windows.
 warn: ignoring syscall time(4026527856, 4026528256, ...)
 warn: ignoring syscall time(4026527408, 1375098, ...)
 warn: ignoring syscall time(4026527320, 1, ...)

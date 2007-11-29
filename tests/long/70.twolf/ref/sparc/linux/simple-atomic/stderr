@@ -1,3 +1,3 @@
+0: system.remote_gdb.listener: listening for remote gdb on port 7007
 warn: Entering event queue @ 0.  Starting simulation...
-warn: Ignoring request to flush register windows.
 warn: Increasing stack size by one page.

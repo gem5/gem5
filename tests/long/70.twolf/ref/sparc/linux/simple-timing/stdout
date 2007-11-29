@@ -18,11 +18,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 14 2007 22:48:17
-M5 started Tue Aug 14 23:38:54 2007
+M5 compiled Nov 28 2007 15:13:45
+M5 started Wed Nov 28 15:13:46 2007
 M5 executing on nacho
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing tests/run.py long/70.twolf/sparc/linux/simple-timing
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sav
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 270397899000 because target called exit()
