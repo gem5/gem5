@@ -144,10 +144,40 @@ class Process : public SimObject
     //separated.
     uint64_t M5_pid;
 
+    class FdMap
+    {
+      public:
+            int fd;
+            std::string filename;
+            int mode;
+            int flags;
+            bool isPipe;
+            int readPipeSource;
+            uint64_t fileOffset;
+
+
+            FdMap()
+            {
+                    fd = -1;
+                    filename = "NULL";
+                    mode = 0;
+                    flags = 0;
+                    isPipe = false;
+                    readPipeSource = 0;
+                    fileOffset = 0;
+
+            }
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+    };
+
   private:
     // file descriptor remapping support
-    static const int MAX_FD = 256;	// max legal fd value
-    int fd_map[MAX_FD+1];
+    static const int MAX_FD = 256;    // max legal fd value
+    FdMap fd_map[MAX_FD+1];
+
 
   public:
     // static helper functions to generate file descriptors for constructor
@@ -168,13 +198,25 @@ class Process : public SimObject
     void dup_fd(int sim_fd, int tgt_fd);
 
     // generate new target fd for sim_fd
-    int alloc_fd(int sim_fd);
+    int alloc_fd(int sim_fd, std::string filename, int flags, int mode, bool pipe);
 
     // free target fd (e.g., after close)
     void free_fd(int tgt_fd);
 
     // look up simulator fd for given target fd
     int sim_fd(int tgt_fd);
+
+    // look up simulator fd_map object for a given target fd
+    FdMap * sim_fd_obj(int tgt_fd);
+
+    // fix all offsets for currently open files and save them
+    void fix_file_offsets();
+
+    // find all offsets for currently open files and save them
+    void find_file_offsets();
+
+    // set the source of this read pipe for a checkpoint resume
+    void setReadPipeSource(int read_pipe_fd, int source_fd);
 
     virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
 

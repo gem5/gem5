@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-
 #include <string>
 
 #include "arch/remote_gdb.hh"
@@ -114,13 +113,32 @@ Process::Process(ProcessParams * params)
 
     M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)
-    fd_map[STDIN_FILENO] = stdin_fd;
-    fd_map[STDOUT_FILENO] = stdout_fd;
-    fd_map[STDERR_FILENO] = stderr_fd;
+    Process::FdMap *fdo = &fd_map[STDIN_FILENO];
+    fdo->fd = stdin_fd;
+    fdo->filename = in;
+    fdo->flags = O_RDONLY;
+    fdo->mode = -1;
+    fdo->fileOffset = 0;
+
+    fdo =  &fd_map[STDOUT_FILENO];
+    fdo->fd = stdout_fd;
+    fdo->filename = out;
+    fdo->flags =  O_WRONLY | O_CREAT | O_TRUNC;
+    fdo->mode = 0774;
+    fdo->fileOffset = 0;
+
+    fdo = &fd_map[STDERR_FILENO];
+    fdo->fd = stderr_fd;
+    fdo->filename = "STDERR";
+    fdo->flags = O_WRONLY;
+    fdo->mode = -1;
+    fdo->fileOffset = 0;
+
 
     // mark remaining fds as free
     for (int i = 3; i <= MAX_FD; ++i) {
-        fd_map[i] = -1;
+        Process::FdMap *fdo = &fd_map[i];
+        fdo->fd = -1;
     }
 
     mmap_start = mmap_end = 0;
@@ -230,22 +248,30 @@ Process::dup_fd(int sim_fd, int tgt_fd)
     if (tgt_fd < 0 || tgt_fd > MAX_FD)
         panic("Process::dup_fd tried to dup past MAX_FD (%d)", tgt_fd);
 
-    fd_map[tgt_fd] = sim_fd;
+    Process::FdMap *fdo = &fd_map[tgt_fd];
+    fdo->fd = sim_fd;
 }
 
 
 // generate new target fd for sim_fd
 int
-Process::alloc_fd(int sim_fd)
+Process::alloc_fd(int sim_fd, string filename, int flags, int mode, bool pipe)
 {
     // in case open() returns an error, don't allocate a new fd
     if (sim_fd == -1)
         return -1;
 
     // find first free target fd
-    for (int free_fd = 0; free_fd < MAX_FD; ++free_fd) {
-        if (fd_map[free_fd] == -1) {
-            fd_map[free_fd] = sim_fd;
+    for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
+        Process::FdMap *fdo = &fd_map[free_fd];
+        if (fdo->fd == -1) {
+            fdo->fd = sim_fd;
+            fdo->filename = filename;
+            fdo->mode = mode;
+            fdo->fileOffset = 0;
+            fdo->flags = flags;
+            fdo->isPipe = pipe;
+            fdo->readPipeSource = 0;
             return free_fd;
         }
     }
@@ -258,10 +284,17 @@ Process::alloc_fd(int sim_fd)
 void
 Process::free_fd(int tgt_fd)
 {
-    if (fd_map[tgt_fd] == -1)
+    Process::FdMap *fdo = &fd_map[tgt_fd];
+    if (fdo->fd == -1)
         warn("Process::free_fd: request to free unused fd %d", tgt_fd);
 
-    fd_map[tgt_fd] = -1;
+    fdo->fd = -1;
+    fdo->filename = "NULL";
+    fdo->mode = 0;
+    fdo->fileOffset = 0;
+    fdo->flags = 0;
+    fdo->isPipe = false;
+    fdo->readPipeSource = 0;
 }
 
 
@@ -272,9 +305,17 @@ Process::sim_fd(int tgt_fd)
     if (tgt_fd > MAX_FD)
         return -1;
 
-    return fd_map[tgt_fd];
+    return fd_map[tgt_fd].fd;
 }
 
+Process::FdMap *
+Process::sim_fd_obj(int tgt_fd)
+{
+    if (tgt_fd > MAX_FD)
+        panic("sim_fd_obj called in fd out of range.");
+
+    return &fd_map[tgt_fd];
+}
 bool
 Process::checkAndAllocNextPage(Addr vaddr)
 {
@@ -301,6 +342,127 @@ Process::checkAndAllocNextPage(Addr vaddr)
     return false;
 }
 
+ // find all offsets for currently open files and save them
+void
+Process::fix_file_offsets() {
+    Process::FdMap *fdo_stdin = &fd_map[STDIN_FILENO];
+    Process::FdMap *fdo_stdout = &fd_map[STDOUT_FILENO];
+    Process::FdMap *fdo_stderr = &fd_map[STDERR_FILENO];
+    string in = fdo_stdin->filename;
+    string out = fdo_stdout->filename;
+
+    // initialize file descriptors to default: same as simulator
+    int stdin_fd, stdout_fd, stderr_fd;
+
+    if (in == "stdin" || in == "cin")
+        stdin_fd = STDIN_FILENO;
+    else if (in == "None")
+        stdin_fd = -1;
+    else{
+        //OPEN standard in and seek to the right location
+        stdin_fd = Process::openInputFile(in);
+        if (lseek(stdin_fd, fdo_stdin->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct location in file: %s", in);
+    }
+
+    if (out == "stdout" || out == "cout")
+        stdout_fd = STDOUT_FILENO;
+    else if (out == "stderr" || out == "cerr")
+        stdout_fd = STDERR_FILENO;
+    else if (out == "None")
+        stdout_fd = -1;
+    else{
+        stdout_fd = Process::openOutputFile(out);
+        if (lseek(stdin_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct in file: %s", out);
+    }
+
+    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+
+    fdo_stdin->fd = stdin_fd;
+    fdo_stdout->fd = stdout_fd;
+    fdo_stderr->fd = stderr_fd;
+
+
+    for (int free_fd = 3; free_fd <= MAX_FD; ++free_fd) {
+        Process::FdMap *fdo = &fd_map[free_fd];
+        if (fdo->fd != -1) {
+            if (fdo->isPipe){
+                if (fdo->filename == "PIPE-WRITE")
+                    continue;
+                else {
+                    assert (fdo->filename == "PIPE-READ");
+                    //create a new pipe
+                    int fds[2];
+                    int pipe_retval = pipe(fds);
+
+                    if (pipe_retval < 0) {
+                        // error
+                        panic("Unable to create new pipe.");
+                    }
+                    fdo->fd = fds[0]; //set read pipe
+                    Process::FdMap *fdo_write = &fd_map[fdo->readPipeSource];
+                    if (fdo_write->filename != "PIPE-WRITE")
+                        panic ("Couldn't find write end of the pipe");
+
+                    fdo_write->fd = fds[1];//set write pipe
+               }
+            } else {
+                //Open file
+                int fd = open(fdo->filename.c_str(), fdo->flags, fdo->mode);
+
+                if (fd == -1)
+                    panic("Unable to open file: %s", fdo->filename);
+                fdo->fd = fd;
+
+                //Seek to correct location before checkpoint
+                if (lseek(fd,fdo->fileOffset, SEEK_SET) < 0)
+                    panic("Unable to seek to correct location in file: %s", fdo->filename);
+            }
+        }
+    }
+}
+void
+Process::find_file_offsets(){
+    for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
+        Process::FdMap *fdo = &fd_map[free_fd];
+        if (fdo->fd != -1) {
+            fdo->fileOffset = lseek(fdo->fd, 0, SEEK_CUR);
+        }  else {
+                fdo->filename = "NULL";
+                fdo->fileOffset = 0;
+        }
+    }
+}
+
+void
+Process::setReadPipeSource(int read_pipe_fd, int source_fd){
+    Process::FdMap *fdo = &fd_map[read_pipe_fd];
+    fdo->readPipeSource = source_fd;
+}
+
+void
+Process::FdMap::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(fd);
+    SERIALIZE_SCALAR(isPipe);
+    SERIALIZE_SCALAR(filename);
+    SERIALIZE_SCALAR(flags);
+    SERIALIZE_SCALAR(readPipeSource);
+    SERIALIZE_SCALAR(fileOffset);
+}
+
+void
+Process::FdMap::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(fd);
+    UNSERIALIZE_SCALAR(isPipe);
+    UNSERIALIZE_SCALAR(filename);
+    UNSERIALIZE_SCALAR(flags);
+    UNSERIALIZE_SCALAR(readPipeSource);
+    UNSERIALIZE_SCALAR(fileOffset);
+}
+
 void
 Process::serialize(std::ostream &os)
 {
@@ -314,9 +476,13 @@ Process::serialize(std::ostream &os)
     SERIALIZE_SCALAR(mmap_end);
     SERIALIZE_SCALAR(nxm_start);
     SERIALIZE_SCALAR(nxm_end);
-    SERIALIZE_ARRAY(fd_map, MAX_FD);
-
+    find_file_offsets();
     pTable->serialize(os);
+    for (int x = 0; x <= MAX_FD; x++) {
+        nameOut(os, csprintf("%s.FdMap%d", name(), x));
+        fd_map[x].serialize(os);
+    }
+
 }
 
 void
@@ -332,10 +498,11 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(mmap_end);
     UNSERIALIZE_SCALAR(nxm_start);
     UNSERIALIZE_SCALAR(nxm_end);
-    UNSERIALIZE_ARRAY(fd_map, MAX_FD);
-
     pTable->unserialize(cp, section);
-
+    for (int x = 0; x <= MAX_FD; x++) {
+        fd_map[x].unserialize(cp, csprintf("%s.FdMap%d", section, x));
+     }
+    fix_file_offsets();
 
     checkpointRestored = true;
 

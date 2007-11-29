@@ -350,12 +350,13 @@ SyscallReturn
 dupFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
 {
     int fd = process->sim_fd(tc->getSyscallArg(0));
-
     if (fd < 0)
         return -EBADF;
 
+    Process::FdMap *fdo = process->sim_fd_obj(tc->getSyscallArg(0));
+
     int result = dup(fd);
-    return (result == -1) ? -errno : process->alloc_fd(result);
+    return (result == -1) ? -errno : process->alloc_fd(result, fdo->filename, fdo->flags, fdo->mode, false);
 }
 
 
@@ -442,9 +443,10 @@ pipePseudoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return pipe_retval;
     }
 
-    sim_fds[0] = process->alloc_fd(fds[0]);
-    sim_fds[1] = process->alloc_fd(fds[1]);
+    sim_fds[0] = process->alloc_fd(fds[0], "PIPE-READ", O_WRONLY, -1, true);
+    sim_fds[1] = process->alloc_fd(fds[1], "PIPE-WRITE", O_RDONLY, -1, true);
 
+    process->setReadPipeSource(sim_fds[0], sim_fds[1]);
     // Alpha Linux convention for pipe() is that fd[0] is returned as
     // the return value of the function, and fd[1] is returned in r20.
     tc->setIntReg(SyscallPseudoReturnReg, sim_fds[1]);

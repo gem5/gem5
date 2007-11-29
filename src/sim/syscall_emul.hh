@@ -518,7 +518,7 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     // open the file
     int fd = open(path.c_str(), hostFlags, mode);
 
-    return (fd == -1) ? -errno : process->alloc_fd(fd);
+    return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
 }
 
 
