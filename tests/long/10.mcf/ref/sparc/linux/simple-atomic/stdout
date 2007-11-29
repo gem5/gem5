@@ -21,8 +21,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov 28 2007 15:13:45
-M5 started Wed Nov 28 15:13:46 2007
+M5 compiled Nov 28 2007 18:29:37
+M5 started Wed Nov 28 18:29:38 2007
 M5 executing on nacho
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-atomic tests/run.py long/10.mcf/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
