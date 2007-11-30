@@ -453,7 +453,7 @@ void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
             //Do the stores
             IntReg sp = tc->readIntReg(StackPointerReg);
             for (int index = 16; index < 32; index++) {
-                IntReg regVal = tc->readIntReg(index);
+                uint32_t regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
                 if (!tc->getMemPort()->tryWriteBlob(
                         sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
