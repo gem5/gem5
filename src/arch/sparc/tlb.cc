@@ -331,10 +331,9 @@ TLB::demapAll(int partition_id)
     DPRINTF(TLB, "TLB: Demapping All pid=%#d\n", partition_id);
     cacheValid = false;
     for (x = 0; x < size; x++) {
-        if (!tlb[x].pte.locked() && tlb[x].range.partitionId == partition_id) {
-            if (tlb[x].valid == true){
-                freeList.push_front(&tlb[x]);
-            }
+        if (tlb[x].valid && !tlb[x].pte.locked() &&
+                tlb[x].range.partitionId == partition_id) {
+            freeList.push_front(&tlb[x]);
             tlb[x].valid = false;
             if (tlb[x].used) {
                 tlb[x].used = false;
@@ -351,7 +350,6 @@ TLB::invalidateAll()
     int x;
     cacheValid = false;
 
-    freeList.clear();
     lookupTable.clear();
     for (x = 0; x < size; x++) {
         if (tlb[x].valid == true)
