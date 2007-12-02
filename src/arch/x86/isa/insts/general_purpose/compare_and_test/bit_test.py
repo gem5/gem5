@@ -82,8 +82,7 @@ def macroop BT_R_R {
 };
 
 def macroop BT_M_R {
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     add t2, t2, base
     ld t1, seg, [scale, index, t2], disp
     sext t0, t1, reg, flags=(CF,)
@@ -91,8 +90,7 @@ def macroop BT_M_R {
 
 def macroop BT_P_R {
     rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     ld t1, seg, [1, t2, t7]
     sext t0, t1, reg, flags=(CF,)
 };
@@ -139,8 +137,7 @@ def macroop BTC_R_R {
 };
 
 def macroop BTC_M_R {
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     add t2, t2, base
     limm t3, 1
     rol t3, t3, reg
@@ -152,8 +149,7 @@ def macroop BTC_M_R {
 
 def macroop BTC_P_R {
     rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
@@ -204,8 +200,7 @@ def macroop BTR_R_R {
 };
 
 def macroop BTR_M_R {
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     add t2, t2, base
     limm t3, "(uint64_t(-(2ULL)))"
     rol t3, t3, reg
@@ -217,8 +212,7 @@ def macroop BTR_M_R {
 
 def macroop BTR_P_R {
     rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     limm t3, "(uint64_t(-(2ULL)))"
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
@@ -269,8 +263,7 @@ def macroop BTS_R_R {
 };
 
 def macroop BTS_M_R {
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     add t2, t2, base
     limm t3, 1
     rol t3, t3, reg
@@ -282,8 +275,7 @@ def macroop BTS_M_R {
 
 def macroop BTS_P_R {
     rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
