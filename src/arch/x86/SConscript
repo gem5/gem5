@@ -184,6 +184,7 @@ if env['TARGET_ISA'] == 'x86':
         'system/halt.py',
         'system/undefined_operation.py',
         'system/msrs.py',
+        'system/segmentation.py',
         'simd128/__init__.py',
         'simd128/integer/__init__.py',
         'simd128/integer/data_transfer/__init__.py',
