@@ -225,13 +225,13 @@ let {{
                 "cc" : self.cond}
             return allocator
 
-    iop = InstObjParams("fault", "MicroFault", "MicroFaultBase",
+    iop = InstObjParams("fault", "MicroFaultFlags", "MicroFaultBase",
             {"code": "",
              "cond_test": "checkCondition(ccFlagBits, cc)"})
     exec_output = MicroFaultExecute.subst(iop)
     header_output = MicroFaultDeclare.subst(iop)
     decoder_output = MicroFaultConstructor.subst(iop)
-    iop = InstObjParams("fault", "MicroFaultFlags", "MicroFaultBase",
+    iop = InstObjParams("fault", "MicroFault", "MicroFaultBase",
             {"code": "",
              "cond_test": "true"})
     exec_output += MicroFaultExecute.subst(iop)
