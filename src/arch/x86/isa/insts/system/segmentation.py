@@ -53,13 +53,61 @@
 #
 # Authors: Gabe Black
 
-categories = ["halt",
-              "undefined_operation",
-              "msrs",
-              "segmentation"]
+microcode = '''
+def macroop LGDT_M
+{
+    .adjust_env oszForPseudoDesc
 
-microcode = ""
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
+    # Get the limit
+    ld t1, seg, sib, disp, dataSize=2
+    # Get the base
+    ld t2, seg, sib, 'adjustedDisp + 2'
+    wrbase gdtr, t2
+    wrlimit gdtr, t1
+};
 
+def macroop LGDT_P
+{
+    .adjust_env oszForPseudoDesc
+
+    rdip t7
+    # Get the limit
+    ld t1, seg, riprel, disp, dataSize=2
+    # Get the base
+    ld t2, seg, riprel, 'adjustedDisp + 2'
+    wrbase gdtr, t2
+    wrlimit gdtr, t1
+};
+
+#
+# These versions are for when the original data size was 16 bits. The base is
+# still 32 bits, but the top byte is zeroed before being used.
+#
+
+def macroop LGDT_16_M
+{
+    .adjust_env oszForPseudoDesc
+
+    # Get the limit
+    ld t1, seg, sib, disp, dataSize=2
+    # Get the base
+    ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
+    zexti t2, t2, 23
+    wrbase gdtr, t2
+    wrlimit gdtr, t1
+};
+
+def macroop LGDT_16_P
+{
+    .adjust_env oszForPseudoDesc
+
+    rdip t7
+    # Get the limit
+    ld t1, seg, riprel, disp, dataSize=2
+    # Get the base
+    ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
+    zexti t2, t2, 23
+    wrbase gdtr, t2
+    wrlimit gdtr, t1
+};
+'''

@@ -942,7 +942,7 @@ let {{
             super(Wrbase, self).__init__(dest, \
                     src1, "NUM_INTREGS", flags, dataSize)
         code = '''
-            SegBaseDest = psrc1;
+            SysSegBaseDest = psrc1;
         '''
 
     class Wrlimit(RegOp):
@@ -950,6 +950,6 @@ let {{
             super(Wrlimit, self).__init__(dest, \
                     src1, "NUM_INTREGS", flags, dataSize)
         code = '''
-            SegLimitDest = psrc1;
+            SysSegLimitDest = psrc1;
         '''
 }};

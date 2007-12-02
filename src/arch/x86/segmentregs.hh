@@ -72,6 +72,16 @@ namespace X86ISA
 
         NUM_SEGMENTREGS
     };
+
+    enum SysSegmentRegIndex
+    {
+        SYS_SEGMENT_REG_LDTR,
+        SYS_SEGMENT_REG_TR,
+        SYS_SEGMENT_REG_GDTR,
+        SYS_SEGMENT_REG_IDTR,
+
+        NUM_SYSSEGMENTREGS
+    };
 };
 
 #endif // __ARCH_X86_SEGMENTREGS_HH__

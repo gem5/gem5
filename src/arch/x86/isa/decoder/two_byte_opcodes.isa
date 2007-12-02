@@ -109,7 +109,15 @@
                     default: decode MODRM_REG {
                         0x0: sgdt_Ms();
                         0x1: sidt_Ms();
-                        0x2: lgdt_Ms();
+                        0x2: decode MODE_SUBMODE {
+                            0x0: Inst::LGDT(M);
+                            default: decode OPSIZE {
+                                // 16 bit operand sizes are special, but only
+                                // in legacy and compatability modes.
+                                0x2: Inst::LGDT_16(M);
+                                default: Inst::LGDT(M);
+                            }
+                        }
                         0x3: lidt_Ms();
                         0x4: smsw_Mw();
                         0x6: lmsw_Mw();

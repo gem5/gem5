@@ -127,8 +127,8 @@ def operands {{
         'EferOp':        ('ControlReg', 'uqw', 'MISCREG_EFER', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 73),
         'CR4Op':         ('ControlReg', 'uqw', 'MISCREG_CR4', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 74),
         'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_EFF_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 80),
-        'SegBaseDest':   ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 75),
-        'SegLimitDest':  ('ControlReg', 'uqw', 'MISCREG_SEG_LIMIT(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 76),
+        'SysSegBaseDest':  ('ControlReg', 'uqw', 'MISCREG_SYSSEG_BASE(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 75),
+        'SysSegLimitDest': ('ControlReg', 'uqw', 'MISCREG_SYSSEG_LIMIT(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 76),
 
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 100)
 }};
