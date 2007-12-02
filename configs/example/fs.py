@@ -102,7 +102,7 @@ elif m5.build_env['TARGET_ISA'] == "mips":
 elif m5.build_env['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 elif m5.build_env['TARGET_ISA'] == "x86":
-    test_sys = makeX86System(test_mem_mode, bm[0])
+    test_sys = makeLinuxX86System(test_mem_mode, bm[0])
 else:
     m5.panic("incapable of building non-alpha or non-sparc full system!")
 

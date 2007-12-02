@@ -155,8 +155,8 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeX86System(mem_mode, mdesc = None):
-    self = X86System()
+def makeLinuxX86System(mem_mode, mdesc = None):
+    self = LinuxX86System()
     if not mdesc:
         # generic system
         mdesc = SysConfig()

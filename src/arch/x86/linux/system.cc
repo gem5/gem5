@@ -55,44 +55,34 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
+#include "arch/x86/linux/system.hh"
+#include "arch/vtophys.hh"
+#include "base/trace.hh"
+#include "mem/physical.hh"
+#include "params/LinuxX86System.hh"
 
-#include <string>
-#include <vector>
 
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
-#include "params/X86System.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
+using namespace LittleEndianGuest;
+using namespace X86ISA;
 
-class X86System : public System
+LinuxX86System::LinuxX86System(Params *p)
+    : X86System(p), commandLine(p->command_line)
 {
-  public:
-    typedef X86SystemParams Params;
-    X86System(Params *p);
-    ~X86System();
+}
 
-/**
- * Serialization stuff
- */
-  public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+LinuxX86System::~LinuxX86System()
+{
+}
 
-    void startup();
+void
+LinuxX86System::startup()
+{
+    X86System::startup();
+    //Build the real mode data structure.
+}
 
-  protected:
-    const Params *params() const { return (const Params *)_params; }
-
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        //XXX This may eventually have to do something useful.
-        return addr;
-    }
-};
-
-#endif
-
+LinuxX86System *
+LinuxX86SystemParams::create()
+{
+    return new LinuxX86System(this);
+}

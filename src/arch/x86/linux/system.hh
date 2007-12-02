@@ -55,43 +55,26 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
+#ifndef __ARCH_LINUX_X86_SYSTEM_HH__
+#define __ARCH_LINUX_X86_SYSTEM_HH__
 
 #include <string>
 #include <vector>
 
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
-#include "params/X86System.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
+#include "params/LinuxX86System.hh"
+#include "arch/x86/system.hh"
 
-class X86System : public System
+class LinuxX86System : public X86System
 {
-  public:
-    typedef X86SystemParams Params;
-    X86System(Params *p);
-    ~X86System();
+  protected:
+    std::string commandLine;
 
-/**
- * Serialization stuff
- */
   public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    typedef LinuxX86SystemParams Params;
+    LinuxX86System(Params *p);
+    ~LinuxX86System();
 
     void startup();
-
-  protected:
-    const Params *params() const { return (const Params *)_params; }
-
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        //XXX This may eventually have to do something useful.
-        return addr;
-    }
 };
 
 #endif

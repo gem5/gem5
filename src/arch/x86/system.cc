@@ -55,22 +55,181 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/system.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
+#include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "params/X86System.hh"
 #include "sim/byteswap.hh"
 
 
-using namespace BigEndianGuest;
+using namespace LittleEndianGuest;
+using namespace X86ISA;
 
 X86System::X86System(Params *p)
     : System(p)
 {
+}
+
+void
+X86System::startup()
+{
+    System::startup();
+    // This is the boot strap processor (BSP). Initialize it to look like
+    // the boot loader has just turned control over to the 64 bit OS. We
+    // won't actually set up real mode or legacy protected mode descriptor
+    // tables because we aren't executing any code that would require
+    // them. We do, however toggle the control bits in the correct order
+    // while allowing consistency checks and the underlying mechansims
+    // just to be safe.
+
+    const int NumPDTs = 4;
+
+    const Addr PageMapLevel4 = 0x70000;
+    const Addr PageDirPtrTable = 0x71000;
+    const Addr PageDirTable[NumPDTs] =
+        {0x72000, 0x73000, 0x74000, 0x75000};
+    const Addr GDTBase = 0x76000;
+
+    const int PML4Bits = 9;
+    const int PDPTBits = 9;
+    const int PDTBits = 9;
+
+    // Get a port to write the page tables and descriptor tables.
+    FunctionalPort * physPort = threadContexts[0]->getPhysPort();
+
+    /*
+     * Set up the gdt.
+     */
+    // Place holder at selector 0
+    uint64_t nullDescriptor = 0;
+    physPort->writeBlob(GDTBase, (uint8_t *)(&nullDescriptor), 8);
+
+    //64 bit code segment
+    SegDescriptor csDesc = 0;
+    csDesc.type.c = 0; // Not conforming
+    csDesc.dpl = 0; // Privelege level 0
+    csDesc.p = 1; // Present
+    csDesc.l = 1; // 64 bit
+    csDesc.d = 0; // default operand size
+    //Because we're dealing with a pointer and I don't think it's
+    //guaranteed that there isn't anything in a nonvirtual class between
+    //it's beginning in memory and it's actual data, we'll use an
+    //intermediary.
+    uint64_t csDescVal = csDesc;
+    physPort->writeBlob(GDTBase, (uint8_t *)(&csDescVal), 8);
+
+    threadContexts[0]->setMiscReg(MISCREG_TSG_BASE, GDTBase);
+    threadContexts[0]->setMiscReg(MISCREG_TSG_LIMIT, 0xF);
+
+    /*
+     * Identity map the first 4GB of memory. In order to map this region
+     * of memory in long mode, there needs to be one actual page map level
+     * 4 entry which points to one page directory pointer table which
+     * points to 4 different page directory tables which are full of two
+     * megabyte pages. All of the other entries in valid tables are set
+     * to indicate that they don't pertain to anything valid and will
+     * cause a fault if used.
+     */
+
+    // Put valid values in all of the various table entries which indicate
+    // that those entries don't point to further tables or pages. Then
+    // set the values of those entries which are needed.
+
+    // Page Map Level 4
+
+    // read/write, user, not present
+    uint64_t pml4e = X86ISA::htog(0x6);
+    for (int offset = 0; offset < (1 << PML4Bits) * 8; offset += 8) {
+        physPort->writeBlob(PageMapLevel4 + offset, (uint8_t *)(&pml4e), 8);
+    }
+    // Point to the only PDPT
+    pml4e = X86ISA::htog(0x7 | PageDirPtrTable);
+    physPort->writeBlob(PageMapLevel4, (uint8_t *)(&pml4e), 8);
+
+    // Page Directory Pointer Table
+
+    // read/write, user, not present
+    uint64_t pdpe = X86ISA::htog(0x6);
+    for (int offset = 0; offset < (1 << PDPTBits) * 8; offset += 8) {
+        physPort->writeBlob(PageDirPtrTable + offset,
+                (uint8_t *)(&pdpe), 8);
+    }
+    // Point to the PDTs
+    for (int table = 0; table < NumPDTs; table++) {
+        pdpe = X86ISA::htog(0x7 | PageDirTable[table]);
+        physPort->writeBlob(PageDirPtrTable + table * 8,
+                (uint8_t *)(&pdpe), 8);
+    }
+
+    // Page Directory Tables
+
+    Addr base = 0;
+    const Addr pageSize = 2 << 20;
+    for (int table = 0; table < NumPDTs; table++) {
+        for (int offset = 0; offset < (1 << PDTBits) * 8; offset += 8) {
+            // read/write, user, present, 4MB
+            uint64_t pdte = X86ISA::htog(0x87 | base);
+            physPort->writeBlob(PageDirTable[table] + offset,
+                    (uint8_t *)(&pdte), 8);
+            base += pageSize;
+        }
+    }
+
+    /*
+     * Transition from real mode all the way up to Long mode
+     */
+    CR0 cr0 = threadContexts[0]->readMiscRegNoEffect(MISCREG_CR0);
+    //Turn off paging.
+    cr0.pg = 0;
+    threadContexts[0]->setMiscReg(MISCREG_CR0, cr0);
+    //Turn on protected mode.
+    cr0.pe = 1;
+    threadContexts[0]->setMiscReg(MISCREG_CR0, cr0);
+
+    CR4 cr4 = threadContexts[0]->readMiscRegNoEffect(MISCREG_CR4);
+    //Turn on pae.
+    cr4.pae = 1;
+    threadContexts[0]->setMiscReg(MISCREG_CR4, cr4);
+
+    //Point to the page tables.
+    threadContexts[0]->setMiscReg(MISCREG_CR3, PageMapLevel4);
+
+    Efer efer = threadContexts[0]->readMiscRegNoEffect(MISCREG_EFER);
+    //Enable long mode.
+    efer.lme = 1;
+    threadContexts[0]->setMiscReg(MISCREG_EFER, efer);
+
+    //Activate long mode.
+    cr0.pg = 1;
+    threadContexts[0]->setMiscReg(MISCREG_CR0, cr0);
+
+    /*
+     * Far jump into 64 bit mode.
+     */
+    // Set the selector
+    threadContexts[0]->setMiscReg(MISCREG_CS, 1);
+    // Manually set up the segment attributes. In the future when there's
+    // other existing functionality to do this, that could be used
+    // instead.
+    SegAttr csAttr = 0;
+    csAttr.writable = 0;
+    csAttr.readable = 1;
+    csAttr.expandDown = 0;
+    csAttr.dpl = 0;
+    csAttr.defaultSize = 0;
+    csAttr.longMode = 1;
+    threadContexts[0]->setMiscReg(MISCREG_CS_ATTR, csAttr);
+
+    threadContexts[0]->setPC(threadContexts[0]->getSystemPtr()->kernelEntry);
+    threadContexts[0]->setNextPC(threadContexts[0]->readPC());
+
+    // We should now be in long mode. Yay!
 }
 
 X86System::~X86System()

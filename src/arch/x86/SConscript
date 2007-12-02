@@ -112,6 +112,7 @@ if env['TARGET_ISA'] == 'x86':
         SimObject('X86System.py')
 
         # Full-system sources
+        Source('linux/system.cc')
         Source('pagetable_walker.cc')
         Source('system.cc')
         Source('stacktrace.cc')
