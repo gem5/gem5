@@ -110,7 +110,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
             panic("NX violation!\n");
         entry.noExec = pte.nx;
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         nextState = LongPDP;
         break;
       case LongPDP:
@@ -122,7 +122,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         if (badNX)
             panic("NX violation!\n");
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         nextState = LongPD;
         break;
       case LongPD:
@@ -133,7 +133,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         if (badNX)
             panic("NX violation!\n");
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -164,7 +164,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         if (badNX)
             panic("NX violation!\n");
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         entry.paddr = (uint64_t)pte & (mask(40) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
@@ -179,7 +179,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
       case PAEPDP:
         nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael2 * size;
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         nextState = PAEPD;
         break;
       case PAEPD:
@@ -190,7 +190,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         if (badNX)
             panic("NX violation!\n");
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -220,7 +220,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         if (badNX)
             panic("NX violation!\n");
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         entry.paddr = (uint64_t)pte & (mask(40) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
@@ -238,7 +238,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         entry.writable = pte.w;
         entry.user = pte.u;
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -267,7 +267,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         entry.writable = pte.w;
         entry.user = pte.u;
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         // 4 KB page
         entry.size = 4 * (1 << 10);
         nextRead = ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * size;
@@ -281,7 +281,7 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         entry.writable = pte.w;
         entry.user = pte.u;
         if (!pte.p)
-            panic("Page not present!\n");
+            panic("Page at %#x not present!\n", entry.vaddr);
         entry.paddr = (uint64_t)pte & (mask(20) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
