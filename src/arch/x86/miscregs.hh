@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_MISCREGS_HH__
 #define __ARCH_X86_MISCREGS_HH__
 
+#include "arch/x86/segmentregs.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 
@@ -258,76 +259,83 @@ namespace X86ISA
         MISCREG_DS,
         MISCREG_FS,
         MISCREG_GS,
-        MISCREG_INT, // This isn't actually used.
+        MISCREG_HS,
+        MISCREG_TSL,
+        MISCREG_TSG,
+        MISCREG_LS,
+        MISCREG_MS,
+        MISCREG_TR,
+        MISCREG_IDTR,
 
         // Hidden segment base field
-        MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + NumSegments,
+        MISCREG_SEG_BASE_BASE = MISCREG_SEG_SEL_BASE + NUM_SEGMENTREGS,
         MISCREG_ES_BASE = MISCREG_SEG_BASE_BASE,
         MISCREG_CS_BASE,
         MISCREG_SS_BASE,
         MISCREG_DS_BASE,
         MISCREG_FS_BASE,
         MISCREG_GS_BASE,
-        MISCREG_INT_BASE,
+        MISCREG_HS_BASE,
+        MISCREG_TSL_BASE,
+        MISCREG_TSG_BASE,
+        MISCREG_LS_BASE,
+        MISCREG_MS_BASE,
+        MISCREG_TR_BASE,
+        MISCREG_IDTR_BASE,
 
         // The effective segment base, ie what is actually added to an
         // address. In 64 bit mode this can be different from the above,
         // namely 0.
-        MISCREG_SEG_EFF_BASE_BASE = MISCREG_SEG_BASE_BASE + NumSegments,
+        MISCREG_SEG_EFF_BASE_BASE = MISCREG_SEG_BASE_BASE + NUM_SEGMENTREGS,
         MISCREG_ES_EFF_BASE = MISCREG_SEG_EFF_BASE_BASE,
         MISCREG_CS_EFF_BASE,
         MISCREG_SS_EFF_BASE,
         MISCREG_DS_EFF_BASE,
         MISCREG_FS_EFF_BASE,
         MISCREG_GS_EFF_BASE,
-        MISCREG_INT_EFF_BASE,
+        MISCREG_HS_EFF_BASE,
+        MISCREG_TSL_EFF_BASE,
+        MISCREG_TSG_EFF_BASE,
+        MISCREG_LS_EFF_BASE,
+        MISCREG_MS_EFF_BASE,
+        MISCREG_TR_EFF_BASE,
+        MISCREG_IDTR_EFF_BASE,
 
         // Hidden segment limit field
-        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_EFF_BASE_BASE + NumSegments,
+        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_EFF_BASE_BASE + NUM_SEGMENTREGS,
         MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
         MISCREG_CS_LIMIT,
         MISCREG_SS_LIMIT,
         MISCREG_DS_LIMIT,
         MISCREG_FS_LIMIT,
         MISCREG_GS_LIMIT,
-        MISCREG_INT_LIMIT, // This isn't actually used.
+        MISCREG_HS_LIMIT,
+        MISCREG_TSL_LIMIT,
+        MISCREG_TSG_LIMIT,
+        MISCREG_LS_LIMIT,
+        MISCREG_MS_LIMIT,
+        MISCREG_TR_LIMIT,
+        MISCREG_IDTR_LIMIT,
 
         // Hidden segment limit attributes
-        MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + NumSegments,
+        MISCREG_SEG_ATTR_BASE = MISCREG_SEG_LIMIT_BASE + NUM_SEGMENTREGS,
         MISCREG_ES_ATTR = MISCREG_SEG_ATTR_BASE,
         MISCREG_CS_ATTR,
         MISCREG_SS_ATTR,
         MISCREG_DS_ATTR,
         MISCREG_FS_ATTR,
         MISCREG_GS_ATTR,
-        MISCREG_INT_ATTR, // This isn't actually used.
-
-        // System segment selectors
-        MISCREG_SYSSEG_SEL_BASE = MISCREG_SEG_ATTR_BASE + NumSegments,
-        MISCREG_LDTR = MISCREG_SYSSEG_SEL_BASE,
-        MISCREG_TR,
-
-        // Hidden system segment base field
-        MISCREG_SYSSEG_BASE_BASE = MISCREG_SYSSEG_SEL_BASE + NumSysSegments,
-        MISCREG_LDTR_BASE = MISCREG_SYSSEG_BASE_BASE,
-        MISCREG_TR_BASE,
-        MISCREG_GDTR_BASE,
-        MISCREG_IDTR_BASE,
-
-        // Hidden system segment limit field
-        MISCREG_SYSSEG_LIMIT_BASE = MISCREG_SYSSEG_BASE_BASE + NumSysSegments,
-        MISCREG_LDTR_LIMIT = MISCREG_SYSSEG_LIMIT_BASE,
-        MISCREG_TR_LIMIT,
-        MISCREG_GDTR_LIMIT,
-        MISCREG_IDTR_LIMIT,
-
-        // Hidden system segment attribute field
-        MISCREG_SYSSEG_ATTR_BASE = MISCREG_SYSSEG_LIMIT_BASE + NumSysSegments,
-        MISCREG_LDTR_ATTR = MISCREG_SYSSEG_ATTR_BASE,
+        MISCREG_HS_ATTR,
+        MISCREG_TSL_ATTR,
+        MISCREG_TSG_ATTR,
+        MISCREG_LS_ATTR,
+        MISCREG_MS_ATTR,
         MISCREG_TR_ATTR,
+        MISCREG_IDTR_ATTR,
 
         // Floating point control registers
-        MISCREG_X87_TOP = MISCREG_SYSSEG_ATTR_BASE + NumSysSegments,
+        MISCREG_X87_TOP =
+            MISCREG_SEG_ATTR_BASE + NUM_SEGMENTREGS,
 
         //XXX Add "Model-Specific Registers"
 
@@ -434,30 +442,6 @@ namespace X86ISA
     MISCREG_SEG_ATTR(int index)
     {
         return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_SYSSEG_SEL(int index)
-    {
-        return (MiscRegIndex)(MISCREG_SYSSEG_SEL_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_SYSSEG_BASE(int index)
-    {
-        return (MiscRegIndex)(MISCREG_SYSSEG_BASE_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_SYSSEG_LIMIT(int index)
-    {
-        return (MiscRegIndex)(MISCREG_SYSSEG_LIMIT_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_SYSSEG_ATTR(int index)
-    {
-        return (MiscRegIndex)(MISCREG_SYSSEG_ATTR_BASE + index);
     }
 
     /**
@@ -729,6 +713,10 @@ namespace X86ISA
      * Segment Selector
      */
     BitUnion64(SegSelector)
+        // The following bitfield is not defined in the ISA, but it's useful
+        // when checking selectors in larger data types to make sure they
+        // aren't too large.
+        Bitfield<63, 3> esi; // Extended selector
         Bitfield<15, 3> si; // Selector Index
         Bitfield<2> ti; // Table Indicator
         Bitfield<1, 0> rpl; // Requestor Privilege Level

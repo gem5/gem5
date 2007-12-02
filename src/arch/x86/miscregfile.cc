@@ -205,6 +205,31 @@ void MiscRegFile::setReg(int miscReg,
                 }
             }
         }
+      // These segments always actually use their bases, or in other words
+      // their effective bases must stay equal to their actual bases.
+      case MISCREG_FS:
+      case MISCREG_GS:
+      case MISCREG_HS:
+      case MISCREG_TSL:
+      case MISCREG_TSG:
+      case MISCREG_TR:
+      case MISCREG_IDTR:
+        regVal[MISCREG_SEG_EFF_BASE(miscReg - MISCREG_SEG_SEL_BASE)] = val;
+        break;
+      // These segments ignore their bases in 64 bit mode.
+      // their effective bases must stay equal to their actual bases.
+      case MISCREG_ES:
+      case MISCREG_CS:
+      case MISCREG_SS:
+      case MISCREG_DS:
+        {
+            Efer efer = regVal[MISCREG_EFER];
+            SegAttr csAttr = regVal[MISCREG_CS_ATTR];
+            if (!efer.lma || !csAttr.longMode) // Check for non 64 bit mode.
+                regVal[MISCREG_SEG_EFF_BASE(miscReg -
+                        MISCREG_SEG_SEL_BASE)] = val;
+        }
+        break;
     }
     setRegNoEffect(miscReg, newVal);
 }

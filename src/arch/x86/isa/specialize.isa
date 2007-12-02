@@ -154,12 +154,18 @@ let {{
             elif opType.tag == None or opType.size == None:
                 raise Exception, "Problem parsing operand tag: %s" % opType.tag
             elif opType.tag == "C":
+                # A control register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
                 Name += "_C"
             elif opType.tag == "D":
+                # A debug register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
                 Name += "_D"
-            elif opType.tag in ("G", "P", "S", "T", "V"):
+            elif opType.tag == "S":
+                # A segment selector register indexed by the "reg" field
+                env.addReg(ModRMRegIndex)
+                Name += "_S"
+            elif opType.tag in ("G", "P", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
                 env.addReg(ModRMRegIndex)
                 Name += "_R"

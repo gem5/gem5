@@ -937,19 +937,100 @@ let {{
             }
             '''
 
-    class Wrbase(RegOp):
+    # Microops for manipulating segmentation registers
+    class SegOp(RegOp):
+        abstract = True
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
-            super(Wrbase, self).__init__(dest, \
+            super(SegOp, self).__init__(dest, \
                     src1, "NUM_INTREGS", flags, dataSize)
+
+    class Wrbase(SegOp):
         code = '''
-            SysSegBaseDest = psrc1;
+            SegBaseDest = psrc1;
         '''
 
-    class Wrlimit(RegOp):
-        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
-            super(Wrlimit, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+    class Wrlimit(SegOp):
         code = '''
-            SysSegLimitDest = psrc1;
+            SegLimitDest = psrc1;
+        '''
+
+    class Wrsel(SegOp):
+        code = '''
+            SegSelDest = psrc1;
+        '''
+
+    class Rdbase(SegOp):
+        code = '''
+            DestReg = SegBaseDest;
+        '''
+
+    class Rdlimit(SegOp):
+        code = '''
+            DestReg = SegLimitSrc1;
+        '''
+
+    class Rdsel(SegOp):
+        code = '''
+            DestReg = SegSelSrc1;
+        '''
+
+    class Chks(SegOp):
+        code = '''
+            // The selector is in source 1.
+            SegSelector selector = psrc1;
+
+            // Compute the address of the descriptor and set DestReg to it.
+            if (selector.ti) {
+                // A descriptor in the LDT
+                Addr target = (selector.esi << 3) + LDTRBase;
+                if (!LDTRSel || (selector.esi << 3) + dataSize > LDTRLimit)
+                    fault = new GeneralProtection(selector & mask(16));
+                DestReg = target;
+            } else {
+                // A descriptor in the GDT
+                Addr target = (selector.esi << 3) + GDTRBase;
+                if ((selector.esi << 3) + dataSize > GDTRLimit)
+                    fault = new GeneralProtection(selector & mask(16));
+                DestReg = target;
+            }
+        '''
+        flag_code = '''
+            // Check for a NULL selector and set ZF,EZF appropriately.
+            ccFlagBits = ccFlagBits & ~(ext & (ZFBit | EZFBit));
+            if (!selector.esi && !selector.ti)
+                ccFlagBits = ccFlagBits | (ext & (ZFBit | EZFBit));
+        '''
+
+    class Wrdh(RegOp):
+        code = '''
+
+        '''
+
+    class Wrdl(RegOp):
+        code = '''
+            SegDescriptor desc = SrcReg1;
+            SegAttr attr = 0;
+            Addr base = 0, limit = 0;
+            attr.dpl = desc.dpl;
+            attr.defaultSize = desc.d;
+            if (!desc.p)
+                panic("Segment not present.\\n");
+            if (!desc.s)
+                panic("System segment encountered.\\n");
+            if (desc.type.codeOrData) {
+                panic("Code segment encountered with c = %d, r = %d, a = %d.\\n",
+                        desc.type.c, desc.type.r, desc.type.a);
+            } else {
+                attr.expandDown = desc.type.e;
+                attr.readable = 1;
+                attr.writable = desc.type.w;
+                base = desc.baseLow | (desc.baseHigh << 24);
+                limit = desc.limitLow | (desc.limitHigh << 16);
+                if (desc.g)
+                    limit = (limit << 12) | mask(12);
+            }
+            SegBaseDest = base;
+            SegLimitDest = limit;
+            SegAttrDest = attr;
         '''
 }};

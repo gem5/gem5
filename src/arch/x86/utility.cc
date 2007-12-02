@@ -143,16 +143,16 @@ void initCPU(ThreadContext *tc, int cpuId)
             tc->readMiscReg(MISCREG_CS_BASE));
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 
-    tc->setMiscReg(MISCREG_GDTR_BASE, 0);
-    tc->setMiscReg(MISCREG_GDTR_LIMIT, 0xffff);
+    tc->setMiscReg(MISCREG_TSG_BASE, 0);
+    tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
 
     tc->setMiscReg(MISCREG_IDTR_BASE, 0);
     tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
 
-    tc->setMiscReg(MISCREG_LDTR, 0);
-    tc->setMiscReg(MISCREG_LDTR_BASE, 0);
-    tc->setMiscReg(MISCREG_LDTR_LIMIT, 0xffff);
-    tc->setMiscReg(MISCREG_LDTR_ATTR, 0);
+    tc->setMiscReg(MISCREG_TSL, 0);
+    tc->setMiscReg(MISCREG_TSL_BASE, 0);
+    tc->setMiscReg(MISCREG_TSL_LIMIT, 0xffff);
+    tc->setMiscReg(MISCREG_TSL_ATTR, 0);
 
     tc->setMiscReg(MISCREG_TR, 0);
     tc->setMiscReg(MISCREG_TR_BASE, 0);
@@ -306,8 +306,8 @@ void startupCPU(ThreadContext *tc, int cpuId)
         uint64_t csDescVal = csDesc;
         physPort->writeBlob(GDTBase, (uint8_t *)(&csDescVal), 8);
 
-        tc->setMiscReg(MISCREG_GDTR_BASE, GDTBase);
-        tc->setMiscReg(MISCREG_GDTR_LIMIT, 0xF);
+        tc->setMiscReg(MISCREG_TSG_BASE, GDTBase);
+        tc->setMiscReg(MISCREG_TSG_LIMIT, 0xF);
 
         /*
          * Identity map the first 4GB of memory. In order to map this region

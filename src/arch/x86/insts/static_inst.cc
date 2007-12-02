@@ -94,8 +94,26 @@ namespace X86ISA
           case SEGMENT_REG_GS:
             ccprintf(os, "GS");
             break;
-          case SEGMENT_REG_INT:
-            ccprintf(os, "INT");
+          case SEGMENT_REG_HS:
+            ccprintf(os, "HS");
+            break;
+          case SEGMENT_REG_TSL:
+            ccprintf(os, "TSL");
+            break;
+          case SEGMENT_REG_TSG:
+            ccprintf(os, "TSG");
+            break;
+          case SEGMENT_REG_LS:
+            ccprintf(os, "LS");
+            break;
+          case SEGMENT_REG_MS:
+            ccprintf(os, "MS");
+            break;
+          case SYS_SEGMENT_REG_TR:
+            ccprintf(os, "TR");
+            break;
+          case SYS_SEGMENT_REG_IDTR:
+            ccprintf(os, "IDTR");
             break;
           default:
             panic("Unrecognized segment %d\n", segment);

@@ -81,8 +81,11 @@ let {{
     for letter in ("C", "D", "E", "F", "G", "S"):
         assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
 
-    for reg in ("LDTR", "TR", "GDTR", "IDTR"):
+    for reg in ("TR", "IDTR"):
         assembler.symbols[reg.lower()] = "SYS_SEGMENT_REG_%s" % reg
+
+    for reg in ("TSL", "TSG"):
+        assembler.symbols[reg.lower()] = "SEGMENT_REG_%s" % reg
 
     # Miscellaneous symbols
     symbols = {
@@ -112,7 +115,10 @@ let {{
 
     # This segment selects an internal address space mapped to MSRs,
     # CPUID info, etc.
-    assembler.symbols["intseg"] = "SEGMENT_REG_INT"
+    assembler.symbols["intseg"] = "SEGMENT_REG_MS"
+    # This segment always has base 0, and doesn't imply any special handling
+    # like the internal segment above
+    assembler.symbols["flatseg"] = "SEGMENT_REG_LS"
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()

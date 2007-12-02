@@ -68,19 +68,18 @@ namespace X86ISA
         SEGMENT_REG_DS,
         SEGMENT_REG_FS,
         SEGMENT_REG_GS,
-        SEGMENT_REG_INT,
-
-        NUM_SEGMENTREGS
-    };
-
-    enum SysSegmentRegIndex
-    {
-        SYS_SEGMENT_REG_LDTR,
+        SEGMENT_REG_HS, // Temporary descriptor
+        SEGMENT_REG_TSL, // Local descriptor table
+        SEGMENT_REG_TSG, // Global descriptor table
+        SEGMENT_REG_LS, // Flat segment
+        SEGMENT_REG_MS, // Emulation memory
+        // These shouldn't be used directly in a load or store since they
+        // are likely accessed in other ways in a real machine. For instance,
+        // they may be loaded into the temporary segment register on demand.
         SYS_SEGMENT_REG_TR,
-        SYS_SEGMENT_REG_GDTR,
         SYS_SEGMENT_REG_IDTR,
 
-        NUM_SYSSEGMENTREGS
+        NUM_SEGMENTREGS
     };
 };
 

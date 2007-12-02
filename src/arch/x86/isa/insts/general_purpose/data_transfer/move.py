@@ -192,6 +192,108 @@ def macroop MOVZX_W_R_P {
 def macroop MOV_C_R {
     wrcr reg, regm
 };
+
+def macroop MOV_R_S {
+    rdsel reg, regm
+};
+
+def macroop MOV_M_S {
+    rdsel t1, reg
+    st t1, seg, sib, disp, dataSize=2
+};
+
+def macroop MOV_P_S {
+    rdip t7
+    rdsel t1, reg
+    st t1, seg, riprel, disp, dataSize=2
+};
+
+def macroop MOV_REAL_S_R {
+    zext t2, regm, 15
+    slli t3, t2, 2, dataSize=8
+    wrsel reg, regm
+    wrbase reg, t3
+};
+
+def macroop MOV_REAL_S_M {
+    ld t1, seg, sib, disp, dataSize=2
+    zext t2, t1, 15
+    slli t3, t2, 2, dataSize=8
+    wrsel reg, t1
+    wrbase reg, t3
+};
+
+def macroop MOV_REAL_S_P {
+    rdip t7
+    ld t1, seg, riprel, disp, dataSize=2
+    zext t2, t1, 15
+    slli t3, t2, 2, dataSize=8
+    wrsel reg, t1
+    wrbase reg, t3
+};
+
+def macroop MOV_S_R {
+    chks t1, regm, flags=(EZF,), dataSize=8
+    bri t0, label("end"), flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, regm
+end:
+    wrsel reg, regm
+};
+
+def macroop MOV_S_M {
+    ld t1, seg, sib, disp, dataSize=2
+    chks t2, t1, flags=(EZF,), dataSize=8
+    bri t0, label("end"), flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, t1
+end:
+    wrsel reg, t1
+};
+
+def macroop MOV_S_P {
+    rdip t7
+    ld t1, seg, riprel, disp, dataSize=2
+    chks t2, t1, flags=(EZF,), dataSize=8
+    bri t0, label("end"), flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, t1
+end:
+    wrsel reg, t1
+};
+
+def macroop MOVSS_S_R {
+    chks t1, regm, flags=(EZF,), dataSize=8
+    # This actually needs to use the selector as the error code, but it would
+    # be hard to get that information into the instruction at the moment.
+    fault "new GeneralProtection(0)", flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, regm
+    wrsel reg, regm
+};
+
+def macroop MOVSS_S_M {
+    ld t1, seg, sib, disp, dataSize=2
+    chks t2, t1, flags=(EZF,), dataSize=8
+    # This actually needs to use the selector as the error code, but it would
+    # be hard to get that information into the instruction at the moment.
+    fault "new GeneralProtection(0)", flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, t1
+    wrsel reg, t1
+};
+
+def macroop MOVSS_S_P {
+    rdip t7
+    ld t1, seg, riprel, disp, dataSize=2
+    chks t2, t1, flags=(EZF,), dataSize=8
+    # This actually needs to use the selector as the error code, but it would
+    # be hard to get that information into the instruction at the moment.
+    fault "new GeneralProtection(0)", flags=(CEZF,)
+    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
+    wrdl reg, t2, t1
+    wrsel reg, t1
+};
 '''
 #let {{
 #    class MOVD(Inst):

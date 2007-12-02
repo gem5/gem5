@@ -176,14 +176,14 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     uint32_t flags = req->getFlags();
     bool storeCheck = flags & StoreCheck;
 
-    int seg = flags & mask(3);
+    int seg = flags & mask(4);
 
     //XXX Junk code to surpress the warning
     if (storeCheck);
 
     // If this is true, we're dealing with a request to read an internal
     // value.
-    if (seg == SEGMENT_REG_INT) {
+    if (seg == SEGMENT_REG_MS) {
         DPRINTF(TLB, "Addresses references internal memory.\n");
         Addr prefix = vaddr & IntAddrPrefixMask;
         if (prefix == IntAddrPrefixCPUID) {
