@@ -206,6 +206,7 @@ void MiscRegFile::setReg(int miscReg,
                 }
             }
         }
+        break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
       case MISCREG_FS:
