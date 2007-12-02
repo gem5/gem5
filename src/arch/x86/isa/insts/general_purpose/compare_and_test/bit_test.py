@@ -59,20 +59,22 @@ def macroop BT_R_I {
 };
 
 def macroop BT_M_I {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     # This fudges just a tiny bit, but it's reasonable to expect the
     # microcode generation logic to have the log of the various sizes
     # floating around as well.
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     ld t1, seg, [scale, index, t2], disp
     sexti t0, t1, imm, flags=(CF,)
 };
 
 def macroop BT_P_I {
     rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    limm t1, imm, dataSize=asz
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     ld t1, seg, [1, t2, t7]
     sexti t0, t1, imm, flags=(CF,)
 };
@@ -82,15 +84,17 @@ def macroop BT_R_R {
 };
 
 def macroop BT_M_R {
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     ld t1, seg, [scale, index, t2], disp
     sext t0, t1, reg, flags=(CF,)
 };
 
 def macroop BT_P_R {
     rdip t7
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     ld t1, seg, [1, t2, t7]
     sext t0, t1, reg, flags=(CF,)
 };
@@ -103,12 +107,13 @@ def macroop BTC_R_I {
 };
 
 def macroop BTC_M_I {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     # This fudges just a tiny bit, but it's reasonable to expect the
     # microcode generation logic to have the log of the various sizes
     # floating around as well.
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, 1
     roli t3, t3, imm
     ldst t1, seg, [scale, index, t2], disp
@@ -118,9 +123,10 @@ def macroop BTC_M_I {
 };
 
 def macroop BTC_P_I {
-    rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    limm t1, imm, dataSize=asz
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, 1
     roli t3, t3, imm
     ldst t1, seg, [1, t2, t7]
@@ -137,8 +143,9 @@ def macroop BTC_R_R {
 };
 
 def macroop BTC_M_R {
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [scale, index, t2], disp
@@ -148,8 +155,9 @@ def macroop BTC_M_R {
 };
 
 def macroop BTC_P_R {
-    rdip t7
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
@@ -166,12 +174,13 @@ def macroop BTR_R_I {
 };
 
 def macroop BTR_M_I {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     # This fudges just a tiny bit, but it's reasonable to expect the
     # microcode generation logic to have the log of the various sizes
     # floating around as well.
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, "(uint64_t(-(2ULL)))"
     roli t3, t3, imm
     ldst t1, seg, [scale, index, t2], disp
@@ -181,9 +190,10 @@ def macroop BTR_M_I {
 };
 
 def macroop BTR_P_I {
-    rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    limm t1, imm, dataSize=asz
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, "(uint64_t(-(2ULL)))"
     roli t3, t3, imm
     ldst t1, seg, [1, t2, t7]
@@ -200,8 +210,9 @@ def macroop BTR_R_R {
 };
 
 def macroop BTR_M_R {
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, "(uint64_t(-(2ULL)))"
     rol t3, t3, reg
     ldst t1, seg, [scale, index, t2], disp
@@ -211,8 +222,9 @@ def macroop BTR_M_R {
 };
 
 def macroop BTR_P_R {
-    rdip t7
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, "(uint64_t(-(2ULL)))"
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
@@ -229,12 +241,13 @@ def macroop BTS_R_I {
 };
 
 def macroop BTS_M_I {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     # This fudges just a tiny bit, but it's reasonable to expect the
     # microcode generation logic to have the log of the various sizes
     # floating around as well.
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, 1
     roli t3, t3, imm
     ldst t1, seg, [scale, index, t2], disp
@@ -244,9 +257,10 @@ def macroop BTS_M_I {
 };
 
 def macroop BTS_P_I {
-    rdip t7
-    limm t1, imm
-    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    limm t1, imm, dataSize=asz
+    srai t2, t1, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, 1
     roli t3, t3, imm
     ldst t1, seg, [1, t2, t7]
@@ -263,8 +277,9 @@ def macroop BTS_R_R {
 };
 
 def macroop BTS_M_R {
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
-    add t2, t2, base
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
+    add t2, t2, base, dataSize=asz
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [scale, index, t2], disp
@@ -274,8 +289,9 @@ def macroop BTS_M_R {
 };
 
 def macroop BTS_P_R {
-    rdip t7
-    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)"
+    rdip t7, dataSize=asz
+    srai t2, reg, "(env.dataSize == 8) ? 3 : ((env.dataSize == 4) ? 2 : 1)", \
+            dataSize=asz
     limm t3, 1
     rol t3, t3, reg
     ldst t1, seg, [1, t2, t7]
