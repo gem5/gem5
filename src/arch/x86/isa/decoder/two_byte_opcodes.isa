@@ -118,7 +118,15 @@
                                 default: Inst::LGDT(M);
                             }
                         }
-                        0x3: lidt_Ms();
+                        0x3: decode MODE_SUBMODE {
+                            0x0: Inst::LIDT(M);
+                            default: decode OPSIZE {
+                                // 16 bit operand sizes are special, but only
+                                // in legacy and compatability modes.
+                                0x2: Inst::LIDT_16(M);
+                                default: Inst::LIDT(M);
+                            }
+                        }
                         0x4: smsw_Mw();
                         0x6: lmsw_Mw();
                         0x7: invlpg_M();

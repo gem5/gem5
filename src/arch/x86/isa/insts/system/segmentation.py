@@ -110,4 +110,61 @@ def macroop LGDT_16_P
     wrbase gdtr, t2
     wrlimit gdtr, t1
 };
+
+def macroop LIDT_M
+{
+    .adjust_env oszForPseudoDesc
+
+    # Get the limit
+    ld t1, seg, sib, disp, dataSize=2
+    # Get the base
+    ld t2, seg, sib, 'adjustedDisp + 2'
+    wrbase idtr, t2
+    wrlimit idtr, t1
+};
+
+def macroop LIDT_P
+{
+    .adjust_env oszForPseudoDesc
+
+    rdip t7
+    # Get the limit
+    ld t1, seg, riprel, disp, dataSize=2
+    # Get the base
+    ld t2, seg, riprel, 'adjustedDisp + 2'
+    wrbase idtr, t2
+    wrlimit idtr, t1
+};
+
+#
+# These versions are for when the original data size was 16 bits. The base is
+# still 32 bits, but the top byte is zeroed before being used.
+#
+
+def macroop LIDT_16_M
+{
+    .adjust_env oszForPseudoDesc
+
+    # Get the limit
+    ld t1, seg, sib, disp, dataSize=2
+    # Get the base
+    ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
+    zexti t2, t2, 23
+    wrbase idtr, t2
+    wrlimit idtr, t1
+};
+
+def macroop LIDT_16_P
+{
+    .adjust_env oszForPseudoDesc
+
+    rdip t7
+    # Get the limit
+    ld t1, seg, riprel, disp, dataSize=2
+    # Get the base
+    ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
+    zexti t2, t2, 23
+    wrbase idtr, t2
+    wrlimit idtr, t1
+};
 '''
