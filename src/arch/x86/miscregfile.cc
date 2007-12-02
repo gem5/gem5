@@ -103,7 +103,8 @@ string X86ISA::getMiscRegName(RegIndex index)
 
 void MiscRegFile::clear()
 {
-    //When there are actually misc regs implemented, this will clear them
+    // Blank everything. 0 might not be an appropriate value for some things.
+    memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
 }
 
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
