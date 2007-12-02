@@ -413,7 +413,10 @@
                 0x0: Inst::ENTER(Iw,Iw);
                 0x1: Inst::LEAVE();
                 0x2: ret_far_Iw();
-                0x3: ret_far();
+                0x3: decode MODE_SUBMODE {
+                    0x3, 0x4: ret_far_real();
+                    default: Inst::RET_FAR();
+                }
                 0x4: int3();
                 0x5: int_Ib();
                 0x6: decode MODE_SUBMODE {

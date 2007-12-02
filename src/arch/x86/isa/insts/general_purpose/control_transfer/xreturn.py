@@ -77,4 +77,36 @@ def macroop RET_NEAR_I
     add rsp, rsp, t2
     wripi t1, 0
 };
+
+def macroop RET_FAR {
+    .adjust_env oszIn64Override
+
+    # Get the return RIP
+    ld t1, ss, [1, t0, rsp]
+
+    # Get the return CS
+    ld t2, ss, [1, t0, rsp], dsz
+
+    # Get the rpl
+    andi t3, t2, 0x3
+
+    # Get the cpl
+
+    # Here we'd check if we're changing priviledge levels. We'll just hope
+    # that doesn't happen yet.
+
+    # Do stuff if they're equal
+    chks t4, t2, flags=(EZF,)
+    fault "new GeneralProtection(0)", flags=(CEZF,)
+    ld t3, flatseg, [1, t0, t4], addressSize=8, dataSize=8
+    wrdl cs, t3, t2
+    # There should be validity checks on the RIP checks here, but I'll do
+    # that later.
+    wrip t0, t1
+    bri t0, label("end")
+
+    # Do other stuff if they're not.
+end:
+    fault "NoFault"
+};
 '''

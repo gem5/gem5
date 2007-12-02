@@ -1010,27 +1010,31 @@ let {{
         code = '''
             SegDescriptor desc = SrcReg1;
             SegAttr attr = 0;
-            Addr base = 0, limit = 0;
             attr.dpl = desc.dpl;
             attr.defaultSize = desc.d;
-            if (!desc.p)
-                panic("Segment not present.\\n");
-            if (!desc.s)
+            if (!desc.s) {
+                SegBaseDest = SegBaseDest;
+                SegLimitDest = SegLimitDest;
+                SegAttrDest = SegAttrDest;
                 panic("System segment encountered.\\n");
-            if (desc.type.codeOrData) {
-                panic("Code segment encountered with c = %d, r = %d, a = %d.\\n",
-                        desc.type.c, desc.type.r, desc.type.a);
             } else {
-                attr.expandDown = desc.type.e;
-                attr.readable = 1;
-                attr.writable = desc.type.w;
-                base = desc.baseLow | (desc.baseHigh << 24);
-                limit = desc.limitLow | (desc.limitHigh << 16);
+                if (!desc.p)
+                    panic("Segment not present.\\n");
+                if (desc.type.codeOrData) {
+                    attr.readable = desc.type.r;
+                    attr.longMode = desc.l;
+                } else {
+                    attr.expandDown = desc.type.e;
+                    attr.readable = 1;
+                    attr.writable = desc.type.w;
+                }
+                Addr base = desc.baseLow | (desc.baseHigh << 24);
+                Addr limit = desc.limitLow | (desc.limitHigh << 16);
                 if (desc.g)
                     limit = (limit << 12) | mask(12);
+                SegBaseDest = base;
+                SegLimitDest = limit;
+                SegAttrDest = attr;
             }
-            SegBaseDest = base;
-            SegLimitDest = limit;
-            SegAttrDest = attr;
         '''
 }};
