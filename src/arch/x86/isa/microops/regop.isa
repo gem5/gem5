@@ -885,6 +885,18 @@ let {{
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, op2, 0);'
 
+    class Rdcr(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Rdcr, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
+                fault = new InvalidOpcode();
+            } else {
+                DestReg = ControlSrc1;
+            }
+        '''
+
     class Wrcr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrcr, self).__init__(dest, \

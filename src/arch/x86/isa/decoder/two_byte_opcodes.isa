@@ -216,7 +216,7 @@
             0x04: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: mov_Rd_Cd();
+                    0x0: Inst::MOV(Rd,Cd);
                     0x1: mov_Rd_Dd();
                     0x2: Inst::MOV(Cd,Rd);
                     0x3: mov_Dd_Rd();

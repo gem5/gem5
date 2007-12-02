@@ -193,6 +193,10 @@ def macroop MOV_C_R {
     wrcr reg, regm
 };
 
+def macroop MOV_R_C {
+    rdcr reg, regm
+};
+
 def macroop MOV_R_S {
     rdsel reg, regm
 };
