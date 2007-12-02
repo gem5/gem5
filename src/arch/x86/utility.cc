@@ -118,6 +118,7 @@ void initCPU(ThreadContext *tc, int cpuId)
     for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
         tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
         tc->setMiscReg(MISCREG_SEG_BASE(seg), 0);
+        tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), 0);
         tc->setMiscReg(MISCREG_SEG_LIMIT(seg), 0xffff);
         tc->setMiscReg(MISCREG_SEG_ATTR(seg), dataAttr);
     }
@@ -130,7 +131,10 @@ void initCPU(ThreadContext *tc, int cpuId)
     codeAttr.defaultSize = 0;
 
     tc->setMiscReg(MISCREG_CS, 0xf000);
-    tc->setMiscReg(MISCREG_CS_BASE, 0x00000000ffff0000ULL);
+    tc->setMiscReg(MISCREG_CS_BASE,
+            0x00000000ffff0000ULL);
+    tc->setMiscReg(MISCREG_CS_EFF_BASE,
+            0x00000000ffff0000ULL);
     // This has the base value pre-added.
     tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
     tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);

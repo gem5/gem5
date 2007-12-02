@@ -270,8 +270,20 @@ namespace X86ISA
         MISCREG_GS_BASE,
         MISCREG_INT_BASE,
 
+        // The effective segment base, ie what is actually added to an
+        // address. In 64 bit mode this can be different from the above,
+        // namely 0.
+        MISCREG_SEG_EFF_BASE_BASE = MISCREG_SEG_BASE_BASE + NumSegments,
+        MISCREG_ES_EFF_BASE = MISCREG_SEG_EFF_BASE_BASE,
+        MISCREG_CS_EFF_BASE,
+        MISCREG_SS_EFF_BASE,
+        MISCREG_DS_EFF_BASE,
+        MISCREG_FS_EFF_BASE,
+        MISCREG_GS_EFF_BASE,
+        MISCREG_INT_EFF_BASE,
+
         // Hidden segment limit field
-        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_BASE_BASE + NumSegments,
+        MISCREG_SEG_LIMIT_BASE = MISCREG_SEG_EFF_BASE_BASE + NumSegments,
         MISCREG_ES_LIMIT = MISCREG_SEG_LIMIT_BASE,
         MISCREG_CS_LIMIT,
         MISCREG_SS_LIMIT,
@@ -404,6 +416,12 @@ namespace X86ISA
     MISCREG_SEG_BASE(int index)
     {
         return (MiscRegIndex)(MISCREG_SEG_BASE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_SEG_EFF_BASE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_SEG_EFF_BASE_BASE + index);
     }
 
     static inline MiscRegIndex

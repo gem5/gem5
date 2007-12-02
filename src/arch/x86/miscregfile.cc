@@ -186,6 +186,25 @@ void MiscRegFile::setReg(int miscReg,
         break;
       case MISCREG_CR8:
         break;
+      case MISCREG_CS_ATTR:
+        {
+            SegAttr toggled = regVal[miscReg] ^ val;
+            SegAttr newCSAttr = val;
+            if (toggled.longMode) {
+                SegAttr newCSAttr = val;
+                if (newCSAttr.longMode) {
+                    regVal[MISCREG_ES_EFF_BASE] = 0;
+                    regVal[MISCREG_CS_EFF_BASE] = 0;
+                    regVal[MISCREG_SS_EFF_BASE] = 0;
+                    regVal[MISCREG_DS_EFF_BASE] = 0;
+                } else {
+                    regVal[MISCREG_ES_EFF_BASE] = regVal[MISCREG_ES_BASE];
+                    regVal[MISCREG_CS_EFF_BASE] = regVal[MISCREG_CS_BASE];
+                    regVal[MISCREG_SS_EFF_BASE] = regVal[MISCREG_SS_BASE];
+                    regVal[MISCREG_DS_EFF_BASE] = regVal[MISCREG_DS_BASE];
+                }
+            }
+        }
     }
     setRegNoEffect(miscReg, newVal);
 }

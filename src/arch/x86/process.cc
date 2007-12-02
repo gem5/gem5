@@ -160,6 +160,7 @@ X86LiveProcess::startup()
         //Initialize the segment registers.
         for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
             tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
+            tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
         }
 

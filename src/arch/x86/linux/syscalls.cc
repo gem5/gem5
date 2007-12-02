@@ -103,6 +103,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       //Each of these valid options should actually check addr.
       case SetFS:
         tc->setMiscRegNoEffect(MISCREG_FS_BASE, addr);
+        tc->setMiscRegNoEffect(MISCREG_FS_EFF_BASE, addr);
         return 0;
       case GetFS:
         fsBase = tc->readMiscRegNoEffect(MISCREG_FS_BASE);
@@ -110,6 +111,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return 0;
       case SetGS:
         tc->setMiscRegNoEffect(MISCREG_GS_BASE, addr);
+        tc->setMiscRegNoEffect(MISCREG_GS_EFF_BASE, addr);
         return 0;
       case GetGS:
         gsBase = tc->readMiscRegNoEffect(MISCREG_GS_BASE);
