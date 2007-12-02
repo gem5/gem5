@@ -128,7 +128,7 @@ def macroop BTC_P_I {
     ldst t1, seg, [1, t2, t7]
     sexti t0, t1, imm, flags=(CF,)
     xor t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 
 def macroop BTC_R_R {
@@ -159,7 +159,7 @@ def macroop BTC_P_R {
     ldst t1, seg, [1, t2, t7]
     sext t0, t1, reg, flags=(CF,)
     xor t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 
 def macroop BTR_R_I {
@@ -193,7 +193,7 @@ def macroop BTR_P_I {
     ldst t1, seg, [1, t2, t7]
     sexti t0, t1, imm, flags=(CF,)
     and t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 
 def macroop BTR_R_R {
@@ -224,7 +224,7 @@ def macroop BTR_P_R {
     ldst t1, seg, [1, t2, t7]
     sext t0, t1, reg, flags=(CF,)
     and t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 
 def macroop BTS_R_I {
@@ -258,7 +258,7 @@ def macroop BTS_P_I {
     ldst t1, seg, [1, t2, t7]
     sexti t0, t1, imm, flags=(CF,)
     or t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 
 def macroop BTS_R_R {
@@ -289,6 +289,6 @@ def macroop BTS_P_R {
     ldst t1, seg, [1, t2, t7]
     sext t0, t1, reg, flags=(CF,)
     or t1, t1, t3
-    st t1, seg, [scale, index, t2], disp
+    st t1, seg, [1, t2, t7], disp
 };
 '''
