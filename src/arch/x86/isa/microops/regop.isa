@@ -936,4 +936,20 @@ let {{
                 ControlDest = newVal;
             }
             '''
+
+    class Wrbase(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrbase, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            SegBaseDest = psrc1;
+        '''
+
+    class Wrlimit(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrlimit, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            SegLimitDest = psrc1;
+        '''
 }};
