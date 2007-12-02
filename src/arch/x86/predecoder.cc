@@ -270,7 +270,10 @@ namespace X86ISA
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
             int immType = ImmediateType[emi.opcode.num - 1][nextByte];
-            immediateSize = SizeTypeToSize[logOpSize - 1][immType];
+            if (emi.opcode.num == 1 && nextByte >= 0xA0 && nextByte <= 0xA3)
+                immediateSize = SizeTypeToSize[logAddrSize - 1][immType];
+            else
+                immediateSize = SizeTypeToSize[logOpSize - 1][immType];
 
             //Determine what to expect next
             if (UsesModRM[emi.opcode.num - 1][nextByte]) {

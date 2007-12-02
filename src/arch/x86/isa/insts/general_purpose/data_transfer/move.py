@@ -60,12 +60,12 @@ microcode = '''
 #
 
 def macroop MOV_R_MI {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     ld reg, seg, [1, t0, t1]
 };
 
 def macroop MOV_MI_R {
-    limm t1, imm
+    limm t1, imm, dataSize=asz
     st reg, seg, [1, t0, t1]
 };
 
