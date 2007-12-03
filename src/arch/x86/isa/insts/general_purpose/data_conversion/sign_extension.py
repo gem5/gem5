@@ -55,7 +55,7 @@
 
 microcode = '''
 def macroop CDQE_R {
-    sexti reg, reg, "env.dataSize << 2 - 1"
+    sexti reg, reg, "env.dataSize * 4 - 1"
 };
 
 def macroop CQO_R_R {
