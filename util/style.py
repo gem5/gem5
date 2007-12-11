@@ -402,7 +402,7 @@ if __name__ == '__main__':
                     print '>>%s<<' % line[:-1]
     elif command == 'chkformat':
         stats = ValidationStats()
-        for filename in files:
+        for filename in args:
             validate(filename, stats=stats, verbose=verbose, exit_code=code)
 
         if verbose > 0:
