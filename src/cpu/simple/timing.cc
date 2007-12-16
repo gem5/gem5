@@ -57,12 +57,13 @@ void
 TimingSimpleCPU::init()
 {
     BaseCPU::init();
+    cpuId = tc->readCpuId();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, tc->readCpuId());
+        TheISA::initCPU(tc, cpuId);
     }
 #endif
 }

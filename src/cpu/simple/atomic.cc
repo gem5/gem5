@@ -79,12 +79,13 @@ void
 AtomicSimpleCPU::init()
 {
     BaseCPU::init();
+    cpuId = tc->readCpuId();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, tc->readCpuId());
+        TheISA::initCPU(tc, cpuId);
     }
 #endif
     if (hasPhysMemPort) {
@@ -93,6 +94,9 @@ AtomicSimpleCPU::init()
         physmemPort.getPeerAddressRanges(pmAddrList, snoop);
         physMemAddr = *pmAddrList.begin();
     }
+    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
+    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
 }
 
 bool
@@ -159,9 +163,6 @@ AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
     icachePort.snoopRangeSent = false;
     dcachePort.snoopRangeSent = false;
 
-    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
-    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
-    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
 }
 
 
@@ -240,6 +241,9 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
     }
     assert(threadContexts.size() == 1);
     cpuId = tc->readCpuId();
+    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
+    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
 }
 
 
