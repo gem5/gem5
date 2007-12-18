@@ -91,7 +91,7 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
 
-        root.switch_cpus = switch_cpus
+        testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.standard_switch:
