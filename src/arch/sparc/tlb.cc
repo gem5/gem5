@@ -223,7 +223,7 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id, bool
             va, partition_id, context_id, real);
     // Assemble full address structure
     tr.va = va;
-    tr.size = MachineBytes;
+    tr.size = 1;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
@@ -282,7 +282,7 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
 
     // Assemble full address structure
     tr.va = va;
-    tr.size = MachineBytes;
+    tr.size = 1;
     tr.contextId = context_id;
     tr.partitionId = partition_id;
     tr.real = real;
