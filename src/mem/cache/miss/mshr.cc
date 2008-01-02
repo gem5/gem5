@@ -64,7 +64,7 @@ MSHR::TargetList::TargetList()
 
 inline void
 MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
-                      Counter order, bool cpuSide)
+                      Counter order, bool cpuSide, bool markPending)
 {
     if (cpuSide) {
         if (pkt->needsExclusive()) {
@@ -74,7 +74,9 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         if (pkt->cmd == MemCmd::UpgradeReq) {
             hasUpgrade = true;
         }
+    }
 
+    if (markPending) {
         MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
         if (mshr != NULL) {
             assert(!mshr->downstreamPending);
@@ -82,7 +84,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         }
     }
 
-    push_back(Target(pkt, readyTime, order, cpuSide));
+    push_back(Target(pkt, readyTime, order, cpuSide, markPending));
 }
 
 
@@ -109,10 +111,11 @@ MSHR::TargetList::clearDownstreamPending()
 {
     Iterator end_i = end();
     for (Iterator i = begin(); i != end_i; ++i) {
-        MSHR *mshr = dynamic_cast<MSHR*>(i->pkt->senderState);
-        if (mshr != NULL) {
-            assert(mshr->downstreamPending);
-            mshr->downstreamPending = false;
+        if (i->markedPending) {
+            MSHR *mshr = dynamic_cast<MSHR*>(i->pkt->senderState);
+            if (mshr != NULL) {
+                mshr->clearDownstreamPending();
+            }
         }
     }
 }
@@ -162,13 +165,23 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     // Don't know of a case where we would allocate a new MSHR for a
     // snoop (mem-side request), so set cpuSide to true here.
     assert(targets->isReset());
-    targets->add(target, whenReady, _order, true);
+    targets->add(target, whenReady, _order, true, true);
     assert(deferredTargets->isReset());
     pendingInvalidate = false;
     pendingShared = false;
     data = NULL;
 }
 
+
+void
+MSHR::clearDownstreamPending()
+{
+    assert(downstreamPending);
+    downstreamPending = false;
+    // recursively clear flag on any MSHRs we will be forwarding
+    // responses to
+    targets->clearDownstreamPending();
+}
 
 bool
 MSHR::markInService()
@@ -221,11 +234,13 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
         (!deferredTargets->empty() || pendingInvalidate ||
          (!targets->needsExclusive && pkt->needsExclusive()))) {
         // need to put on deferred list
-        deferredTargets->add(pkt, whenReady, _order, true);
+        deferredTargets->add(pkt, whenReady, _order, true, true);
     } else {
-        // no request outstanding, or still OK to append to
-        // outstanding request
-        targets->add(pkt, whenReady, _order, true);
+        // No request outstanding, or still OK to append to
+        // outstanding request: append to regular target list.  Only
+        // mark pending if current request hasn't been issued yet
+        // (isn't in service).
+        targets->add(pkt, whenReady, _order, true, !inService);
     }
 
     ++ntargets;
@@ -276,7 +291,8 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
         PacketPtr cp_pkt = new Packet(pkt, true);
-        targets->add(cp_pkt, curTick, _order, false);
+        targets->add(cp_pkt, curTick, _order, false,
+                     downstreamPending && targets->needsExclusive);
         ++ntargets;
 
         if (targets->needsExclusive) {
@@ -355,6 +371,10 @@ MSHR::handleFill(Packet *pkt, CacheBlk *blk)
         // the regular target list.
         assert(!targets->needsExclusive);
         targets->needsExclusive = true;
+        // if any of the deferred targets were upper-level cache
+        // requests marked downstreamPending, need to clear that
+        assert(!downstreamPending);  // not pending here anymore
+        deferredTargets->clearDownstreamPending();
         // this clears out deferredTargets too
         targets->splice(targets->end(), *deferredTargets);
         deferredTargets->resetFlags();

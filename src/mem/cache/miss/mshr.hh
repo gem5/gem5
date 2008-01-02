@@ -60,12 +60,15 @@ class MSHR : public Packet::SenderState, public Printable
         Counter order;  //!< Global order (for memory consistency mgmt)
         PacketPtr pkt;  //!< Pending request packet.
         bool cpuSide;   //!< Did request come from cpu side or mem side?
+        bool markedPending; //!< Did we mark upstream MSHR
+                            //!<  as downstreamPending?
 
         bool isCpuSide() const { return cpuSide; }
 
-        Target(PacketPtr _pkt, Tick _readyTime, Counter _order, bool _cpuSide)
+        Target(PacketPtr _pkt, Tick _readyTime, Counter _order,
+               bool _cpuSide, bool _markedPending)
             : recvTime(curTick), readyTime(_readyTime), order(_order),
-              pkt(_pkt), cpuSide(_cpuSide)
+              pkt(_pkt), cpuSide(_cpuSide), markedPending(_markedPending)
         {}
     };
 
@@ -81,7 +84,8 @@ class MSHR : public Packet::SenderState, public Printable
         TargetList();
         void resetFlags() { needsExclusive = hasUpgrade = false; }
         bool isReset()    { return !needsExclusive && !hasUpgrade; }
-        void add(PacketPtr pkt, Tick readyTime, Counter order, bool cpuSide);
+        void add(PacketPtr pkt, Tick readyTime, Counter order,
+                 bool cpuSide, bool markPending);
         void replaceUpgrades();
         void clearDownstreamPending();
         bool checkFunctional(PacketPtr pkt);
@@ -172,6 +176,8 @@ public:
                   Tick when, Counter _order);
 
     bool markInService();
+
+    void clearDownstreamPending();
 
     /**
      * Mark this MSHR as free.
