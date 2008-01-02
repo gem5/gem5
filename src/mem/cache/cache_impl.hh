@@ -775,16 +775,29 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             // if this packet is an error copy that to the new packet
             if (is_error)
                 target->pkt->copyError(pkt);
+            if (pkt->isInvalidate()) {
+                // If intermediate cache got ReadRespWithInvalidate,
+                // propagate that.  Response should not have
+                // isInvalidate() set otherwise.
+                assert(target->pkt->cmd == MemCmd::ReadResp);
+                assert(pkt->cmd == MemCmd::ReadRespWithInvalidate);
+                target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
+            }
             cpuSidePort->respond(target->pkt, completion_time);
         } else {
             // I don't believe that a snoop can be in an error state
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
-            handleSnoop(target->pkt, blk, true, true);
+            handleSnoop(target->pkt, blk, true, true,
+                        mshr->pendingInvalidate || pkt->isInvalidate());
         }
 
         mshr->popTarget();
+    }
+
+    if (pkt->isInvalidate()) {
+        tags->invalidateBlk(blk);
     }
 
     if (mshr->promoteDeferredTargets()) {
@@ -854,7 +867,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 
     if (blk == NULL) {
         // better have read new data...
-        assert(pkt->isRead());
+        assert(pkt->hasData());
 
         // need to do a replacement
         blk = tags->findReplacement(addr, writebacks);
@@ -890,7 +903,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
         // either we're getting new data or the block should already be valid
-        assert(pkt->isRead() || blk->isValid());
+        assert(pkt->hasData() || blk->isValid());
     }
 
     if (!pkt->sharedAsserted()) {
@@ -922,9 +935,9 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 
 template<class TagStore>
 void
-Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
-                                        uint8_t *blk_data,
-                                        bool already_copied)
+Cache<TagStore>::
+doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
+                       bool already_copied, bool pending_inval)
 {
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
@@ -941,14 +954,29 @@ Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
     if (pkt->isRead()) {
         pkt->setDataFromBlock(blk_data, blkSize);
     }
+    if (pkt->cmd == MemCmd::ReadResp && pending_inval) {
+        // Assume we defer a response to a read from a far-away cache
+        // A, then later defer a ReadExcl from a cache B on the same
+        // bus as us.  We'll assert MemInhibit in both cases, but in
+        // the latter case MemInhibit will keep the invalidation from
+        // reaching cache A.  This special response tells cache A that
+        // it gets the block to satisfy its read, but must immediately
+        // invalidate it.
+        pkt->cmd = MemCmd::ReadRespWithInvalidate;
+    }
     memSidePort->respond(pkt, curTick + hitLatency);
 }
 
 template<class TagStore>
 void
 Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
-                             bool is_timing, bool is_deferred)
+                             bool is_timing, bool is_deferred,
+                             bool pending_inval)
 {
+    // deferred snoops can only happen in timing mode
+    assert(!(is_deferred && !is_timing));
+    // pending_inval only makes sense on deferred snoops
+    assert(!(pending_inval && !is_deferred));
     assert(pkt->isRequest());
 
     // first propagate snoop upward to see if anyone above us wants to
@@ -1018,7 +1046,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             pkt->setSupplyExclusive();
         }
         if (is_timing) {
-            doTimingSupplyResponse(pkt, blk->data, is_deferred);
+            doTimingSupplyResponse(pkt, blk->data, is_deferred, pending_inval);
         } else {
             pkt->makeAtomicResponse();
             pkt->setDataFromBlock(blk->data, blkSize);
@@ -1085,7 +1113,8 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
                 // the packet's invalidate flag is set...
                 assert(pkt->isInvalidate());
             }
-            doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(), false);
+            doTimingSupplyResponse(pkt, wb_pkt->getPtr<uint8_t>(),
+                                   false, false);
 
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
@@ -1101,7 +1130,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
         }
     }
 
-    handleSnoop(pkt, blk, true, false);
+    handleSnoop(pkt, blk, true, false, false);
 }
 
 
@@ -1116,7 +1145,7 @@ Cache<TagStore>::snoopAtomic(PacketPtr pkt)
     }
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
-    handleSnoop(pkt, blk, false, false);
+    handleSnoop(pkt, blk, false, false, false);
     return hitLatency;
 }
 

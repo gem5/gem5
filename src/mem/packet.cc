@@ -59,6 +59,9 @@ MemCmd::commandInfo[] =
     { SET3(IsRead, IsRequest, NeedsResponse), ReadResp, "ReadReq" },
     /* ReadResp */
     { SET3(IsRead, IsResponse, HasData), InvalidCmd, "ReadResp" },
+    /* ReadRespWithInvalidate */
+    { SET4(IsRead, IsResponse, HasData, IsInvalidate),
+            InvalidCmd, "ReadRespWithInvalidate" },
     /* WriteReq */
     { SET5(IsWrite, NeedsExclusive, IsRequest, NeedsResponse, HasData),
             WriteResp, "WriteReq" },
@@ -84,19 +87,19 @@ MemCmd::commandInfo[] =
            IsRequest, HasData, NeedsResponse),
             WriteInvalidateResp, "WriteInvalidateReq" },
     /* WriteInvalidateResp */
-    { SET4(IsWrite, NeedsExclusive, IsInvalidate, IsResponse),
+    { SET3(IsWrite, NeedsExclusive, IsResponse),
             InvalidCmd, "WriteInvalidateResp" },
     /* UpgradeReq */
     { SET4(IsInvalidate, NeedsExclusive, IsRequest, NeedsResponse),
             UpgradeResp, "UpgradeReq" },
     /* UpgradeResp */
-    { SET3(IsInvalidate, NeedsExclusive, IsResponse),
+    { SET2(NeedsExclusive, IsResponse),
             InvalidCmd, "UpgradeResp" },
     /* ReadExReq */
     { SET5(IsRead, NeedsExclusive, IsInvalidate, IsRequest, NeedsResponse),
             ReadExResp, "ReadExReq" },
     /* ReadExResp */
-    { SET5(IsRead, NeedsExclusive, IsInvalidate, IsResponse, HasData),
+    { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "ReadExResp" },
     /* LoadLockedReq */
     { SET4(IsRead, IsLocked, IsRequest, NeedsResponse),

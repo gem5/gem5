@@ -207,9 +207,9 @@ MemTest::completeRequest(PacketPtr pkt)
     assert(removeAddr != outstandingAddrs.end());
     outstandingAddrs.erase(removeAddr);
 
-    switch (pkt->cmd.toInt()) {
-      case MemCmd::ReadResp:
+    assert(pkt->isResponse());
 
+    if (pkt->isRead()) {
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
             panic("%s: read of %x (blk %x) @ cycle %d "
                   "returns %x, expected %x\n", name(),
@@ -228,14 +228,9 @@ MemTest::completeRequest(PacketPtr pkt)
 
         if (maxLoads != 0 && numReads >= maxLoads)
             exitSimLoop("maximum number of loads reached");
-        break;
-
-      case MemCmd::WriteResp:
+    } else {
+        assert(pkt->isWrite());
         numWritesStat++;
-        break;
-
-      default:
-        panic("invalid command %s (%d)", pkt->cmdString(), pkt->cmd.toInt());
     }
 
     noResponseCycles = 0;

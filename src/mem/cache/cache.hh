@@ -186,7 +186,7 @@ class Cache : public BaseCache
     bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
     void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
-                                bool already_copied);
+                                bool already_copied, bool pending_inval);
 
     /**
      * Sets the blk to the new state.
@@ -194,7 +194,7 @@ class Cache : public BaseCache
      * @param new_state The new coherence state for the block.
      */
     void handleSnoop(PacketPtr ptk, BlkType *blk,
-                     bool is_timing, bool is_deferred);
+                     bool is_timing, bool is_deferred, bool pending_inval);
 
     /**
      * Create a writeback request for the given block.
