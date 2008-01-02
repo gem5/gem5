@@ -1,8 +1,8 @@
 
 ---------- Begin Simulation Statistics ----------
-host_mem_usage                                 366088                       # Number of bytes of host memory used
-host_seconds                                   156.35                       # Real time elapsed on the host
-host_tick_rate                                1042333                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 368552                       # Number of bytes of host memory used
+host_seconds                                   153.46                       # Real time elapsed on the host
+host_tick_rate                                1061945                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_seconds                                  0.000163                       # Number of seconds simulated
 sim_ticks                                   162969030                       # Number of ticks simulated
@@ -78,7 +78,7 @@ system.cpu0.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu0.l1c.replacements                    27517                       # number of replacements
 system.cpu0.l1c.sampled_refs                    27861                       # Sample count of references to valid blocks.
 system.cpu0.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu0.l1c.tagsinuse                  345.687561                       # Cycle average of tags in use
+system.cpu0.l1c.tagsinuse                  345.121888                       # Cycle average of tags in use
 system.cpu0.l1c.total_refs                      11484                       # Total number of references to valid blocks.
 system.cpu0.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu0.l1c.writebacks                      10876                       # number of writebacks
@@ -157,7 +157,7 @@ system.cpu1.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu1.l1c.replacements                    27839                       # number of replacements
 system.cpu1.l1c.sampled_refs                    28200                       # Sample count of references to valid blocks.
 system.cpu1.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu1.l1c.tagsinuse                  345.864238                       # Cycle average of tags in use
+system.cpu1.l1c.tagsinuse                  344.387684                       # Cycle average of tags in use
 system.cpu1.l1c.total_refs                      11496                       # Total number of references to valid blocks.
 system.cpu1.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu1.l1c.writebacks                      10966                       # number of writebacks
@@ -236,7 +236,7 @@ system.cpu2.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu2.l1c.replacements                    27813                       # number of replacements
 system.cpu2.l1c.sampled_refs                    28149                       # Sample count of references to valid blocks.
 system.cpu2.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu2.l1c.tagsinuse                  347.648591                       # Cycle average of tags in use
+system.cpu2.l1c.tagsinuse                  346.292399                       # Cycle average of tags in use
 system.cpu2.l1c.total_refs                      11687                       # Total number of references to valid blocks.
 system.cpu2.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu2.l1c.writebacks                      11045                       # number of writebacks
@@ -315,7 +315,7 @@ system.cpu3.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu3.l1c.replacements                    28133                       # number of replacements
 system.cpu3.l1c.sampled_refs                    28477                       # Sample count of references to valid blocks.
 system.cpu3.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu3.l1c.tagsinuse                  348.344200                       # Cycle average of tags in use
+system.cpu3.l1c.tagsinuse                  347.262699                       # Cycle average of tags in use
 system.cpu3.l1c.total_refs                      11422                       # Total number of references to valid blocks.
 system.cpu3.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu3.l1c.writebacks                      11005                       # number of writebacks
@@ -473,7 +473,7 @@ system.cpu5.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu5.l1c.replacements                    27880                       # number of replacements
 system.cpu5.l1c.sampled_refs                    28223                       # Sample count of references to valid blocks.
 system.cpu5.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu5.l1c.tagsinuse                  348.509117                       # Cycle average of tags in use
+system.cpu5.l1c.tagsinuse                  348.223192                       # Cycle average of tags in use
 system.cpu5.l1c.total_refs                      11787                       # Total number of references to valid blocks.
 system.cpu5.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu5.l1c.writebacks                      11039                       # number of writebacks
@@ -552,7 +552,7 @@ system.cpu6.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu6.l1c.replacements                    27468                       # number of replacements
 system.cpu6.l1c.sampled_refs                    27829                       # Sample count of references to valid blocks.
 system.cpu6.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu6.l1c.tagsinuse                  345.752626                       # Cycle average of tags in use
+system.cpu6.l1c.tagsinuse                  345.245640                       # Cycle average of tags in use
 system.cpu6.l1c.total_refs                      11434                       # Total number of references to valid blocks.
 system.cpu6.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu6.l1c.writebacks                      10779                       # number of writebacks
@@ -631,7 +631,7 @@ system.cpu7.l1c.prefetcher.num_hwpf_squashed_from_miss            0             
 system.cpu7.l1c.replacements                    27895                       # number of replacements
 system.cpu7.l1c.sampled_refs                    28241                       # Sample count of references to valid blocks.
 system.cpu7.l1c.soft_prefetch_mshr_full             0                       # number of mshr full events for SW prefetching instrutions
-system.cpu7.l1c.tagsinuse                  347.065724                       # Cycle average of tags in use
+system.cpu7.l1c.tagsinuse                  346.417041                       # Cycle average of tags in use
 system.cpu7.l1c.total_refs                      11691                       # Total number of references to valid blocks.
 system.cpu7.l1c.warmup_cycle                        0                       # Cycle when the warmup percentage was hit.
 system.cpu7.l1c.writebacks                      10935                       # number of writebacks
