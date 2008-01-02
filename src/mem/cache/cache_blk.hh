@@ -37,6 +37,7 @@
 
 #include <list>
 
+#include "base/printable.hh"
 #include "sim/core.hh"		// for Tick
 #include "arch/isa_traits.hh"	// for Addr
 #include "mem/packet.hh"
@@ -251,5 +252,17 @@ class CacheBlk
         }
     }
 };
+
+class CacheBlkPrintWrapper : public Printable
+{
+    CacheBlk *blk;
+  public:
+    CacheBlkPrintWrapper(CacheBlk *_blk) : blk(_blk) {}
+    virtual ~CacheBlkPrintWrapper() {}
+    void print(std::ostream &o, int verbosity = 0,
+               const std::string &prefix = "") const;
+};
+
+
 
 #endif //__CACHE_BLK_HH__

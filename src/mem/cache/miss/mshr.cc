@@ -133,6 +133,18 @@ MSHR::TargetList::checkFunctional(PacketPtr pkt)
 
 
 void
+MSHR::TargetList::
+print(std::ostream &os, int verbosity, const std::string &prefix) const
+{
+    ConstIterator end_i = end();
+    for (ConstIterator i = begin(); i != end_i; ++i) {
+        ccprintf(os, "%s%s: ", prefix, i->isCpuSide() ? "cpu" : "mem");
+        i->pkt->print(os, verbosity, "");
+    }
+}
+
+
+void
 MSHR::allocate(Addr _addr, int _size, PacketPtr target,
                Tick whenReady, Counter _order)
 {
@@ -350,26 +362,41 @@ MSHR::handleFill(Packet *pkt, CacheBlk *blk)
 }
 
 
-void
-MSHR::dump()
+bool
+MSHR::checkFunctional(PacketPtr pkt)
 {
-    ccprintf(cerr,
-             "inService: %d thread: %d\n"
-             "Addr: %x ntargets %d\n"
-             "Targets:\n",
-             inService, threadNum, addr, ntargets);
-#if 0
-    TargetListIterator tar_it = targets->begin();
-    for (int i = 0; i < ntargets; i++) {
-        assert(tar_it != targets->end());
-
-        ccprintf(cerr, "\t%d: Addr: %x cmd: %s\n",
-                 i, tar_it->pkt->getAddr(), tar_it->pkt->cmdString());
-
-        tar_it++;
+    // For printing, we treat the MSHR as a whole as single entity.
+    // For other requests, we iterate over the individual targets
+    // since that's where the actual data lies.
+    if (pkt->isPrint()) {
+        pkt->checkFunctional(this, addr, size, NULL);
+        return false;
+    } else {
+        return (targets->checkFunctional(pkt) ||
+                deferredTargets->checkFunctional(pkt));
     }
-#endif
-    ccprintf(cerr, "\n");
+}
+
+
+void
+MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
+{
+    ccprintf(os, "%s[%x:%x] %s %s %s state: %s %s %s %s\n",
+             prefix, addr, addr+size-1,
+             isCacheFill ? "Fill" : "",
+             needsExclusive() ? "Excl" : "",
+             _isUncacheable ? "Unc" : "",
+             inService ? "InSvc" : "",
+             downstreamPending ? "DwnPend" : "",
+             pendingInvalidate ? "PendInv" : "",
+             pendingShared ? "PendShared" : "");
+
+    ccprintf(os, "%s  Targets:\n", prefix);
+    targets->print(os, verbosity, prefix + "    ");
+    if (!deferredTargets->empty()) {
+        ccprintf(os, "%s  Deferred Targets:\n", prefix);
+        deferredTargets->print(os, verbosity, prefix + "      ");
+    }
 }
 
 MSHR::~MSHR()

@@ -62,6 +62,8 @@ class MemTest : public MemObject
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
+    void printAddr(Addr a);
+
   protected:
     class TickEvent : public Event
     {

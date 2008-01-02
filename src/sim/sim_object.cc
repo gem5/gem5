@@ -264,3 +264,19 @@ SimObject::takeOverFrom(BaseCPU *cpu)
 {
     panic("Unimplemented!");
 }
+
+
+SimObject *
+SimObject::find(const char *name)
+{
+    SimObjectList::const_iterator i = simObjectList.begin();
+    SimObjectList::const_iterator end = simObjectList.end();
+
+    for (; i != end; ++i) {
+        SimObject *obj = *i;
+        if (obj->name() == name)
+            return obj;
+    }
+
+    return NULL;
+}

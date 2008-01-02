@@ -45,6 +45,7 @@
 #include "base/compiler.hh"
 #include "base/fast_alloc.hh"
 #include "base/misc.hh"
+#include "base/printable.hh"
 #include "mem/request.hh"
 #include "sim/host.hh"
 #include "sim/core.hh"
@@ -91,6 +92,8 @@ class MemCmd
         NetworkNackError,  // nacked at network layer (not by protocol)
         InvalidDestError,  // packet dest field invalid
         BadAddressError,   // memory address invalid
+        // Fake simulator-only commands
+        PrintReq,       // Print state matching address
         NUM_MEM_CMDS
     };
 
@@ -111,6 +114,7 @@ class MemCmd
         IsLocked,       //!< Alpha/MIPS LL or SC access
         HasData,        //!< There is an associated payload
         IsError,        //!< Error response
+        IsPrint,        //!< Print state matching address (for debugging)
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -150,6 +154,7 @@ class MemCmd
     bool isReadWrite() const    { return isRead() && isWrite(); }
     bool isLocked() const       { return testCmdAttrib(IsLocked); }
     bool isError() const        { return testCmdAttrib(IsError); }
+    bool isPrint() const        { return testCmdAttrib(IsPrint); }
 
     const Command responseCommand() const {
         return commandInfo[cmd].response;
@@ -187,7 +192,7 @@ class MemCmd
  * ultimate destination and back, possibly being conveyed by several
  * different Packets along the way.)
  */
-class Packet : public FastAlloc
+class Packet : public FastAlloc, public Printable
 {
   public:
 
@@ -294,6 +299,36 @@ class Packet : public FastAlloc
         virtual ~SenderState() {}
     };
 
+    class PrintReqState : public SenderState {
+        class LabelStackEntry {
+          public:
+            const std::string label;
+            std::string *prefix;
+            bool labelPrinted;
+            LabelStackEntry(const std::string &_label,
+                            std::string *_prefix);
+        };
+
+        typedef std::list<LabelStackEntry> LabelStack;
+        LabelStack labelStack;
+
+        std::string *curPrefixPtr;
+
+      public:
+        std::ostream &os;
+        const int verbosity;
+
+        PrintReqState(std::ostream &os, int verbosity = 0);
+        ~PrintReqState();
+
+        const std::string &curPrefix() { return *curPrefixPtr; }
+        void pushLabel(const std::string &lbl,
+                       const std::string &prefix = "  ");
+        void popLabel();
+        void printLabels();
+        void printObj(Printable *obj);
+    };
+
     /** This packet's sender state.  Devices should use dynamic_cast<>
      *   to cast to the state appropriate to the sender. */
     SenderState *senderState;
@@ -316,6 +351,7 @@ class Packet : public FastAlloc
     bool isReadWrite() const    { return cmd.isReadWrite(); }
     bool isLocked() const       { return cmd.isLocked(); }
     bool isError() const        { return cmd.isError(); }
+    bool isPrint() const        { return cmd.isPrint(); }
 
     // Snoop flags
     void assertMemInhibit()     { flags[MemInhibit] = true; }
@@ -573,19 +609,39 @@ class Packet : public FastAlloc
      * value.  If the functional request is a write, it may update the
      * memory value.
      */
-    bool checkFunctional(Addr base, int size, uint8_t *data);
+    bool checkFunctional(Printable *obj, Addr base, int size, uint8_t *data);
 
     /**
      * Check a functional request against a memory value stored in
-     * another packet (i.e. an in-transit request or response).
+     * another packet (i.e. an in-transit request or response).  If
+     * possible, the request will be satisfied and transformed
+     * in-place into a response (at which point no further checking
+     * need be done).
+     *
+     * @return True if the memory location addressed by the request
+     * overlaps with the location addressed by otherPkt.
      */
     bool checkFunctional(PacketPtr otherPkt) {
-        return (otherPkt->hasData() &&
-                checkFunctional(otherPkt->getAddr(), otherPkt->getSize(),
-                                otherPkt->getPtr<uint8_t>()));
+        return checkFunctional(otherPkt,
+                               otherPkt->getAddr(), otherPkt->getSize(),
+                               otherPkt->hasData() ?
+                                   otherPkt->getPtr<uint8_t>() : NULL);
     }
-};
 
-std::ostream & operator<<(std::ostream &o, const Packet &p);
+    void pushLabel(const std::string &lbl) {
+        if (isPrint()) {
+            dynamic_cast<PrintReqState*>(senderState)->pushLabel(lbl);
+        }
+    }
+
+    void popLabel() {
+        if (isPrint()) {
+            dynamic_cast<PrintReqState*>(senderState)->popLabel();
+        }
+    }
+
+    void print(std::ostream &o, int verbosity = 0,
+               const std::string &prefix = "") const;
+};
 
 #endif //__MEM_PACKET_HH

@@ -62,9 +62,11 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     tempBlock->data = new uint8_t[blkSize];
 
     cpuSidePort = new CpuSidePort(p->name + "-cpu_side_port", this,
-            p->cpu_side_filter_ranges);
+                                  "CpuSidePort",
+                                  p->cpu_side_filter_ranges);
     memSidePort = new MemSidePort(p->name + "-mem_side_port", this,
-            p->mem_side_filter_ranges);
+                                  "MemSidePort",
+                                  p->mem_side_filter_ranges);
     cpuSidePort->setOtherPort(memSidePort);
     memSidePort->setOtherPort(cpuSidePort);
 
@@ -91,7 +93,8 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
         return memSidePort;
     } else if (if_name == "functional") {
         return new CpuSidePort(name() + "-cpu_side_funcport", this,
-                std::vector<Range<Addr> >());
+                               "CpuSideFuncPort",
+                               std::vector<Range<Addr> >());
     } else {
         panic("Port name %s unrecognized\n", if_name);
     }
@@ -640,21 +643,27 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 template<class TagStore>
 void
 Cache<TagStore>::functionalAccess(PacketPtr pkt,
+                                  CachePort *incomingPort,
                                   CachePort *otherSidePort)
 {
     Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
     BlkType *blk = tags->findBlock(pkt->getAddr());
 
-    if (blk && pkt->checkFunctional(blk_addr, blkSize, blk->data)) {
-        // request satisfied from block
-        return;
-    }
+    pkt->pushLabel(name());
 
-    // Need to check for outstanding misses and writes; if neither one
-    // satisfies, then forward to other side of cache.
-    if (!(mshrQueue.checkFunctional(pkt, blk_addr) ||
-          writeBuffer.checkFunctional(pkt, blk_addr))) {
-        otherSidePort->checkAndSendFunctional(pkt);
+    CacheBlkPrintWrapper cbpw(blk);
+    bool done =
+        (blk && pkt->checkFunctional(&cbpw, blk_addr, blkSize, blk->data))
+        || incomingPort->checkFunctional(pkt)
+        || mshrQueue.checkFunctional(pkt, blk_addr)
+        || writeBuffer.checkFunctional(pkt, blk_addr)
+        || otherSidePort->checkFunctional(pkt);
+
+    // We're leaving the cache, so pop cache->name() label
+    pkt->popLabel();
+
+    if (!done) {
+        otherSidePort->sendFunctional(pkt);
     }
 }
 
@@ -1275,18 +1284,16 @@ template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    if (!checkFunctional(pkt)) {
-        myCache()->functionalAccess(pkt, cache->memSidePort);
-    }
+    myCache()->functionalAccess(pkt, this, otherPort);
 }
 
 
 template<class TagStore>
 Cache<TagStore>::
-CpuSidePort::CpuSidePort(const std::string &_name,
-                         Cache<TagStore> *_cache, std::vector<Range<Addr> >
-                         filterRanges)
-    : BaseCache::CachePort(_name, _cache, filterRanges)
+CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
+                         const std::string &_label,
+                         std::vector<Range<Addr> > filterRanges)
+    : BaseCache::CachePort(_name, _cache, _label, filterRanges)
 {
 }
 
@@ -1352,9 +1359,7 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    if (!checkFunctional(pkt)) {
-        myCache()->functionalAccess(pkt, cache->cpuSidePort);
-    }
+    myCache()->functionalAccess(pkt, this, otherPort);
 }
 
 
@@ -1439,8 +1444,9 @@ Cache<TagStore>::MemSidePort::processSendEvent()
 template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
-        std::vector<Range<Addr> > filterRanges)
-    : BaseCache::CachePort(_name, _cache, filterRanges)
+                         const std::string &_label,
+                         std::vector<Range<Addr> > filterRanges)
+    : BaseCache::CachePort(_name, _cache, _label, filterRanges)
 {
     // override default send event from SimpleTimingPort
     delete sendEvent;

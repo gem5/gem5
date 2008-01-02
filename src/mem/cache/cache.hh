@@ -73,6 +73,7 @@ class Cache : public BaseCache
       public:
         CpuSidePort(const std::string &_name,
                     Cache<TagStore> *_cache,
+                    const std::string &_label,
                     std::vector<Range<Addr> > filterRanges);
 
         // BaseCache::CachePort just has a BaseCache *; this function
@@ -97,6 +98,7 @@ class Cache : public BaseCache
       public:
         MemSidePort(const std::string &_name,
                     Cache<TagStore> *_cache,
+                    const std::string &_label,
                     std::vector<Range<Addr> > filterRanges);
 
         // BaseCache::CachePort just has a BaseCache *; this function
@@ -229,7 +231,8 @@ class Cache : public BaseCache
      * @param pkt The request to perform.
      * @return The result of the access.
      */
-    void functionalAccess(PacketPtr pkt, CachePort *otherSidePort);
+    void functionalAccess(PacketPtr pkt, CachePort *incomingPort,
+                          CachePort *otherSidePort);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.

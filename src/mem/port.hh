@@ -243,6 +243,11 @@ class Port
     */
     virtual void memsetBlob(Addr addr, uint8_t val, int size);
 
+    /** Inject a PrintReq for the given address to print the state of
+     * that address throughout the memory system.  For debugging.
+     */
+    void printAddr(Addr a);
+
   private:
 
     /** Internal helper function for read/writeBlob().

@@ -37,6 +37,7 @@
 
 #include <iostream>
 #include <cstring>
+#include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/packet.hh"
@@ -121,7 +122,9 @@ MemCmd::commandInfo[] =
     /* InvalidDestError  -- packet dest field invalid */
     { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
-    { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" }
+    { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" },
+    /* PrintReq */
+    { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" }
 };
 
 
@@ -154,7 +157,7 @@ Packet::allocate()
 
 
 bool
-Packet::checkFunctional(Addr addr, int size, uint8_t *data)
+Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
 {
     Addr func_start = getAddr();
     Addr func_end   = getAddr() + getSize() - 1;
@@ -163,6 +166,17 @@ Packet::checkFunctional(Addr addr, int size, uint8_t *data)
 
     if (func_start > val_end || val_start > func_end) {
         // no intersection
+        return false;
+    }
+
+    // check print first since it doesn't require data
+    if (isPrint()) {
+        dynamic_cast<PrintReqState*>(senderState)->printObj(obj);
+        return false;
+    }
+
+    // if there's no data, there's no need to look further
+    if (!data) {
         return false;
     }
 
@@ -194,40 +208,85 @@ Packet::checkFunctional(Addr addr, int size, uint8_t *data)
             std::memcpy(data, getPtr<uint8_t>() - offset,
                         (std::min(func_end, val_end) - val_start) + 1);
         }
-        // we always want to keep going with a write
-        return false;
-    } else
+    } else {
         panic("Don't know how to handle command %s\n", cmdString());
+    }
+
+    // keep going with request by default
+    return false;
 }
 
 
-std::ostream &
-operator<<(std::ostream &o, const Packet &p)
+void
+Packet::print(std::ostream &o, const int verbosity,
+              const std::string &prefix) const
 {
-
-    o << "[0x";
-    o.setf(std::ios_base::hex, std::ios_base::showbase);
-    o <<  p.getAddr();
-    o.unsetf(std::ios_base::hex| std::ios_base::showbase);
-    o <<  ":";
-    o.setf(std::ios_base::hex, std::ios_base::showbase);
-    o <<  p.getAddr() + p.getSize() - 1 << "] ";
-    o.unsetf(std::ios_base::hex| std::ios_base::showbase);
-
-    if (p.isRead())
-        o << "Read ";
-    if (p.isWrite())
-        o << "Write ";
-    if (p.isInvalidate())
-        o << "Invalidate ";
-    if (p.isRequest())
-        o << "Request ";
-    if (p.isResponse())
-        o << "Response ";
-    if (p.hasData())
-        o << "w/Data ";
-
-    o << std::endl;
-    return o;
+    ccprintf(o, "%s[%x:%x] %s\n", prefix,
+             getAddr(), getAddr() + getSize() - 1, cmdString());
 }
 
+
+Packet::PrintReqState::PrintReqState(std::ostream &_os, int _verbosity)
+    : curPrefixPtr(new std::string("")), os(_os), verbosity(_verbosity)
+{
+    labelStack.push_back(LabelStackEntry("", curPrefixPtr));
+}
+
+
+Packet::PrintReqState::~PrintReqState()
+{
+    labelStack.pop_back();
+    assert(labelStack.empty());
+    delete curPrefixPtr;
+}
+
+
+Packet::PrintReqState::
+LabelStackEntry::LabelStackEntry(const std::string &_label,
+                                 std::string *_prefix)
+    : label(_label), prefix(_prefix), labelPrinted(false)
+{
+}
+
+
+void
+Packet::PrintReqState::pushLabel(const std::string &lbl,
+                                 const std::string &prefix)
+{
+    labelStack.push_back(LabelStackEntry(lbl, curPrefixPtr));
+    curPrefixPtr = new std::string(*curPrefixPtr);
+    *curPrefixPtr += prefix;
+}
+
+void
+Packet::PrintReqState::popLabel()
+{
+    delete curPrefixPtr;
+    curPrefixPtr = labelStack.back().prefix;
+    labelStack.pop_back();
+    assert(!labelStack.empty());
+}
+
+void
+Packet::PrintReqState::printLabels()
+{
+    if (!labelStack.back().labelPrinted) {
+        LabelStack::iterator i = labelStack.begin();
+        LabelStack::iterator end = labelStack.end();
+        while (i != end) {
+            if (!i->labelPrinted) {
+                ccprintf(os, "%s%s\n", *(i->prefix), i->label);
+                i->labelPrinted = true;
+            }
+            i++;
+        }
+    }
+}
+
+
+void
+Packet::PrintReqState::printObj(Printable *obj)
+{
+    printLabels();
+    obj->print(os, verbosity, curPrefix());
+}

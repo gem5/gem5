@@ -314,18 +314,22 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - start();
 
-    if (pkt->cmd == MemCmd::ReadReq) {
+    if (pkt->isRead()) {
         memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET("Read");
-    } else if (pkt->cmd == MemCmd::WriteReq) {
+        pkt->makeAtomicResponse();
+    } else if (pkt->isWrite()) {
         memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
+        pkt->makeAtomicResponse();
+    } else if (pkt->isPrint()) {
+        Packet::PrintReqState *prs = dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
+        prs->printLabels();
+        ccprintf(prs->os, "%s%#x\n", prs->curPrefix(), *hostAddr);
     } else {
         panic("PhysicalMemory: unimplemented functional command %s",
               pkt->cmdString());
     }
-
-    pkt->makeAtomicResponse();
 }
 
 
@@ -405,12 +409,16 @@ PhysicalMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 void
 PhysicalMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
+    pkt->pushLabel(memory->name());
+
     if (!checkFunctional(pkt)) {
         // Default implementation of SimpleTimingPort::recvFunctional()
         // calls recvAtomic() and throws away the latency; we can save a
         // little here by just not calculating the latency.
         memory->doFunctionalAccess(pkt);
     }
+
+    pkt->popLabel();
 }
 
 unsigned int

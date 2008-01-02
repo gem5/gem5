@@ -41,8 +41,10 @@
 using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
-        std::vector<Range<Addr> > filter_ranges)
-    : SimpleTimingPort(_name, _cache), cache(_cache), otherPort(NULL),
+                                const std::string &_label,
+                                std::vector<Range<Addr> > filter_ranges)
+    : SimpleTimingPort(_name, _cache), cache(_cache),
+      label(_label), otherPort(NULL),
       blocked(false), mustSendRetry(false), filterRanges(filter_ranges)
 {
 }
@@ -50,8 +52,8 @@ BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
 
 BaseCache::BaseCache(const Params *p)
     : MemObject(p),
-      mshrQueue(p->mshrs, 4, MSHRQueue_MSHRs),
-      writeBuffer(p->write_buffers, p->mshrs+1000,
+      mshrQueue("MSHRs", p->mshrs, 4, MSHRQueue_MSHRs),
+      writeBuffer("write buffer", p->write_buffers, p->mshrs+1000,
                   MSHRQueue_WriteBuffer),
       blkSize(p->block_size),
       hitLatency(p->latency),
@@ -71,19 +73,21 @@ BaseCache::CachePort::recvStatusChange(Port::Status status)
     }
 }
 
+
+bool
+BaseCache::CachePort::checkFunctional(PacketPtr pkt)
+{
+    pkt->pushLabel(label);
+    bool done = SimpleTimingPort::checkFunctional(pkt);
+    pkt->popLabel();
+    return done;
+}
+
+
 int
 BaseCache::CachePort::deviceBlockSize()
 {
     return cache->getBlockSize();
-}
-
-
-void
-BaseCache::CachePort::checkAndSendFunctional(PacketPtr pkt)
-{
-    if (!checkFunctional(pkt)) {
-        sendFunctional(pkt);
-    }
 }
 
 

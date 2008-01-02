@@ -38,6 +38,7 @@
 
 #include <list>
 
+#include "base/printable.hh"
 #include "mem/packet.hh"
 
 class CacheBlk;
@@ -47,7 +48,7 @@ class MSHRQueue;
  * Miss Status and handling Register. This class keeps all the information
  * needed to handle a cache miss including a list of target requests.
  */
-class MSHR : public Packet::SenderState
+class MSHR : public Packet::SenderState, public Printable
 {
 
   public:
@@ -60,7 +61,7 @@ class MSHR : public Packet::SenderState
         PacketPtr pkt;  //!< Pending request packet.
         bool cpuSide;   //!< Did request come from cpu side or mem side?
 
-        bool isCpuSide() { return cpuSide; }
+        bool isCpuSide() const { return cpuSide; }
 
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order, bool _cpuSide)
             : recvTime(curTick), readyTime(_readyTime), order(_order),
@@ -71,6 +72,7 @@ class MSHR : public Packet::SenderState
     class TargetList : public std::list<Target> {
         /** Target list iterator. */
         typedef std::list<Target>::iterator Iterator;
+        typedef std::list<Target>::const_iterator ConstIterator;
 
       public:
         bool needsExclusive;
@@ -83,6 +85,8 @@ class MSHR : public Packet::SenderState
         void replaceUpgrades();
         void clearDownstreamPending();
         bool checkFunctional(PacketPtr pkt);
+        void print(std::ostream &os, int verbosity,
+                   const std::string &prefix) const;
     };
 
     /** A list of MSHRs. */
@@ -114,7 +118,7 @@ class MSHR : public Packet::SenderState
     bool isCacheFill;
 
     /** True if we need to get an exclusive copy of the block. */
-    bool needsExclusive() { return targets->needsExclusive; }
+    bool needsExclusive() const { return targets->needsExclusive; }
 
     /** True if the request is uncacheable */
     bool _isUncacheable;
@@ -231,15 +235,14 @@ public:
 
     void handleFill(Packet *pkt, CacheBlk *blk);
 
-    bool checkFunctional(PacketPtr pkt) {
-        return (targets->checkFunctional(pkt) ||
-                deferredTargets->checkFunctional(pkt));
-    }
+    bool checkFunctional(PacketPtr pkt);
 
     /**
-     * Prints the contents of this MSHR to stderr.
+     * Prints the contents of this MSHR for debugging.
      */
-    void dump();
+    void print(std::ostream &os,
+               int verbosity = 0,
+               const std::string &prefix = "") const;
 };
 
 #endif //__MSHR_HH__

@@ -52,7 +52,6 @@
 #include "cpu/checker/cpu.hh"
 #endif
 
-using namespace std;
 using namespace TheISA;
 
 BaseO3CPU::BaseO3CPU(Params *params)
@@ -521,8 +520,8 @@ template <class Impl>
 void
 FullO3CPU<Impl>::activateThread(unsigned tid)
 {
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
+    std::list<unsigned>::iterator isActive =
+        std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i]: Calling activate thread.\n", tid);
 
@@ -539,8 +538,8 @@ void
 FullO3CPU<Impl>::deactivateThread(unsigned tid)
 {
     //Remove From Active List, if Active
-    list<unsigned>::iterator thread_it =
-        find(activeThreads.begin(), activeThreads.end(), tid);
+    std::list<unsigned>::iterator thread_it =
+        std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     DPRINTF(O3CPU, "[tid:%i]: Calling deactivate thread.\n", tid);
 
@@ -959,8 +958,8 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     // the active threads list.
     int tid = 0;
 
-    list<unsigned>::iterator isActive = find(
-        activeThreads.begin(), activeThreads.end(), tid);
+    std::list<unsigned>::iterator isActive =
+        std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     if (isActive == activeThreads.end()) {
         //May Need to Re-code this if the delay variable is the delay
@@ -1454,8 +1453,8 @@ FullO3CPU<Impl>::updateThreadPriority()
     {
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
-        list<unsigned>::iterator list_begin = activeThreads.begin();
-        list<unsigned>::iterator list_end   = activeThreads.end();
+        std::list<unsigned>::iterator list_begin = activeThreads.begin();
+        std::list<unsigned>::iterator list_end   = activeThreads.end();
 
         unsigned high_thread = *list_begin;
 

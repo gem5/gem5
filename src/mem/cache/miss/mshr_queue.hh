@@ -46,6 +46,9 @@
 class MSHRQueue
 {
   private:
+    /** Local label (for functional print requests) */
+    const std::string label;
+
     /**  MSHR storage. */
     MSHR *registers;
     /** Holds pointers to all allocated entries. */
@@ -87,7 +90,8 @@ class MSHRQueue
      * @param reserve The minimum number of entries needed to satisfy
      * any access.
      */
-    MSHRQueue(int num_entries, int reserve, int index);
+    MSHRQueue(const std::string &_label, int num_entries, int reserve,
+              int index);
 
     /** Destructor */
     ~MSHRQueue();

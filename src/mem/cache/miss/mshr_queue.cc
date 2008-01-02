@@ -36,8 +36,10 @@
 
 using namespace std;
 
-MSHRQueue::MSHRQueue(int num_entries, int reserve, int _index)
-    : numEntries(num_entries + reserve - 1), numReserve(reserve),
+MSHRQueue::MSHRQueue(const std::string &_label,
+                     int num_entries, int reserve, int _index)
+    : label(_label),
+      numEntries(num_entries + reserve - 1), numReserve(reserve),
       index(_index)
 {
     allocated = 0;
@@ -90,14 +92,17 @@ MSHRQueue::findMatches(Addr addr, vector<MSHR*>& matches) const
 bool
 MSHRQueue::checkFunctional(PacketPtr pkt, Addr blk_addr)
 {
+    pkt->pushLabel(label);
     MSHR::ConstIterator i = allocatedList.begin();
     MSHR::ConstIterator end = allocatedList.end();
     for (; i != end; ++i) {
         MSHR *mshr = *i;
         if (mshr->addr == blk_addr && mshr->checkFunctional(pkt)) {
+            pkt->popLabel();
             return true;
         }
     }
+    pkt->popLabel();
     return false;
 }
 

@@ -150,3 +150,15 @@ Port::memsetBlob(Addr addr, uint8_t val, int size)
 
     delete [] buf;
 }
+
+
+void
+Port::printAddr(Addr a)
+{
+    Request req(a, 1, 0);
+    Packet pkt(&req, MemCmd::PrintReq, Packet::Broadcast);
+    Packet::PrintReqState prs(std::cerr);
+    pkt.senderState = &prs;
+
+    sendFunctional(&pkt);
+}

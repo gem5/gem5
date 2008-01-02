@@ -319,10 +319,14 @@ Bridge::BridgePort::recvFunctional(PacketPtr pkt)
 {
     std::list<PacketBuffer*>::iterator i;
 
+    pkt->pushLabel(name());
+
     for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
         if (pkt->checkFunctional((*i)->pkt))
             return;
     }
+
+    pkt->popLabel();
 
     // fall through if pkt still not satisfied
     otherPort->sendFunctional(pkt);

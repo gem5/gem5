@@ -100,7 +100,8 @@ class BaseCache : public MemObject
 
       protected:
         CachePort(const std::string &_name, BaseCache *_cache,
-                std::vector<Range<Addr> > filter_ranges);
+                  const std::string &_label,
+                  std::vector<Range<Addr> > filter_ranges);
 
         virtual void recvStatusChange(Status status);
 
@@ -111,6 +112,8 @@ class BaseCache : public MemObject
         typedef EventWrapper<Port, &Port::sendRetry>
             SendRetryEvent;
 
+        const std::string label;
+
       public:
         void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
 
@@ -118,7 +121,7 @@ class BaseCache : public MemObject
 
         void clearBlocked();
 
-        void checkAndSendFunctional(PacketPtr pkt);
+        bool checkFunctional(PacketPtr pkt);
 
         CachePort *otherPort;
 

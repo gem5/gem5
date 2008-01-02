@@ -399,3 +399,10 @@ MemTestParams::create()
 {
     return new MemTest(this);
 }
+
+
+void
+MemTest::printAddr(Addr a)
+{
+    cachePort.printAddr(a);
+}
