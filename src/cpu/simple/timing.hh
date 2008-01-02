@@ -203,6 +203,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void completeDataAccess(PacketPtr );
     void advanceInst(Fault fault);
 
+    /**
+     * Print state of address in memory system via PrintReq (for
+     * debugging).
+     */
+    void printAddr(Addr a);
+
   private:
 
     typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;

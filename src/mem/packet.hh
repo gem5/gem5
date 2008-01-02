@@ -299,7 +299,12 @@ class Packet : public FastAlloc, public Printable
         virtual ~SenderState() {}
     };
 
+    /**
+     * Object used to maintain state of a PrintReq.  The senderState
+     * field of a PrintReq should always be of this type.
+     */
     class PrintReqState : public SenderState {
+        /** An entry in the label stack. */
         class LabelStackEntry {
           public:
             const std::string label;
@@ -321,11 +326,23 @@ class Packet : public FastAlloc, public Printable
         PrintReqState(std::ostream &os, int verbosity = 0);
         ~PrintReqState();
 
+        /** Returns the current line prefix. */
         const std::string &curPrefix() { return *curPrefixPtr; }
+
+        /** Push a label onto the label stack, and prepend the given
+         * prefix string onto the current prefix.  Labels will only be
+         * printed if an object within the label's scope is
+         * printed. */
         void pushLabel(const std::string &lbl,
                        const std::string &prefix = "  ");
+        /** Pop a label off the label stack. */
         void popLabel();
+        /** Print all of the pending unprinted labels on the
+         * stack. Called by printObj(), so normally not called by
+         * users unless bypassing printObj(). */
         void printLabels();
+        /** Print a Printable object to os, because it matched the
+         * address on a PrintReq. */
         void printObj(Printable *obj);
     };
 
@@ -613,13 +630,7 @@ class Packet : public FastAlloc, public Printable
 
     /**
      * Check a functional request against a memory value stored in
-     * another packet (i.e. an in-transit request or response).  If
-     * possible, the request will be satisfied and transformed
-     * in-place into a response (at which point no further checking
-     * need be done).
-     *
-     * @return True if the memory location addressed by the request
-     * overlaps with the location addressed by otherPkt.
+     * another packet (i.e. an in-transit request or response).
      */
     bool checkFunctional(PacketPtr otherPkt) {
         return checkFunctional(otherPkt,
@@ -628,12 +639,18 @@ class Packet : public FastAlloc, public Printable
                                    otherPkt->getPtr<uint8_t>() : NULL);
     }
 
+    /**
+     * Push label for PrintReq (safe to call unconditionally).
+     */
     void pushLabel(const std::string &lbl) {
         if (isPrint()) {
             dynamic_cast<PrintReqState*>(senderState)->pushLabel(lbl);
         }
     }
 
+    /**
+     * Pop label for PrintReq (safe to call unconditionally).
+     */
     void popLabel() {
         if (isPrint()) {
             dynamic_cast<PrintReqState*>(senderState)->popLabel();

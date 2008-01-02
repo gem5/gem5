@@ -133,7 +133,7 @@ class SimObject : public Serializable, protected StartupCallback
 
     /**
      * Find the SimObject with the given name and return a pointer to
-     * it.  Priarily used for interactive debugging.  Argument is
+     * it.  Primarily used for interactive debugging.  Argument is
      * char* rather than std::string to make it callable from gdb.
      */
     static SimObject *find(const char *name);

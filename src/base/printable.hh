@@ -36,6 +36,11 @@
 #include <ostream>
 #include <string>
 
+/**
+ * Abstract base class for objects which support being printed
+ * to a stream for debugging.  Primarily used to support PrintReq
+ * in memory system.
+ */
 class Printable
 {
   public:

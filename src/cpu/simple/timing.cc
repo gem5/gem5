@@ -822,6 +822,13 @@ TimingSimpleCPU::IprEvent::description()
 }
 
 
+void
+TimingSimpleCPU::printAddr(Addr a)
+{
+    dcachePort.printAddr(a);
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 //
 //  TimingSimpleCPU Simulation Object

@@ -156,6 +156,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
             int size, unsigned flags);
     Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
             int size, unsigned flags);
+
+    /**
+     * Print state of address in memory system via PrintReq (for
+     * debugging).
+     */
+    void printAddr(Addr a);
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

@@ -253,6 +253,12 @@ class CacheBlk
     }
 };
 
+/**
+ * Simple class to provide virtual print() method on cache blocks
+ * without allocating a vtable pointer for every single cache block.
+ * Just wrap the CacheBlk object in an instance of this before passing
+ * to a function that requires a Printable object.
+ */
 class CacheBlkPrintWrapper : public Printable
 {
     CacheBlk *blk;

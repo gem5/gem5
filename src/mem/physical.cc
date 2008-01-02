@@ -323,8 +323,12 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
         TRACE_PACKET("Write");
         pkt->makeAtomicResponse();
     } else if (pkt->isPrint()) {
-        Packet::PrintReqState *prs = dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
+        Packet::PrintReqState *prs =
+            dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
+        // Need to call printLabels() explicitly since we're not going
+        // through printObj().
         prs->printLabels();
+        // Right now we just print the single byte at the specified address.
         ccprintf(prs->os, "%s%#x\n", prs->curPrefix(), *hostAddr);
     } else {
         panic("PhysicalMemory: unimplemented functional command %s",

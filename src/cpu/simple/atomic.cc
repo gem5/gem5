@@ -783,6 +783,13 @@ AtomicSimpleCPU::tick()
 }
 
 
+void
+AtomicSimpleCPU::printAddr(Addr a)
+{
+    dcachePort.printAddr(a);
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 //
 //  AtomicSimpleCPU Simulation Object

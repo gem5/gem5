@@ -62,6 +62,10 @@ class MemTest : public MemObject
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
+    /**
+     * Print state of address in memory system via PrintReq (for
+     * debugging).
+     */
     void printAddr(Addr a);
 
   protected:
