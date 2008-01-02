@@ -919,7 +919,7 @@ Cache<TagStore>::doTimingSupplyResponse(PacketPtr req_pkt,
     PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt, true);
     if (!req_pkt->isInvalidate()) {
         // note that we're ignoring the shared flag on req_pkt... it's
-        // basically irrelveant, as we'll always assert shared unless
+        // basically irrelevant, as we'll always assert shared unless
         // it's an exclusive request, in which case the shared line
         // should never be asserted1
         pkt->assertShared();
@@ -1056,7 +1056,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
                 pkt->getAddr());
 
         //Look through writebacks for any non-uncachable writes, use that
-        for (int i=0; i<writebacks.size(); i++) {
+        for (int i = 0; i < writebacks.size(); i++) {
             mshr = writebacks[i];
             assert(!mshr->isUncacheable());
             assert(mshr->getNumTargets() == 1);
