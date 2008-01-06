@@ -171,8 +171,8 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
     if (pkt->cmd == MemCmd::SwapReq) {
         cmpAndSwap(blk, pkt);
     } else if (pkt->isWrite()) {
+        blk->status |= BlkDirty;
         if (blk->checkWrite(pkt)) {
-            blk->status |= BlkDirty;
             pkt->writeDataToBlock(blk->data, blkSize);
         }
     } else if (pkt->isRead()) {
