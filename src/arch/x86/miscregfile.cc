@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2003-2006, 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  */
 
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -209,27 +209,27 @@ void MiscRegFile::setReg(int miscReg,
         break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
-      case MISCREG_FS:
-      case MISCREG_GS:
-      case MISCREG_HS:
-      case MISCREG_TSL:
-      case MISCREG_TSG:
-      case MISCREG_TR:
-      case MISCREG_IDTR:
-        regVal[MISCREG_SEG_EFF_BASE(miscReg - MISCREG_SEG_SEL_BASE)] = val;
+      case MISCREG_FS_BASE:
+      case MISCREG_GS_BASE:
+      case MISCREG_HS_BASE:
+      case MISCREG_TSL_BASE:
+      case MISCREG_TSG_BASE:
+      case MISCREG_TR_BASE:
+      case MISCREG_IDTR_BASE:
+        regVal[MISCREG_SEG_EFF_BASE(miscReg - MISCREG_SEG_BASE_BASE)] = val;
         break;
       // These segments ignore their bases in 64 bit mode.
       // their effective bases must stay equal to their actual bases.
-      case MISCREG_ES:
-      case MISCREG_CS:
-      case MISCREG_SS:
-      case MISCREG_DS:
+      case MISCREG_ES_BASE:
+      case MISCREG_CS_BASE:
+      case MISCREG_SS_BASE:
+      case MISCREG_DS_BASE:
         {
             Efer efer = regVal[MISCREG_EFER];
             SegAttr csAttr = regVal[MISCREG_CS_ATTR];
             if (!efer.lma || !csAttr.longMode) // Check for non 64 bit mode.
                 regVal[MISCREG_SEG_EFF_BASE(miscReg -
-                        MISCREG_SEG_SEL_BASE)] = val;
+                        MISCREG_SEG_BASE_BASE)] = val;
         }
         break;
     }
