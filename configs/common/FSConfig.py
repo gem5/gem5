@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -155,6 +155,10 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
 
     return self
 
+def x86IOAddress(port):
+    IO_address_space_base = 0x1000000000000000
+    return IO_address_space_base + port;
+
 def makeLinuxX86System(mem_mode, mdesc = None):
     self = LinuxX86System()
     if not mdesc:
@@ -163,9 +167,22 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
 
     # Physical memory
-    self.membus = Bus(bus_id=0)
+    self.membus = Bus(bus_id=1)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.physmem.port = self.membus.port
+
+    # North Bridge
+    self.iobus = Bus(bus_id=0)
+    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.bridge.side_a = self.iobus.port
+    self.bridge.side_b = self.membus.port
+
+    # Serial port and console
+    self.console = SimConsole()
+    self.com_1 = Uart8250()
+    self.com_1.pio_addr = x86IOAddress(0x3f8)
+    self.com_1.pio = self.iobus.port
+    self.com_1.sim_console = self.console
 
     # Platform
     self.opteron = Opteron()

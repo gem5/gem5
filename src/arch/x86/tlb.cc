@@ -470,6 +470,16 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             //overlapping.
             req->setPaddr(regNum * sizeof(MiscReg));
             return NoFault;
+        } else if (prefix == IntAddrPrefixIO) {
+            // TODO If CPL > IOPL or in virtual mode, check the I/O permission
+            // bitmap in the TSS.
+
+            Addr IOPort = vaddr & ~IntAddrPrefixMask;
+            // Make sure the address fits in the expected 16 bit IO address
+            // space.
+            assert(!(IOPort & ~0xFFFF));
+            req->setPaddr(PhysAddrPrefixIO | IOPort);
+            return NoFault;
         } else {
             panic("Access to unrecognized internal address space %#x.\n",
                     prefix);
