@@ -107,6 +107,15 @@ let {{
     }
     assembler.symbols.update(symbols)
 
+    assembler.symbols["ldsz"] = \
+        "((env.dataSize == 8) ? 3 : (env.dataSize == 4) ? 2 : 1)"
+
+    assembler.symbols["lasz"] = \
+        "((env.addressSize == 8) ? 3 : (env.addressSize == 4) ? 2 : 1)"
+
+    assembler.symbols["lssz"] = \
+        "((env.stackSize == 8) ? 3 : (env.stackSize == 4) ? 2 : 1)"
+
     # Short hand for common scale-index-base combinations.
     assembler.symbols["sib"] = \
         [symbols["scale"], symbols["index"], symbols["base"]]
