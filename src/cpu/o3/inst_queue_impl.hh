@@ -667,7 +667,7 @@ InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
     // @todo: Ensure that these FU Completions happen at the beginning
     // of a cycle, otherwise they could add too many instructions to
     // the queue.
-    issueToExecuteQueue->access(0)->size++;
+    issueToExecuteQueue->access(-1)->size++;
     instsToExecute.push_back(inst);
 }
 
@@ -752,7 +752,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 FUCompletion *execution = new FUCompletion(issuing_inst,
                                                            idx, this);
 
-                execution->schedule(curTick + cpu->ticks(issue_latency - 1));
+                execution->schedule(curTick + cpu->ticks(op_latency - 1));
 
                 // @todo: Enforce that issue_latency == 1 or op_latency
                 if (issue_latency > 1) {
