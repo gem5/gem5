@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                    409                       # Nu
 global.BPredUnit.condPredicted                   1184                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         2029                       # Number of BP lookups
 global.BPredUnit.usedRAS                          277                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  84357                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 197344                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
-host_tick_rate                               71887995                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  61994                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 152004                       # Number of bytes of host memory used
+host_seconds                                     0.09                       # Real time elapsed on the host
+host_tick_rate                               52834669                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 23                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores               124                       # Number of conflicting stores.
 memdepunit.memDep.insertedLoads                  2030                       # Number of loads inserted to the mem dependence unit.
@@ -21,7 +21,7 @@ sim_insts                                        5623                       # Nu
 sim_seconds                                  0.000005                       # Number of seconds simulated
 sim_ticks                                     4806000                       # Number of ticks simulated
 system.cpu.commit.COM:branches                    862                       # Number of branches committed
-system.cpu.commit.COM:bw_lim_events                85                       # number cycles where commit BW limit reached
+system.cpu.commit.COM:bw_lim_events                86                       # number cycles where commit BW limit reached
 system.cpu.commit.COM:bw_limited                    0                       # number of insts not committed due to BW limits
 system.cpu.commit.COM:committed_per_cycle.start_dist                     # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle.samples         8660                      
@@ -29,12 +29,12 @@ system.cpu.commit.COM:committed_per_cycle.min_value            0
                                0         6353   7336.03%           
                                1         1192   1376.44%           
                                2          402    464.20%           
-                               3          185    213.63%           
+                               3          186    214.78%           
                                4          132    152.42%           
-                               5           93    107.39%           
-                               6          110    127.02%           
+                               5           92    106.24%           
+                               6          109    125.87%           
                                7          108    124.71%           
-                               8           85     98.15%           
+                               8           86     99.31%           
 system.cpu.commit.COM:committed_per_cycle.max_value            8                      
 system.cpu.commit.COM:committed_per_cycle.end_dist
 
@@ -241,12 +241,12 @@ system.cpu.iew.EXEC:rate                     0.833975                       # In
 system.cpu.iew.EXEC:refs                         2660                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                       1006                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
-system.cpu.iew.WB:consumers                      5426                       # num instructions consuming a value
+system.cpu.iew.WB:consumers                      5428                       # num instructions consuming a value
 system.cpu.iew.WB:count                          7664                       # cumulative count of insts written-back
-system.cpu.iew.WB:fanout                     0.742905                       # average fanout of values written-back
+system.cpu.iew.WB:fanout                     0.742815                       # average fanout of values written-back
 system.cpu.iew.WB:penalized                         0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.WB:penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu.iew.WB:producers                      4031                       # num instructions producing a value
+system.cpu.iew.WB:producers                      4032                       # num instructions producing a value
 system.cpu.iew.WB:rate                       0.797254                       # insts written-back per cycle
 system.cpu.iew.WB:sent                           7781                       # cumulative count of insts sent to commit
 system.cpu.iew.branchMispredicts                  401                       # Number of branch mispredicts detected at execute
@@ -318,9 +318,9 @@ system.cpu.iq.ISSUE:issued_per_cycle.start_dist                     # Number of 
 system.cpu.iq.ISSUE:issued_per_cycle.samples         9449                      
 system.cpu.iq.ISSUE:issued_per_cycle.min_value            0                      
                                0         6104   6459.94%           
-                               1         1119   1184.25%           
-                               2          811    858.29%           
-                               3          592    626.52%           
+                               1         1118   1183.19%           
+                               2          813    860.41%           
+                               3          591    625.46%           
                                4          460    486.82%           
                                5          212    224.36%           
                                6          105    111.12%           

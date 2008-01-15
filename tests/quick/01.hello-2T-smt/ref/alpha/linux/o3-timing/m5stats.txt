@@ -8,10 +8,10 @@ global.BPredUnit.condIncorrect                   1092                       # Nu
 global.BPredUnit.condPredicted                   2350                       # Number of conditional branches predicted
 global.BPredUnit.lookups                         4075                       # Number of BP lookups
 global.BPredUnit.usedRAS                          561                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  92493                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 197924                       # Number of bytes of host memory used
-host_seconds                                     0.12                       # Real time elapsed on the host
-host_tick_rate                               47019704                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  64609                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 152616                       # Number of bytes of host memory used
+host_seconds                                     0.17                       # Real time elapsed on the host
+host_tick_rate                               32849793                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads                 14                       # Number of conflicting loads.
 memdepunit.memDep.conflictingLoads                 12                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores                35                       # Number of conflicting stores.
@@ -34,10 +34,10 @@ system.cpu.commit.COM:bw_limited_1                  0                       # nu
 system.cpu.commit.COM:committed_per_cycle.start_dist                     # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle.samples        11403                      
 system.cpu.commit.COM:committed_per_cycle.min_value            0                      
-                               0         6781   5946.68%           
-                               1         2144   1880.21%           
-                               2          950    833.11%           
-                               3          495    434.10%           
+                               0         6780   5945.80%           
+                               1         2145   1881.08%           
+                               2          951    833.99%           
+                               3          494    433.22%           
                                4          331    290.27%           
                                5          216    189.42%           
                                6          215    188.55%           
