@@ -16,9 +16,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov 28 2007 18:29:37
-M5 started Wed Nov 28 18:29:38 2007
-M5 executing on nacho
+M5 compiled Jan 16 2008 04:32:20
+M5 started Wed Jan 16 04:31:23 2008
+M5 executing on m45-027.pool
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing tests/run.py quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 14990500 because target called exit()
