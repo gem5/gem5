@@ -61,4 +61,3 @@ class X86System(System):
 
 class LinuxX86System(X86System):
     type = 'LinuxX86System'
-    command_line = Param.String("", "the kernel command line")

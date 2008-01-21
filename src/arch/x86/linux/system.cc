@@ -68,7 +68,7 @@ using namespace LittleEndianGuest;
 using namespace X86ISA;
 
 LinuxX86System::LinuxX86System(Params *p)
-    : X86System(p), commandLine(p->command_line)
+    : X86System(p), commandLine(p->boot_osflags)
 {
 }
 

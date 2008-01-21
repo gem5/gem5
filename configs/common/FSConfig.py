@@ -184,6 +184,9 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.com_1.pio = self.iobus.port
     self.com_1.sim_console = self.console
 
+    # Command line
+    self.boot_osflags = 'earlyprintk=ttyS0'
+
     # Platform
     self.opteron = Opteron()
 
