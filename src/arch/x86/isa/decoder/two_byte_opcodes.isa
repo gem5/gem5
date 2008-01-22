@@ -766,8 +766,8 @@
                     }
                     0x3: BTC(Ev,Gv);
                 }
-                0x4: bsf_Gv_Ev();
-                0x5: bsr_Gv_Ev();
+                0x4: Inst::BSF(Gv,Ev);
+                0x5: Inst::BSR(Gv,Ev);
                 //The size of the second operand in these instructions should
                 //really be "b" or "w", but it's set to v in order to have a
                 //consistent register size. This shouldn't affect behavior.

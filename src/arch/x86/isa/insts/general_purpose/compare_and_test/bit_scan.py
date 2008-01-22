@@ -1,4 +1,32 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2008 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabe Black
+
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -53,10 +81,342 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
-#let {{
-#    class BSF(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class BSR(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};
+microcode = '''
+def macroop BSF_R_R {
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, regm, regm, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0x0
+
+    # Bit 6
+    limm t2, 0xFFFFFFFF00000000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0xFFFF0000FFFF0000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0xFF00FF00FF00FF00
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0xF0F0F0F0F0F0F0F0
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0xCCCCCCCCCCCCCCCC
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0xAAAAAAAAAAAAAAAA
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSF_R_M {
+
+    ld t1, seg, sib, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0x0
+
+    # Bit 6
+    limm t2, 0xFFFFFFFF00000000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0xFFFF0000FFFF0000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0xFF00FF00FF00FF00
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0xF0F0F0F0F0F0F0F0
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0xCCCCCCCCCCCCCCCC
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0xAAAAAAAAAAAAAAAA
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSF_R_P {
+
+    rdip t7
+    ld t1, seg, riprel, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0x0
+
+    # Bit 6
+    limm t2, 0xFFFFFFFF00000000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0xFFFF0000FFFF0000
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0xFF00FF00FF00FF00
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0xF0F0F0F0F0F0F0F0
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0xCCCCCCCCCCCCCCCC
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0xAAAAAAAAAAAAAAAA
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSR_R_R {
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, regm, regm, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0
+
+    # Bit 6
+    limm t2, 0x00000000FFFFFFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0x0000FFFF0000FFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0x00FF00FF00FF00FF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0x0F0F0F0F0F0F0F0F
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0x3333333333333333
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0x5555555555555555
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSR_R_M {
+
+    ld t1, seg, sib, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    mov reg, reg, t0
+
+    # Bit 6
+    limm t2, 0x00000000FFFFFFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0x0000FFFF0000FFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0x00FF00FF00FF00FF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0x0F0F0F0F0F0F0F0F
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0x3333333333333333
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0x5555555555555555
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSR_R_P {
+
+    rdip t7
+    ld t1, seg, riprel, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    bri t0, label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    mov reg, reg, t0
+
+    # Bit 6
+    limm t2, 0x00000000FFFFFFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    limm t2, 0x0000FFFF0000FFFF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    limm t2, 0x00FF00FF00FF00FF
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    limm t2, 0x0F0F0F0F0F0F0F0F
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    limm t2, 0x3333333333333333
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    limm t2, 0x5555555555555555
+    and t3, t2, t1, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(CEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+'''
