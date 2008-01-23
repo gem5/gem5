@@ -57,6 +57,7 @@
 
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/system.hh"
+#include "arch/x86/smbios.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"
@@ -74,6 +75,10 @@ using namespace X86ISA;
 X86System::X86System(Params *p)
     : System(p)
 {
+    smbiosTable = new X86ISA::SMBios::SMBiosTable;
+    smbiosTable->smbiosHeader.majorVersion = 2;
+    smbiosTable->smbiosHeader.minorVersion = 5;
+    smbiosTable->smbiosHeader.intermediateHeader.smbiosBCDRevision = 0x25;
 }
 
 void
@@ -230,10 +235,34 @@ X86System::startup()
     threadContexts[0]->setNextPC(threadContexts[0]->readPC());
 
     // We should now be in long mode. Yay!
+
+    //Write out the SMBios/DMI table
+    writeOutSMBiosTable(0xF0000);
 }
+
+void
+X86System::writeOutSMBiosTable(Addr header, Addr table)
+{
+    // Get a port to write the table and header to memory.
+    FunctionalPort * physPort = threadContexts[0]->getPhysPort();
+
+    // If the table location isn't specified, just put it after the header.
+    // The header size as of the 2.5 SMBios specification is 0x1F bytes
+    if (!table) {
+        if (!smbiosTable->smbiosHeader.intermediateHeader.tableAddr)
+            smbiosTable->smbiosHeader.
+                intermediateHeader.tableAddr = header + 0x1F;
+    } else {
+        smbiosTable->smbiosHeader.intermediateHeader.tableAddr = table;
+    }
+
+    smbiosTable->writeOut(physPort, header);
+}
+
 
 X86System::~X86System()
 {
+    delete smbiosTable;
 }
 
 void

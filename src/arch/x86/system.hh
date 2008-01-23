@@ -68,6 +68,14 @@
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
 
+namespace X86ISA
+{
+    namespace SMBios
+    {
+        class SMBiosTable;
+    }
+}
+
 class X86System : public System
 {
   public:
@@ -85,6 +93,11 @@ class X86System : public System
     void startup();
 
   protected:
+
+    X86ISA::SMBios::SMBiosTable * smbiosTable;
+
+    void writeOutSMBiosTable(Addr header, Addr table = 0);
+
     const Params *params() const { return (const Params *)_params; }
 
     virtual Addr fixFuncEventAddr(Addr addr)
