@@ -32,11 +32,7 @@ import imp
 import os
 import sys
 
-from os.path import basename
-from os.path import isdir, join as joinpath
-from os.path import exists
-from os.path import isdir
-from os.path import isfile
+from os.path import basename, exists, isdir, isfile, join as joinpath
 
 import SCons
 

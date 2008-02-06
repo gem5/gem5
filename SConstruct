@@ -66,7 +66,7 @@
 import sys
 import os
 
-from os.path import isdir, join as joinpath
+from os.path import isdir, isfile, join as joinpath
 
 import SCons
 
@@ -521,8 +521,8 @@ Export('nonsticky_opts')
 for base_dir in base_dir_list:
     for root, dirs, files in os.walk(base_dir):
         if 'SConsopts' in files:
-            print "Reading", os.path.join(root, 'SConsopts')
-            SConscript(os.path.join(root, 'SConsopts'))
+            print "Reading", joinpath(root, 'SConsopts')
+            SConscript(joinpath(root, 'SConsopts'))
 
 all_isa_list.sort()
 all_cpu_list.sort()
@@ -712,7 +712,7 @@ for build_path in build_paths:
     # $BUILD_ROOT/options/$BUILD_DIR so you can nuke
     # $BUILD_ROOT/$BUILD_DIR without losing your options settings.
     current_opts_file = joinpath(build_root, 'options', build_dir)
-    if os.path.isfile(current_opts_file):
+    if isfile(current_opts_file):
         sticky_opts.files.append(current_opts_file)
         print "Using saved options file %s" % current_opts_file
     else:
@@ -720,7 +720,7 @@ for build_path in build_paths:
 
         # Make sure the directory is there so we can create it later
         opt_dir = os.path.dirname(current_opts_file)
-        if not os.path.isdir(opt_dir):
+        if not isdir(opt_dir):
             os.mkdir(opt_dir)
 
         # Get default build options from source tree.  Options are
@@ -728,7 +728,7 @@ for build_path in build_paths:
         # overriden by 'default=' arg on command line.
         default_opts_file = joinpath('build_opts',
                                      ARGUMENTS.get('default', build_dir))
-        if os.path.isfile(default_opts_file):
+        if isfile(default_opts_file):
             sticky_opts.files.append(default_opts_file)
             print "Options file %s not found,\n  using defaults in %s" \
                   % (current_opts_file, default_opts_file)
