@@ -259,6 +259,7 @@ class StaticInstBase : public RefCounted
     bool isMicroBranch() const { return flags[IsMicroBranch]; }
     //@}
 
+    void setLastMicroop() { flags[IsLastMicroop] = true; }
     /// Operation class.  Used to select appropriate function unit in issue.
     OpClass opClass()     const { return _opClass; }
 };

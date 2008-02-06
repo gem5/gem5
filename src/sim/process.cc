@@ -61,6 +61,8 @@
 #include "arch/sparc/solaris/process.hh"
 #elif THE_ISA == MIPS_ISA
 #include "arch/mips/linux/process.hh"
+#elif THE_ISA == ARM_ISA
+#include "arch/arm/linux/process.hh"
 #elif THE_ISA == X86_ISA
 #include "arch/x86/linux/process.hh"
 #else
@@ -695,6 +697,17 @@ LiveProcess::create(LiveProcessParams * params)
     switch (objFile->getOpSys()) {
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(params, objFile);
+        break;
+
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == ARM_ISA
+    if (objFile->getArch() != ObjectFile::Arm)
+        fatal("Object file architecture does not match compiled ISA (ARM).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::Linux:
+        process = new ArmLinuxProcess(params, objFile);
         break;
 
       default:

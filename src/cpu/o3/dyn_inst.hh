@@ -49,6 +49,10 @@
     template <class Impl> class X86DynInst;
     struct X86SimpleImpl;
     typedef X86DynInst<X86SimpleImpl> O3DynInst;
+#elif THE_ISA == ARM_ISA
+    template <class Impl> class ArmDynInst;
+    struct ArmSimpleImpl;
+    typedef ArmDynInst<ArmSimpleImpl> O3DynInst;
 #else
     #error "O3DynInst not defined for this ISA"
 #endif

@@ -88,6 +88,8 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             arch = ObjectFile::X86;
         } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             arch = ObjectFile::Alpha;
+        } else if (ehdr.e_machine == EM_ARM) {
+            arch = ObjectFile::Arm;
         } else {
             warn("Unknown architecture: %d\n", ehdr.e_machine);
             arch = ObjectFile::UnknownArch;
@@ -98,6 +100,7 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         {
 
           case ELFOSABI_LINUX:
+          case ELFOSABI_ARM:
             opSys = ObjectFile::Linux;
             break;
           case ELFOSABI_SOLARIS:

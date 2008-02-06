@@ -6,3 +6,4 @@ cscope.files
 cscope.out
 *.pyc
 *~
+.*.swp

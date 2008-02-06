@@ -49,6 +49,7 @@
 #define SPARC_ISA 42
 #define MIPS_ISA 34000
 #define X86_ISA 8086
+#define ARM_ISA 6
 
 //These tell the preprocessor where to find the files of a particular
 //ISA, and set the "TheISA" macro for use elsewhere.
@@ -60,6 +61,8 @@
     #define TheISA MipsISA
 #elif THE_ISA == X86_ISA
     #define TheISA X86ISA
+#elif THE_ISA == ARM_ISA
+    #define TheISA ArmISA
 #else
     #error "THE_ISA not set"
 #endif
