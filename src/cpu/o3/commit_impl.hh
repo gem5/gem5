@@ -65,7 +65,7 @@ DefaultCommit<Impl>::TrapEvent::process()
 
 template <class Impl>
 const char *
-DefaultCommit<Impl>::TrapEvent::description()
+DefaultCommit<Impl>::TrapEvent::description() const
 {
     return "Trap";
 }

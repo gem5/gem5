@@ -77,7 +77,7 @@ class MemTest : public MemObject
         TickEvent(MemTest *c)
             : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c) {}
         void process() {cpu->tick();}
-        virtual const char *description() { return "MemTest tick"; }
+        virtual const char *description() const { return "MemTest tick"; }
     };
 
     TickEvent tickEvent;

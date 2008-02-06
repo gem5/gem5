@@ -94,7 +94,7 @@ class LWBackEnd
         TrapEvent(LWBackEnd<Impl> *_be);
 
         void process();
-        const char *description();
+        const char *description() const;
     };
 
     LWBackEnd(Params *params);

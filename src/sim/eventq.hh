@@ -219,7 +219,7 @@ class Event : public Serializable, public FastAlloc
     /// Return a C string describing the event.  This string should
     /// *not* be dynamically allocated; just a const char array
     /// describing the event class.
-    virtual const char *description();
+    virtual const char *description() const;
 
     /// Dump the current event data
     void dump();
@@ -280,7 +280,7 @@ DelayFunction(Tick when, T *object)
             : Event(&mainEventQueue), object(o)
             { setFlags(this->AutoDestroy); schedule(when); }
         void process() { (object->*F)(); }
-        const char *description() { return "delay"; }
+        const char *description() const { return "delay"; }
     };
 
     new DelayEvent(when, object);

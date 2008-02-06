@@ -99,7 +99,7 @@ class InstQueue
                      InstQueue<Impl> *iq_ptr);
 
         virtual void process();
-        virtual const char *description();
+        virtual const char *description() const;
     };
 #endif
     /** Constructs an IQ. */

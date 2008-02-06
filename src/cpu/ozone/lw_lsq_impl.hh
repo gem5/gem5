@@ -55,7 +55,7 @@ OzoneLWLSQ<Impl>::WritebackEvent::process()
 
 template<class Impl>
 const char *
-OzoneLWLSQ<Impl>::WritebackEvent::description()
+OzoneLWLSQ<Impl>::WritebackEvent::description() const
 {
     return "Store writeback";
 }

@@ -150,7 +150,7 @@ class Bridge : public MemObject
 
             virtual void process() { port->trySend(); }
 
-            virtual const char *description() { return "bridge send"; }
+            virtual const char *description() const { return "bridge send"; }
         };
 
         SendEvent sendEvent;

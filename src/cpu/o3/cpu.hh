@@ -136,7 +136,7 @@ class FullO3CPU : public BaseO3CPU
         /** Processes a tick event, calling tick() on the CPU. */
         void process();
         /** Returns the description of the tick event. */
-        const char *description();
+        const char *description() const;
     };
 
     /** The tick event used for scheduling CPU ticks. */
@@ -178,7 +178,7 @@ class FullO3CPU : public BaseO3CPU
         void process();
 
         /** Returns the description of the event. */
-        const char *description();
+        const char *description() const;
     };
 
     /** Schedule thread to activate , regardless of its current state. */
@@ -229,7 +229,7 @@ class FullO3CPU : public BaseO3CPU
         void setRemove(bool _remove) { remove = _remove; }
 
         /** Returns the description of the event. */
-        const char *description();
+        const char *description() const;
     };
 
     /** Schedule cpu to deallocate thread context.*/

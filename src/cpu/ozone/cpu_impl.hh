@@ -82,7 +82,7 @@ OzoneCPU<Impl>::TickEvent::process()
 
 template <class Impl>
 const char *
-OzoneCPU<Impl>::TickEvent::description()
+OzoneCPU<Impl>::TickEvent::description() const
 {
     return "OzoneCPU tick";
 }

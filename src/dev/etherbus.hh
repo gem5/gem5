@@ -62,7 +62,8 @@ class EtherBus : public EtherObject
         DoneEvent(EventQueue *q, EtherBus *b)
             : Event(q), bus(b) {}
         virtual void process() { bus->txDone(); }
-        virtual const char *description() { return "ethernet bus completion"; }
+        virtual const char *description() const
+            { return "ethernet bus completion"; }
     };
 
     DoneEvent event;

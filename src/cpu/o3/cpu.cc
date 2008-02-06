@@ -80,7 +80,7 @@ FullO3CPU<Impl>::TickEvent::process()
 
 template <class Impl>
 const char *
-FullO3CPU<Impl>::TickEvent::description()
+FullO3CPU<Impl>::TickEvent::description() const
 {
     return "FullO3CPU tick";
 }
@@ -109,7 +109,7 @@ FullO3CPU<Impl>::ActivateThreadEvent::process()
 
 template <class Impl>
 const char *
-FullO3CPU<Impl>::ActivateThreadEvent::description()
+FullO3CPU<Impl>::ActivateThreadEvent::description() const
 {
     return "FullO3CPU \"Activate Thread\"";
 }
@@ -141,7 +141,7 @@ FullO3CPU<Impl>::DeallocateContextEvent::process()
 
 template <class Impl>
 const char *
-FullO3CPU<Impl>::DeallocateContextEvent::description()
+FullO3CPU<Impl>::DeallocateContextEvent::description() const
 {
     return "FullO3CPU \"Deallocate Context\"";
 }

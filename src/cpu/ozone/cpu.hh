@@ -306,7 +306,7 @@ class OzoneCPU : public BaseCPU
 
         TickEvent(OzoneCPU *c, int w);
         void process();
-        const char *description();
+        const char *description() const;
     };
 
     TickEvent tickEvent;

@@ -577,7 +577,7 @@ MiscRegFile::CP0Event::process()
 }
 
 const char *
-MiscRegFile::CP0Event::description()
+MiscRegFile::CP0Event::description() const
 {
     return "Coprocessor-0 event";
 }

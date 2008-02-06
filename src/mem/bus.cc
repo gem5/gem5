@@ -105,7 +105,7 @@ void Bus::BusFreeEvent::process()
     bus->recvRetry(-1);
 }
 
-const char * Bus::BusFreeEvent::description()
+const char * Bus::BusFreeEvent::description() const
 {
     return "bus became available";
 }

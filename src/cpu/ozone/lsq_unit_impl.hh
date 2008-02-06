@@ -60,7 +60,7 @@ OzoneLSQ<Impl>::StoreCompletionEvent::process()
 
 template <class Impl>
 const char *
-OzoneLSQ<Impl>::StoreCompletionEvent::description()
+OzoneLSQ<Impl>::StoreCompletionEvent::description() const
 {
     return "LSQ store completion";
 }

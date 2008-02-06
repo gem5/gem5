@@ -230,7 +230,7 @@ dumpMainQueue()
 
 
 const char *
-Event::description()
+Event::description() const
 {
     return "generic";
 }

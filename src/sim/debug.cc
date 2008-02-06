@@ -63,7 +63,7 @@ class DebugBreakEvent : public Event
     DebugBreakEvent(EventQueue *q, Tick _when);
 
     void process();	// process event
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 //
@@ -87,7 +87,7 @@ DebugBreakEvent::process()
 
 
 const char *
-DebugBreakEvent::description()
+DebugBreakEvent::description() const
 {
     return "debug break";
 }

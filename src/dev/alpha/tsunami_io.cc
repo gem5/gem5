@@ -205,7 +205,7 @@ TsunamiIO::RTC::RTCEvent::process()
 }
 
 const char *
-TsunamiIO::RTC::RTCEvent::description()
+TsunamiIO::RTC::RTCEvent::description() const
 {
     return "tsunami RTC interrupt";
 }
@@ -429,7 +429,7 @@ TsunamiIO::PITimer::Counter::CounterEvent::process()
 }
 
 const char *
-TsunamiIO::PITimer::Counter::CounterEvent::description()
+TsunamiIO::PITimer::Counter::CounterEvent::description() const
 {
     return "tsunami 8254 Interval timer";
 }

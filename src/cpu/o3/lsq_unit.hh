@@ -273,7 +273,7 @@ class LSQUnit {
         void process();
 
         /** Returns the description of this event. */
-        const char *description();
+        const char *description() const;
 
       private:
         /** Instruction whose results are being written back. */

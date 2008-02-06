@@ -101,7 +101,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
             TickEvent(TimingSimpleCPU *_cpu)
                 :Event(&mainEventQueue), cpu(_cpu) {}
-            const char *description() { return "Timing CPU tick"; }
+            const char *description() const { return "Timing CPU tick"; }
             void schedule(PacketPtr _pkt, Tick t);
         };
 
@@ -127,7 +127,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             ITickEvent(TimingSimpleCPU *_cpu)
                 : TickEvent(_cpu) {}
             void process();
-            const char *description() { return "Timing CPU icache tick"; }
+            const char *description() const { return "Timing CPU icache tick"; }
         };
 
         ITickEvent tickEvent;
@@ -155,7 +155,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             DTickEvent(TimingSimpleCPU *_cpu)
                 : TickEvent(_cpu) {}
             void process();
-            const char *description() { return "Timing CPU dcache tick"; }
+            const char *description() const { return "Timing CPU dcache tick"; }
         };
 
         DTickEvent tickEvent;
@@ -219,7 +219,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         TimingSimpleCPU *cpu;
         IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu, Tick t);
         virtual void process();
-        virtual const char *description();
+        virtual const char *description() const;
     };
 
     void completeDrain();

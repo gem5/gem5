@@ -58,7 +58,7 @@ InstructionQueue<Impl>::FUCompletion::process()
 
 template <class Impl>
 const char *
-InstructionQueue<Impl>::FUCompletion::description()
+InstructionQueue<Impl>::FUCompletion::description() const
 {
     return "Functional unit completion";
 }

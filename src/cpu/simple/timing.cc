@@ -822,7 +822,7 @@ TimingSimpleCPU::IprEvent::process()
 }
 
 const char *
-TimingSimpleCPU::IprEvent::description()
+TimingSimpleCPU::IprEvent::description() const
 {
     return "Timing Simple CPU Delay IPR event";
 }

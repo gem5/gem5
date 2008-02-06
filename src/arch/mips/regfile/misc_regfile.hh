@@ -139,7 +139,7 @@ namespace MipsISA
             virtual void process();
 
             /** Returns the description of this event. */
-            const char *description();
+            const char *description() const;
 
             /** Schedule This Event */
             void scheduleEvent(int delay);

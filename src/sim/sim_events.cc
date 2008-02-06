@@ -65,7 +65,7 @@ SimLoopExitEvent::process()
 
 
 const char *
-SimLoopExitEvent::description()
+SimLoopExitEvent::description() const
 {
     return "simulation loop exit";
 }
@@ -123,7 +123,7 @@ CountedExitEvent::process()
 
 
 const char *
-CountedExitEvent::description()
+CountedExitEvent::description() const
 {
     return "counted exit";
 }
@@ -153,7 +153,7 @@ CheckSwapEvent::process()
 }
 
 const char *
-CheckSwapEvent::description()
+CheckSwapEvent::description() const
 {
     return "check swap";
 }

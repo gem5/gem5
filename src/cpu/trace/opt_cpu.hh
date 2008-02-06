@@ -81,7 +81,7 @@ class OptCPU : public SimObject
         /**
          * Return a string description of this event.
          */
-        const char *description();
+        const char *description() const;
     };
 
     TickEvent tickEvent;
