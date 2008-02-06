@@ -33,7 +33,7 @@ import os
 import sys
 
 from os.path import basename
-from os.path import join as joinpath
+from os.path import isdir, join as joinpath
 from os.path import exists
 from os.path import isdir
 from os.path import isfile
@@ -181,31 +181,22 @@ env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
 ########################################################################
 #
-# Walk the tree and execute all SConscripts
+# Walk the tree and execute all SConscripts in 'src' subdirectories
 #
-srcdir = env['SRCDIR']
-for root, dirs, files in os.walk(srcdir, topdown=True):
-    if root == srcdir:
-        # we don't want to recurse back into this SConscript
+
+for base_dir in base_dir_list:
+    src_dir = joinpath(base_dir, 'src')
+    if not isdir(src_dir):
         continue
+    here = Dir('.').srcnode().abspath
+    for root, dirs, files in os.walk(src_dir, topdown=True):
+        if root == here:
+            # we don't want to recurse back into this SConscript
+            continue
 
-    if 'SConscript' in files:
-        # strip off the srcdir part since scons will try to find the
-        # script in the build directory
-        base = root[len(srcdir) + 1:]
-        SConscript(joinpath(base, 'SConscript'))
-
-extra_string = env['EXTRAS']
-if extra_string and extra_string != '' and not extra_string.isspace():
-    for extra in extra_string.split(':'):
-        print 'Adding', extra, 'to source directory list'
-        env.Append(CPPPATH=[Dir(extra)])
-        for root, dirs, files in os.walk(extra, topdown=True):
-            if 'SConscript' in files:
-                subdir = root[len(os.path.dirname(extra))+1:]
-                print '  Found SConscript in', subdir
-                build_dir = joinpath(env['BUILDDIR'], subdir)
-                SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
+        if 'SConscript' in files:
+            build_dir = joinpath(env['BUILDDIR'], root[len(src_dir) + 1:])
+            SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 
 for opt in env.ExportOptions:
     env.ConfigFile(opt)

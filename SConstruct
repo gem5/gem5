@@ -205,6 +205,10 @@ for t in abs_targets:
     if build_path not in build_paths:
         build_paths.append(build_path)
 
+# Make sure build_root exists (might not if this is the first build there)
+if not isdir(build_root):
+    os.mkdir(build_root)
+
 ###################################################
 #
 # Set up the default build environment.  This environment is copied
@@ -215,14 +219,6 @@ for t in abs_targets:
 env = Environment(ENV = os.environ,  # inherit user's environment vars
                   ROOT = ROOT,
                   SRCDIR = SRCDIR)
-
-#Parse CC/CXX early so that we use the correct compiler for
-# to test for dependencies/versions/libraries/includes
-if ARGUMENTS.get('CC', None):
-    env['CC'] = ARGUMENTS.get('CC')
-
-if ARGUMENTS.get('CXX', None):
-    env['CXX'] = ARGUMENTS.get('CXX')
 
 Export('env')
 
@@ -239,6 +235,61 @@ env.SetOption('duplicate', 'soft-copy')
 # noticeably longer.
 if False:
     env.TargetSignatures('content')
+
+#
+# Set up global sticky options... these are common to an entire build
+# tree (not specific to a particular build like ALPHA_SE)
+#
+
+# Option validators & converters for global sticky options
+def PathListMakeAbsolute(val):
+    if not val:
+        return val
+    f = lambda p: os.path.abspath(os.path.expanduser(p))
+    return ':'.join(map(f, val.split(':')))
+
+def PathListAllExist(key, val, env):
+    if not val:
+        return
+    paths = val.split(':')
+    for path in paths:
+        if not isdir(path):
+            raise SCons.Errors.UserError("Path does not exist: '%s'" % path)
+
+global_sticky_opts_file = joinpath(build_root, 'options.global')
+
+global_sticky_opts = Options(global_sticky_opts_file, args=ARGUMENTS)
+
+global_sticky_opts.AddOptions(
+    ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
+    ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
+    ('EXTRAS', 'Add Extra directories to the compilation', '',
+     PathListAllExist, PathListMakeAbsolute)
+    )    
+
+
+# base help text
+help_text = '''
+Usage: scons [scons options] [build options] [target(s)]
+
+'''
+
+help_text += "Global sticky options:\n" \
+             + global_sticky_opts.GenerateHelpText(env)
+
+# Update env with values from ARGUMENTS & file global_sticky_opts_file
+global_sticky_opts.Update(env)
+
+# Save sticky option settings back to current options file
+global_sticky_opts.Save(global_sticky_opts_file, env)
+
+# Parse EXTRAS option to build list of all directories where we're
+# look for sources etc.  This list is exported as base_dir_list.
+base_dir_list = [ROOT]
+if env['EXTRAS']:
+    base_dir_list += env['EXTRAS'].split(':')
+
+Export('base_dir_list')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
@@ -467,27 +518,15 @@ Export('nonsticky_opts')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above options
-for root, dirs, files in os.walk('.'):
-    if 'SConsopts' in files:
-        SConscript(os.path.join(root, 'SConsopts'))
+for base_dir in base_dir_list:
+    for root, dirs, files in os.walk(base_dir):
+        if 'SConsopts' in files:
+            print "Reading", os.path.join(root, 'SConsopts')
+            SConscript(os.path.join(root, 'SConsopts'))
 
 all_isa_list.sort()
 all_cpu_list.sort()
 default_cpus.sort()
-
-def PathListMakeAbsolute(val):
-    if not val:
-        return val
-    f = lambda p: os.path.abspath(os.path.expanduser(p))
-    return ':'.join(map(f, val.split(':')))
-
-def PathListAllExist(key, val, env):
-    if not val:
-        return
-    paths = val.split(':')
-    for path in paths:
-        if not isdir(path):
-            raise SCons.Errors.UserError("Path does not exist: '%s'" % path)
 
 sticky_opts.AddOptions(
     EnumOption('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
@@ -509,15 +548,11 @@ sticky_opts.AddOptions(
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolOption('USE_CHECKER', 'Use checker for detailed CPU models', False),
-    ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
-    ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
     BoolOption('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('PYTHONHOME',
      'Override the default PYTHONHOME for this system (use with caution)',
      '%s:%s' % (sys.prefix, sys.exec_prefix)),
-    ('EXTRAS', 'Add Extra directories to the compilation', '',
-     PathListAllExist, PathListMakeAbsolute)
     )
 
 nonsticky_opts.AddOptions(
@@ -606,12 +641,6 @@ concat_builder = Builder(action = Action(['cat $SOURCES > $TARGET',
 
 env.Append(BUILDERS = { 'Concat' : concat_builder })
 
-
-# base help text
-help_text = '''
-Usage: scons [scons options] [build options] [target(s)]
-
-'''
 
 # libelf build is shared across all configs in the build root.
 env.SConscript('ext/libelf/SConscript',
@@ -712,7 +741,7 @@ for build_path in build_paths:
     sticky_opts.Update(env)
     nonsticky_opts.Update(env)
 
-    help_text += "Sticky options for %s:\n" % build_dir \
+    help_text += "\nSticky options for %s:\n" % build_dir \
                  + sticky_opts.GenerateHelpText(env) \
                  + "\nNon-sticky options for %s:\n" % build_dir \
                  + nonsticky_opts.GenerateHelpText(env)
