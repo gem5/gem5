@@ -34,7 +34,7 @@
  */
 
 #include "arch/isa_traits.hh"
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#include "mem/cache/prefetch/tagged.hh"
 
 TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)
     : BasePrefetcher(p),

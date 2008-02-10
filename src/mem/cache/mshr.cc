@@ -39,7 +39,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "mem/cache/miss/mshr.hh"
+#include "mem/cache/mshr.hh"
 #include "sim/core.hh" // for curTick
 #include "sim/host.hh"
 #include "base/misc.hh"

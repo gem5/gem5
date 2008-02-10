@@ -41,9 +41,9 @@
 
 #include "base/misc.hh" // fatal, panic, and warn
 
-#include "mem/cache/base_cache.hh"
-#include "mem/cache/cache_blk.hh"
-#include "mem/cache/miss/mshr.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/blk.hh"
+#include "mem/cache/mshr.hh"
 
 #include "sim/eventq.hh"
 

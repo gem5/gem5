@@ -41,7 +41,7 @@
 #include "base/intmath.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "mem/cache/tags/split.hh"
 #include "mem/cache/tags/split_lifo.hh"
 #include "mem/cache/tags/split_lru.hh"

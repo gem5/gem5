@@ -36,7 +36,7 @@
 #ifndef __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
 
-#include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/cache/prefetch/base.hh"
 
 class GHBPrefetcher : public BasePrefetcher
 {

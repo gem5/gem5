@@ -36,7 +36,7 @@
 #ifndef __SPLIT_BLK_HH__
 #define __SPLIT_BLK_HH__
 
-#include "mem/cache/cache_blk.hh" // base class
+#include "mem/cache/blk.hh" // base class
 
 /**
  * Split cache block.

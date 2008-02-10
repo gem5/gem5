@@ -34,7 +34,7 @@
  * Stride Prefetcher template instantiations.
  */
 
-#include "mem/cache/prefetch/stride_prefetcher.hh"
+#include "mem/cache/prefetch/stride.hh"
 
 void
 StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,

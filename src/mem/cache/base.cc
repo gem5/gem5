@@ -35,8 +35,8 @@
 
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
-#include "mem/cache/base_cache.hh"
-#include "mem/cache/miss/mshr.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/mshr.hh"
 
 using namespace std;
 

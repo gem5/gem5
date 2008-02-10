@@ -38,7 +38,7 @@
 
 #include "base/misc.hh"
 #include "mem/cache/tags/iic.hh"
-#include "mem/cache/tags/repl/gen.hh"
+#include "mem/cache/tags/iic_repl/gen.hh"
 #include "params/GenRepl.hh"
 #include "sim/host.hh"
 

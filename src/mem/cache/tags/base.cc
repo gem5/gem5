@@ -34,9 +34,9 @@
  * Definitions of BaseTags.
  */
 
-#include "mem/cache/tags/base_tags.hh"
+#include "mem/cache/tags/base.hh"
 
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "cpu/smt.hh" //maxThreadsPerCPU
 #include "sim/sim_exit.hh"
 

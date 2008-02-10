@@ -27,7 +27,7 @@
  */
 
 #include "base/cprintf.hh"
-#include "mem/cache/cache_blk.hh"
+#include "mem/cache/blk.hh"
 
 void
 CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,

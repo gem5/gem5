@@ -39,12 +39,12 @@
 #include <cstring>
 #include <list>
 
-#include "mem/cache/cache_blk.hh" // base class
+#include "mem/cache/blk.hh" // base class
 #include "mem/cache/tags/split_blk.hh"
 #include "mem/packet.hh" // for inlined functions
 #include "base/hashmap.hh"
 #include <assert.h>
-#include "mem/cache/tags/base_tags.hh"
+#include "mem/cache/tags/base.hh"
 
 class BaseCache;
 
