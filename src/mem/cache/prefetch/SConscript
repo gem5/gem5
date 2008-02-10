@@ -30,8 +30,8 @@
 
 Import('*')
 
-Source('base_prefetcher.cc')
-Source('ghb_prefetcher.cc')
-Source('stride_prefetcher.cc')
-Source('tagged_prefetcher.cc')
+Source('base.cc')
+Source('ghb.cc')
+Source('stride.cc')
+Source('tagged.cc')
 

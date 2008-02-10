@@ -32,10 +32,12 @@ Import('*')
 
 SimObject('BaseCache.py')
 
-Source('base_cache.cc')
+Source('base.cc')
 Source('cache.cc')
-Source('cache_blk.cc')
-Source('cache_builder.cc')
+Source('blk.cc')
+Source('builder.cc')
+Source('mshr.cc')
+Source('mshr_queue.cc')
 
 TraceFlag('Cache')
 TraceFlag('CachePort')
